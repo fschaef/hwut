@@ -532,6 +532,10 @@ todo-7  THE MEASUREMENT THAT RULES disc-1
         Write of one run, read of a cross-directory aggregate, forms (a)
         and (c). Until it exists, disc-1 stays open and (a) stands.
 
+todo-9  is the orchestrator's t-9 and is BUILT (RATIONALE D-18): the
+        record names run ids. What remains of the old bridge -- the
+        'resolve' seam and '_local_resolver' -- is deleted.
+
 todo-10 THE GATHER'S GROUP OF GROUPS, AND WHAT A DELIVERY CARRIES
         Ids are directory-local (D-14). A gather across directories has
         one honest key, '(directory relative to the gather root, local
@@ -566,3 +570,14 @@ todo-10 THE GATHER'S GROUP OF GROUPS, AND WHAT A DELIVERY CARRIES
         OPEN, for task 3 ('hwut.cov'): the bundle's file layout, and
         whether the gathered group table is written into the bundle at
         all or recomputed from the per-directory tables on read.
+
+todo-11 TWO REFUSALS A COVERAGE RUN OWES
+        'interactive' beside coverage: a session measures one process
+        across many choices while the record is keyed per choice, so
+        the run must refuse by name rather than seat one process's
+        measurement under one choice. 'record_timing' beside coverage:
+        the wrapped call carries the tool's own cost, so a cadence
+        measured under it is not the application's. Both are refusals
+        at the door -- where the demand is HANDED IN, before a process
+        runs -- and both are unbuilt: the dispatcher accepts every
+        configuration under coverage today.

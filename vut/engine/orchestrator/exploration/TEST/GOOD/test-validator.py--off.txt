@@ -2,7 +2,7 @@
 --- build named alone; analogy and constraints switched off ---
 title    'T'  language None  origin HEADER  at 1:7
 root:
-    build = Build(framework='make', executable=None, caps=None)
+    build = Build(framework='make', executable=None, coverage_target=None, caps=None)
     analogy = ()
     constraints = ()
 choice -:

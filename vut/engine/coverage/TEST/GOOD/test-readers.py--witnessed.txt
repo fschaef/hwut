@@ -1,8 +1,7 @@
 
 --- the report, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: java
          | ##tool:     jacoco
          | ##format:   jacoco-xml

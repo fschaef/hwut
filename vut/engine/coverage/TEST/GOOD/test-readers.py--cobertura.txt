@@ -1,8 +1,7 @@
 
 --- the xml, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: python
          | ##tool:     cobertura
          | ##format:   cobertura-xml

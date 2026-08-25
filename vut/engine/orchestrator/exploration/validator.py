@@ -345,12 +345,12 @@ def _build(entry, file, fault_list):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, _position_of(node, entry),
             "'build' is a framework name or a scope of 'framework', "
-            "'executable' and 'caps'"))
+            "'executable', 'coverage_target' and 'caps'"))
         return None
 
     field_db = {}
     for inner in node.entry_list:
-        if inner.key in ("framework", "executable"):
+        if inner.key in ("framework", "executable", "coverage_target"):
             value = _string(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
         elif inner.key == "caps":

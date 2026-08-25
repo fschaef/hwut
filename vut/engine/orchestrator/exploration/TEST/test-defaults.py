@@ -48,7 +48,7 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.exploration.specification    import (TestParameters, Caps,
+from vut.engine.orchestrator.exploration.configuration_tree import (TestParameters, Caps,
                                                      KEY_TO_FIELD)
 from vut.engine.orchestrator.exploration.relation         import (RELATION, default_of,
                                                      effective, value_db_of,

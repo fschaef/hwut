@@ -2,9 +2,11 @@
 --- every fault, refused by name ---
          no version                             -> RecordFault
          a version this reader does not know    -> RecordFault
+         version 1, which named the run by NAME -> RecordFault
          no 'tool' in the header                -> RecordFault
-         no 'test' in the header -- the run would be anonymous -> RecordFault
-         no 'choice' in the header              -> RecordFault
+         no 'run' in the header -- the record would be anonymous -> RecordFault
+         a 'run' that spells no run id          -> RecordFault
+         one bad id among good ones             -> RecordFault
          a block without 'CV'                   -> RecordFault
          'EX' before any 'SF'                   -> RecordFault
          a delta that does not advance          -> RecordFault
@@ -17,9 +19,11 @@
 INSPECT: a.py EX=((1, 4),) CV=((1, 2),)
   OK  : refused: no version
   OK  : refused: a version this reader does not know
+  OK  : refused: version 1, which named the run by NAME
   OK  : refused: no 'tool' in the header
-  OK  : refused: no 'test' in the header -- the run would be anonymous
-  OK  : refused: no 'choice' in the header
+  OK  : refused: no 'run' in the header -- the record would be anonymous
+  OK  : refused: a 'run' that spells no run id
+  OK  : refused: one bad id among good ones
   OK  : refused: a block without 'CV'
   OK  : refused: 'EX' before any 'SF'
   OK  : refused: a delta that does not advance

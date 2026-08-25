@@ -34,7 +34,9 @@ from ...operations.run.stage_canonicalise import StageCanonicalise
 from ...operations.run.core         import Provision
 from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
+from dataclasses import replace
 from ...bookkeeper.bookkeeper   import Bookkeeper
+from ...bookkeeper.test_id_db   import TestIdDb
 from ...bookkeeper.stream_store import Store, DirectoryBusy
 from ...procsitter.procsitter       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
@@ -48,17 +50,25 @@ FRAME_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
 class TestRunDispatcher(I_Dispatcher):
     """Drives one directory's plan against the real machinery."""
 
-    def __init__(self, directory, entry, record=None):
+    def __init__(self, directory, entry, record=None, coverage=None):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
                 and Store made here, the directory LOCK taken here and
                 held to 'close()'.
 
-        'entry'  the directory's CTreePlanEntry: its app_set names
-                 what exists; the plan's nodes are resolved against it.
-        'record' THE STORE KNOB (n-1): None or True stores every
-                 subject; False stores nothing; '--no-store' is a
-                 later word over it.
+        'entry'    the directory's CTreePlanEntry: its app_set names
+                   what exists; the plan's nodes are resolved against
+                   it.
+        'record'   THE STORE KNOB (n-1): None or True stores every
+                   subject; False stores nothing; '--no-store' is a
+                   later word over it.
+        'coverage' a CoverageConfig where coverage is asked (coverage
+                   D-19): every configuration is then made for the
+                   coverage target, and every run harvests. The run id
+                   comes from the directory's register; a run of an
+                   unregistered choice harvests under NO id and is
+                   noted 'NOT_ASKED' -- coverage is measured for
+                   accepted tests.
 
         Raises DirectoryBusy where another live process holds the
         directory -- refused at the door, never queued.
@@ -82,8 +92,11 @@ class TestRunDispatcher(I_Dispatcher):
             raise DirectoryBusy(
                 "the directory '%s' is held by a live process"
                 % directory)
+        self.coverage   = coverage
+        self.id_db      = None if coverage is None else TestIdDb(directory)
         self.config_db  = {app.source_file:
-                               test_configuration_of(app, directory)
+                               test_configuration_of(app, directory,
+                                                     coverage)
                            for app in entry.app_set}
         #  BUILD action name -> the configuration whose build it is.
         self.build_db   = {}
@@ -175,20 +188,29 @@ class TestRunDispatcher(I_Dispatcher):
                 stage_execute      = multi.provider(node.choice),
                 stage_canonicalise = StageCanonicalise(configuration,
                                                        node.choice))
+        run_id = None
+        if self.id_db is not None:
+            run_id = self.id_db.run_id_of(configuration.stem, node.choice)
+            if run_id is None:
+                #  Unregistered: never accepted, so no id to seat. The
+                #  run proceeds as a plain run; the entry says NOT_ASKED.
+                configuration = replace(configuration, coverage=None)
         outcome = await run_test_held(
             configuration,
             Request(choice=node.choice, record=self.record),
             store=self.store_db.get(node.file, self.store),
-            provision=provision)
+            provision=provision, run_id=run_id)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
         return bool(outcome.verdict)
 
 
-def test_run_dispatcher_factory(record=None):
+def test_run_dispatcher_factory(record=None, coverage=None):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
-            factory 'orchestrator()' consumes, the store knob bound.
+            factory 'orchestrator()' consumes, the store knob and the
+            coverage demand bound.
     """
     return lambda directory, entry: TestRunDispatcher(directory, entry,
-                                                      record=record)
+                                                      record=record,
+                                                      coverage=coverage)

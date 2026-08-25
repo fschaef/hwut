@@ -195,6 +195,14 @@ class Bookkeeper:
         return self.directory / ".hwut-store" \
                               / self.key(test, choice, subject)
 
+    def coverage_path(self, test, choice):
+        """RETURN: Path, where the COVERAGE RECORD of that run lives --
+        '.hwut-store/<key>.cover', the store's own ground: a measurement
+        of the last run of that choice, never a nominal, never a
+        subject. The suffix is coverage's own ('affected.py')."""
+        return self.directory / ".hwut-store" \
+                              / self.key(test, choice, "cover")
+
     def raw_path(self, test, choice, subject):
         """RETURN: Path, where the PRE-canonicalisation stream lives."""
         path = self.candidate_path(test, choice, subject)
@@ -248,10 +256,15 @@ class Bookkeeper:
         os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
     # -- recording ----------------------------------------------------
-    def record(self, result, configuration, goal, choice_name=None):
+    def record(self, result, configuration, goal, choice_name=None,
+               coverage=None):
         """
         RETURN: dict, the entry as written -- 'when' and 'host' are
                 added here, so no caller has to remember them.
+
+        'coverage' is the coverage step's token ('E_CoverageResult'),
+        written as 'coverage' on the entry; None where none was asked,
+        and then the key is absent -- absence is data.
 
         DERIVED, not handed in: the verdict and the report token from
         the result; both halves of freeing from the choice's
@@ -287,6 +300,8 @@ class Bookkeeper:
         records = tuple(getattr(result.provision, "records", ()) or ())
         if records:
             entry["records"] = [_plain(r) for r in records]
+        if coverage is not None:
+            entry["coverage"] = str(coverage)
 
         content    = self.book()
         test_book  = content.setdefault(result.name, {})

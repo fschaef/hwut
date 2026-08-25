@@ -1,0 +1,263 @@
+THE VUT COVERAGE RECORD -- the format, line by line
+==============================================================================
+
+Mechanics only. WHY the format is shaped this way stands in RATIONALE
+(D-5 the skeleton, D-7 the provenance, D-8 and D-18 the run, D-11 the
+measures, D-12 named points). What is OPEN stands in DISCUSSIONS.
+
+A record is UTF-8 text, LF terminated, one file per run. Its extension
+is '.cover'. Every line is one of five kinds, in this order:
+
+    ##VUT-COVERAGE <version>     the version line, FIRST
+    ##<key>: <value>             header lines
+    SF:<path>                    a source file, opening a BLOCK
+    EX:<ranges>  CV:<ranges>     the line axis of that block
+    <TAG>:<points>               a registered measure of that block
+
+Blank lines are skipped wherever they stand. Trailing whitespace on a
+line is stripped before reading.
+
+
+------------------------------------------------------------------------------
+1  THE VERSION LINE
+------------------------------------------------------------------------------
+
+    ##VUT-COVERAGE 2
+
+FIRST line of the record. The number is decimal. A reader that does not
+write this version REFUSES; it does not attempt a partial reading.
+
+    1    the header named the run by NAME: '##test:' and '##choice:'
+    2    the header names RUN IDS: '##run:'      <- what this build writes
+
+
+------------------------------------------------------------------------------
+2  THE HEADER
+------------------------------------------------------------------------------
+
+Six keys, every one REQUIRED. A missing key is a refusal. Order is as
+written below; a reader accepts any order. Leading and trailing
+whitespace around key and value is stripped, so the column alignment
+below is cosmetic.
+
+    ##run:      <run ids>       WHO ran -- see 2.1
+    ##language: <name>          the language of the sources
+    ##tool:     <name>          the coverage tool that made the artifact
+    ##format:   <name>          the artifact format it was read from
+    ##counts:   no | yes        whether 'CV' carries hit counts -- see 4.3
+
+'language', 'tool' and 'format' are free text without commas. A MERGED
+record whose parts disagree on one of them carries every value it saw,
+comma separated and sorted ('coverage,trace').
+
+2.1  THE RUN LINE
+
+    ##run:      0.1             one run
+    ##run:      -               NO run: the record names none
+    ##run:      0.0,0.1,3       several runs: a MERGED record
+
+A run id is '<app id>' or '<app id>.<choice id>', both decimal, issued
+by the register of the test directory ('bookkeeper/test_id_db.py'). The
+value is a SET: ids sorted ascending, comma separated, no spaces. '-'
+is the empty set, which is what a record fresh from a reader carries
+until 'record.seated' gives it one.
+
+A word that spells no run id is a refusal, and the refusal names the
+word.
+
+
+------------------------------------------------------------------------------
+3  THE SOURCE FILE LINE
+------------------------------------------------------------------------------
+
+    SF:parser/core.py
+
+Opens a BLOCK and closes the one before it. The path is RELATIVE TO THE
+TEST DIRECTORY, with '/' as separator on every platform. It may leave
+the directory ('../core.py'); an aggregator rebases it onto the gather
+root.
+
+Blocks are written in ascending path order, so two runs of one test
+produce the same bytes.
+
+A block MUST carry 'EX' and 'CV'. A block missing either is a refusal.
+A source file that was not measured has NO block -- absence and
+emptiness do not collapse. A source file measured and found to hold no
+executable line has a block with an EMPTY 'EX'.
+
+
+------------------------------------------------------------------------------
+4  THE LINE AXIS
+------------------------------------------------------------------------------
+
+    EX:3+12,5+5        the ranges that COULD be executed
+    CV:3+12            the ranges that WERE
+
+Both are DELTA CODED range lists. 'uncovered = EX - CV' and every
+percentage are DERIVED by whoever renders; neither is stored.
+
+4.1  A RANGE
+
+Half-open: '[begin, end)', 'end' the first line AFTER the range. Ranges
+in one list are sorted, disjoint, and never adjacent -- two adjacent
+runs of lines are ONE range.
+
+4.2  THE DELTA CODING
+
+    <d>            a range of ONE line
+    <d>+<L>        a range of L lines
+
+'d' is the gap from the PREVIOUS range's end; the first 'd' is the
+first line number itself. So every 'd' is positive and small.
+
+    lines 3..14 and 20..24     ->    3+12,5+5
+    lines 3, 7, 40             ->    3,3,32
+
+An EMPTY list is the empty string: 'EX:' with nothing after the colon.
+
+REFUSALS: a piece that spells no number; a delta of zero or less (the
+ranges would not advance); a length below one (the range covers no
+line).
+
+4.3  HIT COUNTS
+
+OFF by default. The header's 'counts:' declares whether they stand, so
+a reader never guesses.
+
+    <d>*<C>        a one-line range hit C times
+    <d>+<L>*<C>    an L-line range hit C times
+
+Counts ride on 'CV' only. 'counts: yes' with a piece carrying no count
+is a refusal, and so is a count where the header promised none.
+
+A MERGE of records carrying counts is REFUSED by name
+('CountsNotMergeable'): the union of two ranges has no answer for two
+different counts over one line.
+
+
+------------------------------------------------------------------------------
+5  THE MEASURES
+------------------------------------------------------------------------------
+
+Every measurement that is not the line axis rides in its own line under
+the TAG its measure claims. A block with no such measurement writes no
+such line, so a record of line coverage alone is byte-identical to what
+it was before any measure existed.
+
+Measures are written in registered-NAME order, after 'EX' and 'CV'.
+A tag no measure claims is a refusal; the refusal names every tag this
+build knows. 'hwut.cov formats' prints the table this section
+describes, generated from the registry (RATIONALE D-13) -- when the two
+disagree, the generated one is right.
+
+5.1  REGISTERED MEASURES
+
+    TAG  NAME     SHAPE          MERGEABLE   WHAT IT COUNTS
+    BR   branch   point          no          of the arms leaving this
+                                             decision, how many were taken
+    MC   mcdc     point, same    no          of the conditions in this
+                  line admitted              decision, for how many was
+                                             independence demonstrated
+    TG   toggle   named point    YES         whether this signal bit
+                                             reached both 0 and 1
+    CP   cover    named point    YES         whether this cover point
+                                             was hit
+
+MERGEABLE says whether two records holding it may be unioned. 'branch'
+and 'mcdc' say no: a COUNT of arms taken does not carry WHICH arms, so
+two runs covering different arms cannot be combined. A merge of records
+carrying either is refused by name ('MeasureNotMergeable').
+
+5.2  THE POINT SHAPE  (BR, MC)
+
+    <d>*<covered>/<total>
+
+per DECISION POINT, comma separated, in line order. 'd' is the delta
+from the previous point's line; the first must advance from zero.
+
+    BR:2*1/2          line 2, one of two arms taken
+    MC:4*2/3,0*3/3    line 4, two decisions on it
+
+A delta of ZERO means ANOTHER DECISION ON THE SAME LINE, which
+'if (a && b || c)' produces. It is admitted for 'mcdc' and refused for
+'branch', which is reported per line.
+
+REFUSALS: a piece that spells no point; a first delta that does not
+advance from zero; a zero delta where the measure admits none; a total
+below one; 'covered' above 'total'.
+
+5.3  THE NAMED POINT SHAPE  (TG, CP)
+
+    <d>*<name>*<covered>/<total>
+
+per NAMED point, comma separated, in (line, name) order. The line is
+the point's DECLARED position -- a signal's declaration, a 'cover
+property' statement -- so several points share one line as a matter of
+course: a delta of zero is admitted from the SECOND point on.
+
+    TG:12*data[0]*1/1,0*data[1]*0/1
+
+THE NAME IS WHAT MAKES THE MEASURE MERGEABLE: point identity is
+carried, so two runs are unioned point by point and a point covered in
+either is covered.
+
+A name carrying '*' or ',' -- the encoding's own separators -- is
+REFUSED at writing. There is no escape scheme: a refusal is preferable
+to a corruption, and no witnessed identifier carries one.
+
+REFUSALS: as 5.2, plus a piece that names no point, and a MERGE where
+one (line, name) carries two different totals -- the two records do not
+describe one point.
+
+
+------------------------------------------------------------------------------
+6  A WHOLE RECORD
+------------------------------------------------------------------------------
+
+    ##VUT-COVERAGE 2
+    ##run:      0.1
+    ##language: c
+    ##tool:     gcov
+    ##format:   gcov-annotated
+    ##counts:   no
+    SF:parser/core.c
+    EX:3+12,5+5
+    CV:3+12
+    BR:5*1/2
+    SF:parser/table.c
+    EX:
+    CV:
+
+'table.c' was measured and holds no executable line. A source file that
+was NOT measured would have no block at all.
+
+
+------------------------------------------------------------------------------
+7  WHAT A READER REFUSES
+------------------------------------------------------------------------------
+
+Every refusal names the FIRST fault and stops. A coverage record half
+read is a coverage report that lies, so nothing recovers and carries
+on.
+
+    RecordFault            the record cannot be read
+      no version line, or one that spells no number
+      a version this build does not write
+      a header key missing
+      a 'run' word that spells no run id
+      a block without 'EX' or 'CV'
+      'EX', 'CV' or a measure line before any 'SF'
+      a line whose key is neither 'SF', 'EX', 'CV' nor a claimed tag
+      a range or count that spells no number
+      a delta that does not advance, a length below one
+      counts promised and absent, or given and not promised
+    MeasureFault           a measure line cannot be read -- see 5.2, 5.3
+    NotMergeable           the records cannot be unioned
+      CountsNotMergeable     one of them carries hit counts
+      MeasureNotMergeable    one of them carries a measure declaring
+                             itself unmergeable
+
+A file that does not parse is SKIPPED by an aggregator and named on
+stderr: one broken record must not cost a whole selection, and it must
+not vanish either. So is a record that names NO run -- it cannot be
+attributed, and a guess would be worse than the loss.

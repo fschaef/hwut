@@ -1,8 +1,7 @@
 
 --- the report, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: lua
          | ##tool:     luacov
          | ##format:   luacov-report
@@ -13,9 +12,8 @@
 INSPECT: uncovered = ((7, 8), (11, 12))   ratio = 0.7500
 
 --- a file whose largest count is four digits ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: lua
          | ##tool:     luacov
          | ##format:   luacov-report

@@ -7,6 +7,11 @@ INSPECT: test-fresh.py -> [2]
 INSPECT: after reload, test-later.py -> [3]
 --- remove one choice; its sibling keeps its id ---
 INSPECT: removed 0.0; 'y' still [0.1]; 'z' got [0.2]
+--- an aborted accept hands its id back ---
+INSPECT: gave back 0.1 (the last issued) -> mark stepped back: True
+         the next accept receives [0.1]
+INSPECT: gave back 0.0 (NOT the last) -> mark stepped back: False
+         the next accept receives [0.2]
 --- the ceiling ---
 INSPECT: a scope at ID_LIMIT asked to issue -> TestIdFault
   OK  : a removed entry is GONE -- no flag, no tombstone; only the mark remembers
@@ -15,6 +20,8 @@ INSPECT: a scope at ID_LIMIT asked to issue -> TestIdFault
   OK  : a sibling's id never moves when a choice is removed
   OK  : the retired choice id is not re-issued in its scope
   OK  : the 2**32nd id of a scope is refused by name
+  OK  : an aborted accept giving back the LAST id steps the mark back: nothing persisted ever carried that number
+  OK  : giving back an id that is NOT the last leaves the mark: lowering it would hand the later id out twice
   OK  : removing what was never registered is refused
 SUCCESS: removal deletes the name; the number is retired.
 <hwut-end>

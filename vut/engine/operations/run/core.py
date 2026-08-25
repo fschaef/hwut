@@ -130,7 +130,11 @@ def application_argv(configuration, choice_name):
                     / configuration.source_file)]
     if choice_name is not None:
         argv.append(str(choice_name))
-    return argv
+    #  COVERAGE wraps the call where the tool needs to (interpreted
+    #  languages); an instrumented binary measures itself and comes
+    #  back unchanged (coverage_action).
+    from ..coverage_action import wrapped_argv
+    return wrapped_argv(configuration, argv)
 
 
 async def read_all(reader):

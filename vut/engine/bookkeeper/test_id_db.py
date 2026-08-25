@@ -20,6 +20,15 @@ DESCRIPTION
        this directory by construction, meaningless outside it. A gather
        across directories qualifies at gather time and never stores.
 
+       GIVING BACK. 'hwut.accept' must name a run BEFORE it knows the
+       acceptance will stand -- a coverage record is seated at harvest.
+       So it allocates as usual and, if it aborts, calls
+       'give_back(run_id)': the id is removed and the scope's mark
+       steps back IF that id is still the last one issued. Where it is
+       not -- something else allocated in between -- the mark stands
+       and the number is simply retired. Both outcomes are safe under
+       the law below; no reservation, no transaction, no pending state.
+
        AN ID IS ISSUED ONCE AND NEVER AGAIN (bookkeeper RATIONALE B-2).
        Each scope counts from 0 upward; the next id is one above the
        highest that scope ever issued, and the file carries that
@@ -247,6 +256,44 @@ class TestIdDb:
         choice_db[choice_id] = fresh
         self._save()
         return old
+
+    def give_back(self, run_id):
+        """
+        RETURN: True,  the scope's mark stepped BACK: that id was the
+                       last one issued and is now unissued.
+                False, the entry is gone but the mark STANDS: something
+                       was issued after it, and lowering the mark would
+                       hand the later id out twice.
+
+        Raises TestIdFault where the run id is not registered.
+
+        FOR AN ABORTED ACCEPT, which must name a run before it knows
+        the acceptance will stand. Either outcome is safe: an id whose
+        mark stepped back reached no file that survives, and one whose
+        mark stands is simply retired (B-4).
+        """
+        if run_id.choice_id is None:
+            standing = self._app_db.get(run_id.app_id)
+            if standing is None:
+                raise TestIdFault("no app id %s is registered"
+                                  % run_id.app_id)
+            if self._choice_db[run_id.app_id]:
+                raise TestIdFault(
+                    "app %i still holds %i choice(s); give those back "
+                    "first" % (run_id.app_id,
+                               len(self._choice_db[run_id.app_id])))
+            self.remove_app(run_id.app_id)
+            if run_id.app_id + 1 != self._next_app: return False
+            self._next_app = run_id.app_id
+            self._save()
+            return True
+
+        self.remove_choice(run_id.app_id, run_id.choice_id)
+        mark = self._next_choice_db[run_id.app_id]
+        if run_id.choice_id + 1 != mark: return False
+        self._next_choice_db[run_id.app_id] = run_id.choice_id
+        self._save()
+        return True
 
     def remove_app(self, app_id):
         """

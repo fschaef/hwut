@@ -103,10 +103,19 @@ class Build(_Scope):
     record with 'framework' alone; the scope form states the rest.
 
     'caps' here caps the BUILD process; the caps at choice level cap the
-    RUN. One noun, one meaning, two places."""
-    framework:  str  | None = None
-    executable: str  | None = None
-    caps:       Caps | None = None
+    RUN. One noun, one meaning, two places.
+
+    'coverage_target' names the COVERAGE-CAPABLE application, as the
+    author's build rules know it ('cov-parse.exe'). Under 'hwut.cov'
+    that target is built and run in place of 'executable'; the name is
+    the whole communication with the build system. An author may name
+    it the same as 'executable'. REQUIRED under coverage: its absence
+    is noted as 'NO_COVERAGE_TARGET' on the run's book entry, and the
+    run continues with 'executable' (coverage RATIONALE D-19)."""
+    framework:       str  | None = None
+    executable:      str  | None = None
+    coverage_target: str  | None = None
+    caps:            Caps | None = None
 
 
 @dataclass(frozen=True, slots=True)

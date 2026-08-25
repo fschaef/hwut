@@ -13,6 +13,9 @@ healing      rename keeps the id and touches ONE entry; collisions and
              unknown ids are refused by name.
 retire       removal deletes the entry; the id is never issued again,
              across a reload too; the ceiling refuses by name.
+give_back    an ABORTED accept hands its id back: the mark steps back
+             where that id was the last issued, and stands where it
+             was not.
 tables       the file round-trips, marks included; a rename in between
              survives it.
 faults       every unreadable register, refused by name -- versions 1,
@@ -189,6 +192,21 @@ def test_retire():
     print("INSPECT: removed 0.0; 'y' still [%s]; 'z' got [%s]"
           % (both.run_id_of("a.py", "y"), next_id))
 
+    print("--- an aborted accept hands its id back ---")
+    aborting = TestIdDb(_place())
+    first    = aborting.run_id_of("a.py", "x", allocate_f=True)
+    last     = aborting.run_id_of("a.py", "y", allocate_f=True)
+    stepped  = aborting.give_back(last)
+    after    = aborting.run_id_of("a.py", "z", allocate_f=True)
+    print("INSPECT: gave back %s (the last issued) -> mark stepped back: %s"
+          % (last, stepped))
+    print("         the next accept receives [%s]" % after)
+    held       = aborting.give_back(first)
+    held_after = aborting.run_id_of("a.py", "w", allocate_f=True)
+    print("INSPECT: gave back %s (NOT the last) -> mark stepped back: %s"
+          % (first, held))
+    print("         the next accept receives [%s]" % held_after)
+
     print("--- the ceiling ---")
     full = TestIdDb(_place())
     full._next_app = ID_LIMIT
@@ -209,6 +227,12 @@ def test_retire():
          "the retired choice id is not re-issued in its scope"),
         (ceiling == "TestIdFault",
          "the 2**32nd id of a scope is refused by name"),
+        (stepped is True and str(after) == "0.1",
+         "an aborted accept giving back the LAST id steps the mark "
+         "back: nothing persisted ever carried that number"),
+        (held is False and str(held_after) == "0.2",
+         "giving back an id that is NOT the last leaves the mark: "
+         "lowering it would hand the later id out twice"),
         (_raised(lambda: db.remove_app(9)) == "TestIdFault",
          "removing what was never registered is refused"),
     ])

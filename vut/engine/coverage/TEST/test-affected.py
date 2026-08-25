@@ -47,6 +47,7 @@ import config                                                   # noqa: F401
 from vut.language_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record   import ranges_of, FileCoverage, \
                                          CoverageRecord, format_record
+from vut.engine.bookkeeper.test_run_id import TestRunId
 from vut.engine.coverage.affected import (change_db_of_diff, main,
                                           E_ExitCode)
 
@@ -112,14 +113,18 @@ def build_fixture():
     """
     root = tempfile.mkdtemp(prefix="vut_affected_")
 
-    def place(sub, test, choice, line_iterable, source):
-        """RETURN: None. Writes one record where a run would leave it."""
+    def place(sub, test, choice, line_iterable, source, run):
+        """RETURN: None. Writes one record where a run would leave it.
+
+        'run' is the id the directory's register issued for that
+        (test, choice); the record carries it, and the file name still
+        carries the names because the STORE names files that way."""
         directory = os.path.join(root, sub)
         os.makedirs(directory, exist_ok=True)
         record = CoverageRecord(
             language="python", tool="coverage",
             source="coverage.py-json", counts_f=False,
-            test=test, choice=choice,
+            run=frozenset([run]),
             file_db={source: FileCoverage(source,
                                           ranges_of(line_iterable),
                                           ranges_of(line_iterable))})
@@ -132,11 +137,11 @@ def build_fixture():
     #  (D-4). Two different directories therefore spell ONE file two
     #  ways, and the face rebases both onto 'parser/core.py'.
     place("parser/TEST", "test-parse.py", "basic", range(1, 11),
-          "../core.py")
+          "../core.py", TestRunId(0, 0))
     place("parser/TEST", "test-parse.py", "deep",  range(6, 21),
-          "../core.py")
+          "../core.py", TestRunId(0, 1))
     place("other/TEST",  "test-other.py", None,    range(50, 53),
-          "../../parser/core.py")
+          "../../parser/core.py", TestRunId(0))
     return root
 
 

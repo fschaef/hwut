@@ -7,9 +7,9 @@ This document is the procedure for ADMITTING ONE MORE COVERAGE TOOL
 into the component: what to do, in what order, and where each piece
 goes. It is walked once per tool, by a developer of this component.
 
-It does not explain how a test run OBTAINS coverage -- that lifecycle
-(elect, instrument, probe, run, report, harvest, merge) belongs to the
-'hwut.cov' service and its manual. And it does not restate the laws of
+It does not explain how a test run OBTAINS coverage -- that chain
+(build the coverage target, wrap, report, harvest) is README section 5
+and RATIONALE D-19, built in 'operations/coverage_action.py'. And it does not restate the laws of
 the record or of a reader; those live in README.txt and RATIONALE.txt
 and are only POINTED AT from here.
 

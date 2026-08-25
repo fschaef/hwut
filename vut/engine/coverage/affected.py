@@ -141,36 +141,35 @@ def change_db_of_diff(text, strip=1):
 
 # ---------------------------------------------------------------- records
 
-def record_iterable(root, suffix=RECORD_SUFFIX, resolve=None):
+def record_iterable(root, suffix=RECORD_SUFFIX):
     """
     YIELD: [0] Gathered         who made the record, AS THIS GATHER SEES
-                                IT: the RUN ID of the record's own
-                                'test'/'choice', qualified by the
-                                DIRECTORY it was found in, relative to
-                                'root'. The qualification is THIS
-                                gather's and is never stored (D-14).
+                                IT: a RUN ID the record's own header
+                                names, qualified by the DIRECTORY it was
+                                found in, relative to 'root'. The
+                                qualification is THIS gather's and is
+                                never stored (D-14).
            [1] CoverageRecord   what it says
 
-    'resolve(directory, test, choice) -> TestRunId' turns the record's
-    NAMES into the register's NUMBERS. THE SEAM TO THE REGISTER: a face
-    above hands in one backed by 'test_id_db' and gets the directory's
-    real ids; omitted, '_local_resolver' numbers within this gather
-    only, and says so where it is defined. Coverage never reads the
-    register itself -- it is the leaf and imports nothing outward.
+    THE RECORD CARRIES ITS OWN IDS (D-18), so nothing here resolves a
+    name: the register issued them and only the EDGE that prints an
+    answer needs it to decode. A MERGED record names several runs and
+    is yielded once per run -- the fold is over runs, and an aggregate
+    that reached a line means every run in it reached that line.
 
     THE WALK IS SORTED so that the fold allocates group ids identically
     from any two invocations over one tree: found-directory first, then
-    the record file's name.
+    the record file's name, then the run id.
 
     THE SEAM. The store's naming is the BOOKKEEPER'S; walking for a
     suffix is a stand-in until this face can ask it. Nothing else in this
     module knows where a record lives.
 
-    A file that does not parse is SKIPPED and named on stderr: one broken
-    record must not cost the whole selection, and it must not vanish
-    either.
+    A file that does not parse is SKIPPED and named on stderr, and so is
+    one that names NO run -- it cannot be attributed, and attributing it
+    to a guess is worse than losing it. One broken record must not cost
+    the whole selection, and it must not vanish either.
     """
-    if resolve is None: resolve = _local_resolver()
     for base, dir_list, file_list in sorted(os.walk(root)):
         dir_list[:] = sorted(d for d in dir_list if not d.startswith("."))
         for name in sorted(file_list):
@@ -182,43 +181,15 @@ def record_iterable(root, suffix=RECORD_SUFFIX, resolve=None):
             except (OSError, RecordFault) as fault:
                 sys.stderr.write("skipped '%s': %s\n" % (path, fault))
                 continue
-            relative = os.path.relpath(base, root).replace(os.sep, "/")
+            relative  = os.path.relpath(base, root).replace(os.sep, "/")
             directory = None if relative == "." else relative
-            yield (Gathered(directory,
-                            resolve(directory, record.test,
-                                    record.choice)),
-                   rebased(record, directory))
-
-
-def _local_resolver():
-    """
-    RETURN: callable, 'resolve(directory, test, choice) -> TestRunId',
-            numbering from 0 upward per scope as names are first met.
-
-    A STAND-IN, and it says which kind. The REGISTER's ids are the
-    directory's own and stand across invocations; these stand only
-    within THIS gather, in the register's own shape and by the
-    register's own rule (from 0, one above the last issued, per
-    scope), so that a face which later hands in the real resolver
-    changes the NUMBERS and nothing else. Used where no register was
-    handed in -- a walk over a tree this process does not administer.
-    """
-    app_db    = {}      # directory -> {app name: app_id}
-    choice_db = {}      # (directory, app_id) -> {choice name: id}
-
-    def resolve(directory, test, choice):
-        """RETURN: TestRunId of that run, allocating on first sight."""
-        name_db = app_db.setdefault(directory, {})
-        if test not in name_db:
-            name_db[test] = len(name_db)
-        app_id = name_db[test]
-        if choice is None: return TestRunId(app_id)
-        seen = choice_db.setdefault((directory, app_id), {})
-        if choice not in seen:
-            seen[choice] = len(seen)
-        return TestRunId(app_id, seen[choice])
-
-    return resolve
+            if not record.run:
+                sys.stderr.write("skipped '%s': the record names no run\n"
+                                 % path)
+                continue
+            for run_id in sorted(record.run):
+                yield (Gathered(directory, run_id),
+                       rebased(record, directory))
 
 
 def rebased(record, directory):
@@ -244,7 +215,7 @@ def rebased(record, directory):
     return CoverageRecord(language=record.language, tool=record.tool,
                           source=record.source, counts_f=record.counts_f,
                           file_db=file_db, version=record.version,
-                          test=record.test, choice=record.choice)
+                          run=record.run)
 
 
 # ------------------------------------------------------------------- face

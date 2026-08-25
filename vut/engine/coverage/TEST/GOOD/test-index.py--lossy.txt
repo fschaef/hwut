@@ -1,15 +1,14 @@
 
 --- merge answers WHAT the suite reached ---
 INSPECT: core.py covered = ((1, 21),)
-         test = 'test-parse.py'  choice = 'basic,deep'
+         run  = 0.0,0.1
          -- who covered line 3? the merged record cannot say.
 
 --- the index answers WHO reached it ---
 INSPECT: core.py:3  -> 0.0
          core.py:15 -> 0.1
   OK  : merge unions the ranges -- the whole span, one range
-  OK  : provenance that agrees is carried
-  OK  : provenance that differs is JOINED -- the mixture is visible, but not per line
+  OK  : the merged record names BOTH runs -- the mixture is visible, but not per line
   OK  : the index keeps per line what the merge folds away
   OK  : and it distinguishes the two runs the merge fused
 SUCCESS: two questions, two folds, one set of per-run records.

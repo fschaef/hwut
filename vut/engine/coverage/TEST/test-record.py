@@ -20,15 +20,18 @@ encoding   the delta coding: 'd+L' per range, 'd' alone where a range
            is one line, 'd+L*C' where counts are recorded. Encode and
            decode are inverse over every shape, the empty one included.
 
-roundtrip  a whole record through 'format_record' and back: header
-           provenance (language, tool, format, counts) survives, file
-           blocks survive, and the bytes are stable because files are
-           written sorted.
+roundtrip  a whole record through 'format_record' and back: the 'run'
+           line naming the RUN IDS this record is of, header provenance
+           (language, tool, format, counts), file blocks -- all survive,
+           and the bytes are stable because files are written sorted.
+           A record fresh from a reader names no run and says '-';
+           'seated' is the one seam that gives it one.
 
 merge      the union across records: associative and commutative, so an
            aggregate does not depend on the order it walked. Provenance
            that AGREES is carried; provenance that DIFFERS is joined, so
-           a non-uniform aggregate shows that it is one.
+           a non-uniform aggregate shows that it is one. THE RUNS ARE
+           UNIONED, so a merged record names every run that made it.
 
 faults     what a record must never be read as: an unstated version, a
            missing header field, a block without 'EX' or 'CV', a delta
@@ -50,8 +53,9 @@ from vut.engine.coverage.record       import (ranges_of, union, subtract,
                                               line_n, encode, decode,
                                               FileCoverage, CoverageRecord,
                                               format_record, parse_record,
-                                              merge, RecordFault,
+                                              merge, seated, RecordFault,
                                               CountsNotMergeable)
+from vut.engine.bookkeeper.test_run_id import TestRunId
 from vut.engine.coverage.configuration import CoverageConfig, CoverageRefused
 from vut.engine.coverage.registry      import (language_of,
                                                candidate_tuple_of, elect)
@@ -204,8 +208,7 @@ def test_encoding():
 def test_roundtrip():
     """A whole record, out and back."""
     record = CoverageRecord(
-        test     = "test-parse.py",
-        choice   = "basic",
+        run      = frozenset([TestRunId(0, 1)]),
         language = "python",
         tool     = "coverage",
         source   = "coverage.py-json",
@@ -226,7 +229,8 @@ def test_roundtrip():
 
     back = parse_record(text)
     banner("read back")
-    print("INSPECT: test=%s choice=%s" % (back.test, back.choice))
+    print("INSPECT: run=%s"
+          % ",".join(str(r) for r in sorted(back.run)))
     print("         language=%s tool=%s format=%s counts=%s"
           % (back.language, back.tool, back.source, back.counts_f))
     for path in sorted(back.file_db):
@@ -236,11 +240,27 @@ def test_roundtrip():
               % (path, entry.executable, entry.covered,
                  entry.uncovered, ratio))
 
+    banner("fresh from a reader: no run, and it SAYS so")
+    fresh = CoverageRecord("python", "coverage", "coverage.py-json",
+                           file_db=record.file_db)
+    print("INSPECT: %s" % format_record(fresh).splitlines()[1])
+    print("         seated -> %s"
+          % format_record(seated(fresh, TestRunId(4, 2))).splitlines()[1])
+
     ok = check([
         (format_record(back) == text,
          "format(parse(format(x))) == format(x) -- the bytes are stable"),
-        (back.test == "test-parse.py" and back.choice == "basic",
-         "the header names the RUN this record is of"),
+        (not fresh.run and format_record(fresh).splitlines()[1]
+                           == "##run:      -",
+         "a reader's record names no run, and the absence is SPOKEN"),
+        (seated(fresh, TestRunId(4, 2)).run
+         == frozenset([TestRunId(4, 2)]),
+         "'seated' is the one seam that gives a record its run"),
+        (parse_record(format_record(fresh)).run == frozenset(),
+         "and '-' reads back as no run, not as a run named '-'"),
+        (back.run == frozenset([TestRunId(0, 1)]),
+         "the header names the RUN this record is of, by the id the "
+         "register issued"),
         (back.language == "python" and back.tool == "coverage"
          and back.source == "coverage.py-json",
          "the header's provenance survives: language, tool, format"),
@@ -268,9 +288,12 @@ def test_merge():
                                                   ranges_of(executable),
                                                   ranges_of(covered))})
 
-    a = made_by("coverage", "core.py", range(1, 21), range(1, 6))
-    b = made_by("coverage", "core.py", range(1, 21), range(15, 21))
-    c = made_by("coverage", "other.py", range(1, 5), range(1, 3))
+    a = seated(made_by("coverage", "core.py", range(1, 21), range(1, 6)),
+               TestRunId(0, 0))
+    b = seated(made_by("coverage", "core.py", range(1, 21), range(15, 21)),
+               TestRunId(0, 1))
+    c = seated(made_by("coverage", "other.py", range(1, 5), range(1, 3)),
+               TestRunId(2))
 
     banner("two runs of one file")
     both = merge([a, b])
@@ -283,6 +306,11 @@ def test_merge():
     banner("order does not matter")
     print("INSPECT: merge(a,b) == merge(b,a) -> %s"
           % (format_record(merge([a, b])) == format_record(merge([b, a]))))
+
+    banner("the merged record names EVERY run that made it")
+    print("INSPECT: %s" % format_record(both).splitlines()[1])
+    print("         and with a third: %s"
+          % format_record(merge([a, b, c])).splitlines()[1])
 
     banner("provenance that differs is JOINED, so it is visible")
     mixed = merge([a, made_by("trace", "core.py", range(1, 21), [7])])
@@ -311,6 +339,12 @@ def test_merge():
          "merge is associative -- byte for byte"),
         (mixed.tool == "coverage,trace",
          "a non-uniform aggregate SHOWS that it is one"),
+        (both.run == frozenset([TestRunId(0, 0), TestRunId(0, 1)]),
+         "the merged record names both runs -- the union, in one line"),
+        (format_record(merge([a, b, c])).splitlines()[1]
+         == "##run:      0.0,0.1,2",
+         "sorted and comma separated: the spelling a group table uses "
+         "for a set"),
         (merge([a, a]).file_db["core.py"].covered
          == a.file_db["core.py"].covered,
          "merge is idempotent: a record merged with itself is itself"),
@@ -324,26 +358,32 @@ def test_merge():
 
 def test_faults():
     """What a record must never be read as."""
-    good = ("##VUT-COVERAGE 1\n##test:     a\n##choice:   basic\n"
+    good = ("##VUT-COVERAGE 2\n##run:      0.0\n"
             "##language: python\n##tool:     coverage\n"
             "##format:   coverage.py-json\n##counts:   no\n"
             "SF:a.py\nEX:1+3\nCV:1\n")
 
     case_list = [
         ("no version",
-         good.replace("##VUT-COVERAGE 1\n", "")),
+         good.replace("##VUT-COVERAGE 2\n", "")),
         ("a version this reader does not know",
-         good.replace("VUT-COVERAGE 1", "VUT-COVERAGE 7")),
+         good.replace("VUT-COVERAGE 2", "VUT-COVERAGE 7")),
+        ("version 1, which named the run by NAME",
+         "##VUT-COVERAGE 1\n##test: a\n##choice: basic\n"
+         "##language: python\n##tool: coverage\n##format: x\n"
+         "##counts: no\nSF:a.py\nEX:1\nCV:1\n"),
         ("no 'tool' in the header",
          good.replace("##tool:     coverage\n", "")),
-        ("no 'test' in the header -- the run would be anonymous",
-         good.replace("##test:     a\n", "")),
-        ("no 'choice' in the header",
-         good.replace("##choice:   basic\n", "")),
+        ("no 'run' in the header -- the record would be anonymous",
+         good.replace("##run:      0.0\n", "")),
+        ("a 'run' that spells no run id",
+         good.replace("##run:      0.0", "##run:      basic")),
+        ("one bad id among good ones",
+         good.replace("##run:      0.0", "##run:      0.0,x,2")),
         ("a block without 'CV'",
          good.replace("CV:1\n", "")),
         ("'EX' before any 'SF'",
-         "##VUT-COVERAGE 1\n##test: a\n##choice: -\n##language: python\n"
+         "##VUT-COVERAGE 2\n##run: -\n##language: python\n"
          "##tool: coverage\n##format: x\n##counts: no\nEX:1\n"),
         ("a delta that does not advance",
          good.replace("CV:1", "CV:0")),
@@ -373,7 +413,7 @@ def test_faults():
     ok = check(result_list + [
         (record.file_db["a.py"].executable == ((1, 4),),
          "the well-formed record still reads"),
-        (record.test == "a" and record.choice == "basic",
+        (record.run == frozenset([TestRunId(0, 0)]),
          "and it names the run it is of"),
     ])
     verdict(ok, "a record is read whole or refused by name; never half.")

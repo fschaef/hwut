@@ -62,6 +62,7 @@ from vut.engine.coverage.record  import (ranges_of, FileCoverage,
                                          CoverageRecord, format_record,
                                          parse_record, merge,
                                          MeasureNotMergeable, RecordFault)
+from vut.engine.bookkeeper.test_run_id import TestRunId
 
 
 def banner(label):
@@ -103,7 +104,7 @@ def record_with(measure_db):
     """RETURN: CoverageRecord of one file carrying those measures."""
     return CoverageRecord(
         language="c", tool="gcov", source="gcov-annotated", counts_f=False,
-        test="test-parse.py", choice="basic",
+        run=frozenset([TestRunId(0, 0)]),
         file_db={"core.c": FileCoverage("core.c",
                                         ranges_of([1, 2, 3, 4]),
                                         ranges_of([1, 2, 4]),

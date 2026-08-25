@@ -86,6 +86,12 @@ class TestConfiguration:
     interpreter:    Optional[Sequence[str]] = None   # INTERPRETED only
     build:          object                  = None   # COMPILED only
     store:          object                  = None   # None: do not record
+    coverage:       object                  = None   # None: coverage not
+                                            # asked; else the coverage
+                                            # step's own struct
+                                            # ('coverage_action.
+                                            # CoverageSetup'), held
+                                            # verbatim
     execute:        Optional[Sequence[str]] = None   # THE CALL, STATED
                                             # VERBATIM (R-68): where an
                                             # author states how the

@@ -1,8 +1,7 @@
 
 --- the report, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: vhdl
          | ##tool:     ghdl
          | ##format:   ghdl-psl-json

@@ -1,8 +1,7 @@
 
 --- the resultset, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: ruby
          | ##tool:     simplecov
          | ##format:   simplecov-resultset

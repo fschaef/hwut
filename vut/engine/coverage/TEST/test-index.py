@@ -78,7 +78,7 @@ def verdict(ok, sentence):
     print("%s: %s" % ("SUCCESS" if ok else "FAILURE", sentence))
 
 
-def record_of(test, choice, file_db):
+def record_of(run, file_db):
     """
     RETURN: CoverageRecord, of one run; 'file_db' maps a path to the
             LINES it covered.
@@ -86,7 +86,7 @@ def record_of(test, choice, file_db):
     return CoverageRecord(
         language = "python", tool = "coverage",
         source   = "coverage.py-json", counts_f = False,
-        test     = test, choice = choice,
+        run      = frozenset([run]),
         file_db  = {path: FileCoverage(path, ranges_of(line_iterable),
                                        ranges_of(line_iterable))
                     for path, line_iterable in file_db.items()})
@@ -102,12 +102,10 @@ A_ORIGIN = TestRunId(0, 0)
 B_ORIGIN = TestRunId(0, 1)
 C_ORIGIN = Gathered("engine/TEST", TestRunId(1))
 
-A_RECORD = record_of("test-parse.py", "basic",
+A_RECORD = record_of(A_ORIGIN,
                      {"core.py": range(1, 11), "only_a.py": range(1, 4)})
-B_RECORD = record_of("test-parse.py", "deep",
-                     {"core.py": range(6, 21)})
-C_RECORD = record_of("test-other.py", None,
-                     {"core.py": range(40, 43)})
+B_RECORD = record_of(B_ORIGIN, {"core.py": range(6, 21)})
+C_RECORD = record_of(C_ORIGIN.run_id, {"core.py": range(40, 43)})
 
 
 def raised(action):
@@ -178,8 +176,8 @@ def test_segments():
 
     banner("two runs that merely TOUCH do not overlap")
     touching = index_of([
-        (A_ORIGIN, record_of("t", "a", {"x.py": range(1, 6)})),
-        (B_ORIGIN, record_of("t", "b", {"x.py": range(6, 11)}))])
+        (A_ORIGIN, record_of(A_ORIGIN, {"x.py": range(1, 6)})),
+        (B_ORIGIN, record_of(B_ORIGIN, {"x.py": range(6, 11)}))])
     for (begin, end), origin_set in touching.segment_iterable("x.py"):
         print("         [%3i,%3i)  %s" % (begin, end, named(origin_set)))
 
@@ -297,7 +295,7 @@ def test_change():
 def test_economy():
     """One segment for a file one run reaches whole."""
     whole = index_of([(A_ORIGIN,
-                       record_of("t", "a", {"big.py": range(1, 5001)}))])
+                       record_of(A_ORIGIN, {"big.py": range(1, 5001)}))])
     segment_list = list(whole.segment_iterable("big.py"))
     banner("5000 lines, one run")
     for (begin, end), origin_set in segment_list:
@@ -305,8 +303,8 @@ def test_economy():
 
     banner("5000 lines, two runs splitting it in half")
     halved = index_of([
-        (A_ORIGIN, record_of("t", "a", {"big.py": range(1, 2501)})),
-        (B_ORIGIN, record_of("t", "b", {"big.py": range(2501, 5001)}))])
+        (A_ORIGIN, record_of(A_ORIGIN, {"big.py": range(1, 2501)})),
+        (B_ORIGIN, record_of(B_ORIGIN, {"big.py": range(2501, 5001)}))])
     print("         segments: %i" % len(list(halved.segment_iterable("big.py"))))
 
     ok = check([
@@ -332,8 +330,8 @@ def test_lossy():
     banner("merge answers WHAT the suite reached")
     print("INSPECT: core.py covered = %s"
           % (merged.file_db["core.py"].covered,))
-    print("         test = '%s'  choice = '%s'"
-          % (merged.test, merged.choice))
+    print("         run  = %s"
+          % ",".join(str(r) for r in sorted(merged.run)))
     print("         -- who covered line 3? the merged record cannot say.")
 
     banner("the index answers WHO reached it")
@@ -343,10 +341,8 @@ def test_lossy():
     ok = check([
         (merged.file_db["core.py"].covered == ((1, 21),),
          "merge unions the ranges -- the whole span, one range"),
-        (merged.test == "test-parse.py",
-         "provenance that agrees is carried"),
-        (merged.choice == "basic,deep",
-         "provenance that differs is JOINED -- the mixture is visible, "
+        (merged.run == frozenset([A_ORIGIN, B_ORIGIN]),
+         "the merged record names BOTH runs -- the mixture is visible, "
          "but not per line"),
         (index.of_line("core.py", 3) == frozenset([A_ORIGIN]),
          "the index keeps per line what the merge folds away"),

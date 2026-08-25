@@ -130,3 +130,31 @@ GRAVEYARD The group table as a third table INSIDE 'test_id_db.py': one
           file for two lifetimes -- a register entry is removed, a
           group never is -- and a name/number table beside a
           set/number table.
+
+
+B-4  AN ABORTED ACCEPT HANDS ITS ID BACK                       (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM   A coverage record is seated with a run id at HARVEST, which is
+          during the run 'hwut.accept' performs -- before the acceptance
+          is known to stand. So accept must name a run it may not keep.
+          A run OUTSIDE accept presupposes a registered choice and asks
+          nothing new; only accept's own run does.
+DECISION  ACCEPT ALLOCATES AS USUAL and, if it aborts, calls
+          'give_back(run_id)'. The entry is removed, and the scope's
+          mark STEPS BACK where that id was the last one issued; where
+          something was issued after it, the mark STANDS and the number
+          is simply retired.
+          Both outcomes keep B-2: an id whose mark stepped back reached
+          no file that survives (the register is rewritten in the same
+          call), and a retired one is never issued again by definition.
+          NO MACHINERY: no reservation, no transaction, no pending
+          state, nothing to recover after a crash. A crashed accept
+          leaves a registered name whose test never blessed, which
+          'vanished()' and 'hwut.sanitize --unregistered' already
+          describe.
+COST      One method and one printing section in the register's 'retire'
+          choice.
+GRAVEYARD 'reserve' / 'commit' / 'discard' as a transaction over the
+          register: a second lifetime for an entry, a file that must be
+          understood in two states, and a recovery question for every
+          crash between the two calls.

@@ -1,8 +1,7 @@
 
 --- the document, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: verilog
          | ##tool:     ucis
          | ##format:   ucis-xml

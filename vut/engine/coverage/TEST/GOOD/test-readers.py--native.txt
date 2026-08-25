@@ -1,8 +1,7 @@
 
 --- the artifact, read whole ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: verilog
          | ##tool:     verilator
          | ##format:   verilator-dat

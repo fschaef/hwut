@@ -153,8 +153,8 @@ def record_of(reader, language, entry_iterable, counts_f=False):
             covered_lines, count_list) tuples -- the ONE place a reader
             turns its findings into the homogeneous shape.
 
-    'test' and 'choice' are left empty here: a reader knows the ARTIFACT,
-    not the run. The caller that knows the key seats them (D-8).
+    'run' is left EMPTY here: a reader knows the ARTIFACT, not the run.
+    The caller that knows the id seats it ('record.seated', D-8, D-18).
     """
     file_db = {}
     for path, executable, covered, count_list in entry_iterable:

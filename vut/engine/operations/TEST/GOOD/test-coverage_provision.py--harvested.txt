@@ -1,0 +1,18 @@
+INSPECT: verdict False report nominal-file-not-found
+         coverage on the entry: ok
+         record: .hwut-store/demo.cover
+           | ##VUT-COVERAGE 2
+           | ##run:      0.0
+           | ##language: python
+           | ##tool:     witness
+           | ##format:   witness-json
+           | ##counts:   no
+           | SF:demo.py
+           | EX:1+6
+  OK  : the step concluded OK, and the book entry says so
+  OK  : the record lives in the store's own ground, never in OUT/
+  OK  : the record is SEATED with the run id handed in
+  OK  : and carries what the reader read
+  OK  : the subject is what the application printed -- the wrapper added nothing to what is judged
+SUCCESS: the run's closing act harvests, seats, stores, and the book says 'ok'.
+<hwut-end>

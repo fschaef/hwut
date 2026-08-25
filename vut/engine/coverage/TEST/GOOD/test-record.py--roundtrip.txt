@@ -1,8 +1,7 @@
 
 --- the stored form ---
-    | ##VUT-COVERAGE 1
-    | ##test:     test-parse.py
-    | ##choice:   basic
+    | ##VUT-COVERAGE 2
+    | ##run:      0.1
     | ##language: python
     | ##tool:     coverage
     | ##format:   coverage.py-json
@@ -18,13 +17,20 @@
     | CV:1+3
 
 --- read back ---
-INSPECT: test=test-parse.py choice=basic
+INSPECT: run=0.1
          language=python tool=coverage format=coverage.py-json counts=False
          nothing.py           EX=() CV=() uncovered=() ratio=none
          parser/core.py       EX=((3, 15),) CV=((3, 10),) uncovered=((10, 15),) ratio=0.583
          parser/grammar.py    EX=((1, 4),) CV=((1, 4),) uncovered=() ratio=1.000
+
+--- fresh from a reader: no run, and it SAYS so ---
+INSPECT: ##run:      -
+         seated -> ##run:      4.2
   OK  : format(parse(format(x))) == format(x) -- the bytes are stable
-  OK  : the header names the RUN this record is of
+  OK  : a reader's record names no run, and the absence is SPOKEN
+  OK  : 'seated' is the one seam that gives a record its run
+  OK  : and '-' reads back as no run, not as a run named '-'
+  OK  : the header names the RUN this record is of, by the id the register issued
   OK  : the header's provenance survives: language, tool, format
   OK  : and whether counts were recorded
   OK  : every source file survives

@@ -63,9 +63,11 @@ from typing      import Iterable, Mapping, Sequence
 
 from .measure import (measure_of_tag, name_tuple as measure_name_tuple,
                       measure_of, tag_tuple, MeasureFault)
+from ..bookkeeper.test_run_id import (TestRunId, run_id_of_text,
+                                      RunIdFault)
 
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 
 _COMMENT = "##"
 
@@ -302,18 +304,25 @@ class CoverageRecord:
     Same law as the book entry: a record is HISTORY, and the
     configuration may have moved since.
 
-    'test' and 'choice' name THE RUN THIS IS OF. In the store they are
-    the key and need not be written; away from the store the record
-    would be anonymous, and an INDEX over many records could then only
-    guess which run reached which line from the path it was found at.
-    So the header carries them (RATIONALE D-8). 'choice' is None for the
-    choice-less test and is written '-', as the runner's own DOWN
-    grammar already spells it.
+    'run' NAMES THE RUNS THIS IS OF, as RUN IDS the register issued
+    (bookkeeper B-2). In the store the key would do; away from the store
+    the record would be anonymous, and an INDEX over many records could
+    then only guess which run reached which line from the path it was
+    found at. So the header carries them (RATIONALE D-8, D-18).
 
-    A record fresh from a READER carries neither: a reader knows the
-    ARTIFACT, not the run, and the caller that holds the key seats them.
-    That absence is SPOKEN as '-' too -- an empty field would be a byte
-    nobody meant, and a header that merely looked complete.
+    A SET, not one id, because 'merge' unions records: a merged record
+    is of several runs and its header says so. One run is the common
+    case and spells one id.
+
+    IDS, NOT NAMES: an id is issued once and never re-used, so a record
+    that travelled decodes to the same test or to 'no longer
+    registered', never to another test -- and a rename touches no record
+    anywhere.
+
+    A record fresh from a READER carries the EMPTY set: a reader knows
+    the ARTIFACT, not the run, and the caller that holds the id seats it
+    ('seated'). That absence is SPOKEN as '-' -- an empty field would be
+    a byte nobody meant, and a header that merely looked complete.
     """
     language:  str
     tool:      str
@@ -321,8 +330,55 @@ class CoverageRecord:
     counts_f:  bool                    = False
     file_db:   Mapping[str, FileCoverage] = field(default_factory=dict)
     version:   int                     = FORMAT_VERSION
-    test:      str                     = ""
-    choice:    str | None              = None
+    run:       frozenset               = frozenset()
+
+
+def seated(record, run):
+    """
+    RETURN: CoverageRecord, the same record naming 'run' -- a TestRunId,
+            or any iterable of them.
+
+    THE ONE SEAM between a reader (which knows the artifact) and the
+    caller that knows which run made it.
+    """
+    run_set = frozenset([run]) if isinstance(run, TestRunId) \
+              else frozenset(run)
+    return CoverageRecord(language = record.language,
+                          tool     = record.tool,
+                          source   = record.source,
+                          counts_f = record.counts_f,
+                          file_db  = record.file_db,
+                          version  = record.version,
+                          run      = run_set)
+
+
+def run_text_of(run_set):
+    """
+    RETURN: str, the run ids sorted and comma separated -- the spelling
+            a group table uses for a set.
+            '-', where the set is empty: the record names no run.
+    """
+    return ",".join(str(r) for r in sorted(run_set)) if run_set else "-"
+
+
+def run_set_of_text(text):
+    """
+    RETURN: frozenset of TestRunId, what the header's 'run:' spells;
+            empty for '-'.
+
+    Raises RecordFault where a word spells no run id -- naming the word,
+    because a record whose attribution cannot be read must not be half
+    read.
+    """
+    if text.strip() == "-": return frozenset()
+    result = []
+    for word in text.split(","):
+        if not word.strip(): continue
+        try:               result.append(run_id_of_text(word))
+        except RunIdFault as fault:
+            raise RecordFault("the header's 'run' names '%s': %s"
+                              % (word.strip(), fault))
+    return frozenset(result)
 
 
 def format_record(record) -> str:
@@ -332,11 +388,8 @@ def format_record(record) -> str:
             produce the same bytes.
     """
     line_list = ["%sVUT-COVERAGE %i" % (_COMMENT, record.version),
-                 "%stest:     %s"    % (_COMMENT,
-                                        record.test if record.test else "-"),
-                 "%schoice:   %s"    % (_COMMENT,
-                                        record.choice
-                                        if record.choice is not None else "-"),
+                 "%srun:      %s"    % (_COMMENT,
+                                        run_text_of(record.run)),
                  "%slanguage: %s"    % (_COMMENT, record.language),
                  "%stool:     %s"    % (_COMMENT, record.tool),
                  "%sformat:   %s"    % (_COMMENT, record.source),
@@ -427,9 +480,11 @@ def parse_record(text):
         raise RecordFault("the header names no format version")
     if version != FORMAT_VERSION:
         raise RecordFault("format version %i is not %i -- this reader "
-                          "does not pretend to read it"
+                          "does not pretend to read it. Version 1 named "
+                          "the run by NAME ('test:', 'choice:'); a "
+                          "record names RUN IDS now (D-18)."
                           % (version, FORMAT_VERSION))
-    for key in ("test", "choice", "language", "tool", "format", "counts"):
+    for key in ("run", "language", "tool", "format", "counts"):
         if key not in header:
             raise RecordFault("the header names no '%s'" % key)
 
@@ -439,10 +494,7 @@ def parse_record(text):
                           counts_f = header["counts"] == "yes",
                           file_db  = file_db,
                           version  = version,
-                          test     = ("" if header["test"] == "-"
-                                      else header["test"]),
-                          choice   = (None if header["choice"] == "-"
-                                      else header["choice"]))
+                          run      = run_set_of_text(header["run"]))
 
 
 def merge(record_iterable):
@@ -457,6 +509,11 @@ def merge(record_iterable):
     so the merged header SHOWS that the aggregate is not uniform. What an
     aggregator does about that -- merge, segregate, refuse -- is its own
     ruling, and it can only be taken because the header says so.
+
+    THE RUNS ARE UNIONED: the merged record is of every run that made
+    it, and its 'run:' line spells the set. An unseated record
+    contributes nothing to the set and does not make the others
+    anonymous.
 
     Raises CountsNotMergeable where any record carries hit counts: a
     union has no answer for two different counts over one line, and a
@@ -512,14 +569,10 @@ def merge(record_iterable):
                     union(standing.covered,    entry.covered),
                     None, measure_db)
 
-    choice_list = sorted(set(r.choice for r in record_list),
-                         key=lambda c: str(c))
+    run_set = frozenset().union(*(r.run for r in record_list))
     return CoverageRecord(language = joined("language"),
                           tool     = joined("tool"),
                           source   = joined("source"),
                           counts_f = False,
                           file_db  = file_db,
-                          test     = joined("test"),
-                          choice   = (choice_list[0]
-                                      if len(choice_list) == 1
-                                      else joined("choice")))
+                          run      = run_set)

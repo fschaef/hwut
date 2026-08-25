@@ -1,8 +1,7 @@
 
 --- the json, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: python
          | ##tool:     coverage
          | ##format:   coverage.py-json

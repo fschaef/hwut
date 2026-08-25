@@ -1,8 +1,7 @@
 
 --- a record of line coverage alone ---
-         | ##VUT-COVERAGE 1
-         | ##test:     test-parse.py
-         | ##choice:   basic
+         | ##VUT-COVERAGE 2
+         | ##run:      0.0
          | ##language: c
          | ##tool:     gcov
          | ##format:   gcov-annotated
@@ -12,9 +11,8 @@
          | CV:1+2,1
 
 --- the same record, measured further ---
-         | ##VUT-COVERAGE 1
-         | ##test:     test-parse.py
-         | ##choice:   basic
+         | ##VUT-COVERAGE 2
+         | ##run:      0.0
          | ##language: c
          | ##tool:     gcov
          | ##format:   gcov-annotated

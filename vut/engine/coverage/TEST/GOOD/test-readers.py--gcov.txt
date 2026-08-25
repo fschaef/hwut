@@ -1,8 +1,7 @@
 
 --- the annotated source, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: c
          | ##tool:     gcov
          | ##format:   gcov-annotated

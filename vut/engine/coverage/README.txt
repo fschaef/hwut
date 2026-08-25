@@ -52,7 +52,7 @@ about whether coverage was wanted.
                         go.py               go cover profile
                         luacov.py           luacov report
                         jacoco.py           jacoco xml
-    core.py           the face: Coverage, verify()
+    FORMAT.txt        the record's syntax, line by line
 
 
 ------------------------------------------------------------------------------
@@ -68,17 +68,25 @@ about whether coverage was wanted.
     reader_of(tool)         one reader per tool
         |
         v
+    build coverage_target   the author's target, built and run in
+        |                   place of the executable (section 5)
+        v
     wrap(argv) ------> the execute stage runs THIS argv instead
         |
         |              the tool leaves its own artifact in
         |              <test_directory>/OUT/COVERAGE/
         v
-    harvest() --------> CoverageRecord  ---> store.write_coverage()
-                        (homogeneous)        ---> services/report.py
+    report_argv() ---> the second supervised call, where one stands
+        |
+        v
+    harvest() --------> CoverageRecord --seated(run id)-->
+                        (homogeneous)   .hwut-store/<test>--<choice>.cover
 
-Four seams outside this component, one line each: 'StoreConfig
-.record_coverage', the execute stage's argv, the store's write, the
-pack's render.
+Four seams outside this component: the adapter's target
+('orchestrator/run/adapter.py'), the execute stage's argv
+('operations/run/core.py'), the session's closing act
+('operations/coverage_action.py'), the book entry and the record's path
+('bookkeeper/bookkeeper.py').
 
 
 ------------------------------------------------------------------------------
@@ -96,9 +104,8 @@ DELTA CODED: 'd+L' per range, 'd' alone where the range is one line,
 'd+L*C' where hit counts are recorded. 'd' is the gap from the previous
 range's END, so every delta is positive and small.
 
-    ##VUT-COVERAGE 1
-    ##test:     test-parse.py
-    ##choice:   basic
+    ##VUT-COVERAGE 2
+    ##run:      0.1
     ##language: python
     ##tool:     coverage
     ##format:   coverage.py-json
@@ -107,10 +114,19 @@ range's END, so every delta is positive and small.
     EX:3+12,5+5
     CV:3+12
 
-THE HEADER NAMES THE RUN ('test', 'choice' -- '-' for the choice-less
-test) as well as the provenance ('language', 'tool', 'format'). In the
-store those are the key; away from it the record would be anonymous, and
-the index (4b) could only guess.
+THE HEADER NAMES THE RUN as a RUN ID the register issued -- '0.1' is
+application 0, choice 1 -- beside the provenance ('language', 'tool',
+'format'). In the store the key would do; away from it the record would
+be anonymous, and the index (4b) could only guess.
+
+'run' IS A SET, comma separated: a MERGED record names every run that
+made it ('##run:      0.0,0.1,3'). A record fresh from a READER names
+none and says so ('##run:      -'); 'record.seated' is the one seam that
+gives it a run.
+
+IDS, NOT NAMES (RATIONALE D-18): an id is issued once and never re-used
+(bookkeeper B-2), so a record that travelled decodes to the same test or
+to 'no longer registered' -- and a RENAME TOUCHES NO RECORD.
 
 PATHS ARE RELATIVE TO THE TEST DIRECTORY. HIT COUNTS are off by default
 and the header declares them. MERGE is the union of ranges: associative,
@@ -207,20 +223,54 @@ place that changes.
 
 
 ------------------------------------------------------------------------------
-5  WHAT A COVERAGE RUN IS NOT
+5  WHAT A COVERAGE RUN IS
 ------------------------------------------------------------------------------
 
-    -- it enforces the caps named in 'disabled_caps', and no others;
-       'ALL' disables every one. Declared, never inferred.
-    -- it measures NO cadence: 'record_coverage' beside 'record_timing'
-       is refused.
-    -- it never takes the INTERACTIVE road: a session measures one
-       process across many choices, and the record is keyed per choice.
-       Refused, not silently rerouted.
-    -- it holds its directory alone (pending the parallelism work).
+THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov <wishlist>' or
+'hwut.run --coverage' generates the chain; nothing is discovered:
 
-'core.verify()' refuses each of these where the request is HANDED IN,
-before a single process runs.
+    build    'build { coverage_target = "cov-parse.exe" }' is built IN
+             PLACE OF the executable and run in its place. The name is
+             the whole communication with the author's build system.
+             REQUIRED under coverage for a compiled test; absent, the
+             run is noted 'no-coverage-target' and continues with the
+             executable.
+    run      the elected reader's 'wrap' puts the tool around the call
+             where the tool needs it; an instrumented binary measures
+             itself and the argv is unchanged.
+    report   'report_argv', the tool's second call, supervised.
+    harvest  the run's closing act: the reader reads 'OUT/COVERAGE',
+             the record is seated with the run id and written to
+             '.hwut-store/<test>--<choice>.cover'. Raw artefacts are
+             run debris under 'OUT/'.
+
+ONE TOKEN PER RUN on the book entry, 'coverage':
+
+    ok                  a record stands
+    no-coverage-target  compiled, and no 'coverage_target' declared
+    no-data-provided    the run left nothing to harvest; NO record
+    report-failed       the tool's second call did not end well
+    (absent)            coverage was not asked
+
+A run that bore nothing writes no record; the book says why. Coverage
+is measured for ACCEPTED tests: the run id is the register's, and a run
+of an unregistered choice is a plain run. Built: 'operations/
+coverage_action.py', tested in 'operations/TEST/test-coverage_provision.py'.
+
+
+------------------------------------------------------------------------------
+5a  WHAT A COVERAGE RUN IS NOT
+------------------------------------------------------------------------------
+
+    -- it is not a replay: a replay executed nothing and harvests
+       nothing; the entry carries no 'coverage' key.
+    -- it is not a run of an unregistered choice: no run id, no
+       record; the run is a plain run.
+    -- it does not take the INTERACTIVE road: a session measures one
+       process across many choices, and the record is keyed per
+       choice (DISCUSSIONS todo-11: the refusal is owed).
+    -- it measures NO cadence: 'record_timing' beside coverage is owed
+       a refusal (todo-11).
 
 
 ------------------------------------------------------------------------------
@@ -231,8 +281,6 @@ before a single process runs.
     no tool configured for the language
     no configured candidate available on this machine
     the elected tool has no reader in this build
-    'record_timing' beside 'record_coverage'
-    'interactive' beside 'record_coverage'
     a record that cannot be read whole            (RecordFault)
     a record line under a tag no measure claims   (RecordFault)
     a merge of records carrying hit counts        (CountsNotMergeable)

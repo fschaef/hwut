@@ -657,3 +657,125 @@ COST      'test-identity.py' and four GOODs left; 'keys' joined
 GRAVEYARD Keeping 'identity.py' as a re-export of the bookkeeper's
           names: a file that says 'coverage has an identity' and holds
           none.
+
+
+D-18  A RECORD NAMES RUN IDS, AND NAMES A SET OF THEM          (2026-08-25)
+------------------------------------------------------------------------------
+COMPLETES D-8, which put the run in the header as (test, choice) NAMES
+          because ids could not be persisted then. Orchestrator todo-4
+          t-9.
+PROBLEM   Names in the header make every rename rewrite every record of
+          that test -- 'hwut.rename' would have to walk and edit records
+          it otherwise only moves. Ids could not be used while the
+          register re-issued them (a record naming run 47, kept across a
+          removal and a later accept, would attribute its lines to a
+          test that never ran them). Bookkeeper B-2 removed that: an id
+          is issued once.
+          Separately, 'merge' had to say WHOSE the aggregate was, and
+          did it by joining name strings -- 'test: a,b' / 'choice:
+          basic,deep' -- which spells a CROSS of names, not the pairs
+          that actually ran.
+DECISION  FORMAT VERSION 2. One header line replaces two:
+
+              ##run:      47.66      one run
+              ##run:      -          NO run: fresh from a reader
+              ##run:      0.0,0.1,3  a MERGED record: the set
+
+          'CoverageRecord.run' is a frozenset of 'TestRunId'; 'merge'
+          UNIONS it, so a merged record names every run that made it and
+          the cross disappears. The spelling is the group table's own
+          spelling for a set, so a merged record's 'run' line reads as a
+          group-table line does.
+          THE SET, NOT A GROUP ID: a group id would be one integer, but
+          a merged record could then not be read without the
+          directory's group table, and a record that TRAVELLED would be
+          mute. Bytes are paid only by merged records, which are
+          aggregates and few.
+          'seated(record, run)' is the ONE SEAM between a reader (which
+          knows the artifact) and the caller that knows the run.
+          Version 1 is refused by name.
+          THE RESOLVE SEAM IS GONE. 'record_iterable' no longer takes a
+          'resolve'; '_local_resolver' is deleted. A record carries its
+          ids, a gather qualifies them into 'Gathered', and only the
+          EDGE that prints an answer needs the register. A MERGED record
+          is yielded once per run it names; a record naming NO run is
+          skipped and said on stderr -- attributing it to a guess is
+          worse than losing it.
+COST      Version 1 records do not read; none exist outside GOODs.
+          Thirty-two GOODs re-recorded (readers, record, measure, index,
+          affected), every movement a header line.
+GRAVEYARD Keeping names beside the ids 'for readability': two truths,
+          and the rename problem back in full.
+          A group id in the header: a record that cannot be read alone.
+
+
+D-19  THE DEMAND SHAPES THE RUN: THE PROVISION CHAIN            (2026-08-25)
+------------------------------------------------------------------------------
+CLOSES   HOW-TO-INTEGRATE's task 2 (the run-side provision) and settles
+         the reader role at THREE calls; the 'instrument()' and 'probe()'
+         hooks it proposed are not built.
+PROBLEM  Coverage had readers and a record and no way to make a run
+         produce either. Two shapes were on the table: the run node
+         DISCOVERS what the artifact it was handed can do (an executable
+         reports 'records_coverage', the run adapts); or the demand
+         GENERATES a run built to measure. The first makes coverage a
+         property to detect, and detection has no honest answer for a
+         binary that merely looks instrumented.
+DECISION 'hwut.cov <wishlist>' -- or 'hwut.run --coverage' -- IS THE
+         DEMAND, and it shapes the chain top-down:
+
+             build   the author's 'build { coverage_target }' is built
+                     IN PLACE OF the executable and run in its place.
+                     The name is the whole communication with the build
+                     system: hwut asks for 'cov-parse.exe', the author's
+                     rules instrument that target. No flag, no variable,
+                     no name hwut invents. An author may name it the
+                     same as 'executable' and pays in rebuilds.
+                     Up-to-dateness is the build system's question.
+             run     the elected reader's 'wrap' puts the tool around
+                     the call where the tool needs it (interpreted
+                     languages); an instrumented binary measures itself.
+             report  'report_argv', the tool's second call, supervised.
+             harvest the run's CLOSING ACT ('coverage_action.harvest'):
+                     the reader reads 'OUT/COVERAGE', the record is
+                     SEATED with the run id (D-18) and stored as
+                     '.hwut-store/<test>--<choice>.cover' -- the store's
+                     own ground, a measurement of the last run, never a
+                     nominal, never a subject. Raw artefacts are run
+                     debris under 'OUT/', overwritten by the next run.
+
+         'coverage_target' IS REQUIRED UNDER COVERAGE for a compiled
+         test. Its absence is NOTED -- 'E_CoverageResult
+         .NO_COVERAGE_TARGET' on the run's book entry -- and the run
+         CONTINUES with the executable: for an interpreted test the tool
+         needs no build variant and a real record comes out; for a
+         compiled one the tree bears nothing and the harvest is trivial.
+         ONE TOKEN PER RUN, on the book entry: a run is one stimulus
+         applied once, so its coverage outcome is one fact -- OK,
+         NO_COVERAGE_TARGET, NO_DATA_PROVIDED, REPORT_FAILED. A run that
+         bore nothing writes NO record; the book says why. Absence and
+         its cause travel together.
+         COVERAGE IS MEASURED FOR ACCEPTED TESTS: the run id is the
+         register's, and a run of an unregistered choice is a plain run.
+         An accept that must name a run before it stands hands the id
+         back on abort (bookkeeper B-4).
+COST     'TestConfiguration.coverage', held verbatim like 'build' and
+         'store'. One line in 'application_argv'. 'run_test_held' takes
+         a 'run_id'. 'Bookkeeper.coverage_path' and a 'coverage' key on
+         the entry. Four validator GOODs moved (the key list of 'build').
+         'core.py' -- 'Coverage' and 'verify()' over a
+         'StoreConfig.record_coverage' knob and a 'store
+         .write_coverage()' that were never built, imported by nothing
+         -- is DELETED: the face is 'operations/coverage_action.py'.
+GRAVEYARD Discovery: 'records_coverage' as an attribute the run node
+         reads off the built artifact -- undetectable for a binary, and
+         a property where a decision was wanted.
+         A standard name ('cov-<stem>.exe') coined by hwut: a target the
+         build system was never told about.
+         A bare 'coverage_target' flag meaning 'same artifact': says
+         nothing the election does not, and the name IS the mechanism.
+         Persisting the cause in the record ('a record that records
+         nothing'): the empty-vs-absent line, crossed.
+         'instrument()' / 'probe()' on the reader role: the build
+         variant is the author's declaration, so nothing is left for a
+         hook to instrument; and a probe is detection by another name.

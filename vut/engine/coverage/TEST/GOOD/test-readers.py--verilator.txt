@@ -1,8 +1,7 @@
 
 --- the export, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: unknown
          | ##tool:     verilator_coverage
          | ##format:   lcov-tracefile

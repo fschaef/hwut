@@ -56,7 +56,7 @@ def naming_of(app):
     return NamingConfig(same_nominal_f=bool(root.same))
 
 
-def test_configuration_of(app, directory):
+def test_configuration_of(app, directory, coverage=None):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
             source kind and interpreter from the language, the build
@@ -66,12 +66,21 @@ def test_configuration_of(app, directory):
             with its pype as the stdout canonicaliser and its stated
             tolerances as compare's Configuration.
 
+    'coverage' is a 'CoverageConfig' where coverage is asked (coverage
+    RATIONALE D-19): the reader is ELECTED for the language, the build
+    then names 'coverage_target' in place of the executable, and the
+    configuration carries a 'CoverageSetup'. A COMPILED test that
+    declares no 'coverage_target' gets the setup with the note
+    'NO_COVERAGE_TARGET' and builds and runs its executable as ever.
+
     Raises AssertionError for a language no interpreter is declared
     for -- refused at the door, not guessed.
     """
     root = _root_of(app)
 
-    build       = _build_of(root)
+    setup = None if coverage is None else _coverage_setup_of(app, root,
+                                                              coverage)
+    build = _build_of(root, setup)
     interpreter = None
     if build is not None:
         source_kind = E_SourceKind.COMPILED
@@ -94,24 +103,54 @@ def test_configuration_of(app, directory):
         choice_db      = choice_db,
         interpreter    = interpreter,
         build          = build,
+        coverage       = setup,
         interactive    = any(p.interactive for p in
                              app.choice_db.values()),
         execute        = (None if root.execute is None
                           else tuple(shlex.split(root.execute))))
 
 
-def _build_of(parameters):
+def _build_of(parameters, setup=None):
     """
     RETURN: BuildConfig from the stated 'build' key, 'None' where none
             stands. The framework word must be known; the executable
-            is the one target.
+            is the one target -- or, under coverage with a
+            'coverage_target' declared, THAT is the one target: built
+            by name and run in its place.
     """
     stated = parameters.build
     if stated is None or stated.framework is None: return None
     assert stated.framework in _BUILD_SYSTEM_DB, \
            "no build system declared for framework '%s'" % stated.framework
-    return BuildConfig(_BUILD_SYSTEM_DB[stated.framework],
-                       [stated.executable or "app"])
+    target = stated.executable or "app"
+    if setup is not None and setup.note is None \
+       and stated.coverage_target is not None:
+        target = stated.coverage_target
+    return BuildConfig(_BUILD_SYSTEM_DB[stated.framework], [target])
+
+
+def _coverage_setup_of(app, root, coverage):
+    """
+    RETURN: CoverageSetup: the reader elected for the language this
+            machine has a tool for, the config, and the note
+            'NO_COVERAGE_TARGET' where the test is COMPILED and names no
+            'build.coverage_target' -- else no note.
+
+    Raises CoverageRefused where no tool for the language is available
+    here, naming every candidate.
+    """
+    from ...coverage.registry import language_of, elect
+    from ...coverage.reader   import reader_of
+    from ...operations.coverage_action import CoverageSetup, E_CoverageResult
+
+    language = language_of(app.source_file, coverage.language)
+    reader   = reader_of(elect(language))
+    stated   = root.build
+    note     = None
+    if stated is not None and stated.framework is not None \
+       and stated.coverage_target is None:
+        note = E_CoverageResult.NO_COVERAGE_TARGET
+    return CoverageSetup(reader=reader, config=coverage, note=note)
 
 
 def _caps_of(parameters):

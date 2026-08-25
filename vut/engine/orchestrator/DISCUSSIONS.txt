@@ -85,12 +85,13 @@ OWED, in order:
        state where a record's ids stand, or removal cannot find them.
   t-7  hwut.rename / hwut.rename-choice: base entry, file moves,
        register rename -- one holding; record contents untouched (R3).
-  t-9  THE RECORD FORMAT REVISION: the VUT-COVERAGE header names a
-       RUN ID where it named test/choice; the register decodes;
-       version bump; index folds over TestRunIds. UNBLOCKED by
-       bookkeeper B-2 (an id may now be persisted); design pending.
-       Its precondition 'identity.py reduces to the gather shapes' is
-       done: 'identity.py' is dissolved (coverage D-17).
+  t-9  THE RECORD FORMAT REVISION  [BUILT 2026-08-25, coverage D-18]
+       Format version 2: '##run:' names RUN IDS, a SET of them, '-'
+       where the record names none. 'merge' unions the set. The
+       resolve seam is gone -- a record carries its ids. Accept hands
+       an id back when it aborts (bookkeeper B-4). What t-7 owes is
+       now SMALLER: 'hwut.rename' moves files and renames the register
+       entry and touches NO record content, as R3 ruled.
   t-11 'hwut.sanitize', the housekeeping face -- options, each a
        report first and a repair only on request:
            --unregistered   source files in the directory that hold

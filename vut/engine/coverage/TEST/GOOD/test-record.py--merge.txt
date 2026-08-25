@@ -8,6 +8,10 @@ INSPECT: CV(a) = ((1, 6),)
 --- order does not matter ---
 INSPECT: merge(a,b) == merge(b,a) -> True
 
+--- the merged record names EVERY run that made it ---
+INSPECT: ##run:      0.0,0.1
+         and with a third: ##run:      0.0,0.1,2
+
 --- provenance that differs is JOINED, so it is visible ---
 INSPECT: tool = 'coverage,trace'
 
@@ -21,6 +25,8 @@ INSPECT: merge([]) -> None
   OK  : merge is commutative -- byte for byte
   OK  : merge is associative -- byte for byte
   OK  : a non-uniform aggregate SHOWS that it is one
+  OK  : the merged record names both runs -- the union, in one line
+  OK  : sorted and comma separated: the spelling a group table uses for a set
   OK  : merge is idempotent: a record merged with itself is itself
   OK  : hit counts are refused by name, not resolved by an unasked rule
   OK  : no record aggregates to None, never to an empty record

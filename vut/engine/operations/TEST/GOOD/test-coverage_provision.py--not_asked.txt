@@ -1,0 +1,7 @@
+INSPECT: verdict False report nominal-file-not-found
+         coverage on the entry: <absent>
+         record: <none>
+  OK  : no key on the entry -- absence is data
+  OK  : the call was not wrapped: the application left no artefact
+SUCCESS: a plain run is a plain run.
+<hwut-end>

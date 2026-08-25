@@ -1,8 +1,7 @@
 
 --- the profile, read ---
-         | ##VUT-COVERAGE 1
-         | ##test:     -
-         | ##choice:   -
+         | ##VUT-COVERAGE 2
+         | ##run:      -
          | ##language: go
          | ##tool:     go
          | ##format:   go-coverprofile
