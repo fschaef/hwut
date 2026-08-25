@@ -57,7 +57,7 @@ import sys
 
 from .record   import (ranges_of, parse_record, RecordFault,
                        CoverageRecord, FileCoverage)
-from .identity import Origin
+from .identity import TestRunId, Gathered
 from .index    import index_of
 
 
@@ -141,12 +141,26 @@ def change_db_of_diff(text, strip=1):
 
 # ---------------------------------------------------------------- records
 
-def record_iterable(root, suffix=RECORD_SUFFIX):
+def record_iterable(root, suffix=RECORD_SUFFIX, resolve=None):
     """
-    YIELD: [0] Origin           who made the record -- its own header's
-                                'test' and 'choice', and the DIRECTORY it
-                                was found in, relative to 'root'
+    YIELD: [0] Gathered         who made the record, AS THIS GATHER SEES
+                                IT: the RUN ID of the record's own
+                                'test'/'choice', qualified by the
+                                DIRECTORY it was found in, relative to
+                                'root'. The qualification is THIS
+                                gather's and is never stored (D-14).
            [1] CoverageRecord   what it says
+
+    'resolve(directory, test, choice) -> TestRunId' turns the record's
+    NAMES into the register's NUMBERS. THE SEAM TO THE REGISTER: a face
+    above hands in one backed by 'test_id_db' and gets the directory's
+    real ids; omitted, '_local_resolver' numbers within this gather
+    only, and says so where it is defined. Coverage never reads the
+    register itself -- it is the leaf and imports nothing outward.
+
+    THE WALK IS SORTED so that the fold allocates group ids identically
+    from any two invocations over one tree: found-directory first, then
+    the record file's name.
 
     THE SEAM. The store's naming is the BOOKKEEPER'S; walking for a
     suffix is a stand-in until this face can ask it. Nothing else in this
@@ -156,8 +170,9 @@ def record_iterable(root, suffix=RECORD_SUFFIX):
     record must not cost the whole selection, and it must not vanish
     either.
     """
-    for base, dir_list, file_list in os.walk(root):
-        dir_list[:] = [d for d in dir_list if not d.startswith(".")]
+    if resolve is None: resolve = _local_resolver()
+    for base, dir_list, file_list in sorted(os.walk(root)):
+        dir_list[:] = sorted(d for d in dir_list if not d.startswith("."))
         for name in sorted(file_list):
             if not name.endswith(suffix): continue
             path = os.path.join(base, name)
@@ -167,10 +182,50 @@ def record_iterable(root, suffix=RECORD_SUFFIX):
             except (OSError, RecordFault) as fault:
                 sys.stderr.write("skipped '%s': %s\n" % (path, fault))
                 continue
-            relative = os.path.relpath(base, root)
+            relative = os.path.relpath(base, root).replace(os.sep, "/")
             directory = None if relative == "." else relative
-            yield (Origin(directory, record.test, record.choice),
+            yield (Gathered(directory,
+                            resolve(directory, record.test,
+                                    record.choice)),
                    rebased(record, directory))
+
+
+def _local_resolver():
+    """
+    RETURN: callable, 'resolve(directory, test, choice) -> TestRunId',
+            numbering lowest-unused per directory as names are first
+            met.
+
+    A STAND-IN, and it says which kind. The REGISTER's ids are the
+    directory's own and stand across invocations; these stand only
+    within THIS gather, in the register's own shape and by the
+    register's own rule (lowest unused, per scope), so that a face
+    which later hands in the real resolver changes the NUMBERS and
+    nothing else. Used where no register was handed in -- a walk over
+    a tree this process does not administer.
+    """
+    app_db    = {}      # directory -> {app name: app_id}
+    choice_db = {}      # (directory, app_id) -> {choice name: id}
+
+    def lowest_unused(used):
+        """RETURN: int, the smallest positive integer not in 'used'."""
+        candidate = 1
+        while candidate in used: candidate += 1
+        return candidate
+
+    def resolve(directory, test, choice):
+        """RETURN: TestRunId of that run, allocating on first sight."""
+        name_db = app_db.setdefault(directory, {})
+        if test not in name_db:
+            name_db[test] = lowest_unused(set(name_db.values()))
+        app_id = name_db[test]
+        if choice is None: return TestRunId(app_id)
+        seen = choice_db.setdefault((directory, app_id), {})
+        if choice not in seen:
+            seen[choice] = lowest_unused(set(seen.values()))
+        return TestRunId(app_id, seen[choice])
+
+    return resolve
 
 
 def rebased(record, directory):
@@ -201,7 +256,7 @@ def rebased(record, directory):
 
 # ------------------------------------------------------------------- face
 
-def render(origin_tuple, change_db, index, bare_f):
+def render(key_tuple, change_db, index, bare_f):
     """
     RETURN: str, what the face prints: the bare run list where 'bare_f',
             else the framed answer -- what was asked, what was indexed,
@@ -211,19 +266,19 @@ def render(origin_tuple, change_db, index, bare_f):
     a pack of this can be compared, stored, or pasted.
     """
     if bare_f:
-        return "".join("%s\n" % o for o in origin_tuple)
+        return "".join("%s\n" % k for k in key_tuple)
 
     range_n = sum(len(r) for r in change_db.values())
     line_list = ["==[ HWUT AFFECTED ]%s" % ("=" * 58),
                  "change:  %i file(s), %i range(s)"
                  % (len(change_db), range_n),
                  "index:   %i run(s), %i source file(s)"
-                 % (len(index.id_table), len(index.file_db)),
+                 % (len(index.run_key_set), len(index.file_db)),
                  "groups:  %i distinct" % len(index.group_table),
                  ""]
-    if origin_tuple:
+    if key_tuple:
         line_list.append("runs to perform:")
-        line_list += ["  %s" % o for o in origin_tuple]
+        line_list += ["  %s" % k for k in key_tuple]
     else:
         line_list.append("runs to perform: NONE executed the changed lines.")
     line_list.append("")
@@ -295,13 +350,13 @@ def main(argv, write=None, error=None):
         error("REFUSED: the diff touches no line this face can read\n")
         return E_ExitCode.REFUSED
 
-    index        = index_of(record_iterable(root))
-    origin_tuple = index.of_change(change_db)
-    write(render(origin_tuple, change_db, index, bare_f))
+    index     = index_of(record_iterable(root))
+    key_tuple = index.of_change(change_db)
+    write(render(key_tuple, change_db, index, bare_f))
     if bare_f:
         for line in NOTE_LINE_TUPLE: error("%s\n" % line)
 
-    return E_ExitCode.OK if origin_tuple else E_ExitCode.EMPTY
+    return E_ExitCode.OK if key_tuple else E_ExitCode.EMPTY
 
 
 if __name__ == "__main__":

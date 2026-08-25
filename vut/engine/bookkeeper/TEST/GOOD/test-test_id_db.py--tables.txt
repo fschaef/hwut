@@ -1,0 +1,14 @@
+--- the file, as stored ---
+         | ##VUT-TEST-IDS 3
+         | A:1 test-parser.py
+         | C:1.1 basic
+         | C:1.2 deep
+         | A:2 test-other.py
+--- read back ---
+INSPECT: byte-identical after a round trip: True
+         [1.2] decodes to ('test-parser.py', 'deep')
+  OK  : format(parse(format())) is the identity
+  OK  : the rename survived the disk
+  OK  : a number this directory never issued answers None
+SUCCESS: one file, atomically replaced, write-protected.
+<hwut-end>

@@ -1,0 +1,50 @@
+THE BOOKKEEPER -- settled decisions
+==============================================================================
+
+Entries are PROBLEM / DECISION / COST / GRAVEYARD, appended, never
+rewritten. Decisions made while the component was a sub-package of the
+orchestrator stand in that component's RATIONALE (D-4, D-6, D-7, D-8)
+and are not copied here.
+
+
+B-1  THE BOOKKEEPER IS A COMPONENT, NOT PART OF THE ORCHESTRATOR
+                                                              (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM   The bookkeeper stood in 'orchestrator/bookkeeper/'. It was
+          not the orchestrator's alone: 'operations' imported it at
+          nine places, and the coverage work then needed the shape of
+          a test run as well. Two components below the orchestrator
+          were reaching UPWARD into it to name a run.
+          The pressure surfaced as a mutual reference. Coverage needed
+          'TestRunId'; putting it in the bookkeeper made coverage
+          depend on the orchestrator, and 'hwut.cov' will live in the
+          orchestrator's services -- so the two packages would point
+          at each other. Placing the shape in COVERAGE instead removed
+          the cycle and stated something false: that a test run is a
+          coverage concept.
+DECISION  'engine/bookkeeper/', a sibling of 'operations', 'coverage'
+          and 'orchestrator'. It refers to none of them; they refer
+          DOWNWARD to it.
+          A TEST RUN IS A GENERALITY -- the runner performs one, the
+          base records one, a report names one, a coverage record
+          attributes work to one -- so its shape stands with the runs'
+          ADMINISTRATOR. 'test_run_id.py' holds it, and holds nothing
+          else, so the file cannot become a drawer.
+          WHAT STAYED WITH COVERAGE: 'Gathered' and the group
+          interning. How an aggregator qualifies run ids across
+          directories, and how it interns SETS of them, are questions
+          only an aggregator asks.
+COST      34 import lines across 18 files. One depth correction
+          inside the package ('....auxiliary' became '...auxiliary').
+          Two GOODs moved, both naming the layer that refuses a bad
+          run id: it is the bookkeeper's fault type now, and
+          coverage's 'IdentityFault' is a KIND of it, so a caller
+          catching the general one still catches the particular.
+GRAVEYARD 'TestRunId' in coverage: it says a test run is a coverage
+          concept, and the next consumer that is not coverage would
+          have to import coverage to name a run.
+          'TestRunId' in a general 'engine/' file beside the register:
+          the shape and its administrator separated for no reason, and
+          a file at engine level with one type in it invites a second.
+          Leaving the bookkeeper where it was: two components already
+          paid for that placement before coverage ever asked.

@@ -401,3 +401,228 @@ WHAT THIS DELIBERATELY DOES NOT SOLVE. A measure with NO LINE cannot
           is no help with it -- pretending otherwise is how a design gets
           reported '92% covered' while the coverage somebody came for is
           discarded.
+
+
+D-12  A NAMED POINT MERGES WHERE A DIGEST CANNOT               (2026-08-24)
+------------------------------------------------------------------------------
+SUPERSEDES IN PART D-11's closing paragraph ('a measure with NO LINE
+          cannot live here at all') and disc-9's 'NO LINE' column. Both
+          were sound on what they knew; the correction is EVIDENCE, not
+          argument, and the evidence is in WITNESS-hdl-artifacts.txt.
+PROBLEM   D-11 refused merge on 'branch' because (covered, total) does
+          not carry WHICH arms, and concluded that measures without a
+          line -- toggle, functional cover -- could not live in this
+          record. The artifacts say both halves were too broad. Every
+          point verilator emits carries a FILE and a LINE: toggle points
+          at the signal's DECLARATION line, branch ARMS as separate
+          named points, cover properties at their statement. GHDL's PSL
+          report names file, line and counts per directive. And every
+          one of them is NAMED -- 'verilator_coverage' merges its own
+          '.dat' files by addition, which is only possible because the
+          identity survives.
+DECISION  'NamedPointMeasure': a measure recorded per
+          (line, name, covered, total), the name carried in the record.
+          Because identity survives, two records UNION honestly, and the
+          measure declares 'mergeable = True' -- the first that does.
+          Two ride on it today, both from witnessed artifacts:
+
+              TG   toggle    a signal's bit, at its declaration line
+              CP   cover     a 'cover property' / PSL cover directive
+
+          UNMERGEABILITY WAS A PROPERTY OF THE DIGEST, NOT OF THE
+          MEASUREMENT. That is the whole of the correction, and it is
+          worth stating plainly because the original reasoning reads
+          like a statement about branch coverage and is in fact a
+          statement about the encoding chosen for it.
+COST      A third point shape in 'measure.py' beside 'PointMeasure', and
+          a record line that carries names -- so a named-point record is
+          wider than a digest one. Paid where the axis is asked for and
+          nowhere else: a file with no such measurement writes no such
+          line, exactly as before.
+GRAVEYARD Seating toggle points on a synthetic line: it would put a
+          measurement at a position no source holds, and every renderer
+          downstream would show it as a line fact.
+          Keeping the anonymous digest for toggle 'for consistency':
+          consistency with a shape that was already known to discard the
+          answer.
+
+WHAT REMAINS LINE-LESS REMAINS OUT, and the UCIS reader has now made the
+          gap STRUCTURAL rather than incidental. FSM states, assertion
+          bins and covergroup bins are line-less BY THE UCIS XSD ITSELF
+          -- not by the absence of an open-source emitter. disc-9's
+          option (b) stands, awaiting a real artifact like every reader
+          here. Its mandatory statement shrinks to 'FSM and covergroup
+          coverage are not measured here'.
+
+
+D-13  THE TOOL/FORMAT TABLES ARE GENERATED, NOT WRITTEN         (2026-08-24)
+------------------------------------------------------------------------------
+PROBLEM   One fact -- which tool speaks which format, and which of them
+          this build reads -- was written out at FIVE sites: the
+          'readers/__init__.py' docstring, the '[r]' markers in
+          'registry.py', README section 5, OVERVIEW's format table and
+          DISCUSSIONS todo-2. On the day this was written, THREE of the
+          five were already false: two said 'seven' where eleven stood,
+          and README named 'kcov' an alias of the tracefile after the
+          witness had moved it to cobertura AND the code had shipped the
+          move. The code was right at every point. Prose cannot be kept
+          true by discipline at five sites; it can only be kept true by
+          not being written five times.
+DECISION  The table has ONE author, and it is the registry. 'hwut.cov
+          formats' prints tool, format, language reach and whether this
+          build reads it, from 'registered_tuple()' and each reader's
+          own 'name' and 'source_format'. Its HWUT GOOD file IS the
+          table, so a reader admitted without its documentation updated
+          turns a test RED rather than leaving a document quietly wrong.
+          Every prose site carries a POINTER, never a copy.
+
+          THE DOCUMENTS KEEP WHAT THE REGISTRY CANNOT HOLD: todo-2's
+          ledger says what was built and WHEN and against WHICH witness;
+          OVERVIEW says which roads were walked and what each artifact
+          overturned. Those are history and do not rot. What rots is the
+          restatement of a table, and only that is withdrawn.
+COST      A prose reader must run a command -- or read a GOOD file -- to
+          see the table. The GOOD file is in the tree and is plain text,
+          so the cost is one path.
+          The corrections of 2026-08-24 are still made BY HAND here, one
+          pass, because 'hwut.cov' does not exist yet. That is accepted
+          rather than deferred: a document that states the disc-9
+          amendment while contradicting it three tables later fails its
+          own Defence Test.
+GRAVEYARD A tree-wide convention that the tables be updated together:
+          that convention was already in force and produced the three
+          falsehoods above.
+          Marking the tables stale and waiting for 'hwut.cov': it leaves
+          a repository asserting something untrue about kcov for the
+          length of two tasks.
+
+
+D-14  IDENTITY IS DIRECTORY-LOCAL; THE GATHER QUALIFIES            (2026-08-24)
+------------------------------------------------------------------------------
+SUPERSEDES IN PART D-9's Origin shape, and SETTLES disc-8's second
+          fork (the scope of an id). disc-8's first fork -- who OWNS the
+          table -- stands open exactly as before.
+PROBLEM   Origin was '(directory, test, choice)', the directory relative
+          to wherever the aggregator stood. 'hwut.run' from the tree
+          root and 'hwut.cov' from a subdirectory would therefore
+          allocate DIFFERENT ids for the SAME run: an identity that
+          varies with where one stood when asking is not an identity.
+          Absolute paths are barred (D-4), environment variables are
+          barred by house doctrine, and disc-8's own repair --
+          partitioned id ranges per directory -- needs the very
+          coordination it was meant to avoid.
+DECISION  TWO KEYS, TWO LIFETIMES.
+
+              Origin    (test, choice)         PERSISTENT, per directory
+              Gathered  (found-dir, Origin)    EPHEMERAL, per gather
+
+          An Origin is unique inside one test directory by the
+          FILESYSTEM'S OWN GUARANTEE -- no allocation, no ranges, no
+          registry above the directories. It does not vary with the
+          invocation root, and a directory that MOVES touches no id:
+          the strongest form of the rename law, for free.
+          A gather across directories qualifies AT GATHER TIME: the
+          found-directory, relative to the gather root the caller
+          chose, beside the Origin. 'Gathered' lives exactly as long
+          as the aggregation; 'IdTable.format' REFUSES a table holding
+          one, because storing it would freeze one invocation's view
+          of the tree as if it were identity.
+          THE GATHER IS CANONICAL OR THE IDS ARE NOT REPRODUCIBLE:
+          records enter the fold sorted by found-directory then record
+          name, so two gathers over one tree allocate identically. The
+          walker sorts; 'index_of' trusts its caller.
+          THE SERIALISATION MOVES to '##VUT-TEST-IDS 2' with
+          'T:<id> <flag> <test>|<choice>'. Version 1's directory column
+          was a field whose only legal persisted value would have been
+          'empty' -- a spelling for a fact that cannot occur -- and no
+          table was ever persisted anywhere in the tree, so this was
+          the last cheap moment to cut it. The parser refuses version 1
+          BY NAME, saying what changed and what to do.
+COST      Three identity GOODs moved ('allocation', 'faults', 'tables')
+          -- an intended structural change, audited line by line: the
+          version bump, the two-part line, and the retired entry
+          decoding without a directory. 47 of 50 stood byte-exact,
+          because 'Gathered' spells 'directory:test--choice' precisely
+          as the old three-field Origin did.
+          'rename' loses its 'directory' arm: there is nothing of the
+          kind left to rename.
+GRAVEYARD Absolute directories: name a machine (D-4's whole point).
+          Directories relative to the invocation root: the defect
+          itself.
+          Partitioned id ranges per directory (disc-8's old (a)):
+          somebody must hand out the ranges, which is the external
+          coordination being removed.
+          A 'directory' field ruled always-None in persisted tables:
+          a vestigial column, and a parser accepting a field the law
+          forbids.
+
+
+D-15  THE REGISTER NUMBERS; THIS COMPONENT GROUPS               (2026-08-25)
+------------------------------------------------------------------------------
+SUPERSEDES D-9's first interning and the whole of D-14's Origin, which
+          the orchestrator's D-7 replaced. D-14's DIR-LOCALITY and its
+          ephemeral gather qualification stand, and are the reason this
+          fits at all.
+PROBLEM   This component interned TWICE: a name became a test id, and a
+          set of test ids became a group. The first interning existed
+          because a segment carrying test NAMES would carry them
+          thousands of times. The register (orchestrator D-7) now
+          issues those numbers itself, at accept, per directory, and
+          keeps them through a rename. Interning them again here would
+          be a SECOND numbering of the same thing -- two id spaces, two
+          truths, and a decode that could disagree.
+DECISION  ONE INTERNING REMAINS: 'GroupTable', set of run keys -> group
+          id. 'IdTable', 'Origin', 'Entry' and 'parse_id_table' are
+          GONE from this component.
+          THE VALUE TYPE 'TestRunId' STANDS HERE, in the leaf, and the
+          register IMPORTS it: coverage imports nothing outward, and a
+          pair of integers has no business holding a file open. The
+          register owns allocation, the file and the names; this owns
+          the shape. Reversing that placement is two import lines.
+          'index_of' folds over whatever run keys it is GIVEN -- ids
+          for one directory, 'Gathered' for a gather -- and numbers no
+          test itself. 'affected' resolves names to ids through an
+          INJECTABLE seam ('resolve'), whose default numbers within one
+          gather, by the register's own rule and in its own shape, and
+          says at its definition which kind of number it is. A face
+          above hands in the real register and the NUMBERS change,
+          nothing else.
+          THE GROUP TABLE MOVES TO VERSION 2: a group holds RUN IDS,
+          spelled '47' / '47.66'. A GATHERED key offered for storage is
+          REFUSED by 'format' -- it belongs to one aggregation and
+          storing it would freeze that view as identity.
+COST      Three identity choices (allocation, rename, retire) LEFT this
+          component with the mechanism they tested; they stand in the
+          register's own test. Twelve GOODs moved, every movement an
+          id where a name stood -- audited, re-recorded.
+          A record still carries NAMES in its header; the resolve seam
+          is the bridge until the record format names run ids (todo-9).
+GRAVEYARD Coverage keeping its own IdTable and mapping register ids
+          onto it: two id spaces for one fact.
+          Coverage importing the register: the leaf would depend on
+          the orchestrator, and 'hwut.affected' would need a bookkeeper
+          to read a directory it does not administer.
+
+
+D-16  THE RUN SHAPE IS THE BOOKKEEPER'S                         (2026-08-25)
+------------------------------------------------------------------------------
+CORRECTS D-15, which placed 'TestRunId' in this component.
+PROBLEM   D-15 put the shape of a test run here because coverage is a
+          leaf and imports nothing outward. That reasoning was about
+          LAYERING and said something false about MEANING: a test run
+          is not a coverage concept. The runner performs one, the base
+          records one, a report names one; coverage is one consumer
+          among several.
+DECISION  'TestRunId' and 'run_id_of_text' stand in the BOOKKEEPER,
+          which is a component of its own since bookkeeper B-1. This
+          component IMPORTS them, downward, like every other consumer.
+          WHAT REMAINS THIS COMPONENT'S: 'Gathered' -- how an
+          aggregator qualifies run ids across directories, at gather
+          time, never stored -- and the GROUP interning. Both are
+          questions only an aggregator asks.
+          'IdentityFault' is now a KIND of the bookkeeper's
+          'RunIdFault', so a caller catching the general one catches a
+          bad group too.
+COST      Two GOODs moved, both naming the refusing layer.
+GRAVEYARD The leaf-purity argument of D-15: it would have made every
+          future consumer of a run id import COVERAGE to name one.

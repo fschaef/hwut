@@ -35,7 +35,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__),
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
                                            RESULT_DB_FILE_NAME)

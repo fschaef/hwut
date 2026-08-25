@@ -41,7 +41,7 @@ import sys
 if __package__ in (None, ""):
     import _config; __package__ = _config.PACKAGE            # noqa: E702
 
-from ..bookkeeper.stream_store import DirectoryLock
+from ...bookkeeper.stream_store import DirectoryLock
 from ..exploration             import finder
 from ..exploration             import reader
 from ._exit                    import E_ExitCode

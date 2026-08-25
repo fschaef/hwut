@@ -43,9 +43,10 @@ import os
 import sys
 from pathlib import Path
 
-from ..bookkeeper.bookkeeper        import Bookkeeper
-from ..bookkeeper.configuration      import E_StderrNote
-from ..bookkeeper.stream_store       import Store
+from ...bookkeeper.bookkeeper        import Bookkeeper
+from ...bookkeeper.test_id_db        import TestIdDb
+from ...bookkeeper.configuration      import E_StderrNote
+from ...bookkeeper.stream_store       import Store
 from ..exploration.explorer          import explore
 from ..exploration.task_list         import SelectionError
 from ..exploration.task_list_query   import CTestTaskListQuery
@@ -441,6 +442,7 @@ def main(argv=None, write=None, read_line=None):
         write("FAULT: %s" % fault)
 
     bookkeeper = Bookkeeper(directory)
+    id_db      = TestIdDb(directory)
     store      = Store(bookkeeper)
     try:
         case_sequence = CTestTaskListQuery(
@@ -529,6 +531,9 @@ def main(argv=None, write=None, read_line=None):
             skipped_list.append(key)
             continue
         store.accept(key.test, key.choice, key.subject, text)
+        #  THE REGISTER: an id is born at first accept (test_id_db).
+        #  Idempotent -- a standing run returns its standing id.
+        id_db.run_id_of(key.test, key.choice, allocate_f=True)
         blessed_list.append(key)
 
     write("")

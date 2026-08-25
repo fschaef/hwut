@@ -1,26 +1,20 @@
 
---- the id table ---
-         no version line                  -> IdentityFault
-         an id that spells no number      -> IdentityFault
-         no live/retired flag             -> IdentityFault
-         too few name parts               -> IdentityFault
-         an id standing twice             -> IdentityFault
-         a line that is no entry          -> IdentityFault
-
 --- the group table ---
-         no version line                  -> IdentityFault
-         a group id that spells no number -> IdentityFault
-         a member that is no id           -> IdentityFault
-         a line that is no group          -> IdentityFault
-  OK  : refused: no version line
-  OK  : refused: an id that spells no number
-  OK  : refused: no live/retired flag
-  OK  : refused: too few name parts
-  OK  : refused: an id standing twice
-  OK  : refused: a line that is no entry
+         no version line                        -> IdentityFault
+         a group id that spells no number       -> IdentityFault
+         a member that spells no run id         -> RunIdFault
+         a member with too many parts           -> RunIdFault
+         a line that is no group                -> IdentityFault
+         version 1: ids this component interned itself -> IdentityFault
+
+--- and the group that was never allocated ---
+         asking for group 99                    -> IdentityFault
   OK  : refused: no version line
   OK  : refused: a group id that spells no number
-  OK  : refused: a member that is no id
+  OK  : refused: a member that spells no run id
+  OK  : refused: a member with too many parts
   OK  : refused: a line that is no group
+  OK  : refused: version 1: ids this component interned itself
+  OK  : never answered with the empty set -- that would read as 'nobody ran this'
 SUCCESS: an unreadable table is refused, never half-read.
 <hwut-end>

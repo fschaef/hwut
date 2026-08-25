@@ -1,0 +1,14 @@
+==[ TEST REGISTER ]===========================================================
+[1] test-parse.py
+    [1.1] basic
+    [1.2] deep
+[2] test-other.py   VANISHED: no such file
+(exit: OK)
+--- a fresh directory ---
+==[ TEST REGISTER ]===========================================================
+(empty -- an id is born at first accept)
+  OK  : choices print beneath their application
+  OK  : the unofficial disappearance is said where ids are shown
+  OK  : an empty register says how an id is born
+SUCCESS: the register has a face, and it names what left.
+<hwut-end>

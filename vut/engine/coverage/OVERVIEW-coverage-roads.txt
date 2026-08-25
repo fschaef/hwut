@@ -3,11 +3,18 @@ LANGUAGES, TOOLS, FORMATS -- the coverage roads, and what is witnessed
 
 THE THREE AXES, AND WHO OWNS WHICH. A LANGUAGE names a registry entry;
 the entry lists TOOLS in preference order; 'elect' takes the first the
-machine has; the tool's FORMAT names the reader. Fifteen tool names,
-seven formats, one record. The record is the unifier -- everything
+machine has; the tool's FORMAT names the reader. Twenty-one tool names,
+eleven formats, one record. The record is the unifier -- everything
 below dies at harvest.
 
-THE SEVEN FORMATS, and the languages that reach them:
+THE COUNTS ABOVE ARE THE ONLY NUMBERS THIS FILE STATES. The table of
+which tool speaks which format is printed by 'hwut.cov formats' from
+the registry itself, and is not copied here (RATIONALE D-13). What
+follows is the SHAPE of the roads and the HISTORY of how each was
+witnessed -- which is what this file is for and what the registry
+cannot hold.
+
+THE FORMATS, and the languages that reach them:
 
     coverage-json    coverage.py's json          python, cython
     lcov-tracefile   the lingua franca; ONE      c/c++ (llvm-cov), rust,
@@ -84,9 +91,10 @@ formats we have', confirmed by artifact; all under WITNESS-more/):
                 pollutes with system headers at 0%% -- same omit-glob
                 story as its bash helpers
 
-CORRECTIONS THE WITNESSES DEMAND (pending, one diff):
-    -- kcov moves from the tracefile aliases to the cobertura ones;
-    -- 'zsh' gets the empty candidate list (the Pascal/Tcl doctrine);
+CORRECTIONS THE WITNESSES DEMANDED -- ALL SHIPPED (2026-08-24,
+'coverage-complete.diff'):
+    -- kcov moved from the tracefile aliases to the cobertura ones;
+    -- 'zsh' got the empty candidate list (the Pascal/Tcl doctrine);
     -- the verilog road states '--coverage-line', never bare
        '--coverage', for the lcov export (WITNESS finding 3);
     -- kcov's injected helpers ('bash-helper*.sh') fall to omit globs.
@@ -142,12 +150,43 @@ ghdl psl.json, simplecov resultset and ucis xml all shipped in
 'coverage-complete.diff', 2026-08-24; the sweep's registry
 corrections -- node/c8 roads and aliases -- shipped in the same diff,
 second issue):
-    1. fold the amendment into DISCUSSIONS disc-9 and RATIONALE --
-       both still describe the world before the witnesses;
-    2. the run side: 'instrument' hook + the probe ('can this
-       executable REGISTER coverage?'); report_argv on the
-       'verilator_coverage' alias naming '--write-info';
-    3. the 'hwutcov' entry point over the finished lifecycle;
+    1. [DONE] the amendment folded into DISCUSSIONS disc-9
+       (superseded-in-part, not rewritten) and RATIONALE D-12; the
+       five copies of the tool/format table withdrawn in favour of
+       one generated one (D-13).
+    2. THE PROVISION CHAIN -- the run side of the reader role. Today
+       'wrap' is the IDENTITY in nine of eleven readers and
+       'report_argv' is None in nine: the component READS eleven
+       formats and can ARRANGE two. For the other nine the readers
+       say in PROSE what the build line must carry -- gcov's
+       '--coverage', verilator's '--coverage', jacoco's '-javaagent:',
+       ghdl's '-fpsl', luacov's 'require' -- and a forgotten flag is
+       discovered at HARVEST, as an honest ABSENT, after the run has
+       already been spent. So:
+           instrument(build_argv, config)  the build node asks what
+                                           the build line must carry
+           probe(executable, config)       can this executable REGISTER
+                                           coverage? ('.gcno' present,
+                                           '__gcov_' symbols, coverage
+                                           points in a verilated model)
+                                           -- refuse BY NAME before the
+                                           run spends anything
+       plus 'report_argv' on the 'verilator_coverage' alias naming
+       'verilator_coverage --write-info' where a 'coverage.dat' stands
+       -- which is also the first alias that must OVERRIDE rather than
+       forward, since two tools sharing a format do not share a drive.
+    3. 'hwut.cov', the unifying EXECUTABLE. Its verbs and the reader
+       role's calls are ONE LIST, or one of them is lying:
+
+           elect       (registry)
+           instrument  instrument(build_argv, config)
+           probe       probe(executable, config)
+           run         wrap(argv, ...)
+           report      report_argv(...)
+           harvest     harvest(dir, root, config)
+           merge       (record.merge)
+           formats     the generated table (D-13)
+
     4. deferred by doctrine: covergroup BINS (line-less by the UCIS
        XSD itself), the long-tail readers, and every refusal stands
        until a real artifact arrives.

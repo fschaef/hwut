@@ -45,7 +45,8 @@ from vut.language_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record import (ranges_of, FileCoverage,
                                         CoverageRecord, merge)
 from vut.engine.coverage.index    import TestIndex, index_of
-from vut.engine.coverage.identity import Origin, EMPTY_GROUP
+from vut.engine.coverage.identity import (TestRunId, Gathered,
+                                          EMPTY_GROUP)
 
 
 def banner(label):
@@ -91,9 +92,9 @@ def named(origin_set):
 
 
 #  TWO RUNS THAT OVERLAP IN THE MIDDLE OF ONE FILE.
-A_ORIGIN = Origin(None, "test-parse.py", "basic")
-B_ORIGIN = Origin(None, "test-parse.py", "deep")
-C_ORIGIN = Origin("engine/TEST", "test-other.py", None)
+A_ORIGIN = TestRunId(1, 1)
+B_ORIGIN = TestRunId(1, 2)
+C_ORIGIN = Gathered("engine/TEST", TestRunId(2))
 
 A_RECORD = record_of("test-parse.py", "basic",
                      {"core.py": range(1, 11), "only_a.py": range(1, 4)})
@@ -219,19 +220,20 @@ def test_change():
     print("INSPECT: %s -- and this is NOT a clearance" % [str(o) for o in lonely])
 
     ok = check([
-        ([str(o) for o in index.of_change({"core.py": ranges_of([7, 8])})]
-         == ["test-parse.py--basic", "test-parse.py--deep"],
-         "an edit in the shared region names both runs"),
+        ([str(k) for k in index.of_change({"core.py": ranges_of([7, 8])})]
+         == ["1.1", "1.2"],
+         "an edit in the shared region names both runs -- as the "
+         "REGISTER numbered them; the names are its to decode"),
         (len(both) == 2,
          "an edit across files names the union of their runs"),
         (lonely == (),
          "an edit nobody executed names nobody"),
         (index.of_change({}) == (),
          "an empty change names nobody"),
-        (str(C_ORIGIN) == "engine/TEST:test-other.py",
-         "a choice-less run prints without a choice"),
-        (str(A_ORIGIN) == "test-parse.py--basic",
-         "and a directory-less origin without a directory"),
+        (str(C_ORIGIN) == "engine/TEST:2",
+         "a gathered key spells its found-directory and run id"),
+        (str(A_ORIGIN) == "1.1",
+         "and a plain run id spells app and choice, nothing more"),
     ])
     verdict(ok, "a change names the runs that certainly touched it.")
 

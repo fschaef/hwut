@@ -114,3 +114,92 @@ COST      The Bookkeeper knows the SHAPE of test_run's result and
 GRAVEYARD test_run flattening: keeps compare knowledge inside the
           recorder and leaves the dict's shape an unwritten contract
           between two components.
+
+
+D-7  THE TEST REGISTER: RELATIONAL, LOWEST-UNUSED, DELETE-FREES  (2026-08-25)
+------------------------------------------------------------------------------
+MOVED    The register described here left this component on 2026-08-25:
+         the bookkeeper is a COMPONENT now (bookkeeper RATIONALE B-1).
+         The decision below stands as ruled; only its address changed,
+         from 'orchestrator/bookkeeper/' to 'bookkeeper/'.
+SUPERSEDES coverage D-9 in whole and coverage D-14 in part: D-14's
+          DIR-LOCALITY stands and is load-bearing here; its interned
+          pair, monotone allocation, never-reuse law and retirement
+          machinery fall.
+PROBLEM   Coverage attribution, the healing services and exploration
+          all need 'which test is this' as a NUMBER that survives a
+          rename. The pair-interning gave one id per (test, choice),
+          so renaming an application touched one entry PER CHOICE; and
+          its never-reuse law demanded retirement flags and a monotone
+          counter -- machinery guarding stored ids that nothing stores.
+DECISION  RELATIONAL, in 'bookkeeper/test_id_db.py', one file per
+          directory, 'GOOD/test_ids.dat':
+
+              APP      app_id    o--o  application file name
+              CHOICE   choice_id o--o  choice name, PER application
+              run      TestRunId(app_id, choice_id|None), '47' / '47.66'
+
+          THE ID IS BORN AT FIRST ACCEPT ('hwut.accept' allocates on
+          bless, idempotently). ALLOCATION IS LOWEST-UNUSED in each
+          table's own scope -- accepting is not time critical, so the
+          smallest free number is chosen deliberately: no counter to
+          persist, no march to infinity. REMOVAL DELETES the entry and
+          frees the id. The guard that makes reuse safe: AN ID NEVER
+          LEAVES THE DIRECTORY'S BOOK -- everything persisted carries
+          names (coverage D-8; the base's own keys). Should a persisted
+          index one day want stored ids, THAT design re-opens this.
+          A MISSING register reads empty (a fresh directory); a DAMAGED
+          one REFUSES BY NAME -- unlike the result base, because
+          exploration restricts itself to the register and an empty
+          reading would silently hide every test.
+          THE REGISTER GAINS TWO ANSWERS THE PAIR NEVER HAD:
+          'vanished()' names every registered application whose file
+          left without 'hwut.remove' (the divergence D-4 could not
+          see: the base knows results, the register knows EXISTENCE),
+          and 'roster()' is what exploration will restrict its
+          interviews to.
+COST      Accept writes one more file, per allocation, atomically.
+          Five service GOODs moved by exactly one line each (the
+          register in a directory listing) and one by the new option's
+          help text -- audited whole, re-recorded.
+GRAVEYARD One id per (test, choice) pair: a fifty-choice rename is
+          fifty entries.
+          Retirement and never-reuse: protection for stored ids, where
+          storing ids is forbidden instead.
+          A global register above the directories: needs the lock and
+          the coordination dir-locality (coverage D-14) exists to
+          remove.
+
+
+D-8  IDS IN RECORDS; ONE HOLDING FREES AND DELETES               (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM   Three rulings meet. Coverage records carry the test's NAME in
+          their header (coverage D-8), so a rename leaves stale names
+          inside stored files. Repairing that in 'hwut.rename' adds a
+          feature the storage format makes unnecessary: the ruling is
+          that VUT-COVERAGE records will REFER TO RUN IDS (or group
+          ids), not names. But D-7 frees an id on removal -- and a
+          freed id, reissued, would let an OLD record attribute work
+          to a NEW test: the false attribution that reports nothing.
+DECISION  AN ID MAY BE PERSISTED ONLY IN FILES THE NAMING NAMES.
+          'hwut.remove' deletes the run's record files in the SAME
+          HOLDING in which it frees the id -- so freeing and deleting
+          every persisted reference are one act, and reuse is safe.
+          UNOFFICIAL vanishment frees nothing: the register entry
+          STANDS (D-7, 'vanished()'), so the id is never reissued
+          while stray records could still spell it.
+          'hwut.rename' therefore touches NO record content, ever: the
+          id inside the record is the identity, the id survives the
+          rename, and the name lives in one place -- the register.
+          THE RECORD FORMAT REVISION (header names a run id where it
+          named test/choice; version bump; the register becomes the
+          decode) is coverage work, designed with t-9, not here.
+COST      A record without its directory's register decodes to a
+          number. Accepted: the register is write-protected, refuses
+          damage by name, and travels with GOOD/ -- the same trust the
+          result base already carries.
+GRAVEYARD Rewriting record headers in 'hwut.rename': a feature against
+          a format about to remove its cause.
+          Never-reuse and retirement: guards for ids persisted
+          ANYWHERE; persisting them only where remove deletes them is
+          the cheaper law.

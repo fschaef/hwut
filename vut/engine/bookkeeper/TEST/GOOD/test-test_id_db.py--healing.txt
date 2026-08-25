@@ -1,0 +1,17 @@
+--- rename the application ---
+INSPECT: [1] 'test-parse.py' -> 'test-parser.py'
+         one entry moved; the choices still answer:
+         [1.2] -> ('test-parser.py', 'deep')
+--- rename the choice ---
+INSPECT: [1.1] -> ('test-parser.py', 'quick')
+--- refusals, by name ---
+         app rename onto a live name            -> TestIdFault
+         choice rename onto a live sibling      -> TestIdFault
+         renaming an app never registered       -> TestIdFault
+         renaming a choice never registered     -> TestIdFault
+  OK  : the id survives both renames -- THE POINT of the register
+  OK  : the old application name resolves no more
+  OK  : two live apps under one name is refused
+  OK  : no rename ever allocated
+SUCCESS: a rename touches one entry; every id stands.
+<hwut-end>

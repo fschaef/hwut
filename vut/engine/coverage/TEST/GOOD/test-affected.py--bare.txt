@@ -1,8 +1,8 @@
 
 --- --bare ---
 REACTION  status 0   stderr 325 byte(s)
-          | parser/TEST:test-parse.py--basic
-          | parser/TEST:test-parse.py--deep
+          | parser/TEST:1.1
+          | parser/TEST:1.2
           ! NOTE: these are the runs that CERTAINLY executed the changed lines.
           !       A run ABSENT here may still be affected -- by a branch that was
           !       deleted, by a data file, by a dynamic dispatch, by an absence.

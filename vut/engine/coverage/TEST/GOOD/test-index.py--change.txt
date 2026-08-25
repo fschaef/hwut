@@ -1,17 +1,17 @@
 
 --- an edit inside the shared region ---
-INSPECT: {'core.py': ((7, 9),)} -> ['test-parse.py--basic', 'test-parse.py--deep']
+INSPECT: {'core.py': ((7, 9),)} -> ['1.1', '1.2']
 
 --- an edit in two files at once ---
-INSPECT: ['test-parse.py--basic', 'test-parse.py--deep']
+INSPECT: ['1.1', '1.2']
 
 --- an edit nobody ever executed ---
 INSPECT: [] -- and this is NOT a clearance
-  OK  : an edit in the shared region names both runs
+  OK  : an edit in the shared region names both runs -- as the REGISTER numbered them; the names are its to decode
   OK  : an edit across files names the union of their runs
   OK  : an edit nobody executed names nobody
   OK  : an empty change names nobody
-  OK  : a choice-less run prints without a choice
-  OK  : and a directory-less origin without a directory
+  OK  : a gathered key spells its found-directory and run id
+  OK  : and a plain run id spells app and choice, nothing more
 SUCCESS: a change names the runs that certainly touched it.
 <hwut-end>

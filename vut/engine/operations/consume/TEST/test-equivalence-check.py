@@ -43,12 +43,12 @@ from   vut.engine.operations.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.operations.observer        import ObserverGroup  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
-from   vut.engine.orchestrator.bookkeeper.stream_store import Store  # noqa E402
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import Bookkeeper      # noqa E402
+from   vut.engine.bookkeeper.stream_store import Store  # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import Bookkeeper      # noqa E402
 from   vut.engine.operations.consume.loaded import loaded        # noqa E402
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                                    Bookkeeper)
-from   vut.engine.orchestrator.bookkeeper.stream_store           import Store          # noqa E402
+from   vut.engine.bookkeeper.stream_store           import Store          # noqa E402
 
 
 def _check(pair_list):

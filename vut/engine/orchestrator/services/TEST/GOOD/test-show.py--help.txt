@@ -6,8 +6,13 @@ $ hwut.show --help
         hwut.show                   the whole directory: 'hwut.conf' first,
                                     then every test application as a tree
         hwut.show <source file>     one file's specification
+        hwut.show --show-ids        the TEST REGISTER: every registered
+                                    application and choice with its id;
+                                    a registered application whose file
+                                    is ABSENT is marked VANISHED
 
     OPTIONS
+        --show-ids          print the register instead of the tree
         --no-default        drop every value nobody stated, leaving what
                             somebody chose
         --provenance        name the place of every stated value -- the

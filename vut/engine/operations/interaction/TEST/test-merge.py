@@ -50,9 +50,9 @@ from   vut.engine.operations.interaction.feed import (              # noqa E402
                                                     resolution_of)
 from   vut.engine.operations.interaction.feed import RemoteDisplay  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                                    Bookkeeper)
-from   vut.engine.orchestrator.bookkeeper.stream_store           import Store          # noqa E402
+from   vut.engine.bookkeeper.stream_store           import Store          # noqa E402
 
 
 def _check(pair_list):

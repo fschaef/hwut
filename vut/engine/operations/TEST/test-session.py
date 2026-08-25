@@ -44,13 +44,13 @@ from   vut.engine.operations.session         import (              # noqa E402
                                                    Request,
                                                    store_of,
                                                    E_Goal)
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                                    Bookkeeper,
                                                    compare_setup_delta)
 from   vut.engine.operations.interaction.feed import (            # noqa E402
                                                     E_DisplayTarget,
                                                     driver_for)
-from   vut.engine.orchestrator.bookkeeper.stream_store           import (Store,        # noqa E402
+from   vut.engine.bookkeeper.stream_store           import (Store,        # noqa E402
                                                    DirectoryBusy,
                                                    StoreConfig,
                                                    LOCK_DIRECTORY_NAME)

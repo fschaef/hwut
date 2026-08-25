@@ -5,8 +5,8 @@ INSPECT: core.py covered = ((1, 21),)
          -- who covered line 3? the merged record cannot say.
 
 --- the index answers WHO reached it ---
-INSPECT: core.py:3  -> test-parse.py--basic
-         core.py:15 -> test-parse.py--deep
+INSPECT: core.py:3  -> 1.1
+         core.py:15 -> 1.2
   OK  : merge unions the ranges -- the whole span, one range
   OK  : provenance that agrees is carried
   OK  : provenance that differs is JOINED -- the mixture is visible, but not per line

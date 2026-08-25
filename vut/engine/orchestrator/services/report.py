@@ -68,7 +68,7 @@ def bookkeeper_of(directory):
     Imported here, not at module scope: the face runs by path as well
     as by module, and the import must follow the '_config' adoption.
     """
-    from ..bookkeeper.bookkeeper import Bookkeeper
+    from ...bookkeeper.bookkeeper import Bookkeeper
     return Bookkeeper(directory)
 
 

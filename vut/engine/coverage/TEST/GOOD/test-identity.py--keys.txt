@@ -1,0 +1,25 @@
+
+--- a run id is what the REGISTER issued ---
+INSPECT: app 1, choice 1    -> 1.1
+INSPECT: app 1, choice 2    -> 1.2
+INSPECT: app 2, no choice   -> 2
+         this component numbers no test; it carries the
+         shape, and the register decodes it to names.
+
+--- a GATHERED key qualifies one fold, and only that fold ---
+INSPECT: other/TEST:1
+         'other/TEST' is relative to the GATHER ROOT the
+         caller chose, so it is exactly that transient.
+         at the root: 3.4
+
+--- read back from text ---
+         47     -> 47
+         47.66  -> 47.66
+  OK  : a run id spells app and choice, or app alone
+  OK  : a gathered key spells its found-directory first
+  OK  : a record found AT the root needs no qualification
+  OK  : the text form reads back
+  OK  : and what spells no run id is refused by the BOOKKEEPER's own fault: the shape is its, and so is the refusal
+  OK  : run ids order by app then choice, so a printed answer is stable
+SUCCESS: the register numbers; this component carries.
+<hwut-end>

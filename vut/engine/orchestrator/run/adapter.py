@@ -15,7 +15,7 @@ ______________________________________________________________________________
 """
 import shlex
 
-from ..bookkeeper.configuration  import NamingConfig
+from ...bookkeeper.configuration  import NamingConfig
 from ...operations.build_action  import BuildConfig, E_BuildSystem
 from ...operations.configuration import (E_SourceKind,
                                          TestChoiceConfiguration,

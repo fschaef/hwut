@@ -1,0 +1,166 @@
+HOW TO INTEGRATE A COVERAGE
+==============================================================================
+
+PURPOSE
+
+This document is the procedure for ADMITTING ONE MORE COVERAGE TOOL
+into the component: what to do, in what order, and where each piece
+goes. It is walked once per tool, by a developer of this component.
+
+It does not explain how a test run OBTAINS coverage -- that lifecycle
+(elect, instrument, probe, run, report, harvest, merge) belongs to the
+'hwut.cov' service and its manual. And it does not restate the laws of
+the record or of a reader; those live in README.txt and RATIONALE.txt
+and are only POINTED AT from here.
+
+
+THE STAGES
+------------------------------------------------------------------------------
+
+                            +---------+
+                            | WITNESS |
+                            +----+----+
+                                 |
+                    the ARTIFACT decides the road
+                   format read      format new
+                        |                |
+                        v                v
+                   +-------+        +--------+
+                   | ALIAS |        | READER |
+                   +---+---+        +----+---+
+                       |                 |
+                       |            axis new?
+                       |           no |     | yes
+                       |              |     v
+                       |              | +---------+
+                       |              | | MEASURE |
+                       |              | +----+----+
+                       |              |      |
+                       v              v      v
+                       +--------------+------+
+                                      |
+                                      v
+                                +----------+
+                                | REGISTER |
+                                +----------+
+                                      |
+                                      v
+                                +----------+
+                                |  PROVE   |
+                                +----------+
+                                      |
+                                      v
+                                +----------+
+                                |  LEDGER  |
+                                +----------+
+
+
+WITNESS
+------------------------------------------------------------------------------
+
+Run the real tool over a real source file. Keep what it wrote under
+'WITNESS-<topic>/<language>/', and add to 'WITNESS-<topic>-artifacts.txt':
+the exact commands with tool versions, and what the artifact shows that
+a specification would not have told you.
+
+    lua 5.4.6, luacov 0.16.0:
+        lua -lluacov demo.lua && luacov
+    FINDING: the stats file cannot tell 'never run' from 'not
+    executable'; only the REPORT can. The reader reads the report.
+
+No reader is written from a specification alone, and no alias is placed
+on belief -- the road is decided by the artifact. Where the tool cannot
+run here, a fixture answering the format's OWN INVARIANT stands in, the
+substitution is stated at the fixture, and the witness remains owed.
+
+
+ALIAS
+------------------------------------------------------------------------------
+
+The artifact turned out to be a format already read: one line in
+'readers/__init__.py', one candidate in the registry, done.
+
+    ALIAS_DB:          "gcovr": "lcov"
+    DEFAULT_TOOL_DB:   "*.c": (..., "gcovr", ...)
+
+An alias claims the FORMAT and nothing else. A tool that needs its own
+build flags or its own second call deserves a module.
+
+
+READER
+------------------------------------------------------------------------------
+
+The artifact is a new format: one module under 'readers/'.
+
+    class FooReader(I_Reader):
+        name          = "foo"
+        source_format = "foo json"
+        def wrap(self, argv, config, work_dir):     return argv
+        def report_argv(self, config, work_dir):    return None
+        def harvest(self, work_dir, source_root, config=None):
+            ...                    # artifact -> record_of(...) | None
+
+    register(FooReader())
+
+The laws it must obey -- absence is None, paths made relative, the
+gather set applied, EX never invented, the pair never the percentage,
+spawn nothing -- are 'reader.py' docstring and README section 6. Read
+an existing reader of similar shape first; 'simplecov.py' is a small one.
+
+
+MEASURE
+------------------------------------------------------------------------------
+
+Only where the artifact carries an axis the record does not hold yet
+(line and branch exist; toggle and cover exist). One 'register' call in
+'measure.py': a name, a record tag, an encoding, and the honest answer
+to whether two records holding it merge.
+
+    register(NamedPointMeasure(name="toggle", tag="TG"))
+
+The axis enters at a FILE and a LINE or it does not enter (disc-9,
+RATIONALE D-12).
+
+
+REGISTER
+------------------------------------------------------------------------------
+
+Make the tool electable:
+
+    DEFAULT_TOOL_DB    the language's candidate tuple, in preference
+                       order -- readable formats first
+    EXTENSION_DB       only where the source extension is new
+
+A candidate with no reader is still listed: the machine then refuses
+BY NAME instead of reporting no coverage. An empty candidate list is
+itself an answer ('this build vouches for no tool here') -- never
+invent one.
+
+
+PROVE
+------------------------------------------------------------------------------
+
+One HWUT choice in 'TEST/test-readers.py'. The fixture is the tool's
+bytes, pasted verbatim. The choice PRINTS what the reader made of them
+-- plus the format's own cross-check where one exists -- and the
+recorded GOOD file is the specification. No assertions.
+
+    cd TEST && python3 test-readers.py foo > GOOD/test-readers.py--foo.txt
+    # audit the file line by line, THEN bless it
+
+Re-record 'GOOD/hwut.cov--formats.txt': the generated tool/format table
+gained a row, and a reader admitted without it turns the suite red
+(RATIONALE D-13).
+
+
+LEDGER
+------------------------------------------------------------------------------
+
+One line each, history only -- what was built, when, against which
+witness:
+
+    DISCUSSIONS.txt todo-2           the reader ledger
+    OVERVIEW-coverage-roads.txt      the road walked, the finding
+
+Do not copy the tool/format table anywhere; it has one author, the
+registry, and 'hwut.cov formats' prints it (RATIONALE D-13).

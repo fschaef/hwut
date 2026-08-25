@@ -584,7 +584,7 @@ The Store's own struct, held verbatim by the configuration (2.7):
       record_timing: bool   # also keep the per-line cadence (4)
 
 THE BOOK. What HAPPENED is not this component's to keep. It is entered in
-the BOOKKEEPER (vut/engine/orchestrator/bookkeeper/), which owns the one
+the BOOKKEEPER (vut/engine/bookkeeper/), which owns the one
 base of a test directory -- 'GOOD/result_db.json' -- and its shape. This is
 what a recursive listing over results reads ('hwut info' in HWUT today).
 

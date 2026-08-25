@@ -1,15 +1,15 @@
 
 --- one line at a time ---
-         core.py:1   -> test-parse.py--basic
-         core.py:6   -> test-parse.py--basic,test-parse.py--deep
-         core.py:15  -> test-parse.py--deep
+         core.py:1   -> 1.1
+         core.py:6   -> 1.1,1.2
+         core.py:15  -> 1.2
          core.py:30  -> <nobody>
-         core.py:41  -> engine/TEST:test-other.py
+         core.py:41  -> engine/TEST:2
 
 --- a span ---
-         core.py 4..7    -> test-parse.py--basic,test-parse.py--deep
+         core.py 4..7    -> 1.1,1.2
          core.py 22..30  -> <nobody>
-         core.py 1..100  -> engine/TEST:test-other.py,test-parse.py--basic,test-parse.py--deep
+         core.py 1..100  -> 1.1,1.2,engine/TEST:2
 
 --- a file nobody measured ---
          ghost.py:1 -> <nobody>

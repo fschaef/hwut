@@ -34,7 +34,7 @@ from ..plan.printer                import print_plan
 from ..plan.wish                   import (HELP as WISH_HELP,
                                            WishError,
                                            parse_wish)
-from ..bookkeeper.bookkeeper       import Bookkeeper
+from ...bookkeeper.bookkeeper       import Bookkeeper
 from ..plan.wish                   import USAGE_TOKEN_TUPLE \
                                            as WISH_TOKEN_TUPLE
 from ._core                        import usage_line

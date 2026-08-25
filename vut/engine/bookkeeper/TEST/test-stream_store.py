@@ -34,9 +34,9 @@ from   config import HwutRunner                                  # noqa F401,E40
 from   vut.engine.operations.nominal import (BytesNominal,         # noqa E402
                                            StreamNominal,
                                            NominalNotAvailable)
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper)
-from   vut.engine.orchestrator.bookkeeper.stream_store   import (Store,                # noqa E402
+from   vut.engine.bookkeeper.stream_store   import (Store,                # noqa E402
                                            DirectoryLock,
                                            liveness_can_be_asked,
                                            LOCK_DIRECTORY_NAME)

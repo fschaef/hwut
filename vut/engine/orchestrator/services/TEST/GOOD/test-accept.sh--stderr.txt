@@ -27,3 +27,4 @@ GOOD holds (no stderr nominal):
     test-ok.stdout
     test-two--a.stdout
     test-two--b.stdout
+    test_ids.dat

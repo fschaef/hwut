@@ -11,7 +11,7 @@ DESCRIPTION
        database, an object store -- fits behind the same interface.
 
        THE NAMING IS THE BOOKKEEPER'S. A Store is constructed OVER a
-       Bookkeeper (vut/engine/orchestrator/bookkeeper/) and asks it for
+       Bookkeeper (vut/engine/bookkeeper/) and asks it for
        every path it touches; the key scheme has ONE expression, there.
        The Store triggers the reading and the writing; the Bookkeeper
        answers where. Results and entries are the Bookkeeper's whole
@@ -42,7 +42,7 @@ from .configuration import StoreConfig   # noqa: F401
 
 #  The lock mechanism lives in the auxiliary; these names are part of
 #  THIS component's face and are re-exported here.
-from   ....auxiliary.directory_mutex import (MkdirMutex,        # noqa: F401
+from   ...auxiliary.directory_mutex import (MkdirMutex,        # noqa: F401
                                             DirectoryBusy,
                                             DirectoryDeadlock,
                                             liveness_can_be_asked,

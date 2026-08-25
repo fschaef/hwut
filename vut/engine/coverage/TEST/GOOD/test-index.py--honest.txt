@@ -1,7 +1,7 @@
 
 --- the index knows only the runs it was built from ---
 INSPECT: built from A alone, core.py:15 -> <nobody>
-         built from all,     core.py:15 -> test-parse.py--deep
+         built from all,     core.py:15 -> 1.2
 
 --- an empty answer is not a clearance ---
          core.py:30 -> <nobody>

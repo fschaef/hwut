@@ -39,3 +39,4 @@ STATUS: 0
     ==============================================================================
 GOOD holds (first blessed, second left alone):
     test-ok.stdout
+    test_ids.dat

@@ -1,0 +1,15 @@
+--- remove the first application ---
+INSPECT: removed 'test-parse.py'; register now:
+         [2] test-other.py
+         asking for the freed id: None
+--- the pool hands the freed id out again ---
+INSPECT: test-fresh.py -> [1]
+--- remove one choice; its sibling keeps its id ---
+INSPECT: removed 1.1; 'y' still [1.2]; 'z' got [1.1]
+  OK  : a removed entry is GONE -- no retirement, no flag
+  OK  : the freed id returned to the pool and was handed out again
+  OK  : a sibling's id never moves when a choice is removed
+  OK  : the freed choice id is reused in its own scope
+  OK  : removing what was never registered is refused
+SUCCESS: removal deletes; the pool is the id space itself.
+<hwut-end>

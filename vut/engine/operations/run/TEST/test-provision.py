@@ -56,9 +56,9 @@ from   vut.engine.operations.run.stage_execute      import \
                                                   StageExecute    # noqa E402
 from   vut.engine.operations.run.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                                  Bookkeeper)
-from   vut.engine.orchestrator.bookkeeper.stream_store         import Store            # noqa E402
+from   vut.engine.bookkeeper.stream_store         import Store            # noqa E402
 
 #  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
 #  the one place that knows where 'vut' is; a hop count here is a
@@ -538,9 +538,9 @@ from   vut.engine.operations.run.stage_execute      import \
                                                   StageExecute    # noqa E402
 from   vut.engine.operations.run.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
-from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                                  Bookkeeper)
-from   vut.engine.orchestrator.bookkeeper.stream_store         import Store            # noqa E402
+from   vut.engine.bookkeeper.stream_store         import Store            # noqa E402
 
 #  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
 #  the one place that knows where 'vut' is; a hop count here is a

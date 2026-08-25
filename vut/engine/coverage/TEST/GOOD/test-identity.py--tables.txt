@@ -1,30 +1,26 @@
 
---- the id table, as it is stored ---
-         | ##VUT-TEST-IDS 1
-         | T:1 . -|test-parser.py|basic
-         | T:2 . -|test-parse.py|deep
-         | T:3 ! other/TEST|test-other.py|-
+--- the group table, as it is stored ---
+         | ##VUT-TEST-GROUPS 2
+         | G:0
+         | G:1 1.1
+         | G:2 1.1,1.2
+         | G:3 1.2
 
 --- read back ---
-         1 live    test-parser.py--basic
-         2 live    test-parse.py--deep
-         3 retired other/TEST:test-other.py
+         0 -> {}
+         1 -> 1.1
+         2 -> 1.1, 1.2
+         3 -> 1.2
 
---- the next allocation stands ABOVE the highest id read ---
+--- the next allocation stands ABOVE the highest group read ---
 INSPECT: -> 4
 
---- the group table, as it is stored ---
-         | ##VUT-TEST-GROUPS 1
-         | G:0
-         | G:1 1,2
-         | G:2 2
+--- a GATHERED key has no place in a stored table ---
+         raised IdentityFault
   OK  : format(parse(format(x))) == format(x) -- the bytes are stable
-  OK  : a retired entry survives the round trip, retired
-  OK  : and does not resolve forward after it
-  OK  : a renamed entry survives under its id
-  OK  : reading a table allocates onward from ABOVE the highest id it saw -- a round trip can never reissue an id
-  OK  : the group table survives the round trip
-  OK  : the empty group with it
-  OK  : and allocates onward from above the highest group read
-SUCCESS: a table can be written, read, and written again without ever reissuing an id.
+  OK  : a group decodes to the run ids it was made of
+  OK  : the empty group survives the round trip
+  OK  : reading a table allocates onward from ABOVE the highest group it saw
+  OK  : storing a gathered key is refused: it belongs to ONE aggregation and would freeze that view as identity
+SUCCESS: one table, stable bytes, and nothing ephemeral in it.
 <hwut-end>

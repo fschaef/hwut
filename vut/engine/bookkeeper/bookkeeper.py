@@ -119,7 +119,7 @@ def compare_setup_delta(options):
     the defaults cannot disagree about what a member is.
     """
     if options is None: return {}
-    from ...compare.configuration import Configuration
+    from ..compare.configuration import Configuration
     default    = Configuration()
     difference = {}
 

@@ -24,6 +24,7 @@ ______________________________________________________________________________
 import sys
 
 from ..exploration.hwut_parse import text_of_directory, text_of_file
+from ...bookkeeper.test_id_db  import TestIdDb, TestIdFault
 from ._exit                   import E_ExitCode
 
 
@@ -35,8 +36,13 @@ HELP = """hwut.show -- the configuration the framework READ
     hwut.show                   the whole directory: 'hwut.conf' first,
                                 then every test application as a tree
     hwut.show <source file>     one file's specification
+    hwut.show --show-ids        the TEST REGISTER: every registered
+                                application and choice with its id;
+                                a registered application whose file
+                                is ABSENT is marked VANISHED
 
 OPTIONS
+    --show-ids          print the register instead of the tree
     --no-default        drop every value nobody stated, leaving what
                         somebody chose
     --provenance        name the place of every stated value -- the
@@ -58,6 +64,38 @@ EXIT STATUS
     0    nothing refused, no fault met
     1    a fault was met
     2    the command line cannot be read"""
+
+
+def show_register(directory, write):
+    """
+    RETURN: E_ExitCode, OK -- also for an EMPTY register, which is a
+            fresh directory and not a fault. FAULT where the register
+            file itself cannot be read.
+
+    Prints every registered application '[id] name', its choices
+    beneath as '[id.id] choice'. A registered application whose FILE
+    IS ABSENT is marked VANISHED: it left without 'hwut.remove', and
+    healing is a service, never a guess.
+    """
+    try:
+        id_db = TestIdDb(directory)
+    except TestIdFault as fault:
+        write("FAULT: %s" % fault)
+        return E_ExitCode.FAULT
+
+    write("==[ TEST REGISTER ]%s" % ("=" * 59))
+    if len(id_db) == 0:
+        write("(empty -- an id is born at first accept)")
+        return E_ExitCode.OK
+
+    vanished_db = dict(id_db.vanished())
+    for app_id, name, choice_tuple in id_db.app_iterable():
+        mark = "   VANISHED: no such file" \
+               if app_id in vanished_db else ""
+        write("[%i] %s%s" % (app_id, name, mark))
+        for choice_id, choice in choice_tuple:
+            write("    [%i.%i] %s" % (app_id, choice_id, choice))
+    return E_ExitCode.OK
 
 
 def main(argv=None, write=None):
@@ -87,7 +125,8 @@ def main(argv=None, write=None):
         else:
             name_list.append(argument)
 
-    known_set = {"--no-default", "--provenance", "--gnu"}
+    known_set = {"--no-default", "--provenance", "--gnu",
+                 "--show-ids"}
     unknown   = sorted(option_set - known_set)
     if unknown:
         write("REFUSED: unknown option(s): %s" % ", ".join(unknown))
@@ -98,6 +137,9 @@ def main(argv=None, write=None):
               "or the directory" % len(name_list))
         write(USAGE)
         return E_ExitCode.REFUSED
+
+    if "--show-ids" in option_set:
+        return show_register(directory, write)
 
     no_default_f = "--no-default" in option_set
     provenance_f = "--provenance" in option_set

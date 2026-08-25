@@ -661,7 +661,7 @@ Still open, each awaiting its ruling:
 ONE base, 'GOOD/result_db.json', JSON, REPLACES the footprint file; the
 footprint face, FOOTPRINT_FILE_NAME and '_write_footprint' are gone. The
 base, THE NAMING, the reproducible configurations and the divergence
-verdicts belong to the BOOKKEEPER (vut/engine/orchestrator/bookkeeper/);
+verdicts belong to the BOOKKEEPER (vut/engine/bookkeeper/);
 its RATIONALE D-1..D-6 holds the rulings, and the attribution record has
 its first durable home there. Here, the Store keeps the ARTIFACTS and the
 LOCK, is constructed OVER a Bookkeeper, and asks it for every path: the

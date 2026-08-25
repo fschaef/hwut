@@ -16,6 +16,13 @@ DESCRIPTION
        needed was only that a record CARRY that key when it travels away
        from the store, which is why the header names it (RATIONALE D-8).
 
+       THE RUN KEY IS WHATEVER THE FOLD WAS GIVEN, and the REGISTER
+       issued it (orchestrator D-7). One directory's fold hands in
+       'TestRunId's; a GATHER across directories hands in 'Gathered'
+       keys -- a found-directory beside a run id, formed at gather time
+       and living exactly as long as the aggregation (D-14). The index
+       interns SETS of either; it numbers no test itself.
+
        CONSEQUENCE, and it is a rule, not a remark: THE PER-RUN RECORDS
        MUST BE KEPT. An aggregate that replaces them answers the first
        question and destroys the second.
@@ -54,8 +61,8 @@ ______________________________________________________________________________
 from bisect import bisect_right
 
 from .record   import union
-from .identity import (Origin, IdTable, GroupTable,      # noqa: F401
-                       EMPTY_GROUP, IdentityFault)
+from .identity import (TestRunId, Gathered,             # noqa: F401
+                       GroupTable, EMPTY_GROUP, IdentityFault)
 
 
 class TestIndex:
@@ -64,18 +71,26 @@ class TestIndex:
     Built by 'index_of'. Holds the segmentation and the two tables that
     decode it; holds no record and no configuration.
 
-    TWO LEVELS OF ANSWER. 'group_of_line' and 'id_set_of_ranges' work in
-    NUMBERS -- what a machine wants. 'of_line', 'of_ranges' and
-    'of_change' decode to Origins -- what a person wants. The decoding
-    happens at the edge, on what a query touched.
+    TWO LEVELS OF ANSWER. 'group_of_line' works in GROUP numbers --
+    the compact form a query bisects for. 'of_line', 'of_ranges' and
+    'of_change' decode the group to RUN KEYS. Decoding a run key to a
+    NAME is the REGISTER's, at the edge, by whoever asked -- this
+    holds no name.
     """
 
-    def __init__(self, file_db, id_table, group_table):
+    def __init__(self, file_db, group_table):
         """RETURN: TestIndex over 'file_db': path -> (boundary_tuple,
-        group_tuple), with the tables that decode it."""
+        group_tuple), with the table that decodes a group."""
         self.file_db     = file_db
-        self.id_table    = id_table
         self.group_table = group_table
+
+    @property
+    def run_key_set(self):
+        """RETURN: frozenset, every run key the index knows."""
+        result = set()
+        for _, key_tuple in self.group_table.item_iterable():
+            result |= set(key_tuple)
+        return frozenset(result)
 
     @property
     def path_tuple(self):
@@ -99,10 +114,10 @@ class TestIndex:
         if i < 0 or i >= len(group_tuple): return EMPTY_GROUP
         return group_tuple[i]
 
-    def id_set_of_ranges(self, path, range_tuple):
+    def key_set_of_ranges(self, path, range_tuple):
         """
-        RETURN: frozenset of int, every TEST ID that executed any line of
-                those half-open ranges of that file.
+        RETURN: frozenset, every RUN KEY that executed any line of those
+                half-open ranges of that file.
 
         The hot path: bisect to the first segment, walk while it
         overlaps, union the decoded groups. No name is formed.
@@ -117,49 +132,32 @@ class TestIndex:
             while i < len(group_tuple) and boundary_tuple[i] < end:
                 if boundary_tuple[i + 1] > begin \
                    and group_tuple[i] != EMPTY_GROUP:
-                    result |= self.group_table.id_set_of(group_tuple[i])
+                    result |= self.group_table.key_set_of(group_tuple[i])
                 i += 1
         return frozenset(result)
 
-    # --------------------------------------------------------- in names
-
-    def origin_set_of(self, id_set):
-        """
-        RETURN: frozenset of Origin, the runs those test ids name.
-
-        Raises IdentityFault on an id the table never allocated: an
-        unresolvable id is an attribution nobody can check, and the empty
-        set would read as 'nobody ran this'.
-        """
-        result = set()
-        for test_id in id_set:
-            origin = self.id_table.origin_of(test_id)
-            if origin is None:
-                raise IdentityFault("test id %s stands in the index but "
-                                    "in no table" % test_id)
-            result.add(origin)
-        return frozenset(result)
+    # ------------------------------------------------------ in run keys
 
     def of_line(self, path, line):
         """
-        RETURN: frozenset of Origin, the runs that executed that line.
+        RETURN: frozenset of run key, the runs that executed that line.
                 Empty frozenset, where the line was executed by none --
                 which is NOT a claim that no test depends on it.
         """
         group_id = self.group_of_line(path, line)
         if group_id == EMPTY_GROUP: return frozenset()
-        return self.origin_set_of(self.group_table.id_set_of(group_id))
+        return self.group_table.key_set_of(group_id)
 
     def of_ranges(self, path, range_tuple):
         """
-        RETURN: frozenset of Origin, every run that executed ANY line of
-                the given half-open ranges of that file.
+        RETURN: frozenset of run key, every run that executed ANY line
+                of the given half-open ranges of that file.
         """
-        return self.origin_set_of(self.id_set_of_ranges(path, range_tuple))
+        return self.key_set_of_ranges(path, range_tuple)
 
     def of_change(self, change_db):
         """
-        RETURN: tuple of Origin, sorted -- every run that executed any
+        RETURN: tuple of run key, sorted -- every run that executed any
                 line the change touched.
 
         'change_db' maps a source file path to the half-open ranges the
@@ -170,10 +168,10 @@ class TestIndex:
         data, by an absence. Running only these and calling the suite
         green is a false green.
         """
-        id_set = set()
+        key_set = set()
         for path, range_tuple in change_db.items():
-            id_set |= self.id_set_of_ranges(path, range_tuple)
-        return tuple(sorted(self.origin_set_of(id_set)))
+            key_set |= self.key_set_of_ranges(path, range_tuple)
+        return tuple(sorted(key_set))
 
     # ------------------------------------------------------- the shape
 
@@ -191,22 +189,23 @@ class TestIndex:
     def segment_iterable(self, path):
         """
         YIELD: [0] (begin, end)  one half-open segment of the file
-               [1] frozenset of Origin, who executed it
+               [1] frozenset of run key, who executed it
 
-        In line order. The rendering face of the index; the machine face
-        is 'group_segment_iterable', which forms no name.
+        In line order. The rendering face of the index; the machine
+        face is 'group_segment_iterable', which decodes nothing.
         """
         for span, group_id in self.group_segment_iterable(path):
             if group_id == EMPTY_GROUP:
                 yield span, frozenset()
             else:
-                yield span, self.origin_set_of(
-                    self.group_table.id_set_of(group_id))
+                yield span, self.group_table.key_set_of(group_id)
 
 
-def index_of(pair_iterable, id_table=None, group_table=None):
+def index_of(pair_iterable, group_table=None):
     """
-    RETURN: TestIndex over the (Origin, CoverageRecord) pairs given.
+    RETURN: TestIndex over the (run key, CoverageRecord) pairs given --
+            a run key being a TestRunId, or a Gathered where the fold
+            spans directories.
 
     Only the COVERED ranges enter: the index answers who EXECUTED a
     line. What was executable and never reached belongs to the coverage
@@ -216,28 +215,33 @@ def index_of(pair_iterable, id_table=None, group_table=None):
     reaches whole costs one segment -- the same economy the record's
     intervals buy, kept through the fold.
 
-    'id_table' and 'group_table' are parameters so that a caller which
-    already holds them -- the bookkeeper, one day (disc-8) -- hands them
-    in and keeps its ids stable across builds. Omitted, fresh ones are
-    made and the ids live only as long as this index.
+    THE RUN KEYS ARE NOT INVENTED HERE. The REGISTER issued them
+    (orchestrator D-7); this folds over what it was given and never
+    numbers a test itself.
+
+    'group_table' is a parameter so that a caller folding several
+    directories keeps ONE table across them. Omitted, a fresh one is
+    made and the group ids live as long as this index.
+
+    THE PAIRS ARRIVE SORTED BY KEY or the GROUP ids are not
+    reproducible: two gathers over one tree must allocate identically,
+    so the CALLER orders (D-14). This function trusts the order given.
     """
-    if id_table    is None: id_table    = IdTable()
     if group_table is None: group_table = GroupTable()
 
     event_db = {}
-    for origin, record in pair_iterable:
-        test_id = id_table.id_of(origin)
+    for run_key, record in pair_iterable:
         for path, entry in record.file_db.items():
             event_list = event_db.setdefault(path, [])
             for begin, end in entry.covered:
-                event_list.append((begin, 1, test_id))
-                event_list.append((end, -1, test_id))
+                event_list.append((begin, 1, run_key))
+                event_list.append((end, -1, run_key))
 
     file_db = {}
     for path, event_list in event_db.items():
         #  A CLOSE BEFORE AN OPEN at the same position: two ranges that
         #  merely touch must not appear to overlap for one line.
-        event_list.sort(key=lambda e: (e[0], e[1], e[2]))
+        event_list.sort(key=lambda e: (e[0], e[1], str(e[2])))
 
         #  SWEEP: the state AFTER every event position, in line order.
         state_list = []
@@ -246,9 +250,9 @@ def index_of(pair_iterable, id_table=None, group_table=None):
         while i < n:
             position = event_list[i][0]
             while i < n and event_list[i][0] == position:
-                _, step, test_id = event_list[i]
-                active[test_id] = active.get(test_id, 0) + step
-                if active[test_id] == 0: del active[test_id]
+                _, step, run_key = event_list[i]
+                active[run_key] = active.get(run_key, 0) + step
+                if active[run_key] == 0: del active[run_key]
                 i += 1
             state_list.append((position,
                                group_table.group_of(frozenset(active))))
@@ -280,4 +284,4 @@ def index_of(pair_iterable, id_table=None, group_table=None):
 
         file_db[path] = (tuple(boundary_list), tuple(group_list))
 
-    return TestIndex(file_db, id_table, group_table)
+    return TestIndex(file_db, group_table)

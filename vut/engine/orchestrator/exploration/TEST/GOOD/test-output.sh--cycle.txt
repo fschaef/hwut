@@ -8,4 +8,5 @@ accepted: status 0
 nominals:
     test-file.result.csv
     test-file.stdout
+    test_ids.dat
 STATUS: 0

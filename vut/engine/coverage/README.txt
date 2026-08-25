@@ -3,10 +3,12 @@ coverage -- THE MEASUREMENT OF WHAT A TEST REACHED
 ==============================================================================
 
 Status:  The record and its algebra, the election, the index, the
-         two internings, 'hwut.affected', SEVEN READERS (coverage.py,
-         lcov, gcov, cobertura, go, luacov, jacoco) and the MEASURE registration (branch,
-         mc/dc) are BUILT and green. 'julia' is owed, and a WITNESSED
-         jacoco fixture, and DISCUSSIONS.txt names what is not built.
+         two internings, 'hwut.affected', ELEVEN READERS over eleven
+         artifact formats, and the MEASURE registration (branch, mc/dc,
+         toggle, cover) are BUILT and green. For the current table of
+         tools, formats and what this build reads, ask the registry --
+         'hwut.cov formats' (RATIONALE D-13); it is not copied here.
+         'julia' is owed, and DISCUSSIONS.txt names what is not built.
 Layer:   BESIDE procsitter and compare -- a component the operations
          layer holds VERBATIM and translates for.
 Bounds:  ONE test's measurement. Aggregating many is a HIGHER layer.
@@ -132,14 +134,15 @@ this line" -- and therefore, what to run when that line changes.
     index_of([(Origin, CoverageRecord), ...])  ->  TestIndex
 
         .of_line(path, line)        -> frozenset of Origin
-        .of_ranges(path, ranges)    -> frozenset of Origin
-        .of_change({path: ranges})  -> tuple of Origin, sorted
+        .of_ranges(path, ranges)    -> frozenset of run keys
+        .of_change({path: ranges})  -> tuple of run keys, sorted
         .segment_iterable(path)     -> ((begin, end), origin_set) ...
 
-An Origin is (directory, test, choice). The directory is supplied by the
-AGGREGATOR: a record's paths are relative to its test directory and name
-no machine, so what disambiguates two 'core.py' comes from where the
-record was found.
+An Origin is (test, choice) -- DIRECTORY-LOCAL, stable under any
+invocation root, untouched when its directory moves (RATIONALE D-14).
+A GATHER across directories qualifies at gather time: 'Gathered' pairs
+the found-directory with the Origin, is what a cross-directory index
+decodes to, and is never stored -- 'IdTable.format' refuses it.
 
 A SEGMENT CARRIES ONE INTEGER, not a set of names. 'identity.py' interns
 twice: an Origin becomes a TEST ID, and a set of test ids becomes a GROUP
@@ -253,23 +256,22 @@ emptiness do not collapse.
 A READER NAMES ITS CALLS AND MAKES NONE. Every process HWUT runs goes
 through the procsitter, so the execute stage makes what the reader names.
 
-    tool                format                 wrap          second call
-    ------------------  ---------------------  ------------  -------------
+THE TABLE OF TOOLS, FORMATS AND ALIASES IS NOT WRITTEN HERE. It has one
+author -- the registry -- and is printed by
+
+    hwut.cov formats
+
+whose GOOD file stands in 'TEST/GOOD/'. It was copied into five
+documents once, and three of the five were false within two days
+(RATIONALE D-13). What this section states instead is the SHAPE of the
+answer: every tool names a format; several tools share one; a tool
+either names a second call or honestly names none.
+
     coverage            coverage.py json       coverage run  coverage json
-    lcov                lcov tracefile         --            --
-    gcovr                 (alias of lcov)      --            --
-    grcov                 (alias of lcov)      --            --
-    kcov                  (alias of lcov)      --            --
-    llvm-cov              (alias of lcov)      --            --
-    cargo-llvm-cov        (alias of lcov)      --            --
-    verilator_coverage    (alias of lcov)      --            --
     gcov                gcov annotated source  --            gcov -b -p ...
-    cobertura           cobertura xml          --            --
-    go                  go cover profile       --            --
-    luacov              luacov report          --            --
-    jacoco              jacoco xml             --            --
-    coverlet              (alias of cobertura) --            --
-    scoverage             (alias of cobertura) --            --
+    lcov &c.            lcov tracefile         --            --
+
+Those three are the only shapes there are.
 
 WHAT THAT REACHES. 'gcov' serves every gcc front end -- C, C++,
 Objective-C, FORTRAN, Ada, Modula-2, COBOL, Vala, and VHDL through GHDL.
@@ -364,8 +366,13 @@ MC/DC IS REGISTERED AND NOTHING PRODUCES IT YET. The encoding is ours and
 is tested; reading GCC 14's '--conditions' output is owed, and will be
 written against a real artifact like every other reader.
 
-A MEASURE WITH NO LINE CANNOT LIVE HERE. Toggle coverage belongs to a
-signal, a functional bin to a covergroup -- see DISCUSSIONS disc-9.
+A MEASURE WITH NO LINE CANNOT LIVE HERE -- AND FEWER LACK ONE THAN WAS
+BELIEVED. The witnessed artifacts seat toggle points at the signal's
+DECLARATION line and cover points at their statement, so both live here
+as NAMED points, and because a named point carries its identity, both
+MERGE (RATIONALE D-12). What is truly line-less -- FSM states,
+covergroup bins -- is line-less by the UCIS XSD itself, and stays out:
+see DISCUSSIONS disc-9 and its amendment.
 
 
 ------------------------------------------------------------------------------
@@ -388,6 +395,10 @@ WRITE THE READER AGAINST A REAL ARTIFACT. Every fixture in
 verbatim; a hand-written one proves only that the reader reads what its
 author imagined.
 
+THE THREE STEPS ABOVE ARE THE CODE ONLY. The witness, the fixture, the
+choice, the GOOD file and the ledgers are steps too:
+'HOW-TO-INTEGRATE-A-COVERAGE.txt' walks all of them in order.
+
 
 ------------------------------------------------------------------------------
 8  THE TEST
@@ -400,7 +411,8 @@ author imagined.
 
 test-record:   intervals, encoding, roundtrip, merge, faults, election.
 test-readers:  python, cobertura, lcov, gcov, go, luacov, jacoco,
-               agreement, aliases, calls, absent, gather.
+               witnessed, verilator, native, ghdl, psl, resultset,
+               ucis, agreement, aliases, calls, absent, gather.
 test-measure:  registration, branch, mcdc, in_record, unmergeable,
                faults.
 test-index:    segments, query, change, economy, lossy, honest.

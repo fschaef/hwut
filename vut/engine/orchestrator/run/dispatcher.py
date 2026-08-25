@@ -34,8 +34,8 @@ from ...operations.run.stage_canonicalise import StageCanonicalise
 from ...operations.run.core         import Provision
 from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
-from ...orchestrator.bookkeeper.bookkeeper   import Bookkeeper
-from ...orchestrator.bookkeeper.stream_store import Store, DirectoryBusy
+from ...bookkeeper.bookkeeper   import Bookkeeper
+from ...bookkeeper.stream_store import Store, DirectoryBusy
 from ...procsitter.procsitter       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
 from .adapter                       import (naming_of,

@@ -220,6 +220,24 @@ somebody measures a reason not to.
 ------------------------------------------------------------------------------
 disc-8  WHOSE TABLE IS THE TEST ID -- and what the rename service owes
 ------------------------------------------------------------------------------
+CLOSED (2026-08-25, RATIONALE D-15; orchestrator D-7, D-8). THE FIRST
+FORK IS SETTLED: (a) THE BOOKKEEPER OWNS IT, as
+'bookkeeper/test_id_db.py' over 'GOOD/test_ids.dat'. Ids are born at
+first accept, allocated lowest-unused, freed on removal; a rename keeps
+them. This component interns SETS only. What the rename service owes is
+recorded in the orchestrator's todo-4, not here. The text below is kept
+as it was ruled.
+
+SUPERSEDED IN PART (2026-08-24, RATIONALE D-14): THE SECOND FORK IS
+SETTLED. Identity is DIRECTORY-LOCAL by construction -- Origin is
+'(test, choice)', unique per directory by the filesystem's own
+guarantee, so the scope question dissolves: there is nothing to
+partition and no ranges to assign ('first_id' stays as a mechanism,
+no longer as the plan). A gather qualifies ephemerally ('Gathered')
+and is never stored. THE FIRST FORK -- who OWNS the table, (a)
+bookkeeper / (b) component / (c) nobody -- stands OPEN below, exactly
+as written, and (c) remains what runs today.
+
 THIS ONE EDITS THE BOOKKEEPER. Nothing is built until the tree is quiet.
 
 WHAT IS ALREADY TRUE (D-9). The mechanism stands in 'identity.py': ids
@@ -271,6 +289,35 @@ key space is already the law.
 disc-9  HARDWARE DESCRIPTION LANGUAGES -- the record cannot hold what a
         simulator measures
 ------------------------------------------------------------------------------
+SUPERSEDED IN PART (2026-08-24) by WITNESS-hdl-artifacts.txt and
+RATIONALE D-12. The text below is kept AS IT WAS RULED; it is not
+rewritten, because the reasoning was sound on what it knew and the
+correction is a matter of EVIDENCE, not of argument. What the witnesses
+overturned:
+
+    the 'NO LINE' column      verilator and ghdl seat toggle, branch-arm
+                              and cover points at a FILE and a LINE.
+                              Four-of-eight becomes two-of-eight.
+    'not merely not built'    the verilator '.dat', the ghdl psl.json
+                              and the ucis xml are READ TODAY, each
+                              against a witnessed artifact.
+    the lcov road             is POLLUTED, not merely lossy: the export
+                              misfiles toggle onto 'DA' lines. The road
+                              now says '--coverage-line'; the native
+                              '.dat' has its own reader and stands first.
+    unmergeability            was a property of the anonymous DIGEST,
+                              not of the measurement. Named points merge.
+
+WHAT STANDS UNCHANGED. Option (b) -- a second record shape keyed by BIN
+-- still awaits a real artifact, and the UCIS reader has now PROVED the
+gap structural rather than incidental: FSM, assertion and covergroup
+bins are LINE-LESS BY THE XSD ITSELF, not merely by the absence of an
+open-source emitter. The vendor tools remain candidates with no reader.
+The mandatory statement of option (a) shrinks to 'FSM and covergroup
+coverage are not measured here'.
+
+------------------------------------------------------------------------------
+
 WHAT WORKS TODAY, and it is more than expected. VHDL and Verilog line
 coverage needs NO new reader:
 
@@ -361,13 +408,17 @@ todo-1  THE HOMOGENEOUS RECORD, ITS MERGE, AND THE INDEX      [BUILT]
         'Interval' and 'iterable_from_integer_list()' -- the primitive
         that folds adjacent integers into ranges exists.
 
-todo-2  THE PER-LANGUAGE READERS                            [7 built]
+todo-2  THE PER-LANGUAGE READERS                           [11 built]
         BUILT, each against a REAL artifact of the real tool:
             coverage   coverage.py json        python
             lcov       lcov tracefile          the lingua franca; also
                        serves 'gcovr', 'grcov', 'kcov' by alias
             gcov       gcov annotated source   c, c++, fortran, ada,
                                                vhdl (ghdl)
+                       WITNESSED FURTHER (2026-08-24) over gfortran,
+                       gnat, gcc objective-c, valac, gdc and GnuCOBOL --
+                       no new code, and one WART stated: gnat marks an
+                       untaken arm's line 'not executable'.
             cobertura  cobertura xml           the second lingua franca;
                                                also serves 'coverlet' and
                                                'scoverage' by alias
@@ -375,6 +426,15 @@ todo-2  THE PER-LANGUAGE READERS                            [7 built]
             luacov     luacov REPORT           lua
             jacoco     jacoco xml              java, kotlin, scala,
                                                groovy
+            verilator  verilator native .dat   verilog: line, branch
+                                               arms, toggle bits, cover
+            ghdl       ghdl psl-report json    vhdl 'cover' directives
+            simplecov  simplecov resultset     ruby's own record
+            ucis       ucis xml (Accellera)    line, branch, toggle
+        THE TABLE ABOVE IS NOT THE AUTHORITY. 'hwut.cov formats' prints
+        it from the registry itself (RATIONALE D-13); this ledger names
+        what was BUILT and when, which is a different fact and does not
+        rot.
         SETTLED WHILE BUILDING, and worth keeping: luacov's raw
         'luacov.stats.out' CANNOT distinguish 'executable and never run'
         from 'not executable' -- both count 0, verified against the real
@@ -382,21 +442,22 @@ todo-2  THE PER-LANGUAGE READERS                            [7 built]
         the 'luacov' command writes from those same counters WITH the
         source beside them, does know the difference. So the report is
         read and the stats file is not read at all.
-        THE JACOCO FIXTURE IS THE ONE THAT WAS NOT WITNESSED, and that
-        is stated at the fixture and in its test choice. Maven Central
-        answers 403 from here, so no artifact could be produced. What
-        was used instead: the report DTD (handed over first-hand), and
-        the format's OWN INVARIANT as a stand-in for witnessing -- every
-        '<sourcefile>' carries '<counter>' elements JaCoCo derives from
-        its own '<line>' elements, and the test checks the fixture
-        against them.
+        THE JACOCO FIXTURE WAS THE ONE THAT WAS NOT WITNESSED -- AND
+        THE WITNESS HAS SINCE ARRIVED (2026-08-24). When the reader was
+        written, Maven Central answered 403 from here, so the fixture
+        was CONSTRUCTED from the report DTD and checked against the
+        format's OWN INVARIANT: every '<sourcefile>' carries '<counter>'
+        elements JaCoCo derives from its own '<line>' elements. That
+        substitution was stated at the fixture and in its choice.
+        JaCoCo 0.8.12 has now run here (javac + agent + jacococli), and
+        the report it wrote stands verbatim in the 'witnessed' choice,
+        answering the same cross-check. The constructed fixture REMAINS:
+        it is what exercises two languages in one report and the refusal
+        of a mute line. The debt is DISCHARGED, not deleted.
         TWO SAMPLES FETCHED FROM THE WEB FAILED THAT CHECK, which is why
         neither is in the tree: one had its 'mb'/'cb' pairs mirrored
         against its own BRANCH counter, the other had lost 'ci'/'mi'
         altogether. A fetched artifact is not a witnessed artifact.
-        STILL OWED: a real 'jacoco.xml' from a real build, to replace
-        the constructed one. The cross-check is already written, so the
-        replacement proves itself.
         OWED:
             julia      '.jl.*.cov' -- annotated source, the gcov family
                        with other markers ('0' rather than '#####').
@@ -414,6 +475,15 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
         a third is one 'register' call.
         BUILT: 'cobertura' READS branch data ('condition-coverage'), so
         the branch measure has a real source today.
+        BUILT (2026-08-24, RATIONALE D-12): the NAMED-POINT measures
+        'toggle'/TG and 'cover'/CP, and 'NamedPointMeasure' beneath
+        them. They carry POINT IDENTITY, so they declare 'mergeable =
+        True' honestly, and 'verilator' and 'ghdl' both produce them
+        from witnessed artifacts. This closes the OWED item that asked
+        for 'a mergeable encoding': the encoding EXISTS and is shipped.
+        What it does NOT do is make 'branch' or 'mcdc' mergeable --
+        those keep the anonymous digest they were defined with, and
+        keep refusing.
         OWED:
           -- gcov's 'branch N taken' lines, and lcov's 'BRDA'. Both are
              seen and skipped by their readers; both are straightforward
@@ -428,11 +498,12 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
              took both values, MC/DC whether each term alone can flip
              the outcome. They are different questions and deserve
              different tags.
-          -- A MERGEABLE ENCODING. Both built-ins refuse to merge,
-             because a COUNT does not carry WHICH. An encoding holding
-             the SET of arms taken would merge by union like everything
-             else here; it is bigger, and nobody has wanted an aggregate
-             over branch data yet.
+          -- BRANCH AND MC/DC ON THE NAMED-POINT SHAPE. The mergeable
+             encoding is no longer hypothetical -- 'NamedPointMeasure'
+             is built and in use. Moving 'branch' and 'mcdc' onto it
+             would make them merge too, and costs their record TAGS a
+             format change; nobody has yet wanted an aggregate over
+             branch data, so it waits for somebody who does.
 
 todo-3  'hwut.convert_to_lcov'
         The export face (D-6). The reader registry run backwards.

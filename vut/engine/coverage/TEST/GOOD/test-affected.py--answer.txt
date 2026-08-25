@@ -7,8 +7,8 @@ REACTION  status 0   stderr 0 byte(s)
           | groups:  5 distinct
           |
           | runs to perform:
-          |   parser/TEST:test-parse.py--basic
-          |   parser/TEST:test-parse.py--deep
+          |   parser/TEST:1.1
+          |   parser/TEST:1.2
           |
           | NOTE: these are the runs that CERTAINLY executed the changed lines.
           |       A run ABSENT here may still be affected -- by a branch that was
@@ -24,7 +24,7 @@ REACTION  status 0   stderr 0 byte(s)
           | groups:  5 distinct
           |
           | runs to perform:
-          |   other/TEST:test-other.py
+          |   other/TEST:1
           |
           | NOTE: these are the runs that CERTAINLY executed the changed lines.
           |       A run ABSENT here may still be affected -- by a branch that was
