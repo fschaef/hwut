@@ -57,7 +57,8 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
 
@@ -66,26 +67,11 @@ SECTION_RULE  = "=" * 10          # the report's separator, at least this
 _FIELD_SET    = set(" *0123456789")
 
 
-class LuacovReader(I_Reader):
+class LuacovFormat(CCoverageFormat):
     """luacov, through the report its own command writes."""
-    name          = "luacov"
-    source_format = "luacov-report"
+    name = "luacov-report"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged. luacov is switched on from
-        INSIDE the application ('require("luacov")'), not from outside
-        it: there is nothing here to wrap.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. See the module header: producing the report
-        needs the LUA_PATH the test ran under, which this component does
-        not know."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of the luacov report.
                 None, where none stands -- ABSENT.
@@ -102,6 +88,26 @@ class LuacovReader(I_Reader):
                          entry_iterable(section_db, source_root, config,
                                         counts_f),
                          counts_f)
+
+
+class LuacovFramework(CCoverageFramework):
+    """luacov: invocation; reads LuacovFormat."""
+    name   = "luacov"
+    format = LuacovFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged. luacov is switched on from
+        INSIDE the application ('require("luacov")'), not from outside
+        it: there is nothing here to wrap.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. See the module header: producing the report
+        needs the LUA_PATH the test ran under, which this component does
+        not know."""
+        return None
 
 
 def read_report(text):
@@ -212,4 +218,4 @@ def entry_iterable(section_db, source_root, config, counts_f):
         yield path, executable, covered, count_list
 
 
-register(LuacovReader())
+register(LuacovFramework())

@@ -50,35 +50,19 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
 
 TRACEFILE_SUFFIX = (".info", ".lcov")
 
 
-class LcovReader(I_Reader):
+class LcovFormat(CCoverageFormat):
     """An LCOV tracefile, whoever wrote it."""
-    name          = "lcov"
-    source_format = "lcov-tracefile"
+    name = "lcov-tracefile"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        The tools behind this format instrument at BUILD time or run
-        their own supervisor; none of them wraps a command line the way
-        'coverage run' does. Pretending to wrap would be a call that
-        does nothing, which is worse than no call.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. A tracefile is text already; see the module
-        header."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every tracefile under the artifact
                 directory, unioned.
@@ -103,6 +87,28 @@ class LcovReader(I_Reader):
                          entry_iterable(count_db, source_root, config,
                                         counts_f),
                          counts_f)
+
+
+class LcovFramework(CCoverageFramework):
+    """lcov: invocation; reads LcovFormat."""
+    name   = "lcov"
+    format = LcovFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged.
+
+        The tools behind this format instrument at BUILD time or run
+        their own supervisor; none of them wraps a command line the way
+        'coverage run' does. Pretending to wrap would be a call that
+        does nothing, which is worse than no call.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. A tracefile is text already; see the module
+        header."""
+        return None
 
 
 def count_db_of(text):
@@ -187,4 +193,4 @@ def entry_iterable(count_db, source_root, config, counts_f):
         yield path, executable, covered, count_list
 
 
-register(LcovReader())
+register(LcovFramework())

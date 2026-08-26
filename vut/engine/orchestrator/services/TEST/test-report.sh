@@ -7,12 +7,13 @@
 # another pair of eyes, human or AI, without them asking for file
 # after file:
 #
-#     hwut.report APPLICATION [CHOICE] [-r|--raw] [-c|--coverage]
+#     hwut.report APPLICATION [CHOICE] [-r|--raw] [--no-coverage]
 #
-#     default    the pack, cadence written INTO the stream as
-#                '<delta-t>:<line>' prefixes; raw sidecars stay out
-#     --raw      the files VERBATIM, sidecars as their own sections
-#     --coverage RESERVED (todo-22): accepted, and honest about it
+#     default       the pack, cadence written INTO the stream as
+#                   '<delta-t>:<line>' prefixes; raw sidecars stay out;
+#                   the COVERAGE of the run where one was harvested
+#     --raw         the files VERBATIM, sidecars as their own sections
+#     --no-coverage leave the coverage section out
 #
 # The pack is the product: stdout, exit 0, stderr silent.
 #
@@ -37,7 +38,7 @@ REPORT="python3 $ROOT/vut/engine/orchestrator/services/report.py"
 case "$1" in
     --hwut-info)
         echo "The report service face: one command packs one test whole."
-        echo "CHOICES: pack, raw, bare, flags;"
+        echo "CHOICES: pack, raw, bare, flags, coverage;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -106,25 +107,53 @@ flags)
     echo
     $REPORT demo.py basic -r         > short_r.txt 2> /dev/null
     $REPORT demo.py basic --raw      > long_r.txt  2> /dev/null
-    $REPORT demo.py basic -c         > short_c.txt 2> /dev/null
-    $REPORT demo.py basic --coverage > long_c.txt  2> /dev/null
-    $REPORT demo.py basic            > neither.txt 2> /dev/null
+    $REPORT demo.py basic --no-coverage > without.txt 2> /dev/null
+    $REPORT demo.py basic               > with.txt    2> /dev/null
     if cmp -s short_r.txt long_r.txt; then r_same="identical"; else r_same="DIFFER"; fi
-    if cmp -s short_c.txt long_c.txt; then c_same="identical"; else c_same="DIFFER"; fi
     echo "REACTION  -r vs --raw      : $r_same"
-    echo "          -c vs --coverage : $c_same"
-    echo "          coverage line, asked  : $(grep '^coverage:' short_c.txt)"
-    echo "          coverage line, silent : $(grep '^coverage:' neither.txt)"
-    echo "          COVERAGE section, asked {"
-    sed -n '/^==\[ COVERAGE \]/,/^$/p' short_c.txt | sed 's/^/              /'
-    echo "          }"
-    echo "          COVERAGE sections, silent : \
-$(grep -c '^==\[ COVERAGE \]' neither.txt)"
+    echo "          coverage line, default      : \
+$(grep '^coverage:' with.txt)"
+    echo "          coverage line, --no-coverage: \
+$(grep '^coverage:' without.txt)"
+    echo "          COVERAGE sections, default      : \
+$(grep -c '^==\[ COVERAGE \]' with.txt)"
+    echo "          COVERAGE sections, --no-coverage: \
+$(grep -c '^==\[ COVERAGE \]' without.txt)"
     echo
-    echo "One flag, two spellings -- and a RESERVED flag is honest:"
-    echo "asked, it says the gathering is owed (todo-22); unasked, no"
-    echo "section pretends there was anything to show."
-    echo "SUCCESS: a reserved flag is honest about being reserved."
+    echo "One flag, two spellings; and where the book knows nothing of"
+    echo "coverage, no section pretends there was anything to show."
+    echo "SUCCESS: the default is the useful one, and absence is spoken."
+    ;;
+
+coverage)
+    build_fixture
+    #  A HARVESTED RUN: the book's entry and the binary record, written
+    #  as a real coverage run would leave them.
+    ROOT="$ROOT" python3 - <<'PYEOF_INNER'
+import json, os, sys
+sys.path.insert(0, os.environ["ROOT"])
+from vut.engine.coverage.record import (CoverageRecord, FileCoverage,
+                                        ranges_of)
+from vut.engine.coverage.binary import pack_record
+from vut.engine.bookkeeper.test_run_id import TestRunId
+record = CoverageRecord("python", "coverage", "coverage.py-json",
+                        run=frozenset([TestRunId(0, 1)]),
+                        file_db={"demo.py": FileCoverage(
+                            "demo.py", ranges_of([1, 2, 3, 4, 5]),
+                            ranges_of([1, 2]))})
+open(".hwut-store/demo--basic.cover", "wb").write(pack_record(record))
+book = {"demo": {"configuration": {}, "choices": {"basic": {
+    "operations": {"Run": {"verdict": False, "report": "ok",
+                           "coverage": "ok"}}}}}}
+os.makedirs("GOOD", exist_ok=True)
+json.dump(book, open("GOOD/result_db.json", "w"))
+PYEOF_INNER
+    echo "STIMULUS  hwut.report demo.py basic          (a HARVESTED run)"
+    run_report demo.py basic
+    echo
+    echo "The report says WHAT broke; the coverage says WHICH LINES the"
+    echo "run reached -- and, first, which it did NOT."
+    echo "SUCCESS: a failure and its coverage travel together."
     ;;
 
 *)

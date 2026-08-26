@@ -1,0 +1,18 @@
+
+--- the tree as it was taken ---
+         nothing moved
+
+--- after an accept in one directory ---
+         parser/TEST    register moved
+
+--- the ids of the bundle still decode ---
+         other/TEST test-other
+
+--- and after the directory is gone ---
+         other/TEST     both gone
+         parser/TEST    register moved
+  OK  : the directory that moved is named, and only it
+  OK  : the bundle still decodes: an id is issued once, so a snapshot read against a NEWER register still resolves
+  OK  : a directory that no longer reads is named 'gone', not silently skipped
+SUCCESS: the generation says whether the tree moved, not whether the answer is wrong.
+<hwut-end>

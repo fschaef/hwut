@@ -366,6 +366,34 @@ root, the choice. A value taken from 'default_app' reports its provenance
 as 'hwut.conf:<line>' (section 7.1).
 
 
+5.1a  VARIANT GROUPS
+______________________________________________________________________________
+
+'hwut.conf' may carry 'variant_group { }'. Each GROUP is a DIMENSION of
+configuration; each of its alternatives is a point on that dimension.
+
+    variant_group {
+        cov  { gcov { build { coverage_target = "cov-app.exe" } }
+               llvm { build { coverage_target = "app-prof.exe" } } }
+        load { fast { caps { timeout_sec = 30 } }
+               slow { caps { timeout_sec = 600 } } }
+    }
+
+'--variant=gcov,slow' merges what those alternatives state over the
+base -- one alternative per group. A variant states DIFFERENCES only;
+what it leaves unstated keeps the base's value, and the order of names
+carries no meaning.
+
+    two alternatives of ONE group      REFUSED, naming the group
+    a name no group declares           REFUSED, naming what is declared
+    one name in TWO groups             REFUSED at the declaration
+
+Within a group the alternatives configure the same parameters; across
+groups the subspaces are disjoint (RATIONALE E-9). Every alternative of
+every group stands in ONE namespace, so a selection never needs
+qualifying.
+
+
 5.2  TARGETS
 ______________________________________________________________________________
 

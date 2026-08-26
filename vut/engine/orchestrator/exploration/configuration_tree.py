@@ -200,6 +200,22 @@ class Target:
 
 
 @dataclass(frozen=True, slots=True)
+class Variant:
+    """ONE ALTERNATIVE of a variant group: a scope of test parameters
+    stated ASIDE, merged over the base when the alternative is named.
+
+    'group' is the dimension it belongs to. The alternatives of one
+    group configure THE SAME parameters -- that is what makes them
+    alternatives -- and stating the same fields inside one group is
+    required, not a conflict (RATIONALE E-9).
+    """
+    name:       str
+    group:      str
+    parameters: object                   # TestParameters
+    position:   object     = None
+
+
+@dataclass(frozen=True, slots=True)
 class DirectorySpec:
     """The directory's own keys of 'hwut.conf'.
 
@@ -214,7 +230,13 @@ class DirectorySpec:
     'target_db' binds the USER-DEFINED TARGETS of 'hwut.target' (E-7):
     an open-ended namespace of the directory's own, local, never
     inherited. 'on_entry'/'on_exit' are standard targets with their own
-    keys and are refused inside it by name."""
+    keys and are refused inside it by name.
+
+    'variant_db' holds the VARIANT GROUPS of 'variant_group { }': the
+    alternative's name -> Variant. ONE NAMESPACE for every alternative
+    of every group, so '--variant=gcov' needs no qualification and two
+    groups may not share an alternative name. Two alternatives of ONE
+    group named together are refused: they configure one subspace."""
     on_entry:        str | None = None
     on_exit:         str | None = None
     test_directory:  str | None = None
@@ -224,6 +246,7 @@ class DirectorySpec:
     target_db:       dict       = None   # target name -> script (E-7)
     default_app:     object     = None   # TestParameters, or None
     default_app_position_db: dict = None # key -> Position
+    variant_db:      dict       = None   # alternative name -> Variant
     language_setup:  dict       = None
     position:        Position   = None
 

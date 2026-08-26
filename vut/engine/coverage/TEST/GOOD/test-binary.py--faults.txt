@@ -1,0 +1,18 @@
+
+--- what the reader refuses ---
+         not a zlib stream                        -> RecordFault
+         no magic                                 -> RecordFault
+         a version this build does not read       -> RecordFault
+         truncated after the header               -> RecordFault
+         bytes after the last file                -> RecordFault
+         a range delta of zero                    -> RecordFault
+         a tag no measure claims                  -> RecordFault
+  OK  : refused: not a zlib stream
+  OK  : refused: no magic
+  OK  : refused: a version this build does not read
+  OK  : refused: truncated after the header
+  OK  : refused: bytes after the last file
+  OK  : refused: a range delta of zero
+  OK  : refused: a tag no measure claims
+SUCCESS: a record half read is a report that lies; nothing is half read.
+<hwut-end>

@@ -83,29 +83,53 @@ The artifact turned out to be a format already read: one line in
     ALIAS_DB:          "gcovr": "lcov"
     DEFAULT_TOOL_DB:   "*.c": (..., "gcovr", ...)
 
-An alias claims the FORMAT and nothing else. A tool that needs its own
-build flags or its own second call deserves a module.
+An alias is a FRAMEWORK over a shared format: it is invoked as the
+framework it reads through, and stamps its own name. A tool that needs
+its own call form or its own second call deserves a framework class.
 
 
-READER
+FRAMEWORK
 ------------------------------------------------------------------------------
 
-The artifact is a new format: one module under 'readers/'.
+The artifact is a format already read, but the tool is invoked its own
+way: one 'CCoverageFramework' subclass naming the existing format.
 
-    class FooReader(I_Reader):
-        name          = "foo"
-        source_format = "foo json"
-        def wrap(self, argv, config, work_dir):     return argv
-        def report_argv(self, config, work_dir):    return None
-        def harvest(self, work_dir, source_root, config=None):
-            ...                    # artifact -> record_of(...) | None
+    class FooFramework(CCoverageFramework):
+        name   = "foo"
+        format = LcovFormat()                        # what it writes
+        def wrap(self, argv, config, work_dir):      return argv
+        def report_argv(self, config, work_dir):     return None
+        def instrumented_f(self, target, work_dir):  return None  # optional
 
-    register(FooReader())
+    register(FooFramework())
 
-The laws it must obey -- absence is None, paths made relative, the
-gather set applied, EX never invented, the pair never the percentage,
-spawn nothing -- are 'reader.py' docstring and README section 6. Read
-an existing reader of similar shape first; 'simplecov.py' is a small one.
+'instrumented_f' is OPTIONAL and answers None where the tool leaves no
+trace to check; it never answers False for want of a way to know.
+
+
+FORMAT
+------------------------------------------------------------------------------
+
+The artifact is a new format: one module under 'readers/' holding a
+'CCoverageFormat' and the framework that writes it.
+
+    class FooFormat(CCoverageFormat):
+        name = "foo-json"
+        def read(self, work_dir, source_root, config=None):
+            ...                    # artefact -> record_of(self, ...) | None
+
+    class FooFramework(CCoverageFramework):
+        name   = "foo"
+        format = FooFormat()
+        def wrap(self, argv, config, work_dir): ...
+
+    register(FooFramework())
+
+The laws a format must obey -- absence is None, paths made relative,
+the gather set applied, EX never invented, the pair never the
+percentage, no tool stamped -- and a framework -- spawn nothing, name
+the call -- are 'reader.py' docstring and README section 6. Read an
+existing module of similar shape first; 'simplecov.py' is a small one.
 
 
 MEASURE

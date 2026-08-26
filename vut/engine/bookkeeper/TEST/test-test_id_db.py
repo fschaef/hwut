@@ -274,7 +274,7 @@ def test_faults():
     good = _filled(directory).format()
     shutil.rmtree(directory)
 
-    H = "##VUT-TEST-IDS 4\n"
+    H = "##VUT-TEST-IDS 5\n"
 
     def wrote(text):
         scratch = _place()
@@ -287,13 +287,15 @@ def test_faults():
         return "nothing"
 
     case_list = [
-        ("no version line",       good.replace("##VUT-TEST-IDS 4\n", "")),
+        ("no version line",       good.replace("##VUT-TEST-IDS 5\n", "")),
         ("version 1, pair-interned",
          "##VUT-TEST-IDS 1\nT:1 . -|a|-\n"),
         ("version 2, pair-interned",
          "##VUT-TEST-IDS 2\nT:1 . a|-\n"),
         ("version 3, re-using, no mark",
          "##VUT-TEST-IDS 3\nA:1 a.py\n"),
+        ("version 4, no generation",
+         "##VUT-TEST-IDS 4\nN:1\nA:0 a.py\nN:0.0\n"),
         ("an app id that spells no number",
          H + "N:1\nA:x demo.py\nN:x.0\n"),
         ("an app id standing twice",
@@ -326,6 +328,8 @@ def test_faults():
          H + "N:many\nA:0 a.py\nN:0.0\n"),
         ("a mark beyond the ceiling",
          H + "N:%i\n" % (ID_LIMIT + 1)),
+        ("a generation that spells no number",
+         H + "G:many\nN:1\nA:0 a.py\nN:0.0\n"),
     ]
     result_list = []
     for label, text in case_list:

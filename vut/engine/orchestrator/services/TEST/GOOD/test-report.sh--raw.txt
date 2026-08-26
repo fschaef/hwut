@@ -11,7 +11,7 @@ REACTION  exit code : 0   stderr : 0 bytes
                 .hwut-store/demo--basic.stdout.raw           19 bytes  (out raw stdout)
                 .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
                 .hwut-store/demo--basic.stdout.times         51 bytes  (out timing stdout)
-              coverage: not requested
+              coverage: none recorded
               cadence: sections verbatim
               
               ==[ SOURCE: demo.py ]===========================================================

@@ -779,3 +779,211 @@ GRAVEYARD Discovery: 'records_coverage' as an attribute the run node
          'instrument()' / 'probe()' on the reader role: the build
          variant is the author's declaration, so nothing is left for a
          hook to instrument; and a probe is detection by another name.
+
+
+D-20  THE RECORD ON DISK IS BINARY; THE TEXT IS THE PRESENTATION  (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM  A gather reads thousands of records. Measured on a real one
+         (sympy, 1 516 files, 140 778 ranges, one test run under
+         coverage.py): the text spelling is 530 KB and takes 80 ms to
+         parse; a thousand such runs is 80 seconds of parsing before a
+         single question is answered. Every one of its 281 556 delta
+         numbers lay below 255.
+DECISION ONE FORM ON DISK: BINARY ('binary.py', FORMAT.txt section 8).
+         Every delta sequence is a stream of unsigned bytes with a
+         single escape (0xFF, then u32), packed and unpacked in one
+         'struct' call -- measured: the size of a varint, twenty times
+         the decode speed of the text, no dependency. zlib is a FIXED
+         outer layer: measured against the compare engine over every
+         GOOD in the tree, inflating is 0.3% of what a judge costs, so
+         a flag would be a second format for nothing. The run set is
+         fixed-width so a gather reads who ran without decoding the
+         rest.
+         THE TEXT IS THE PRESENTATION: 'hwut.cov convert [--from]
+         [--to] FILE' renders either spelling into the other on
+         demand; the tests print the text because the text is what a
+         reader audits. Both codecs yield one record, proven on every
+         witnessed artifact.
+         GOOD FILES STAY TEXT. Measured: zipping them saves 30% of
+         575 KB and costs the audit, the diff, the review and git's
+         delta storage -- a one-line change would rewrite an archive.
+         The form on disk is the form a reader of that file reads.
+COST     'affected.py' reads binary; its GOODs did not move, since the
+         answer is unchanged. 'coverage_action' writes binary. One new
+         module, one new test, one new face.
+GRAVEYARD uint16 deltas: larger than the text (deltas are one ASCII
+         digit). LEB128 in Python: the size of uint8+escape at a fifth
+         of the speed. Protocol buffers: the same bytes with a schema
+         compiler and a second description of the record. A text
+         header inside the binary so that 'zcat | head' reads it: charm
+         for a second grammar; 'convert' answers the need. Optional
+         zlib: a flag for 0.3%. A per-file offset table: a second
+         structure for a read pattern nobody has.
+
+
+D-21  COVERAGE RIDES ON TESTIMONY                                (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM  A run that is killed, stalls, is contained, fails to launch,
+         or ends without '<hwut-end>' has often touched lines before
+         it stopped, and the tool has written them down. Harvesting
+         them reads as "these lines are covered".
+DECISION "COVERED" MEANS "EXECUTED BY A TEST THAT TESTIFIED". A killed
+         process says neither OK nor FAIL; the lines it happened to
+         touch are not weaker evidence, they are evidence of NOTHING.
+         So a run that did not testify IS NOT HARVESTED: the check
+         stands BEFORE the harvest ('coverage_action.testified_f'),
+         nothing is read and then discarded, the artefacts lie as
+         debris, and the book entry says 'run-incomplete'.
+         The condition is 'delivered a verdict', not 'was killed': a
+         non-zero exit is testimony (the application ended by itself
+         and said so); an ending without the terminal token is not
+         (R-70: the token IS the statement). The same law stands for
+         GOOD files, which are never recorded over a crash -- a
+         measurement is only as good as the testimony it rides on.
+COST     One set of E_TestRunResult members named as 'not testified';
+         one token; one printing choice ('incomplete').
+GRAVEYARD A 'partial' record with the book saying so: a claim with a
+         footnote is still a claim, and an aggregator would union it.
+
+
+D-22  ONE ARTEFACT DIRECTORY PER TEST DIRECTORY, SO ONE RUN AT A TIME
+                                                              (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM  Every tool leaves its artefact in the test directory's
+         'OUT/COVERAGE', and the choices of one directory run at once
+         under 'hwut.run'. Observed: choice 'b' harvested choice 'a's
+         file. Redirecting each run to its own directory is possible
+         for most tools (coverage.py '--data-file', gcov 'GCOV_PREFIX',
+         jacoco 'destfile', verilator '+coverage+file') and not for
+         all (cobertura, coverlet under a build tool) -- nine
+         mechanisms, nine failure modes, and the failure is SILENT: a
+         tool that ignored its redirection writes into the shared
+         place and the harvest reads another run's data with full
+         confidence.
+DECISION UNDER COVERAGE, ONE RUN AT A TIME PER DIRECTORY. The
+         dispatcher holds a lock around each run of a directory
+         ('cov_lock'); 'coverage_action.prepare' empties 'OUT/COVERAGE'
+         before each. Directories still run in parallel. A framework
+         NEED NOT redirect and MAY NOT assume it is alone across
+         directories -- only within one. Correct by construction,
+         one behaviour to supervise, no per-tool knowledge in the
+         dispatcher.
+COST     Throughput within one directory, under coverage only. Coverage
+         runs are slower per run in any case and are not the inner
+         loop. If a measured problem appears, a per-framework
+         'artifact_directory(run)' capability with this lock kept for
+         frameworks that lack it is the change -- made when the number
+         exists.
+GRAVEYARD Per-run directories now: diversity without a measured need.
+
+
+D-23  TWO ROLES: THE FRAMEWORK IS INVOKED, THE FORMAT IS READ     (2026-08-25)
+------------------------------------------------------------------------------
+CORRECTS  'I_Reader', which held three calls of which two -- 'wrap',
+          'report_argv' -- are INVOCATION, not reading; the role was the
+          framework, misnamed as the reader.
+PROBLEM   A tool and the artefact it writes are two facts (D-7): c8,
+          gcovr, cargo-llvm-cov, llvm-cov, grcov, node and
+          verilator_coverage all write LCOV. The alias mechanism was
+          one framework pointing at a format it does not own -- the
+          evidence the split is real -- but it was a special case
+          beside a role that pretended the two were one.
+DECISION  'CCoverageFramework(ABC)', one per tool: 'wrap',
+          'report_argv', 'instrumented_f' (OPTIONAL: True/False where
+          the tool leaves a trace before the run -- gcov's '.gcno' --
+          None where it cannot check; never a guessed False, which
+          would be D-19's detection by another name), and 'format',
+          the 'CCoverageFormat(ABC)' it writes. 'harvest' is
+          'format.read' with the framework's name stamped as the
+          record's 'tool'. 'CCoverageFormat', one per artefact format:
+          'read', stamping NO tool -- a format knows the artefact, not
+          who ran. The alias is '_SharedFormatFramework': a framework
+          over another's format and invocation. The registry holds
+          frameworks ('framework_of') and refuses what is no framework:
+          the role is the type. Admitting a tool that writes a known
+          format is one subclass; admitting a format is one more.
+COST      Eleven modules split mechanically, each reviewed; every
+          consumer re-pointed; 'roles' choice in test-readers. No GOOD
+          of any reader moved: the records are byte-identical.
+GRAVEYARD 'I_Reader' kept as an alias of the framework: two names for
+          one role, and the wrong one first.
+
+
+D-24  A FAILURE REPORT CARRIES ITS COVERAGE                      (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM  'hwut.report' packs a test WHOLE for another pair of eyes,
+         human or AI. It says WHAT broke. It did not say WHICH LINES
+         the failing run actually executed -- the fact that turns a
+         search over a repository into a search over a few hundred
+         lines. The '-c' flag was reserved and honest about being
+         unbuilt.
+DECISION COVERAGE STANDS BY DEFAULT where a record was harvested;
+         '--no-coverage' leaves it out. The section names the book's
+         own token first ('outcome: ok', 'run-incomplete', ...), then
+         WHAT WAS NOT EXECUTED -- what a failing run did not reach is
+         what a reader is looking for -- then the record in its TEXT
+         spelling (D-20).
+         WHERE THE BOOK KNOWS NOTHING of coverage for this run, the
+         section is ABSENT: coverage was never asked, and an empty
+         section would be a measurement of nothing. Where the book has
+         a token but no record, the token stands alone and says why
+         (D-21).
+         THE BINARY RECORD IS NOT PACKED as a section: '.cover' is
+         excluded from the file walk. Its presentation is the COVERAGE
+         section, and a blob in a pack meant to be read is a blob.
+         THE COVERAGE IS THE LAST RUN'S. A failing run still harvests,
+         so the useful case is the common one; a report read after a
+         later passing run shows that one, and the book's run id ties
+         the two together.
+COST     One section, one option, one exclusion in 'find_records'; the
+         'flags' choice re-recorded and a 'coverage' choice added.
+GRAVEYARD '-c' as an opt-in: the reader who most needs the coverage is
+         the one who does not know to ask for it.
+
+
+D-25  THE GATHER, AND WHAT A DELIVERY CARRIES                    (2026-08-25)
+------------------------------------------------------------------------------
+CLOSES   todo-10.
+PROBLEM  Ids are DIRECTORY-LOCAL (D-14): every directory numbers its
+         runs from 0, so ids alone cannot say who reached a line across
+         a tree. And a report may be rendered where the tree is not.
+DECISION THE GATHER qualifies every record's run ids with the directory
+         it found them in, relative to the GATHER ROOT the caller chose
+         ('Gathered'), and folds them into one index.
+         A GATHERED GROUP is a SET OF (directory, local group) PAIRS as
+         one number: what a stretch of source is reached by, seen from
+         the gather. It answers "which test applications and choices,
+         across the whole tree, executed this range".
+         EPHEMERAL TO HWUT: the gathered table is made in the gather
+         process and written into NO directory's 'GOOD/'. It is a
+         function of the root the caller chose, exactly as transient as
+         that choice. The per-directory group tables are read as
+         IN-MEMORY COPIES for the same reason -- a gather interns sets
+         a directory never folded, and interning into its file would be
+         the gather writing back.
+         A DELIVERY IS A BUNDLE: the gather's group-of-groups table and
+         index, plus a SNAPSHOT of each directory's register and group
+         table as TEXT, keyed by directory relative to the root, valid
+         only as one bundle. Decoding is a CHAIN, each link a table:
+         gathered group -> pairs -> that directory's group table -> run
+         ids -> that directory's register -> names.
+         A SNAPSHOT NAMES ITS GENERATION. Both tables count their
+         mutations ('G:' in the register, 'R:' in the group table); the
+         bundle records the number it copied and 'hwut.cov stale' says
+         which directories have MOVED, which are GONE, and which are
+         unreadable. The bundle is not thereby wrong: ids are issued
+         once (bookkeeper B-2), so a snapshot decoded against a NEWER
+         register still resolves, and a removed test's id decodes to
+         'no longer registered' -- true, not misattributed. The
+         generation says whether the TREE has moved, not whether the
+         answer is safe.
+COST     'gather.py'; two verbs; a generation line in both persisted
+         tables (register version 5, group table version 4), their
+         earlier versions refused by name.
+GRAVEYARD Recomputing the gathered table on read instead of shipping
+         it: it is a function of the per-directory tables, so it COULD
+         be -- but then a bundle's segments name numbers whose meaning
+         is derived, and two readers could derive differently.
+         An unversioned snapshot: a copy that claims to still match.
+         Writing the gathered groups into each directory: the gather's
+         view frozen as identity (D-14).

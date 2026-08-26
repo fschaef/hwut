@@ -1,0 +1,10 @@
+INSPECT: verdict False report test-app-stalled
+         coverage on the entry: run-incomplete
+         record: <none>
+  OK  : the run did not end by itself
+  OK  : the tool DID leave an artefact -- lines were touched
+  OK  : and it is NOT harvested: a killed process testifies to nothing, so the lines it touched are a claim of nothing
+  OK  : no record is written
+  OK  : the book says why
+SUCCESS: coverage rides on testimony; no testimony, no coverage.
+<hwut-end>

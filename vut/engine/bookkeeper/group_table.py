@@ -57,7 +57,7 @@ from   .test_run_id import (TestRunId, RunIdFault, run_id_of_text,
 
 
 FILE_NAME      = "group_ids.dat"
-FORMAT_VERSION = "3"
+FORMAT_VERSION = "4"
 EMPTY_GROUP    = 0
 
 
@@ -80,9 +80,10 @@ class GroupTable:
     def __init__(self):
         """RETURN: GroupTable holding only the empty group; the next
         group id is 1."""
-        self._set_db   = {frozenset(): EMPTY_GROUP}
-        self._group_db = {EMPTY_GROUP: frozenset()}
-        self._next     = EMPTY_GROUP + 1
+        self._set_db    = {frozenset(): EMPTY_GROUP}
+        self._group_db  = {EMPTY_GROUP: frozenset()}
+        self._next      = EMPTY_GROUP + 1
+        self.generation = 0        # bumped per write (coverage D-25)
 
     def __len__(self):
         """RETURN: int, how many distinct groups exist, the empty one
@@ -149,6 +150,7 @@ class GroupTable:
     def format(self):
         """
         RETURN: str, the table as it is stored:
+                    'R:<generation>'             bumped per write
                     'N:<next group id>'          the scope's mark
                     'G:<id> <run ids, comma separated>'   per group,
                 ascending; the empty group's line carries nothing
@@ -161,6 +163,7 @@ class GroupTable:
         MACHINE-FREE: numbers only.
         """
         line_list = ["##VUT-TEST-GROUPS " + FORMAT_VERSION,
+                     "R:%i" % self.generation,
                      "N:%i" % self._next]
         for group_id, key_tuple in self.item_iterable():
             for key in key_tuple:
@@ -196,10 +199,15 @@ class GroupTable:
                         raise GroupFault(
                             "group-table version '%s' is not read; this "
                             "build writes %s. Versions 1 and 2 kept no "
-                            "mark." % (version or "<none>",
-                                       FORMAT_VERSION))
+                            "mark; version 3 kept no generation."
+                            % (version or "<none>", FORMAT_VERSION))
                 continue
             head, _, body = line.partition(" ")
+            if head.startswith("R:"):
+                try:               self.generation = int(head[2:])
+                except ValueError: raise GroupFault(
+                                       "'%s' spells no generation" % line)
+                continue
             if head.startswith("N:"):
                 if mark_seen:
                     raise GroupFault("the group mark stands twice")
@@ -279,8 +287,10 @@ class GroupDb(GroupTable):
     def _allocated(self):
         """
         RETURN: None. The whole file, replaced atomically and left
-                write-protected -- the register's own treatment.
+                write-protected -- the register's own treatment. The
+                GENERATION is bumped first (coverage D-25).
         """
+        self.generation += 1
         path = self.path
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():

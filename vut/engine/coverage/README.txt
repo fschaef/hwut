@@ -43,8 +43,11 @@ about whether coverage was wanted.
                       a gather found it in
     affected.py       'hwut.affected': a change in, the runs out
     registry.py       language -> candidate tools -> the elected one
-    reader.py         the reader ROLE, and the tool -> reader registry
-    readers/          one module per artifact FORMAT
+    reader.py         the two ROLES -- CCoverageFramework (the tool:
+                      invocation) over CCoverageFormat (the artefact:
+                      reading) -- and the tool -> framework registry
+    readers/          one module per artifact FORMAT, holding the
+                      format and the framework(s) that write it
                         python_coverage.py  coverage.py json
                         lcov.py             the lcov tracefile
                         gcov.py             gcov annotated source
@@ -52,7 +55,9 @@ about whether coverage was wanted.
                         go.py               go cover profile
                         luacov.py           luacov report
                         jacoco.py           jacoco xml
-    FORMAT.txt        the record's syntax, line by line
+    FORMAT.txt        the record's syntax, both spellings
+    binary.py         the binary spelling: the ONE form on disk
+    gather.py         the cross-directory fold, and the delivery bundle
 
 
 ------------------------------------------------------------------------------
@@ -65,7 +70,7 @@ about whether coverage was wanted.
     registry.elect()        the candidate list of that language, by
         |                   GLOB; the FIRST one this machine has
         v
-    reader_of(tool)         one reader per tool
+    framework_of(tool)      one framework per tool, its format inside
         |
         v
     build coverage_target   the author's target, built and run in
@@ -241,14 +246,16 @@ THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov <wishlist>' or
     report   'report_argv', the tool's second call, supervised.
     harvest  the run's closing act: the reader reads 'OUT/COVERAGE',
              the record is seated with the run id and written to
-             '.hwut-store/<test>--<choice>.cover'. Raw artefacts are
-             run debris under 'OUT/'.
+             '.hwut-store/<test>--<choice>.cover' in its BINARY
+             spelling (D-20; 'hwut.cov convert' shows it). Raw
+             artefacts are run debris under 'OUT/'.
 
 ONE TOKEN PER RUN on the book entry, 'coverage':
 
     ok                  a record stands
     no-coverage-target  compiled, and no 'coverage_target' declared
     no-data-provided    the run left nothing to harvest; NO record
+    run-incomplete      the application did not testify; nothing read
     report-failed       the tool's second call did not end well
     (absent)            coverage was not asked
 
@@ -266,11 +273,14 @@ coverage_action.py', tested in 'operations/TEST/test-coverage_provision.py'.
        nothing; the entry carries no 'coverage' key.
     -- it is not a run of an unregistered choice: no run id, no
        record; the run is a plain run.
-    -- it does not take the INTERACTIVE road: a session measures one
-       process across many choices, and the record is keyed per
-       choice (DISCUSSIONS todo-11: the refusal is owed).
-    -- it measures NO cadence: 'record_timing' beside coverage is owed
-       a refusal (todo-11).
+    -- it is not a harvest of a run that did not TESTIFY (D-21): a run
+       that was killed, stalled, was contained, or ended without
+       '<hwut-end>' is noted 'run-incomplete' and nothing is read.
+    -- it is not concurrent with another run of ITS directory (D-22):
+       one artefact directory, one run at a time; directories in
+       parallel.
+    -- it is not time-capped (D-19): wall clock and CPU are lifted;
+       memory, file size, process and disk caps stand.
 
 
 ------------------------------------------------------------------------------

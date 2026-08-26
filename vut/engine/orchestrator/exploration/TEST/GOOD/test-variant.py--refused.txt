@@ -1,0 +1,23 @@
+
+--- two alternatives of ONE group ---
+         --variant=gcov,llvm
+           'gcov' and 'llvm' are both alternatives of the variant group 'cov': one group configures one subspace, so one alternative of it may stand
+         --variant=fast,slow
+           'fast' and 'slow' are both alternatives of the variant group 'load': one group configures one subspace, so one alternative of it may stand
+
+--- a name no group declares ---
+         --variant=nope
+           no variant 'nope' is declared; this tree declares 'fast', 'gcov', 'llvm', 'slow'
+         --variant=gcov,typo
+           no variant 'typo' is declared; this tree declares 'fast', 'gcov', 'llvm', 'slow'
+
+--- a tree that declares none ---
+         --variant=gcov, against 'hwut { }'
+           no variant 'gcov' is declared; this tree declares none
+  OK  : the refusal names the GROUP, so the author sees which dimension he asked for twice
+  OK  : and both alternatives
+  OK  : an unknown name is answered with what IS declared
+  OK  : a good name beside a bad one does not rescue it: the selection is refused whole, before anything merges
+  OK  : and what is honourable is honoured
+SUCCESS: the refusal is structural: two names, one group.
+<hwut-end>

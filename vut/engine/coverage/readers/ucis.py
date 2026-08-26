@@ -96,7 +96,8 @@ ______________________________________________________________________________
 import os
 import xml.etree.ElementTree as ElementTree
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
@@ -104,27 +105,11 @@ from ..record import ranges_of, FileCoverage, CoverageRecord
 XML_SUFFIX = (".xml",)
 
 
-class UcisReader(I_Reader):
+class UcisFormat(CCoverageFormat):
     """UCIS XML, Accellera's interchange format."""
-    name          = "ucis"
-    source_format = "ucis-xml"
+    name = "ucis-xml"
 
-    def wrap(self, argv, config, work_dir):
-        """RETURN: list[str], 'argv' unchanged. UCIS XML stands at the
-        end of a CONVERSION step (a vendor export, or 'pyucis convert'
-        over a native database) that this component neither runs nor
-        names -- the same posture 'readers/jacoco.py' takes toward the
-        agent that produces ITS artifact."""
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The conversion that produces UCIS XML needs the
-        source database and its own tool choice, which this reader does
-        not own; naming a call that could not run would be worse than
-        naming none (readers/jacoco.py carries the same reasoning)."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every UCIS XML document under the
                 artifact directory, unioned -- line coverage in EX/CV,
@@ -143,6 +128,27 @@ class UcisReader(I_Reader):
 
         counts_f = bool(config is not None and config.counts)
         return _record_of(self, entry_db, source_root, config, counts_f)
+
+
+class UcisFramework(CCoverageFramework):
+    """ucis: invocation; reads UcisFormat."""
+    name   = "ucis"
+    format = UcisFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """RETURN: list[str], 'argv' unchanged. UCIS XML stands at the
+        end of a CONVERSION step (a vendor export, or 'pyucis convert'
+        over a native database) that this component neither runs nor
+        names -- the same posture 'readers/jacoco.py' takes toward the
+        agent that produces ITS artifact."""
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. The conversion that produces UCIS XML needs the
+        source database and its own tool choice, which this reader does
+        not own; naming a call that could not run would be worse than
+        naming none (readers/jacoco.py carries the same reasoning)."""
+        return None
 
 
 def _read(path):
@@ -220,7 +226,7 @@ def _coverage_count(bin_node):
     except ValueError: return 0
 
 
-def _record_of(reader, entry_db, source_root, config, counts_f):
+def _record_of(fmt, entry_db, source_root, config, counts_f):
     """RETURN: CoverageRecord over the absorbed points."""
     from ..measure import BRANCH, TOGGLE                      # noqa: F401
     file_db = {}
@@ -255,8 +261,8 @@ def _record_of(reader, entry_db, source_root, config, counts_f):
                                      measure_db)
 
     return CoverageRecord(language = _language_of(file_db),
-                          tool     = reader.name,
-                          source   = reader.source_format,
+                          tool     = "",
+                          source   = fmt.name,
                           counts_f = counts_f,
                           file_db  = file_db)
 
@@ -281,4 +287,4 @@ def _language_of(file_db):
     return name_set.pop() if len(name_set) == 1 else "unknown"
 
 
-register(UcisReader())
+register(UcisFramework())

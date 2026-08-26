@@ -55,13 +55,14 @@ ______________________________________________________________________________
 import os
 import sys
 
-from .record   import (ranges_of, parse_record, RecordFault,
-                       CoverageRecord, FileCoverage)
+from .record   import (ranges_of, RecordFault, CoverageRecord,
+                       FileCoverage)
+from .binary   import unpack_record
 from ..bookkeeper.test_run_id import TestRunId
 from .index    import index_of, Gathered
 
 
-RECORD_SUFFIX = ".cover"
+RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.cov convert' shows it
 
 
 class E_ExitCode:
@@ -176,8 +177,8 @@ def record_iterable(root, suffix=RECORD_SUFFIX):
             if not name.endswith(suffix): continue
             path = os.path.join(base, name)
             try:
-                with open(path, "r", encoding="utf-8") as handle:
-                    record = parse_record(handle.read())
+                with open(path, "rb") as handle:
+                    record = unpack_record(handle.read())
             except (OSError, RecordFault) as fault:
                 sys.stderr.write("skipped '%s': %s\n" % (path, fault))
                 continue

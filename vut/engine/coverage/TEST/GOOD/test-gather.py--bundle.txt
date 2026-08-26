@@ -1,0 +1,25 @@
+
+--- what the bundle carries ---
+INSPECT: format 1  directories other/TEST, parser/TEST
+         gathered groups 5  files 2
+         other/TEST     register generation 1, groups generation 0
+         parser/TEST    register generation 3, groups generation 0
+
+--- a snapshot is the table AS TEXT ---
+           | ##VUT-TEST-IDS 5
+           | G:3
+           | N:1
+           | A:0 test-parse
+           | N:0.2
+           | C:0.0 basic
+           | C:0.1 deep
+
+--- the gather wrote into no directory's GOOD/ ---
+         directories whose group table now exists: none
+  OK  : the bundle round-trips
+  OK  : and names the version it was written in
+  OK  : NOTHING was written back: a gather's table is a function of the root the caller chose, and nothing it makes is identity
+  OK  : one snapshot per directory the fold touched
+  OK  : the register travels as its own text format
+SUCCESS: a delivery is the index and a versioned copy of every table that decodes it.
+<hwut-end>

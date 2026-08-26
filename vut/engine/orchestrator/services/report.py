@@ -20,11 +20,19 @@ DESCRIPTION
                                                 prefixes, raw sidecars
                                                 and timing sections
                                                 included
-           hwut.report TEST-APP [CHOICE] -c     pack the COVERAGE too
-                                                ('--coverage') -- the
-                                                flag is RESERVED: the
-                                                pack says the gathering
-                                                is owed (todo-22)
+           hwut.report TEST-APP [CHOICE] --no-coverage
+                                                LEAVE OUT the coverage
+                                                section. It stands BY
+                                                DEFAULT where a record
+                                                was harvested: a report
+                                                says WHAT broke, and
+                                                coverage says WHICH
+                                                LINES the run actually
+                                                executed -- together
+                                                they narrow a search
+                                                from a repository to a
+                                                few hundred lines
+                                                (coverage D-24)
 
        THE BOOKKEEPER OWNS THE NAMING. This face resolves NOTHING by
        hand: 'nominal_path', 'candidate_path', 'raw_path' and
@@ -87,7 +95,11 @@ def subject_tuple_of(bookkeeper, test, choice):
     for path in base.iterdir():
         name = path.name
         if not name.startswith(stem):                          continue
-        if name.endswith((".raw", ".times", ".when")):          continue
+        #  '.cover' is the coverage record, BINARY (coverage D-20): it
+        #  is not a subject, and its presentation is the COVERAGE
+        #  section. Packing the bytes would put a blob in a pack meant
+        #  to be read.
+        if name.endswith((".raw", ".times", ".when", ".cover")): continue
         name_list.append(name[len(stem):])
     return tuple(sorted(name_list))
 
@@ -162,8 +174,60 @@ def load_timing(path):
         return []
 
 
+def coverage_section_text(directory, application, choice):
+    """
+    RETURN: str, the coverage of that run: the token the book recorded,
+            and -- where a record stands -- its text spelling, uncovered
+            ranges first, because what a failing run did NOT reach is
+            what a reader is looking for.
+            None, where the book knows nothing of coverage for this run
+            (coverage was never asked): the section is then absent, and
+            absence is not reported as an empty measurement.
+    """
+    from ...bookkeeper.bookkeeper import Bookkeeper
+    from ...coverage.binary       import unpack_record
+    from ...coverage.record       import format_record, RecordFault
+
+    keeper = Bookkeeper(directory)
+    stem   = application[:-3] if application.endswith(".py") else application
+    entry  = keeper.result(stem, choice, "Run") or {}
+    token  = entry.get("coverage")
+    path   = keeper.coverage_path(stem, choice)
+    if token is None and not path.is_file(): return None
+
+    line_list = ["outcome: %s" % (token or "<not recorded>")]
+    if not path.is_file():
+        line_list.append("")
+        line_list.append("No record stands. The outcome above says why;")
+        line_list.append("a run that did not testify is never harvested")
+        line_list.append("(coverage RATIONALE D-21).")
+        return "\n".join(line_list)
+
+    try:               record = unpack_record(path.read_bytes())
+    except (RecordFault, OSError) as fault:
+        return "outcome: %s\nthe record cannot be read: %s" % (token, fault)
+
+    line_list.append("")
+    line_list.append("NOT EXECUTED by this run:")
+    silent_f = True
+    for source in sorted(record.file_db):
+        uncovered = record.file_db[source].uncovered
+        if not uncovered: continue
+        silent_f = False
+        line_list.append("  %-44s %s"
+                         % (source, ", ".join("%i..%i" % (b, e - 1)
+                                              for b, e in uncovered)))
+    if silent_f:
+        line_list.append("  (nothing: every executable line was reached)")
+    line_list.append("")
+    line_list.append("the record, in its text spelling "
+                     "('hwut.cov convert'):")
+    line_list.append(format_record(record).rstrip("\n"))
+    return "\n".join(line_list)
+
+
 def build_pack(directory, application, choice, raw_f,
-               coverage_f=False):
+               coverage_f=True):
     """
     RETURN: str, the whole pack: metadata first, then one delimited
             section per file -- source, GOOD, OUT (cadence-prefixed
@@ -210,9 +274,12 @@ def build_pack(directory, application, choice, raw_f,
                                                          relative_path)),
                             section))
     timing_db = {k: record_db[k] for k in record_db if " timing " in k}
+    coverage_text = coverage_section_text(directory, application, choice) \
+                    if coverage_f else None
     line_list.append("coverage: %s"
-                     % ("requested -- not gathered yet (todo-22)"
-                        if coverage_f else "not requested"))
+                     % ("left out ('--no-coverage')" if not coverage_f
+                        else coverage_text.splitlines()[0][len("outcome: "):]
+                             if coverage_text else "none recorded"))
     line_list.append("cadence: %s"
                      % ("as '<delta-t>:<line>' prefixes"
                         if timing_db and not raw_f else
@@ -227,14 +294,8 @@ def build_pack(directory, application, choice, raw_f,
                                          "=" * max(1, 74 - len(title))))
         line_list.append(text.rstrip("\n"))
 
-    if coverage_f:
-        #  ASKED FOR, NOT YET GATHERED. The pack says so rather than
-        #  omitting the section silently -- the house law: absence is
-        #  reported, never guessed. (Gathering it is owed; see
-        #  DISCUSSIONS todo-22.)
-        section("COVERAGE",
-                "not gathered yet -- '-c' is accepted and reserved;\n"
-                "the gathering is owed (DISCUSSIONS todo-22).")
+    if coverage_text is not None:
+        section("COVERAGE", coverage_text)
 
     if os.path.isfile(source_path):
         section("SOURCE: %s" % application, read(application))
@@ -299,9 +360,9 @@ def _main(argv):
     parser.add_argument("-r", "--raw", action="store_true",
                         help="files verbatim: no cadence prefixes, raw "
                              "sidecars and timing sections included")
-    parser.add_argument("-c", "--coverage", action="store_true",
-                        help="pack the COVERAGE of this test too (not "
-                             "yet gathered -- the pack says so)")
+    parser.add_argument("--no-coverage", action="store_true",
+                        help="leave out the coverage section; it stands "
+                             "by default where a record was harvested")
     arguments = parser.parse_args(argv)
 
     application = os.path.basename(arguments.application)
@@ -309,7 +370,7 @@ def _main(argv):
                                   arguments.application))
     sys.stdout.write(build_pack(directory, application,
                                 arguments.choice, arguments.raw,
-                                arguments.coverage))
+                                not arguments.no_coverage))
     return E_ExitCode.OK
 
 

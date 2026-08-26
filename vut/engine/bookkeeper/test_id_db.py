@@ -43,6 +43,12 @@ DESCRIPTION
        directory and the choices of ONE application; group ids are a
        third scope of their own ('group_table.py').
 
+       THE GENERATION ('G:') counts mutations of this file. A snapshot
+       of the register -- what a coverage delivery carries (coverage
+       D-25) -- names the generation it copied, so a reader can say
+       whether the directory has moved since, rather than decoding
+       against a table that has changed.
+
        THE FILE is 'GOOD/test_ids.dat', beside the result base, written
        the same way: atomically, left write-protected. It is written on
        every mutation. A MISSING file reads as an empty register (a
@@ -70,7 +76,7 @@ from   .test_run_id import TestRunId, ID_LIMIT
 
 
 FILE_NAME      = "test_ids.dat"
-FORMAT_VERSION = "4"
+FORMAT_VERSION = "5"
 
 
 class TestIdFault(ValueError):
@@ -114,6 +120,7 @@ class TestIdDb:
         self._choice_db  = {}     # app_id -> {choice_id: name}
         self._next_app   = 0      # high-water mark of the app scope
         self._next_choice_db = {} # app_id -> high-water mark of its choices
+        self.generation      = 0  # bumped on every mutation (coverage D-25)
         try:
             text = self.path.read_text(encoding="utf-8")
         except FileNotFoundError:
@@ -332,6 +339,7 @@ class TestIdDb:
     def format(self):
         """
         RETURN: str, the register as it is stored:
+                    'G:<generation>'                  bumped per mutation
                     'N:<next app id>'                 the app scope's mark
                     'A:<id> <name>'                   per application
                     'N:<app_id>.<next choice id>'     its choice mark
@@ -342,6 +350,7 @@ class TestIdDb:
         timestamps.
         """
         line_list = ["##VUT-TEST-IDS " + FORMAT_VERSION,
+                     "G:%i" % self.generation,
                      "N:%i" % self._next_app]
         for app_id, name, choice_tuple in self.app_iterable():
             line_list.append("A:%i %s" % (app_id, name))
@@ -378,10 +387,16 @@ class TestIdDb:
                             "register version '%s' is not read; this "
                             "build writes %s. Versions 1 and 2 were "
                             "the pair-interned tables; version 3 "
-                            "re-used ids and kept no mark."
+                            "re-used ids and kept no mark; version 4 "
+                            "kept no generation."
                             % (version or "<none>", FORMAT_VERSION))
                 continue
             head, _, name = line.partition(" ")
+            if head.startswith("G:"):
+                try:               self.generation = int(head[2:])
+                except ValueError: raise TestIdFault(
+                                       "'%s' spells no generation" % line)
+                continue
             if head.startswith("N:"):
                 self._parse_mark(head[2:], line)
                 continue
@@ -479,7 +494,11 @@ class TestIdDb:
         """
         RETURN: None. The whole file, replaced atomically and left
                 write-protected -- the result base's own treatment.
+                The GENERATION is bumped first: every write is a
+                mutation, and a snapshot must be able to tell them
+                apart (coverage D-25).
         """
+        self.generation += 1
         path = self.path
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():

@@ -46,7 +46,8 @@ import io
 import json
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
 
@@ -54,18 +55,55 @@ DATA_FILE = ".coverage"
 JSON_FILE = "coverage.json"
 
 
-class PythonCoverageReader(I_Reader):
-    """coverage.py, through its json report."""
-    name          = "coverage"
-    source_format = "coverage.py-json"
+def _data_path(work_dir):
+    """RETURN: str, where the run leaves its database."""
+    return os.path.join(artifact_directory_of(work_dir), DATA_FILE)
 
-    def _data_path(self, work_dir):
-        """RETURN: str, where the run leaves its database."""
-        return os.path.join(artifact_directory_of(work_dir), DATA_FILE)
 
-    def _json_path(self, work_dir):
-        """RETURN: str, where the second call leaves the report."""
-        return os.path.join(artifact_directory_of(work_dir), JSON_FILE)
+def _json_path(work_dir):
+    """RETURN: str, where the second call leaves the report."""
+    return os.path.join(artifact_directory_of(work_dir), JSON_FILE)
+
+
+class PythonCoverageFormat(CCoverageFormat):
+    """coverage.py's json report."""
+    name = "coverage.py-json"
+
+    def read(self, work_dir, source_root, config=None):
+        """
+        RETURN: CoverageRecord, of the json report.
+                None, where no report stands -- ABSENT, which is not an
+                empty measurement and must not be reported as one.
+        """
+        path = _json_path(work_dir)
+        if not os.path.isfile(path): return None
+        with io.open(path, "r", encoding="utf-8") as handle:
+            document = json.load(handle)
+        return record_of(self, "python",
+                         _entry_iterable(document, source_root, config))
+
+
+def _entry_iterable(document, source_root, config):
+    """
+    YIELD: (path, executable_lines, covered_lines, None) per source
+           file inside the gather set.
+
+    EX is 'executed + missing': what COULD be hit. 'excluded_lines'
+    are not executable and enter neither.
+    """
+    for raw_path, entry in sorted(document.get("files", {}).items()):
+        path = relative_path(raw_path, source_root)
+        if not wanted(path, config): continue
+        executed = entry.get("executed_lines", [])
+        missing  = entry.get("missing_lines", [])
+        yield path, list(executed) + list(missing), executed, None
+
+
+class PythonCoverageFramework(CCoverageFramework):
+    """coverage.py: 'coverage run' around the call, 'coverage json'
+    after it; reads PythonCoverageFormat."""
+    name   = "coverage"
+    format = PythonCoverageFormat()
 
     def wrap(self, argv, config, work_dir):
         """
@@ -75,7 +113,7 @@ class PythonCoverageReader(I_Reader):
         application flag that coverage.py also knows ('--include', say)
         stays the application's.
         """
-        head = ["coverage", "run", "--data-file=%s" % self._data_path(work_dir)]
+        head = ["coverage", "run", "--data-file=%s" % _data_path(work_dir)]
         if config is not None:
             if config.include:
                 head.append("--include=%s" % ",".join(config.include))
@@ -89,36 +127,8 @@ class PythonCoverageReader(I_Reader):
                 What the run left is a database; this makes it readable.
         """
         return ["coverage", "json",
-                "--data-file=%s" % self._data_path(work_dir),
-                "-o", self._json_path(work_dir), "-q"]
-
-    def harvest(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of the json report.
-                None, where no report stands -- ABSENT, which is not an
-                empty measurement and must not be reported as one.
-        """
-        path = self._json_path(work_dir)
-        if not os.path.isfile(path): return None
-        with io.open(path, "r", encoding="utf-8") as handle:
-            document = json.load(handle)
-        return record_of(self, "python",
-                         self._entry_iterable(document, source_root, config))
-
-    def _entry_iterable(self, document, source_root, config):
-        """
-        YIELD: (path, executable_lines, covered_lines, None) per source
-               file inside the gather set.
-
-        EX is 'executed + missing': what COULD be hit. 'excluded_lines'
-        are not executable and enter neither.
-        """
-        for raw_path, entry in sorted(document.get("files", {}).items()):
-            path = relative_path(raw_path, source_root)
-            if not wanted(path, config): continue
-            executed = entry.get("executed_lines", [])
-            missing  = entry.get("missing_lines", [])
-            yield path, list(executed) + list(missing), executed, None
+                "--data-file=%s" % _data_path(work_dir),
+                "-o", _json_path(work_dir), "-q"]
 
 
-register(PythonCoverageReader())
+register(PythonCoverageFramework())

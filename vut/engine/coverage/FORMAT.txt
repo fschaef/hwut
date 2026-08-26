@@ -5,8 +5,13 @@ Mechanics only. WHY the format is shaped this way stands in RATIONALE
 (D-5 the skeleton, D-7 the provenance, D-8 and D-18 the run, D-11 the
 measures, D-12 named points). What is OPEN stands in DISCUSSIONS.
 
-A record is UTF-8 text, LF terminated, one file per run. Its extension
-is '.cover'. Every line is one of five kinds, in this order:
+A record has TWO SPELLINGS of one content: the TEXT spelling, sections
+1 to 7, and the BINARY spelling, section 8. The file on disk,
+'.cover', is BINARY. The text is the presentation: 'hwut.cov convert'
+renders either into the other, and the tests print it.
+
+In the text spelling a record is UTF-8, LF terminated. Every line is
+one of five kinds, in this order:
 
     ##VUT-COVERAGE <version>     the version line, FIRST
     ##<key>: <value>             header lines
@@ -261,3 +266,52 @@ A file that does not parse is SKIPPED by an aggregator and named on
 stderr: one broken record must not cost a whole selection, and it must
 not vanish either. So is a record that names NO run -- it cannot be
 attributed, and a guess would be worse than the loss.
+
+
+------------------------------------------------------------------------------
+8  THE BINARY SPELLING
+------------------------------------------------------------------------------
+
+Little-endian throughout. The whole file is ONE zlib stream (level 6);
+what follows is its content, front to back, no padding, no offsets.
+
+    file     =  "VUTC"  u8 version  header  u32 n_files  file_block*
+    header   =  run_set  str language  str tool  str format  u8 counts
+    run_set  =  u32 n  (u32 app_id  u32 choice_id)*
+    str      =  u16 length  UTF-8 bytes
+    file_block = str path  stream EX  stream CV  [stream counts]
+                 u8 n_measures  (tag  stream)*
+    stream   =  u32 n_bytes  byte*
+    tag      =  two ASCII bytes, the measure's tag (5.1)
+
+    version     1 -- what this build writes and reads
+    choice_id   0xFFFFFFFF spells 'no choice' ('47' in the text)
+    counts      0 or 1; 'stream counts' stands iff 1
+    n_files     blocks follow in ascending path order
+
+8.1  THE NUMBER STREAM
+
+Every delta-coded sequence is a stream of unsigned bytes with one
+escape:
+
+    0x00 .. 0xFE   the number itself
+    0xFF           the number follows as u32
+
+Ranges: the stream holds 'd, L' pairs as section 4.2 defines them.
+Counts: one number per COVERED range, in order.
+Points (5.2): 'd, covered, total' per point.
+Named points (5.3): 'd, name, covered, total' per point, the name
+spliced into the stream as a 'str' (u16 length, UTF-8 bytes).
+
+8.2  REFUSALS, in addition to section 7's
+
+    not a zlib stream; no "VUTC"; a version this build does not write;
+    the buffer ends where a field expects more; bytes after the last
+    block; a range delta of zero or a length of zero; an escaped number
+    cut short; a tag no measure claims.
+
+8.3  ONE CONTENT
+
+'unpack(pack(r))' and 'parse(format(r))' are the same record, and
+'format(unpack(pack(r))) == format(r)' byte for byte. The test proves
+it on every witnessed artifact ('TEST/test-binary.py').

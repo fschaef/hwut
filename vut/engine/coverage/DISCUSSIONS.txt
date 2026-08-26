@@ -536,48 +536,19 @@ todo-9  is the orchestrator's t-9 and is BUILT (RATIONALE D-18): the
         record names run ids. What remains of the old bridge -- the
         'resolve' seam and '_local_resolver' -- is deleted.
 
-todo-10 THE GATHER'S GROUP OF GROUPS, AND WHAT A DELIVERY CARRIES
-        Ids are directory-local (D-14). A gather across directories has
-        one honest key, '(directory relative to the gather root, local
-        id)', and a stretch of one source file seen by the gather is
-        reached by a SET OF (directory, group) PAIRS -- one group per
-        directory involved. 'hwut.cov --gather' interns that set as a
-        GATHERED GROUP, in memory, in the gather process, and writes it
-        into no directory's GOOD/: it is ephemeral to hwut itself.
+todo-10 BUILT (2026-08-25, RATIONALE D-25): 'hwut.cov gather' and
+        'hwut.cov stale'; the bundle carries the gathered table AND the
+        index, and every snapshot names the generation it was taken at.
 
-            D1:  test_ids.dat   group_ids.dat   records
-            D2:  test_ids.dat   group_ids.dat   records
-                       |
-              hwut.cov --gather (one root)
-                       v
-            g' <-> { (D1, g3), (D2, g7) }     the gather's own table
-            segment -> g'                      the gather's own index
+todo-11 RETIRED (2026-08-25). Both refusals were inherited from the
+        never-built 'core.py' and do not survive D-19: the harvest is
+        per choice after that choice's application ends, so 'interactive'
+        is a question of a framework resetting its counters between
+        choices, not a door refusal; and timing beside coverage is the
+        cost of THAT run, a fact and not a contradiction.
 
-        DECODING IS A CHAIN, each link a table: gathered group -> pairs
-        -> that directory's group table -> run ids -> that directory's
-        register -> names. So a DELIVERY of coverage is a BUNDLE: the
-        gather's group-of-groups table and index, plus a snapshot of
-        every directory's register and group table, keyed by directory
-        relative to the gather root, valid only as one bundle. Three
-        small files per directory; nothing else travels.
-
-        Because ids are issued once (bookkeeper B-2), a snapshot
-        decoded against a NEWER register still resolves: new ids only
-        appear, and a removed test's id decodes to 'no longer
-        registered' -- true, not misattributed. And a gather never
-        writes back: nothing it makes is identity.
-
-        OPEN, for task 3 ('hwut.cov'): the bundle's file layout, and
-        whether the gathered group table is written into the bundle at
-        all or recomputed from the per-directory tables on read.
-
-todo-11 TWO REFUSALS A COVERAGE RUN OWES
-        'interactive' beside coverage: a session measures one process
-        across many choices while the record is keyed per choice, so
-        the run must refuse by name rather than seat one process's
-        measurement under one choice. 'record_timing' beside coverage:
-        the wrapped call carries the tool's own cost, so a cadence
-        measured under it is not the application's. Both are refusals
-        at the door -- where the demand is HANDED IN, before a process
-        runs -- and both are unbuilt: the dispatcher accepts every
-        configuration under coverage today.
+todo-12 BUILT (2026-08-25): 'hwut.cov <wish>' runs, 'gather' folds,
+        'stale' checks a bundle, 'convert' and 'formats' show. There is
+        no 'merge' verb -- merging records is a function, and merging
+        ACROSS directories is what 'gather' is. There is no 'report'
+        verb: 'hwut.report' carries coverage by default (D-24).

@@ -12,6 +12,15 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --directory=<path>          the root to run below; the current
                                 directory else
     --no-store                  the store knob: no subject recorded
+    --coverage                  the DEMAND (coverage D-19): every test
+                                is built and run for coverage, every
+                                completed run harvested; what
+                                'hwut.cov <wish>' says
+    --variant=<a>[,<b>...]      the VARIANT selection (E-9): one
+                                alternative per variant group, merged
+                                over the base configuration. Two
+                                alternatives of ONE group, or a name
+                                no group declares, are refused
     --jobs=<n>                  the host-global bound on work standing
                                 at once, across every directory;
                                 unbounded else
@@ -51,6 +60,7 @@ from ..plan.wish                   import (HELP as WISH_HELP,
                                            WishError,
                                            parse_wish)
 from ..run.dispatcher              import test_run_dispatcher_factory
+from ..exploration.variant         import name_tuple_of, VariantError
 from ..run.orchestrate             import orchestrator
 from ..run.strategy                import (DEFAULT_STRATEGY_NAME,
                                            STRATEGY_DB, strategy_of)
@@ -105,7 +115,8 @@ OTHER
     --help              this text"""
 
 
-async def _drive(root, wish, record, worker_max_n, strategy, flow):
+async def _drive(root, wish, record, worker_max_n, strategy, flow,
+                 coverage=None, variant_tuple=()):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
             'flow' as each event arrived; the closing 'None' consumed,
@@ -115,7 +126,9 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow):
     BEFORE the first event.
     """
     queue = orchestrator(root, wish,
-                         test_run_dispatcher_factory(record=record),
+                         test_run_dispatcher_factory(
+                             record=record, coverage=coverage,
+                             variant_tuple=variant_tuple),
                          worker_max_n=worker_max_n, strategy=strategy)
     event_list = []
     while True:
@@ -125,7 +138,7 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow):
         flow.dispatch(item)
 
 
-def main(argv=None, write=None, write_error=None):
+def main(argv=None, write=None, write_error=None, demand=None):
     """
     RETURN: E_ExitCode, the exit status of the run (E-1): OK where
             every test stood and no fault was met, FAULT where one
@@ -144,15 +157,19 @@ def main(argv=None, write=None, write_error=None):
     if write_error is None: write_error = \
         lambda line: print(line, file=sys.stderr)
     try:
-        return _main(argv, write, write_error, captured_f)
+        return _main(argv, write, write_error, captured_f, demand)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         return E_ExitCode.SIGPIPE
 
 
-def _main(argv, write, write_error, captured_f):
+def _main(argv, write, write_error, captured_f, demand=None):
     """
     RETURN: E_ExitCode -- 'main' without the pipe guard.
+
+    'demand' is a CoverageConfig a FACE hands in for '--coverage' --
+    the seam through which 'hwut.cov' and its tests state the tool
+    until '--variant' selects it from the configuration (todo-13).
     """
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
@@ -175,6 +192,8 @@ def _main(argv, write, write_error, captured_f):
 
     directory    = "."
     record       = None
+    coverage     = None
+    variant_text = ""
     worker_max_n = None
     strategy     = strategy_of(DEFAULT_STRATEGY_NAME)
     unknown      = []
@@ -182,6 +201,11 @@ def _main(argv, write, write_error, captured_f):
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument == "--no-store":  record  = False
+        elif argument == "--coverage":
+            from ...coverage.configuration import CoverageConfig
+            coverage = demand if demand is not None else CoverageConfig()
+        elif argument.startswith("--variant="):
+            variant_text = argument[len("--variant="):]
         elif argument in ("--dbd", "--directory-by-directory"):
             strategy = strategy_of("linear")
         elif argument.startswith("--strategy="):
@@ -224,7 +248,7 @@ def _main(argv, write, write_error, captured_f):
     try:
         event_list = asyncio.run(
             _drive(directory, wish, record, worker_max_n, strategy,
-                   flow))
+                   flow, coverage, name_tuple_of(variant_text)))
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

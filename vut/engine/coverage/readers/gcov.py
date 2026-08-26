@@ -52,7 +52,8 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
 
@@ -63,38 +64,11 @@ NOT_EXECUTABLE = "-"
 NEVER_EXECUTED = ("#####", "=====", "$$$$$")
 
 
-class GcovReader(I_Reader):
+class GcovFormat(CCoverageFormat):
     """gcc's '.gcov' annotated source."""
-    name          = "gcov"
-    source_format = "gcov-annotated"
+    name = "gcov-annotated"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        gcov instruments at BUILD time ('--coverage'), not at launch:
-        there is nothing to wrap, and a wrapper that did nothing would be
-        worse than none. Whether the build carried the flag is the
-        BUILD's business, and this reader reports its absence by finding
-        no '.gcda'.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """
-        RETURN: list[str], 'gcov -b -p <every .gcda the run wrote>'.
-                None, where the run wrote none -- the build was not
-                instrumented, and gcov over nothing would only add a
-                failure with a misleading name.
-
-        Made LATE, after the application ended: before it there is no
-        '.gcda' to name.
-        """
-        path_list = gcda_path_tuple(work_dir)
-        if not path_list: return None
-        return ["gcov", "-b", "-p"] + list(path_list)
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every '.gcov' the second call left.
                 None, where none stands -- ABSENT, which is not an empty
@@ -122,6 +96,53 @@ class GcovReader(I_Reader):
                          entry_iterable(entry_db, source_root, config,
                                         counts_f),
                          counts_f)
+
+
+class GcovFramework(CCoverageFramework):
+    """gcov: invocation; reads GcovFormat. The one framework that can
+    CHECK instrumentation: gcc leaves a '.gcno' beside every object it
+    instrumented, before anything runs."""
+    name   = "gcov"
+    format = GcovFormat()
+
+    def instrumented_f(self, target, work_dir):
+        """
+        RETURN: True,  at least one '.gcno' stands under 'work_dir' --
+                       something was compiled with '--coverage'.
+                False, none does: nothing here was instrumented.
+
+        Never None: the trace either stands or it does not.
+        """
+        for base, _, file_list in os.walk(work_dir):
+            if any(name.endswith(".gcno") for name in file_list):
+                return True
+        return False
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged.
+
+        gcov instruments at BUILD time ('--coverage'), not at launch:
+        there is nothing to wrap, and a wrapper that did nothing would be
+        worse than none. Whether the build carried the flag is the
+        BUILD's business, and this reader reports its absence by finding
+        no '.gcda'.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """
+        RETURN: list[str], 'gcov -b -p <every .gcda the run wrote>'.
+                None, where the run wrote none -- the build was not
+                instrumented, and gcov over nothing would only add a
+                failure with a misleading name.
+
+        Made LATE, after the application ended: before it there is no
+        '.gcda' to name.
+        """
+        path_list = gcda_path_tuple(work_dir)
+        if not path_list: return None
+        return ["gcov", "-b", "-p"] + list(path_list)
 
 
 def gcda_path_tuple(work_dir):
@@ -217,4 +238,4 @@ def entry_iterable(entry_db, source_root, config, counts_f):
         yield path, executable, covered, count_list
 
 
-register(GcovReader())
+register(GcovFramework())

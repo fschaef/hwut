@@ -41,7 +41,8 @@ import io
 import json
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
@@ -49,27 +50,11 @@ from ..record import ranges_of, FileCoverage, CoverageRecord
 RESULTSET_SUFFIX = (".resultset.json",)
 
 
-class SimplecovReader(I_Reader):
+class SimplecovFormat(CCoverageFormat):
     """SimpleCov's .resultset.json."""
-    name          = "simplecov"
-    source_format = "simplecov-resultset"
+    name = "simplecov-resultset"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        SimpleCov starts INSIDE the ruby process ('SimpleCov.start'
-        before the code under test loads) -- the test's own first lines,
-        not a wrapper around them. This reader reports its absence by
-        finding no resultset.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The process writes the resultset at exit."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every resultset under the artifact
                 directory, suites and files unioned.
@@ -101,10 +86,31 @@ class SimplecovReader(I_Reader):
                                          ranges_of(covered), count_list)
 
         return CoverageRecord(language = "ruby",
-                              tool     = self.name,
-                              source   = self.source_format,
+                              tool     = "",
+                              source   = self.name,
                               counts_f = counts_f,
                               file_db  = file_db)
+
+
+class SimplecovFramework(CCoverageFramework):
+    """simplecov: invocation; reads SimplecovFormat."""
+    name   = "simplecov"
+    format = SimplecovFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged.
+
+        SimpleCov starts INSIDE the ruby process ('SimpleCov.start'
+        before the code under test loads) -- the test's own first lines,
+        not a wrapper around them. This reader reports its absence by
+        finding no resultset.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. The process writes the resultset at exit."""
+        return None
 
 
 def _absorb(line_db_by_file, path):
@@ -137,4 +143,4 @@ def _absorb(line_db_by_file, path):
                 standing[number] = standing.get(number, 0) + value
 
 
-register(SimplecovReader())
+register(SimplecovFramework())

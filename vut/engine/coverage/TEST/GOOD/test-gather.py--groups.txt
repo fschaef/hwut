@@ -1,0 +1,18 @@
+
+--- each gathered group, as (directory, local group) pairs ---
+         g'0 -> {}
+         g'1 -> (other/TEST, 1)
+         g'2 -> (parser/TEST, 1)
+         g'3 -> (parser/TEST, 2)
+         g'4 -> (parser/TEST, 3)
+
+--- the chain walked: what each gathered group MEANS ---
+         g'1 -> other/TEST test-other
+         g'2 -> parser/TEST test-parse [basic]
+         g'3 -> parser/TEST test-parse [basic]; parser/TEST test-parse [deep]
+         g'4 -> parser/TEST test-parse [deep]
+  OK  : one gathered group names TWO runs -- the lines 4..5 both choices reached
+  OK  : and the chain decodes it to test applications and CHOICES: which is what the number is for
+  OK  : the empty group stays empty across the gather too
+SUCCESS: a set of (directory, group) pairs, as one number.
+<hwut-end>

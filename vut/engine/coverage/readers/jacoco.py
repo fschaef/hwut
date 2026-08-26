@@ -59,7 +59,8 @@ import os
 import xml.etree.ElementTree as ElementTree
 
 from ..configuration import CoverageRefused
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
@@ -67,10 +68,39 @@ from ..record import ranges_of, FileCoverage, CoverageRecord
 XML_SUFFIX = (".xml",)
 
 
-class JacocoReader(I_Reader):
+class JacocoFormat(CCoverageFormat):
     """JaCoCo's XML report."""
-    name          = "jacoco"
-    source_format = "jacoco-xml"
+    name = "jacoco-xml"
+
+    def read(self, work_dir, source_root, config=None):
+        """
+        RETURN: CoverageRecord, of every JaCoCo report under the artifact
+                directory, unioned.
+                None, where none stands -- ABSENT.
+
+        Raises CoverageRefused where a report carries '<line>' elements
+        with no instruction counts: it is well-formed and cannot say
+        which lines ran.
+        """
+        entry_db = {}
+        directory = artifact_directory_of(work_dir)
+        if os.path.isdir(directory):
+            for name in sorted(os.listdir(directory)):
+                if not name.endswith(XML_SUFFIX): continue
+                path = os.path.join(directory, name)
+                root = _read(path)
+                if root is None: continue
+                _absorb(entry_db, root, name)
+        if not entry_db: return None
+
+        counts_f = bool(config is not None and config.counts)
+        return _record_of(self, entry_db, source_root, config, counts_f)
+
+
+class JacocoFramework(CCoverageFramework):
+    """jacoco: invocation; reads JacocoFormat."""
+    name   = "jacoco"
+    format = JacocoFormat()
 
     def wrap(self, argv, config, work_dir):
         """
@@ -96,30 +126,6 @@ class JacocoReader(I_Reader):
         as it already writes the jar.
         """
         return None
-
-    def harvest(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every JaCoCo report under the artifact
-                directory, unioned.
-                None, where none stands -- ABSENT.
-
-        Raises CoverageRefused where a report carries '<line>' elements
-        with no instruction counts: it is well-formed and cannot say
-        which lines ran.
-        """
-        entry_db = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(XML_SUFFIX): continue
-                path = os.path.join(directory, name)
-                root = _read(path)
-                if root is None: continue
-                _absorb(entry_db, root, name)
-        if not entry_db: return None
-
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, entry_db, source_root, config, counts_f)
 
 
 def _read(path):
@@ -186,7 +192,7 @@ def _number(text):
     except ValueError: return 0
 
 
-def _record_of(reader, entry_db, source_root, config, counts_f):
+def _record_of(fmt, entry_db, source_root, config, counts_f):
     """
     RETURN: CoverageRecord, with the branch measurement seated beside the
             line one.
@@ -219,8 +225,8 @@ def _record_of(reader, entry_db, source_root, config, counts_f):
                                      measure_db)
 
     return CoverageRecord(language = _language_of(file_db),
-                          tool     = reader.name,
-                          source   = reader.source_format,
+                          tool     = "",
+                          source   = fmt.name,
                           counts_f = counts_f,
                           file_db  = file_db)
 
@@ -244,4 +250,4 @@ def _language_of(file_db):
     return name_set.pop() if len(name_set) == 1 else "unknown"
 
 
-register(JacocoReader())
+register(JacocoFramework())

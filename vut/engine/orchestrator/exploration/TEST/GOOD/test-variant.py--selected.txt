@@ -1,0 +1,20 @@
+
+--- one alternative from each group ---
+         --variant=gcov,slow -> coverage_target cov-app.exe  timeout 600.0  memory 2048
+
+--- the other order says the same ---
+         --variant=slow,gcov -> coverage_target cov-app.exe  timeout 600.0  memory 2048
+
+--- one alone leaves the other dimension unstated ---
+         --variant=llvm      -> coverage_target app-prof.exe  timeout None
+
+--- no variant at all ---
+         --variant absent    -> build None  caps None
+  OK  : each dimension contributes what it states
+  OK  : and a field only one of them states survives the merge
+  OK  : ORDER CARRIES NO MEANING: the groups partitioned the space, so the two selections cannot meet on a field
+  OK  : an unnamed dimension states nothing -- the base stands
+  OK  : no name, no change
+  OK  : two names, two alternatives
+SUCCESS: a variant states differences; the base carries the rest.
+<hwut-end>

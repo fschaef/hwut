@@ -3,6 +3,8 @@
          no version line                        -> GroupFault
          version 2: no mark, re-issuing         -> GroupFault
          version 1: self-interned ids           -> GroupFault
+         version 3: no generation               -> GroupFault
+         a generation that spells no number     -> GroupFault
          no mark at all                         -> GroupFault
          a mark standing twice                  -> GroupFault
          a mark that spells no number           -> GroupFault
@@ -21,6 +23,8 @@
   OK  : refused: no version line
   OK  : refused: version 2: no mark, re-issuing
   OK  : refused: version 1: self-interned ids
+  OK  : refused: version 3: no generation
+  OK  : refused: a generation that spells no number
   OK  : refused: no mark at all
   OK  : refused: a mark standing twice
   OK  : refused: a mark that spells no number

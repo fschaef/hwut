@@ -62,7 +62,7 @@ DESCRIPTION
        rather than reporting no coverage at all.
 ______________________________________________________________________________
 """
-from ..reader import register, _READER_DB
+from ..reader import register, CCoverageFramework, _FRAMEWORK_DB
 
 from . import python_coverage      # noqa: F401
 from . import lcov                 # noqa: F401
@@ -104,37 +104,31 @@ ALIAS_DB = {
 }
 
 
-class _Alias:
-    """One tool's name over another's reader.
+class _SharedFormatFramework(CCoverageFramework):
+    """One tool's name over another framework's format and invocation.
 
-    'name' is this tool; everything else is the reader it delegates to,
-    so the record's provenance names the TOOL that ran and the FORMAT it
-    wrote -- which are different facts and both are wanted (D-7).
+    'name' is THIS tool; the format is the one it writes, shared with
+    the framework it reads through, so the record's provenance names
+    the TOOL that ran and the FORMAT it wrote -- different facts, both
+    wanted (D-7). Invocation is delegated too: the tools behind one
+    format are invoked alike or not at all.
     """
-    def __init__(self, name, reader):
-        """RETURN: _Alias standing for 'name', reading through 'reader'."""
-        self.name          = name
-        self.reader        = reader
-        self.source_format = reader.source_format
+    def __init__(self, name, through):
+        """RETURN: framework standing for 'name', reading and invoking
+        through 'through'."""
+        self.name    = name
+        self.through = through
+        self.format  = through.format
 
     def wrap(self, argv, config, work_dir):
-        """RETURN: list[str], what the underlying reader would run."""
-        return self.reader.wrap(argv, config, work_dir)
+        """RETURN: list[str], what the underlying framework would run."""
+        return self.through.wrap(argv, config, work_dir)
 
     def report_argv(self, config, work_dir):
-        """RETURN: list[str] | None, the underlying reader's second call."""
-        return self.reader.report_argv(config, work_dir)
-
-    def harvest(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, with THIS tool's name in the header --
-                the format is shared, the tool that wrote it is not.
-                None, where no artifact stands.
-        """
-        from dataclasses import replace
-        record = self.reader.harvest(work_dir, source_root, config)
-        return None if record is None else replace(record, tool=self.name)
+        """RETURN: list[str] | None, the underlying framework's second
+        call."""
+        return self.through.report_argv(config, work_dir)
 
 
 for _name, _target in sorted(ALIAS_DB.items()):
-    register(_Alias(_name, _READER_DB[_target]))
+    register(_SharedFormatFramework(_name, _FRAMEWORK_DB[_target]))

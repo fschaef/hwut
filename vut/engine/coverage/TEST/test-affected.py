@@ -46,7 +46,8 @@ import config                                                   # noqa: F401
 
 from vut.language_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record   import ranges_of, FileCoverage, \
-                                         CoverageRecord, format_record
+                                         CoverageRecord
+from vut.engine.coverage.binary   import pack_record
 from vut.engine.bookkeeper.test_run_id import TestRunId
 from vut.engine.coverage.affected import (change_db_of_diff, main,
                                           E_ExitCode)
@@ -129,9 +130,9 @@ def build_fixture():
                                           ranges_of(line_iterable),
                                           ranges_of(line_iterable))})
         name = test if choice is None else "%s--%s" % (test, choice)
-        with io.open(os.path.join(directory, name + ".cover"), "w",
-                     encoding="utf-8") as handle:
-            handle.write(format_record(record))
+        with io.open(os.path.join(directory, name + ".cover"), "wb") \
+                as handle:
+            handle.write(pack_record(record))
 
     #  EVERY record names its source RELATIVE TO ITS OWN TEST DIRECTORY
     #  (D-4). Two different directories therefore spell ONE file two

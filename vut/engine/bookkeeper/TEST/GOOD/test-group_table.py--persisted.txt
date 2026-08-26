@@ -4,7 +4,8 @@ INSPECT: 1 group(s); file on disk: False
 
 --- after three allocations ---
 INSPECT: file on disk: True
-         | ##VUT-TEST-GROUPS 3
+         | ##VUT-TEST-GROUPS 4
+         | R:3
          | N:4
          | G:0
          | G:1 0.0

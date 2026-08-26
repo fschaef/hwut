@@ -1,0 +1,15 @@
+
+--- declarations that are refused ---
+         'variant_group' that is no scope     -> 'variant_group' is a scope of groups, each a scope of alternatives
+         a group that is no scope             -> variant group 'cov' is a scope of alternatives
+         an alternative that is no scope      -> variant 'gcov' is a scope of test parameters
+         an unknown key inside an alternative -> unknown key 'bogus' in variant 'gcov'
+         ONE NAME IN TWO GROUPS               -> variant 'gcov' stands in group 'cov' and in group 'load': every variant name is unique, so that '--variant' needs no qualification
+  OK  : refused: 'variant_group' that is no scope
+  OK  : refused: a group that is no scope
+  OK  : refused: an alternative that is no scope
+  OK  : refused: an unknown key inside an alternative
+  OK  : refused: ONE NAME IN TWO GROUPS
+  OK  : the two-groups refusal names BOTH groups: every variant name is unique, so '--variant' never needs qualifying
+SUCCESS: what cannot be read is refused at the declaration.
+<hwut-end>

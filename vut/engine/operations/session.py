@@ -329,7 +329,8 @@ async def run_test_held(configuration, request=None, store=None,
                "could not be attributed"
         from .coverage_action import harvest
         coverage = await harvest(configuration, store.bookkeeper,
-                                 test_name, choice_name, run_id)
+                                 test_name, choice_name, run_id,
+                                 result.report)
     entry = store.bookkeeper.record(result, configuration, goal,
                                     choice_name, coverage=coverage)
     return Outcome(result=result, recorded_db=recorded_db, entry=entry,

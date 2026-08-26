@@ -1,0 +1,20 @@
+
+--- what was found ---
+INSPECT: directories other/TEST, parser/TEST
+         files       other/core.py, parser/core.py
+
+--- parser/core.py, segment by segment ---
+         [ 1, 4)  group 2  parser/TEST:0.0
+         [ 4, 6)  group 3  parser/TEST:0.0, parser/TEST:0.1
+         [ 6, 8)  group 4  parser/TEST:0.1
+
+--- who reached one line ---
+         core.py line 2  -> parser/TEST:0.0
+         core.py line 4  -> parser/TEST:0.0, parser/TEST:0.1
+         core.py line 8  -> <nobody>
+  OK  : both directories were walked
+  OK  : a line both choices reached names both, each carrying the directory it was found in
+  OK  : the segment boundary stands where the set of runs changes
+  OK  : a run id of ANOTHER directory is told apart though both count from 0
+SUCCESS: ids are directory-local; the gather qualifies them.
+<hwut-end>

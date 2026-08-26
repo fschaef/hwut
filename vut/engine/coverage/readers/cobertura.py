@@ -60,7 +60,8 @@ ______________________________________________________________________________
 import os
 import xml.etree.ElementTree as ElementTree
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
@@ -68,23 +69,11 @@ from ..record import ranges_of, FileCoverage, CoverageRecord
 XML_SUFFIX = (".xml",)
 
 
-class CoberturaReader(I_Reader):
+class CoberturaFormat(CCoverageFormat):
     """Cobertura XML, whoever wrote it."""
-    name          = "cobertura"
-    source_format = "cobertura-xml"
+    name = "cobertura-xml"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged. The ecosystems that write
-        this format drive their own runs; see the module header.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The xml is text already."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every Cobertura xml under the artifact
                 directory, unioned.
@@ -102,6 +91,23 @@ class CoberturaReader(I_Reader):
 
         counts_f = bool(config is not None and config.counts)
         return _record_of(self, entry_db, source_root, config, counts_f)
+
+
+class CoberturaFramework(CCoverageFramework):
+    """cobertura: invocation; reads CoberturaFormat."""
+    name   = "cobertura"
+    format = CoberturaFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged. The ecosystems that write
+        this format drive their own runs; see the module header.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. The xml is text already."""
+        return None
 
 
 def _read(path):
@@ -171,7 +177,7 @@ def _condition_pair(line_node):
         return (None, None)
 
 
-def _record_of(reader, entry_db, source_root, config, counts_f):
+def _record_of(fmt, entry_db, source_root, config, counts_f):
     """
     RETURN: CoverageRecord, with the branch measurement seated beside the
             line one.
@@ -203,8 +209,8 @@ def _record_of(reader, entry_db, source_root, config, counts_f):
                                      measure_db)
 
     return CoverageRecord(language = _language_of(file_db),
-                          tool     = reader.name,
-                          source   = reader.source_format,
+                          tool     = "",
+                          source   = fmt.name,
                           counts_f = counts_f,
                           file_db  = file_db)
 
@@ -232,4 +238,4 @@ def _language_of(file_db):
     return "unknown"
 
 
-register(CoberturaReader())
+register(CoberturaFramework())

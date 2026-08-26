@@ -9,7 +9,7 @@ REACTION  exit code : 0   stderr : 0 bytes
                 demo.py                                      29 bytes  (source)
                 GOOD/demo--basic.stdout                      11 bytes  (good stdout)
                 .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
-              coverage: not requested
+              coverage: none recorded
               cadence: none recorded
               
               ==[ SOURCE: demo.py ]===========================================================

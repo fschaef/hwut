@@ -48,7 +48,8 @@ ______________________________________________________________________________
 """
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
@@ -60,10 +61,34 @@ _PAGE_LINE, _PAGE_BRANCH, _PAGE_TOGGLE, _PAGE_USER = (
     "v_line", "v_branch", "v_toggle", "v_user")
 
 
-class VerilatorReader(I_Reader):
+class VerilatorFormat(CCoverageFormat):
     """Verilator's native coverage data file."""
-    name          = "verilator"
-    source_format = "verilator-dat"
+    name = "verilator-dat"
+
+    def read(self, work_dir, source_root, config=None):
+        """
+        RETURN: CoverageRecord, of every verilator '.dat' under the
+                artifact directory, unioned -- line coverage in EX/CV,
+                branch arms in 'branch', toggle bits in 'toggle',
+                cover properties in 'cover'.
+                None, where none stands -- ABSENT.
+        """
+        point_db  = {}
+        directory = artifact_directory_of(work_dir)
+        if os.path.isdir(directory):
+            for name in sorted(os.listdir(directory)):
+                if not name.endswith(DAT_SUFFIX): continue
+                _absorb(point_db, os.path.join(directory, name))
+        if not point_db: return None
+
+        counts_f = bool(config is not None and config.counts)
+        return _record_of(self, point_db, source_root, config, counts_f)
+
+
+class VerilatorFramework(CCoverageFramework):
+    """verilator: invocation; reads VerilatorFormat."""
+    name   = "verilator"
+    format = VerilatorFormat()
 
     def wrap(self, argv, config, work_dir):
         """
@@ -82,25 +107,6 @@ class VerilatorReader(I_Reader):
                 reader reads; no second call stands between them.
         """
         return None
-
-    def harvest(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every verilator '.dat' under the
-                artifact directory, unioned -- line coverage in EX/CV,
-                branch arms in 'branch', toggle bits in 'toggle',
-                cover properties in 'cover'.
-                None, where none stands -- ABSENT.
-        """
-        point_db  = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(DAT_SUFFIX): continue
-                _absorb(point_db, os.path.join(directory, name))
-        if not point_db: return None
-
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, point_db, source_root, config, counts_f)
 
 
 def _absorb(point_db, path):
@@ -175,7 +181,7 @@ def _span_iterable(span_text, fallback_line):
     return result or (fallback_line,)
 
 
-def _record_of(reader, point_db, source_root, config, counts_f):
+def _record_of(fmt, point_db, source_root, config, counts_f):
     """
     RETURN: CoverageRecord over the absorbed points, one FileCoverage
             per source file, each measure on its own axis.
@@ -228,8 +234,8 @@ def _record_of(reader, point_db, source_root, config, counts_f):
                                      measure_db)
 
     return CoverageRecord(language = _language_of(file_db),
-                          tool     = reader.name,
-                          source   = reader.source_format,
+                          tool     = "",
+                          source   = fmt.name,
                           counts_f = counts_f,
                           file_db  = file_db)
 
@@ -253,4 +259,4 @@ def _language_of(file_db):
     return name_set.pop() if len(name_set) == 1 else "unknown"
 
 
-register(VerilatorReader())
+register(VerilatorFramework())

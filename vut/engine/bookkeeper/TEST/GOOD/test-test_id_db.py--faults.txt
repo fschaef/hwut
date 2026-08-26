@@ -2,6 +2,7 @@
          version 1, pair-interned               -> TestIdFault
          version 2, pair-interned               -> TestIdFault
          version 3, re-using, no mark           -> TestIdFault
+         version 4, no generation               -> TestIdFault
          an app id that spells no number        -> TestIdFault
          an app id standing twice               -> TestIdFault
          an app name standing twice             -> TestIdFault
@@ -18,12 +19,14 @@
          a run id at its mark (would re-issue)  -> TestIdFault
          a mark that spells no number           -> TestIdFault
          a mark beyond the ceiling              -> TestIdFault
+         a generation that spells no number     -> TestIdFault
 --- and the two honest absences ---
          no file at all -> 0 apps (a fresh directory)
   OK  : refused: no version line
   OK  : refused: version 1, pair-interned
   OK  : refused: version 2, pair-interned
   OK  : refused: version 3, re-using, no mark
+  OK  : refused: version 4, no generation
   OK  : refused: an app id that spells no number
   OK  : refused: an app id standing twice
   OK  : refused: an app name standing twice
@@ -40,6 +43,7 @@
   OK  : refused: a run id at its mark (would re-issue)
   OK  : refused: a mark that spells no number
   OK  : refused: a mark beyond the ceiling
+  OK  : refused: a generation that spells no number
   OK  : a MISSING register reads empty; only a DAMAGED one refuses
 SUCCESS: damage refuses by name; absence is a fresh start.
 <hwut-end>

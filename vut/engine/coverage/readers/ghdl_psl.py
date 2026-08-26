@@ -43,7 +43,8 @@ import io
 import json
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted)
 from ..record import FileCoverage, CoverageRecord
 
@@ -51,27 +52,11 @@ from ..record import FileCoverage, CoverageRecord
 JSON_SUFFIX = (".json",)
 
 
-class GhdlPslReader(I_Reader):
+class GhdlPslFormat(CCoverageFormat):
     """GHDL's '--psl-report' json."""
-    name          = "ghdl"
-    source_format = "ghdl-psl-json"
+    name = "ghdl-psl-json"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        The report is asked for ON the run command line
-        ('--psl-report=FILE'), and the PSL itself was compiled in with
-        '-fpsl' -- both the build's and the test's own business; this
-        reader reports their absence by finding no report.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The run writes the report itself."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every PSL report under the artifact
                 directory, unioned -- 'cover' points per source file,
@@ -98,10 +83,31 @@ class GhdlPslReader(I_Reader):
                                          {"cover": point_tuple})
 
         return CoverageRecord(language = _language_of(file_db),
-                              tool     = self.name,
-                              source   = self.source_format,
+                              tool     = "",
+                              source   = self.name,
                               counts_f = False,
                               file_db  = file_db)
+
+
+class GhdlPslFramework(CCoverageFramework):
+    """ghdl: invocation; reads GhdlPslFormat."""
+    name   = "ghdl"
+    format = GhdlPslFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged.
+
+        The report is asked for ON the run command line
+        ('--psl-report=FILE'), and the PSL itself was compiled in with
+        '-fpsl' -- both the build's and the test's own business; this
+        reader reports their absence by finding no report.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. The run writes the report itself."""
+        return None
 
 
 def _absorb(point_db, path):
@@ -145,4 +151,4 @@ def _language_of(file_db):
             else "unknown")
 
 
-register(GhdlPslReader())
+register(GhdlPslFramework())

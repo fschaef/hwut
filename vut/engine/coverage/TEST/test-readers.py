@@ -4,7 +4,7 @@ ______________________________________________________________________________
 
 PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
-CHOICES: python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
+CHOICES: roles, python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
          verilator, native, ghdl, psl, resultset, ucis, agreement,
          aliases, calls, absent, gather;
 
@@ -153,7 +153,12 @@ aliases    eight tools speak the tracefile -- 'gcovr', 'grcov',
            WITNESSED: its output holds cobertura and NO tracefile, so its
            alias now points there -- one line moved, nothing else.
 
-calls      what a reader NAMES rather than makes: 'coverage run' wraps,
+roles      the two roles (RATIONALE D-23): every tool is a
+           CCoverageFramework over a CCoverageFormat; the format reads
+           and stamps no tool, the framework invokes and stamps its
+           name; 'instrumented_f' answers None where it cannot check.
+
+calls      what a framework NAMES rather than makes: 'coverage run' wraps,
            'coverage json' is a second supervised call, gcov wraps
            nothing and names a call only where a '.gcda' exists.
 
@@ -174,7 +179,7 @@ import config                                                   # noqa: F401
 from vut.language_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.configuration import CoverageConfig
 from vut.engine.coverage.record        import format_record, line_n
-from vut.engine.coverage.reader        import reader_of, registered_tuple
+from vut.engine.coverage.reader        import framework_of, registered_tuple
 
 
 def raised(action):
@@ -1086,7 +1091,7 @@ def harvested(tool, name_text_pair_list, config=None, root_pair_list=(),
     an absolute path on the machine that wrote it.
     """
     root = work_dir_with(name_text_pair_list, root_pair_list)
-    try:     return reader_of(tool).harvest(root, source_root or root,
+    try:     return framework_of(tool).harvest(root, source_root or root,
                                             config or CoverageConfig())
     finally: shutil.rmtree(root, ignore_errors=True)
 
@@ -1152,7 +1157,7 @@ def test_lcov():
             with io.open(os.path.join(root, "OUT", "COVERAGE", name), "w",
                          encoding="utf-8") as handle:
                 handle.write("SF:%s\n%send_of_record\n" % (deep, body))
-        merged = reader_of("lcov").harvest(root, root, CoverageConfig())
+        merged = framework_of("lcov").harvest(root, root, CoverageConfig())
     finally:
         shutil.rmtree(root, ignore_errors=True)
     show(merged)
@@ -1796,31 +1801,105 @@ def test_aliases():
                 "header names.")
 
 
+def test_roles():
+    """The two roles: every tool is a framework over a format."""
+    from vut.engine.coverage.reader import (CCoverageFramework,
+                                            CCoverageFormat, register)
+    from vut.engine.coverage.configuration import CoverageRefused
+
+    banner("every registered tool is a CCoverageFramework over a "
+           "CCoverageFormat")
+    shared_db = {}
+    for tool in registered_tuple():
+        fw = framework_of(tool)
+        shared_db.setdefault(fw.format.name, []).append(tool)
+        print("         %-18s %-24s %s"
+              % (tool, fw.format.name,
+                 "through %s" % fw.through.name
+                 if hasattr(fw, "through") else ""))
+    all_roles_f = all(isinstance(framework_of(t), CCoverageFramework)
+                      and isinstance(framework_of(t).format, CCoverageFormat)
+                      for t in registered_tuple())
+
+    banner("one format, several frameworks")
+    for fmt, tool_list in sorted(shared_db.items()):
+        if len(tool_list) > 1:
+            print("         %-24s %s" % (fmt, ", ".join(tool_list)))
+
+    banner("the format stamps no tool; the framework does")
+    root  = work_dir_with([("run.info", COVERAGE_LCOV)])
+    fw    = framework_of("c8")
+    plain = fw.format.read(root, root, CoverageConfig())
+    full  = fw.harvest(root, root, CoverageConfig())
+    shutil.rmtree(root, ignore_errors=True)
+    print("         format.read -> tool '%s'  format '%s'"
+          % (plain.tool, plain.source))
+    print("         harvest     -> tool '%s'  format '%s'"
+          % (full.tool, full.source))
+
+    banner("instrumented_f: a check where a trace exists, None else")
+    root = work_dir_with([("x.gcno", "")])
+    print("         gcov,   a '.gcno' present -> %s"
+          % framework_of("gcov").instrumented_f("app", root))
+    shutil.rmtree(root, ignore_errors=True)
+    root = work_dir_with([])
+    print("         gcov,   none present      -> %s"
+          % framework_of("gcov").instrumented_f("app", root))
+    shutil.rmtree(root, ignore_errors=True)
+    print("         coverage.py               -> %s"
+          % framework_of("coverage").instrumented_f("app.py", "."))
+
+    banner("the registry refuses what is no framework")
+    class NotOne:
+        name = "not-one"
+    try:               register(NotOne()); refused = "nothing"
+    except CoverageRefused as fault: refused = "CoverageRefused"
+    print("         registering a bare object -> %s" % refused)
+
+    ok = check([
+        (all_roles_f, "every tool: framework over format"),
+        (len(shared_db["lcov-tracefile"]) > 3,
+         "one LCOV format serves several frameworks -- the reason the "
+         "roles are two"),
+        (plain.tool == "" and full.tool == "c8"
+         and full.source == "lcov-tracefile",
+         "the format leaves 'tool' empty; the framework stamps its own "
+         "name over the shared format"),
+        (framework_of("gcov").instrumented_f("app", "/nonexistent") is False
+         and framework_of("coverage").instrumented_f("a", ".") is None,
+         "gcov answers True or False; coverage.py answers None -- "
+         "'cannot check', never a guessed False"),
+        (refused == "CoverageRefused", "the role is the type"),
+    ])
+    verdict(ok, "a tool is invoked by its framework and read by its "
+                "format.")
+
+
 def test_calls():
     """What a reader NAMES rather than makes."""
     config = CoverageConfig(include=("*.py",), omit=("TEST/*",))
     root   = work_dir_with([])
     try:
         banner("coverage.py wraps the application")
-        wrapped = reader_of("coverage").wrap(
+        wrapped = framework_of("coverage").wrap(
             ["python3", "-u", "test-parse.py", "basic"], config, root)
         print("         %s" % " ".join(
             w.replace(root, "<work>") for w in wrapped))
 
         banner("and names a SECOND call: what the run left is a database")
-        second = reader_of("coverage").report_argv(config, root)
+        second = framework_of("coverage").report_argv(config, root)
         print("         %s" % " ".join(
             w.replace(root, "<work>") for w in second))
 
         banner("gcov wraps nothing -- it instruments at BUILD time")
         print("         %s"
-              % reader_of("gcov").wrap(["./prog"], config, root))
+              % framework_of("gcov").wrap(["./prog"], config, root))
 
         banner("and names no call where the build left no '.gcda'")
-        print("         %s" % reader_of("gcov").report_argv(config, root))
+        print("         %s" % framework_of("gcov").report_argv(config, root))
 
         banner("the tracefile tools name none either: it is text already")
-        print("         %s" % reader_of("lcov").report_argv(config, root))
+        print("         %s" % framework_of("lcov").report_argv(config, root))
 
         ok = check([
             (wrapped[:2] == ["coverage", "run"],
@@ -1836,12 +1915,12 @@ def test_calls():
             (second[:2] == ["coverage", "json"],
              "the second call is NAMED here and MADE by the execute "
              "stage: a reader spawns nothing"),
-            (reader_of("gcov").wrap(["./prog"], config, root) == ["./prog"],
+            (framework_of("gcov").wrap(["./prog"], config, root) == ["./prog"],
              "gcov leaves the command line alone"),
-            (reader_of("gcov").report_argv(config, root) is None,
+            (framework_of("gcov").report_argv(config, root) is None,
              "and names no call over a build that was not instrumented, "
              "rather than running gcov over nothing"),
-            (reader_of("lcov").report_argv(config, root) is None,
+            (framework_of("lcov").report_argv(config, root) is None,
              "a tracefile needs no second call"),
         ])
     finally:
@@ -1915,6 +1994,7 @@ if __name__ == "__main__":
         argv       = sys.argv,
         title      = "The readers: three artifact formats, one record",
         choice_map = {
+            "roles":     test_roles,
             "python":    test_python,
             "cobertura": test_cobertura,
             "go":        test_go,

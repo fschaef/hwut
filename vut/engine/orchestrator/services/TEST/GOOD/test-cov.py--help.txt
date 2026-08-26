@@ -1,0 +1,54 @@
+$ hwut.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
+
+    PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with
+             verbs (coverage RATIONALE D-13, D-20).
+
+        hwut.cov [<wish>] [--variant=<a>,<b>] [<hwut.run options>]
+                                    THE RUN, for coverage: 'hwut.run
+                                    --coverage' with the same wish and
+                                    options; every test is built and run
+                                    for coverage, every completed run
+                                    harvested (coverage D-19, D-21). The
+                                    tool is the configuration's, selected
+                                    by '--variant' (E-9); elected for the
+                                    language else
+        hwut.cov gather [--directory=<path>] [--out=<file>]
+                                    FOLD every record below the root into
+                                    ONE index whose keys are (directory,
+                                    run id), and write the DELIVERY BUNDLE
+                                    -- the gather's group-of-groups table
+                                    and index, plus a versioned snapshot of
+                                    each directory's register and group
+                                    table (coverage D-25). Writes into no
+                                    directory's 'GOOD/'.
+        hwut.cov stale BUNDLE [--directory=<path>]
+                                    which directories of that bundle have
+                                    MOVED since it was taken
+        hwut.cov convert [--from <form>] [--to <form>] FILE
+                                    the record in another spelling, on
+                                    stdout. Forms: 'binary' (what the store
+                                    holds, '.cover'), 'text' (the
+                                    presentation, FORMAT.txt). '--from'
+                                    defaults by the file's first bytes,
+                                    '--to' to the other form.
+        hwut.cov formats            the table of tools, formats and
+                                    aliases, GENERATED from the registry
+                                    -- the one author of that table
+        hwut.cov --help             this text
+
+    A first word that is a VERB ('gather', 'stale', 'convert', 'formats')
+    is that verb; anything else is the wish of a run. Faults set the exit
+    status (E-1); a record that cannot be read is refused by name and
+    nothing is written.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov 
+
+    ==============================================================================
+    DIRECTORIES                                             0 ok, 0 fail, 00:00:00
+    ------------------------------------------------------------------------------
+        (no directory ran)
+    ==============================================================================
+    [status 3]
+SUCCESS: help on request; an empty command line is EMPTY.
+<hwut-end>

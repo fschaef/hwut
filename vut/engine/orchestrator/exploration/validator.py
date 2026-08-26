@@ -25,7 +25,7 @@ from vut.language_support.python.hwut_hocon import (ScalarNode,
                                                       ObjectNode)
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Target, E_Origin,
-                            KEY_TO_FIELD, ROOT_ONLY_KEY_SET)
+                            KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
 
 _STRUCTURAL_KEY_SET = ("title", "language", "choices")
 
@@ -134,6 +134,9 @@ def validate_conf(hwut_node, file):
             field_db["default_app_position_db"] = position_db
         elif entry.key == "language-setup":
             language_setup = _language_setup(entry, file, fault_list)
+        elif entry.key == "variant_group":
+            value = _variant_group(entry, file, fault_list)
+            if value is not None: field_db["variant_db"] = value
         elif entry.key == "apps":
             app_db = _apps(entry, file, fault_list)
         elif entry.key in KEY_TO_FIELD or entry.key in _STRUCTURAL_KEY_SET:
@@ -529,6 +532,65 @@ def _default_app(entry, file, fault_list):
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in 'default_app'" % inner.key))
     return TestParameters(**parameters), position_db
+
+
+def _variant_group(entry, file, fault_list):
+    """
+    RETURN: dict, alternative name -> Variant, of every group inside
+            'variant_group { }'.
+            None, the value is no scope (fault recorded).
+
+    ONE NAMESPACE: an alternative name standing in two groups is
+    refused by name, so '--variant=<name>' never needs qualifying
+    (RATIONALE E-9).
+    """
+    if not isinstance(entry.node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, entry.key_position,
+            "'variant_group' is a scope of groups, each a scope of "
+            "alternatives"))
+        return None
+
+    variant_db = {}
+    for group in entry.node.entry_list:
+        if not isinstance(group.node, ObjectNode):
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, group.key_position,
+                "variant group '%s' is a scope of alternatives"
+                % group.key))
+            continue
+        for alternative in group.node.entry_list:
+            if not isinstance(alternative.node, ObjectNode):
+                fault_list.append(Fault(
+                    E_FaultKind.TYPE, file, alternative.key_position,
+                    "variant '%s' is a scope of test parameters"
+                    % alternative.key))
+                continue
+            standing = variant_db.get(alternative.key)
+            if standing is not None:
+                fault_list.append(Fault(
+                    E_FaultKind.VOCABULARY, file,
+                    alternative.key_position,
+                    "variant '%s' stands in group '%s' and in group "
+                    "'%s': every variant name is unique, so that "
+                    "'--variant' needs no qualification"
+                    % (alternative.key, standing.group, group.key)))
+                continue
+            parameters = {}
+            for inner in alternative.node.entry_list:
+                if inner.key in KEY_TO_FIELD:
+                    _parameter(inner, parameters, file, fault_list)
+                else:
+                    fault_list.append(Fault(
+                        E_FaultKind.VOCABULARY, file, inner.key_position,
+                        "unknown key '%s' in variant '%s'"
+                        % (inner.key, alternative.key)))
+            variant_db[alternative.key] = Variant(
+                name       = alternative.key,
+                group      = group.key,
+                parameters = TestParameters(**parameters),
+                position   = alternative.key_position)
+    return variant_db
 
 
 #  The STANDARD targets: fixed semantics, their own top-level keys. The

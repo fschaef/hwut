@@ -1,5 +1,6 @@
 --- the file, as stored ---
-         | ##VUT-TEST-IDS 4
+         | ##VUT-TEST-IDS 5
+         | G:5
          | N:2
          | A:0 test-parser.py
          | N:0.2

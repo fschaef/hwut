@@ -1,0 +1,26 @@
+
+--- the text of what came back ---
+         | ##VUT-COVERAGE 2
+         | ##run:      3.4,7
+         | ##language: vhdl
+         | ##tool:     gcov
+         | ##format:   gcov-annotated
+         | ##counts:   yes
+         | SF:src/blinker.vhdl
+         | EX:1+3,6,289+2,69698
+         | CV:1+2*5,297*70000
+         | BR:5*1/2,4*2/2
+         | CP:3*p_ok*1/1
+         | MC:4*2/3,0*3/3
+         | TG:12*data[0]*1/1,0*daté[1]*0/1
+         | SF:src/leer/ü.vhdl
+         | EX:
+         | CV:
+  OK  : every measure, counts, two run ids, UTF-8 paths and names: byte-identical text
+  OK  : the run set survives, the choice-less id among it
+  OK  : a count above 254 took the escape and came back
+  OK  : a range delta above 254 took the escape and came back
+  OK  : an empty block is an empty block, not a missing one
+  OK  : the file is a zlib stream -- fixed layer, no flag
+SUCCESS: what the text can say, the bytes can say.
+<hwut-end>

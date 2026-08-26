@@ -1,0 +1,22 @@
+$ hwut.cov
+    [status 1]
+    the book {
+      test-py--a     report ok                       coverage ok
+      test-py--b     report ok                       coverage no-data-provided
+      test-hang--x   report terminated-without-hwut-end coverage run-incomplete
+      test-new       report ok                       coverage <absent>
+    }
+    the records {
+      test-py--a     ##run:      0.0 | CV:1+3
+      test-py--b     <none>
+      test-hang--x   <none>
+      test-new       <none>
+    }
+  OK  : a registered choice that left an artefact: harvested
+  OK  : and its record carries the REGISTER's id, not a name
+  OK  : a registered choice that left none: noted, no record
+  OK  : a run that ended without '<hwut-end>' did not testify: not harvested, though it left an artefact
+  OK  : an unregistered test ran plain: no id, no key, no record
+  OK  : the exit status is the run's: the unfinished test failed
+SUCCESS: the demand shapes every run; the book says what each one bore.
+<hwut-end>

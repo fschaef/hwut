@@ -1,0 +1,46 @@
+
+--- every registered tool is a CCoverageFramework over a CCoverageFormat ---
+         c8                 lcov-tracefile           through lcov
+         cargo-llvm-cov     lcov-tracefile           through lcov
+         cobertura          cobertura-xml            
+         coverage           coverage.py-json         
+         coverlet           cobertura-xml            through cobertura
+         gcov               gcov-annotated           
+         gcovr              lcov-tracefile           through lcov
+         ghdl               ghdl-psl-json            
+         go                 go-coverprofile          
+         grcov              lcov-tracefile           through lcov
+         jacoco             jacoco-xml               
+         kcov               cobertura-xml            through cobertura
+         lcov               lcov-tracefile           
+         llvm-cov           lcov-tracefile           through lcov
+         luacov             luacov-report            
+         node               lcov-tracefile           through lcov
+         scoverage          cobertura-xml            through cobertura
+         simplecov          simplecov-resultset      
+         ucis               ucis-xml                 
+         verilator          verilator-dat            
+         verilator_coverage lcov-tracefile           through lcov
+
+--- one format, several frameworks ---
+         cobertura-xml            cobertura, coverlet, kcov, scoverage
+         lcov-tracefile           c8, cargo-llvm-cov, gcovr, grcov, lcov, llvm-cov, node, verilator_coverage
+
+--- the format stamps no tool; the framework does ---
+         format.read -> tool ''  format 'lcov-tracefile'
+         harvest     -> tool 'c8'  format 'lcov-tracefile'
+
+--- instrumented_f: a check where a trace exists, None else ---
+         gcov,   a '.gcno' present -> True
+         gcov,   none present      -> False
+         coverage.py               -> None
+
+--- the registry refuses what is no framework ---
+         registering a bare object -> CoverageRefused
+  OK  : every tool: framework over format
+  OK  : one LCOV format serves several frameworks -- the reason the roles are two
+  OK  : the format leaves 'tool' empty; the framework stamps its own name over the shared format
+  OK  : gcov answers True or False; coverage.py answers None -- 'cannot check', never a guessed False
+  OK  : the role is the type
+SUCCESS: a tool is invoked by its framework and read by its format.
+<hwut-end>

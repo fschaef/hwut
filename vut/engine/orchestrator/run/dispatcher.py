@@ -50,7 +50,8 @@ FRAME_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
 class TestRunDispatcher(I_Dispatcher):
     """Drives one directory's plan against the real machinery."""
 
-    def __init__(self, directory, entry, record=None, coverage=None):
+    def __init__(self, directory, entry, record=None, coverage=None,
+                 variant_tuple=()):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
                 and Store made here, the directory LOCK taken here and
@@ -62,6 +63,9 @@ class TestRunDispatcher(I_Dispatcher):
         'record'   THE STORE KNOB (n-1): None or True stores every
                    subject; False stores nothing; '--no-store' is a
                    later word over it.
+        'variant_tuple' the alternatives named by '--variant' (E-9):
+                   what each states is merged over every application's
+                   configuration, one alternative per variant group.
         'coverage' a CoverageConfig where coverage is asked (coverage
                    D-19): every configuration is then made for the
                    coverage target, and every run harvests. The run id
@@ -94,9 +98,17 @@ class TestRunDispatcher(I_Dispatcher):
                 % directory)
         self.coverage   = coverage
         self.id_db      = None if coverage is None else TestIdDb(directory)
+        #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
+        #  every tool leaves its artefact in the directory's OUT/COVERAGE.
+        self.cov_lock   = None if coverage is None else asyncio.Lock()
+        variant_db      = getattr(getattr(entry, "app_set", None),
+                                  "directory_spec", None)
+        variant_db      = getattr(variant_db, "variant_db", None)
         self.config_db  = {app.source_file:
                                test_configuration_of(app, directory,
-                                                     coverage)
+                                                     coverage,
+                                                     variant_tuple,
+                                                     variant_db)
                            for app in entry.app_set}
         #  BUILD action name -> the configuration whose build it is.
         self.build_db   = {}
@@ -174,6 +186,14 @@ class TestRunDispatcher(I_Dispatcher):
             await multi.close()
 
     async def run_test(self, node):
+        """RETURN: bool, the verdict; under coverage, one run at a time
+        in this directory (coverage D-22)."""
+        if self.cov_lock is None:
+            return await self._run_test(node)
+        async with self.cov_lock:
+            return await self._run_test(node)
+
+    async def _run_test(self, node):
         """
         RETURN: bool, the choice's VERDICT from the full ceremony:
                 provision (the session's own ChoiceExecute where one
@@ -190,6 +210,8 @@ class TestRunDispatcher(I_Dispatcher):
                                                        node.choice))
         run_id = None
         if self.id_db is not None:
+            from ...operations.coverage_action import prepare
+            prepare(configuration)
             run_id = self.id_db.run_id_of(configuration.stem, node.choice)
             if run_id is None:
                 #  Unregistered: never accepted, so no id to seat. The
@@ -205,12 +227,14 @@ class TestRunDispatcher(I_Dispatcher):
         return bool(outcome.verdict)
 
 
-def test_run_dispatcher_factory(record=None, coverage=None):
+def test_run_dispatcher_factory(record=None, coverage=None,
+                                variant_tuple=()):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
-            factory 'orchestrator()' consumes, the store knob and the
-            coverage demand bound.
+            factory 'orchestrator()' consumes, the store knob, the
+            coverage demand and the variant selection bound.
     """
-    return lambda directory, entry: TestRunDispatcher(directory, entry,
-                                                      record=record,
-                                                      coverage=coverage)
+    return lambda directory, entry: TestRunDispatcher(
+                                        directory, entry, record=record,
+                                        coverage=coverage,
+                                        variant_tuple=variant_tuple)

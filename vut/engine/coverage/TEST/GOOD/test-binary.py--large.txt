@@ -1,0 +1,11 @@
+
+--- size and time ---
+INSPECT: ranges 145060
+         binary/text size ratio below one half: True
+         unpack under one second: True
+  OK  : more than a hundred thousand ranges
+  OK  : byte-identical text after the round trip
+  OK  : the bytes are less than half the text
+  OK  : unpacked in under a second
+SUCCESS: the fast path carries a large record.
+<hwut-end>

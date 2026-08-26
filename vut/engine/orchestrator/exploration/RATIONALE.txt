@@ -1271,3 +1271,66 @@ GRAVEYARD Discovery of 'OUT/' -- retired: no missing-file verdict, and
           A per-acceptance command-line option for extra files --
           rejected: what a test produces is its DESIGN, authored once,
           not restated at every acceptance.
+
+
+E-9  VARIANT GROUPS: A DIMENSION OF CONFIGURATION                (2026-08-25)
+------------------------------------------------------------------------------
+PROBLEM  A tool choice, a build target, a set of caps -- whole MODES of
+         operation -- had no home. Naming them on the command line
+         ('--coverage=gcov') puts configuration where configuration is
+         not; stating them per test repeats them; and combining two
+         such choices needs a rule for what happens when both touch one
+         field.
+DECISION 'variant_group { }' in 'hwut.conf': each GROUP is a DIMENSION,
+         each of its alternatives a point on it.
+
+             variant_group {
+                 cov  { gcov { build { coverage_target = "cov-app.exe" } }
+                        llvm { build { coverage_target = "app-prof.exe" } } }
+                 load { fast { caps { timeout_sec = 30 } }
+                        slow { caps { timeout_sec = 600 } } }
+             }
+
+             --variant=gcov,slow     one alternative per group
+             --variant=gcov,llvm     REFUSED: one group, twice
+
+         WITHIN A GROUP the alternatives configure THE SAME parameters
+         -- that is what makes them alternatives, and stating one
+         another's fields is required, not a conflict. ACROSS GROUPS
+         the subspaces are DISJOINT, which is what makes them
+         combinable. The author draws the partition by writing the
+         groups; the machine holds him to it.
+         THE REFUSAL IS STRUCTURAL, decided by a lookup before anything
+         merges: two names, one group. So ORDER CARRIES NO MEANING --
+         the selected alternatives cannot meet on a field. An author
+         who wants two at once has drawn his partition wrongly, and the
+         refusal says which dimension.
+         DOUBLE SPECIFICATION IS REFUSED IN GENERAL. Multiple optional
+         variants require the author to have an idea WHICH SUBSPACE
+         each configures; those subspaces must be disjoint for the
+         whole to remain containable.
+         ONE NAMESPACE for every alternative of every group, so
+         '--variant=gcov' needs no qualification; a name standing in
+         two groups is refused at the DECLARATION, where the author can
+         still choose another.
+         A NAME NO GROUP DECLARES REFUSES, naming what is declared:
+         running the base configuration instead would be a run that
+         measured something other than what was asked, and said
+         nothing.
+         Selection merges over the ROOT choice's parameters; a variant
+         states DIFFERENCES and 'merged_with' does the rest.
+COST     One key in the validator, one shape, one module ('variant.py'),
+         one parameter through the dispatcher and adapter. Coverage's
+         'CoverageConfig.tool' is now filled from configuration, and
+         no command-line option names a tool.
+GRAVEYARD 'variant_group cov { ... }' as a two-word HOCON key: it
+         parses (unquoted keys admit spaces), but every other two-word
+         construct would then be ambiguous with a key that legitimately
+         holds one. Nesting says the same and matches 'build { }'.
+         Flat variants with a field-by-field conflict check: it made
+         order significant, and it solved the wrong problem -- the
+         alternatives of one dimension are MEANT to state one another's
+         fields.
+         Qualified selection ('--variant=cov:gcov'): unnecessary once
+         names are unique, and unique names are one more disjointness
+         the author declares.

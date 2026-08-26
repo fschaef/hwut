@@ -1,18 +1,11 @@
 STIMULUS  the flag spellings, one flag at a time:
 
 REACTION  -r vs --raw      : identical
-          -c vs --coverage : identical
-          coverage line, asked  : coverage: requested -- not gathered yet (todo-22)
-          coverage line, silent : coverage: not requested
-          COVERAGE section, asked {
-              ==[ COVERAGE ]==================================================================
-              not gathered yet -- '-c' is accepted and reserved;
-              the gathering is owed (DISCUSSIONS todo-22).
-              
-          }
-          COVERAGE sections, silent : 0
+          coverage line, default      : coverage: none recorded
+          coverage line, --no-coverage: coverage: left out ('--no-coverage')
+          COVERAGE sections, default      : 0
+          COVERAGE sections, --no-coverage: 0
 
-One flag, two spellings -- and a RESERVED flag is honest:
-asked, it says the gathering is owed (todo-22); unasked, no
-section pretends there was anything to show.
-SUCCESS: a reserved flag is honest about being reserved.
+One flag, two spellings; and where the book knows nothing of
+coverage, no section pretends there was anything to show.
+SUCCESS: the default is the useful one, and absence is spoken.

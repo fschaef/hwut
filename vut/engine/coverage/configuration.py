@@ -35,16 +35,17 @@ class CoverageConfig:
     what prevent the interval collapse, and the question HWUT asks is
     'did this test reach this code', not 'how often' (D-5).
 
-    'disabled_caps' names the procsitter caps this run does NOT enforce;
-    the string 'ALL' disables every one. Declared, never inferred -- a
-    cap that disappears without being said is the green-direction
-    failure.
+    'tool' names the coverage tool outright and SKIPS the election: the
+    reader registered under that name serves, or the request is refused
+    by name. None asks for election (D-2). Caps under coverage are not
+    stated here: the policy is fixed (D-19) -- time is lifted, the rest
+    stands.
     """
     include:       Sequence[str] = field(default_factory=tuple)
     omit:          Sequence[str] = field(default_factory=tuple)
     language:      str | None    = None
     counts:        bool          = False
-    disabled_caps: Sequence[str] = field(default_factory=tuple)
+    tool:          str | None    = None
 
 
 class CoverageRefused(ValueError):

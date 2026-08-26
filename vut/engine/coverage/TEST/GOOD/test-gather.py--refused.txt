@@ -1,0 +1,18 @@
+
+--- bundles that cannot be read ---
+         not json                               -> '<dir>/a.json' is no bundle: Expecting value: line 1 column 1 (char 0)
+         a version this build does not read     -> bundle version 99 is not 1 -- this build does not pretend to read it
+         no 'snapshot'                          -> the bundle names no 'snapshot'
+
+--- a gathered group the bundle does not carry ---
+         group 7, in an empty bundle            -> the bundle carries no gathered group 7
+
+--- a bundle naming a directory it carries no snapshot of ---
+         group 1 -> an absent snapshot          -> the bundle names directory 'parser/TEST' and carries no snapshot of it
+  OK  : refused: not json
+  OK  : refused: a version this build does not read
+  OK  : refused: no 'snapshot'
+  OK  : refused: a group the bundle does not carry
+  OK  : refused: a pair whose snapshot is missing -- the chain is broken and says so
+SUCCESS: a delivery half understood is a report that lies.
+<hwut-end>

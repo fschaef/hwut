@@ -14,6 +14,8 @@ THE COVERAGE PROVISION CHAIN.
              coverage asked + artefacts left  ->  '.cover' + 'ok'
              coverage asked + nothing left    ->  no file  + 'no-data-provided'
              coverage not asked               ->  no key on the entry
+             the application did not testify  ->  nothing READ,
+                                                  'run-incomplete'
              compiled, no 'coverage_target'   ->  'no-coverage-target',
                                                   executable built as ever
 
@@ -31,6 +33,7 @@ ______________________________________________________________________________
 """
 import asyncio
 import io
+from   dataclasses import replace
 import json
 import os
 import shutil
@@ -49,15 +52,18 @@ from   vut.engine.operations.configuration   import (              # noqa E402
 from   vut.engine.operations.session         import (run_test_held, # noqa E402
                                                    Request)
 from   vut.engine.operations.coverage_action import (CoverageSetup, # noqa E402
-                                                   E_CoverageResult)
+                                                   E_CoverageResult,
+                                                   uncapped)
 from   vut.engine.bookkeeper.bookkeeper      import Bookkeeper     # noqa E402
 from   vut.engine.bookkeeper.stream_store    import StoreConfig    # noqa E402
 from   vut.engine.bookkeeper.test_run_id     import TestRunId      # noqa E402
 from   vut.engine.coverage.configuration     import CoverageConfig # noqa E402
-from   vut.engine.coverage.reader            import (I_Reader,     # noqa E402
+from   vut.engine.coverage.reader            import (CCoverageFramework,
+                                                  CCoverageFormat,     # noqa E402
                                                    record_of,
                                                    artifact_directory_of)
-from   vut.engine.coverage.record            import parse_record   # noqa E402
+from   vut.engine.coverage.binary            import unpack_record  # noqa E402
+from   vut.engine.coverage.record            import format_record  # noqa E402
 
 WITNESS_FILE = "witness.json"
 
@@ -74,20 +80,11 @@ if "--witness" in sys.argv:
 ''' % WITNESS_FILE
 
 
-class WitnessReader(I_Reader):
-    """A tool that measures by being asked to."""
-    name          = "witness"
-    source_format = "witness-json"
+class WitnessFormat(CCoverageFormat):
+    """The witness file: which lines ran."""
+    name = "witness-json"
 
-    def wrap(self, argv, config, work_dir):
-        """RETURN: list of str, the call with '--witness' appended."""
-        return list(argv) + ["--witness"]
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None: no second call."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """RETURN: CoverageRecord of the witness file; None where the
         application left none."""
         path = os.path.join(artifact_directory_of(work_dir), WITNESS_FILE)
@@ -97,6 +94,20 @@ class WitnessReader(I_Reader):
         return record_of(self, "python",
                          ((p, e["executable"], e["covered"], None)
                           for p, e in entry_db.items()))
+
+
+class WitnessFramework(CCoverageFramework):
+    """A tool that measures by being asked to."""
+    name   = "witness"
+    format = WitnessFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """RETURN: list of str, the call with '--witness' appended."""
+        return list(argv) + ["--witness"]
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None: no second call."""
+        return None
 
 
 def _check(pair_list):
@@ -147,23 +158,24 @@ def _show(outcome, bookkeeper, directory):
     if not path.is_file():
         print("         record: <none>")
         return
-    print("         record: %s" % os.path.relpath(path, directory))
-    with io.open(path, encoding="utf-8") as fh:
-        for line in fh.read().splitlines()[:8]:
-            print("           | %s" % line)
+    print("         record: %s  (binary; shown converted)"
+          % os.path.relpath(path, directory))
+    for line in format_record(unpack_record(path.read_bytes())) \
+                    .splitlines()[:8]:
+        print("           | %s" % line)
 
 
 #  ------------------------------------------------------------- choices
 
 def test_harvested():
     """Coverage asked, the tree bore fruit: a record, seated, stored."""
-    setup = CoverageSetup(reader=WitnessReader(), config=CoverageConfig())
+    setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
     configuration, bookkeeper, directory = _place(setup)
     outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
     _show(outcome, bookkeeper, directory)
 
     path   = bookkeeper.coverage_path("demo", None)
-    record = parse_record(path.read_text(encoding="utf-8"))
+    record = unpack_record(path.read_bytes())
     ok = _check([
         (outcome.coverage is E_CoverageResult.OK
          and outcome.entry["coverage"] == "ok",
@@ -188,7 +200,7 @@ def test_harvested():
 def test_nothing_borne():
     """Coverage asked, the application left nothing: no record, and the
     book says why."""
-    setup = CoverageSetup(reader=WitnessReader(), config=CoverageConfig())
+    setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
     mute  = APPLICATION.replace('"--witness" in sys.argv', "False")
     configuration, bookkeeper, directory = _place(setup, mute)
     outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
@@ -205,6 +217,38 @@ def test_nothing_borne():
     ])
     shutil.rmtree(directory)
     _verdict(ok, "absence and its cause travel together, in the book.")
+
+
+def test_incomplete():
+    """The application did not testify: nothing is read (D-21)."""
+    setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
+    #  Writes its witness file, then stalls without the terminal token
+    #  being the point: it is killed by the (tiny) wall clock.
+    stalling = APPLICATION + "import time\nsys.stdout.flush()\ntime.sleep(30)\n"
+    configuration, bookkeeper, directory = _place(setup, stalling)
+    configuration = replace(configuration,
+                            caps=ProcsitterConfig(max_wall_clock_sec=2.0,
+                                                  max_output_gap_sec=1.0))
+    outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
+    _show(outcome, bookkeeper, directory)
+    witness_left = os.path.isfile(os.path.join(
+        artifact_directory_of(directory), WITNESS_FILE))
+
+    ok = _check([
+        (outcome.report.value in ("test-app-stalled", "test-app-contained"),
+         "the run did not end by itself"),
+        (witness_left,
+         "the tool DID leave an artefact -- lines were touched"),
+        (outcome.coverage is E_CoverageResult.RUN_INCOMPLETE,
+         "and it is NOT harvested: a killed process testifies to "
+         "nothing, so the lines it touched are a claim of nothing"),
+        (not bookkeeper.coverage_path("demo", None).exists(),
+         "no record is written"),
+        (outcome.entry["coverage"] == "run-incomplete",
+         "the book says why"),
+    ])
+    shutil.rmtree(directory)
+    _verdict(ok, "coverage rides on testimony; no testimony, no coverage.")
 
 
 def test_not_asked():
@@ -235,9 +279,9 @@ def test_no_target():
                                             coverage_target="cov-app.exe"))
     undeclared = TestParameters(build=Build(framework="make",
                                             executable="app.exe"))
-    plain      = CoverageSetup(reader=WitnessReader(),
+    plain      = CoverageSetup(reader=WitnessFramework(),
                                config=CoverageConfig())
-    noted      = CoverageSetup(reader=WitnessReader(),
+    noted      = CoverageSetup(reader=WitnessFramework(),
                                config=CoverageConfig(),
                                note=E_CoverageResult.NO_COVERAGE_TARGET)
     for label, parameters, setup in (
@@ -247,7 +291,19 @@ def test_no_target():
         build = _build_of(parameters, setup)
         print("INSPECT: %-26s -> target %s" % (label, build.target_list))
 
+    plain_caps = ProcsitterConfig(max_wall_clock_sec=30.0,
+                                  max_cpu_time_sec=20, max_memory_mb=256)
+    cov_caps   = uncapped(plain_caps)
+    print("INSPECT: caps under coverage: wall %s cpu %s memory %s MB"
+          % ("lifted" if cov_caps.max_wall_clock_sec > 1e8 else "kept",
+             "lifted" if cov_caps.max_cpu_time_sec  > 1e8 else "kept",
+             cov_caps.max_memory_mb))
+
     ok = _check([
+        (cov_caps.max_wall_clock_sec > 1e8 and cov_caps.max_cpu_time_sec > 1e8
+         and cov_caps.max_memory_mb == 256,
+         "time is luxury under coverage and is lifted; memory keeps "
+         "the machine alive and stands"),
         (_build_of(declared, None).target_list == ["app.exe"],
          "without coverage the executable is the one target"),
         (_build_of(declared, plain).target_list == ["cov-app.exe"],
@@ -268,6 +324,7 @@ if __name__ == "__main__":
         choice_map = {
             "harvested":     test_harvested,
             "nothing_borne": test_nothing_borne,
+            "incomplete":    test_incomplete,
             "not_asked":     test_not_asked,
             "no_target":     test_no_target,
         },

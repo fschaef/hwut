@@ -1,6 +1,8 @@
 INSPECT: no coverage asked          -> target ['app.exe']
 INSPECT: asked, target declared     -> target ['cov-app.exe']
 INSPECT: asked, NO target declared  -> target ['app.exe']
+INSPECT: caps under coverage: wall lifted cpu lifted memory 256 MB
+  OK  : time is luxury under coverage and is lifted; memory keeps the machine alive and stands
   OK  : without coverage the executable is the one target
   OK  : under coverage the COVERAGE TARGET is built and run in its place -- the name is the whole communication
   OK  : a compiled test declaring none builds its executable as ever; the note NO_COVERAGE_TARGET rides on the entry

@@ -241,12 +241,15 @@ def test_persisted():
 
 def test_faults():
     """Every unreadable table, refused by name."""
-    H    = "##VUT-TEST-GROUPS 3\n"
+    H    = "##VUT-TEST-GROUPS 4\n"
     good = filled().format()
     case_list = [
         ("no version line",                 good.replace(H, "")),
         ("version 2: no mark, re-issuing",  "##VUT-TEST-GROUPS 2\nG:1 1\n"),
         ("version 1: self-interned ids",    "##VUT-TEST-GROUPS 1\nG:1 1,2\n"),
+        ("version 3: no generation",         "##VUT-TEST-GROUPS 3\nN:2\nG:1 0.0\n"),
+        ("a generation that spells no number",
+                                             H + "R:many\nN:1\nG:0\n"),
         ("no mark at all",                  H + "G:0\nG:1 0.0\n"),
         ("a mark standing twice",           H + "N:2\nN:2\nG:1 0.0\n"),
         ("a mark that spells no number",    H + "N:x\nG:0\n"),

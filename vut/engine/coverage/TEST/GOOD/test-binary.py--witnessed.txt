@@ -1,0 +1,22 @@
+
+--- witnessed artifacts, packed and unpacked ---
+         coverage   files  1  ranges    7  measures -                      identical: True
+         lcov       files  1  ranges    7  measures -                      identical: True
+         gcov       files  1  ranges    6  measures -                      identical: True
+         cobertura  files  1  ranges    7  measures branch                 identical: True
+         luacov     files  1  ranges    9  measures -                      identical: True
+         jacoco     files  1  ranges    9  measures branch                 identical: True
+         verilator  files  3  ranges   12  measures branch,cover,toggle    identical: True
+         ghdl       files  1  ranges    0  measures cover                  identical: True
+         ucis       files  3  ranges   12  measures branch,toggle          identical: True
+  OK  : coverage: the record survives both codecs
+  OK  : lcov: the record survives both codecs
+  OK  : gcov: the record survives both codecs
+  OK  : cobertura: the record survives both codecs
+  OK  : luacov: the record survives both codecs
+  OK  : jacoco: the record survives both codecs
+  OK  : verilator: the record survives both codecs
+  OK  : ghdl: the record survives both codecs
+  OK  : ucis: the record survives both codecs
+SUCCESS: one record, two spellings, one truth.
+<hwut-end>

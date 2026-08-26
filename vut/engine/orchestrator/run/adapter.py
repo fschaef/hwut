@@ -56,7 +56,8 @@ def naming_of(app):
     return NamingConfig(same_nominal_f=bool(root.same))
 
 
-def test_configuration_of(app, directory, coverage=None):
+def test_configuration_of(app, directory, coverage=None,
+                          variant_tuple=(), variant_db=None):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
             source kind and interpreter from the language, the build
@@ -65,6 +66,12 @@ def test_configuration_of(app, directory, coverage=None):
             itself (R-68), and one TestChoiceConfiguration per choice
             with its pype as the stdout canonicaliser and its stated
             tolerances as compare's Configuration.
+
+    'variant_tuple' names the alternatives '--variant' selected (E-9);
+    what each states is merged over the ROOT choice's parameters,
+    before the build struct and the caps are taken from it. A variant
+    states DIFFERENCES; what it leaves unstated keeps what the author
+    wrote.
 
     'coverage' is a 'CoverageConfig' where coverage is asked (coverage
     RATIONALE D-19): the reader is ELECTED for the language, the build
@@ -77,10 +84,17 @@ def test_configuration_of(app, directory, coverage=None):
     for -- refused at the door, not guessed.
     """
     root = _root_of(app)
+    if variant_tuple:
+        from ..exploration.variant import merged_parameters
+        root = merged_parameters(variant_tuple, variant_db, root)
 
     setup = None if coverage is None else _coverage_setup_of(app, root,
                                                               coverage)
     build = _build_of(root, setup)
+    caps  = _caps_of(root)
+    if setup is not None:
+        from ...operations.coverage_action import uncapped
+        caps = uncapped(caps)          # time is luxury under coverage (D-19)
     interpreter = None
     if build is not None:
         source_kind = E_SourceKind.COMPILED
@@ -99,7 +113,7 @@ def test_configuration_of(app, directory, coverage=None):
         source_file    = app.source_file,
         source_kind    = source_kind,
         test_directory = directory,
-        caps           = _caps_of(root),
+        caps           = caps,
         choice_db      = choice_db,
         interpreter    = interpreter,
         build          = build,
@@ -140,11 +154,12 @@ def _coverage_setup_of(app, root, coverage):
     here, naming every candidate.
     """
     from ...coverage.registry import language_of, elect
-    from ...coverage.reader   import reader_of
+    from ...coverage.reader   import framework_of
     from ...operations.coverage_action import CoverageSetup, E_CoverageResult
 
     language = language_of(app.source_file, coverage.language)
-    reader   = reader_of(elect(language))
+    reader   = framework_of(coverage.tool if coverage.tool is not None
+                            else elect(language))
     stated   = root.build
     note     = None
     if stated is not None and stated.framework is not None \

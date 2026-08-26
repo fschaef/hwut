@@ -46,7 +46,8 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (I_Reader, register, artifact_directory_of,
+from ..reader import (CCoverageFramework, CCoverageFormat,
+                      register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
 
@@ -55,27 +56,11 @@ PROFILE_SUFFIX = (".out", ".cover", ".coverprofile")
 COUNTING_MODE_SET = ("count", "atomic")
 
 
-class GoReader(I_Reader):
+class GoFormat(CCoverageFormat):
     """Go's cover profile."""
-    name          = "go"
-    source_format = "go-coverprofile"
+    name = "go-coverprofile"
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        'go test' takes '-coverprofile' as an argument of ITS OWN
-        command line, not as a wrapper around somebody else's. A test
-        application that is a go test invocation states that flag
-        itself; one that is a compiled binary cannot be wrapped at all.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The profile is text, written by the run."""
-        return None
-
-    def harvest(self, work_dir, source_root, config=None):
+    def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, of every profile under the artifact
                 directory.
@@ -101,6 +86,27 @@ class GoReader(I_Reader):
                          entry_iterable(block_db, prefix, source_root,
                                         config, counts_f),
                          counts_f)
+
+
+class GoFramework(CCoverageFramework):
+    """go: invocation; reads GoFormat."""
+    name   = "go"
+    format = GoFormat()
+
+    def wrap(self, argv, config, work_dir):
+        """
+        RETURN: list[str], 'argv' unchanged.
+
+        'go test' takes '-coverprofile' as an argument of ITS OWN
+        command line, not as a wrapper around somebody else's. A test
+        application that is a go test invocation states that flag
+        itself; one that is a compiled binary cannot be wrapped at all.
+        """
+        return list(argv)
+
+    def report_argv(self, config, work_dir):
+        """RETURN: None. The profile is text, written by the run."""
+        return None
 
 
 def module_prefix_of(work_dir):
@@ -201,4 +207,4 @@ def entry_iterable(block_db, prefix, source_root, config, counts_f):
         yield path, sorted(executable), sorted(covered), count_list
 
 
-register(GoReader())
+register(GoFramework())
