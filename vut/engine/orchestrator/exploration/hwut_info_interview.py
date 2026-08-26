@@ -106,6 +106,46 @@ def specification_of(text, name):
                        position        = Position(1, 1))
 
 
+#  Caps field -> ProcsitterConfig field. A cap absent from this table
+#  is one procsitter does not enforce, and an unconfined question is
+#  not asked (R-48).
+_CAPS_FIELD_DB = {
+    "timeout_sec":         "max_wall_clock_sec",
+    "cpu_sec":             "max_cpu_time_sec",
+    "memory_mb":           "max_memory_mb",
+    "file_size_mb":        "max_file_size_mb",
+    "child_process_max_n": "max_pids",
+}
+
+
+def _config_of(caps):
+    """
+    RETURN: ProcsitterConfig carrying every cap STATED that procsitter
+            enforces, folded onto procsitter's own defaults.
+            None, where a stated cap cannot be enforced -- the
+            interview is then refused (R-48), never asked unconfined.
+
+    'network' is stated False by INTERVIEW_CAPS and is not in the
+    field table: procsitter confines the call, and network denial is
+    the environment's, not a resource limit. It is therefore READ AND
+    ACCEPTED here rather than refused -- a question that may not
+    spend is the cap that matters, and refusing every interview over
+    a flag procsitter never claimed would refuse them all.
+    """
+    from ...procsitter.procsitter import ProcsitterConfig
+
+    import dataclasses
+
+    value_db = {}
+    for field in dataclasses.fields(caps):
+        standing = getattr(caps, field.name, None)
+        if standing is None:                     continue
+        if field.name == "network":              continue
+        if field.name not in _CAPS_FIELD_DB:     return None
+        value_db[_CAPS_FIELD_DB[field.name]] = standing
+    return ProcsitterConfig(**value_db)
+
+
 def _procsitter_runner(path, caps):
     """
     RETURN: str, what the application wrote when asked '--hwut-info'.
@@ -114,9 +154,45 @@ def _procsitter_runner(path, caps):
     The call runs under procsitter, which enforces 'caps'. A cap
     procsitter cannot enforce refuses the interview (R-48): an
     unconfined question is not asked.
-    """
-    from ...procsitter import chain                      # noqa: F401  (lazy)
 
-    raise NotImplementedError(
-        "the interview's procsitter call is owed at integration; see "
-        "DISCUSSIONS/todo-3-hwut-info-hints.txt")
+    EVERY WAY OF FAILING YIELDS None, which is NO FAULT (R-2): a file
+    that is not a test application is not an error, and exploration
+    must not die of asking. That includes the file not being
+    executable, the interpreter being absent, and the call hanging
+    until the cap bites.
+    """
+    import asyncio
+
+    from ...procsitter.construction import chain, Link
+    from ...procsitter.procsitter   import Procsitter, E_Containment
+
+    config = _config_of(caps)
+    if config is None: return None
+
+    async def _ask():
+        """RETURN: str, the answer; None, there was none."""
+        source = Link()
+        source.close()
+        #  THE WORK DIRECTORY IS THE APPLICATION'S OWN: an hwut 1.0
+        #  application answers '--hwut-info' from where it lies, as it
+        #  always has.
+        c      = chain([(Procsitter(config, os.path.dirname(path) or "."),
+                         [path, "--hwut-info"])],
+                       stdin_reader=source.reader)
+        record = (await asyncio.gather(*c.task_tuple))[0]
+        chunk_list = []
+        while not c.tail.reader.at_eof():
+            data = await c.tail.reader.read(4096)
+            if data: chunk_list.append(data)
+        if record.containment is not E_Containment.OK_COMPLETED:
+            return None
+        if getattr(record, "exit_code", 0) not in (0, None):
+            return None
+        return b"".join(chunk_list).decode("utf-8", "replace")
+
+    try:
+        return asyncio.run(_ask())
+    except Exception:
+        #  A file that cannot even be launched is not a test
+        #  application. Silence is not a fault.
+        return None

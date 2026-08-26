@@ -1,0 +1,5 @@
+old-app.py   -> 'An hwut 1.0 application'  choices: alpha, beta
+mute.py      -> not a test application
+angry.py     -> not a test application
+notes.txt    -> not a test application
+<hwut-end>

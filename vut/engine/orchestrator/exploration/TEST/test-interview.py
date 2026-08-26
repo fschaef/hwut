@@ -8,7 +8,7 @@ PURPOSE: THE THIRD CARRIER. A file that neither carrier speaks for is
          application carries no 'hwut' trigger, because it predates the
          trigger.
 
-CHOICES: block, silence, directory, precedence;
+CHOICES: block, silence, directory, precedence, procsitter;
 
 DESCRIPTION:
 
@@ -45,6 +45,7 @@ import config                                                       # noqa: F401
 
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.orchestrator.exploration.hwut_info_interview import (specification_of,
+                                                        interview,
                                                         INTERVIEW_CAPS)
 from vut.engine.orchestrator.exploration.explorer            import explore
 
@@ -182,6 +183,58 @@ def test_precedence():
         shutil.rmtree(directory, ignore_errors=True)
 
 
+def test_procsitter():
+    """RETURN: None. THE REAL CALL, under the real procsitter: an hwut
+    1.0 application answers and is read; a file that answers nothing
+    is not a test application; a file that HANGS is capped and is not
+    one either -- and none of the three is a fault.
+
+    THE CAP IS NOT TIMED HERE. That it bites is what matters; how long
+    it took is the machine's, and a GOOD holding it would be a lie.
+    """
+    import stat
+    directory = tempfile.mkdtemp()
+    try:
+        def put(name, text, executable_f=True):
+            path = os.path.join(directory, name)
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(text)
+            if executable_f:
+                os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC
+                                                     | stat.S_IXGRP
+                                                     | stat.S_IXOTH)
+
+        put("old-app.py",
+            "#! /usr/bin/env python3\n"
+            "import sys\n"
+            "if '--hwut-info' in sys.argv:\n"
+            "    print('An hwut 1.0 application;')\n"
+            "    print('CHOICES: alpha, beta;')\n"
+            "    sys.exit(0)\n"
+            "print('ran')\n")
+        put("mute.py",
+            "#! /usr/bin/env python3\n"
+            "import sys\n"
+            "sys.exit(0)\n")
+        put("angry.py",
+            "#! /usr/bin/env python3\n"
+            "import sys\n"
+            "sys.exit(3)\n")
+        put("notes.txt", "not a program at all\n", executable_f=False)
+
+        for name in ("old-app.py", "mute.py", "angry.py", "notes.txt"):
+            spec = interview(directory, name)
+            if spec is None:
+                print("%-12s -> not a test application" % name)
+            else:
+                print("%-12s -> '%s'  choices: %s"
+                      % (name, spec.title,
+                         ", ".join(sorted(k for k in spec.choice_db
+                                          if k is not None)) or "none"))
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "The interview: hwut 1.0 answers, and is read;", {
@@ -189,4 +242,5 @@ if __name__ == "__main__":
         "silence":    test_silence,
         "directory":  test_directory,
         "precedence": test_precedence,
+        "procsitter": test_procsitter,
     }).run()

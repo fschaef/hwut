@@ -38,10 +38,19 @@ printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
 chmod +x ok_dir/test-ok.sh
 printf 'steady line\n' > ok_dir/GOOD/test-ok.stdout
 
+#  A REAL FAULT: a dependency CYCLE, which the plan cannot satisfy.
+#  (It was a test with an unterminated header, which the reader passes
+#  over in silence -- the file simply is not a test application. The
+#  '1' that column showed came from an ImportError in the interview,
+#  not from a fault: a GOOD recorded over a crash.)
 mkdir -p fault_dir
-printf '#!/bin/bash\n# hwut { title = %s\necho x\n' '"broken' \
-    > fault_dir/test-broken.sh
-chmod +x fault_dir/test-broken.sh
+printf 'hwut {\n    on_entry = "true"\n    on_exit = "true"\n    dependency { "test-a.sh" = ["test-b.sh"]  "test-b.sh" = ["test-a.sh"] }\n}\n' \
+    > fault_dir/hwut.conf
+for name in a b; do
+    printf '#!/bin/bash\n# hwut { title = "T" }\necho x\n' \
+        > "fault_dir/test-$name.sh"
+    chmod +x "fault_dir/test-$name.sh"
+done
 
 mkdir -p run_ok/suite/TEST run_fault/suite/TEST
 cp -r ok_dir/.    run_ok/suite/TEST/
