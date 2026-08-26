@@ -22,7 +22,7 @@ sys.path.insert(0, "../../../../")
 
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main
-import vut.engine.pretty                as pretty
+import vut.engine.compare.engine.pretty as pretty
 import vut.engine.compare.TEST.racing   as racing
 from   vut.language_support.python.racing_condition_sim import Trigger
 from   vut.language_support.python.deterministic_random import DeterministicStream

@@ -29,7 +29,7 @@ import sys
 from   io import StringIO
 sys.path.insert(0, "../../../../")
 
-import vut.engine.pretty                as     pretty
+import vut.engine.compare.engine.pretty as     pretty
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as     main
 
