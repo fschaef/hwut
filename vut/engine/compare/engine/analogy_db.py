@@ -43,11 +43,11 @@ The table above, is what is stored in the analogy database, along with line
 number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
-from   vut.system.helper        import number_of_decimal_digits
-from   collections              import defaultdict
-from   bidict                   import bidict
+from   collections import defaultdict
+from   bidict      import bidict
 
 from   typing import Iterable
+from   math   import ceil, log10
 
 class AnalogyDb(bidict):
     """Maintains pairs of terms which are considered analogies.
@@ -162,6 +162,9 @@ class AnalogyDb(bidict):
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
+        def number_of_decimal_digits(n):
+            return ceil(log10(n+1))
+
         def length(n):
             if   n is None:          return 1 # -> " "
             elif isinstance(n, str): return len(n)
@@ -186,3 +189,4 @@ class AnalogyDb(bidict):
         ]
         
         return "AnalogyDb", txt
+
