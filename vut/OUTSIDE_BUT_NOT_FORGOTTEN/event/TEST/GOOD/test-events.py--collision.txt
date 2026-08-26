@@ -1,9 +1,0 @@
-
---- define EventThing in TEST_EV_COL_A ---
-EventThing.id: TEST_EV_COL_A.EventThing
-
---- define EventThing again in TEST_EV_COL_A -- collision ---
-EventIdCollision raised: Event subclass name 'EventThing' is already registered in category 'TEST_EV_COL_A' to __main__.run_collision.<locals>.EventThing
-
---- define EventThing in TEST_EV_COL_B -- different category, OK ---
-new class registered: id=TEST_EV_COL_B.EventThing

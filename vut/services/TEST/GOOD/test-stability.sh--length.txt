@@ -1,0 +1,10 @@
+STATUS: 0
+STDOUT {
+    REPEATS: 3   KEYS: 1
+    
+    suite/TEST: test-app.sh
+        BYTES differ, verdict did not: subject 'stdout' -- the tolerance absorbed it
+        LENGTH differs: subject 'stdout' emitted a different number of lines; not timed
+    
+    TALLY: 0 unstable, 1 warned, 0 steady
+}

@@ -1,5 +1,0 @@
-
---- shared FIRST token, distinct SECOND -> needs LL(2) ---
-compiled under LL(2): yes
-branch 0 FIRST_2: {(regex:@id\b), (regex:@num\b)}
-branch 1 FIRST_2: {(regex:@id\b, string:=)}

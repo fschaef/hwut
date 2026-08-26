@@ -1,4 +1,0 @@
-b1 : reactor { B : behavior { E => F; } }
-b1 : reactor { B : behavior { G => H; } }
-speed: float;
-open: speed { x: int; }

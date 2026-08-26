@@ -1,9 +1,0 @@
-
---- open category 'BASIC_TEST' ---
-EventOne.category:  BASIC_TEST
-EventOne.id:        BASIC_TEST.EventOne
-EventTwo.category:  BASIC_TEST
-EventTwo.id:        BASIC_TEST.EventTwo
-
---- events_in_category('BASIC_TEST') ---
-['EventOne', 'EventTwo']

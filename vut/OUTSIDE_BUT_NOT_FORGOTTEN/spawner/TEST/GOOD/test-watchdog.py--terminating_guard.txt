@@ -1,6 +1,0 @@
---- watchdog fires during an in-progress terminate() ---
-  FSM state while terminating : TERMINATING
-  state after watchdog resolve : TERMINATING
-  expected                     : still TERMINATING
-  state after confirmation     : TERM_OK
-  expected                     : TERM_OK (terminate() decided)

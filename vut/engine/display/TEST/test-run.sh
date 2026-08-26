@@ -26,14 +26,15 @@
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../.." && pwd)
-RUN="python3 -m vut.engine.orchestrator.services.run"
+RUN="python3 -m vut.services.run"
 export PYTHONPATH="$ROOT"
+export PATH="$ROOT/vut/bin:$PATH"    # '#! /usr/bin/env hwut.pype' filters
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
         echo "The hwut.run face: the tree run, rendered live."
-        echo "CHOICES: green, fail, nostore, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused;"
+        echo "CHOICES: green, fail, nostore, timing, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -166,6 +167,29 @@ nostore)
     n=$(find tree -name "*.stdout" -not -path "*/GOOD/*" | wc -l)
     s=$(find tree -name "*.when" | wc -l)
     echo "candidates after the default: $n   freshness sidecars: $s"
+    ;;
+
+timing)
+    #  The cadence knob: '--timing' leaves a per-line delta list beside
+    #  the candidate; the default leaves none. The DELTAS THEMSELVES
+    #  are the machine's, so only their presence and their count are
+    #  shown -- never a number the machine chose.
+    fixture_green
+    face --directory=tree > /dev/null
+    n=$(find tree -name "*.times" | wc -l)
+    echo "cadence sidecars by default: $n"
+    rm -rf tree; fixture_green
+    face --directory=tree --timing > /dev/null
+    n=$(find tree -name "*.times" | wc -l)
+    echo "cadence sidecars with --timing: $n"
+    python3 -c "
+import json, sys
+d = json.load(open('tree/suite/TEST/.hwut-store/test-ok.stdout.times'))
+print('unit: %s   deltas: %d   every delta a number: %s'
+      % (d['unit'], len(d['delta_list']),
+         all(isinstance(x, float) for x in d['delta_list'])))"
+    #  ONE MEASUREMENT AT A TIME: refused beside '--coverage'.
+    face --directory=tree --timing --coverage
     ;;
 
 empty)

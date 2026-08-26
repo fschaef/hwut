@@ -23,33 +23,9 @@ sys.path.insert(0, "../../../../")
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main
 import vut.engine.compare.engine.pretty as pretty
-import vut.engine.compare.TEST.racing   as racing
-from   vut.language_support.python.racing_condition_sim import Trigger
+import vut.engine.compare.TEST.line_provider as line_provider
+
 from   vut.language_support.python.deterministic_random import DeterministicStream
-
-class LineTrigger(Trigger):
-    def __init__(self, name, timeline, lines):
-        super().__init__(timeline)
-        self.name  = name
-        self.lines = list(lines)
-
-        self.prepared_line = None
-        self.lines_consumed = 0
-        self.pseudo_time_at_preparation = 0
-
-    async def fire(self, pseudo_time):
-        if self.lines:
-            self.prepared_line = self.lines.pop(0)
-        self.pseudo_time_at_preparation = pseudo_time
-
-    async def readline(self):
-        while self.prepared_line is None:
-            await asyncio.sleep(0)
-        result = self.prepared_line
-        self.lines_consumed += 1
-        print(f"[{self.pseudo_time_at_preparation}] {self.name}: => ({self.lines_consumed}) '{self.prepared_line.rstrip()}'")
-        self.prepared_line = None
-        return result
 
 async def test(subject_timeline, nominal_timeline):
     config = Configuration()
@@ -59,7 +35,7 @@ async def test(subject_timeline, nominal_timeline):
     nominal_content = ["trudi", "hein",  "##! potpourri", "karlos", "damian", "adelbert", "berta",  "####", "crisper", "friedolin"]
     
     subject, nominal, \
-    dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_content,
+    dispatcher_handle = line_provider.prepare_dispatcher(subject_timeline, subject_content,
                                                   nominal_timeline, nominal_content)
 
     try:
@@ -70,7 +46,7 @@ async def test(subject_timeline, nominal_timeline):
             print(f"YIELD {pair_count}: {st.name} <-> {nt.name}")
             print(pretty.do(chunk_pair))
     finally:
-        await racing.cleanup(dispatcher_handle)
+        await line_provider.cleanup(dispatcher_handle)
 
     print(f"Finished with {pair_count} chunks.")
 

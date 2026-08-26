@@ -1,0 +1,36 @@
+BEFORE {
+    .hwut-store/test-app.stderr
+    .hwut-store/test-app.stderr.when
+    .hwut-store/test-app.stdout
+    .hwut-store/test-app.stdout.times
+    .hwut-store/test-app.stdout.when
+    GOOD/result_db.json
+    GOOD/test-app.stdout
+    GOOD/test_ids.dat
+    book: ['test-app']
+}
+STATUS: 0
+STDOUT {
+    TO BE FORGOTTEN, in 'tree/suite/TEST':
+      test-app -- 6 file(s), the book entry, the register id
+          .hwut-store/test-app.stderr
+          .hwut-store/test-app.stderr.when
+          .hwut-store/test-app.stdout
+          .hwut-store/test-app.stdout.times
+          .hwut-store/test-app.stdout.when
+          GOOD/test-app.stdout
+    test-app:
+        forgotten: .hwut-store/test-app.stderr
+        forgotten: .hwut-store/test-app.stderr.when
+        forgotten: .hwut-store/test-app.stdout
+        forgotten: .hwut-store/test-app.stdout.times
+        forgotten: .hwut-store/test-app.stdout.when
+        forgotten: GOOD/test-app.stdout
+        book entry: removed
+        register: id retired
+}
+AFTER {
+    GOOD/result_db.json
+    GOOD/test_ids.dat
+    book: []
+}

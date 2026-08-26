@@ -1,4 +1,0 @@
-
---- OptMap: fired-but-silent body routes on presence, not content ---
-present, child=NodeAbsent, PASS -> NodeAbsent
-present, child=NodeAbsent, tag -> ('got', NodeAbsent)

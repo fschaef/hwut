@@ -349,7 +349,7 @@ Notable test patterns:
   - benchmark.py                non-test performance probes
 
 Coverage is collected with 'coverage run' as configured in 'hwut-info.dat'.
-Helpers ('common.py', 'racing.py', 'tmp.py', 'benchmark*.py') are excluded
+Helpers ('common.py', 'line_provider.py', 'tmp.py', 'benchmark*.py') are excluded
 from both test runs and coverage.
 
 

@@ -1,8 +1,0 @@
-
---- constructor primes tok1 and tok2 ---
-tok1 set: True -> @a
-tok2 set: True -> @a
-no retired single 'tok': True
-
---- one-token stream still leaves a live window (tok2 = EOF) ---
-tok1: @a tok2 is EOF: True

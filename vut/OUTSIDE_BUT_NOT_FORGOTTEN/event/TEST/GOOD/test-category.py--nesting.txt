@@ -1,7 +1,0 @@
-
---- attempt to nest category() blocks ---
-RuntimeError raised (expected)
-mentions both names: True
-
---- after the exception, the outer category is cleanly closed ---
-subsequent category() at top level: ok

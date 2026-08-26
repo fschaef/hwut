@@ -1,9 +1,0 @@
-
---- empty string ---
-ValueError raised (expected)
-
---- non-string ---
-ValueError raised (expected)
-
---- contains '.' ---
-ValueError raised (expected)

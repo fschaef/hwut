@@ -1,0 +1,10 @@
+
+--- the BASE 'fire' is abstract -- it refuses ---
+  NotImplementedError -- as owed: a trigger must say what it does
+
+--- the BASE 'on_termination' is optional -- it is silent ---
+  returned quietly; nothing raised, nothing printed
+
+--- a NAME given is the name kept ---
+  name: GIVEN
+<hwut-end>

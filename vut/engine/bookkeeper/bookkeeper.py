@@ -415,6 +415,133 @@ class Bookkeeper:
         if path.exists(): path.unlink()
         return note
 
+    # -- THE STAIN: a test that switched results is disqualified ------
+    def stain(self, test, choice):
+        """
+        RETURN: dict, the stain standing on that choice -- 'repeat_n',
+                'when' and the 'verdict_list' that convicted it.
+                None, the choice is clean.
+
+        A STAIN IS A DISQUALIFICATION, not a failure. A test that came
+        out 'ok' in one repeat and not in another has borne FALSE
+        WITNESS about the unit beneath it, and bears it until it is
+        proven steady over at least as many repeats as convicted it
+        ('hwut.stability'). Until then the choice is not run at all:
+        there is nothing to learn from asking a liar again.
+        """
+        key = NO_CHOICE_KEY if choice is None else choice
+        return self.book().get(test, {}).get("choices", {}) \
+                          .get(key, {}).get("stain")
+
+    def note_stain(self, test, choice, repeat_n, verdict_list):
+        """
+        RETURN: dict, the stain now standing -- replacing any earlier
+                one, so a fresh conviction states the fresh count.
+
+        'repeat_n' is what it takes to clear it: a later proof must
+        repeat AT LEAST as often, or it has not answered the charge.
+        """
+        content   = self.book()
+        test_book = content.setdefault(test, {})
+        choice_db = test_book.setdefault("choices", {})
+        key       = NO_CHOICE_KEY if choice is None else choice
+        stain     = {"repeat_n":     int(repeat_n),
+                     "when":         _now(),
+                     "verdict_list": list(verdict_list)}
+        choice_db.setdefault(key, {})["stain"] = stain
+        self._write_book(content)
+        return stain
+
+    def clear_stain(self, test, choice):
+        """
+        RETURN: dict, the stain that is gone.
+                None, none stood.
+
+        THE ONLY WAY OUT BESIDE REMOVAL. 'hwut.stability' clears it
+        having repeated at least as often as the conviction and found
+        every verdict alike; nothing else does -- not a run, not an
+        acceptance, not the passage of time.
+        """
+        content   = self.book()
+        choice_db = content.get(test, {}).get("choices", {})
+        key       = NO_CHOICE_KEY if choice is None else choice
+        gone      = choice_db.get(key, {}).pop("stain", None)
+        if gone is not None: self._write_book(content)
+        return gone
+
+    # -- RENAME: the book re-keys; NO RECORD CONTENT IS TOUCHED -------
+    def rename_test(self, test, fresh):
+        """
+        RETURN: dict, the entry now standing under 'fresh'.
+                None, the test was not in the book.
+
+        Raises KeyError where 'fresh' already stands: a rename that
+        would swallow another test's history is refused, never merged.
+
+        THE ENTRY MOVES WHOLE -- its configuration, its choices, their
+        operations, their stderr notes and any STAIN. A rename is not
+        a fresh start: what the test did under its old name it did.
+        """
+        content = self.book()
+        if test not in content:                    return None
+        if fresh in content:
+            raise KeyError("'%s' already stands in the book" % fresh)
+        content[fresh] = content.pop(test)
+        self._write_book(content)
+        return content[fresh]
+
+    def rename_choice(self, test, choice, fresh):
+        """
+        RETURN: dict, the choice entry now standing under 'fresh'.
+                None, the choice was not in the book.
+
+        Raises KeyError where 'fresh' already stands among that test's
+        choices.
+        """
+        content   = self.book()
+        choice_db = content.get(test, {}).get("choices", {})
+        key       = NO_CHOICE_KEY if choice is None else choice
+        new_key   = NO_CHOICE_KEY if fresh is None else fresh
+        if key not in choice_db:                   return None
+        if new_key in choice_db:
+            raise KeyError("'%s' already stands among the choices of "
+                           "'%s'" % (fresh, test))
+        choice_db[new_key] = choice_db.pop(key)
+        self._write_book(content)
+        return choice_db[new_key]
+
+    # -- REMOVAL: the book forgets, that a fresh record may be made ---
+    def remove_test(self, test):
+        """
+        RETURN: dict, the test's whole book entry that is gone.
+                None, the test was not in the book.
+
+        THE BOOK ONLY. Nominals, candidates and the register are other
+        people's ground; the face that removes a test walks them in
+        its own order and this is one step of it.
+        """
+        content = self.book()
+        gone    = content.pop(test, None)
+        if gone is not None: self._write_book(content)
+        return gone
+
+    def remove_choice(self, test, choice):
+        """
+        RETURN: dict, the choice's book entry that is gone.
+                None, the choice was not in the book.
+
+        The test's own entry stands, its other choices with it. A test
+        whose LAST choice is removed keeps an empty 'choices' map: the
+        configuration it recorded is still true, and 'remove_test' is
+        the verb for wanting none of it.
+        """
+        content   = self.book()
+        choice_db = content.get(test, {}).get("choices", {})
+        key       = NO_CHOICE_KEY if choice is None else choice
+        gone      = choice_db.pop(key, None)
+        if gone is not None: self._write_book(content)
+        return gone
+
     def result(self, test, choice, operation):
         """
         RETURN: dict, the most recent entry of that operation.

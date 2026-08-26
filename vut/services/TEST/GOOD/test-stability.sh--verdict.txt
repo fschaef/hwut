@@ -1,0 +1,12 @@
+STATUS: 1
+STDOUT {
+    REPEATS: 4   KEYS: 1
+    
+    suite/TEST: test-app.sh
+        VERDICT differs between repeats: ok, test-failed, ok, test-failed
+    
+    STAINED: suite/TEST: test-app.sh -- not run again until proven steady over 4 repeat(s).
+             In an urgent case: 'hwut.remove' (or 'hwut.remove-choice') and accept afresh.
+    
+    TALLY: 1 unstable, 0 warned, 0 steady
+}

@@ -1,5 +1,0 @@
-What I would do before coding
-
-Pin down the cancel protocol for at least the thread case (process and remote can wait).
-Decide AVAILABLE → UNAVAILABLE behaviour with a one-sentence rule.
-Sketch the CRM interface the Task Manager will call, even if the body is return immediately.

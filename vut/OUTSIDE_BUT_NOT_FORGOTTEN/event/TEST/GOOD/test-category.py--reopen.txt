@@ -1,8 +1,0 @@
-
---- open 'REOPEN_TEST' first time ---
-
---- open 'REOPEN_TEST' again, add another class ---
-classes accumulated: ['EventFirst', 'EventSecond']
-
---- re-open and re-register same name: collision ---
-EventIdCollision raised (expected)

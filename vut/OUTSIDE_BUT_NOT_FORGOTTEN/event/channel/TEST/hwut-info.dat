@@ -1,7 +1,0 @@
-Event Component: Transport Layer (Channel, Marshalling, ...)
-----------------------------------------------------------
-
-coverage run --omit ./*.py -a *.py 
-
---not common.py
---not config.py

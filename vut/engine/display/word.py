@@ -29,6 +29,8 @@ PHRASE_DB = {
     "unsupported":                 "not supported here",
     "misdep":                      "missing dependency",
 
+    "unstable":                    "UNSTABLE -- not run",
+
     "source-not-found":            "source file missing",
     "interpreter-not-found":       "interpreter missing",
     "not-equivalent-with-nominal": "differs from GOOD",

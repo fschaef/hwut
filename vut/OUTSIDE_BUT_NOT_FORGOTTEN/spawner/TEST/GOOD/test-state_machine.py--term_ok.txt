@@ -1,5 +1,0 @@
---- begin_termination(2000ms); child will confirm ---
-  state while terminating: TERMINATING
-  state after confirmation: TERM_OK
---- edges emitted ---
-  LAUNCHED->RUNNING , RUNNING->TERMINATING , TERMINATING->TERM_OK

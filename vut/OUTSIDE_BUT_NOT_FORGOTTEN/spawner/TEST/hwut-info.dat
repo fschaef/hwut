@@ -1,6 +1,0 @@
-Testing the Spawner component
---------------------------------------------------------------
-
-coverage run --omit ./*.py -a *.py
-
---not config.py

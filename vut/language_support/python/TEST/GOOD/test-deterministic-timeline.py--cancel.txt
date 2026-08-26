@@ -1,0 +1,8 @@
+
+--- cancel() the task carrying run() -- no announcement follows ---
+SETUP: A       |1111111111|
+  [t:0] A fires
+  run() was cancelled
+
+No '[end:..]' line above: the triggers were abandoned, not ended.
+<hwut-end>

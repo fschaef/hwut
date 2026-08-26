@@ -38,7 +38,7 @@ class E_StderrNote(Enum):
     reporting it wanted.
 
     NOMINAL is RETIRED and REMOVED. It is never written by anything --
-    'orchestrator/services/accept.py' promotes every subject EXCEPT
+    'services/accept.py' promotes every subject EXCEPT
     stderr, and refuses by name where stderr spoke and no note
     tolerates it (E-5, services/RATIONALE.txt).
 

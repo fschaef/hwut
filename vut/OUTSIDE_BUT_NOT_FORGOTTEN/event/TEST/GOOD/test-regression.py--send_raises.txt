@@ -1,4 +1,0 @@
-
---- send() on a NEW (not started) terminal ---
-state: NEW
-RuntimeError raised (expected)

@@ -11,13 +11,15 @@ ______________________________________________________________________________
 FILES:
 
     hwut_pype.py    parser and interpreter.
-    hwut.pype       executable she-bang entry point.
     manual.txt      user manual with grammar, semantics, idioms.
     examples/       five runnable scripts, each with a matching input
                     file: 'hwut.pype examples/NN-name.pype
                     < examples/NN-name.txt'. Reference outputs are
                     recorded in TEST/GOOD/test-pype.py--examples.txt.
     TEST/           HWUT test suite (16 choices, GOOD baselined).
+
+    The executable she-bang entry point is 'bin/hwut.pype' under the
+    package root, with every other launcher of the tool.
 
 INVOCATION:
 

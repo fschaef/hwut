@@ -1,5 +1,0 @@
---- begin_termination(100ms); child stays silent ---
-  state after deadline: TERM_FAILURE
-  killer was invoked  : True
---- edges emitted ---
-  LAUNCHED->RUNNING , RUNNING->TERMINATING , TERMINATING->TERM_FAILURE

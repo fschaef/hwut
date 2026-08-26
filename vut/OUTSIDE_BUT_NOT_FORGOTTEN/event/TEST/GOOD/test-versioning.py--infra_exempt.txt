@@ -1,6 +1,0 @@
-
---- after handshake, no EventInfo announced for EVENT_INFRA ---
-a._info_sent (expected empty): []
-b._info_sent (expected empty): []
-a.is_up: True
-b.is_up: True

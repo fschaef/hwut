@@ -1,5 +1,0 @@
-"""The demo module: one documented reactor."""
-"""Drives the rover at a fixed gain."""
-drive : reactor { gain: float; go : behavior { GO => move; } }
-"""On a declaration -- parseable, unlawful (D-20)."""
-limit: float;

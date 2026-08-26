@@ -1,4 +1,0 @@
-
---- send TASK and COMPILE events; each fires the right handler ---
-task_seen:    ['EventTaskDone', 'EventTaskStarted']
-compile_seen: ['EventCompilerDone']

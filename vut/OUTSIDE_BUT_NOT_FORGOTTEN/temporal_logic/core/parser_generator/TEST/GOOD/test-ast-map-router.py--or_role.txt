@@ -1,4 +1,0 @@
-
---- OrMap: role-keyed address routes the tagged branch ---
-fired role 'named'           -> ('got', 'B')
-fired index 0                -> 'A'

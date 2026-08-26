@@ -1,8 +1,0 @@
-INSPECT: diverging: Judge = False, Lawyer pairs = 1, reduced = False
-INSPECT: matching:  Judge = True, Lawyer pairs = 1, reduced = True
-  OK  : Judge (is_equivalent): diverging subject -> False
-  OK  : Lawyer (associate) lets the run reach its natural end
-  OK  : Lawyer yields the alignment; its reduction is False
-  OK  : THE LAW: Lawyer's reduction equals Judge's verdict, both cases
-  OK  : matching subject: both axes agree on True
-SUCCESS: Judge and Lawyer agree; the alignment reaches the consumer.

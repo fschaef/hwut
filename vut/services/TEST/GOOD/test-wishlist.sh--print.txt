@@ -1,0 +1,12 @@
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/net/TEST/test-b.sh
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-b.sh
+    ./storage/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh two
+    ./storage/TEST/test-b.sh
+}

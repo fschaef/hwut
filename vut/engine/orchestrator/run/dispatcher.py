@@ -51,7 +51,8 @@ class TestRunDispatcher(I_Dispatcher):
     """Drives one directory's plan against the real machinery."""
 
     def __init__(self, directory, entry, record=None, coverage=None,
-                 variant_tuple=()):
+                 variant_tuple=(), timing_f=False,
+                 despite_stain_f=False):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
                 and Store made here, the directory LOCK taken here and
@@ -73,6 +74,13 @@ class TestRunDispatcher(I_Dispatcher):
                    unregistered choice harvests under NO id and is
                    noted 'NOT_ASKED' -- coverage is measured for
                    accepted tests.
+        'despite_stain_f' runs a STAINED choice anyway. THE PROVER'S
+                   SEAM ALONE: 'hwut.stability' must be able to run
+                   what it disqualified, or a stain could never be
+                   answered. No command line reaches it.
+        'timing_f' asks every configuration for the run's CADENCE
+                   ('--timing'): per-line delta times kept beside the
+                   candidate, for an analyst and for 'hwut.stability'.
 
         Raises DirectoryBusy where another live process holds the
         directory -- refused at the door, never queued.
@@ -96,6 +104,7 @@ class TestRunDispatcher(I_Dispatcher):
             raise DirectoryBusy(
                 "the directory '%s' is held by a live process"
                 % directory)
+        self.despite_stain_f = despite_stain_f
         self.coverage   = coverage
         self.id_db      = None if coverage is None else TestIdDb(directory)
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
@@ -108,7 +117,8 @@ class TestRunDispatcher(I_Dispatcher):
                                test_configuration_of(app, directory,
                                                      coverage,
                                                      variant_tuple,
-                                                     variant_db)
+                                                     variant_db,
+                                                     timing_f)
                            for app in entry.app_set}
         #  BUILD action name -> the configuration whose build it is.
         self.build_db   = {}
@@ -199,8 +209,21 @@ class TestRunDispatcher(I_Dispatcher):
                 provision (the session's own ChoiceExecute where one
                 stands), canonicalise, compare against the nominal,
                 record to the Bookkeeper.
+
+        A STAINED CHOICE IS NOT RUN. It came out 'ok' in one repeat and
+        not in another, so its testimony is worthless and asking it
+        again would only produce more of it. The verdict is False and
+        the report 'unstable' -- which fails the choice, fails its
+        directory, and fails the run: what the run says about the
+        component under test is that the component cannot be relied
+        upon to have been tested.
         """
         configuration = self.config_db[node.file]
+        stain = None if self.despite_stain_f \
+                else self.bookkeeper.stain(configuration.stem, node.choice)
+        if stain is not None:
+            self.report_db[node.name()] = E_TestRunResult.UNSTABLE.value
+            return False
         provision     = None
         multi         = self.session_db.get(node.file)
         if multi is not None:
@@ -228,13 +251,17 @@ class TestRunDispatcher(I_Dispatcher):
 
 
 def test_run_dispatcher_factory(record=None, coverage=None,
-                                variant_tuple=()):
+                                variant_tuple=(), timing_f=False,
+                 despite_stain_f=False):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
             factory 'orchestrator()' consumes, the store knob, the
-            coverage demand and the variant selection bound.
+            coverage demand, the variant selection and the cadence
+            demand bound.
     """
     return lambda directory, entry: TestRunDispatcher(
                                         directory, entry, record=record,
                                         coverage=coverage,
-                                        variant_tuple=variant_tuple)
+                                        variant_tuple=variant_tuple,
+                                        timing_f=timing_f,
+                                        despite_stain_f=despite_stain_f)

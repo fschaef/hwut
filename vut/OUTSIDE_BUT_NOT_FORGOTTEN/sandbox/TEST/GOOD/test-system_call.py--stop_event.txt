@@ -1,4 +1,0 @@
-
---- Testing Stop Event Termination ---
-ACTION: Setting stop_event.
-SUCCESS: Termination signal sent.

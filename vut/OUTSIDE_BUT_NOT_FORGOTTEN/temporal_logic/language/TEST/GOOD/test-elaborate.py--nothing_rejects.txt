@@ -1,9 +1,0 @@
-
---- Nothing rejections (elab-nothing-rejects.vut) ---
-diagnostics: 6  (has_fatal: True)
-  REJECT [NOTHING] operation on known 'k' without a Nothing-gate -- a known holder may be Nothing; gate it ('if: k != Nothing') or operate on a had substitute (SEMANTICS 28)
-  REJECT [NOTHING] had holder 'held' receives known 'k' that may be Nothing -- gate first (SEMANTICS 28)
-  REJECT [NOTHING] Nothing assigned to had holder 'held' -- having requires existence; only known holders admit Nothing (LANGUAGE 0.5, SEMANTICS 28)
-  REJECT [NOTHING] operation on known 'k' without a Nothing-gate -- a known holder may be Nothing; gate it ('if: k != Nothing') or operate on a had substitute (SEMANTICS 28)
-  REJECT [TYPE] target 'r' receives the known out: entry 'view' without the known: site marker -- known and had are part of the type; a view never becomes custody (agreement ruling, R-41.2)
-  REJECT [NOTHING] operation on known 'm' without a Nothing-gate -- a known holder may be Nothing; gate it ('if: m != Nothing') or operate on a had substitute (SEMANTICS 28)

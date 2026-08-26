@@ -36,7 +36,7 @@ from   vut.engine.bookkeeper.test_id_db import (    # noqa E402
                                            TestIdDb, TestRunId,
                                            TestIdFault, FILE_NAME,
                                            ID_LIMIT)
-from   vut.engine.orchestrator.services  import show             # noqa E402
+from   vut.services  import show             # noqa E402
 
 
 def _check(pair_list):

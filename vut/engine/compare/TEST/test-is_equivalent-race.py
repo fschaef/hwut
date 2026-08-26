@@ -21,7 +21,7 @@ sys.path.insert(0, "../../../../")
 
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main        as     main
-import vut.engine.compare.TEST.racing as     racing
+import vut.engine.compare.TEST.line_provider as line_provider
 from   vut.language_support.python.deterministic_random import DeterministicStream
 
 
@@ -41,13 +41,13 @@ async def run_test(subject_timeline, nominal_timeline):
 
     subject,          \
     nominal,          \
-    dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_line_list, 
+    dispatcher_handle = line_provider.prepare_dispatcher(subject_timeline, subject_line_list, 
                                                   nominal_timeline, nominal_line_list)
 
     try:
         verdict = await main.is_equivalent(config, subject, nominal)
     finally:
-        await racing.cleanup(dispatcher_handle)
+        await line_provider.cleanup(dispatcher_handle)
 
     print(f"Verdict: {verdict}")
     

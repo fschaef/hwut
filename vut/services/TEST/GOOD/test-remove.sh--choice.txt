@@ -1,0 +1,48 @@
+BEFORE {
+    .hwut-store/test-app--one.stderr
+    .hwut-store/test-app--one.stderr.when
+    .hwut-store/test-app--one.stdout
+    .hwut-store/test-app--one.stdout.times
+    .hwut-store/test-app--one.stdout.when
+    .hwut-store/test-app--two.stderr
+    .hwut-store/test-app--two.stderr.when
+    .hwut-store/test-app--two.stdout
+    .hwut-store/test-app--two.stdout.times
+    .hwut-store/test-app--two.stdout.when
+    GOOD/result_db.json
+    GOOD/test-app--one.stdout
+    GOOD/test-app--two.stdout
+    GOOD/test_ids.dat
+    book: ['test-app']
+}
+STATUS: 0
+STDOUT {
+    TO BE FORGOTTEN, in 'tree/suite/TEST':
+      test-app one -- 6 file(s), the book entry, the register id
+          .hwut-store/test-app--one.stderr
+          .hwut-store/test-app--one.stderr.when
+          .hwut-store/test-app--one.stdout
+          .hwut-store/test-app--one.stdout.times
+          .hwut-store/test-app--one.stdout.when
+          GOOD/test-app--one.stdout
+    test-app one:
+        forgotten: .hwut-store/test-app--one.stderr
+        forgotten: .hwut-store/test-app--one.stderr.when
+        forgotten: .hwut-store/test-app--one.stdout
+        forgotten: .hwut-store/test-app--one.stdout.times
+        forgotten: .hwut-store/test-app--one.stdout.when
+        forgotten: GOOD/test-app--one.stdout
+        book entry: removed
+        register: choice id retired
+}
+AFTER {
+    .hwut-store/test-app--two.stderr
+    .hwut-store/test-app--two.stderr.when
+    .hwut-store/test-app--two.stdout
+    .hwut-store/test-app--two.stdout.times
+    .hwut-store/test-app--two.stdout.when
+    GOOD/result_db.json
+    GOOD/test-app--two.stdout
+    GOOD/test_ids.dat
+    book: ['test-app']
+}

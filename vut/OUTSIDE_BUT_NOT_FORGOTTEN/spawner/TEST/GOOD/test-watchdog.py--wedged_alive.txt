@@ -1,4 +1,0 @@
---- ALIVE forever (wedged child) ---
-  state after many polls : RUNNING
-  expected               : RUNNING (no verdict invented)
-  poll happened          : True

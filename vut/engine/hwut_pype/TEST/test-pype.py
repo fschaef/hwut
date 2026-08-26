@@ -585,7 +585,8 @@ def _run_pipe_file_inputs():
                      order as one stream; trace positions name the file.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-file-input-work")
     os.makedirs(work_dir, exist_ok=True)
@@ -625,7 +626,8 @@ def run_examples():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
@@ -658,7 +660,8 @@ def run_generate():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
@@ -1112,7 +1115,8 @@ def run_boundaries_stack():
 
     banner("--trace: gcc-style 'file:line:' diagnostics on stderr")
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     with CRunScript(
             file_name       = "tmp-trace.pype",
             shebang         = "#!" + interpreter_path,
@@ -1169,7 +1173,8 @@ def run_boundaries_stack():
 
     banner("--dry-run checks the script and reads no input")
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     with CRunScript(
             file_name       = "tmp-dry.pype",
             shebang         = "#!" + interpreter,
@@ -1292,7 +1297,8 @@ def run_imports():
                      pipeline exit status.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-import-work")
     lib_dir  = os.path.join(work_dir, "lib")
@@ -1466,8 +1472,8 @@ def run_pipe():
     """
     _run_pipe_file_inputs()
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__),
-                            "..", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "bin", "hwut.pype"))
     script_txt_list = [
         'SCAN/on: "PASS" <n = int> ":" <f = "*.txt"> => {',
         '    print("ok %d %s" % (n, f))',

@@ -1,0 +1,14 @@
+
+--- producer fires at every tick; consumer waits between them ---
+SETUP: PROD    |111|
+  [t:0] PROD prepared item@0
+        consumer took item@0
+  [t:1] PROD prepared item@1
+        consumer took item@1
+  [t:2] PROD prepared item@2
+        consumer took item@2
+  [end:3] PROD announced end-of-stream
+  consumer saw end-of-stream after 3 item(s)
+
+Each item was taken BEFORE the next tick prepared one: the run yields.
+<hwut-end>

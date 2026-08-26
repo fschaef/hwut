@@ -15,7 +15,7 @@ ______________________________________________________________________________
 """
 import shlex
 
-from ...bookkeeper.configuration  import NamingConfig
+from ...bookkeeper.configuration  import NamingConfig, StoreConfig
 from ...operations.build_action  import BuildConfig, E_BuildSystem
 from ...operations.configuration import (E_SourceKind,
                                          TestChoiceConfiguration,
@@ -57,7 +57,8 @@ def naming_of(app):
 
 
 def test_configuration_of(app, directory, coverage=None,
-                          variant_tuple=(), variant_db=None):
+                          variant_tuple=(), variant_db=None,
+                          timing_f=False):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
             source kind and interpreter from the language, the build
@@ -79,6 +80,12 @@ def test_configuration_of(app, directory, coverage=None,
     configuration carries a 'CoverageSetup'. A COMPILED test that
     declares no 'coverage_target' gets the setup with the note
     'NO_COVERAGE_TARGET' and builds and runs its executable as ever.
+
+    'timing_f' asks for the RUN'S CADENCE ('--timing'): the per-line
+    delta times are kept beside the candidate. It is the ONLY thing
+    that raises a StoreConfig here -- WHERE and HOW MUCH is kept is the
+    store's word, and until something asks for more than the candidate
+    there is nothing for it to say.
 
     Raises AssertionError for a language no interpreter is declared
     for -- refused at the door, not guessed.
@@ -121,7 +128,10 @@ def test_configuration_of(app, directory, coverage=None,
         interactive    = any(p.interactive for p in
                              app.choice_db.values()),
         execute        = (None if root.execute is None
-                          else tuple(shlex.split(root.execute))))
+                          else tuple(shlex.split(root.execute))),
+        store          = (StoreConfig(directory=directory,
+                                      record_timing=True)
+                          if timing_f else None))
 
 
 def _build_of(parameters, setup=None):

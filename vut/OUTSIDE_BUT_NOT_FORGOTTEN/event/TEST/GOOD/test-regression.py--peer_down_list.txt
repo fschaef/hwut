@@ -1,6 +1,0 @@
-
---- stop A; both of B's peer-down callbacks fire ---
-fired: ['one', 'two']
-
---- set_peer_down_callback REPLACES the list ---
-fired2: ['only-this']

@@ -1,7 +1,0 @@
-INSPECT: containment = COMPLETED, built = ['beta.out', 'alpha.out'], report = ok
-  OK  : build tool completed with exit 0
-  OK  : both targets built -- accounted in request order
-  OK  : nothing missing
-  OK  : target content is the build's, not a stand-in
-  OK  : verdict True; brief report 'ok'
-SUCCESS: targets built and accounted after the task finished.

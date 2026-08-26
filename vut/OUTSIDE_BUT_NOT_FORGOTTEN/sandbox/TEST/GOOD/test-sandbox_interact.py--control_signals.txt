@@ -1,9 +1,0 @@
-INSPECT: subject transcript:
-    | ready
-    | pong
-    | result 42
-    | bye
-  OK  : subject: own attribution record, clean, natural end
-  OK  : controller: own attribution record, clean, natural end
-  OK  : the control dialogue ran to completion, in order
-SUCCESS: control signals via stdout/stdin -- two supervised calls, one loop.

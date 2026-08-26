@@ -1,4 +1,0 @@
-
---- disjoint OR branches -> no conflict ---
-rules compiled: 3
-conflict:       none

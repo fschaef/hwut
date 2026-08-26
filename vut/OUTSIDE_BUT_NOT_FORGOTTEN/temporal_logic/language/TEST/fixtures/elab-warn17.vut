@@ -1,2 +1,0 @@
-ghost : reactor { g : behavior { E => F; } }
-import: "lib/gone.vut" as: gone

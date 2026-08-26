@@ -8,3 +8,4 @@ INSPECT: acquire() -> True, taken = True
   OK  : release removes every trace
   OK  : and the mutex says so
 SUCCESS: the mutex is taken and released without residue.
+<hwut-end>

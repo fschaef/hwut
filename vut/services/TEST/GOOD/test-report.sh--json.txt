@@ -1,0 +1,33 @@
+STATUS: 1
+STDOUT {
+    {
+      "directory_list": [
+        {
+          "case_list": [
+            {
+              "choice": null,
+              "file": "test-app.sh",
+              "name": "test-app.sh",
+              "reason": null,
+              "stained": false,
+              "verdict": true,
+              "when": "<instant>"
+            },
+            {
+              "choice": null,
+              "file": "test-diff.sh",
+              "name": "test-diff.sh",
+              "reason": "not-equivalent-with-nominal",
+              "stained": false,
+              "verdict": false,
+              "when": "<instant>"
+            }
+          ],
+          "directory": "suite/TEST",
+          "title": ""
+        }
+      ],
+      "fail_n": 1,
+      "test_n": 2
+    }
+}

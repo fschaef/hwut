@@ -1,0 +1,10 @@
+stained, so not run:
+STATUS: 1
+    hh:mm:ss | 000 | [END  ] SUIT:test-app.sh ........ UNSTABLE -- not run  [FAIL]
+        test-app.sh                  UNSTABLE -- not run
+removed:
+    the stain went with the book: True
+runs again, with no history:
+STATUS: 1
+    hh:mm:ss | 000 | [END  ] SUIT:test-app.sh ............... GOOD missing  [FAIL]
+        test-app.sh                  GOOD missing

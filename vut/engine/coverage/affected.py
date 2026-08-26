@@ -68,7 +68,7 @@ RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.cov convert' shows it
 class E_ExitCode:
     """The face's exit codes.
 
-    A LOCAL STAND-IN: the services share 'orchestrator/services/_exit.py'
+    A LOCAL STAND-IN: the services share 'services/_exit.py'
     and this face joins them the day it moves there. Stated here so that
     the numbers are not invented twice.
     """

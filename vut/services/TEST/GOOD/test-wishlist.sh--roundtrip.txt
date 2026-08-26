@@ -1,0 +1,14 @@
+THE FILE {
+    # the messaging quick check -- kept by hand
+    ./messaging/net/TEST/test-a.sh one
+    # ./messaging/net/TEST/test-a.sh two   -- too slow
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+}
+READ BACK:
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+}

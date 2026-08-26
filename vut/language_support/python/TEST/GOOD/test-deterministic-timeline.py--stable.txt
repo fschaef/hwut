@@ -1,0 +1,23 @@
+
+--- three triggers, all digit 1 at tick 0 ---
+SETUP: first   |1|
+SETUP: second  |1|
+SETUP: third   |1|
+  [t:0] first fires
+  [t:0] second fires
+  [t:0] third fires
+  [end:1] first notified
+  [end:1] second notified
+  [end:1] third notified
+
+--- registered BACKWARDS -- the order follows registration, not the name ---
+SETUP: third   |1|
+SETUP: second  |1|
+SETUP: first   |1|
+  [t:0] third fires
+  [t:0] second fires
+  [t:0] first fires
+  [end:1] third notified
+  [end:1] second notified
+  [end:1] first notified
+<hwut-end>

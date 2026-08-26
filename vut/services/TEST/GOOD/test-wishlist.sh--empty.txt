@@ -1,0 +1,18 @@
+--- no wish at all: everything
+    cases: 9
+--- a list with one line: that one
+STATUS: 0
+STDOUT {
+    ./storage/TEST/test-b.sh
+}
+--- the same list, its one line commented out
+STATUS: 3
+STDOUT {
+}
+--- a wholly empty file
+STATUS: 3
+STDOUT {
+}
+--- and a run over an empty list runs nothing
+STATUS: 3
+    started: 0

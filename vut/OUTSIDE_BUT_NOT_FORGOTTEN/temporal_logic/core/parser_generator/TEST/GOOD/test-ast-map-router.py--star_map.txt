@@ -1,7 +1,0 @@
-
---- StarMap: uniform item leaf, NodeList product, emptiness is a state ---
-empty star -> NodeList       -> NodeList(items=())
-empty star -> falsey         -> True
-3-item star -> NodeList      -> NodeList(items=(('got', 'A'), ('got', 'B'), ('got', 'C')))
-len                          -> 3
-PASS items                   -> NodeList(items=('A', 'B', 'C'))

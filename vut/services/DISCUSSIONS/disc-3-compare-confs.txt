@@ -1,0 +1,32 @@
+disc-3  '--confs [file-name]+' -- THE SETUP FROM FILES              ** OPEN **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-26, with E-9): the command-line faces gain a way
+to take the compare SETUP from configuration files --
+
+    --confs [file-name]+
+
+-- so that a richer setup (constraints, region parameters, marker
+changes) is reachable without a test run around it. The flag lands in
+'_core.py' with the other shared setup flags, so 'hwut.compare' and
+'hwut.merge' gain it together ('homogeneous by design', _core.py).
+Later files override earlier ones; the explicit flags ('--numeric',
+'--pattern', '--nothing') override every file.
+
+This closes the capability that 'tool/hwut_compare.py' carried as
+'--config cfg.py' and took to its grave (E-9).
+
+OPEN (the fork, one at a time, before any build):
+
+ a  THE FILE'S LANGUAGE. Candidates:
+      1  the 'hwut.conf' specification language, restricted to the
+         compare scope -- ONE language in the whole tool, read by the
+         one reader exploration already owns;  <- recommended
+      2  a bespoke key=value form -- a second language, a second
+         reader, a second place to be wrong.
+    The retired tool's form -- an exec'd Python file -- is not a
+    candidate.
+
+ b  Whether a bare test directory ('hwut.conf' present, no --confs
+    given) is read implicitly, or only what the flag names is ever
+    read. Refuse-rather-than-guess says: only what is named.

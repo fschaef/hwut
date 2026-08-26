@@ -1,8 +1,0 @@
---- terminate(50ms); child stays silent past the deadline ---
-  final state    : TERM_FAILURE
-  killer invoked  : True
---- events surfaced ---
-  state LAUNCHED->RUNNING
-  state RUNNING->TERMINATING
-  freed last_state=TERMINATING after_deadline=True
-  state TERMINATING->TERM_FAILURE

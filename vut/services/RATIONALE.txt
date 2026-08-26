@@ -1,0 +1,686 @@
+==============================================================================
+services -- RATIONALE
+==============================================================================
+
+Settled decisions, read-only. Append-only; no entry is removed once
+written.
+
+----------------------------------------------------------------------------
+E-1  THE EXIT STATUS LAW
+----------------------------------------------------------------------------
+PROBLEM   Five faces, five sets of magic integers, no shared source of
+          truth. A caller comparing '$?' against a literal had no
+          guarantee two faces agreed on what '1' meant.
+
+DECISION  One 'IntEnum', 'E_ExitCode', in '_exit.py'; every face
+          imports and returns its members:
+
+              OK      = 0   nothing refused, nothing failed
+              FAULT   = 1   a fault or failure; still printed what stands
+              REFUSED = 2   the command line cannot be READ
+              EMPTY   = 3   reads, asks for NOTHING
+              SIGPIPE = 141 reader hung up; face went quiet
+
+          'IntEnum': 'sys.exit()' takes a member unchanged, so a
+          standing suite's 'status == 2' check keeps holding without
+          change while the faces migrate.
+
+          For the three faces (compare, merge, report) that can be run
+          by path ('python3 .../report.py') in addition to '-m', the
+          'from ._exit import E_ExitCode' line is placed AFTER the
+          '_config' adoption guard so the relative import resolves in
+          both invocation modes.
+
+COST      Every face needed surgical edits; GOODs that print status
+          numbers changed for plan (E-2 below) and for the new run face.
+
+GRAVEYARD Bare integer returns -- every 'return 0/1/2' replaced.
+
+----------------------------------------------------------------------------
+E-2  PLAN EMPTY-SELECTION EXIT STATUS RETROACTIVE CHANGE
+----------------------------------------------------------------------------
+PROBLEM   'hwut.plan' with a wish that selects nothing previously
+          returned 0 -- indistinguishable from a plan that found tests.
+          An empty selection is a design signal, not a success.
+
+DECISION  'hwut.plan' with an empty plan now returns 3 (EMPTY), not 0.
+          The HELP text's status blurb extended with the EMPTY line.
+          The wish GOOD ('test-plan.py--wish') re-blessed: one line
+          changed from '[status 0]' to '[status 3]'. Named separately
+          here so the delivery header can state it explicitly.
+
+COST      Callers that checked 'hwut.plan ... && ...' for an empty
+          plan must adjust; the new status is more informative.
+
+----------------------------------------------------------------------------
+E-3  FOLD HARDENING (FORCED FIX, NOT A DESIGN CHOICE)
+----------------------------------------------------------------------------
+PROBLEM   'orchestrator/run/summary.py' fold() crashed with KeyError
+          when a KNOWN kind's required field was absent -- the
+          vocabulary's stability promise requires that a malformed
+          known kind be IGNORED, not crashed on, exactly as an unknown
+          kind is.
+
+DECISION  fold() now guards every branch with a 'fits(*fields)' check;
+          a known kind missing a required field is silently skipped.
+          The docstring updated to state the extended promise. The four
+          receiver GOODs are byte-exact unchanged -- fold() only changed
+          its error behaviour, not its happy path.
+
+COST      Marginally more code in fold(). The fix was forced by the
+          'test-plain.py unknown' choice, which crafted a 'run-ended'
+          lacking 'verdict' -- a legitimate test of the stability
+          promise at the consumer.
+
+----------------------------------------------------------------------------
+E-4  ACCEPTANCE, AND WHAT IT REFUSES
+----------------------------------------------------------------------------
+PROBLEM   'Store.accept()' existed -- "the only way a nominal comes to
+          exist" -- but nothing called it: no face promoted a
+          candidate, so the first pole could only be placed by hand.
+
+DECISION  'hwut.accept'. The table:
+
+              candidate  nominal  --force   accept
+              ---------  -------  -------   ------------------------
+                 yes       no        -      BLESS, the first pole
+                 yes       yes       no     MERGE REQUIRED: named,
+                                            nothing written, FAULT
+                 yes       yes      yes     BLESS, overwriting
+
+          '--yes' and '--force' are SEPARATE flags: '--yes' asserts
+          'I have already looked'; '--force' asserts 'overwrite the
+          thing I judge against' -- the one operation here that
+          destroys evidence, never implied by the other.
+
+          SELECTION IS THE WISH, once: the positional short form
+          ('hwut.accept "test-*.py" one two') is SUGAR that desugars
+          into '--glob' targets; 'task_list_query' does the selecting
+          for both spellings. Keys follow RECORDING: the stem
+          ('operations/session.py', configuration.stem), per subject
+          -- a choice can be part-blessed.
+
+          The interactive question shows the CANDIDATE -- the
+          canonicalised record, which is what the framework compares;
+          '.raw' is named, not printed. Anything but 'y' leaves the
+          pole alone.
+
+COST      Unattended '--yes --force' in a script can rewrite every
+          pole of a directory; the two-flag split is the guard, and
+          the words are deliberate.
+
+GRAVEYARD One combined '--force' meaning both -- rejected; unattended
+          first-blessing would silently acquire pole-clobbering.
+
+----------------------------------------------------------------------------
+E-5  STDERR IS NEVER SUBJECT TO TESTING
+----------------------------------------------------------------------------
+PROBLEM   A run records a stderr candidate; accept blessed it; the
+          verdict stayed 'unexpected-stderr' -- the NOTE governs, not
+          the file, so accept could produce a nominal that provably
+          does nothing. Worse: a stream that both carries diagnostics
+          and is held to a blessed text can do neither job.
+
+DECISION  stderr is for ERROR REPORTING; that is its whole job. Never
+          a nominal, never compared, never pype-d. Where error
+          reporting is itself under test, the application FLUSHES IT
+          TO A FILE and names that file in 'output' (exploration/
+          DISCUSSIONS/todo-1). 'E_StderrNote.NOMINAL' is retired;
+          its code removal is its own step (a blessed suite iterates
+          it).
+
+          Accept's one stderr decision is the NOTE, and only where it
+          SPOKE:
+
+              silent            FORBIDDEN, silently, the default
+              spoke, no flag    REFUSED by name, both remedies stated
+              spoke, --stderr-tol[erated]
+                                the note IGNORED is written; it
+                                GOVERNS -- the re-run is green
+
+          THERE IS NO DEFAULT where stderr speaks: a default leaves
+          the user clueless in front of output that deviates.
+
+COST      One more flag, and a refusal where HWUT 1.0 users may have
+          expected a question. The refusal names both ways out.
+
+----------------------------------------------------------------------------
+E-6  ACCEPT REFUSES THE STREAM THAT NEVER COMPLETED
+----------------------------------------------------------------------------
+PROBLEM   A candidate can sit in the store without its closing token:
+          a run cut short, an abort, a crash mid-write, or an
+          application that does not speak R-70. Promotion would bless
+          an INCOMPLETE stream as the pole every later run is judged
+          against.
+
+DECISION  'hwut.accept' refuses to operate where a selected stdout
+          candidate's last line is not '<hwut-end>'. Atomic, before
+          any pole is touched; every offending key named. NO FLAG
+          bypasses it: '--force' overrides a standing pole, never
+          stream integrity. Consistent by construction with the abort
+          ruling (the aborting entity provides FAIL; content
+          irrelevant) and with R-70 (the token is the stream's own
+          testimony of completeness). File subjects are exempt: their
+          completeness is the READING POINT (after the token), not a
+          token of their own.
+
+COST      Every fixture and every hand-run application must speak the
+          law -- print the token as its last line -- including the
+          suites' own bash fixtures, which were corrected rather than
+          exempted: a fixture that does not speak the law is a
+          fixture that lies.
+
+----------------------------------------------------------------------------
+E-7  hwut.target -- USER-DEFINED DIRECTORY TARGETS
+----------------------------------------------------------------------------
+PROBLEM   A test tree accumulates directory chores -- clean, regenerate,
+          repack -- that belong to the directories and not to any test.
+          Without a home they end up as ad-hoc scripts run by hand, or
+          worse, as pseudo-tests that pollute the suite.
+
+DECISION  'hwut.conf' binds user-defined targets in a SEPARATE
+          dictionary -- a 'target { }' scope of the directory's own
+          keys:
+
+              hwut {
+                  target {
+                      clean = "./clean.sh"
+                  }
+              }
+
+          'on_entry'/'on_exit' are standard targets with fixed
+          semantics and their own top-level keys; the separate
+          dictionary exists so the open-ended namespace can never
+          collide with them. The validator refuses standard names
+          inside 'target { }' by name. The scope is LOCAL, never
+          inherited (R-69's locality law); a parent cannot bind a
+          target for a subtree.
+
+          A directory binding any target is WALKED, test applications
+          or none: definition is membership.
+
+          THE FACE:  hwut.target <option-list> <target> <passed-through>
+          Everything before the target name is the service's
+          vocabulary; everything after it goes to each directory's
+          script, argv-style, untouched. One target per invocation.
+
+              -i, --ignore     skip a directory failing a runnability
+                               reason (any of the three below)
+              --default <s>    run script <s> where the target is
+                               absent
+              -q, --quiet      no per-directory output recording
+              +x               set a+x where the executable bit is
+                               missing; never done without it
+
+          TWO PHASES. Phase one explores every directory below the
+          root and settles the plan; a refusal costs ZERO executions.
+          Per walked directory, three reasons decide, in order:
+
+              1  file present
+              2  file executable
+              3  shebang's interpreter executable (where one decides)
+
+          A failed reason refuses the COMPLETE target execution,
+          except under '-i'. The reason-2 refusal hints at '+x'.
+
+          TARGETS ARE NOT TESTS. Exit codes are informational:
+          reported per directory, never deciding. 'hwut.target'
+          succeeds iff phase one accepted and every planned script
+          was found and executed -- however it exited. Outputs and
+          exit codes are recorded into a per-directory report; '-q'
+          disables the recording.
+
+          A script's cwd is the walked directory; the environment is
+          inherited unchanged -- no injected variables, the operating
+          system provides what a script needs. The passed-through
+          arguments are the one channel the service adds.
+
+          THE DIRECTORY MUTEX IS LAW: the service takes DirectoryLock
+          per directory -- a target run never collides with a test
+          run, or another target run, on the same directory.
+
+          'target { }' stands in the configuration vocabulary; its
+          entry in the rendered SPECIFICATION.txt lands with the
+          configuration tree (R-72, exploration todo-9).
+
+COST      One more service face and one more 'hwut.conf' key. A
+          directory carrying only 'target { }' is now walked, which
+          widens the explorer's membership law.
+
+GRAVEYARD Inheritance of 'target { }' for a subtree -- rejected;
+          locality is the standing law, and a parent binding 'clean'
+          silently for children hides who runs what where.
+          Exit code deciding OK/FAULT -- rejected; targets are not
+          tests, and a non-zero 'clean' may be that script's normal
+          voice.
+
+----------------------------------------------------------------------------
+E-8  THE LAUNCHER ROOF 'bin/'
+----------------------------------------------------------------------------
+PROBLEM   Two launchers existed, each beside its component
+          ('engine/hwut_pype/hwut.pype', 'engine/compare/tool/
+          hwut.compare'); the nine faces had none and answered only
+          as 'python3 -m vut.services.<name>'. Test scripts already
+          she-banged '#! /usr/bin/env hwut.pype' and relied on a PATH
+          nothing in the tree provides.
+
+DECISION  ONE ROOF: 'vut/bin/' holds every launcher of the tool, and
+          only launchers -- two-line shell shims that resolve their
+          own location ('readlink -f') and exec the face or the
+          module file. The faces stay in 'services/', unmoved; the
+          naming law gains one clause: a face's launcher is
+          'bin/hwut.<name>'. (Ruled 2026-08-26.)
+
+COST      One more top-level directory; a shim per face to keep in
+          step with the naming law; PYTHONPATH is set by the shim,
+          which shadows an already-exported one only by prepending.
+
+GRAVEYARD A single 'hwut' dispatcher with subcommands -- rejected by
+          ruling: one door hiding many faces.
+          The modules AS the launchers ('bin/hwut.show' the Python
+          file itself) -- rejected: a dot in a file name makes it
+          unimportable, and every face's suite drives 'main(argv,
+          write)' by import; the form would break all nine suites.
+          Launchers beside their components -- rejected by ruling:
+          one roof, 'hwut.pype' included.
+
+----------------------------------------------------------------------------
+E-9  hwut_compare.py RETIRED -- THE READING VIEW SUPERSEDES
+----------------------------------------------------------------------------
+PROBLEM   Two efforts displayed the tolerance lexing, and one name
+          covered both: 'engine/compare/tool/hwut_compare.py' (a
+          preview that rebuilt a PatternFinder by hand, exec'd a
+          '--config' Python file, forced numeric tolerance to 0.1 so
+          colour had something to show, and classified regions
+          against its own hardcoded set) and 'hwut.compare FILE'
+          (the face's reading view: the stream fed against itself
+          through the real 'reading/', marks by tolerance kind,
+          region handlers from the real registry).
+
+DECISION  The tool is RETIRED; the face keeps the name. The readings
+          a user sees are the readings the framework judges by --
+          one lexer, one registry, one door. (Ruled 2026-08-26.)
+
+COST      The '--config <file>' path to a richer setup is gone until
+          the face gains a configuration-file argument
+          (DISCUSSIONS/disc-3); until then the command line reaches
+          only '--numeric', '--pattern', '--nothing'. The tool's
+          suite and four GOOD files go with it;
+          'tool/migrate_region_syntax.py' stands alone and untested,
+          as it already was.
+
+GRAVEYARD Renaming the tool to 'hwut.lex' or 'hwut.preview' --
+          rejected: nothing left to rename.
+          Keeping the tool for its '--config' -- rejected: 'exec' of
+          a Python file is not a configuration door, and the tool's
+          defaults were admittedly not the framework's.
+
+----------------------------------------------------------------------------
+E-10  '--timing' RAISES THE STORE; 'hwut.stability' READS IT
+----------------------------------------------------------------------------
+PROBLEM   The cadence apparatus was complete and dead. 'StoreConfig.
+          record_timing', 'Store.write_timing', 'Store.timing',
+          'keep_timing' and stage_execute's per-line delta all stood
+          and were unit-tested, while 'test_configuration_of' built
+          no StoreConfig at all -- so 'configuration.store' was None
+          for every test of every tree run, 'keep_timing' False, and
+          no '.times' sidecar was ever written. A question about
+          several runs ('does this suite pass RELIABLY') had no data
+          and no face.
+
+DECISION  'hwut.run --timing' raises a StoreConfig in the ADAPTER,
+          where a test's configuration is built and where the store's
+          word belongs. It is the only thing that raises one: until
+          something asks for more than the candidate there is nothing
+          for a StoreConfig to say. Refused beside '--coverage' --
+          ONE MEASUREMENT AT A TIME (coverage D-3): a coverage run's
+          times are the instrumentation's and a cadence read from
+          them would be a lie.
+
+          'run.main' gains an 'event_sink': the report stream is the
+          run's truth (O-4) and whoever wants the whole folds it.
+          THAT is the seam a face above a face folds at.
+
+          'hwut.stability' runs the wish N times ('--repeat', 3) and
+          reports FOUR findings: VERDICT differs (the fault, and the
+          only one that moves the exit status); BYTES differ though
+          the verdict held (the tolerance absorbed it -- one
+          tightening from flaky); LENGTH differs (unalignable, so not
+          timed); CADENCE unsteady, 'stddev/average' PER LINE ACROSS
+          THE REPEATS. (Ruled 2026-08-26.)
+
+COST      A knob on 'hwut.run' and a seam in its 'main'. A stability
+          run is N runs: it costs what it measures. The repeats share
+          one store, so only the LAST candidate survives them -- the
+          face reads each snapshot before the next repeat overwrites
+          it.
+
+GRAVEYARD 'rt' across the LINES OF ONE RUN -- rejected: that measures
+          the shape of the test, not its stability. A test that
+          builds and then prints has a huge spread across its own
+          lines, every time, on every machine, and would be reported
+          forever. Across repeats, a legitimately slow step is slow
+          in all of them and scores zero.
+          A private keyword on 'run.main' instead of '--timing' --
+          rejected: the README names two uses of the measurement and
+          both are the analyst's, so the knob earns a door.
+          'record_timing' stated in 'hwut.conf' -- rejected: it makes
+          the test author responsible for what the analyst wants at
+          the moment of asking.
+          Warnings moving the exit status -- rejected by ruling:
+          tolerance is there for a reason.
+
+----------------------------------------------------------------------------
+E-11  THE STAIN: INSTABILITY IS FALSE TESTIMONY, NOT A FAILURE
+----------------------------------------------------------------------------
+PROBLEM   A test that comes out 'ok' in one repeat and not in another
+          has not made a weak claim. It has made a claim it has no
+          right to make, ABOUT THE RELIABILITY OF THE UNIT BENEATH IT.
+          Reporting it as a failure understates the offence: a failure
+          is information, a switching verdict is noise wearing the
+          clothes of information. Nothing recorded it, so a suite
+          could switch for years and every run would look like a
+          fresh, honest verdict.
+
+DECISION  'hwut.stability' writes a STAIN into the book at
+          'choices/<key>/stain' -- 'repeat_n', 'when', and the
+          verdicts that convicted it. It stands beside 'stderr', the
+          other per-choice standing decision, and is written by the
+          face that takes it.
+
+          A STAINED CHOICE IS NOT RUN. The dispatcher reads the stain
+          before the ceremony and returns the verdict False with the
+          report 'unstable': there is nothing to learn from asking a
+          liar again. The choice fails, ITS DIRECTORY FAILS, and the
+          run fails -- what the run then says about the component
+          under test is that the component cannot be relied upon to
+          have been tested.
+
+          'E_TestRunResult.UNSTABLE' stands FIRST in the precedence
+          table: a stain outranks anything a run could have found,
+          because there was no run. Its phrase is 'UNSTABLE -- not
+          run'.
+
+          'hwut.accept' refuses a stained choice, by name, with the
+          way out. Acceptance declares the POLE of the good cluster;
+          a test that will not hold still has no cluster, and
+          blessing one of its runs would write the false testimony
+          into the nominal itself.
+
+          THE ONLY TWO WAYS OUT: 'hwut.stability' repeating AT LEAST
+          as often as the conviction and finding every verdict alike;
+          or 'hwut.remove' / 'hwut.remove-choice', which forgets the
+          book entry and the stain with it -- the urgent path, which
+          says 'this test has no history' (true) and never 'this test
+          is fine' (unsayable here). (Ruled 2026-08-26.)
+
+COST      'run.main' gains 'despite_stain_f' -- THE PROVER'S SEAM: the
+          face that disqualified a choice must be able to run it, or
+          a stain could never be answered. No command line reaches it.
+          A new failure token costs a phrase and a rank, both of which
+          the operations hygiene suite demanded before it would pass.
+
+GRAVEYARD Running a stained test and reporting UNSTABLE afterwards --
+          rejected by ruling: it spends the machine on testimony
+          already known worthless, and a green run beneath the stain
+          would tempt the reader.
+          Fewer repeats than convicted clearing the stain -- rejected:
+          a proof that repeats less often has not answered the charge.
+          'hwut.accept' clearing a stain -- rejected: acceptance is
+          the act the stain exists to forbid.
+          Time clearing a stain -- rejected: nothing about waiting
+          makes a witness truthful.
+
+----------------------------------------------------------------------------
+E-12  REMOVAL FORGETS WHAT THE FRAMEWORK RECORDED, AND NOTHING ELSE
+----------------------------------------------------------------------------
+PROBLEM   'hwut.remove' was owed (orchestrator todo-2) and became
+          urgent with E-11: the stain's escape hatch pointed at a door
+          that did not exist. And a test whose subject genuinely
+          changed has no nominal worth keeping -- an old pole is not
+          the centre of a new cluster, it is a fact about a program
+          that no longer exists.
+
+DECISION  'hwut.remove <test>' and 'hwut.remove-choice <test> <choice>'
+          forget, IN THIS ORDER, each step announced: the NOMINALS,
+          the CANDIDATES and every sidecar beside them (freshness,
+          raw, cadence, coverage), the BOOK ENTRY (the stderr note and
+          the stain with it), and the REGISTER ID -- retired, never
+          reissued, so no later test inherits an old test's coverage
+          history.
+
+          NEVER TOUCHED: the test application, its 'hwut.conf', and
+          'OUT/'. Removal forgets what the FRAMEWORK recorded; the
+          author's own files are the author's.
+
+          IT ASKS FIRST, showing the whole list, unless '--yes'. A
+          nominal is a blessed artefact and its loss is a real loss.
+
+          A TEST THE BOOK NEVER KNEW is not an error: there was
+          nothing to forget. Refusing would make removal depend on the
+          very history it exists to discard. (Ruled 2026-08-26.)
+
+COST      Two faces over one module; the choice form differs in what a
+          word means and in nothing else. The paths are shown relative
+          to the test directory -- 'GOOD/x.stdout' and
+          '.hwut-store/x.stdout' are different files and a basename
+          alone would print them alike.
+
+GRAVEYARD Removing the test application too -- rejected: the framework
+          records; the author writes.
+          Removing without asking -- rejected: an unrecoverable act
+          with no confirmation is a trap, and '--yes' serves the
+          script that has already decided.
+
+----------------------------------------------------------------------------
+E-13  A WISHLIST IS A FILE OF TARGETS, AND THE ROUND TRIP CLOSES
+----------------------------------------------------------------------------
+PROBLEM   A suite worth quick-checking -- 'the messaging tests' -- is
+          a thing a person MEANS, not a thing a glob expresses. It is
+          maintained by adding and removing entries and by writing
+          down why one was dropped. A command line holds none of that:
+          it cannot be commented, cannot be reviewed, cannot be
+          committed beside the tree it describes.
+
+DECISION  'hwut.wishlist [<wish>]' PRINTS what a wish selects, one
+          line per case, in walk order:
+
+              ./<path>/<test-app> [<choice>]
+
+          '--wishlist <file>' READS that form back: '#' comments and
+          blank lines dropped, the lines joining the '--glob' targets
+          and OR'ed with them. It lives in 'plan/wish.py', so every
+          face that takes a wish gains it at once -- one parser, one
+          place to be wrong (the homogeneity of disc-3).
+
+          THE ROUND TRIP CLOSES: what is printed is what is read, so
+          an author asks once, prunes, comments, and keeps the file.
+
+          THE LEADING './' IS THE LIST'S OWN GROUND -- resolved
+          ABSOLUTELY against the directory of the wishlist FILE, not
+          against the reader's cwd and not against the run's root. A
+          list beside the subtree it describes therefore travels with
+          it and reads the same from anywhere.
+
+          THE GLOB'S FILE MEMBER MAY CARRY A PATH, relative to the
+          run's root, with globbing throughout. 'CTestTaskListQuery'
+          learns its 'directory' (relative) and the 'root' (absolute)
+          to answer one. A path-bearing glob against a query that
+          knows neither matches NOTHING -- refused by silence rather
+          than answered by ignoring the path, which would select the
+          right file in the wrong place. (Ruled 2026-08-26.)
+
+COST      The query's constructor gained two parameters and every
+          construction site with it ('plan/tree.py', 'services/plan.py',
+          'services/accept.py'). A single-directory face passes '.'
+          and its own absolute path: one directory is its own root.
+
+GRAVEYARD A second matcher for wishlist lines alone -- rejected: two
+          matchers, and a question about what a wishlist line means
+          when pasted after '--glob'.
+          './' resolved against the RUN'S ROOT -- rejected: the list
+          would then only work from one place, which is the opposite
+          of travelling.
+          A path admitted to 'collision' and 'dependency' -- rejected:
+          those are different animals. Dependencies are RESOLVED
+          within a directory and collisions only prevent PARALLEL
+          RUNNING of sensitive neighbours; neither has use for a path,
+          and admitting one would invite a cross-directory dependency,
+          which the plan does not mean.
+
+              a path is legal where a target SELECTS ACROSS A TREE,
+              illegal where a target NAMES A NEIGHBOUR.
+
+----------------------------------------------------------------------------
+E-14  'hwut.tell' TELLS ABOUT ONE TEST; 'hwut.report' REPORTS ON A RUN
+----------------------------------------------------------------------------
+PROBLEM   One word, two subjects. 'hwut.report' packed ONE TEST whole
+          -- metadata, source, GOOD, OUT, cadence -- for another pair
+          of eyes, human or model. But 'a report' in a testing tool is
+          also what CI reads: JUnit XML, TAP, the traditional HWUT
+          page. That is a WHOLE RUN, folded from the stream or queried
+          out of the result databases, and it is a different face
+          entirely. Left as one word, '--format' would have had to
+          mean two things.
+
+DECISION  THE PACKER IS RENAMED 'hwut.tell'. It tells you about one
+          test: 'hwut.tell TEST-APP [CHOICE]'. Nothing else about it
+          changes.
+
+          'hwut.report' is FREED for the reporting face -- queries
+          over the result databases, rendered by '--format':
+
+              traditional   the HWUT page: per-directory blocks with
+                            dot leaders, the summary with its
+                            prefix-elided directory column
+              junit         the XML every CI ingests
+              tap           still widely read
+              json          for whoever builds their own
+
+          THE WIDTH IS THE TERMINAL'S, never a constant: the
+          traditional page fills what it is given, as 'display/
+          console' already decides once for the run's own rendering.
+
+          '[OK]' and '[FAIL]' are RIGHT-ALIGNED to one column, so the
+          dot leader is two shorter for a failure and the verdicts
+          stand in a line. (Ruled 2026-08-26.)
+
+COST      A rename of a face, its launcher, its suite and five GOOD
+          files. 'hwut.report' now names something that does not exist
+          yet -- a debt stated, not a promise kept.
+
+GRAVEYARD '--format' on 'hwut.run' -- rejected: the run RENDERS LIVE
+          and its stream is its truth; a report is asked for AFTER,
+          and may be asked of a run that happened yesterday, which
+          only the databases remember.
+          '--format' on the packer -- rejected: it packs one test and
+          a CI format wants the run.
+
+----------------------------------------------------------------------------
+E-15  THE EXCLUSIONS, AND 'hwut' AS THE DEFAULT FACE
+----------------------------------------------------------------------------
+PROBLEM   A wish could only ADD. 'everything except the vendored tree'
+          and 'everything except the slow choice' had to be written as
+          an enumeration of what remains, which goes stale the moment
+          a test is added.
+
+DECISION  '--exclude <target>' takes the same form as '--glob', path
+          member and all. '--exclude-dir <glob>' names a DIRECTORY AND
+          EVERY DIRECTORY BELOW IT: a glob carrying '/' matches the
+          path or an ancestor of it, a BARE NAME matches any path
+          COMPONENT, so '--exclude-dir OUT' drops 'a/OUT/TEST' and
+          'a/OUT/b/TEST' alike.
+
+          AN EXCLUSION OUTRANKS EVERY INCLUDE. Asked first, answered
+          first: a case an exclusion names is not wanted, whatever
+          selected it -- a wishlist line, a glob, or the bare wish.
+
+          'bin/hwut' IS 'hwut.run'. A bare 'hwut' states no wish, a
+          wish that states nothing wants everything, so 'hwut' runs
+          the whole tree below the current directory. (Ruled
+          2026-08-26.)
+
+COST      Two more keywords in the one wish parser, and the query
+          answers a directory question it did not before.
+
+GRAVEYARD Negated globs ('--glob !x') -- rejected: one keyword doing
+          two jobs, and a shell that eats the '!'.
+
+----------------------------------------------------------------------------
+E-16  'hwut.rename' FOLLOWS THE NAME; NO RECORD CONTENT IS TOUCHED
+----------------------------------------------------------------------------
+PROBLEM   Renaming a test threw its history away: the nominals stood
+          under the old key and the next run reported a missing GOOD.
+
+DECISION  'hwut.rename <old> <new>' and 'hwut.rename-choice <test>
+          <old> <new>' MOVE the artefacts and re-key the book: not one
+          byte inside a nominal, a candidate, a cadence or a coverage
+          record changes. A VUT-COVERAGE record refers to its RUN ID,
+          and THE REGISTER KEEPS THAT ID across a rename -- which is
+          what the register is for.
+
+          A RENAME IS NOT A FRESH START. The book entry moves with
+          everything in it: the recorded runs, the stderr note, and
+          ANY STAIN. A test that switched results does not launder
+          itself by being called something else.
+
+          THE SOURCE FILE IS NOT MOVED. Renaming the author's own file
+          is the author's act ('git mv'); this face FOLLOWS it.
+
+          A COLLISION IS REFUSED BEFORE ANYTHING MOVES: half a rename
+          onto a live name is worse than none. (Ruled 2026-08-26.)
+
+COST      Two faces over one module, as with removal.
+
+GRAVEYARD Moving the source file too -- rejected: the framework
+          records; the author writes.
+          A rename that drops the stain -- rejected: that is
+          laundering, and 'hwut.remove' is the honest verb for it.
+
+----------------------------------------------------------------------------
+E-17  'hwut.report' -- FOUR FORMATS, AND THE STAIN IN EACH
+----------------------------------------------------------------------------
+PROBLEM   'hwut.run' renders LIVE, for the person watching. CI reads
+          machine formats, and a human reading a finished run wants
+          the HWUT page. Neither is a live rendering, and both may be
+          asked of a run that happened yesterday.
+
+DECISION  'hwut.report [<wish>] [--format=<name>]' READS THE BOOKS.
+          It explores the tree for its SHAPE and asks each directory's
+          'result_db.json' for the VERDICT, so a report may be taken
+          long after the run. A case the books never saw is 'never
+          run' -- a finding, not a fault, and never a stand-in for a
+          failure.
+
+          FOUR FORMATS: 'traditional' (the default), 'junit', 'tap',
+          'json'.
+
+          THE WIDTH IS THE TERMINAL'S: '--width', else COLUMNS, else
+          the terminal's own, else 80, and never below 40. Nothing
+          assumes a constant.
+
+          '[OK]' AND '[FAIL]' ARE RIGHT-ALIGNED TO ONE COLUMN, so the
+          dot leader runs two shorter for a failure and the verdicts
+          stand in a line. The summary's directory column is
+          PREFIX-ELIDED against the line above, the shared leading
+          path replaced by dots of its own length, the sharing ending
+          at a separator. THE FAILURES ARE LISTED ONCE MORE at the
+          end, after the summary.
+
+          THE STAIN IS A FAILURE IN EVERY FORMAT. JUnit knows failure,
+          error and skipped; a stained choice is none of them -- it
+          was not run, and it did not fail. 'skipped' is the closest
+          and is a lie of exactly the kind E-11 forbids, so a stain is
+          emitted as a FAILURE whose message names it: CI goes red,
+          which is true, and the message says why. (Ruled 2026-08-26.)
+
+COST      A face that both explores and reads books; the shape is the
+          tree's and the verdict is the book's, and neither alone
+          would do.
+
+GRAVEYARD '--format' on 'hwut.run' -- rejected with E-14: the run's
+          stream is a live thing and a report is asked for after.
+          A stain as JUnit 'skipped' -- rejected: it would tell CI the
+          run was fine.
+          Failures shown only in place -- rejected by ruling: a list
+          at the end is what a reader scrolls to.

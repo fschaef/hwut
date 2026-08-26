@@ -1,4 +1,0 @@
---- spawn_thread: numeric deadline is refused (D9) ---
-  terminate(500) returned: False   (expect False)
-  terminate(None) returned: True   (expect True)
-  terminal state: TERM_OK

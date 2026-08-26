@@ -1,0 +1,11 @@
+
+--- stop() after the first tick -- ticks 1.. are not walked, the announcement still comes ---
+SETUP: STOPPER |1111|
+SETUP: OTHER   |1111|
+  [t:0] STOPPER fires
+  ... asks the dispatcher to stop
+  [end:4] STOPPER notified
+  [end:4] OTHER notified
+
+end_tick is still the timeline's length, not the tick the run stopped at.
+<hwut-end>

@@ -1,7 +1,0 @@
-
---- matching pins handshake cleanly ---
-both sides accepted the peer key
-round-trip works: True
-
---- a mismatched pin raises ValueError ---
-ValueError raised by the pinning side: True

@@ -1,0 +1,41 @@
+disc-4  'hwut.play' -- RUN ONE TEST, SHOW THE READING               ** OPEN **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-26): a new face, named 'hwut.play' --
+
+    hwut.play TEST-APP [CHOICE]
+
+-- explores the directory, resolves the test's OWN compare
+configuration, performs the optional build, runs the choice, and
+displays the READING of the produced output under that configuration:
+the stream fed against itself, marks by tolerance kind, exactly the
+face 'hwut.compare FILE' shows -- but under the test's setup, not the
+command line's.
+
+PLAY JUDGES NOTHING AND RECORDS NOTHING; it renders. 'hwut.run' is the
+face that judges and records; the README holds the distinction in one
+line. This is the closing of the seam '_core.py' names: "a service run
+inside a test run receives that Configuration object directly" -- play
+is the command line's way to stand inside.
+
+Per the naming law: 'services/play.py', launcher 'bin/hwut.play',
+suite 'TEST/test-play.*'.
+
+OPEN (each a fork, one at a time, before any build):
+
+ a  CHOICE ABSENT: every choice of the test in sequence, or the first,
+    or a refusal asking for one? Refuse-rather-than-guess leans to the
+    refusal where the test has more than one choice; a single-choice
+    test plays its one choice unasked.
+
+ b  WHICH STREAM: stdout alone, or stderr beside it? E-5 says stderr
+    is never subject to testing; whether a rendering face may still
+    SHOW it (marked as untested) is a different question.
+
+ c  THE FAILING BUILD: the build is part of the test ('build is a
+    failing test' law); what does play show when it fails -- the build
+    log, plainly, and stop?
+
+ d  THE DIRECTORY MUTEX: play executes in the test directory; does it
+    take DirectoryLock like a run does? (It records nothing, but it
+    runs the author's program, which may write.)

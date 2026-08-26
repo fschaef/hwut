@@ -1,4 +1,0 @@
-
---- F-6 strict gate: parser diagnostics block declare ---
-parse diagnostics: 3
-refused: F-6 strict gate: 3 parser diagnostic(s) block declare -- declare only ever sees a clean tree

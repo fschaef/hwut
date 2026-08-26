@@ -1,8 +1,0 @@
-
---- router has 3 entries ---
-len(router): 3
-
---- publish three events; each lands on the matching Terminals ---
-seen1 (TASK)   : [('EventTaskDone', 1), ('EventTaskStarted', 42)]
-seen2 (COMPILE): [('EventCompilerDone', 42)]
-seen3 (id=42)  : [('EventCompilerDone', 42), ('EventTaskStarted', 42)]

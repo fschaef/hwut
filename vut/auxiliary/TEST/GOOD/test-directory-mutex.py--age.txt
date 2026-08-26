@@ -4,3 +4,4 @@ INSPECT: no holder recorded      -> age = None
   OK  : a held lock answers its age
   OK  : a record without an acquisition time answers None, never zero
 SUCCESS: holder time is answered where recorded, absent where not.
+<hwut-end>

@@ -38,6 +38,11 @@ from   .result import E_TestRunResult
 #  A run that failed to build says so; it does not report that its output
 #  file was missing, though that is also true.
 _PRECEDENCE = (
+    # -- THE TESTIMONY: the loudest reason of all, and the earliest.
+    #  A stained choice is not run, so no other reason can arise for
+    #  it; standing first says that a stain outranks anything a run
+    #  could have found, because there was no run.
+    E_TestRunResult.UNSTABLE,
     # -- the source and the build: nothing could even be attempted
     E_TestRunResult.SOURCE_NOT_FOUND,
     E_TestRunResult.INTERPRETER_NOT_FOUND,

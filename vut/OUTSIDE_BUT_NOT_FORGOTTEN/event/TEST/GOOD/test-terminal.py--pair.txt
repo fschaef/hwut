@@ -1,4 +1,0 @@
-
---- send a few events both directions ---
-a_seen: [('a', 'EventTaskStarted', 2)]
-b_seen: [('b', 'EventTaskDone', 1), ('b', 'EventCompilerDone', 3)]

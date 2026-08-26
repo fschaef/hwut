@@ -1,6 +1,0 @@
-
---- EventTerminalUp .timestamp = ... ---
-FrozenInstanceError raised (expected)
-
---- EventTerminalDown .timestamp = ... ---
-FrozenInstanceError raised (expected)

@@ -1,5 +1,0 @@
---- E_TerminationReason members ---
-  DONE
-  TERMINATED
-  UNACCOMPLISHED
-  exactly DONE / TERMINATED / UNACCOMPLISHED: OK

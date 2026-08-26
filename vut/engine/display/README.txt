@@ -28,7 +28,7 @@ this component never decides what runs. 'parse_rendering()' raises
 that into REFUSED, exactly as it does for 'WishError'.
 
 THE QUEUE IS THE ONLY DOOR
-The face ('orchestrator/services/run.py') reads the queue live and hands
+The face ('services/run.py') reads the queue live and hands
 each event to 'CPlainFlow.dispatch()'; a suite may call 'render()'
 with a list instead. The closing 'None' is a no-op to dispatch; the
 tail blocks are written by 'CPlainFlow.tail()' after the loop.

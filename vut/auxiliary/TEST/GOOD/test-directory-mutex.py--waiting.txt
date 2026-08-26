@@ -3,3 +3,4 @@ INSPECT: a live holder outlives the contender's wait
   OK  : the holder outliving the wait is still refused
   OK  : and the contender did wait before saying so
 SUCCESS: waiting buys patience, never the lock.
+<hwut-end>

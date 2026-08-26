@@ -30,6 +30,14 @@ class E_TestRunResult(Enum):
     # THE JUDGEMENT: everything ran; the subject does not match.
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
 
+    # THE TESTIMONY: nothing ran, and nothing will, until it is cleared.
+    # A choice that came out 'ok' in one repeat and not in another bore
+    # FALSE WITNESS about the unit beneath it. It is not asked again --
+    # there is nothing to learn from asking a liar -- until
+    # 'hwut.stability' repeats at least as often as convicted it and
+    # finds every verdict alike, or the test is removed and re-accepted.
+    UNSTABLE                    = "unstable"
+
     # THE TEST APPLICATION:
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_CONTAINED          = "test-app-contained"

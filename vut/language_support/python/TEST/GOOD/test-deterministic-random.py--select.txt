@@ -1,0 +1,7 @@
+
+--- select over a list -- 20 draws ---
+c b d a b c d a d d d c a d b d d b b b
+
+--- select over a tuple -- 12 draws ---
+p q p r p p p q q r q p
+<hwut-end>

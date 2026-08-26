@@ -55,7 +55,7 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 
 [16] SUBJECT: => (9) 'kasper'
 [18] SUBJECT: => (10) 'friedrich'
-[19] SUBJECT: => (11) ''
+[20] SUBJECT: => (11) ''
 YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>

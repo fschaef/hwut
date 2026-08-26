@@ -1,0 +1,31 @@
+$ hwut.cov explain <dir>/a
+    REFUSED: 'hwut.run' does not take: <dir>/a, explain
+    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+                    [--glob <target>]... [--exclude <target>]...
+                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
+    [status 2]
+$ hwut.cov convert --to yaml <dir>/a
+    REFUSED: '--to' takes one of binary, text
+    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    [status 2]
+$ hwut.cov convert --bogus <dir>/a
+    REFUSED: unknown option '--bogus'
+    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    [status 2]
+$ hwut.cov convert <dir>/a <dir>/a
+    REFUSED: 'convert' takes exactly one FILE
+    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    [status 2]
+$ hwut.cov convert
+    REFUSED: 'convert' takes exactly one FILE
+    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    [status 2]
+$ hwut.cov formats extra
+    REFUSED: 'formats' takes no argument
+    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    [status 2]
+SUCCESS: the door refuses by name, with the usage line.
+<hwut-end>

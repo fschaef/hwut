@@ -17,8 +17,8 @@
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../../.." && pwd)
-RUN="python3 -m vut.engine.orchestrator.services.run"
-ACCEPT="python3 -m vut.engine.orchestrator.services.accept"
+RUN="python3 -m vut.services.run"
+ACCEPT="python3 -m vut.services.accept"
 export PYTHONPATH="$ROOT"
 
 case "$1" in

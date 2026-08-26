@@ -1,0 +1,19 @@
+
+--- an EMPTY timeline -- end_tick 0 ---
+SETUP: EMPTY   ||
+  [end:0] EMPTY notified
+
+--- a timeline of BLANKS -- no digit, so nothing fires ---
+SETUP: BLANK   |    |
+  [end:4] BLANK notified
+
+--- NO TRIGGERS at all -- nothing to announce, and no failure ---
+  (dispatcher ran; nothing was scheduled)
+
+--- a timeline of blanks beside one that fires ---
+SETUP: BLANK   |   |
+SETUP: FIRES   | 1 |
+  [t:1] FIRES fires
+  [end:3] BLANK notified
+  [end:3] FIRES notified
+<hwut-end>

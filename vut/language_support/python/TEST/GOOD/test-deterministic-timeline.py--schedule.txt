@@ -1,0 +1,35 @@
+
+--- staggered: A at 0, B at 2, C at 4 ---
+SETUP: A       |1    |
+SETUP: B       |  1  |
+SETUP: C       |    1|
+  [t:0] A fires
+  [t:2] B fires
+  [t:4] C fires
+  [end:5] A notified
+  [end:5] B notified
+  [end:5] C notified
+
+--- a SHORT timeline stops contributing; the long one goes on ---
+SETUP: SHORT   |11|
+SETUP: LONG    |111111|
+  [t:0] SHORT fires
+  [t:0] LONG fires
+  [t:1] SHORT fires
+  [t:1] LONG fires
+  [t:2] LONG fires
+  [t:3] LONG fires
+  [t:4] LONG fires
+  [t:5] LONG fires
+  [end:6] SHORT notified
+  [end:6] LONG notified
+
+--- the SCHEDULE as built -- '[tick] (priority)name' ---
+SETUP: A       |12|
+SETUP: B       |21|
+TriggerDispatcher
+[0] (1)A
+[0] (2)B
+[1] (1)B
+[1] (2)A
+<hwut-end>

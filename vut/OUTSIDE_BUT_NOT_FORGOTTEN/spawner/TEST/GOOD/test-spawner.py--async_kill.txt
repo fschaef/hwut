@@ -1,4 +1,0 @@
---- spawn_async: stubborn child + terminate(100) ---
-  state before terminate: RUNNING
-  terminate(100) returned: True
-  terminal state: TERM_FAILURE

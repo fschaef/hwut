@@ -1,0 +1,12 @@
+THE FILE, beside the tests it names {
+    ./TEST/test-a.sh one
+    ./TEST/test-a.sh two
+    ./TEST/test-b.sh
+}
+READ BACK from the root:
+STATUS: 0
+STDOUT {
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-b.sh
+}

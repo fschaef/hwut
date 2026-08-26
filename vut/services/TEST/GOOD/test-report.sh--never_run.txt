@@ -1,0 +1,56 @@
+--- traditional
+STATUS: 1
+STDOUT {
+    ======================================================================
+    
+    suite/TEST                                                   <no date>
+    ----------------------------------------------------------------------
+    
+     * The steady one:
+    
+            test-app.sh ............................................[FAIL]
+    
+    ======================================================================
+    
+    SUMMARY:
+    
+        Fails: N: Verdict:          Directory:
+    
+             1 1    [FAIL]   suite/TEST
+    
+    ----------------------------------------------------------------------
+    
+    FAILURES:
+    
+        suite/TEST: test-app.sh -- never run
+    
+    ----------------------------------------------------------------------
+                                                                  (1 test)
+    
+    ======================================================================
+}
+--- json
+STATUS: 1
+STDOUT {
+    {
+      "directory_list": [
+        {
+          "case_list": [
+            {
+              "choice": null,
+              "file": "test-app.sh",
+              "name": "test-app.sh",
+              "reason": "never run",
+              "stained": false,
+              "verdict": null,
+              "when": null
+            }
+          ],
+          "directory": "suite/TEST",
+          "title": ""
+        }
+      ],
+      "fail_n": 1,
+      "test_n": 1
+    }
+}

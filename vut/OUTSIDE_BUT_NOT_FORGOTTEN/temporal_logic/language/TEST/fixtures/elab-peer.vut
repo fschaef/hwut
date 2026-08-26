@@ -1,2 +1,0 @@
-vehicle : reactor { top_speed: float; power: float; go : behavior { GO => move; } }
-max_speed: float;

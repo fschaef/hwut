@@ -20,6 +20,10 @@ downstream walk.
     primitives   raw next_int stream, next_float, coin -- the bare generator.
     ranges       next_int over small and degenerate [v,v] ranges.
     gauss        gauss, gauss clamped to a band, gauss_int -- the libm path.
+                 THE ONLY TOLERATED CHOICE: the two full-precision blocks
+                 are framed as a 'table' region with 'numeric={1:1e-12}',
+                 so a differing libm's last bits pass while real drift in
+                 the Box-Muller path fails. The integer draws stay exact.
     sample       sample_indices (Fisher-Yates) and sample over a list.
     select       stateless select: same state + same pool -> same element.
     unchosen     select_unchosen with a caller-owned SelectionMarker: spread is
@@ -38,6 +42,14 @@ from vut.language_support.python.deterministic_random import (DeterministicStrea
                                                               SelectionMarker)
 
 SEED = 0x42
+
+#  THE ONE PLACE THE LIBM PATH IS TOLERATED. Every other choice compares
+#  exactly: the generator is integer arithmetic and owes byte identity on
+#  any machine. 'gauss' alone touches log/cos/sqrt, so its two
+#  full-precision blocks carry a per-column band -- stated in the output
+#  itself, since a region frames BOTH streams or neither.
+TOLERANCE_REGION_BEGIN = "##! table numeric={1:1e-12}"
+REGION_END             = "####"
 
 
 def banner(label):
@@ -79,16 +91,28 @@ def run_ranges():
 
 
 def run_gauss():
-    """RETURN: None. The libm path: gauss, clamped gauss, gauss_int."""
+    """RETURN: None. The libm path: gauss, clamped gauss, gauss_int.
+
+    THE TWO FULL-PRECISION BLOCKS ARE FRAMED AS A 'table' REGION with a
+    per-column numeric tolerance. Column 1 is the value; 1e-12 is some
+    four thousand ULP at unit magnitude, so a libm that differs in the
+    last bits is tolerated while any real drift in the Box-Muller path
+    -- which moves a value in its leading digits -- still fails. The
+    labels in column 0 and the integer draws below stay exact.
+    """
     banner("gauss(0, 1) -- 10 draws (full precision)")
     s = DeterministicStream(SEED)
+    print(TOLERANCE_REGION_BEGIN)
     for i in range(10):
         print("[%02d] %r" % (i, s.gauss(0.0, 1.0)))
+    print(REGION_END)
 
     banner("gauss(0, 1) clamped to [-1, 1]")
     s = DeterministicStream(SEED)
+    print(TOLERANCE_REGION_BEGIN)
     for i in range(10):
         print("[%02d] %r" % (i, s.gauss(0.0, 1.0, -1.0, 1.0)))
+    print(REGION_END)
 
     banner("gauss_int(100, 15) -- 20 draws")
     s = DeterministicStream(SEED)

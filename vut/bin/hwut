@@ -1,0 +1,9 @@
+#! /bin/sh
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+# THE DEFAULT FACE. 'hwut' alone is 'hwut.run': the tree run, from
+# wherever it is called, by PATH or by path. A bare 'hwut' states no
+# wish, and a wish that states nothing wants everything -- so 'hwut'
+# runs the whole tree below the current directory.
+HERE=$(dirname "$(readlink -f "$0")")
+PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
+    exec python3 -m vut.services.run "$@"

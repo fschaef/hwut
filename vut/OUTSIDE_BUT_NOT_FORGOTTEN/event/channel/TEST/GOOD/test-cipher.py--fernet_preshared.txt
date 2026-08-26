@@ -1,9 +1,0 @@
-
---- ciphertext differs from plaintext ---
-ciphertext != plaintext: True
-
---- the other side decrypts it ---
-decrypt(encrypt(x)) == x: True
-
---- a wrong key fails to decrypt ---
-wrong key raised InvalidToken (expected)

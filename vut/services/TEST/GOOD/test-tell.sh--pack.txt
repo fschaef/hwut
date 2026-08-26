@@ -1,0 +1,33 @@
+STIMULUS  hwut.tell demo.py basic          (the default pack)
+REACTION  exit code : 0   stderr : 0 bytes
+          the pack {
+              ==[ HWUT TEST REPORT ]========================================================
+              test:    demo.py
+              choice:  basic
+              hint:    OUT differs from GOOD
+              files:
+                demo.py                                      29 bytes  (source)
+                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
+                .hwut-store/demo--basic.stdout.raw           19 bytes  (out raw stdout)
+                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
+                .hwut-store/demo--basic.stdout.times         51 bytes  (out timing stdout)
+              coverage: none recorded
+              cadence: as '<delta-t>:<line>' prefixes
+              
+              ==[ SOURCE: demo.py ]===========================================================
+              print("alpha")
+              print("beta")
+              
+              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
+              alpha
+              beta
+              
+              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
+              0.012100:alpha
+              1.503400:BETA
+          }
+
+The cadence rides INSIDE the stream, per line; the raw
+sidecars stay out of the default pack; the hint says at once
+whether OUT meets GOOD.
+SUCCESS: one dump answers every 'can you send me...' at once.

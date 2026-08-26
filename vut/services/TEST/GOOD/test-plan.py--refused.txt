@@ -1,0 +1,28 @@
+
+--- an unreadable point ---
+$ hwut.plan --since=noon
+    REFUSED: '--since=noon': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+    usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
+                     [--glob <target>]... [--exclude <target>]...
+                     [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--directory=<path>]
+    [status 2]
+
+--- '--fail' beside '--pass' ---
+$ hwut.plan --fail --pass
+    REFUSED: '--fail' beside '--pass' can want nothing
+    usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
+                     [--glob <target>]... [--exclude <target>]...
+                     [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--directory=<path>]
+    [status 2]
+
+--- an argument the face does not take ---
+$ hwut.plan test-a.py
+    REFUSED: 'hwut.plan' does not take: test-a.py
+    usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
+                     [--glob <target>]... [--exclude <target>]...
+                     [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--directory=<path>]
+    [status 2]
+<hwut-end>

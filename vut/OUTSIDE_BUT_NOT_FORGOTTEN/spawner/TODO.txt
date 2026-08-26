@@ -1,5 +1,0 @@
-EventChildTerminationReq -- must be forwarded to child's terminal
-
-EventChildKilled -- is not something to be reported to the parent if the child
-exited properly. This event should better be called
-'EventChildStoppedForcefully' or so.

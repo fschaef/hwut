@@ -1,7 +1,0 @@
-Testing the platform-independent sandbox: resource caps, attribution,
-process hygiene, honest degradation.
----------------------------------------------------------------
-
-coverage run --omit ./*.py -a *.py
-
---not config.py

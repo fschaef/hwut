@@ -1,0 +1,11 @@
+STATUS: 1
+STDOUT {
+    TAP version 13
+    1..2
+    ok 1 - suite/TEST: test-app.sh
+    not ok 2 - suite/TEST: test-diff.sh
+      ---
+      reason: not-equivalent-with-nominal
+      message: the run reported 'not-equivalent-with-nominal'
+      ...
+}

@@ -1,6 +1,0 @@
-
---- A sends, B receives via mp.Queue with Marshaller wire format ---
-type:        EventTaskDone
-task_id:     99
-duration_s:  3.5
-type matches: True

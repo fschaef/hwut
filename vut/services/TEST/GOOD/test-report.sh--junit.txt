@@ -1,0 +1,14 @@
+STATUS: 1
+STDOUT {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <testsuites tests="2" failures="1">
+      <testsuite name="suite/TEST" tests="2" failures="1">
+        <testcase classname="suite/TEST" name="test-app.sh"/>
+        <testcase classname="suite/TEST" name="test-diff.sh">
+          <failure type="not-equivalent-with-nominal" message="the run reported 'not-equivalent-with-nominal'"/>
+        </testcase>
+      </testsuite>
+    </testsuites>
+}
+--- and it parses:
+    testsuites tests=2 failures=1

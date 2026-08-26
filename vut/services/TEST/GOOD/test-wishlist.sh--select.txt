@@ -1,0 +1,20 @@
+--- a bare name, matched in every directory
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-b.sh
+    ./messaging/queue/TEST/test-b.sh
+    ./storage/TEST/test-b.sh
+}
+--- a PATH-BEARING glob, across the tree
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+}
+--- a path AND a choice
+STATUS: 0
+STDOUT {
+    ./messaging/queue/TEST/test-a.sh one
+}

@@ -1,5 +1,0 @@
-INSPECT: containment = COMPLETED, verdict = True
-  OK  : test app completed
-  OK  : exit code 0
-  OK  : judged equivalent
-SUCCESS: matching subject judged equivalent.

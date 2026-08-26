@@ -1,0 +1,15 @@
+#! /usr/bin/env python3
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+
+The she-bang entry point of the pype filter: 'hwut_pype.main()' run as a
+script from wherever 'hwut.pype' is called, by PATH or by path.
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                "..", "engine", "hwut_pype"))
+from hwut_pype import main   # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

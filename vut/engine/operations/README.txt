@@ -919,13 +919,13 @@ connection IS the session has nothing to answer on once it is closed.
            '_core.py':
            '-' is stdin; --numeric/--pattern/--nothing name the setup):
 
-           'hwut.merge' (orchestrator/services/merge.py): any subject stream/file against any
+           'hwut.merge' (services/merge.py): any subject stream/file against any
            nominal -- UI on stderr, the artifact on '-o PATH' or
            stdout, written ONLY on commit (exit 0; a CANCEL exits 1 and
            writes nothing). Knows nothing of GOOD/ -- storing stays
            Accept's (10).
 
-           'hwut.compare' (orchestrator/services/compare.py): display only, never writes --
+           'hwut.compare' (services/compare.py): display only, never writes --
            the rendering IS the product, so it goes to STDOUT; exit is
            the diff convention (0 equivalent, 1 differing). With ONE
            argument it displays the READING of that stream.

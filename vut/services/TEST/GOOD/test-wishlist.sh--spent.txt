@@ -1,0 +1,8 @@
+THE LIST {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh one
+}
+WHAT RAN:
+STATUS: 1
+    [START] MN:test-a.sh [one]
+    [START] MQ:test-a.sh [one]

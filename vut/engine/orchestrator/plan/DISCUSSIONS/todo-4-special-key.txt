@@ -2,7 +2,7 @@ todo-4  THE 'special' KEY AND 'hwut.special'              ** LABOUR OWED **
 ______________________________________________________________________________
 
 The choice is made (P-11); nothing is built. The labour lands in
-exploration (the key) and orchestrator/services/ (the service).
+exploration (the key) and services/ (the service).
 
     special = { "clean" = "clean_this.sh" }     root-only, string values
 

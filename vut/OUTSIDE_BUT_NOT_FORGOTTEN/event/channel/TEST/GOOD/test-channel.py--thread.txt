@@ -1,4 +1,0 @@
-
---- A sends, B receives via thread queue ---
-type:        EventTaskDone
-task_id:     42

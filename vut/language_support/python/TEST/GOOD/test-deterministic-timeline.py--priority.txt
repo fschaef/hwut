@@ -1,0 +1,19 @@
+
+--- digits swap between ticks: B leads at 0, A leads at 1 ---
+SETUP: A       |21|
+SETUP: B       |12|
+  [t:0] B fires
+  [t:0] A fires
+  [t:1] A fires
+  [t:1] B fires
+  [end:2] A notified
+  [end:2] B notified
+
+--- 0 is the strongest digit, 9 the weakest ---
+SETUP: WEAK    |9|
+SETUP: STRONG  |0|
+  [t:0] STRONG fires
+  [t:0] WEAK fires
+  [end:1] WEAK notified
+  [end:1] STRONG notified
+<hwut-end>

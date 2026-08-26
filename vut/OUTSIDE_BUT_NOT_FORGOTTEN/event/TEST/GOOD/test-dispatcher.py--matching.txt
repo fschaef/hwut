@@ -1,8 +1,0 @@
-
---- len after three subscribes ---
-len: 3
-
---- dispatch three events ---
-by_event   : ['TEST_LOCAL_DISP_TASK.EventTaskDone']
-by_category: ['TEST_LOCAL_DISP_COMPILE.EventCompilerDone']
-by_pred    : ['TEST_LOCAL_DISP_COMPILE.EventCompilerDone']

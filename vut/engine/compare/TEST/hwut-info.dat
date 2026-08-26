@@ -6,7 +6,7 @@ coverage run --omit ./*.py -a *.py
 --not detect*.py
 --not *monkey*.py
 --not benchmark*.py
---not racing.py
+--not line_provider.py
 --not common.py
 --not mini_ui.py
 --not tmp.py

@@ -1,7 +1,0 @@
-INSPECT: args[:6]     = ['/usr/bin/nsjail', '--quiet', '--mode', 'o', '--uid_mapping', '0:1000:1']
-INSPECT: args[-5:]    = ['--', 'python3', 'script.py', '--arg', 'val']
-  OK  : nsjail binary is first argument
-  OK  : --mode value is 'o'
-  OK  : '--' separator is present
-  OK  : target command follows '--' unchanged
-SUCCESS: Command structure is correct.

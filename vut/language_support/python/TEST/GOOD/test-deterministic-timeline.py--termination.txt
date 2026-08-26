@@ -1,0 +1,28 @@
+
+--- end_tick is the LENGTH -- 5 characters, last firing at tick 0 ---
+SETUP: EARLY   |1    |
+  [t:0] EARLY fires
+  [end:5] EARLY notified
+
+--- a trigger that NEVER fires is notified all the same ---
+SETUP: FIRES   |1  |
+SETUP: SILENT  |   |
+  [t:0] FIRES fires
+  [end:3] FIRES notified
+  [end:3] SILENT notified
+
+--- the LONGEST timeline sets end_tick for everybody ---
+SETUP: SHORT   |1|
+SETUP: LONG    |1      |
+  [t:0] SHORT fires
+  [t:0] LONG fires
+  [end:7] SHORT notified
+  [end:7] LONG notified
+
+--- a trigger that does not override is simply silent at the end ---
+SETUP: SPEAKS  |1 |
+SETUP: MUTE    |1 |  (no on_termination override)
+  [t:0] SPEAKS fires
+  [t:0] MUTE fires
+  [end:2] SPEAKS notified
+<hwut-end>

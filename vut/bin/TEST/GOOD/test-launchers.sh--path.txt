@@ -1,0 +1,4 @@
+hwut.show: PATH form == by-path form: True
+l1 x
+l3 x
+she-bang through PATH: exit 0

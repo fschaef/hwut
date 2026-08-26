@@ -1,0 +1,13 @@
+cadence sidecars by default: 0
+cadence sidecars with --timing: 1
+unit: second   deltas: 1   every delta a number: True
+STATUS: 2
+STDOUT {
+    REFUSED: '--timing' and '--coverage' cannot both stand: a coverage run's times are the instrumentation's
+    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+                    [--glob <target>]... [--exclude <target>]...
+                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
+}

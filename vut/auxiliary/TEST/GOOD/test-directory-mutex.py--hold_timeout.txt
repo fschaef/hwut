@@ -6,3 +6,4 @@ INSPECT: a live holder, acquired 100 seconds ago
   OK  : a live holder within its allowance stands
   OK  : a live holder past its allowance is treated as gone
 SUCCESS: the hold allowance is an opt-in, not the law.
+<hwut-end>

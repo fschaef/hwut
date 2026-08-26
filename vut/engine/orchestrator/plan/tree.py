@@ -10,6 +10,8 @@ An entry names its directory RELATIVE to the root; the root itself
 stands on the CTreePlan, so no entry carries a machine-chosen path.
 ______________________________________________________________________________
 """
+import os
+
 from dataclasses import dataclass
 
 from ..exploration.task_list_query import CTestTaskListQuery
@@ -66,7 +68,13 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         bookkeeper = None
         if wish.asks_base_f():
             bookkeeper = bookkeeper_factory(directory)
-        task_list          = CTestTaskListQuery(wish, bookkeeper)
+        #  THE WALK'S 'directory' IS ALREADY RELATIVE to the root,
+        #  which is exactly what a path-bearing glob is matched
+        #  against ('messaging/*/test-queue.py').
+        task_list          = CTestTaskListQuery(
+                                 wish, bookkeeper,
+                                 directory=directory,
+                                 root=tree_exploration.root)
         plan, report_list  = determine(result.app_set, task_list)
         spec               = result.app_set.directory_spec
         entry_list.append(CTreePlanEntry(

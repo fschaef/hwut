@@ -1,7 +1,0 @@
-Event Component: Basics
-----------------------------------------------------------
-
-coverage run --omit ./*.py -a *.py 
-
---not common.py
---not config.py

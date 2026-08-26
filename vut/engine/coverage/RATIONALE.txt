@@ -911,7 +911,7 @@ GRAVEYARD 'I_Reader' kept as an alias of the framework: two names for
 
 D-24  A FAILURE REPORT CARRIES ITS COVERAGE                      (2026-08-25)
 ------------------------------------------------------------------------------
-PROBLEM  'hwut.report' packs a test WHOLE for another pair of eyes,
+PROBLEM  'hwut.tell' packs a test WHOLE for another pair of eyes,
          human or AI. It says WHAT broke. It did not say WHICH LINES
          the failing run actually executed -- the fact that turns a
          search over a repository into a search over a few hundred

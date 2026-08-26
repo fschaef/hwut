@@ -1,0 +1,8 @@
+STATUS: 0
+STDOUT {
+    REPEATS: 3   KEYS: 1
+    
+    STEADY: every repeat agreed, on every key.
+    
+    TALLY: 0 unstable, 0 warned, 1 steady
+}

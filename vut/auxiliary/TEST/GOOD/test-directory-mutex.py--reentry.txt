@@ -5,3 +5,4 @@ INSPECT: the holder acquires its own directory again
   OK  : the first acquisition still stands
   OK  : and the lock is untouched
 SUCCESS: the mutex is non-recursive, and says so by name.
+<hwut-end>

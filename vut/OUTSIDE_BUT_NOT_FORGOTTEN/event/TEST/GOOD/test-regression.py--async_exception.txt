@@ -1,4 +1,0 @@
-
---- dispatch one event to a good and a raising async sink ---
-outcome:            ['good ran']
-inflight after run: 0

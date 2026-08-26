@@ -1,0 +1,63 @@
+STATUS: 2
+STDOUT {
+    REFUSED: '--repeat' takes an integer of 2 or more, not '1' -- one run cannot disagree with itself
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: '--repeat' takes an integer of 2 or more, not 'two' -- one run cannot disagree with itself
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: '--rt-max' takes a non-negative number, not '-1'
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: '--epsilon' takes a non-negative number, not 'soon'
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: '--strategy' takes one of linear, parallel, successor, not 'hopeful'
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.stability' does not take: --sideways
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: the directory 'nowhere' does not exist
+    hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
+                   [--glob <target>]... [--exclude <target>]...
+                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--directory=<path>]
+}

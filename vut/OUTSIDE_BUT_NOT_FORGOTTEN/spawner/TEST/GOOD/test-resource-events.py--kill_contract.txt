@@ -1,6 +1,0 @@
---- kill() returns a bool matching capability ---
-  async   can_force_kill=True  kill()->True
-  thread  can_force_kill=False kill()->False
-  remote  agent-ack    kill()->True
-  remote  agent-refuse kill()->False
-  all kill() returns are bool and capability-honest: OK

@@ -511,7 +511,7 @@ todo-3  'hwut.convert_to_lcov'
         The export face (D-6). The reader registry run backwards.
 
 todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
-        'orchestrator/services/report.py' renders per source file the
+        'services/report.py' renders per source file the
         percentage and the UNCOVERED line ranges -- which the stored form
         already is, so there is no conversion at display time. Retires
         'operations/DISCUSSIONS' todo-22 and moves two GOODs
@@ -524,7 +524,7 @@ todo-5  '--global-conf [<file>]' ON THE SERVICES
 
 todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [BUILT]
         Built as 'coverage/affected.py' with 'main(argv, write)'. The
-        thin service shim under 'orchestrator/services/' is OWED, and
+        thin service shim under 'services/' is OWED, and
         with it the shared 'E_ExitCode' -- both edit an existing
         directory, so both wait for a quiet tree.
 
