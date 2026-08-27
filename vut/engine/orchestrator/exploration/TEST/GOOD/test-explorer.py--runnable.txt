@@ -1,0 +1,7 @@
+applications found: test-neither.py, test-nobang.py, test-nobit.py, test-whole.py
+faults:
+    test-neither.py:1:1: UNRUNNABLE: no she-bang: the first line must name the interpreter ('#! /usr/bin/env python3'), or the file is handed to 'sh' and its own text read as a shell script
+    test-neither.py:1:1: UNRUNNABLE: not executable: a test application is STARTED by its own name, so it needs the executable bit ('chmod +x')
+    test-nobang.py:1:1: UNRUNNABLE: no she-bang: the first line must name the interpreter ('#! /usr/bin/env python3'), or the file is handed to 'sh' and its own text read as a shell script
+    test-nobit.py:1:1: UNRUNNABLE: not executable: a test application is STARTED by its own name, so it needs the executable bit ('chmod +x')
+<hwut-end>

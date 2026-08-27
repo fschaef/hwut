@@ -1,5 +1,5 @@
-INSPECT: with choice = GOOD/parse--basic.stdout
-         no choice   = GOOD/parse.stdout
+INSPECT: with choice = GOOD/parse--basic.txt
+         no choice   = GOOD/parse.txt
          candidate   = .hwut-store/parse--basic.stdout
   OK  : the choice is part of the key, so choices never collide
   OK  : a test without choices carries no choice part

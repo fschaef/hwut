@@ -2,7 +2,7 @@
 STATUS: 1
 STDOUT {
     REFUSED: stderr SPOKE and no note tolerates it --
-        test-ok   (10 bytes)
+        test-ok.sh   (10 bytes)
     stderr is for ERROR REPORTING and is never subject to
     testing. Either state '--stderr-tol' to note it IGNORED,
     or -- where the reporting is itself under test -- flush
@@ -11,7 +11,7 @@ STDOUT {
 == --stderr-tol ==
 STATUS: 0
 STDOUT {
-    NOTE: stderr of 'test-ok' is now IGNORED (10 bytes spoke)
+    NOTE: stderr of 'test-ok.sh' is now IGNORED (10 bytes spoke)
     
     ==============================================================================
     ACCEPTED  3 of 3
@@ -24,7 +24,7 @@ STDOUT {
 == the note governs: the suite re-runs green ==
 run status: 0
 GOOD holds (no stderr nominal):
-    test-ok.stdout
-    test-two--a.stdout
-    test-two--b.stdout
+    test-ok.sh.txt
+    test-two.sh--a.txt
+    test-two.sh--b.txt
     test_ids.dat

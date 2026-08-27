@@ -1,48 +1,48 @@
 BEFORE {
-    .hwut-store/test-app--one.stderr
-    .hwut-store/test-app--one.stderr.when
-    .hwut-store/test-app--one.stdout
-    .hwut-store/test-app--one.stdout.times
-    .hwut-store/test-app--one.stdout.when
-    .hwut-store/test-app--two.stderr
-    .hwut-store/test-app--two.stderr.when
-    .hwut-store/test-app--two.stdout
-    .hwut-store/test-app--two.stdout.times
-    .hwut-store/test-app--two.stdout.when
+    .hwut-store/test-app.sh--one.stderr
+    .hwut-store/test-app.sh--one.stderr.when
+    .hwut-store/test-app.sh--one.stdout
+    .hwut-store/test-app.sh--one.stdout.times
+    .hwut-store/test-app.sh--one.stdout.when
+    .hwut-store/test-app.sh--two.stderr
+    .hwut-store/test-app.sh--two.stderr.when
+    .hwut-store/test-app.sh--two.stdout
+    .hwut-store/test-app.sh--two.stdout.times
+    .hwut-store/test-app.sh--two.stdout.when
     GOOD/result_db.json
-    GOOD/test-app--one.stdout
-    GOOD/test-app--two.stdout
+    GOOD/test-app.sh--one.txt
+    GOOD/test-app.sh--two.txt
     GOOD/test_ids.dat
-    book: ['test-app']
+    book: ['test-app.sh']
 }
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app one -- 6 file(s), the book entry, the register id
-          .hwut-store/test-app--one.stderr
-          .hwut-store/test-app--one.stderr.when
-          .hwut-store/test-app--one.stdout
-          .hwut-store/test-app--one.stdout.times
-          .hwut-store/test-app--one.stdout.when
-          GOOD/test-app--one.stdout
-    test-app one:
-        forgotten: .hwut-store/test-app--one.stderr
-        forgotten: .hwut-store/test-app--one.stderr.when
-        forgotten: .hwut-store/test-app--one.stdout
-        forgotten: .hwut-store/test-app--one.stdout.times
-        forgotten: .hwut-store/test-app--one.stdout.when
-        forgotten: GOOD/test-app--one.stdout
+      test-app.sh one -- 6 file(s), the book entry, the register id
+          .hwut-store/test-app.sh--one.stderr
+          .hwut-store/test-app.sh--one.stderr.when
+          .hwut-store/test-app.sh--one.stdout
+          .hwut-store/test-app.sh--one.stdout.times
+          .hwut-store/test-app.sh--one.stdout.when
+          GOOD/test-app.sh--one.txt
+    test-app.sh one:
+        forgotten: .hwut-store/test-app.sh--one.stderr
+        forgotten: .hwut-store/test-app.sh--one.stderr.when
+        forgotten: .hwut-store/test-app.sh--one.stdout
+        forgotten: .hwut-store/test-app.sh--one.stdout.times
+        forgotten: .hwut-store/test-app.sh--one.stdout.when
+        forgotten: GOOD/test-app.sh--one.txt
         book entry: removed
         register: choice id retired
 }
 AFTER {
-    .hwut-store/test-app--two.stderr
-    .hwut-store/test-app--two.stderr.when
-    .hwut-store/test-app--two.stdout
-    .hwut-store/test-app--two.stdout.times
-    .hwut-store/test-app--two.stdout.when
+    .hwut-store/test-app.sh--two.stderr
+    .hwut-store/test-app.sh--two.stderr.when
+    .hwut-store/test-app.sh--two.stdout
+    .hwut-store/test-app.sh--two.stdout.times
+    .hwut-store/test-app.sh--two.stdout.when
     GOOD/result_db.json
-    GOOD/test-app--two.stdout
+    GOOD/test-app.sh--two.txt
     GOOD/test_ids.dat
-    book: ['test-app']
+    book: ['test-app.sh']
 }

@@ -1,16 +1,16 @@
 $ hwut.run --coverage --glob test-py*
     [status 0]
     the book {
-      test-py--a     report ok                       coverage ok
-      test-py--b     report ok                       coverage no-data-provided
-      test-hang--x   report -                        coverage <no entry>
-      test-new       report -                        coverage <no entry>
+      test-py.py--a  report ok                       coverage ok
+      test-py.py--b  report ok                       coverage no-data-provided
+      test-hang.py--x report -                        coverage <no entry>
+      test-new.py    report -                        coverage <no entry>
     }
     the records {
-      test-py--a     ##run:      0.0 | CV:1+3
-      test-py--b     <none>
-      test-hang--x   <none>
-      test-new       <none>
+      test-py.py--a  ##run:      0.0 | CV:1+3
+      test-py.py--b  <none>
+      test-hang.py--x <none>
+      test-new.py    <none>
     }
 $ hwut.cov --glob nothing-matches*
     [status 3]

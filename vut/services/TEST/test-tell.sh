@@ -27,8 +27,8 @@
 # THE FIXTURE, built here: a packed corpus in miniature --
 #
 #     <work>/demo.py                              the source
-#     <work>/GOOD/demo--basic.stdout              alpha, beta
-#     <work>/.hwut-store/demo--basic.stdout       alpha, BETA  (differs!)
+#     <work>/GOOD/demo.py--basic.txt              alpha, beta
+#     <work>/.hwut-store/demo.py--basic.stdout       alpha, BETA  (differs!)
 #     <work>/.hwut-store/...stdout.raw            raw sidecar
 #     <work>/.hwut-store/...stdout.times          cadence sidecar
 #
@@ -54,16 +54,21 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
+
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
     mkdir -p GOOD .hwut-store
     printf 'print("alpha")\nprint("beta")\n' > demo.py
-    printf 'alpha\nbeta\n'                   > GOOD/demo--basic.stdout
-    printf 'alpha\nBETA\n'                   > .hwut-store/demo--basic.stdout
+    printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.txt
+    printf 'alpha\nBETA\n'                   > .hwut-store/demo.py--basic.stdout
     if [ "$1" != "bare" ]; then
         printf 'raw alpha\nraw BETA\n' \
-                                > .hwut-store/demo--basic.stdout.raw
+                                > .hwut-store/demo.py--basic.stdout.raw
         printf '{"unit": "second", "delta_list": [0.0121, 1.5034]}\n' \
-                                > .hwut-store/demo--basic.stdout.times
+                                > .hwut-store/demo.py--basic.stdout.times
     fi
 }
 

@@ -7,4 +7,7 @@
 
 --- a root that is NOT a test directory, and holds none ---
     directories explored: 0
+
+--- and one with NO boundary above it: refused, not guessed ---
+    RootConfMissing, as owed
 <hwut-end>

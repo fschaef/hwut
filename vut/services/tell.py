@@ -115,7 +115,7 @@ def find_records(directory, application, choice):
     ('demo.py'); the key uses its STEM, which is what recording used.
     """
     bookkeeper = bookkeeper_of(directory)
-    test       = Path(application).stem
+    test       = os.path.basename(application)
     root       = Path(directory)
     found      = {}
 

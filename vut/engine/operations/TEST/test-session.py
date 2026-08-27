@@ -157,7 +157,7 @@ def test_recording_feeds_replay():
         "import random\nprint('run id', random.randint(0, 10**9))\n")
 
     executed = asyncio.run(run_test(configuration))
-    stored   = open(store.candidate_path("demo", None, "stdout")).read()
+    stored   = open(store.candidate_path("demo.py", None, "stdout")).read()
     replayed = asyncio.run(run_test(configuration, Request(replay=True)))
 
     print("INSPECT: recorded subjects = %s" % sorted(executed.recorded_db))
@@ -197,7 +197,7 @@ def test_entry_is_booked():
           % {k: v for k, v in outcome.entry.items()
              if k not in ("when", "host", "records")})
     ok = _check([
-        (sorted(book["demo"]["choices"]["<none>"]["operations"])
+        (sorted(book["demo.py"]["choices"]["<none>"]["operations"])
              == ["Accept", "Run"],
          "one entry per operation, both kept"),
         ("canonicaliser" in outcome.entry,
@@ -294,7 +294,7 @@ def test_goal_selects():
     display = asyncio.run(run_test(
         configuration,
         Request(goal=E_Goal.DISPLAY, display=Display(adapter=Adapter()))))
-    operation_list = sorted(store.bookkeeper.book()["demo"]["choices"]
+    operation_list = sorted(store.bookkeeper.book()["demo.py"]["choices"]
                                                   ["<none>"]["operations"])
 
     print("INSPECT: VERDICT -> %s, %s" % (verdict.verdict, verdict.report))
@@ -343,9 +343,9 @@ def test_recording_sidecars():
     store = Store(Bookkeeper(directory))
     asyncio.run(run_test(configuration))
 
-    candidate = open(store.candidate_path("demo", None, "stdout")).read()
-    raw       = store.raw_path("demo", None, "stdout").read_text()
-    cadence   = store.timing("demo", None, "stdout")
+    candidate = open(store.candidate_path("demo.py", None, "stdout")).read()
+    raw       = store.raw_path("demo.py", None, "stdout").read_text()
+    cadence   = store.timing("demo.py", None, "stdout")
 
     print("INSPECT: canonicalised record = %r" % candidate)
     print("         raw stream kept      = %r" % raw)
@@ -353,7 +353,7 @@ def test_recording_sidecars():
           % (len(cadence or ()), all(d >= 0 for d in (cadence or ()))))
     print("         cadence has none of the record's bytes: %s"
           % (store.timing_path("demo", None, "stdout")
-             != store.candidate_path("demo", None, "stdout")))
+             != store.candidate_path("demo.py", None, "stdout")))
     ok = _check([
         (candidate == "apple\nzebra\n",
          "the RECORD is the canonicalised stream"),
@@ -504,7 +504,7 @@ def test_the_configuration_says_where():
         interpreter    = ["python3", "-u"],
         choice_db      = {None: TestChoiceConfiguration()})
     default   = store_of(storeless, _bookkeeper_of(storeless))
-    landed    = here.nominal_path("demo", None, "stdout").exists()
+    landed    = here.nominal_path("demo.py", None, "stdout").exists()
     not_here  = not os.path.exists(os.path.join(directory, "GOOD"))
 
     print("INSPECT: the store's own directory was named -> artifacts land there")
@@ -562,7 +562,7 @@ def test_the_compare_setup_is_recorded():
             choice_db      = {None: TestChoiceConfiguration(compare=options)})
 
     store = Store(Bookkeeper(directory))
-    store.accept("demo", None, "stdout", "value 100.0\n")
+    store.accept("demo.py", None, "stdout", "value 100.0\n")
     strict_outcome = asyncio.run(run_test(configured(None)))
     loose_outcome  = asyncio.run(run_test(configured(loose)))
 

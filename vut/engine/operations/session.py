@@ -269,7 +269,7 @@ async def run_test_held(configuration, request=None, store=None,
             raise ConfigurationError(
                 "no Bookkeeper -- it is made above and handed in")
         store = store_of(configuration, bookkeeper)
-    test_name = configuration.stem
+    test_name = configuration.key_name
 
     groundwork = provision if provision is not None \
                  else _groundwork(configuration, store, test_name,

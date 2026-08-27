@@ -56,7 +56,8 @@ from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import explore_tree
+                                                     import (explore_tree,
+                                                             RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
@@ -172,7 +173,7 @@ def row_list_of(root, wish):
         app_db     = {app.source_file: app for app in result.app_set}
         row_list   = []
         for case in query.get_test_cases(result.app_set):
-            test   = os.path.splitext(case.source_file)[0]
+            test   = case.source_file
             key    = NO_CHOICE_KEY if case.choice is None else case.choice
             entry  = book.get(test, {}).get("choices", {}).get(key, {})
             run    = entry.get("operations", {}).get("Run", {})
@@ -504,6 +505,9 @@ def main(argv=None, write=None):
 
     try:
         entry_list = row_list_of(os.path.abspath(directory), wish)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

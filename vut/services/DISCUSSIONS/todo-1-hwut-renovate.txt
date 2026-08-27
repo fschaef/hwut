@@ -13,3 +13,93 @@ services/renovate.py per the naming law. 'hwut.renovate
          (or the renovated HwutRunner). RULED (7a): --apply rewrites
          GOODs only -- a tool must not edit an author's program;
          scripts are report-only.
+
+RULED (chat, 2026-08-26): r-a IS PROMOTED FROM REPORT-ONLY TO A
+GENERATOR. 'hwut.renovate' takes the '--hwut-info' answer and WRITES A
+HEADER CONFIGURATION into the test application's own source.
+
+    hwut.renovate --directory=X [--apply]
+
+    for every candidate that answers '--hwut-info' and carries no
+    'hwut {' trigger:
+
+        interview it              (hwut_info_interview.interview)
+        render the answer as a header
+        insert it into the source, in that language's comment form
+
+    'The title;'  ->  title = "The title"
+    'CHOICES: a, b;'          ->  choices = ["a", "b"]
+    'HAPPY: <pattern>;' (0..n)->  happy   = [...]         (R-12: the
+                                  key is 'eq_pattern'; 'happy' was its
+                                  1.0 name)
+    'SAME;'                   ->  same        = true      (R-45)
+    'INTERACTIVE;'            ->  interactive = true      (R-46)
+
+WHY IT IS WORTH BUILDING. The interview is a MIGRATION PATH and it
+COSTS A PROCESS PER CANDIDATE, every exploration, for ever. A header
+is read from text. Renovating turns a permanent running cost into a
+one-time edit, and turns a specification the framework must ASK FOR
+into one it can READ.
+
+THIS BREAKS THE 7a RULING and does so knowingly: 7a says '--apply'
+rewrites GOODs only, because 'a tool must not edit an author's
+program'. Header generation edits the program. The distinction that
+justifies it: the header states WHAT THE PROGRAM ALREADY SAYS about
+itself, verbatim, and changes no behaviour -- it moves a statement
+from runtime to source. It is still an edit, so:
+
+  -  '--apply' is required; the default REPORTS the header it would
+     write, so the author reads it before it lands.
+  -  the insertion point and comment form are the language's, and a
+     language whose comment form is not known is REPORTED, never
+     guessed at.
+  -  a file already carrying a trigger is never touched.
+
+OPEN, one ruling before building:
+
+    Does the generated header REPLACE the '--hwut-info' block in the
+    source, or stand beside it?
+
+    RECOMMENDED: STAND BESIDE IT, untouched. The block is executable
+    code that may do more than print (a 1.0 application often exits
+    on it), and deleting code is a different act from adding a
+    comment. The header wins by precedence anyway -- HEADER outranks
+    INTERVIEW (R-44) -- so the block becomes dead weight the author
+    may remove at leisure, and the renovation stays reversible by
+    deleting the lines it added.
+
+
+RULED (chat, 2026-08-27): THE RENOVATOR MUST ENTER THE BOOKS, much as
+'hwut.accept' does.
+
+A renovated test application is READ by the framework -- the header
+carries its title and choices -- but the BOOK still knows nothing of
+it. And exploration is only half the story: what a face asks the book
+for ('hwut.report', 'hwut.stability', a stain, a run id) is absent for
+every test that has never been accepted, so a renovated tree answers
+'never run' to every question about its own history.
+
+So renovation writes what an acceptance would have written:
+
+    THE BOOK       'GOOD/result_db.json': an entry per (test, choice)
+                   -- the configuration it was read under, the choices
+                   it declares.
+    THE REGISTER   'GOOD/test_ids.dat': an id per application and per
+                   choice, born as 'hwut.accept' bears them (B-2: ids
+                   issued once, never reused).
+
+WHAT IT DOES NOT WRITE: a NOMINAL. A blessed artefact is the author's
+act and a migration has no standing to perform it -- the 1.0 GOOD
+files are already there, under the 1.0 naming, and whether the
+framework learns that naming or the files are moved is E-14's open
+question, not the renovator's to settle.
+
+NOR A VERDICT. The book entry says 'this test exists and is
+configured thus', never 'this test passed'. A renovator has run
+nothing.
+
+OPEN: whether the entry is written under '--apply' only, as r-a and
+r-b are, or whether entering the books is harmless enough to be the
+default. RECOMMENDED: '--apply', like the rest -- a file under
+'GOOD/' is the framework's memory, and writing it unasked is the same
+class of act as rewriting a header.

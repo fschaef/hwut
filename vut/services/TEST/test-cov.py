@@ -34,6 +34,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 import config                                                    # noqa F401
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.services.cov import main          # noqa E402
@@ -141,6 +142,9 @@ def test_help():
     #  and its record would move whenever one is added -- so it is
     #  made to stand somewhere with nothing in it.
     directory = tempfile.mkdtemp(prefix="vut_cov_")
+    #  AND A BOUNDARY: every face ascends collecting 'hwut.conf' until
+    #  it meets 'hwut-root.conf', and a tree without one is refused.
+    tree_boundary(directory)
     here      = os.getcwd()
     try:
         os.chdir(directory)

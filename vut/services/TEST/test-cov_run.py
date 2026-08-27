@@ -56,6 +56,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 import config                                                    # noqa F401
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.services.cov import main as cov_main   # noqa E402
@@ -136,6 +137,10 @@ def script(title, choice_list, body, source):
 def fixture():
     """RETURN: str, the fixture root, for the caller to remove."""
     root = tempfile.mkdtemp(prefix="vut_cov_e2e_")
+    #  THE TREE'S BOUNDARY: every face ascends collecting
+    #  'hwut.conf' until it meets this file; a tree without one
+    #  is refused, so a fixture states its own.
+    tree_boundary(root)
     test = os.path.join(root, "suite", "TEST")
     good = os.path.join(test, "GOOD")
     os.makedirs(good)
@@ -150,20 +155,20 @@ def fixture():
     put(test, "test-py.py", script("Py", ["a", "b"],
         'if choice == "a": witness([1,2,3])\n'
         'print("py " + choice)\nprint("<hwut-end>")\n', "py.py"))
-    put(good, "test-py--a.stdout", "py a\n<hwut-end>\n")
-    put(good, "test-py--b.stdout", "py b\n<hwut-end>\n")
+    put(good, "test-py.py--a.txt", "py a\n<hwut-end>\n")
+    put(good, "test-py.py--b.txt", "py b\n<hwut-end>\n")
     put(test, "test-hang.py", script("Hang", ["x"],
         'import time\nwitness([5,6])\nprint("hang x")\n'
         'sys.stdout.flush()\ntime.sleep(3)\n', "hang.py"))
-    put(good, "test-hang--x.stdout", "hang x\n<hwut-end>\n")
+    put(good, "test-hang.py--x.txt", "hang x\n<hwut-end>\n")
     put(test, "test-new.py", script("New", [],
         'witness([7,8])\nprint("new")\nprint("<hwut-end>")\n', "new.py"))
-    put(good, "test-new.stdout", "new\n<hwut-end>\n")
+    put(good, "test-new.py.txt", "new\n<hwut-end>\n")
 
     #  The register: ids are born at accept; these were accepted.
     db = TestIdDb(test)
-    for app, choice in (("test-py", "a"), ("test-py", "b"),
-                        ("test-hang", "x")):
+    for app, choice in (("test-py.py", "a"), ("test-py.py", "b"),
+                        ("test-hang.py", "x")):
         db.run_id_of(app, choice, allocate_f=True)
     return root
 
@@ -191,7 +196,8 @@ def show_book(root):
     keeper = Bookkeeper(test)
     token_db = {}
     print("    the book {")
-    for key in ("test-py--a", "test-py--b", "test-hang--x", "test-new"):
+    for key in ("test-py.py--a", "test-py.py--b", "test-hang.py--x",
+                "test-new.py"):
         app, _, choice = key.partition("--")
         entry = keeper.result(app, choice or None, "Run")
         token = entry.get("coverage", "<absent>") if entry else "<no entry>"
@@ -200,7 +206,8 @@ def show_book(root):
               % (key, entry.get("report", "-") if entry else "-", token))
     print("    }")
     print("    the records {")
-    for key in ("test-py--a", "test-py--b", "test-hang--x", "test-new"):
+    for key in ("test-py.py--a", "test-py.py--b", "test-hang.py--x",
+                "test-new.py"):
         app, _, choice = key.partition("--")
         path = keeper.coverage_path(app, choice or None)
         if not path.is_file():
@@ -232,20 +239,20 @@ def test_run():
     status   = call("hwut.cov", [], root)
     token_db = show_book(root)
     test = os.path.join(root, "suite", "TEST")
-    a_path = Bookkeeper(test).coverage_path("test-py", "a")
+    a_path = Bookkeeper(test).coverage_path("test-py.py", "a")
     a_rec  = unpack_record(a_path.read_bytes()) if a_path.is_file() else None
 
     ok = check([
-        (token_db["test-py--a"] == "ok",
+        (token_db["test-py.py--a"] == "ok",
          "a registered choice that left an artefact: harvested"),
         (a_rec is not None and str(next(iter(a_rec.run))) == "0.0",
          "and its record carries the REGISTER's id, not a name"),
-        (token_db["test-py--b"] == "no-data-provided",
+        (token_db["test-py.py--b"] == "no-data-provided",
          "a registered choice that left none: noted, no record"),
-        (token_db["test-hang--x"] == "run-incomplete",
+        (token_db["test-hang.py--x"] == "run-incomplete",
          "a run that ended without '<hwut-end>' did not testify: not "
          "harvested, though it left an artefact"),
-        (token_db["test-new"] == "<absent>",
+        (token_db["test-new.py"] == "<absent>",
          "an unregistered test ran plain: no id, no key, no record"),
         (status == 1,
          "the exit status is the run's: the unfinished test failed"),
@@ -264,8 +271,8 @@ def test_door():
     shutil.rmtree(root)
 
     ok = check([
-        (token_db["test-py--a"] == "ok"
-         and token_db["test-hang--x"] == "<no entry>",
+        (token_db["test-py.py--a"] == "ok"
+         and token_db["test-hang.py--x"] == "<no entry>",
          "'hwut.run --coverage' with a wish is the same demand, "
          "the wish honoured"),
         (empty == 3,

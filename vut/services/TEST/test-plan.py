@@ -45,6 +45,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from vut.services.plan import main
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 
 
 FILE_DB = {
@@ -59,6 +60,9 @@ FILE_DB = {
 }
 
 
+
+
+
 def banner(label):
     """RETURN: None. Section heading."""
     print()
@@ -71,6 +75,10 @@ def build_directory(extra_db=None):
             adds, for the caller to remove.
     """
     directory = tempfile.mkdtemp(prefix="vut_plan_")
+    #  THE TREE'S BOUNDARY: every face ascends collecting
+    #  'hwut.conf' until it meets this file; a tree without one
+    #  is refused, so a fixture states its own.
+    tree_boundary(directory)
     for name, content in dict(FILE_DB, **(extra_db or {})).items():
         with open(os.path.join(directory, name), "w") as fh:
             fh.write(content)

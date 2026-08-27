@@ -1,0 +1,51 @@
+
+----------------------------------------------------------------------------
+RE-RECORDING A GOOD: THE VERDICT MUST NOT MOVE
+----------------------------------------------------------------------------
+A GOOD is re-recorded when a change is DESIGNED -- a name, a phrase, a
+column. It is not re-recorded because the suite went red.
+
+THE TWO ARE INDISTINGUISHABLE BY EYE, and a redirect makes both green:
+
+    python3 test-x.py choice > GOOD/test-x.py--choice.txt
+
+That command records whatever came out, a FAILURE or a TRACEBACK
+included, and the next run agrees with it perfectly.
+
+SO CHECK THE VERDICT, ALWAYS, before and after:
+
+    grep -c '^FAILURE\|^  FAIL' <old>   ==   same in <new>
+
+A count that MOVED is not a designed change: it is the suite telling
+you something and being silenced. Read the diff.
+
+This is written down because it happened three times in one session:
+twice caught, once not -- 'test-coverage_provision.py--harvested' was
+blessed FAILING and stayed green for hours, because the failure was
+its own oracle.
+
+A VERDICT COUNT IS NOT ENOUGH FOR A DISPLAY-ONLY SUITE
+------------------------------------------------------
+Some suites carry no 'FAIL'/'SUCCESS' line at all: they SHOW what
+happened and the GOOD is the whole of the judgement ('test-remove.sh',
+'test-wishlist.sh', 'test-report.sh'). There the verdict check has
+nothing to count, and a change can turn the test into a SILENT NO-OP
+that still prints, still matches its fresh GOOD, and asserts nothing.
+
+That happened here: the record key became the file WHOLE, the fixture
+kept asking 'hwut.remove' for the STEM, the face looked under a key
+that does not exist, found nothing, and said so politely --
+
+    TO BE FORGOTTEN: test-app -- 0 file(s)
+        book entry: none stood
+    AFTER { ... book: ['test-app.sh'] }        <- unchanged
+
+-- and that was recorded as the oracle. Nothing failed. Nothing was
+tested either.
+
+SO COUNT THE PHRASES THAT MEAN 'I FOUND NOTHING', before and after:
+
+    none stood | not registered | no recorded artefact | <no entry>
+    <none> | never run | GOOD missing | nothing to accept | is EMPTY
+
+A count that ROSE is the suite going quiet, not the suite agreeing.

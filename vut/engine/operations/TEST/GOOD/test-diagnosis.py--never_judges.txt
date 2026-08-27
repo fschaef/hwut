@@ -1,6 +1,6 @@
 STIMULUS a finished run, verdict = False, report = test-app-no-output
 REACTION what the observer wrote {
-    EXPLAIN  parse, choice basic
+    EXPLAIN  parse.py, choice basic
       REQUEST    ['vut-no-such-interpreter', 'parse.py', 'basic']
       RESOLVED   vut-no-such-interpreter: NOT FOUND on PATH
       CWD        /tests/parser

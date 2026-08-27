@@ -19,7 +19,7 @@ THE BUILD STEP OF PROVISION.
 
     CAUSAL CONTRACT
              the argv follows from the build system; the build runs in
-             'BUILD/<stem>'; the report names what went wrong, tool
+             'BUILD/<file>'; the report names what went wrong, tool
              reasons outranking target reasons.
 
     CONSISTENCY CONTRACT
@@ -78,10 +78,10 @@ def _configuration(directory, build_configuration):
 def _with_makefile(body):
     """
     RETURN: (TestConfiguration factory input) str, a fresh test directory
-            whose 'BUILD/demo' holds a Makefile with 'body'.
+            whose 'BUILD/demo.c' holds a Makefile with 'body'.
     """
     directory = tempfile.mkdtemp(prefix="vut_build_")
-    build_dir = os.path.join(directory, "BUILD", "demo")
+    build_dir = os.path.join(directory, "BUILD", "demo.c")
     os.makedirs(build_dir)
     with open(os.path.join(build_dir, "Makefile"), "w") as fh:
         fh.write(body)
@@ -137,7 +137,7 @@ def test_argv():
 
 
 def test_success():
-    """A build that runs and produces its target. It runs in BUILD/<stem>,
+    """A build that runs and produces its target. It runs in BUILD/<file>,
     which is where the accounting then looks."""
     directory = _with_makefile("app:\n\techo built > app\n")
     configuration = _configuration(directory,
@@ -150,8 +150,8 @@ def test_success():
     print("         built     = %s" % list(outcome.built_target_list))
     print("         missing   = %s" % list(outcome.missing_target_list))
     ok = _check([
-        (where == os.path.join("BUILD", "demo"),
-         "the build ran in BUILD/<stem>, not in the test directory"),
+        (where == os.path.join("BUILD", "demo.c"),
+         "the build ran in BUILD/<file>, not in the test directory"),
         (outcome.report is E_TestRunResult.OK,
          "the report is OK"),
         (outcome.built_target_list == ("app",),

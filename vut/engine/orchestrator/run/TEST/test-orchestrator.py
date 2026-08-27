@@ -44,6 +44,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.plan.wish          import Wish
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from vut.engine.orchestrator.run.orchestrate    import orchestrator
 from vut.engine.orchestrator.run.summary        import fold
 from vut.engine.orchestrator.scheduler.scheduler import I_Dispatcher
@@ -83,6 +84,9 @@ class TickDispatcher(I_Dispatcher):
         return await self._answer(node.name())
 
 
+
+
+
 def banner(label):
     """RETURN: None. Section heading."""
     print()
@@ -95,11 +99,14 @@ def tree_of(file_db):
             -> content), for the caller to remove.
     """
     root = tempfile.mkdtemp(prefix="vut_orch_")
+    #  THE TREE'S BOUNDARY: the climb stops here; a tree without
+    #  a 'hwut-root.conf' above it is refused.
+    tree_boundary(root)
     for relative, content in file_db.items():
         path = os.path.join(root, relative)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as fh:
-            fh.write(content)
+        with open(path, "w") as _fh:
+            _fh.write(content)
     return root
 
 

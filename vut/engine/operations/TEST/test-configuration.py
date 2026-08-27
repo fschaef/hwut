@@ -91,8 +91,8 @@ def test_places():
     ok = _check([
         (c.stem == "parse",
          "the stem drops the extension"),
-        (str(c.build_directory) == "/tests/parser/BUILD/parse",
-         "the build directory is BUILD/<stem> under the test directory"),
+        (str(c.build_directory) == "/tests/parser/BUILD/parse.c",
+         "the build directory is BUILD/<file> under the test directory"),
         (str(c.output_directory) == "/tests/parser/OUT",
          "outputs go to OUT/ beside BUILD/"),
         (c.build_directory != c.output_directory,

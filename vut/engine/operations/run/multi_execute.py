@@ -51,10 +51,16 @@ DESCRIPTION
 
        THE SINKS are the transport of the two channel subjects. They
        live under the test directory in a session sub directory
-       ('.hwut-session/'), are named RELATIVE on the wire (the app's
-       cwd is the test directory; no machine-chosen absolute path
-       crosses it), are read on 'done' and deleted -- the sub directory
-       leaves with the session.
+       ('.hwut-session/'), named by THE SAME LAW AS A RECORD -- the
+       source file whole, then the choice, then the channel:
+
+           .hwut-session/test-show.py--help.out
+           .hwut-session/test-show.py--help.err
+
+       Named RELATIVE on the wire (the app's cwd is the test
+       directory; no machine-chosen absolute path crosses it), read on
+       'done' and deleted -- the sub directory leaves with the
+       session.
 
        WHAT A STATUS MEANS follows the classic run: the application
        exiting non-zero is BEHAVIOR, not provision failure -- the
@@ -312,10 +318,22 @@ class MultiExecute(I_MultiProvider):
         return "-" if choice_name is None else str(choice_name)
 
     def _sink_pair(self, token):
-        """RETURN: (str, str), the RELATIVE sink paths of that token --
-        relative, so no machine-chosen absolute path crosses the wire;
-        the app's working directory is the test directory."""
-        stem = "no-choice" if token == "-" else token
+        """
+        RETURN: (str, str), the RELATIVE sink paths of that token --
+                '.hwut-session/<file>--<choice>.out' and '.err'.
+
+        Relative, so no machine-chosen absolute path crosses the wire;
+        the app's working directory is the test directory.
+
+        THE SAME KEY LAW AS A RECORD (configuration.key_name): the
+        SOURCE FILE WHOLE, extension and all, then the choice. Named
+        by the choice alone, 'test-implementation.lua' and
+        'test-implementation.py' would write one another's sinks in
+        one session directory -- and each would read the other's
+        output as its own.
+        """
+        stem = self.configuration.key_name
+        if token != "-": stem = "%s--%s" % (stem, token)
         base = "%s/%s" % (SESSION_DIRECTORY_NAME, stem)
         return base + ".out", base + ".err"
 
@@ -389,8 +407,22 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                         report      = E_TestRunResult.TEST_APP_CONTAINED,
                         record_list = record)
             case _:
-                raw_db  = session._read_sinks(
-                                    session._token(self.choice_name))
+                #  THE SINKS MUST BE THERE. 'done' says the choice ran
+                #  and its files are complete and closed; where one is
+                #  absent the application said so and did not do it.
+                #  THAT IS A REPORT, NOT AN EXCEPTION -- a missing file
+                #  escaping here dies in the scheduler as a bare
+                #  'Task exception was never retrieved', and the run
+                #  loses the one thing it was for: a verdict with a
+                #  reason.
+                try:
+                    raw_db = session._read_sinks(
+                                     session._token(self.choice_name))
+                except OSError:
+                    return Supply(
+                        product     = None,
+                        report      = E_TestRunResult.TEST_APP_NO_OUTPUT,
+                        record_list = record)
                 #  THE CHOICE'S declared files, read NOW -- after this
                 #  choice's 'done', which the token precedes; the
                 #  process lives on for its siblings, so the process

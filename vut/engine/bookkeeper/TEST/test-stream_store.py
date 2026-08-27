@@ -87,9 +87,9 @@ def test_keys():
     print("         no choice   = %s" % os.path.relpath(no_choice, directory))
     print("         candidate   = %s" % os.path.relpath(candidate, directory))
     ok = _check([
-        (with_choice.name == "parse--basic.stdout",
+        (with_choice.name == "parse--basic.txt",
          "the choice is part of the key, so choices never collide"),
-        (no_choice.name == "parse.stdout",
+        (no_choice.name == "parse.txt",
          "a test without choices carries no choice part"),
         (with_choice.parent.name == "GOOD"
          and candidate.parent.name == ".hwut-store",

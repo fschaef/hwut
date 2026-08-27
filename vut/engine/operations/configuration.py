@@ -114,23 +114,51 @@ class TestConfiguration:
         """
         RETURN: str, the source file's stem -- 'parse' for 'parse.c'.
 
-        It KEYS THE BUILD DIRECTORY, so stems must be unique across the
-        tests that share a directory. This object sees one test and
-        cannot check that; the check belongs where configurations are
-        made.
+        IT KEYS NOTHING. A stem is not unique among the tests of a
+        directory -- 'x.lua' and 'x.py' share one -- so neither a
+        record nor a build directory may be named by it; both take
+        'key_name', the file whole. What is left here is the stem as a
+        WORD, for a message or a derived name that has no ground to
+        collide on.
         """
         return Path(self.source_file).stem
 
     @property
+    def key_name(self):
+        """
+        RETURN: str, THE NAME A RECORD IS KEYED BY -- the source file
+                WHOLE, extension and all: 'parse.c', not 'parse'.
+
+        THE EXTENSION CARRIES MEANING. 'test-implementation.lua' and
+        'test-implementation.py' are two tests of two implementations
+        of one thing, and they share a directory precisely because
+        they belong together. Keyed by the stem they would share every
+        record -- one nominal, one candidate, one book entry, one
+        coverage measurement -- and each would silently overwrite the
+        other. Keyed WHOLE they cannot collide, because a directory
+        cannot hold two files of one name.
+
+        This is also hwut 1.0's naming, which is what the accepted
+        files of an existing tree already carry.
+        """
+        return self.source_file
+
+    @property
     def build_directory(self):
         """
-        RETURN: Path, where THIS test's build runs: 'BUILD/<stem>' under
-                the test directory.
+        RETURN: Path, where THIS test's build runs: 'BUILD/<file>'
+                under the test directory -- the source file WHOLE, as
+                a record is keyed ('key_name').
 
         One build directory per test is what lets different tests run
-        concurrently without a lock.
+        concurrently without a lock -- and the stem does not give one
+        per test. 'test-implementation.lua' and
+        'test-implementation.py' share a stem and would share a build
+        directory: two builds, one ground, running at once, each
+        deleting the other's objects. Keyed WHOLE they cannot collide,
+        because a directory cannot hold two files of one name.
         """
-        return Path(self.test_directory) / "BUILD" / self.stem
+        return Path(self.test_directory) / "BUILD" / self.key_name
 
     @property
     def output_directory(self):
@@ -172,8 +200,9 @@ def verify(configuration):
     RETURN: None, the configuration is servable.
 
     Raises ConfigurationError naming the ONE first fault. Checks only
-    what this object can see -- one test application. Whether two tests
-    collide in 'BUILD/<stem>' is invisible here and belongs above.
+    what this object can see -- one test application. TWO TESTS CANNOT
+    COLLIDE IN 'BUILD/' any more: it is keyed by the file WHOLE, and a
+    directory cannot hold two files of one name.
     """
     c = configuration
 

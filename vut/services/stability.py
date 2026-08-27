@@ -166,8 +166,12 @@ def unsteady_line_tuple(cadence_tuple, rt_max, epsilon):
 def key_of(node_name):
     """
     RETURN: (test, choice), the store's key parts for a plan node --
-            'test-ok.sh'       -> ('test-ok', None)
-            'test-ok.sh green' -> ('test-ok', 'green')
+            'test-ok.sh'       -> ('test-ok.sh', None)
+            'test-ok.sh green' -> ('test-ok.sh', 'green')
+
+    THE FILE NAME WHOLE keys a record (configuration.key_name): two
+    tests of one name and two extensions belong together and must not
+    share a record.
             None, for a node that is not a test: a build or a session,
             which records no subject and has no cadence.
 
@@ -176,7 +180,7 @@ def key_of(node_name):
     """
     if "[" in node_name: return None
     file_name, _, choice = node_name.partition(" ")
-    return os.path.splitext(file_name)[0], (choice if choice else None)
+    return file_name, (choice if choice else None)
 
 
 def snapshot_of(root, verdict_db, subject_tuple):

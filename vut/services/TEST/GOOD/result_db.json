@@ -1,0 +1,1389 @@
+{
+  "test-accept": {
+    "choices": {
+      "ask": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 37.9375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.233706749000703
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "bless": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 38.703125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.228746065997257
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-accept.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-compare": {
+    "choices": {
+      "differing": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.187201591998019
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "reading": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.170876975997089
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "tolerated": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.158103015000961
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-compare.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-cov": {
+    "choices": {
+      "convert": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "formats": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "help": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-cov.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-cov_run": {
+    "choices": {
+      "door": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "run": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-cov_run.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-merge": {
+    "choices": {
+      "cancel": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.137723679999908
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "commit": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.1219959020017995
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "stdout_artifact": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.3203125,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.111207219000789
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-merge.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-plan": {
+    "choices": {
+      "faults": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "plan": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "wish": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-plan.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-report": {
+    "choices": {
+      "json": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 25.2734375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.99278361100005
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "never_run": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.960788805001357
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "tap": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 25.44921875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.897226303000934
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "traditional": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 21.01953125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.877393814000243
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-report.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-show": {
+    "choices": {
+      "directory": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "file": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-show.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-stability": {
+    "choices": {
+      "bytes": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.827081760999135
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "cadence": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 45.8046875,
+                "peak_pids": 4,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.800070738998329
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "length": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 39.75,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.776456657000381
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "steady": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 39.89453125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.695830480999575
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "verdict": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 39.85546875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.639683346998936
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-stability.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-tell": {
+    "choices": {
+      "bare": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.609709576001478
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "coverage": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.578415407002467
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "flags": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.549923298000067
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "pack": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.51900330799981
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "raw": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.489132159997098
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-tell.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-wishlist": {
+    "choices": {
+      "print": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.418326077000529
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.38020286399842
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "roundtrip": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.3435655730027065
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "select": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.305455706002249
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      },
+      "spent": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 43.278429,
+                "exit_code": 0,
+                "peak_disk_mb": 0.84375,
+                "peak_memory_mb": 3.8203125,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.386023006998585
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:06Z"
+          }
+        }
+      },
+      "travels": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.104578,
+                "exit_code": 0,
+                "peak_disk_mb": 1.32421875,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.228686511996784
+              }
+            ],
+            "report": "nominal-file-not-found",
+            "verdict": false,
+            "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-wishlist.sh",
+      "source_kind": "executable"
+    }
+  }
+}

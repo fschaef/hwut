@@ -1,25 +1,25 @@
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app -- 6 file(s), the book entry, the register id
-          .hwut-store/test-app.stderr
-          .hwut-store/test-app.stderr.when
-          .hwut-store/test-app.stdout
-          .hwut-store/test-app.stdout.times
-          .hwut-store/test-app.stdout.when
-          GOOD/test-app.stdout
+      test-app.sh -- 6 file(s), the book entry, the register id
+          .hwut-store/test-app.sh.stderr
+          .hwut-store/test-app.sh.stderr.when
+          .hwut-store/test-app.sh.stdout
+          .hwut-store/test-app.sh.stdout.times
+          .hwut-store/test-app.sh.stdout.when
+          GOOD/test-app.sh.txt
     
     This cannot be undone here. Proceed? [y/N] 
     NOTE: nothing was removed
 }
 AFTER a refusal {
-    .hwut-store/test-app.stderr
-    .hwut-store/test-app.stderr.when
-    .hwut-store/test-app.stdout
-    .hwut-store/test-app.stdout.times
-    .hwut-store/test-app.stdout.when
+    .hwut-store/test-app.sh.stderr
+    .hwut-store/test-app.sh.stderr.when
+    .hwut-store/test-app.sh.stdout
+    .hwut-store/test-app.sh.stdout.times
+    .hwut-store/test-app.sh.stdout.when
     GOOD/result_db.json
-    GOOD/test-app.stdout
+    GOOD/test-app.sh.txt
     GOOD/test_ids.dat
-    book: ['test-app']
+    book: ['test-app.sh']
 }

@@ -7,10 +7,10 @@ REACTION  exit code : 0   stderr : 0 bytes
               hint:    OUT differs from GOOD
               files:
                 demo.py                                      29 bytes  (source)
-                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
-                .hwut-store/demo--basic.stdout.raw           19 bytes  (out raw stdout)
-                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
-                .hwut-store/demo--basic.stdout.times         51 bytes  (out timing stdout)
+                GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
+                .hwut-store/demo.py--basic.stdout.raw        19 bytes  (out raw stdout)
+                .hwut-store/demo.py--basic.stdout            11 bytes  (out stdout)
+                .hwut-store/demo.py--basic.stdout.times      51 bytes  (out timing stdout)
               coverage: ok
               cadence: as '<delta-t>:<line>' prefixes
               
@@ -35,11 +35,11 @@ REACTION  exit code : 0   stderr : 0 bytes
               print("alpha")
               print("beta")
               
-              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
+              ==[ GOOD STDOUT: GOOD/demo.py--basic.txt ]======================================
               alpha
               beta
               
-              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
+              ==[ OUT STDOUT: .hwut-store/demo.py--basic.stdout ]=============================
               0.012100:alpha
               1.503400:BETA
           }

@@ -1,0 +1,71 @@
+disc-6  hwut 2.0 OVER THE WHOLE TREE: THE ROOT CAUSES     ** OPEN **
+______________________________________________________________________________
+
+MEASURED (2026-08-27): 'hwut.run' called IN each of the 25 TEST
+directories. No crash, no hang, no unretrieved task anywhere. ~600
+cases; 581 failures, and they are THREE CAUSES, not 581.
+
+----------------------------------------------------------------------------
+r-1   567 x 'GOOD missing'  -- THE SUBJECT SUFFIX               ** OPEN **
+----------------------------------------------------------------------------
+The tree holds     GOOD/test-group_table.py--groups.txt
+The framework asks GOOD/test-group_table.py--groups.stdout
+
+HALF OF THE 1.0 NAMING IS IN PLACE and half is not. The KEY is the
+source file WHOLE ('key_name', E-14's ruling: 'test-x.lua' and
+'test-x.py' must not share a record). The SUFFIX is still the
+SUBJECT's -- '.stdout', '.stderr' -- where 1.0 names one file, '.txt'.
+
+That single suffix is the whole of r-1. It was left deliberately: the
+1.0 GOODs are the ones that RUN today, and renaming them would break
+the framework the code base is actually tested with. E-14 holds the
+open question -- the framework learns '.txt', or the files are moved
+to '.out'/'.err' when 2.0 is functional. RULED: not now.
+
+----------------------------------------------------------------------------
+r-2   8 x  -- 'hwut-info.dat' IS NOT READ                       ** OPEN **
+----------------------------------------------------------------------------
+    7  test-test_id_db.py [every choice]  'killed by the supervisor'
+    1  benchmark-hwut_hocon.py            3 faults, read as a header
+
+'engine/bookkeeper/TEST/hwut-info.dat' says
+
+    python *.py
+    --not config.py
+
+and that is CORRECT AND SUFFICIENT for hwut 1.0: the file needs no
+she-bang, because the directory states its interpreter. VUT 2.0 does
+not read that file, so it launches the application BY ITS OWN NAME,
+finds no she-bang, and reports a containment that never happened.
+
+'language_support/python/TEST/hwut-info.dat' likewise says
+'--not benchmark*.py'; unread, the benchmark's SAMPLE HOCON is taken
+for a header and faults three times.
+
+THIS IS THE RENOVATOR GAP (todo-1), and it now accounts for more of
+the residue than everything except the suffix. A tree that states its
+own interpreter perfectly, to a framework that cannot hear it.
+
+----------------------------------------------------------------------------
+r-3   6 x  -- CAPS BITE HONESTLY                                ** OPEN **
+----------------------------------------------------------------------------
+    4  test-procsitter_limits.py  wall_clock, pids, self_exit_codes,
+                                  stderr_tail_cap
+    2  test-csp_backtracking_mrv.py  soduko, massive-pipe
+
+THE FRAMEWORK IS RIGHT IN BOTH. Measured: 'soduko' peaks at 1069 MB
+against the 512 MB default -- a genuinely heavy test, wanting
+'caps { memory_mb = 2048 }' in its header or a smaller puzzle.
+
+The procsitter four are subtler: tests whose SUBJECT is exceeding
+caps, run under caps. The outer supervisor contains the test that is
+testing containment. Their own 'caps' key is the intended remedy, but
+whether a containment test should be capped AT ALL is a question --
+a cap it cannot exceed makes the test meaningless, and a cap it can
+makes the outer report indistinguishable from the inner one.
+
+----------------------------------------------------------------------------
+AND ONE ODD ONE OUT
+----------------------------------------------------------------------------
+    1  test-defaults.py [instantiate]  'unexpected stderr'
+Not looked at.

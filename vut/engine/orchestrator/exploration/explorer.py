@@ -21,7 +21,7 @@ from .              import finder
 from .              import reader
 from .              import satisfiability
 from .              import hwut_info_interview
-from .fault         import Fault, E_FaultKind
+from .fault         import Fault, E_FaultKind, Position
 from .              import provenance
 from .configuration_tree import (CTestApp, CTestAppSet, DirectorySpec,
                             TestParameters)
@@ -80,6 +80,24 @@ def explore(directory, interview_runner=None, inherited=None):
         directory_spec, conf_app_db, conf_fault_list = \
                                       reader.read_conf(text, finder.CONF_NAME)
         fault_list.extend(conf_fault_list)
+        #  A VARIANT GROUP IS THE ROOT'S ALONE (tree_explorer). A test
+        #  directory's own conf is read HERE and not by the walk, so
+        #  the refusal has to stand here too, or the one place the key
+        #  is most tempting to write is the one place nobody checks.
+        if directory_spec is not None:
+            from .tree_explorer import (ROOT_CONF_ONLY_FIELD_TUPLE,
+                                        ROOT_CONF_NAME, KEY_OF_FIELD)
+            for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+                if getattr(directory_spec, name):
+                    fault_list.append(Fault(
+                        E_FaultKind.VOCABULARY, finder.CONF_NAME,
+                        directory_spec.position,
+                        "'%s' outside '%s': a variant group is a "
+                        "DIMENSION and the selection is made once for "
+                        "the whole run, so the groups are declared "
+                        "once, at the root"
+                        % (KEY_OF_FIELD.get(name, name),
+                           ROOT_CONF_NAME)))
         if directory_spec is None:
             directory_spec = DirectorySpec(language_setup={},
                                            dependency={})
@@ -129,6 +147,7 @@ def explore(directory, interview_runner=None, inherited=None):
             fault_list.extend(pair_fault_list)
             continue                                 # refused, not guessed
         app_db[name] = app
+
 
     #  SATISFIABILITY -- the dependency graph is complete only now, and
     #  no verdict enters it: what cannot be reached is knowable here.

@@ -132,9 +132,9 @@ def test_naming():
     print("         raw         = %s" % os.path.relpath(raw, "/place"))
     print("         cadence     = %s" % os.path.relpath(cadence, "/place"))
     ok = _check([
-        (str(with_choice).endswith("GOOD/parse--basic.stdout"),
+        (str(with_choice).endswith("GOOD/parse--basic.txt"),
          "the choice is part of the key, so choices never collide"),
-        (str(without).endswith("GOOD/parse.stdout"),
+        (str(without).endswith("GOOD/parse.txt"),
          "a test without choices carries no choice part"),
         (str(candidate).endswith(".hwut-store/parse--basic.stdout"),
          "nominals and candidates live in SEPARATE key spaces"),

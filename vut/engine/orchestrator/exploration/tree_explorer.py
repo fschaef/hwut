@@ -7,6 +7,29 @@ PURPOSE: THE TREE WALK -- the stage before 'explore()'. It walks down
          values flow down, the child's own word wins -- the R-26 law
          lifted one level.
 
+THE CHAIN IS CLIMBED BEFORE IT IS DESCENDED. From the directory the
+caller names, the walk ASCENDS through the parents, collecting every
+'hwut.conf' it passes, until it reaches a 'hwut-root.conf'. The
+collected confs are then applied OUTERMOST FIRST, so the innermost
+word wins -- the same law as the descent, reached from the other end:
+
+    path/hwut-root.conf                        (4)  applied first
+    path/to/hwut.conf                          (3)
+    path/to/my/test/hwut.conf                  (2)
+    path/to/my/test/directory/TEST/hwut.conf   (1)  applied last
+                                                    then the headers
+
+THE EFFECTIVE CONFIGURATION OF A TEST DIRECTORY IS A FACT ABOUT THE
+TREE, not about where the person happened to stand. Running from the
+project root and running from inside a test directory must agree, and
+the suite says they do.
+
+A TREE WITH NO 'hwut-root.conf' ABOVE IT IS AN ERROR, not a default.
+An author has to know that global configuration exists and that an
+inheriting, shadowing chain is in force; discovering it by accident,
+years later, from a value nobody can account for, is worse than being
+stopped at the door.
+
 A TEST DIRECTORY is one whose NAME equals the effective
 'test_directory' key -- 'TEST' where nobody states it. The name that
 applies to a directory is decided by its parent chain: a directory
@@ -19,9 +42,14 @@ WHAT FLOWS DOWN -- the keys that configure tests in general:
     ignore            the child's word wins whole
     test_directory    the child's word wins
 
-WHAT DOES NOT: 'on_entry', 'on_exit', 'collision', 'dependency' name
-LOCAL files and actions; stated at a tree level -- a directory that is
-not a test directory -- they draw a fault and flow nowhere.
+WHAT DOES NOT: 'on_entry', 'on_exit', 'collision', 'dependency' and the
+directory's own TARGETS name LOCAL files and actions; stated at a tree
+level -- a directory that is not a test directory -- they draw a fault
+and flow nowhere.
+
+AND WHAT BELONGS TO THE ROOT ALONE: 'variant_group'. A variant group
+is a DIMENSION, and the selection is made once for the whole run; it
+is declared once, in 'hwut-root.conf', and refused anywhere else.
 
 The walk descends in sorted order, skips names beginning '.', and does
 not descend INTO a test directory: what stands below one is that
@@ -42,9 +70,36 @@ FALLBACK_TEST_DIRECTORY = "TEST"
 
 #  The keys that flow down the tree; everything else is local.
 INHERITABLE_FIELD_TUPLE = ("default_app", "language_setup", "ignore",
-                           "test_directory")
+                           "test_directory", "variant_db")
 LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
-                           "dependency")
+                           "dependency", "target_db")
+
+#  THE ROOT CONF'S ALONE. A VARIANT GROUP IS A DIMENSION and
+#  '--variant=gcov,slow' is ONE selection made once, on the command
+#  line, for the whole run. Declared per directory, the same name
+#  would mean one thing here and another there, or be unknown in half
+#  the tree -- and the refusal that names what IS declared would have
+#  nothing single to name. So the groups are declared once, at the
+#  root, where the boundary is.
+#
+#  It was in NEITHER list before: stated at a tree level it drew no
+#  fault, because it is not local, and reached nothing, because it does
+#  not flow. It was swallowed in silence, which is the worst of the
+#  three answers.
+ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db",)
+
+#  Field -> the KEY AN AUTHOR WRITES. A fault that names the record
+#  field sends the reader looking for a word that is not in his file.
+KEY_OF_FIELD = {"variant_db": "variant_group",
+                "target_db":  "target"}
+
+#  THE BOUNDARY OF THE ASCENT, and the most dominant configuration
+#  there is. It plays BOTH ROLES: it is READ like any other conf --
+#  and may be empty, which says only 'the tree ends here' -- and it
+#  STOPS the climb, so nothing above a project can reach into it.
+#  The NAME is the finder's, which also keeps it out of the source
+#  file candidates: one definition, not two.
+ROOT_CONF_NAME = finder.ROOT_CONF_NAME
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +128,8 @@ def explore_tree(root, interview_runner=None):
     """
     fault_list  = []
     result_list = []
+    inherited, ascent_fault_list = ascended_spec(root)
+    fault_list.extend(ascent_fault_list)
     #  THE ROOT IS ITSELF A CANDIDATE. Standing IN a test directory and
     #  asking is the ordinary case -- it is where an author works --
     #  and a walk that only ever enters CHILDREN named 'TEST' looks
@@ -85,10 +142,11 @@ def explore_tree(root, interview_runner=None):
     #  it as if inherited would fault on every one of them.
     if os.path.basename(os.path.normpath(root)) == FALLBACK_TEST_DIRECTORY:
         result_list.append(
-            (".", explore(root, interview_runner=interview_runner)))
+            (".", explore(root, interview_runner=interview_runner,
+                          inherited=inherited)))
     else:
-        _walk(root, ".", DirectorySpec(language_setup={}, dependency={}),
-              interview_runner, result_list, fault_list)
+        _walk(root, ".", inherited, interview_runner, result_list,
+              fault_list)
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list))
@@ -111,6 +169,90 @@ def inherited_spec(parent, child):
         else:
             field_db[name] = theirs if theirs else mine
     return replace(child, **field_db)
+
+
+class RootConfMissing(Exception):
+    """No 'hwut-root.conf' stands above the named directory."""
+    pass
+
+
+def ascended_spec(start):
+    """
+    RETURN: [0] DirectorySpec, every 'hwut.conf' ABOVE 'start' folded
+                in OUTERMOST FIRST, so the innermost word wins; the
+                'hwut-root.conf' that ended the climb folded first of
+                all.
+            [1] list[Fault], what the climbed confs got wrong.
+
+    Raises RootConfMissing where the climb reaches the file system's
+    own root without meeting a 'hwut-root.conf'. A tree with no root
+    conf is an ERROR, not a default (see this module's PURPOSE).
+
+    THE CLIMB LOOKS FOR ITS BOUNDARY IN 'start' ITSELF, and for a
+    plain 'hwut.conf' only ABOVE it: 'start''s own conf is read by the
+    walk that follows, or by 'explore()' where 'start' is a test
+    directory, and reading it twice would fold it onto itself. A
+    'hwut-root.conf' is a different file and no such double arises --
+    which matters, because the ordinary way to run is to stand AT the
+    project root, where that file lies.
+
+    A LOCAL KEY MET ON THE WAY UP draws a fault, exactly as one met on
+    the way down: 'on_entry', 'on_exit', 'collision', 'dependency' and
+    the directory's own TARGETS name local matters, and an ancestor
+    has no business naming them.
+    """
+    here       = os.path.abspath(os.path.normpath(start))
+    at_start   = True
+    climbed    = []                      # innermost first
+    fault_list = []
+    while True:
+        root_path = os.path.join(here, ROOT_CONF_NAME)
+        if os.path.isfile(root_path):
+            climbed.append((root_path, ROOT_CONF_NAME))
+            break
+        if not at_start:
+            conf_path = os.path.join(here, finder.CONF_NAME)
+            if os.path.isfile(conf_path):
+                climbed.append((conf_path, conf_path))
+        at_start = False
+        parent = os.path.dirname(here)
+        if parent == here:
+            raise RootConfMissing(
+                "no '%s' stands above '%s' -- a tree states its own "
+                "boundary, and the global configuration that applies "
+                "to it, in that file" % (ROOT_CONF_NAME, start))
+        here = parent
+
+    effective = DirectorySpec(language_setup={}, dependency={})
+    for path, shown in reversed(climbed):        # OUTERMOST FIRST
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                text = handle.read()
+        except OSError:
+            continue
+        spec, _app_db, conf_fault_list = reader.read_conf(text, shown)
+        fault_list.extend(conf_fault_list)
+        if spec is None: continue
+        for name in LOCAL_FIELD_TUPLE:
+            if getattr(spec, name):
+                fault_list.append(Fault(
+                    E_FaultKind.VOCABULARY, shown, spec.position,
+                    "'%s' above a test directory: it names local "
+                    "matters and belongs in a test directory's own "
+                    "'hwut.conf'" % KEY_OF_FIELD.get(name, name)))
+        if shown != ROOT_CONF_NAME:
+            for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+                if getattr(spec, name):
+                    fault_list.append(Fault(
+                        E_FaultKind.VOCABULARY, shown, spec.position,
+                        "'%s' outside '%s': a variant group is a "
+                        "DIMENSION and the selection is made once for "
+                        "the whole run, so the groups are declared "
+                        "once, at the root"
+                        % (KEY_OF_FIELD.get(name, name),
+                           ROOT_CONF_NAME)))
+        effective = inherited_spec(effective, spec)
+    return effective, fault_list
 
 
 def _walk(root, relative, effective, interview_runner,
@@ -163,7 +305,15 @@ def _folded(directory, relative, effective, fault_list):
                 E_FaultKind.VOCABULARY, conf_name, spec.position,
                 "'%s' at a tree level: it names local matters and "
                 "belongs in a test directory's own 'hwut.conf'"
-                % name))
+                % KEY_OF_FIELD.get(name, name)))
+    for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+        if getattr(spec, name):
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, conf_name, spec.position,
+                "'%s' outside '%s': a variant group is a DIMENSION "
+                "and the selection is made once for the whole run, so "
+                "the groups are declared once, at the root"
+                % (KEY_OF_FIELD.get(name, name), ROOT_CONF_NAME)))
     return inherited_spec(effective, spec)
 
 

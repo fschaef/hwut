@@ -9,7 +9,7 @@ STDOUT {
     ==============================================================================
 }
 GOOD holds:
-    test-two--a.stdout
+    test-two.sh--a.txt
     test_ids.dat
 == the same thing, spelled as the wish ==
 STATUS: 0
@@ -22,5 +22,5 @@ STDOUT {
     ==============================================================================
 }
 GOOD holds:
-    test-two--a.stdout
+    test-two.sh--a.txt
     test_ids.dat

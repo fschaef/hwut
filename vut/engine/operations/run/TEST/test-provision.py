@@ -363,7 +363,7 @@ def test_source_kinds():
     the artifact BUILT ABOVE (the plan's order, replayed by hand with
     'build_action'); EXECUTABLE runs the file itself."""
     directory = tempfile.mkdtemp(prefix="vut_prov_")
-    build_dir = os.path.join(directory, "BUILD", "app")
+    build_dir = os.path.join(directory, "BUILD", "app.c")
     os.makedirs(build_dir)
     with open(os.path.join(build_dir, "Makefile"), "w") as fh:
         fh.write("built:\n"
@@ -845,7 +845,7 @@ def test_source_kinds():
     the artifact BUILT ABOVE (the plan's order, replayed by hand with
     'build_action'); EXECUTABLE runs the file itself."""
     directory = tempfile.mkdtemp(prefix="vut_prov_")
-    build_dir = os.path.join(directory, "BUILD", "app")
+    build_dir = os.path.join(directory, "BUILD", "app.c")
     os.makedirs(build_dir)
     with open(os.path.join(build_dir, "Makefile"), "w") as fh:
         fh.write("built:\n"

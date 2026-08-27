@@ -8,6 +8,9 @@ PURPOSE: A THROWAWAY EXECUTABLE SCRIPT, for tests that need a real
                 path.
     CRunScript  the same, as a context manager: the script is deleted
                 when the block ends, whatever ended it.
+    tree_boundary()
+                writes the 'hwut-root.conf' that ENDS a fixture's
+                tree, so the climb has somewhere to stop.
 
 A test that supervises processes, times them, or reads their streams
 needs something REAL on the other side. Writing that by hand in every
@@ -76,6 +79,25 @@ def do(file_name:       Optional[str],
         print("}")
 
     return str(script_path)
+
+
+def tree_boundary(directory, content="hwut {\n}\n"):
+    """
+    RETURN: str, the path written.
+
+    THE BOUNDARY OF A FIXTURE'S TREE. Every face ASCENDS from where it
+    is called, collecting each 'hwut.conf' it passes, until it meets a
+    'hwut-root.conf'; a tree with none above it is REFUSED. So a
+    fixture that builds a tree states its own end, and an empty block
+    is a complete statement -- it says only 'the tree ends here'.
+
+    'content' takes global parameters where a fixture wants them; they
+    apply to every test of that tree unless a nearer conf or a source
+    header says otherwise.
+    """
+    target = Path(directory) / "hwut-root.conf"
+    target.write_text(content, encoding="utf-8")
+    return str(target)
 
 
 class CRunScript(ContextManager[str]):

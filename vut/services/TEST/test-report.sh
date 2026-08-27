@@ -53,6 +53,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
+
 face() {
     $FACE "$@" > out.txt 2> err.txt
     echo "STATUS: $?"
@@ -86,12 +91,12 @@ good_app() { fixture '# hwut { title = "The steady one" }' \
 
 mixed() {           # one standing, one differing
     good_app
-    printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.stdout
+    printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
     printf '#!/bin/bash\n# hwut { title = "The differing one" }\necho "what the run says"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-diff.sh
     chmod +x tree/suite/TEST/test-diff.sh
     printf 'what the GOOD expects\n<hwut-end>\n' \
-        > tree/suite/TEST/GOOD/test-diff.stdout
+        > tree/suite/TEST/GOOD/test-diff.sh.txt
     $RUN --directory=tree --silent > /dev/null 2>&1
 }
 
@@ -101,7 +106,7 @@ flipping() {
             'echo $((n + 1)) > count.txt' \
             'if [ $((n % 2)) -eq 0 ]; then echo "steady line";' \
             'else echo "other"; fi' 'echo "<hwut-end>"'
-    printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.stdout
+    printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
 }
 
 # ---------------------------------------------------------------------------

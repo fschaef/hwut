@@ -220,7 +220,8 @@ class TestRunDispatcher(I_Dispatcher):
         """
         configuration = self.config_db[node.file]
         stain = None if self.despite_stain_f \
-                else self.bookkeeper.stain(configuration.stem, node.choice)
+                else self.bookkeeper.stain(configuration.key_name,
+                                           node.choice)
         if stain is not None:
             self.report_db[node.name()] = E_TestRunResult.UNSTABLE.value
             return False
@@ -235,7 +236,8 @@ class TestRunDispatcher(I_Dispatcher):
         if self.id_db is not None:
             from ...operations.coverage_action import prepare
             prepare(configuration)
-            run_id = self.id_db.run_id_of(configuration.stem, node.choice)
+            run_id = self.id_db.run_id_of(configuration.key_name,
+                                          node.choice)
             if run_id is None:
                 #  Unregistered: never accepted, so no id to seat. The
                 #  run proceeds as a plain run; the entry says NOT_ASKED.

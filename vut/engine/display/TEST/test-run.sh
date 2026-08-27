@@ -53,6 +53,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
+
 mask() {                # hh:mm:ss -> the one masked token
     sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'
 }
@@ -113,7 +118,7 @@ fixture_tree() {        # three directories, two passing tests each
                 $t $t > tree/$d/TEST/test-$t.sh
             chmod +x tree/$d/TEST/test-$t.sh
             printf 'steady %s\n<hwut-end>\n' $t \
-                > tree/$d/TEST/GOOD/test-$t.stdout
+                > tree/$d/TEST/GOOD/test-$t.sh.txt
         done
     done
 }
@@ -121,7 +126,7 @@ fixture_tree() {        # three directories, two passing tests each
 fixture_tree_fail() {   # the tree; one test of beta differs, gamma's
                         # entry fails and its tests never run
     fixture_tree
-    put tree/beta/TEST/GOOD/test-two.stdout "what the GOOD expects"
+    put tree/beta/TEST/GOOD/test-two.sh.txt "what the GOOD expects"
     printf 'hwut {\n    on_entry = "false"\n    on_exit  = "true"\n}\n' \
         > tree/gamma/TEST/hwut.conf
 }
@@ -133,7 +138,7 @@ fixture_green() {       # one directory, one passing test
     printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
         > tree/suite/TEST/test-ok.sh
     chmod +x tree/suite/TEST/test-ok.sh
-    put tree/suite/TEST/GOOD/test-ok.stdout "steady line"
+    put tree/suite/TEST/GOOD/test-ok.sh.txt "steady line"
 }
 
 fixture_fail() {        # the green one, one differing test beside it
@@ -141,7 +146,7 @@ fixture_fail() {        # the green one, one differing test beside it
     printf '#!/bin/bash\n# hwut { title = "Diff" }\necho "what the run says"\n' \
         > tree/suite/TEST/test-diff.sh
     chmod +x tree/suite/TEST/test-diff.sh
-    put tree/suite/TEST/GOOD/test-diff.stdout "what the GOOD expects"
+    put tree/suite/TEST/GOOD/test-diff.sh.txt "what the GOOD expects"
 }
 
 fixture_fault() {       # a dependency the directory does not offer
@@ -194,7 +199,7 @@ timing)
     echo "cadence sidecars with --timing: $n"
     python3 -c "
 import json, sys
-d = json.load(open('tree/suite/TEST/.hwut-store/test-ok.stdout.times'))
+d = json.load(open('tree/suite/TEST/.hwut-store/test-ok.sh.stdout.times'))
 print('unit: %s   deltas: %d   every delta a number: %s'
       % (d['unit'], len(d['delta_list']),
          all(isinstance(x, float) for x in d['delta_list'])))"

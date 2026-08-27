@@ -75,6 +75,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.plan.wish       import Wish
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from vut.engine.orchestrator.run.orchestrate import orchestrator
 from vut.engine.orchestrator.run.dispatcher  import \
                                              test_run_dispatcher_factory
@@ -93,6 +94,9 @@ def fixture(entry_command="true"):
             caller to remove. 'entry_command' is what 'on_entry' runs.
     """
     root = tempfile.mkdtemp(prefix="vut_e2e_")
+    #  THE TREE'S BOUNDARY: the climb stops here; a tree without
+    #  a 'hwut-root.conf' above it is refused.
+    tree_boundary(root)
     test = os.path.join(root, "suite", "TEST")
     good = os.path.join(test, "GOOD")
     os.makedirs(good)
@@ -113,12 +117,12 @@ def fixture(entry_command="true"):
         '#!/bin/bash\n'
         '# hwut { title = "Ok" }\n'
         'echo "steady line"\n', executable=True)
-    put(good, "test-ok.stdout",    "steady line\n")
+    put(good, "test-ok.sh.txt",    "steady line\n")
     put(test, "test-diff.sh",
         '#!/bin/bash\n'
         '# hwut { title = "Diff" }\n'
         'echo "what the run says"\n', executable=True)
-    put(good, "test-diff.stdout",  "what the GOOD expects\n")
+    put(good, "test-diff.sh.txt",  "what the GOOD expects\n")
     put(test, "test-built.c",
         '/* hwut { title = "Built"\n'
         '          build { framework = "make"'
@@ -135,7 +139,7 @@ def fixture(entry_command="true"):
         'for line in sys.stdin:\n'
         '    sys.stdout.write(re.sub(r"NOISE-\\d+ ", "", line))\n'
         'print("<hwut-end>")   # the pype owns the token (R-70 t-6)\n')
-    put(good, "test-noise.stdout", "kept line\n<hwut-end>\n")
+    put(good, "test-noise.sh.txt", "kept line\n<hwut-end>\n")
     put(test, "test-app.sh",
         '#!/bin/bash\n'
         '# hwut { title = "App"  interactive = yes\n'
@@ -147,14 +151,14 @@ def fixture(entry_command="true"):
         '    echo "done $token 0"\n'
         'done\n'
         'echo bye\n', executable=True)
-    put(good, "test-app--a.stdout", "choice a served\n")
-    put(good, "test-app--b.stdout", "choice b served\n")
+    put(good, "test-app.sh--a.txt", "choice a served\n")
+    put(good, "test-app.sh--b.txt", "choice b served\n")
     put(test, "test-dead.sh",
         '#!/bin/bash\n'
         '# hwut { title = "Dead"  interactive = yes\n'
         '#        choices = ["x"] }\n'
         'exit 7\n', executable=True)
-    put(good, "test-dead--x.stdout", "never\n")
+    put(good, "test-dead.sh--x.txt", "never\n")
     put(test, "test-m.sh",
         '#!/bin/bash\n'
         '# hwut { title = "Misdep" }\n'
@@ -165,7 +169,7 @@ def fixture(entry_command="true"):
         '#        numeric = 0.01 }\n'
         'echo "value 100.4"\n'
         'echo "<hwut-end>"\n', executable=True)
-    put(good, "test-tol.stdout", "value 100.0\n<hwut-end>\n")
+    put(good, "test-tol.sh.txt", "value 100.0\n<hwut-end>\n")
     put(test, "test-same.sh",
         '#!/bin/bash\n'
         '# hwut { title   = "Same"\n'
@@ -173,19 +177,19 @@ def fixture(entry_command="true"):
         '#        choices = ["a", "b"] }\n'
         'echo "one behaviour for every choice"\n'
         'echo "<hwut-end>"\n', executable=True)
-    put(good, "test-same.stdout",
+    put(good, "test-same.sh.txt",
         "one behaviour for every choice\n<hwut-end>\n")
     put(test, "test-mark.sh",
         '#!/bin/bash\n'
         '# hwut { title = "Mark" }\n'
         'echo "renovated line"\n'
         'echo "<hwut-end>"\n', executable=True)
-    put(good, "test-mark.stdout", "renovated line\n<hwut-end>\n")
+    put(good, "test-mark.sh.txt", "renovated line\n<hwut-end>\n")
     put(test, "test-cut.sh",
         '#!/bin/bash\n'
         '# hwut { title = "Cut" }\n'
         'echo "renovated line"\n', executable=True)
-    put(good, "test-cut.stdout",  "renovated line\n<hwut-end>\n")
+    put(good, "test-cut.sh.txt",  "renovated line\n<hwut-end>\n")
     return root
 
 

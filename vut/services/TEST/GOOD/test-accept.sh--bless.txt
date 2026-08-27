@@ -10,7 +10,7 @@ STDOUT {
     ==============================================================================
 }
 GOOD holds:
-    test-ok.stdout
-    test-two--a.stdout
-    test-two--b.stdout
+    test-ok.sh.txt
+    test-two.sh--a.txt
+    test-two.sh--b.txt
     test_ids.dat

@@ -114,7 +114,7 @@ def explain(configuration, choice_name, provision_record, raw_db=None):
     """
     argv      = application_argv(configuration, choice_name)
     line_list = ["EXPLAIN  %s, choice %s"
-                 % (configuration.stem, choice_name)]
+                 % (configuration.key_name, choice_name)]
     line_list.append("  REQUEST    %r" % (argv,))
     line_list += ["  RESOLVED   %s" % line
                   for line in resolution_chain(argv[0])]

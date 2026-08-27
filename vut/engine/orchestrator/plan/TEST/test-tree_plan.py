@@ -31,9 +31,13 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.exploration.tree_explorer import explore_tree
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from vut.engine.orchestrator.plan.tree import (determine_tree,
                                                print_tree_plan)
 from vut.engine.orchestrator.plan.wish import Wish
+
+
+
 
 
 def banner(label):
@@ -48,6 +52,10 @@ def tree_of():
             [1] str               the root, for the caller to remove.
     """
     root = tempfile.mkdtemp(prefix="vut_treeplan_")
+    #  THE TREE'S BOUNDARY: every face ascends collecting
+    #  'hwut.conf' until it meets this file; a tree without one
+    #  is refused, so a fixture states its own.
+    tree_boundary(root)
     file_db = {
         "alpha/TEST/hwut.conf":  'hwut { dependency { "test-b.py" = '
                                  '["test-a.py"] } }\n',
@@ -59,8 +67,8 @@ def tree_of():
     for relative, content in file_db.items():
         path = os.path.join(root, relative)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as fh:
-            fh.write(content)
+        with open(path, "w") as _fh:
+            _fh.write(content)
     return explore_tree(root), root
 
 

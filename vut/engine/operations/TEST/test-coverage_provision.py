@@ -163,7 +163,7 @@ def _show(outcome, bookkeeper, directory):
                                                 outcome.report.value))
     print("         coverage on the entry: %s"
           % outcome.entry.get("coverage", "<absent>"))
-    path = bookkeeper.coverage_path("demo", None)
+    path = bookkeeper.coverage_path("demo.py", None)
     if not path.is_file():
         print("         record: <none>")
         return
@@ -183,20 +183,20 @@ def test_harvested():
     outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
     _show(outcome, bookkeeper, directory)
 
-    path   = bookkeeper.coverage_path("demo", None)
+    path   = bookkeeper.coverage_path("demo.py", None)
     record = unpack_record(path.read_bytes())
     ok = _check([
         (outcome.coverage is E_CoverageResult.OK
          and outcome.entry["coverage"] == "ok",
          "the step concluded OK, and the book entry says so"),
-        (str(path).endswith(os.path.join(".hwut-store", "demo.cover")),
+        (str(path).endswith(os.path.join(".hwut-store", "demo.py.cover")),
          "the record lives in the store's own ground, never in OUT/"),
         (record.run == frozenset([TestRunId(0, 0)]),
          "the record is SEATED with the run id handed in"),
         (record.tool == "witness"
          and record.file_db["demo.py"].covered == ((1, 7),),
          "and carries what the reader read"),
-        (bookkeeper.candidate_path("demo", None, "stdout")
+        (bookkeeper.candidate_path("demo.py", None, "stdout")
                    .read_text(encoding="utf-8").startswith("behaviour one"),
          "the subject is what the application printed -- the wrapper "
          "added nothing to what is judged"),
@@ -219,7 +219,7 @@ def test_nothing_borne():
         (outcome.coverage is E_CoverageResult.NO_DATA_PROVIDED,
          "a tree that did not grow makes the harvest trivial: "
          "NO_DATA_PROVIDED"),
-        (not bookkeeper.coverage_path("demo", None).exists(),
+        (not bookkeeper.coverage_path("demo.py", None).exists(),
          "and NO record is written -- absent, never empty"),
         (outcome.entry["coverage"] == "no-data-provided",
          "the book entry carries the cause beside the absence"),
@@ -251,7 +251,7 @@ def test_incomplete():
         (outcome.coverage is E_CoverageResult.RUN_INCOMPLETE,
          "and it is NOT harvested: a killed process testifies to "
          "nothing, so the lines it touched are a claim of nothing"),
-        (not bookkeeper.coverage_path("demo", None).exists(),
+        (not bookkeeper.coverage_path("demo.py", None).exists(),
          "no record is written"),
         (outcome.entry["coverage"] == "run-incomplete",
          "the book says why"),

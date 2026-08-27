@@ -1,8 +1,8 @@
-INSPECT: ran in    = BUILD/demo
+INSPECT: ran in    = BUILD/demo.c
          report    = ok
          built     = ['app']
          missing   = []
-  OK  : the build ran in BUILD/<stem>, not in the test directory
+  OK  : the build ran in BUILD/<file>, not in the test directory
   OK  : the report is OK
   OK  : the declared target is accounted present
   OK  : and the outcome says it succeeded

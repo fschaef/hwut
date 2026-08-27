@@ -37,7 +37,9 @@ import sys
 import tempfile
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.exploration.tree_explorer import explore_tree
+from vut.engine.orchestrator.exploration.tree_explorer import (explore_tree,
+                                                               RootConfMissing)
+from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 
 
 def banner(label):
@@ -53,6 +55,8 @@ def tree_of(file_db):
             [1] str, the root, for the caller to remove.
     """
     root = tempfile.mkdtemp(prefix="vut_walk_")
+    #  THE TREE'S BOUNDARY: the climb stops here (see tree_explorer).
+    tree_boundary(root)
     for relative, content in file_db.items():
         path = os.path.join(root, relative)
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -177,8 +181,18 @@ def test_root():
 
     banner("a root that is NOT a test directory, and holds none")
     plain = tempfile.mkdtemp(prefix="vut_walk_")
+    tree_boundary(plain)
     print("    directories explored: %d" % len(list(explore_tree(plain))))
     shutil.rmtree(plain, ignore_errors=True)
+
+    banner("and one with NO boundary above it: refused, not guessed")
+    naked = tempfile.mkdtemp(prefix="vut_walk_")
+    try:
+        explore_tree(naked)
+        print("    NOT REFUSED -- which would be wrong")
+    except RootConfMissing:
+        print("    RootConfMissing, as owed")
+    shutil.rmtree(naked, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -60,6 +60,12 @@ RESULT_DB_FILE_NAME = "result_db.json"
 
 NO_CHOICE_KEY       = "<none>"
 
+#  Subject -> the suffix a NOMINAL carries. 'stdout' is spelt hwut
+#  1.0's way, because the accepted files of an existing tree carry
+#  that name and 1.0 still reads them. A subject absent here keeps
+#  its own name.
+NOMINAL_SUFFIX_DB   = {"stdout": "txt"}
+
 _OPERATION_BY_GOAL  = {"VERDICT": "Run",
                        "DISPLAY": "Display",
                        "NOMINAL": "Accept"}
@@ -180,10 +186,25 @@ class Bookkeeper:
         of the test is held against one blessed file. Candidates keep
         their own names regardless, or the choices would overwrite one
         another (configuration.py, NamingConfig).
+
+        THE STDOUT NOMINAL IS SPELT '.txt' -- hwut 1.0's name, and the
+        name every accepted file of an existing tree already carries.
+        A NOMINAL IS THE SHARED GROUND between the two frameworks: 1.0
+        reads these files today and must keep reading them, so 2.0
+        asks for them under the name they have.
+
+        EVERY OTHER SUBJECT KEEPS ITS OWN ('.stderr', a declared
+        output file's): 1.0 named ONE file per choice and has no word
+        for the rest, so there is nothing to be compatible with, and
+        two subjects under one name would collide.
+
+        CANDIDATES ARE UNAFFECTED. The store is 2.0's own ground, no
+        other framework reads it, and there the subject names itself.
         """
         nominal_choice = None if self.naming.same_nominal_f else choice
-        return self.directory / "GOOD" / self.key(test, nominal_choice,
-                                                  subject)
+        return self.directory / "GOOD" \
+               / self.key(test, nominal_choice, NOMINAL_SUFFIX_DB
+                                                .get(subject, subject))
 
     def candidate_path(self, test, choice, subject):
         """RETURN: Path, where the CANDIDATE record of that key lives.

@@ -44,6 +44,9 @@ import sys
 from pathlib import Path
 
 from   vut.engine.bookkeeper.bookkeeper                import Bookkeeper
+from   vut.engine.orchestrator.exploration.tree_explorer \
+                                                       import (RootConfMissing,
+                                                               ascended_spec)
 from   vut.engine.bookkeeper.test_id_db                import TestIdDb
 from   vut.engine.bookkeeper.configuration             import E_StderrNote
 from   vut.engine.bookkeeper.stream_store              import Store
@@ -247,7 +250,7 @@ def key_list_of(store, case_sequence):
     for case in case_sequence:
         #  RECORDING keys by the STEM, so acceptance must too, or it
         #  looks where nothing was ever written.
-        test   = Path(case.source_file).stem
+        test   = case.source_file
         choice = case.choice
         #  A STAINED CHOICE IS NEVER PROMOTED. Acceptance declares the
         #  POLE of the good cluster; a choice that switches results has
@@ -297,7 +300,7 @@ def stderr_spoke_db(store, case_sequence):
     """
     spoke_db = {}
     for case in case_sequence:
-        test   = Path(case.source_file).stem
+        test   = case.source_file
         choice = case.choice
         path   = store.bookkeeper.candidate_path(test, choice,
                                                  STDERR_SUBJECT)
@@ -443,7 +446,18 @@ def main(argv=None, write=None, read_line=None):
                               until_spec=wish.until_spec,
                               glob_tuple=wish.glob_tuple + glob_tuple)
 
-    result = explore(directory)
+    #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
+    #  in a test directory owes the same effective configuration as a
+    #  walk that reached it from the project root.
+    try:
+        inherited, ascent_fault_list = ascended_spec(directory)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    for fault in ascent_fault_list:
+        write(str(fault))
+
+    result = explore(directory, inherited=inherited)
     for fault in result.fault_list:
         write("FAULT: %s" % fault)
 
@@ -479,10 +493,10 @@ def main(argv=None, write=None, read_line=None):
 
     #  A STAINED CHOICE IS NEVER PROMOTED, and never silently: the
     #  refusal is spoken, by name, with the way out.
-    stained_list = [(Path(case.source_file).stem, case.choice)
+    stained_list = [(case.source_file, case.choice)
                     for case in case_sequence
                     if store.bookkeeper.stain(
-                           Path(case.source_file).stem,
+                           case.source_file,
                            case.choice) is not None]
     for test, choice in stained_list:
         write("REFUSED to bless: '%s%s' bears a STAIN -- it switched "

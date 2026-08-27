@@ -1,12 +1,12 @@
 first run (no nominal yet): status 1
 residue in the test directory: 0
 candidates:
-    test-file.result.csv
-    test-file.stderr
-    test-file.stdout
+    test-file.sh.result.csv
+    test-file.sh.stderr
+    test-file.sh.stdout
 accepted: status 0
 nominals:
-    test-file.result.csv
-    test-file.stdout
+    test-file.sh.result.csv
+    test-file.sh.txt
     test_ids.dat
 STATUS: 0

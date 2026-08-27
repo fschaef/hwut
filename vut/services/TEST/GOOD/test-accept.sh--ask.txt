@@ -6,8 +6,8 @@ STATUS: 0
         steady line
         <hwut-end>
     ------------------------------------------------------------------------------
-        candidate: test-ok.stdout
-        nominal:   test-ok.stdout
+        candidate: test-ok.sh.stdout
+        nominal:   test-ok.sh.txt
     accept this as the nominal? [y/N] 
     
     ==============================================================================
@@ -16,8 +16,8 @@ STATUS: 0
         choice a
         <hwut-end>
     ------------------------------------------------------------------------------
-        candidate: test-two--a.stdout
-        nominal:   test-two--a.stdout
+        candidate: test-two.sh--a.stdout
+        nominal:   test-two.sh--a.txt
     accept this as the nominal? [y/N] 
     
     ==============================================================================
@@ -26,8 +26,8 @@ STATUS: 0
         choice b
         <hwut-end>
     ------------------------------------------------------------------------------
-        candidate: test-two--b.stdout
-        nominal:   test-two--b.stdout
+        candidate: test-two.sh--b.stdout
+        nominal:   test-two.sh--b.txt
     accept this as the nominal? [y/N] 
     
     ==============================================================================
@@ -38,5 +38,5 @@ STATUS: 0
         left alone     test-two.sh b .stdout
     ==============================================================================
 GOOD holds (first blessed, second left alone):
-    test-ok.stdout
+    test-ok.sh.txt
     test_ids.dat

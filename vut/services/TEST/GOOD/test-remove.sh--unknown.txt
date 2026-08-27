@@ -1,9 +1,9 @@
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-nobody -- 0 file(s), the book entry, the register id
+      test-nobody.sh -- 0 file(s), the book entry, the register id
       (no recorded artefact stands; the book and the register are still asked)
-    test-nobody:
+    test-nobody.sh:
         book entry: none stood
         register: not registered
 }

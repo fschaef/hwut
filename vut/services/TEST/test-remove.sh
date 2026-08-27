@@ -51,6 +51,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
+
 mask() {                # THE ELAPSED STAMP IS THE MACHINE'S. A run
                         # line carries 'hh:mm:ss' and a run that
                         # crosses a second prints a different one --
@@ -111,7 +116,7 @@ whole)
     #  Everything the framework recorded, gone.
     plain_app
     standing "BEFORE"
-    face $REMOVE --directory=tree/suite/TEST test-app --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh --yes
     standing "AFTER"
     ;;
 
@@ -119,14 +124,14 @@ choice)
     #  One choice gone; the other stands, nominal and all.
     choice_app
     standing "BEFORE"
-    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app one --yes
+    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one --yes
     standing "AFTER"
     ;;
 
 untouched)
     #  The author's own files are the author's.
     plain_app
-    $REMOVE --directory=tree/suite/TEST test-app --yes > /dev/null
+    $REMOVE --directory=tree/suite/TEST test-app.sh --yes > /dev/null
     echo "the application stands:  $([ -f tree/suite/TEST/test-app.sh ] \
         && echo True || echo False)"
     echo "the hwut.conf stands:    $([ -f tree/suite/TEST/hwut.conf ] \
@@ -138,13 +143,13 @@ untouched)
 unknown)
     #  Nothing to forget is not an error.
     plain_app
-    face $REMOVE --directory=tree/suite/TEST test-nobody --yes
+    face $REMOVE --directory=tree/suite/TEST test-nobody.sh --yes
     ;;
 
 asking)
     #  Without '--yes' it asks, and 'n' removes nothing.
     plain_app
-    echo "n" | $REMOVE --directory=tree/suite/TEST test-app > out.txt 2>&1
+    echo "n" | $REMOVE --directory=tree/suite/TEST test-app.sh > out.txt 2>&1
     echo "STATUS: $?"
     echo "STDOUT {"; sed 's/^/    /' < out.txt; echo "}"
     standing "AFTER a refusal"
@@ -165,7 +170,7 @@ stain)
     echo "STATUS: $?"
     grep -E "UNSTABLE" run.txt | mask | sed 's/^/    /'
     echo "removed:"
-    $REMOVE --directory=tree/suite/TEST test-app --yes > /dev/null 2>&1
+    $REMOVE --directory=tree/suite/TEST test-app.sh --yes > /dev/null 2>&1
     echo "    the stain went with the book: $(python3 -c "
 import json
 print(json.load(open('tree/suite/TEST/GOOD/result_db.json')) == {})")"
@@ -178,10 +183,10 @@ print(json.load(open('tree/suite/TEST/GOOD/result_db.json')) == {})")"
 refused)
     #  Every door, by name.
     plain_app
-    face $REMOVE --directory=tree/suite/TEST --sideways test-app
-    face $REMOVE --directory=nowhere test-app
+    face $REMOVE --directory=tree/suite/TEST --sideways test-app.sh
+    face $REMOVE --directory=nowhere test-app.sh
     face $REMOVE --directory=tree/suite/TEST
-    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app one two
+    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one two
     ;;
 
 *)
