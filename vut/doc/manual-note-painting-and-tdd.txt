@@ -1,0 +1,53 @@
+MANUAL NOTE — for the introduction, and for the section on method
+=================================================================
+
+TITLE:  The test as a painting
+
+THE ACT
+-------
+The author uses the software to paint on the screen the picture that
+is described in the requirements. When the picture matches, the author
+blesses.
+
+The author is the painter, unbound by problem-alien formalities, free
+to paint the behaviour in the clearest way the problem admits.
+
+An assert imposes a translation. The reader of an assert must carry it
+back into the mathematical object or the process that was actually
+under investigation. Every assert costs one act of interpretation, and
+the interpretation is not written down anywhere.
+
+A picture costs none. The behaviour is on the screen in the terms of
+the problem.
+
+TEST-DRIVEN DEVELOPMENT WITH HWUT
+---------------------------------
+HWUT is used test-first, routinely.
+
+  - The nominal behaviour stands in the requirements document, in the
+    mail, on the other screen, or in the author's head.
+  - A minimal application is developed that exercises the behaviour
+    and displays it.
+  - Development continues until the displayed behaviour is exactly the
+    behaviour that was intended.
+  - Then it is blessed.
+
+The red phase is real: output that does not match the intended picture
+is red. The tool does not require an assertion to make it so.
+
+HWUT 1.0 additionally allowed a GOOD file to be written before any
+test existed. That path puts the specification into the repository as
+an artifact — reviewable, versionable, arguable — before a line of
+implementation is written. See disc-N-hwut-amend.txt; the same
+instrument serves both purposes.
+
+FOR THE JUNIOR ENGINEER
+-----------------------
+Faced with a wall of failing asserts, the junior deletes assert lines.
+The framework offers no other move and records no trace of the
+deletion.
+
+Faced with a differing picture, the junior sees what the program did
+and what it was supposed to do, side by side, in the terms of the
+problem. Whether that is enough depends on how well the picture was
+painted — which is why the painting is the skill this manual teaches.

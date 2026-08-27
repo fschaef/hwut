@@ -1,0 +1,49 @@
+disc-N-hwut-amend.txt          (number to be assigned)
+
+SERVICE:  hwut.amend <wishlist>
+
+PROBLEM
+-------
+A GOOD file stores the verdict and not the grounds. Line 412 says
+"berta". It does not say that "berta" is correct because the sort is
+stable and Berta was inserted before Caesar.
+
+Consequence: the authority behind the blessing is not transferable.
+Years later a difference appears, the expert who blessed is gone, and
+the reader holds a notarised document from a judge who cannot be
+recalled to the stand. The only move left is re-blessing. This is the
+failure mode that discredits golden-master testing elsewhere
+(snapshot rot).
+
+The free-description model already raises the quality of the expert's
+judgement — a clear picture is easier to judge than an assert. What is
+missing is the record of who judged, and on what grounds.
+
+SUBJECT OF THE WISHLIST
+-----------------------
+Fields that a blessing may carry:
+
+  - author of the acceptance
+  - moment of acceptance
+  - reference: requirement id, document, mail, ticket
+  - warrant: the one sentence that made the behaviour correct
+  - previous digest (what this blessing replaced)
+
+RULING RECORDED
+---------------
+result_db.json shall keep track of the author who accepted.
+
+OPEN
+----
+  - Does the warrant live in result_db.json, beside the GOOD file, or
+    in a region inside it?
+  - Is a warrant mandatory on re-blessing, optional on first blessing?
+  - How is the author determined — git identity, environment, prompt?
+  - Does hwut.amend edit records after the fact, or only at bless time?
+
+NOTE
+----
+Same feature answers a second problem: HWUT 1.0 allowed a GOOD file to
+be written before the test existed. That path makes the specification
+an artifact that can be reviewed, versioned and argued with *before*
+implementation. Warrant and write-GOOD-first are one instrument.

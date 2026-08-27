@@ -1,0 +1,44 @@
+MANUAL NOTE — for the section on writing test applications
+==========================================================
+
+TITLE:  Choosing what a test prints
+
+SITUATION
+---------
+A test application prints an object through a representation function
+that many other test applications also use. The representation is
+changed: a column is added, a header renamed, a field reordered.
+
+Four hundred GOOD files now differ. Every difference is correct. The
+behaviour under test has not changed at all.
+
+This is not nondeterminism and the tolerance scheme must not absorb
+it. A scheme that absorbed a changed representation would absorb a
+real regression along with it.
+
+PROCEDURE
+---------
+  1. Test the representation function itself, properly and on its own.
+     It is now a component under test, not a convenience.
+
+  2. Run the complete suite against the OLD representation. Green.
+     This establishes that nothing but the representation is in
+     motion.
+
+  3. Switch to the new representation. Re-bless.
+
+     Nothing has changed but the representation, so the behaviour is
+     still the behaviour that was blessed. The verdict carries over
+     because the step that could have changed it was excluded in
+     step 2.
+
+GUIDANCE
+--------
+Prefer a representation that the test owns, or one that is local to
+the tested component, or one that is stable by contract.
+
+A representation borrowed from far away is a coupling between tests
+that share nothing else. It carries every future edit of that faraway
+code into every GOOD file that ever printed through it.
+
+The picture a test paints is part of the test. Treat it as such.

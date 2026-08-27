@@ -1,0 +1,56 @@
+NOTE — neighbouring tools, for context and for positioning
+==========================================================
+
+Written from recollection, not verified against current versions.
+Verify before any of this is quoted publicly.
+
+GOLDEN-MASTER FAMILY (same idea, different reach)
+-------------------------------------------------
+ApprovalTests        Preaching this model since roughly 2007. Multi-
+                     language. Vocabulary: "approve" rather than
+                     "bless". Diff-tool launch on mismatch.
+
+Jest snapshots       JavaScript. Enormous installed base. Where the
+                     term "snapshot rot" comes from: -u re-blesses
+                     everything, and everything is what gets
+                     re-blessed on a Friday.
+
+insta                Rust. Well regarded. Has an interactive review
+                     mode (accept / reject / skip, per file) that is
+                     worth studying against the equivalence-class
+                     re-blessing idea.
+
+Consequence for positioning: free description of behaviour is not the
+differentiator. That continent is settled. The differentiators are:
+
+  - tolerant comparison (analogies, numeric tolerance, potpourri)
+  - --hwut-info choice combinatorics
+  - language independence at the process boundary
+  - integrated coverage, with numbers that travel
+    (binary .cover: 45x smaller than lcov, 30x faster to read than
+     cobertura, measured on 1516 files / 140778 ranges)
+
+"Snapshots, but ours" loses. "Behavioural description that survives
+nondeterminism, across languages, with combinatorial sweeps and
+coverage" is not sold by anyone.
+
+PROPERTY-BASED FAMILY (complement, not rival)
+---------------------------------------------
+Hypothesis           Python. QuickCheck lineage (Haskell, 1999).
+
+The idea: the framework generates inputs — many, and shrunk to the
+smallest failing case when something breaks. The author does not
+enumerate cases; the author states a property that must hold over all
+of them.
+
+The weak point of the family is the oracle. Stating a property strong
+enough to be interesting is hard, and most users fall back to trivial
+properties (does not crash, round-trips).
+
+The pairing is unusually clean: Hypothesis owns input generation,
+HWUT owns the oracle. Generated stimulus, painted reaction, blessed
+picture. Nobody has shipped that combination.
+
+Worth reading specifically: their shrinking, and their database of
+previously failing examples (a persisted corpus of interesting inputs
+— close in spirit to a roster).

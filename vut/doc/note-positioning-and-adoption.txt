@@ -1,0 +1,69 @@
+NOTE — positioning and adoption
+===============================
+
+Nothing here is ruled. This is material for a later decision.
+
+THE CLAIM THAT HOLDS
+--------------------
+An assert can only fail on a hypothesis the author already had.
+A blessed picture fails on everything.
+
+That asymmetry is the whole value. It is why characterising an
+unfamiliar system with HWUT takes an afternoon.
+
+The second claim, which is the deeper one:
+
+A GOOD file is a formal, authoritative expression that a behaviour is
+correct. It is grounded on an expert's competence. An expert judges
+correctness far better when the behaviour is described clearly.
+Therefore free expression is not decoration — it is what makes the
+expert's judgement reliable, and the reliability of that judgement is
+what makes the test statement trustworthy.
+
+Free expression -> better judgement -> trustworthy blessing.
+That chain is the argument. Lead with it.
+
+WHERE NOT TO FIGHT
+------------------
+Not against pytest for the centre of the Python world. Defaults, IDE
+buttons, and what the junior already knows decide that ground, and
+none of them are decided on merit.
+
+WHERE TO STAND
+--------------
+Ground the assert model is bad at:
+
+  - compilers, parsers, code generators
+  - command line tools
+  - protocol stacks
+  - cross-language systems
+  - legacy characterisation, where no specification exists at all
+
+INTEROPERATE RATHER THAN REPLACE
+--------------------------------
+  - pytest plugin: HWUT tests run inside suites that already exist.
+    (Ruled worth doing.)
+  - JUnit XML output: HWUT results appear in dashboards that already
+    exist.
+
+Both are distribution, not architecture. They cost little and they
+remove the two standard objections before they are raised.
+
+THE DEMONSTRATION
+-----------------
+Not a feature tour. Point HWUT at an untested legacy binary and have a
+behavioural net around it by lunch. That one demonstration carries the
+value claim, the coverage numbers, and the cross-language property at
+once.
+
+Coverage benchmarks travel further than philosophy. Keep them
+prominent and keep them reproducible.
+
+THE NAME
+--------
+HWUT — the Hello-Worldler's Unit Test. Pronounced "hood".
+The "ha-what?" mishearing is a hook, not a liability.
+
+Remaining cost is search: what a stranger finds when they look for
+"hwut". Worth checking before release and worth a canonical domain and
+a distinctive first-page snippet if it looks thin.

@@ -1,0 +1,41 @@
+disc-N-hwut-lint.txt           (number to be assigned)
+
+SERVICE:  hwut.lint <wishlist>
+
+PROBLEM
+-------
+The explanatory power of a HWUT test is a property of the author, not
+of the framework. A well painted picture localises a fault better than
+any assert: three lines "alfred" / "caesar" / "berta" and the reader
+sees at once that the second and third are swapped.
+
+A poorly painted picture is a wall of repr() output with embedded
+addresses, and it is notarised all the same.
+
+Assert frameworks fail closed under a weak author: a bad assert is
+still a named, scoped predicate. HWUT fails open. The best feature of
+the tool is the one most dependent on the person holding it.
+
+A linter cannot make a picture good. It can raise the floor.
+
+CANDIDATE CHECKS
+----------------
+  - unstable-looking tokens in a GOOD file: hex addresses, absolute
+    paths, timestamps, temporary directory names, version strings,
+    process ids
+  - no structure: single line, no labels, no separators
+  - unlabelled numeric columns
+  - GOOD file consisting of a boolean or of "OK"/"FAIL" only
+    (the test asserts instead of displaying)
+  - GOOD file whose content is dominated by one repr()-shaped run
+  - GOOD file with no corresponding stimulus visible in the test
+  - excessive width or length (a picture no one will read)
+
+OPEN
+----
+  - Warning only, or may lint fail a run?
+  - Per-test suppression, and where is the suppression recorded?
+  - Does lint run over GOOD files, over test sources, or both?
+  - Overlap with hwut.sanitize (--unregistered, --stale, --orphans):
+    lint judges content, sanitize judges the register. Confirm the
+    split before either grows into the other.

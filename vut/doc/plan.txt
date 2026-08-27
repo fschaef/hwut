@@ -1,4 +1,0 @@
-# MODULE;                                    STATUS;           OLDEST-POST-MODIFICATIONS;
-engine/compare;                              COMPLETE;         2021y06m13d;
-user_interface/difference_display/console;   BEGIN;
-system;                                      BEGIN;
