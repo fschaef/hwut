@@ -56,7 +56,8 @@ from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import explore_tree
+                                                     import (explore_tree,
+                                                             RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
@@ -504,6 +505,9 @@ def main(argv=None, write=None):
 
     try:
         entry_list = row_list_of(os.path.abspath(directory), wish)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

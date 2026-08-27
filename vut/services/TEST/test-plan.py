@@ -71,6 +71,11 @@ def build_directory(extra_db=None):
             adds, for the caller to remove.
     """
     directory = tempfile.mkdtemp(prefix="vut_plan_")
+    #  THE TREE'S BOUNDARY: every face ascends collecting
+    #  'hwut.conf' until it meets this file; a tree without one
+    #  is refused, so a fixture states its own.
+    with open(os.path.join(directory, "hwut-root.conf"), "w") as fh:
+        fh.write("hwut {\n}\n")
     for name, content in dict(FILE_DB, **(extra_db or {})).items():
         with open(os.path.join(directory, name), "w") as fh:
             fh.write(content)

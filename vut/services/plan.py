@@ -29,6 +29,9 @@ import sys
 
 from   vut.engine.orchestrator.exploration.explorer    import explore
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
+from   vut.engine.orchestrator.exploration.tree_explorer \
+                                                    import (RootConfMissing,
+                                                            ascended_spec)
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                        import CTestTaskListQuery
 from   vut.engine.orchestrator.plan.determine          import determine
@@ -126,7 +129,18 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    result = explore(directory)
+    #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
+    #  in a test directory owes the same effective configuration as a
+    #  walk that reached it from the project root.
+    try:
+        inherited, ascent_fault_list = ascended_spec(directory)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    for fault in ascent_fault_list:
+        write(str(fault))
+
+    result = explore(directory, inherited=inherited)
     for fault in result.fault_list:
         write(str(fault))
 
@@ -138,6 +152,9 @@ def main(argv=None, write=None):
                                 root=os.path.abspath(directory))
     try:
         plan, report_list = determine(result.app_set, task_list)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

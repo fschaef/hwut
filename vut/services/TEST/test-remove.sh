@@ -51,6 +51,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
+
 mask() {                # THE ELAPSED STAMP IS THE MACHINE'S. A run
                         # line carries 'hh:mm:ss' and a run that
                         # crosses a second prints a different one --

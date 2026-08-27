@@ -53,6 +53,9 @@ def tree_of(file_db):
             [1] str, the root, for the caller to remove.
     """
     root = tempfile.mkdtemp(prefix="vut_walk_")
+    #  THE TREE'S BOUNDARY: the climb stops here (see tree_explorer).
+    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+        fh.write("hwut {\n}\n")
     for relative, content in file_db.items():
         path = os.path.join(root, relative)
         os.makedirs(os.path.dirname(path), exist_ok=True)

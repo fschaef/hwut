@@ -61,6 +61,8 @@ from   vut.engine.display.console                    import (HELP as RENDERING_H
 from   vut.engine.display.console                    import USAGE_TOKEN_TUPLE \
                                                              as RENDERING_TOKEN_TUPLE
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
+from   vut.engine.orchestrator.exploration.tree_explorer \
+                                                    import RootConfMissing
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
@@ -285,6 +287,9 @@ def _main(argv, write, write_error, captured_f, demand=None,
             _drive(directory, wish, record, worker_max_n, strategy,
                    flow, coverage, name_tuple_of(variant_text),
                    timing_f, event_sink, despite_stain_f))
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

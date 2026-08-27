@@ -48,6 +48,11 @@ def tree_of():
             [1] str               the root, for the caller to remove.
     """
     root = tempfile.mkdtemp(prefix="vut_treeplan_")
+    #  THE TREE'S BOUNDARY: every face ascends collecting
+    #  'hwut.conf' until it meets this file; a tree without one
+    #  is refused, so a fixture states its own.
+    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+        fh.write("hwut {\n}\n")
     file_db = {
         "alpha/TEST/hwut.conf":  'hwut { dependency { "test-b.py" = '
                                  '["test-a.py"] } }\n',

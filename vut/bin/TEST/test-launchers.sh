@@ -57,6 +57,11 @@ if [ "$1" == "path" ]; then
     WORK=$(mktemp -d)
     trap 'rm -rf "$WORK"' EXIT
     cd "$WORK"
+
+#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
+#  until it meets this file; a tree without one is refused, so a
+#  fixture states its own. Empty says only 'the tree ends here'.
+printf 'hwut {\n}\n' > hwut-root.conf
     export PATH="$BIN:$PATH"
 
     by_path=$("$BIN/hwut.show" --help 2>&1)

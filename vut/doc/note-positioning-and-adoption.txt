@@ -49,12 +49,30 @@ INTEROPERATE RATHER THAN REPLACE
 Both are distribution, not architecture. They cost little and they
 remove the two standard objections before they are raised.
 
+THE DIFFERENTIATORS, RANKED
+--------------------------
+See note-independence-coverage-build.txt. In order of how little
+anyone else can answer them:
+
+  1. The build folded into the test result. A test that does not
+     compile is a failed test, not an aborted suite.
+  2. One coverage record spanning all languages in the repository.
+  3. Language independence with nothing installed into the subject.
+     The HWUT for C is the HWUT for Haskell.
+  4. Tolerant comparison: analogies, numeric tolerance, potpourri.
+  5. --hwut-info choice combinatorics.
+
+Free description of behaviour is the value, but it is not the
+differentiator — see note-neighbouring-tools.txt. Lead with 1 to 3.
+
 THE DEMONSTRATION
 -----------------
-Not a feature tour. Point HWUT at an untested legacy binary and have a
-behavioural net around it by lunch. That one demonstration carries the
-value claim, the coverage numbers, and the cross-language property at
-once.
+Not a feature tour. Point HWUT at a repository it has never seen, in
+languages it was never taught, and produce a behavioural net and a
+coverage figure by lunch without modifying a line of it.
+
+The legacy-binary variant of the same demonstration carries the value
+claim; the polyglot variant carries all five differentiators at once.
 
 Coverage benchmarks travel further than philosophy. Keep them
 prominent and keep them reproducible.
