@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The 'output' parameter: declared subjects, files included."
+#     choices    = ["cycle", "declare", "forgotten", "refuse"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'output' PARAMETER (todo-1): a test STATES what it produces.
@@ -23,7 +30,7 @@ export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
-        echo "The 'output' parameter: declared subjects, files included."
+        echo "The 'output' parameter: declared subjects, files included.;"
         echo "CHOICES: declare, refuse, cycle, forgotten;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

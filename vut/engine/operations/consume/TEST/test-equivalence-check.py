@@ -1,4 +1,15 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "EquivalenceCheck: read -> verdict"
+#     choices    = ["blind", "fast_fail", "named_absent",
+#                   "nominal_missing", "observer", "provision_failed",
+#                   "terminated", "unexpected_stderr", "unjudged",
+#                   "verdict"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

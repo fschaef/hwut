@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Strategy: when a directory's unit starts"
+#     choices    = ["contract", "linear", "parallel", "successor"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

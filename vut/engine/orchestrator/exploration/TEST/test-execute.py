@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "'execute': the call itself, stated verbatim"
+#     choices    = ["refused", "stated"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

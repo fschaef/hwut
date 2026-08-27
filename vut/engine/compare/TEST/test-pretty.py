@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "ChunkPair.description()"
+#     choices    = ["line-sequence", "potpourri"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
@@ -36,7 +42,7 @@ import vut.engine.compare.main          as     main
 import asyncio
 
 if "--hwut-info" in sys.argv:
-    print("ChunkPair.description()")
+    print("ChunkPair.description();")
     print("CHOICES: line-sequence, potpourri;")
     sys.exit()
 

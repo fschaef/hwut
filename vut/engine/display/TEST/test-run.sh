@@ -1,5 +1,15 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The hwut.run face: the tree run, rendered live."
+#     choices    = ["busy", "colour", "empty", "fail", "green",
+#                   "jobs-budget", "linear-raw", "nostore", "refused",
+#                   "strategy-refused", "tiers", "timing", "tree-fail",
+#                   "tree-green"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.run' FACE, IN ITS NATURAL HABITAT: real bash test
@@ -33,7 +43,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.run face: the tree run, rendered live."
+        echo "The hwut.run face: the tree run, rendered live.;"
         echo "CHOICES: green, fail, nostore, timing, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

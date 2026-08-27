@@ -1,5 +1,13 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The hwut.stability face: what did not stay the same."
+#     choices    = ["bytes", "cadence", "length", "refused", "stain",
+#                   "steady", "verbose", "verdict"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.stability' FACE -- the same wish run several times, and what
@@ -37,7 +45,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.stability face: what did not stay the same."
+        echo "The hwut.stability face: what did not stay the same.;"
         echo "CHOICES: steady, verdict, bytes, length, cadence, verbose, stain, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

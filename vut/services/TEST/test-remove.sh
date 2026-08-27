@@ -1,5 +1,13 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The removal faces: a test, or one choice, forgotten."
+#     choices    = ["asking", "choice", "refused", "stain", "unknown",
+#                   "untouched", "whole"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.remove' AND 'hwut.remove-choice' FACES -- a test, or one
@@ -33,7 +41,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The removal faces: a test, or one choice, forgotten."
+        echo "The removal faces: a test, or one choice, forgotten.;"
         echo "CHOICES: whole, choice, untouched, unknown, asking, stain, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "MatchDb"
+#     choices    = ["analogy_interferences", "extract_ultimates",
+#                   "pairing"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

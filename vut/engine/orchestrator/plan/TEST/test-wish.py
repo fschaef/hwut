@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Wish: keywords read, cases selected"
+#     choices    = ["anchors", "base", "globs", "parsing", "refused"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The build step of provision"
+#     choices    = ["argv", "contained", "reasons", "silent_failure",
+#                   "success"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

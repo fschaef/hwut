@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "HOCON parser: subset (A), annotated tree"
+#     choices    = ["comments", "faults", "numbers", "oneline",
+#                   "positions", "quoting", "refused", "scalars",
+#                   "structure"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

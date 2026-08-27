@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Determination: a wish and a directory become a plan"
+#     choices    = ["closure", "deterministic", "empty", "misdep",
+#                   "pruned", "whole"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Validator: plain tree, or refusal by name"
+#     choices    = ["choiceless", "conf", "exclusivity", "header",
+#                   "list_form", "off", "root_only", "types",
+#                   "vocabulary"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

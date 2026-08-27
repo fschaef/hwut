@@ -73,8 +73,22 @@ def explore_tree(root, interview_runner=None):
     """
     fault_list  = []
     result_list = []
-    _walk(root, ".", DirectorySpec(language_setup={}, dependency={}),
-          interview_runner, result_list, fault_list)
+    #  THE ROOT IS ITSELF A CANDIDATE. Standing IN a test directory and
+    #  asking is the ordinary case -- it is where an author works --
+    #  and a walk that only ever enters CHILDREN named 'TEST' looks
+    #  everywhere except where it already stands.
+    #
+    #  The name it must match is the FALLBACK: 'test_directory' is
+    #  stated by a PARENT's 'hwut.conf', and at the root there is no
+    #  parent to state it. The root's own conf cannot be folded here
+    #  either -- a test directory's conf holds LOCAL keys, and folding
+    #  it as if inherited would fault on every one of them.
+    if os.path.basename(os.path.normpath(root)) == FALLBACK_TEST_DIRECTORY:
+        result_list.append(
+            (".", explore(root, interview_runner=interview_runner)))
+    else:
+        _walk(root, ".", DirectorySpec(language_setup={}, dependency={}),
+              interview_runner, result_list, fault_list)
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list))

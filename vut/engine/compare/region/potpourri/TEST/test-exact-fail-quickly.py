@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "FriendsPairing: fail quickly"
+#     choices    = ["analogy", "basic", "border", "wild"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

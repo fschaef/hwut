@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Stateful Constraints: bindings, space, dependencies, errors"
+#     choices    = ["basic", "deps", "errors", "lawyer", "strings"]
+# }
+#
 """STATEFUL CONSTRAINTS: '((name: value))' bindings + Configuration.constraint_db.
 
 Pins DOC/SEMANTICS.txt section 10: check-on-entry into the constraint

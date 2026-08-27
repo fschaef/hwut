@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Plan printer: the canonical text, one-way"
+#     choices    = ["bare", "empty", "full"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

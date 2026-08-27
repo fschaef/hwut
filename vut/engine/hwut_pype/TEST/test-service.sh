@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The pype service called as a shell citizen -- its natural habitat."
+#     choices    = ["absent_script", "exit_code", "filter"]
+#     eq-pattern = ["SUCCESS.*"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE SERVICE IN ITS NATURAL HABITAT: pype is a PIPE FILTER, and this test
@@ -18,7 +25,7 @@ PYPE="python3 $HERE/../hwut_pype.py"
 
 case "$1" in
     --hwut-info)
-        echo "The pype service called as a shell citizen -- its natural habitat."
+        echo "The pype service called as a shell citizen -- its natural habitat.;"
         echo "CHOICES: filter, exit_code, absent_script;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;

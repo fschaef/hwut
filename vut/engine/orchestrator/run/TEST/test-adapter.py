@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The translation: stated parameters reach their owners"
+#     choices    = ["caps", "compare", "naming", "refused", "sweep"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

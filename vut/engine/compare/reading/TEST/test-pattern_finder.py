@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Tolerance PatternFinder"
+#     choices    = ["aggressive", "do", "setup", "tolerance_id"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ____________________________________________________________________________
 

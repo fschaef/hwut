@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Potpourri Variants: subset, duplicates"
+#     choices    = ["combined", "duplicates", "subset"]
+# }
+#
 """Potpourri variants: the 'subset' and 'duplicates' flags.
 
 Pins DOC/SEMANTICS.txt section 7.5 (POTPOURRI variants): subset (subject

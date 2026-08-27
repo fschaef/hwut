@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "hwut.cov end to end"
+#     choices    = ["door", "run"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

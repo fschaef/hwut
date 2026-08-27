@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Plan form: nodes, links, exclusions, laws at the door"
+#     choices    = ["closure", "derived", "nodes", "refused", "stage"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

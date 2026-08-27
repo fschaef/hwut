@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The front door and its ceremony"
+#     choices    = ["book", "busy", "goal", "lock", "recording",
+#                   "refused", "request", "setup", "sidecars", "target",
+#                   "the_arc", "where"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

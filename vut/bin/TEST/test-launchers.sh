@@ -1,5 +1,11 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The launcher roof: every shim answers with its face's voice."
+#     choices    = ["answer", "path"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE LAUNCHER ROOF, DRIVEN AS A TABLE: every shim in bin/ is called and
@@ -20,7 +26,7 @@ unset COLUMNS NO_COLOR
 
 case "$1" in
     --hwut-info)
-        echo "The launcher roof: every shim answers with its face's voice."
+        echo "The launcher roof: every shim answers with its face's voice.;"
         echo "CHOICES: answer, path;"
         exit 0 ;;
 esac

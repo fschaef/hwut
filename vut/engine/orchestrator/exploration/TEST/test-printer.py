@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "hwut.parse: what the framework read"
+#     choices    = ["directory", "faults", "file", "no_default",
+#                   "origins", "places"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+#
+# hwut {
+#     title      = "Procsitter resource containment with attribution"
+#     choices    = ["cancelled_run", "clean_under_caps", "command_guard",
+#                   "cpu_time", "disk_space_low", "disk_usage",
+#                   "file_size", "memory", "no_psutil", "output_gap",
+#                   "pids", "self_exit_codes", "stderr_tail_cap",
+#                   "wall_clock"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

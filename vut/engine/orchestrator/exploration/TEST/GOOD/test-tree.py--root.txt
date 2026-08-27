@@ -1,0 +1,10 @@
+
+--- started ABOVE the test directory ---
+    TEST     test-a.py, test-b.py
+
+--- started IN the test directory -- the root itself ---
+    .        test-a.py, test-b.py
+
+--- a root that is NOT a test directory, and holds none ---
+    directories explored: 0
+<hwut-end>

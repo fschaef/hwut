@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "FriendsPairingMax: Search anyway"
+#     choices    = ["basic", "restricted_cmp"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

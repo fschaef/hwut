@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Table Region: ordered, unordered, key, columns, errors"
+#     choices    = ["columns", "errors", "key", "modes"]
+# }
+#
 """'table' region: every line is a row of columns.
 
 Pins DOC/SEMANTICS.txt section 7.5 (TABLE): ordered/unordered/key-matched

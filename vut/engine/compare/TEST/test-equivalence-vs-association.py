@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Orthogonal Space Consistency Check"
+#     choices    = ["analogy", "leakage", "numeric", "potpourri",
+#                   "sudoku"]
+#     eq-pattern = ["Consistency:         OK"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Orthogonal Space Sampling (Consistency Check).

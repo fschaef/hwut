@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Explorer: carriers, cross-check, resolution"
+#     choices    = ["carriers", "defaults", "directory", "faults",
+#                   "graph", "resolve"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

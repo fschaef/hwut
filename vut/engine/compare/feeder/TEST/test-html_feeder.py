@@ -1,4 +1,9 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "The HTML generator feeder"
+# }
+#
 import io
 import sys
 import asyncio
@@ -85,7 +90,7 @@ Then turned into butter and sat on the grass.
 
 if __name__ == "__main__":
     if "--hwut-info" in sys.argv:
-        print("Testin the HTML generator feeder")
+        print("The HTML generator feeder;")
         sys.exit()
     parser = argparse.ArgumentParser(description="VUT UI Feeder Test Script")
 

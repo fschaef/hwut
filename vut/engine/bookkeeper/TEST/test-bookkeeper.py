@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The Bookkeeper: the naming, the base, the verdicts"
+#     choices    = ["damage", "divergence", "naming", "overwrite",
+#                   "protection", "record", "reproduce", "setup_delta"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

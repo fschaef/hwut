@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The group table: a set of runs is a number, issued once"
+#     choices    = ["faults", "groups", "persisted", "tables"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

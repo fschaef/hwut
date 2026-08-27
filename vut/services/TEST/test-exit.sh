@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The exit status law: one enum, every face relates."
+#     choices    = ["law"]
+#     eq-pattern = ["[0-9]+"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE EXIT STATUS LAW (E-1), TESTED AS A TABLE: one enum,
@@ -14,7 +21,7 @@ export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
-        echo "The exit status law: one enum, every face relates."
+        echo "The exit status law: one enum, every face relates.;"
         echo "CHOICES: law;"
         echo "HAPPY: [0-9]+;"
         exit 0 ;;

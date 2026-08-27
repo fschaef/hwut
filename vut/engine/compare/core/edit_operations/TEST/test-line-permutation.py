@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Lines: Permutation LineElement-types"
+#     choices    = ["different", "different-2", "different-good-2",
+#                   "different-void-2", "same"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The multi-executor: one application call, many choices"
+#     choices    = ["files", "plugged", "refused", "session", "status",
+#                   "unknown"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

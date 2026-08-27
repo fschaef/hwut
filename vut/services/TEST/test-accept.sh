@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The hwut.accept face: promotion, and what it refuses."
+#     choices    = ["ask", "bless", "merge", "stderr", "sugar", "token"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.accept' FACE, IN ITS NATURAL HABITAT: real runs record real
@@ -25,7 +32,7 @@ export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.accept face: promotion, and what it refuses."
+        echo "The hwut.accept face: promotion, and what it refuses.;"
         echo "CHOICES: bless, merge, stderr, sugar, ask, token;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

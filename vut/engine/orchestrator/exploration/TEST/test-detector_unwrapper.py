@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Detector and unwrapper: no comment syntax known"
+#     choices    = ["blank", "dash", "detect", "hash", "offsets",
+#                   "single", "star"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

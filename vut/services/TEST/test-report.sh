@@ -1,5 +1,13 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The hwut.report face: the databases, rendered."
+#     choices    = ["json", "junit", "never_run", "refused", "stain",
+#                   "tap", "traditional", "width"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.report' FACE -- what the result databases hold, rendered
@@ -35,7 +43,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.report face: the databases, rendered."
+        echo "The hwut.report face: the databases, rendered.;"
         echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

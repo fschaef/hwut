@@ -1,11 +1,19 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Tree walk: markers found, configuration folded down"
+#     choices    = ["inherit", "locals", "marker", "root",
+#                   "walk"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
 PURPOSE: THE TREE WALK (R-69) -- finding test directories, folding the
          configuration down.
 
-CHOICES: walk, inherit, marker, locals;
+CHOICES: walk, inherit, marker, locals, root;
 
 DESCRIPTION:
 
@@ -142,11 +150,43 @@ def test_locals():
         shutil.rmtree(root, ignore_errors=True)
 
 
+def test_root():
+    """RETURN: None. THE ROOT IS ITSELF A CANDIDATE: a walk started IN
+    a test directory explores THAT directory, and not only the ones
+    below it. Standing where the tests are is the ordinary case -- it
+    is where an author works -- and a walk that enters only CHILDREN
+    named 'TEST' looked everywhere except where it already stood.
+    """
+    file_db = {
+        "TEST/hwut.conf": 'hwut {\n    on_entry = "true"\n}\n',
+        "TEST/test-a.py": '# hwut { title = "A"  choices = ["one","two"] }\n',
+        "TEST/test-b.py": '# hwut { title = "B" }\n',
+    }
+
+    banner("started ABOVE the test directory")
+    tree, root = tree_of(file_db)
+    for where, result in tree:
+        print("    %-8s %s" % (where, ", ".join(
+              sorted(a.source_file for a in result.app_set))))
+
+    banner("started IN the test directory -- the root itself")
+    for where, result in explore_tree(os.path.join(root, "TEST")):
+        print("    %-8s %s" % (where, ", ".join(
+              sorted(a.source_file for a in result.app_set))))
+    shutil.rmtree(root, ignore_errors=True)
+
+    banner("a root that is NOT a test directory, and holds none")
+    plain = tempfile.mkdtemp(prefix="vut_walk_")
+    print("    directories explored: %d" % len(list(explore_tree(plain))))
+    shutil.rmtree(plain, ignore_errors=True)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Tree walk: markers found, configuration folded down;", {
         "walk":    test_walk,
         "inherit": test_inherit,
+        "root":       test_root,
         "marker":  test_marker,
         "locals":  test_locals,
     }).run()

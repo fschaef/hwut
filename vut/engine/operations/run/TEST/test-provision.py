@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Provision: execute, canonicalise, and the loaded read"
+#     choices    = ["absent_application", "argv", "canonicalisation",
+#                   "canonicaliser_broken", "containment", "loaded",
+#                   "same_shape", "source_kinds", "stages", "subjects"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

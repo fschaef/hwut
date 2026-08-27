@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The directory mutex: one live holder, asked liveness, named refusals"
+#     choices    = ["age", "dead", "foreign", "hold_timeout", "reentry",
+#                   "taken", "waiting"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Lines: Transposition and Visible Nothing"
+#     choices    = ["transpose", "visible-nothing"]
+# }
+#
 """
 PURPOSE: Verify Transposition distance scaling and VISIBLE_NOTHING logic.
 CHOICES: transpose, visible-nothing;

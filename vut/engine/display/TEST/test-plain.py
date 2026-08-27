@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Tier 1, the plain console report, over scripted streams"
+#     choices    = ["allgreen", "empty", "fault", "mixed", "tiers",
+#                   "unknown", "words"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

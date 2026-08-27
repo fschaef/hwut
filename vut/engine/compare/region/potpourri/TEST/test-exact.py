@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "FriendsPairing: Search anyway"
+#     choices    = ["analogy", "basic", "border", "special", "wild",
+#                   "wild-2"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

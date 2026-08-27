@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "FrozenAnalogyDb Validation Suite"
+#     choices    = ["consistency", "flyweight", "hybrid_masks",
+#                   "immutability", "member_functions"]
+# }
+#
 """
 PURPOSE: Aggressive validation of FrozenAnalogyDb member functions and state,
          including Hybrid Bitmask/ID validation logic.

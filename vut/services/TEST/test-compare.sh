@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The compare service face: the diff convention, on stdout."
+#     choices    = ["differing", "reading", "tolerated"]
+#     eq-pattern = ["SUCCESS.*"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE COMPARE SERVICE, IN ITS NATURAL HABITAT. The shell asks, the
@@ -25,7 +32,7 @@ export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
-        echo "The compare service face: the diff convention, on stdout."
+        echo "The compare service face: the diff convention, on stdout.;"
         echo "CHOICES: differing, tolerated, reading;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;

@@ -1,4 +1,16 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The readers: three artifact formats, one record"
+#     choices    = ["absent", "agreement", "aliases", "calls",
+#                   "cobertura", "gather", "gcov", "ghdl", "go",
+#                   "jacoco", "lcov", "luacov", "native", "psl",
+#                   "python", "resultset", "roles", "ucis", "verilator",
+#                   "witnessed"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

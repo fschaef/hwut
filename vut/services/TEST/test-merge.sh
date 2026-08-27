@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The merge service face: channels, exit codes, the commit law."
+#     choices    = ["cancel", "commit", "stdout_artifact"]
+#     eq-pattern = ["SUCCESS.*"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE MERGE SERVICE, IN ITS NATURAL HABITAT. The caller is the shell --
@@ -26,7 +33,7 @@ export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
-        echo "The merge service face: channels, exit codes, the commit law."
+        echo "The merge service face: channels, exit codes, the commit law.;"
         echo "CHOICES: commit, cancel, stdout_artifact;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;

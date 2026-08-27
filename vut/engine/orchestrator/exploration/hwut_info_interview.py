@@ -190,9 +190,16 @@ def _procsitter_runner(path, caps):
             return None
         return b"".join(chunk_list).decode("utf-8", "replace")
 
+    #  THE COROUTINE IS BUILT BEFORE THE TRY and CLOSED where the run
+    #  never happens. 'asyncio.run' can refuse before it starts -- a
+    #  loop is already running, say -- and a coroutine dropped
+    #  unawaited warns on stderr, which would put a machine-chosen
+    #  path into whatever is capturing this.
+    task = _ask()
     try:
-        return asyncio.run(_ask())
+        return asyncio.run(task)
     except Exception:
         #  A file that cannot even be launched is not a test
         #  application. Silence is not a fault.
+        task.close()
         return None

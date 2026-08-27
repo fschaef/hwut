@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "DifferenceDisplay and the feed session"
+#     choices    = ["down_stream", "every_subject", "no_provision",
+#                   "only_differing", "sequence", "signature",
+#                   "verdict_safe"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

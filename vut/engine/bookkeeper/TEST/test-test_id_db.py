@@ -1,3 +1,12 @@
+#
+# hwut {
+#     title      = "The test register: ids that survive renames"
+#     choices    = ["allocation", "face", "faults", "healing", "retire",
+#                   "tables", "vanished"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 
 PURPOSE: THE TEST REGISTER -- ids for applications and choices that

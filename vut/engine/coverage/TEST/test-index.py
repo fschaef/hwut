@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The coverage index: who executed this line, and what to run when it changes"
+#     choices    = ["change", "economy", "honest", "keys", "lossy",
+#                   "query", "segments"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

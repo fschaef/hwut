@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Scheduler: the plan executed, trace and report"
+#     choices    = ["budget", "build", "exclusion", "frame", "misdep",
+#                   "ordering", "parallel", "session", "workers"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

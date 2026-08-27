@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Region Handlers: shebang framing, verbatim, ignore, params, errors"
+#     choices    = ["errors", "ignore", "params", "verbatim"]
+# }
+#
 """Region handlers via the shebang framing: 'verbatim', 'ignore', the
 'potpourri' parameters, and the loud framing errors.
 

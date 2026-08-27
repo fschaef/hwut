@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "DeterministicStream RNG and SelectionMarker spread"
+#     choices    = ["gauss", "primitives", "ranges", "sample",
+#                   "seed_sweep", "select", "unchosen"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

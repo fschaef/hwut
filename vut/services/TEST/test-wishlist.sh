@@ -1,5 +1,13 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The hwut.wishlist face: the list, printed and spent."
+#     choices    = ["empty", "print", "refused", "roundtrip", "select",
+#                   "spent", "travels"]
+#     eq-pattern = ["STATUS: [0-9]"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE 'hwut.wishlist' FACE AND THE '--wishlist' KEYWORD -- the list,
@@ -28,7 +36,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.wishlist face: the list, printed and spent."
+        echo "The hwut.wishlist face: the list, printed and spent.;"
         echo "CHOICES: print, select, roundtrip, travels, spent, empty, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;

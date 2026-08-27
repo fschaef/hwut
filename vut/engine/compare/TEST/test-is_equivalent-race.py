@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Async Racing: is_equivalent Early Abort"
+#     choices    = ["jittery", "nominal-slow", "subject-slow"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Testing 'is_equivalent' early abort under race conditions.

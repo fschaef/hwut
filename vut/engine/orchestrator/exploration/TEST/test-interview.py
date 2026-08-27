@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The interview: hwut 1.0 answers, and is read"
+#     choices    = ["block", "directory", "precedence", "procsitter",
+#                   "silence"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

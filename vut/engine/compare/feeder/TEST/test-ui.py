@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "UI Feeder Protocol (Comprehensive)"
+#     choices    = ["potpourri", "structure", "types"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Test the UI Feeder Protocol (feeder/ui.py).

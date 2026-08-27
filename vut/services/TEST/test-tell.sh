@@ -1,5 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# hwut {
+#     title      = "The report service face: one command packs one test whole."
+#     choices    = ["bare", "coverage", "flags", "pack", "raw"]
+#     eq-pattern = ["SUCCESS.*"]
+# }
+#
 # ---------------------------------------------------------------------------
 #
 # THE REPORT SERVICE, IN ITS NATURAL HABITAT: one shell command packs
@@ -37,7 +44,7 @@ TELL="python3 $ROOT/vut/services/tell.py"
 
 case "$1" in
     --hwut-info)
-        echo "The report service face: one command packs one test whole."
+        echo "The report service face: one command packs one test whole.;"
         echo "CHOICES: pack, raw, bare, flags, coverage;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;

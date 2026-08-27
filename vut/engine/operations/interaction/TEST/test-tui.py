@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The TUI tier"
+#     choices    = ["display_only", "editor_loop", "elements", "reading",
+#                   "regions", "rendering", "target_wiring",
+#                   "undecided_author"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

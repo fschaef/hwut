@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Branch and MC/DC: measures registered beside the line axis"
+#     choices    = ["branch", "faults", "in_record", "mcdc", "named",
+#                   "registration", "unmergeable"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

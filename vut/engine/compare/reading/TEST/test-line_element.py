@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Tolerance: LineElement-s"
+#     choices    = ["LineElementAnalogy",
+#                   "LineElementEquivalencePattern", "LineElementNumber",
+#                   "LineElementString", "NumberBand"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ____________________________________________________________________________
 

@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "TriggerDispatcher: schedule, priority, and the end of time"
+#     choices    = ["abstract", "cancel", "edges", "priority",
+#                   "schedule", "stable", "stop", "termination",
+#                   "yielding"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

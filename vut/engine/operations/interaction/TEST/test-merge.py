@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "The merge session: the UP half"
+#     choices    = ["cancel", "commit", "display_only", "empty_commit",
+#                   "envelope", "loop", "loop_pipe", "loop_realigns",
+#                   "rich_client", "sequence", "unknown", "widened_down"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Async Racing: associate Stream Flow"
+#     choices    = ["jittery", "nominal-slow", "subject-slow"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Testing 'associate' with deterministic async race conditions.

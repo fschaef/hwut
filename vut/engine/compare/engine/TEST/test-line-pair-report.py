@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+#
+# hwut {
+#     title      = "LinePair: subject_and_nominal_line_element_lists()"
+#     choices    = ["accordion", "circular", "exhaustion", "monkey",
+#                   "transpose", "visible-nothing"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 HWUT Unit Test for LinePair.subject_and_nominal_line_element_lists()

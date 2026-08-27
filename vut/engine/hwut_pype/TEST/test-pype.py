@@ -1,4 +1,15 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "pype line-matching language"
+#     choices    = ["anchors_repeat", "boundaries_stack", "compat",
+#                   "default_mode", "else_flush", "errors", "examples",
+#                   "generate", "if_cause", "imports", "inheritance",
+#                   "modes", "multi_inheritance", "namespace",
+#                   "patterns", "pipe", "terminal"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

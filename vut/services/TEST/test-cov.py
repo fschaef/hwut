@@ -1,4 +1,12 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "hwut.cov: convert, formats, and the door"
+#     choices    = ["convert", "formats", "help", "refused"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
@@ -127,7 +135,19 @@ def test_refused():
 def test_help():
     """The help text and the empty line."""
     call(["--help"], "")
-    call([], "")
+    #  THE EMPTY COMMAND LINE READS THE WORKING DIRECTORY, and a walk
+    #  now explores the directory it STANDS IN as well as those below.
+    #  Run here, this call would report on the suite's own neighbours
+    #  and its record would move whenever one is added -- so it is
+    #  made to stand somewhere with nothing in it.
+    directory = tempfile.mkdtemp(prefix="vut_cov_")
+    here      = os.getcwd()
+    try:
+        os.chdir(directory)
+        call([], "")
+    finally:
+        os.chdir(here)
+        shutil.rmtree(directory, ignore_errors=True)
     verdict(True, "help on request; an empty command line is EMPTY.")
 
 

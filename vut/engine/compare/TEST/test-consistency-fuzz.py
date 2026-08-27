@@ -1,4 +1,11 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Generative Judge/Lawyer consistency net"
+#     choices    = ["consistency", "constraints", "metamorphic",
+#                   "reflexive"]
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

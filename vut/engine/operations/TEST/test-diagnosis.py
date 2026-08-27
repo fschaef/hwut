@@ -1,4 +1,13 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Diagnosis: every silent failure names itself"
+#     choices    = ["channel_hint", "empty_answer", "never_judges",
+#                   "nothing", "one_source", "record", "resolution"]
+#     eq-pattern = ["SUCCESS.*"]
+#     interactive = true
+# }
+#
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+#
+# hwut {
+#     title      = "Bipartite Matching: Augmenting Path Algorithm"
+#     choices    = ["basic", "chain", "stress"]
+# }
+#
 import sys
 import os
 import time
