@@ -54,11 +54,6 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-#  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
-#  until it meets this file; a tree without one is refused, so a
-#  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
-
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
     mkdir -p GOOD .hwut-store
     printf 'print("alpha")\nprint("beta")\n' > demo.py

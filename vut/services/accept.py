@@ -44,9 +44,6 @@ import sys
 from pathlib import Path
 
 from   vut.engine.bookkeeper.bookkeeper                import Bookkeeper
-from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                       import (RootConfMissing,
-                                                               ascended_spec)
 from   vut.engine.bookkeeper.test_id_db                import TestIdDb
 from   vut.engine.bookkeeper.configuration             import E_StderrNote
 from   vut.engine.bookkeeper.stream_store              import Store
@@ -446,18 +443,7 @@ def main(argv=None, write=None, read_line=None):
                               until_spec=wish.until_spec,
                               glob_tuple=wish.glob_tuple + glob_tuple)
 
-    #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
-    #  in a test directory owes the same effective configuration as a
-    #  walk that reached it from the project root.
-    try:
-        inherited, ascent_fault_list = ascended_spec(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for fault in ascent_fault_list:
-        write(str(fault))
-
-    result = explore(directory, inherited=inherited)
+    result = explore(directory)
     for fault in result.fault_list:
         write("FAULT: %s" % fault)
 

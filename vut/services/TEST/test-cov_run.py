@@ -136,11 +136,6 @@ def script(title, choice_list, body, source):
 def fixture():
     """RETURN: str, the fixture root, for the caller to remove."""
     root = tempfile.mkdtemp(prefix="vut_cov_e2e_")
-    #  THE TREE'S BOUNDARY: every face ascends collecting
-    #  'hwut.conf' until it meets this file; a tree without one
-    #  is refused, so a fixture states its own.
-    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
-        fh.write("hwut {\n}\n")
     test = os.path.join(root, "suite", "TEST")
     good = os.path.join(test, "GOOD")
     os.makedirs(good)

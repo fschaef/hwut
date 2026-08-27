@@ -1,0 +1,107 @@
+NOTE — three properties that no neighbouring tool has together
+==============================================================
+
+Material for the manual and for the positioning. Nothing here is
+ruled.
+
+1. LANGUAGE INDEPENDENCE, WITHOUT INSTALLATION
+----------------------------------------------
+HWUT tests at the process boundary: stimulus in, printed reaction out.
+The subject under test links nothing, imports nothing, and registers
+nothing.
+
+The consequence usually stated as "multi-language support" is weaker
+than what is on offer here. Most tools that claim it ship one adapter
+per language: a gem, a crate, a pip package, a header to include, a
+JUnit descendant to inherit from. That is N frameworks under one
+brand, N dependencies added to N builds, and N dialects the engineer
+must learn.
+
+The HWUT used for C is the same HWUT used for Haskell. Not a port. The
+same tool.
+
+What this buys, concretely:
+
+  - No new dependency enters the build of the tested project. The
+    dependency graph of the product is untouched by the fact that it
+    is tested.
+  - A subject that cannot be modified can still be tested: a vendored
+    binary, a closed toolchain, a generated artifact, something behind
+    a serial line or a socket.
+  - A polyglot repository has one test vocabulary, not one per
+    language. The engineer who moves from the C module to the Lua
+    module does not change tools.
+  - A language with no test framework at all — or with a bad one — is
+    not a special case.
+
+The cost is honest and should be stated: no in-process access. No
+mocking of internals from the harness, no fixtures injected into the
+subject's address space. The subject must be arranged to display what
+it does. That arrangement is the test application, and writing it is
+the skill.
+
+2. COVERAGE ACROSS LANGUAGES, UNDER ONE ROOF
+--------------------------------------------
+A repository holding bash, C and Lua has, today, three coverage
+regimes: three instrumentation mechanisms, three output formats, three
+reports, and no total. The question "what fraction of this repository
+is exercised" has no answer, because nothing spans the boundary.
+
+HWUT records coverage for all of them in one format and reports one
+figure over the whole repository.
+
+Cross-language test *running* exists in weak forms elsewhere.
+Cross-language *coverage* essentially does not.
+
+This is also where the measured numbers belong, because the unified
+binary format is what makes them possible:
+
+  binary .cover, on a real run of 1516 files / 140778 ranges
+    - 45x smaller than lcov
+    - 30x faster to read than cobertura
+
+Binary is the only on-disk form. Text is presentation, via
+hwut.cov convert.
+
+3. THE BUILD IS PART OF THE TEST RESULT
+---------------------------------------
+Every framework this note's author is aware of treats compilation as a
+precondition. The build runs outside the suite. If it fails, the run
+aborts, and the engineer learns nothing about the remaining nine
+hundred tests.
+
+Under HWUT the build belongs to the test. A test that does not compile
+is a test that failed: recorded, with its compiler output as its
+reaction, while the suite continues.
+
+Three consequences:
+
+  - A global abort becomes a local red. One broken test application
+    costs one result, not the run.
+  - Compiler output is a behaviour like any other. It can be
+    displayed, compared tolerantly, and blessed. A test whose intended
+    behaviour is "this must not compile, and must say why" is an
+    ordinary test, not a special mechanism.
+  - Independence is real: tests do not share a build step whose
+    failure is common to all of them.
+
+For anything with a compiler in the loop — code generators, cross
+compilation, dialect behaviour across gcc / clang / msvc, deliberately
+rejected programs — this is not a convenience. It is the reason to
+reach for the tool.
+
+WHY THE THREE BELONG TOGETHER
+-----------------------------
+Each is separately available somewhere, in some form. The combination
+is not:
+
+  free description of behaviour
+    + no installation into the subject
+    + one coverage record across all languages
+    + the build folded into the result
+
+A tool with all four can be pointed at a repository it has never seen,
+in languages it was never taught, and produce a behavioural net and a
+coverage figure without a line of that repository being modified.
+
+That is the demonstration.
