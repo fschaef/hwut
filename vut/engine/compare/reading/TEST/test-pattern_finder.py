@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Tolerance PatternFinder"
 #     choices    = ["aggressive", "do", "setup", "tolerance_id"]
 # }

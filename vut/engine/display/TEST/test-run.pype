@@ -1,52 +1,136 @@
 #! /usr/bin/env hwut.pype
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 # ---------------------------------------------------------------------------
-# THE FLOW DIGEST of a parallel 'hwut.run': the flow tier's lines are
-# recorded per directory nickname and printed SORTED, the parallel
-# column dropped; the closing blocks pass through unchanged. Times are
-# masked by the suite before the filter sees them; a machine path in a
-# fault's text is masked here, on every line.
+# THE FLOW DIGEST of a parallel 'hwut.run'.
+#
+# THIS SCRIPT IS PART OF THE ORACLE, not a tidy-up on the way to the
+# terminal: what the GOOD file holds is what this filter made of the
+# stream. A defect here is a defect in the oracle, and a digest that
+# swallowed a verdict would bless a broken subject
+# (engine/display/DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt).
+#
+# THE OUTPUT IS DETERMINISTIC. Launches are subject to race, so the
+# flow's ORDER is not a fact about the subject and must not be
+# recorded as one. The lines are collected, and written SORTED.
+#
+#     collect -> EXPAND -> sort on (directory, app, choice)
+#             -> RE-ELIDE -> print
+#
+# EXPANSION COMES FIRST. A live flow line elides against ARRIVAL
+# order: ':/:' means 'the same application as the line above'. Sorting
+# lines still in that form would attach a choice to whichever run
+# happened to sort above it. So each line is restored to its full key
+# before anything is compared -- and only then, having a total order,
+# may the digest elide again. ONLY A WRITER THAT SORTS MAY ELIDE
+# (disc-8), which is why the live flow's elision and this one are
+# different acts upon the same notation.
+#
+# WHAT IS MASKED, AND WHY IT IS MASKED HERE: the timing column, the
+# job column and machine-chosen paths are facts about the machine and
+# the morning, not about the subject. All three are swallowed in THIS
+# file -- deterministicalization in two places, a shell filter and a
+# pype, is one place too many to be wrong.
+#
+# WHAT IS NOT MASKED: the badge, the name, the phrase, the verdict.
+# Masking the clock is deterministicalization; masking a verdict is
+# blindness.
 # ---------------------------------------------------------------------------
 on: <bof> => {
     import re
-    flow_db   = {}          # nick -> [line body, ...]
+
+    run_list  = []          # (directory, app, choice, badge, tail)
     standing  = 0
     peak      = 0
     peak_f    = False       # set by 'test-run--jobs-budget.pype'
+    closed_f  = False       # the first ruler has passed
+    last_dir  = None        # the arrival-order elision being expanded
+    last_app  = None
+
+    BADGE_TUPLE = ("START", "END", "SKIP", "DIR", "FRAME", "DONE",
+                   "TREE", "FAULT", "NOTE")
+    RUN_BADGE_TUPLE = ("START", "END", "SKIP")
+
     def masked(text):
-        # a machine path between quotes: the tree-relative tail kept
-        return re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
+        text = re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
+        text = re.sub(r"^\s*\d+\.\d+s\s+", "", text)
+        text = re.sub(r"^\|\d+\|\s+", "", text)
+        #  THE DOTTED FILL IS NO FACT ABOUT THE SUBJECT: its length
+        #  is the width less the body, and the body carries the LIVE
+        #  elision mark, which arrival order decides. Two runs of one
+        #  suite would differ in nothing but a count of dots.
+        text = re.sub(r"\.{2,}", "..", text)
+        #  THE WALL CLOCK of the closing blocks: how long the suite
+        #  took is a fact about the machine and the morning.
+        return re.sub(r"\d{2}:\d{2}:\d{2}", "hh:mm:ss", text)
 }
 
-# A flow line: 'hh:mm:ss | NNN | [TAG  ] NICK...'. The body after the
-# parallel column is kept; the nickname is the word that follows the tag.
-on: <bol> "hh:mm:ss |" <int> "|" => {
-    body = pype.line().split("|", 2)[2].strip()
-    tag, rest = body[:7], body[7:].strip()
-    nick = rest.split(":")[0].split(" ")[0]
-    if   tag == "[START]": standing += 1; peak = max(peak, standing)
-    elif tag == "[END  ]": standing -= 1
-    if flow_db is None: print(masked(pype.line()))     # a FAULTS block line
-    else:               flow_db.setdefault(nick, []).append(masked(body))
-}
-
-on: <bol> "=====" => {
-    if flow_db is not None:
-        print("FLOW DIGEST (per directory, sorted) {")
-        for nick in sorted(flow_db):
-            print("    %s:" % nick)
-            for body in sorted(flow_db[nick]):
-                print("        %s" % body)
-        if peak_f:
-            print("    peak standing at once: %d" % peak)
-        print("}")
-        print("")
-        flow_db = None
-    print(pype.line())
+on: <bol> <"[A-Z]*"> => {
+    text  = masked(pype.line())
+    field = text.split()
+    badge = field[0] if field else ""
+    if closed_f or badge not in BADGE_TUPLE:
+        print(text)
+    elif badge == "DIR":
+        last_dir = field[1] if len(field) > 1 else last_dir
+        last_app = None
+        run_list.append((last_dir, "", "", badge,
+                         " ".join(field[2:])))
+    elif badge not in RUN_BADGE_TUPLE:
+        last_app = None
+        print(text)
+    else:
+        if   badge == "START": standing += 1; peak = max(peak, standing)
+        elif badge == "END":   standing -= 1
+        mark = field[1]
+        if   mark == ":/:": directory, app, rest = last_dir, last_app, field[2:]
+        elif mark == ":/":  directory, app, rest = last_dir, field[2], field[3:]
+        else:               directory, app, rest = mark, field[2], field[3:]
+        last_dir, last_app = directory, app
+        remainder = " ".join(rest)
+        head, dot, tail = remainder.partition("..")
+        run_list.append((directory, app, head.strip(), badge,
+                         (dot + tail).strip()))
 }
 
 on: <else> => {
-    # blank lines of the flow are the digest's own business; everything
-    # after the first ruler passes through.
-    if flow_db is None or pype.line().strip(): print(masked(pype.line()))
+    #  Everything that does not open with a badge: the blank lines of
+    #  the flow are the digest's own business; after the first ruler
+    #  every line passes through.
+    if closed_f or pype.line().strip(): print(masked(pype.line()))
+}
+
+on: <bol> "=====" => {
+    if not closed_f:
+        closed_f = True
+        print("FLOW DIGEST (sorted; the launch order is no fact of the")
+        print("             subject, and is not recorded) {")
+        seen_dir = None
+        seen_app = None
+        for directory, app, choice, badge, tail in sorted(run_list):
+            if   (directory, app) == (seen_dir, seen_app): mark = ":/:"
+            elif directory == seen_dir:                    mark = ":/"
+            else:                                          mark = directory
+            #  ':/:' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE.
+            #  A choiceless run elided to ':/:' would name nothing at
+            #  all -- the mark says 'the same application', and with
+            #  no choice beside it nothing tells one line from the
+            #  next.
+            if mark == ":/:" and not choice: mark = ":/"
+            seen_dir, seen_app = directory, app
+            if badge == "DIR":
+                #  The directory's own line names the directory, not
+                #  a run under it: it opens the block and elides
+                #  nothing.
+                seen_app = None
+                print(("    %-5s %s %s"
+                       % (badge, directory, tail)).rstrip())
+                continue
+            shown = "" if mark == ":/:" else app
+            line  = "    %-5s %-6s %-20s %s" % (badge, mark, shown, choice)
+            line  = line.rstrip()
+            print("%s %s" % (line, tail) if tail else line)
+        if peak_f: print("    peak standing at once: %d" % peak)
+        print("}")
+        print("")
+    print(masked(pype.line()))
 }

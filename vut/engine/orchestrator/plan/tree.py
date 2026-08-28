@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 from ..exploration.task_list_query import CTestTaskListQuery
 from .determine import determine
+from .label     import swallowed_warning_tuple
 from .printer   import print_plan
 
 
@@ -36,9 +37,10 @@ class CTreePlanEntry:
 @dataclass(frozen=True, slots=True)
 class CTreePlan:
     """The plans of a tree, in walk order."""
-    root:        str
-    entry_tuple: tuple
-    fault_tuple: tuple           # the WALK's own faults
+    root:          str
+    entry_tuple:   tuple
+    fault_tuple:   tuple         # the WALK's own faults
+    warning_tuple: tuple = ()    # findings that decide nothing
 
     def __iter__(self):
         """YIELD: [0] CTreePlanEntry  one directory's entry, walk
@@ -47,6 +49,7 @@ class CTreePlan:
 
 
 def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
+                   label_view=None,
                    build_interview=None):
     """
     RETURN: CTreePlan, one plan per test directory of
@@ -63,7 +66,9 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
            "the wish asks the base (%s) and no Bookkeeper factory " \
            "was handed down" % wish
 
-    entry_list = []
+    entry_list  = []
+    met_set     = set()
+    visible_set = set()
     for directory, result in tree_exploration:
         bookkeeper = None
         if wish.asks_base_f():
@@ -74,8 +79,13 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         task_list          = CTestTaskListQuery(
                                  wish, bookkeeper,
                                  directory=directory,
-                                 root=tree_exploration.root)
+                                 root=tree_exploration.root,
+                                 label_view=label_view)
         plan, report_list  = determine(result.app_set, task_list)
+        if label_view is not None and wish.glob_tuple:
+            met, visible = task_list.glob_reach(result.app_set)
+            met_set.update(met)
+            visible_set.update(visible)
         spec               = result.app_set.directory_spec
         entry_list.append(CTreePlanEntry(
             directory    = directory,
@@ -85,9 +95,11 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
             on_exit      = spec.on_exit,
             report_tuple = tuple(report_list),
             fault_tuple  = tuple(result.fault_list)))
-    return CTreePlan(root        = tree_exploration.root,
-                     entry_tuple = tuple(entry_list),
-                     fault_tuple = tuple(tree_exploration.fault_tuple))
+    return CTreePlan(
+        root          = tree_exploration.root,
+        entry_tuple   = tuple(entry_list),
+        fault_tuple   = tuple(tree_exploration.fault_tuple),
+        warning_tuple = swallowed_warning_tuple(met_set, visible_set))
 
 
 def print_tree_plan(tree_plan, write=None):

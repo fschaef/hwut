@@ -1,0 +1,24 @@
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': out, session
+    
+      session -- 1 found:
+          suite/TEST/.hwut-session                             a session that did not finish; 1 sink file(s), read by nobody
+    
+      out -- 1 found:
+          suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
+    
+    
+    REMOVING:
+        gone: suite/TEST/.hwut-session
+        gone: suite/TEST/OUT
+}
+STANDING {
+    hwut-root.conf
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
+}

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "DifferenceDisplay and the feed session"
 #     choices    = ["down_stream", "every_subject", "no_provision",
 #                   "only_differing", "sequence", "signature",

@@ -45,6 +45,20 @@ DESCRIPTION
        Whatever exists is packed; what does not is SAID in the
        metadata -- absence reported, never guessed (the house law).
 
+       THE HEAD IS A FORMAL INPUT. It names WHERE the test stands --
+       the directory relative to 'hwut-root.conf', the one ground
+       every reader shares -- WHAT ran, and BOTH readings, which are
+       two questions and get two fields:
+
+           verdict:        what the COMPARISON found, or that none
+                           could be made
+           status report:  what the RECORDS say -- which of OUT and
+                           GOOD stand
+
+       ONE FIELD ANSWERING BOTH is how a test that never ran comes to
+       be read as a test that failed. A missing provision is a RESULT,
+       and it is stated as one.
+
        MACHINE-FREE: relative names and byte counts only -- no absolute
        paths, no dates -- so a pack can be compared, stored, or pasted
        without freezing one machine into it.
@@ -226,6 +240,56 @@ def coverage_section_text(directory, application, choice):
     return "\n".join(line_list)
 
 
+def _subject_db(record_db, prefix):
+    """
+    RETURN: dict, SUBJECT NAME -> relative path, for every record of
+            this kind that is a stream in its own right -- the raw
+            sidecars and the timing sections are not.
+
+    The section names read '<kind> <subject>', so the subject is what
+    stands after the kind: 'good stdout' -> 'stdout'.
+    """
+    return {key[len(prefix):]: path
+            for key, path in record_db.items()
+            if key.startswith(prefix)
+            and " raw " not in key and " timing " not in key}
+
+
+def _both_text(good_db, out_db):
+    """
+    RETURN: str, which subjects stand on both sides and which on one
+            -- a pack states what it has, and a subject recorded but
+            never accepted is a fact a bug hunter wants at the head,
+            not left to be inferred from the file list.
+    """
+    shared = sorted(set(good_db) & set(out_db))
+    lonely = sorted(set(good_db) ^ set(out_db))
+    text   = ", ".join(shared) if shared else "no shared subject"
+    if lonely: text += "; one side only: %s" % ", ".join(lonely)
+    return text
+
+
+def _place(directory):
+    """
+    RETURN: str, where this test stands, RELATIVE TO THE TREE'S
+            BOUNDARY -- the directory holding 'hwut-root.conf', which
+            is the one place every reader of a pack shares. '.' where
+            the test sits at the boundary itself.
+            "<no 'hwut-root.conf' above>" where the directory stands
+            in no tree: said, never guessed at, and never an absolute
+            path -- a pack is MACHINE-FREE.
+    """
+    import os.path as _p
+    from vut.engine.orchestrator.exploration.tree_explorer \
+        import RootConfMissing, root_conf_directory
+    try:
+        boundary = root_conf_directory(directory)
+    except RootConfMissing:
+        return "<no 'hwut-root.conf' above>"
+    relative = _p.relpath(_p.abspath(directory), boundary)
+    return relative.replace(os.sep, "/")
+
+
 def build_pack(directory, application, choice, raw_f,
                coverage_f=True):
     """
@@ -244,21 +308,55 @@ def build_pack(directory, application, choice, raw_f,
             return file_handle.read()
 
     #  -- metadata ------------------------------------------------------
+    #  THE HEAD NAMES THE PLACE, THE SUBJECT AND BOTH READINGS. A pack
+    #  is a FORMAL INPUT: a bug hunter reading it must be able to say
+    #  WHERE this ran, WHAT ran, and -- separately -- what the
+    #  comparison found and what the records say. The two are not one
+    #  question, and one field answering both is how a test that never
+    #  ran gets read as a test that failed.
+    good_db = _subject_db(record_db, "good ")
+    out_db  = _subject_db(record_db, "out ")
+
+    #  THE VERDICT is what a COMPARISON found -- and a comparison is
+    #  BETWEEN ONE SUBJECT AND ITS OWN NOMINAL. Pairing whichever
+    #  'out' key came first against whichever 'good' key came first
+    #  compares stderr against stdout and calls two identical streams
+    #  different. Where no subject stands on both sides, no comparison
+    #  was possible, and the verdict says so rather than borrowing the
+    #  status report's words.
+    shared_tuple = tuple(sorted(set(good_db) & set(out_db)))
+    if not shared_tuple:
+        verdict = "none -- no comparison was possible"
+    else:
+        differing = tuple(name for name in shared_tuple
+                          if read(good_db[name]) != read(out_db[name]))
+        if not differing:
+            verdict = "OUT == GOOD (byte-identical): %s" \
+                      % ", ".join(shared_tuple)
+        else:
+            verdict = "OUT differs from GOOD: %s" % ", ".join(differing)
+
+    #  THE STATUS REPORT is what the RECORDS say: which streams stand.
+    #  A missing provision is a RESULT, stated as one.
+    if good_db and out_db:
+        status = "run and accepted -- both records stand (%s)" \
+                 % _both_text(good_db, out_db)
+    elif out_db:
+        status = "never accepted -- the OUT stands, no GOOD (%s)" \
+                 % ", ".join(sorted(out_db))
+    elif good_db:
+        status = "not run here -- the GOOD stands, no OUT (%s)" \
+                 % ", ".join(sorted(good_db))
+    else:
+        status = "nothing recorded -- neither OUT nor GOOD"
+
     line_list = ["==[ HWUT TEST REPORT ]%s" % ("=" * 56),
-                 "test:    %s" % application,
-                 "choice:  %s" % (choice if choice is not None else "<none>")]
-    good_key = next((k for k in record_db if k.startswith("good ")
-                     and " raw " not in k and " timing " not in k), None)
-    out_key  = next((k for k in record_db if k.startswith("out ")
-                     and " raw " not in k and " timing " not in k), None)
-    if good_key and out_key:
-        verdict_hint = "OUT == GOOD (byte-identical)" \
-                       if read(record_db[good_key]) \
-                          == read(record_db[out_key]) else "OUT differs from GOOD"
-    elif out_key:  verdict_hint = "no GOOD found -- nothing accepted yet"
-    elif good_key: verdict_hint = "no OUT found -- test not run here"
-    else:          verdict_hint = "neither OUT nor GOOD found"
-    line_list.append("hint:    %s" % verdict_hint)
+                 "directory:     %s" % _place(directory),
+                 "test:          %s" % application,
+                 "choice:        %s"
+                 % (choice if choice is not None else "<none>"),
+                 "verdict:       %s" % verdict,
+                 "status report: %s" % status]
     line_list.append("files:")
     if os.path.isfile(source_path):
         line_list.append("  %-40s %6i bytes  (source)"

@@ -3,5 +3,5 @@
     candidates after the run: 0
 
 --- record default: every subject stored, sidecar beside it ---
-    candidates: 10   freshness sidecars: 20
+    candidates: 11   freshness sidecars: 22
 <hwut-end>

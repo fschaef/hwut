@@ -29,6 +29,15 @@ $ hwut.plan --help
                                 --glob "test-*.py quick-[0-2]"
                             may stand several times; the globs are OR'ed
                             among themselves
+        --label <expr>      the runs the label expression names ('AND',
+                            'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
+                            universe); a union among its labels, narrowing
+                            against the rest; absent, 'meta' is silent --
+                            which a LITERAL target overrides, and a glob
+                            does not (it warns instead)
+        <app> [<choice>...] the short form: bare words are targets, the
+                            first naming files, each further one a
+                            choice; globbing allowed in both
 
         Keywords of different kinds are AND'ed. '--fail' beside '--pass'
         is refused. A wish matching nothing yields an empty plan and a

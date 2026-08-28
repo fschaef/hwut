@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The hwut.stability face: what did not stay the same."
 #     choices    = ["bytes", "cadence", "length", "refused", "stain",
 #                   "steady", "verbose", "verdict"]
@@ -91,7 +91,7 @@ masked() {              # <args...> -- as 'face', every number the
 
 conf() {                # <extra-lines...>
     mkdir -p tree/suite/TEST/GOOD
-    { echo 'hwut {'
+    { echo '@hwut {'
       echo '    on_entry = "true"'
       echo '    on_exit  = "true"'
       printf '%s\n' "$@"
@@ -101,7 +101,7 @@ conf() {                # <extra-lines...>
 
 app() {                 # <name> <body...>
     { echo '#!/bin/bash'
-      echo "# hwut { title = \"$1\" }"
+      echo "# @hwut { title = \"$1\" }"
       shift
       printf '%s\n' "$@"
     } > tree/suite/TEST/test-app.sh

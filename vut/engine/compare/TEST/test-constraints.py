@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Stateful Constraints: bindings, space, dependencies, errors"
 #     choices    = ["basic", "deps", "errors", "lawyer", "strings"]
 # }

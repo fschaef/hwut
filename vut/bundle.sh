@@ -1,53 +1,118 @@
 #!/usr/bin/env bash
+# ---------------------------------------------------------------------------
+# bundle.sh -- pack a source tree into a unified diff against /dev/null.
+#
+# Comment convention: every function comment opens with the RETURN block.
+# Bash has no docstrings, so '#' replaces the Python '"""' boundary; the
+# RETURN-first form is unchanged.
+# ---------------------------------------------------------------------------
+set -euo pipefail
+
+# --- Configuration & State -------------------------------------------------
+SELECT_MODE="git"             # git | find | since | list
+SINCE_REF=""
+LIST_FILE=""
+DIRS=()
+EXTENSIONS=()
+EXTRA_FILES=()
+EXCLUDE_PATTERNS=(.git .hwut-store __pycache__ .ruff_cache OUT
+                  .mypy_cache .pytest_cache '*.egg-info' .venv node_modules)
+EXCLUDE_GIVEN=0
+EXCLUDE_PATH_GLOBS=()
+OUTPUT_FILE=""
+MAX_FILE_BYTES=262144         # 0 disables
+MAX_PART_BYTES=0              # 0 disables splitting
+BINARY_MODE="skip"            # skip | git
+COMPLETE=0
+# Pruned even under --complete: a bundled .git would be enormous and could not
+# be re-applied into a repository anyway. Name it in an explicit -x to include.
+HARD_PRUNE=(.git)
+DRY_RUN=0
+TOP_N=10
+VERIFY_FILES=()
+PROFILE=""
+PROFILE_FILE=".bundlerc"
+
 print_usage() {
     cat << EOF
 Usage: $(basename "$0") [OPTIONS]
-Options:
+
+Selection:
   -d DIR1 [DIR2 ...]   Directories to search (space-separated)
-  -e EXT1 [EXT2 ...]   Extensions to include (space-separated)
-  -f FILE1 [FILE2 ...] Extra static files to append (space-separated)
+  -e EXT1 [EXT2 ...]   Extensions to include; none given means every file
+  -f FILE1 [FILE2 ...] Extra static files to append
+      --use-find       Select with find(1) instead of 'git ls-files'; needed
+                       outside a git working tree and for untracked trees
+  -g, --git            Select from 'git ls-files' (the default; accepted for
+                       symmetry with --use-find)
+      --since REF      Select only files changed since REF (implies --git)
+      --from-list FILE Bundle exactly the paths listed in FILE (one per line)
+
+Exclusion:
   -x NAME1 [NAME2 ...] Directory names to prune, with everything below. Matched
-                       against the directory's own name only, never the path;
+                       against a path component only, never the whole path;
                        globs allowed ('*.egg-info'). First -x replaces the
-                       default, further -x accumulate. (Default: ${EXCLUDE_PATTERNS[*]})
-  -o FILE              Output filename (Default: dump-<first-dir-name>.txt)
+                       default, further -x accumulate.
+                       (Default: ${EXCLUDE_PATTERNS[*]})
+  -X GLOB1 [GLOB2 ...] Exclude by whole path glob ('vut/*/TEST/GOOD/*')
+  -S BYTES             Skip files larger than BYTES; 0 disables (Default: ${MAX_FILE_BYTES})
+  -a, --complete       Complete dump: no pruning, no size cap, binary members
+                       included, untracked files included. '.git' stays pruned.
+      --binary         Render binary files as git literal patches instead of
+                       skipping them (implied by --complete)
+
+Output:
+  -o FILE              Output filename, '-' for stdout
+                       (Default: dump-<first-dir-name>.txt)
+      --max-bytes N    Split output into parts of at most N bytes each
+  -p NAME              Load argument vector NAME from ${PROFILE_FILE}
   -n, --dry-run        Report what would be bundled; write nothing
-  -N NUM               Number of largest files to list in dry-run (Default: ${TOP_N})
+  -N NUM               Largest files to list in dry-run (Default: ${TOP_N})
+      --verify FILE... Re-hash the manifest of FILE against the working tree
   -h, --help           Show this help message
+
+Within a follower list, '--' takes the next token literally.
 EOF
 }
-set -euo pipefail
-# --- Configuration & State ---
-EXTRA_FILES=()
-EXCLUDE_PATTERNS=("OUT")
-EXCLUDE_GIVEN=0
-OUTPUT_FILE=""
-EXTENSIONS=()
-DIRS=()
-DRY_RUN=0
-TOP_N=10
-# --- Parsing Subsystem ---
+
+die() { echo "Error: $*" >&2; exit 1; }
+
+# --- Parsing Subsystem -----------------------------------------------------
 SHIFT_COUNT=0
+
+# RETURN: nothing, the collected followers are appended to the named array
+#         and SHIFT_COUNT is set to the number of tokens consumed.
+#
+# Collection stops at the first token beginning with '-'. A token that is
+# exactly '--' is dropped and the token after it is taken literally, which is
+# how a value beginning with '-' is passed.
 command_line_get_nominus_followers() {
     local -n target_array=$1
     local n=1
     shift 2
-    while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
-        target_array+=("$1")
-        shift
-        n=$((n + 1))
+    while [[ $# -gt 0 ]]; do
+        if [[ "$1" == "--" ]]; then
+            [[ $# -gt 1 ]] || die "'--' at end of argument list"
+            target_array+=("$2"); shift 2; n=$((n + 2)); continue
+        fi
+        [[ "$1" =~ ^- ]] && break
+        target_array+=("$1"); shift; n=$((n + 1))
     done
     SHIFT_COUNT=$n
 }
+
+# RETURN: nothing, the named variable holds the single follower value and
+#         SHIFT_COUNT is set to 2.
 command_line_get_follower() {
     local -n target_var=$1
-    if [[ $# -lt 3 ]]; then
-        echo "Error: $2 requires an argument" >&2
-        exit 1
-    fi
+    [[ $# -ge 3 ]] || die "$2 requires an argument"
     target_var="$3"
     SHIFT_COUNT=2
 }
+
+# RETURN: nothing, all global option variables are set from the argument list.
+#
+# Exits with status 1 on an unknown option.
 command_line_parse() {
     while [[ $# -gt 0 ]]; do
         local arg="$1"
@@ -55,30 +120,240 @@ command_line_parse() {
             -d) command_line_get_nominus_followers DIRS "$@"; shift "$SHIFT_COUNT" ;;
             -e) command_line_get_nominus_followers EXTENSIONS "$@"; shift "$SHIFT_COUNT" ;;
             -f) command_line_get_nominus_followers EXTRA_FILES "$@"; shift "$SHIFT_COUNT" ;;
-            -x) # First -x replaces the default; later ones accumulate.
-                [[ $EXCLUDE_GIVEN -eq 0 ]] && EXCLUDE_PATTERNS=() && EXCLUDE_GIVEN=1
+            -x) [[ $EXCLUDE_GIVEN -eq 0 ]] && EXCLUDE_PATTERNS=() && EXCLUDE_GIVEN=1
                 command_line_get_nominus_followers EXCLUDE_PATTERNS "$@"; shift "$SHIFT_COUNT" ;;
+            -X) command_line_get_nominus_followers EXCLUDE_PATH_GLOBS "$@"; shift "$SHIFT_COUNT" ;;
+            --verify) command_line_get_nominus_followers VERIFY_FILES "$@"; shift "$SHIFT_COUNT" ;;
             -o) command_line_get_follower OUTPUT_FILE "$@"; shift "$SHIFT_COUNT" ;;
             -N) command_line_get_follower TOP_N "$@"; shift "$SHIFT_COUNT" ;;
+            -S) command_line_get_follower MAX_FILE_BYTES "$@"; shift "$SHIFT_COUNT" ;;
+            -p) command_line_get_follower PROFILE "$@"; shift "$SHIFT_COUNT" ;;
+            --max-bytes) command_line_get_follower MAX_PART_BYTES "$@"; shift "$SHIFT_COUNT" ;;
+            --since) command_line_get_follower SINCE_REF "$@"; shift "$SHIFT_COUNT"
+                     SELECT_MODE="since" ;;
+            --from-list) command_line_get_follower LIST_FILE "$@"; shift "$SHIFT_COUNT"
+                         SELECT_MODE="list" ;;
+            -g|--git) SELECT_MODE="git"; shift ;;
+            --use-find) SELECT_MODE="find"; shift ;;
+            --binary) BINARY_MODE="git"; shift ;;
+            -a|--complete) COMPLETE=1; BINARY_MODE="git"; MAX_FILE_BYTES=0
+                           EXCLUDE_PATTERNS=(); EXCLUDE_GIVEN=1
+                           EXCLUDE_PATH_GLOBS=(); EXTENSIONS=(); shift ;;
             -n|--dry-run) DRY_RUN=1; shift ;;
             -h|--help) print_usage; exit 0 ;;
             *) echo "Error: Unknown option '$arg'" >&2; print_usage >&2; exit 1 ;;
         esac
     done
 }
-# Derive OUTPUT_FILE from the first search directory when -o was not given.
+
+# RETURN: the argument vector recorded for PROFILE, one token per output line,
+#         read from the first ${PROFILE_FILE} found from CWD upwards.
+#
+# Exits with status 1 if no such file or no such profile exists. A profile is
+# a line of the form 'name: -d vut/engine -e py txt'.
+profile_arguments() {
+    local name="$1" dir line
+    dir=$(pwd)
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/$PROFILE_FILE" ]]; then
+            line=$(sed -n "s/^[[:space:]]*${name}[[:space:]]*:[[:space:]]*//p" \
+                   "$dir/$PROFILE_FILE" | head -n1)
+            [[ -n "$line" ]] || die "profile '$name' not found in $dir/$PROFILE_FILE"
+            printf '%s\n' $line
+            return 0
+        fi
+        dir=$(dirname "$dir")
+    done
+    die "no $PROFILE_FILE found from $(pwd) upwards"
+}
+
+# RETURN: nothing, OUTPUT_FILE holds a name derived from the first search
+#         directory when -o was not given.
 output_file_determine() {
     [[ -n "$OUTPUT_FILE" ]] && return 0
     local dir_name="files"
-    if [[ ${#DIRS[@]} -gt 0 ]]; then
-        dir_name=$(basename "$(realpath -m "${DIRS[0]}")")
-    fi
+    [[ ${#DIRS[@]} -gt 0 ]] && dir_name=$(basename "$(realpath -m "${DIRS[0]}")")
     OUTPUT_FILE="dump-${dir_name}.txt"
 }
-# --- Core Processing & Formatting ---
-# Returns success if FILE is non-empty and its last byte is NOT a newline.
-# Command substitution strips trailing newlines, so we compare byte counts
-# instead of capturing tail output.
+
+# --- Path Handling ---------------------------------------------------------
+# RETURN: the argument with any './' prefix and duplicate slashes removed.
+#
+# Exits with status 1 on an absolute path: a bundle member must be relative to
+# the tree root, or the emitted 'a/<path>' header is unapplicable.
+path_normalise() {
+    local p="$1"
+    [[ "$p" == /* ]] && die "absolute path in bundle: '$p' (run from the tree root)"
+    p="${p#./}"
+    printf '%s' "${p//\/\//\/}"
+}
+
+# RETURN: 0, if any component of the path matches an exclude pattern
+#         1, else
+path_is_pruned() {
+    local path="$1" comp pat
+    local IFS=/
+    for comp in $path; do
+        for pat in "${HARD_PRUNE[@]}" ${EXCLUDE_PATTERNS[@]+"${EXCLUDE_PATTERNS[@]}"}; do
+            [[ "$comp" == $pat ]] && return 0
+        done
+    done
+    return 1
+}
+
+# RETURN: 0, if the whole path matches an exclude glob given with -X
+#         1, else
+path_is_glob_excluded() {
+    local path="$1" glob
+    for glob in ${EXCLUDE_PATH_GLOBS[@]+"${EXCLUDE_PATH_GLOBS[@]}"}; do
+        [[ "$path" == $glob ]] && return 0
+    done
+    return 1
+}
+
+# RETURN: 0, if the path ends in one of the wanted extensions or none was given
+#         1, else
+path_has_wanted_extension() {
+    [[ ${#EXTENSIONS[@]} -eq 0 ]] && return 0
+    local path="$1" ext
+    for ext in "${EXTENSIONS[@]}"; do
+        [[ "$path" == *."$ext" ]] && return 0
+    done
+    return 1
+}
+
+# --- Selection -------------------------------------------------------------
+# RETURN: NUL-separated candidate paths as produced by find(1) under DIRS.
+select_find() {
+    [[ ${#DIRS[@]} -gt 0 ]] || return 0
+    local name_args=() prune_args=() i all=("${HARD_PRUNE[@]}")
+    all+=(${EXCLUDE_PATTERNS[@]+"${EXCLUDE_PATTERNS[@]}"})
+    if [[ ${#EXTENSIONS[@]} -eq 0 ]]; then name_args=("-name" "*")
+    else
+        for i in "${!EXTENSIONS[@]}"; do
+            [[ "$i" -gt 0 ]] && name_args+=("-o")
+            name_args+=("-name" "*.${EXTENSIONS[$i]}")
+        done
+    fi
+    prune_args=("-type" "d" "(")
+    for i in "${!all[@]}"; do
+        [[ "$i" -gt 0 ]] && prune_args+=("-o")
+        prune_args+=("-name" "${all[$i]}")
+    done
+    prune_args+=(")")
+    find "${DIRS[@]}" \( "${prune_args[@]}" \) -prune \
+         -o -type f \( "${name_args[@]}" \) -print0
+}
+
+# RETURN: NUL-separated candidate paths tracked by git under DIRS.
+#
+# Exits with status 1 outside a git working tree.
+select_git() {
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+        || die "git selection needs a git working tree; use --use-find outside one"
+    if [[ $COMPLETE -eq 1 ]]; then
+        # Everything on disk, ignored files included: 'complete' means complete.
+        { git ls-files -z -- ${DIRS[@]+"${DIRS[@]}"}
+          git ls-files -z --others -- ${DIRS[@]+"${DIRS[@]}"}; } | LC_ALL=C sort -zu
+    else
+        git ls-files -z -- ${DIRS[@]+"${DIRS[@]}"}
+    fi
+}
+
+# RETURN: NUL-separated candidate paths changed since SINCE_REF and still
+#         present in the working tree.
+#
+# Exits with status 1 outside a git working tree or on an unknown reference.
+select_since() {
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+        || die "--since needs a git working tree"
+    git rev-parse --verify --quiet "$SINCE_REF" >/dev/null \
+        || die "unknown reference '$SINCE_REF'"
+    { git diff --name-only -z "$SINCE_REF" -- ${DIRS[@]+"${DIRS[@]}"}
+      git ls-files -z --others --exclude-standard -- ${DIRS[@]+"${DIRS[@]}"}; } \
+    | LC_ALL=C sort -zu
+}
+
+# RETURN: NUL-separated candidate paths read from LIST_FILE, blank lines and
+#         '#' comment lines dropped.
+select_list() {
+    [[ -f "$LIST_FILE" ]] || die "list file '$LIST_FILE' not found"
+    grep -v -e '^[[:space:]]*$' -e '^[[:space:]]*#' "$LIST_FILE" | tr '\n' '\0'
+}
+
+# --- Filtering -------------------------------------------------------------
+# Filter verdicts, filled by candidates_filter.
+ACCEPTED=()
+REJ_PRUNED=()
+REJ_GLOB=()
+REJ_LARGE=()
+REJ_BINARY=()
+REJ_MISSING=()
+
+# RETURN: 0, if the file holds no NUL byte or is empty
+#         1, else
+file_is_text() {
+    [[ -s "$1" ]] || return 0
+    grep -Iq . "$1"
+}
+
+# RETURN: nothing, ACCEPTED and the REJ_* arrays hold the normalised candidate
+#         paths sorted into one bucket each.
+#
+# Reads NUL-separated paths from standard input. Duplicates are dropped, so
+# the same file named by -f and by the search never appears twice.
+candidates_filter() {
+    local path size
+    local -A seen=()
+    while IFS= read -r -d '' path; do
+        path=$(path_normalise "$path")
+        [[ -n "$path" ]] || continue
+        [[ -n "${seen[$path]:-}" ]] && continue
+        seen["$path"]=1
+        if   path_is_pruned "$path";         then REJ_PRUNED+=("$path")
+        elif path_is_glob_excluded "$path";  then REJ_GLOB+=("$path")
+        elif ! path_has_wanted_extension "$path"; then :
+        elif [[ ! -f "$path" ]];             then REJ_MISSING+=("$path")
+        elif ! file_is_text "$path" && [[ "$BINARY_MODE" == "skip" ]]
+                                             then REJ_BINARY+=("$path")
+        else
+            size=$(stat -c%s "$path")
+            if [[ "$MAX_FILE_BYTES" -gt 0 && "$size" -gt "$MAX_FILE_BYTES" ]]; then
+                REJ_LARGE+=("$path")
+            else
+                ACCEPTED+=("$path")
+            fi
+        fi
+    done
+}
+
+# RETURN: nothing, ACCEPTED and the REJ_* arrays are filled from the selection
+#         mode in force, with EXTRA_FILES appended to the candidate stream.
+candidates_collect() {
+    local stream; stream=$(mktemp)
+    { case "$SELECT_MODE" in
+        find)  select_find ;;
+        git)   select_git ;;
+        since) select_since ;;
+        list)  select_list ;;
+      esac
+      local file
+      for file in ${EXTRA_FILES[@]+"${EXTRA_FILES[@]}"}; do
+          printf '%s\0' "$file"
+      done
+    } | LC_ALL=C sort -z > "$stream"
+    # No pipe into candidates_filter: a pipeline stage is a subshell and its
+    # verdict arrays would be discarded at its exit.
+    candidates_filter < "$stream"
+    rm -f "$stream"
+}
+
+# --- Member Rendering ------------------------------------------------------
+# RETURN: 0, if the file is non-empty and its last byte is not a newline
+#         1, else
+#
+# Command substitution strips trailing newlines, so byte counts are compared
+# instead of tail output.
 file_lacks_final_newline() {
     local file="$1"
     [[ -s "$file" ]] || return 1
@@ -86,195 +361,244 @@ file_lacks_final_newline() {
     last=$(tail -c1 "$file" | od -An -tu1 | tr -d ' ')
     [[ "$last" != "10" ]]
 }
-# Returns 0 if the file was dumped, 1 if it was skipped.
-dump_file_contents() {
-    local file="$1"
-    local out_target="$2"
-    if [[ -f "$file" ]]; then
-        # An empty file has no hunk in git's format: just the diff header and
-        # a null index line. Emitting a '@@ -0,0 +1,0 @@' hunk corrupts the
-        # patch for `git apply`.
-        if [[ ! -s "$file" ]]; then
-            {
-                printf 'diff --git a/%s b/%s\n' "$file" "$file"
-                printf '%s\n' 'new file mode 100644'
-                printf '%s\n' 'index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
-            } >> "$out_target"
-            return 0
-        fi
-        # Git-diff style header: every line of content becomes an added (+) line,
-        # so the whole bundle reads as a unified diff against /dev/null.
+
+# RETURN: nothing, the diff representation of FILE is appended to TARGET.
+#
+# An empty file gets header and null index line but no hunk: emitting a
+# '@@ -0,0 +1,0 @@' hunk corrupts the patch for 'git apply'.
+member_render() {
+    local file="$1" target="$2"
+    if ! file_is_text "$file"; then
+        # A binary member cannot be expressed as '+'-prefixed lines. git knows
+        # the literal-patch encoding (deflate, base85); delegate rather than
+        # reimplement it. 'git diff' reports difference with status 1.
+        git diff --no-index --binary -- /dev/null "$file" >> "$target" || true
+        return 0
+    fi
+    if [[ ! -s "$file" ]]; then
         {
             printf 'diff --git a/%s b/%s\n' "$file" "$file"
             printf '%s\n' 'new file mode 100644'
-            printf '%s\n' '--- /dev/null'
-            printf '+++ b/%s\n' "$file"
-        } >> "$out_target"
-        # Hunk header with correct added-line count.
-        local nlines
-        nlines=$(wc -l < "$file" | tr -d ' ')
-        # Account for a missing final newline (counts as one more content line).
-        if file_lacks_final_newline "$file"; then
-            nlines=$((nlines + 1))
-        fi
-        printf '@@ -0,0 +1,%s @@\n' "$nlines" >> "$out_target"
-        # Prefix every content line with '+'. GNU sed preserves a missing
-        # final newline, so add one explicitly before the marker.
-        sed 's/^/+/' "$file" >> "$out_target"
-        # Match git's exact format for a missing final newline.
-        if file_lacks_final_newline "$file"; then
-            printf '\n%s\n' '\ No newline at end of file' >> "$out_target"
-        fi
-    else
-        echo "Warning: File '$file' not found. Skipping." >&2
-        return 1
+            printf '%s\n' 'index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
+        } >> "$target"
+        return 0
+    fi
+    {
+        printf 'diff --git a/%s b/%s\n' "$file" "$file"
+        printf '%s\n' 'new file mode 100644'
+        printf '%s\n' '--- /dev/null'
+        printf '+++ b/%s\n' "$file"
+    } >> "$target"
+    local nlines
+    nlines=$(wc -l < "$file" | tr -d ' ')
+    file_lacks_final_newline "$file" && nlines=$((nlines + 1))
+    printf '@@ -0,0 +1,%s @@\n' "$nlines" >> "$target"
+    sed 's/^/+/' "$file" >> "$target"
+    if file_lacks_final_newline "$file"; then
+        printf '\n%s\n' '\ No newline at end of file' >> "$target"
     fi
 }
-# --- Search Strategy & Collection ---
-build_find_extensions() {
-    local -n find_args=$1
-    for i in "${!EXTENSIONS[@]}"; do
-        [[ "$i" -gt 0 ]] && find_args+=("-o")
-        find_args+=("-name" "*.${EXTENSIONS[$i]}")
+
+# --- Writing ---------------------------------------------------------------
+# RETURN: nothing, the ignored header banner and the manifest for the given
+#         member paths are written to TARGET.
+#
+# Everything before the first 'diff --git' is skipped by 'git apply' and by
+# 'patch', so the manifest travels inside the bundle without disturbing it.
+header_write() {
+    local target="$1" part="$2" total="$3"; shift 3
+    local members=("$@") path
+    {
+        printf '%s\n' '# This bundle is a unified diff against /dev/null. To undump:'
+        printf '%s\n' '#   git apply <this-file>          # recreates files and directories'
+        printf '%s\n' '#   patch -p1 < <this-file>        # alternative, if git is unavailable'
+        printf '%s\n' '# Lines beginning with "#" are ignored by both tools.'
+        printf '%s\n' '# To check a bundle against the working tree: bundle.sh --verify <this-file>'
+        printf '# bundle: %s  part %s of %s\n' "$(basename "$OUTPUT_FILE")" "$part" "$total"
+        printf '# members: %s\n' "${#members[@]}"
+        for path in ${members[@]+"${members[@]}"}; do
+            printf '# sha256 %s  %s\n' "$(sha256sum "$path" | cut -d' ' -f1)" "$path"
+        done
+    } >> "$target"
+}
+
+# RETURN: the argument with '.<part>of<total>' inserted before its extension,
+#         or unchanged when TOTAL is 1.
+part_name() {
+    local name="$1" part="$2" total="$3"
+    [[ "$total" -eq 1 ]] && { printf '%s' "$name"; return 0; }
+    local base="${name%.*}" ext="${name##*.}"
+    [[ "$base" == "$name" ]] && { printf '%s.%sof%s' "$name" "$part" "$total"; return 0; }
+    printf '%s.%sof%s.%s' "$base" "$part" "$total" "$ext"
+}
+
+WRITTEN_PARTS=()
+
+# RETURN: nothing, the bundle is written to OUTPUT_FILE, or to several
+#         '.NofM.' parts when --max-bytes forces a split, and WRITTEN_PARTS
+#         holds the names written.
+#
+# Members are rendered once into a scratch directory and measured, so the
+# split respects the emitted size rather than the raw file size. A single
+# member larger than the limit occupies a part of its own.
+bundle_write() {
+    local scratch; scratch=$(mktemp -d)
+    local i=0 path sizes=() parts_of=() part=1 running=0
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        member_render "$path" "$scratch/m.$i"
+        sizes[$i]=$(stat -c%s "$scratch/m.$i")
+        if [[ "$MAX_PART_BYTES" -gt 0 && $running -gt 0 \
+              && $((running + sizes[i])) -gt "$MAX_PART_BYTES" ]]; then
+            part=$((part + 1)); running=0
+        fi
+        parts_of[$i]=$part
+        running=$((running + sizes[i]))
+        i=$((i + 1))
     done
-}
-# find(1) predicate: directory whose basename matches any exclude pattern.
-build_find_prune() {
-    local -n out=$1
-    [[ ${#EXCLUDE_PATTERNS[@]} -gt 0 ]] || { out=("-false"); return 0; }
-    out=("-type" "d" "(")
-    for i in "${!EXCLUDE_PATTERNS[@]}"; do
-        [[ "$i" -gt 0 ]] && out+=("-o")
-        out+=("-name" "${EXCLUDE_PATTERNS[$i]}")
+    local total=$part p name members=() idx
+    for ((p = 1; p <= total; p++)); do
+        name=$(part_name "$OUTPUT_FILE" "$p" "$total")
+        members=()
+        for idx in "${!parts_of[@]}"; do
+            [[ "${parts_of[$idx]}" -eq "$p" ]] && members+=("${ACCEPTED[$idx]}")
+        done
+        : > "$scratch/out"
+        header_write "$scratch/out" "$p" "$total" ${members[@]+"${members[@]}"}
+        for idx in "${!parts_of[@]}"; do
+            [[ "${parts_of[$idx]}" -eq "$p" ]] && cat "$scratch/m.$idx" >> "$scratch/out"
+        done
+        if [[ "$name" == "-" ]]; then cat "$scratch/out"
+        else cp "$scratch/out" "$name"; fi
+        WRITTEN_PARTS+=("$name")
     done
-    out+=(")")
+    rm -rf "$scratch"
 }
-# Files matching extensions under DIRS, not descending into pruned dirs.
-find_target_files() {
-    [[ ${#DIRS[@]} -gt 0 && ${#EXTENSIONS[@]} -gt 0 ]] || return 0
-    local name_args=() prune_args=()
-    build_find_extensions name_args
-    build_find_prune prune_args
-    find "${DIRS[@]}" \( "${prune_args[@]}" \) -prune -o -type f \( "${name_args[@]}" \) -print0
-}
-# Pruned directories (top-most only; everything below is implied).
-find_pruned_dirs() {
-    [[ ${#DIRS[@]} -gt 0 ]] || return 0
-    local prune_args=()
-    build_find_prune prune_args
-    find "${DIRS[@]}" \( "${prune_args[@]}" \) -prune -print0
-}
-# Directories that will be searched.
-find_considered_dirs() {
-    [[ ${#DIRS[@]} -gt 0 ]] || return 0
-    local prune_args=()
-    build_find_prune prune_args
-    find "${DIRS[@]}" \( "${prune_args[@]}" \) -prune -o -type d -print0
-}
-collect_target_files() {
-    local list_file="$1"
-    find_target_files >> "$list_file"
-    for file in "${EXTRA_FILES[@]}"; do
-        printf "%s\0" "$file" >> "$list_file"
+
+# --- Verification ----------------------------------------------------------
+# RETURN: 0, if every manifest entry of every given bundle matches the file of
+#           that name in the working tree
+#         1, else
+#
+# Differences are reported one per line as MISSING or DIFFERS with the path.
+verify_bundles() {
+    local bundle hash path actual bad=0 checked=0
+    for bundle in "${VERIFY_FILES[@]}"; do
+        [[ -f "$bundle" ]] || die "bundle '$bundle' not found"
+        while read -r _ _ hash path; do
+            checked=$((checked + 1))
+            if [[ ! -f "$path" ]]; then
+                echo "MISSING  $path"; bad=$((bad + 1)); continue
+            fi
+            actual=$(sha256sum "$path" | cut -d' ' -f1)
+            [[ "$actual" == "$hash" ]] || { echo "DIFFERS  $path"; bad=$((bad + 1)); }
+        done < <(grep '^# sha256 ' "$bundle")
     done
+    echo "Verified: ${checked} members, ${bad} mismatch(es)"
+    [[ $bad -eq 0 ]]
 }
-# --- Dry Run ---
-# Prints a NUL-separated list, one per line, indented.
-print_z_list() {
-    local n=0 item
-    while IFS= read -r -d '' item; do
-        printf '    %s\n' "$item"; n=$((n + 1))
-    done
-    [[ $n -eq 0 ]] && echo "    (none)"
-    return 0
+
+# --- Dry Run ---------------------------------------------------------------
+# RETURN: nothing, the named bucket is printed indented, one entry per line.
+print_bucket() {
+    local title="$1"; shift
+    echo "== $title (${#@}) =="
+    [[ $# -eq 0 ]] && { echo "    (none)"; return 0; }
+    printf '    %s\n' "$@"
 }
+
+# RETURN: nothing, a report of accepted and rejected candidates, the largest
+#         files and the resulting part count is printed.
 dry_run_report() {
-    local list_file="$1"
-    echo "== Directories considered =="
-    find_considered_dirs | print_z_list
-    echo "== Directories pruned, incl. subtrees (patterns: ${EXCLUDE_PATTERNS[*]:-<none>}) =="
-    find_pruned_dirs | print_z_list
-    echo "== Files ignored (matching extensions under pruned dirs) =="
-    local name_args=()
-    build_find_extensions name_args
-    { find_pruned_dirs | xargs -0 -r -I{} find {} -type f \( "${name_args[@]}" \) -print0; } | print_z_list
-    echo "== Files included =="
-    print_z_list < "$list_file"
-    echo "== Largest ${TOP_N} files =="
-    xargs -0 -r stat -c '%s %n' -- < "$list_file" 2>/dev/null \
-        | sort -rn | head -n "$TOP_N" \
+    local path
+    if [[ "$SELECT_MODE" == "find" && ${#DIRS[@]} -gt 0 ]]; then
+        local pruned=() prune_args=("-type" "d" "(") i
+        for i in "${!EXCLUDE_PATTERNS[@]}"; do
+            [[ "$i" -gt 0 ]] && prune_args+=("-o")
+            prune_args+=("-name" "${EXCLUDE_PATTERNS[$i]}")
+        done
+        prune_args+=(")")
+        mapfile -t pruned < <(find "${DIRS[@]}" \( "${prune_args[@]}" \) -prune -print)
+        print_bucket "Directories pruned, incl. subtrees (${EXCLUDE_PATTERNS[*]:-<none>})" \
+            ${pruned[@]+"${pruned[@]}"}
+    fi
+    print_bucket "Pruned by directory name (${EXCLUDE_PATTERNS[*]:-<none>})" \
+        ${REJ_PRUNED[@]+"${REJ_PRUNED[@]}"}
+    print_bucket "Excluded by path glob (${EXCLUDE_PATH_GLOBS[*]:-<none>})" \
+        ${REJ_GLOB[@]+"${REJ_GLOB[@]}"}
+    print_bucket "Skipped, larger than ${MAX_FILE_BYTES} bytes" \
+        ${REJ_LARGE[@]+"${REJ_LARGE[@]}"}
+    print_bucket "Skipped, binary" ${REJ_BINARY[@]+"${REJ_BINARY[@]}"}
+    print_bucket "Skipped, not found" ${REJ_MISSING[@]+"${REJ_MISSING[@]}"}
+    print_bucket "Included" ${ACCEPTED[@]+"${ACCEPTED[@]}"}
+    echo "== Largest ${TOP_N} included files =="
+    if [[ ${#ACCEPTED[@]} -eq 0 ]]; then echo "    (none)"; else
+        stat -c '%s %n' -- "${ACCEPTED[@]}" | LC_ALL=C sort -rn | head -n "$TOP_N" \
         | while read -r size name; do
-            printf '    %8s  %s\n' "$(numfmt --to=iec --suffix=B "$size")" "$name"
+              printf '    %8s  %s\n' "$(numfmt --to=iec --suffix=B "$size")" "$name"
           done
-    local total
-    total=$(xargs -0 -r stat -c '%s' -- < "$list_file" 2>/dev/null | awk '{s+=$1} END{print s+0}')
-    echo "Total: $(tr -cd '\0' < "$list_file" | wc -c) files, $(numfmt --to=iec --suffix=B "${total:-0}") raw; would write $OUTPUT_FILE"
+    fi
+    local total=0 size
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        size=$(stat -c%s "$path"); total=$((total + size))
+    done
+    local parts=1
+    [[ "$MAX_PART_BYTES" -gt 0 ]] && parts=$(( (total / MAX_PART_BYTES) + 1 ))
+    echo "Total: ${#ACCEPTED[@]} files, $(numfmt --to=iec --suffix=B "$total") raw;"\
+         "would write $OUTPUT_FILE in ~${parts} part(s) [mode: ${SELECT_MODE}]"
+    echo "Tip: rerun with --from-list after editing the 'Included' list into a file."
 }
-# --- Statistics ---
-declare -A EXT_COUNT=()
-TOTAL_COUNT=0
-statistics_register() {
-    local base ext
-    base=$(basename "$1")
-    case "$base" in
-        ?*.*) ext="${base##*.}" ;;
-        *)    ext="(no ext)" ;;
-    esac
-    EXT_COUNT["$ext"]=$(( ${EXT_COUNT["$ext"]:-0} + 1 ))
-    TOTAL_COUNT=$((TOTAL_COUNT + 1))
-}
-# Prints: Files: "*.txt": 321, "*.py": 2, ... (sorted by count, descending)
+
+# --- Statistics ------------------------------------------------------------
+# RETURN: nothing, one line of per-extension counts and one summary line are
+#         printed for the written bundle.
 statistics_report() {
-    local summary="" count ext
+    local -A ext_count=()
+    local path base ext summary="" count size name
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        base=$(basename "$path")
+        case "$base" in ?*.*) ext="${base##*.}" ;; *) ext="(no ext)" ;; esac
+        ext_count["$ext"]=$(( ${ext_count["$ext"]:-0} + 1 ))
+    done
     while read -r count ext; do
         [[ -n "$summary" ]] && summary+=", "
         summary+="\"*.${ext}\": ${count}"
-    done < <(
-        for ext in "${!EXT_COUNT[@]}"; do
-            printf '%s %s\n' "${EXT_COUNT[$ext]}" "$ext"
-        done | sort -rn -k1,1
-    )
-    local size
-    size=$(numfmt --to=iec --suffix=B "$(stat -c%s "$OUTPUT_FILE")")
+    done < <(for ext in "${!ext_count[@]}"; do
+                 printf '%s %s\n' "${ext_count[$ext]}" "$ext"
+             done | LC_ALL=C sort -rn -k1,1)
+    size=0
+    for name in "${WRITTEN_PARTS[@]}"; do
+        [[ "$name" == "-" ]] && continue
+        size=$((size + $(stat -c%s "$name")))
+    done
     echo "Files: ${summary:-(none)}"
-    echo "Total: ${TOTAL_COUNT} files, dump size: ${size}"
+    echo "Total: ${#ACCEPTED[@]} files, dump size: $(numfmt --to=iec --suffix=B "$size")"
 }
-# --- Main Execution Path ---
+
+# --- Main Execution Path ---------------------------------------------------
 main() {
-    echo "(1) parsing command line"
-    command_line_parse "$@"
-    output_file_determine
-    local file_list_tmp
-    file_list_tmp=$(mktemp)
-    echo "(2) collecting and sorting files"
-    collect_target_files "$file_list_tmp"
-    sort -z -o "$file_list_tmp" "$file_list_tmp"
-    if [[ $DRY_RUN -eq 1 ]]; then
-        dry_run_report "$file_list_tmp"
-        rm -f "$file_list_tmp"
-        return 0
-    fi
-    local temp_payload
-    temp_payload=$(mktemp)
-    # Header banner: '#' lines are ignored by `git apply` and `patch`
-    # (everything before the first 'diff --git' is skipped), so they are
-    # safe to keep in the bundle as an inline how-to-undump hint.
-    cat << 'EOF' > "$temp_payload"
-# This bundle is a unified diff against /dev/null. To undump:
-#   git apply <this-file>          # recreates files and directories
-#   patch -p1 < <this-file>        # alternative, if git is unavailable
-# Lines beginning with '#' are ignored by both tools.
-EOF
-    echo "(3) dumping file contents"
-    while IFS= read -r -d '' file; do
-        if dump_file_contents "$file" "$temp_payload"; then
-            statistics_register "$file"
+    local argv=() prof_args=() i=1
+    # A profile is expanded in place of its '-p NAME', so that options given
+    # on the command line still override it by coming later.
+    while [[ $# -gt 0 ]]; do
+        if [[ "$1" == "-p" ]]; then
+            [[ $# -ge 2 ]] || die "-p requires an argument"
+            mapfile -t prof_args < <(profile_arguments "$2")
+            argv+=(${prof_args[@]+"${prof_args[@]}"}); shift 2; continue
         fi
-    done < "$file_list_tmp"
-    mv "$temp_payload" "$OUTPUT_FILE"
-    rm -f "$file_list_tmp"
-    echo "Success: Concatenated bundle written to $OUTPUT_FILE"
+        argv+=("$1"); shift
+    done
+    command_line_parse ${argv[@]+"${argv[@]}"}
+    if [[ ${#VERIFY_FILES[@]} -gt 0 ]]; then verify_bundles; return $?; fi
+    output_file_determine
+    echo "(1) collecting candidates [mode: ${SELECT_MODE}]" >&2
+    candidates_collect
+    if [[ $DRY_RUN -eq 1 ]]; then dry_run_report; return 0; fi
+    [[ ${#ACCEPTED[@]} -gt 0 ]] || die "no files selected; try -n to see why"
+    echo "(2) rendering ${#ACCEPTED[@]} members" >&2
+    bundle_write
+    echo "Success: bundle written to ${WRITTEN_PARTS[*]}" >&2
     statistics_report
-    echo "To undump: git apply $OUTPUT_FILE   (or: patch -p1 < $OUTPUT_FILE)"
+    echo "To undump: git apply ${WRITTEN_PARTS[0]}   (or: patch -p1 < ${WRITTEN_PARTS[0]})"
 }
+
 main "$@"

@@ -1,22 +1,13 @@
 
 --- unknown and misspelt keys, by name and position ---
-title    'T'  language None  origin HEADER  at 1:7
-root:
-    (nothing stated)
-choice 'one':
-    (nothing stated)
-FAULT f.py:3:5: VOCABULARY: unknown key 'numerc'
-FAULT f.py:5:15: VOCABULARY: unknown key 'pyep' in choice 'one'
+no specification
+FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 
 --- a key bound to nothing, where something is required ---
-title    'T'  language None  origin HEADER  at 1:7
-root:
-    comment = ()
-choice -:
-    (nothing stated)
-FAULT f.py:3:14: TYPE: 'numeric' is bound to nothing; leave it unstated for the default, or name a value
+no specification
+FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 
 --- 'title' absent ---
 no specification
-FAULT f.py:1:7: VOCABULARY: 'title' is required and absent
+FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 <hwut-end>

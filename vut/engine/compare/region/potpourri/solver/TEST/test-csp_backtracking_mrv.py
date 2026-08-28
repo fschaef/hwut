@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "CSP Backtracking MRV: Friends Pairing Stress Test"
 #     choices    = ["backtracking", "lane-trap", "massive-pipe",
 #                   "soduko"]

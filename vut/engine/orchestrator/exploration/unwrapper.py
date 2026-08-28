@@ -8,8 +8,12 @@ The line record is the PARSER's ('SourceLine'); the knowledge of comment
 leaders is HWUT's and stays here. A HOCON parser has no business knowing
 that a specification may live inside a C comment.
 
-The region's first line begins at the marker; its column offset is the
-marker's column. The lines after it share a comment leader -- ' * ', '# ',
+The region's first line begins at the marker, THE '@' DROPPED: the '@'
+is the sigil that FINDS the block in a foreign file, not a part of the
+block's own grammar. What reaches the parser reads 'hwut { ... }' in a
+source file exactly as it does in a '.conf', so one validator and one
+vocabulary serve both. The column offset accounts for the dropped
+character, so every parser position stays file-relative. The lines after it share a comment leader -- ' * ', '# ',
 '-- ' -- which is their longest common leading prefix. The prefix is
 DISCOVERED over those lines, never known from a table; whitespace-only lines
 take no part in the discovery and lose at most the prefix's length.
@@ -28,14 +32,17 @@ def unwrap(text, region):
 
     'text' is the file's raw content; 'region' a detector Region in it.
     """
-    raw = text[region.i_marker : region.i_close + 1]
+    #  THE '@' IS DROPPED HERE, and nowhere else: 'region.i_marker'
+    #  keeps pointing at it, so a fault names the marker as a person
+    #  sees it.
+    raw = text[region.i_marker + 1 : region.i_close + 1]
     line_list = raw.split("\n")
 
     if len(line_list) == 1:
-        return [SourceLine(line_list[0], region.line, region.column - 1)]
+        return [SourceLine(line_list[0], region.line, region.column)]
 
     prefix = _common_prefix(line_list[1:])
-    result = [SourceLine(line_list[0], region.line, region.column - 1)]
+    result = [SourceLine(line_list[0], region.line, region.column)]
     for i, line in enumerate(line_list[1:], start=1):
         n = min(len(prefix), len(line)) if not line.strip() else len(prefix)
         result.append(SourceLine(line[n:], region.line + i, n))

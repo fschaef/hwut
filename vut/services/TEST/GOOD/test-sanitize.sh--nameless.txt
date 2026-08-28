@@ -1,0 +1,29 @@
+--- a record with no start time:
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock  (reporting only; '--apply' acts)
+    
+      lock -- 1 found:
+          suite/TEST/.hwut-lock                                the holder (pid <n>) is gone, taken <n> s ago
+    
+      1 item(s), <size> kB
+}
+--- a record of the wrong shape:
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock  (reporting only; '--apply' acts)
+    
+      lock -- 1 found:
+          suite/TEST/.hwut-lock                                the holder (pid <n>) is gone
+    
+      1 item(s), <size> kB
+}
+--- no record at all:
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock  (reporting only; '--apply' acts)
+    
+      lock -- 1 found:
+          suite/TEST/.hwut-lock                                the holder (pid ?) is gone
+    
+}

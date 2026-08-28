@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The store: records and the directory lock"
 #     choices    = ["keys", "lock_dead", "lock_live", "nominal_kinds",
 #                   "promotion"]

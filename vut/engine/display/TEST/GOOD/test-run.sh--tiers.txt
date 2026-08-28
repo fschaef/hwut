@@ -10,7 +10,7 @@ STDOUT {
     ==============================================================================
     FAULTS
     ------------------------------------------------------------------------------
-    hh:mm:ss | 000 | [FAULT] SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+    FAULT SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
     
     ==============================================================================
     FAILURES
@@ -24,7 +24,7 @@ STATUS: 1
 STDOUT {
 }
 STDERR {
-    hh:mm:ss | 000 | [FAULT] SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+    FAULT SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
 }
 == --plain, statable redundantly ==
 STATUS: 0

@@ -38,10 +38,30 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         lines are ignored; a leading './' means the
                         WISHLIST'S OWN DIRECTORY, so a list travels
                         with the tree it describes. Globbing is
-                        allowed throughout, path member included. The
+                        allowed throughout, path member included. A
+                        SORTED list may ELIDE: a leading ':/' is the
+                        previous line's directory, ':/:' its directory
+                        and file, a choice following (disc-8). The
                         lines join the '--glob' targets and are OR'ed
                         with them. 'hwut.wishlist' PRINTS this form,
                         so the round trip closes.
+THE SHORT FORM OF HWUT 1.0 lives here too ('desugar_positional',
+'with_targets'): a face may take BARE WORDS -- 'hwut.run test-app.sh
+one' -- the first naming files, every further one a choice, globbing
+allowed in both. It is sugar for '--glob' and nothing else, so the
+short form can never mean what the long form cannot say.
+
+    --label <expr>      the runs the label expression names, out of
+                        'hwut-root.labels' (disc-8): 'AND', 'OR',
+                        'NOT', brackets, 'all' the universe, ',' sugar
+                        for 'OR'. A UNION among the labels it names
+                        where every other keyword narrows -- a label
+                        names a SET, and naming two asks for both;
+                        against the rest of the wish it still narrows.
+                        ABSENT, the standard label 'meta' is SILENT:
+                        a wish that asks no label does not want what
+                        'meta' labels. Naming a label lifts the
+                        silence.
 
 A <point> is a SPAN back from now, or an ANCHOR:
 
@@ -73,8 +93,10 @@ ______________________________________________________________________________
 """
 import calendar
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime    import datetime, timedelta, timezone
+
+from .label      import LabelExprError, parse_expression
 
 
 UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
@@ -98,7 +120,7 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--until=<point>]", "[--glob <target>]...",
                      "[--exclude <target>]...",
                      "[--exclude-dir <glob>]...",
-                     "[--wishlist <file>]...")
+                     "[--wishlist <file>]...", "[--label <expr>]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -120,7 +142,16 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         carrying fnmatch's '*', '?' and '[ ]':
                             --glob "test-*.py quick-[0-2]"
                         may stand several times; the globs are OR'ed
-                        among themselves"""
+                        among themselves
+    --label <expr>      the runs the label expression names ('AND',
+                        'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
+                        universe); a union among its labels, narrowing
+                        against the rest; absent, 'meta' is silent --
+                        which a LITERAL target overrides, and a glob
+                        does not (it warns instead)
+    <app> [<choice>...] the short form: bare words are targets, the
+                        first naming files, each further one a
+                        choice; globbing allowed in both"""
 
 
 class WishError(Exception):
@@ -144,6 +175,7 @@ class Wish:
     wishlist_f:        bool  = False
     exclude_tuple:     tuple = ()
     exclude_dir_tuple: tuple = ()
+    label_spec: str | None = None
 
     def states_nothing_f(self):
         """
@@ -161,7 +193,8 @@ class Wish:
         return not (self.fail_f or self.pass_f or self.glob_tuple
                     or self.wishlist_f or self.exclude_tuple
                     or self.exclude_dir_tuple) \
-               and self.since_spec is None and self.until_spec is None
+               and self.since_spec is None and self.until_spec is None \
+               and self.label_spec is None
 
     def asks_glob_f(self):
         """
@@ -169,6 +202,14 @@ class Wish:
                 stated, or a wishlist read whatever it held.
         """
         return bool(self.glob_tuple) or self.wishlist_f
+
+    def asks_label_f(self):
+        """
+        RETURN: bool, True where the wish names labels -- a question
+                only 'hwut-root.labels' can answer, so a CLabelView
+                must be handed down wherever it is asked.
+        """
+        return self.label_spec is not None
 
     def asks_base_f(self):
         """
@@ -199,6 +240,8 @@ class Wish:
                          for text in self.exclude_tuple)
         part_list.extend('--exclude-dir "%s"' % text
                          for text in self.exclude_dir_tuple)
+        if self.label_spec is not None:
+            part_list.append('--label "%s"' % self.label_spec)
         return " ".join(part_list)
 
 
@@ -226,6 +269,7 @@ def parse_wish(argv):
     exclude_list     = []
     exclude_dir_list = []
     wishlist_f       = False
+    label_spec       = None
     rest_list        = []
 
     index = 0
@@ -269,6 +313,26 @@ def parse_wish(argv):
             glob_list.extend(
                 wishlist_target_tuple(argument[len("--wishlist="):]))
             wishlist_f = True
+        elif argument == "--label" or argument.startswith("--label="):
+            if argument == "--label":
+                if index >= len(argv):
+                    raise WishError("'--label' stands without an "
+                                    "expression")
+                text   = argv[index]
+                index += 1
+            else:
+                text = argument[len("--label="):]
+            if label_spec is not None:
+                raise WishError(
+                    "'--label' stands twice; one expression holds "
+                    "the whole question -- write "
+                    "'--label \"%s OR %s\"'" % (label_spec, text))
+            try:
+                parse_expression(text)
+            except LabelExprError as error:
+                raise WishError("'--label %s' cannot be read -- %s"
+                                % (text, error))
+            label_spec = text
         else:
             rest_list.append(argument)
 
@@ -285,7 +349,8 @@ def parse_wish(argv):
 
     return (Wish(fail_f, pass_f, since_spec, until_spec,
                  tuple(glob_list), wishlist_f,
-                 tuple(exclude_list), tuple(exclude_dir_list)),
+                 tuple(exclude_list), tuple(exclude_dir_list),
+                 label_spec),
             rest_list)
 
 
@@ -318,14 +383,104 @@ def wishlist_target_tuple(file_name):
     #  what lets a list travel with the tree it describes.
     here = os.path.abspath(os.path.dirname(file_name) or ".")
     target_list = []
-    for line in line_list:
+    for number, line in enumerate(line_list, start=1):
         text = line.strip()
         if not text or text.startswith("#"): continue
-        if text.startswith("./"):
+        if text.startswith(":"):
+            previous = target_list[-1] if target_list else None
+            try:
+                text = expanded_target(text, previous)
+            except ElisionError as error:
+                raise WishError("'%s', line %d: %s"
+                                % (file_name, number, error))
+        elif text.startswith("./"):
             text = "%s/%s" % (here.replace(os.sep, "/").rstrip("/"),
                               text[2:])
         target_list.append(text)
     return tuple(target_list)
+
+
+def desugar_positional(word_list):
+    """
+    RETURN: tuple[str], the wish globs a SHORT FORM asks for -- empty
+            where no word stands.
+
+    THE SHORT FORM OF HWUT 1.0, revived: the first word names files,
+    every further word a choice; each choice becomes its own target,
+    and the wish OR's them. Globbing is allowed in BOTH members, as
+    it is in '--glob'.
+
+        ("test-*.py", "one", "two")
+            -> ("test-*.py one", "test-*.py two")
+        ("test-*.py",)
+            -> ("test-*.py",)          every choice of the file
+
+    IT IS SUGAR AND NOTHING MORE: it becomes wish globs, and the
+    wish's own engine does the selecting. One selection language, so
+    the short form can never mean what the long form cannot say.
+
+    A face whose bare words already mean something else --
+    'hwut.rename <old> <new>', 'hwut.labels.create <label>' -- does
+    not call this: the sugar is a thing a face asks for, never a
+    thing 'parse_wish' does behind its back.
+    """
+    if not word_list: return ()
+    file_glob    = word_list[0]
+    choice_tuple = tuple(word_list[1:])
+    if not choice_tuple: return (file_glob,)
+    return tuple("%s %s" % (file_glob, choice)
+                 for choice in choice_tuple)
+
+
+def with_targets(wish, word_list):
+    """
+    RETURN: Wish, 'wish' with the short form's targets added to its
+            globs -- 'wish' itself where no word stands.
+    """
+    glob_tuple = desugar_positional(word_list)
+    if not glob_tuple: return wish
+    return replace(wish, glob_tuple=wish.glob_tuple + glob_tuple)
+
+
+class ElisionError(Exception):
+    """An elided target that cannot be expanded: a ditto with no
+    predecessor, a ':/:' without a choice, a lone ':'."""
+
+
+def expanded_target(text, previous):
+    """
+    RETURN: str, the target 'text' with its elision expanded against
+            'previous' -- the LAST EXPANDED TARGET before it (disc-8):
+
+                :/<file> [<choice>]   previous target's DIRECTORY
+                :/: <choice>          its directory AND its file
+
+    Raises ElisionError where no expansion can be meant: 'previous' is
+    None -- A DITTO WITH NO PREDECESSOR is the one way the notation
+    can be silently wrong, expanded against the wrong entry it names a
+    real run nobody meant -- or ':/:' stands without a choice, which
+    would only name the previous run again, or the mark is malformed.
+    """
+    if previous is None:
+        raise ElisionError("a ditto ('%s') stands with no target "
+                           "before it to elide from" % text)
+    previous_file = previous.split(" ", 1)[0]
+    if text.startswith(":/:"):
+        choice = text[len(":/:"):].strip()
+        if not choice:
+            raise ElisionError("':/:' stands without a choice -- it "
+                               "would only name the previous run "
+                               "again")
+        return "%s %s" % (previous_file, choice)
+    if text.startswith(":/"):
+        rest = text[len(":/"):].strip()
+        if not rest:
+            raise ElisionError("':/' stands without a file")
+        directory = previous_file.rsplit("/", 1)[0] \
+                    if "/" in previous_file else ""
+        return "%s/%s" % (directory, rest) if directory else rest
+    raise ElisionError("a leading ':' is an elision mark and reads "
+                       "':/' or ':/:' -- '%s' is neither" % text)
 
 
 def cutoff_instant(spec, now):

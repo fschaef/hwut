@@ -1,12 +1,12 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The hwut.run face: the tree run, rendered live."
 #     choices    = ["busy", "colour", "empty", "fail", "green",
-#                   "jobs-budget", "linear-raw", "nostore", "refused",
-#                   "strategy-refused", "tiers", "timing", "tree-fail",
-#                   "tree-green"]
+#                   "jobs-budget", "labels", "linear-raw", "nostore",
+#                   "refused", "short-form", "strategy-refused",
+#                   "tiers", "timing", "tree-fail", "tree-green"]
 #     eq-pattern = ["STATUS: [0-9]"]
 # }
 #
@@ -24,6 +24,18 @@
 # THE COLOUR DECISION under test, not the escapes' spelling: piped is
 # plain; '--colour' enforces, 'NO_COLOR' notwithstanding;
 # '--no-colour' refuses.
+#
+# THE LABELS (disc-8): a bare run SILENCES what the standard label
+# marks; naming a label lifts the silence; a label that does not
+# stand is refused by name. The view is built at the boundary before
+# anything runs; a broken 'hwut-root.labels' is a FAULT at the door.
+# AN EXPLICIT LITERAL TARGET OVERRIDES THE SILENCE; a glob does not,
+# and where it meets only silenced runs it WARNS, naming the remedy.
+#
+# THE SHORT FORM OF HWUT 1.0: 'hwut.run test-app.sh one' -- bare
+# words are targets, the first naming files, each further one a
+# choice, globbing allowed in both. Sugar for '--glob' and nothing
+# else.
 #
 # MANY DIRECTORIES (O-11..O-15): the flow tier may interleave across
 # directories and is blessed THROUGH THE DIGEST FILTER 'test-run.pype'
@@ -44,7 +56,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.run face: the tree run, rendered live.;"
-        echo "CHOICES: green, fail, nostore, timing, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused;"
+        echo "CHOICES: green, fail, nostore, timing, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused, labels, short-form;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -58,8 +70,13 @@ cd "$WORK"
 #  fixture states its own. Empty says only 'the tree ends here'.
 printf 'hwut {\n}\n' > hwut-root.conf
 
-mask() {                # hh:mm:ss -> the one masked token
-    sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'
+mask() {                # THE RAW PATH's deterministicalization: the
+                        # wall clock and the mktemp ground are facts
+                        # about the machine and the morning, not
+                        # about the subject. The DIGESTED path is
+                        # masked by 'test-run.pype', which swallows
+                        # these and the flow's own columns besides.
+    sed -E "s/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g; s|$WORK|WORK|g"
 }
 
 face() {                # <args...>  -- status, masked stdout, stderr
@@ -82,8 +99,10 @@ put() {                 # <path> <content...>
 digest() {              # <args...>  -- status, digested stdout, stderr
     #  '$?' after a pipe is the pipe's: the face's status is taken from
     #  PIPESTATUS. The digest filter sits beside this suite and is
-    #  called by path; times are masked before it reads.
-    $RUN "$@" 2> err.txt | mask | "$HERE/${PYPE:-test-run.pype}" > out.txt
+    #  called by path; IT masks the clock and the job column, and the
+    #  ground is masked after it, on what it passed through.
+    $RUN "$@" 2> err.txt | "$HERE/${PYPE:-test-run.pype}" \
+        | mask > out.txt
     echo "STATUS: ${PIPESTATUS[0]}"
     echo "STDOUT {"
     sed 's/^/    /' < out.txt
@@ -114,7 +133,7 @@ fixture_tree() {        # three directories, two passing tests each
         printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
             > tree/$d/TEST/hwut.conf
         for t in one two; do
-            printf '#!/bin/bash\n# hwut { title = "%s" }\necho "steady %s"\necho "<hwut-end>"\n' \
+            printf '#!/bin/bash\n# @hwut { title = "%s" }\necho "steady %s"\necho "<hwut-end>"\n' \
                 $t $t > tree/$d/TEST/test-$t.sh
             chmod +x tree/$d/TEST/test-$t.sh
             printf 'steady %s\n<hwut-end>\n' $t \
@@ -135,7 +154,7 @@ fixture_green() {       # one directory, one passing test
     mkdir -p tree/suite/TEST/GOOD
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\n' \
         > tree/suite/TEST/test-ok.sh
     chmod +x tree/suite/TEST/test-ok.sh
     put tree/suite/TEST/GOOD/test-ok.sh.txt "steady line"
@@ -143,7 +162,7 @@ fixture_green() {       # one directory, one passing test
 
 fixture_fail() {        # the green one, one differing test beside it
     fixture_green
-    printf '#!/bin/bash\n# hwut { title = "Diff" }\necho "what the run says"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Diff" }\necho "what the run says"\n' \
         > tree/suite/TEST/test-diff.sh
     chmod +x tree/suite/TEST/test-diff.sh
     put tree/suite/TEST/GOOD/test-diff.sh.txt "what the GOOD expects"
@@ -282,9 +301,15 @@ jobs-budget)
     #  the same peak under every strategy.
     fixture_tree
     echo "== --jobs=2 =="
-    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree --jobs=2
+    #  '--start-delay=0': this choice counts the most work standing at
+    #  once by pairing START against END, so every START must exist.
+    #  Held back, whether a line STANDS AT ALL would depend on the
+    #  speed of the machine -- the one thing a GOOD may never hold.
+    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree \
+        --jobs=2 --start-delay=0
     echo "== --jobs=1 =="
-    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree --jobs=1
+    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree \
+        --jobs=1 --start-delay=0
     ;;
 
 linear-raw)
@@ -324,6 +349,46 @@ PY
     echo "== --quiet: the fault in the closing FAULTS block =="
     every_strategy --directory=tree --quiet
     kill $holder 2> /dev/null; wait $holder 2> /dev/null
+    ;;
+
+short-form)
+    #  What HWUT 1.0 spelled, spelled again.
+    fixture_tree
+    echo "--- one app, every choice of it"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+         test-one.sh
+    echo "--- a globbed app"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+         "test-*.sh"
+    echo "--- a bare word that names nothing selects nothing"
+    face --plain --no-store --directory=tree test-nowhere.sh
+    echo "--- an unknown OPTION is still refused by name"
+    face --plain --no-store --directory=tree --sideways
+    ;;
+
+labels)
+    #  The silence, live in the run itself.
+    fixture_tree
+    python3 -m vut.services.labels.add meta \
+        --glob "tree/*/TEST/test-two.sh" > /dev/null
+    echo "--- bare: the standard label is silent (no test-two runs)"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree
+    echo "--- '--label meta' lifts the silence (only test-two runs)"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+         --label meta
+    echo "--- '--label all' is the universe"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+         --label all
+    echo "--- a label that does not stand, refused by name"
+    face --plain --no-store --directory=tree --label cocnern
+    echo "--- a LITERAL target overrides the silence"
+    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+         alpha/TEST/test-two.sh
+    echo "--- a GLOB does not; wholly swallowed, it warns"
+    face --plain --no-store --directory=tree "alpha/TEST/test-tw*.sh"
+    echo "--- a broken labels file is a FAULT at the door"
+    echo "x : y" >> hwut-root.labels
+    face --plain --no-store --directory=tree
     ;;
 
 *)

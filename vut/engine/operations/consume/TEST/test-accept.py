@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Accept: write the nominal"
 #     choices    = ["all_or_nothing", "initiate", "ledger", "pulls_run",
 #                   "stderr", "take_dump", "the_loop"]

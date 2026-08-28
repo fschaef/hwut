@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Detector and unwrapper: no comment syntax known"
 #     choices    = ["blank", "dash", "detect", "hash", "offsets",
 #                   "single", "star"]
@@ -70,19 +70,26 @@ def show(text):
 def test_detect():
     """RETURN: None. Presence, absence, word-only, brace in string."""
     banner("found, first occurrence")
-    show("code code\n/* hwut { title = \"T\" } */\nmore code\n")
+    show("code code\n/* @hwut { title = \"T\" } */\nmore code\n")
     banner("absent")
     show("no marker anywhere\n")
     banner("the word alone, no brace")
     show("this line mentions hwut in prose\nreal code\n")
+
+    banner("a BARE 'hwut {' is not a marker")
+    #  THE '@' IS PART OF THE MARKER: a bare 'hwut {' occurs in
+    #  prose, in a README, in a shell line that calls the tool, and
+    #  every such occurrence would otherwise make the file a test
+    #  application by accident.
+    show('# the config block reads  hwut { title = "T" }\ncode\n')
     banner("a brace inside a string does not close the region")
-    show('# hwut {\n#     title = "closer } inside"\n# }\n')
+    show('# @hwut {\n#     title = "closer } inside"\n# }\n')
 
 
 def test_star():
     """RETURN: None. ' * ' leader; '*/' outside the region."""
     banner("star leader")
-    show('/* hwut {\n'
+    show('/* @hwut {\n'
          ' *     title = "Parser corner cases"\n'
          ' *     build = "make"\n'
          ' * } */\n'
@@ -93,7 +100,7 @@ def test_hash():
     """RETURN: None. '# ' leader; an inner HOCON comment survives."""
     banner("hash leader")
     show('#! /usr/bin/env python3\n'
-         '# hwut {\n'
+         '# @hwut {\n'
          '#     title = "T"\n'
          '#     # a comment INSIDE the specification\n'
          '#     numeric = 0.01\n'
@@ -104,7 +111,7 @@ def test_hash():
 def test_dash():
     """RETURN: None. '-- ' leader."""
     banner("dash leader")
-    show('-- hwut {\n'
+    show('-- @hwut {\n'
          '--     title = "T"\n'
          '-- }\n'
          'print("lua")\n')
@@ -113,16 +120,16 @@ def test_dash():
 def test_single():
     """RETURN: None. One line; and opener plus lone closer."""
     banner("everything on one line")
-    show('/* hwut { title = "T" } */\n')
+    show('/* @hwut { title = "T" } */\n')
     banner("lone closer: the leader must not eat the brace")
-    show('/* hwut { title = "T"\n'
+    show('/* @hwut { title = "T"\n'
          ' * } */\n')
 
 
 def test_blank():
     """RETURN: None. A blank line inside the region."""
     banner("blank line takes no part")
-    show('# hwut {\n'
+    show('# @hwut {\n'
          '#     title = "T"\n'
          '\n'
          '#     numeric = 0.5\n'
@@ -136,7 +143,7 @@ def test_offsets():
     show('line one\n'
          'line two\n'
          'line three\n'
-         '/* hwut {\n'
+         '/* @hwut {\n'
          ' *     title = "T"\n'
          ' * } */\n')
 

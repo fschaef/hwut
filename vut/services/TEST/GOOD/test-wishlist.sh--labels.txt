@@ -1,0 +1,43 @@
+--- bare: the silenced runs are not printed
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/net/TEST/test-b.sh
+    ./messaging/queue/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-b.sh
+    ./storage/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh two
+    ./storage/TEST/test-b.sh
+}
+--- '--label meta': the silence lifted, the two alone
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh one
+}
+--- '--label all AND NOT meta' spells the bare wish
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/net/TEST/test-b.sh
+    ./messaging/queue/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-b.sh
+    ./storage/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh two
+    ./storage/TEST/test-b.sh
+}
+--- a LITERAL target overrides the silence
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+}
+--- a GLOB does not; wholly swallowed, it warns
+STATUS: 3
+STDOUT {
+    WARNING: the glob 'messaging/net/TEST/test-a.s? one' met only runs the standard label silences -- name a label ('--label meta') to reach them
+}
+--- a label that does not stand, refused by name
+STATUS: 2
+STDOUT {
+    REFUSED: no label 'cocnern' stands in 'hwut-root.labels'
+}

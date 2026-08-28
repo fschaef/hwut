@@ -1,0 +1,32 @@
+THE FILE {
+    ./messaging/net/TEST/test-a.sh one
+    :/: two
+    :/test-b.sh
+    ./storage/TEST/test-a.sh one
+}
+READ BACK, expanded:
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/net/TEST/test-b.sh
+    ./storage/TEST/test-a.sh one
+}
+--- a ditto with no predecessor, refused by name
+STATUS: 2
+STDOUT {
+    REFUSED: 'tree/first.txt', line 1: a ditto (':/test-b.sh') stands with no target before it to elide from
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
+}
+--- ':/:' without a choice, refused by name
+STATUS: 2
+STDOUT {
+    REFUSED: 'tree/bare.txt', line 2: ':/:' stands without a choice -- it would only name the previous run again
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
+}
+--- a lone ':' is no elision mark
+STATUS: 2
+STDOUT {
+    REFUSED: 'tree/lone.txt', line 2: a leading ':' is an elision mark and reads ':/' or ':/:' -- ':sideways' is neither
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
+}

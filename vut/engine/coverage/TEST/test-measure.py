@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Branch and MC/DC: measures registered beside the line axis"
 #     choices    = ["branch", "faults", "in_record", "mcdc", "named",
 #                   "registration", "unmergeable"]

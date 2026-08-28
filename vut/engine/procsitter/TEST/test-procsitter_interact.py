@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The two-way tee: eavesdrop stdout, inject stdin -- pure pipe composition"
 #     choices    = ["chain_stdin", "chain_stop_early", "control_signals",
 #                   "pype_interactor", "tee_copy", "tee_degenerate"]

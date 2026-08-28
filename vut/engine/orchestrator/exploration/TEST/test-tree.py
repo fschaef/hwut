@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Tree walk: markers found, configuration folded down"
 #     choices    = ["inherit", "locals", "marker", "root",
 #                   "walk"]
@@ -87,9 +87,9 @@ def show(tree, detail=None):
 def test_walk():
     """RETURN: None. Order, and no descent into a test directory."""
     tree, root = tree_of({
-        "alpha/TEST/test-a.py":        '# hwut { title = "A" }\n',
+        "alpha/TEST/test-a.py":        '# @hwut { title = "A" }\n',
         "alpha/TEST/deeper/unrelated": 'not walked\n',
-        "beta/gamma/TEST/test-b.py":   '# hwut { title = "B" }\n',
+        "beta/gamma/TEST/test-b.py":   '# @hwut { title = "B" }\n',
         "beta/plain/readme.txt":       'no tests here\n',
     })
     try:
@@ -107,10 +107,10 @@ def test_inherit():
                                 '} }\n',
         "sub/hwut.conf":        'hwut { default_app { numeric = 0.1 } '
                                 '}\n',
-        "sub/TEST/test-a.py":   '# hwut { title = "A" }\n',
+        "sub/TEST/test-a.py":   '# @hwut { title = "A" }\n',
         "sub/TEST/hwut.conf":   'hwut { default_app { pype = '
                                 '"own.pype" } }\n',
-        "other/TEST/test-b.py": '# hwut { title = "B" }\n',
+        "other/TEST/test-b.py": '# @hwut { title = "B" }\n',
     })
     try:
         banner("parameter by parameter: the nearer word wins")
@@ -125,8 +125,8 @@ def test_marker():
     """RETURN: None. 'test_directory' renames the marker below."""
     tree, root = tree_of({
         "hwut.conf":              'hwut { test_directory = "checks" }\n',
-        "one/checks/test-a.py":   '# hwut { title = "A" }\n',
-        "one/TEST/not-found.py":  '# hwut { title = "Ghost" }\n',
+        "one/checks/test-a.py":   '# @hwut { title = "A" }\n',
+        "one/TEST/not-found.py":  '# @hwut { title = "Ghost" }\n',
     })
     try:
         banner("the marker is 'checks'; 'TEST' is an ordinary name")
@@ -140,7 +140,7 @@ def test_locals():
     tree, root = tree_of({
         "hwut.conf":          'hwut { on_entry  = "prepare.sh"\n'
                               '       collision = ["test-a.py"] }\n',
-        "TEST/test-a.py":     '# hwut { title = "A" }\n',
+        "TEST/test-a.py":     '# @hwut { title = "A" }\n',
     })
     try:
         banner("named, faulted, and not flowed")
@@ -163,8 +163,8 @@ def test_root():
     """
     file_db = {
         "TEST/hwut.conf": 'hwut {\n    on_entry = "true"\n}\n',
-        "TEST/test-a.py": '# hwut { title = "A"  choices = ["one","two"] }\n',
-        "TEST/test-b.py": '# hwut { title = "B" }\n',
+        "TEST/test-a.py": '# @hwut { title = "A"  choices = ["one","two"] }\n',
+        "TEST/test-b.py": '# @hwut { title = "B" }\n',
     }
 
     banner("started ABOVE the test directory")

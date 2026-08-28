@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Potpourri Variants: subset, duplicates"
 #     choices    = ["combined", "duplicates", "subset"]
 # }

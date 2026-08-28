@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Lines: Permutation LineElement-types"
 #     choices    = ["different", "different-2", "different-good-2",
 #                   "different-void-2", "same"]

@@ -1,22 +1,5 @@
 
 --- a full header ---
-title    'Parser corner cases'  language heartfun  origin HEADER  at 1:7
-root:
-    build = Build(framework='make', executable='special.exe', coverage_target=None, caps=Caps(timeout_sec=300.0, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=None, write_directory_list=None))
-    caps = Caps(timeout_sec=30.0, cpu_sec=20.0, memory_mb=512, file_size_mb=64, child_process_max_n=4, file_handle_max_n=64, network=False, write_directory_list=('tmp', 'out'))
-    pype = 'strip.pype'
-    numeric = 0.01
-    eq_pattern = ('bonjour|hello',)
-    nothing = ('_',)
-    analogy = ('((', '))')
-    constraints = ('x < y + 2', 'abs(sin(z) - x) < eps')
-    comment = ('##', '##')
-    slash_eqv = True
-    same = True
-    interactive = True
-choice 'one':
-    (nothing stated)
-choice 'two':
-    caps = Caps(timeout_sec=5.0, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=None, write_directory_list=None)
-    numeric = 0.05
+no specification
+FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 <hwut-end>

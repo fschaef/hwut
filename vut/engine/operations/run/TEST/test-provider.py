@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The provider seam: one interface per role, refused at the door"
 #     choices    = ["cadence", "door", "foreign", "roles", "scheme"]
 #     interactive = true

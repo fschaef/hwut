@@ -1,0 +1,29 @@
+--- by default the error stream is not shown
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-noisy.sh ]================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | out
+         2    2 | <hwut-end>
+    ============================================================
+}
+--- '--stderr' shows it, marked as never tested
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-noisy.sh ]================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | out
+         2    2 | <hwut-end>
+    ============================================================
+    
+    ===== STDERR -- shown, never tested (E-5) ====================
+        a warning
+}

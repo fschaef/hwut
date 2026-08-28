@@ -1,9 +1,10 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
-#     choices    = ["ask", "bless", "merge", "stderr", "sugar", "token"]
+#     choices    = ["ask", "bless", "labels", "merge", "stderr",
+#                   "sugar", "token"]
 #     eq-pattern = ["STATUS: [0-9]"]
 # }
 #
@@ -33,7 +34,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
-        echo "CHOICES: bless, merge, stderr, sugar, ask, token;"
+        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -65,9 +66,9 @@ fixture() {             # one directory, one plain test, one two-choice
     mkdir -p tree/suite/TEST
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-ok.sh
-    printf '#!/bin/bash\n# hwut { title = "Two"\n#        choices = ["a", "b"] }\necho "choice $1"\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Two"\n#        choices = ["a", "b"] }\necho "choice $1"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-two.sh
     chmod +x tree/suite/TEST/*.sh
     $RUN --directory=tree --silent 2> /dev/null
@@ -102,7 +103,7 @@ stderr)
     #  default: refused by name with both remedies; '--stderr-tol'
     #  notes IGNORED, and the note GOVERNS -- the re-run is green.
     fixture
-    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-ok.sh
     chmod +x tree/suite/TEST/test-ok.sh
     $RUN --directory=tree --silent 2> /dev/null
@@ -114,6 +115,31 @@ stderr)
     $RUN --directory=tree --silent 2> /dev/null
     echo "run status: $?"
     echo "GOOD holds (no stderr nominal):"
+    good | sed 's/^/    /'
+    ;;
+
+labels)
+    #  AN EXPLICIT TARGET DOMINATES THE SILENCE (disc-8): a face that
+    #  names a run and then declines to bless it is the silent
+    #  failure this feature exists to prevent, arriving from the
+    #  other side.
+    fixture
+    python3 -m vut.services.labels.add meta \
+        --glob "test-two.sh a" --directory=tree > /dev/null
+    echo "== a BARE accept passes the silenced run by =="
+    face --directory=tree/suite/TEST --yes
+    echo "GOOD holds:"
+    good | sed 's/^/    /'
+    echo "== NAMING it literally blesses it =="
+    face --directory=tree/suite/TEST --yes test-two.sh a
+    echo "GOOD holds:"
+    good | sed 's/^/    /'
+    echo "== a GLOB wholly swallowed warns instead =="
+    fixture
+    python3 -m vut.services.labels.add meta \
+        --glob "test-two.sh a" --directory=tree > /dev/null
+    face --directory=tree/suite/TEST --yes "test-two.s?" a
+    echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;
 
@@ -138,7 +164,7 @@ token)
     #  is promotable while one incomplete stream stands in the
     #  selection, and no flag bypasses.
     fixture
-    printf '#!/bin/bash\n# hwut { title = "Cut" }\necho "half a line"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Cut" }\necho "half a line"\n' \
         > tree/suite/TEST/test-cut.sh
     chmod +x tree/suite/TEST/test-cut.sh
     $RUN --directory=tree --silent 2> /dev/null

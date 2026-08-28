@@ -12,7 +12,7 @@ One line per event as it arrives:
 the display NEVER reads a clock of its own; a 'when' that is not an
 ISO instant prints verbatim, right-aligned. 'NNN' is the count of
 parallel executions AFTER the event. 'NICK' is the directory's
-deterministic nickname, expanded once at its '[DIR  ]' line and again
+deterministic nickname, expanded once at its 'DIR  ' line and again
 in both closing blocks. '[SKIP ]' marks a 'run-ended' that never had a
 'run-begun' -- a node that never ran must not claim it did.
 
@@ -83,14 +83,51 @@ def _split_node(node):
     return base, (choice if choice else None)
 
 
+def _instant(when):
+    """
+    RETURN: float, the instant as seconds since the epoch, where
+            'when' parses as ISO-8601.
+            None, where it does not -- a stream whose instants cannot
+            be read holds nothing back, which is the safe way to be
+            wrong about a clock.
+    """
+    try:
+        return datetime.fromisoformat(str(when)).timestamp()
+    except (ValueError, TypeError):
+        return None
+
+
 def _display_name(node):
     """
-    RETURN: str, the node as the eye reads it: 'base [choice]' where a
+    RETURN: str, the node as the eye reads it: 'base choice' where a
             choice stands, the base alone else.
+
+    NO BRACES ROUND THE CHOICE. The flow gives the choice a column of
+    its own, and a column needs no bracket to say where it begins --
+    the brackets were doing what alignment now does, and doing it
+    with punctuation the eye must step over.
     """
     base, choice = _split_node(node)
     if choice is None: return base
-    return "%s [%s]" % (base, choice)
+    return "%s %s" % (base, choice)
+
+
+#  The application-name column of the flow line. FIXED, so a column
+#  never moves under a reader following it down the page.
+APP_COLUMN = 20
+
+#  HOW LONG A START IS HELD BACK. A test that finishes inside the
+#  window never announces its beginning: the pair says nothing the
+#  end line does not, and two lines per run buries the one that
+#  carries a verdict. A test that outlives the window announces
+#  itself, so a slow or hanging one is visible while it stands.
+#
+#  ZERO MEANS ANNOUNCE AT ONCE, and a suite that records the flow
+#  states it: whether a line EXISTS would otherwise depend on the
+#  speed of the machine, which is the one thing a GOOD file may
+#  never hold. A digest that drops START lines is the other way
+#  (--pype), and the run suite takes both roads.
+START_DELAY_SECONDS = 2.0
 
 
 class CPlainFlow(CRunReportReceiver):
@@ -98,7 +135,9 @@ class CPlainFlow(CRunReportReceiver):
     event, the closing blocks from its own accounting."""
 
     def __init__(self, write, write_error=None, width=78, ink=None,
-                 tier=E_Tier.PLAIN):
+                 tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
+                 detail_f=False, failure_summary_f=True,
+                 start_delay=START_DELAY_SECONDS):
         """
         RETURN: CPlainFlow writing flow lines through 'write' and, in
                 the SILENT tier, faults through 'write_error'.
@@ -107,6 +146,14 @@ class CPlainFlow(CRunReportReceiver):
                  CONSTRUCTOR argument, never sniffed from a terminal,
                  so a suite pins it.
         'ink'    the CInk of word.py; a transparent one where None.
+
+        THE COLUMNS ARE ASKED FOR, never assumed. 'timing_f' puts a
+        seconds column before the line, 'jobs_f' a '|<n>|' one; absent
+        both, the flow carries the badge and the name alone -- what a
+        person reads is what ran, not when it ran or how many stood
+        beside it. 'detail_f' shows the SESSION and BUILD nodes,
+        which are otherwise silent unless they FAIL. 'failure_summary_f'
+        keeps the closing FAILURES block, which stands by default.
         """
         self.write       = write
         self.write_error = write_error if write_error is not None \
@@ -114,6 +161,15 @@ class CPlainFlow(CRunReportReceiver):
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
         self.tier        = tier
+        self.timing_f    = timing_f
+        self.jobs_f      = jobs_f
+        self.detail_f    = detail_f
+        self.failure_summary_f = failure_summary_f
+        self.start_delay = start_delay
+        self.held_db     = {}        # (directory, node) -> what its
+                                     # START line would have said
+        self.last_key    = None      # (directory, file) of the last
+                                     # flow line that named a run
 
         self.t0          = None      # first parseable 'when'
         self.when_first  = None      # first 'when', raw
@@ -171,18 +227,20 @@ class CPlainFlow(CRunReportReceiver):
 
     def _clock(self, when):
         """
-        RETURN: str, the flow line's clock column: 'hh:mm:ss' since
-                the stream's first instant where 'when' parses as
-                ISO-8601; 'when' verbatim, right-aligned to 8, else.
+        RETURN: str, the flow line's timing column: SECONDS since the
+                stream's first instant, one decimal, right-aligned;
+                'when' verbatim, right-aligned, where it does not
+                parse as ISO-8601.
+
+        SECONDS, NOT 'hh:mm:ss': a test suite is read in seconds, and
+        a column of zeroed hours says nothing anyone needed.
         """
         try:
             t = datetime.fromisoformat(str(when))
         except (ValueError, TypeError):
             return "%8s" % str(when)
         if self.t0 is None: self.t0 = t
-        seconds = int((t - self.t0).total_seconds())
-        return "%02d:%02d:%02d" % (seconds // 3600,
-                                   seconds // 60 % 60, seconds % 60)
+        return "%7.1fs" % (t - self.t0).total_seconds()
 
     def _elapsed(self):
         """
@@ -202,11 +260,72 @@ class CPlainFlow(CRunReportReceiver):
 
     def _prefix(self, when):
         """
-        RETURN: [0] str, the line prefix 'hh:mm:ss | NNN | ', plain.
+        RETURN: [0] str, the line prefix, plain: the seconds column
+                where '--show-timing' asked for it, the '|<n>|' job
+                column where '--show-jobs' did, and NOTHING where
+                neither did -- which is the default.
                 [1] str, the same, painted dim.
+
+        The job column carries no blank inside its bars: '|3|' is one
+        token and reads as one.
         """
-        text = "%s | %03d | " % (self._clock(when), self.parallel_n)
+        part_list = []
+        if self.timing_f: part_list.append(self._clock(when))
+        if self.jobs_f:   part_list.append("|%d|" % self.parallel_n)
+        if not part_list: return "", ""
+        text = " ".join(part_list) + " "
         return text, self.ink.dim(text)
+
+    def _run_body(self, directory, node):
+        """
+        RETURN: [0] str, the run's name column, ELIDED against the
+                    line before it and column-aligned:
+
+                        A  test-app.sh  one
+                        :/ test-solo.sh
+                        A2 test-app.sh  one
+                        :/:             two
+
+                    ':/' stands where the DIRECTORY repeats, ':/:'
+                    where the application does too -- the same one
+                    mark, two positions, that a sorted wishlist uses
+                    (disc-8). What repeats is not read again; what
+                    changed stands out.
+                [1] str, the same, the nickname painted.
+
+        The columns are padded so applications of one directory sit
+        under one another and the choices of one application do the
+        same.
+        """
+        name          = _display_name(node)
+        file, _, rest = name.partition(" ")
+        choice        = rest.strip()
+        nick          = self._nick(directory)
+        key           = (directory, file)
+        #  THE COLUMNS ARE FIXED, not grown as names arrive: a width
+        #  that widens mid-run moves every column under it, and a
+        #  reader following one column down the page loses it. A name
+        #  longer than the column overflows its own line alone.
+        nick_width     = max([len(n) for n in self.nick_db.values()]
+                             + [3])
+        app_width      = APP_COLUMN
+
+        if self.last_key == key:
+            mark, mark_ink, shown = ":/:", self.ink.dim(":/:"), ""
+        elif self.last_key is not None \
+             and self.last_key[0] == directory:
+            mark, mark_ink, shown = ":/", self.ink.dim(":/"), file
+        else:
+            mark, mark_ink, shown = nick, self._ink_nick(directory), \
+                                    file
+        self.last_key = key
+
+        pad_mark = " " * max(nick_width - len(mark), 0)
+        pad_app  = " " * max(app_width - len(shown), 0)
+        body     = "%s%s %s%s" % (mark, pad_mark, shown, pad_app)
+        body_ink = "%s%s %s%s" % (mark_ink, pad_mark, shown, pad_app)
+        if not choice: return body.rstrip(), body_ink.rstrip()
+        return "%s %s" % (body, choice), "%s %s" % (body_ink, choice)
 
     def _line(self, when, badge, badge_ink, body, body_ink,
               right="", right_ink="", tail=""):
@@ -246,7 +365,7 @@ class CPlainFlow(CRunReportReceiver):
             if directory not in self.dir_order:
                 self.dir_order.append(directory)
         if self.tier is not E_Tier.VERBOSE: return
-        self._line(when, "[TREE ]", self.ink.bold("[TREE ]"),
+        self._line(when, "TREE ", self.ink.bold("TREE "),
                    "%d directory(ies)" % len(directory_list),
                    "%d directory(ies)" % len(directory_list))
 
@@ -257,7 +376,7 @@ class CPlainFlow(CRunReportReceiver):
         nick = self._nick(directory)
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
         body = "%s = %s" % (nick, directory)
-        self._line(when, "[DIR  ]", self.ink.warn("[DIR  ]"),
+        self._line(when, "DIR  ", self.ink.warn("DIR  "),
                    body, "%s = %s" % (self._ink_nick(directory),
                                       directory))
 
@@ -272,29 +391,84 @@ class CPlainFlow(CRunReportReceiver):
         body = "%s:%s" % (nick, role)
         body_ink = "%s:%s" % (self._ink_nick(directory), role)
         if good:
-            self._line(when, "[FRAME]", "[FRAME]", body, body_ink,
-                       "[OK]", self.ink.ok("[OK]"))
+            self._line(when, "FRAME", "FRAME", body, body_ink,
+                       "[OK]", self.ink.tag_ok("[OK]"))
         else:
             right = "the frame failed  [FAIL]"
             right_ink = "%s  %s" % (self.ink.fail("the frame failed"),
-                                    self.ink.fail("[FAIL]"))
-            self._line(when, "[FRAME]", "[FRAME]", body, body_ink,
+                                    self.ink.tag_fail("[FAIL]"))
+            self._line(when, "FRAME", "FRAME", body, body_ink,
                        right, right_ink)
 
+    def _provision_hidden_f(self, node_kind):
+        """
+        RETURN: bool, True where a node of this kind does not speak:
+                SESSION and BUILD are PROVISION, and only the tests
+                and the directory's own lines make a flow worth
+                reading. '--show-details' shows them; the VERBOSE
+                tier shows everything.
+
+        A FAILING provision node always speaks, wherever this is
+        asked: a failed precondition is a test result, not a silence.
+        """
+        if self.detail_f:                    return False
+        if self.tier is E_Tier.VERBOSE:      return False
+        return node_kind in ("SESSION", "BUILD")
+
     def on_run_begun(self, when, directory, node, node_kind):
-        """RETURN: None. The parallel count rises; a [START] line."""
+        """RETURN: None. The parallel count rises; a 'START' line --
+        where the tier speaks at all, and where the node is not a
+        silent provision one."""
         self.parallel_n += 1
         self.began_set.add((directory, node))
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
-        nick = self._nick(directory)
-        name = _display_name(node)
-        self._line(when, "[START]", self.ink.start("[START]"),
-                   "%s:%s" % (nick, name),
-                   "%s:%s" % (self._ink_nick(directory), name))
+        if self._provision_hidden_f(node_kind):        return
+        if self.start_delay > 0:
+            #  HELD, not dropped: the body is computed when the line
+            #  is finally written, so the elision reads against the
+            #  line that truly precedes it.
+            self.held_db[(directory, node)] = when
+            return
+        body, body_ink = self._run_body(directory, node)
+        self._line(when, "START", self.ink.start("START"),
+                   body, body_ink)
+
+    def on_tick(self, when):
+        """
+        RETURN: None. Releases every held START whose run has now
+                outlived the delay -- oldest first, so the flow keeps
+                the order the runs began in.
+
+        Called by the consumer when no event arrived: a run that
+        merely takes long emits nothing, and a START nobody released
+        would never be seen.
+        """
+        if not self.held_db: return
+        now = _instant(when)
+        if now is None: return
+        for key in sorted(self.held_db,
+                          key=lambda k: str(self.held_db[k])):
+            begun = _instant(self.held_db[key])
+            if begun is None or now - begun < self.start_delay:
+                continue
+            directory, node = key
+            began_when     = self.held_db.pop(key)
+            body, body_ink = self._run_body(directory, node)
+            self._line(began_when, "START",
+                       self.ink.start("START"), body, body_ink)
+
+    def _release_held(self, key):
+        """
+        RETURN: bool, True where a START was still held for this run
+                -- and is now forgotten, unwritten: the run ended
+                inside the window, and its end line says everything
+                its beginning would have.
+        """
+        return self.held_db.pop(key, None) is not None
 
     def on_run_ended(self, when, directory, node, node_kind, good,
                      verdict, cause=None, report=None):
-        """RETURN: None. [END  ] where the node had begun, [SKIP ]
+        """RETURN: None. 'END  ' where the node had begun, 'SKIP '
         else; the failing line carries its phrase inline; the count
         falls only for what had risen."""
         key      = (directory, node)
@@ -309,27 +483,28 @@ class CPlainFlow(CRunReportReceiver):
             self.dir_order.append(directory)
 
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
-        nick     = self._nick(directory)
-        name     = _display_name(node)
-        body     = "%s:%s" % (nick, name)
-        body_ink = "%s:%s" % (self._ink_nick(directory), name)
+        #  A FAILING provision node speaks even where its kind is
+        #  otherwise silent: a failed precondition is a test result.
+        if good and self._provision_hidden_f(node_kind):  return
+        self._release_held((directory, node))
+        body, body_ink = self._run_body(directory, node)
         word     = phrase(report if report is not None else verdict)
         tail     = "" if cause is None else "  <- %s" % cause
 
         if not began_f:
-            self._line(when, "[SKIP ]", self.ink.warn("[SKIP ]"),
+            self._line(when, "SKIP ", self.ink.warn("SKIP "),
                        "%s  %s" % (body, word),
                        "%s  %s" % (body_ink, self.ink.warn(word)),
                        tail=tail)
             return
         if good:
-            self._line(when, "[END  ]", "[END  ]", body, body_ink,
-                       "[OK]", self.ink.ok("[OK]"))
+            self._line(when, "END  ", "END  ", body, body_ink,
+                       "[OK]", self.ink.tag_ok("[OK]"))
         else:
             right     = "%s  [FAIL]" % word
             right_ink = "%s  %s" % (self.ink.fail(word),
-                                    self.ink.fail("[FAIL]"))
-            self._line(when, "[END  ]", "[END  ]", body, body_ink,
+                                    self.ink.tag_fail("[FAIL]"))
+            self._line(when, "END  ", "END  ", body, body_ink,
                        right, right_ink, tail=tail)
 
     def on_fault(self, when, directory, text):
@@ -337,9 +512,9 @@ class CPlainFlow(CRunReportReceiver):
         -- SILENT -- the same line on 'write_error'; QUIET holds it
         for the tail's FAULTS block."""
         prefix, prefix_ink = self._prefix(when)
-        line = "%s[FAULT] %s: %s" % (prefix_ink,
+        line = "%sFAULT %s: %s" % (prefix_ink,
                                      self._ink_nick(directory), text)
-        self.fault_list.append((directory, "%s[FAULT] %s: %s"
+        self.fault_list.append((directory, "%sFAULT %s: %s"
                                 % (prefix, self._nick(directory), text)))
         if   self.tier is E_Tier.SILENT: self.write_error(line)
         elif self.tier is E_Tier.QUIET:  pass
@@ -350,7 +525,7 @@ class CPlainFlow(CRunReportReceiver):
         selection."""
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
         prefix, prefix_ink = self._prefix(when)
-        self.write("%s[NOTE ] %s: %s" % (prefix_ink,
+        self.write("%sNOTE  %s: %s" % (prefix_ink,
                                          self._ink_nick(directory),
                                          text))
 
@@ -367,8 +542,8 @@ class CPlainFlow(CRunReportReceiver):
         right  = "%d of %d ok  %s" % (ok_n, total_n, tag)
         right_ink = "%d of %d ok  %s" \
                     % (ok_n, total_n,
-                       self.ink.ok(tag) if good else self.ink.fail(tag))
-        self._line(when, "[DONE ]", "[DONE ]", nick,
+                       self.ink.tag_ok(tag) if good else self.ink.tag_fail(tag))
+        self._line(when, "DONE ", "DONE ", nick,
                    self._ink_nick(directory), right, right_ink)
 
     def _fault_lines(self):
@@ -389,7 +564,7 @@ class CPlainFlow(CRunReportReceiver):
         self.good_f = good
         self.fail_n = fail_n
         if self.tier is not E_Tier.VERBOSE: return
-        self._line(when, "[TREE ]", self.ink.bold("[TREE ]"),
+        self._line(when, "TREE ", self.ink.bold("TREE "),
                    "done, %d failure(s)" % fail_n,
                    "done, %d failure(s)" % fail_n)
 
@@ -400,9 +575,9 @@ class CPlainFlow(CRunReportReceiver):
         when      = fields.get("when", "")
         prefix, prefix_ink = self._prefix(when)
         text = "event of kind '%s' does not fit the vocabulary" % kind
-        line = "%s[FAULT] %s: %s" % (prefix_ink,
+        line = "%sFAULT %s: %s" % (prefix_ink,
                                      self._ink_nick(directory), text)
-        self.fault_list.append((directory, "%s[FAULT] %s: %s"
+        self.fault_list.append((directory, "%sFAULT %s: %s"
                                 % (prefix, self._nick(directory), text)))
         if   self.tier is E_Tier.SILENT: self.write_error(line)
         elif self.tier is E_Tier.QUIET:  pass
@@ -459,7 +634,7 @@ class CPlainFlow(CRunReportReceiver):
             plain_left  = "%-*s  %s" % (nick_width, nick, directory)
             plain_right = "%-6s %s" % (tag, counts)
             fill = max(w - len(plain_left) - len(plain_right) - 2, 1)
-            tag_ink  = ink.ok(tag) if good else ink.fail(tag)
+            tag_ink  = ink.tag_ok(tag) if good else ink.tag_fail(tag)
             ink_left = "%s%s  %s" % (ink.nick(nick,
                                        self.nick_index[directory]),
                                      " " * (nick_width - len(nick)),
@@ -481,6 +656,7 @@ class CPlainFlow(CRunReportReceiver):
         fail_dir_list = [d for d in self.dir_order
                          if self._failure_key_list(d)
                          or self.frame_bad_db.get(d)]
+        if not self.failure_summary_f: fail_dir_list = []
         if not fail_dir_list:
             write("=" * w)
             return

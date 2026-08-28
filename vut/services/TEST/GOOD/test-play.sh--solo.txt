@@ -1,0 +1,44 @@
+--- one choice: played unasked
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-one.sh ]==================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | only
+         2    2 | <hwut-end>
+    ============================================================
+}
+--- several, none named: refused, and they are listed
+STATUS: 2
+STDOUT {
+    REFUSED: 'test-many.sh' names 2 runs, and this face plays ONE: test-many.sh a, test-many.sh b
+}
+--- the selection is the WISH'S, so a glob works too
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-one.sh ]==================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | only
+         2    2 | <hwut-end>
+    ============================================================
+}
+--- named: played
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-many.sh b ]================================= round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | choice b
+         2    2 | <hwut-end>
+    ============================================================
+}

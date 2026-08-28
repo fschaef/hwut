@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# hwut {
+# @hwut {
 #     title      = "FriendsPairingMax: Search anyway"
 #     choices    = ["basic", "restricted_cmp"]
 # }

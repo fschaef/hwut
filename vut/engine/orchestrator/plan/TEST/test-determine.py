@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Determination: a wish and a directory become a plan"
 #     choices    = ["closure", "deterministic", "empty", "misdep",
 #                   "pruned", "whole"]
@@ -63,16 +63,16 @@ CONF = ('hwut {\n'
 
 FILE_DB = {
     "hwut.conf":     CONF,
-    "test-a.py":     '# hwut { title = "A"  build = "make"\n'
+    "test-a.py":     '# @hwut { title = "A"  build = "make"\n'
                      '#        choices = ["one", "two"] }\n',
-    "test-b.py":     '# hwut { title = "B" }\n',
-    "test-c.py":     '# hwut { title = "C" }\n',
-    "test-i.py":     '# hwut { title = "I"  interactive = yes\n'
+    "test-b.py":     '# @hwut { title = "B" }\n',
+    "test-c.py":     '# @hwut { title = "C" }\n',
+    "test-i.py":     '# @hwut { title = "I"  interactive = yes\n'
                      '#        choices = ["x", "y"] }\n',
-    "test-net.py":   '# hwut { title = "Net" }\n',
-    "test-port.py":  '# hwut { title = "Port"  choices = ["one", "two"] }\n',
-    "test-lost.py":  '# hwut { title = "Lost" }\n',
-    "test-heir.py":  '# hwut { title = "Heir" }\n',
+    "test-net.py":   '# @hwut { title = "Net" }\n',
+    "test-port.py":  '# @hwut { title = "Port"  choices = ["one", "two"] }\n',
+    "test-lost.py":  '# @hwut { title = "Lost" }\n',
+    "test-heir.py":  '# @hwut { title = "Heir" }\n',
 }
 
 

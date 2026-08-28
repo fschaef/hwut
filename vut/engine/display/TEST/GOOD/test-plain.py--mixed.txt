@@ -1,26 +1,18 @@
 
 --- the mixed tree ---
-00:00:00 | 000 | [FAULT] TSPT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
-00:00:00 | 000 | [DIR  ] TSPT = time-stamping-pio-tests/TEST
-00:00:01 | 000 | [SKIP ] TSPT:test-m.sh  missing dependency
-00:00:01 | 001 | [START] TSPT:build[make test-built.c]
-00:00:03 | 000 | [END  ] TSPT:build[make test-built.c] . the build failed  [FAIL]
-00:00:03 | 000 | [SKIP ] TSPT:test-built.c  not supported here  <- build[make test-built.c]
-00:00:03 | 001 | [START] TSPT:test-app.sh [a]
-00:00:04 | 002 | [START] TSPT:test-app.sh [b]
-00:00:05 | 001 | [END  ] TSPT:test-app.sh [a] ........................... [OK]
-00:00:05 | 002 | [START] TSPT:test-cut.sh
-00:00:06 | 001 | [END  ] TSPT:test-app.sh [b] ........................... [OK]
-00:00:07 | 000 | [END  ] TSPT:test-cut.sh . output cut short (no <hwut-end>)  [FAIL]
-00:00:07 | 001 | [START] TSPT:test-dead.sh [x]
-00:00:08 | 000 | [END  ] TSPT:test-dead.sh [x] . killed by the supervisor  [FAIL]
-00:00:08 | 001 | [START] TSPT:test-diff.sh
-00:00:09 | 000 | [END  ] TSPT:test-diff.sh ......... differs from GOOD  [FAIL]
-00:00:09 | 001 | [START] TSPT:test-ok.sh
-00:00:10 | 000 | [END  ] TSPT:test-ok.sh ................................ [OK]
-00:00:10 | 000 | [DIR  ] COMP = compare/TEST
-00:00:11 | 001 | [START] COMP:test-region.py [nested]
-00:00:12 | 000 | [END  ] COMP:test-region.py [nested] ................... [OK]
+FAULT TSPT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+DIR   TSPT = time-stamping-pio-tests/TEST
+SKIP  TSPT test-m.sh  missing dependency
+END   :/   build[make           test-built.c] ....... the build failed  [FAIL]
+SKIP  :/   test-built.c  not supported here  <- build[make test-built.c]
+END   :/   test-app.sh          a ....................................... [OK]
+END   :/:                       b ....................................... [OK]
+END   :/   test-cut.sh .............. output cut short (no <hwut-end>)  [FAIL]
+END   :/   test-dead.sh         x ........... killed by the supervisor  [FAIL]
+END   :/   test-diff.sh ............................ differs from GOOD  [FAIL]
+END   :/   test-ok.sh ................................................... [OK]
+DIR   COMP = compare/TEST
+END   COMP test-region.py       nested .................................. [OK]
 
 ==============================================================================
 DIRECTORIES                                             4 ok, 6 fail, 00:00:12
@@ -35,7 +27,7 @@ TSPT  time-stamping-pio-tests/TEST
     build[make test-built.c]     the build failed
     test-built.c                 not supported here  <- build[make test-built.c]
     test-cut.sh                  output cut short (no <hwut-end>)
-    test-dead.sh [x]             killed by the supervisor
+    test-dead.sh x               killed by the supervisor
     test-diff.sh                 differs from GOOD
     test-m.sh                    missing dependency
 ==============================================================================

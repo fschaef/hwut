@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "EquivalenceCheck: read -> verdict"
 #     choices    = ["blind", "fast_fail", "named_absent",
 #                   "nominal_missing", "observer", "provision_failed",

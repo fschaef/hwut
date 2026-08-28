@@ -1,8 +1,5 @@
 
 --- choice-less: root parameters are the one call's ---
-title    'T'  language None  origin HEADER  at 1:7
-root:
-    numeric = 0.5
-choice -:
-    (nothing stated)
+no specification
+FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 <hwut-end>

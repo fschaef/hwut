@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "TriggerDispatcher: schedule, priority, and the end of time"
 #     choices    = ["abstract", "cancel", "edges", "priority",
 #                   "schedule", "stable", "stop", "termination",

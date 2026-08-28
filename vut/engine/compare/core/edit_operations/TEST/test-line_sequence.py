@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Edit Distance: Line list alignment"
 #     choices    = ["nominal", "special", "subject"]
 # }

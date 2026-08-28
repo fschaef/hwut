@@ -28,6 +28,7 @@ PHRASE_DB = {
     "launch-failed":               "the launch failed",
     "unsupported":                 "not supported here",
     "misdep":                      "missing dependency",
+    "spec-broken":                 "the specification does not parse",
 
     "unstable":                    "UNSTABLE -- not run",
 
@@ -130,6 +131,15 @@ class CInk:
 
     def ok(self, text):      return self.paint(text, 32)
     def fail(self, text):    return self.paint(text, 31)
+
+    #  THE VERDICT TAG CARRIES A GROUND, the phrase beside it does
+    #  not: the tag is what an eye scans a long report for, and a
+    #  block of colour is FOUND at a glance where a coloured word is
+    #  read for. A phrase on a ground would be a second block
+    #  competing with the first. White on green, white on red -- 97
+    #  the bright foreground, 42 and 41 the grounds.
+    def tag_ok(self, text):   return self.paint(text, 97, 42)
+    def tag_fail(self, text): return self.paint(text, 97, 41)
     def warn(self, text):    return self.paint(text, 33)
     def start(self, text):   return self.paint(text, 34)
     def dim(self, text):     return self.paint(text, 2)

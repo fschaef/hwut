@@ -52,11 +52,15 @@ from   vut.engine.bookkeeper.configuration             import E_StderrNote
 from   vut.engine.bookkeeper.stream_store              import Store
 from   vut.engine.orchestrator.exploration.explorer    import explore
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
+from   vut.engine.orchestrator.plan.label              import swallowed_warning_tuple
+from   vut.services.labels                             import view_at
+from   vut.services.labels._file                       import LabelFileError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                        import CTestTaskListQuery
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
-                                                               parse_wish)
+                                                               parse_wish,
+                                                               with_targets)
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
 from   ._core                                          import usage_line
@@ -146,26 +150,6 @@ SIDECAR_SUFFIX_TUPLE = (".raw", ".times", ".when")
 #  So stderr is never PROMOTED. The one thing acceptance decides about
 #  it is the NOTE, and only where it spoke -- see 'stderr_decision'.
 STDERR_SUBJECT = "stderr"
-
-
-def desugar_positional(word_list):
-    """
-    RETURN: tuple, the wish globs a short form asks for -- empty where
-            no word stands.
-
-    The first word names files, every further word a choice; each
-    choice becomes its own target, and the wish OR's them:
-
-        ("test-*.py", "one", "two")
-            -> ("test-*.py one", "test-*.py two")
-        ("test-*.py",)
-            -> ("test-*.py",)          every choice of the file
-    """
-    if not word_list: return ()
-    file_glob    = word_list[0]
-    choice_tuple = tuple(word_list[1:])
-    if not choice_tuple: return (file_glob,)
-    return tuple("%s %s" % (file_glob, choice) for choice in choice_tuple)
 
 
 def subject_tuple_of(store, test, choice):
@@ -437,14 +421,9 @@ def main(argv=None, write=None, read_line=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    #  The short form is SUGAR: it becomes wish globs, and the wish's
-    #  own engine does the selecting. One selection language.
-    glob_tuple = desugar_positional(word_list)
-    if glob_tuple:
-        wish = wish.__class__(fail_f=wish.fail_f, pass_f=wish.pass_f,
-                              since_spec=wish.since_spec,
-                              until_spec=wish.until_spec,
-                              glob_tuple=wish.glob_tuple + glob_tuple)
+    #  The short form is SUGAR ('wish.desugar_positional'), and the
+    #  wish's own engine does the selecting. ONE SELECTION LANGUAGE:
+    #  the sugar lives with the wish, so every face spells it alike.
 
     #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
     #  in a test directory owes the same effective configuration as a
@@ -464,12 +443,26 @@ def main(argv=None, write=None, read_line=None):
     bookkeeper = Bookkeeper(directory)
     id_db      = TestIdDb(directory)
     store      = Store(bookkeeper)
+    wish = with_targets(wish, word_list)
     try:
-        case_sequence = CTestTaskListQuery(
+        label_view = view_at(directory)
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return E_ExitCode.FAULT
+    try:
+        query = CTestTaskListQuery(
             wish, bookkeeper,
             directory=".",
-            root=os.path.abspath(directory)).get_test_cases(
-                                                 result.app_set)
+            root=os.path.abspath(directory),
+            label_view=label_view)
+        case_sequence = query.get_test_cases(result.app_set)
+        if wish.glob_tuple:
+            #  A FACE THAT NAMES A RUN AND BLESSES NOTHING MUST SAY
+            #  WHY: a literal target lifts the silence, and a glob
+            #  wholly swallowed by it speaks (disc-8).
+            for text in swallowed_warning_tuple(
+                            *query.glob_reach(result.app_set)):
+                write(text)
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

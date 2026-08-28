@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The directory mutex: one live holder, asked liveness, named refusals"
 #     choices    = ["age", "dead", "foreign", "hold_timeout", "reentry",
 #                   "taken", "waiting"]

@@ -1,10 +1,9 @@
 
 --- faults, never swallowed ---
-00:00:00 | 000 | [FAULT] ROOT: the task file names 'gone/', which is not there
-00:00:00 | 000 | [DIR  ] SUIT = suite/TEST
-00:00:01 | 001 | [START] SUIT:test-ok.sh
-00:00:02 | 000 | [END  ] SUIT:test-ok.sh ................................ [OK]
-00:00:02 | 000 | [FAULT] SUIT: OSError: the directory vanished mid-walk
+FAULT ROOT: the task file names 'gone/', which is not there
+DIR   SUIT = suite/TEST
+END   SUIT test-ok.sh ................................................... [OK]
+FAULT SUIT: OSError: the directory vanished mid-walk
 
 ==============================================================================
 DIRECTORIES                                             1 ok, 0 fail, 00:00:02

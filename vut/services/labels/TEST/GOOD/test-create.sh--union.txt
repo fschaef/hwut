@@ -1,0 +1,15 @@
+--- a union of two labels, narrowed by a glob
+STATUS: 0
+STDOUT {
+    coast: created, 2 members -- a snapshot of what the wish selected
+        + ./tree/messaging/net/TEST/test-b.sh
+        + ./tree/messaging/queue/TEST/test-b.sh
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/messaging/net/TEST/test-b.sh   : coast east
+    ./tree/messaging/queue/TEST/test-b.sh : coast east
+    ./tree/storage/TEST/test-b.sh         : west
+}

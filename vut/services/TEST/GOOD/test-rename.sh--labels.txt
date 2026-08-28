@@ -1,0 +1,31 @@
+THE FILE {
+    ./tree/suite/TEST/test-app.sh one : concern meta
+    :/: two                           : concern
+}
+--- the whole test renamed: every entry follows
+STATUS: 0
+      test-app.sh -> test-fresh.sh -- 10 file(s), the book entry, the register name
+        book entry: re-keyed
+        labels: re-keyed (2 entries)
+THE FILE {
+    ./tree/suite/TEST/test-fresh.sh one : concern meta
+    :/: two                             : concern
+}
+--- one choice renamed: its one entry follows
+STATUS: 0
+        labels: re-keyed (1 entry)
+THE FILE {
+    ./tree/suite/TEST/test-fresh.sh first : concern meta
+    :/: two                               : concern
+}
+--- a fresh name that stands in the STORE: the face's own door
+STATUS: 2
+    REFUSED: 'two' already stands among the choices of 'test-fresh.sh'
+--- a fresh name that stands only in the FILE: a fault, not a merge
+STATUS: 1
+        FAULT: labels -- './tree/suite/TEST/test-fresh.sh stale' already stands; the old entries keep their name for 'hwut.sanitize --orphans'
+THE FILE {
+    ./tree/suite/TEST/test-fresh.sh first : concern meta
+    :/: two                               : concern
+    ./tree/suite/TEST/test-fresh.sh stale : concern
+}

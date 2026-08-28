@@ -1,10 +1,10 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The removal faces: a test, or one choice, forgotten."
-#     choices    = ["asking", "choice", "refused", "stain", "unknown",
-#                   "untouched", "whole"]
+#     choices    = ["asking", "choice", "labels", "refused", "stain",
+#                   "unknown", "untouched", "whole"]
 #     eq-pattern = ["STATUS: [0-9]"]
 # }
 #
@@ -42,7 +42,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The removal faces: a test, or one choice, forgotten.;"
-        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, refused;"
+        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -101,16 +101,37 @@ fixture() {             # <choice-line...> -- one app, run and accepted
     $RUN --directory=tree --timing --silent > /dev/null 2>&1
 }
 
-plain_app() { fixture '# hwut { title = "Plain" }' \
+plain_app() { fixture '# @hwut { title = "Plain" }' \
                       'echo "steady line"' 'echo "<hwut-end>"'; }
 
 choice_app() {
-    fixture '# hwut { title = "Two"  choices = ["one", "two"] }' \
+    fixture '# @hwut { title = "Two"  choices = ["one", "two"] }' \
             'echo "line for $1"' 'echo "<hwut-end>"'
 }
 
 # ---------------------------------------------------------------------------
 case "$1" in
+
+labels)
+    #  THE BOUNDARY RECORDS FOLLOW ('services/_follow.py', disc-8
+    #  section 5): a dropped test's label entries drop with it,
+    #  symmetric with the book and the register (E-12) -- a run named
+    #  in 'hwut-root.labels' but no longer offered would look merely
+    #  unlabelled, which is the silent failure this forbids.
+    choice_app
+    python3 -m vut.services.labels.create concern \
+        --glob "test-app.sh" --directory=tree > /dev/null
+    echo "THE FILE, BEFORE {"; grep -v "^#" hwut-root.labels \
+        | sed 's/^/    /'; echo "}"
+    echo "--- one choice forgotten: its entry alone drops"
+    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one --yes
+    echo "THE FILE {"; grep -v "^#" hwut-root.labels \
+        | sed 's/^/    /'; echo "}"
+    echo "--- the whole test forgotten: the label empties, the file goes"
+    face $REMOVE --directory=tree/suite/TEST test-app.sh --yes
+    if [ -f hwut-root.labels ]; then echo "THE FILE: still stands"
+    else echo "THE FILE: absent -- no label exists"; fi
+    ;;
 
 whole)
     #  Everything the framework recorded, gone.
@@ -157,7 +178,7 @@ asking)
 
 stain)
     #  The urgent way out of a stain.
-    fixture '# hwut { title = "Flip" }' \
+    fixture '# @hwut { title = "Flip" }' \
             'n=0' \
             '[ -f count.txt ] && n=$(cat count.txt)' \
             'echo $((n + 1)) > count.txt' \

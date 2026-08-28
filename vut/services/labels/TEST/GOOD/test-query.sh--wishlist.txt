@@ -1,0 +1,17 @@
+--- sorted, elided, ready to be read back
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-b.sh
+    ./tree/messaging/queue/TEST/test-b.sh
+    ./tree/storage/TEST/test-b.sh
+}
+--- and it PIPES BACK: the round trip closes
+STATUS: 0
+STDOUT {
+    mixed: created, 5 members -- a snapshot of what the wish selected
+        + ./tree/messaging/net/TEST/test-a.sh one
+        + ./tree/messaging/net/TEST/test-b.sh
+        + ./tree/messaging/queue/TEST/test-a.sh one
+        + ./tree/messaging/queue/TEST/test-b.sh
+        + ./tree/storage/TEST/test-b.sh
+}

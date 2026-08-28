@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Defaults: declared by the owner, related by us"
 #     choices    = ["declared", "instantiate", "merge", "refused",
 #                   "table"]

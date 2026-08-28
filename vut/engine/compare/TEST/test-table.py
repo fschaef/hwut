@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Table Region: ordered, unordered, key, columns, errors"
 #     choices    = ["columns", "errors", "key", "modes"]
 # }

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The build step of provision"
 #     choices    = ["argv", "contained", "reasons", "silent_failure",
 #                   "success"]

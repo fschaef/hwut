@@ -1,0 +1,63 @@
+todo-2-pype-is-part-of-the-oracle.txt          ** FOR DOCUMENTATION **
+______________________________________________________________________________
+
+FOR THE DEVELOPER'S MANUAL. Ruled in conversation, 2026-08-28, while
+the flow line was being rebuilt. Nothing to build here; this is a
+thing the manual must SAY, and the place it is written down until the
+manual exists.
+
+THE POINT
+
+    A PYPE SCRIPT IS PART OF THE TEST APPLICATION, and a test
+    application, being an artifact like any other, MAY CONTAIN
+    ERRORS.
+
+WHY IT MATTERS
+
+Where a subject's output is nondeterministic -- and a parallel
+'hwut.run' is the plainest case, its launches subject to race -- the
+recorded GOOD is not the raw stream. It is what the pype made of the
+stream: collected, expanded, SORTED, and written back in a canonical
+shape.
+
+So the pype stands INSIDE the oracle, not beside it. What a person
+reads in the GOOD is the pype's account of the run, and a defect in
+the pype is a defect in the oracle itself -- a wrong digest can make
+a broken subject look blessed, and no amount of care in the subject
+will show it.
+
+WHAT FOLLOWS FROM IT
+
+  -  A PYPE IS REVIEWED AS THE SUBJECT IS. It is not configuration
+     and not a convenience filter; it is code that decides what the
+     test says.
+  -  IT DESERVES ITS OWN TESTS where it carries real logic.
+     'engine/hwut_pype/TEST' tests the LANGUAGE; a script that
+     collects, sorts and re-elides a flow is a program, and a program
+     nobody tested is a program nobody knows.
+  -  THE MANUAL MUST SAY IT PLAINLY, beside the first example that
+     uses a pype. A newcomer meeting '--pype' reads it as
+     post-processing -- a tidy-up on the way to the terminal -- and
+     that reading is wrong in the one way that matters.
+  -  A DIGEST MUST NOT SWALLOW A DIFFERENCE IT WAS NOT ASKED TO
+     SWALLOW. Masking the clock is deterministicalization; masking a
+     verdict is blindness. The line between them is the pype
+     author's to hold, and the manual should say where it runs.
+
+THE COMPANION LAW (disc-8, and now twice over)
+
+ONLY A WRITER THAT SORTS MAY ELIDE. The live flow elides against
+ARRIVAL order, which a race can permute; a digest elides against
+SORTED order, which nothing can. A digest that sorted lines already
+elided would attach ':/: two' to whichever run happened to sort above
+it. Hence the pipeline, and hence its order:
+
+    collect -> EXPAND -> sort on (directory, app, choice)
+            -> RE-ELIDE -> print
+
+WHERE THIS BITES NEXT
+
+The Quex migration meets it immediately: HWUT 1.0 suites carry
+filters of their own, and every one of them is an oracle component
+arriving unreviewed.
+______________________________________________________________________________

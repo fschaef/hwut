@@ -2,9 +2,11 @@ STIMULUS  hwut.tell demo.py basic          (the default pack)
 REACTION  exit code : 0   stderr : 0 bytes
           the pack {
               ==[ HWUT TEST REPORT ]========================================================
-              test:    demo.py
-              choice:  basic
-              hint:    OUT differs from GOOD
+              directory:     .
+              test:          demo.py
+              choice:        basic
+              verdict:       OUT differs from GOOD: stdout
+              status report: run and accepted -- both records stand (stdout)
               files:
                 demo.py                                      29 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)

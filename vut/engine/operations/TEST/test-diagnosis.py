@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Diagnosis: every silent failure names itself"
 #     choices    = ["channel_hint", "empty_answer", "never_judges",
 #                   "nothing", "one_source", "record", "resolution"]

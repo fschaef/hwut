@@ -1,7 +1,7 @@
 
 --- star leader ---
 marker at 1:4
-line  1  stripped 3  |hwut {|
+line  1  stripped 4  |hwut {|
 line  2  stripped 3  |    title = "Parser corner cases"|
 line  3  stripped 3  |    build = "make"|
 line  4  stripped 3  |}|

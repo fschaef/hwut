@@ -1,10 +1,13 @@
-$ hwut.cov explain <dir>/a
-    REFUSED: 'hwut.run' does not take: <dir>/a, explain
+$ hwut.cov --sideways
+    REFUSED: 'hwut.run' does not take: --sideways
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
     [status 2]
 $ hwut.cov convert --to yaml <dir>/a

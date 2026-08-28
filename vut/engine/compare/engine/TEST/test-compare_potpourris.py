@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Potpourri"
 #     choices    = ["info", "judge"]
 # }

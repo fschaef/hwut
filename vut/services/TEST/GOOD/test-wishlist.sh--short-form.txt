@@ -1,0 +1,34 @@
+--- 'test-a.sh one': app and choice
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh one
+}
+--- the same as '--glob'
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh one
+}
+--- one app, every choice of it
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+    ./storage/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh two
+}
+--- two choices of one app
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh one
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-a.sh one
+    ./messaging/queue/TEST/test-a.sh two
+    ./storage/TEST/test-a.sh one
+    ./storage/TEST/test-a.sh two
+}

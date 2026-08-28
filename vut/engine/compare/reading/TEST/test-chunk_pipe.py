@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "ChunkPipe"
 #     choices    = ["comment", "normal", "special"]
 # }

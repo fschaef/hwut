@@ -46,6 +46,9 @@ import sys
 
 from   vut.engine.bookkeeper.bookkeeper              import Bookkeeper
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
+from   vut.engine.orchestrator.plan.label            import swallowed_warning_tuple
+from   vut.services.labels                           import view_at
+from   vut.services.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
@@ -53,11 +56,14 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                              RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
-                                                             parse_wish)
+                                                             parse_wish,
+                                                             with_targets)
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 
-USAGE = usage_line("hwut.wishlist", ("[<wish>]", "[--directory=<path>]"))
+USAGE = usage_line("hwut.wishlist",
+                   ("[<wish>]", "[<file-glob> [choice-glob]...]",
+                    "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -79,7 +85,7 @@ def target_line(relative_directory, source_file, choice):
     return path if choice is None else "%s %s" % (path, choice)
 
 
-def line_tuple_of(root, wish):
+def line_tuple_of(root, wish, warning_list=None):
     """
     YIELD: [0] str  one wishlist line per selected case, in WALK ORDER
                     -- the order a run would take them, so a list read
@@ -88,6 +94,10 @@ def line_tuple_of(root, wish):
     Raises SelectionError where the wish names what the tree does not
     hold -- refused at the door, as everywhere.
     """
+    if warning_list is None: warning_list = []
+    label_view  = view_at(root)
+    met_set     = set()
+    visible_set = set()
     for directory, result in explore_tree(root):
         #  THE WALK'S 'directory' IS RELATIVE to the root -- the very
         #  form a wishlist line carries.
@@ -95,9 +105,16 @@ def line_tuple_of(root, wish):
                      if wish.asks_base_f() else None
         query      = CTestTaskListQuery(wish, bookkeeper,
                                         directory=directory,
-                                        root=root)
+                                        root=root,
+                                        label_view=label_view)
+        if wish.glob_tuple:
+            met, visible = query.glob_reach(result.app_set)
+            met_set.update(met)
+            visible_set.update(visible)
         for case in query.get_test_cases(result.app_set):
             yield target_line(directory, case.source_file, case.choice)
+    for text in swallowed_warning_tuple(met_set, visible_set):
+        warning_list.append(text)
 
 
 def main(argv=None, write=None):
@@ -126,11 +143,13 @@ def main(argv=None, write=None):
 
     directory = "."
     unknown   = []
+    word_list = []
     for argument in rest_list:
         if argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         else:
-            unknown.append(argument)
+            if argument.startswith("-"): unknown.append(argument)
+            else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.wishlist' does not take: %s"
               % ", ".join(sorted(unknown)))
@@ -142,14 +161,21 @@ def main(argv=None, write=None):
         return E_ExitCode.REFUSED
 
     try:
-        line_list = list(line_tuple_of(os.path.abspath(directory), wish))
+        wish = with_targets(wish, word_list)
+        warning_list = []
+        line_list = list(line_tuple_of(os.path.abspath(directory), wish,
+                                       warning_list))
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return E_ExitCode.FAULT
 
+    for text in warning_list: write(text)
     for line in line_list: write(line)
     return E_ExitCode.OK if line_list else E_ExitCode.EMPTY
 

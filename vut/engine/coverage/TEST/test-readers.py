@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The readers: three artifact formats, one record"
 #     choices    = ["absent", "agreement", "aliases", "calls",
 #                   "cobertura", "gather", "gcov", "ghdl", "go",

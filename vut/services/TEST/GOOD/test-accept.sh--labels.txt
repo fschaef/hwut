@@ -1,0 +1,37 @@
+== a BARE accept passes the silenced run by ==
+STATUS: 0
+STDOUT {
+    
+    ==============================================================================
+    ACCEPTED  2 of 2
+    ------------------------------------------------------------------------------
+        blessed        test-ok.sh .stdout
+        blessed        test-two.sh b .stdout
+    ==============================================================================
+}
+GOOD holds:
+    test-ok.sh.txt
+    test-two.sh--b.txt
+    test_ids.dat
+== NAMING it literally blesses it ==
+STATUS: 0
+STDOUT {
+    
+    ==============================================================================
+    ACCEPTED  1 of 1
+    ------------------------------------------------------------------------------
+        blessed        test-two.sh a .stdout
+    ==============================================================================
+}
+GOOD holds:
+    test-ok.sh.txt
+    test-two.sh--a.txt
+    test-two.sh--b.txt
+    test_ids.dat
+== a GLOB wholly swallowed warns instead ==
+STATUS: 3
+STDOUT {
+    WARNING: the glob 'test-two.s? a' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    NOTE: nothing to accept -- the selection holds no recorded candidate
+}
+GOOD holds:

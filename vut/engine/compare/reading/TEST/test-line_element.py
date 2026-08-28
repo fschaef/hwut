@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Tolerance: LineElement-s"
 #     choices    = ["LineElementAnalogy",
 #                   "LineElementEquivalencePattern", "LineElementNumber",

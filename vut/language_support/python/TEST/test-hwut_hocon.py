@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "HOCON parser: subset (A), annotated tree"
 #     choices    = ["comments", "faults", "numbers", "oneline",
 #                   "positions", "quoting", "refused", "scalars",
@@ -233,7 +233,7 @@ def test_faults():
 def test_positions():
     """RETURN: None. Offsets carried: the same text reported at its
     place in a larger file, as an unwrapped header would be."""
-    text = ('hwut {\n'
+    text = ('@hwut {\n'
             '    title = "T"\n'
             '}')
     run("plain: as its own file", text)

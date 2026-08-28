@@ -58,6 +58,7 @@ import sys
 from   vut.engine.bookkeeper.bookkeeper   import Bookkeeper, NO_CHOICE_KEY
 from   vut.engine.bookkeeper.stream_store import Store
 from   vut.engine.bookkeeper.test_id_db   import TestIdDb, TestIdFault
+from   ._follow                           import labels_renamed
 from   ._exit                             import E_ExitCode
 
 USAGE = ("usage: hwut.rename <old> <new> [<old> <new>...] [--yes] "
@@ -184,6 +185,14 @@ def follow(store, test, choice, fresh_test, fresh_choice, whole_test_f,
                 write("    register: choice name follows; the id stands")
     except TestIdFault as error:
         write("    FAULT: register -- %s" % error)
+        good_f = False
+
+    #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'): a
+    #  crash above leaves an entry naming the old name -- loud, and
+    #  findable -- never a record silently pointing at nothing.
+    if not labels_renamed(str(store.directory), test, choice,
+                          fresh_test, fresh_choice, whole_test_f,
+                          write):
         good_f = False
     return good_f
 

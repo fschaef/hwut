@@ -1,0 +1,3 @@
+STATUS: 3
+STDOUT {
+}

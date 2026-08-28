@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Tier 1, the plain console report, over scripted streams"
 #     choices    = ["allgreen", "empty", "fault", "mixed", "tiers",
 #                   "unknown", "words"]

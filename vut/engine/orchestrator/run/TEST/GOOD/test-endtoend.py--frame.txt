@@ -1,12 +1,40 @@
 
 --- the stream ---
     {"directory_list": ["suite/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
-    {"directory": "suite/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer", "when": "T02"}
+    {"directory": "suite/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block", "when": "T02"}
     {"directory": "suite/TEST", "format": 1, "kind": "dir-begun", "node_n": 16, "when": "T03"}
-    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-m.sh", "node_kind": "TEST", "verdict": "misdep", "when": "T04"}
-    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "frame", "role": "on_entry", "when": "T05"}
-    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_exit", "when": "T06"}
-    {"directory": "suite/TEST", "fail_db": {"test-m.sh": "MISDEP"}, "format": 1, "good": false, "kind": "dir-done", "when": "T07"}
-    {"fail_n": 1, "format": 1, "good": false, "kind": "tree-done", "when": "T08"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "build[make test-built.c]", "node_kind": "BUILD", "when": "T04"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "build[make test-built.c]", "node_kind": "BUILD", "report": "build-failed", "verdict": "build-failed", "when": "T05"}
+    {"cause": "build[make test-built.c]", "directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-built.c", "node_kind": "TEST", "verdict": "unsupported", "when": "T06"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "session[test-app.sh]", "node_kind": "SESSION", "when": "T07"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "session[test-app.sh]", "node_kind": "SESSION", "verdict": "ok", "when": "T08"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "session[test-dead.sh]", "node_kind": "SESSION", "when": "T09"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "session[test-dead.sh]", "node_kind": "SESSION", "verdict": "ok", "when": "T10"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-app.sh a", "node_kind": "TEST", "when": "T11"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-app.sh a", "node_kind": "TEST", "verdict": "ok", "when": "T12"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-app.sh b", "node_kind": "TEST", "when": "T13"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-app.sh b", "node_kind": "TEST", "verdict": "ok", "when": "T14"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-cut.sh", "node_kind": "TEST", "when": "T15"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-cut.sh", "node_kind": "TEST", "report": "terminated-without-hwut-end", "verdict": "test-failed", "when": "T16"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-dead.sh x", "node_kind": "TEST", "when": "T17"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-dead.sh x", "node_kind": "TEST", "report": "test-app-contained", "verdict": "test-failed", "when": "T18"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-diff.sh", "node_kind": "TEST", "when": "T19"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-diff.sh", "node_kind": "TEST", "report": "not-equivalent-with-nominal", "verdict": "test-failed", "when": "T20"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-m.sh", "node_kind": "TEST", "when": "T21"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-m.sh", "node_kind": "TEST", "report": "nominal-file-not-found", "verdict": "test-failed", "when": "T22"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-mark.sh", "node_kind": "TEST", "when": "T23"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-mark.sh", "node_kind": "TEST", "verdict": "ok", "when": "T24"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-noise.sh", "node_kind": "TEST", "when": "T25"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-noise.sh", "node_kind": "TEST", "verdict": "ok", "when": "T26"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-ok.sh", "node_kind": "TEST", "when": "T27"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-ok.sh", "node_kind": "TEST", "verdict": "ok", "when": "T28"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-same.sh a", "node_kind": "TEST", "when": "T29"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-same.sh a", "node_kind": "TEST", "verdict": "ok", "when": "T30"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-same.sh b", "node_kind": "TEST", "when": "T31"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-same.sh b", "node_kind": "TEST", "verdict": "ok", "when": "T32"}
+    {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-tol.sh", "node_kind": "TEST", "when": "T33"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-tol.sh", "node_kind": "TEST", "verdict": "ok", "when": "T34"}
+    {"directory": "suite/TEST", "fail_db": {"build[make test-built.c]": "ENDED_BAD", "test-built.c": "UNSUPPORTED", "test-cut.sh": "ENDED_BAD", "test-dead.sh x": "ENDED_BAD", "test-diff.sh": "ENDED_BAD", "test-m.sh": "ENDED_BAD"}, "format": 1, "good": false, "kind": "dir-done", "when": "T35"}
+    {"fail_n": 6, "format": 1, "good": false, "kind": "tree-done", "when": "T36"}
     None
 <hwut-end>

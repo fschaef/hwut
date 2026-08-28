@@ -1,0 +1,21 @@
+--- the glob is spent here, run by run
+STATUS: 0
+STDOUT {
+    concern: created, 3 members -- a snapshot of what the wish selected
+        + ./tree/messaging/net/TEST/test-b.sh
+        + ./tree/messaging/queue/TEST/test-b.sh
+        + ./tree/storage/TEST/test-b.sh
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/messaging/net/TEST/test-b.sh   : concern
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+    ./tree/storage/TEST/test-b.sh         : concern
+}
+--- the same label again, refused, 'add' named
+STATUS: 2
+STDOUT {
+    REFUSED: the label 'concern' already stands -- 'hwut.labels.add' grows a standing set; this face only creates, so a typo cannot silently grow the wrong one
+}

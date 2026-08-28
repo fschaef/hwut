@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The homogeneous coverage record: intervals, delta coding, merge, election"
 #     choices    = ["election", "encoding", "faults", "intervals",
 #                   "merge", "roundtrip"]

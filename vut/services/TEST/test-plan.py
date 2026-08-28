@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "hwut.plan: the test plan the framework intends"
-#     choices    = ["faults", "help", "plan", "refused", "wish"]
+#     choices    = ["faults", "help", "plan", "refused",
+#                   "short-form", "wish"]
 #     interactive = true
 # }
 #
@@ -18,7 +19,7 @@ questions ('--fail', '--since=', ...) read the directory's own result
 base; a base is not laid here, so the wish choices below use globs --
 the base questions have their suite in plan/TEST/test-wish.py.
 
-CHOICES: plan, wish, faults, refused, help;
+CHOICES: plan, wish, faults, refused, short-form, help;
 
 DESCRIPTION:
 
@@ -53,10 +54,10 @@ FILE_DB = {
                    '    collision  = ["test-net.py", "test-a.py two"]\n'
                    '    dependency { "test-b.py" = ["test-a.py one"] }\n'
                    '}\n',
-    "test-a.py":   '# hwut { title = "A"  build = "make"\n'
+    "test-a.py":   '# @hwut { title = "A"  build = "make"\n'
                    '#        choices = ["one", "two"] }\n',
-    "test-b.py":   '# hwut { title = "B" }\n',
-    "test-net.py": '# hwut { title = "Net" }\n',
+    "test-b.py":   '# @hwut { title = "B" }\n',
+    "test-net.py": '# @hwut { title = "Net" }\n',
 }
 
 
@@ -132,7 +133,7 @@ def test_wish():
 def test_faults():
     """RETURN: None. A broken header beside sound ones."""
     directory = build_directory(
-        {"test-broken.py": '# hwut { title = "Broken"  numeric = yes }\n'})
+        {"test-broken.py": '# @hwut { title = "Broken"  numeric = yes }\n'})
     try:
         banner("the fault prints; the plan of what stands follows")
         call(directory, [])
@@ -150,8 +151,26 @@ def test_refused():
         banner("'--fail' beside '--pass'")
         call(directory, ["--fail", "--pass"])
 
-        banner("an argument the face does not take")
+        banner("an OPTION the face does not take")
+        call(directory, ["--sideways"])
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
+def test_short_form():
+    """RETURN: None. The short form of HWUT 1.0: bare words are
+    targets, the first naming files, each further one a choice --
+    sugar for '--glob', which the WISH line shows."""
+    directory = build_directory()
+    try:
+        banner("one app, every choice of it")
         call(directory, ["test-a.py"])
+        banner("app and choice")
+        call(directory, ["test-a.py", "one"])
+        banner("the same, spelled as the wish")
+        call(directory, ["--glob", "test-a.py one"])
+        banner("a globbed app")
+        call(directory, ["test-*.py"])
     finally:
         shutil.rmtree(directory, ignore_errors=True)
 
@@ -172,6 +191,7 @@ if __name__ == "__main__":
         "plan":    test_plan,
         "wish":    test_wish,
         "faults":  test_faults,
-        "refused": test_refused,
-        "help":    test_help,
+        "refused":    test_refused,
+        "short-form": test_short_form,
+        "help":       test_help,
     }).run()

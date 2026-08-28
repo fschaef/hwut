@@ -1,0 +1,13 @@
+--- one carried it, one never did
+STATUS: 0
+STDOUT {
+    concern: 1 removed, 1 untouched
+        - ./tree/messaging/net/TEST/test-b.sh
+        = ./tree/storage/TEST/test-b.sh
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+}

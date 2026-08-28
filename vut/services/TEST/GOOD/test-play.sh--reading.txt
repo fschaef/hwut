@@ -1,0 +1,33 @@
+--- the application declares a tolerance: the number is marked
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-loose.sh ]================================== round 1
+    setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | value {3.14159} done
+         2    2 | <hwut-end>
+    ============================================================
+}
+--- the application declares none: it stands plain
+STATUS: 0
+STDOUT {
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-exact.sh ]================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | value 3.14159 done
+         2    2 | <hwut-end>
+    ============================================================
+}
+--- and PLAY RECORDED NOTHING:
+STANDING {
+    GOOD
+    hwut.conf
+    test-exact.sh
+    test-loose.sh
+}

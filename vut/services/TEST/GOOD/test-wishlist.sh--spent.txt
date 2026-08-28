@@ -4,5 +4,3 @@ THE LIST {
 }
 WHAT RAN:
 STATUS: 1
-    [START] MN:test-a.sh [one]
-    [START] MQ:test-a.sh [one]

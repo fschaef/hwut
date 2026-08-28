@@ -1,0 +1,8 @@
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': session  (reporting only; '--apply' acts)
+    
+      session -- 1 found:
+          suite/TEST/.hwut-session                             a session that did not finish; 2 sink file(s), read by nobody
+    
+}

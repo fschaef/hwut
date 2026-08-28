@@ -16,18 +16,18 @@ test-a.py {
 
 
 --- --gnu ---
-test-a.py:1:9:  test-a.py {
-test-a.py:1:9:      title = "Tolerances"
-test-a.py:1:9:      choices {
-test-a.py:1:9:          two {
+test-a.py:1:10: test-a.py {
+test-a.py:1:10:     title = "Tolerances"
+test-a.py:1:10:     choices {
+test-a.py:1:10:         two {
 test-a.py:4:17:             caps {
 test-a.py:4:17:                 timeout_sec = 30.0
 test-a.py:4:17:             }
 test-a.py:5:23:             numeric = 0.05
 hwut.conf:4:9:              comment = ["//", "//"]
 hwut.conf:3:9:              slash_eqv = false
-test-a.py:1:9:          }
-test-a.py:1:9:      }
-test-a.py:1:9:  }
+test-a.py:1:10:         }
+test-a.py:1:10:     }
+test-a.py:1:10: }
 
 <hwut-end>

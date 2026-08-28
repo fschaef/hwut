@@ -1,0 +1,10 @@
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': orphans  (reporting only; '--apply' acts)
+    
+      orphans -- 2 found:
+          suite/TEST/GOOD/test-app.sh--nochoice.txt            'test-app.sh' offers no choice 'nochoice'
+          suite/TEST/GOOD/test-gone.sh.txt                     no application 'test-gone.sh' stands here
+    
+      2 item(s), <size> kB
+}

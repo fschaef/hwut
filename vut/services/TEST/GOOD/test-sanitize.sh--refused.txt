@@ -1,0 +1,18 @@
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.sanitize' does not take: --sideways
+    hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session] [--lock]
+                  [--out] [--orphans] [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: '--target' stands without a name
+    hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session] [--lock]
+                  [--out] [--orphans] [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: the directory 'nowhere' does not exist
+    hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session] [--lock]
+                  [--out] [--orphans] [--directory=<path>]
+}

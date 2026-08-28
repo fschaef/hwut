@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "hwut.cov: convert, formats, and the door"
 #     choices    = ["convert", "formats", "help", "refused"]
 #     eq-pattern = ["SUCCESS.*"]
@@ -122,7 +122,11 @@ def test_refused():
     directory = tempfile.mkdtemp(prefix="vut_cov_")
     p = os.path.join(directory, "a")
     with open(p, "w") as fh: fh.write(RECORD_TEXT)
-    for argument_list in (["explain", p],
+    #  A BARE WORD IS A TARGET now (the 1.0 short form), so an
+    #  unrecognised word is no longer a refusal: it is a wish, and
+    #  'hwut.cov <app> <choice>' is how one measures one test. An
+    #  unknown OPTION is still refused by name.
+    for argument_list in (["--sideways"],
                           ["convert", "--to", "yaml", p],
                           ["convert", "--bogus", p],
                           ["convert", p, p],

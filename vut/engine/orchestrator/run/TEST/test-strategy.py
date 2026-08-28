@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Strategy: when a directory's unit starts"
 #     choices    = ["contract", "linear", "parallel", "successor"]
 #     interactive = true

@@ -1,16 +1,14 @@
 
 --- VERBOSE ---
-00:00:00 | 000 | [TREE ] 1 directory(ies)
-00:00:00 | 000 | [FAULT] SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
-00:00:00 | 000 | [DIR  ] SUIT = suite/TEST
-00:00:00 | 000 | [FRAME] SUIT:on_entry .................................. [OK]
-00:00:01 | 001 | [START] SUIT:test-a.sh
-00:00:02 | 000 | [END  ] SUIT:test-a.sh ................................. [OK]
-00:00:02 | 001 | [START] SUIT:test-b.sh
-00:00:03 | 000 | [END  ] SUIT:test-b.sh ........... stalled, no output  [FAIL]
-00:00:03 | 000 | [FRAME] SUIT:on_exit ............... the frame failed  [FAIL]
-00:00:03 | 000 | [DONE ] SUIT .............................. 1 of 2 ok  [FAIL]
-00:00:03 | 000 | [TREE ] done, 2 failure(s)
+TREE  1 directory(ies)
+FAULT SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
+DIR   SUIT = suite/TEST
+FRAME SUIT:on_entry ..................................................... [OK]
+END   SUIT test-a.sh .................................................... [OK]
+END   :/   test-b.sh .............................. stalled, no output  [FAIL]
+FRAME SUIT:on_exit .................................. the frame failed  [FAIL]
+DONE  SUIT ................................................. 1 of 2 ok  [FAIL]
+TREE  done, 2 failure(s)
 
 ==============================================================================
 DIRECTORIES                                             1 ok, 1 fail, 00:00:03
@@ -36,7 +34,7 @@ SUIT  suite/TEST ........................................ [FAIL]   1 of   2 ok
 ==============================================================================
 FAULTS
 ------------------------------------------------------------------------------
-00:00:00 | 000 | [FAULT] SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
+FAULT SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
 
 ==============================================================================
 FAILURES
@@ -48,6 +46,6 @@ SUIT  suite/TEST
 [fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
 
 --- SILENT ---
-stderr> 00:00:00 | 000 | [FAULT] SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
+stderr> FAULT SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
 [fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
 <hwut-end>

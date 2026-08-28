@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "'execute': the call itself, stated verbatim"
 #     choices    = ["refused", "stated"]
 #     interactive = true
@@ -56,7 +56,7 @@ def explored(file_db):
 def test_stated():
     """RETURN: None. The parameter, root and per-choice."""
     result = explored({
-        "test-awk.py": '# hwut {\n'
+        "test-awk.py": '# @hwut {\n'
                        '#     title   = "Awk"\n'
                        '#     execute = "awk -f $file -v c=$choice"\n'
                        '#     choices { one { }\n'
@@ -76,7 +76,7 @@ def test_refused():
     """RETURN: None. The two refusals, by name."""
     banner("an unknown '$word'")
     result = explored({
-        "test-a.py": '# hwut { title = "A"\n'
+        "test-a.py": '# @hwut { title = "A"\n'
                      '#        execute = "run $file --tag=$version" }\n'})
     for fault in result.fault_list:
         print("    %s" % fault)
@@ -84,7 +84,7 @@ def test_refused():
 
     banner("'execute' beside 'interactive'")
     result = explored({
-        "test-i.py": '# hwut { title = "I"  interactive = yes\n'
+        "test-i.py": '# @hwut { title = "I"  interactive = yes\n'
                      '#        execute = "awk -f $file"\n'
                      '#        choices = ["x"] }\n'})
     for fault in result.fault_list:

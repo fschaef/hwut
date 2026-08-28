@@ -40,7 +40,7 @@ marker: a region opened by it and closed by its matching brace is a
 specification. 'title' is the only required key; its presence makes a file a
 test application.
 
-    hwut {
+    @hwut {
         title    = "..."
         language = "..."
 
@@ -270,7 +270,7 @@ ______________________________________________________________________________
 The region stands inside a comment of the file's own language; no
 compiler or interpreter reads it.
 
-    /* hwut {                              hwut {
+    /* @hwut {                              @hwut {
      *     title = "Parser corner cases"       title = "Parser corner cases"
      *     build = "make"                      build = "make"
      *     choices {                           choices {
@@ -286,7 +286,7 @@ effective value of every parameter with its provenance.
 5  hwut.conf
 ______________________________________________________________________________
 
-    hwut {
+    @hwut {
         on_entry  = "setup.sh"
         on_exit   = "teardown.sh"
         ignore    = ["*.gen.c"]
@@ -335,7 +335,7 @@ failure; every case whose dependencies cannot be met reports '[MISDEP]'.
 in a dictionary of its own -- an open-ended namespace of user-chosen
 names, local, never inherited:
 
-    hwut {
+    @hwut {
         target {
             clean = "./clean.sh"
         }
@@ -354,7 +354,7 @@ ______________________________________________________________________________
 application of the directory receives them, and they DO NOT OVERWRITE: what
 an application states itself stands.
 
-    hwut {
+    @hwut {
         default_app {
             comment = "//"
             caps    { timeout_sec = 5 }

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The multi-executor: one application call, many choices"
 #     choices    = ["files", "plugged", "refused", "session", "status",
 #                   "unknown"]

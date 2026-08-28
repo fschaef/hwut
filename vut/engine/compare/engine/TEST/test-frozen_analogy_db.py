@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "FrozenAnalogyDb Validation Suite"
 #     choices    = ["consistency", "flyweight", "hybrid_masks",
 #                   "immutability", "member_functions"]

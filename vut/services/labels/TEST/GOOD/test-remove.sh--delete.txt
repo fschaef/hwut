@@ -1,0 +1,23 @@
+--- the whole set, asked for in words
+STATUS: 0
+STDOUT {
+    concern: 3 removed, 0 untouched
+        - ./tree/messaging/net/TEST/test-b.sh
+        - ./tree/messaging/queue/TEST/test-b.sh
+        - ./tree/storage/TEST/test-b.sh
+    concern: no member left -- the label is deleted
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/storage/TEST/test-a.sh one : meta
+}
+--- the last label goes; the file goes with it
+STATUS: 0
+STDOUT {
+    meta: 1 removed, 0 untouched
+        - ./tree/storage/TEST/test-a.sh one
+    meta: no member left -- the label is deleted
+}
+THE FILE: absent -- no label exists

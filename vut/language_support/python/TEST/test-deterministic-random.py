@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "DeterministicStream RNG and SelectionMarker spread"
 #     choices    = ["gauss", "primitives", "ranges", "sample",
 #                   "seed_sweep", "select", "unchosen"]

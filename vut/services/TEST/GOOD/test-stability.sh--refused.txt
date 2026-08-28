@@ -3,7 +3,8 @@ STDOUT {
     REFUSED: '--repeat' takes an integer of 2 or more, not '1' -- one run cannot disagree with itself
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -12,7 +13,8 @@ STDOUT {
     REFUSED: '--repeat' takes an integer of 2 or more, not 'two' -- one run cannot disagree with itself
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -21,7 +23,8 @@ STDOUT {
     REFUSED: 'hwut.stability' does not take: --rt-max=-1
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -30,7 +33,8 @@ STDOUT {
     REFUSED: 'hwut.stability' does not take: --epsilon=soon
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -39,7 +43,8 @@ STDOUT {
     REFUSED: '--strategy' takes one of linear, parallel, successor, not 'hopeful'
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -48,7 +53,8 @@ STDOUT {
     REFUSED: 'hwut.stability' does not take: --sideways
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
@@ -57,7 +63,8 @@ STDOUT {
     REFUSED: the directory 'nowhere' does not exist
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
-                   [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
+                   [--exclude-dir <glob>]... [--wishlist <file>]...
+                   [--label <expr>] [<file-glob> [choice-glob]...] [--repeat=<n>]
                    [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }

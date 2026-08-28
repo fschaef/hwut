@@ -29,6 +29,8 @@ import sys
 
 from   vut.engine.orchestrator.exploration.explorer    import explore
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
+from   vut.services.labels                             import view_at
+from   vut.services.labels._file                       import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                     import (RootConfMissing,
                                                             ascended_spec)
@@ -38,7 +40,8 @@ from   vut.engine.orchestrator.plan.determine          import determine
 from   vut.engine.orchestrator.plan.printer            import print_plan
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
-                                                               parse_wish)
+                                                               parse_wish,
+                                                               with_targets)
 from   vut.engine.bookkeeper.bookkeeper                import Bookkeeper
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
@@ -48,7 +51,8 @@ from   ._exit                                          import E_ExitCode
 
 USAGE = usage_line("usage: hwut.plan",
                     WISH_TOKEN_TUPLE
-                    + ("[--directory=<path>]",))
+                    + ("[<file-glob> [choice-glob]...]",
+                       "[--directory=<path>]"))
 
 HELP = """hwut.plan -- the TEST PLAN the framework intends
 
@@ -118,11 +122,13 @@ def main(argv=None, write=None):
 
     directory = "."
     unknown   = []
+    word_list = []
     for argument in rest_list:
         if argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         else:
-            unknown.append(argument)
+            if argument.startswith("-"): unknown.append(argument)
+            else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.plan' does not take: %s"
               % ", ".join(sorted(unknown)))
@@ -144,12 +150,19 @@ def main(argv=None, write=None):
     for fault in result.fault_list:
         write(str(fault))
 
+    wish       = with_targets(wish, word_list)
     bookkeeper = Bookkeeper(directory) if wish.asks_base_f() else None
+    try:
+        label_view = view_at(directory)
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return E_ExitCode.FAULT
     #  ONE DIRECTORY IS ITS OWN ROOT: a path-bearing glob is
     #  matched against '.', so './test-x.py' names a test here and
     #  'other/test-x.py' names nothing -- which is true.
     task_list  = CTestTaskListQuery(wish, bookkeeper, directory=".",
-                                root=os.path.abspath(directory))
+                                root=os.path.abspath(directory),
+                                label_view=label_view)
     try:
         plan, report_list = determine(result.app_set, task_list)
     except RootConfMissing as error:

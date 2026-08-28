@@ -1,0 +1,35 @@
+--- a keyword
+STATUS: 2
+STDOUT {
+    REFUSED: 'AND' is the grammar's own word
+}
+--- the universe
+STATUS: 2
+STDOUT {
+    REFUSED: 'all' is the universe of runs -- a keyword, never assigned
+}
+--- the standard label
+STATUS: 2
+STDOUT {
+    REFUSED: 'meta' is the standard label; it always stands and 'hwut.labels.add' grows it
+}
+--- a wish that states nothing
+STATUS: 2
+STDOUT {
+    REFUSED: the wish states nothing, and a wish stating nothing wants EVERYTHING; naming a set is the one act where everything must be asked for in words -- '--label all'
+    hwut.labels.create <label> [--fail] [--pass] [--since=<point>]
+                       [--until=<point>] [--glob <target>]...
+                       [--exclude <target>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--directory=<path>]
+}
+--- two labels
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.labels.create' takes ONE label, and 2 stand: one, two
+    hwut.labels.create <label> [--fail] [--pass] [--since=<point>]
+                       [--until=<point>] [--glob <target>]...
+                       [--exclude <target>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--directory=<path>]
+}

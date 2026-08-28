@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The 'output' parameter: declared subjects, files included."
 #     choices    = ["cycle", "declare", "forgotten", "refuse"]
 #     eq-pattern = ["STATUS: [0-9]"]
@@ -52,7 +52,7 @@ fixture() {             # the app writes stdout AND result.csv
     mkdir -p tree/suite/TEST
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#!/bin/bash\n# hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\nprintf "a,b\\\\n1,2\\\\n" > result.csv\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\nprintf "a,b\\\\n1,2\\\\n" > result.csv\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-file.sh
     chmod +x tree/suite/TEST/test-file.sh
 }
@@ -76,10 +76,10 @@ PYEOF
 refuse)
     #  '<stderr>' and every other malformation, refused by name.
     mkdir -p bad
-    printf '#!/bin/bash\n# hwut { title = "A"\n#        output = ["<stdout>", "<stderr>"] }\necho x\n' > bad/test-a.sh
-    printf '#!/bin/bash\n# hwut { title = "B"\n#        output = ["<stdin>"] }\necho x\n'  > bad/test-b.sh
-    printf '#!/bin/bash\n# hwut { title = "C"\n#        output = ["a.log", "a.log"] }\necho x\n' > bad/test-c.sh
-    printf '#!/bin/bash\n# hwut { title = "D"\n#        output = ["-dash.log"] }\necho x\n'      > bad/test-d.sh
+    printf '#!/bin/bash\n# @hwut { title = "A"\n#        output = ["<stdout>", "<stderr>"] }\necho x\n' > bad/test-a.sh
+    printf '#!/bin/bash\n# @hwut { title = "B"\n#        output = ["<stdin>"] }\necho x\n'  > bad/test-b.sh
+    printf '#!/bin/bash\n# @hwut { title = "C"\n#        output = ["a.log", "a.log"] }\necho x\n' > bad/test-c.sh
+    printf '#!/bin/bash\n# @hwut { title = "D"\n#        output = ["-dash.log"] }\necho x\n'      > bad/test-d.sh
     chmod +x bad/*.sh
     python3 - <<'PYEOF'
 from vut.engine.orchestrator.exploration.explorer import explore
@@ -113,7 +113,7 @@ forgotten)
     fixture
     $RUN --directory=tree --silent 2> /dev/null
     $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
-    printf '#!/bin/bash\n# hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-file.sh
     chmod +x tree/suite/TEST/test-file.sh
     $RUN --directory=tree --quiet > run.txt 2> /dev/null

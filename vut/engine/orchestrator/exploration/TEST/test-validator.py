@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Validator: plain tree, or refusal by name"
 #     choices    = ["choiceless", "conf", "exclusivity", "header",
 #                   "list_form", "off", "root_only", "types",
@@ -139,7 +139,7 @@ def conf(label, text):
 def test_header():
     """RETURN: None. Every parameter kind once."""
     header("a full header",
-           'hwut {\n'
+           '@hwut {\n'
            '    title      = "Parser corner cases"\n'
            '    language   = "heartfun"\n'
            '    build {\n'
@@ -177,7 +177,7 @@ def test_header():
 def test_list_form():
     """RETURN: None. The list form of 'choices'."""
     header("choices as a list of names",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    choices = [\"one\", \"two\", \"three\"]\n'
            '}\n')
@@ -186,7 +186,7 @@ def test_list_form():
 def test_choiceless():
     """RETURN: None. No 'choices': the single 'None' entry."""
     header("choice-less: root parameters are the one call's",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    numeric = 0.5\n'
            '}\n')
@@ -195,7 +195,7 @@ def test_choiceless():
 def test_vocabulary():
     """RETURN: None. Unknown, misspelt, and missing keys."""
     header("unknown and misspelt keys, by name and position",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    numerc  = 0.5\n'
            '    choices {\n'
@@ -203,13 +203,13 @@ def test_vocabulary():
            '    }\n'
            '}\n')
     header("a key bound to nothing, where something is required",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    numeric =\n'
            '    comment = null\n'
            '}\n')
     header("'title' absent",
-           'hwut {\n'
+           '@hwut {\n'
            '    numeric = 0.5\n'
            '}\n')
 
@@ -217,7 +217,7 @@ def test_vocabulary():
 def test_types():
     """RETURN: None. Values of the wrong shape."""
     header("wrong shapes, each named",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    numeric = 1.5\n'
            '    build   = yes\n'
@@ -233,30 +233,30 @@ def test_off():
     """RETURN: None. Absence takes the default; off is written, in any
     of its spellings."""
     header("build named alone; analogy and constraints switched off",
-           'hwut {\n'
+           '@hwut {\n'
            '    title       = "T"\n'
            '    build       = "make"\n'
            '    analogy     = []\n'
            '    constraints = false\n'
            '}\n')
     header("the other spellings of off, and absence beside them",
-           'hwut {\n'
+           '@hwut {\n'
            '    title       = "T"\n'
            '    analogy     = no\n'
            '    constraints =\n'
            '}\n')
     header("'analogy = true' says nothing and is refused",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    analogy = true\n'
            '}\n')
     header("'comment' is a marker pair, and reads alike",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    comment = ["/*", "*/"]\n'
            '}\n')
     header("'comment' switched off, and one of three markers",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    comment = []\n'
            '    choices { one { comment = ["#", "#", "#"] } }\n'
@@ -267,14 +267,14 @@ def test_root_only():
     """RETURN: None. The two root-only parameters, well and badly
     placed."""
     header("at the root: they reach every choice",
-           'hwut {\n'
+           '@hwut {\n'
            '    title       = "T"\n'
            '    same        = yes\n'
            '    interactive = yes\n'
            '    choices { one { } two { numeric = 0.05 } }\n'
            '}\n')
     header("inside a choice: refused, by name",
-           'hwut {\n'
+           '@hwut {\n'
            '    title   = "T"\n'
            '    choices {\n'
            '        one { same        = yes }\n'
@@ -286,7 +286,7 @@ def test_root_only():
 def test_conf():
     """RETURN: None. A full hwut.conf."""
     conf("a full hwut.conf",
-         'hwut {\n'
+         '@hwut {\n'
          '    on_entry  = "setup.sh"\n'
          '    on_exit   = "teardown.sh"\n'
          '    ignore    = ["*.gen.c", "tmp-*"]\n'
@@ -315,13 +315,13 @@ def test_conf():
 def test_exclusivity():
     """RETURN: None. A test parameter at the conf root."""
     conf("test parameters do not stand at the conf root",
-         'hwut {\n'
+         '@hwut {\n'
          '    numeric  = 0.01\n'
          '    title    = "T"\n'
          '    on_entry = "setup.sh"\n'
          '}\n')
     conf("a target of three words",
-         'hwut {\n'
+         '@hwut {\n'
          '    collision = ["test-a.py one two"]\n'
          '}\n')
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The coverage index: who executed this line, and what to run when it changes"
 #     choices    = ["change", "economy", "honest", "keys", "lossy",
 #                   "query", "segments"]

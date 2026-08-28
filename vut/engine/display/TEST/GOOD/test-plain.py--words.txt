@@ -1,60 +1,33 @@
 
 --- every report word ---
-00:00:00 | 000 | [DIR  ] SUIT = suite/TEST
-00:00:01 | 001 | [START] SUIT:test-00.sh
-00:00:01 | 000 | [END  ] SUIT:test-00.sh ......... source file missing  [FAIL]
-00:00:02 | 001 | [START] SUIT:test-01.sh
-00:00:02 | 000 | [END  ] SUIT:test-01.sh ......... interpreter missing  [FAIL]
-00:00:03 | 001 | [START] SUIT:test-02.sh
-00:00:03 | 000 | [END  ] SUIT:test-02.sh ........... differs from GOOD  [FAIL]
-00:00:04 | 001 | [START] SUIT:test-03.sh
-00:00:04 | 000 | [END  ] SUIT:test-03.sh ......... UNSTABLE -- not run  [FAIL]
-00:00:05 | 001 | [START] SUIT:test-04.sh
-00:00:05 | 000 | [END  ] SUIT:test-04.sh . the application would not launch  [FAIL]
-00:00:06 | 001 | [START] SUIT:test-05.sh
-00:00:06 | 000 | [END  ] SUIT:test-05.sh .... killed by the supervisor  [FAIL]
-00:00:07 | 001 | [START] SUIT:test-06.sh
-00:00:07 | 000 | [END  ] SUIT:test-06.sh .......... produced no output  [FAIL]
-00:00:08 | 001 | [START] SUIT:test-07.sh
-00:00:08 | 000 | [END  ] SUIT:test-07.sh .......... stalled, no output  [FAIL]
-00:00:09 | 001 | [START] SUIT:test-08.sh
-00:00:09 | 000 | [END  ] SUIT:test-08.sh ...... no recording to replay  [FAIL]
-00:00:10 | 001 | [START] SUIT:test-09.sh
-00:00:10 | 000 | [END  ] SUIT:test-09.sh ......... output file missing  [FAIL]
-00:00:11 | 001 | [START] SUIT:test-10.sh
-00:00:11 | 000 | [END  ] SUIT:test-10.sh ................ GOOD missing  [FAIL]
-00:00:12 | 001 | [START] SUIT:test-11.sh
-00:00:12 | 000 | [END  ] SUIT:test-11.sh . output cut short (no <hwut-end>)  [FAIL]
-00:00:13 | 001 | [START] SUIT:test-12.sh
-00:00:13 | 000 | [END  ] SUIT:test-12.sh ........... unexpected stderr  [FAIL]
-00:00:14 | 001 | [START] SUIT:test-13.sh
-00:00:14 | 000 | [END  ] SUIT:test-13.sh .... region framing is broken  [FAIL]
-00:00:15 | 001 | [START] SUIT:test-14.sh
-00:00:15 | 000 | [END  ] SUIT:test-14.sh ............ stderr undecided  [FAIL]
-00:00:16 | 001 | [START] SUIT:test-15.sh
-00:00:16 | 000 | [END  ] SUIT:test-15.sh .... pype interpreter missing  [FAIL]
-00:00:17 | 001 | [START] SUIT:test-16.sh
-00:00:17 | 000 | [END  ] SUIT:test-16.sh ......... pype script missing  [FAIL]
-00:00:18 | 001 | [START] SUIT:test-17.sh
-00:00:18 | 000 | [END  ] SUIT:test-17.sh . pype script has a syntax error  [FAIL]
-00:00:19 | 001 | [START] SUIT:test-18.sh
-00:00:19 | 000 | [END  ] SUIT:test-18.sh . pype killed by the supervisor  [FAIL]
-00:00:20 | 001 | [START] SUIT:test-19.sh
-00:00:20 | 000 | [END  ] SUIT:test-19.sh ................. pype failed  [FAIL]
-00:00:21 | 001 | [START] SUIT:test-20.sh
-00:00:21 | 000 | [END  ] SUIT:test-20.sh .......... build tool missing  [FAIL]
-00:00:22 | 001 | [START] SUIT:test-21.sh
-00:00:22 | 000 | [END  ] SUIT:test-21.sh . build killed by the supervisor  [FAIL]
-00:00:23 | 001 | [START] SUIT:test-22.sh
-00:00:23 | 000 | [END  ] SUIT:test-22.sh ............ the build failed  [FAIL]
-00:00:24 | 001 | [START] SUIT:test-23.sh
-00:00:24 | 000 | [END  ] SUIT:test-23.sh ............ target not built  [FAIL]
-00:00:25 | 001 | [START] SUIT:test-24.sh
-00:00:25 | 000 | [END  ] SUIT:test-24.sh . a dependency would not be acquired  [FAIL]
-00:00:26 | 001 | [START] SUIT:test-25.sh
-00:00:26 | 000 | [END  ] SUIT:test-25.sh .. display target unreachable  [FAIL]
-00:00:27 | 001 | [START] SUIT:test-26.sh
-00:00:27 | 000 | [END  ] SUIT:test-26.sh ....... a token nobody taught  [FAIL]
+DIR   SUIT = suite/TEST
+END   SUIT test-00.sh ............................ source file missing  [FAIL]
+END   :/   test-01.sh ............................ interpreter missing  [FAIL]
+END   :/   test-02.sh .............................. differs from GOOD  [FAIL]
+END   :/   test-03.sh ............................ UNSTABLE -- not run  [FAIL]
+END   :/   test-04.sh ............... the application would not launch  [FAIL]
+END   :/   test-05.sh ....................... killed by the supervisor  [FAIL]
+END   :/   test-06.sh ............................. produced no output  [FAIL]
+END   :/   test-07.sh ............................. stalled, no output  [FAIL]
+END   :/   test-08.sh ......................... no recording to replay  [FAIL]
+END   :/   test-09.sh ............................ output file missing  [FAIL]
+END   :/   test-10.sh ................................... GOOD missing  [FAIL]
+END   :/   test-11.sh ............... output cut short (no <hwut-end>)  [FAIL]
+END   :/   test-12.sh .............................. unexpected stderr  [FAIL]
+END   :/   test-13.sh ....................... region framing is broken  [FAIL]
+END   :/   test-14.sh ............................... stderr undecided  [FAIL]
+END   :/   test-15.sh ....................... pype interpreter missing  [FAIL]
+END   :/   test-16.sh ............................ pype script missing  [FAIL]
+END   :/   test-17.sh ................. pype script has a syntax error  [FAIL]
+END   :/   test-18.sh .................. pype killed by the supervisor  [FAIL]
+END   :/   test-19.sh .................................... pype failed  [FAIL]
+END   :/   test-20.sh ............................. build tool missing  [FAIL]
+END   :/   test-21.sh ................. build killed by the supervisor  [FAIL]
+END   :/   test-22.sh ............................... the build failed  [FAIL]
+END   :/   test-23.sh ............................... target not built  [FAIL]
+END   :/   test-24.sh ............. a dependency would not be acquired  [FAIL]
+END   :/   test-25.sh ..................... display target unreachable  [FAIL]
+END   :/   test-26.sh .......................... a token nobody taught  [FAIL]
 
 ==============================================================================
 DIRECTORIES                                            0 ok, 27 fail, 00:00:27

@@ -101,12 +101,25 @@ class CDirectoryWork:
         """
         entry     = self.entry
         directory = entry.directory
+        #  A SPECIFICATION THAT DOES NOT PARSE IS A FAILING TEST, not
+        #  merely a fault beside the run. The application named by
+        #  the fault never became a node -- it could not be
+        #  determined -- so it is reported here, terminal before
+        #  anything runs, exactly as a [MISDEP] node is: the same law
+        #  that makes a failed BUILD a test result rather than a
+        #  suite-aborting precondition. Without this the directory
+        #  says '0 of 1 ok' and the broken application is invisible
+        #  in the count.
         for fault in entry.fault_tuple:
             emit("fault", directory=directory, text=str(fault))
         for report in entry.report_tuple:
             emit("report", directory=directory, text=str(report))
+        broken_tuple = _broken_app_tuple(entry)
         emit("dir-begun", directory=directory,
-             node_n=len(entry.plan))
+             node_n=len(entry.plan) + len(broken_tuple))
+        for name in broken_tuple:
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict="spec-broken")
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
         #  their 'run-ended' comes first, verdict named.
@@ -240,14 +253,42 @@ class CTreeScheduler:
             return CDirDone(False, 0)
 
 
-def orchestrate(root, wish, build_interview=None):
+def _broken_app_tuple(entry):
+    """
+    RETURN: tuple[str], every source file a fault of this directory
+            names that DID NOT become a node -- sorted, each once.
+
+    A file that parsed and ran stands in the plan; a file the fault
+    names and the plan does not is one exploration could not read.
+    The directory's own file ('hwut.conf') names no application and
+    is left to the fault line alone.
+    """
+    planned = set()
+    for node in entry.plan:
+        name = node.name()
+        planned.add(name)
+        planned.add(name.split(" ", 1)[0])
+        if "[" in name: planned.add(name.split("[", 1)[0].strip())
+    named = set()
+    for fault in entry.fault_tuple:
+        file = getattr(fault, "file", None)
+        if not file or file.endswith(".conf"):     continue
+        if file in planned:                        continue
+        named.add(file)
+    return tuple(sorted(named))
+
+
+def orchestrate(root, wish, build_interview=None, label_view=None):
     """
     RETURN: CTreePlan, what 'wish' comes to on the tree below 'root':
             explored under the configuration tree, determined per
             directory (P-17).
 
     The Bookkeeper of each directory is made HERE and handed down,
-    and only where the wish asks the base.
+    and only where the wish asks the base. THE LABEL VIEW IS NOT: the
+    engine never opens 'hwut-root.labels' -- a face builds it
+    ('services/labels.view_at') and hands it in, and 'None' means no
+    label knowledge reaches the selection (disc-8).
     """
     tree = explore_tree(root)
     factory = None
@@ -256,11 +297,13 @@ def orchestrate(root, wish, build_interview=None):
             Bookkeeper(os.path.normpath(os.path.join(root, directory)))
     return determine_tree(tree, wish,
                           bookkeeper_factory = factory,
-                          build_interview    = build_interview)
+                          build_interview    = build_interview,
+                          label_view         = label_view)
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
-                 clock=None, strategy=None):
+                 clock=None, strategy=None, label_view=None,
+                 warn=None):
     """
     RETURN: asyncio.Queue, the report stream of the run -- the events
             of 'vocabulary.py', then one 'None'. The run stands as an
@@ -269,8 +312,14 @@ def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
     Requires a running event loop; determination happens before the
     first event is emitted, so a refused wish raises HERE, at the
     call, not inside the task.
+
+    'warn' takes one finding at a time and is called BEFORE the first
+    event: a finding that decides nothing still belongs before the
+    thing it is about.
     """
-    tree_plan = orchestrate(root, wish)
+    tree_plan = orchestrate(root, wish, label_view=label_view)
+    if warn is not None:
+        for text in tree_plan.warning_tuple: warn(text)
     queue     = asyncio.Queue()
     asyncio.ensure_future(
         CTreeScheduler(dispatcher_factory, worker_max_n,

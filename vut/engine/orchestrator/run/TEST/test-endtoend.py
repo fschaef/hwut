@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "End to end: the wire over real processes"
 #     choices    = ["frame", "nostore", "stream"]
 #     interactive = true
@@ -107,7 +107,7 @@ def fixture(entry_command="true"):
         if executable: os.chmod(path, 0o755)
 
     put(test, "hwut.conf",
-        'hwut {\n'
+        '@hwut {\n'
         '    ignore   = ["Makefile", "strip_noise.py"]\n'
         '    on_entry = "%s"\n'
         '    on_exit  = "true"\n'
@@ -115,23 +115,23 @@ def fixture(entry_command="true"):
         '}\n' % entry_command)
     put(test, "test-ok.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Ok" }\n'
+        '# @hwut { title = "Ok" }\n'
         'echo "steady line"\n', executable=True)
     put(good, "test-ok.sh.txt",    "steady line\n")
     put(test, "test-diff.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Diff" }\n'
+        '# @hwut { title = "Diff" }\n'
         'echo "what the run says"\n', executable=True)
     put(good, "test-diff.sh.txt",  "what the GOOD expects\n")
     put(test, "test-built.c",
-        '/* hwut { title = "Built"\n'
+        '/* @hwut { title = "Built"\n'
         '          build { framework = "make"'
         '                  executable = "app" } } */\n')
     put(test, "Makefile",
         'app:\n\tfalse\n')
     put(test, "test-noise.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Noise"\n'
+        '# @hwut { title = "Noise"\n'
         '#        pype  = "python3 strip_noise.py" }\n'
         'echo "NOISE-1234 kept line"\n', executable=True)
     put(test, "strip_noise.py",
@@ -142,7 +142,7 @@ def fixture(entry_command="true"):
     put(good, "test-noise.sh.txt", "kept line\n<hwut-end>\n")
     put(test, "test-app.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "App"  interactive = yes\n'
+        '# @hwut { title = "App"  interactive = yes\n'
         '#        choices = ["a", "b"] }\n'
         'while read cmd token out err; do\n'
         '    [ "$cmd" = run ] || continue\n'
@@ -155,24 +155,24 @@ def fixture(entry_command="true"):
     put(good, "test-app.sh--b.txt", "choice b served\n")
     put(test, "test-dead.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Dead"  interactive = yes\n'
+        '# @hwut { title = "Dead"  interactive = yes\n'
         '#        choices = ["x"] }\n'
         'exit 7\n', executable=True)
     put(good, "test-dead.sh--x.txt", "never\n")
     put(test, "test-m.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Misdep" }\n'
+        '# @hwut { title = "Misdep" }\n'
         'echo never\n', executable=True)
     put(test, "test-tol.sh",
         '#!/bin/bash\n'
-        '# hwut { title   = "Tolerance"\n'
+        '# @hwut { title   = "Tolerance"\n'
         '#        numeric = 0.01 }\n'
         'echo "value 100.4"\n'
         'echo "<hwut-end>"\n', executable=True)
     put(good, "test-tol.sh.txt", "value 100.0\n<hwut-end>\n")
     put(test, "test-same.sh",
         '#!/bin/bash\n'
-        '# hwut { title   = "Same"\n'
+        '# @hwut { title   = "Same"\n'
         '#        same    = yes\n'
         '#        choices = ["a", "b"] }\n'
         'echo "one behaviour for every choice"\n'
@@ -181,13 +181,13 @@ def fixture(entry_command="true"):
         "one behaviour for every choice\n<hwut-end>\n")
     put(test, "test-mark.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Mark" }\n'
+        '# @hwut { title = "Mark" }\n'
         'echo "renovated line"\n'
         'echo "<hwut-end>"\n', executable=True)
     put(good, "test-mark.sh.txt", "renovated line\n<hwut-end>\n")
     put(test, "test-cut.sh",
         '#!/bin/bash\n'
-        '# hwut { title = "Cut" }\n'
+        '# @hwut { title = "Cut" }\n'
         'echo "renovated line"\n', executable=True)
     put(good, "test-cut.sh.txt",  "renovated line\n<hwut-end>\n")
     return root

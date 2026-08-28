@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
 #     choices    = ["json", "junit", "never_run", "refused", "stain",
 #                   "tap", "traditional", "width"]
@@ -86,13 +86,13 @@ fixture() {         # <body...> -- one directory, one app, run
     chmod +x tree/suite/TEST/test-app.sh
 }
 
-good_app() { fixture '# hwut { title = "The steady one" }' \
+good_app() { fixture '# @hwut { title = "The steady one" }' \
                      'echo "steady line"' 'echo "<hwut-end>"'; }
 
 mixed() {           # one standing, one differing
     good_app
     printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
-    printf '#!/bin/bash\n# hwut { title = "The differing one" }\necho "what the run says"\necho "<hwut-end>"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "The differing one" }\necho "what the run says"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-diff.sh
     chmod +x tree/suite/TEST/test-diff.sh
     printf 'what the GOOD expects\n<hwut-end>\n' \
@@ -101,7 +101,7 @@ mixed() {           # one standing, one differing
 }
 
 flipping() {
-    fixture '# hwut { title = "The flip" }' \
+    fixture '# @hwut { title = "The flip" }' \
             'n=0' '[ -f count.txt ] && n=$(cat count.txt)' \
             'echo $((n + 1)) > count.txt' \
             'if [ $((n % 2)) -eq 0 ]; then echo "steady line";' \

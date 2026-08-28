@@ -189,7 +189,31 @@ class MkdirMutex:
         if holder is None: return True            # a lock naming nobody
         started = _process_start_time(holder.get("pid", -1))
         if started is None: return True            # no such process
-        if abs(started - holder.get("started", 0.0)) > 1.0: return True
+        recorded = holder.get("started")
+        if recorded is None:
+            #  A LOCK THAT CANNOT NAME ITS HOLDER IS NOT A CLAIM, and
+            #  it is GONE. A record without a start time -- an older
+            #  version's, a half-written one, a hand-edited one --
+            #  cannot be compared against any process, so no future
+            #  run and no cleaning could ever break it: it would block
+            #  the directory for ever.
+            #
+            #  THE SAME ANSWER A MISSING RECORD ALREADY GETS, two
+            #  lines above. An unreadable claim and an absent one are
+            #  the same claim.
+            #
+            #  NOTE the narrow window this shares with the absent
+            #  case: 'acquire' makes the directory and THEN writes the
+            #  record, so a live holder is briefly unnameable. That
+            #  race predates this line and is answered where it
+            #  belongs -- 'acquire' retries, up to 'attempt_max'.
+            return True
+        try:
+            if abs(started - recorded) > 1.0: return True
+        except TypeError:
+            #  A RECORD OF THE WRONG SHAPE, for the same reason: it
+            #  cannot be compared, so it cannot be honoured.
+            return True
         if self.max_hold_sec is not None:
             age = self.holder_age_sec()
             if age is not None and age > self.max_hold_sec: return True

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The gather: many directories, one index, one bundle"
 #     choices    = ["bundle", "fold", "groups", "refused", "stale"]
 #     eq-pattern = ["SUCCESS.*"]

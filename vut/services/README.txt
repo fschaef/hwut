@@ -115,6 +115,13 @@ the tool, under ONE NAMING LAW:
     its launcher <=>  vut/bin/hwut.<name>
     its suite    <=>  TEST/test-<name>.py or TEST/test-<name>.sh
 
+A DOTTED NAME IS A PACKAGE (disc-8): a family of faces on one subject
+shares a package, the dot in the launcher naming the directory:
+
+    hwut.<p>.<name>  <=>  vut/services/<p>/<name>.py
+    its launcher     <=>  vut/bin/hwut.<p>.<name>
+    its suite        <=>  vut/services/<p>/TEST/test-<name>.sh (or .py)
+
 Every plain '<name>.py' in this directory IS a service; a module that
 is NOT a service is underscore-prefixed ('_core.py', '_config.py' --
 private helpers of the operations faces). 'show.py' and 'plan.py'
@@ -123,7 +130,15 @@ the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.
 'wishlist.py' faces the exploration alone: it selects and prints, and
-runs nothing. 'remove.py' (and its choice form) faces the Bookkeeper
+runs nothing. 'play.py' runs ONE choice and renders the reading of
+what it produced under that test's own setup; it judges nothing and
+records nothing. The faces that take a wish also take its SHORT FORM --
+'hwut.run test-app.sh one', bare words as targets. '_follow.py' is the one place a renamed or removed name
+reaches the records at the tree's boundary; the rename and removal
+faces call it last. 'labels/' is the first dotted family:
+'hwut.labels.create', '.add', '.remove', '.list' and '.query' -- five
+acts on 'hwut-root.labels', the file of the tree's SETS OF RUNS, which
+stands beside 'hwut-root.conf' at the boundary. 'remove.py' (and its choice form) faces the Bookkeeper
 and the register, and runs nothing either. A healing face on a stored subject reads
 the Bookkeeper; its run-fallback re-enters the orchestrator -- a face
 importing both sides sits above both, which is here.

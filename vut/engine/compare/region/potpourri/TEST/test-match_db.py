@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# hwut {
+# @hwut {
 #     title      = "MatchDb"
 #     choices    = ["analogy_interferences", "extract_ultimates",
 #                   "pairing"]

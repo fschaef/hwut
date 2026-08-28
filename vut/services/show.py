@@ -21,10 +21,16 @@ specification carries a fault yields its faults and no tree, since
 exploration refuses rather than guesses.
 ______________________________________________________________________________
 """
+import os
 import sys
 
 from   vut.engine.orchestrator.exploration.hwut_parse import (text_of_directory,
                                                               text_of_file)
+from   vut.engine.orchestrator.exploration.tree_explorer \
+                                                      import (RootConfMissing,
+                                                              root_conf_directory)
+from   vut.engine.orchestrator.plan.label             import STANDARD_LABEL
+from   vut.services.labels                            import _file
 from   vut.engine.bookkeeper.test_id_db               import (TestIdDb,
                                                               TestIdFault)
 from   ._exit                                         import E_ExitCode
@@ -100,6 +106,58 @@ def show_register(directory, write):
     return E_ExitCode.OK
 
 
+def labels_line_tuple(directory, name):
+    """
+    RETURN: [0] tuple[str], the '==[ LABELS ]' section for the tests
+                of 'directory' -- of the one file 'name', where one is
+                named -- each entry as the labels file states it, THE
+                SILENT ONES MARKED: the failure mode of every label
+                mechanism is a test that silently does not run, and a
+                person looking at a test that seems not to exist must
+                find the answer in the first place they look (disc-8).
+                Empty where no entry concerns what is shown -- the
+                feature unused costs no line of output.
+            [1] str | None, the fault where 'hwut-root.labels' cannot
+                be read; the section is then the fault's alone.
+
+    NO BOUNDARY, NO SECTION: 'hwut.show' works on a bare directory,
+    and a tree without a root conf can hold no labels file.
+    """
+    try:
+        boundary = root_conf_directory(directory)
+    except RootConfMissing:
+        return (), None
+    if not os.path.isfile(_file.file_path(boundary)):
+        return (), None
+    try:
+        entry_db = _file.read_entry_db(boundary)
+    except _file.LabelFileError as error:
+        return (), "FAULT: %s" % error
+
+    where = os.path.relpath(os.path.abspath(directory), boundary)
+    where = "" if where == "." else where.replace(os.sep, "/")
+    def local_f(key):
+        head, _, tail = key[0].rpartition("/")
+        return head == where and (name is None or tail == name)
+    key_list = sorted((key for key in entry_db if local_f(key)),
+                      key=_file.sort_key)
+    if not key_list: return (), None
+
+    line_list = ["==[ LABELS ]%s" % ("=" * 66)]
+    shown = [("%s%s" % (key[0].rpartition("/")[2],
+                        "" if key[1] is None else " %s" % key[1]),
+              entry_db[key])
+             for key in key_list]
+    width = max(len(target) for target, _ in shown)
+    for target, label_set in shown:
+        line = "%-*s : %s" % (width, target,
+                              " ".join(sorted(label_set)))
+        if STANDARD_LABEL in label_set:
+            line += "   -- SILENT: a bare wish passes this by"
+        line_list.append(line)
+    return tuple(line_list), None
+
+
 def main(argv=None, write=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
@@ -159,7 +217,15 @@ def main(argv=None, write=None):
         write(str(fault))
     if text:
         write(text)
-    return E_ExitCode.FAULT if fault_list else E_ExitCode.OK
+    label_line_tuple, label_fault = labels_line_tuple(
+        directory, name_list[0] if name_list else None)
+    if label_fault is not None:
+        write(label_fault)
+    for line in label_line_tuple:
+        write(line)
+    if fault_list or label_fault is not None:
+        return E_ExitCode.FAULT
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

@@ -1,0 +1,15 @@
+--- 'meta' needs no create
+STATUS: 0
+STDOUT {
+    meta: 2 added, 0 already carrying
+        + ./tree/storage/TEST/test-a.sh one
+        + ./tree/storage/TEST/test-a.sh two
+}
+--- labels accumulate: the choice's own entry adds to it
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/storage/TEST/test-a.sh one : concern meta
+    :/: two                           : meta
+}

@@ -4,9 +4,12 @@ STDOUT {
     REFUSED: the directory 'nowhere-such-dir' does not exist
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
 }
 == an option nobody knows ==
@@ -15,9 +18,12 @@ STDOUT {
     REFUSED: 'hwut.run' does not take: --frobnicate
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
 }
 == tiers beside one another ==
@@ -26,9 +32,12 @@ STDOUT {
     REFUSED: choose one of -v/--verbose, --quiet, --silent
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
 }
 == colour beside no-colour ==
@@ -37,9 +46,12 @@ STDOUT {
     REFUSED: '--colour' beside '--no-colour' can want nothing
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
 }
 == jobs without a number ==
@@ -48,8 +60,11 @@ STDOUT {
     REFUSED: '--jobs' takes a positive integer, not 'many'
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]... [--no-store]
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
                     [--timing] [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--start-delay=<seconds>]
                     [--directory=<path>]
 }

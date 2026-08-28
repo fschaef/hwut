@@ -1,0 +1,38 @@
+--- bare is 'all AND NOT meta': what a bare run would take
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh two
+    ./tree/messaging/net/TEST/test-b.sh
+    ./tree/messaging/queue/TEST/test-a.sh two
+    ./tree/messaging/queue/TEST/test-b.sh
+    ./tree/storage/TEST/test-a.sh one
+    ./tree/storage/TEST/test-a.sh two
+    ./tree/storage/TEST/test-b.sh
+}
+--- naming 'meta' lifts the silence
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh one
+    ./tree/messaging/queue/TEST/test-a.sh one
+}
+--- 'all' is the universe
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh one
+    ./tree/messaging/net/TEST/test-a.sh two
+    ./tree/messaging/net/TEST/test-b.sh
+    ./tree/messaging/queue/TEST/test-a.sh one
+    ./tree/messaging/queue/TEST/test-a.sh two
+    ./tree/messaging/queue/TEST/test-b.sh
+    ./tree/storage/TEST/test-a.sh one
+    ./tree/storage/TEST/test-a.sh two
+    ./tree/storage/TEST/test-b.sh
+}
+--- the grammar composes
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh two
+    ./tree/messaging/queue/TEST/test-a.sh two
+    ./tree/storage/TEST/test-a.sh one
+    ./tree/storage/TEST/test-a.sh two
+}

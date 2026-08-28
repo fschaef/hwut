@@ -176,6 +176,30 @@ class RootConfMissing(Exception):
     pass
 
 
+def root_conf_directory(start):
+    """
+    RETURN: str, the ABSOLUTE directory holding the 'hwut-root.conf'
+            that bounds the tree 'start' stands in -- the same
+            boundary 'ascended_spec' climbs to, found the same way.
+
+    Raises RootConfMissing where no such file stands above 'start'.
+    The boundary is a FACT ABOUT THE TREE and everything anchored
+    there -- 'hwut-root.labels' among it (disc-8) -- must anchor at
+    the same place the configuration climb ends, or two climbs could
+    name two trees.
+    """
+    here = os.path.abspath(os.path.normpath(start))
+    while True:
+        if os.path.isfile(os.path.join(here, ROOT_CONF_NAME)):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            raise RootConfMissing(
+                "no '%s' stands in or above '%s' -- the tree has no "
+                "boundary" % (ROOT_CONF_NAME, start))
+        here = parent
+
+
 def ascended_spec(start):
     """
     RETURN: [0] DirectorySpec, every 'hwut.conf' ABOVE 'start' folded

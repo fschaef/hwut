@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Generative Judge/Lawyer consistency net"
 #     choices    = ["consistency", "constraints", "metamorphic",
 #                   "reflexive"]

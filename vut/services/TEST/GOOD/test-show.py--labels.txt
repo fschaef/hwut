@@ -1,0 +1,67 @@
+
+--- the directory: entries shown, the silent one marked ---
+$ hwut.show --no-default
+    hwut.conf
+        dependency           test-b.py <- test-a.py one
+
+    test-a.py {
+        title = "A"
+        choices {
+            one {
+                numeric = 0.01                    # app
+            }
+            two {
+                numeric = 0.01                    # app
+            }
+        }
+    }
+
+    test-b.py {
+        title = "B"
+        choices {
+            - {
+            }
+        }
+    }
+
+    ==[ LABELS ]==================================================================
+    test-a.py one : meta   -- SILENT: a bare wish passes this by
+    test-b.py     : concern
+    [status 0]
+
+--- one file: its entries alone ---
+$ hwut.show test-b.py --no-default
+    test-b.py {
+        title = "B"
+        choices {
+            - {
+            }
+        }
+    }
+    ==[ LABELS ]==================================================================
+    test-b.py : concern
+    [status 0]
+
+--- no boundary above: no section ---
+$ hwut.show test-b.py --no-default
+    test-b.py {
+        title = "B"
+        choices {
+            - {
+            }
+        }
+    }
+    [status 0]
+
+--- a broken labels file: the fault said aloud ---
+$ hwut.show test-b.py --no-default
+    test-b.py {
+        title = "B"
+        choices {
+            - {
+            }
+        }
+    }
+    FAULT: WORK/hwut-root.labels:1: a target starts './' -- the file's own ground -- and 'x' does not
+    [status 1]
+<hwut-end>

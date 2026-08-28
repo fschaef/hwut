@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# hwut {
+# @hwut {
 #     title      = "LinePair: subject_and_nominal_line_element_lists()"
 #     choices    = ["accordion", "circular", "exhaustion", "monkey",
 #                   "transpose", "visible-nothing"]

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Explorer: carriers, cross-check, resolution"
 #     choices    = ["carriers", "defaults", "directory", "faults",
 #                   "graph", "resolve"]
@@ -118,9 +118,9 @@ def test_directory():
     """RETURN: None. Both carriers, ignores at work."""
     banner("a directory of both carriers")
     directory = build_directory({
-        "test-parse.py":  '# hwut {\n#     title = "parses"\n'
+        "test-parse.py":  '# @hwut {\n#     title = "parses"\n'
                           '#     choices = [\"one\", \"two\"]\n# }\n',
-        "test-plain.sh":  '# hwut { title = "plain" }\n',
+        "test-plain.sh":  '# @hwut { title = "plain" }\n',
         "notes.txt":      "ignored by default\n",
         "data.json":      "{}\n",
         "test-gen.c":     "int main() { return 0; }\n",
@@ -140,7 +140,7 @@ def test_resolve():
     """RETURN: None. Root default in, choice overwrite wins."""
     banner("root is the default; a choice overwrites")
     directory = build_directory({
-        "test-tol.py": '# hwut {\n'
+        "test-tol.py": '# @hwut {\n'
                        '#     title   = "tolerances"\n'
                        '#     numeric = 0.01\n'
                        '#     pype    = \"strip.pype\"\n'
@@ -160,7 +160,7 @@ def test_carriers():
     """RETURN: None. The cross-check: one file, one carrier."""
     banner("header AND apps; and a ghost entry")
     directory = build_directory({
-        "test-both.py": '# hwut { title = "I have a header" }\n',
+        "test-both.py": '# @hwut { title = "I have a header" }\n',
         "hwut.conf":    'hwut {\n'
                         '    apps {\n'
                         '        test-both.py  { title = "and an entry" }\n'
@@ -176,9 +176,9 @@ def test_faults():
     """RETURN: None. Faults accumulate; the healthy still explore."""
     banner("a malformed header beside a healthy one")
     directory = build_directory({
-        "test-bad.py":  '# hwut {\n#     title = "bad"\n'
+        "test-bad.py":  '# @hwut {\n#     title = "bad"\n'
                         '#     numerc = 0.5\n# }\n',
-        "test-good.py": '# hwut { title = "good" }\n',
+        "test-good.py": '# @hwut { title = "good" }\n',
     })
     try:     show(explore(directory))
     finally: shutil.rmtree(directory, ignore_errors=True)
@@ -188,7 +188,7 @@ def test_defaults():
     """RETURN: None. Effective values; the record keeps its Nones."""
     banner("effective = chosen, or the owner's default")
     directory = build_directory({
-        "test-t.py": '# hwut { title = "T"\n'
+        "test-t.py": '# @hwut { title = "T"\n'
                      '#        numeric = 0.25 }\n',
     })
     try:
@@ -211,8 +211,8 @@ def test_graph():
     reach of [MISDEP]."""
     banner("targets that exist; nothing unreachable")
     directory = build_directory({
-        "test-a.py":  '# hwut { title = "A"  choices = [\"one\", \"two\"] }\n',
-        "test-b.py":  '# hwut { title = "B" }\n',
+        "test-a.py":  '# @hwut { title = "A"  choices = [\"one\", \"two\"] }\n',
+        "test-b.py":  '# @hwut { title = "B" }\n',
         "hwut.conf":  'hwut {\n'
                       '    collision  = ["test-b.py", "test-a.py two"]\n'
                       '    dependency {\n'
@@ -226,7 +226,7 @@ def test_graph():
 
     banner("a target the directory does not offer")
     directory = build_directory({
-        "test-a.py":  '# hwut { title = "A"  choices = [\"one\", \"two\"] }\n',
+        "test-a.py":  '# @hwut { title = "A"  choices = [\"one\", \"two\"] }\n',
         "hwut.conf":  'hwut {\n'
                       '    collision  = ["test-ghost.py"]\n'
                       '    dependency {\n'
@@ -239,11 +239,11 @@ def test_graph():
 
     banner("a cycle, and what hangs off it")
     directory = build_directory({
-        "test-a.py":  '# hwut { title = "A" }\n',
-        "test-b.py":  '# hwut { title = "B" }\n',
-        "test-c.py":  '# hwut { title = "C" }\n',
-        "test-d.py":  '# hwut { title = "D" }\n',
-        "test-e.py":  '# hwut { title = "E" }\n',
+        "test-a.py":  '# @hwut { title = "A" }\n',
+        "test-b.py":  '# @hwut { title = "B" }\n',
+        "test-c.py":  '# @hwut { title = "C" }\n',
+        "test-d.py":  '# @hwut { title = "D" }\n',
+        "test-e.py":  '# @hwut { title = "E" }\n',
         "hwut.conf":  'hwut {\n'
                       '    dependency {\n'
                       '        "test-a.py" = ["test-c.py"]\n'

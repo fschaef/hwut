@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The report service face: one command packs one test whole."
 #     choices    = ["bare", "coverage", "flags", "pack", "raw"]
 #     eq-pattern = ["SUCCESS.*"]

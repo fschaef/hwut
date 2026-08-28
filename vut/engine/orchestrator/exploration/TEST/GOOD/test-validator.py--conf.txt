@@ -1,17 +1,4 @@
 
 --- a full hwut.conf ---
-on_entry 'setup.sh'  on_exit 'teardown.sh'  ignore ('*.gen.c', 'tmp-*')
-collision ['test-a.py', 'test-b.py two']
-dependency test-b.py        <- ['test-a.py']
-dependency test-c.py two    <- ['test-a.py', 'test-b.py one']
-language 'heartfun': interpreter 'heartfun' coverage None profiler None
-language 'python': interpreter 'python3.12 -u' coverage 'coverage run' profiler None
-app 'test-gen.c':
-title    'generated parser'  language None  origin CONF  at 18:21
-root:
-    build = Build(framework='make', executable=None, coverage_target=None, caps=None)
-choice 'one':
-    (nothing stated)
-choice 'two':
-    (nothing stated)
+FAULT hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block
 <hwut-end>

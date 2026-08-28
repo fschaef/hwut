@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Lines"
 #     choices    = ["analogies", "basic", "special", "visible-nothing"]
 # }

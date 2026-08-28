@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The front door and its ceremony"
 #     choices    = ["book", "busy", "goal", "lock", "recording",
 #                   "refused", "request", "setup", "sidecars", "target",

@@ -210,3 +210,100 @@ COST      One more module in display/. The alternative (growing
 VERIFIED  A pure refactor must move zero GOODs. All 14 display GOODs
           byte-exact after the move, the 'refused' choice -- which
           exercises all three rendering refusals -- included.
+
+
+D-9  THE FLOW LINE CARRIES WHAT WAS ASKED FOR, AND NAMES WHAT RAN
+
+PROBLEM   Every flow line opened with a clock and a job count nobody
+          had asked for, carried its badge in brackets and its choice
+          in braces, repeated the directory nickname on every line,
+          and announced the beginning of tests that had already
+          finished. Four columns of furniture around one fact.
+
+DECISION  THE COLUMNS ARE ASKED FOR. '--show-timing' gives seconds
+          (a suite is read in seconds; a column of zeroed hours says
+          nothing); '--show-jobs' gives '|3|', no blank inside the
+          bars. Absent both, the line carries the badge and the name.
+          THE BADGES LOSE THEIR BRACKETS and keep their alignment,
+          five characters wide. THE CHOICE LOSES ITS BRACES: it has a
+          column of its own, and a column needs no punctuation to say
+          where it begins.
+          THE LINE ELIDES, as a sorted wishlist does (disc-8): ':/'
+          where the directory repeats, ':/:' where the application
+          does. Columns are FIXED, not grown as names arrive -- a
+          width that widens mid-run moves every column under it.
+          SESSION AND BUILD ARE SILENT unless '--show-details', the
+          VERBOSE tier, or FAILURE: a failed precondition is a test
+          result, never a silence.
+          THE 'START' IS HELD '--start-delay' seconds, 2 by default.
+          A test finishing inside the window never announces its
+          beginning; one outliving it does, so a slow or hanging test
+          is visible while it stands. The consumer WAKES on its own
+          (run.py, TICK_SECONDS) -- a run that merely takes long
+          emits no event, and a held line nobody released would never
+          be seen.
+          A BROKEN SPECIFICATION IS A FAILING TEST, emitted like a
+          [MISDEP] node, counted in its directory and named in
+          FAILURES -- the same law that makes a failed BUILD a test
+          result rather than a suite-aborting precondition.
+          THE VERDICT TAG CARRIES A GROUND, white on green and white
+          on red; the phrase beside it does not. The tag is what an
+          eye SCANS for, and a block of colour is found at a glance
+          where a coloured word is read for.
+          THE WIDTH is the terminal's, held between 40 and 120: a
+          line drawn across a very wide terminal is a line the eye
+          must travel, and the dots stop joining name to verdict.
+
+COST      Every display GOOD moves. The default flow no longer shows
+          when a test ran, which '--show-timing' restores.
+
+VERIFIED  337 declared choices green across ten suite families.
+
+GRAVEYARD A FIXED 2-SECOND DELAY, unstatable -- rejected: whether a
+          line EXISTS would depend on the speed of the machine, which
+          is the one thing a GOOD file may never hold.
+
+
+D-10  THE RUN'S GOOD IS A DIGEST, AND THE DIGEST IS PART OF THE ORACLE
+
+PROBLEM   'hwut.run' launches in parallel, so the ORDER of its flow
+          is decided by a race. Order is not a fact about the
+          subject, and a GOOD that records it records the morning.
+
+DECISION  THE RUN SUITE RECORDS THROUGH A PYPE ('test-run.pype').
+          The digest collects the flow, EXPANDS the elision, SORTS on
+          (directory, application, choice), RE-ELIDES, and prints.
+          EXPANSION COMES FIRST because a live line elides against
+          ARRIVAL order: sorting lines still in that form would
+          attach ':/: two' to whichever run sorted above it. And only
+          then may it elide again -- ONLY A WRITER THAT SORTS MAY
+          ELIDE (disc-8), which is why the live flow's elision and
+          the digest's are different acts upon one notation.
+          THE DIGEST MASKS what belongs to the machine and the
+          morning: the timing column, the job column, machine paths,
+          the wall clock, and the DOTTED FILL -- whose length is the
+          width less the body, and whose body carries the live
+          elision mark, so two runs of one suite differed in nothing
+          but a count of dots.
+          IT MASKS NOTHING ELSE. Masking the clock is
+          deterministicalization; masking a verdict is blindness.
+          THE PYPE IS THEREFORE PART OF THE ORACLE, and a defect in
+          it is a defect in the oracle -- see
+          DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt, which
+          the developer's manual must carry.
+
+COST      What a person reads in the run suite's GOOD is the digest's
+          account, not literally what the terminal printed. The price
+          of determinism under parallel launch.
+
+VERIFIED  Byte-identical across '--jobs=1, 2, 4' and over three
+          consecutive runs. Three defects were caught by that check
+          and not by inspection: the varying dotted fill, a ':/:'
+          that named nothing where a run had no choice, and 'DIR'
+          lines printed on arrival while everything else was sorted.
+
+GRAVEYARD MASKING IN TWO PLACES, shell and pype -- rejected as
+          policy: one place, or the two disagree. The raw choices,
+          which no digest reads, are masked in the suite; the
+          digested ones in the pype; both swallow the same kinds of
+          fact.

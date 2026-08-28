@@ -1,0 +1,19 @@
+--- a label that does not stand, 'create' named
+STATUS: 2
+STDOUT {
+    REFUSED: no label 'cocnern' stands -- 'hwut.labels.create' makes a new one; this face only grows, so a typo cannot silently make a set nobody asked for
+}
+--- the universe
+STATUS: 2
+STDOUT {
+    REFUSED: 'all' is the universe of runs -- a keyword, never assigned
+}
+--- a wish that states nothing
+STATUS: 2
+STDOUT {
+    REFUSED: the wish states nothing, and a wish stating nothing wants EVERYTHING; growing a set by everything must be asked for in words -- '--label all'
+    hwut.labels.add <label> [--fail] [--pass] [--since=<point>] [--until=<point>]
+                    [--glob <target>]... [--exclude <target>]...
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [--label <expr>] [--directory=<path>]
+}

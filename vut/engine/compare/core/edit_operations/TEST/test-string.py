@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Strings"
 #     choices    = ["basic", "long"]
 # }

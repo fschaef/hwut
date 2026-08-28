@@ -5,6 +5,7 @@ $ hwut.plan --since=noon
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
                      [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--label <expr>] [<file-glob> [choice-glob]...]
                      [--directory=<path>]
     [status 2]
 
@@ -14,15 +15,17 @@ $ hwut.plan --fail --pass
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
                      [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--label <expr>] [<file-glob> [choice-glob]...]
                      [--directory=<path>]
     [status 2]
 
---- an argument the face does not take ---
-$ hwut.plan test-a.py
-    REFUSED: 'hwut.plan' does not take: test-a.py
+--- an OPTION the face does not take ---
+$ hwut.plan --sideways
+    REFUSED: 'hwut.plan' does not take: --sideways
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
                      [--exclude-dir <glob>]... [--wishlist <file>]...
+                     [--label <expr>] [<file-glob> [choice-glob]...]
                      [--directory=<path>]
     [status 2]
 <hwut-end>

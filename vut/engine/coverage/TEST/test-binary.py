@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The binary spelling of the coverage record"
 #     choices    = ["faults", "large", "measures", "witnessed"]
 #     eq-pattern = ["SUCCESS.*"]

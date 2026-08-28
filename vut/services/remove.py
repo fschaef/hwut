@@ -53,6 +53,7 @@ import sys
 from   vut.engine.bookkeeper.bookkeeper   import Bookkeeper, NO_CHOICE_KEY
 from   vut.engine.bookkeeper.stream_store import Store
 from   vut.engine.bookkeeper.test_id_db   import TestIdDb, TestIdFault
+from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
 
 USAGE = ("usage: hwut.remove <test> [<test>...] [--yes] "
@@ -166,6 +167,14 @@ def forget(store, test, choice, whole_test_f, write):
                 write("    register: not registered")
     except TestIdFault as error:
         write("    FAULT: register -- %s" % error)
+        good_f = False
+
+    #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'),
+    #  symmetric with the book and the register (E-12): a crash above
+    #  leaves an entry 'hwut.sanitize --orphans' can find -- never a
+    #  record silently pointing at nothing.
+    if not labels_forgotten(str(store.directory), test, choice,
+                            whole_test_f, write):
         good_f = False
     return good_f
 

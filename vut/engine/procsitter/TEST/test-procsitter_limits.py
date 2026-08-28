@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Procsitter resource containment with attribution"
 #     choices    = ["cancelled_run", "clean_under_caps", "command_guard",
 #                   "cpu_time", "disk_space_low", "disk_usage",

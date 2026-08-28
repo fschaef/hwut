@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Async Racing: is_equivalent Early Abort"
 #     choices    = ["jittery", "nominal-slow", "subject-slow"]
 # }

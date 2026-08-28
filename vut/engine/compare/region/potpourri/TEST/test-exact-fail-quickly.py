@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# hwut {
+# @hwut {
 #     title      = "FriendsPairing: fail quickly"
 #     choices    = ["analogy", "basic", "border", "wild"]
 # }

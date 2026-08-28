@@ -1,0 +1,4 @@
+STATUS: 3
+STDOUT {
+    EMPTY: the choice produced no output to read
+}

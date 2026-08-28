@@ -1,0 +1,40 @@
+--- all three views of a pyped test
+STATUS: 0
+STDOUT {
+    ===== RAW -- what the application produced ===================
+        pid 41288 started
+        value 7
+        <hwut-end>
+    
+    ===== PYPED -- what the pype produced ========================
+        pid <n> started
+        value 7
+        <hwut-end>
+    
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-pyped.sh ]================================== round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | pid <n> started
+         2    2 | value 7
+         3    3 | <hwut-end>
+    ============================================================
+}
+--- and where NO pype stands, the view says so
+STATUS: 0
+STDOUT {
+    ===== PYPED -- no pype stands for this stream ================
+        the subject IS the raw stream
+    
+    ===== SUBJECT -- what enters the comparator ==================
+    
+    =[ test-plainly.sh ]================================ round 1
+    setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+    reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+    --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+         1    1 | nothing filters me
+         2    2 | <hwut-end>
+    ============================================================
+}

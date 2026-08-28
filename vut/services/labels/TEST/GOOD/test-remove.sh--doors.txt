@@ -1,0 +1,15 @@
+--- a label that does not stand
+STATUS: 2
+STDOUT {
+    REFUSED: no label 'ghost' stands in 'hwut-root.labels'
+}
+--- a wish that states nothing; the remedy names the label
+STATUS: 2
+STDOUT {
+    REFUSED: the wish states nothing, and a wish stating nothing wants EVERYTHING; taking a label off everything -- deleting the set -- must be asked for in words: '--label concern'
+    hwut.labels.remove <label> [--fail] [--pass] [--since=<point>]
+                       [--until=<point>] [--glob <target>]...
+                       [--exclude <target>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--directory=<path>]
+}

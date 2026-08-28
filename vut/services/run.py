@@ -53,6 +53,7 @@ ______________________________________________________________________________
 import asyncio
 import os
 import sys
+from   datetime import datetime, timezone
 
 from   vut.engine.display.console                    import (HELP as RENDERING_HELP,
                                                              RenderingError,
@@ -63,9 +64,12 @@ from   vut.engine.display.console                    import USAGE_TOKEN_TUPLE \
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                     import RootConfMissing
+from   vut.services.labels                          import view_at
+from   vut.services.labels._file                    import LabelFileError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
-                                                             parse_wish)
+                                                             parse_wish,
+                                                             with_targets)
 from   vut.engine.orchestrator.run.dispatcher        import test_run_dispatcher_factory
 from   vut.engine.orchestrator.exploration.variant   import (name_tuple_of,
                                                              VariantError)
@@ -82,7 +86,8 @@ from   ._exit                                        import E_ExitCode
 
 USAGE = usage_line("usage: hwut.run",
                     WISH_TOKEN_TUPLE
-                    + ("[--no-store]", "[--timing]", "[--jobs=<n>]",
+                    + ("[<file-glob> [choice-glob]...]",
+                       "[--no-store]", "[--timing]", "[--jobs=<n>]",
                        "[--strategy=<name>]")
                         + RENDERING_TOKEN_TUPLE
                         + ("[--directory=<path>]",))
@@ -125,9 +130,16 @@ OTHER
     --help              this text"""
 
 
+#  How often the consumer wakes to offer the flow the clock. Short
+#  enough that a held START appears promptly, long enough to cost
+#  nothing.
+TICK_SECONDS = 0.25
+
+
 async def _drive(root, wish, record, worker_max_n, strategy, flow,
                  coverage=None, variant_tuple=(), timing_f=False,
-                 event_sink=None, despite_stain_f=False):
+                 event_sink=None, despite_stain_f=False,
+                 label_view=None, warn=None):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
             'flow' as each event arrived; the closing 'None' consumed,
@@ -142,10 +154,25 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow,
                              variant_tuple=variant_tuple,
                              timing_f=timing_f,
                              despite_stain_f=despite_stain_f),
-                         worker_max_n=worker_max_n, strategy=strategy)
+                         worker_max_n=worker_max_n, strategy=strategy,
+                         label_view=label_view, warn=warn)
     event_list = []
+    #  THE WAKE: a run that merely takes long emits no event, so a
+    #  flow holding its START line back would never release it. The
+    #  loop therefore wakes on its own and offers the flow the
+    #  current instant; a flow that holds nothing does nothing with
+    #  it.
+    tick = getattr(flow, "on_tick", None)
     while True:
-        item = await queue.get()
+        if tick is None:
+            item = await queue.get()
+        else:
+            try:
+                item = await asyncio.wait_for(queue.get(),
+                                              timeout=TICK_SECONDS)
+            except asyncio.TimeoutError:
+                tick(datetime.now(timezone.utc).isoformat())
+                continue
         if item is None: return event_list
         event_list.append(item)
         if event_sink is not None: event_sink(item)
@@ -221,9 +248,16 @@ def _main(argv, write, write_error, captured_f, demand=None,
     coverage     = None
     variant_text = ""
     timing_f     = False
-    worker_max_n = None
+    #  THE DEFAULT BOUND IS THE MACHINE'S OWN: more work standing at
+    #  once than the host has cores buys no throughput and costs
+    #  every test its share of the timing. '--jobs' overrides, above
+    #  or below -- the policy lives HERE, at the door a person reads,
+    #  and never inside 'CBudget', where 'None' honestly means 'no
+    #  bound at all'.
+    worker_max_n = os.cpu_count() or 1
     strategy     = strategy_of(DEFAULT_STRATEGY_NAME)
     unknown      = []
+    word_list    = []
     for argument in rest_list:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
@@ -252,8 +286,13 @@ def _main(argv, write, write_error, captured_f, demand=None,
                 write(USAGE)
                 return E_ExitCode.REFUSED
             worker_max_n = int(text)
-        else:
+        elif argument.startswith("-"):
             unknown.append(argument)
+        else:
+            #  THE SHORT FORM OF HWUT 1.0: 'hwut.run test-app.sh one'
+            #  -- sugar for a wish glob, globbing allowed in both
+            #  members ('wish.desugar_positional').
+            word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.run' does not take: %s"
               % ", ".join(sorted(unknown)))
@@ -277,6 +316,19 @@ def _main(argv, write, write_error, captured_f, demand=None,
     #  wire's paths stay relative to it either way.
     directory = os.path.abspath(directory)
 
+    wish = with_targets(wish, word_list)
+
+    #  THE LABEL VIEW, built at the tree's boundary before anything
+    #  runs: the silence must be determined, or refused, at the door.
+    try:
+        label_view = view_at(directory)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return E_ExitCode.FAULT
+
     #  The face knows its own sink; display knows what a terminal is
     #  worth. Tier, ink and width are decided there, once.
     tty_f = (not captured_f) and sys.stdout.isatty()
@@ -286,7 +338,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
         event_list = asyncio.run(
             _drive(directory, wish, record, worker_max_n, strategy,
                    flow, coverage, name_tuple_of(variant_text),
-                   timing_f, event_sink, despite_stain_f))
+                   timing_f, event_sink, despite_stain_f,
+                   label_view, write))
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

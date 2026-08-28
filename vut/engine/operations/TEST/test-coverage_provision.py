@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The coverage provision chain"
 #     choices    = ["harvested", "incomplete", "no_target", "not_asked",
 #                   "nothing_borne"]

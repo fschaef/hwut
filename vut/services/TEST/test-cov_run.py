@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "hwut.cov end to end"
 #     choices    = ["door", "run"]
 #     eq-pattern = ["SUCCESS.*"]
@@ -111,7 +111,7 @@ register(WitnessFramework())
 HEAD = '''\
 #! /usr/bin/env python3
 import json, os, sys
-# hwut { title = "%s" %s }
+# @hwut { title = "%s" %s }
 choice = [a for a in sys.argv[1:] if not a.startswith("--")]
 choice = choice[0] if choice else None
 if "--hwut-info" in sys.argv:

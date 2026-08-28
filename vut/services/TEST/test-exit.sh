@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The exit status law: one enum, every face relates."
 #     choices    = ["law"]
 #     eq-pattern = ["[0-9]+"]
@@ -45,7 +45,7 @@ PYEOF
 
 #  The stimuli, one directory each. ---------------------------------------
 mkdir -p ok_dir/GOOD
-printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
+printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\n' \
     > ok_dir/test-ok.sh
 chmod +x ok_dir/test-ok.sh
 printf 'steady line\n' > ok_dir/GOOD/test-ok.sh.txt
@@ -59,7 +59,7 @@ mkdir -p fault_dir
 printf 'hwut {\n    on_entry = "true"\n    on_exit = "true"\n    dependency { "test-a.sh" = ["test-b.sh"]  "test-b.sh" = ["test-a.sh"] }\n}\n' \
     > fault_dir/hwut.conf
 for name in a b; do
-    printf '#!/bin/bash\n# hwut { title = "T" }\necho x\n' \
+    printf '#!/bin/bash\n# @hwut { title = "T" }\necho x\n' \
         > "fault_dir/test-$name.sh"
     chmod +x "fault_dir/test-$name.sh"
 done
@@ -67,7 +67,7 @@ done
 mkdir -p run_ok/suite/TEST run_fault/suite/TEST
 cp -r ok_dir/.    run_ok/suite/TEST/
 cp -r fault_dir/. run_fault/suite/TEST/
-printf 'hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
+printf '@hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
     | tee run_ok/suite/TEST/hwut.conf > run_fault/suite/TEST/hwut.conf
 
 status() { "$@" > /dev/null 2>&1; echo -n "$?"; }

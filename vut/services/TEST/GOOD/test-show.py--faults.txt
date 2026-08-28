@@ -1,6 +1,6 @@
 
 --- the broken file alone ---
 $ hwut.show test-broken.py
-    test-broken.py:1:38: TYPE: 'numeric' must be a number
+    test-broken.py:1:39: TYPE: 'numeric' must be a number
     [status 1]
 <hwut-end>

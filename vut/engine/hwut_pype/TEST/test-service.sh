@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The pype service called as a shell citizen -- its natural habitat."
 #     choices    = ["absent_script", "exit_code", "filter"]
 #     eq-pattern = ["SUCCESS.*"]

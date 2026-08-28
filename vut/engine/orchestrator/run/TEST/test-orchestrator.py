@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Orchestrator: the report stream of a run"
 #     choices    = ["broken", "empty", "frame", "stream"]
 #     interactive = true
@@ -163,9 +163,9 @@ TWO_DIRECTORY_TREE = {
     "alpha/TEST/hwut.conf": 'hwut { on_entry = "prep.sh"\n'
                             '       dependency { "test-b.py" = '
                             '["test-a.py"] } }\n',
-    "alpha/TEST/test-a.py": '# hwut { title = "A"  build = "make" }\n',
-    "alpha/TEST/test-b.py": '# hwut { title = "B" }\n',
-    "beta/TEST/test-z.py":  '# hwut { title = "Z" }\n',
+    "alpha/TEST/test-a.py": '# @hwut { title = "A"  build = "make" }\n',
+    "alpha/TEST/test-b.py": '# @hwut { title = "B" }\n',
+    "beta/TEST/test-z.py":  '# @hwut { title = "Z" }\n',
 }
 
 
@@ -188,7 +188,7 @@ def test_broken():
         "alpha/TEST/hwut.conf":
             'hwut { dependency { "test-b.py" = ["test-a.py"]\n'
             '                    "test-m.py" = ["test-ghost.py"] } }\n',
-        "alpha/TEST/test-m.py": '# hwut { title = "M" }\n'}))
+        "alpha/TEST/test-m.py": '# @hwut { title = "M" }\n'}))
     try:
         banner("build broken; one case unsatisfiable")
         event_list = run(root, Wish(),

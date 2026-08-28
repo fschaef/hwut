@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The translation: stated parameters reach their owners"
 #     choices    = ["caps", "compare", "naming", "refused", "sweep"]
 #     interactive = true

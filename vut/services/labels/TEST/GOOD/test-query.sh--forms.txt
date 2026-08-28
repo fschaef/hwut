@@ -1,0 +1,18 @@
+--- '--expand': for eyes and for grep
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh one
+    ./tree/messaging/net/TEST/test-b.sh
+    ./tree/messaging/queue/TEST/test-a.sh one
+    ./tree/messaging/queue/TEST/test-b.sh
+    ./tree/storage/TEST/test-b.sh
+}
+--- '--labels': what each run carries; not a wishlist
+STATUS: 0
+STDOUT {
+    ./tree/messaging/net/TEST/test-a.sh one   : meta
+    ./tree/messaging/net/TEST/test-b.sh       : concern
+    ./tree/messaging/queue/TEST/test-a.sh one : meta
+    ./tree/messaging/queue/TEST/test-b.sh     : concern
+    ./tree/storage/TEST/test-b.sh             : concern
+}

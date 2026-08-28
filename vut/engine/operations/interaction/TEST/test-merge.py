@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The merge session: the UP half"
 #     choices    = ["cancel", "commit", "display_only", "empty_commit",
 #                   "envelope", "loop", "loop_pipe", "loop_realigns",

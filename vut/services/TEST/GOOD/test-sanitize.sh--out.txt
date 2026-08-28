@@ -1,0 +1,8 @@
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': out  (reporting only; '--apply' acts)
+    
+      out -- 1 found:
+          suite/TEST/OUT                                       the application's product space; 2 file(s), rewritten by the next run
+    
+}

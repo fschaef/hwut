@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Orthogonal Space Consistency Check"
 #     choices    = ["analogy", "leakage", "numeric", "potpourri",
 #                   "sudoku"]

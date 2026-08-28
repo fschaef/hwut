@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Configuration: declarations, slots, constraint relation"
 #     choices    = ["constraint_db", "declared", "edges", "namespace",
 #                   "slots"]

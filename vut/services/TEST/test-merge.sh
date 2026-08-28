@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The merge service face: channels, exit codes, the commit law."
 #     choices    = ["cancel", "commit", "stdout_artifact"]
 #     eq-pattern = ["SUCCESS.*"]

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Variant groups: dimensions of configuration"
 #     choices    = ["declared", "refused", "selected", "vocabulary"]
 #     eq-pattern = ["SUCCESS.*"]

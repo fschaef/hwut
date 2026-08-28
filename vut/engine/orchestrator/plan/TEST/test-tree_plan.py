@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Tree plan: one plan per directory, walk order"
 #     choices    = ["refused", "tree"]
 #     interactive = true
@@ -59,10 +59,10 @@ def tree_of():
     file_db = {
         "alpha/TEST/hwut.conf":  'hwut { dependency { "test-b.py" = '
                                  '["test-a.py"] } }\n',
-        "alpha/TEST/test-a.py":  '# hwut { title = "A"  build = '
+        "alpha/TEST/test-a.py":  '# @hwut { title = "A"  build = '
                                  '"make" }\n',
-        "alpha/TEST/test-b.py":  '# hwut { title = "B" }\n',
-        "beta/TEST/test-z.py":   '# hwut { title = "Z" }\n',
+        "alpha/TEST/test-b.py":  '# @hwut { title = "B" }\n',
+        "beta/TEST/test-z.py":   '# @hwut { title = "Z" }\n',
     }
     for relative, content in file_db.items():
         path = os.path.join(root, relative)

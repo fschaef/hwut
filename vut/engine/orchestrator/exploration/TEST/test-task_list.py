@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Task list: select, or refuse at the door"
 #     choices    = ["all", "named", "refused"]
 #     interactive = true
@@ -66,15 +66,15 @@ def build_app_set():
         "hwut.conf": 'hwut {\n'
                      '    dependency { "test-c.py y" = ["test-z.py"] }\n'
                      '}\n',
-        "test-a.py": '# hwut {\n#     title   = "A"\n'
+        "test-a.py": '# @hwut {\n#     title   = "A"\n'
                      '#     numeric = 0.01\n'
                      '#     caps    { timeout_sec = 30  network = false }\n'
                      '#     choices { one { }\n'
                      '#               two { numeric = 0.05\n'
                      '#                     caps { timeout_sec = 5 } } }\n'
                      '# }\n',
-        "test-b.sh": '# hwut { title = "B" }\n',
-        "test-c.py": '# hwut {\n#     title   = "C"\n'
+        "test-b.sh": '# @hwut { title = "B" }\n',
+        "test-c.py": '# @hwut {\n#     title   = "C"\n'
                      '#     choices = [\"x\", \"y\"]\n# }\n',
     }
     for name, content in file_db.items():

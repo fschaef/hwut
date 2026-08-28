@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Lines: Transposition and Visible Nothing"
 #     choices    = ["transpose", "visible-nothing"]
 # }

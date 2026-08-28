@@ -1,0 +1,16 @@
+--- half news, half already carrying
+STATUS: 0
+STDOUT {
+    concern: 1 added, 2 already carrying
+        + ./tree/storage/TEST/test-b.sh
+        = ./tree/messaging/net/TEST/test-b.sh
+        = ./tree/messaging/queue/TEST/test-b.sh
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
+    #  holds, a hand comment does not survive the next write.
+    ./tree/messaging/net/TEST/test-b.sh   : concern
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+    ./tree/storage/TEST/test-b.sh         : concern
+}

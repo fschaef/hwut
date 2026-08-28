@@ -1,0 +1,31 @@
+--- no such application
+STATUS: 2
+STDOUT {
+    REFUSED: nothing here answers 'test-nowhere.sh'; this directory offers: test-here.sh
+}
+--- no such choice
+STATUS: 2
+STDOUT {
+    REFUSED: nothing here answers 'test-here.sh nochoice'; this directory offers: test-here.sh
+}
+--- an option the face does not take
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.play' does not take: --sideways
+    hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
+              [--directory=<path>]
+}
+--- two words too many
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.play' plays ONE test, and one choice of it: <test-app> [<choice>]
+    hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
+              [--directory=<path>]
+}
+--- no application named at all
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.play' plays ONE test, and one choice of it: <test-app> [<choice>]
+    hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
+              [--directory=<path>]
+}

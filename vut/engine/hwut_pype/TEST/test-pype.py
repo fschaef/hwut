@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "pype line-matching language"
 #     choices    = ["anchors_repeat", "boundaries_stack", "compat",
 #                   "default_mode", "else_flush", "errors", "examples",

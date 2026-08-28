@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The interview: hwut 1.0 answers, and is read"
 #     choices    = ["block", "directory", "precedence", "procsitter",
 #                   "silence"]
@@ -122,7 +122,7 @@ def test_directory():
     directory = tempfile.mkdtemp(prefix="vut_interview_")
     file_db = {
         "otto-von-bismarck.bas": "REM an hwut 1.0 test application\n",
-        "test-modern.py":        '# hwut { title = "modern" }\n',
+        "test-modern.py":        '# @hwut { title = "modern" }\n',
         "not-a-test.dat":        "just data\n",
     }
     for name, content in file_db.items():
@@ -162,7 +162,7 @@ def test_precedence():
     banner("a header-carrying file and an 'apps' entry are never run")
     directory = tempfile.mkdtemp(prefix="vut_interview_")
     file_db = {
-        "test-header.py": '# hwut { title = "header speaks" }\n',
+        "test-header.py": '# @hwut { title = "header speaks" }\n',
         "legacy.bas":     "REM named under apps\n",
         "hwut.conf":      'hwut {\n'
                           '    apps { legacy.bas { title = "conf speaks" } }\n'

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Plan state: admission, supports, exclusion, ordering"
 #     choices    = ["admission", "exclusion", "ordering", "supports"]
 #     interactive = true

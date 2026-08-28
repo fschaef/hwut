@@ -684,3 +684,276 @@ GRAVEYARD '--format' on 'hwut.run' -- rejected with E-14: the run's
           run was fine.
           Failures shown only in place -- rejected by ruling: a list
           at the end is what a reader scrolls to.
+
+----------------------------------------------------------------------------
+E-18  'hwut.sanitize' -- REPORTS BY DEFAULT; NEVER GUESSES AT BLESSED WORK
+----------------------------------------------------------------------------
+PROBLEM   A tree accumulates: sessions that did not finish, locks whose
+          holder is gone, 'OUT/' from last week, records naming cases
+          nobody offers. Nothing found any of it, and nothing could
+          call the project's own 'clean'.
+
+DECISION  'hwut.sanitize [<wish>] [--apply] [--target <name>]...'.
+          IT REPORTS AND DOES NOT ACT; '--apply' is the whole
+          difference, because the answers here are IRREVERSIBLE.
+
+          FIVE ASPECTS, none stated meaning all -- EXCEPT the targets,
+          which are never implied: running somebody's script is an act
+          nobody asked for.
+
+            --session  wreckage; nothing reads it between runs
+            --lock     a lock WHOSE HOLDER IS GONE. A LIVE LOCK IS
+                       NEVER TOUCHED, not even under '--apply'. The
+                       liveness is asked through the mutex's OWN
+                       predicate, so this face and the runner cannot
+                       disagree about who is alive.
+
+                       AND A CLAIM THAT CANNOT NAME ITS CLAIMANT IS
+                       GONE (ruled 2026-08-27): a record with no start
+                       time, one of the wrong shape, or none at all
+                       cannot be compared against any process -- so
+                       honoured, NO FUTURE RUN AND NO CLEANING COULD
+                       EVER BREAK IT, and the directory is blocked for
+                       ever. An unreadable claim and an absent one are
+                       the same claim, and the code already answered
+                       the absent one that way.
+            --out      the application's scratch
+            --orphans  records naming a case nobody offers
+            --target   the PROJECT'S OWN verb, in every directory that
+                       binds it (E-7). A target NO DIRECTORY BINDS is
+                       REFUSED BY NAME: a misspelt 'clen' that quietly
+                       does nothing is worse than one that stops.
+
+          THE ORPHAN GUARD, which is the ruling that matters: A RECORD
+          IS NEVER AN ORPHAN WHERE EXPLORATION CANNOT SEE THE
+          APPLICATION AND THE FILE STILL STANDS. It is UNREACHABLE --
+          the mending is in the configuration, not in the blessed
+          work.
+
+          MEASURED ON THIS TREE, and this is why the guard exists:
+          without it '--apply' would have deleted NINE blessed
+          nominals -- 'regression-1.py', 'regression-2.py',
+          'regression-3.py', 'verify_signature.sh' -- applications
+          hwut 1.0 runs and VUT 2.0 cannot yet see because their
+          'hwut-info.dat' is unread (disc-6, r-2).
+
+          THE GUARD IS NARROW. Where exploration DOES offer the
+          application and has no such CHOICE, the record is a reliable
+          orphan: the configuration was read, understood, and does not
+          name it.
+
+          AND ORPHANS ARE NOT JUDGED AT ALL where exploration raised a
+          fault, or where the wish hides cases -- a tree that cannot be
+          read cannot say what it offers, and hidden cases would look
+          orphaned. (Ruled 2026-08-27.)
+
+COST      One face that must know every kind of record the framework
+          writes; a record name it cannot parse is passed over, which
+          is the safe way to be wrong.
+
+GRAVEYARD ACTING BY DEFAULT -- rejected: a GOOD file deleted by a tool
+          that guessed is gone.
+          THE FRAMEWORK CLEANING A PROJECT'S OWN LEAVINGS -- rejected:
+          it does not know what they are; the project says so through
+          a target.
+          A 'test-' PREFIX as the gate for 'is this a record' --
+          rejected: this tree holds 'regression-1.py' and
+          'verify_signature.sh', and the gate would pass over their
+          records in silence. The gate is a SOURCE EXTENSION in the
+          test part.
+
+E-19  LABELS -- SETS OF RUNS IN ONE FILE; THE NAMING LAW'S DOTTED CLAUSE
+
+PROBLEM   Suites hold tests about the SUITE ('meta' -- every GOOD ends
+          in the terminal) that have no business in the run a person
+          makes after changing the product; and authors need durable,
+          nameable SETS of runs ('concern', 'slow') that a wish can
+          ask for. Where does membership live, and through which
+          faces?
+
+DECISION  ONE FILE, 'hwut-root.labels', beside 'hwut-root.conf' at
+          the boundary the configuration climb ends at: literal
+          targets only, sorted, elided, rewritten whole; absent means
+          no label exists, which is not an error. FIVE FACES,
+          'hwut.labels.create/add/remove/list/query' -- the naming
+          law gains its dotted clause: a dotted launcher name is a
+          package. '--label <expr>' joins THE WISH, one parser for
+          every face; the GRAMMAR ('AND', 'OR', 'NOT', 'all'; ',' is
+          'OR') lives with the engine ('plan/label.py') because the
+          selection evaluates it; the file's reader and writer are
+          the faces' own ('services/labels/_file.py'). ABSENT A LABEL
+          QUESTION, the standard label 'meta' is SILENT -- and the
+          silence is THE WISH'S, not one face's, or 'hwut.wishlist'
+          and 'hwut.run --wishlist' would select different sets and
+          the disc-5 round trip would not close. A face the label
+          view does not reach REFUSES '--label' rather than guessing.
+          'create' refuses a label that stands; 'add' refuses one
+          that does not: A TYPO MUST NOT SILENTLY MAKE OR GROW THE
+          WRONG SET. All three writers refuse a wish that states
+          nothing: enrolling or stripping EVERYTHING must be asked
+          for in words ('--label all', '--label <label>'). A glob
+          that met only silenced runs draws a WARNING naming it: the
+          silence must speak where it swallows an explicit match.
+          The whole design: services/DISCUSSIONS/disc-8-labels.txt.
+
+COST      Every selection that would honour labels must be HANDED the
+          view -- construction sites change one by one (the label
+          faces first; 'run', 'plan' and the rest follow). The file
+          is rewritten whole, so a hand comment does not survive a
+          write.
+
+GRAVEYARD SELF-LABELLING IN THE TEST HEADER -- rejected: no set from
+          a query, no labelling of tests one does not own, no single
+          file saying what sets exist.
+          GLOBS STORED IN THE FILE -- rejected: the file would hold
+          two truths, the pattern and the snapshot the next write
+          turns it into.
+          'hwut.labels-add' AND 'hwut.labels add' -- rejected: five
+          hyphen-launchers collide with '-' <=> '_'; a face with a
+          verb is a shape no face has.
+          '--group' -- rejected: the file is 'hwut-root.labels';
+          two words for one thing is what terminological invariance
+          forbids.
+
+E-20  THE LABELS GO LIVE -- THE VIEW IN EVERY WISH; NAMES FOLLOWED
+
+PROBLEM   E-19 delivered the file and its faces, but '--label'
+          reached no selecting face and the standard label silenced
+          nothing: a parsed option that does not act is a lie waiting
+          to be believed. And a rename or removal that the labels
+          file does not follow loses a member SILENTLY -- unlabelled
+          looks exactly like never labelled.
+
+DECISION  'view_at(directory)' ('services/labels/__init__.py') is THE
+          ONE DOOR a face obtains the view through; 'hwut.plan',
+          'hwut.wishlist', 'hwut.report' and 'hwut.accept' build it
+          at their doors, and 'hwut.run' threads it through
+          'orchestrator' -> 'orchestrate' -> 'determine_tree', which
+          also serves 'hwut.cov' and 'hwut.stability' riding
+          'run.main'. 'RootConfMissing' is the face's REFUSED,
+          'LabelFileError' its FAULT, and it does not run. THE LAWS
+          OF EMPTINESS STAND: an empty command line takes all
+          available; an empty wishlist FILE is an empty wish, nothing
+          to do; and a view assigning the standard label nowhere
+          imposes NOTHING -- the selection walks the very path, byte
+          for byte, it walked before labels existed
+          ('CLabelView.silences_f' guards the fast path).
+          'services/_follow.py' is THE ONE PLACE a changed or
+          forgotten name reaches the boundary records, called LAST by
+          'hwut.rename', 'hwut.rename-choice', 'hwut.remove' and
+          'hwut.remove-choice': a crash above leaves an entry loud
+          and findable (E-18), never one silently pointing at
+          nothing; a stale-entry collision is a FAULT, not a merge.
+          'hwut.show' answers section 6: an '==[ LABELS ]' section,
+          the silent entries marked -- because the failure mode of
+          every label mechanism is a test that silently does not run.
+
+COST      Every future face that selects through a wish must hand the
+          view down or its '--label' refuses -- deliberate: refused,
+          never silently ignored. 'hwut.accept' under a bare wish no
+          longer touches what the standard label silences; blessing a
+          silenced GOOD asks for '--label' in words.
+
+GRAVEYARD THE ENGINE READING 'hwut-root.labels' ITSELF -- rejected:
+          data flows into the engine, the engine imports nothing
+          back; one reader, owned by the faces.
+          LIFTING THE SILENCE BY EXPLICIT TARGET -- still open
+          (disc-8, fork b); the warning speaks meanwhile.
+
+E-21  THE SHORT FORM OF HWUT 1.0; AN EXPLICIT TARGET OVERRIDES
+
+PROBLEM   Two things HWUT 1.0 had and 2.0 had lost or never gained.
+          FIRST, 'hwut test-app choice' -- the shortest thing a
+          person types all day -- lived in 'hwut.accept' alone, and
+          every other face refused a bare word by name. SECOND, a
+          face could NAME a run and then decline to act on it: the
+          standard label's silence hid what 'hwut.accept
+          test-meta.sh' explicitly asked for, which is the silent
+          failure labels exist to prevent, arriving from the other
+          side.
+
+DECISION  THE SHORT FORM MOVES TO THE WISH ('desugar_positional',
+          'with_targets' in 'plan/wish.py'): the first word names
+          files, every further word a choice, globbing in both, and
+          it is SUGAR FOR '--glob' -- one selection language, so the
+          short form can never mean what the long form cannot say.
+          'hwut.run', 'hwut.plan', 'hwut.wishlist', 'hwut.report' and
+          'hwut.accept' take it; 'hwut.stability' and 'hwut.cov'
+          inherit it by forwarding their words to 'hwut.run'. A face
+          whose bare words already mean something else --
+          'hwut.rename', 'hwut.labels.create', 'hwut.show' -- does
+          not call it: the sugar is a thing a face ASKS FOR, never a
+          thing 'parse_wish' does behind its back.
+          AN EXPLICIT LITERAL TARGET OVERRIDES THE SILENCE
+          ('literal_target_f'): the silence is what a wish carries
+          when it asks nothing, and a named run is not nothing. A
+          GLOB DOES NOT -- the same line 'hwut-root.labels' draws by
+          holding literal targets only -- and where a glob's every
+          match is silenced it draws a WARNING naming the remedy, in
+          EVERY face ('swallowed_warning_tuple', accumulated over the
+          whole walk through 'CTestTaskListQuery.glob_reach' and
+          carried on 'CTreePlan.warning_tuple'). No face is special,
+          'hwut.accept' least of all: were it to read targets
+          differently, one wishlist file would select two sets and
+          the disc-5 round trip would break.
+
+COST      A bare word is no longer refused, so a mistyped word is a
+          target that selects nothing rather than a refusal by name.
+          An unknown OPTION is still refused, which is where typos
+          mostly land. The warning makes the quiet case speak.
+
+GRAVEYARD '--force-also-meta' -- rejected: '--label meta', '--label
+          all' and a literal target already say it.
+          ANY STATED TARGET OVERRIDING, globs included -- rejected:
+          '--glob "*"' would then run what a bare wish does not.
+          THE SUGAR INSIDE 'parse_wish' -- rejected: it would swallow
+          the words of every face that has its own.
+
+
+E-22  'hwut.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A TEST
+
+PROBLEM   'hwut.compare FILE' shows how compare READS a stream, but
+          under the command line's setup. An author asking 'why did
+          the framework not see these two numbers as equal' needs the
+          reading under THE TEST'S OWN setup -- and had no way to ask
+          that did not also produce a verdict and a record.
+
+DECISION  A face, 'hwut.play <test-app> [<choice>]', BUILT AS WIRING
+          over bricks that already exist and owning no ceremony of
+          its own: the wish and 'CTestTaskListQuery' say which run is
+          meant; 'provision_of' builds, launches, contains, collects
+          and CANONICALISES -- the very provision a run consumes;
+          compare's reading interprets; 'TuiDisplay' displays. What
+          play shows is what a run compares BY CONSTRUCTION.
+          THREE VIEWS, each a named region '===== <name> =====': the
+          SUBJECT by default (what enters the comparator, under the
+          reading), '--raw' what the application produced, '--pyped'
+          what the pype made of it.
+          PLAY JUDGES NOTHING AND RECORDS NOTHING; IT RENDERS.
+          No nominal is read, no Bookkeeper is made, no result is
+          written, nothing is stored. 'hwut.run' judges and records,
+          and the distinction is the whole point: ASKING MUST NOT
+          BECOME A RESULT.
+          This closes the seam '_core.py' names -- a service run
+          inside a test run receives that Configuration object
+          directly; play is the command line's way to stand inside.
+          The four forks of disc-4 are ruled there: refuse rather
+          than guess a choice; stderr shown only when asked and
+          always marked untested (E-5); a failed build named and
+          stopped upon; the directory mutex held while the author's
+          program runs.
+
+COST      Play runs the author's program, so it holds the directory
+          and cannot be used while a run holds it. The stream is not
+          kept: what a run would store, play shows and forgets.
+
+VERIFIED  Six choices recorded. The 'reading' choice lists the
+          directory afterwards and finds it unchanged, which is the
+          claim 'records nothing' made testable.
+
+GRAVEYARD PLAYING 'THE FIRST' CHOICE where several stand and none is
+          named -- rejected: it runs the author's program under a
+          choice nobody asked for.
+          A '--record' FLAG -- rejected: a face that may record is a
+          face whose output an author must think twice about. That
+          face exists, and is called 'hwut.run'.

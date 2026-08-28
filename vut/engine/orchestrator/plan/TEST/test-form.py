@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Plan form: nodes, links, exclusions, laws at the door"
 #     choices    = ["closure", "derived", "nodes", "refused", "stage"]
 #     interactive = true

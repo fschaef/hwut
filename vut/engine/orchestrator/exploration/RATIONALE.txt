@@ -1334,3 +1334,48 @@ GRAVEYARD 'variant_group cov { ... }' as a two-word HOCON key: it
          Qualified selection ('--variant=cov:gcov'): unnecessary once
          names are unique, and unique names are one more disjointness
          the author declares.
+
+
+R-72  THE MARKER IS '@hwut {' -- A SIGIL, NOT A KEY
+
+PROBLEM   The region opened at the first 'hwut' followed by a brace,
+          anywhere in the file. But 'hwut {' occurs in prose, in a
+          README, in a shell line that calls the tool, and in a
+          document that describes the format -- and every such
+          occurrence made the file a test application by accident.
+
+DECISION  The marker is '@hwut {'. ONE regex, in
+          'source_file_detector.py'.
+
+          THE '@' IS A SIGIL THAT FINDS THE BLOCK, NOT PART OF THE
+          BLOCK'S GRAMMAR. 'unwrapper.unwrap' drops it before the
+          parser sees anything, so what reaches HOCON reads
+          'hwut { ... }' in a source file exactly as it does in a
+          '.conf'. One validator, one vocabulary, one block -- the
+          sigil answers only 'where does it begin, in a file that is
+          mostly something else'. 'region.i_marker' keeps pointing at
+          the '@', so a fault names the marker as a person sees it.
+
+          '.conf' FILES KEEP THE BARE 'hwut {'. They are read whole
+          ('reader.read_conf'), never scanned for a region, so
+          nothing in them can be mistaken for anything else. This
+          extends to every place a conf block is WRITTEN OR QUOTED:
+          a fixture that builds an 'hwut.conf', a help text that
+          shows one, a document that explains one.
+
+COST      Every existing test application must gain the character.
+          121 files in this tree; HWUT 1.0 suites meet the same sweep
+          at migration.
+
+VERIFIED  Seven GOODs move, all in 'test-detector_unwrapper', whose
+          whole subject IS the marker -- and one of them now records
+          that a bare 'hwut {' opens no region, which is the change's
+          entire purpose. No other GOOD in the tree contains the
+          marker text.
+
+GRAVEYARD ACCEPTING BOTH FORMS -- rejected: the bare form is what
+          causes the trouble, and a format that accepts the ambiguous
+          spelling has not removed the ambiguity.
+          '@hwut' AS THE HOCON KEY -- rejected: the source block and
+          the conf block would then be two vocabularies, and a
+          validator would have to know which file it was reading.

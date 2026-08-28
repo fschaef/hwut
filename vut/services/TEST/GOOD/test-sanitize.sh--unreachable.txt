@@ -1,0 +1,7 @@
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': orphans
+    
+      nothing to sanitize
+}
+the nominal still stands: yes

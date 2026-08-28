@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Provision: execute, canonicalise, and the loaded read"
 #     choices    = ["absent_application", "argv", "canonicalisation",
 #                   "canonicaliser_broken", "containment", "loaded",

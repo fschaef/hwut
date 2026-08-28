@@ -29,8 +29,12 @@ import os
 from datetime import datetime, timezone
 
 from ..plan.wish    import cutoff_instant
+from ..plan.label   import (STANDARD_LABEL, evaluate_f,
+                            label_name_tuple, literal_target_f,
+                            parse_expression)
 from .configuration_tree import CTestCaseSequence
-from .task_list     import CTestTaskList, CTestTaskListAll
+from .task_list     import (CTestTaskList, CTestTaskListAll,
+                            SelectionError)
 
 
 RUN_OPERATION = "Run"
@@ -42,7 +46,7 @@ class CTestTaskListQuery(CTestTaskList):
     different kinds are AND'ed."""
 
     def __init__(self, wish, bookkeeper=None, now=None, directory=None,
-                 root=None):
+                 root=None, label_view=None):
         """
         RETURN: CTestTaskListQuery over 'wish'.
 
@@ -70,25 +74,51 @@ class CTestTaskListQuery(CTestTaskList):
                       common form. 'None' where no absolute target can
                       arise.
 
+        'label_view'  what 'hwut-root.labels' assigns (CLabelView,
+                      plan/label.py), built by the file's reader and
+                      handed down. Required where the wish asks a
+                      LABEL question; where handed at all, the query
+                      SILENCES the standard label: a wish that asks no
+                      label does not want what 'meta' labels (disc-8).
+                      'None' means NO LABEL KNOWLEDGE REACHES HERE --
+                      no silence, and a '--label' wish is REFUSED
+                      rather than answered by guessing.
+
         Raises AssertionError where a base question stands without a
         Bookkeeper -- refused at the door, not answered by guessing.
         """
         assert bookkeeper is not None or not wish.asks_base_f(), \
                "the wish asks the base (%s) and no Bookkeeper was " \
                "handed down" % wish
+        assert label_view is None \
+               or (directory is not None and root is not None), \
+               "a label view is handed to a query that does not " \
+               "know its place (directory and root)"
         self.wish       = wish
         self.bookkeeper = bookkeeper
         self.now        = now
         self.directory  = directory
         self.root       = root
+        self.label_view = label_view
+        self.label_tree = None
+        self.label_settled_f = False
 
     def get_test_cases(self, app_set):
         """
         RETURN: CTestCaseSequence, the cases of 'app_set' that answer
                 every question the wish asks -- empty where none does.
         """
+        self._settle_label()
         every = CTestTaskListAll().get_test_cases(app_set)
-        if self.wish.states_nothing_f(): return every
+        #  A wish stating nothing takes ALL AVAILABLE -- unless a
+        #  standard label stands somewhere, for then 'available' is
+        #  itself the question. An empty or silence-free view is NO
+        #  VIEW for this purpose, so a tree that labels nothing walks
+        #  the very path it walked before labels existed.
+        if self.wish.states_nothing_f() \
+           and (self.label_view is None
+                or not self.label_view.silences_f()):
+            return every
         return CTestCaseSequence(tuple(case for case in every
                                        if self._wanted_f(case)))
 
@@ -97,6 +127,7 @@ class CTestTaskListQuery(CTestTaskList):
         RETURN: bool, True where the case answers every question the
                 wish asks.
         """
+        if self._label_hidden_f(case):                      return False
         if self._excluded_f(case):                          return False
         if self.wish.asks_glob_f() and not self._glob_hit_f(case):
             return False
@@ -124,6 +155,61 @@ class CTestTaskListQuery(CTestTaskList):
             cutoff = cutoff_instant(self.wish.until_spec, self._now())
             if instant is None or instant >= cutoff:        return False
         return True
+
+    def _settle_label(self):
+        """
+        RETURN: None. Settles the wish's label question, once, at the
+                first selection -- inside 'get_test_cases', which is
+                the one door every face already guards.
+
+        Raises SelectionError where the wish asks a label question and
+        no label view was handed down -- refused, not silently
+        answered with everything -- or where it names a label that
+        does not stand, BY NAME: a misspelt label silently naming
+        nothing is how an author comes to believe a set is empty.
+        """
+        if self.label_settled_f: return
+        self.label_settled_f = True
+        if not self.wish.asks_label_f(): return
+        if self.label_view is None:
+            raise SelectionError(
+                "'--label %s' asks 'hwut-root.labels', and no label "
+                "view reaches this selection" % self.wish.label_spec)
+        self.label_tree = parse_expression(self.wish.label_spec)
+        unknown = [name for name in label_name_tuple(self.label_tree)
+                   if name not in self.label_view.defined]
+        if unknown:
+            raise SelectionError(
+                "no label '%s' stands in 'hwut-root.labels'"
+                % "', '".join(unknown))
+
+    def _label_hidden_f(self, case):
+        """
+        RETURN: bool, True where the labels hide the case: the wish's
+                label expression does not name it -- or, where the
+                wish asks NO label, the standard label 'meta' does.
+                False where no label view reaches this query: no
+                knowledge, no silence.
+
+        THE SILENCE IS THE WISH'S, not one face's: a wish that asks no
+        label does not want what 'meta' labels, and every face that
+        selects through a wish is silent alike -- else 'hwut.wishlist'
+        and 'hwut.run --wishlist' would select different sets and the
+        disc-5 round trip would no longer close.
+        """
+        if self.label_view is None: return False
+        where = os.path.normpath(os.path.join(
+                    self.root, self.directory, case.source_file))
+        label_set = self.label_view.label_set_of(where, case.choice)
+        if self.label_tree is not None:
+            return not evaluate_f(self.label_tree, label_set)
+        if STANDARD_LABEL not in label_set:      return False
+        #  AN EXPLICIT TARGET DOMINATES THE SILENCE (disc-8): the
+        #  silence is what a wish carries when it asks NOTHING, and a
+        #  named run is not nothing. A face that names a run and then
+        #  passes it by is the silent failure this whole feature
+        #  exists to prevent, arriving from the other side.
+        return not self._named_literally_f(case)
 
     def _now(self):
         """
@@ -179,6 +265,52 @@ class CTestTaskListQuery(CTestTaskList):
         return any(fnmatch.fnmatchcase(part, glob_text)
                    for part in where.split("/"))
 
+    def _named_literally_f(self, case):
+        """
+        RETURN: bool, True where a LITERAL target of the wish names
+                the case -- the file alone, which names every choice
+                of it, or file and choice together.
+
+        A glob does not count ('literal_target_f'): where it meets
+        only silenced runs it draws a WARNING instead
+        ('glob_reach'), so nothing is ever quietly passed by.
+        """
+        for text in self.wish.glob_tuple:
+            if not literal_target_f(text):        continue
+            if self._target_hit_f(case, text):    return True
+        return False
+
+    def glob_reach(self, app_set):
+        """
+        RETURN: [0] frozenset[str], every glob of the wish that met at
+                    least one case here, the labels disregarded.
+                [1] frozenset[str], those of them that met at least
+                    one case the labels leave VISIBLE.
+
+        A caller unions both over the whole walk before it judges: a
+        glob silenced in one directory may stand plainly in the next,
+        and a warning about it there would be a lie.
+        """
+        met     = set()
+        visible = set()
+        for case in CTestTaskListAll().get_test_cases(app_set):
+            for text in self.wish.glob_tuple:
+                if not self._target_hit_f(case, text): continue
+                met.add(text)
+                if not self._label_hidden_f(case): visible.add(text)
+        return frozenset(met), frozenset(visible)
+
+    def _target_hit_f(self, case, text):
+        """
+        RETURN: bool, True where the one target 'text' names the case.
+        """
+        choice = "" if case.choice is None else case.choice
+        file_glob, _, choice_glob = text.partition(" ")
+        if not self._file_hit_f(case, file_glob.strip()): return False
+        choice_glob = choice_glob.strip()
+        if not choice_glob:                               return True
+        return fnmatch.fnmatchcase(choice, choice_glob)
+
     def _glob_hit_f(self, case):
         """
         RETURN: bool, True where any glob of the wish names the case.
@@ -198,14 +330,8 @@ class CTestTaskListQuery(CTestTaskList):
         here, and answering it by ignoring the path would select the
         right file in the wrong place.
         """
-        choice = "" if case.choice is None else case.choice
-        for text in self.wish.glob_tuple:
-            file_glob, _, choice_glob = text.partition(" ")
-            if not self._file_hit_f(case, file_glob.strip()): continue
-            choice_glob = choice_glob.strip()
-            if not choice_glob:                            return True
-            if fnmatch.fnmatchcase(choice, choice_glob):   return True
-        return False
+        return any(self._target_hit_f(case, text)
+                   for text in self.wish.glob_tuple)
 
     def _file_hit_f(self, case, file_glob):
         """

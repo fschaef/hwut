@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "UI Feeder Protocol (Comprehensive)"
 #     choices    = ["potpourri", "structure", "types"]
 #     interactive = true

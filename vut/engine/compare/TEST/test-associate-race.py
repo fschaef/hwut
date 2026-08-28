@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Async Racing: associate Stream Flow"
 #     choices    = ["jittery", "nominal-slow", "subject-slow"]
 # }

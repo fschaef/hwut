@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "hwut.parse: what the framework read"
 #     choices    = ["directory", "faults", "file", "no_default",
 #                   "origins", "places"]
@@ -104,7 +104,7 @@ def show_directory(label, file_db, runner=None):
 def test_file():
     """RETURN: None. One file, every parameter shown."""
     show_file("a file with two choices",
-              {"test-a.py": '# hwut {\n'
+              {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
                             '#     numeric = 0.01\n'
                             '#     caps    { timeout_sec = 30 }\n'
@@ -119,7 +119,7 @@ def test_file():
 
 def test_no_default():
     """RETURN: None. With and without the values nobody stated."""
-    file_db = {"test-a.py": '# hwut {\n'
+    file_db = {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
                             '#     numeric = 0.01\n'
                             '#     caps    { timeout_sec = 30 }\n'
@@ -150,7 +150,7 @@ def test_origins():
     """RETURN: None. Every annotation the printer uses."""
     show_directory("every provenance in one directory",
                    {"legacy.bas": "REM an hwut 1.0 application\n",
-                    "test-own.py": '# hwut {\n'
+                    "test-own.py": '# @hwut {\n'
                                    '#     title   = "own"\n'
                                    '#     numeric = 0.01\n'
                                    '#     choices { two { numeric = 0.05 } }\n'
@@ -170,7 +170,7 @@ def test_origins():
 
 def test_places():
     """RETURN: None. The two ways of naming a place."""
-    file_db = {"test-a.py": '# hwut {\n'
+    file_db = {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
                             '#     numeric = 0.01\n'
                             '#     caps    { timeout_sec = 30 }\n'
@@ -197,9 +197,9 @@ def test_places():
 def test_directory():
     """RETURN: None. Directory keys, applications, unreachable cases."""
     show_directory("the whole directory",
-                   {"test-a.py": '# hwut { title = "A"\n'
+                   {"test-a.py": '# @hwut { title = "A"\n'
                                  '#        choices = ["one", "two"] }\n',
-                    "test-b.py": '# hwut { title = "B" }\n',
+                    "test-b.py": '# @hwut { title = "B" }\n',
                     "hwut.conf": 'hwut {\n'
                                  '    on_entry  = "setup.sh"\n'
                                  '    collision = ["test-b.py"]\n'
@@ -213,7 +213,7 @@ def test_directory():
 def test_faults():
     """RETURN: None. A specification that does not parse."""
     show_file("a header with a fault prints no tree",
-              {"test-bad.py": '# hwut {\n'
+              {"test-bad.py": '# @hwut {\n'
                               '#     title   = "Bad"\n'
                               '#     numeric = 1.5\n'
                               '#     pype    = unquoted\n'

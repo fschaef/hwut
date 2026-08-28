@@ -1,20 +1,20 @@
 STATUS: 2
 STDOUT {
     REFUSED: the wishlist 'tree/nowhere.txt' cannot be read -- [Errno 2] No such file or directory: 'tree/nowhere.txt'
-    hwut.wishlist [<wish>] [--directory=<path>]
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: '--wishlist' stands without a file
-    hwut.wishlist [<wish>] [--directory=<path>]
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: 'hwut.wishlist' does not take: --sideways
-    hwut.wishlist [<wish>] [--directory=<path>]
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: the directory 'nowhere' does not exist
-    hwut.wishlist [<wish>] [--directory=<path>]
+    hwut.wishlist [<wish>] [<file-glob> [choice-glob]...] [--directory=<path>]
 }

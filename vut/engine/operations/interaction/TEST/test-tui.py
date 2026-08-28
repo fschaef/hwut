@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The TUI tier"
 #     choices    = ["display_only", "editor_loop", "elements", "reading",
 #                   "regions", "rendering", "target_wiring",

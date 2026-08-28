@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Wish: keywords read, cases selected"
 #     choices    = ["anchors", "base", "globs", "parsing", "refused"]
 #     interactive = true
@@ -87,10 +87,10 @@ def build_directory():
     """
     directory = tempfile.mkdtemp(prefix="vut_wish_")
     file_db = {
-        "test-a.py":   '# hwut { title = "A"  choices = ["one", "two"] }\n',
-        "test-b.py":   '# hwut { title = "B" }\n',
-        "test-net.py": '# hwut { title = "Net" }\n',
-        "quick-3.py":  '# hwut { title = "Q"  choices = ["one"] }\n',
+        "test-a.py":   '# @hwut { title = "A"  choices = ["one", "two"] }\n',
+        "test-b.py":   '# @hwut { title = "B" }\n',
+        "test-net.py": '# @hwut { title = "Net" }\n',
+        "quick-3.py":  '# @hwut { title = "Q"  choices = ["one"] }\n',
     }
     for name, content in file_db.items():
         with open(os.path.join(directory, name), "w") as fh:

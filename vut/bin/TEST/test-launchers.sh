@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The launcher roof: every shim answers with its face's voice."
 #     choices    = ["answer", "path"]
 # }
@@ -33,7 +33,7 @@ esac
 
 FACE_LIST="show plan run accept target cov compare merge tell
            stability wishlist report remove remove-choice
-           rename rename-choice"
+           rename rename-choice sanitize"
 
 first_line() { grep -m1 -v '^[[:space:]]*$'; }
 

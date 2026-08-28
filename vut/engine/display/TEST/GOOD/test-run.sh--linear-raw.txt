@@ -1,18 +1,14 @@
 == --strategy=linear --jobs=1 ==
 STATUS: 1
 STDOUT {
-    hh:mm:ss | 000 | [DIR  ] ALPH = alpha/TEST
-    hh:mm:ss | 001 | [START] ALPH:test-one.sh
-    hh:mm:ss | 000 | [END  ] ALPH:test-one.sh ............................... [OK]
-    hh:mm:ss | 001 | [START] ALPH:test-two.sh
-    hh:mm:ss | 000 | [END  ] ALPH:test-two.sh ............................... [OK]
-    hh:mm:ss | 000 | [DIR  ] BETA = beta/TEST
-    hh:mm:ss | 001 | [START] BETA:test-one.sh
-    hh:mm:ss | 000 | [END  ] BETA:test-one.sh ............................... [OK]
-    hh:mm:ss | 001 | [START] BETA:test-two.sh
-    hh:mm:ss | 000 | [END  ] BETA:test-two.sh .......... differs from GOOD  [FAIL]
-    hh:mm:ss | 000 | [DIR  ] GAMM = gamma/TEST
-    hh:mm:ss | 000 | [FRAME] GAMM:on_entry .............. the frame failed  [FAIL]
+    DIR   ALPH = alpha/TEST
+    END   ALPH test-one.sh .................................................. [OK]
+    END   :/   test-two.sh .................................................. [OK]
+    DIR   BETA = beta/TEST
+    END   BETA test-one.sh .................................................. [OK]
+    END   :/   test-two.sh ............................. differs from GOOD  [FAIL]
+    DIR   GAMM = gamma/TEST
+    FRAME GAMM:on_entry ................................. the frame failed  [FAIL]
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss

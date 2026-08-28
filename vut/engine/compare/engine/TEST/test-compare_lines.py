@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Line Comparison"
 #     choices    = ["info", "judge"]
 # }

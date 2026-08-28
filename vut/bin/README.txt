@@ -16,6 +16,7 @@ two-line shell shims, nothing importable. Each resolves its own location
                         hwut.stability  hwut.wishlist  hwut.report
                         hwut.remove   hwut.remove-choice
                         hwut.rename   hwut.rename-choice
+                        hwut.sanitize
 
     hwut            THE DEFAULT FACE: 'hwut' alone is 'hwut.run'. A
                     bare 'hwut' states no wish, and a wish that states

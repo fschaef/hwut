@@ -91,7 +91,8 @@ FACTOR_MIN   = 50.0    # times the usual delta -- not 2, not 5
 
 USAGE = usage_line("hwut.stability",
                    WISH_TOKEN_TUPLE
-                   + ("[--repeat=<n>]",
+                   + ("[<file-glob> [choice-glob]...]",
+                      "[--repeat=<n>]",
                       "[--cadence]", "[--strategy=<name>]",
                       "[--verbose]", "[--directory=<path>]"))
 
@@ -399,6 +400,11 @@ def main(argv=None, write=None, write_error=None):
     cadence_f  = False
     subject_tuple = ("stdout",)
     unknown    = []
+    #  BARE WORDS ARE TARGETS (the 1.0 short form): this face does not
+    #  desugar them itself -- they travel in 'argv' to 'hwut.run',
+    #  which does. Collected here only so the door does not refuse
+    #  them as unknown options.
+    word_list = []
     for argument in rest_list:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
@@ -422,7 +428,8 @@ def main(argv=None, write=None, write_error=None):
                 return E_ExitCode.REFUSED
             strategy = name
         else:
-            unknown.append(argument)
+            if argument.startswith("-"): unknown.append(argument)
+            else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.stability' does not take: %s"
               % ", ".join(sorted(unknown)))
@@ -514,8 +521,10 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     from . import run as run_service
     from vut.engine.orchestrator.run.summary import fold
 
-    #  THE FACE'S OWN WORDS DO NOT TRAVEL to 'hwut.run': left in, the
-    #  wish parser reads them as targets and selects nothing.
+    #  THE FACE'S OWN OPTIONS DO NOT TRAVEL to 'hwut.run', which does
+    #  not take them. THE WISH'S WORDS DO -- options and bare targets
+    #  alike: one selection language, and the repeats must run the
+    #  very wish the person stated.
     wish_argv = [a for a in argv
                  if not a.startswith(("--repeat=", "--strategy=",
                                       "--directory="))

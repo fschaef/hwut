@@ -53,6 +53,8 @@ import xml.sax.saxutils as saxutils
 from   vut.engine.bookkeeper.bookkeeper              import (Bookkeeper,
                                                              NO_CHOICE_KEY)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
+from   vut.services.labels                           import view_at
+from   vut.services.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
@@ -60,7 +62,8 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                              RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
-                                                             parse_wish)
+                                                             parse_wish,
+                                                             with_targets)
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 
@@ -69,7 +72,8 @@ WIDTH_DEFAULT  = 80
 WIDTH_MINIMUM  = 40
 
 USAGE = usage_line("hwut.report",
-                   ("[<wish>]", "[--format=<name>]", "[--out=<file>]",
+                   ("[<wish>]", "[<file-glob> [choice-glob]...]",
+                    "[--format=<name>]", "[--out=<file>]",
                     "[--width=<n>]", "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
@@ -164,11 +168,13 @@ def row_list_of(root, wish):
     say which halves those are.
     """
     entry_list = []
+    label_view = view_at(root)
     for directory, result in explore_tree(root):
         whole      = os.path.join(root, directory)
         bookkeeper = Bookkeeper(whole)
         query      = CTestTaskListQuery(wish, bookkeeper,
-                                        directory=directory, root=root)
+                                        directory=directory, root=root,
+                                        label_view=label_view)
         book       = bookkeeper.book()
         app_db     = {app.source_file: app for app in result.app_set}
         row_list   = []
@@ -471,6 +477,7 @@ def main(argv=None, write=None):
     out_name    = None
     width       = None
     unknown     = []
+    word_list = []
     for argument in rest_list:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
@@ -492,7 +499,8 @@ def main(argv=None, write=None):
                 return E_ExitCode.REFUSED
             width = int(text)
         else:
-            unknown.append(argument)
+            if argument.startswith("-"): unknown.append(argument)
+            else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.report' does not take: %s"
               % ", ".join(sorted(unknown)))
@@ -503,6 +511,7 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
+    wish = with_targets(wish, word_list)
     try:
         entry_list = row_list_of(os.path.abspath(directory), wish)
     except RootConfMissing as error:
@@ -511,6 +520,9 @@ def main(argv=None, write=None):
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return E_ExitCode.FAULT
 
     if not any(row_list for _, _, row_list in entry_list):
         write("EMPTY: the wish selects no case in '%s'" % directory)

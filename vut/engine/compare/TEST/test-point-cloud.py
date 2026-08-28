@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Point-Cloud Region: coverage, pair, dist, constraint, errors"
 #     choices    = ["constraint", "coverage", "dist", "errors",
 #                   "generative", "pair", "spatial"]

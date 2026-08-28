@@ -1,0 +1,5 @@
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.labels.list' does not take: --sideways
+    hwut.labels.list [--directory=<path>]
+}

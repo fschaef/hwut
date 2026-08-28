@@ -1,5 +1,5 @@
 #
-# hwut {
+# @hwut {
 #     title      = "The test register: ids that survive renames"
 #     choices    = ["allocation", "face", "faults", "healing", "retire",
 #                   "tables", "vanished"]

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The configuration of one test application"
 #     choices    = ["aggregation", "choices", "frozen", "interpreted",
 #                   "places", "refusal"]

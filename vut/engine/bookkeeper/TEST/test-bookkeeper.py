@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "The Bookkeeper: the naming, the base, the verdicts"
 #     choices    = ["damage", "divergence", "naming", "overwrite",
 #                   "protection", "record", "reproduce", "setup_delta"]

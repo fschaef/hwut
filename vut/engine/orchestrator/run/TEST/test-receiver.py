@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Vocabulary and receiver: format, dispatch, misfit"
 #     choices    = ["dispatch", "emitter", "format", "misfit"]
 #     interactive = true

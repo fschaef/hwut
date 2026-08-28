@@ -3,9 +3,18 @@ ______________________________________________________________________________
 
 PURPOSE: Find the specification region in a source file's raw text.
 
-The region opens at the FIRST occurrence of the word 'hwut' followed by a
-brace, at any position in the file, and closes at the matching brace. No
-table of comment syntaxes exists; the text is scanned as it stands.
+The region opens at the FIRST occurrence of '@hwut' followed by a brace,
+at any position in the file, and closes at the matching brace. No table
+of comment syntaxes exists; the text is scanned as it stands.
+
+THE '@' IS PART OF THE MARKER. A bare '@hwut {' occurs in prose, in a
+README, in a shell line that calls the tool -- and every such occurrence
+would open a region and make the file a test application by accident.
+The '@' costs one character and ends the question.
+
+THE '.conf' FILES ARE NOT SOURCE FILES and keep their bare '@hwut {':
+they are read whole ('reader.read_conf'), never scanned for a region,
+so nothing there can be mistaken for anything else.
 
 The brace matching skips double-quoted strings. A brace inside a HOCON
 comment within the region can end the region early; the parse then fails
@@ -16,13 +25,13 @@ import re
 
 from dataclasses import dataclass
 
-_MARKER_RE = re.compile(r"(?<![0-9A-Za-z_\-])hwut\s*\{")
+_MARKER_RE = re.compile(r"@hwut\s*\{")
 
 
 @dataclass(frozen=True, slots=True)
 class Region:
     """The specification region inside a file's raw text."""
-    i_marker: int     # index of 'h' of 'hwut'
+    i_marker: int     # index of '@' of '@hwut'
     i_open:   int     # index of the opening brace
     i_close:  int     # index of the matching closing brace
     line:     int     # 1-based line of the marker

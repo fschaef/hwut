@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# hwut {
+# @hwut {
 #     title      = "Scheduler: the plan executed, trace and report"
 #     choices    = ["budget", "build", "exclusion", "frame", "misdep",
 #                   "ordering", "parallel", "session", "workers"]

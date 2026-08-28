@@ -1,0 +1,464 @@
+disc-8  LABELS -- A SPECIFICATION TO BUILD FROM             ** SETTLED **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-27), AMENDED AND CLOSED (chat, 2026-08-28). The
+three forks that stood open at the foot -- whether 'add' may create,
+the face names against the naming law, and 'hwut.show' -- are closed
+below where they belong. Both forks that stood at the foot are
+now RULED (2026-08-28) and built; the foot names what they came to.
+
+BUILT (2026-08-28), in two deliveries: the wish, the file and the
+five faces first; then the view handed into EVERY selecting face,
+the rename/removal follow-through, and 'hwut.show' -- sections 5, 6
+and 8 carry the as-built word.
+
+WHAT A LABEL IS: a name for a SET OF TEST RUNS. Not a configuration
+and not a parameter -- membership, and nothing else.
+
+==============================================================================
+1.  THE FILE
+==============================================================================
+'hwut-root.labels', BESIDE 'hwut-root.conf', at the tree's boundary.
+One file per tree. Absent means no label exists, which is not an
+error: a tree that labels nothing behaves exactly as today.
+
+    #  hwut-root.labels -- the sets of this tree.
+    ./engine/bookkeeper/TEST/test-group_table.py    : concern
+    :/: groups                                     : meta
+    :/: tables                                     : meta concern
+    :/test-stream_store.py                         : meta
+    ./services/TEST/test-accept.sh                 : concern
+
+    <target> : <label> [<label>...]
+
+THE PART BEFORE ':' IS A TARGET, in the form 'hwut.wishlist' prints
+and '--wishlist' reads: a path from the tree's root, then an optional
+choice. It carries the PATH because the file sits at the root and
+'test-x.py' alone is ambiguous across directories.
+
+THE ELISION -- ONE MARK, TWO POSITIONS. A LEADING ':' is a ditto for
+one path component; an INTERIOR ':' separates the target from its
+labels. Position tells them apart and no reader needs a second rule:
+
+    :/     the previous entry's DIRECTORY
+    :/:    its directory AND its test application; a CHOICE follows
+
+A DITTO WITH NO PREDECESSOR IS REFUSED BY NAME -- a ':/' on the first
+line, or after nothing but comments. It is the one way the notation
+can be silently wrong: expanded against the wrong entry it names a
+real run that nobody meant.
+
+SORTED, on '(directory, file, choice)', the choice-less entry of an
+application first. The sort is not cosmetic: the ditto chain depends
+on it, and the file is machine-written and hand-edited both -- an
+'add' that reorders makes a diff nobody can read.
+
+ONE LINE PER RUN. A run named twice is a fault, named by line: two
+answers to one question is not a merge, it is a mistake.
+
+'#' TO END OF LINE IS A COMMENT. Blank lines are nothing. A HAND
+COMMENT DOES NOT SURVIVE A REWRITE -- the writer rewrites whole, and
+the header says so; the file is the framework's, and a durable word
+belongs in a README.
+
+LITERAL TARGETS ONLY -- A GLOB IN THIS FILE IS REFUSED BY NAME.
+Globbing is for what a PERSON writes: the command line and a
+wishlist. THIS FILE IS THE FRAMEWORK'S, and the faces expand at WRITE
+time, so what is stored is what was matched. Three things would break
+otherwise: 'hwut.rename' could not re-key 'test-*.py'; 'hwut.remove'
+could not tell whether dropping an entry unlabels one run or twenty;
+and 'list's count would stop being a fact about the file.
+
+    A GLOB IS SPENT, NOT STORED. A test added later does not join
+    the set, and running 'add' again is how it catches up -- the
+    same snapshot semantics 'create' already declares.
+
+==============================================================================
+2.  THE STANDARD LABELS -- 'meta' AND 'all'
+==============================================================================
+    hwut.run                     everything EXCEPT 'meta'
+    hwut.run --label mine        only 'mine'
+    hwut.run --label mine,yours  'mine' OR 'yours'
+    hwut.run --label meta        only 'meta'
+    hwut.run --label all         everything, 'meta' included
+
+A META TEST TESTS THE GOODNESS OF TESTS -- 'every GOOD ends in the
+terminal', 'no application lacks a title'. It is about the SUITE, not
+the product, and has no business in the run a person makes after
+changing the product.
+
+'all' IS A KEYWORD, NOT AN ENTRY: nobody assigns it, so it never
+stands on a line. It denotes the universe of runs, and 'all AND NOT
+meta' says the default in words.
+
+RESERVED, AND REFUSED AS CUSTOMER LABELS: 'meta', 'all', and the
+grammar's 'AND', 'OR', 'NOT'. Refused at 'create', at the door -- not
+at the point where the ambiguity would show, which is some later
+query nobody connects to the naming.
+
+AN UNDEFINED 'meta' IMPOSES NO EXCLUSION. A tree that labels nothing,
+or labels only 'concern', runs everything. Silence costs nothing where
+nobody asked for it.
+
+AN EXPLICIT LITERAL TARGET OVERRIDES THE SILENCE -- RULED. The
+silence is what a wish carries when it asks NOTHING, and a named run
+is not nothing. A face that names a run and then passes it by is the
+silent failure this whole feature exists to prevent, arriving from
+the other side: 'hwut.accept test-meta.sh one' must bless.
+
+    LITERAL, NOT GLOBBED. The framework draws the same line twice:
+    'hwut-root.labels' holds literal targets only for the reason a
+    literal target overrides -- a literal names ONE run and is spent
+    as certainty, a glob names a set nobody has seen yet.
+    'test-*.sh' is how a person writes 'this directory', not 'I have
+    considered each of these runs', and under the other reading
+    '--glob "*"' would run what a bare wish does not, a distinction
+    with nothing behind it.
+
+    NO FACE IS SPECIAL, 'hwut.accept' least of all: were accept to
+    read targets differently from 'hwut.run', one wishlist file
+    would select two sets and the disc-5 round trip would break as
+    surely as a per-face silence would break it.
+
+    THE GLOB SPEAKS INSTEAD. A glob whose every match is silenced
+    draws a WARNING naming it and the remedy, IN EVERY FACE
+    ('swallowed_warning_tuple'). So a face can never QUIETLY answer
+    nothing where a person stated a target: it takes what was named,
+    or says why not and how.
+
+'--label' IS A UNION among the labels it names, where every other wish
+keyword NARROWS. Deliberate: a label names a SET, and naming two sets
+asks for both. AGAINST THE REST OF THE WISH IT STILL NARROWS --
+'--label mine --fail' is 'mine AND failing'.
+
+NAMING A LABEL LIFTS THE SILENCE. It is not an exception: the silence
+is 'no label was asked for', and asking for one answers it.
+
+A WISH STATING NOTHING TAKES ALL AVAILABLE -- and only the STANDARD
+label bends what 'available' means. RULED: an empty command line was
+always 'everything there is'; an empty (or all-commented) wishlist
+FILE was always an empty wish, nothing to do; both laws stand
+untouched under labels. A view that assigns the standard label
+nowhere imposes NOTHING: the selection walks the very path, byte for
+byte, that it walked before labels existed ('CLabelView.silences_f').
+
+THE SILENCE IS THE WISH'S, NOT 'hwut.run's. '--label' lives in the
+wish module, so 'plan', 'wishlist', 'accept', 'cov', 'report' and
+'stability' are silent alike. THIS IS LOAD-BEARING: were the silence
+'hwut.run's alone, 'hwut.wishlist > list.txt' and 'hwut.run
+--wishlist list.txt' would select different sets, and disc-5's round
+trip -- the whole reason a wishlist is worth keeping -- would no
+longer close.
+
+==============================================================================
+3.  THE FACES
+==============================================================================
+Naming law extended (section 7): 'hwut.labels.<verb>' <=>
+'services/labels/<verb>.py', launcher 'bin/hwut.labels.<verb>'.
+
+EVERY FACE TAKES A WISH -- the wish module's whole option group, one
+parser, the same words everywhere. '<wish>' below is that group,
+'--wishlist <file>' and '--glob' and '--fail' and the rest.
+
+    hwut.labels.create <label> <wish>
+        A NEW label. REFUSES a label that already stands, naming
+        'hwut.labels.add' as the verb for growing one. That refusal
+        is the whole reason it is a separate face: A TYPO IN A LABEL
+        NAME MUST NOT SILENTLY GROW THE WRONG SET.
+            hwut.labels.create concern --fail
+        The set is a SNAPSHOT of what the wish selected, and the
+        report says so.
+        REFUSES A WISH THAT STATES NOTHING. A bare wish wants
+        everything ('states_nothing_f'), so 'create concern' would
+        quietly enrol the whole tree. Naming a set is the one act
+        where 'everything' must be asked for in words: '--label all'.
+        REFUSES A RESERVED NAME (section 2).
+        EXIT: OK created; REFUSED the label stands, the name is
+        reserved, the wish states nothing, or it cannot be read;
+        EMPTY the wish selected nothing -- AND NO LABEL IS CREATED,
+        because an empty set is not a set anybody wanted.
+
+    hwut.labels.add <label> <wish>
+        Adds every selected run to the label. DOES NOT CREATE a label
+        that does not stand: it refuses, and names 'create'. Same
+        argument that separated the two faces -- 'add cocnern
+        list.txt' would otherwise make a set nobody asked for. The
+        STANDARD label always stands and needs no create.
+        REFUSES A WISH THAT STATES NOTHING, as 'create' does, and so
+        does 'remove': ALL THREE WRITERS alike -- enrolling or
+        stripping everything must be asked for in words ('--label
+        all'; for 'remove', '--label <label>' says 'the whole set').
+        EXIT: OK; REFUSED the label does not stand, or the wish
+        cannot be read; FAULT the file cannot be written.
+
+    hwut.labels.remove <label> <wish>
+        Removes them. A run that did not carry the label is NOT an
+        error and is reported as untouched: removing what is not
+        there is a no-op, not a fault.
+        A LABEL LEFT WITH NO MEMBERS IS DELETED, and the report says
+        so -- an empty set is indistinguishable from an absent one,
+        and keeping it would only mislead 'list'.
+
+    hwut.labels.list
+        Every label, with THE NUMBER OF MEMBERS beside it:
+            concern   14
+            meta       7
+        THE NUMBER IS A COUNT, NEVER A HANDLE. Numbering for
+        reference invites '--label 3', and a number that shifts when
+        a label is added is a target that moves under the author.
+
+    hwut.labels.query [<expr>]
+        DEFAULT: A WISHLIST FILE, ready to be read back -- target
+        lines, sorted, ELIDED, and nothing else. It pipes into
+        '--wishlist', into 'add' and into 'remove'.
+            --expand    the same runs, one full target per line, no
+                        ditto: for eyes and for grep
+            --labels    each run with the labels it carries
+        THE LATTER TWO ARE NOT FOR MAKING A WISHLIST and say so:
+        '--labels' puts an interior ':' on the line, which no
+        wishlist reader takes.
+        Bare, the expression is 'all AND NOT meta' -- what a run
+        would take.
+        EXIT: OK; REFUSED the expression cannot be parsed or names a
+        label that does not stand; EMPTY it names nothing.
+
+THE EXPANSION IS REPORTED, RUN BY RUN. 'create' and 'add' say WHAT
+they enrolled, not merely how many. A person who globbed must see
+what the pattern caught before it becomes a set -- that is what makes
+write-time expansion honest rather than merely convenient.
+
+A GLOB THAT MET NOTHING WARNS, naming the glob. It is not a refusal:
+the pattern is well formed, and today's tree simply holds no such
+run. AND THE SILENCE MUST SPEAK: a glob that met ONLY runs the
+standard label silences draws its own warning, naming the remedy
+('--label meta') -- a wishlist line naming a 'meta' run, dropped
+without a word, is how a member goes missing and looks merely
+unlabelled. A warning speaks in the file's tongue: never an absolute
+path, './'-form against the boundary.
+
+==============================================================================
+4.  THE EXPRESSION GRAMMAR
+==============================================================================
+    expr   := term (('AND' | 'OR') term)*
+    term   := 'NOT' term | '(' expr ')' | <label>
+
+  -  'AND' binds tighter than 'OR'. Stated because it is the one
+     thing a reader assumes and a writer must not have to.
+  -  KEYWORDS ARE UPPER CASE, and they are RESERVED (section 2): a
+     label may not be called 'not', in any casing. Reserving costs
+     an author nothing and removes the question entirely.
+  -  '--label a,b' IS SUGAR for 'a OR b'. ONE GRAMMAR, not two: the
+     comma form and the expression form are the same question, and
+     two parsers for one question is one place too many to be wrong.
+     '--label "mine AND NOT slow"' then says a thing the comma
+     cannot.
+  -  NO GLOBS ON LABEL NAMES, no counts, no arithmetic. A grammar
+     that grows is a language nobody documents.
+  -  A LABEL THAT DOES NOT EXIST IS REFUSED BY NAME, wherever it is
+     named -- in an expression AND behind '--label'. 'concren AND
+     meta' silently naming nothing is how an author comes to believe
+     a set is empty, and '--label' is the busier door of the two.
+
+==============================================================================
+5.  WHAT MUST FOLLOW A RENAME AND A REMOVAL
+==============================================================================
+'hwut.rename' and 'hwut.rename-choice' MUST RE-KEY THE LABEL FILE. A
+label keyed by a name that has changed loses a member silently -- and
+the member is not MISSING, it is UNLABELLED, which looks exactly like
+never having been labelled.
+
+'hwut.remove' and 'hwut.remove-choice' MUST DROP THE ENTRY, symmetric
+with the book and the register, which removal already forgets (E-12).
+
+BUILT AS ONE MODULE, 'services/_follow.py' -- THE ONE PLACE a changed
+or forgotten name reaches the records at the TREE'S BOUNDARY, called
+by every affected face as its LAST step: a crash above leaves an
+entry naming the old name, loud and findable ('hwut.sanitize
+--orphans', E-18), never a record silently pointing at nothing. A
+directory outside any tree follows nothing; an absent labels file
+prints nothing -- the feature unused costs no line of output. A fresh
+key that ALREADY STANDS in the file is a FAULT, not a merge; where it
+stands in the STORE, the face's own door refuses first. Whatever
+anchors at the boundary tomorrow joins this module, not the faces.
+
+'hwut.sanitize --orphans' should offer a label entry naming a run that
+no longer exists -- WITH THE SAME GUARD IT ALREADY APPLIES (E-18): an
+entry whose application still stands is UNREACHABLE, not orphaned.
+
+==============================================================================
+6.  'hwut.show' MUST SAY WHY A TEST DID NOT RUN
+==============================================================================
+NOT OPTIONAL, and it is the reason this feature is safe to ship. THE
+FAILURE MODE OF EVERY LABEL MECHANISM IN EVERY FRAMEWORK IS A TEST
+THAT SILENTLY DOES NOT RUN. If 'meta' is silent by default, a
+'meta'-labelled test that did not run must be ASKABLE.
+
+'hwut.show' names an application's labels, and MARKS THE SILENT ONES.
+A person looking at a test that seems not to exist must find the
+answer in the first place they look.
+
+BUILT: an '==[ LABELS ]' section after the specification, the entries
+that concern what is shown, as the file states them, the standard
+label marked '-- SILENT: a bare wish passes this by'. NO BOUNDARY, NO
+SECTION: 'hwut.show' works on a bare directory, and a tree without a
+root conf can hold no labels file. A broken file is a fault, said
+aloud; the feature unused costs no line of output.
+
+==============================================================================
+7.  WHERE IT PLUGS IN
+==============================================================================
+    plan/wish.py            'label_spec' on 'Wish'; '--label' parsed
+                            beside '--glob', its grammar checked at
+                            the door; 'states_nothing_f' and the
+                            round-trip '__str__' must know it. EVERY
+                            FACE INHERITS IT FROM HERE -- that is why
+                            the wish is one parser.
+    plan/label.py           THE GRAMMAR AND ITS EVALUATION, and the
+                            'CLabelView' the selection reads. IN THE
+                            ENGINE, not with the faces, because
+                            'task_list_query' evaluates it -- data
+                            flows into the engine, the engine imports
+                            nothing back. The file's READER AND
+                            WRITER stay the faces' own
+                            ('services/labels/_file.py'): the engine
+                            never opens 'hwut-root.labels'; a face
+                            builds the view and hands it down. A face
+                            the view does not reach REFUSES
+                            '--label', through 'SelectionError' at
+                            the one door every face already guards
+                            ('get_test_cases').
+    plan/wish.py            THE DITTO EXPANDER, beside
+                            'wishlist_target_tuple' and used by it.
+                            The elision is a property of a SORTED
+                            TARGET FILE, not of the labels file, so
+                            wishlists read it too. One expander, both
+                            files.
+                            'hwut.wishlist' keeps printing EXPANDED:
+                            its output is in WALK order, not sorted,
+                            so compression would fire almost never
+                            and would suggest an adjacency the file
+                            does not have. THE READER TAKES BOTH
+                            FORMS; only a writer that SORTS emits the
+                            short one, which today is
+                            'hwut.labels.query' alone.
+    exploration/task_list_query.py
+                            '_label_hidden_f', first among the
+                            questions: a case is hidden where the
+                            expression does not name it, or -- no
+                            label asked -- where 'meta' labels it.
+    services/labels/__init__.py
+                            'view_at(directory)': THE ONE DOOR any
+                            other face obtains the view through --
+                            climb, read, build. 'RootConfMissing' is
+                            the face's REFUSED; 'LabelFileError' its
+                            FAULT, and it does not run: a selection
+                            whose silence cannot be determined must
+                            not guess at it.
+    run/orchestrate.py      'orchestrator' and 'orchestrate' carry
+                            'label_view' down to 'determine_tree';
+                            'hwut.run' builds it at its door, and
+                            'hwut.cov' and 'hwut.stability' ride
+                            'run.main', so one threading serves
+                            three faces.
+    services/_follow.py     section 5, as built.
+    services/labels/        the five faces; '_file.py' the reader and
+                            writer; '_faces.py' what the five share.
+    services/rename.py, remove.py, remove_choice.py
+                            the follow-through of section 5.
+    services/show.py        section 6.
+
+THE NAMING LAW GAINS A CLAUSE (services/README, RATIONALE): A DOTTED
+LAUNCHER NAME IS A PACKAGE.
+
+    hwut.<n>          <=>  services/<n>.py          ('-' <=> '_')
+    hwut.<p>.<n>      <=>  services/<p>/<n>.py      NEW
+    its launcher      <=>  bin/hwut.<p>.<n>
+    its suite         <=>  services/labels/TEST/test-<n>.sh (or .py)
+
+Five acts on one file is a FAMILY; the dot says so, and the law
+extends rather than bends. Rejected: 'hwut.labels-add' (five
+launchers, and the hyphen already means '_' in a module name, so
+'labels_add.py' would sit beside 'remove_choice.py' meaning something
+else entirely); 'hwut.labels add' (a face with a verb -- no face does
+this today, and 'hwut.target' shows the tree prefers a face per act).
+
+==============================================================================
+OPEN -- two, and neither blocks the build
+==============================================================================
+ a  RULED: NO. A glob that met nothing WARNS, status unmoved.
+    It warns (section 3). Whether it also answers FAULT is not
+    ruled. Against: '--label cocnern' is REFUSED by name (section 4),
+    and a misspelt '--glob "test-quue.py"' is the same slip.
+    RECOMMENDED: WARN ONLY, status unmoved. A label either stands or
+    does not, which is a fact about THE FILE; a glob's emptiness is a
+    fact about THE TREE THIS MORNING, and a wish is allowed to select
+    nothing (P-9). Cadence set the precedent for a finding that
+    speaks without deciding.
+    It is a one-line change if ruled the other way.
+
+ b  RULED: YES, A LITERAL ONE DOES -- against the recommendation
+    recorded below, and rightly (section 2 carries the ruling).
+    What follows is the case that was made against it, kept because
+    the warning it argues for was built and stands.
+
+    DOES AN EXPLICIT TARGET LIFT THE SILENCE?
+    'query meta > list.txt; add slow --wishlist list.txt' selects
+    NOTHING: the list names the runs one by one, and the silence --
+    being the wish's, and the wish asking no label -- still hides
+    them.
+    RECOMMENDED (NOT taken): NO -- the one rule stays 'naming a
+    LABEL lifts it',
+    and the WARNING above speaks where the silence swallows an
+    explicit match (built). Lifting by target would make a glob's
+    meaning depend on what it happens to catch, and a wishlist line
+    and a glob are one mechanism, so no line could be drawn between
+    'explicit' and 'pattern'.
+
+==============================================================================
+GRAVEYARD
+==============================================================================
+SELF-LABELLING IN THE HEADER ('label = ["meta"]') -- rejected: a set
+cannot be made FROM A QUERY ('create concern --fail' would mean
+editing every failing file, and the set is stale the moment one is
+fixed); a test one does not own cannot be labelled; and no single file
+says what sets exist.
+
+A 'meta' KEY OF ITS OWN -- rejected: 'slow', 'nightly', 'db' are the
+same shape and would each want a key.
+
+A 'META/' DIRECTORY beside 'TEST/' -- rejected: the file system would
+carry the classification, so a test could not be two things at once,
+and moving it between sets would move the file.
+
+'hwut.target' (E-7) -- rejected: a target is DIRECTORY-LOCAL by
+ruling; a label is a property of the run wherever it stands.
+
+NUMBERING LABELS FOR REFERENCE -- rejected: a handle that shifts when
+a label is added is a target that moves under the author.
+
+'--group' AS THE OPTION -- rejected: the file is 'hwut-root.labels'
+and the faces are 'hwut.labels.*'. Two words for one thing is what
+terminological invariance forbids.
+
+'=' AS THE LABEL SEPARATOR -- rejected: ':' already serves, and
+POSITION distinguishes the ditto from the separator. One mark in two
+positions beats two marks.
+
+GLOBS STORED IN 'hwut-root.labels' -- rejected: the file would hold
+two truths, what a person wrote and what the next unrelated 'add' or
+'remove' will replace it with. Someone writing a live pattern into
+the file plainly means it to STAY live; converting it to a snapshot
+on a command about a different label is section 5's failure arriving
+through the format itself.
+
+TWO PARSERS, comma-union for '--label' and the grammar for 'query' --
+rejected: one question, one grammar.
+
+'--force-also-meta' TO BLESS A SILENCED RUN -- rejected: '--label
+meta' and '--label all' already say it, in the vocabulary that
+exists, and a literal target says it by naming the run. A second
+word for one thing is what terminological invariance forbids.
+
+ANY STATED TARGET OVERRIDING THE SILENCE, globs included -- rejected:
+'--glob "*"' would then run what a bare wish does not.
+______________________________________________________________________________

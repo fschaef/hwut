@@ -1,7 +1,7 @@
 
 --- found, first occurrence ---
 marker at 2:4
-line  2  stripped 3  |hwut { title = "T" }|
+line  2  stripped 4  |hwut { title = "T" }|
 
 --- absent ---
 no region
@@ -9,9 +9,12 @@ no region
 --- the word alone, no brace ---
 no region
 
+--- a BARE 'hwut {' is not a marker ---
+no region
+
 --- a brace inside a string does not close the region ---
 marker at 1:3
-line  1  stripped 2  |hwut {|
+line  1  stripped 3  |hwut {|
 line  2  stripped 2  |    title = "closer } inside"|
 line  3  stripped 2  |}|
 <hwut-end>

@@ -1,0 +1,18 @@
+--- a holder that is gone:
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock  (reporting only; '--apply' acts)
+    
+      lock -- 1 found:
+          suite/TEST/.hwut-lock                                the holder (pid <n>) is gone, taken <n> s ago
+    
+      1 item(s), <size> kB
+}
+--- a holder that LIVES (this very shell):
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock
+    
+      nothing to sanitize
+}
+the lock still stands: yes

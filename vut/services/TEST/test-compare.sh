@@ -1,7 +1,7 @@
 #! /bin/bash
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
-# hwut {
+# @hwut {
 #     title      = "The compare service face: the diff convention, on stdout."
 #     choices    = ["differing", "reading", "tolerated"]
 #     eq-pattern = ["SUCCESS.*"]
