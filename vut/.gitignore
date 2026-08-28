@@ -2,6 +2,9 @@ build/
 **/__pycache__
 **/TEST/OUT
 **/TEST/ADM
+**/TEST/.hwut-store
+**/TEST/.hwut-lock
+**/TEST/.hwut-session
 **/tmp
 **/tmp.*
 **/*.coverage

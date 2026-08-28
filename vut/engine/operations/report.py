@@ -67,6 +67,10 @@ _PRECEDENCE = (
     # -- the subjects and nominals
     E_TestRunResult.OUTPUT_FILE_NOT_FOUND,
     E_TestRunResult.NOMINAL_FILE_NOT_FOUND,
+    #  -- READABILITY precedes completeness: a text whose region
+    #     framing is broken cannot be read at all, so nothing that
+    #     follows -- terminal, stderr, verdict -- has been established
+    E_TestRunResult.REGION_SYNTAX_ERROR,
     # -- completeness precedes judgement: an incomplete stream must
     #    never masquerade as an ordinary mismatch (R-70)
     E_TestRunResult.TERMINATED_WITHOUT_END,

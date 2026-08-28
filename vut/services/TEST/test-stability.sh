@@ -84,7 +84,7 @@ masked() {              # <args...> -- as 'face', every number the
     $FACE "$@" > out.txt 2> err.txt
     echo "STATUS: $?"
     echo "STDOUT {"
-    sed -E 's/rt=[0-9]+\.[0-9]+/rt=<r>/; s/[0-9]+\.[0-9]{6}/<delta>/g' \
+    sed -E 's/spread=[0-9]+\.[0-9]+s/spread=<s>/; s/factor=[0-9]+x/factor=<f>/; s/[0-9]+\.[0-9]{6}/<delta>/g' \
         < out.txt | sed 's/^/    /'
     echo "}"
 }
@@ -165,7 +165,7 @@ length)
         'echo "steady line"' \
         'for i in $(seq 0 $n); do echo "noise $i"; done'
     good "steady line"
-    face --directory=tree --repeat=3
+    face --directory=tree --repeat=3 --cadence
     ;;
 
 cadence)
@@ -178,11 +178,11 @@ cadence)
         'echo $((n + 1)) > count.txt' \
         'echo "line one"' \
         'echo "line two"' \
-        'if [ $((n % 2)) -eq 0 ]; then sleep 0.4; fi' \
+        'if [ $n -eq 0 ]; then sleep 6; fi' \
         'echo "line three"' \
         'echo "line four"'
     good "line one" "line two" "line three" "line four"
-    face --directory=tree --repeat=4
+    face --directory=tree --repeat=4 --cadence
     ;;
 
 verbose)
@@ -196,10 +196,10 @@ verbose)
         'echo $((n + 1)) > count.txt' \
         'echo "line one"' \
         'echo "line two"' \
-        'if [ $((n % 2)) -eq 0 ]; then sleep 0.4; fi' \
+        'if [ $n -eq 0 ]; then sleep 6; fi' \
         'echo "line three"'
     good "line one" "line two" "line three"
-    masked --directory=tree --repeat=4 --verbose
+    masked --directory=tree --repeat=4 --cadence --verbose
     ;;
 
 stain)

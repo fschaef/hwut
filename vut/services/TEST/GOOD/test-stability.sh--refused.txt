@@ -4,7 +4,7 @@ STDOUT {
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
@@ -13,25 +13,25 @@ STDOUT {
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
-    REFUSED: '--rt-max' takes a non-negative number, not '-1'
+    REFUSED: 'hwut.stability' does not take: --rt-max=-1
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
-    REFUSED: '--epsilon' takes a non-negative number, not 'soon'
+    REFUSED: 'hwut.stability' does not take: --epsilon=soon
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
@@ -40,7 +40,7 @@ STDOUT {
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
@@ -49,7 +49,7 @@ STDOUT {
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }
 STATUS: 2
@@ -58,6 +58,6 @@ STDOUT {
     hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                    [--glob <target>]... [--exclude <target>]...
                    [--exclude-dir <glob>]... [--wishlist <file>]... [--repeat=<n>]
-                   [--rt-max=<r>] [--epsilon=<s>] [--strategy=<name>] [--verbose]
+                   [--cadence] [--strategy=<name>] [--verbose]
                    [--directory=<path>]
 }

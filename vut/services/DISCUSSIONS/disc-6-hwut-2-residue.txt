@@ -65,7 +65,33 @@ a cap it cannot exceed makes the test meaningless, and a cap it can
 makes the outer report indistinguishable from the inner one.
 
 ----------------------------------------------------------------------------
-AND ONE ODD ONE OUT
+r-4   A DOMAIN ERROR THROWN WHERE A REPORT IS OWED            ** CLOSED **
+----------------------------------------------------------------------------
+'RegionSyntaxError' escaped 'equivalence_check._compare' into the
+scheduler and died as 'Task exception was never retrieved', twice in
+one run, with the traceback on the terminal.
+
+A BROKEN REGION FRAMING IS A VERDICT WITH A REASON. The text arrived;
+it cannot be READ. 'E_TestRunResult.REGION_SYNTAX_ERROR' -- "region
+framing is broken" -- and it ranks ABOVE completeness: a text that
+cannot be read establishes nothing that follows it, not the terminal,
+not the stderr note, not the verdict.
+
+THE CLASS MATTERS MORE THAN THE CASE. This is the second of its kind
+(a missing session sink was the first, 'test-app-no-output'). Both
+were an exception raised through a boundary that owes a REPORT. A
+third will exist. 'test-hygiene.py' is the natural place to forbid it:
+no coroutine of the run may let a non-framework exception cross into
+the scheduler.
+
+----------------------------------------------------------------------------
+AND TWO ODD ONES OUT                                          ** OPEN **
 ----------------------------------------------------------------------------
     1  test-defaults.py [instantiate]  'unexpected stderr'
-Not looked at.
+    n  'Exception ignored in: BaseSubprocessTransport.__del__' ->
+       'RuntimeError: Event loop is closed'
+
+The second is a SHUTDOWN ORDER fault: a subprocess transport survives
+the event loop and is collected after it closed. It is stderr noise,
+not a failure -- but noise of exactly the kind that once poisoned a
+GOOD (an unawaited coroutine, same session). Neither looked at.

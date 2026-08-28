@@ -47,6 +47,7 @@ PHRASE_DB = {
     "pype-interpreter-not-found":  "pype interpreter missing",
     "pype-file-not-found":         "pype script missing",
     "pype-file-syntax-error":      "pype script has a syntax error",
+    "region-syntax-error":         "region framing is broken",
     "pype-contained":              "pype killed by the supervisor",
     "pype-failed":                 "pype failed",
     "build-tool-not-found":        "build tool missing",

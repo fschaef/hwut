@@ -52,6 +52,13 @@ class E_TestRunResult(Enum):
     NOMINAL_FILE_NOT_FOUND      = "nominal-file-not-found"
     TERMINATED_WITHOUT_END      = "terminated-without-hwut-end"
     UNEXPECTED_STDERR           = "unexpected-stderr"
+    #  The REGION FRAMING of a compared text is broken -- an unknown
+    #  handler, a bad parameter, a nested or unclosed region. The text
+    #  arrived; it cannot be READ. That is a verdict with a reason,
+    #  not an exception: raised through, it dies in the scheduler as
+    #  'Task exception was never retrieved' and the run loses the one
+    #  thing it is for.
+    REGION_SYNTAX_ERROR         = "region-syntax-error"
     STDERR_UNDECIDED            = "stderr-undecided"
 
     # THE PYPE STAGE (deterministicalization):

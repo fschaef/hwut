@@ -89,6 +89,236 @@
       "source_kind": "executable"
     }
   },
+  "test-accept.sh": {
+    "choices": {
+      "ask": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 37.87109375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.891152194002643
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "bless": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 37.80859375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.885099067003466
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "merge": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 37.6015625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.973544701002538
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "stderr": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 48.143494000000025,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 34.97265625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 8.258096837991616
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "sugar": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 39.515625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.990800309999031
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "token": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 27.4296875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.850869582995074
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-accept.sh",
+      "source_kind": "executable"
+    }
+  },
   "test-compare": {
     "choices": {
       "differing": {
@@ -193,6 +423,131 @@
             "report": "nominal-file-not-found",
             "verdict": false,
             "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-compare.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-compare.sh": {
+    "choices": {
+      "differing": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 36.19921875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.839484860000084
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "reading": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.3984375,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.829325786995469
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "tolerated": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.40625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.811939808001625
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
           }
         }
       }
@@ -322,6 +677,114 @@
       "source_kind": "executable"
     }
   },
+  "test-cov.py": {
+    "choices": {
+      "convert": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "formats": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "help": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-cov.py",
+      "source_kind": "executable"
+    }
+  },
   "test-cov_run": {
     "choices": {
       "door": {
@@ -383,6 +846,125 @@
       },
       "interactive": true,
       "source_file": "test-cov_run.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-cov_run.py": {
+    "choices": {
+      "door": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "run": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-cov_run.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-exit.sh": {
+    "choices": {
+      "law": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "[0-9]+"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "[0-9]+"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 62.89398600000003,
+                "exit_code": 0,
+                "peak_disk_mb": 2.40625,
+                "peak_memory_mb": 41.51953125,
+                "peak_pids": 4,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 9.575282364006853
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-exit.sh",
       "source_kind": "executable"
     }
   },
@@ -511,6 +1093,131 @@
       "source_kind": "executable"
     }
   },
+  "test-merge.sh": {
+    "choices": {
+      "cancel": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.771571912991931
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "commit": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.754669969988754
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "stdout_artifact": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.739271523998468
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-merge.sh",
+      "source_kind": "executable"
+    }
+  },
   "test-plan": {
     "choices": {
       "faults": {
@@ -561,6 +1268,346 @@
       },
       "interactive": true,
       "source_file": "test-plan.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-plan.py": {
+    "choices": {
+      "faults": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "help": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "plan": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "wish": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-plan.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-remove.sh": {
+    "choices": {
+      "asking": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 45.41711400000001,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.54296875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.99935640100739
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "choice": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 43.40330900000001,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 38.26953125,
+                "peak_pids": 3,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.901637385002687
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 48.143494000000025,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.38671875,
+                "peak_pids": 3,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 8.04604764499527
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "stain": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 57.50990900000002,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.66796875,
+                "peak_pids": 3,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 8.833183375987574
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "unknown": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 43.40330900000001,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 38.99609375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.829173218997312
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "untouched": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.4765625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.740666757992585
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "whole": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 48.143494000000025,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.6796875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.947124200989492
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-remove.sh",
       "source_kind": "executable"
     }
   },
@@ -724,6 +1771,306 @@
       "source_kind": "executable"
     }
   },
+  "test-report.sh": {
+    "choices": {
+      "json": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.62890625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.556313353998121
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "junit": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 12.0390625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.535102570007439
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "never_run": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.490322126992396
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.01953125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.586338492008508
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "stain": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 43.40330900000001,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.21875,
+                "peak_pids": 3,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.6318467460077954
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "tap": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 25.8125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.416707964002853
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "traditional": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.6953125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.399433519996819
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "width": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 25.69921875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.368385516005219
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-report.sh",
+      "source_kind": "executable"
+    }
+  },
   "test-show": {
     "choices": {
       "directory": {
@@ -745,6 +2092,81 @@
             "report": "nominal-file-not-found",
             "verdict": false,
             "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": true,
+      "source_file": "test-show.py",
+      "source_kind": "executable"
+    }
+  },
+  "test-show.py": {
+    "choices": {
+      "directory": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "faults": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "file": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "help": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {},
+        "operations": {
+          "Run": {
+            "host": "linux-x86_64/heimwerker",
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
           }
         }
       }
@@ -961,6 +2383,317 @@
       "source_kind": "executable"
     }
   },
+  "test-stability.sh": {
+    "choices": {
+      "bytes": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.68359375,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.350602160993731
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "cadence": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 45.6015625,
+                "peak_pids": 4,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.318044066996663
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "length": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.7421875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.29062726299162
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 25.22265625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.382047584003885
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "stain": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 53.56741900000001,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.84375,
+                "peak_pids": 4,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 8.240070319006918
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "steady": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 3.83984375,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.189822975997231
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "verbose": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 43.90292099999999,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 45.62890625,
+                "peak_pids": 4,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.884375155997986
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T19:21:18Z"
+          }
+        },
+        "stain": {
+          "repeat_n": 5,
+          "verdict_list": [
+            "ok",
+            "test-failed",
+            "ok",
+            "ok",
+            "ok"
+          ],
+          "when": "2026-08-27T19:21:20Z"
+        }
+      },
+      "verdict": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.703125,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.234735204998287
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-stability.sh",
+      "source_kind": "executable"
+    }
+  },
   "test-tell": {
     "choices": {
       "bare": {
@@ -1135,6 +2868,201 @@
             "report": "nominal-file-not-found",
             "verdict": false,
             "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-tell.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-tell.sh": {
+    "choices": {
+      "bare": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.114769396997872
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "coverage": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.087364150997018
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "flags": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.0424721040035365
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "pack": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 33.361382000000006,
+                "exit_code": 0,
+                "peak_disk_mb": null,
+                "peak_memory_mb": null,
+                "peak_pids": null,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.79674229399825
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
+          }
+        }
+      },
+      "raw": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "SUCCESS.*"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "SUCCESS.*"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 33.361382000000006,
+                "exit_code": 0,
+                "peak_disk_mb": null,
+                "peak_memory_mb": null,
+                "peak_pids": null,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.753808985988144
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:34Z"
           }
         }
       }
@@ -1365,6 +3293,271 @@
             "report": "nominal-file-not-found",
             "verdict": false,
             "when": "2026-08-27T06:56:25Z"
+          }
+        }
+      }
+    },
+    "configuration": {
+      "caps": {
+        "env": null,
+        "max_cpu_time_sec": 300,
+        "max_disk_mb": 100,
+        "max_file_size_mb": 10,
+        "max_memory_mb": 512,
+        "max_output_gap_sec": null,
+        "max_pids": 32,
+        "max_wall_clock_sec": 300.0,
+        "min_free_disk_mb": 128
+      },
+      "interactive": false,
+      "source_file": "test-wishlist.sh",
+      "source_kind": "executable"
+    }
+  },
+  "test-wishlist.sh": {
+    "choices": {
+      "empty": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 27.69140625,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 7.034260728003574
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "print": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 33.361382000000006,
+                "exit_code": 0,
+                "peak_disk_mb": null,
+                "peak_memory_mb": null,
+                "peak_pids": null,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.672635438997531
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "refused": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.845487229002174
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "roundtrip": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 39.13056,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.794757217008737
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "select": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.7740545209962875
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "spent": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 39.671875,
+                "peak_pids": 2,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.809944267995888
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
+          }
+        }
+      },
+      "travels": {
+        "configuration": {
+          "compare": {
+            "equivalent_pattern_list": [
+              "STATUS: [0-9]"
+            ]
+          }
+        },
+        "operations": {
+          "Run": {
+            "compare": {
+              "equivalent_pattern_list": [
+                "STATUS: [0-9]"
+              ]
+            },
+            "host": "linux-x86_64/heimwerker",
+            "records": [
+              {
+                "containment": "OK_COMPLETED",
+                "cpu_time_sec": 41.084761,
+                "exit_code": 0,
+                "peak_disk_mb": 2.41015625,
+                "peak_memory_mb": 0.0,
+                "peak_pids": 1,
+                "stderr_last_100_lines": "",
+                "unenforced": [],
+                "wall_clock_sec": 6.68667076699785
+              }
+            ],
+            "report": "ok",
+            "verdict": true,
+            "when": "2026-08-27T20:18:33Z"
           }
         }
       }

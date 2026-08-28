@@ -4,7 +4,7 @@ ______________________________________________________________________________
 PURPOSE: THE 'hwut.stability' COMMAND LINE -- run the same wish SEVERAL
          TIMES and report what did not stay the same.
 
-    hwut.stability <wish> [--repeat=<n>] [--rt-max=<r>] [--epsilon=<s>]
+    hwut.stability <wish> [--repeat=<n>] [--cadence]
                           [--directory=<path>] [--strategy=<name>]
 
 A suite that passes once has said one thing: it passed once. Whether it
@@ -27,19 +27,27 @@ FOUR FINDINGS, one fault and three warnings:
                 and the timing arithmetic of that key is not attempted.
                 A warning.
 
-    CADENCE     the SAME LINE took wildly different times across the
-                repeats: 'rt = stddev(delta) / average(delta)' per line,
-                over the repeats -- NOT across the lines of one run,
-                which measures the shape of the test and not its
-                stability. A test that builds, then prints, legitimately
-                has a huge spread across its own lines, every time, on
-                every machine. Across repeats, a legitimately slow step
-                is slow in all of them and scores zero. A warning.
+    CADENCE     the SAME LINE took GROSSLY different times across the
+                repeats -- ASKED FOR by '--cadence', never by default.
+                TWO BARS, BOTH REQUIRED: a spread above FIVE SECONDS,
+                far past any resolution question, AND some FIFTY TIMES
+                the usual delta of that line. Not two, not five.
+                Nothing clearing both is noise; nothing below them can
+                be told from noise by any means the framework has. A
+                warning, and only ever a warning.
 
-THE EPSILON GUARDS THE DENOMINATOR. Below the timer's resolution the
-average goes to nearly nothing and the ratio explodes on noise, so a
-line whose average delta is under '--epsilon' is passed over: too fast
-to time is absent data, not fast data.
+TIMING IS NOT CHECKED UNLESS ASKED. '--cadence' asks. The framework
+sets '--jobs', which is ITS OWN parallelism and NOT the machine's
+load: a hundred niced processes and ten busy ones are not comparable,
+and nothing recorded tells them apart. No ratio it could form, no null
+model it could fit and no threshold it could calibrate would mean
+anything. THE TESTER WHO ASKS KNOWS THE MACHINE AND CHOSE THE MOMENT;
+they are the calibration, and the framework has none.
+
+CADENCE IS NEVER A SHOW STOPPER: it does not stain and it does not
+move the exit status, asked for or not. Only a VERDICT does that --
+two runs of one test that disagree on a verdict disagree, full stop,
+with no statistics between the reading and the report.
 
 WHAT IS NEVER PRINTED: a delta, an average, a ratio -- no number the
 machine chose. The findings are COUNTS and NAMES, so that this face can
@@ -58,6 +66,7 @@ EXIT STATUS (E-1, services/_exit.py):
 ______________________________________________________________________________
 """
 import os
+import statistics
 import sys
 
 from   vut.engine.bookkeeper.bookkeeper              import Bookkeeper
@@ -74,13 +83,16 @@ from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 
 REPEAT_DEFAULT  = 3
-RT_MAX_DEFAULT  = 0.5
-EPSILON_DEFAULT = 0.001
+#  THE TWO BARS a cadence finding must clear (disc-7). High enough that
+#  no calibration is needed: the framework cannot measure the machine's
+#  load, so it speaks only of the gross.
+ABSOLUTE_MIN = 5.0     # seconds of spread, far past any resolution
+FACTOR_MIN   = 50.0    # times the usual delta -- not 2, not 5
 
 USAGE = usage_line("hwut.stability",
                    WISH_TOKEN_TUPLE
-                   + ("[--repeat=<n>]", "[--rt-max=<r>]",
-                      "[--epsilon=<s>]", "[--strategy=<name>]",
+                   + ("[--repeat=<n>]",
+                      "[--cadence]", "[--strategy=<name>]",
                       "[--verbose]", "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
@@ -131,25 +143,36 @@ def deviation_of(value_tuple):
             / len(value_tuple)) ** 0.5
 
 
-def rt_of(value_tuple, epsilon):
-    """
-    RETURN: float, 'stddev / average' of the values -- the relative
-            spread, dimensionless, comparable between a fast line and
-            a slow one.
-            None,  the average is under 'epsilon': too fast to time,
-            so the ratio would be noise divided by nothing.
 
-    Absent data, never a zero stand-in.
+def unsteady_line_tuple(cadence_tuple, factor_min=FACTOR_MIN,
+                        absolute_min=ABSOLUTE_MIN):
     """
-    average = mean_of(value_tuple)
-    if average < epsilon: return None
-    return deviation_of(value_tuple) / average
+    YIELD: [0] int    the line index, from 0, whose delta was GROSSLY
+                      out of step across the repeats
+           [1] float  that line's spread, in SECONDS
+           [2] float  that line's factor: spread / the usual delta
 
+    TWO BARS, BOTH REQUIRED (disc-7):
 
-def unsteady_line_tuple(cadence_tuple, rt_max, epsilon):
-    """
-    YIELD: [0] int    the line index, from 0, whose delta was unsteady
-           [1] float  that line's 'rt', above 'rt_max'
+        ABSOLUTE  the spread exceeds 'absolute_min' -- five seconds,
+                  so far past the timer's resolution that precision is
+                  not in question
+        RELATIVE  AND is 'factor_min' times THE MEDIAN delta of that
+                  line -- fifty, not two, not five
+
+    THE MEDIAN, NOT THE AVERAGE. 'spread / average' cannot exceed the
+    number of repeats -- one slow run among four is at most 4x, whatever
+    its size -- so a 50x bar against the average is unreachable below
+    fifty repeats. The median is what the line USUALLY costs, and one
+    slow repeat does not move it: the same outlier scores thousands.
+
+    NOTHING CLEARING BOTH BARS IS NOISE, and nothing below them can be
+    told from noise by any means the framework has. It sets '--jobs',
+    which is ITS OWN parallelism and NOT the machine's load: a hundred
+    niced processes and ten busy ones are not comparable, and nothing
+    recorded tells them apart. So no ratio is formed, no null model is
+    fitted, and no threshold is calibrated -- the bars are high enough
+    that none of it is needed.
 
     'cadence_tuple' holds one delta list per repeat, all of the same
     length -- a differing length is LENGTH's finding and is answered
@@ -157,10 +180,20 @@ def unsteady_line_tuple(cadence_tuple, rt_max, epsilon):
     """
     if not cadence_tuple: return
     for index in range(len(cadence_tuple[0])):
-        across = tuple(cadence[index] for cadence in cadence_tuple)
-        rt     = rt_of(across, epsilon)
-        if rt is not None and rt > rt_max:
-            yield index, rt
+        across  = tuple(cadence[index] for cadence in cadence_tuple)
+        spread  = max(across) - min(across)
+        if spread < absolute_min:                   continue
+        #  'THE USUAL DELTA' IS THE MEDIAN, not the average. The
+        #  average is dragged up by the very outlier being measured,
+        #  and 'spread / average' can never exceed the REPEAT COUNT --
+        #  so a 50x bar against it is unreachable below 50 repeats.
+        #  The median is not moved by one slow repeat, which is
+        #  exactly what 'usually' means.
+        usual   = statistics.median(across)
+        if usual <= 0.0:                            continue
+        factor  = spread / usual
+        if factor < factor_min:                     continue
+        yield index, spread, factor
 
 
 def key_of(node_name):
@@ -218,7 +251,7 @@ def snapshot_of(root, verdict_db, subject_tuple):
     return result
 
 
-def finding_list_of(snapshot_list, rt_max, epsilon):
+def finding_list_of(snapshot_list, cadence_f):
     """
     RETURN: list[CFinding], one per key that any repeat saw, sorted by
             key; a key seen by some repeats and not others is itself a
@@ -257,6 +290,14 @@ def finding_list_of(snapshot_list, rt_max, epsilon):
                     "BYTES differ, verdict did not: subject '%s' -- the "
                     "tolerance absorbed it" % subject)
 
+        #  TIMING IS NOT CHECKED UNLESS ASKED (disc-7). The framework
+        #  cannot measure the machine's load, so it does not pretend
+        #  to: the cautious tester who knows the machine asks for it,
+        #  and THEY are the calibration.
+        if not cadence_f:
+            if finding.note_list: finding_list.append(finding)
+            continue
+
         cadence_subject_set = set()
         for _, _, time_db in seen_list: cadence_subject_set.update(time_db)
         for subject in sorted(cadence_subject_set):
@@ -269,18 +310,17 @@ def finding_list_of(snapshot_list, rt_max, epsilon):
                     "LENGTH differs: subject '%s' emitted a different "
                     "number of lines; not timed" % subject)
                 continue
-            unsteady = tuple(unsteady_line_tuple(cadence_tuple,
-                                                 rt_max, epsilon))
+            unsteady = tuple(unsteady_line_tuple(cadence_tuple))
             if unsteady:
                 finding.note_list.append(
                     "CADENCE unsteady: subject '%s', %d line(s) of %d, "
                     "first at line %d"
                     % (subject, len(unsteady), len(cadence_tuple[0]),
                        unsteady[0][0] + 1))
-                for index, rt in unsteady:
+                for index, spread, factor in unsteady:
                     finding.detail_list.append(
-                        "line %d  rt=%.3f  deltas %s"
-                        % (index + 1, rt,
+                        "line %d  spread=%.3fs  factor=%.0fx  deltas %s"
+                        % (index + 1, spread, factor,
                            " ".join("%.6f" % cadence[index]
                                     for cadence in cadence_tuple)))
         if finding.note_list: finding_list.append(finding)
@@ -354,16 +394,16 @@ def main(argv=None, write=None, write_error=None):
 
     directory  = "."
     repeat_n   = REPEAT_DEFAULT
-    rt_max     = RT_MAX_DEFAULT
-    epsilon    = EPSILON_DEFAULT
     strategy   = DEFAULT_STRATEGY_NAME
     verbose_f  = False
+    cadence_f  = False
     subject_tuple = ("stdout",)
     unknown    = []
     for argument in rest_list:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument == "--verbose": verbose_f = True
+        elif argument == "--cadence": cadence_f = True
         elif argument.startswith("--repeat="):
             text = argument[len("--repeat="):]
             if not text.isdigit() or int(text) < 2:
@@ -373,22 +413,6 @@ def main(argv=None, write=None, write_error=None):
                 write(USAGE)
                 return E_ExitCode.REFUSED
             repeat_n = int(text)
-        elif argument.startswith("--rt-max="):
-            value = _float_or_none(argument[len("--rt-max="):])
-            if value is None or value < 0.0:
-                write("REFUSED: '--rt-max' takes a non-negative number, "
-                      "not '%s'" % argument[len("--rt-max="):])
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            rt_max = value
-        elif argument.startswith("--epsilon="):
-            value = _float_or_none(argument[len("--epsilon="):])
-            if value is None or value < 0.0:
-                write("REFUSED: '--epsilon' takes a non-negative number, "
-                      "not '%s'" % argument[len("--epsilon="):])
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            epsilon = value
         elif argument.startswith("--strategy="):
             name = argument[len("--strategy="):]
             if name not in STRATEGY_DB:
@@ -422,7 +446,7 @@ def main(argv=None, write=None, write_error=None):
 
     key_set = set()
     for snapshot in snapshot_list: key_set.update(snapshot)
-    finding_list = finding_list_of(snapshot_list, rt_max, epsilon)
+    finding_list = finding_list_of(snapshot_list, cadence_f)
     stained_list, cleared_list = _judge(root, key_set, finding_list,
                                         repeat_n)
     for line in report_line_tuple(finding_list, repeat_n, len(key_set),
@@ -490,11 +514,12 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     from . import run as run_service
     from vut.engine.orchestrator.run.summary import fold
 
+    #  THE FACE'S OWN WORDS DO NOT TRAVEL to 'hwut.run': left in, the
+    #  wish parser reads them as targets and selects nothing.
     wish_argv = [a for a in argv
-                 if not a.startswith(("--repeat=", "--rt-max=",
-                                      "--epsilon=", "--strategy=",
+                 if not a.startswith(("--repeat=", "--strategy=",
                                       "--directory="))
-                 and a != "--verbose"]
+                 and a not in ("--verbose", "--cadence")]
     snapshot_list = []
     for _ in range(repeat_n):
         event_list = []

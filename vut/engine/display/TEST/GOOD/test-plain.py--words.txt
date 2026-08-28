@@ -28,36 +28,38 @@
 00:00:13 | 001 | [START] SUIT:test-12.sh
 00:00:13 | 000 | [END  ] SUIT:test-12.sh ........... unexpected stderr  [FAIL]
 00:00:14 | 001 | [START] SUIT:test-13.sh
-00:00:14 | 000 | [END  ] SUIT:test-13.sh ............ stderr undecided  [FAIL]
+00:00:14 | 000 | [END  ] SUIT:test-13.sh .... region framing is broken  [FAIL]
 00:00:15 | 001 | [START] SUIT:test-14.sh
-00:00:15 | 000 | [END  ] SUIT:test-14.sh .... pype interpreter missing  [FAIL]
+00:00:15 | 000 | [END  ] SUIT:test-14.sh ............ stderr undecided  [FAIL]
 00:00:16 | 001 | [START] SUIT:test-15.sh
-00:00:16 | 000 | [END  ] SUIT:test-15.sh ......... pype script missing  [FAIL]
+00:00:16 | 000 | [END  ] SUIT:test-15.sh .... pype interpreter missing  [FAIL]
 00:00:17 | 001 | [START] SUIT:test-16.sh
-00:00:17 | 000 | [END  ] SUIT:test-16.sh . pype script has a syntax error  [FAIL]
+00:00:17 | 000 | [END  ] SUIT:test-16.sh ......... pype script missing  [FAIL]
 00:00:18 | 001 | [START] SUIT:test-17.sh
-00:00:18 | 000 | [END  ] SUIT:test-17.sh . pype killed by the supervisor  [FAIL]
+00:00:18 | 000 | [END  ] SUIT:test-17.sh . pype script has a syntax error  [FAIL]
 00:00:19 | 001 | [START] SUIT:test-18.sh
-00:00:19 | 000 | [END  ] SUIT:test-18.sh ................. pype failed  [FAIL]
+00:00:19 | 000 | [END  ] SUIT:test-18.sh . pype killed by the supervisor  [FAIL]
 00:00:20 | 001 | [START] SUIT:test-19.sh
-00:00:20 | 000 | [END  ] SUIT:test-19.sh .......... build tool missing  [FAIL]
+00:00:20 | 000 | [END  ] SUIT:test-19.sh ................. pype failed  [FAIL]
 00:00:21 | 001 | [START] SUIT:test-20.sh
-00:00:21 | 000 | [END  ] SUIT:test-20.sh . build killed by the supervisor  [FAIL]
+00:00:21 | 000 | [END  ] SUIT:test-20.sh .......... build tool missing  [FAIL]
 00:00:22 | 001 | [START] SUIT:test-21.sh
-00:00:22 | 000 | [END  ] SUIT:test-21.sh ............ the build failed  [FAIL]
+00:00:22 | 000 | [END  ] SUIT:test-21.sh . build killed by the supervisor  [FAIL]
 00:00:23 | 001 | [START] SUIT:test-22.sh
-00:00:23 | 000 | [END  ] SUIT:test-22.sh ............ target not built  [FAIL]
+00:00:23 | 000 | [END  ] SUIT:test-22.sh ............ the build failed  [FAIL]
 00:00:24 | 001 | [START] SUIT:test-23.sh
-00:00:24 | 000 | [END  ] SUIT:test-23.sh . a dependency would not be acquired  [FAIL]
+00:00:24 | 000 | [END  ] SUIT:test-23.sh ............ target not built  [FAIL]
 00:00:25 | 001 | [START] SUIT:test-24.sh
-00:00:25 | 000 | [END  ] SUIT:test-24.sh .. display target unreachable  [FAIL]
+00:00:25 | 000 | [END  ] SUIT:test-24.sh . a dependency would not be acquired  [FAIL]
 00:00:26 | 001 | [START] SUIT:test-25.sh
-00:00:26 | 000 | [END  ] SUIT:test-25.sh ....... a token nobody taught  [FAIL]
+00:00:26 | 000 | [END  ] SUIT:test-25.sh .. display target unreachable  [FAIL]
+00:00:27 | 001 | [START] SUIT:test-26.sh
+00:00:27 | 000 | [END  ] SUIT:test-26.sh ....... a token nobody taught  [FAIL]
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 26 fail, 00:00:26
+DIRECTORIES                                            0 ok, 27 fail, 00:00:27
 ------------------------------------------------------------------------------
-SUIT  suite/TEST ........................................ [FAIL]   0 of  26 ok
+SUIT  suite/TEST ........................................ [FAIL]   0 of  27 ok
 
 ==============================================================================
 FAILURES
@@ -76,19 +78,20 @@ SUIT  suite/TEST
     test-10.sh                   GOOD missing
     test-11.sh                   output cut short (no <hwut-end>)
     test-12.sh                   unexpected stderr
-    test-13.sh                   stderr undecided
-    test-14.sh                   pype interpreter missing
-    test-15.sh                   pype script missing
-    test-16.sh                   pype script has a syntax error
-    test-17.sh                   pype killed by the supervisor
-    test-18.sh                   pype failed
-    test-19.sh                   build tool missing
-    test-20.sh                   build killed by the supervisor
-    test-21.sh                   the build failed
-    test-22.sh                   target not built
-    test-23.sh                   a dependency would not be acquired
-    test-24.sh                   display target unreachable
-    test-25.sh                   a token nobody taught
+    test-13.sh                   region framing is broken
+    test-14.sh                   stderr undecided
+    test-15.sh                   pype interpreter missing
+    test-16.sh                   pype script missing
+    test-17.sh                   pype script has a syntax error
+    test-18.sh                   pype killed by the supervisor
+    test-19.sh                   pype failed
+    test-20.sh                   build tool missing
+    test-21.sh                   build killed by the supervisor
+    test-22.sh                   the build failed
+    test-23.sh                   target not built
+    test-24.sh                   a dependency would not be acquired
+    test-25.sh                   display target unreachable
+    test-26.sh                   a token nobody taught
 ==============================================================================
-[fold: good_f=False fail_n=26 verdict_n=26 fault_n=0]
+[fold: good_f=False fail_n=27 verdict_n=27 fault_n=0]
 <hwut-end>

@@ -30,6 +30,7 @@ from   typing      import Mapping, Optional
 from   ...compare               import main as compare_main
 from   ..result                 import E_TestRunResult
 from   ...compare.configuration import Configuration
+from   ...compare.region.registry import RegionSyntaxError
 from   ..nominal                import NominalNotAvailable
 from   .terminal                import ends_in_terminal
 from   ..observer               import notify
@@ -148,6 +149,15 @@ class EquivalenceCheck:
                 ok = await compare_main.is_equivalent(options,
                                                       subject_reader,
                                                       nominal_reader)
+            except RegionSyntaxError as error:
+                #  THE TEXT ARRIVED AND CANNOT BE READ. A broken region
+                #  framing is a VERDICT WITH A REASON, not an exception:
+                #  raised through, it dies in the scheduler as 'Task
+                #  exception was never retrieved' and the run loses the
+                #  one thing it is for.
+                ok     = False
+                report = E_TestRunResult.REGION_SYNTAX_ERROR
+                notify(self.observer, "diagnosis", name, str(error))
             finally:
                 for reader in (subject_reader, nominal_reader):
                     close = getattr(reader, "close", None)
