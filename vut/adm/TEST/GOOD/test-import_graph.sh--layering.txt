@@ -1,0 +1,34 @@
+--- a tree that obeys its declaration
+STATUS: 0
+STDOUT {
+    LAYERING: every edge obeys 'rules.txt' (4 component(s), 3 edge(s))
+}
+--- ONE edge the declaration does not permit
+STATUS: 1
+STDOUT {
+    LAYERING VIOLATED -- 1 edge(s) no rule permits:
+        engine -> faces
+}
+--- and a declaration permitting it makes the tree obedient
+STATUS: 0
+STDOUT {
+    LAYERING: every edge obeys 'rules.txt' (4 component(s), 4 edge(s))
+}
+--- globs stand on either side
+STATUS: 0
+STDOUT {
+    LAYERING: every edge obeys 'wide.txt' (4 component(s), 4 edge(s))
+}
+--- SEALED: a component that imports nothing of this tree
+STATUS: 0
+STDOUT {
+    LAYERING: every edge obeys 'sealed.txt' (4 component(s), 4 edge(s))
+    SEALED: base/contract -- nothing leaves
+}
+--- and one import out of it breaks the seal, at DEPTH 1,
+    where 'base/contract' is not even a component
+STATUS: 1
+STDOUT {
+    SEAL BROKEN -- 1 import(s) leave a sealed component:
+        base/contract/enums.py -> engine/plan/wish.py
+}

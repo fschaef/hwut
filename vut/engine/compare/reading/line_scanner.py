@@ -40,7 +40,7 @@ ________________________________________________________________________________
 """
 from enum import Enum, auto
 
-from vut.engine.compare.engine.semantics import is_insignificant_line
+from vut.engine.compare.contract.semantics import is_insignificant_line
 
 
 class E_LineClass(Enum):

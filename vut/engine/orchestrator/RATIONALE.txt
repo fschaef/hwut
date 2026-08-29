@@ -208,3 +208,79 @@ GRAVEYARD Rewriting record headers in 'hwut.rename': a feature against
           Never-reuse and retirement: guards for ids persisted
           ANYWHERE; persisting them only where remove deletes them is
           the cheaper law.
+
+R-73  THE SELECTION IS ONE BRICK -- 'exploration/selection.py'
+
+PROBLEM   Six faces wrote the same four lines apiece: 'explore' or
+          'explore_tree', a Bookkeeper where the wish asks the base, a
+          'CTestTaskListQuery', and 'get_test_cases'. 'plan',
+          'wishlist', 'accept', 'report', 'play' and the label faces
+          each assembled them, differing only in whether they walk ONE
+          DIRECTORY or A TREE.
+
+          THAT IS NOT SIX FACES USING A COMPONENT. It is ONE ACTION
+          IMPLEMENTED SIX TIMES, and the sixth copy is where they
+          start to disagree -- 'labels/_faces' had already grown a
+          SECOND pass building throwaway queries to re-derive the glob
+          reach, because the first pass did not hand it back.
+
+DECISION  Two doors and no more: 'of_directory' and 'of_tree'. Each
+          explores, decides the Bookkeeper, builds the query, and
+          answers a 'CSelection' -- the cases, the faults, the
+          findings, and WHAT IT BUILT ON THE WAY: 'result_db',
+          'bookkeeper_db', 'query_db', 'met_set'.
+
+          IT HANDS BACK WHAT IT BUILT because faces need different
+          parts of one act: 'hwut.report' reads the book behind the
+          selection, 'hwut.plan' needs the QUERY itself ('determine'
+          takes a task list, not cases), and a caller asking 'which
+          globs met nothing' must not re-derive it -- deriving it
+          needs the root and the queries this module built, and a
+          caller that tried got it wrong.
+
+          THE HAND-DOWN LAW IS UNCHANGED. The Bookkeeper is still made
+          ABOVE the query; only the number of places that make it
+          moved from six to one.
+
+COST      A face that wants an unusual combination reaches into
+          'CSelection' rather than assembling its own. 'base_f'
+          overrides the wish's own answer for the one face that reads
+          candidates whatever the wish asked ('hwut.accept').
+
+VERIFIED  352 declared choices unmoved -- five faces refactored and
+          not one behaviour changed. Sixteen imports fell out, which
+          the static-analysis ratchet counted before I did.
+
+          FACES KNOWING 'Bookkeeper': NINE BEFORE, FOUR AFTER, and the
+          four are the ones whose subject IS the record -- 'rename'
+          and 'remove' re-key and forget it, 'tell' packs it,
+          'stability' reads what it names. The five that lost it knew
+          the storage layer existed only because a selection needed
+          one handed in.
+
+R-74  THE WISH NAMES DIRECTORIES -- '--dir <glob>'
+
+PROBLEM   The wish selected RUNS. A directory entered only as a filter
+          on a run's path, so a vocabulary that could SUBTRACT a
+          directory ('--exclude-dir') could not NAME one. That is a
+          hole, and it was there before anybody wanted the feature.
+          'hwut.target' exposed it: its subject genuinely IS
+          directories, so it parsed its own arguments and shared no
+          selection with any other face (disc-9).
+
+DECISION  'Wish.dir_tuple', '--dir <glob>', in the ONE wish parser.
+          A UNION among its own globs, NARROWING against the rest of
+          the wish -- the law '--label' already taught (disc-8), so
+          nobody learns a second rule.
+          'selection.directory_tuple' is THE OTHER VIEW of one
+          selection: the directories a wish names, whether it named
+          them or named runs that stand in them. A face asks for the
+          view it needs, and the wish need not know which asked.
+
+COST      Eleven GOODs moved, all of them the usage line: '--dir'
+          joined 'USAGE_TOKEN_TUPLE' and nine faces show it.
+
+VERIFIED  352 declared choices green. The matcher is '--exclude-dir's
+          own, so a glob with '/' matches the path and a bare name
+          matches any component -- one rule wherever a directory is
+          named.

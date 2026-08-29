@@ -282,7 +282,7 @@ def propagate_blockers(pad_blocker_db: list[int], lane_mask_db: list[int]):
         # Iterate backwards from limit_idx-1 down to 0.
         # zip() pairs the countdown index with the reversed slice of pad lists.
         loop_iterator = zip(range(limit_idx - 1, -1, -1), 
-                            lane_pads_list[:limit_idx][::-1])
+                            lane_pads_list[:limit_idx][::-1], strict=False)
 
         for sidx, current_lane_pads in loop_iterator:
             

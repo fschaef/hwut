@@ -43,7 +43,7 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.engine.line          import Line
-from   vut.engine.compare.engine.analogy_db    import AnalogyDb
+from   vut.engine.compare.contract.analogy_db    import AnalogyDb
 from   vut.engine.compare.TEST.common          import prepare, print_match_sequences
 from   vut.engine.compare.reading.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration        import Configuration

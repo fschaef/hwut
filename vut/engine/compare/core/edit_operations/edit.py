@@ -16,7 +16,7 @@ EditSequence: maintains a list of edit objects.
 from  vut.engine.compare.reading.line_element import E_ToleranceId
 # E_EditId lives in the shared semantics module (single source of the
 # comparison semantics); re-exported here for the existing import sites.
-from  vut.engine.compare.engine.semantics          import E_EditId  # noqa: F401
+from  vut.engine.compare.contract.semantics          import E_EditId  # noqa: F401
 
 class Edit:
     __slots__ = ('id', '_auxiliary', 'cost')
@@ -109,7 +109,8 @@ def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_
             elif op == E_EditId.GOOD_TOLERATED: si += 1; ni += 1
             elif op == E_EditId.GOOD_INSERT:    ni += 1
             elif op == E_EditId.GOOD_DELETE:    si += 1
-            else:                               assert False
+            else:                               raise AssertionError(
+                                                    "no edit id '%s'" % op)
 
     return list(iterable(subject_line_element_list, nominal_line_element_list, 
                          func_is_visible_nothing, func_is_identical))
@@ -128,5 +129,5 @@ def list_EditGOOD_line_sequence(subject_list, nominal_list):
                          all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in le_list),
                          lambda subject, nominal: 
                          len(subject) == len(nominal) \
-                         and all(s._string == n._string for s, n in zip(subject, nominal)))
+                         and all(s._string == n._string for s, n in zip(subject, nominal, strict=False)))
 

@@ -40,6 +40,7 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
+export PATH="$ROOT/vut/bin:$PATH"    # '#! /usr/bin/env hwut.pype'
 FACE="python3 -m vut.services.play"
 unset NO_COLOR CI COLUMNS
 

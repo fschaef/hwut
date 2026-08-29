@@ -38,7 +38,13 @@ def notify(observer, method_name, *argument_list):
     if method is None:   return
     try:
         method(*argument_list)
-    except Exception:
+    except Exception:  # noqa: S110 -- deliberate, and load-bearing
+        #  AN OBSERVER MUST NEVER BREAK THE RUN IT WATCHES. Whatever
+        #  a watcher does wrong is the watcher's business; the tests
+        #  keep running, and their verdicts stay what they were. This
+        #  is the one place in the tree where swallowing is the
+        #  correct act, and it is swallowed BROADLY on purpose: an
+        #  observer may raise anything at all.
         pass
 
 

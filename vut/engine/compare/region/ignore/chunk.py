@@ -8,7 +8,7 @@ an ignore region on one side with no region on the other is a structural
 mismatch (not equivalent) -- only the CONTENTS are exempt from judgment.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums               import E_Chunk
+from   vut.engine.compare.contract.enums               import E_Chunk
 from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)

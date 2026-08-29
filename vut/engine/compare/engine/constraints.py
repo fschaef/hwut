@@ -123,7 +123,7 @@ class ConstraintExpression:
         except SyntaxError as e:
             raise ConstraintSpecError(
                 "constraint for '%s': %r is not parseable (%s)"
-                % (variable, text, e.msg))
+                % (variable, text, e.msg)) from None
         self.depend_set = self._validate(tree)
         self._code      = compile(tree, "<constraint>", "eval")
 
@@ -354,7 +354,7 @@ def iter_bindings(line):
     """
     if line is None:
         return
-    from vut.engine.compare.engine.enums import E_ToleranceId
+    from vut.engine.compare.contract.enums import E_ToleranceId
     for element in line.sequence:
         if element.tolerance_id is E_ToleranceId.CONSTRAINT_BINDING:
             yield element.name, element.value

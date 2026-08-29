@@ -35,7 +35,7 @@ def do(subject, nominal, analogy_db):
     n_content, n_filler = split(nominal)
 
     result = []
-    for s, n in zip(s_content, n_content):
+    for s, n in zip(s_content, n_content, strict=False):
         s_d, n_d = _display_line(s), _display_line(n)
         if s_d._string == n_d._string:
             result.append(LinePair(s_d, n_d, (Edit(E_EditId.GOOD),),

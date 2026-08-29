@@ -34,10 +34,6 @@ ______________________________________________________________________________
 """
 import sys
 
-from   vut.engine.orchestrator.exploration.task_list \
-                                             import SelectionError
-from   vut.engine.orchestrator.exploration.tree_explorer \
-                                             import RootConfMissing
 from   vut.engine.orchestrator.plan.label    import reserved_reason
 from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
                                                      USAGE_TOKEN_TUPLE,
@@ -46,8 +42,8 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   .._core                               import usage_line
 from   .._exit                               import E_ExitCode
 from   .                                     import _file
-from   ._faces                               import (selected_key_tuple,
-                                                     split_directory)
+from   .                                    import _editing
+from   ._faces                               import split_directory
 
 USAGE = usage_line("hwut.labels.create",
                    ("<label>",) + USAGE_TOKEN_TUPLE
@@ -99,49 +95,31 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    try:
-        boundary = _file.boundary_of(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    try:
-        entry_db = _file.read_entry_db(boundary)
-    except _file.LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
-    if any(label in label_set for label_set in entry_db.values()):
+    #  ONE ACTION, ONE PLACE ('_editing.py'): climb, read, view,
+    #  select. Three verbs on one entry set is one action, and it was
+    #  written three times.
+    open_labels = _editing.opened(directory, write)
+    if open_labels.status is not None: return open_labels.status
+
+    if _editing.stands_f(open_labels, label):
         write("REFUSED: the label '%s' already stands -- "
               "'hwut.labels.add' grows a standing set; this face "
               "only creates, so a typo cannot silently grow the "
               "wrong one" % label)
         return E_ExitCode.REFUSED
 
-    view = _file.view_of(boundary, entry_db)
-    try:
-        key_tuple, warning_tuple, fault_tuple = \
-            selected_key_tuple(directory, wish, view)
-    except (SelectionError, RootConfMissing) as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for warning in warning_tuple: write(warning)
-    if fault_tuple:
-        for fault in fault_tuple: write("FAULT: %s" % fault)
-        write("nothing written: a tree that cannot be fully read "
-              "cannot say what it offers")
-        return E_ExitCode.FAULT
+    key_tuple = _editing.selected(open_labels, directory, wish, write)
+    if key_tuple is None: return open_labels.status
     if not key_tuple:
         write("EMPTY: the wish selected nothing; no label is created "
               "-- an empty set is not a set anybody wanted")
         return E_ExitCode.EMPTY
 
     for key in key_tuple:
-        entry_db[key] = entry_db.get(key, frozenset()) | {label}
-    try:
-        _file.write_entry_db(boundary, entry_db)
-    except OSError as error:
-        write("FAULT: '%s' cannot be written -- %s"
-              % (_file.file_path(boundary), error))
-        return E_ExitCode.FAULT
+        open_labels.entry_db[key] = \
+            open_labels.entry_db.get(key, frozenset()) | {label}
+    if not _editing.written(open_labels, write):
+        return open_labels.status
 
     write("%s: created, %d member%s -- a snapshot of what the wish "
           "selected"

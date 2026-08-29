@@ -108,7 +108,7 @@ def read_entry_db(boundary):
                 target_part = expanded_target(target_part, previous)
             except ElisionError as error:
                 raise LabelFileError("%s:%d: %s"
-                                     % (path, number, error))
+                                     % (path, number, error)) from None
         previous = target_part
         key = _key(path, number, target_part)
         if key in entry_db:
@@ -230,7 +230,8 @@ def _elided_line_list(entry_db):
     key_list = sorted(entry_db, key=sort_key)
     return [(target, tuple(sorted(entry_db[key])))
             for key, target
-            in zip(key_list, elided_target_tuple(key_list))]
+            in zip(key_list, elided_target_tuple(key_list),
+                   strict=True)]
 
 
 def _split(path, number, text):

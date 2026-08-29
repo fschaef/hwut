@@ -14,8 +14,8 @@ import vut.engine.compare.core.edit_operations.line as     edit_operations_line
 from   vut.engine.compare.core.line_pair            import LinePair, display_twin
 from   vut.engine.compare.core.edit_operations.edit import Edit, E_EditId
 import vut.engine.compare.region.potpourri.pairing                as     pairing
-from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
-from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
+from   vut.engine.compare.contract.analogy_db                       import AnalogyDb
+from   vut.engine.compare.contract.frozen_analogy_db                import FrozenAnalogyDb
 
 def do(subject, nominal, analogy_db, max_comparison_count,
        subset_f=False):

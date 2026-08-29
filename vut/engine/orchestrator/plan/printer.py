@@ -16,7 +16,7 @@ truncated print cannot be mistaken for one another.
                  at a time
 ______________________________________________________________________________
 """
-from .form import E_LinkKind, E_NodeKind, E_Provenance
+from .form import E_LinkKind, E_Provenance
 
 
 def print_plan(plan, write=None):

@@ -48,7 +48,7 @@ import sys
 
 from   vut.engine.coverage.record   import (parse_record, format_record,
                                             RecordFault)
-from   vut.engine.coverage.binary   import pack_record, unpack_record, MAGIC
+from   vut.engine.coverage.binary   import pack_record, unpack_record
 from   vut.engine.coverage.reader   import registered_tuple, framework_of
 from   vut.engine.coverage.registry import DEFAULT_TOOL_DB
 from   ._exit                       import E_ExitCode

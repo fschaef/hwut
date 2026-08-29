@@ -58,7 +58,7 @@ class AnalogyProvenanceDb(bidict):
             if lp.subject_line_n == -1 or lp.nominal_line_n == -1: 
                 continue
             cells_s, cells_n = lp.subject_list(), lp.nominal_list()
-            for sc, nc in zip(cells_s, cells_n):
+            for sc, nc in zip(cells_s, cells_n, strict=False):
                 if sc.tolerance_id is not E_ToleranceId.ANALOGY: 
                     continue
                 s_val, n_val = sc.subject, nc.nominal

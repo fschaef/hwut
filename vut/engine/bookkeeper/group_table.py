@@ -206,14 +206,14 @@ class GroupTable:
             if head.startswith("R:"):
                 try:               self.generation = int(head[2:])
                 except ValueError: raise GroupFault(
-                                       "'%s' spells no generation" % line)
+                                       "'%s' spells no generation" % line) from None
                 continue
             if head.startswith("N:"):
                 if mark_seen:
                     raise GroupFault("the group mark stands twice")
                 try:               mark = int(head[2:])
                 except ValueError: raise GroupFault("'%s' spells no mark"
-                                                    % line)
+                                                    % line) from None
                 if mark > ID_LIMIT:
                     raise GroupFault("mark '%s' lies beyond ID_LIMIT"
                                      % line)
@@ -224,7 +224,7 @@ class GroupTable:
                 raise GroupFault("unknown group-table line '%s'" % line)
             try:               group_id = int(head[2:])
             except ValueError: raise GroupFault("'%s' spells no group id"
-                                                % head)
+                                                % head) from None
             key_set = frozenset(run_id_of_text(word)
                                 for word in body.split(",") if word.strip())
             if group_id == EMPTY_GROUP and key_set:

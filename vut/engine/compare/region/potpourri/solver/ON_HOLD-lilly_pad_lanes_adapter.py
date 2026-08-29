@@ -4,7 +4,7 @@ PURPOSE: Re-interpretation of the analogy constraint matching database
 """
 from typing import Iterable
 from vut.engine.compare.region.potpourri.potential_pair_db import PotentialPairDb
-from vut.engine.compare.engine.analogy_db           import AnalogyDb
+from vut.engine.compare.contract.analogy_db           import AnalogyDb
 
 class LillyPadLanesAdapter:
     """

@@ -25,6 +25,16 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         OR'ed among themselves and AND'ed against the
                         includes -- a case is wanted where an include
                         names it AND no exclude does.
+    --dir <glob>        A DIRECTORY WANTED, and every run in it. The
+                        glob matches a path relative to the run's root
+                        ('messaging/*') or a BARE NAME matching any
+                        path COMPONENT -- the same matching
+                        '--exclude-dir' uses. SEVERAL ARE A UNION
+                        among themselves and NARROW against the rest
+                        of the wish: '--dir a --fail' is 'the failing
+                        runs under a' (disc-10). A DIRECTORY-RELATED
+                        face reads the same field as its SUBJECT
+                        rather than as a filter.
     --exclude-dir <glob>
                         a DIRECTORY not wanted, AND EVERY DIRECTORY
                         BELOW IT. The glob matches either a path
@@ -119,6 +129,7 @@ MONTH_INDEX   = {name.lower(): index for index, name
 USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--until=<point>]", "[--glob <target>]...",
                      "[--exclude <target>]...",
+                     "[--dir <glob>]...",
                      "[--exclude-dir <glob>]...",
                      "[--wishlist <file>]...", "[--label <expr>]")
 
@@ -131,6 +142,16 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         and a case NEVER RUN is wanted too -- the
                         stale wish
     --exclude <target>  a target NOT wanted, whatever else selects it
+    --dir <glob>        A DIRECTORY WANTED, and every run in it. The
+                        glob matches a path relative to the run's root
+                        ('messaging/*') or a BARE NAME matching any
+                        path COMPONENT -- the same matching
+                        '--exclude-dir' uses. SEVERAL ARE A UNION
+                        among themselves and NARROW against the rest
+                        of the wish: '--dir a --fail' is 'the failing
+                        runs under a' (disc-10). A DIRECTORY-RELATED
+                        face reads the same field as its SUBJECT
+                        rather than as a filter.
     --exclude-dir <glob>
                         a directory not wanted, and every directory
                         below it; a bare name matches any component
@@ -175,6 +196,7 @@ class Wish:
     wishlist_f:        bool  = False
     exclude_tuple:     tuple = ()
     exclude_dir_tuple: tuple = ()
+    dir_tuple:         tuple = ()
     label_spec: str | None = None
 
     def states_nothing_f(self):
@@ -192,7 +214,7 @@ class Wish:
         """
         return not (self.fail_f or self.pass_f or self.glob_tuple
                     or self.wishlist_f or self.exclude_tuple
-                    or self.exclude_dir_tuple) \
+                    or self.exclude_dir_tuple or self.dir_tuple) \
                and self.since_spec is None and self.until_spec is None \
                and self.label_spec is None
 
@@ -238,6 +260,8 @@ class Wish:
                          for text in self.glob_tuple)
         part_list.extend('--exclude "%s"' % text
                          for text in self.exclude_tuple)
+        part_list.extend('--dir "%s"' % text
+                         for text in self.dir_tuple)
         part_list.extend('--exclude-dir "%s"' % text
                          for text in self.exclude_dir_tuple)
         if self.label_spec is not None:
@@ -268,6 +292,7 @@ def parse_wish(argv):
     glob_list        = []
     exclude_list     = []
     exclude_dir_list = []
+    dir_list         = []
     wishlist_f       = False
     label_spec       = None
     rest_list        = []
@@ -303,6 +328,12 @@ def parse_wish(argv):
             exclude_list.append(argument[len("--exclude="):])
         elif argument.startswith("--exclude-dir="):
             exclude_dir_list.append(argument[len("--exclude-dir="):])
+        elif argument == "--dir":
+            if index >= len(argv):
+                raise WishError("'--dir' stands without a glob")
+            dir_list.append(argv[index]); index += 1
+        elif argument.startswith("--dir="):
+            dir_list.append(argument[len("--dir="):])
         elif argument == "--wishlist":
             if index >= len(argv):
                 raise WishError("'--wishlist' stands without a file")
@@ -331,7 +362,7 @@ def parse_wish(argv):
                 parse_expression(text)
             except LabelExprError as error:
                 raise WishError("'--label %s' cannot be read -- %s"
-                                % (text, error))
+                                % (text, error)) from None
             label_spec = text
         else:
             rest_list.append(argument)
@@ -350,7 +381,7 @@ def parse_wish(argv):
     return (Wish(fail_f, pass_f, since_spec, until_spec,
                  tuple(glob_list), wishlist_f,
                  tuple(exclude_list), tuple(exclude_dir_list),
-                 label_spec),
+                 tuple(dir_list), label_spec),
             rest_list)
 
 
@@ -376,7 +407,7 @@ def wishlist_target_tuple(file_name):
             line_list = file_handle.read().splitlines()
     except OSError as error:
         raise WishError("the wishlist '%s' cannot be read -- %s"
-                        % (file_name, error))
+                        % (file_name, error)) from None
 
     #  ABSOLUTE, always: the list's ground must be a place, not a
     #  path relative to wherever the reader happens to stand. That is
@@ -392,7 +423,7 @@ def wishlist_target_tuple(file_name):
                 text = expanded_target(text, previous)
             except ElisionError as error:
                 raise WishError("'%s', line %d: %s"
-                                % (file_name, number, error))
+                                % (file_name, number, error)) from None
         elif text.startswith("./"):
             text = "%s/%s" % (here.replace(os.sep, "/").rstrip("/"),
                               text[2:])
@@ -516,7 +547,7 @@ def cutoff_instant(spec, now):
         year  = now.year if month <= now.month else now.year - 1
         anchor_day = day.replace(year=year, month=month, day=1)
     else:
-        assert False, "'%s' passed parsing yet names no point" % spec
+        raise AssertionError("'%s' passed parsing yet names no point" % spec)
     return datetime(anchor_day.year, anchor_day.month, anchor_day.day,
                     tzinfo=timezone.utc)
 

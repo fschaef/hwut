@@ -30,7 +30,6 @@ from   typing      import Optional, Sequence
 
 from   .result                  import E_TestRunResult
 from   ..procsitter.procsitter  import (Procsitter,
-                                        ProcsitterConfig,
                                         E_Containment)
 
 

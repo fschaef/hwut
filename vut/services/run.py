@@ -71,13 +71,12 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              parse_wish,
                                                              with_targets)
 from   vut.engine.orchestrator.run.dispatcher        import test_run_dispatcher_factory
-from   vut.engine.orchestrator.exploration.variant   import (name_tuple_of,
-                                                             VariantError)
+from   vut.engine.orchestrator.exploration.variant   import (name_tuple_of)
 from   vut.engine.orchestrator.run.orchestrate       import orchestrator
 from   vut.engine.orchestrator.run.strategy          import (DEFAULT_STRATEGY_NAME,
                                                              STRATEGY_DB,
                                                              strategy_of)
-from   vut.engine.orchestrator.run.summary           import fold
+from   vut.engine.protocol.summary           import fold
 from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
                                                              as WISH_TOKEN_TUPLE
 from   ._core                                        import usage_line

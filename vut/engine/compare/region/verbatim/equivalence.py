@@ -1,6 +1,6 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer"""
 from __future__ import annotations
-from vut.engine.compare.engine.analogy_db import AnalogyDb
+from vut.engine.compare.contract.analogy_db import AnalogyDb
 
 
 def _raw(line):

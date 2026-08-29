@@ -14,7 +14,7 @@ Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
 import vut.engine.compare.region.potpourri.matching as m
-from   vut.engine.compare.engine.analogy_db import AnalogyDb
+from   vut.engine.compare.contract.analogy_db import AnalogyDb
 from   typeguard import typechecked
 
 def do(subject, nominal, analogy_db, abort_early_f, subset_f=False):

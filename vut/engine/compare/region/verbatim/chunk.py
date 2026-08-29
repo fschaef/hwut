@@ -14,7 +14,7 @@ display filler. 'Verbatim' governs how CONTENT lines compare, not which
 lines take part.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums               import E_Chunk
+from   vut.engine.compare.contract.enums               import E_Chunk
 from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)

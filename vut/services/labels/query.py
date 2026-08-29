@@ -43,10 +43,8 @@ import os
 import sys
 
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                             import (RootConfMissing,
-                                                     explore_tree)
-from   vut.engine.orchestrator.exploration.task_list \
-                                             import CTestTaskListAll
+                                             import RootConfMissing
+from   vut.engine.orchestrator.exploration   import selection
 from   vut.engine.orchestrator.plan.label    import (STANDARD_LABEL,
                                                      UNIVERSE_NAME,
                                                      LabelExprError,
@@ -77,21 +75,21 @@ def named_key_tuple(directory, view, tree):
     The domain is the WALKED TREE, not the file: 'NOT <label>' names
     the unlabelled runs too, and only the tree can say who they are.
     """
-    root        = os.path.abspath(directory)
-    prefix      = os.path.relpath(root, view.boundary)
-    exploration = explore_tree(root)
-    key_list    = []
-    for where, result in exploration:
-        for case in CTestTaskListAll().get_test_cases(result.app_set):
-            joined = os.path.normpath(
-                os.path.join(prefix, where, case.source_file))
-            file   = joined.replace(os.sep, "/")
-            label_set = view.label_set_of(
-                os.path.join(view.boundary, file), case.choice)
-            if evaluate_f(tree, label_set):
-                key_list.append((file, case.choice))
+    root     = os.path.abspath(directory)
+    prefix   = os.path.relpath(root, view.boundary)
+    found    = selection.all_of_tree(root)
+    key_list = []
+    for entry in found.case_list:
+        joined = os.path.normpath(
+            os.path.join(prefix, entry.directory,
+                         entry.case.source_file))
+        file   = joined.replace(os.sep, "/")
+        label_set = view.label_set_of(
+            os.path.join(view.boundary, file), entry.case.choice)
+        if evaluate_f(tree, label_set):
+            key_list.append((file, entry.case.choice))
     return (tuple(sorted(set(key_list), key=_file.sort_key)),
-            exploration.fault_tuple)
+            found.fault_tuple)
 
 
 def main(argv=None, write=None):

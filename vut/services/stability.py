@@ -519,7 +519,7 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     this face reports on the runs, not for them.
     """
     from . import run as run_service
-    from vut.engine.orchestrator.run.summary import fold
+    from vut.engine.protocol.summary import fold
 
     #  THE FACE'S OWN OPTIONS DO NOT TRAVEL to 'hwut.run', which does
     #  not take them. THE WISH'S WORDS DO -- options and bare targets

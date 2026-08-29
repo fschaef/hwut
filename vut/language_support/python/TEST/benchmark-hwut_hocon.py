@@ -26,7 +26,7 @@ import config                                                   # noqa: F401
 from vut.language_support.python.hwut_hocon import parse, SourceLine
 
 
-HEADER = '''hwut {
+HEADER = '''@hwut {
     title       = "Parser corner cases"
     build       { framework = "make"  executable = "special.exe" }
     caps        { timeout_sec = 30  network = false  memory_mb = 512 }
@@ -48,7 +48,7 @@ HEADER = '''hwut {
 }
 '''
 
-SHORT = '''# hwut {
+SHORT = '''# @hwut {
 #     title   = "A modest header"
 #     choices = ["one", "two"]
 # }

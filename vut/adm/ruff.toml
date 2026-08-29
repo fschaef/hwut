@@ -1,6 +1,30 @@
 exclude = [
     "**/TEST/*"
 ]
-# E701, E702 -- multiple statements in one line
-# E221 -- multiple whitespace after assignment
-lint.ignore = ["E701", "E702", "E221"]
+
+#  WHAT THIS TREE DOES NOT CALL A DEFECT.
+#
+#  E701, E702 -- multiple statements in one line
+#  E221       -- multiple whitespace after assignment
+#                Both serve the column alignment this tree reads by:
+#                a dispatch of short 'if x: return y' arms is one
+#                table, and a table wants columns.
+#
+#  UP031      -- percent formatting. HOUSE STYLE, everywhere, and 878
+#                findings of it drown every finding that matters.
+#  I001       -- import sorting. The import blocks are column-aligned
+#                by hand and grouped by origin; a sorter would break
+#                the alignment to satisfy an order nobody reads by.
+#  S101       -- 'assert'. THE DOOR GUARDS ARE ASSERTS, deliberately:
+#                a caller that hands a query no Bookkeeper while
+#                asking the base has made a programming error, and it
+#                is refused where it happens, not carried onward. 74
+#                of them, and every one is a guard.
+#                (Note the distinction 'B011' draws and this tree
+#                keeps: a guard MAY vanish under '-O'; a DISPATCH
+#                THAT FELL THROUGH may not, and those are raised.)
+#
+#  S105       -- 'hardcoded password'. There are none; the rule reads
+#                a key named 'token' and guesses wrong.
+lint.ignore = ["E701", "E702", "E221", "UP031", "I001",
+               "S101", "S105"]

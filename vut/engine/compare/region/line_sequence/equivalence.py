@@ -1,6 +1,6 @@
 from __future__ import annotations
-from vut.engine.compare.engine.analogy_db  import AnalogyDb
-from vut.engine.compare.engine.semantics   import commit_analogies
+from vut.engine.compare.contract.analogy_db  import AnalogyDb
+from vut.engine.compare.contract.semantics   import commit_analogies
 from vut.engine.compare.engine             import constraints
 
 def do(subject:    InputChunk,    #noqa F821
@@ -52,7 +52,7 @@ def _judge(subject, nominal, analogy_db):
 
     analogy_list = []
     assert len(subject.line_list) < 2 and len(nominal.line_list) < 2
-    for subject_line, nominal_line in zip(subject.line_list, nominal.line_list):
+    for subject_line, nominal_line in zip(subject.line_list, nominal.line_list, strict=False):
         verdict, new_analogy_list = subject_line.is_equivalent(nominal_line, analogy_db)
         if not verdict:
             return False, analogy_db

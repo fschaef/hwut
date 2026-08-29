@@ -252,7 +252,7 @@ class MkdirMutex:
                 if self._held_by_self(holder):
                     raise DirectoryDeadlock(
                         "directory '%s' is already held by this very "
-                        "process" % self.directory)
+                        "process" % self.directory) from None
                 if time.monotonic() < deadline:
                     time.sleep(self.poll_sec)
                     continue

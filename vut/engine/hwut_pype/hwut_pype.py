@@ -299,7 +299,7 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
                         condition = compile(condition_txt.strip(), where, "eval")
                     except SyntaxError as error:
                         raise PypeError("%s: cannot compile 'if' condition: %s"
-                                        % (where, error))
+                                        % (where, error)) from None
                     current_handler = Handler("match", owner_name=owner,
                                               where=where, condition=condition,
                                               cause_txt=head_txt)
@@ -812,7 +812,7 @@ class _Nfa:
     def f_seq(self, frag_list):
         """RETURN: (int, int), fragment matching the concatenation."""
         assert frag_list
-        for (_, e1), (s2, _) in zip(frag_list, frag_list[1:]):
+        for (_, e1), (s2, _) in zip(frag_list, frag_list[1:], strict=False):
             self.eps[e1].append(s2)
         return frag_list[0][0], frag_list[-1][1]
 

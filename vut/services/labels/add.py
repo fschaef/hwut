@@ -31,10 +31,6 @@ ______________________________________________________________________________
 """
 import sys
 
-from   vut.engine.orchestrator.exploration.task_list \
-                                             import SelectionError
-from   vut.engine.orchestrator.exploration.tree_explorer \
-                                             import RootConfMissing
 from   vut.engine.orchestrator.plan.label    import (STANDARD_LABEL,
                                                      reserved_reason)
 from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
@@ -44,8 +40,8 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   .._core                               import usage_line
 from   .._exit                               import E_ExitCode
 from   .                                     import _file
-from   ._faces                               import (selected_key_tuple,
-                                                     split_directory)
+from   .                                    import _editing
+from   ._faces                               import split_directory
 
 USAGE = usage_line("hwut.labels.add",
                    ("<label>",) + USAGE_TOKEN_TUPLE
@@ -96,37 +92,19 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    try:
-        boundary = _file.boundary_of(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    try:
-        entry_db = _file.read_entry_db(boundary)
-    except _file.LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
+    #  ONE ACTION, ONE PLACE ('_editing.py').
+    open_labels = _editing.opened(directory, write)
+    if open_labels.status is not None: return open_labels.status
+
     if label != STANDARD_LABEL \
-       and not any(label in label_set
-                   for label_set in entry_db.values()):
+       and not _editing.stands_f(open_labels, label):
         write("REFUSED: no label '%s' stands -- 'hwut.labels.create' "
               "makes a new one; this face only grows, so a typo "
               "cannot silently make a set nobody asked for" % label)
         return E_ExitCode.REFUSED
 
-    view = _file.view_of(boundary, entry_db)
-    try:
-        key_tuple, warning_tuple, fault_tuple = \
-            selected_key_tuple(directory, wish, view)
-    except (SelectionError, RootConfMissing) as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for warning in warning_tuple: write(warning)
-    if fault_tuple:
-        for fault in fault_tuple: write("FAULT: %s" % fault)
-        write("nothing written: a tree that cannot be fully read "
-              "cannot say what it offers")
-        return E_ExitCode.FAULT
+    key_tuple = _editing.selected(open_labels, directory, wish, write)
+    if key_tuple is None: return open_labels.status
     if not key_tuple:
         write("EMPTY: the wish selected nothing; nothing is written")
         return E_ExitCode.EMPTY
@@ -134,18 +112,14 @@ def main(argv=None, write=None):
     added_list   = []
     already_list = []
     for key in sorted(set(key_tuple), key=_file.sort_key):
-        if label in entry_db.get(key, frozenset()):
+        if label in open_labels.entry_db.get(key, frozenset()):
             already_list.append(key)
         else:
             added_list.append(key)
-            entry_db[key] = entry_db.get(key, frozenset()) | {label}
-    if added_list:
-        try:
-            _file.write_entry_db(boundary, entry_db)
-        except OSError as error:
-            write("FAULT: '%s' cannot be written -- %s"
-                  % (_file.file_path(boundary), error))
-            return E_ExitCode.FAULT
+            open_labels.entry_db[key] = \
+                open_labels.entry_db.get(key, frozenset()) | {label}
+    if added_list and not _editing.written(open_labels, write):
+        return open_labels.status
 
     write("%s: %d added, %d already carrying"
           % (label, len(added_list), len(already_list)))

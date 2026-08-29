@@ -10,7 +10,6 @@ An entry names its directory RELATIVE to the root; the root itself
 stands on the CTreePlan, so no entry carries a machine-chosen path.
 ______________________________________________________________________________
 """
-import os
 
 from dataclasses import dataclass
 

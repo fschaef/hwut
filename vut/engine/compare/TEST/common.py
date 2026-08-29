@@ -14,7 +14,7 @@ from   vut.engine.compare.reading.line_element import LineElementString, \
                                                         LineElementAnalogy, \
                                                         LineElementVisibleNothing, \
                                                         LineElementEquivalencePattern
-from   vut.engine.compare.engine.enums           import E_Chunk
+from   vut.engine.compare.contract.enums           import E_Chunk
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.reading.input_chunk      import InputChunk_factory
 

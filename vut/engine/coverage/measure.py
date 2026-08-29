@@ -159,7 +159,7 @@ class PointMeasure(I_Measure):
                 total   = int(total_text)
             except ValueError:
                 raise MeasureFault("'%s' spells no '<delta>*<covered>/"
-                                   "<total>' point" % piece)
+                                   "<total>' point" % piece) from None
             if delta < 0 or (delta == 0 and (i == 0 or not self.same_line_f)):
                 raise MeasureFault(
                     "delta %i in '%s' does not advance%s"
@@ -257,7 +257,7 @@ class NamedPointMeasure(I_Measure):
                 total   = int(total_text)
             except ValueError:
                 raise MeasureFault("'%s' spells no '<delta>*<name>*"
-                                   "<covered>/<total>' point" % piece)
+                                   "<covered>/<total>' point" % piece) from None
             if not name:
                 raise MeasureFault("'%s' names no point" % piece)
             if delta < 0 or (delta == 0 and i == 0):

@@ -46,7 +46,7 @@ from   vut.engine.compare.region.potpourri.matching import (PotentialPairDb,    
                                                      Result,
                                                      extract_ultimates_and_hopeless,
                                                      pairing)
-from   vut.engine.compare.engine.analogy_db  import AnalogyDb                   #noqa E402
+from   vut.engine.compare.contract.analogy_db  import AnalogyDb                   #noqa E402
 from   copy import copy                                                         #noqa E402
 
 

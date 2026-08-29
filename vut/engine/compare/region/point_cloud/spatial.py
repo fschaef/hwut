@@ -62,7 +62,7 @@ class FixedRadiusIndex:
         """
         base = self._cell(p)
         for offset in product((-1, 0, 1), repeat=len(base)):
-            cell = tuple(b + o for b, o in zip(base, offset))
+            cell = tuple(b + o for b, o in zip(base, offset, strict=False))
             for i in self._cell_db.get(cell, ()):
                 yield i
 

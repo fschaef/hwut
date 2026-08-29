@@ -1,4 +1,4 @@
-from vut.engine.compare.engine.analogy_db import AnalogyDb
+from vut.engine.compare.contract.analogy_db import AnalogyDb
 from dataclasses                          import dataclass
 
 from .potential_pair_db import PotentialPairDb

@@ -1,0 +1,107 @@
+THE FACES -- WHAT EACH DOES, AND WHERE THEY COINCIDE
+______________________________________________________________________________
+
+READ FROM THE CODE, not from the prose: an action counts where the
+face CALLS it, so a docstring mentioning a thing does not vote. The
+matrix below is what 'adm/import_graph.py' and a call scan agree on
+(2026-08-29).
+
+WHY IT EXISTS: a face's job is to parse, refuse, WIRE and report. What
+several faces wire alike is a brick that either exists or is missing,
+and this document is where that is decided by looking rather than by
+argument.
+
+==============================================================================
+THE ACTIONS
+==============================================================================
+    SELECT     given a wish, which runs        'exploration/selection'
+    WISH       read the command line's wish    'plan/wish'
+    LABELS     open 'hwut-root.labels'         'services/labels'
+    BOUNDARY   climb to 'hwut-root.conf'       'tree_explorer'
+    BOOK       the record: name it, hold it    'bookkeeper'
+    PLAN       nodes, links, exclusions        'plan/determine'
+    RUN        build, launch, contain          'operations', 'run'
+    COVER      coverage records                'coverage'
+    FOLLOW     a changed name into records     'services/_follow'
+    REPORT     fold the event stream           'protocol'
+    RENDER     put a picture on a stream       'display', 'compare'
+    WRITE      change what is stored
+
+==============================================================================
+WHAT EACH FACE DOES
+==============================================================================
+run          WISH, LABELS, RUN, REPORT, RENDER
+             selects THROUGH the orchestrator, not itself -- the
+             selection happens in 'determine_tree', one level down.
+plan         SELECT, WISH, LABELS, PLAN
+             takes the QUERY from the selection, because 'determine'
+             reads a task list rather than a list of cases.
+wishlist     SELECT, WISH, LABELS
+             the selection, printed. Nothing else.
+accept       SELECT, WISH, LABELS, BOOK, WRITE
+             promotion: the candidate becomes the nominal.
+report       SELECT, WISH, LABELS
+             reads the book BEHIND the selection -- the Bookkeeper it
+             uses is the selection's own.
+stability    WISH, BOOK, REPORT
+             runs the same wish repeatedly, through 'hwut.run'.
+play         SELECT, WISH, RUN, RENDER
+             one run, provisioned and read. Records nothing.
+tell         BOUNDARY, BOOK, COVER
+             packs what the stores hold, for a bug hunter.
+cov          COVER
+             coverage, as verbs.
+show         LABELS, BOUNDARY, BOOK
+             the configuration as the framework read it.
+compare      RENDER          one comparison, rendered.
+merge        (nothing shared) two nominals into one.
+target       (nothing shared) a user-defined verb over the tree.
+rename       BOOK, FOLLOW    a name changed, everywhere it is written.
+remove       BOOK, FOLLOW, WRITE   a name forgotten.
+rename-choice, remove-choice     shims onto the two above.
+
+labels/create   WISH, LABELS, BOUNDARY, WRITE
+labels/add      WISH, LABELS, BOUNDARY, WRITE
+labels/remove   WISH, LABELS, BOUNDARY, WRITE
+labels/list     LABELS, BOUNDARY
+labels/query    LABELS, BOUNDARY, SELECT (all_of_tree)
+
+==============================================================================
+WHERE THEY COINCIDE -- WHAT THE COMPARISON FOUND
+==============================================================================
+1  THE SELECTION -- SETTLED (R-73)
+   Seven faces assembled 'explore + Bookkeeper + query + get_test_cases'
+   by hand. Now 'exploration/selection.py' does, and hands back what
+   it built. Faces knowing 'Bookkeeper' fell from NINE to FOUR, and
+   the four are the ones whose subject IS the record.
+
+2  'WISH + LABELS + BOUNDARY' -- SETTLED for the three writers (E-24)
+   Every face taking a wish also builds a label view, and nearly every
+   one also climbs to the boundary. THE THREE LABEL WRITERS HAVE THE
+   IDENTICAL ROW -- 'create', 'add' and 'remove' are one action with
+   three verbs applied to the entry set.
+   BUILT: 'labels/_editing.py' -- 'opened', 'stands_f', 'selected',
+   'written'. Six imports fell out of the three faces.
+   WHAT REMAINS OF THIS ROW: the other eight faces take a wish and
+   build a label view, but each does something different with it. The
+   coincidence there is 'view_at(directory)' and nothing more, which
+   is already one line and already one place.
+
+3  TWO WALKS, NOT ONE -- OPEN, AND THE INTERESTING ONE
+   'run' does not select: 'determine_tree' selects for it, one level
+   down. So the tree is walked and queried in TWO places -- once for
+   faces ('selection.of_tree'), once for the runner. They share the
+   walk, the Bookkeeper decision and the query; they differ in what
+   they answer, cases against a plan.
+   WHETHER THEY SHOULD BE ONE IS NOT OBVIOUS and is not settled here.
+
+4  FACES THAT SHARE NOTHING -- WORTH A LOOK
+   'merge' and 'target' call nothing that any other face calls. Either
+   they are genuinely peripheral, or they have built private
+   machinery. Not yet examined.
+
+5  'show' TAKES 'TestIdDb' TO DISPLAY IDS
+   The only BOOK reader whose subject is not the record. A read of the
+   register, not bookkeeping -- small, and worth a name of its own if
+   a second face ever wants it.
+______________________________________________________________________________

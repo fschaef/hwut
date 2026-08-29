@@ -46,7 +46,7 @@ from config import HwutRunner                                # noqa: F401
 from vut.engine.orchestrator.plan.wish          import Wish
 from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
 from vut.engine.orchestrator.run.orchestrate    import orchestrator
-from vut.engine.orchestrator.run.summary        import fold
+from vut.engine.protocol.summary        import fold
 from vut.engine.orchestrator.scheduler.scheduler import I_Dispatcher
 
 

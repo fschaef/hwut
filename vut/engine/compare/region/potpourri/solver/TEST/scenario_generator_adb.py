@@ -1,7 +1,7 @@
 """
 PURPOSE: Generate graph scenarios with FrozenAnalogyDb constraints.
 """
-from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 
 def _adb(mapping: dict):
     """Helper to create a FrozenAnalogyDb from a dict {subject_val: nominal_val}"""

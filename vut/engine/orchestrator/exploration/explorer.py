@@ -21,7 +21,7 @@ from .              import finder
 from .              import reader
 from .              import satisfiability
 from .              import hwut_info_interview
-from .fault         import Fault, E_FaultKind, Position
+from .fault         import Fault, E_FaultKind
 from .              import provenance
 from .configuration_tree import (CTestApp, CTestAppSet, DirectorySpec,
                             TestParameters)

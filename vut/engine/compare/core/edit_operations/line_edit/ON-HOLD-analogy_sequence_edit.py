@@ -109,7 +109,7 @@ def find_best_analogies(subject_list, nominal_list):
     n_left = (n for n in Counter(nominal_list) if n not in n_mentioned)
     
     # Map remaining items 1:1
-    mapping.update((s, n) for s, n in zip(s_left, n_left))
+    mapping.update((s, n) for s, n in zip(s_left, n_left, strict=False))
         
     return mapping
 

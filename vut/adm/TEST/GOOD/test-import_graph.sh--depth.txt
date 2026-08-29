@@ -1,0 +1,58 @@
+--- depth 1: the outer directories
+STATUS: 0
+STDOUT {
+    engine -> base
+    faces -> base
+    faces -> engine
+}
+--- depth 2: the inner ones
+STATUS: 0
+STDOUT {
+    engine/plan -> base
+    engine/plan -> engine/store
+    engine/store -> base
+    faces -> base
+    faces -> engine/plan
+    faces -> engine/store
+}
+--- depth 0: the modules themselves
+STATUS: 0
+STDOUT {
+    engine/plan/wish.py -> base/util.py
+    engine/plan/wish.py -> engine/store/book.py
+    engine/store/book.py -> base/util.py
+    faces/run.py -> base/util.py
+    faces/run.py -> engine/plan/wish.py
+    faces/show.py -> engine/store/book.py
+}
+--- and the nested blocks a person reads
+STATUS: 0
+STDOUT {
+    . {
+        1 module(s): __init__.py
+        imports nothing of this tree
+    }
+    base {
+        2 module(s): __init__.py, util.py
+        imports nothing of this tree
+    }
+    engine {
+        1 module(s): __init__.py
+        imports nothing of this tree
+    }
+    engine/plan {
+        2 module(s): __init__.py, wish.py
+        --> base
+        --> engine/store
+    }
+    engine/store {
+        2 module(s): __init__.py, book.py
+        --> base
+    }
+    faces {
+        3 module(s): __init__.py, run.py, show.py
+        --> base
+        --> engine/plan
+        --> engine/store
+    }
+}

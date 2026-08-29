@@ -273,9 +273,8 @@ def _compare_of(parameters):
                 setattr(finder, begin, pair[0])
                 setattr(finder, end,   pair[1])
             case _:
-                assert False, \
-                       "'%s' is a marker PAIR; %d stated" \
-                       % (name, len(pair))
+                raise AssertionError("'%s' is a marker PAIR; %d stated" \
+                       % (name, len(pair)))
 
     if stated["constraints"] is not None:
         finder.constraint_f = bool(stated["constraints"])

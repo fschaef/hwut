@@ -1,0 +1,31 @@
+STATUS: 0
+THE OUTER PICTURE {
+    adm {
+        4 module(s): cythonizer.py, import_graph.py, python_tracer.py, version.py
+        imports nothing of this tree
+    }
+    auxiliary {
+        3 module(s): async_helper.py, directory_mutex.py, parent_child_list.py
+        imports nothing of this tree
+    }
+    engine {
+        167 module(s): bookkeeper.py, configuration.py, group_table.py, stream_store.py, test_id_db.py, test_run_id.py, ... (161 more)
+        --> adm
+        --> auxiliary
+        --> language_support
+    }
+    language_support {
+        7 module(s): __init__.py, deterministic_random.py, deterministic_timeline.py, hwut_hocon.py, hwut_runner.py, script_runner.py, ... (1 more)
+        imports nothing of this tree
+    }
+    services {
+        31 module(s): _boundary.py, _config.py, _core.py, _exit.py, _follow.py, accept.py, ... (25 more)
+        --> auxiliary
+        --> engine
+    }
+}
+STATUS: 0
+THE LAYERING {
+    LAYERING: every edge obeys 'adm/LAYERING.txt' (14 component(s), 28 edge(s))
+    SEALED: engine/compare/contract, engine/protocol, engine/procsitter, auxiliary, language_support -- nothing leaves
+}

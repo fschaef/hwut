@@ -32,8 +32,8 @@ import vut.engine.compare.region.potpourri.solver.csp_backtracking_mrv          
 ## import vut.engine.compare.region.potpourri.solver.csp_chronological_backtracking as solver_csp_chbt
 
 
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.contract.analogy_db        import AnalogyDb
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 
 from   .potential_pair_db  import PotentialPairDb
 from   .result             import PairedGraph, Result

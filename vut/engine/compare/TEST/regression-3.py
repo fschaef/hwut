@@ -15,7 +15,7 @@ from config import HwutRunner
 
 from vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main
-import vut.engine.compare.engine.frozen_analogy_db as fdb
+import vut.engine.compare.contract.frozen_analogy_db as fdb
 
 # --- The Spy ---
 

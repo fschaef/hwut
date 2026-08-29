@@ -79,7 +79,7 @@ from vut.language_support.python.script_runner import tree_boundary  # noqa: E40
 from vut.engine.orchestrator.run.orchestrate import orchestrator
 from vut.engine.orchestrator.run.dispatcher  import \
                                              test_run_dispatcher_factory
-from vut.engine.orchestrator.run.summary     import fold
+from vut.engine.protocol.summary     import fold
 
 
 def banner(label):

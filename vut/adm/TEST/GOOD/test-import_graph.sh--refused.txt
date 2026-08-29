@@ -1,0 +1,20 @@
+--- a format that does not exist
+STATUS: 2
+STDOUT {
+    REFUSED: no format 'sideways'; there is: tree, svg, dot, mermaid, edges
+}
+--- an option the tool does not take
+STATUS: 2
+STDOUT {
+    REFUSED: 'import_graph' does not take: --sideways
+}
+--- a declaration that is not one
+STATUS: 2
+STDOUT {
+    REFUSED: bad.txt:1: a rule reads '<from> -> <to>' or 'SEALED <glob>', and 'faces and engine' does neither
+}
+--- a declaration that is not there
+STATUS: 2
+STDOUT {
+    REFUSED: no layering declaration at 'nowhere.txt' -- '--check' needs one, and this tool writes none
+}

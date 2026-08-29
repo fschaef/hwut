@@ -103,7 +103,7 @@ class RegionHandler:
             except (ValueError, TypeError):
                 raise RegionSyntaxError(line_n,
                     "parameter '%s' of region handler '%s': cannot interpret "
-                    "value '%s'" % (name, self.shebang_name, raw))
+                    "value '%s'" % (name, self.shebang_name, raw)) from None
         return result
 
 

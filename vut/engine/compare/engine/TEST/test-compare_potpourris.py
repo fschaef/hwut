@@ -32,7 +32,7 @@ sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.reading.pattern_finder     import PatternFinder
 from   vut.engine.compare.configuration            import Configuration
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
+from   vut.engine.compare.contract.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import frame_with_potpourri_borders, \
                                                          get_Potpourri, \
                                                          print_friends_pairing_max_result

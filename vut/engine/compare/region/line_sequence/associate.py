@@ -1,4 +1,4 @@
-from   vut.engine.compare.engine.frozen_analogy_db                         import FrozenAnalogyDb
+from   vut.engine.compare.contract.frozen_analogy_db                         import FrozenAnalogyDb
 from   vut.engine.compare.engine                             import constraints
 from   vut.engine.compare.core.line_pair                     import LinePair
 import vut.engine.compare.core.edit_operations.line_sequence as     edit_operations_line_sequence
@@ -42,7 +42,7 @@ def do(subject, nominal, analogy_db):
             else:
                 assert edit.id != E_EditId.TRANSPOSE         # pragma: no cover
                 assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
-                assert False                                 # pragma: no cover
+                raise AssertionError("")
 
             yield subject_seq, nominal_seq, edit.edit_list, edit.cost, edit.id
             s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]

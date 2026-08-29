@@ -6,6 +6,11 @@ PURPOSE: THE 'hwut.target' COMMAND LINE -- run one user-defined target
 
     hwut.target <option-list> <target> <passed-through>
 
+OPTIONS STAND BEFORE THE TARGET NAME. Everything after the target
+belongs to each directory's script, argv-style and untouched -- so
+'--dir' names directories where it stands first, and is a word for
+the script where it stands second.
+
 Everything before the target name is this service's vocabulary;
 everything after it goes to each directory's script, argv-style,
 untouched. One target per invocation.
@@ -33,6 +38,7 @@ run never collides with a test run, or another target run, on the same
 directory.
 ______________________________________________________________________________
 """
+import fnmatch
 import os
 import shutil
 import subprocess
@@ -53,6 +59,11 @@ USAGE = "usage: hwut.target [-i] [--default=<script>] [-q] [+x] " \
 HELP = """hwut.target -- run one user-defined target over the tree
 
     hwut.target <option-list> <target> <passed-through>
+
+OPTIONS STAND BEFORE THE TARGET NAME. Everything after the target
+belongs to each directory's script, argv-style and untouched -- so
+'--dir' names directories where it stands first, and is a word for
+the script where it stands second.
 
 Every directory below the root whose 'hwut.conf' binds targets --
 
@@ -138,7 +149,7 @@ def _read_command_line(argv, write):
     """
     result = {"target": None, "pass_through": [], "ignore_f": False,
               "default": None, "quiet_f": False, "plus_x_f": False,
-              "directory": "."}
+              "directory": ".", "dir_tuple": ()}
     i = 0
     while i < len(argv):
         argument = argv[i]
@@ -152,6 +163,27 @@ def _read_command_line(argv, write):
             result["default"] = argument[len("--default="):]
         elif argument.startswith("--directory="):
             result["directory"] = argument[len("--directory="):]
+        elif argument == "--dir" or argument.startswith("--dir="):
+            #  THE WISH'S OWN WORD (disc-10). A face whose SUBJECT is
+            #  directories reads the same option every other face
+            #  reads as a filter -- one selection language, and a
+            #  person who learnt '--dir' on 'hwut.run' has learnt it
+            #  here.
+            #
+            #  IT MUST STAND BEFORE THE TARGET NAME. Everything after
+            #  the target belongs to the SCRIPT, argv-style and
+            #  untouched -- that is this face's oldest law, and
+            #  '--dir' does not get to break it.
+            if argument == "--dir":
+                i += 1
+                if i >= len(argv):
+                    write("REFUSED: '--dir' stands without a glob")
+                    write(USAGE)
+                    return None
+                text = argv[i]
+            else:
+                text = argument[len("--dir="):]
+            result["dir_tuple"] = result["dir_tuple"] + (text,)
         elif argument.startswith("-") or argument.startswith("+"):
             write("REFUSED: unknown option '%s'" % argument)
             write(USAGE)
@@ -189,7 +221,9 @@ def _phase_one(arguments):
     skipped_n    = 0
     found_any_f  = False
 
+    wanted_f = _wanted_f_of(arguments["dir_tuple"])
     for relative in _walk(root):
+        if not wanted_f(relative): continue
         directory = os.path.normpath(os.path.join(root, relative))
         text      = finder.conf_text(directory)
         if text is None: continue
@@ -276,6 +310,31 @@ def _phase_two(arguments, plan, skipped_n, write):
     write("directories: %d  executed: %d  skipped: %d"
           % (len(plan) + skipped_n, executed_n, skipped_n))
     return E_ExitCode.FAULT if failed_list else E_ExitCode.OK
+
+
+def _wanted_f_of(dir_tuple):
+    """
+    RETURN: callable, taking a root-relative directory and answering
+            whether the wish names it. Everything, where the wish
+            names no directory.
+
+    THE MATCHING IS THE WISH'S OWN (disc-10): a glob carrying '/' is
+    matched against the whole relative path, a BARE NAME against every
+    path COMPONENT, so '--dir TEST' names 'a/TEST' and 'a/b/TEST'
+    alike. One rule wherever a directory is named.
+    """
+    if not dir_tuple: return lambda relative: True
+
+    def wanted_f(relative):
+        for text in dir_tuple:
+            glob = text.strip()
+            if "/" in glob:
+                if fnmatch.fnmatchcase(relative, glob):      return True
+                if relative.startswith(glob.rstrip("*") ):   return True
+            elif any(fnmatch.fnmatchcase(part, glob)
+                     for part in relative.split("/")):       return True
+        return False
+    return wanted_f
 
 
 def _walk(root):

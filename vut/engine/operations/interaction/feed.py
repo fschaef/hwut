@@ -482,7 +482,9 @@ def _carry(value, depth=0):
         for name in name_list:
             if name.startswith("_"): continue
             try:    carried[name] = _carry(getattr(value, name), depth + 1)
-            except Exception:  pass       # a property that computes, and
+            except Exception:  pass       # noqa: S110 -- see below
+            #  A PROPERTY THAT COMPUTES MAY RAISE, and what it raises
+            #  is no part of the message being carried. Swallowed
         if carried: return carried        #   raises: not part of the message
     return repr(value)                    # a sentinel with nothing to read
 

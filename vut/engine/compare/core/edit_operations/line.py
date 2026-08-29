@@ -65,8 +65,8 @@ from  vut.engine.compare.core.edit_operations.core  import (WorkListBase,
 from  vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.reading.pattern_finder  import E_ToleranceId
 from  vut.engine.compare.reading.line_element    import LineElement
-from  vut.engine.compare.engine.enums          import E_Verdict
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from  vut.engine.compare.contract.enums          import E_Verdict
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 
 from  functools   import lru_cache
 from  typeguard   import typechecked
@@ -88,9 +88,9 @@ VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
 # The cost table and transposition cost are part of the shared comparison
 # semantics -- see 'engine/semantics.py' (single source for Judge and Lawyer).
-import vut.engine.compare.engine.semantics as semantics
-from vut.engine.compare.engine.semantics import element_cost_db as cost_db
-from vut.engine.compare.engine.semantics import cost_TRANSPOSE
+import vut.engine.compare.contract.semantics as semantics
+from vut.engine.compare.contract.semantics import element_cost_db as cost_db
+from vut.engine.compare.contract.semantics import cost_TRANSPOSE
 
 cost_INSERT_DELETE = cost_db[INSERT]
 

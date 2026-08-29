@@ -1,0 +1,32 @@
+--- dot
+STATUS: 0
+STDOUT {
+    digraph imports {
+        rankdir=LR;
+        node [shape=box, fontname="monospace"];
+        "engine" -> "base";
+        "faces" -> "base";
+        "faces" -> "engine";
+    }
+}
+--- mermaid
+STATUS: 0
+STDOUT {
+    graph LR
+        _["."]
+        base["base"]
+        engine["engine"]
+        faces["faces"]
+        engine --> base
+        faces --> base
+        faces --> engine
+}
+--- svg: the shape of it, without the coordinates
+STATUS: 0
+THE PICTURE {
+    elements:  5 rect, 4 path, 8 text
+    boxes:     . base engine faces 
+    mutual:    0 pair(s)
+    editable:  3 connector(s) bound, 4 box(es) avoided
+    ids:       id="n__" id="n_base" id="n_engine" id="n_faces" 
+}

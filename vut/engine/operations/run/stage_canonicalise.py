@@ -68,8 +68,24 @@ class StageCanonicalise(I_CanonicaliseProvider):
                 stages' is the orchestrator's merge, not a stage's
                 knowledge of its upstream.
 
-        A failing canonicaliser leaves its text UNCHANGED and says so
-        ('canonicalise'); the subject is delivered either way.
+        A FAILING CANONICALISER ENDS PROVISION: 'product' is None,
+        and the stages beyond never run -- the one rule this shape
+        already has.
+
+        IT MUST. A canonicaliser exists because the raw stream is not
+        comparable -- a timestamp, a pid, an address that differs
+        every run. Delivering the RAW text when the filter did not run
+        does not deliver 'almost the subject'; it delivers a stream
+        NOBODY EVER MEANT TO COMPARE, and the comparison that follows
+        answers a question nobody asked. Where the nominal happens to
+        have been blessed from an equally unfiltered run, THE TEST
+        PASSES FOR THE WRONG REASON and nothing says so.
+
+        THE PYPE IS PART OF THE TEST APPLICATION and may contain
+        errors (display/DISCUSSIONS/todo-2): a missing shebang, a
+        syntax error, a file that is not there. Each is a defect in
+        the TEST, and a defect in a test is a result -- stated, not
+        swallowed.
         """
         configuration = self.configuration
         procsitter = Procsitter(configuration.caps,
@@ -82,8 +98,11 @@ class StageCanonicalise(I_CanonicaliseProvider):
             if pype_argv is not None:
                 text, pype_report = await canonicalise(text, pype_argv,
                                                        procsitter)
-                if pype_report is not E_TestRunResult.OK \
-                   and report is E_TestRunResult.OK:
-                    report = pype_report
+                if pype_report is not E_TestRunResult.OK:
+                    #  NO PRODUCT: provision ends here, and the test
+                    #  is aborted with this stage's token. The stages
+                    #  beyond never run, and no comparison is made
+                    #  against a stream the filter never touched.
+                    return Supply(product=None, report=pype_report)
             reader_db[name] = BytesNominal(text, name=name)
         return Supply(product=reader_db, report=report)

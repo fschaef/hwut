@@ -16,12 +16,7 @@ ______________________________________________________________________________
 """
 import os
 
-from   vut.engine.bookkeeper.bookkeeper              import Bookkeeper
-from   vut.engine.orchestrator.exploration.task_list_query \
-                                                     import CTestTaskListQuery
-from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import explore_tree
-from   vut.engine.orchestrator.plan.label            import swallowed_warning_tuple
+from   vut.engine.orchestrator.exploration          import selection
 
 
 def split_directory(argument_list):
@@ -45,55 +40,40 @@ def selected_key_tuple(directory, wish, view):
     RETURN: [0] tuple[(str, str | None)], every run the wish selects,
                 as entry keys of the labels file -- the file RELATIVE
                 TO THE BOUNDARY, and the choice -- in walk order.
-            [1] tuple[str], one warning per '--glob' that MET NOTHING,
-                the glob named. Not a refusal: the pattern is well
-                formed, and today's tree simply holds no such run.
+            [1] tuple[str], the findings: a glob that met NOTHING, and
+                one wholly swallowed by the standard label's silence.
+                Neither is a refusal.
             [2] tuple[Fault], the walk's own faults.
 
     Raises SelectionError out of the query, unchanged, and
     RootConfMissing out of the walk.
+
+    THE SELECTION IS THE BRICK'S ('exploration/selection.py'). What is
+    left here is the only labels-specific part: REKEYING a case to the
+    form the labels file writes, and speaking a glob in the file's own
+    tongue rather than as an absolute path.
     """
-    root        = os.path.abspath(directory)
-    exploration = explore_tree(root)
-    prefix      = os.path.relpath(root, view.boundary)
-    result_list = list(exploration)
+    root   = os.path.abspath(directory)
+    prefix = os.path.relpath(root, view.boundary)
+    found  = selection.of_tree(root, wish, view)
 
-    key_list = []
-    for where, result in result_list:
-        bookkeeper = Bookkeeper(os.path.join(root, where)) \
-                     if wish.asks_base_f() else None
-        query = CTestTaskListQuery(wish, bookkeeper,
-                                   directory=where, root=root,
-                                   label_view=view)
-        for case in query.get_test_cases(result.app_set):
-            key_list.append((_boundary_relative(prefix, where,
-                                                case.source_file),
-                             case.choice))
+    key_list = [(_boundary_relative(prefix, entry.directory,
+                                    entry.case.source_file),
+                 entry.case.choice)
+                for entry in found.case_list]
 
-    #  ONE WARNING FUNCTION for the whole framework
-    #  ('plan/label.py'): a glob wholly swallowed by the silence
-    #  speaks alike in every face. A LITERAL target never appears
-    #  here -- it overrides the silence (disc-8).
-    met_set     = set()
-    visible_set = set()
-    for where, result in result_list:
-        met, visible = CTestTaskListQuery(
-                           wish, directory=where, root=root,
-                           label_view=view).glob_reach(result.app_set)
-        met_set.update(met)
-        visible_set.update(visible)
-
+    #  THE WARNINGS SPEAK IN THE FILE'S TONGUE: an absolute path is a
+    #  machine's word, not the author's.
     warning_list = [text.replace(text.split("'")[1],
                                  _spoken(text.split("'")[1],
                                          view.boundary))
-                    for text in swallowed_warning_tuple(met_set,
-                                                        visible_set)]
+                    for text in found.warning_tuple]
     for glob_text in wish.glob_tuple:
-        if glob_text in met_set: continue
+        if glob_text in found.met_set: continue
         warning_list.append("WARNING: the glob '%s' met nothing"
                             % _spoken(glob_text, view.boundary))
     return (tuple(key_list), tuple(sorted(warning_list)),
-            exploration.fault_tuple)
+            found.fault_tuple)
 
 
 def _spoken(glob_text, boundary):

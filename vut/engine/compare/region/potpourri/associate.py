@@ -1,5 +1,5 @@
 import vut.engine.compare.region.potpourri.best_match  as     potpourri_association
-from   vut.engine.compare.engine.analogy_db            import AnalogyDb
+from   vut.engine.compare.contract.analogy_db            import AnalogyDb
 from   vut.engine.compare.region.potpourri.variants    import VariantView
 from   vut.engine.compare.core.line_pair               import LinePair, display_twin
 from   vut.engine.compare.core.edit_operations.edit    import Edit, E_EditId

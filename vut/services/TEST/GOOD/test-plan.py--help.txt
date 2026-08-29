@@ -17,6 +17,16 @@ $ hwut.plan --help
                             and a case NEVER RUN is wanted too -- the
                             stale wish
         --exclude <target>  a target NOT wanted, whatever else selects it
+        --dir <glob>        A DIRECTORY WANTED, and every run in it. The
+                            glob matches a path relative to the run's root
+                            ('messaging/*') or a BARE NAME matching any
+                            path COMPONENT -- the same matching
+                            '--exclude-dir' uses. SEVERAL ARE A UNION
+                            among themselves and NARROW against the rest
+                            of the wish: '--dir a --fail' is 'the failing
+                            runs under a' (disc-10). A DIRECTORY-RELATED
+                            face reads the same field as its SUBJECT
+                            rather than as a filter.
         --exclude-dir <glob>
                             a directory not wanted, and every directory
                             below it; a bare name matches any component

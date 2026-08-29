@@ -13,8 +13,8 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.engine.enums           import E_ToleranceId
-from    vut.engine.compare.engine.semantics       import GOOD_EDIT_ID_SET, \
+from    vut.engine.compare.contract.enums           import E_ToleranceId
+from    vut.engine.compare.contract.semantics       import GOOD_EDIT_ID_SET, \
                                                           is_good_edit
 from    vut.engine.compare.engine.line            import Line
 from    vut.engine.compare.core.edit_operations.edit   import E_EditId, Edit

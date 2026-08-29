@@ -49,3 +49,191 @@ SO COUNT THE PHRASES THAT MEAN 'I FOUND NOTHING', before and after:
     <none> | never run | GOOD missing | nothing to accept | is EMPTY
 
 A count that ROSE is the suite going quiet, not the suite agreeing.
+
+THE IMPORT GRAPH, AND THE LAYERING
+______________________________________________________________________________
+
+'adm/import_graph.py' reads every module with 'ast' and reports who
+depends on whom at a stated DEPTH -- 1 the outer directories, 2 the
+inner ones, 0 the modules themselves.
+
+    adm/import_graph.py . --depth=1 --exclude="*/TEST/*" \
+        --exclude="*/test-*" --exclude="*/config.py"
+
+AN IMPORT IS A FACT IN THE TEXT, and nothing here guesses. That is why
+this tool is static while a CALL graph could not be: duck typing and
+dynamic dispatch mean a static call graph INVENTS edges, and an
+invented edge in an architecture document is worse than no document.
+Real calls are observed, never derived.
+
+THE SUITES ARE EXCLUDED. A test application imports whatever it tests,
+upward and downward alike, and is no part of the shape it examines.
+
+FORMATS: 'tree' (nested blocks and arrows, for reading), 'edges' (one
+per line, for grep and for diff -- the form a GOOD file wants), 'dot'
+(graphviz), 'mermaid' (a browser, with nothing installed).
+
+'--check' MAKES THE ARCHITECTURE EXECUTABLE. 'adm/LAYERING.txt'
+declares the permitted DIRECTION between components; an edge no rule
+permits is a violation naming both ends, and the tool answers 1.
+
+    adm/import_graph.py . --depth=2 --check=adm/LAYERING.txt \
+        --exclude="*/TEST/*" --exclude="*/test-*" \
+        --exclude="*/config.py"
+
+The suite is 'adm/TEST/test-import_graph.sh'. Its 'layering' choice
+shows the check PASSING and BITING, because a check that never fails
+proves nothing; its 'vut' choice records the real tree's outer picture
+and its layering, so a change to either shows up as a moved GOOD.
+______________________________________________________________________________
+
+
+STATIC ANALYSIS -- THE RATCHET
+______________________________________________________________________________
+
+'adm/TEST/test-static-analysis.sh' runs 'ruff' over the tree with the
+tree's own configuration and records, SORTED, every kind of finding
+that still stands.
+
+TWO SUITES IN THIS TREE ASK ABOUT THE CODE BASE'S SHAPE RATHER THAN
+ITS BEHAVIOUR -- this one and 'test-import_graph.sh'. Every other
+suite RUNS the product and reads what came out; these two read the
+SOURCE and never run it. That is what 'static analysis' names, and it
+is why they live in 'adm' rather than beside the component they
+examine: their subject is the tree.
+
+NOT 'COMPLIANCE': that word names conformance to an EXTERNAL standard
+-- a MISRA clause, a PEP, an ISO paragraph. There is none here. The
+tree declares its own tolerance in 'adm/ruff.toml' and the GOOD
+records what remains, so the authority is entirely inward and the
+word would point the wrong way.
+
+AND NOT 'HYGIENE', WHICH IS ALREADY TAKEN and means something
+narrower: A COMPONENT'S OWN SOURCE AND GOOD FILES, checked against the
+defects that recurred while that component was built --
+'engine/operations/TEST/test-hygiene.py' is the instance, and disc-6
+expects more. A hygiene suite belongs TO ITS COMPONENT and knows what
+that component keeps getting wrong. This suite belongs to no component
+and knows nothing but what a tool reports about every file alike.
+Terminological invariance: one word, one thing.
+
+IT IS NOT A TEST THAT THE TREE IS CLEAN. It is a test that the tree is
+NO LESS CLEAN THAN IT WAS. One more instance of a tolerated kind, or a
+kind not tolerated before, moves the GOOD and the suite says so. A
+finding REMOVED moves it too, and that re-blessing is the record of an
+improvement.
+
+WHAT IS IGNORED IS IGNORED BY NAME, in 'adm/ruff.toml', each with its
+reason: '%' formatting, hand-aligned imports and asserts-as-door-guards
+are house style, not findings, and 878 of one kind drown every finding
+that matters.
+
+THE 'MUST STAND AT ZERO' SET is four rules, each of which can HIDE A
+FAILURE rather than merely offend:
+
+    F      a name that is not there
+    B011   a dispatch that vanishes under 'python -O' and then hands
+           None to a caller who blames their own code
+    B020   a loop variable rebinding what the loop reads from
+    S110   a swallow with no reason given
+
+'S102' (exec) is deliberately NOT among them: the pype language
+executes its own effect blocks, so exec is the feature. A set that can
+never be empty is a set people learn to ignore.
+
+THE RUFF VERSION IS PRINTED, AND IT IS A HAPPY PATTERN
+
+    eq-pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+"]
+
+so two runs under different ruffs are EQUIVALENT on that line. THIS IS
+WHAT HAPPY PATTERNS ARE FOR: the version is not the fact this suite is
+about -- the findings are. A ruff that knows new rules moves the list,
+and there the suite speaks; a ruff that merely counts higher and finds
+the same things has said nothing, and the suite says nothing back.
+
+Without the pattern the test would go red on every upgrade for a
+reason nobody could act on, and A SUITE THAT CRIES AT NOISE IS A SUITE
+THAT GETS RE-BLESSED UNREAD.
+
+NO RUFF, NO REPORT. A missing tool is a MISSING PRECONDITION, and a
+missing precondition is a RESULT stated as one -- never a silent pass
+that would let hygiene rot unwatched.
+______________________________________________________________________________
+
+
+CONTRACT MATERIAL -- '--shared'
+______________________________________________________________________________
+
+    adm/import_graph.py . --depth=3 --shared=3 \
+        --exclude="*/TEST/*" --exclude="*/test-*" --exclude="*/config.py"
+
+names every NAME that three or more components import, and where it
+lives today.
+
+A NAME THAT THREE COMPONENTS REACH FOR IS NO PART OF WHICHEVER ONE
+HAPPENS TO HOLD IT. Where it lives inside one of its own readers it
+HOLDS A CYCLE SHUT -- and the report says which name, so the question
+stops being 'is there a cycle' and becomes 'what would moving ONE name
+do'.
+
+THE TEST FOR CONTRACT MATERIAL: would moving it move BEHAVIOUR? An
+enum has none and is the clearest case there is. A class with twenty
+methods is not contract however many components import it -- it is
+shared because a REAL dependency exists, and the layering must express
+that rather than hide it.
+
+    adm/import_graph.py . --depth=2 --format=svg > architecture.svg
+
+draws the picture HERE -- no graphviz, no browser, no dependency.
+Components in rows, importers above what they import, and A MUTUAL
+PAIR IN AMBER WITH A HEAD AT BOTH ENDS, so a cycle shows itself.
+
+AND IT IS EDITABLE. Every box is a GROUP with an id, holding the
+rectangle and both labels; every arrow is an INKSCAPE CONNECTOR bound
+to two of those ids, and every box carries 'connector-avoid'. Open the
+file, take the Selector ('S'), drag a box: THE LINES FOLLOW, routing
+around the boxes rather than through them.
+
+    the connector tool   'O' (or Ctrl+F2) -- click one box, click
+                         another, to draw a NEW arrow
+    the XML editor       Ctrl+Shift+X -- shows
+                         'inkscape:connection-start/-end'
+    a deleted box        leaves its connectors dangling; they are not
+                         removed with it
+
+THE 'd' ATTRIBUTE IS WRITTEN ANYWAY, because a browser knows nothing
+of connectors and must still see a line. Inkscape recomputes it the
+moment anything moves, so ONE FILE serves both.
+'engine/compare/contract' is the first fruit of both
+(engine/compare/RATIONALE.txt, C-1).
+______________________________________________________________________________
+
+SEALED COMPONENTS
+______________________________________________________________________________
+
+'adm/LAYERING.txt' has two line shapes, because there are two kinds of
+law.
+
+    <from> -> <to>      a permitted DIRECTION between two components,
+                        judged at the '--depth' asked for
+    SEALED <glob>       a component that IMPORTS NOTHING of this tree,
+                        judged at MODULE depth and therefore true at
+                        EVERY '--depth'
+
+A DIRECTION IS ABOUT A PAIR and can only be read where both are named:
+at depth 2 the whole of 'engine/compare' is one box, and a rule about
+what happens inside it cannot be tested. A SEAL IS ABOUT ONE
+COMPONENT, and 'nothing leaves here' is the whole of a contract's
+claim -- so it holds however coarsely the rest is declared.
+
+SEALED TODAY: 'engine/compare/contract', 'engine/procsitter',
+'auxiliary', 'language_support'.
+
+THREE OF THE FOUR NEEDED NO MOVING, ONLY DECLARING. They already
+imported nothing of this tree; the seal is that sentence made
+checkable, so what is true today cannot quietly stop being true.
+
+WHAT A SEAL DOES NOT FORBID: a sealed component's own modules may
+speak among themselves. The pair that results is INSIDE the seal,
+where nothing outside can be made to wait on it.
+______________________________________________________________________________

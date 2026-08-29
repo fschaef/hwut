@@ -69,7 +69,7 @@ class SafeExpression:
             tree = ast.parse(text, mode="eval")
         except SyntaxError as e:
             raise RegionSyntaxError(line_n,
-                "expression %r: not parseable (%s)" % (text, e.msg))
+                "expression %r: not parseable (%s)" % (text, e.msg)) from None
         self._validate(tree, line_n)
         self._code = compile(tree, "<region-parameter>", "eval")
 
@@ -106,7 +106,7 @@ class SafeExpression:
         """
         scope = dict(SAFE_FUNCTION_DB)
         scope.update(SAFE_CONSTANT_DB)
-        for name, vec in zip(self.vector_names, vectors):
+        for name, vec in zip(self.vector_names, vectors, strict=False):
             scope[name] = vec
         if self.alias_f:
             p = vectors[0]
@@ -123,13 +123,13 @@ class SafeExpression:
 # ------------------------------------------------------------------------------
 
 def _euclidean(x, y):
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(x, y)))
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(x, y, strict=False)))
 
 def _l1(x, y):
-    return sum(abs(a - b) for a, b in zip(x, y))
+    return sum(abs(a - b) for a, b in zip(x, y, strict=False))
 
 def _linf(x, y):
-    return max(abs(a - b) for a, b in zip(x, y))
+    return max(abs(a - b) for a, b in zip(x, y, strict=False))
 
 BUILTIN_DIST_DB = {
     "euclidean": _euclidean,

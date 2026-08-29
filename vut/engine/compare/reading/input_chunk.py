@@ -17,11 +17,11 @@ The two main functions of an 'InputChunk' are
                      for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums          import E_Chunk
+from   vut.engine.compare.contract.enums          import E_Chunk
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.reading.pattern_finder  import E_ToleranceId
-from   vut.engine.compare.engine.analogy_db     import AnalogyDb
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.contract.analogy_db     import AnalogyDb
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 import vut.engine.compare.region.line_sequence.equivalence      as equivalence_check_line
 from   vut.engine.compare.core.line_pair       import LinePair
 import vut.engine.compare.region.line_sequence.associate   as association_line_sequence

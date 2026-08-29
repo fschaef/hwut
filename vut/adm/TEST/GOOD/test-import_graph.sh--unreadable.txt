@@ -1,0 +1,7 @@
+STATUS: 1
+STDOUT {
+    FAULT: engine/plan/torn.py: invalid syntax (torn.py, line 1)
+    engine -> base
+    faces -> base
+    faces -> engine
+}

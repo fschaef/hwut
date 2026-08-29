@@ -34,9 +34,9 @@ from ..plan.form                   import E_NodeKind
 from ..plan.tree                   import determine_tree
 from ..scheduler.budget            import CBudget
 from ..scheduler.scheduler         import Scheduler
-from ..scheduler.state             import E_NodeState, FAILURE_SET
+from ..scheduler.state             import E_NodeState
 from .strategy                     import CLinear
-from .vocabulary                   import event
+from ...protocol.vocabulary        import event
 
 
 #  E_NodeState x kind -> the verdict word (O-3). ENDED_BAD names the

@@ -49,8 +49,7 @@ from .consume.loaded              import loaded
 from   .nominal                       import RecordNominal
 from   pathlib import Path
 from   ..bookkeeper.stream_store import (source_digest_of,
-                                              Store,
-                                              DirectoryBusy)
+                                              Store)
 
 
 class E_Goal(Enum):

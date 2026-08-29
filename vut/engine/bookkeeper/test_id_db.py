@@ -395,7 +395,7 @@ class TestIdDb:
             if head.startswith("G:"):
                 try:               self.generation = int(head[2:])
                 except ValueError: raise TestIdFault(
-                                       "'%s' spells no generation" % line)
+                                       "'%s' spells no generation" % line) from None
                 continue
             if head.startswith("N:"):
                 self._parse_mark(head[2:], line)
@@ -406,7 +406,7 @@ class TestIdDb:
             if head.startswith("A:"):
                 try:               app_id = int(head[2:])
                 except ValueError:
-                    raise TestIdFault("'%s' spells no app id" % head)
+                    raise TestIdFault("'%s' spells no app id" % head) from None
                 if app_id in self._app_db:
                     raise TestIdFault("app id %i stands twice" % app_id)
                 if app_id >= ID_LIMIT:
@@ -424,7 +424,7 @@ class TestIdDb:
                     app_id, choice_id = int(pair[0]), int(pair[1])
                 except (ValueError, IndexError):
                     raise TestIdFault("'%s' spells no app.choice id"
-                                      % head)
+                                      % head) from None
                 choice_db = self._choice_db.get(app_id)
                 if choice_db is None:
                     raise TestIdFault("choice %s.%s names an app id "
@@ -473,7 +473,7 @@ class TestIdDb:
         try:
             value_list = [int(p) for p in part_list]
         except ValueError:
-            raise TestIdFault("'%s' spells no mark" % line)
+            raise TestIdFault("'%s' spells no mark" % line) from None
         if any(v > ID_LIMIT for v in value_list):
             raise TestIdFault("mark '%s' lies beyond ID_LIMIT" % line)
         match value_list:

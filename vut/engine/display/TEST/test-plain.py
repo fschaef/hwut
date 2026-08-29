@@ -52,7 +52,7 @@ from config import HwutRunner                                # noqa: F401
 
 from vut.engine.display.plain               import E_Tier, render
 from vut.engine.operations.result           import E_TestRunResult
-from vut.engine.orchestrator.run.vocabulary import event
+from vut.engine.protocol.vocabulary import event
 
 
 WIDTH = 78

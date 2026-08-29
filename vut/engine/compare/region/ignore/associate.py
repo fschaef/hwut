@@ -25,7 +25,7 @@ def do(subject, nominal, analogy_db):
     n_list = list(nominal.line_list)
 
     result = []
-    for s, n in zip(s_list, n_list):
+    for s, n in zip(s_list, n_list, strict=False):
         result.append(LinePair(_display_line(s), _display_line(n),
                                (Edit(E_EditId.GOOD_TOLERATED),),
                                seq_edit_id=E_EditId.GOOD_TOLERATED))

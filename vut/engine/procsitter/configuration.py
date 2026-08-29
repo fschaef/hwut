@@ -11,7 +11,7 @@ environment), ABOVE this level. The procsitter neither records nor
 enforces them.
 ______________________________________________________________________________
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

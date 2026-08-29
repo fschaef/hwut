@@ -225,8 +225,8 @@ def pack_record(record):
 def _pack_points(w, measure, entry):
     """RETURN: None. A measure's points as one stream: named points
     carry the name as a 'str' inside the stream, via the escape."""
-    numbers, previous = [], 0
-    named_f = _named_f(measure)
+    previous  = 0
+    named_f   = _named_f(measure)
     byte_list = []
     for point in sorted(entry):
         if named_f:
@@ -267,7 +267,7 @@ def unpack_record(data):
     try:
         plain = zlib.decompress(data)
     except zlib.error as fault:
-        raise RecordFault("the record is not a zlib stream: %s" % fault)
+        raise RecordFault("the record is not a zlib stream: %s" % fault) from None
     r = _Reader(plain)
     if r.raw(len(MAGIC)) != MAGIC:
         raise RecordFault("the record does not begin with %r" % MAGIC)

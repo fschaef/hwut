@@ -90,7 +90,7 @@ class Judgment:
                 except ValueError:
                     raise RegionSyntaxError(line.line_n,
                         "table NOMINAL cell in numeric column %d is not a "
-                        "number: %r" % (col, cells[col]))
+                        "number: %r" % (col, cells[col])) from None
         if self.key_column is not None:
             seen = {}
             for line, cells in nominal.row_list:
@@ -116,7 +116,7 @@ class Judgment:
 
     def _row_equal(self, s_cells, n_cells):
         return all(self._cell_equal(col, s, n)
-                   for col, (s, n) in enumerate(zip(s_cells, n_cells)))
+                   for col, (s, n) in enumerate(zip(s_cells, n_cells, strict=False)))
 
     # -- matching modes ------------------------------------------------------
     def _match_ordered(self, s_rows, n_rows):

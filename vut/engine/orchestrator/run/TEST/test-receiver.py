@@ -35,8 +35,8 @@ import asyncio
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.run.receiver   import CRunReportReceiver
-from vut.engine.orchestrator.run.vocabulary import event, format_text
+from vut.engine.protocol.receiver   import CRunReportReceiver
+from vut.engine.protocol.vocabulary import event, format_text
 
 
 def banner(label):

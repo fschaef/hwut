@@ -110,7 +110,7 @@ def evaluate_f(tree, label_set):
                                and evaluate_f(tree[2], label_set)
     if kind == "or":    return evaluate_f(tree[1], label_set) \
                                or evaluate_f(tree[2], label_set)
-    assert False, "an expression tree holds no '%s'" % kind
+    raise AssertionError("an expression tree holds no '%s'" % kind)
 
 
 @dataclass(frozen=True, slots=True)

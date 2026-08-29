@@ -19,8 +19,8 @@ LineElement provide:
 ________________________________________________________________________________
 """
 import vut.engine.compare.core.edit_operations.string as     edit_distance_string
-from   vut.engine.compare.engine.enums                              import E_Verdict, E_ToleranceId
-from   vut.engine.compare.engine.semantics                          import is_plainly_equivalent_verdict
+from   vut.engine.compare.contract.enums                              import E_Verdict, E_ToleranceId
+from   vut.engine.compare.contract.semantics                          import is_plainly_equivalent_verdict
 
 import regex       as re
 from   dataclasses import dataclass
@@ -80,7 +80,7 @@ class LineElement:
             case E_ToleranceId.CONSTRAINT_BINDING:
                 return LineElementConstraintBinding(content)
             case _:
-                assert False # pragma: no cover
+                raise AssertionError("")
 
     def compare(self, nominal):
         """RETURNS: [0] MISFIT,     if 'other' is of another class.

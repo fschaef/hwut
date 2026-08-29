@@ -44,16 +44,12 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.bookkeeper.bookkeeper              import Bookkeeper
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
-from   vut.engine.orchestrator.plan.label            import swallowed_warning_tuple
+from   vut.engine.orchestrator.exploration          import selection
 from   vut.services.labels                           import view_at
 from   vut.services.labels._file                     import LabelFileError
-from   vut.engine.orchestrator.exploration.task_list_query \
-                                                     import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import (explore_tree,
-                                                             RootConfMissing)
+                                                     import (RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
@@ -95,26 +91,13 @@ def line_tuple_of(root, wish, warning_list=None):
     hold -- refused at the door, as everywhere.
     """
     if warning_list is None: warning_list = []
-    label_view  = view_at(root)
-    met_set     = set()
-    visible_set = set()
-    for directory, result in explore_tree(root):
+    found = selection.of_tree(root, wish, view_at(root))
+    warning_list.extend(found.warning_tuple)
+    for entry in found.case_list:
         #  THE WALK'S 'directory' IS RELATIVE to the root -- the very
         #  form a wishlist line carries.
-        bookkeeper = Bookkeeper(os.path.join(root, directory)) \
-                     if wish.asks_base_f() else None
-        query      = CTestTaskListQuery(wish, bookkeeper,
-                                        directory=directory,
-                                        root=root,
-                                        label_view=label_view)
-        if wish.glob_tuple:
-            met, visible = query.glob_reach(result.app_set)
-            met_set.update(met)
-            visible_set.update(visible)
-        for case in query.get_test_cases(result.app_set):
-            yield target_line(directory, case.source_file, case.choice)
-    for text in swallowed_warning_tuple(met_set, visible_set):
-        warning_list.append(text)
+        yield target_line(entry.directory, entry.case.source_file,
+                          entry.case.choice)
 
 
 def main(argv=None, write=None):

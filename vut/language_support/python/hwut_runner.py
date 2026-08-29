@@ -6,7 +6,7 @@ import re
 import time
 import threading
 import tempfile
-from   typing    import Callable, Optional
+from   typing    import Callable
 from   typeguard import typechecked
 
 
@@ -240,7 +240,7 @@ class HwutRunner:
                     status = self.__run_into_sinks(choice, sink_out, sink_err)
                     self.__up(f"done {token} {status}")
             case _:
-                self.__up(f"fail - bad-command")
+                self.__up("fail - bad-command")
         return True
 
     def __find_choice(self, token: str) -> tuple:

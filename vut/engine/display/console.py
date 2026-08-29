@@ -158,7 +158,7 @@ def parse_rendering(argument_list):
             except ValueError:
                 raise RenderingError(
                     "'--start-delay=%s': a number of seconds, '0' to "
-                    "announce at once" % text)
+                    "announce at once" % text) from None
             if start_delay < 0:
                 raise RenderingError(
                     "'--start-delay=%s': a delay does not run "

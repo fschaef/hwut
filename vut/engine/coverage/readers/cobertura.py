@@ -62,7 +62,7 @@ import xml.etree.ElementTree as ElementTree
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
                       register, artifact_directory_of,
-                      relative_path, wanted, record_of)
+                      relative_path, wanted)
 from ..record import ranges_of, FileCoverage, CoverageRecord
 
 

@@ -171,4 +171,4 @@ class SeparatorAdaptor:
         Assuming that subject, and nominal are equivalent, the return value provides
         the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
         """
-        assert False
+        raise AssertionError("")

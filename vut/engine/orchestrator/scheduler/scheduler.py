@@ -38,7 +38,7 @@ ______________________________________________________________________________
 """
 import asyncio
 from abc         import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from ..plan.form  import E_NodeKind
 from .budget      import CBudget, budget_of

@@ -128,6 +128,7 @@ class CTestTaskListQuery(CTestTaskList):
                 wish asks.
         """
         if self._label_hidden_f(case):                      return False
+        if self._outside_dir_f():                           return False
         if self._excluded_f(case):                          return False
         if self.wish.asks_glob_f() and not self._glob_hit_f(case):
             return False
@@ -219,6 +220,25 @@ class CTestTaskListQuery(CTestTaskList):
         now = self.now or datetime.now(timezone.utc)
         if now.tzinfo is None: now = now.replace(tzinfo=timezone.utc)
         return now
+
+    def _outside_dir_f(self):
+        """
+        RETURN: bool, True where the wish names DIRECTORIES and this
+                query's directory is none of them.
+
+        '--dir' NARROWS, it does not add (disc-10, fork a): '--dir a
+        --fail' is 'the failing runs under a', which is how a person
+        says it. Several globs are a UNION among themselves -- naming
+        two directories asks for both -- exactly as '--label' unions
+        its labels and narrows against the rest.
+
+        THE MATCHING IS '--exclude-dir's OWN: a glob carrying '/' is
+        matched against the whole relative path, a BARE NAME against
+        every path COMPONENT. One rule, learnt once.
+        """
+        if not self.wish.dir_tuple: return False
+        return not any(self._directory_hit_f(text.strip())
+                       for text in self.wish.dir_tuple)
 
     def _excluded_f(self, case):
         """

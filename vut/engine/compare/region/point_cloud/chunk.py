@@ -37,7 +37,7 @@ The region's dimension is set by its first valid point; later lines with a
 different component count are malformed.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums               import E_Chunk
+from   vut.engine.compare.contract.enums               import E_Chunk
 from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)

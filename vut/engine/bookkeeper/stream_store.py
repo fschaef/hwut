@@ -35,8 +35,6 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import json
-import os
-from   dataclasses import dataclass
 from   pathlib     import Path
 from .configuration import StoreConfig   # noqa: F401
 
@@ -47,9 +45,6 @@ from   ...auxiliary.directory_mutex import (MkdirMutex,        # noqa: F401
                                             DirectoryDeadlock,
                                             liveness_can_be_asked,
                                             LOCK_DIRECTORY_NAME)
-
-
-LOCK_DIRECTORY_NAME = ".hwut-lock"
 
 
 def _utc_now():

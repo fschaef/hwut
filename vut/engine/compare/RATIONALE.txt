@@ -1,0 +1,81 @@
+
+C-1   THE CONTRACT -- A SHARED NAME BELONGS WHERE ALL ITS READERS
+      SIT ABOVE IT
+
+PROBLEM   'engine/compare' held seven MUTUAL import pairs among five
+          sub-components and four of the tree's ten module-level
+          cycles -- the one place in the tree with no readable
+          direction. Measured ('adm/import_graph.py --shared'), four
+          of those pairs rested on a SINGLE NAME travelling backwards
+          against three to eight going forwards.
+
+DECISION  'engine/compare/contract' holds the vocabulary in which the
+          parties of a comparison name the same things: 'E_Verdict',
+          'E_Chunk', 'E_ToleranceId', 'E_EditId' and the semantics
+          that give them meaning; 'AnalogyDb' and 'FrozenAnalogyDb',
+          the shapes an analogy is carried in.
+
+          IT IMPORTS NOTHING OF THIS TREE, and that is the property
+          which MAKES it a contract: every party sits above it, so no
+          party can be made to wait on another.
+
+          WHAT BELONGS: SHAPES. An enum has no behaviour at all and
+          exists precisely so two parties may say the same word; a
+          request shape is what one party asks of another; an error
+          kind is part of an interface.
+          WHAT DOES NOT: anything whose move would move BEHAVIOUR.
+          THE TEST -- would moving it require moving behaviour? 'Line'
+          has twenty methods and imports 'core'; 'PatternFinder'
+          computes; 'Store' holds state. Those are shared because a
+          REAL DEPENDENCY exists, and the layering must express it,
+          never hide it behind a shared package.
+
+COST      Thirty-six modules re-pointed. The door re-exports and says
+          so with '__all__' -- a re-export is not an unused import,
+          and saying so to the reader matters more than saying it to
+          the tool.
+
+VERIFIED  'reading -> engine' fell from 8 names to 1; 'region ->
+          engine' from 6 to 1. Every shared name of 'compare' now
+          reads 'from contract' except the three that carry
+          behaviour. 301 declared choices unmoved.
+
+WHAT IT DID NOT DO, and this is the honest half: THE SEVEN MUTUAL
+          PAIRS STAND, and the module-cycle count is still ten -- the
+          'enums <-> semantics' pair simply moved INTO the contract
+          with them. What holds the remaining pairs shut is exactly
+          the three names the test above forbids moving. A contract
+          removes the cycles that a MISPLACED SHAPE caused; it cannot
+          remove the ones a real mutual dependency causes, and
+          'reading <-> region' looks like one: a reading contains
+          regions, a region is made of readings.
+
+          THAT REMAINDER IS NOW A QUESTION FOR ARCHITECTURE, not for
+          a tool: state the mutual recursion as a design, or break it
+          by moving behaviour. This entry does neither.
+
+GRAVEYARD MOVING 'Line' AND 'PatternFinder' TOO -- rejected: both
+          carry behaviour, and a 'contract' holding machinery is a
+          package named for a property it does not have.
+
+C-2   THE SEAL -- 'NOTHING LEAVES' IS CHECKABLE, AND SO IT IS CHECKED
+
+PROBLEM   C-1 stated that a contract imports nothing of this tree, and
+          nothing could test it: 'adm/LAYERING.txt' is written at
+          depth 2, where the whole of 'engine/compare' is one
+          component and everything inside it is invisible. A law
+          nobody can check is a law that decays.
+
+DECISION  'SEALED <glob>' in the declaration, JUDGED AT MODULE DEPTH.
+          A direction is about a PAIR and needs both named; a seal is
+          about ONE COMPONENT and needs no depth at all, so it holds
+          at whatever depth the rest is read with.
+
+          VERIFIED BY BREAKING IT: one import added to
+          'contract/enums.py' reaching for 'region/registry.py', and
+          the check at DEPTH 2 -- where it cannot see inside 'compare'
+          at all -- names the module and its target and answers 1.
+
+COST      A second line shape in the declaration, and a second kind of
+          reading. The refusal message names both, so a malformed line
+          says which shapes exist.

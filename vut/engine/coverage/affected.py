@@ -58,7 +58,6 @@ import sys
 from .record   import (ranges_of, RecordFault, CoverageRecord,
                        FileCoverage)
 from .binary   import unpack_record
-from ..bookkeeper.test_run_id import TestRunId
 from .index    import index_of, Gathered
 
 

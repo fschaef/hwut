@@ -41,22 +41,17 @@ ______________________________________________________________________________
 """
 import os
 import sys
-from pathlib import Path
 
-from   vut.engine.bookkeeper.bookkeeper                import Bookkeeper
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                        import (RootConfMissing,
                                                                ascended_spec)
 from   vut.engine.bookkeeper.test_id_db                import TestIdDb
 from   vut.engine.bookkeeper.configuration             import E_StderrNote
 from   vut.engine.bookkeeper.stream_store              import Store
-from   vut.engine.orchestrator.exploration.explorer    import explore
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
-from   vut.engine.orchestrator.plan.label              import swallowed_warning_tuple
+from   vut.engine.orchestrator.exploration            import selection
 from   vut.services.labels                             import view_at
 from   vut.services.labels._file                       import LabelFileError
-from   vut.engine.orchestrator.exploration.task_list_query \
-                                                       import CTestTaskListQuery
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
                                                                parse_wish,
@@ -436,33 +431,33 @@ def main(argv=None, write=None, read_line=None):
     for fault in ascent_fault_list:
         write(str(fault))
 
-    result = explore(directory, inherited=inherited)
-    for fault in result.fault_list:
-        write("FAULT: %s" % fault)
-
-    bookkeeper = Bookkeeper(directory)
-    id_db      = TestIdDb(directory)
-    store      = Store(bookkeeper)
     wish = with_targets(wish, word_list)
     try:
         label_view = view_at(directory)
     except LabelFileError as error:
         write("FAULT: %s" % error)
         return E_ExitCode.FAULT
+
+    #  ONE ACTION, ONE PLACE ('exploration/selection.py'). The
+    #  Bookkeeper is the SELECTION'S -- 'base_f=True' because this
+    #  face reads candidates whatever the wish asked, and a bare wish
+    #  asks no base.
     try:
-        query = CTestTaskListQuery(
-            wish, bookkeeper,
-            directory=".",
-            root=os.path.abspath(directory),
-            label_view=label_view)
-        case_sequence = query.get_test_cases(result.app_set)
-        if wish.glob_tuple:
-            #  A FACE THAT NAMES A RUN AND BLESSES NOTHING MUST SAY
-            #  WHY: a literal target lifts the silence, and a glob
-            #  wholly swallowed by it speaks (disc-8).
-            for text in swallowed_warning_tuple(
-                            *query.glob_reach(result.app_set)):
-                write(text)
+        found = selection.of_directory(directory, wish, label_view,
+                                       inherited=inherited,
+                                       base_f=True)
+        result     = found.result_db["."]
+        bookkeeper = found.bookkeeper_db["."]
+        for fault in found.fault_tuple:
+            write("FAULT: %s" % fault)
+        id_db = TestIdDb(directory)
+        store = Store(bookkeeper)
+        case_sequence = [entry.case for entry in found.case_list]
+        #  A FACE THAT NAMES A RUN AND BLESSES NOTHING MUST SAY WHY:
+        #  a literal target lifts the silence, and a glob wholly
+        #  swallowed by it speaks (disc-8).
+        for text in found.warning_tuple:
+            write(text)
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

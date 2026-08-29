@@ -37,8 +37,8 @@ import re
 from datetime import datetime
 from enum     import Enum
 
-from ..orchestrator.run.receiver import CRunReportReceiver
-from ..orchestrator.run.summary  import fold
+from ..protocol.receiver import CRunReportReceiver
+from ..protocol.summary  import fold
 from .word                       import CInk, phrase
 
 

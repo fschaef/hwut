@@ -13,7 +13,7 @@ import time
 # Standard VUT path injection
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../../")
 sys.path.insert(0, this_directory)
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb      # noqa E402
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb      # noqa E402
 import scenario_generator_adb as gen                                           # noqa E402
 
 # Import your algorithm module

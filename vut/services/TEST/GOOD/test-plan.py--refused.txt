@@ -4,9 +4,9 @@ $ hwut.plan --since=noon
     REFUSED: '--since=noon': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
-                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                     [--label <expr>] [<file-glob> [choice-glob]...]
-                     [--directory=<path>]
+                     [--dir <glob>]... [--exclude-dir <glob>]...
+                     [--wishlist <file>]... [--label <expr>]
+                     [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
 --- '--fail' beside '--pass' ---
@@ -14,9 +14,9 @@ $ hwut.plan --fail --pass
     REFUSED: '--fail' beside '--pass' can want nothing
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
-                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                     [--label <expr>] [<file-glob> [choice-glob]...]
-                     [--directory=<path>]
+                     [--dir <glob>]... [--exclude-dir <glob>]...
+                     [--wishlist <file>]... [--label <expr>]
+                     [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
 --- an OPTION the face does not take ---
@@ -24,8 +24,8 @@ $ hwut.plan --sideways
     REFUSED: 'hwut.plan' does not take: --sideways
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--exclude <target>]...
-                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                     [--label <expr>] [<file-glob> [choice-glob]...]
-                     [--directory=<path>]
+                     [--dir <glob>]... [--exclude-dir <glob>]...
+                     [--wishlist <file>]... [--label <expr>]
+                     [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 <hwut-end>

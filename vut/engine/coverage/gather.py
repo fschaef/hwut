@@ -53,7 +53,7 @@ import json
 import os
 
 from .affected  import record_iterable
-from .index     import index_of, Gathered
+from .index     import index_of
 from ..bookkeeper.test_id_db  import TestIdDb, TestIdFault
 from ..bookkeeper.group_table import (GroupDb, GroupFault,
                                       parse_group_table)
@@ -198,7 +198,7 @@ def read_bundle(path):
         with io.open(path, encoding="utf-8") as handle:
             bundle = json.load(handle)
     except (OSError, ValueError) as fault:
-        raise GatherFault("'%s' is no bundle: %s" % (path, fault))
+        raise GatherFault("'%s' is no bundle: %s" % (path, fault)) from None
     version = bundle.get("format")
     if version != FORMAT_VERSION:
         raise GatherFault("bundle version %s is not %i -- this build "

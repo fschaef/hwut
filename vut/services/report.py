@@ -50,16 +50,13 @@ import shutil
 import sys
 import xml.sax.saxutils as saxutils
 
-from   vut.engine.bookkeeper.bookkeeper              import (Bookkeeper,
-                                                             NO_CHOICE_KEY)
+from   vut.engine.bookkeeper.bookkeeper              import (NO_CHOICE_KEY)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
+from   vut.engine.orchestrator.exploration          import selection
 from   vut.services.labels                           import view_at
 from   vut.services.labels._file                     import LabelFileError
-from   vut.engine.orchestrator.exploration.task_list_query \
-                                                     import CTestTaskListQuery
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import (explore_tree,
-                                                             RootConfMissing)
+                                                     import (RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
@@ -168,17 +165,21 @@ def row_list_of(root, wish):
     say which halves those are.
     """
     entry_list = []
-    label_view = view_at(root)
-    for directory, result in explore_tree(root):
+    #  ONE ACTION, ONE PLACE ('exploration/selection.py'). The
+    #  Bookkeeper this face reads the book from is the one THE
+    #  SELECTION MADE -- two over one directory would be two answers
+    #  to one question.
+    found  = selection.of_tree(root, wish, view_at(root), base_f=True)
+    by_dir = {}
+    for entry in found.case_list:
+        by_dir.setdefault(entry.directory, []).append(entry.case)
+    for directory, result in found.result_db.items():
         whole      = os.path.join(root, directory)
-        bookkeeper = Bookkeeper(whole)
-        query      = CTestTaskListQuery(wish, bookkeeper,
-                                        directory=directory, root=root,
-                                        label_view=label_view)
+        bookkeeper = found.bookkeeper_db[directory]
         book       = bookkeeper.book()
         app_db     = {app.source_file: app for app in result.app_set}
         row_list   = []
-        for case in query.get_test_cases(result.app_set):
+        for case in by_dir.get(directory, ()):
             test   = case.source_file
             key    = NO_CHOICE_KEY if case.choice is None else case.choice
             entry  = book.get(test, {}).get("choices", {}).get(key, {})

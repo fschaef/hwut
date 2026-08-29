@@ -26,7 +26,7 @@ RETURNS:
 """
 
 from vut.language_support.python.deterministic_random             import DeterministicStream
-from vut.engine.compare.engine.analogy_db           import AnalogyDb
+from vut.engine.compare.contract.analogy_db           import AnalogyDb
 from vut.engine.compare.region.potpourri.potential_pair_db import PotentialPairDb
 
 from typing import Optional, Any

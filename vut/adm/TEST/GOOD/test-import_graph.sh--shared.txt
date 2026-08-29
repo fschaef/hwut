@@ -1,0 +1,13 @@
+--- names three or more components import
+STATUS: 0
+STDOUT {
+    E_Kind                       from base                     read by 3: engine/plan, engine/store, faces
+    helper                       from base                     read by 3: engine/plan, engine/store, faces
+}
+--- and two or more, which finds the rest
+STATUS: 0
+STDOUT {
+    E_Kind                       from base                     read by 3: engine/plan, engine/store, faces
+    helper                       from base                     read by 3: engine/plan, engine/store, faces
+    Book                         from engine/store             read by 2: engine/plan, faces
+}

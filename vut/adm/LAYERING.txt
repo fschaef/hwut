@@ -1,0 +1,131 @@
+#  LAYERING -- the permitted DIRECTION between components.
+#  ---------------------------------------------------------------------------
+#  Read by 'adm/import_graph.py --check'. A rule reads
+#
+#      <from-glob> -> <to-glob>
+#
+#  and states that such an edge MAY exist. An edge no rule permits is
+#  a VIOLATION, named by both ends. The declaration says what may
+#  happen; everything else is drift.
+#
+#  '#' to end of line is a comment; blank lines are nothing.
+#
+#  THE CENTRAL LAW: DATA FLOWS INTO THE ENGINE, AND THE ENGINE IMPORTS
+#  NOTHING BACK. A face builds and hands down; the engine consumes.
+#  There is no rule 'engine/* -> services*' below, and its absence is
+#  the law -- one such edge and the check goes red.
+#
+#  This declaration describes the tree at depth 2. Run:
+#
+#      adm/import_graph.py . --depth=2 --check=adm/LAYERING.txt \
+#          --exclude="*/TEST/*" --exclude="*/test-*" \
+#          --exclude="*/config.py"
+#
+#  THE SUITES ARE EXCLUDED, and deliberately: a test application
+#  imports whatever it tests, upward and downward alike, and it is not
+#  part of the shape it examines.
+#  ---------------------------------------------------------------------------
+
+#  THE FOUNDATION. These import nothing of this tree, and the check
+#  needs no rule to say so -- a component with no outgoing edge cannot
+#  violate a direction.
+
+#  A CONTRACT IMPORTS NOTHING. 'engine/compare/contract' holds the
+#  vocabulary in which the parties of a comparison name the same
+#  things -- enums, the analogy shapes, the semantics that give them
+#  meaning. It has NO outgoing edge, and that is the property which
+#  makes it a contract: every party sits above it, so no party can be
+#  made to wait on another.
+#
+#  ENFORCED BY 'SEALED', which is judged at MODULE depth and so holds
+#  at every '--depth' this file is read with -- including depth 2,
+#  where the whole of 'engine/compare' is one component and everything
+#  inside it would otherwise be invisible.
+#
+#  A DIRECTION is about a PAIR and can only be read where both are
+#  named. A SEAL is about ONE COMPONENT, and 'nothing leaves here' is
+#  the whole of a contract's claim.
+
+SEALED engine/compare/contract
+SEALED engine/protocol
+
+#  'procsitter' IS ALREADY A CONTRACT IN FACT: it imports nothing of
+#  this tree, and 'operations' and 'orchestrator' both read
+#  'Procsitter', 'ProcsitterConfig' and 'E_Containment' from it. It
+#  needed no moving -- only DECLARING, so that what is true today
+#  cannot quietly stop being true.
+#
+#  MEASURED, not assumed: 'adm/import_graph.py --shared' names those
+#  three among the cross-component vocabulary, and the seal check
+#  confirms nothing leaves.
+SEALED engine/procsitter
+
+#  THE FOUNDATION IS SEALED FOR THE SAME REASON. 'auxiliary' and
+#  'language_support' import nothing of this tree, which is what makes
+#  them a foundation; the seal is that sentence, made checkable.
+SEALED auxiliary
+SEALED language_support
+
+#  THE ENGINE rests on the foundation, and its parts rest on one
+#  another in one direction.
+engine/*            -> adm
+engine/*            -> auxiliary
+engine/*            -> language_support*
+
+engine/bookkeeper   -> engine/compare
+engine/coverage     -> engine/bookkeeper
+engine/operations   -> engine/bookkeeper
+engine/operations   -> engine/compare
+engine/operations   -> engine/coverage
+engine/operations   -> engine/procsitter
+engine/orchestrator -> engine/bookkeeper
+engine/orchestrator -> engine/compare
+engine/orchestrator -> engine/coverage
+engine/orchestrator -> engine/operations
+engine/orchestrator -> engine/procsitter
+
+#  THE RUN REPORT PROTOCOL. 'engine/protocol' holds what a producer
+#  of the run's event stream and a consumer of it AGREE ON -- the
+#  vocabulary, the receiver a consumer derives from, the fold that
+#  answers what a run came to.
+#
+#  IT REPLACED THE ONE SIDEWAYS ARROW IN THIS TREE.
+#  'engine/display -> engine/orchestrator' stood here until the
+#  protocol moved out of the producer: a consumer reaching into a
+#  producer for the shape they share. Now display points DOWN, as
+#  every other component does, and a TUI or a customer's own consumer
+#  needs three leaf modules rather than the orchestrator.
+engine/display      -> engine/protocol
+engine/orchestrator -> engine/protocol
+
+#  THE FACES rest on everything, and nothing rests on them.
+services*           -> adm
+services*           -> auxiliary
+services*           -> engine/*
+services*           -> language_support*
+
+#  A FACE FAMILY AND ITS PARENT. 'services -> services/labels' is a
+#  face reaching for a family's door; 'services/labels -> services'
+#  is that door reaching back for what every face shares ('_core',
+#  '_exit').
+#
+#  THIS IS A CYCLE AT DEPTH 2, and it is admitted here rather than
+#  hidden. VERIFIED at module depth: no import runs in a circle
+#  between these two -- the shared members ('_core', '_exit') are
+#  leaves and the door is a leaf. It is a thing to WATCH, not a thing
+#  that is well.
+#
+#  THE MODULE GRAPH AS A WHOLE IS NOT ACYCLIC: ten cycles stand, all
+#  INSIDE single components --
+#
+#      4  engine/compare/region
+#      2  engine/operations/run
+#      1  each: engine/compare/engine, engine/compare/reading,
+#               engine/operations/interaction,
+#               engine/orchestrator/exploration
+#
+#  A cycle inside a component is not a layering violation, and this
+#  declaration does not forbid one. Whether each is a design or an
+#  accretion is a question for the review, not for this file.
+services            -> services/labels
+services/labels     -> services

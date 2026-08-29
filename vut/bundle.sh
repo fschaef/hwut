@@ -19,11 +19,13 @@ EXCLUDE_PATTERNS=(.git .hwut-store __pycache__ .ruff_cache OUT
                   .mypy_cache .pytest_cache '*.egg-info' .venv node_modules)
 EXCLUDE_GIVEN=0
 EXCLUDE_PATH_GLOBS=()
+EXCLUDE_NAME_GLOBS=()
 OUTPUT_FILE=""
 MAX_FILE_BYTES=262144         # 0 disables
 MAX_PART_BYTES=0              # 0 disables splitting
 BINARY_MODE="skip"            # skip | git
 COMPLETE=0
+CHMOD_SCRIPT=0
 # Pruned even under --complete: a bundled .git would be enormous and could not
 # be re-applied into a repository anyway. Name it in an explicit -x to include.
 HARD_PRUNE=(.git)
@@ -55,11 +57,24 @@ Exclusion:
                        default, further -x accumulate.
                        (Default: ${EXCLUDE_PATTERNS[*]})
   -X GLOB1 [GLOB2 ...] Exclude by whole path glob ('vut/*/TEST/GOOD/*')
+      --exclude GLOB1 [GLOB2 ...]
+                       Exclude by BASE NAME glob ('*.log', 'ON-HOLD-*').
+                       Matched against the file's own name only, never a
+                       directory and never the path -- so '--exclude *.txt'
+                       drops every .txt wherever it stands, and leaves the
+                       directories holding them alone.
   -S BYTES             Skip files larger than BYTES; 0 disables (Default: ${MAX_FILE_BYTES})
   -a, --complete       Complete dump: no pruning, no size cap, binary members
                        included, untracked files included. '.git' stays pruned.
       --binary         Render binary files as git literal patches instead of
                        skipping them (implied by --complete)
+
+Modes:
+      --chmod-script   Write '<output>.chmod.sh' beside the bundle: one
+                       'chmod a+x' per executable member. A PATCH CARRIES NO
+                       MODE, so every executable arrives as a plain file and
+                       the receiving tree cannot run its own tests until this
+                       script is run. Implied by --complete.
 
 Output:
   -o FILE              Output filename, '-' for stdout
@@ -123,6 +138,7 @@ command_line_parse() {
             -x) [[ $EXCLUDE_GIVEN -eq 0 ]] && EXCLUDE_PATTERNS=() && EXCLUDE_GIVEN=1
                 command_line_get_nominus_followers EXCLUDE_PATTERNS "$@"; shift "$SHIFT_COUNT" ;;
             -X) command_line_get_nominus_followers EXCLUDE_PATH_GLOBS "$@"; shift "$SHIFT_COUNT" ;;
+            --exclude) command_line_get_nominus_followers EXCLUDE_NAME_GLOBS "$@"; shift "$SHIFT_COUNT" ;;
             --verify) command_line_get_nominus_followers VERIFY_FILES "$@"; shift "$SHIFT_COUNT" ;;
             -o) command_line_get_follower OUTPUT_FILE "$@"; shift "$SHIFT_COUNT" ;;
             -N) command_line_get_follower TOP_N "$@"; shift "$SHIFT_COUNT" ;;
@@ -136,9 +152,11 @@ command_line_parse() {
             -g|--git) SELECT_MODE="git"; shift ;;
             --use-find) SELECT_MODE="find"; shift ;;
             --binary) BINARY_MODE="git"; shift ;;
+            --chmod-script) CHMOD_SCRIPT=1; shift ;;
             -a|--complete) COMPLETE=1; BINARY_MODE="git"; MAX_FILE_BYTES=0
                            EXCLUDE_PATTERNS=(); EXCLUDE_GIVEN=1
-                           EXCLUDE_PATH_GLOBS=(); EXTENSIONS=(); shift ;;
+                           EXCLUDE_PATH_GLOBS=(); EXTENSIONS=()
+                           CHMOD_SCRIPT=1; shift ;;
             -n|--dry-run) DRY_RUN=1; shift ;;
             -h|--help) print_usage; exit 0 ;;
             *) echo "Error: Unknown option '$arg'" >&2; print_usage >&2; exit 1 ;;
@@ -207,6 +225,22 @@ path_is_glob_excluded() {
     local path="$1" glob
     for glob in ${EXCLUDE_PATH_GLOBS[@]+"${EXCLUDE_PATH_GLOBS[@]}"}; do
         [[ "$path" == $glob ]] && return 0
+    done
+    return 1
+}
+
+# RETURN: 0, if the file's OWN NAME matches an exclude glob given with
+#            --exclude
+#         1, else
+#
+# The base name only: '--exclude *.log' drops 'a/b/run.log' and leaves the
+# directory 'a/log/' alone. That is the difference from -x, which matches any
+# path component, and from -X, which matches the whole path.
+path_is_name_excluded() {
+    local path="$1" glob base
+    base="${path##*/}"
+    for glob in ${EXCLUDE_NAME_GLOBS[@]+"${EXCLUDE_NAME_GLOBS[@]}"}; do
+        [[ "$base" == $glob ]] && return 0
     done
     return 1
 }
@@ -286,6 +320,7 @@ select_list() {
 ACCEPTED=()
 REJ_PRUNED=()
 REJ_GLOB=()
+REJ_NAME=()
 REJ_LARGE=()
 REJ_BINARY=()
 REJ_MISSING=()
@@ -312,6 +347,7 @@ candidates_filter() {
         seen["$path"]=1
         if   path_is_pruned "$path";         then REJ_PRUNED+=("$path")
         elif path_is_glob_excluded "$path";  then REJ_GLOB+=("$path")
+        elif path_is_name_excluded "$path";  then REJ_NAME+=("$path")
         elif ! path_has_wanted_extension "$path"; then :
         elif [[ ! -f "$path" ]];             then REJ_MISSING+=("$path")
         elif ! file_is_text "$path" && [[ "$BINARY_MODE" == "skip" ]]
@@ -433,6 +469,39 @@ part_name() {
 }
 
 WRITTEN_PARTS=()
+CHMOD_FILE=""
+
+# RETURN: nothing, '<output>.chmod.sh' is written beside the bundle, holding
+#         one 'chmod a+x' per executable member, and CHMOD_FILE names it.
+#         Nothing is written where no member is executable, or where the
+#         bundle goes to stdout.
+#
+# A UNIFIED DIFF CARRIES NO MODE. Every member arrives as a plain file, so a
+# tree unpacked from a bundle cannot run its own tests, its own launchers or
+# its own filters until the bits are restored -- and the failure is silent:
+# 'permission denied' from a suite reads as a broken tree, not a missing
+# chmod.
+chmod_script_write() {
+    local path exec_list=()
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        [[ -x "$path" ]] && exec_list+=("$path")
+    done
+    [[ ${#exec_list[@]} -gt 0 ]] || return 0
+    [[ "$OUTPUT_FILE" == "-" ]] && return 0
+
+    CHMOD_FILE="${WRITTEN_PARTS[0]}.chmod.sh"
+    {
+        echo "#! /bin/sh"
+        echo "# Restore the execute bits a unified diff cannot carry."
+        echo "# Run from the root the bundle was applied into."
+        echo "set -e"
+        for path in "${exec_list[@]}"; do
+            printf 'chmod a+x "%s"\n' "$path"
+        done
+        echo "echo \"execute bits restored: ${#exec_list[@]} file(s)\""
+    } > "$CHMOD_FILE"
+    chmod a+x "$CHMOD_FILE"
+}
 
 # RETURN: nothing, the bundle is written to OUTPUT_FILE, or to several
 #         '.NofM.' parts when --max-bytes forces a split, and WRITTEN_PARTS
@@ -525,6 +594,8 @@ dry_run_report() {
         ${REJ_PRUNED[@]+"${REJ_PRUNED[@]}"}
     print_bucket "Excluded by path glob (${EXCLUDE_PATH_GLOBS[*]:-<none>})" \
         ${REJ_GLOB[@]+"${REJ_GLOB[@]}"}
+    print_bucket "Excluded by base name (${EXCLUDE_NAME_GLOBS[*]:-<none>})" \
+        ${REJ_NAME[@]+"${REJ_NAME[@]}"}
     print_bucket "Skipped, larger than ${MAX_FILE_BYTES} bytes" \
         ${REJ_LARGE[@]+"${REJ_LARGE[@]}"}
     print_bucket "Skipped, binary" ${REJ_BINARY[@]+"${REJ_BINARY[@]}"}
@@ -532,19 +603,43 @@ dry_run_report() {
     print_bucket "Included" ${ACCEPTED[@]+"${ACCEPTED[@]}"}
     echo "== Largest ${TOP_N} included files =="
     if [[ ${#ACCEPTED[@]} -eq 0 ]]; then echo "    (none)"; else
-        stat -c '%s %n' -- "${ACCEPTED[@]}" | LC_ALL=C sort -rn | head -n "$TOP_N" \
-        | while read -r size name; do
-              printf '    %8s  %s\n' "$(numfmt --to=iec --suffix=B "$size")" "$name"
-          done
+        local shown_n=0
+        while read -r size name; do
+            [[ $shown_n -ge "$TOP_N" ]] && break
+            printf '    %8s  %s\n' "$(numfmt --to=iec --suffix=B "$size")" "$name"
+            shown_n=$((shown_n + 1))
+        done < <(stat -c '%s %n' -- "${ACCEPTED[@]}" | LC_ALL=C sort -rn)
     fi
-    local total=0 size
+    local raw=0 size
     for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
-        size=$(stat -c%s "$path"); total=$((total + size))
+        size=$(stat -c%s "$path"); raw=$((raw + size))
     done
+
+    #  THE EMITTED SIZE, measured by rendering: a diff carries a header
+    #  per member and a '+' on every line, and a binary member rendered
+    #  as a literal patch is LARGER than the file it came from. The raw
+    #  total answers a different question than the one asked.
+    local scratch emitted=0 i=0
+    scratch=$(mktemp -d)
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        member_render "$path" "$scratch/m.$i"
+        emitted=$((emitted + $(stat -c%s "$scratch/m.$i")))
+        i=$((i + 1))
+    done
+    rm -rf "$scratch"
+
     local parts=1
-    [[ "$MAX_PART_BYTES" -gt 0 ]] && parts=$(( (total / MAX_PART_BYTES) + 1 ))
-    echo "Total: ${#ACCEPTED[@]} files, $(numfmt --to=iec --suffix=B "$total") raw;"\
-         "would write $OUTPUT_FILE in ~${parts} part(s) [mode: ${SELECT_MODE}]"
+    [[ "$MAX_PART_BYTES" -gt 0 ]] && parts=$(( (emitted / MAX_PART_BYTES) + 1 ))
+    local exec_n=0
+    for path in ${ACCEPTED[@]+"${ACCEPTED[@]}"}; do
+        [[ -x "$path" ]] && exec_n=$((exec_n + 1))
+    done
+    echo "Total: ${#ACCEPTED[@]} files, $(numfmt --to=iec --suffix=B "$raw") raw"
+    echo "Bundle: $(numfmt --to=iec --suffix=B "$emitted") emitted," \
+         "~${parts} part(s), ${exec_n} executable member(s) [mode: ${SELECT_MODE}]"
+    [[ $exec_n -gt 0 && $CHMOD_SCRIPT -eq 0 ]] && \
+        echo "Note: ${exec_n} member(s) are executable and a diff carries no" \
+             "mode -- consider --chmod-script"
     echo "Tip: rerun with --from-list after editing the 'Included' list into a file."
 }
 
@@ -597,8 +692,11 @@ main() {
     echo "(2) rendering ${#ACCEPTED[@]} members" >&2
     bundle_write
     echo "Success: bundle written to ${WRITTEN_PARTS[*]}" >&2
+    [[ $CHMOD_SCRIPT -eq 1 ]] && chmod_script_write
     statistics_report
     echo "To undump: git apply ${WRITTEN_PARTS[0]}   (or: patch -p1 < ${WRITTEN_PARTS[0]})"
+    [[ -n "$CHMOD_FILE" ]] && \
+        echo "Then:      sh ${CHMOD_FILE}   -- a diff carries no execute bit"
 }
 
 main "$@"

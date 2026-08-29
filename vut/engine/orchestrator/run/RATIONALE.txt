@@ -342,3 +342,108 @@ GRAVEYARD Strategy at the budget (decides whom to wake, not when to
           start -- the wrong seat). One global node scheduler now (too
           much at once; the unit of O-13 would have moved before its
           first two strategies taught anything).
+
+O-16 'E_TestRunResult' STAYS WHERE IT IS -- SHARED IS NOT CROSS-CUTTING
+
+PROBLEM   'adm/import_graph.py --shared' names 'E_TestRunResult' among
+          the tree's most-imported names: thirteen modules read it,
+          and the lowest common ancestor of those readers is 'engine'.
+          Read as a rule, that says the enum belongs in an
+          engine-level contract, and 'engine/operations' is where it
+          lives.
+
+DECISION  IT STAYS. TWELVE OF THE THIRTEEN READERS ARE 'operations'
+          ITSELF; exactly one reaches in from outside -- this
+          component's 'dispatcher.py'. That is not a shared
+          vocabulary. It is a component's own enum with one external
+          reader, and moving it would relocate a name away from the
+          twelve modules that live with it in order to serve one.
+
+          THE LESSON, and it corrects how the measurement reads: A
+          COUNT OF READERS IS NOT A CLAIM. What matters is whether the
+          readers are SPREAD. 'E_ToleranceId' was read by five
+          sub-components of 'compare' with no majority anywhere;
+          'E_TestRunResult' is read by one component and a visitor.
+          The tool answers 'who reads this'; whether they are one
+          family is a person's answer.
+
+COST      The lowest-common-ancestor report will keep naming it. That
+          is the report doing its job, and this entry is the reason it
+          may be passed over.
+
+O-17 THE PROTOCOL LEAVES THE PRODUCER -- 'engine/protocol'
+
+PROBLEM   'engine/display -> engine/orchestrator' was the ONE SIDEWAYS
+          ARROW in this tree: every other component pointed downward.
+          It existed for two imports -- 'CRunReportReceiver', the
+          class a consumer derives from, and 'fold', the pure fold
+          over the report stream. Both were written to be consumed
+          from OUTSIDE, and their own purposes say so: "any consumer
+          may use it: our exit-status logic, a TUI, a customer
+          application". Held here, they made a consumer reach into a
+          producer for the shape the two agree on, and a TUI or an
+          HTML renderer had to drag the orchestrator along to get
+          three leaf modules.
+
+DECISION  'engine/protocol' holds 'vocabulary.py', 'receiver.py' and
+          'summary.py' -- the kinds of event, the class a consumer
+          derives from, and the fold. SEALED: it imports nothing of
+          this tree, and the seal is checked (C-2).
+
+          MEASURED, NOT GUESSED. The lowest common ancestor of
+          'fold's readers -- 'engine/display', 'services/run',
+          'services/stability' -- is THE TREE ROOT; 'receiver's is
+          'engine'. The level was read off the readers, not chosen.
+
+          WHAT STAYED: the QUEUE, the scheduler, the dispatcher, and
+          every caller of the fold. A protocol is the SHAPE two
+          parties agree on; the transport and the machinery stay
+          where they run.
+
+COST      Eight modules re-pointed. 'orchestrate.py' now reaches
+          three levels up for 'event', which is what it costs to have
+          the vocabulary above both parties instead of inside one.
+
+VERIFIED  'engine/display -> engine/orchestrator' is GONE; display
+          points down, as everything else does. 224 declared choices
+          unmoved. The static-analysis total fell from 284 to 283 --
+          the two '__all__' lists, this one and the contract's, are
+          sorted now.
+
+O-18 A FAILING CANONICALISER ENDS PROVISION -- IT DOES NOT DELIVER
+
+PROBLEM   'StageCanonicalise' reported a failing pype and DELIVERED
+          THE RAW TEXT ANYWAY: "a failing canonicaliser leaves its
+          text unchanged and says so; the subject is delivered either
+          way". The comparison then ran on a stream the filter never
+          touched.
+
+          A CANONICALISER EXISTS BECAUSE THE RAW STREAM IS NOT
+          COMPARABLE -- a timestamp, a pid, an address that differs
+          every run. Delivering the raw text does not deliver 'almost
+          the subject'; it delivers a stream NOBODY EVER MEANT TO
+          COMPARE. And where the nominal happens to have been blessed
+          from an equally unfiltered run, THE TEST PASSES FOR THE
+          WRONG REASON and nothing says so.
+
+          FOUND BY ACCIDENT: a fixture pype written without a shebang
+          ran as a shell script, failed, and the comparison proceeded.
+
+DECISION  'product' is None where any canonicaliser fails, so
+          provision ENDS with that stage's token -- the one rule this
+          shape already had: "a stage whose product is None ends
+          provision, and the stages beyond never run".
+
+          THE PYPE IS PART OF THE TEST APPLICATION and may contain
+          errors (display/DISCUSSIONS/todo-2). A missing shebang, a
+          syntax error, a mode with no '<else>' handler, a file that
+          is not there: each is a DEFECT IN THE TEST, and a defect in
+          a test is a RESULT -- stated, not swallowed.
+
+COST      A test whose pype is broken now FAILS rather than comparing
+          something. That is the point, and it will surface pypes that
+          have been silently not running.
+
+VERIFIED  A pype without a shebang: 'pype interpreter missing [FAIL]'.
+          A pype whose language is wrong: 'pype failed [FAIL]'. The
+          same pype, corrected: '[OK]'.

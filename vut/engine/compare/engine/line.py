@@ -8,12 +8,11 @@ strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
 import vut.engine.compare.core.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.engine.semantics             import is_plainly_equivalent_verdict, \
+from   vut.engine.compare.contract.semantics             import is_plainly_equivalent_verdict, \
                                                               is_insignificant_line
 from   vut.engine.compare.reading.pattern_finder     import PatternFinder
-from   vut.engine.compare.engine.enums             import (E_Verdict, 
-                                                           E_ToleranceId)
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.contract.enums             import (E_ToleranceId)
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 
 
 class Line:
@@ -127,7 +126,7 @@ class Line:
         l_nominal = len(nominal)
         l_max     = max(l_subject, l_nominal)
         length_d  = abs(l_subject - l_nominal)
-        error_n   = sum(s._string != n._string for s, n in zip(subject, nominal))
+        error_n   = sum(s._string != n._string for s, n in zip(subject, nominal, strict=False))
 
         return (length_d + error_n) / (2 * l_max)
 
@@ -180,7 +179,7 @@ class Line:
             return False, []
 
         analogy_list = []
-        for subject_le, nominal_le in zip(self_sequence, nominal_sequence):
+        for subject_le, nominal_le in zip(self_sequence, nominal_sequence, strict=False):
             verdict, analogy = subject_le.compare(nominal_le)
             # Strict reduction is valid here: 'sequence_v' filters
             # VISIBLE_NOTHING, so the collapse variants cannot arise.

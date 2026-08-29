@@ -78,8 +78,7 @@ import os
 import sys
 
 from   vut.engine.operations.interaction.tui       import TuiDisplay
-from   vut.engine.orchestrator.exploration.explorer \
-                                                   import explore
+from   vut.engine.orchestrator.exploration          import selection
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                    import RootConfMissing
 from   vut.engine.orchestrator.run.adapter         import (
@@ -163,13 +162,16 @@ def main(argv=None, write=None):
     source_file = word_list[0]
     choice_name = word_list[1] if len(word_list) == 2 else None
 
+    #  ONE ACTION, ONE PLACE ('exploration/selection.py').
     try:
-        result = explore(os.path.abspath(directory))
+        found  = selection.of_directory(os.path.abspath(directory),
+                                        Wish())
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
-    if result.fault_list:
-        for fault in result.fault_list: write("FAULT: %s" % fault)
+    result = found.result_db["."]
+    if found.fault_tuple:
+        for fault in found.fault_tuple: write("FAULT: %s" % fault)
         write("nothing played: a directory that cannot be fully read "
               "cannot say what it offers")
         return E_ExitCode.FAULT
@@ -260,7 +262,6 @@ async def _play(configuration, choice_name, plain_f, stderr_f,
     rendering, which touches nothing.
     """
     from vut.engine.operations.run.core import provision_of
-    from dataclasses import replace as _replace
 
     #  ASK FOR THE RAW STREAMS TOO: 'keep_raw' is the provision's own
     #  switch ('record_raw'), and the raw stream is the material for

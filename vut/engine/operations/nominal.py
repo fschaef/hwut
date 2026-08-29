@@ -95,7 +95,7 @@ class RecordNominal(Nominal):
         try:
             return open(self.path, "r", encoding="utf-8", newline="")
         except OSError as error:
-            raise NominalNotAvailable(self.name, error.strerror)
+            raise NominalNotAvailable(self.name, error.strerror) from None
 
     @property
     def name(self):

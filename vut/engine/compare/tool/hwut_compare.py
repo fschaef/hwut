@@ -71,7 +71,7 @@ from   vut.engine.compare.reading.pattern_finder   import PatternFinder    # noq
 from   vut.engine.compare.reading.line_scanner     import (classify,       # noqa: E402
                                                                  E_LineClass,
                                                                  REGION_BEGIN_MARKER)
-from   vut.engine.compare.engine.enums                  import E_ToleranceId    # noqa: E402
+from   vut.engine.compare.contract.enums                  import E_ToleranceId    # noqa: E402
 
 
 RESET = "\033[0m"

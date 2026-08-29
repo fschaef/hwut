@@ -957,3 +957,81 @@ GRAVEYARD PLAYING 'THE FIRST' CHOICE where several stand and none is
           A '--record' FLAG -- rejected: a face that may record is a
           face whose output an author must think twice about. That
           face exists, and is called 'hwut.run'.
+
+E-23  A PACK STATES ITS PLACE, AND TELLS BOTH READINGS
+
+PROBLEM   'hwut.tell' answered one field, 'hint:', for five different
+          situations -- two of them comparisons, three of them the
+          ABSENCE of one. A test that had never run and a test that
+          had failed read alike at a glance, and the pack said
+          nothing about WHERE the test stood. A pack is handed to a
+          bug hunter as a formal input, and it was not one.
+
+DECISION  THE HEAD NAMES THE PLACE AND BOTH READINGS:
+
+              directory:     services/TEST
+              test:          test-app.sh
+              choice:        one
+              verdict:       OUT differs from GOOD: stdout
+              status report: run and accepted -- both records stand
+
+          'verdict' is what a COMPARISON found, or that none could be
+          made. 'status report' is what the RECORDS say -- which
+          streams stand. TWO QUESTIONS, TWO FIELDS: one field
+          answering both is how a test that never ran comes to be
+          read as a test that failed. A MISSING PROVISION IS A
+          RESULT, stated as one -- the same law that makes a broken
+          specification a failing test rather than a fault beside the
+          directory.
+          THE DIRECTORY IS RELATIVE TO 'hwut-root.conf', the one
+          ground every reader of a pack shares; a directory in no
+          tree says so. Never an absolute path: a pack is
+          MACHINE-FREE, and stays comparable, storable and pasteable.
+
+COST      The head grew from three lines to six, and anything parsing
+          'hint:' by name must read two fields instead.
+
+VERIFIED  All four states exercised; the suite's GOODs re-recorded.
+
+DEFECT FOUND, and it was older than this change: the verdict paired
+          whichever 'out' key came first with whichever 'good' key
+          came first -- 'out stderr' against 'good stdout' -- and so
+          called two byte-identical streams different. A COMPARISON
+          IS BETWEEN ONE SUBJECT AND ITS OWN NOMINAL; the subjects
+          are paired by name now, and both fields say which subject
+          they speak of.
+
+GRAVEYARD KEEPING ONE 'hint:' FIELD -- rejected: the word 'hint'
+          understates a result, and one field carrying five
+          situations is how the pack misled its reader.
+
+E-24  OPENING THE LABELS IS ONE BRICK -- 'labels/_editing.py'
+
+PROBLEM   'create', 'add' and 'remove' had the IDENTICAL nine lines
+          apiece -- climb to the boundary or REFUSE, read the file or
+          FAULT, build the view, select what the wish states -- and
+          each wrote the file at the end. THREE VERBS ON ONE ENTRY SET
+          IS ONE ACTION, and it was written three times.
+
+          The face inventory (disc-9) found it by comparing WHAT EACH
+          FACE DOES rather than what it is called: the three rows were
+          identical.
+
+DECISION  'opened', 'stands_f', 'selected', 'written'. The brick
+          climbs, reads, views, selects and writes; the face keeps
+          what is ITS OWN -- which of the three verbs, and what to say
+          about the label standing or not.
+
+          EACH DOOR ANSWERS 'None' OR 'False' WHERE IT ALREADY SPOKE,
+          and carries the status on 'COpenLabels.status'. THE FACE
+          STILL OWNS ITS EXIT: what a face answers is part of its
+          contract with a script (E-1), and no shared module may
+          decide it. The brick says what went wrong and hands the code
+          back.
+
+COST      A face reading the entry set now says 'open_labels.entry_db'
+          rather than a local name. The indirection is real and small.
+
+VERIFIED  17 label choices unmoved, 352 declared choices unmoved. Six
+          imports fell out: the three faces no longer know what a
+          'SelectionError' or a missing boundary is -- the brick does.

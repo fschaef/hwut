@@ -24,25 +24,21 @@ Bookkeeper is made here and handed down, and only where the wish asks
 the base.
 ______________________________________________________________________________
 """
-import os
 import sys
 
-from   vut.engine.orchestrator.exploration.explorer    import explore
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
+from   vut.engine.orchestrator.exploration            import selection
 from   vut.services.labels                             import view_at
 from   vut.services.labels._file                       import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                     import (RootConfMissing,
                                                             ascended_spec)
-from   vut.engine.orchestrator.exploration.task_list_query \
-                                                       import CTestTaskListQuery
 from   vut.engine.orchestrator.plan.determine          import determine
 from   vut.engine.orchestrator.plan.printer            import print_plan
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
                                                                parse_wish,
                                                                with_targets)
-from   vut.engine.bookkeeper.bookkeeper                import Bookkeeper
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
 from   ._core                                          import usage_line
@@ -146,23 +142,22 @@ def main(argv=None, write=None):
     for fault in ascent_fault_list:
         write(str(fault))
 
-    result = explore(directory, inherited=inherited)
-    for fault in result.fault_list:
-        write(str(fault))
-
-    wish       = with_targets(wish, word_list)
-    bookkeeper = Bookkeeper(directory) if wish.asks_base_f() else None
+    wish = with_targets(wish, word_list)
     try:
         label_view = view_at(directory)
     except LabelFileError as error:
         write("FAULT: %s" % error)
         return E_ExitCode.FAULT
-    #  ONE DIRECTORY IS ITS OWN ROOT: a path-bearing glob is
-    #  matched against '.', so './test-x.py' names a test here and
-    #  'other/test-x.py' names nothing -- which is true.
-    task_list  = CTestTaskListQuery(wish, bookkeeper, directory=".",
-                                root=os.path.abspath(directory),
-                                label_view=label_view)
+    #  ONE ACTION, ONE PLACE ('exploration/selection.py'): the
+    #  explore, the Bookkeeper and the query. THIS FACE NEEDS THE
+    #  QUERY ITSELF, because 'determine' takes a task list rather than
+    #  a list of cases.
+    found  = selection.of_directory(directory, wish, label_view,
+                                    inherited=inherited)
+    result = found.result_db["."]
+    for fault in found.fault_tuple:
+        write(str(fault))
+    task_list = found.query_db["."]
     try:
         plan, report_list = determine(result.app_set, task_list)
     except RootConfMissing as error:

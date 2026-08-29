@@ -19,7 +19,7 @@ def extract_matches_and_transposes(s, n):
     ops_append = ops.append 
 
     # fast path: MATCH
-    for i, (a, b) in enumerate(zip(s, n)):
+    for i, (a, b) in enumerate(zip(s, n, strict=False)):
         if a == b:
             used[i] = True
             ops_append((MATCH, i, i))

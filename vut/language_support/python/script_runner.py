@@ -67,7 +67,11 @@ def do(file_name:       Optional[str],
         if script_path and script_path.exists():
             try:
                 script_path.unlink()
-            except Exception:
+            except OSError:  # noqa: S110 -- cleanup after a failure
+                #  THE WRITE ALREADY FAILED; a failure to clean up
+                #  after it must not replace the first failure with a
+                #  second. NARROWED to OSError: a bug here, or an
+                #  interrupt, is not a thing to swallow.
                 pass
         return None
 
@@ -134,5 +138,8 @@ class CRunScript(ContextManager[str]):
         if self.path and os.path.exists(self.path):
             try:
                 os.unlink(self.path)
-            except Exception:
+            except OSError:  # noqa: S110 -- cleanup on the way out
+                #  A TEMPORARY SCRIPT THAT WILL NOT DELETE is not a
+                #  reason to raise out of '__exit__' and mask whatever
+                #  the block was already raising. NARROWED to OSError.
                 pass

@@ -34,8 +34,8 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.analogy_db             import AnalogyDb
-import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
+from   vut.engine.compare.contract.analogy_db             import AnalogyDb
+import vut.engine.compare.contract.frozen_analogy_db      as     frozen_analogy_db
 from   vut.engine.compare.engine                        import constraints
 from   vut.engine.compare.core.chunk_pair import ChunkPair
 from   vut.engine.compare.reading.reading               import judge_reading, \
@@ -107,10 +107,16 @@ async def _is_equivalent_fast(config,
         subject    = judge_reading(config, subject_line_provider)
         nominal    = judge_reading(config, nominal_line_provider)
 
-        # subject, nominal = 'LINE' or 'POTPOURRI'
-        async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
+        #  THE CHUNKS ARE NOT THE READINGS THEY COME FROM. Binding
+        #  them to the same names worked -- the generator is called
+        #  once, before the first step -- but it read as though the
+        #  generator drew from names the loop was rewriting.
+        #  subject_chunk, nominal_chunk = 'LINE' or 'POTPOURRI'
+        async for subject_chunk, nominal_chunk \
+                in generate_chunk_pairs(config, subject, nominal):
             verdict,   \
-            analogy_db = subject.is_equivalent_to_nominal(nominal, analogy_db)
+            analogy_db = subject_chunk.is_equivalent_to_nominal(
+                                            nominal_chunk, analogy_db)
             # analogy db is updated as required to main 'equivalence', else not (of course)
 
             if not verdict:
@@ -240,10 +246,17 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
         subject = lawyer_reading(config, subject_line_provider)
         nominal = lawyer_reading(config, nominal_line_provider)
 
-        # subject, nominal = 'LineSequence', 'Potpourri' or None
-        async for subject, nominal in generate_chunk_pairs_type_aligned(config, subject, nominal):
+        #  THE CHUNKS ARE NOT THE READINGS THEY COME FROM (see the
+        #  same law above).
+        #  subject_chunk, nominal_chunk = 'LineSequence', 'Potpourri'
+        #  or None
+        async for subject_chunk, nominal_chunk \
+                in generate_chunk_pairs_type_aligned(config, subject,
+                                                     nominal):
 
-            result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
+            result = ChunkPair.from_input_chunks(subject_chunk,
+                                                 nominal_chunk,
+                                                 analogy_db)
             analogy_db = result.analogy_db()
 
             # Stateful constraints: a non-equivalent chunk (of ANY type) is

@@ -59,10 +59,10 @@ NOTE   'vut/system/helper.py' carries an 'Interval' class and an
 ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
-from typing      import Iterable, Mapping, Sequence
+from typing      import Mapping
 
 from .measure import (measure_of_tag, name_tuple as measure_name_tuple,
-                      measure_of, tag_tuple, MeasureFault)
+                      measure_of, tag_tuple)
 from ..bookkeeper.test_run_id import (TestRunId, run_id_of_text,
                                       RunIdFault)
 
@@ -239,7 +239,7 @@ def decode(text, counts_f=False):
             length = int(length_text) if length_text else 1
             if counts_f: count_list.append(int(count_text))
         except ValueError:
-            raise RecordFault("'%s' spells no range" % piece)
+            raise RecordFault("'%s' spells no range" % piece) from None
         if delta < 1:
             raise RecordFault("delta %i in '%s' does not advance: ranges "
                               "are disjoint and never adjacent"
@@ -377,7 +377,7 @@ def run_set_of_text(text):
         try:               result.append(run_id_of_text(word))
         except RunIdFault as fault:
             raise RecordFault("the header's 'run' names '%s': %s"
-                              % (word.strip(), fault))
+                              % (word.strip(), fault)) from None
     return frozenset(result)
 
 
@@ -456,7 +456,7 @@ def parse_record(text):
             if body.startswith("VUT-COVERAGE"):
                 try:    version = int(body.split()[1])
                 except (IndexError, ValueError):
-                    raise RecordFault("the header names no format version")
+                    raise RecordFault("the header names no format version") from None
                 continue
             key, _, value = body.partition(":")
             header[key.strip()] = value.strip()

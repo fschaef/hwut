@@ -30,10 +30,6 @@ ______________________________________________________________________________
 """
 import sys
 
-from   vut.engine.orchestrator.exploration.task_list \
-                                             import SelectionError
-from   vut.engine.orchestrator.exploration.tree_explorer \
-                                             import RootConfMissing
 from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
                                                      USAGE_TOKEN_TUPLE,
                                                      WishError,
@@ -41,8 +37,8 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   .._core                               import usage_line
 from   .._exit                               import E_ExitCode
 from   .                                     import _file
-from   ._faces                               import (selected_key_tuple,
-                                                     split_directory)
+from   .                                    import _editing
+from   ._faces                               import split_directory
 
 USAGE = usage_line("hwut.labels.remove",
                    ("<label>",) + USAGE_TOKEN_TUPLE
@@ -89,34 +85,17 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    try:
-        boundary = _file.boundary_of(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    try:
-        entry_db = _file.read_entry_db(boundary)
-    except _file.LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
-    if not any(label in label_set for label_set in entry_db.values()):
+    #  ONE ACTION, ONE PLACE ('_editing.py').
+    open_labels = _editing.opened(directory, write)
+    if open_labels.status is not None: return open_labels.status
+
+    if not _editing.stands_f(open_labels, label):
         write("REFUSED: no label '%s' stands in 'hwut-root.labels'"
               % label)
         return E_ExitCode.REFUSED
 
-    view = _file.view_of(boundary, entry_db)
-    try:
-        key_tuple, warning_tuple, fault_tuple = \
-            selected_key_tuple(directory, wish, view)
-    except (SelectionError, RootConfMissing) as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for warning in warning_tuple: write(warning)
-    if fault_tuple:
-        for fault in fault_tuple: write("FAULT: %s" % fault)
-        write("nothing written: a tree that cannot be fully read "
-              "cannot say what it offers")
-        return E_ExitCode.FAULT
+    key_tuple = _editing.selected(open_labels, directory, wish, write)
+    if key_tuple is None: return open_labels.status
     if not key_tuple:
         write("EMPTY: the wish selected nothing; nothing is written")
         return E_ExitCode.EMPTY
@@ -124,21 +103,16 @@ def main(argv=None, write=None):
     removed_list   = []
     untouched_list = []
     for key in sorted(set(key_tuple), key=_file.sort_key):
-        label_set = entry_db.get(key, frozenset())
+        label_set = open_labels.entry_db.get(key, frozenset())
         if label not in label_set:
             untouched_list.append(key)
             continue
         removed_list.append(key)
         label_set = label_set - {label}
-        if label_set: entry_db[key] = label_set
-        else:         del entry_db[key]
-    if removed_list:
-        try:
-            _file.write_entry_db(boundary, entry_db)
-        except OSError as error:
-            write("FAULT: '%s' cannot be written -- %s"
-                  % (_file.file_path(boundary), error))
-            return E_ExitCode.FAULT
+        if label_set: open_labels.entry_db[key] = label_set
+        else:         del open_labels.entry_db[key]
+    if removed_list and not _editing.written(open_labels, write):
+        return open_labels.status
 
     write("%s: %d removed, %d untouched"
           % (label, len(removed_list), len(untouched_list)))
@@ -147,8 +121,7 @@ def main(argv=None, write=None):
     for key in untouched_list:
         write("    = %s" % _file.target_text(key))
     if removed_list \
-       and not any(label in label_set
-                   for label_set in entry_db.values()):
+       and not _editing.stands_f(open_labels, label):
         write("%s: no member left -- the label is deleted" % label)
     return E_ExitCode.OK
 

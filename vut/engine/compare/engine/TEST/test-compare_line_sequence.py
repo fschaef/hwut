@@ -32,7 +32,7 @@ sys.path.insert(0, "../../../../../")
 from   vut.engine.compare.reading.input_chunk    import InputChunkTerminal
 from   vut.engine.compare.reading.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration        import ConfigurationPatternFinder
-from   vut.engine.compare.engine.analogy_db    import AnalogyDb
+from   vut.engine.compare.contract.analogy_db    import AnalogyDb
 from   vut.engine.compare.TEST.common          import print_match_sequences_lists, \
                                                       print_friends_pairing_max_result, \
                                                       get_sequence_of_Line, \

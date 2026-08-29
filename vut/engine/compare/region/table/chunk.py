@@ -30,7 +30,7 @@ failures -> not equivalent, shown red.
 The NOMINAL's first row defines the table's column count.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums               import E_Chunk
+from   vut.engine.compare.contract.enums               import E_Chunk
 from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)

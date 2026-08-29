@@ -41,8 +41,7 @@ enters only through node kind, read by the dispatcher alone.
 ______________________________________________________________________________
 """
 from ..exploration.configuration_tree import Target
-from .provision_build   import (I_BuildInterview,
-                                SpecificationBuildInterview,
+from .provision_build   import (SpecificationBuildInterview,
                                 build_nodes)
 from .provision_execute import session_nodes
 from .form import (CExclusionSet, CPlanLink, CPlanNode, CTestPlan,

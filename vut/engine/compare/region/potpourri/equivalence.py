@@ -1,6 +1,5 @@
 from   __future__ import annotations
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.contract.analogy_db        import AnalogyDb
 import vut.engine.compare.region.potpourri.pairing as     pairing
 from   vut.engine.compare.region.potpourri.variants import VariantView
 from   vut.engine.compare.engine                    import constraints

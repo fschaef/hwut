@@ -28,7 +28,7 @@ from   vut.engine.compare.core.edit_operations.core  import (WorkListBase,
                                                                            position_increment_db)
 from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 
-from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 from   vut.engine.compare.reading.pattern_finder     import E_ToleranceId
 
 from  typeguard   import typechecked
@@ -44,7 +44,7 @@ SUBSTITUTE      = E_EditId.SUBSTITUTE
 
 # The cost table is part of the shared comparison semantics -- see
 # 'engine/semantics.py' (single source for Judge and Lawyer).
-from vut.engine.compare.engine.semantics import line_cost_db as cost_db
+from vut.engine.compare.contract.semantics import line_cost_db as cost_db
 
 cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
@@ -207,7 +207,7 @@ class WorkItemHistory:
             # cost of INSERT decreases with number of preceeding deletions number
             return cost_INSERT_DELETE / self.delete_n
         else:
-            assert False # pragma no cover
+            raise AssertionError("")
 
 class WorkItem(WorkItemBase):
    def __init__(self, si, ni, edit_list, history=None):

@@ -27,7 +27,7 @@ nesting forbidden; stray '####' forbidden; EOF with an open region
 forbidden; unknown handler / malformed parameter forbidden.
 _______________________________________________________________________________
 """
-from vut.engine.compare.engine.enums             import E_Chunk
+from vut.engine.compare.contract.enums             import E_Chunk
 from vut.engine.compare.engine.line              import Line
 from vut.engine.compare.reading.input_chunk        import InputChunk,         \
                                                         InputChunkTerminal, \
