@@ -23,7 +23,7 @@ import platform
 
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_hocon import parse, SourceLine
+from vut.test_writing_support.python.hwut_hocon import parse, SourceLine
 
 
 HEADER = '''@hwut {

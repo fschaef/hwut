@@ -58,7 +58,7 @@ from   vut.engine.operations.diagnosis     import (DiagnosisObserver,     # noqa
                                                  explain_channels,
                                                  explain_record,
                                                  resolution_chain)
-from   vut.engine.procsitter.procsitter  import (ProcsitterConfig,      # noqa E402
+from   vut.engine.procsitter.api  import (ProcsitterConfig,      # noqa E402
                                                  ProcsitterResult,
                                                  E_Containment)
 

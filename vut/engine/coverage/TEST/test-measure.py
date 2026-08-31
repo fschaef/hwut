@@ -60,7 +60,7 @@ ______________________________________________________________________________
 import sys
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.measure import (I_Measure, PointMeasure,
                                          NamedPointMeasure, register,
                                          measure_of, measure_of_tag,
@@ -71,7 +71,7 @@ from vut.engine.coverage.record  import (ranges_of, FileCoverage,
                                          CoverageRecord, format_record,
                                          parse_record, merge,
                                          MeasureNotMergeable, RecordFault)
-from vut.engine.bookkeeper.test_run_id import TestRunId
+from vut.engine.bookkeeper.api import TestRunId
 
 
 def banner(label):

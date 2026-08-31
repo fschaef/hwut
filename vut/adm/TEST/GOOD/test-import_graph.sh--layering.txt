@@ -32,3 +32,20 @@ STDOUT {
     SEAL BROKEN -- 1 import(s) leave a sealed component:
         base/contract/enums.py -> engine/plan/wish.py
 }
+--- DOOR: one module is a component's only entrance. Here
+    every caller already reaches PAST it, and each is named
+STATUS: 1
+STDOUT {
+    DOOR PASSED -- 2 import(s) reach into a component past its door:
+        base/contract/enums.py -> engine/plan/wish.py (past the door 'engine/plan/api')
+        faces/run.py -> engine/plan/wish.py (past the door 'engine/plan/api')
+}
+--- every caller through the door instead, and the tree is
+    obedient -- while the component's OWN module still
+    reaches its parts freely: a door is for callers, and a
+    part is not a caller
+STATUS: 0
+STDOUT {
+    LAYERING: every edge obeys 'door.txt' (4 component(s), 3 edge(s))
+    DOORS: engine/plan/api -- nothing enters but here
+}

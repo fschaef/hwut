@@ -1,0 +1,4 @@
+STIMULUS: python3 -m vut.services.pype broken.pype
+pype: broken.pype:1: missing '=> EFFECT'
+EXIT:     1
+<hwut-end>

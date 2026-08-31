@@ -73,7 +73,7 @@ logging.getLogger("asyncio").setLevel(logging.ERROR)
 ROOT_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "..", "..", "..", ".."))
 
-HWUT_PYPE = os.path.abspath("../../hwut_pype/hwut_pype.py")
+HWUT_PYPE = os.path.abspath("../../../test_writing_support/hwut_pype/hwut_pype.py")
 
 def _require_hwut_pype() -> bool:
     """
@@ -84,8 +84,8 @@ def _require_hwut_pype() -> bool:
     if os.path.exists(HWUT_PYPE):
         return True
     print(f"FAIL: pype interpreter not found: '{HWUT_PYPE}'")
-    print("      undump component-hwut_pype.txt so that hwut_pype.py")
-    print("      lies at <project root>/tools/hwut_pype/, or set the")
+    print("      restore the tree so that hwut_pype.py")
+    print("      lies at <vut>/test_writing_support/hwut_pype/, or set the")
     print("      environment variable VUT_HWUT_PYPE to its path.")
     return False
 

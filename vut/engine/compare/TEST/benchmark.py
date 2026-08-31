@@ -13,7 +13,7 @@ sys.path.insert(0, "../../../../")
 
 from vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main as main
-from vut.language_support.python.deterministic_random import DeterministicStream
+from vut.test_writing_support.python.deterministic_random import DeterministicStream
 
 # --- Configuration Constants ---
 POTPOURRI_BLOCK_SIZE = 32

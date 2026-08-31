@@ -45,6 +45,12 @@ $ hwut.plan --help
                             against the rest; absent, 'meta' is silent --
                             which a LITERAL target overrides, and a glob
                             does not (it warns instead)
+        --language=<name>   the runs of test applications of that language;
+                            several are a union, narrowing against the rest
+        --faster-than=<seconds>
+                            the runs this machine last saw finish faster
+                            than that; one this machine never saw is not
+                            wanted
         <app> [<choice>...] the short form: bare words are targets, the
                             first naming files, each further one a
                             choice; globbing allowed in both

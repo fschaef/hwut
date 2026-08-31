@@ -6,11 +6,11 @@ SKIP  TSPT test-m.sh  missing dependency
 END   :/   build[make           test-built.c] ....... the build failed  [FAIL]
 SKIP  :/   test-built.c  not supported here  <- build[make test-built.c]
 END   :/   test-app.sh          a ....................................... [OK]
-END   :/:                       b ....................................... [OK]
-END   :/   test-cut.sh .............. output cut short (no <hwut-end>)  [FAIL]
-END   :/   test-dead.sh         x ........... killed by the supervisor  [FAIL]
-END   :/   test-diff.sh ............................ differs from GOOD  [FAIL]
-END   :/   test-ok.sh ................................................... [OK]
+----> :/   :                    b ....................................... [OK]
+----> :/   test-cut.sh .............. output cut short (no <hwut-end>)  [FAIL]
+----> :/   test-dead.sh         x ........... killed by the supervisor  [FAIL]
+----> :/   test-diff.sh ............................ differs from GOOD  [FAIL]
+----> :/   test-ok.sh ................................................... [OK]
 DIR   COMP = compare/TEST
 END   COMP test-region.py       nested .................................. [OK]
 

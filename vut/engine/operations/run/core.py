@@ -95,6 +95,28 @@ from   .provider       import (I_ExecuteProvider,
                                I_CanonicaliseProvider)
 
 
+
+#  THE CALL'S SCRATCH GROUND, under the transient root 'TMP/' (E-24):
+#  one per application (interactive session) or per choice, exported
+#  to the call as its temp directory by the procsitter, and listed by
+#  it after exit -- what a test made and did not remove lands here,
+#  attributable, and not in the machine's '/tmp'.
+SCRATCH_DIRECTORY_NAME = "TMP/scratch"
+
+
+def scratch_dir_of(configuration, choice_name=None):
+    """
+    RETURN: str, the absolute scratch ground of that call:
+            '<test dir>/TMP/scratch/<file>' for an application's
+            session, '<file>--<choice>' for one choice.
+    """
+    import os
+    stem = os.path.basename(str(configuration.source_file))
+    if choice_name is not None: stem = "%s--%s" % (stem, choice_name)
+    return os.path.join(str(configuration.test_directory),
+                        SCRATCH_DIRECTORY_NAME, stem)
+
+
 STDOUT = "stdout"
 STDERR = "stderr"
 
@@ -286,6 +308,13 @@ class Provision:
 
         canonicalised = await self.stage_canonicalise.supply(
             raw_db, stop_event=stop_event)
+        record_list += canonicalised.record_list
+        #  THE ONE RULE, APPLIED TO THIS STAGE TOO: a stage whose
+        #  product is None ends provision with its token. Without this
+        #  the empty delivery was built from 'None' and every reader
+        #  asked for came back as 'TypeError: not subscriptable' -- an
+        #  exception where a REPORT was owed.
+        if canonicalised.product is None: return failed(canonicalised)
 
         #  THE MERGE OF THE REPORTS is the orchestrator's: the earlier
         #  stage's token speaks over the later one's.

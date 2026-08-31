@@ -64,7 +64,7 @@ class StoreConfig:
 
     directory      the test directory whose book and records these are.
                    Nominals live under 'GOOD/', the store's own records
-                   under '.hwut-store/' -- apart from the test's 'OUT/',
+                   under 'TMP/store/' -- apart from the test's 'OUT/',
                    which is the test's product space and whose every
                    file execution reads as a subject.
 
@@ -101,3 +101,18 @@ class NamingConfig:
                     which choice diverged.
     """
     same_nominal_f: bool = False
+
+
+#  THE AUTHOR'S CAPS VOCABULARY -- what a test header may STATE --
+#  against the procsitter's field names. ONE LIST, READ BY TWO: the
+#  adapter turns a stated cap into a procsitter field, and the book
+#  writes a cap back under the name the author knows (E-36). It stands
+#  here, below both, because the bookkeeper may not reach up to the
+#  orchestrator for it.
+CAPS_FIELD_DB = {
+    "timeout_sec":         "max_wall_clock_sec",
+    "cpu_sec":             "max_cpu_time_sec",
+    "memory_mb":           "max_memory_mb",
+    "file_size_mb":        "max_file_size_mb",
+    "child_process_max_n": "max_pids",
+}

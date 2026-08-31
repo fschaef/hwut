@@ -38,7 +38,7 @@ from   pathlib     import Path
 from   enum        import Enum
 from   typing      import Optional
 
-from   ...compare.feeder import ui as compare_feeder
+from   ...compare.api    import feeder_ui as compare_feeder
 
 
 PROTOCOL_SIGNATURE = "vut-feed/1"
@@ -266,7 +266,7 @@ async def merge_session(compare_options, subject_text, nominal_text,
                       any human merge.
     """
     import io
-    from ...compare.configuration import Configuration
+    from ...compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
 
     working    = nominal_text

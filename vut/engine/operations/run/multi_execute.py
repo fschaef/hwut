@@ -51,11 +51,11 @@ DESCRIPTION
 
        THE SINKS are the transport of the two channel subjects. They
        live under the test directory in a session sub directory
-       ('.hwut-session/'), named by THE SAME LAW AS A RECORD -- the
+       ('TMP/session/'), named by THE SAME LAW AS A RECORD -- the
        source file whole, then the choice, then the channel:
 
-           .hwut-session/test-show.py--help.out
-           .hwut-session/test-show.py--help.err
+           TMP/session/test-show.py--help.out
+           TMP/session/test-show.py--help.err
 
        Named RELATIVE on the wire (the app's cwd is the test
        directory; no machine-chosen absolute path crosses it), read on
@@ -103,16 +103,18 @@ from   pathlib import Path
 
 from   ..result                   import E_TestRunResult
 from   .stage_execute             import read_declared_files
-from   ...procsitter.procsitter   import Procsitter
-from   ...procsitter.construction import Link, chain
+from   ...procsitter.api   import Procsitter
+from   ...procsitter.api import Link, chain
 from   .core                      import (Supply, STDOUT, STDERR,
+                                          scratch_dir_of,
                                           application_argv)
 from   .provider                  import (I_ExecuteProvider,
                                           I_ProxyProvider,
                                           I_MultiProvider)
 
 
-SESSION_DIRECTORY_NAME = ".hwut-session"
+#  UNDER THE TRANSIENT ROOT 'TMP/' (services E-24).
+SESSION_DIRECTORY_NAME = "TMP/session"
 
 
 class MultiExecute(I_MultiProvider):
@@ -170,6 +172,7 @@ class MultiExecute(I_MultiProvider):
         if pype_owned_f:
             caps = replace(caps, env={**(caps.env or {}),
                                       "HWUT_NO_TERMINAL": "1"})
+        caps = replace(caps, scratch_dir=scratch_dir_of(configuration))
         procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         self._down   = Link()
@@ -320,7 +323,7 @@ class MultiExecute(I_MultiProvider):
     def _sink_pair(self, token):
         """
         RETURN: (str, str), the RELATIVE sink paths of that token --
-                '.hwut-session/<file>--<choice>.out' and '.err'.
+                'TMP/session/<file>--<choice>.out' and '.err'.
 
         Relative, so no machine-chosen absolute path crosses the wire;
         the app's working directory is the test directory.

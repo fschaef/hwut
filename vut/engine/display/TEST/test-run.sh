@@ -218,7 +218,7 @@ timing)
     echo "cadence sidecars with --timing: $n"
     python3 -c "
 import json, sys
-d = json.load(open('tree/suite/TEST/.hwut-store/test-ok.sh.stdout.times'))
+d = json.load(open('tree/suite/TEST/TMP/store/test-ok.sh.stdout.times'))
 print('unit: %s   deltas: %d   every delta a number: %s'
       % (d['unit'], len(d['delta_list']),
          all(isinstance(x, float) for x in d['delta_list'])))"
@@ -335,8 +335,8 @@ busy)
     #  A directory HELD BY A LIVE PROCESS is refused at its door, a
     #  fault; its siblings run to a good end beside it; status 1.
     fixture_tree
-    mkdir -p tree/beta/TEST/.hwut-lock
-    python3 - tree/beta/TEST/.hwut-lock/holder.json <<'PY' &
+    mkdir -p tree/beta/TEST/TMP/lock
+    python3 - tree/beta/TEST/TMP/lock/holder.json <<'PY' &
 import json, os, sys, time, psutil
 json.dump({"pid": os.getpid(),
            "started": psutil.Process().create_time()},
@@ -344,7 +344,7 @@ json.dump({"pid": os.getpid(),
 time.sleep(60)
 PY
     holder=$!
-    while [ ! -s tree/beta/TEST/.hwut-lock/holder.json ]; do sleep 0.05; done
+    while [ ! -s tree/beta/TEST/TMP/lock/holder.json ]; do sleep 0.05; done
     every_strategy --directory=tree
     echo "== --quiet: the fault in the closing FAULTS block =="
     every_strategy --directory=tree --quiet

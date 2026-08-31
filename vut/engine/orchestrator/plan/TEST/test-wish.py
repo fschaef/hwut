@@ -55,12 +55,26 @@ NOW = datetime(2026, 5, 14, 15, 30, 0, tzinfo=timezone.utc)   # a Thursday
 
 class BookStub:
     """A book of stated entries: (file, choice) -> (verdict, age in
-    seconds). It answers 'result' and nothing else -- what the query
-    asks of a Bookkeeper."""
+    seconds). It answers 'result' -- the BOOK'S half, a decision -- and
+    names a directory whose LOCAL OBSERVATION DATABASE carries the
+    other half, the instant and the duration (E-22): two questions,
+    two sources, as the framework has them."""
 
-    def __init__(self, entry_db):
-        """RETURN: BookStub over 'entry_db'."""
+    def __init__(self, entry_db, directory=None, duration_db=None):
+        """RETURN: BookStub over 'entry_db'; where a 'directory' is
+        given, the ages are written there as observations."""
         self.entry_db = entry_db
+        self.directory = directory
+        if directory is None: return
+        from vut.engine.bookkeeper.api import (ObservationDb,
+                                                       Observation)
+        db = ObservationDb(directory)
+        for (test, choice), (_verdict, age_sec) in entry_db.items():
+            when = NOW - timedelta(seconds=age_sec)
+            db.note(test, choice, "Run",
+                    Observation(when=int(when.timestamp()),
+                                duration_ms=(duration_db or {})
+                                            .get((test, choice))))
 
     def result(self, test, choice, operation):
         """
@@ -69,9 +83,8 @@ class BookStub:
         """
         entry = self.entry_db.get((test, choice))
         if entry is None: return None
-        verdict, age_sec = entry
-        when = NOW - timedelta(seconds=age_sec)
-        return {"verdict": verdict, "when": when.isoformat()}
+        verdict, _age_sec = entry
+        return {"verdict": verdict}
 
 
 def banner(label):
@@ -192,7 +205,13 @@ def test_base():
         ("test-b.py", None):  (False, 90000),    # failed, over a day ago
         ("test-net.py", None): (True, 90000),    # stood,  over a day ago
         #  'quick-3.py one' was never run.
-    })
+    }, directory=directory,
+       duration_db={("test-a.py", "one"):   120,   # 0.12 s
+                    ("test-a.py", "two"):  4500,   # 4.5  s
+                    ("test-b.py", None):    900})  # 0.9  s -- and
+                                                   # 'test-net.py' was
+                                                   # observed with NO
+                                                   # duration at all
     try:
         banner("--fail")
         select(app_set, Wish(fail_f=True), book)
@@ -202,6 +221,11 @@ def test_base():
 
         banner("--since=2h : the never-run case is not wanted")
         select(app_set, Wish(since_spec="2h"), book)
+
+        banner("--faster-than=1 : this machine's own observation; a "
+               "case it never observed, and one it observed without a "
+               "duration, are NOT selected")
+        select(app_set, Wish(faster_than_ms=1000), book)
 
         banner("--until=2h : the stale wish -- the never-run counted")
         select(app_set, Wish(until_spec="2h"), book)

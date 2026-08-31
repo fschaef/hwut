@@ -57,6 +57,15 @@ class ProcsitterConfig:
                          Below it the call is terminated so the OS
                          stays operable, whoever caused the shortage.
 
+    scratch_dir          THE SCRATCH GROUND of the call: made empty
+                         before the spawn and exported as 'TMPDIR' (and
+                         'TMP', 'TEMP'), so that what the call creates
+                         through the platform's temp-file machinery
+                         lands here and is ATTRIBUTABLE to it. Listed
+                         after exit: what still stands is the call's
+                         leftovers ('ProcsitterResult.created_tuple').
+                         'None': the parent's temp ground, unobserved.
+
     env                  ENVIRONMENT OVERLAY: a dict merged OVER the
                          parent's environment at spawn; 'None' inherits
                          it unchanged. The framework speaks to the
@@ -73,3 +82,4 @@ class ProcsitterConfig:
     max_output_gap_sec: float | None = None
     min_free_disk_mb:   int   = 128
     env:                dict  | None = None
+    scratch_dir:        str   | None = None

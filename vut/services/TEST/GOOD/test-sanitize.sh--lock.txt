@@ -4,7 +4,7 @@ STDOUT {
     SANITIZE, in 'tree': lock  (reporting only; '--apply' acts)
     
       lock -- 1 found:
-          suite/TEST/.hwut-lock                                the holder (pid <n>) is gone, taken <n> s ago
+          suite/TEST/TMP/lock                                  the holder (pid <n>) is gone, taken <n> s ago
     
       1 item(s), <size> kB
 }

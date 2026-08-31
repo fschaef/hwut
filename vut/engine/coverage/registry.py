@@ -17,10 +17,11 @@ DESCRIPTION
        is wrong about what it measures reports a green nobody earned.
 
        THE CONFIGURATION NAMES A TOOL; THE COMPONENT RESOLVES THE READER
-       (RATIONALE D-2). 'hwut.conf' carries a dict whose KEY is a GLOB
-       over the LANGUAGE and whose VALUE is an ORDERED LIST OF CANDIDATE
-       TOOLS. The first candidate actually available on this machine
-       serves.
+       (RATIONALE D-2). THE TABLE IS NOT HERE (D-26): the candidate
+       tools of a language stand in 'language-setup.<lang>.coverage' of
+       'hwut-root.conf', and the boundary face writes the shipped table
+       into a new root conf. 'elect' takes the candidate tuple it is
+       handed; this module ships no table of its own.
 
        THE LANGUAGE IS THE KEY, not the interpreter: it is the one thing
        all three source kinds have. An EXECUTABLE and a COMPILED test
@@ -37,135 +38,8 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import shutil
-from fnmatch import fnmatch
 
 from .configuration import CoverageRefused
-
-
-#  THE DEFAULT DICT. 'hwut.conf' overrides it, inherited global to
-#  specific; the search for a global conf runs UPWARD, nearest enclosing
-#  first. Order inside a list is PREFERENCE, not equivalence.
-DEFAULT_TOOL_DB = {
-    #  ORDERED BY PREFERENCE, AND THE ORDER IS NOT ARBITRARY: a tool
-    #  whose FORMAT this build reads stands FIRST. 'elect' takes the
-    #  first candidate the machine HAS, so a table that put an unreadable
-    #  tool in front would refuse on a machine that could have been
-    #  served. Marked [r] below: read today.
-    #
-    #  A candidate with no reader is NOT a mistake -- it is how a machine
-    #  refuses BY NAME ("no reader for 'simplecov'; this build reads ...")
-    #  rather than reporting no coverage at all.
-
-    # -- the gcc family: one flag, one format, many languages -----------
-    "c":              ("gcov", "llvm-cov", "kcov"),          # [r][r][r]
-    "c++":            ("gcov", "llvm-cov", "kcov"),          # [r][r][r]
-    "objective-c":    ("gcov", "llvm-cov"),                  # [r][r]
-    "objective-c++":  ("gcov", "llvm-cov"),                  # [r][r]
-    "fortran*":       ("gcov", "kcov"),                      # gfortran
-    "ada":            ("gcov", "gnatcoverage"),              # gnatcov: own
-    "modula-2":       ("gcov",),                             # gm2
-    #  cobol: gcc's own 'gcobol' (gcc 15+) would gcov natively; the
-    #  GnuCOBOL road was WITNESSED (2026-08-24) measuring the GENERATED
-    #  C -- the untaken arm shows, but attribution to the '.cob' line
-    #  survives only in comments. Stated, not hidden.
-    "cobol":          ("gcov",),                             # gcobol
-    "vala":           ("gcov",),                             # compiles to C
-    "nim":            ("gcov", "lcov"),                      # C backend
-    "assembly":       ("kcov", "gcov"),
-
-    # -- languages with a first-class tool of their own -----------------
-    "python*":        ("coverage", "slipcover", "trace"),    # [r]
-    "cython":         ("coverage",),                         # [r]
-    "lua*":           ("luacov",),                          # [r]
-    "go":             ("go", "gcov"),                        # [r][r]
-    "rust":           ("cargo-llvm-cov", "grcov", "llvm-cov",
-                       "kcov", "tarpaulin"),                 # [r][r][r][r]
-    "swift":          ("llvm-cov", "xccov"),                 # [r]
-    "d":              ("dmd", "gcov", "llvm-cov"),           # dmd: own .lst
-    "zig":            ("kcov", "llvm-cov"),                  # [r][r]
-    "crystal":        ("kcov",),                             # [r]
-    "julia":          ("lcov", "julia"),      # [r] via Coverage.jl export
-    "r":              ("covr",),
-    "haskell":        ("hpc",),
-    "erlang":         ("cover",),
-    "elixir":         ("excoveralls", "cover"),
-    "ocaml":          ("bisect-ppx",),
-    "clojure":        ("cloverage",),
-    "common-lisp":    ("sb-cover",),
-    "prolog":         ("swipl",),
-    "solidity":       ("solidity-coverage",),
-    "dart":           ("lcov", "dart"),       # [r] via format_coverage
-    "flutter":        ("lcov", "flutter"),    # [r] same road
-
-    # -- the JVM: one binary artifact, several report shapes ------------
-    "java":           ("jacoco", "cobertura", "clover",
-                       "jcov"),                                # [r][r]
-    "kotlin":         ("jacoco", "cobertura", "kover"),            # [r][r]
-    "scala":          ("scoverage", "jacoco", "cobertura"),        # [r][r][r]
-    "groovy":         ("jacoco", "cobertura"),                     # [r][r]
-
-    # -- the scripting side ---------------------------------------------
-    #  node ITSELF is the strongest candidate (WITNESSED 2026-08-24):
-    #  'node --test --experimental-test-coverage --test-reporter=lcov'
-    #  writes a tracefile with no package installed at all. 'c8' was
-    #  witnessed writing lcov AND cobertura; for typescript, c8 with
-    #  source maps names the '.ts' source itself.
-    "javascript":     ("node", "c8", "lcov", "cobertura", "nyc",
-                       "istanbul"),                        # [r][r][r][r]
-    "typescript":     ("node", "c8", "lcov", "cobertura", "nyc",
-                       "istanbul"),                        # [r][r][r][r]
-    "ruby":           ("cobertura", "simplecov"),                  # [r][r]
-    "php":            ("cobertura", "phpunit", "xdebug", "pcov",
-                       "phpdbg"),                                  # [r]
-    "perl":           ("cover", "Devel::Cover"),
-    "shell":          ("kcov", "bashcov"),                   # [r]
-    "bash":           ("kcov", "bashcov"),                   # [r]
-    #  zsh: kcov's shell engine is BASH-ONLY, and over a zsh script it
-    #  was WITNESSED (2026-08-24) reporting 2/226 lines across files
-    #  that were not the script. A report that measures nothing and
-    #  names everything; the empty list refuses by name instead.
-    "zsh":            (),
-    "powershell":     ("pester",),
-    "tcl":            (),      # no candidate this author can vouch for;
-                               # an EMPTY list refuses by name, which is
-                               # the honest answer to 'we do not know'
-
-    # -- .NET -----------------------------------------------------------
-    "c#":             ("coverlet", "cobertura", "dotcover",
-                       "opencover", "altcover"),                   # [r][r]
-    "f#":             ("coverlet", "cobertura", "altcover"),       # [r][r]
-    "vb.net":         ("coverlet", "cobertura", "opencover"),      # [r][r]
-
-    # -- numerical / engineering ----------------------------------------
-    "matlab":         ("matlab",),
-    "octave":         ("octave",),
-
-    # -- hardware description: disc-9 AND ITS AMENDMENT ------------------
-    #  (WITNESS-hdl-artifacts.txt). 'verilator' reads the native '.dat'
-    #  whole -- line, branch arms, toggle bits, cover properties, each
-    #  on its own axis -- and stands FIRST. The lcov export road
-    #  ('verilator_coverage') remains for builds that only leave the
-    #  tracefile; it must be produced with '--coverage-line', because
-    #  the export MISFILES toggle and user points as line coverage
-    #  (finding 3, pinned in the 'verilator' test choice). For VHDL,
-    #  'gcov' carries line coverage through ghdl-gcc, and 'ghdl' reads
-    #  the PSL report's cover directives. What remains unheld is what
-    #  remains unwitnessed: covergroup BINS behind UCIS (disc-9 b).
-    "verilog":        ("verilator", "verilator_coverage",
-                       "vcover", "urg", "imc"),              # [r][r]
-    "systemverilog":  ("verilator", "verilator_coverage",
-                       "vcover", "urg", "imc"),              # [r][r]
-    "vhdl":           ("gcov", "ghdl", "vcover", "urg", "imc"),
-                                                             # [r][r] ghdl
-
-    # -- and the ones this author will not guess at ----------------------
-    #  Pascal: Free Pascal has no first-class story to rely on, and the
-    #  Delphi side (DelphiCodeCoverage) emits EMMA XML and possibly LCOV
-    #  -- 'possibly' is not good enough to ship. Establish it against a
-    #  REAL artifact first (DISCUSSIONS todo-2).
-    "pascal":         (),
-    "delphi":         (),
-}
 
 
 #  EXTENSION -> LANGUAGE, for the derivation. A source kind that carries
@@ -217,9 +91,9 @@ EXTENSION_DB = {
     ".sh":     "shell",    ".bash": "bash",     ".zsh":  "zsh",
     ".ps1":    "powershell",
     ".tcl":    "tcl",
-    ".cs":     "c#",
-    ".fs":     "f#",       ".fsx":  "f#",
-    ".vb":     "vb.net",
+    ".cs":     "csharp",
+    ".fs":     "fsharp",       ".fsx":  "fsharp",
+    ".vb":     "vbdotnet",
     ".pas":    "pascal",   ".pp":   "pascal",   ".dpr":  "delphi",
     ".v":      "verilog",  ".sv":   "systemverilog",
     ".svh":    "systemverilog",                 ".vh":   "verilog",
@@ -254,24 +128,6 @@ def language_of(source_file, stated=None):
     return language
 
 
-def candidate_tuple_of(language, tool_db=None):
-    """
-    RETURN: tuple of str, the candidate tools of 'language', in
-            PREFERENCE order -- the first entry whose GLOB matches.
-
-    Raises CoverageRefused where no glob matches, naming the language and
-    the globs that were offered.
-    """
-    db = DEFAULT_TOOL_DB if tool_db is None else tool_db
-    for pattern in sorted(db, key=lambda p: (-len(p), p)):
-        if fnmatch(language, pattern):
-            return tuple(db[pattern])
-    raise CoverageRefused(
-        "no coverage tool is configured for language '%s'; the "
-        "configured globs are %s"
-        % (language, ", ".join("'%s'" % p for p in sorted(db))))
-
-
 def is_available(tool):
     """
     RETURN: True,  'tool' can be launched on this machine.
@@ -283,27 +139,27 @@ def is_available(tool):
     return shutil.which(tool) is not None
 
 
-def elect(language, tool_db=None, available=is_available):
+def elect(language, candidate_tuple, available=is_available):
     """
-    RETURN: str, the FIRST candidate of 'language' that this machine
-            actually has.
+    RETURN: str, the FIRST of 'candidate_tuple' that this machine
+            actually has -- the tool that serves 'language'.
 
-    Raises CoverageRefused where every candidate is absent, NAMING each
-    one -- so the reader of the refusal knows what to install rather than
-    what went wrong.
+    Raises CoverageRefused where the tuple is EMPTY (the language's
+    entry vouches for no tool: an answer, D-2) or where every candidate
+    is absent, NAMING each one -- so the reader of the refusal knows
+    what to install rather than what went wrong.
 
     'available' is a parameter so that a test may state the machine.
     """
-    candidate_tuple = candidate_tuple_of(language, tool_db)
     if not candidate_tuple:
         raise CoverageRefused(
-            "the candidate list for language '%s' is EMPTY: this build "
-            "vouches for no coverage tool there. State one in "
-            "'hwut.conf' -- inventing a default would be worse than "
+            "the 'coverage' list of language '%s' is EMPTY in "
+            "'language-setup': it vouches for no coverage tool. Name "
+            "one there -- inventing a default would be worse than "
             "saying so." % language)
     for tool in candidate_tuple:
         if available(tool): return tool
     raise CoverageRefused(
         "no coverage tool for language '%s' is available here; looked "
         "for %s" % (language, ", ".join("'%s'" % t
-                                        for t in candidate_tuple)))
+                                         for t in candidate_tuple)))

@@ -227,7 +227,7 @@ COMPONENT, and 'nothing leaves here' is the whole of a contract's
 claim -- so it holds however coarsely the rest is declared.
 
 SEALED TODAY: 'engine/compare/contract', 'engine/procsitter',
-'auxiliary', 'language_support'.
+'auxiliary', 'test_writing_support'.
 
 THREE OF THE FOUR NEEDED NO MOVING, ONLY DECLARING. They already
 imported nothing of this tree; the seal is that sentence made

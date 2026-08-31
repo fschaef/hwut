@@ -1379,3 +1379,90 @@ GRAVEYARD ACCEPTING BOTH FORMS -- rejected: the bare form is what
           '@hwut' AS THE HOCON KEY -- rejected: the source block and
           the conf block would then be two vocabularies, and a
           validator would have to know which file it was reading.
+
+
+R-73  'language-setup' IS THE ONE TABLE, AND IT STANDS AT THE ROOT  (2026-08-30)
+______________________________________________________________________________
+PROBLEM   Per-language tooling was stated in four places: the source
+          header ('build.coverage_target'), 'language-setup'
+          (parsed, inherited, never read), coverage's own glob dict in
+          'hwut.conf' over a shipped 'DEFAULT_TOOL_DB', and a hard-coded
+          'INTERPRETER_DB' of three entries in the adapter. A file with
+          no she-bang and no 'language' word was executed by its own
+          name and died before it started, while 1.0 ran it under the
+          directory's interpreter without a thought.
+DECISION  ONE BLOCK PER LANGUAGE, holding everything HWUT does WITH that
+          language: 'extensions', 'interpreter', 'coverage' (the
+          candidate tools, in preference order), 'coverage_target',
+          'profiler'. It stands in 'hwut-root.conf' ONLY, refused in
+          any nearer 'hwut.conf' as a variant group is; that a variant
+          may restate an entry is intended, not built (todo-7). The
+          framework ships NO table: what
+          'DEFAULT_TOOL_DB' and 'INTERPRETER_DB' held is WRITTEN INTO
+          'hwut-root.conf' by the face that places it, where the author
+          can read and edit it.
+          THE LANGUAGE IS THE ACTIVATION KEY. A file's 'language' word
+          selects an entry BY NAME and everything follows from the
+          entry; the name is free ('dep4711_c' is a language). Where
+          the header is silent, 'extensions' selects; an extension two
+          entries claim is refused at the root by name. Neither word
+          nor extension: EXECUTABLE, the she-bang decides, as before.
+          The interpreter is the entry's 'interpreter', else the
+          language's own name (R-10 NOTE). Where a language was
+          DERIVED it is said so ('hwut.parse' shows the derivation) --
+          D-2's rule, stated never silent, applied here.
+COST      Every tree must carry the table; a bare 'hwut { }' root
+          runs only what a she-bang can run. 'build.coverage_target'
+          is gone from the header vocabulary; a header stating it is
+          refused, and the author moves it to the language.
+GRAVEYARD A shipped table with the conf overriding it: the mess this
+          entry removes -- two sources, and a reader of the conf never
+          knows what the default beneath it says.
+          'extensions' as a separate top-level map: it separates the
+          binding from the tooling it binds to, so the two can
+          disagree.
+          Keeping 'language-setup' inheritable per directory (disc-2
+          item 3): a table that differs by directory is a table an
+          author cannot read in one place. Closed by this entry.
+
+R-74  '%' IS THE SOURCE FILE'S STEM, WHEREVER A NAME IS STATED  (2026-08-30)
+______________________________________________________________________________
+PROBLEM   R-11 promised '%' in 'build', and nothing expanded it;
+          'coverage_target' needs it ('%.cov.exe') or every C test
+          restates its own name.
+DECISION  ONE EXPANSION, 'stem_expanded', applied to 'build.framework',
+          'build.executable' and 'language-setup.<lang>.coverage_target'.
+          It does NOT apply to 'target { }' in 'hwut.conf': a target is
+          the directory's word, and a directory has no stem. The manual
+          says so where '%' is admitted and where it is not.
+COST      A literal '%' in a build command must be written '%%'.
+
+R-75  '--language' IS A SELECTOR OF THE WISH                     (2026-08-30)
+______________________________________________________________________________
+PROBLEM   A coverage run over 'the C tests' had no way to say so.
+DECISION  '--language=<name>', repeatable, a UNION among the names it
+          gives and NARROWING against the rest of the wish -- the
+          shape '--dir' and '--label' already have. It lives in the
+          wish, so every face has it. A name no 'language-setup' entry
+          declares is refused by name, as an unknown label is. It
+          STATES NOTHING about any file: it selects, it does not
+          configure.
+
+
+R-76  THE CLIMB ENDS AT 'TEST/TMP'                              (2026-08-30)
+______________________________________________________________________________
+PROBLEM   Every test process now runs with its temp ground under the
+          test directory's 'TMP/scratch/' (procsitter, E-24). A fixture
+          tree a test builds there stood INSIDE the project, and its
+          climb found the project's own root conf: 'RootConfMissing'
+          stopped being owed where it was owed, and fixtures derived a
+          language they never had.
+DECISION  The climb ('root_conf_directory', 'ascended_spec') ENDS at a
+          directory named 'TMP' that stands beside a 'GOOD/': that is
+          a test directory's transient root, and nothing under it
+          belongs to any tree. Ruled 2026-08-30, chat: "climb ends at
+          TEST/TMP if it is a hwut test directory, i.e. containing at
+          least a GOOD subdirectory."
+COST      A test directory with no 'GOOD/' yet -- one that has never
+          accepted -- has a 'TMP/' the climb passes through. Rare, and
+          the cost is the one this entry removes, not a new one.

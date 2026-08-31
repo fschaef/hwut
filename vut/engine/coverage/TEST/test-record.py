@@ -57,17 +57,16 @@ ______________________________________________________________________________
 import sys
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record       import (ranges_of, union, subtract,
                                               line_n, encode, decode,
                                               FileCoverage, CoverageRecord,
                                               format_record, parse_record,
                                               merge, seated, RecordFault,
                                               CountsNotMergeable)
-from vut.engine.bookkeeper.test_run_id import TestRunId
+from vut.engine.bookkeeper.api import TestRunId
 from vut.engine.coverage.configuration import CoverageConfig, CoverageRefused
-from vut.engine.coverage.registry      import (language_of,
-                                               candidate_tuple_of, elect)
+from vut.engine.coverage.registry      import language_of, elect
 
 
 def banner(label):
@@ -429,12 +428,22 @@ def test_faults():
 
 
 def test_election():
-    """Language, candidates, and the three refusals."""
+    """Language, candidates, and the three refusals. THE CANDIDATES
+    ARE THE ROOT CONF'S (D-26): this test hands 'elect' the tuples an
+    author's 'language-setup' would, and the shipped root conf is read
+    to show the table left the code without losing a word."""
     machine = {"coverage", "gcov"}
 
     def available(tool):
         """RETURN: True, the stated machine has 'tool'."""
         return tool in machine
+
+    #  THE SHIPPED TABLE, as the boundary face writes it.
+    from vut.services._boundary import ROOT_CONF_TEXT
+    from vut.engine.orchestrator.exploration.reader import read_conf
+    spec, _apps, fault_list = read_conf(ROOT_CONF_TEXT, "hwut-root.conf")
+    table = {name: entry.coverage
+             for name, entry in spec.language_setup.items()}
 
     banner("the language is derived where it is not stated")
     print("INSPECT: 'test-parse.py'  -> %s" % language_of("test-parse.py"))
@@ -442,24 +451,29 @@ def test_election():
     print("         stated wins      -> %s"
           % language_of("test-parse.py", "lua"))
 
-    banner("candidates by glob, in preference order")
-    print("INSPECT: python  -> %s" % (candidate_tuple_of("python"),))
-    print("         python3 -> %s" % (candidate_tuple_of("python3"),))
-    print("         c++     -> %s" % (candidate_tuple_of("c++"),))
+    banner("the shipped root conf: candidates per language, in "
+           "preference order")
+    print("INSPECT: read with %d fault(s); %d language(s)"
+          % (len(fault_list), len(table)))
+    print("         python  -> %s" % (table["python"],))
+    print("         c++     -> %s" % (table["c++"],))
+    print("         pascal  -> %s" % (table["pascal"],))
 
     banner("the FIRST available candidate is elected")
     print("INSPECT: python on this stated machine -> %s"
-          % elect("python", available=available))
+          % elect("python", table["python"], available=available))
     print("         c      on this stated machine -> %s"
-          % elect("c", available=available))
+          % elect("c", table["c"], available=available))
 
     banner("the three refusals")
     print("         no derivation   -> %s"
           % raised(lambda: language_of("mystery")))
-    print("         no tool for it  -> %s"
-          % raised(lambda: candidate_tuple_of("brainfuck")))
+    print("         empty list      -> %s"
+          % raised(lambda: elect("pascal", table["pascal"],
+                                 available=available)))
     print("         none available  -> %s"
-          % raised(lambda: elect("lua", available=available)))
+          % raised(lambda: elect("lua", table["lua"],
+                                 available=available)))
 
     ok = check([
         (language_of("test-parse.py") == "python",
@@ -468,25 +482,28 @@ def test_election():
          "'.cpp' derives c++"),
         (language_of("test-parse.py", "lua") == "lua",
          "a stated language wins over the derivation"),
-        (candidate_tuple_of("python")[0] == "coverage",
-         "the glob 'python*' answers for 'python', readable tool first"),
-        (candidate_tuple_of("python3") == candidate_tuple_of("python"),
-         "and for 'python3' -- one language under two names"),
-        (candidate_tuple_of("vhdl")[0] == "gcov",
+        (not fault_list,
+         "the shipped root conf reads without a fault"),
+        (table["python"][0] == "coverage",
+         "python's list puts the readable tool first"),
+        (table["vhdl"][0] == "gcov",
          "vhdl reaches gcov, because GHDL's gcc backend writes it -- a "
          "language served by a table entry and no code"),
-        (candidate_tuple_of("pascal") == (),
+        (table["pascal"] == (),
          "and a language this build vouches for no tool on has an EMPTY "
          "list: saying so beats inventing a default"),
-        (elect("python", available=available) == "coverage",
+        (elect("python", table["python"], available=available)
+         == "coverage",
          "the first available candidate is elected"),
-        (elect("c", available=available) == "gcov",
+        (elect("c", table["c"], available=available) == "gcov",
          "and the preference order decides which"),
         (raised(lambda: language_of("mystery")) == "CoverageRefused",
          "an underivable language is refused, never guessed"),
-        (raised(lambda: candidate_tuple_of("brainfuck")) == "CoverageRefused",
-         "a language with no configured tool is refused"),
-        (raised(lambda: elect("lua", available=available)) == "CoverageRefused",
+        (raised(lambda: elect("pascal", table["pascal"],
+                              available=available)) == "CoverageRefused",
+         "an empty candidate list is refused, by name"),
+        (raised(lambda: elect("lua", table["lua"],
+                              available=available)) == "CoverageRefused",
          "a machine with no candidate is refused, not silently skipped"),
     ])
     verdict(ok, "election is stated at every step, and refuses rather "

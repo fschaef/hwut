@@ -11,7 +11,7 @@ STDOUT {
 --- a declaration that is not one
 STATUS: 2
 STDOUT {
-    REFUSED: bad.txt:1: a rule reads '<from> -> <to>' or 'SEALED <glob>', and 'faces and engine' does neither
+    REFUSED: bad.txt:1: a rule reads '<from> -> <to>', 'SEALED <glob>' or 'DOOR <module>', and 'faces and engine' is none of them
 }
 --- a declaration that is not there
 STATUS: 2

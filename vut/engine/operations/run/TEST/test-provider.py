@@ -47,7 +47,7 @@ import inspect
 import tempfile
 import config                                                       # noqa: F401
 
-from   vut.language_support.python.hwut_runner import HwutRunner    # noqa: E402
+from   vut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
 from   vut.engine.operations.run.provider  import (             # noqa: E402
                                                I_Provider,
                                                I_ProxyProvider,
@@ -64,7 +64,7 @@ from   vut.engine.operations.run.stage_canonicalise \
 from   vut.engine.operations.configuration import (TestConfiguration, # noqa: E402
                                                  TestChoiceConfiguration,
                                                  E_SourceKind)
-from   vut.engine.procsitter.procsitter  import ProcsitterConfig    # noqa: E402
+from   vut.engine.procsitter.api  import ProcsitterConfig    # noqa: E402
 
 
 def _check(pair_list):

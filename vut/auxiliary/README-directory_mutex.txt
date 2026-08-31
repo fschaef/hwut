@@ -11,7 +11,7 @@ directory_mutex -- MUTUAL EXCLUSION OVER ONE DIRECTORY, BETWEEN PROCESSES
 1  THE MECHANISM
 ______________________________________________________________________________
 
-'mkdir' of a lock sub directory ('.hwut-lock') decides the winner: it
+'mkdir' of a lock sub directory ('TMP/lock') decides the winner: it
 creates or it fails, never half. Inside, the holder is recorded:
 
     holder.json    { "pid":      the holder's process id,
@@ -31,7 +31,7 @@ Where the platform reports no process start times, no lock is taken and
 ______________________________________________________________________________
 
     MkdirMutex(directory,
-               lock_directory_name = ".hwut-lock",
+               lock_directory_name = "TMP/lock",
                wait_sec            = 0.0,
                poll_sec            = 0.05,
                max_hold_sec        = None)

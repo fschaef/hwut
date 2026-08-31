@@ -52,9 +52,9 @@ CONF = '''\
 hwut {
     variant_group {
         cov  {
-            gcov { build { coverage_target = "cov-app.exe" }
+            gcov { build { executable = "cov-app.exe" }
                    caps  { memory_mb = 2048 } }
-            llvm { build { coverage_target = "app-prof.exe" }
+            llvm { build { executable = "app-prof.exe" }
                    caps  { memory_mb = 4096 } }
         }
         load {
@@ -118,10 +118,10 @@ def test_declared():
     banner("what each alternative states")
     for name in sorted(variant_db):
         variant = variant_db[name]
-        target  = variant.parameters.build.coverage_target \
+        target  = variant.parameters.build.executable \
                   if variant.parameters.build is not None else None
         caps    = variant.parameters.caps
-        print("         %-6s of group '%-5s'  coverage_target %-16s "
+        print("         %-6s of group '%-5s'  executable %-16s "
               "timeout %-6s memory %s"
               % (name, variant.group, target or "-",
                  caps.timeout_sec if caps else "-",
@@ -148,22 +148,22 @@ def test_selected():
 
     banner("one alternative from each group")
     both = merged_parameters(name_tuple_of("gcov,slow"), variant_db)
-    print("         --variant=gcov,slow -> coverage_target %s  "
+    print("         --variant=gcov,slow -> executable %s  "
           "timeout %s  memory %s"
-          % (both.build.coverage_target, both.caps.timeout_sec,
+          % (both.build.executable, both.caps.timeout_sec,
              both.caps.memory_mb))
 
     banner("the other order says the same")
     other = merged_parameters(name_tuple_of("slow,gcov"), variant_db)
-    print("         --variant=slow,gcov -> coverage_target %s  "
+    print("         --variant=slow,gcov -> executable %s  "
           "timeout %s  memory %s"
-          % (other.build.coverage_target, other.caps.timeout_sec,
+          % (other.build.executable, other.caps.timeout_sec,
              other.caps.memory_mb))
 
     banner("one alone leaves the other dimension unstated")
     alone = merged_parameters(name_tuple_of("llvm"), variant_db)
-    print("         --variant=llvm      -> coverage_target %s  "
-          "timeout %s" % (alone.build.coverage_target,
+    print("         --variant=llvm      -> executable %s  "
+          "timeout %s" % (alone.build.executable,
                           alone.caps.timeout_sec))
 
     banner("no variant at all")
@@ -172,7 +172,7 @@ def test_selected():
           % (none.build, none.caps))
 
     ok = check([
-        (both.build.coverage_target == "cov-app.exe"
+        (both.build.executable == "cov-app.exe"
          and both.caps.timeout_sec == 600.0,
          "each dimension contributes what it states"),
         (both.caps.memory_mb == 2048,

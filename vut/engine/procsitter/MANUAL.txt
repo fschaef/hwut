@@ -300,6 +300,19 @@ The result of an execution is reported in a 'ProcsitterResult':
                                      => reason for nonzero exit.
     .unenforced       tuple[str]     caps this platform could not
                                      enforce -- honest reporting
+    .created_tuple    tuple[str]     what the call MADE AND LEFT: files
+                                     and directories standing at exit
+                                     and absent before the spawn, under
+                                     work_dir (relative to it) and under
+                                     'config.scratch_dir' (absolute).
+                                     Before-and-after, not a watch: made
+                                     and removed is not listed. The work
+                                     dir's own 'TMP/' is never listed.
+
+Scratch ground ('config.scratch_dir'): made empty before the spawn and
+exported to the call as TMPDIR, TMP and TEMP, so that the platform's
+temp-file machinery lands there and what it leaves is attributable to
+this call. 'None' leaves the parent's temp ground in place, unobserved.
 
 Containment Overview:
 

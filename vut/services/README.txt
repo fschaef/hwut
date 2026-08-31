@@ -72,6 +72,18 @@ The faces:
                  not '<hwut-end>' is refused outright: an incomplete
                  stream is never promotable, and no flag bypasses.
 
+    hwut.pype    (pype.py)
+                 the pype LINE-MATCHING FILTER, as a face. The language
+                 -- parser, modes, trace, usage line -- lives in
+                 'test_writing_support/hwut_pype' and is tested there;
+                 this face owns the DOOR: '--help' on stdout, 0; no
+                 argument naming an existing script, or a dangling
+                 '--pype-dir', refused with the usage, 2; a script that
+                 does not parse, 1; 'sys.exit(n)' inside a python block
+                 leaves untouched. Every other option is handed to the
+                 interpreter unread. A '#! /usr/bin/env hwut.pype'
+                 she-bang line reaches it by PATH.
+
     hwut.target  (target.py)
                  one USER-DEFINED TARGET run over every directory that
                  binds targets (E-7):
@@ -130,7 +142,9 @@ the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.
 'wishlist.py' faces the exploration alone: it selects and prints, and
-runs nothing. 'play.py' runs ONE choice and renders the reading of
+runs nothing. 'pype.py' faces 'test_writing_support/hwut_pype': the
+interpreter is test-writing support, and the face is the tool's door to
+it. 'play.py' runs ONE choice and renders the reading of
 what it produced under that test's own setup; it judges nothing and
 records nothing. The faces that take a wish also take its SHORT FORM --
 'hwut.run test-app.sh one', bare words as targets. '_follow.py' is the one place a renamed or removed name

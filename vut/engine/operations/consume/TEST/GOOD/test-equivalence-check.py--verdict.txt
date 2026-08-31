@@ -4,6 +4,6 @@ INSPECT: subject differs  -> verdict = False report = not-equivalent-with-nomina
                      per subject = {'stdout': False}
   OK  : a matching subject passes and reports OK
   OK  : a differing subject fails
-  OK  : and the report names the MISMATCH, nothing else being wrong
+  OK  : and the report names the MISMATCH, nothing else being wrong -- the SHAPE of it is 'hwut.report''s, afterwards, since comparison aborts before either text is whole
 SUCCESS: the verdict follows the comparison, and names itself.
 <hwut-end>

@@ -7,38 +7,56 @@ PURPOSE: THE CONFIGURATION ADAPTER (O-7) -- exploration's resolved
 
 One direction, no memory: exploration owns WHAT WAS STATED; operations
 owns WHAT A RUN NEEDS; this file owns the mapping and nothing else.
-What the mapping does not cover yet (compare tolerances, 'execute',
-language_setup) is named in run/DISCUSSIONS -- refused here rather
-than guessed: an unmapped statement must not silently vanish into a
-default.
+What the mapping does not cover yet (compare tolerances) is refused
+here rather than guessed: an unmapped statement must not silently
+vanish into a default.
+
+THE LANGUAGE TABLE IS THE ROOT CONF'S (exploration R-73). 'language_setup'
+is the resolved 'language-setup' dict of the tree; this module carries
+NO table of its own. The interpreter is the entry's word, else the
+language's own name (R-10); the coverage tools are the entry's list;
+the coverage target is the entry's pattern, '%' the stem (R-74).
 ______________________________________________________________________________
 """
+import os
 import shlex
 
-from ...bookkeeper.configuration  import NamingConfig, StoreConfig
+from ...bookkeeper.api  import NamingConfig, StoreConfig
 from ...operations.build_action  import BuildConfig, E_BuildSystem
 from ...operations.configuration import (E_SourceKind,
                                          TestChoiceConfiguration,
                                          TestConfiguration)
-from ...procsitter.procsitter    import ProcsitterConfig
+from ...procsitter.api    import ProcsitterConfig
 
 
-#  language word (exploration) -> interpreter argv (operations).
-INTERPRETER_DB = {
-    "python": ("python3",),
-    "bash":   ("bash",),
-    "lua":    ("luau",),
-}
+def stem_expanded(text, source_file):
+    """
+    RETURN: str, 'text' with every '%' replaced by the STEM of
+            'source_file' -- 'test-parse.c' gives 'test-parse' -- and
+            '%%' by one literal '%' (R-74).
+    """
+    stem = os.path.splitext(os.path.basename(source_file))[0]
+    return text.replace("%%", "\0").replace("%", stem).replace("\0", "%")
+
+
+def interpreter_of(language, language_setup):
+    """
+    RETURN: list[str], the argv prefix that runs a test of 'language':
+            the 'language-setup' entry's 'interpreter', split as a
+            shell would; the language's own name where the entry
+            states none, or where no entry stands (R-10 NOTE).
+    """
+    setup = (language_setup or {}).get(language)
+    if setup is not None and setup.interpreter:
+        return shlex.split(setup.interpreter)
+    return [language]
+
 
 #  Caps field (exploration) -> ProcsitterConfig field. Unmapped caps
 #  keep procsitter's own defaults.
-_CAPS_FIELD_DB = {
-    "timeout_sec":         "max_wall_clock_sec",
-    "cpu_sec":             "max_cpu_time_sec",
-    "memory_mb":           "max_memory_mb",
-    "file_size_mb":        "max_file_size_mb",
-    "child_process_max_n": "max_pids",
-}
+#  THE AUTHOR'S CAPS VOCABULARY stands at the bookkeeper, below both
+#  its readers ('bookkeeper/configuration.CAPS_FIELD_DB').
+from ...bookkeeper.api import CAPS_FIELD_DB as _CAPS_FIELD_DB
 
 _BUILD_SYSTEM_DB = {"make": E_BuildSystem.MAKE}
 
@@ -58,7 +76,7 @@ def naming_of(app):
 
 def test_configuration_of(app, directory, coverage=None,
                           variant_tuple=(), variant_db=None,
-                          timing_f=False):
+                          timing_f=False, language_setup=None):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
             source kind and interpreter from the language, the build
@@ -75,29 +93,32 @@ def test_configuration_of(app, directory, coverage=None,
     wrote.
 
     'coverage' is a 'CoverageConfig' where coverage is asked (coverage
-    RATIONALE D-19): the reader is ELECTED for the language, the build
-    then names 'coverage_target' in place of the executable, and the
-    configuration carries a 'CoverageSetup'. A COMPILED test that
-    declares no 'coverage_target' gets the setup with the note
+    RATIONALE D-19): the reader is ELECTED among the language entry's
+    'coverage' candidates, the build then names the entry's
+    'coverage_target' ('%' expanded) in place of the executable, and
+    the configuration carries a 'CoverageSetup'. A COMPILED test whose
+    language states no 'coverage_target' gets the setup with the note
     'NO_COVERAGE_TARGET' and builds and runs its executable as ever.
+
+    'language_setup' is the tree's resolved 'language-setup' dict
+    (R-73); None reads as empty, and every language is then called by
+    its own name.
 
     'timing_f' asks for the RUN'S CADENCE ('--timing'): the per-line
     delta times are kept beside the candidate. It is the ONLY thing
     that raises a StoreConfig here -- WHERE and HOW MUCH is kept is the
     store's word, and until something asks for more than the candidate
     there is nothing for it to say.
-
-    Raises AssertionError for a language no interpreter is declared
-    for -- refused at the door, not guessed.
     """
     root = _root_of(app)
     if variant_tuple:
         from ..exploration.variant import merged_parameters
         root = merged_parameters(variant_tuple, variant_db, root)
 
-    setup = None if coverage is None else _coverage_setup_of(app, root,
-                                                              coverage)
-    build = _build_of(root, setup)
+    entry = (language_setup or {}).get(app.language)
+    setup = None if coverage is None \
+            else _coverage_setup_of(app, root, coverage, entry)
+    build = _build_of(root, app.source_file, setup, entry)
     caps  = _caps_of(root)
     if setup is not None:
         from ...operations.coverage_action import uncapped
@@ -108,10 +129,8 @@ def test_configuration_of(app, directory, coverage=None,
     elif app.language is None:
         source_kind = E_SourceKind.EXECUTABLE
     else:
-        assert app.language in INTERPRETER_DB, \
-               "no interpreter declared for language '%s'" % app.language
         source_kind = E_SourceKind.INTERPRETED
-        interpreter = list(INTERPRETER_DB[app.language])
+        interpreter = interpreter_of(app.language, language_setup)
 
     choice_db = {choice: _choice_of(parameters)
                  for choice, parameters in app.choice_db.items()}
@@ -134,46 +153,57 @@ def test_configuration_of(app, directory, coverage=None,
                           if timing_f else None))
 
 
-def _build_of(parameters, setup=None):
+def _build_of(parameters, source_file, setup=None, entry=None):
     """
     RETURN: BuildConfig from the stated 'build' key, 'None' where none
             stands. The framework word must be known; the executable
-            is the one target -- or, under coverage with a
-            'coverage_target' declared, THAT is the one target: built
-            by name and run in its place.
+            is the one target -- or, under coverage with the language
+            entry stating a 'coverage_target', THAT is the one target:
+            built by name and run in its place. '%' in either is the
+            source file's stem (R-74).
     """
     stated = parameters.build
     if stated is None or stated.framework is None: return None
-    assert stated.framework in _BUILD_SYSTEM_DB, \
-           "no build system declared for framework '%s'" % stated.framework
-    target = stated.executable or "app"
+    framework = stem_expanded(stated.framework, source_file)
+    assert framework in _BUILD_SYSTEM_DB, \
+           "no build system declared for framework '%s'" % framework
+    target = stem_expanded(stated.executable or "app", source_file)
     if setup is not None and setup.note is None \
-       and stated.coverage_target is not None:
-        target = stated.coverage_target
-    return BuildConfig(_BUILD_SYSTEM_DB[stated.framework], [target])
+       and entry is not None and entry.coverage_target is not None:
+        target = stem_expanded(entry.coverage_target, source_file)
+    return BuildConfig(_BUILD_SYSTEM_DB[framework], [target])
 
 
-def _coverage_setup_of(app, root, coverage):
+def _coverage_setup_of(app, root, coverage, entry):
     """
-    RETURN: CoverageSetup: the reader elected for the language this
-            machine has a tool for, the config, and the note
-            'NO_COVERAGE_TARGET' where the test is COMPILED and names no
-            'build.coverage_target' -- else no note.
+    RETURN: CoverageSetup: the reader elected among the language
+            entry's 'coverage' candidates -- the first this machine has
+            -- the config, and the note 'NO_COVERAGE_TARGET' where the
+            test is COMPILED and its language states no
+            'coverage_target'; else no note.
 
-    Raises CoverageRefused where no tool for the language is available
-    here, naming every candidate.
+    Raises CoverageRefused where the test has no language, where no
+    entry stands for it, where the entry's candidate list is empty, or
+    where every candidate is absent here -- each named at the door.
     """
-    from ...coverage.registry import language_of, elect
-    from ...coverage.reader   import framework_of
+    from ...coverage.api import elect, CoverageRefused
+    from ...coverage.api   import framework_of
     from ...operations.coverage_action import CoverageSetup, E_CoverageResult
 
-    language = language_of(app.source_file, coverage.language)
-    reader   = framework_of(coverage.tool if coverage.tool is not None
-                            else elect(language))
-    stated   = root.build
-    note     = None
+    if app.language is None:
+        raise CoverageRefused(
+            "'%s' has no language: coverage needs one to elect a tool. "
+            "State 'language' in its header, or claim its extension in "
+            "'language-setup' of 'hwut-root.conf'." % app.source_file)
+    if entry is None:
+        raise CoverageRefused(
+            "no 'language-setup' entry stands for language '%s' of '%s' "
+            "in 'hwut-root.conf'" % (app.language, app.source_file))
+    reader = framework_of(elect(app.language, entry.coverage))
+    stated = root.build
+    note   = None
     if stated is not None and stated.framework is not None \
-       and stated.coverage_target is None:
+       and entry.coverage_target is None:
         note = E_CoverageResult.NO_COVERAGE_TARGET
     return CoverageSetup(reader=reader, config=coverage, note=note)
 
@@ -243,7 +273,7 @@ def _compare_of(parameters):
                            "whitespace_eqv")}
     if all(value is None for value in stated.values()): return None
 
-    from ...compare.configuration import Configuration
+    from ...compare.api import Configuration
     options = Configuration()
     finder  = options.pattern_finder
 

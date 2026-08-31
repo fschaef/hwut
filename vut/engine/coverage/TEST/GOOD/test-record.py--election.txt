@@ -4,10 +4,11 @@ INSPECT: 'test-parse.py'  -> python
          'engine.cpp'     -> c++
          stated wins      -> lua
 
---- candidates by glob, in preference order ---
-INSPECT: python  -> ('coverage', 'slipcover', 'trace')
-         python3 -> ('coverage', 'slipcover', 'trace')
+--- the shipped root conf: candidates per language, in preference order ---
+INSPECT: read with 0 fault(s); 56 language(s)
+         python  -> ('coverage', 'slipcover', 'trace')
          c++     -> ('gcov', 'llvm-cov', 'kcov')
+         pascal  -> ()
 
 --- the FIRST available candidate is elected ---
 INSPECT: python on this stated machine -> coverage
@@ -15,19 +16,19 @@ INSPECT: python on this stated machine -> coverage
 
 --- the three refusals ---
          no derivation   -> CoverageRefused
-         no tool for it  -> CoverageRefused
+         empty list      -> CoverageRefused
          none available  -> CoverageRefused
   OK  : '.py' derives python
   OK  : '.cpp' derives c++
   OK  : a stated language wins over the derivation
-  OK  : the glob 'python*' answers for 'python', readable tool first
-  OK  : and for 'python3' -- one language under two names
+  OK  : the shipped root conf reads without a fault
+  OK  : python's list puts the readable tool first
   OK  : vhdl reaches gcov, because GHDL's gcc backend writes it -- a language served by a table entry and no code
   OK  : and a language this build vouches for no tool on has an EMPTY list: saying so beats inventing a default
   OK  : the first available candidate is elected
   OK  : and the preference order decides which
   OK  : an underivable language is refused, never guessed
-  OK  : a language with no configured tool is refused
+  OK  : an empty candidate list is refused, by name
   OK  : a machine with no candidate is refused, not silently skipped
 SUCCESS: election is stated at every step, and refuses rather than guesses.
 <hwut-end>

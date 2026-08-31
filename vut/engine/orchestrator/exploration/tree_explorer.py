@@ -86,7 +86,29 @@ LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
 #  fault, because it is not local, and reached nothing, because it does
 #  not flow. It was swallowed in silence, which is the worst of the
 #  three answers.
-ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db",)
+ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db", "language_setup")
+
+#  Field -> WHY it is the root's alone, for the fault that names it.
+ROOT_CONF_ONLY_REASON_DB = {
+    "variant_db":     "a variant group is a DIMENSION and the selection "
+                      "is made once for the whole run, so the groups are "
+                      "declared once, at the root",
+    "language_setup": "the language table is read in ONE place (R-73): "
+                      "a file's language, its interpreter and its "
+                      "coverage tools must not depend on where in the "
+                      "tree it stands",
+}
+
+
+def root_only_fault(name, conf_name, position):
+    """
+    RETURN: Fault, VOCABULARY: the root-conf-only field 'name' met in
+            'conf_name', with the reason it is refused there.
+    """
+    return Fault(E_FaultKind.VOCABULARY, conf_name, position,
+                 "'%s' outside '%s': %s"
+                 % (KEY_OF_FIELD.get(name, name), ROOT_CONF_NAME,
+                    ROOT_CONF_ONLY_REASON_DB[name]))
 
 #  Field -> the KEY AN AUTHOR WRITES. A fault that names the record
 #  field sends the reader looking for a word that is not in his file.
@@ -176,6 +198,22 @@ class RootConfMissing(Exception):
     pass
 
 
+TRANSIENT_ROOT_NAME = "TMP"
+
+
+def transient_ground_f(path):
+    """
+    RETURN: bool, True where 'path' is a test directory's transient
+            root 'TEST/TMP' -- named 'TMP' and standing beside a
+            'GOOD/' (E-24) -- so that the climb ENDS there: what a run
+            makes under 'TMP/' stands outside every tree, and a
+            fixture built there must not read the enclosing project's
+            root conf as its own.
+    """
+    return os.path.basename(path) == TRANSIENT_ROOT_NAME \
+           and os.path.isdir(os.path.join(os.path.dirname(path), "GOOD"))
+
+
 def root_conf_directory(start):
     """
     RETURN: str, the ABSOLUTE directory holding the 'hwut-root.conf'
@@ -193,10 +231,13 @@ def root_conf_directory(start):
         if os.path.isfile(os.path.join(here, ROOT_CONF_NAME)):
             return here
         parent = os.path.dirname(here)
-        if parent == here:
+        if parent == here or transient_ground_f(here):
             raise RootConfMissing(
                 "no '%s' stands in or above '%s' -- the tree has no "
-                "boundary" % (ROOT_CONF_NAME, start))
+                "boundary%s" % (ROOT_CONF_NAME, start,
+                                "" if parent == here else
+                                " (the climb ends at the transient "
+                                "ground 'TMP/', E-24)"))
         here = parent
 
 
@@ -240,11 +281,15 @@ def ascended_spec(start):
                 climbed.append((conf_path, conf_path))
         at_start = False
         parent = os.path.dirname(here)
-        if parent == here:
+        if parent == here or transient_ground_f(here):
             raise RootConfMissing(
                 "no '%s' stands above '%s' -- a tree states its own "
                 "boundary, and the global configuration that applies "
-                "to it, in that file" % (ROOT_CONF_NAME, start))
+                "to it, in that file%s"
+                % (ROOT_CONF_NAME, start,
+                   "" if parent == here else
+                   " (the climb ends at the transient ground 'TMP/', "
+                   "E-24)"))
         here = parent
 
     effective = DirectorySpec(language_setup={}, dependency={})
@@ -267,14 +312,8 @@ def ascended_spec(start):
         if shown != ROOT_CONF_NAME:
             for name in ROOT_CONF_ONLY_FIELD_TUPLE:
                 if getattr(spec, name):
-                    fault_list.append(Fault(
-                        E_FaultKind.VOCABULARY, shown, spec.position,
-                        "'%s' outside '%s': a variant group is a "
-                        "DIMENSION and the selection is made once for "
-                        "the whole run, so the groups are declared "
-                        "once, at the root"
-                        % (KEY_OF_FIELD.get(name, name),
-                           ROOT_CONF_NAME)))
+                    fault_list.append(root_only_fault(name, shown,
+                                                      spec.position))
         effective = inherited_spec(effective, spec)
     return effective, fault_list
 
@@ -332,12 +371,8 @@ def _folded(directory, relative, effective, fault_list):
                 % KEY_OF_FIELD.get(name, name)))
     for name in ROOT_CONF_ONLY_FIELD_TUPLE:
         if getattr(spec, name):
-            fault_list.append(Fault(
-                E_FaultKind.VOCABULARY, conf_name, spec.position,
-                "'%s' outside '%s': a variant group is a DIMENSION "
-                "and the selection is made once for the whole run, so "
-                "the groups are declared once, at the root"
-                % (KEY_OF_FIELD.get(name, name), ROOT_CONF_NAME)))
+            fault_list.append(root_only_fault(name, conf_name,
+                                              spec.position))
     return inherited_spec(effective, spec)
 
 

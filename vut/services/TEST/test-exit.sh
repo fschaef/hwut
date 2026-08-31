@@ -101,6 +101,12 @@ printf 'hwut.run      %s      %s        %s      %s\n' \
               --directory=run_ok --glob 'nothing-*')"
 printf 'steady\n'      > a.txt
 printf 'different\n'   > b.txt
+printf 'on: <else> => flush;\n' > ok.pype
+printf 'on: bad\n'              > broken.pype
+printf 'hwut.pype     %s      %s        %s      -\n' \
+    "$(status python3 -m vut.services.pype ok.pype a.txt)" \
+    "$(status python3 -m vut.services.pype broken.pype a.txt)" \
+    "$(status python3 -m vut.services.pype)"
 printf 'hwut.compare  %s      %s        %s      -\n' \
     "$(status python3 -m vut.services.compare \
               a.txt a.txt)" \

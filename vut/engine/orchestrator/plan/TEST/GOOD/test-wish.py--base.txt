@@ -17,6 +17,12 @@
         test-a.py one
         test-a.py two
 
+--- --faster-than=1 : this machine's own observation; a case it never observed, and one it observed without a duration, are NOT selected ---
+    WISH: --faster-than=1
+    2 case(s)
+        test-a.py one
+        test-b.py -
+
 --- --until=2h : the stale wish -- the never-run counted ---
     WISH: --until=2h
     3 case(s)

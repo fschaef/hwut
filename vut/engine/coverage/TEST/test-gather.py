@@ -65,7 +65,7 @@ from   vut.engine.coverage.record  import (CoverageRecord,       # noqa E402
                                            FileCoverage, ranges_of,
                                            seated)
 from   vut.engine.coverage.binary  import pack_record            # noqa E402
-from   vut.engine.bookkeeper.test_id_db import TestIdDb          # noqa E402
+from   vut.engine.bookkeeper.api import TestIdDb          # noqa E402
 
 FIXTURE = (
     ("parser/TEST", (("test-parse", "basic", (1, 2, 3, 4, 5)),

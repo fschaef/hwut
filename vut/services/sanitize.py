@@ -4,10 +4,6 @@ ______________________________________________________________________________
 PURPOSE: THE 'hwut.sanitize' COMMAND LINE -- what a tree accumulates,
          found and named; and removed only when asked.
 
-    hwut.sanitize [<wish>] [--apply] [--target <name>]...
-                  [--session] [--lock] [--out] [--orphans]
-                  [--directory=<path>]
-
 IT REPORTS AND DOES NOT ACT. A bare 'hwut.sanitize' walks the tree and
 SAYS what it found; nothing is removed, nothing is run. '--apply' is
 the whole difference. THE DEFAULT IS THE SAFE ONE because the answers
@@ -17,12 +13,12 @@ one deleted by a tool that guessed is gone.
 WHAT IT LOOKS FOR, each asked for by its own flag; NONE STATED MEANS
 ALL OF THEM, because a wish that states nothing wants everything.
 
-    --session   '.hwut-session/' directories. A session's sinks are
+    --session   'TMP/session/' directories. A session's sinks are
                 read on 'done' and deleted; a directory that survives
                 the run is the wreckage of one that did not finish.
                 ALWAYS SAFE TO REMOVE: nothing reads it between runs.
 
-    --lock      '.hwut-lock/' directories WHOSE HOLDER IS GONE. A LIVE
+    --lock      'TMP/lock/' directories WHOSE HOLDER IS GONE. A LIVE
                 LOCK IS NEVER TOUCHED, not even under '--apply' -- it
                 is a running test's claim on its directory, and
                 breaking it is how two runs come to write one store.
@@ -36,7 +32,7 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 is scratch.
 
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
-                candidate under '.hwut-store/', a book entry or a
+                candidate under 'TMP/store/', a book entry or a
                 register id whose (test, choice) NO LONGER EXISTS in
                 the directory's configuration.
 
@@ -50,6 +46,19 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 REFUSED for orphan work entirely: a tree that cannot
                 be read cannot be judged.
 
+    --transient THE TWO TRANSIENT ROOTS WHOLE, 'OUT/' and 'TMP/', per
+                directory (services E-24): what a run can make again.
+                The tree-wide spelling of 'rm -rf OUT/ TMP/' -- one
+                command where three hundred hands invite a mistyped
+                glob that takes 'GOOD/' with it. NEVER IMPLIED by a bare
+                command line: it takes the candidates with it, and a
+                bare call asks about rubbish, not about everything.
+                A DIRECTORY WHOSE 'TMP/lock/' NAMES A LIVE HOLDER IS
+                REFUSED, named on stderr, and the walk continues: a hand
+                typing 'rm -rf TMP/' in one directory has chosen; a tool
+                sweeping the tree has not been asked about any one of
+                them, and sweeping a live run's ground from under it is
+                the failure that reproduces once a month under '--jobs'.
     --target <name>
                 RUN A DIRECTORY'S OWN TARGET, e.g. 'clean'. The
                 framework does not know what a project's rubbish is;
@@ -82,10 +91,8 @@ import sys
 
 from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
-from   vut.engine.bookkeeper.bookkeeper              import (Bookkeeper,
+from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
                                                              NO_CHOICE_KEY)
-from   vut.engine.bookkeeper.stream_store            import Store
-from   vut.engine.bookkeeper.test_id_db              import TestIdDb, TestIdFault
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
@@ -106,17 +113,20 @@ SOURCE_EXTENSION_SET   = frozenset((
     "py", "sh", "bash", "lua", "pl", "rb", "c", "cpp", "cc", "bas",
     "exe", "bat", "ps1", "js", "ts", "vhd", "v", "sv"))
 
-SESSION_DIRECTORY_NAME = ".hwut-session"
+from vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 OUT_DIRECTORY_NAME     = "OUT"
+TRANSIENT_ROOT_TUPLE   = ("OUT", "TMP")           # services E-24
 
 #  What a bare command line asks about. Not the targets: running
 #  somebody's script is never implied.
 ASPECT_TUPLE = ("session", "lock", "out", "orphans")
+#  Asked for by name only; a bare call never takes the candidates.
+EXPLICIT_ASPECT_TUPLE = ("transient",)
 
-USAGE = usage_line("hwut.sanitize",
+USAGE = usage_line("usage: hwut.sanitize",
                    ("[<wish>]", "[--apply]", "[--target <name>]...",
                     "[--session]", "[--lock]", "[--out]", "[--orphans]",
-                    "[--directory=<path>]"))
+                    "[--transient]", "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -165,7 +175,7 @@ def shown(root, path):
 
 def session_finding_list(root, directory):
     """
-    YIELD: [0] CFinding  a '.hwut-session/' that survived its run.
+    YIELD: [0] CFinding  a 'TMP/session/' that survived its run.
 
     A session's sinks are read on 'done' and deleted; the directory
     leaves with the session. One that stands between runs is the
@@ -182,7 +192,7 @@ def session_finding_list(root, directory):
 
 def lock_finding_list(root, directory):
     """
-    YIELD: [0] CFinding  a '.hwut-lock/' WHOSE HOLDER IS GONE.
+    YIELD: [0] CFinding  a 'TMP/lock/' WHOSE HOLDER IS GONE.
 
     A LIVE LOCK IS NEVER YIELDED. It is a running test's claim on its
     directory, and breaking it is how two runs come to write one
@@ -277,8 +287,8 @@ def orphan_finding_list(root, directory, app_set):
 
     known_test_set = set(t for t, _ in offered)
 
-    #  -- the files: GOOD/ and .hwut-store/ ------------------------------
-    for holder in ("GOOD", ".hwut-store"):
+    #  -- the files: GOOD/ and TMP/store/ ------------------------------
+    for holder in ("GOOD", STORE_DIRECTORY_NAME):
         base = os.path.join(directory, holder)
         if not os.path.isdir(base): continue
         for name in sorted(os.listdir(base)):
@@ -355,6 +365,39 @@ def record_key_of(name):
     return test, choice
 
 
+def transient_finding_list(root, directory):
+    """
+    YIELD: [0] CFinding  a transient root of the directory, 'OUT/' or
+                         'TMP/', whole (E-24).
+
+    Raises DirectoryLive where 'TMP/lock/' names a holder that is
+    STILL ALIVE, or whose liveness the platform cannot tell: the
+    directory is refused entire -- 'OUT/' included, since the live run
+    reads it -- and the caller names it on stderr and walks on.
+    """
+    lock_path = os.path.join(directory, LOCK_DIRECTORY_NAME)
+    if os.path.isdir(lock_path):
+        mutex  = MkdirMutex(directory)
+        holder = mutex.holder()
+        if not mutex._holder_is_gone(holder):
+            raise DirectoryLive("%s: 'TMP/lock' names a live holder "
+                                "(pid %s); nothing here is touched"
+                                % (shown(root, directory),
+                                   (holder or {}).get("pid", "?")))
+    for name in TRANSIENT_ROOT_TUPLE:
+        path = os.path.join(directory, name)
+        if not os.path.isdir(path): continue
+        n = sum(len(f) for _, _, f in os.walk(path))
+        yield CFinding("transient", shown(root, path),
+                       "transient root; %d file(s), all of it a run can "
+                       "make again" % n, size_of(path))
+
+
+class DirectoryLive(Exception):
+    """A directory whose lock names a live holder: refused whole."""
+    pass
+
+
 def directory_finding_list(root, directory, result, aspect_set, wanted_f):
     """
     RETURN: [0] list[CFinding], everything the asked-for aspects found
@@ -377,6 +420,14 @@ def directory_finding_list(root, directory, result, aspect_set, wanted_f):
         finding_list.extend(lock_finding_list(root, directory))
     if "out" in aspect_set:
         finding_list.extend(out_finding_list(root, directory))
+    if "transient" in aspect_set:
+        try:
+            finding_list.extend(transient_finding_list(root, directory))
+        except DirectoryLive as error:
+            #  NAMED ON STDERR, not folded into the report: it is the
+            #  one thing here a script must not miss.
+            print("REFUSED: %s" % error, file=sys.stderr)
+            refusal_list.append(str(error))
 
     if "orphans" in aspect_set:
         if result.fault_list:
@@ -510,7 +561,8 @@ def main(argv=None, write=None):
             target_list.append(rest_list[index]); index += 1
         elif argument.startswith("--target="):
             target_list.append(argument[len("--target="):])
-        elif argument[2:] in ASPECT_TUPLE and argument.startswith("--"):
+        elif argument.startswith("--") \
+             and argument[2:] in ASPECT_TUPLE + EXPLICIT_ASPECT_TUPLE:
             aspect_set.add(argument[2:])
         else:
             unknown.append(argument)
@@ -528,6 +580,11 @@ def main(argv=None, write=None):
     #  wants everything. The TARGETS are never implied: running
     #  somebody's script is an act nobody asked for.
     if not aspect_set: aspect_set = set(ASPECT_TUPLE)
+    #  '--transient' TAKES THE OTHER ASPECTS WITH IT: a session, a stale
+    #  lock, an 'OUT/' are all inside what it removes, and reporting
+    #  them twice would count one directory's rubbish twice.
+    if "transient" in aspect_set:
+        aspect_set -= {"session", "lock", "out"}
 
     root = os.path.abspath(directory)
     try:
@@ -560,7 +617,7 @@ def main(argv=None, write=None):
     if refusal_list: write("")
 
     total_bytes = 0
-    for kind in ASPECT_TUPLE:
+    for kind in ASPECT_TUPLE + EXPLICIT_ASPECT_TUPLE:
         of_kind = [f for f in finding_list if f.kind == kind]
         if not of_kind: continue
         write("  %s -- %d found:" % (kind, len(of_kind)))

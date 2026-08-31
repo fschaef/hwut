@@ -14,7 +14,7 @@ DESCRIPTION
 
        THE NAMING. A record's key is (test, choice, subject); the
        Bookkeeper turns it into the file that carries it -- nominal
-       under 'GOOD/', candidate under '.hwut-store/', the raw and cadence
+       under 'GOOD/', candidate under 'TMP/store/', the raw and cadence
        sidecars beside the candidate. Whoever reads or writes those
        files asks here for the path; the reading and writing themselves
        are the caller's.
@@ -47,13 +47,18 @@ ______________________________________________________________________________
 """
 import json
 import os
+import sys
 import platform
 import stat
 from   dataclasses import fields, is_dataclass
 from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
-from .configuration import E_StderrNote, NamingConfig
+from .configuration import CAPS_FIELD_DB, E_StderrNote, NamingConfig
+
+#  THE STORE'S GROUND, under the transient root 'TMP/' (services E-24).
+#  Re-exported by 'stream_store'.
+STORE_DIRECTORY_NAME = "TMP/store"
 
 
 RESULT_DB_FILE_NAME = "result_db.json"
@@ -88,6 +93,25 @@ def this_host():
 def _now():
     """RETURN: str, the current UTC instant, seconds resolution, ISO."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _stated_caps(caps):
+    """
+    RETURN: dict, THE CAPS THAT HELD, by the name an author states
+            them under -- 'timeout_sec', not 'max_wall_clock_sec'.
+            A cap with no value at all is absent, never a null; a cap
+            the author did not state stands at the framework's default,
+            because THE DEFAULT IS WHAT HELD and a reader asking what
+            this test was configured to do must be told it.
+
+    The vocabulary is 'configuration.CAPS_FIELD_DB', the one list of
+    what a header may say, read by the adapter too: a field the procsitter grows for its
+    own purposes -- a scratch ground, an environment overlay -- is the
+    EXECUTOR'S and has no place in an oracle.
+    """
+    return {stated: _plain(getattr(caps, field))
+            for stated, field in sorted(CAPS_FIELD_DB.items())
+            if getattr(caps, field, None) is not None}
 
 
 def _plain(value):
@@ -125,7 +149,7 @@ def compare_setup_delta(options):
     the defaults cannot disagree about what a member is.
     """
     if options is None: return {}
-    from ..compare.configuration import Configuration
+    from ..compare.api import Configuration
     default    = Configuration()
     difference = {}
 
@@ -212,16 +236,17 @@ class Bookkeeper:
         THE STORE'S OWN GROUND, apart from 'OUT/': 'OUT/' is the
         TEST'S product space -- execution reads every file there as a
         subject -- and the store's records must never become the next
-        run's subjects. The dot-name also keeps the tree walk out."""
-        return self.directory / ".hwut-store" \
+        run's subjects. Under 'TMP/', the framework's transient root
+        (services E-24): visible, and safe to delete whole."""
+        return self.directory / STORE_DIRECTORY_NAME \
                               / self.key(test, choice, subject)
 
     def coverage_path(self, test, choice):
         """RETURN: Path, where the COVERAGE RECORD of that run lives --
-        '.hwut-store/<key>.cover', the store's own ground: a measurement
+        'TMP/store/<key>.cover', the store's own ground: a measurement
         of the last run of that choice, never a nominal, never a
         subject. The suffix is coverage's own ('affected.py')."""
-        return self.directory / ".hwut-store" \
+        return self.directory / STORE_DIRECTORY_NAME \
                               / self.key(test, choice, "cover")
 
     def raw_path(self, test, choice, subject):
@@ -280,8 +305,12 @@ class Bookkeeper:
     def record(self, result, configuration, goal, choice_name=None,
                coverage=None):
         """
-        RETURN: dict, the entry as written -- 'when' and 'host' are
-                added here, so no caller has to remember them.
+        RETURN: dict, the entry as written -- DECISIONS ONLY (E-20).
+                What the run merely observed -- its duration, its
+                telemetry, the host and the instant -- is written to
+                the LOCAL observation database instead (E-22), which
+                this method also does, so no caller has to remember
+                either.
 
         'coverage' is the coverage step's token ('E_CoverageResult'),
         written as 'coverage' on the entry; None where none was asked,
@@ -291,26 +320,32 @@ class Bookkeeper:
         the result; both halves of freeing from the choice's
         configuration (the canonicaliser changed the RECORD, the
         compare setup changed the VERDICT -- without them a later
-        reader cannot tell what this entry meant); THE ATTRIBUTION from
-        the result's provision -- the record of the process that
-        produced a result is PART of that result, in every mode, and
-        this is its durable home.
+        reader cannot tell what this entry meant).
+
+        THE ATTRIBUTION IS AN OBSERVATION and goes to the local
+        database: the record of the process that produced a result is
+        part of that result, and a run makes it again, identically.
 
         OVERWRITES exactly one (test, choice, operation) entry and
         leaves every other untouched; refreshes the test's and the
         choice's reproducible configuration beside it.
 
-        THE LEDGER READING of an ACCEPT (n-3): the book is a book of
-        record, and an accept is an EVENT in it. The entry keeps
-        'first_accept' -- the instant of the FIRST acceptance ever,
-        carried forward untouched -- while 'when' is the LAST: a
-        re-accept moves only the second.
+        AN ACCEPT KEEPS ITS INSTANT (E-36): 'last_accept' says when the
+        NOMINAL NOW STANDING was blessed -- a fact about the oracle in
+        front of the reader. A re-accept moves it, because a re-accept
+        produced the nominal that now stands. Every EARLIER acceptance
+        is history, and history is the configuration management
+        system's: git holds each one, dated and attributed.
         """
         operation = _OPERATION_BY_GOAL[goal.name]
+        #  THE BASE HOLDS DECISIONS (E-20). 'when', 'host' and the
+        #  attribution 'records' were all things a run can MAKE AGAIN
+        #  identically, and went to the local observation database
+        #  (E-22); what stays is what a later reader cannot reproduce:
+        #  the verdict, the report, the acceptance's instant, and the
+        #  configuration that says what the entry meant.
         entry     = {"verdict": bool(result.verdict),
-                     "report":  str(result.report),
-                     "when":    _now(),
-                     "host":    this_host()}
+                     "report":  str(result.report)}
         choice_entry = configuration.choice_configuration(choice_name)
         if choice_entry.canonicalisers:
             entry["canonicaliser"] = {name: list(argv) for name, argv
@@ -319,8 +354,10 @@ class Bookkeeper:
         if setup:
             entry["compare"] = setup
         records = tuple(getattr(result.provision, "records", ()) or ())
-        if records:
-            entry["records"] = [_plain(r) for r in records]
+        #  WHAT THIS MACHINE MERELY OBSERVED goes to the local database
+        #  (E-22), not here: a run can make it again. The book keeps the
+        #  decisions.
+        self._note_observation(result, operation, choice_name, records)
         if coverage is not None:
             entry["coverage"] = str(coverage)
 
@@ -333,13 +370,41 @@ class Bookkeeper:
         choice_book["configuration"] = self._choice_facts(choice_entry)
         operation_db = choice_book.setdefault("operations", {})
         if operation == "Accept":
-            prior = operation_db.get("Accept")
-            entry["first_accept"] = prior.get("first_accept",
-                                              prior.get("when")) \
-                                    if prior else entry["when"]
+            #  'last_accept' IS THE ONLY INSTANT LEFT IN THE BASE, and
+            #  belongs here because ACCEPTANCE IS A DECISION: it says
+            #  WHEN THE STANDING NOMINAL WAS BLESSED, which is a fact
+            #  about the oracle in front of the reader, not about any
+            #  run. HISTORY IS THE CONFIGURATION MANAGEMENT SYSTEM'S:
+            #  git holds every earlier acceptance of this file, dated,
+            #  attributed and undoable, and the book need not keep a
+            #  second, poorer copy (E-36).
+            entry["last_accept"] = _now()
         operation_db[operation] = entry
         self._write_book(content)
         return entry
+
+    def _note_observation(self, result, operation, choice_name, records):
+        """
+        RETURN: None. The run's telemetry written to the LOCAL
+                observation database, under '(test, choice, operation)'
+                -- state now, overwritten (E-22, E-23).
+
+        A fault writing it is SWALLOWED: an observation nobody can
+        store costs a re-run and nothing else, and must never make a
+        recorded verdict fail.
+        """
+        from .observation import ObservationDb, observation_of
+        try:
+            ObservationDb(self.directory).note(
+                result.name, choice_name, operation,
+                observation_of(records[-1] if records else None,
+                               host=this_host(),
+                               compare_complete_f=getattr(
+                                   result, "compare_complete_f", None)))
+        except Exception as fault:                          # noqa: BLE001
+            #  Said once on stderr, never raised: the verdict stands.
+            print("NOTE: local observation not written -- %s" % fault,
+                  file=sys.stderr)
 
     @staticmethod
     def _test_facts(configuration):
@@ -353,7 +418,7 @@ class Bookkeeper:
         if configuration.interpreter is not None:
             facts["interpreter"] = list(configuration.interpreter)
         if configuration.caps is not None:
-            facts["caps"] = _plain(configuration.caps)
+            facts["caps"] = _stated_caps(configuration.caps)
         return facts
 
     @staticmethod

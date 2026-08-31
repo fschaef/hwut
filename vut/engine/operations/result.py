@@ -27,8 +27,20 @@ class E_TestRunResult(Enum):
     SOURCE_NOT_FOUND            = "source-not-found"
     INTERPRETER_NOT_FOUND       = "interpreter-not-found"
 
-    # THE JUDGEMENT: everything ran; the subject does not match.
+    # THE JUDGEMENT: everything ran; the subject does not match. The
+    # THREE SHAPES OF A DIFFERENCE say WHERE TO LOOK, never who is
+    # wrong: all three are FAIL, and which side is at fault -- a GOOD
+    # blessed under an older framework, a filter that stopped
+    # filtering, a change in the code -- is the reader's to decide.
+    #   GREW      every recorded line still stands, in order; lines
+    #             stand between or around them
+    #   SHRANK    every line that stands was recorded, in order; lines
+    #             the GOOD holds are gone
+    #   DIVERGED  neither: a recorded line changed or moved
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
+    NOT_EQUIVALENT_GREW         = "not-equivalent-grew"
+    NOT_EQUIVALENT_SHRANK       = "not-equivalent-shrank"
+    NOT_EQUIVALENT_DIVERGED     = "not-equivalent-diverged"
 
     # THE TESTIMONY: nothing ran, and nothing will, until it is cleared.
     # A choice that came out 'ok' in one repeat and not in another bore

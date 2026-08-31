@@ -14,7 +14,7 @@
 #
 # answer   every launcher called by path: the exit code and the first
 #          non-empty line of what it said. The faces answer '--help'
-#          with 0; 'hwut.pype' answers a bare call with its usage, 1.
+#          with 0; 'hwut.pype' answers a bare call with its usage, 2.
 #
 # path     the PATH form and the by-path form must agree byte-for-byte;
 #          a '#! /usr/bin/env hwut.pype' she-bang script must run when
@@ -33,7 +33,7 @@ esac
 
 FACE_LIST="show plan run accept target cov compare merge tell
            stability wishlist report remove remove-choice
-           rename rename-choice sanitize"
+           rename rename-choice sanitize pype"
 
 first_line() { grep -m1 -v '^[[:space:]]*$'; }
 

@@ -1,0 +1,69 @@
+--- report: the roots, not their pieces
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': transient  (reporting only; '--apply' acts)
+    
+      transient -- 4 found:
+          other/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
+          other/TEST/TMP                                       transient root; 0 file(s), all of it a run can make again
+          suite/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
+          suite/TEST/TMP                                       transient root; 2 file(s), all of it a run can make again
+    
+      4 item(s), <size> kB
+}
+--- a bare call never takes them
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': lock, orphans, out, session  (reporting only; '--apply' acts)
+    
+      session -- 1 found:
+          suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody
+    
+      lock -- 1 found:
+          other/TEST/TMP/lock                                  the holder (pid ?) is gone
+    
+      out -- 2 found:
+          other/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
+          suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
+    
+      4 item(s), <size> kB
+}
+--- apply: 'other' holds a live lock and is refused whole
+STATUS: 0
+STDOUT {
+    SANITIZE, in 'tree': transient
+    
+      NOTE: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+    
+      transient -- 2 found:
+          suite/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
+          suite/TEST/TMP                                       transient root; 2 file(s), all of it a run can make again
+    
+      2 item(s), <size> kB
+    
+    REMOVING:
+        gone: suite/TEST/OUT
+        gone: suite/TEST/TMP
+}
+STDERR {
+    REFUSED: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+}
+STANDING {
+    hwut-root.conf
+    other
+    other/TEST
+    other/TEST/GOOD
+    other/TEST/GOOD/test-app.sh.txt
+    other/TEST/OUT
+    other/TEST/OUT/product.txt
+    other/TEST/TMP
+    other/TEST/TMP/lock
+    other/TEST/TMP/lock/holder.json
+    other/TEST/test-app.sh
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
+}

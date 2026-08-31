@@ -4,10 +4,10 @@
          load     fast, slow
 
 --- what each alternative states ---
-         fast   of group 'load '  coverage_target -                timeout 30.0   memory None
-         gcov   of group 'cov  '  coverage_target cov-app.exe      timeout None   memory 2048
-         llvm   of group 'cov  '  coverage_target app-prof.exe     timeout None   memory 4096
-         slow   of group 'load '  coverage_target -                timeout 600.0  memory None
+         fast   of group 'load '  executable -                timeout 30.0   memory None
+         gcov   of group 'cov  '  executable cov-app.exe      timeout None   memory 2048
+         llvm   of group 'cov  '  executable app-prof.exe     timeout None   memory 4096
+         slow   of group 'load '  executable -                timeout 600.0  memory None
   OK  : the declaration reads without fault
   OK  : every alternative of every group stands in ONE namespace
   OK  : and each knows the group it belongs to

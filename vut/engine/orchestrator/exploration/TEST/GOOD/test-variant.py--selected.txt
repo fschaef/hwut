@@ -1,12 +1,12 @@
 
 --- one alternative from each group ---
-         --variant=gcov,slow -> coverage_target cov-app.exe  timeout 600.0  memory 2048
+         --variant=gcov,slow -> executable cov-app.exe  timeout 600.0  memory 2048
 
 --- the other order says the same ---
-         --variant=slow,gcov -> coverage_target cov-app.exe  timeout 600.0  memory 2048
+         --variant=slow,gcov -> executable cov-app.exe  timeout 600.0  memory 2048
 
 --- one alone leaves the other dimension unstated ---
-         --variant=llvm      -> coverage_target app-prof.exe  timeout None
+         --variant=llvm      -> executable app-prof.exe  timeout None
 
 --- no variant at all ---
          --variant absent    -> build None  caps None

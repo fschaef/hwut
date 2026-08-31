@@ -4,8 +4,6 @@ ______________________________________________________________________________
 PURPOSE: THE 'hwut.wishlist' COMMAND LINE -- print, one per line, every
          test application and choice the given wish selects.
 
-    hwut.wishlist [<wish>] [--directory=<path>]
-
 prints
 
     ./<path>/<test-app> [<choice>]
@@ -57,7 +55,7 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 
-USAGE = usage_line("hwut.wishlist",
+USAGE = usage_line("usage: hwut.wishlist",
                    ("[<wish>]", "[<file-glob> [choice-glob]...]",
                     "[--directory=<path>]"))
 

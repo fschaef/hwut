@@ -90,7 +90,7 @@ def bookkeeper_of(directory):
     Imported here, not at module scope: the face runs by path as well
     as by module, and the import must follow the '_config' adoption.
     """
-    from vut.engine.bookkeeper.bookkeeper import Bookkeeper
+    from vut.engine.bookkeeper.api import Bookkeeper
     return Bookkeeper(directory)
 
 
@@ -198,9 +198,9 @@ def coverage_section_text(directory, application, choice):
             (coverage was never asked): the section is then absent, and
             absence is not reported as an empty measurement.
     """
-    from vut.engine.bookkeeper.bookkeeper import Bookkeeper
-    from vut.engine.coverage.binary       import unpack_record
-    from vut.engine.coverage.record       import format_record, RecordFault
+    from vut.engine.bookkeeper.api import Bookkeeper
+    from vut.engine.coverage.api       import unpack_record
+    from vut.engine.coverage.api       import format_record, RecordFault
 
     keeper = Bookkeeper(directory)
     stem   = application[:-3] if application.endswith(".py") else application

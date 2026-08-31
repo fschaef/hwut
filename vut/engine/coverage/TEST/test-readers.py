@@ -188,7 +188,7 @@ import shutil
 import tempfile
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.configuration import CoverageConfig
 from vut.engine.coverage.record        import format_record, line_n
 from vut.engine.coverage.reader        import framework_of, registered_tuple

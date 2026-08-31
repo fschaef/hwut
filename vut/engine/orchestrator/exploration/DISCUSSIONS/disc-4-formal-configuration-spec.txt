@@ -32,5 +32,5 @@ WHAT IS MISSING:
 
 OPEN: the document's form (EBNF for the grammar + a key table, or the
 prose-formal style of README hardened); where multi-language parser
-ports hook their check (language_support/<lang>/TEST against the same
+ports hook their check (test_writing_support/<lang>/TEST against the same
 specification file).

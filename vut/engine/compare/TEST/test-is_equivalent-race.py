@@ -28,7 +28,7 @@ sys.path.insert(0, "../../../../")
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main        as     main
 import vut.engine.compare.TEST.line_provider as line_provider
-from   vut.language_support.python.deterministic_random import DeterministicStream
+from   vut.test_writing_support.python.deterministic_random import DeterministicStream
 
 
 async def run_test(subject_timeline, nominal_timeline):

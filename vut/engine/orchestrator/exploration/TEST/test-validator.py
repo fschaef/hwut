@@ -58,7 +58,7 @@ import sys
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.exploration.unwrapper        import plain_lines
-from vut.language_support.python.hwut_hocon import parse
+from vut.test_writing_support.python.hwut_hocon import parse
 from vut.engine.orchestrator.exploration                  import validator
 
 

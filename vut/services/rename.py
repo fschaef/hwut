@@ -25,7 +25,7 @@ which is true after it.)
 WHAT MOVES, each step announced:
 
     NOMINALS     'GOOD/<key>.<subject>' per subject
-    CANDIDATES   '.hwut-store/<key>.<subject>' and every sidecar
+    CANDIDATES   'TMP/store/<key>.<subject>' and every sidecar
                  beside it -- the freshness stamp, the raw stream, the
                  cadence, the coverage record
     THE BOOK     'GOOD/result_db.json': the entry re-keyed
@@ -55,9 +55,9 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.bookkeeper.bookkeeper   import Bookkeeper, NO_CHOICE_KEY
-from   vut.engine.bookkeeper.stream_store import Store
-from   vut.engine.bookkeeper.test_id_db   import TestIdDb, TestIdFault
+from   vut.engine.bookkeeper.api   import Bookkeeper, NO_CHOICE_KEY
+from   vut.engine.bookkeeper.api import Store
+from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_renamed
 from   ._exit                             import E_ExitCode
 
@@ -73,7 +73,7 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
 
 def _shown(store, path):
     """RETURN: str, the path as it reads from the test directory --
-    'GOOD/x.stdout' and '.hwut-store/x.stdout' are DIFFERENT files and
+    'GOOD/x.stdout' and 'TMP/store/x.stdout' are DIFFERENT files and
     a basename alone would print them alike."""
     try:               return os.path.relpath(path, str(store.directory))
     except ValueError: return path

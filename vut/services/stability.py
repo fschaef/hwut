@@ -69,8 +69,8 @@ import os
 import statistics
 import sys
 
-from   vut.engine.bookkeeper.bookkeeper              import Bookkeeper
-from   vut.engine.bookkeeper.stream_store            import Store
+from   vut.engine.bookkeeper.api              import Bookkeeper
+from   vut.engine.bookkeeper.api            import Store
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
@@ -89,7 +89,7 @@ REPEAT_DEFAULT  = 3
 ABSOLUTE_MIN = 5.0     # seconds of spread, far past any resolution
 FACTOR_MIN   = 50.0    # times the usual delta -- not 2, not 5
 
-USAGE = usage_line("hwut.stability",
+USAGE = usage_line("usage: hwut.stability",
                    WISH_TOKEN_TUPLE
                    + ("[<file-glob> [choice-glob]...]",
                       "[--repeat=<n>]",

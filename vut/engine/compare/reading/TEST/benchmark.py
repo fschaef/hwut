@@ -5,7 +5,7 @@ import time
 import string
 from vut.engine.compare.configuration            import ConfigurationPatternFinder
 from vut.engine.compare.reading.pattern_finder import PatternFinder
-from vut.language_support.python.deterministic_random          import DeterministicStream
+from vut.test_writing_support.python.deterministic_random          import DeterministicStream
 
 def string_stream(n=10000, complexity=0.5, seed=0x42):
     """

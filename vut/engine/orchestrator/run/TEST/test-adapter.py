@@ -269,28 +269,38 @@ def test_naming():
 
 
 def test_refused():
-    """RETURN: None. Refusal by name, at the door."""
+    """RETURN: None. Refusal by name, at the door -- and what is NOT
+    refused: a language the table does not know is called by its own
+    name (exploration R-10, R-73)."""
+    from vut.engine.orchestrator.exploration.configuration_tree \
+                                                       import LanguageSetup
+    own_name = _configuration(TestParameters(), language="klingon")
+    stated   = test_configuration_of(
+                   _app(TestParameters(), "python"), "/tmp",
+                   language_setup={"python":
+                                   LanguageSetup(interpreter="python3 -u")})
     refusal = []
-    try:
-        _configuration(TestParameters(), language="klingon")
-        refusal.append("(none)")
-    except AssertionError as error:
-        refusal.append(str(error))
     try:
         _compare_of(TestParameters(analogy=("<<",)))
         refusal.append("(none)")
     except AssertionError as error:
         refusal.append(str(error))
 
-    print("INSPECT: an unknown language -> %s" % refusal[0])
-    print("         a marker pair of one -> %s" % refusal[1])
+    print("INSPECT: an unknown language  -> interpreter %s"
+          % (own_name.interpreter,))
+    print("         a stated interpreter -> interpreter %s"
+          % (stated.interpreter,))
+    print("         a marker pair of one -> %s" % refusal[0])
     ok = _check([
-        ("klingon" in refusal[0],
-         "the unknown language is named in its refusal"),
-        ("analogy" in refusal[1],
+        (own_name.interpreter == ["klingon"],
+         "the unknown language is called by its own name"),
+        (stated.interpreter == ["python3", "-u"],
+         "'language-setup' names the call, split as a shell would"),
+        ("analogy" in refusal[0],
          "the malformed pair is named in its refusal"),
     ])
-    _verdict(ok, "what cannot be translated is refused, by name.")
+    _verdict(ok, "what cannot be translated is refused, by name; "
+                 "what is merely unknown is called by its own name.")
 
 
 if __name__ == "__main__":

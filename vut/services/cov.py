@@ -33,8 +33,10 @@ PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with
                                 defaults by the file's first bytes,
                                 '--to' to the other form.
     hwut.cov formats            the table of tools, formats and
-                                aliases, GENERATED from the registry
-                                -- the one author of that table
+                                aliases this build READS, GENERATED
+                                from the registry -- the one author of
+                                that table. Which tool serves a language
+                                is the root conf's word (D-26)
     hwut.cov --help             this text
 
 A first word that is a VERB ('gather', 'stale', 'convert', 'formats')
@@ -46,11 +48,10 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.coverage.record   import (parse_record, format_record,
+from   vut.engine.coverage.api   import (parse_record, format_record,
                                             RecordFault)
-from   vut.engine.coverage.binary   import pack_record, unpack_record
-from   vut.engine.coverage.reader   import registered_tuple, framework_of
-from   vut.engine.coverage.registry import DEFAULT_TOOL_DB
+from   vut.engine.coverage.api   import pack_record, unpack_record
+from   vut.engine.coverage.api   import registered_tuple, framework_of
 from   ._exit                       import E_ExitCode
 
 USAGE = "usage: hwut.cov [<wish>] | convert [--from binary|text] " \
@@ -88,11 +89,11 @@ def convert(data, source_form, target_form):
 
 def formats_text():
     """
-    RETURN: str, two tables read from the registry and written nowhere
+    RETURN: str, one table read from the registry and written nowhere
             else: every tool this build READS with its format and, for
-            an alias, the reader it reads through; then every LANGUAGE
-            with its candidate tools in election order, a '*' marking
-            the ones this build reads.
+            an alias, the reader it reads through. WHICH TOOL SERVES A
+            LANGUAGE is not the registry's to say (coverage D-26): it
+            stands in 'language-setup' of the tree's 'hwut-root.conf'.
     """
     readable  = set(registered_tuple())
     line_list = ["TOOLS READ BY THIS BUILD",
@@ -103,12 +104,8 @@ def formats_text():
         line_list.append("  %-18s %-24s %s"
                          % (tool, reader.source_format,
                             through.name if through is not None else "-"))
-    line_list += ["", "CANDIDATES PER LANGUAGE, IN ELECTION ORDER "
-                      "('*' = read by this build)"]
-    for language in sorted(DEFAULT_TOOL_DB):
-        words = ["%s%s" % (t, "*" if t in readable else "")
-                 for t in DEFAULT_TOOL_DB[language]]
-        line_list.append("  %-14s %s" % (language, "  ".join(words)))
+    line_list += ["", "The candidates per language stand in "
+                      "'language-setup' of 'hwut-root.conf'."]
     return "\n".join(line_list)
 
 
@@ -134,7 +131,7 @@ def _gather(word_list, write):
             REFUSED on a bad option or a root that is no directory,
             EMPTY where no record stands below the root.
     """
-    from vut.engine.coverage.gather import (gathered_index, snapshot_db_of,
+    from vut.engine.coverage.api import (gathered_index, snapshot_db_of,
                                             bundle_of, write_bundle,
                                             BUNDLE_FILE)
     option_db, rest, unknown = _option_db(word_list,
@@ -177,7 +174,7 @@ def _stale(word_list, write):
             has moved or can no longer be read, REFUSED on a bad
             command line or an unreadable bundle.
     """
-    from vut.engine.coverage.gather import (read_bundle, stale_tuple,
+    from vut.engine.coverage.api import (read_bundle, stale_tuple,
                                             GatherFault)
     option_db, rest, unknown = _option_db(word_list, ("directory",))
     if unknown or len(rest) != 1:

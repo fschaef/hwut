@@ -95,7 +95,7 @@ from   ._core                                      import usage_line
 from   ._exit                                      import E_ExitCode
 from   .compare                                    import reading_view
 
-USAGE = usage_line("hwut.play",
+USAGE = usage_line("usage: hwut.play",
                    ("<test-app>", "[<choice>]", "[--raw]", "[--pyped]",
                     "[--stderr]", "[--plain]",
                     "[--directory=<path>]"))
@@ -182,7 +182,9 @@ def main(argv=None, write=None):
     choice_name   = case.choice
     configuration = test_configuration_of(
                         result.app_set.app_db[case.source_file],
-                        os.path.abspath(directory))
+                        os.path.abspath(directory),
+                        language_setup=result.app_set.directory_spec
+                                             .language_setup)
     try:
         return asyncio.run(_play(configuration, choice_name,
                                  plain_f, stderr_f, raw_f, pyped_f,

@@ -44,6 +44,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__),
 
 from   config import HwutRunner                                  # noqa F401,E402
 
+from   vut.engine.bookkeeper.observation import ObservationDb   # noqa E402
 from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
@@ -56,7 +57,7 @@ from   vut.engine.operations.report        import (TestResult,     # noqa E402
 from   vut.engine.operations.result        import E_TestRunResult  # noqa F401,E402
 from   vut.engine.operations.run.core import Run             # noqa E402
 from   vut.engine.operations.session       import E_Goal           # noqa E402
-from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api  import ProcsitterConfig # noqa E402
 
 
 def _check(pair_list):
@@ -116,7 +117,7 @@ def _ran(configuration, choice_name=None):
 
 def test_naming():
     """The naming turns (test, choice, subject) into the file that
-    carries it: nominal under GOOD/, candidate under '.hwut-store/'
+    carries it: nominal under GOOD/, candidate under 'TMP/store/'
     (the store's OWN ground, apart from the test's 'OUT/'), the raw and
     cadence sidecars beside the candidate."""
     book = Bookkeeper("/place")
@@ -136,7 +137,7 @@ def test_naming():
          "the choice is part of the key, so choices never collide"),
         (str(without).endswith("GOOD/parse.txt"),
          "a test without choices carries no choice part"),
-        (str(candidate).endswith(".hwut-store/parse--basic.stdout"),
+        (str(candidate).endswith("TMP/store/parse--basic.stdout"),
          "nominals and candidates live in SEPARATE key spaces"),
         (str(raw).endswith(".stdout.raw")
          and str(cadence).endswith(".stdout.times"),
@@ -162,33 +163,34 @@ def test_record_derives():
 
     fresh    = Bookkeeper(directory)
     read     = fresh.result("demo", "basic", "Run")
-    records  = read.get("records", [])
+    observed = ObservationDb(directory).get("demo", "basic", "Run")
 
     print("INSPECT: entry keys = %s" % sorted(entry))
     print("         verdict %s, report %s"
           % (read["verdict"], read["report"]))
     print("         canonicaliser = %s" % read["canonicaliser"])
-    print("         attribution: %i record(s), containment %s, exit %s"
-          % (len(records),
-             records[0]["containment"] if records else "-",
-             records[0]["exit_code"] if records else "-"))
+    print("         observed: host %s, duration %s"
+          % (observed.host is not None,
+             observed.duration_ms is not None))
     ok = _check([
-        (sorted(entry) == ["canonicaliser", "host", "records",
-                           "report", "verdict", "when"],
-         "'when' and 'host' are added here, not by the caller"),
+        (sorted(entry) == ["canonicaliser", "report", "verdict"],
+         "THE BASE HOLDS DECISIONS: the verdict, the report, and what "
+         "says what they meant -- nothing a run can make again"),
         (read["verdict"] is True and read["report"] == "ok",
          "the verdict and the report come from the result"),
         (read["canonicaliser"] == {"stdout": ["cat"]},
          "the canonicaliser comes from the choice's configuration"),
-        (len(records) == 1
-         and records[0]["containment"] == "OK_COMPLETED"
-         and records[0]["exit_code"] == 0,
-         "the attribution record is DURABLE -- read by a fresh "
-         "Bookkeeper"),
+        ("records" not in entry and "when" not in entry
+         and "host" not in entry,
+         "the attribution, the instant and the host are OBSERVATIONS "
+         "and are not in the book"),
+        (observed is not None and observed.host is not None,
+         "they are in the LOCAL database instead, under (test, "
+         "choice, operation) -- added here, not by the caller"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "an entry is derived, and the producer's record "
-                 "survives the visit.")
+    _verdict(ok, "an entry is derived; decisions to the book, "
+                 "observations to the local database.")
 
 
 def test_overwrite():
@@ -313,8 +315,7 @@ def test_reproduce():
     print("INSPECT: test facts   = %s"
           % {k: test_facts[k] for k in sorted(test_facts)
              if k != "caps"})
-    print("         caps recorded: %s"
-          % ("max_wall_clock_sec" in test_facts.get("caps", {})))
+    print("         caps recorded: %s" % test_facts.get("caps"))
     print("         choice facts = %s" % choice_facts)
     print("         unknown test -> %s, unknown choice -> %s"
           % (fresh.test_configuration("ghost"),
@@ -324,8 +325,16 @@ def test_reproduce():
          and test_facts["source_kind"] == "interpreted"
          and test_facts["interpreter"] == ["python3", "-u"],
          "the test application is reproducible from the base"),
-        (test_facts.get("caps", {}).get("max_wall_clock_sec") == 20.0,
-         "the caps ride with it"),
+        #  THE AUTHOR'S NAME, not the procsitter's: the book writes
+        #  what a header may STATE, through the one vocabulary
+        #  ('_CAPS_FIELD_DB'), so a field the procsitter grows for its
+        #  own use never reaches an oracle (E-36).
+        (test_facts.get("caps", {}).get("timeout_sec") == 20.0
+         and "scratch_dir" not in test_facts.get("caps", {})
+         and "env" not in test_facts.get("caps", {}),
+         "the caps that HELD ride with it -- the stated one and the "
+         "defaults beneath it -- under the name an author states them "
+         "by, and nothing the EXECUTOR added (E-36)"),
         (choice_facts == {"canonicaliser": {"stdout": ["cat"]},
                           "compare": {"numeric_tolerance_ratio": 0.01}},
          "the choice is reproducible: both halves of freeing"),
@@ -418,8 +427,15 @@ def test_setup_delta():
          for f in dataclasses.fields(original_config)],
         slots=True)
 
+    #  THE DOOR IS WHAT THE BOOK READS (E-37), so the future compare
+    #  must stand behind the door as well: patching the module the
+    #  door imports FROM would leave the door holding yesterday's
+    #  class, and this test would prove nothing.
+    from vut.engine.compare import api as compare_api
+    original_api_config = compare_api.Configuration
     compare_configuration.ConfigurationPatternFinder = FutureFinder
     compare_configuration.Configuration              = FutureConfiguration
+    compare_api.Configuration                        = FutureConfiguration
     try:
         future = FutureConfiguration()
         future.pattern_finder.rounding_digits = 3
@@ -427,6 +443,7 @@ def test_setup_delta():
     finally:
         compare_configuration.ConfigurationPatternFinder = original_finder
         compare_configuration.Configuration              = original_config
+        compare_api.Configuration                        = original_api_config
 
     #  AND AN OPTION THAT DOES NOT EXIST cannot be set at all: the
     #  configuration is slotted, so a misspelt tolerance is refused where

@@ -15,9 +15,9 @@ from pathlib import Path
 from   dataclasses import replace
 
 from   ..result                   import E_TestRunResult
-from   ...procsitter.procsitter   import Procsitter, E_Containment
-from   ...procsitter.construction import Link, chain
-from   .core                      import (Supply,
+from   ...procsitter.api   import Procsitter, E_Containment
+from   ...procsitter.api import Link, chain
+from   .core                      import (Supply, scratch_dir_of,
                                           STDOUT, STDERR,
                                           application_argv,
                                           read_all,
@@ -58,6 +58,8 @@ class StageExecute(I_ExecuteProvider):
         if pype_owned_f:
             caps = replace(caps, env={**(caps.env or {}),
                                       "HWUT_NO_TERMINAL": "1"})
+        caps = replace(caps, scratch_dir=scratch_dir_of(configuration,
+                                                         self.choice_name))
         procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         error_link = Link()

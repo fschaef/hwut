@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result       import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api    import ProcsitterConfig # noqa E402
 from   vut.engine.operations.consume.accept import (Accept,       # noqa E402
                                                      AcceptConfig,
                                                      AcceptStep,
@@ -54,10 +54,10 @@ from   vut.engine.operations.consume.equivalence_check import (            # noq
 from   vut.engine.operations.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.operations.run.core  import Run            # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper)
-from   vut.engine.bookkeeper.stream_store           import Store          # noqa E402
-from   vut.engine.bookkeeper.configuration import (  # noqa E402
+from   vut.engine.bookkeeper.api           import Store          # noqa E402
+from   vut.engine.bookkeeper.api import (  # noqa E402
                                               E_StderrNote)
 
 
@@ -272,10 +272,11 @@ def test_initiate_needs_its_session():
 
 
 def test_ledger():
-    """THE LEDGER READING (n-3): the book is a book of record, and an
-    accept is an EVENT in it. 'first_accept' is the instant of the
-    FIRST acceptance ever, carried forward untouched; 'when' is the
-    LAST -- a re-accept moves only the second."""
+    """THE NOMINAL'S DATE (E-36): an acceptance is a DECISION, and
+    'last_accept' says when the nominal NOW STANDING was blessed. A
+    re-accept moves it. Earlier acceptances are not kept: history is
+    the configuration management system's, and git holds each one
+    dated and attributed."""
     directory  = tempfile.mkdtemp(prefix="vut_acc_")
     bookkeeper = Bookkeeper(directory)
 
@@ -295,24 +296,28 @@ def test_ledger():
     second = accept_entry("two")
 
     print("INSPECT: after the FIRST accept")
-    print("         first_accept == when : %s"
-          % (first["first_accept"] == first["when"]))
+    print("         last_accept stands   : %s" % ("last_accept" in first))
     print("         after a RE-ACCEPT")
-    print("         first_accept carried : %s"
-          % (second["first_accept"] == first["first_accept"]))
-    print("         'when' may move on   : %s"
-          % (second["when"] >= first["when"]))
+    print("         last_accept moved    : %s"
+          % (second["last_accept"] >= first["last_accept"]))
+    print("         'when' is not here   : %s" % ("when" not in second))
     ok = _check([
-        (first["first_accept"] == first["when"],
-         "the first accept IS both ends of the ledger"),
-        (second["first_accept"] == first["first_accept"],
-         "a re-accept leaves 'first_accept' untouched"),
-        (second["when"] >= first["when"],
-         "and moves only 'when' -- the LAST accept"),
+        ("last_accept" in first,
+         "an acceptance dates the nominal it produced"),
+        (second["last_accept"] >= first["last_accept"],
+         "a re-accept MOVES it: the nominal now standing is the one "
+         "this accept blessed"),
+        ("first_accept" not in second,
+         "and no earlier acceptance is kept: history is the "
+         "configuration management system's, which holds every one of "
+         "them dated and attributed (E-36)"),
+        ("when" not in first and "when" not in second,
+         "the run's own instant is an OBSERVATION and is not in the "
+         "book (E-20)"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "first and last accept: the book keeps the history's "
-                 "two ends.")
+    _verdict(ok, "the accept dates the nominal it produced; earlier "
+                 "ones are git's.")
 
 
 

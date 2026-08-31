@@ -1,0 +1,5 @@
+LAUNCHER: bin/hwut.pype is executable
+l1 x
+l3 x
+EXIT:     0
+<hwut-end>

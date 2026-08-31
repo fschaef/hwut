@@ -43,15 +43,12 @@ ________________________________________________________________________________
 """
 from dataclasses import dataclass, field
 
+from ..contract.enums import RegionSyntaxError   # noqa: F401
 
-class RegionSyntaxError(Exception):
-    """Region framing of the INPUT is broken (unknown handler, bad
-    parameter, nesting, stray/missing '####'). Deliberately loud: a region
-    marker must never be silently reinterpreted as content.
-    """
-    def __init__(self, line_n, message):
-        self.line_n = line_n
-        super().__init__("line %s: %s" % (line_n, message))
+
+#  THE CALLER'S EXCEPTION lives in the contract, with the rest of the
+#  vocabulary a caller must know ('compare/contract/enums.py'): a class
+#  the outside catches is not this module's private matter.
 
 
 @dataclass(frozen=True)

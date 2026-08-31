@@ -1,10 +1,11 @@
-INSPECT: entry keys = ['canonicaliser', 'host', 'records', 'report', 'verdict', 'when']
+INSPECT: entry keys = ['canonicaliser', 'report', 'verdict']
          verdict True, report ok
          canonicaliser = {'stdout': ['cat']}
-         attribution: 1 record(s), containment OK_COMPLETED, exit 0
-  OK  : 'when' and 'host' are added here, not by the caller
+         observed: host True, duration True
+  OK  : THE BASE HOLDS DECISIONS: the verdict, the report, and what says what they meant -- nothing a run can make again
   OK  : the verdict and the report come from the result
   OK  : the canonicaliser comes from the choice's configuration
-  OK  : the attribution record is DURABLE -- read by a fresh Bookkeeper
-SUCCESS: an entry is derived, and the producer's record survives the visit.
+  OK  : the attribution, the instant and the host are OBSERVATIONS and are not in the book
+  OK  : they are in the LOCAL database instead, under (test, choice, operation) -- added here, not by the caller
+SUCCESS: an entry is derived; decisions to the book, observations to the local database.
 <hwut-end>

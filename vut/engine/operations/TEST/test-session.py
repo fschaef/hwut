@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result       import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api    import ProcsitterConfig # noqa E402
 from   vut.engine.operations.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
@@ -54,13 +54,13 @@ from   vut.engine.operations.session         import (              # noqa E402
                                                    Request,
                                                    store_of,
                                                    E_Goal)
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper,
                                                    compare_setup_delta)
 from   vut.engine.operations.interaction.feed import (            # noqa E402
                                                     E_DisplayTarget,
                                                     driver_for)
-from   vut.engine.bookkeeper.stream_store           import (Store,        # noqa E402
+from   vut.engine.bookkeeper.api           import (Store,        # noqa E402
                                                    DirectoryBusy,
                                                    StoreConfig,
                                                    LOCK_DIRECTORY_NAME)
@@ -203,11 +203,11 @@ def test_entry_is_booked():
         ("canonicaliser" in outcome.entry,
          "the canonicaliser is recorded: a record is HISTORY, and a later "
          "Replay must be able to tell it was freed differently"),
-        ("when" in outcome.entry and "host" in outcome.entry,
-         "when and host are recorded for the speed reference"),
-        ("records" in outcome.entry,
-         "the attribution rides with it -- the record of the process "
-         "that produced a result is PART of that result"),
+        ("when" not in outcome.entry and "host" not in outcome.entry
+         and "records" not in outcome.entry,
+         "the instant, the host and the attribution are NOT in the "
+         "book: a run makes them again, so they are observations, and "
+         "stand in the local database (E-20, E-22)"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "what happened is booked, and never appended to.")
@@ -326,8 +326,8 @@ def test_recording_sidecars():
                  "on: <else> => {\n    kept.append(pype.line())\n}\n"
                  "on: <eof> => {\n    for one in sorted(kept):\n"
                  "        print(one)\n}\n")
-    pype = os.path.join(os.path.dirname(__file__), "..", "..",
-                        "hwut_pype", "hwut_pype.py")
+    pype = os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                        "test_writing_support", "hwut_pype", "hwut_pype.py")
     configuration = TestConfiguration(
         source_file    = "demo.py",
         source_kind    = E_SourceKind.INTERPRETED,

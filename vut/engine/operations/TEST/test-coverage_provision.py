@@ -25,7 +25,7 @@ THE COVERAGE PROVISION CHAIN.
              coverage not asked               ->  no key on the entry
              the application did not testify  ->  nothing READ,
                                                   'run-incomplete'
-             compiled, no 'coverage_target'   ->  'no-coverage-target',
+             compiled, language names no 'coverage_target' -> 'no-coverage-target',
                                                   executable built as ever
 
     CONSISTENCY CONTRACT
@@ -53,7 +53,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api    import ProcsitterConfig # noqa E402
 from   vut.engine.operations.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
@@ -63,16 +63,16 @@ from   vut.engine.operations.session         import (run_test_held, # noqa E402
 from   vut.engine.operations.coverage_action import (CoverageSetup, # noqa E402
                                                    E_CoverageResult,
                                                    uncapped)
-from   vut.engine.bookkeeper.bookkeeper      import Bookkeeper     # noqa E402
-from   vut.engine.bookkeeper.stream_store    import StoreConfig    # noqa E402
-from   vut.engine.bookkeeper.test_run_id     import TestRunId      # noqa E402
-from   vut.engine.coverage.configuration     import CoverageConfig # noqa E402
-from   vut.engine.coverage.reader            import (CCoverageFramework,
+from   vut.engine.bookkeeper.api      import Bookkeeper     # noqa E402
+from   vut.engine.bookkeeper.api    import StoreConfig    # noqa E402
+from   vut.engine.bookkeeper.api     import TestRunId      # noqa E402
+from   vut.engine.coverage.api     import CoverageConfig # noqa E402
+from   vut.engine.coverage.api            import (CCoverageFramework,
                                                   CCoverageFormat,     # noqa E402
                                                    record_of,
                                                    artifact_directory_of)
-from   vut.engine.coverage.binary            import unpack_record  # noqa E402
-from   vut.engine.coverage.record            import format_record  # noqa E402
+from   vut.engine.coverage.api            import unpack_record  # noqa E402
+from   vut.engine.coverage.api            import format_record  # noqa E402
 
 WITNESS_FILE = "witness.json"
 
@@ -189,7 +189,7 @@ def test_harvested():
         (outcome.coverage is E_CoverageResult.OK
          and outcome.entry["coverage"] == "ok",
          "the step concluded OK, and the book entry says so"),
-        (str(path).endswith(os.path.join(".hwut-store", "demo.py.cover")),
+        (str(path).endswith(os.path.join("TMP/store", "demo.py.cover")),
          "the record lives in the store's own ground, never in OUT/"),
         (record.run == frozenset([TestRunId(0, 0)]),
          "the record is SEATED with the run id handed in"),
@@ -277,27 +277,30 @@ def test_not_asked():
 
 
 def test_no_target():
-    """The build-side half: a compiled test declaring no
-    'coverage_target' is noted, and builds its executable as ever."""
+    """The build-side half: a compiled test whose LANGUAGE declares no
+    'coverage_target' is noted, and builds its executable as ever. The
+    target is the language's word (exploration R-73), '%' its stem
+    (R-74)."""
     from vut.engine.orchestrator.run.adapter import _build_of
     from vut.engine.orchestrator.exploration.configuration_tree import (
-                                                   Build, TestParameters)
+                                     Build, LanguageSetup, TestParameters)
 
-    declared   = TestParameters(build=Build(framework="make",
-                                            executable="app.exe",
-                                            coverage_target="cov-app.exe"))
-    undeclared = TestParameters(build=Build(framework="make",
-                                            executable="app.exe"))
+    parameters = TestParameters(build=Build(framework="make",
+                                            executable="%.exe"))
+    declared   = LanguageSetup(coverage=("witness",),
+                               coverage_target="%.cov.exe")
+    undeclared = LanguageSetup(coverage=("witness",))
     plain      = CoverageSetup(reader=WitnessFramework(),
                                config=CoverageConfig())
     noted      = CoverageSetup(reader=WitnessFramework(),
                                config=CoverageConfig(),
                                note=E_CoverageResult.NO_COVERAGE_TARGET)
-    for label, parameters, setup in (
+    source     = "test-app.c"
+    for label, entry, setup in (
             ("no coverage asked",         declared,   None),
             ("asked, target declared",    declared,   plain),
             ("asked, NO target declared", undeclared, noted)):
-        build = _build_of(parameters, setup)
+        build = _build_of(parameters, source, setup, entry)
         print("INSPECT: %-26s -> target %s" % (label, build.target_list))
 
     plain_caps = ProcsitterConfig(max_wall_clock_sec=30.0,
@@ -313,14 +316,18 @@ def test_no_target():
          and cov_caps.max_memory_mb == 256,
          "time is luxury under coverage and is lifted; memory keeps "
          "the machine alive and stands"),
-        (_build_of(declared, None).target_list == ["app.exe"],
-         "without coverage the executable is the one target"),
-        (_build_of(declared, plain).target_list == ["cov-app.exe"],
-         "under coverage the COVERAGE TARGET is built and run in its "
-         "place -- the name is the whole communication"),
-        (_build_of(undeclared, noted).target_list == ["app.exe"],
-         "a compiled test declaring none builds its executable as "
-         "ever; the note NO_COVERAGE_TARGET rides on the entry"),
+        (_build_of(parameters, source, None, declared).target_list
+         == ["test-app.exe"],
+         "without coverage the executable is the one target, '%' the "
+         "stem"),
+        (_build_of(parameters, source, plain, declared).target_list
+         == ["test-app.cov.exe"],
+         "under coverage the language's COVERAGE TARGET is built and "
+         "run in its place -- the name is the whole communication"),
+        (_build_of(parameters, source, noted, undeclared).target_list
+         == ["test-app.exe"],
+         "a language declaring none builds the executable as ever; "
+         "the note NO_COVERAGE_TARGET rides on the entry"),
     ])
     _verdict(ok, "the demand shapes the build; a missing declaration is "
                  "noted, not fatal.")

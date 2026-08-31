@@ -86,7 +86,7 @@ ______________________________________________________________________________
 
 Capability: the configuration registers 'interactive'. The wire is the
 hwut_runner protocol; sinks are the transport, RELATIVE, under
-'.hwut-session/'.
+'TMP/session/'.
 
   Orchestrator   MultiExecute      app --interactive        ChoiceExecute
       |             |                    |                     (per choice)

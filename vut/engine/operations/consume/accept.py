@@ -45,7 +45,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional
-from ...bookkeeper.configuration import E_StderrNote
+from ...bookkeeper.api import E_StderrNote
 
 from   ..result           import E_TestRunResult
 from   ..interaction.feed import E_Intent, merge_session

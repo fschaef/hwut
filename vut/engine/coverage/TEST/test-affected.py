@@ -52,11 +52,11 @@ import shutil
 import tempfile
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record   import ranges_of, FileCoverage, \
                                          CoverageRecord
 from vut.engine.coverage.binary   import pack_record
-from vut.engine.bookkeeper.test_run_id import TestRunId
+from vut.engine.bookkeeper.api import TestRunId
 from vut.engine.coverage.affected import (change_db_of_diff, main,
                                           E_ExitCode)
 

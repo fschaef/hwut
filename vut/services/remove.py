@@ -20,7 +20,7 @@ and never 'this test is fine', which nothing here can say.
 WHAT IS FORGOTTEN, in this order, each step announced:
 
     NOMINALS     'GOOD/<key>' per subject -- the poles themselves.
-    CANDIDATES   '.hwut-store/<key>' and every sidecar beside it: the
+    CANDIDATES   'TMP/store/<key>' and every sidecar beside it: the
                  freshness stamp, the raw stream, the cadence, the
                  coverage record.
     THE BOOK     'GOOD/result_db.json': the recorded runs, the stderr
@@ -50,9 +50,9 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.bookkeeper.bookkeeper   import Bookkeeper, NO_CHOICE_KEY
-from   vut.engine.bookkeeper.stream_store import Store
-from   vut.engine.bookkeeper.test_id_db   import TestIdDb, TestIdFault
+from   vut.engine.bookkeeper.api   import Bookkeeper, NO_CHOICE_KEY
+from   vut.engine.bookkeeper.api import Store
+from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
 
@@ -118,7 +118,7 @@ def victim_tuple(store, test, choice, whole_test_f):
 
 def _shown(store, path):
     """RETURN: str, the path as it reads from the test directory --
-    'GOOD/x.stdout' and '.hwut-store/x.stdout' are DIFFERENT files and
+    'GOOD/x.stdout' and 'TMP/store/x.stdout' are DIFFERENT files and
     a basename alone would print them alike."""
     try:    return os.path.relpath(path, str(store.directory))
     except ValueError: return path

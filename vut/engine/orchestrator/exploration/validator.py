@@ -20,7 +20,7 @@ ______________________________________________________________________________
 import re
 
 from .fault         import Fault, E_FaultKind
-from vut.language_support.python.hwut_hocon import (ScalarNode,
+from vut.test_writing_support.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
                                                       ObjectNode)
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
@@ -348,12 +348,19 @@ def _build(entry, file, fault_list):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, _position_of(node, entry),
             "'build' is a framework name or a scope of 'framework', "
-            "'executable', 'coverage_target' and 'caps'"))
+            "'executable' and 'caps'"))
         return None
 
     field_db = {}
     for inner in node.entry_list:
-        if inner.key in ("framework", "executable", "coverage_target"):
+        if inner.key == "coverage_target":
+            #  R-73: the coverage target is the LANGUAGE'S word now.
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "'coverage_target' is not a 'build' key: it stands in "
+                "'language-setup.<language>' of 'hwut-root.conf' "
+                "(R-73), '%' the source file's stem"))
+        elif inner.key in ("framework", "executable"):
             value = _string(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
         elif inner.key == "caps":
@@ -621,13 +628,20 @@ def _target_map(entry, file, fault_list):
 
 
 def _language_setup(entry, file, fault_list):
-    """RETURN: dict, language name -> LanguageSetup."""
+    """
+    RETURN: dict, language name -> LanguageSetup (R-73).
+
+    An extension two entries claim draws a fault naming both: the
+    binding must be a function, or a file's language would depend on
+    the order the table was written in.
+    """
     if not isinstance(entry.node, ObjectNode):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, entry.key_position,
             "'language-setup' is an object of language names"))
         return {}
-    result = {}
+    result       = {}
+    claimed_db   = {}                         # extension -> language
     for language in entry.node.entry_list:
         if not isinstance(language.node, ObjectNode):
             fault_list.append(Fault(
@@ -636,9 +650,31 @@ def _language_setup(entry, file, fault_list):
             continue
         field_db = {}
         for inner in language.node.entry_list:
-            if inner.key in ("interpreter", "coverage", "profiler"):
+            if inner.key in ("interpreter", "coverage_target", "profiler"):
                 value = _string(inner, file, fault_list)
                 if value is not None: field_db[inner.key] = value
+            elif inner.key == "coverage":
+                value = _string_list_or_empty(inner, file, fault_list)
+                if value is not None: field_db["coverage"] = value
+            elif inner.key == "extensions":
+                value = _string_list(inner, file, fault_list)
+                if value is None: continue
+                for extension in value:
+                    if not extension.startswith("."):
+                        fault_list.append(Fault(
+                            E_FaultKind.TYPE, file, inner.key_position,
+                            "extension '%s' of language '%s' must "
+                            "start with '.'" % (extension, language.key)))
+                    elif extension in claimed_db:
+                        fault_list.append(Fault(
+                            E_FaultKind.TYPE, file, inner.key_position,
+                            "extension '%s' is claimed by '%s' and by "
+                            "'%s': one extension selects one language"
+                            % (extension, claimed_db[extension],
+                               language.key)))
+                    else:
+                        claimed_db[extension] = language.key
+                field_db["extensions"] = value
             else:
                 fault_list.append(Fault(
                     E_FaultKind.VOCABULARY, file, inner.key_position,
@@ -646,6 +682,16 @@ def _language_setup(entry, file, fault_list):
                     % (inner.key, language.key)))
         result[language.key] = LanguageSetup(**field_db)
     return result
+
+
+def _string_list_or_empty(entry, file, fault_list):
+    """
+    RETURN: tuple[str] | None -- as '_string_list', but an EMPTY list is
+            an answer (coverage D-2) and comes back as '()'.
+    """
+    node = entry.node
+    if isinstance(node, ListNode) and not node.item_list: return ()
+    return _string_list(entry, file, fault_list)
 
 
 def _apps(entry, file, fault_list):

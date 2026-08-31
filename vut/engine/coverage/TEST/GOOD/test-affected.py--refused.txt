@@ -4,7 +4,7 @@ REACTION  status 2   stderr 95 byte(s)
           ! REFUSED: '--records DIR' is required: this face reads coverage records, it does not run tests.
 
 --- a root that is no directory ---
-REACTION  status 2   stderr 59 byte(s)
+REACTION  status 2   stderr 121 byte(s)
           ! REFUSED: '<work>/nope' is no directory
 
 --- '-p' that is no number ---

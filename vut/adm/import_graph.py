@@ -47,10 +47,16 @@ THE DECLARATION HAS TWO LINE SHAPES:
     SEALED <glob>       a component that IMPORTS NOTHING of this tree,
                         judged at MODULE depth and therefore true at
                         every '--depth'
+    DOOR <module>       a component that NOTHING OUTSIDE MAY REACH
+                        PAST: the module named is its one entrance, and
+                        an import from outside of anything else beneath
+                        its directory is a violation. Judged at MODULE
+                        depth, like a seal.
 
 A DIRECTION is about a pair and can only be read where both are named.
-A SEAL is about one component, so a contract can be enforced without
-declaring the whole tree at its depth.
+A SEAL and a DOOR are about one component, so a contract can be
+enforced without declaring the whole tree at its depth. A seal says
+NOTHING LEAVES; a door says NOTHING ENTERS BUT HERE.
 ______________________________________________________________________________
 """
 import ast
@@ -60,8 +66,7 @@ import sys
 
 
 #  Directories no import graph is about.
-SKIP_TUPLE = ("__pycache__", ".git", "GOOD", "OUT", ".hwut-store",
-              ".hwut-session", ".hwut-lock")
+SKIP_TUPLE = ("__pycache__", ".git", "GOOD", "OUT", "TMP")
 
 #  What a component is called when a module sits at the root itself.
 ROOT_NAME = "."
@@ -513,6 +518,9 @@ def rule_tuple_of(path):
                 reading '<from> -> <to>', globs allowed either side.
             [1] tuple[str], the SEALED components -- lines reading
                 'SEALED <glob>'.
+            [2] tuple[str], the DOOR modules -- lines reading
+                'DOOR <module>', each the one entrance of the component
+                that holds it.
 
     '#' to end of line is a comment; blank lines are nothing.
 
@@ -528,6 +536,7 @@ def rule_tuple_of(path):
     """
     rule_list  = []
     sealed_list = []
+    door_list   = []
     with open(path, "r", encoding="utf-8") as file_handle:
         for number, line in enumerate(file_handle, start=1):
             text = line.split("#", 1)[0].strip()
@@ -535,14 +544,18 @@ def rule_tuple_of(path):
             if text.startswith("SEALED "):
                 sealed_list.append(text[len("SEALED "):].strip())
                 continue
+            if text.startswith("DOOR "):
+                door_list.append(text[len("DOOR "):].strip())
+                continue
             left, arrow, right = text.partition("->")
             if not arrow:
                 raise ValueError("%s:%d: a rule reads "
-                                 "'<from> -> <to>' or 'SEALED "
-                                 "<glob>', and '%s' does neither"
+                                 "'<from> -> <to>', 'SEALED <glob>' "
+                                 "or 'DOOR <module>', and '%s' is "
+                                 "none of them"
                                  % (path, number, text))
             rule_list.append((left.strip(), right.strip()))
-    return tuple(rule_list), tuple(sealed_list)
+    return tuple(rule_list), tuple(sealed_list), tuple(door_list)
 
 
 def seal_violation_tuple(root, exclude_tuple, sealed_tuple):
@@ -588,6 +601,50 @@ def seal_violation_tuple(root, exclude_tuple, sealed_tuple):
             #  outside can be made to wait on it.
             if sealed_f(target):  continue
             found.append("%s -> %s" % (path, target))
+    return tuple(sorted(found))
+
+
+def door_violation_tuple(root, exclude_tuple, door_tuple):
+    """
+    RETURN: tuple[str], every import by which a module OUTSIDE a
+            component reaches past its door -- the importing module
+            named, and the module it reached for.
+
+    A DOOR IS THE ONE ENTRANCE. 'DOOR engine/compare/api' says: a
+    module outside 'engine/compare' may import 'engine/compare/api'
+    and nothing else beneath 'engine/compare'. The component's own
+    modules are unaffected -- a door is for callers, and a component's
+    parts are not callers.
+
+    JUDGED AT MODULE DEPTH, like a seal: the claim is about one
+    component and needs no depth at all.
+    """
+    if not door_tuple: return ()
+    path_tuple = module_tuple(root, exclude_tuple)
+    by_dotted  = {}
+    for path in path_tuple:
+        dotted = path[:-len(".py")].replace("/", ".")
+        by_dotted.setdefault(dotted, path)
+        if dotted.endswith(".__init__"):
+            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+
+    #  The door's own directory is the wall it stands in.
+    wall_db = {door: door.rsplit("/", 1)[0] for door in door_tuple}
+
+    found = []
+    for path in path_tuple:
+        name_tuple, _ = imported_tuple(root, path)
+        for dotted in name_tuple:
+            target = _matched(dotted, by_dotted)
+            if target is None: continue
+            stem = target[:-len(".py")] if target.endswith(".py") else target
+            for door, wall in wall_db.items():
+                if not stem.startswith(wall + "/"): continue
+                if stem == door:                    continue
+                #  INSIDE THE WALL IS NOT A CALLER.
+                if path.startswith(wall + "/"):     continue
+                found.append("%s -> %s (past the door '%s')"
+                             % (path, target, door))
     return tuple(sorted(found))
 
 
@@ -647,7 +704,7 @@ def main(argv=None, write=None):
 
     if check is not None:
         try:
-            rule_tuple, sealed_tuple = rule_tuple_of(check)
+            rule_tuple, sealed_tuple, door_tuple = rule_tuple_of(check)
         except ValueError as error:
             write("REFUSED: %s" % error)
             return 2
@@ -659,13 +716,18 @@ def main(argv=None, write=None):
         violation = violation_tuple(edge_db, rule_tuple)
         broken    = seal_violation_tuple(root, tuple(exclude),
                                          sealed_tuple)
-        if not violation and not broken:
+        entered   = door_violation_tuple(root, tuple(exclude),
+                                         door_tuple)
+        if not violation and not broken and not entered:
             write("LAYERING: every edge obeys '%s' (%d component(s), "
                   "%d edge(s))" % (check, len(edge_db),
                                    sum(len(v) for v in edge_db.values())))
             if sealed_tuple:
                 write("SEALED: %s -- nothing leaves"
                       % ", ".join(sealed_tuple))
+            if door_tuple:
+                write("DOORS: %s -- nothing enters but here"
+                      % ", ".join(door_tuple))
             return 1 if fault_tuple else 0
         if violation:
             write("LAYERING VIOLATED -- %d edge(s) no rule permits:"
@@ -675,6 +737,10 @@ def main(argv=None, write=None):
             write("SEAL BROKEN -- %d import(s) leave a sealed "
                   "component:" % len(broken))
             for text in broken: write("    %s" % text)
+        if entered:
+            write("DOOR PASSED -- %d import(s) reach into a component "
+                  "past its door:" % len(entered))
+            for text in entered: write("    %s" % text)
         return 1
 
     write({"tree":    lambda: tree_text(edge_db, member_db, depth),

@@ -1,0 +1,15 @@
+--- over stdin
+l1 x
+l3 x
+EXIT:     0
+--- over named input files, in order
+STIMULUS: python3 -m vut.services.pype keep-x.pype in-1.txt in-2.txt
+l1 x
+l3 x
+l5 x
+EXIT:     0
+--- dry run reads no input
+STIMULUS: python3 -m vut.services.pype --dry-run keep-x.pype
+dry run ok: 1 mode(s), 2 handler(s)
+EXIT:     0
+<hwut-end>

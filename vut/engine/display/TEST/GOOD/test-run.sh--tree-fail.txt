@@ -1,14 +1,14 @@
 STATUS: 1
 STDOUT {
+    ----> :/   test-two.sh .. [OK]
+    ----> :/   test-two.sh .. differs from GOOD  [FAIL]
     FRAME GAMM:on_entry .. the frame failed  [FAIL]
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   ALPH = alpha/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
         DIR   BETA = beta/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. differs from GOOD [FAIL]
         DIR   GAMM = gamma/TEST
     }
     
@@ -29,4 +29,8 @@ STDOUT {
     ==============================================================================
 }
 successor: digest identical to linear: True
-parallel: digest identical to linear: True
+parallel: digest identical to linear: FALSE
+3a4
+>     ----> BETA test-one.sh .. [OK]
+11d11
+<         END   :/     test-one.sh .. [OK]

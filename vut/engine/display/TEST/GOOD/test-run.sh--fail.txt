@@ -1,8 +1,8 @@
 STATUS: 1
 STDOUT {
     DIR   SUIT = suite/TEST
-    END   SUIT test-diff.sh ............................ differs from GOOD  [FAIL]
-    END   :/   test-ok.sh ................................................... [OK]
+    END   test-diff.sh ................................. differs from GOOD  [FAIL]
+    ----> test-ok.sh ........................................................ [OK]
     
     ==============================================================================
     DIRECTORIES                                             1 ok, 1 fail, hh:mm:ss

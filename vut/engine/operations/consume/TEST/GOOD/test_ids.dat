@@ -1,0 +1,24 @@
+##VUT-TEST-IDS 5
+G:19
+N:2
+A:0 test-accept.py
+N:0.7
+C:0.0 all_or_nothing
+C:0.1 initiate
+C:0.2 ledger
+C:0.3 pulls_run
+C:0.4 stderr
+C:0.5 take_dump
+C:0.6 the_loop
+A:1 test-equivalence-check.py
+N:1.10
+C:1.0 blind
+C:1.1 fast_fail
+C:1.2 named_absent
+C:1.3 nominal_missing
+C:1.4 observer
+C:1.5 provision_failed
+C:1.6 terminated
+C:1.7 unexpected_stderr
+C:1.8 unjudged
+C:1.9 verdict

@@ -5,7 +5,7 @@
 #     title      = "The hwut.sanitize face: what a tree accumulates"
 #     choices    = ["report", "session", "lock", "nameless", "out",
 #                   "orphans", "unreachable", "apply", "target",
-#                   "refused"]
+#                   "refused", "transient"]
 #     eq-pattern = ["STATUS: [0-9]"]
 # }
 #
@@ -15,7 +15,7 @@
 #
 # report       a bare command line REPORTS AND DOES NOT ACT -- what it
 #              found still stands afterwards.
-# session      '.hwut-session/' is wreckage; always safe.
+# session      'TMP/session/' is wreckage; always safe.
 # lock         a lock whose holder is GONE is offered; A LIVE LOCK IS
 #              NEVER OFFERED, not even under '--apply'. And a claim
 #              that CANNOT NAME ITS CLAIMANT is gone: honoured, it
@@ -60,14 +60,14 @@ face() {
     echo "STDOUT {"; sed 's|'"$WORK"'|<work>|g; s/[0-9]\+\.[0-9] kB/<size> kB/;
                         s/pid [0-9]\+/pid <n>/; s/[0-9]\+ s ago/<n> s ago/' \
                     < out.txt | sed 's/^/    /'; echo "}"
-    if [ -s err.txt ]; then echo "STDERR {"; sed 's/^/    /' < err.txt; echo "}"; fi
+    if [ -s err.txt ]; then echo "STDERR {"; sed 's/pid [0-9]\+/pid <n>/; s/^/    /' < err.txt; echo "}"; fi
 }
 
 tree() {                  #  one directory, one application, one choice
     mkdir -p tree/suite/TEST/GOOD
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#! /bin/bash\n# hwut { title = "A" }\necho "line"\necho "<hwut-end>"\n' \
+    printf '#! /bin/bash\n# @hwut { title = "A" }\necho "line"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-app.sh
     chmod +x tree/suite/TEST/test-app.sh
     printf 'line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
@@ -86,25 +86,25 @@ case "$1" in
 report)
     #  A BARE COMMAND LINE ACTS ON NOTHING.
     tree
-    mkdir -p tree/suite/TEST/.hwut-session tree/suite/TEST/OUT
-    touch tree/suite/TEST/.hwut-session/a.out tree/suite/TEST/OUT/product.txt
+    mkdir -p tree/suite/TEST/TMP/session tree/suite/TEST/OUT
+    touch tree/suite/TEST/TMP/session/a.out tree/suite/TEST/OUT/product.txt
     face --directory=tree
     listing
     ;;
 
 session)
     tree
-    mkdir -p tree/suite/TEST/.hwut-session
-    touch tree/suite/TEST/.hwut-session/a.out tree/suite/TEST/.hwut-session/a.err
+    mkdir -p tree/suite/TEST/TMP/session
+    touch tree/suite/TEST/TMP/session/a.out tree/suite/TEST/TMP/session/a.err
     face --directory=tree --session
     ;;
 
 lock)
     #  A LIVE LOCK IS NEVER OFFERED. The dead one is.
     tree
-    mkdir -p tree/suite/TEST/.hwut-lock
+    mkdir -p tree/suite/TEST/TMP/lock
     printf '{"pid": 999999, "started": 1.0, "acquired": 1.0}\n' \
-        > tree/suite/TEST/.hwut-lock/holder.json
+        > tree/suite/TEST/TMP/lock/holder.json
     echo "--- a holder that is gone:"
     face --directory=tree --lock
     #  A LIVE HOLDER RECORDS ITS OWN START TIME. A record WITHOUT one
@@ -117,10 +117,41 @@ from vut.auxiliary.directory_mutex import _process_start_time
 json.dump({'pid': os.getppid(),
            'started': _process_start_time(os.getppid()),
            'acquired': 1.0},
-          open('tree/suite/TEST/.hwut-lock/holder.json', 'w'))"
+          open('tree/suite/TEST/TMP/lock/holder.json', 'w'))"
     echo "--- a holder that LIVES (this very shell):"
     face --directory=tree --lock --apply
-    echo "the lock still stands: $([ -d tree/suite/TEST/.hwut-lock ] && echo yes || echo NO)"
+    echo "the lock still stands: $([ -d tree/suite/TEST/TMP/lock ] && echo yes || echo NO)"
+    ;;
+
+transient)
+    #  THE TWO ROOTS WHOLE (E-24). Reported with the rest silenced;
+    #  removed under --apply; a directory with a LIVE lock refused on
+    #  stderr and the walk goes on.
+    tree
+    mkdir -p tree/suite/TEST/OUT tree/suite/TEST/TMP/store \
+             tree/suite/TEST/TMP/session tree/other/TEST/GOOD \
+             tree/other/TEST/TMP/lock tree/other/TEST/OUT
+    echo x > tree/suite/TEST/OUT/product.txt
+    echo x > tree/suite/TEST/TMP/store/test-app.sh.stdout
+    echo x > tree/suite/TEST/TMP/session/a.out
+    echo x > tree/other/TEST/OUT/product.txt
+    cp tree/suite/TEST/test-app.sh tree/other/TEST/
+    printf 'line\n<hwut-end>\n' > tree/other/TEST/GOOD/test-app.sh.txt
+    echo "--- report: the roots, not their pieces"
+    face --directory=tree --transient
+    echo "--- a bare call never takes them"
+    face --directory=tree
+    python3 -c "
+import json, os, sys
+sys.path.insert(0, '$ROOT')
+from vut.auxiliary.directory_mutex import _process_start_time
+json.dump({'pid': os.getppid(),
+           'started': _process_start_time(os.getppid()),
+           'acquired': 1.0},
+          open('tree/other/TEST/TMP/lock/holder.json', 'w'))"
+    echo "--- apply: 'other' holds a live lock and is refused whole"
+    face --directory=tree --transient --apply
+    listing
     ;;
 
 nameless)
@@ -128,17 +159,17 @@ nameless)
     #  would block the directory for ever: no future run could break
     #  it and no cleaning could remove it.
     tree
-    mkdir -p tree/suite/TEST/.hwut-lock
+    mkdir -p tree/suite/TEST/TMP/lock
     echo "--- a record with no start time:"
     printf '{"pid": 1, "acquired": 1.0}\n' \
-        > tree/suite/TEST/.hwut-lock/holder.json
+        > tree/suite/TEST/TMP/lock/holder.json
     face --directory=tree --lock
     echo "--- a record of the wrong shape:"
     printf '{"pid": 1, "started": "yesterday"}\n' \
-        > tree/suite/TEST/.hwut-lock/holder.json
+        > tree/suite/TEST/TMP/lock/holder.json
     face --directory=tree --lock
     echo "--- no record at all:"
-    rm -f tree/suite/TEST/.hwut-lock/holder.json
+    rm -f tree/suite/TEST/TMP/lock/holder.json
     face --directory=tree --lock
     ;;
 
@@ -174,8 +205,8 @@ unreachable)
 
 apply)
     tree
-    mkdir -p tree/suite/TEST/.hwut-session tree/suite/TEST/OUT
-    touch tree/suite/TEST/.hwut-session/a.out tree/suite/TEST/OUT/a.txt
+    mkdir -p tree/suite/TEST/TMP/session tree/suite/TEST/OUT
+    touch tree/suite/TEST/TMP/session/a.out tree/suite/TEST/OUT/a.txt
     face --directory=tree --session --out --apply
     listing
     ;;

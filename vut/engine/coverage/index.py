@@ -72,8 +72,8 @@ from bisect      import bisect_right
 from dataclasses import dataclass
 
 from .record import union
-from ..bookkeeper.test_run_id import TestRunId          # noqa: F401
-from ..bookkeeper.group_table import (GroupTable,       # noqa: F401
+from ..bookkeeper.api import TestRunId          # noqa: F401
+from ..bookkeeper.api import (GroupTable,       # noqa: F401
                                       EMPTY_GROUP, GroupFault)
 
 

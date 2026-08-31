@@ -68,8 +68,14 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
     pair_list = [(app_place, "%s {" % app.source_file),
                  _line("title", app.title, None, 1, provenance_f, gnu_f)]
     if app.language is not None:
-        pair_list.append(_line("language", app.language, None, 1,
-                               provenance_f, gnu_f))
+        place, text = _line("language", app.language, None, 1,
+                            provenance_f, gnu_f)
+        #  NEVER SILENT (R-73): a language the extension selected is
+        #  said to be, whatever the flags -- the author did not write it.
+        if getattr(app, "language_derived_f", False):
+            text = "%s# derived: extension -> 'language-setup'" \
+                   % text.ljust(_VALUE_COLUMN)
+        pair_list.append((place, text))
 
     pair_list.append((app_place, "%schoices {" % _INDENT))
     for choice in sorted(app.choice_db, key=lambda c: (c is None, c or "")):

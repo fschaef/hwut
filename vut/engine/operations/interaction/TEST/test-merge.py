@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result       import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api    import ProcsitterConfig # noqa E402
 from   vut.engine.operations.consume.accept import (Accept,       # noqa E402
                                                      AcceptConfig,
                                                      AcceptStep,
@@ -60,9 +60,9 @@ from   vut.engine.operations.interaction.feed import (              # noqa E402
                                                     resolution_of)
 from   vut.engine.operations.interaction.feed import RemoteDisplay  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper)
-from   vut.engine.bookkeeper.stream_store           import Store          # noqa E402
+from   vut.engine.bookkeeper.api           import Store          # noqa E402
 
 
 def _check(pair_list):

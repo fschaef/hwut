@@ -54,8 +54,8 @@ import os
 
 from .affected  import record_iterable
 from .index     import index_of
-from ..bookkeeper.test_id_db  import TestIdDb, TestIdFault
-from ..bookkeeper.group_table import (GroupDb, GroupFault,
+from ..bookkeeper.api  import TestIdDb, TestIdFault
+from ..bookkeeper.api import (GroupDb, GroupFault,
                                       parse_group_table)
 
 BUNDLE_FILE    = "coverage-bundle.json"

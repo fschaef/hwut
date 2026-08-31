@@ -28,15 +28,15 @@
 #
 #     <work>/demo.py                              the source
 #     <work>/GOOD/demo.py--basic.txt              alpha, beta
-#     <work>/.hwut-store/demo.py--basic.stdout       alpha, BETA  (differs!)
-#     <work>/.hwut-store/...stdout.raw            raw sidecar
-#     <work>/.hwut-store/...stdout.times          cadence sidecar
+#     <work>/TMP/store/demo.py--basic.stdout       alpha, BETA  (differs!)
+#     <work>/TMP/store/...stdout.raw            raw sidecar
+#     <work>/TMP/store/...stdout.times          cadence sidecar
 #
 # THE KEY IS THE BOOKKEEPER'S: 'demo--basic', the source file's STEM --
 # what RECORDING uses. The old fixture spelled 'demo.py--basic', which
 # no real run ever writes; it named a corpus that could not exist, and
 # the face agreed with it because the face spelled the law twice.
-# Candidates live under '.hwut-store/', nominals under 'GOOD/'.
+# Candidates live under 'TMP/store/', nominals under 'GOOD/'.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -60,15 +60,15 @@ cd "$WORK"
 printf 'hwut {\n}\n' > hwut-root.conf
 
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
-    mkdir -p GOOD .hwut-store
+    mkdir -p GOOD TMP/store
     printf 'print("alpha")\nprint("beta")\n' > demo.py
     printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.txt
-    printf 'alpha\nBETA\n'                   > .hwut-store/demo.py--basic.stdout
+    printf 'alpha\nBETA\n'                   > TMP/store/demo.py--basic.stdout
     if [ "$1" != "bare" ]; then
         printf 'raw alpha\nraw BETA\n' \
-                                > .hwut-store/demo.py--basic.stdout.raw
+                                > TMP/store/demo.py--basic.stdout.raw
         printf '{"unit": "second", "delta_list": [0.0121, 1.5034]}\n' \
-                                > .hwut-store/demo.py--basic.stdout.times
+                                > TMP/store/demo.py--basic.stdout.times
     fi
 }
 
@@ -153,7 +153,7 @@ record = CoverageRecord("python", "coverage", "coverage.py-json",
                         file_db={"demo.py": FileCoverage(
                             "demo.py", ranges_of([1, 2, 3, 4, 5]),
                             ranges_of([1, 2]))})
-open(".hwut-store/demo--basic.cover", "wb").write(pack_record(record))
+open("TMP/store/demo--basic.cover", "wb").write(pack_record(record))
 book = {"demo": {"configuration": {}, "choices": {"basic": {
     "operations": {"Run": {"verdict": False, "report": "ok",
                            "coverage": "ok"}}}}}}

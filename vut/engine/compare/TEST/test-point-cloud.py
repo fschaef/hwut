@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(sys.argv[0]), "../../../../"))
 from vut.engine.compare.configuration   import Configuration      # noqa: E402
 import vut.engine.compare.main          as     main               # noqa: E402
 from vut.engine.compare.region.registry import RegionSyntaxError  # noqa: E402
-from vut.language_support.python.deterministic_random import DeterministicStream  # noqa: E402
+from vut.test_writing_support.python.deterministic_random import DeterministicStream  # noqa: E402
 
 if "--hwut-info" in sys.argv:
     print("Point-Cloud Region: coverage, pair, dist, constraint, errors;")

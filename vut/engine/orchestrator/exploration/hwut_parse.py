@@ -45,8 +45,21 @@ def text_of_file(directory, name, no_default_f=False,
     if spec is None or fault_list: return "", fault_list
 
     from .explorer import _resolve
-    return app_text(_resolve(spec), no_default_f, provenance_f,
-                    gnu_f), fault_list
+    return app_text(_resolve(spec, _inherited_of(directory)),
+                    no_default_f, provenance_f, gnu_f), fault_list
+
+
+def _inherited_of(directory):
+    """
+    RETURN: DirectorySpec, the root's word folded down to 'directory'
+            ('tree_explorer.ascended_spec') -- so that 'language-setup'
+            reaches a single-directory reading (R-73).
+            None where no 'hwut-root.conf' stands above: 'hwut.show'
+            works on a bare directory, and reads it bare.
+    """
+    from .tree_explorer import ascended_spec, RootConfMissing
+    try:                      return ascended_spec(directory)[0]
+    except RootConfMissing:   return None
 
 
 def text_of_directory(directory, interview_runner=None,
@@ -58,7 +71,8 @@ def text_of_directory(directory, interview_runner=None,
 
     The order is the explorer's: 'hwut.conf' first, then the files.
     """
-    result = explore(directory, interview_runner=interview_runner)
+    result = explore(directory, interview_runner=interview_runner,
+                     inherited=_inherited_of(directory))
     text_list = []
 
     spec = result.app_set.directory_spec

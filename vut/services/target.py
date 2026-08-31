@@ -47,7 +47,7 @@ import sys
 if __package__ in (None, ""):
     import _config; __package__ = _config.PACKAGE            # noqa: E702
 
-from   vut.engine.bookkeeper.stream_store   import DirectoryLock
+from   vut.engine.bookkeeper.api   import DirectoryLock
 from   vut.engine.orchestrator.exploration  import finder
 from   vut.engine.orchestrator.exploration  import reader
 from   ._exit                               import E_ExitCode

@@ -15,5 +15,6 @@ hwut.remove-choice exit 0: PURPOSE: THE 'hwut.remove-choice' COMMAND LINE -- ONE
 hwut.rename        exit 0: PURPOSE: THE 'hwut.rename' COMMAND LINE -- a test, or one choice of it,
 hwut.rename-choice exit 0: PURPOSE: THE 'hwut.rename-choice' COMMAND LINE -- ONE CHOICE renamed,
 hwut.sanitize      exit 0: PURPOSE: THE 'hwut.sanitize' COMMAND LINE -- what a tree accumulates,
+hwut.pype          exit 0: usage: hwut.pype [--trace] SCRIPT < input
 hwut              exit 0: hwut.run -- the tree run, rendered live
-hwut.pype          exit 1: usage: hwut.pype [--trace] SCRIPT < input
+hwut.pype          exit 2: usage: hwut.pype [--trace] SCRIPT < input

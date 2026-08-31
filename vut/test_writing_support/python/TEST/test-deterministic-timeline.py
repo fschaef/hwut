@@ -68,8 +68,8 @@ import asyncio
 
 import config                                                    # noqa: F401
 
-from vut.language_support.python.hwut_runner          import HwutRunner
-from vut.language_support.python.deterministic_timeline import (Trigger,
+from vut.test_writing_support.python.hwut_runner          import HwutRunner
+from vut.test_writing_support.python.deterministic_timeline import (Trigger,
                                                                 TriggerDispatcher)
 
 

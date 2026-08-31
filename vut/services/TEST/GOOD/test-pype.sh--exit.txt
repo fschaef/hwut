@@ -1,0 +1,3 @@
+STIMULUS: python3 -m vut.services.pype leave.pype
+EXIT:     7
+<hwut-end>

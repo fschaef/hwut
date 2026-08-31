@@ -11,7 +11,7 @@ named 'vut/', then inserts that directory's parent into sys.path.
 
 After 'import config' (as the first import in a test file), all of:
 
-    from vut.language_support.python.hwut_runner import HwutRunner
+    from vut.test_writing_support.python.hwut_runner import HwutRunner
     from vut.artifact                            import ...
 
 work normally.
@@ -37,4 +37,4 @@ while True:
         )
     _cur = _parent
 
-from vut.language_support.python.hwut_runner import HwutRunner # noqa E401
+from vut.test_writing_support.python.hwut_runner import HwutRunner # noqa E401

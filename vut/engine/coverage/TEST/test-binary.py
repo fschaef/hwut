@@ -46,7 +46,7 @@ from   vut.engine.coverage.record  import (CoverageRecord,       # noqa E402
 from   vut.engine.coverage.binary  import (pack_record,          # noqa E402
                                            unpack_record, MAGIC,
                                            FORMAT_VERSION, ESCAPE)
-from   vut.engine.bookkeeper.test_run_id import TestRunId        # noqa E402
+from   vut.engine.bookkeeper.api import TestRunId        # noqa E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importlib                                                 # noqa E402

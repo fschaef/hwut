@@ -3,8 +3,9 @@ $ hwut.cov --sideways
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]

@@ -1,6 +1,10 @@
-INSPECT: report = pype-interpreter-not-found
-         stdout = 'alpha\n'
+INSPECT: report   = pype-interpreter-not-found
+         provided = []
+         'stdout' in provided = False
+         records  = 2 (execution, canonicalisation)
   OK  : the report names the canonicaliser, not the application
-  OK  : the text is UNCHANGED -- never half a stream
-SUCCESS: a broken canonicaliser blames itself, not the code.
+  OK  : NOTHING is handed over -- never a stream the filter did not touch
+  OK  : and asking for one answers 'no', never an exception
+  OK  : the attribution carries both calls: the application's and the canonicaliser's
+SUCCESS: a broken canonicaliser ends provision and blames itself, not the code.
 <hwut-end>

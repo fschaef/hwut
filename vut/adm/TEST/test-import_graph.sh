@@ -50,7 +50,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "adm/import_graph.py: who depends on whom, and the layering;"
-        echo "CHOICES: depth, formats, layering, shared, unreadable, refused, vut;"
+        echo "CHOICES: depth, formats, layering, shared, unreadable, refused, vut, door;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -174,6 +174,27 @@ layering)
     printf 'from tree.engine.plan.wish import Wish\n' \
         >> tree/base/contract/enums.py
     face tree --depth=1 --check=sealed.txt
+
+    #  A DOOR IS THE MIRROR OF A SEAL: a seal says NOTHING LEAVES, a
+    #  door says NOTHING ENTERS BUT HERE. Judged at MODULE depth too,
+    #  and a component's own modules are not callers.
+    echo "--- DOOR: one module is a component's only entrance. Here"
+    echo "    every caller already reaches PAST it, and each is named"
+    printf 'from tree.engine.store.book import Book\n' \
+        > tree/engine/plan/api.py
+    printf 'faces -> *\nengine -> *\nbase -> *\nDOOR engine/plan/api\n' \
+        > door.txt
+    face tree --depth=1 --check=door.txt
+    echo "--- every caller through the door instead, and the tree is"
+    echo "    obedient -- while the component's OWN module still"
+    echo "    reaches its parts freely: a door is for callers, and a"
+    echo "    part is not a caller"
+    printf 'from tree.engine.plan.api import Wish\n' > tree/faces/show.py
+    printf 'from tree.engine.plan.api import Wish\n' > tree/faces/run.py
+    printf 'E_Kind = 1\n' > tree/base/contract/enums.py
+    printf 'from tree.engine.plan.wish import Wish\n' \
+        >> tree/engine/plan/api.py
+    face tree --depth=1 --check=door.txt
     ;;
 
 unreadable)

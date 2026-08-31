@@ -86,18 +86,11 @@ def explore(directory, interview_runner=None, inherited=None):
         #  is most tempting to write is the one place nobody checks.
         if directory_spec is not None:
             from .tree_explorer import (ROOT_CONF_ONLY_FIELD_TUPLE,
-                                        ROOT_CONF_NAME, KEY_OF_FIELD)
+                                        root_only_fault)
             for name in ROOT_CONF_ONLY_FIELD_TUPLE:
                 if getattr(directory_spec, name):
-                    fault_list.append(Fault(
-                        E_FaultKind.VOCABULARY, finder.CONF_NAME,
-                        directory_spec.position,
-                        "'%s' outside '%s': a variant group is a "
-                        "DIMENSION and the selection is made once for "
-                        "the whole run, so the groups are declared "
-                        "once, at the root"
-                        % (KEY_OF_FIELD.get(name, name),
-                           ROOT_CONF_NAME)))
+                    fault_list.append(root_only_fault(
+                        name, finder.CONF_NAME, directory_spec.position))
         if directory_spec is None:
             directory_spec = DirectorySpec(language_setup={},
                                            dependency={})
@@ -167,6 +160,25 @@ def explore(directory, interview_runner=None, inherited=None):
         fault_list = tuple(fault_list))
 
 
+def _language_of(spec, directory_spec):
+    """
+    RETURN: [0] str | None, the language of the test application: the
+                header's 'language' word where stated, else the one
+                whose 'language-setup' entry claims the file's
+                extension, else None -- an EXECUTABLE, the she-bang
+                decides (R-73).
+            [1] bool, True where [0] was DERIVED from the extension
+                rather than stated: never silent.
+    """
+    if spec.language is not None: return spec.language, False
+    setup_db = getattr(directory_spec, "language_setup", None) or {}
+    suffix   = os.path.splitext(spec.source_file)[1]
+    if not suffix: return None, False
+    for language, setup in setup_db.items():
+        if suffix in setup.extensions: return language, True
+    return None, False
+
+
 def _resolve(spec, directory_spec=None):
     """
     RETURN: CTestApp, 'spec' folded: the directory's 'default_app' is the
@@ -190,9 +202,11 @@ def _resolve(spec, directory_spec=None):
         origin_db[name] = provenance.of_choice(spec, name, default_app,
                                                directory_spec)
 
+    language, derived_f = _language_of(spec, directory_spec)
     return CTestApp(source_file = spec.source_file,
                     title       = spec.title,
-                    language    = spec.language,
+                    language    = language,
+                    language_derived_f = derived_f,
                     choice_db   = choice_db,
                     origin      = spec.origin,
                     position    = spec.position,

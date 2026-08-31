@@ -4,8 +4,8 @@ TREE  1 directory(ies)
 FAULT SUIT: hwut.conf:2:3: DIRECTORY: a broken statement
 DIR   SUIT = suite/TEST
 FRAME SUIT:on_entry ..................................................... [OK]
-END   SUIT test-a.sh .................................................... [OK]
-END   :/   test-b.sh .............................. stalled, no output  [FAIL]
+END   test-a.sh ......................................................... [OK]
+----> test-b.sh ................................... stalled, no output  [FAIL]
 FRAME SUIT:on_exit .................................. the frame failed  [FAIL]
 DONE  SUIT ................................................. 1 of 2 ok  [FAIL]
 TREE  done, 2 failure(s)

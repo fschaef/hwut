@@ -6,7 +6,7 @@
 #                   "cpu_time", "disk_space_low", "disk_usage",
 #                   "file_size", "memory", "no_psutil", "output_gap",
 #                   "pids", "self_exit_codes", "stderr_tail_cap",
-#                   "wall_clock"]
+#                   "wall_clock", "created_files"]
 #     eq-pattern = ["SUCCESS.*"]
 #     interactive = true
 # }
@@ -35,6 +35,11 @@ CHOICES:
   output_gap:  the SILENCE cap -- silence measured on the WIRE: a
                mute call and a BLOCK-BUFFERED talker are both stalled;
                a flushing talker outlives the gap untouched.
+  created_files: what the call MADE AND LEFT -- under the work dir
+               (relative) and under the configured scratch ground,
+               which the call sees as TMPDIR (absolute); what it made
+               and removed is not listed; the work dir's own 'TMP/'
+               is the framework's and never the call's.
   no_psutil:   psutil absent -> memory/pid caps reported in .unenforced,
                wall clock still enforced.
   cancelled_run: an INTERRUPTED run (Ctrl-C, a logout killing the
@@ -64,6 +69,8 @@ AUTHOR: Frank-Rene Schaefer
 """
 
 import asyncio
+import os
+import re
 import logging
 import sys
 import tempfile
@@ -118,6 +125,53 @@ async def _run(config, app_code):
 
 
 # ---------------------------------------------------------------------------
+
+async def test_created_files():
+    """'created_tuple': before-and-after over the work dir and the
+    scratch ground exported as TMPDIR."""
+    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work:
+        scratch = os.path.join(work, "TMP", "scratch", "call")
+        os.makedirs(os.path.join(work, "already"))
+        config = ProcsitterConfig(max_wall_clock_sec=15.0, scratch_dir=scratch)
+        app    = ("import os, tempfile\n"
+                  "open('left.txt', 'w').close()\n"
+                  "os.makedirs('made/deep')\n"
+                  "open('made/deep/file.txt', 'w').close()\n"
+                  "open('gone.txt', 'w').close(); os.remove('gone.txt')\n"
+                  "os.makedirs('TMP/session'); open('TMP/session/x', 'w').close()\n"
+                  "d = tempfile.mkdtemp(prefix='leak_')\n"
+                  "open(os.path.join(d, 'inside.txt'), 'w').close()\n"
+                  "tempfile.mkstemp(prefix='handle_')\n")
+        result = await Procsitter(config, work).run(_argv(app))
+        shown  = [(x.replace(scratch, "<scratch>") if x.startswith(scratch)
+                   else x) for x in result.created_tuple]
+        #  the scratch leak's random name is not for the record
+        shown  = [re.sub(r"(leak_|handle_)[A-Za-z0-9_]+", r"\1<random>", x)
+                  for x in shown]
+        print("INSPECT: created_tuple ->")
+        for line in shown: print("           %s" % line)
+        ok = _check([
+            ("left.txt" in shown,
+             "a file made beside the source is listed"),
+            ("made/deep/file.txt" in shown and "made" in shown,
+             "a directory and what it holds, both listed"),
+            ("gone.txt" not in shown,
+             "a file made and removed is NOT listed"),
+            ("already" not in shown,
+             "what stood before the call is NOT listed"),
+            (not any(x.startswith("TMP") for x in shown),
+             "the work dir's own 'TMP/' is the framework's, never listed"),
+            (any(x.startswith("<scratch>/leak_") for x in shown)
+             and any(x.endswith("inside.txt") for x in shown),
+             "a scratch directory the call leaked is listed, absolute, "
+             "with what it holds"),
+            (any("handle_" in x for x in shown),
+             "an unlinked-never temp file is listed"),
+            (result.containment is E_Containment.OK_COMPLETED,
+             "the call completed; listing is observation, not a cap"),
+        ])
+        _verdict(ok, "created_tuple names what the call made and left.")
+
 
 async def test_wall_clock():
     """A sleeping (hanging) test burns no CPU; only the wall-clock cap can
@@ -595,6 +649,7 @@ if __name__ == "__main__":
             "self_exit_codes":  test_self_exit_codes,
             "stderr_tail_cap":  test_stderr_tail_cap,
             "command_guard":    test_command_guard,
+            "created_files":    test_created_files,
         },
         happy      = "SUCCESS.*",
     ).run()

@@ -79,6 +79,9 @@ _PRECEDENCE = (
     E_TestRunResult.UNEXPECTED_STDERR,
     # -- the judgement: everything ran, the subject does not match
     E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
+    E_TestRunResult.NOT_EQUIVALENT_GREW,
+    E_TestRunResult.NOT_EQUIVALENT_SHRANK,
+    E_TestRunResult.NOT_EQUIVALENT_DIVERGED,
     # -- the display, which cannot make a test wrong
     E_TestRunResult.DISPLAY_TARGET_UNREACHABLE,
 )
@@ -171,4 +174,11 @@ class TestResult:
         reason = first_by_precedence(reason_list)
         if reason is not E_TestRunResult.OK:  return reason
         if self.verdict:                      return E_TestRunResult.OK
+        #  THE RUN SAYS 'differs', AND NO MORE. Comparison aborts at
+        #  the first difference it can state (compare/main.py: "as soon
+        #  as False can be stated it aborts, not consuming any further
+        #  input"), so at this moment neither text has been read
+        #  whole. GREW and SHRANK are claims ABOUT THE WHOLE TEXT and
+        #  are not this stage's to make; 'hwut.report' reads whole
+        #  files afterwards and says which shape it is (E-31).
         return E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL

@@ -29,7 +29,7 @@ from   pathlib     import Path
 from   typing      import Optional, Sequence
 
 from   .result                  import E_TestRunResult
-from   ..procsitter.procsitter  import (Procsitter,
+from   ..procsitter.api  import (Procsitter,
                                         E_Containment)
 
 

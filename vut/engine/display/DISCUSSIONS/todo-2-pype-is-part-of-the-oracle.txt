@@ -32,7 +32,7 @@ WHAT FOLLOWS FROM IT
      and not a convenience filter; it is code that decides what the
      test says.
   -  IT DESERVES ITS OWN TESTS where it carries real logic.
-     'engine/hwut_pype/TEST' tests the LANGUAGE; a script that
+     'test_writing_support/hwut_pype/TEST' tests the LANGUAGE; a script that
      collects, sorts and re-elides a flow is a program, and a program
      nobody tested is a program nobody knows.
   -  THE MANUAL MUST SAY IT PLAINLY, beside the first example that

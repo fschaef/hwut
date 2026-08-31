@@ -23,7 +23,7 @@ open question -- the framework learns '.txt', or the files are moved
 to '.out'/'.err' when 2.0 is functional. RULED: not now.
 
 ----------------------------------------------------------------------------
-r-2   8 x  -- 'hwut-info.dat' IS NOT READ                       ** OPEN **
+r-2   8 x  -- 'hwut-info.dat' IS NOT READ                     ** CLOSED **
 ----------------------------------------------------------------------------
     7  test-test_id_db.py [every choice]  'killed by the supervisor'
     1  benchmark-hwut_hocon.py            3 faults, read as a header
@@ -38,13 +38,21 @@ she-bang, because the directory states its interpreter. VUT 2.0 does
 not read that file, so it launches the application BY ITS OWN NAME,
 finds no she-bang, and reports a containment that never happened.
 
-'language_support/python/TEST/hwut-info.dat' likewise says
+'test_writing_support/python/TEST/hwut-info.dat' likewise says
 '--not benchmark*.py'; unread, the benchmark's SAMPLE HOCON is taken
 for a header and faults three times.
 
 THIS IS THE RENOVATOR GAP (todo-1), and it now accounts for more of
 the residue than everything except the suffix. A tree that states its
 own interpreter perfectly, to a framework that cannot hear it.
+
+CLOSED (2026-08-30, R-73): the root cause was NO DERIVATION in the
+exploration, not the unread file. 'language-setup' in 'hwut-root.conf'
+now binds '.py' to python and names the interpreter, so the seven
+choices run as 1.0 ran them, she-bang or none. What 'hwut-info.dat'
+still says that the framework does not hear is the '--not' line; that
+becomes 'ignore' in the directory's 'hwut.conf', and renovate (todo-1)
+translates it. The benchmark is that case.
 
 ----------------------------------------------------------------------------
 r-3   6 x  -- CAPS BITE HONESTLY                                ** OPEN **

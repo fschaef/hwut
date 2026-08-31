@@ -39,7 +39,7 @@ from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.exploration.tree_explorer import (explore_tree,
                                                                RootConfMissing)
-from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
+from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 
 
 def banner(label):

@@ -40,7 +40,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result       import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api    import ProcsitterConfig # noqa E402
 from   vut.engine.operations.build_action import (BuildConfig,   # noqa E402
                                                    E_BuildSystem)
 from   vut.engine.operations.configuration   import (              # noqa E402
@@ -54,12 +54,12 @@ from   vut.engine.operations.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.operations.observer        import ObserverGroup  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
-from   vut.engine.bookkeeper.stream_store import Store  # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import Bookkeeper      # noqa E402
+from   vut.engine.bookkeeper.api import Store  # noqa E402
+from   vut.engine.bookkeeper.api import Bookkeeper      # noqa E402
 from   vut.engine.operations.consume.loaded import loaded        # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper)
-from   vut.engine.bookkeeper.stream_store           import Store          # noqa E402
+from   vut.engine.bookkeeper.api           import Store          # noqa E402
 
 
 def _check(pair_list):
@@ -124,7 +124,9 @@ def test_verdict():
         (differs.verdict is False,
          "a differing subject fails"),
         (differs.report is E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
-         "and the report names the MISMATCH, nothing else being wrong"),
+         "and the report names the MISMATCH, nothing else being "
+         "wrong -- the SHAPE of it is 'hwut.report''s, afterwards, "
+         "since comparison aborts before either text is whole"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "the verdict follows the comparison, and names itself.")

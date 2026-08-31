@@ -23,63 +23,7 @@ $ hwut.cov <dir>f<dir>o<dir>r<dir>m<dir>a<dir>t<dir>s<dir>
       verilator          verilator-dat            -
       verilator_coverage lcov-tracefile           lcov
 
-    CANDIDATES PER LANGUAGE, IN ELECTION ORDER ('*' = read by this build)
-      ada            gcov*  gnatcoverage
-      assembly       kcov*  gcov*
-      bash           kcov*  bashcov
-      c              gcov*  llvm-cov*  kcov*
-      c#             coverlet*  cobertura*  dotcover  opencover  altcover
-      c++            gcov*  llvm-cov*  kcov*
-      clojure        cloverage
-      cobol          gcov*
-      common-lisp    sb-cover
-      crystal        kcov*
-      cython         coverage*
-      d              dmd  gcov*  llvm-cov*
-      dart           lcov*  dart
-      delphi         
-      elixir         excoveralls  cover
-      erlang         cover
-      f#             coverlet*  cobertura*  altcover
-      flutter        lcov*  flutter
-      fortran*       gcov*  kcov*
-      go             go*  gcov*
-      groovy         jacoco*  cobertura*
-      haskell        hpc
-      java           jacoco*  cobertura*  clover  jcov
-      javascript     node*  c8*  lcov*  cobertura*  nyc  istanbul
-      julia          lcov*  julia
-      kotlin         jacoco*  cobertura*  kover
-      lua*           luacov*
-      matlab         matlab
-      modula-2       gcov*
-      nim            gcov*  lcov*
-      objective-c    gcov*  llvm-cov*
-      objective-c++  gcov*  llvm-cov*
-      ocaml          bisect-ppx
-      octave         octave
-      pascal         
-      perl           cover  Devel::Cover
-      php            cobertura*  phpunit  xdebug  pcov  phpdbg
-      powershell     pester
-      prolog         swipl
-      python*        coverage*  slipcover  trace
-      r              covr
-      ruby           cobertura*  simplecov*
-      rust           cargo-llvm-cov*  grcov*  llvm-cov*  kcov*  tarpaulin
-      scala          scoverage*  jacoco*  cobertura*
-      shell          kcov*  bashcov
-      solidity       solidity-coverage
-      swift          llvm-cov*  xccov
-      systemverilog  verilator*  verilator_coverage*  vcover  urg  imc
-      tcl            
-      typescript     node*  c8*  lcov*  cobertura*  nyc  istanbul
-      vala           gcov*
-      vb.net         coverlet*  cobertura*  opencover
-      verilog        verilator*  verilator_coverage*  vcover  urg  imc
-      vhdl           gcov*  ghdl*  vcover  urg  imc
-      zig            kcov*  llvm-cov*
-      zsh            
+    The candidates per language stand in 'language-setup' of 'hwut-root.conf'.
     [status 0]
 SUCCESS: the table has one author, the registry, and this is its printout.
 <hwut-end>

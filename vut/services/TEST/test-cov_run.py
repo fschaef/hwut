@@ -31,10 +31,12 @@ PURPOSE: 'hwut.cov' END TO END -- the demand through the real door, the
             GOOD/              nominals, and 'test_ids.dat' seeding
                                ids for test-py and test-hang
 
-    The tool is the WITNESS reader, registered here and STATED in the
-    demand handed to the face ('CoverageConfig(tool="witness")', the
-    seam '--variant' will fill, todo-13), so the run is deterministic
-    on any machine: the chain is the unit, not a real coverage tool.
+    The tool is the WITNESS reader, registered here and NAMED IN THE
+    FIXTURE'S OWN 'hwut-root.conf' -- 'language-setup { python {
+    coverage = ["witness"] } }' (coverage D-26, the one source) -- with
+    a 'witness' executable placed on PATH so that election finds it. The
+    run is deterministic on any machine: the chain is the unit, not a
+    real coverage tool.
 
 CHOICES: run, door;
 
@@ -56,22 +58,32 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 import config                                                    # noqa F401
-from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
+from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.services.cov import main as cov_main   # noqa E402
 from   vut.services.run import main as run_main   # noqa E402
-from   vut.engine.bookkeeper.bookkeeper     import Bookkeeper          # noqa E402
-from   vut.engine.bookkeeper.test_id_db     import TestIdDb            # noqa E402
-from   vut.engine.coverage.reader           import (CCoverageFramework,
+from   vut.engine.bookkeeper.api     import Bookkeeper          # noqa E402
+from   vut.engine.bookkeeper.api     import TestIdDb            # noqa E402
+from   vut.engine.coverage.api           import (CCoverageFramework,
                                                   CCoverageFormat, register, # noqa E402
                                                   record_of,
                                                   artifact_directory_of)
-from   vut.engine.coverage.binary           import unpack_record       # noqa E402
-from   vut.engine.coverage.record           import format_record       # noqa E402
-from   vut.engine.coverage.configuration    import CoverageConfig       # noqa E402
+from   vut.engine.coverage.api           import unpack_record       # noqa E402
+from   vut.engine.coverage.api           import format_record       # noqa E402
+from   vut.engine.coverage.api    import CoverageConfig       # noqa E402
 
-DEMAND = CoverageConfig(tool="witness")     # what '--variant' will select
+DEMAND = CoverageConfig()                   # what THIS RUN gathers; the tool
+                                            # is the root conf's word (D-26)
+ROOT_CONF = """\
+hwut {
+    language-setup {
+        python { extensions  = [".py"]
+                 interpreter = "python3"
+                 coverage    = ["witness"] }
+    }
+}
+"""
 
 WITNESS_FILE = "witness.json"
 
@@ -140,7 +152,16 @@ def fixture():
     #  THE TREE'S BOUNDARY: every face ascends collecting
     #  'hwut.conf' until it meets this file; a tree without one
     #  is refused, so a fixture states its own.
-    tree_boundary(root)
+    tree_boundary(root, ROOT_CONF)
+    #  ELECTION ASKS THE SYSTEM whether a candidate can be launched:
+    #  a 'witness' that can be found is what makes the table's word
+    #  come true here.
+    tool_dir = os.path.join(root, "bin")
+    os.makedirs(tool_dir)
+    with open(os.path.join(tool_dir, "witness"), "w") as fh:
+        fh.write("#! /bin/sh\nexit 0\n")
+    os.chmod(os.path.join(tool_dir, "witness"), 0o755)
+    os.environ["PATH"] = tool_dir + os.pathsep + os.environ.get("PATH", "")
     test = os.path.join(root, "suite", "TEST")
     good = os.path.join(test, "GOOD")
     os.makedirs(good)

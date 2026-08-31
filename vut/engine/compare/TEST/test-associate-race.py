@@ -31,7 +31,7 @@ import vut.engine.compare.main          as main
 import vut.engine.compare.engine.pretty as pretty
 import vut.engine.compare.TEST.line_provider as line_provider
 
-from   vut.language_support.python.deterministic_random import DeterministicStream
+from   vut.test_writing_support.python.deterministic_random import DeterministicStream
 
 async def test(subject_timeline, nominal_timeline):
     config = Configuration()

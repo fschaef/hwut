@@ -11,8 +11,8 @@ named 'vut/', then inserts that directory's parent into sys.path.
 
 After 'import config' (as the first import in a test file), all of:
 
-    from vut.language_support.python.hwut_runner import HwutRunner
-    from vut.engine.procsitter.procsitter              import ...
+    from vut.test_writing_support.python.hwut_runner import HwutRunner
+    from vut.engine.procsitter.api              import ...
 
 work normally.
 
@@ -43,4 +43,4 @@ while True:
 #  it is this file that knows where 'vut' is.
 VUT_DIRECTORY = _cur
 
-from vut.language_support.python.hwut_runner import HwutRunner # noqa E401
+from vut.test_writing_support.python.hwut_runner import HwutRunner # noqa E401

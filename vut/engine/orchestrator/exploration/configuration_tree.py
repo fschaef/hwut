@@ -105,17 +105,12 @@ class Build(_Scope):
     'caps' here caps the BUILD process; the caps at choice level cap the
     RUN. One noun, one meaning, two places.
 
-    'coverage_target' names the COVERAGE-CAPABLE application, as the
-    author's build rules know it ('cov-parse.exe'). Under 'hwut.cov'
-    that target is built and run in place of 'executable'; the name is
-    the whole communication with the build system. An author may name
-    it the same as 'executable'. REQUIRED under coverage: its absence
-    is noted as 'NO_COVERAGE_TARGET' on the run's book entry, and the
-    run continues with 'executable' (coverage RATIONALE D-19)."""
-    framework:       str  | None = None
-    executable:      str  | None = None
-    coverage_target: str  | None = None
-    caps:            Caps | None = None
+    '%' in 'framework' and 'executable' is the SOURCE FILE'S STEM (R-74).
+    The coverage target is NOT here: it is the language's word,
+    'language-setup.<lang>.coverage_target' (R-73)."""
+    framework:  str  | None = None
+    executable: str  | None = None
+    caps:       Caps | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,10 +174,28 @@ class TestAppSpec:
 
 @dataclass(frozen=True, slots=True)
 class LanguageSetup:
-    """The tooling for one language, as 'hwut.conf' states it."""
-    interpreter: str | None = None
-    coverage:    str | None = None
-    profiler:    str | None = None
+    """EVERYTHING HWUT DOES WITH ONE LANGUAGE, as 'hwut-root.conf' states
+    it (R-73). The entry's NAME is the language, and a file's 'language'
+    word selects it by that name.
+
+    'extensions'       the file extensions that select this entry where
+                       a header states no 'language'; each with its dot
+    'interpreter'      the call for an INTERPRETED test, argv prefix;
+                       the language's own name where unstated (R-10)
+    'coverage'         the candidate coverage tools, PREFERENCE ORDER;
+                       the empty tuple is an answer (coverage D-2)
+    'coverage_target'  the COVERAGE-CAPABLE build target, '%' the source
+                       file's stem (R-74); under 'hwut.cov' it is built
+                       and run in place of 'build.executable'. Unstated
+                       for a COMPILED test: noted 'NO_COVERAGE_TARGET'
+                       on the book entry, the run continues with the
+                       executable (coverage D-19)
+    'profiler'         declared, not yet consumed"""
+    extensions:      tuple      = ()
+    interpreter:     str | None = None
+    coverage:        tuple      = ()
+    coverage_target: str | None = None
+    profiler:        str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,6 +280,9 @@ class CTestApp:
     origin:      E_Origin
     position:    Position
     origin_db:   dict = None              # choice -> {name: str}
+    #  R-73: True where 'language' was DERIVED from the file's extension
+    #  through 'language-setup', not stated by the header. Never silent.
+    language_derived_f: bool = False
 
 
 @dataclass(frozen=True, slots=True)

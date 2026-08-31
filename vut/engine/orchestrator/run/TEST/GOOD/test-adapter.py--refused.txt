@@ -1,6 +1,8 @@
-INSPECT: an unknown language -> no interpreter declared for language 'klingon'
+INSPECT: an unknown language  -> interpreter ['klingon']
+         a stated interpreter -> interpreter ['python3', '-u']
          a marker pair of one -> 'analogy' is a marker PAIR; 1 stated
-  OK  : the unknown language is named in its refusal
+  OK  : the unknown language is called by its own name
+  OK  : 'language-setup' names the call, split as a shell would
   OK  : the malformed pair is named in its refusal
-SUCCESS: what cannot be translated is refused, by name.
+SUCCESS: what cannot be translated is refused, by name; what is merely unknown is called by its own name.
 <hwut-end>

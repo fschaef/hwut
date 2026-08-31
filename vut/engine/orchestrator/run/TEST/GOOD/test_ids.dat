@@ -1,0 +1,6 @@
+##VUT-TEST-IDS 5
+G:2
+N:1
+A:0 test-adapter.py
+N:0.1
+C:0.0 refused

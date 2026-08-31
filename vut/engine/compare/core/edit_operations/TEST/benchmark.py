@@ -16,7 +16,7 @@ from typing import List, Tuple
 # Ensure VUT is in path
 sys.path.insert(0, "../" * 8)
 
-from vut.language_support.python.deterministic_random import DeterministicStream
+from vut.test_writing_support.python.deterministic_random import DeterministicStream
 from vut.engine.compare.reading.line_element import E_ToleranceId, LineElement, LineElementString
 from vut.engine.compare.engine.line import Line
 import vut.engine.compare.core.edit_operations.line as edit_line

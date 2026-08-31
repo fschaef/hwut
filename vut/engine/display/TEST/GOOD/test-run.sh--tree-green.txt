@@ -1,16 +1,16 @@
 STATUS: 0
 STDOUT {
+    ----> :/   test-two.sh .. [OK]
+    ----> :/   test-two.sh .. [OK]
+    ----> :/   test-two.sh .. [OK]
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   ALPH = alpha/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
         DIR   BETA = beta/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
         DIR   GAMM = gamma/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
     }
     
     ==============================================================================
@@ -21,5 +21,17 @@ STDOUT {
     GAMM  gamma/TEST .. [OK]     2 of   2 ok
     ==============================================================================
 }
-successor: digest identical to linear: True
-parallel: digest identical to linear: True
+successor: digest identical to linear: FALSE
+4a5
+>     ----> GAMM test-one.sh .. [OK]
+13d13
+<         END   :/     test-one.sh .. [OK]
+parallel: digest identical to linear: FALSE
+3a4
+>     ----> BETA test-one.sh .. [OK]
+4a6
+>     ----> GAMM test-one.sh .. [OK]
+11d12
+<         END   :/     test-one.sh .. [OK]
+13d13
+<         END   :/     test-one.sh .. [OK]

@@ -56,7 +56,7 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.language_support.python.hwut_hocon import (parse, SourceLine,
+from vut.test_writing_support.python.hwut_hocon import (parse, SourceLine,
                                                       ScalarNode, ListNode,
                                                       ObjectNode)
 

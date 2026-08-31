@@ -1,10 +1,10 @@
-INSPECT: no coverage asked          -> target ['app.exe']
-INSPECT: asked, target declared     -> target ['cov-app.exe']
-INSPECT: asked, NO target declared  -> target ['app.exe']
+INSPECT: no coverage asked          -> target ['test-app.exe']
+INSPECT: asked, target declared     -> target ['test-app.cov.exe']
+INSPECT: asked, NO target declared  -> target ['test-app.exe']
 INSPECT: caps under coverage: wall lifted cpu lifted memory 256 MB
   OK  : time is luxury under coverage and is lifted; memory keeps the machine alive and stands
-  OK  : without coverage the executable is the one target
-  OK  : under coverage the COVERAGE TARGET is built and run in its place -- the name is the whole communication
-  OK  : a compiled test declaring none builds its executable as ever; the note NO_COVERAGE_TARGET rides on the entry
+  OK  : without coverage the executable is the one target, '%' the stem
+  OK  : under coverage the language's COVERAGE TARGET is built and run in its place -- the name is the whole communication
+  OK  : a language declaring none builds the executable as ever; the note NO_COVERAGE_TARGET rides on the entry
 SUCCESS: the demand shapes the build; a missing declaration is noted, not fatal.
 <hwut-end>

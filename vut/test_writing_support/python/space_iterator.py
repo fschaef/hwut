@@ -5,7 +5,7 @@ PURPOSE:
        scenario parameterization in general.
 
 SYNOPSIS:
-       import hwut.language_support.python.space_iterator as generator
+       import hwut.test_writing_support.python.space_iterator as generator
 
        basis [
            list of values for 'a',

@@ -63,7 +63,7 @@ from typing      import Mapping
 
 from .measure import (measure_of_tag, name_tuple as measure_name_tuple,
                       measure_of, tag_tuple)
-from ..bookkeeper.test_run_id import (TestRunId, run_id_of_text,
+from ..bookkeeper.api import (TestRunId, run_id_of_text,
                                       RunIdFault)
 
 

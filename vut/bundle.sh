@@ -15,7 +15,7 @@ LIST_FILE=""
 DIRS=()
 EXTENSIONS=()
 EXTRA_FILES=()
-EXCLUDE_PATTERNS=(.git .hwut-store __pycache__ .ruff_cache OUT
+EXCLUDE_PATTERNS=(.git TMP __pycache__ .ruff_cache OUT
                   .mypy_cache .pytest_cache '*.egg-info' .venv node_modules)
 EXCLUDE_GIVEN=0
 EXCLUDE_PATH_GLOBS=()

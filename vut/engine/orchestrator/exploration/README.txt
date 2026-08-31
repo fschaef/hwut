@@ -101,17 +101,26 @@ cannot make.
                             caps { ... }
                         }
 
-                    'framework'  the build framework; '%' expands to the
-                                 source file's stem
+                    'framework'  the build framework
                     'executable' the artefact to call; the source file's
                                  stem where unstated
                     'caps'       the caps of the BUILD process
+
+                    '%' in 'framework' and 'executable' is the SOURCE
+                    FILE'S STEM (section 4.1). The coverage-capable
+                    target is NOT stated here: it is the language's
+                    word, 'language-setup.<lang>.coverage_target'
+                    (section 7), and a 'coverage_target' inside 'build'
+                    is refused by name.
 
     CANONICALISATION -- the D of Equivalence(D(b_pole), D(b), T)
         pype        pype script that rewrites a stream into canonical
                     form. PYPE-ING IS ONLY EVER APPLIED TO STDOUT --
                     not to stderr (never read as a subject), not to
                     files (not a stream; read whole, after the end).
+                    A first word ending in '.pype' is run by the
+                    interpreter, whatever the file's she-bang or mode
+                    (E-28); any other first word runs as stated.
 
     WHAT THE TEST PRODUCES
         output      the subjects, in order. Absent: '<stdout>' alone.
@@ -283,6 +292,21 @@ compiler or interpreter reads it.
 effective value of every parameter with its provenance.
 
 
+4.1  '%' IS THE SOURCE FILE'S STEM
+______________________________________________________________________________
+
+Wherever a NAME OR A COMMAND about one test application is stated, '%'
+expands to the stem of its source file -- 'test-parse.c' gives
+'test-parse' -- and '%%' is one literal '%'. It is admitted in:
+
+    build.framework                        header, 'apps'
+    build.executable                       header, 'apps'
+    language-setup.<lang>.coverage_target  hwut-root.conf     '%.cov.exe'
+
+It is NOT admitted in 'target { }' of 'hwut.conf': a target is the
+directory's word, and a directory has no stem. Nothing else expands it.
+
+
 5  hwut.conf
 ______________________________________________________________________________
 
@@ -296,13 +320,6 @@ ______________________________________________________________________________
         dependency {
             "test-b.py"     = ["test-a.py"]
             "test-c.py two" = ["test-a.py", "test-b.py one"]
-        }
-
-        language-setup {
-            python   { interpreter = "python3.12 -u"
-                       coverage    = "coverage run"
-                       profiler    = "python3.12 -c CProfile" }
-            heartfun { interpreter = "heartfun" }
         }
 
         apps {
@@ -369,12 +386,12 @@ as 'hwut.conf:<line>' (section 7.1).
 5.1a  VARIANT GROUPS
 ______________________________________________________________________________
 
-'hwut.conf' may carry 'variant_group { }'. Each GROUP is a DIMENSION of
+'hwut-root.conf' may carry 'variant_group { }'. Each GROUP is a DIMENSION of
 configuration; each of its alternatives is a point on that dimension.
 
     variant_group {
-        cov  { gcov { build { coverage_target = "cov-app.exe" } }
-               llvm { build { coverage_target = "app-prof.exe" } } }
+        opt  { o0   { build { executable = "%-O0.exe" } }
+               o3   { build { executable = "%-O3.exe" } } }
         load { fast { caps { timeout_sec = 30 } }
                slow { caps { timeout_sec = 600 } } }
     }
@@ -406,37 +423,47 @@ between -- the call itself:
 Quotes are needed only where a choice is named, a bare key ending at the
 blank.
 
-'language-setup' states the tooling per language. 'apps' carries the
-specifications of header-less files; an entry uses the vocabulary of
-sections 1 and 2, entire and unchanged.
+'apps' carries the specifications of header-less files; an entry uses
+the vocabulary of sections 1 and 2, entire and unchanged.
 
-'language-setup' and 'apps' hold user-chosen names and nothing else, as
-'choices' does. A user-chosen name never stands beside a framework key.
+'language-setup' (section 7) and 'apps' hold user-chosen names and
+nothing else, as 'choices' does. A user-chosen name never stands beside
+a framework key.
 
 
 6  EXCLUSIVITY
 ______________________________________________________________________________
 
-    KEY                          HEADER  hwut.conf
+    KEY                          HEADER  hwut.conf  hwut-root.conf
     ------------------------------------------------------------------
-    title                          x        x
-    language                       x        x
-    choices                        x        x
-    every test parameter (2)       x        x
+    title                          x        x          -
+    language                       x        x          -
+    choices                        x        x          -
+    every test parameter (2)       x        x          -
 
-    on_entry, on_exit, ignore      -        x
-    collision, dependency          -        x
-    target                         -        x
-    language-setup                 -        x
-    apps                           -        x
+    on_entry, on_exit, ignore      -        x          -
+    collision, dependency          -        x          -
+    target                         -        x          -
+    apps                           -        x          -
+
+    variant_group                  -        -          x
+    language-setup                 -        -          x
 
 'on_entry', 'on_exit', 'ignore', 'collision' and 'dependency' are properties
 of the directory; no file owns them. A file cannot state what it collides
 with or depends on, since the statement is about a PAIR.
 
-'language-setup' states how HWUT deals with a language, which is likewise a
-directory fact. 'apps' is the carrier for
-header-less files; a header describes one file and needs no such key.
+THE CLIMB ENDS AT 'TEST/TMP' (R-76). Ascending from a directory that
+stands under a test directory's transient root -- a 'TMP' beside a
+'GOOD/' -- stops there and finds no root conf: what a run makes under
+'TMP/' is outside every tree, and a fixture built there does not read
+the enclosing project's 'hwut-root.conf' as its own.
+
+'language-setup' and 'variant_group' are the ROOT'S ALONE (R-73, E-9):
+a language's tooling and a run's dimensions are read in one place, and a
+nearer 'hwut.conf' stating either is refused by name. 'apps' is the
+carrier for header-less files; a header describes one file and needs no
+such key.
 
 The root of 'hwut.conf' carries directory keys only. It carries no test
 parameters for the directory at large.
@@ -445,16 +472,56 @@ parameters for the directory at large.
 7  LANGUAGE
 ______________________________________________________________________________
 
-The language is normally guessed from the file's extension: '.py' is python,
-'.js' is javascript. Where guessing does not reach, 'language' states it.
+THE LANGUAGE IS THE ACTIVATION KEY (R-73). A test application's language
+selects ONE ENTRY of 'language-setup' in 'hwut-root.conf', and
+everything HWUT does with the file follows from that entry:
 
-'language' names the language a file is written in. 'language-setup' states
-the tooling for a language. The first is a file's property and stands in
-either carrier; the second is the directory's and stands in 'hwut.conf'
-alone.
+    hwut {
+        language-setup {
+            python   { extensions  = [".py", ".pyw"]
+                       interpreter = "python3"
+                       coverage    = ["coverage", "slipcover", "trace"] }
+            c        { extensions  = [".c"]
+                       coverage    = ["gcov", "llvm-cov", "kcov"]
+                       coverage_target = "%.cov.exe" }
+            dep4711_c { interpreter = "dep4711-run"
+                        coverage    = [] }
+        }
+    }
 
-A language with no 'language-setup' entry is called by its own name:
-'language = "heartfun"' calls 'heartfun test-app.hf'.
+    extensions       the file extensions that select this entry where a
+                     header states no 'language'; each with its dot. An
+                     extension two entries claim is refused at the root.
+    interpreter      the call for an INTERPRETED test, an argv prefix;
+                     the entry's own name where unstated
+    coverage         the candidate coverage tools, PREFERENCE ORDER: the
+                     first this machine has serves. '[]' is an ANSWER --
+                     nobody vouches for a tool (coverage D-2)
+    coverage_target  the coverage-capable build target of a COMPILED
+                     test, built and run in place of 'build.executable'
+                     under 'hwut.cov'; '%' the source file's stem (4.1)
+    profiler         declared, not yet consumed
+
+The entry's NAME is the language, and the name is free: 'dep4711_c' is
+a language. A file selects it with 'language = "dep4711_c"'.
+
+HOW A FILE'S LANGUAGE IS FOUND, in this order:
+
+    1  the header's (or 'apps' entry's) 'language' word
+    2  the entry whose 'extensions' claims the file's extension --
+       DERIVED, and said so: 'hwut.show' marks it
+    3  none: the file is EXECUTABLE, and its she-bang decides
+
+A language with no 'language-setup' entry is called by its own name
+(R-10): 'language = "heartfun"' calls 'heartfun test-app.hf'.
+
+'language-setup' STANDS IN 'hwut-root.conf' AND NOWHERE ELSE. The
+framework ships no table: the boundary face writes one when it places
+the root conf (services E-25), and 'hwut.show --root-conf-template'
+prints that text for pasting into a root conf placed by hand.
+
+'--language=<name>' on every face SELECTS the test applications of a
+language; several are a union. It states nothing about any file (R-75).
 
 
 7.1  WHAT THE FRAMEWORK READ
@@ -559,7 +626,7 @@ THE HOCON PARSER produces the ANNOTATED TREE: every key, every value and
 every block carries its position in the source file. It does not live here:
 it is test-writing support and stands at
 
-    vut/language_support/python/hocon_parser.py
+    vut/test_writing_support/python/hocon_parser.py
 
 with its own TEST directory. Every supported language is given a parser that
 behaves the same way; the Python one's GOOD files are the description the

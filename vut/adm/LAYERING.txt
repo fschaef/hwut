@@ -47,6 +47,13 @@
 #  the whole of a contract's claim.
 
 SEALED engine/compare/contract
+
+#  THE DOOR OF 'compare'. The largest component of the tree, and the
+#  one whose insides move most; what the rest of the tree needs of it
+#  is five names ('Configuration', 'is_equivalent', 'associate',
+#  'RegionSyntaxError', 'feeder_ui'). They stand in one module, and a
+#  caller reaching past it is drift the check catches.
+DOOR engine/compare/api
 SEALED engine/protocol
 
 #  'procsitter' IS ALREADY A CONTRACT IN FACT: it imports nothing of
@@ -60,17 +67,30 @@ SEALED engine/protocol
 #  confirms nothing leaves.
 SEALED engine/procsitter
 
+#  AND ITS DOOR. A sealed component with a door is the strongest shape
+#  the check can state: nothing leaves, and nothing enters but here.
+DOOR engine/procsitter/api
+
+#  COVERAGE. Its surface was made deliberate by D-26 -- the table left
+#  the code -- and this states where it now is.
+DOOR engine/coverage/api
+
+#  THE BOOKKEEPER, which owns TWO databases -- the book of decisions
+#  and this machine's observations -- and was reached at seven modules
+#  before this line.
+DOOR engine/bookkeeper/api
+
 #  THE FOUNDATION IS SEALED FOR THE SAME REASON. 'auxiliary' and
-#  'language_support' import nothing of this tree, which is what makes
+#  'test_writing_support' import nothing of this tree, which is what makes
 #  them a foundation; the seal is that sentence, made checkable.
 SEALED auxiliary
-SEALED language_support
+SEALED test_writing_support
 
 #  THE ENGINE rests on the foundation, and its parts rest on one
 #  another in one direction.
 engine/*            -> adm
 engine/*            -> auxiliary
-engine/*            -> language_support*
+engine/*            -> test_writing_support*
 
 engine/bookkeeper   -> engine/compare
 engine/coverage     -> engine/bookkeeper
@@ -102,7 +122,7 @@ engine/orchestrator -> engine/protocol
 services*           -> adm
 services*           -> auxiliary
 services*           -> engine/*
-services*           -> language_support*
+services*           -> test_writing_support*
 
 #  A FACE FAMILY AND ITS PARENT. 'services -> services/labels' is a
 #  face reaching for a family's door; 'services/labels -> services'

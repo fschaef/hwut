@@ -28,7 +28,7 @@ import os
 from dataclasses import dataclass
 from datetime    import datetime, timezone
 
-from ...bookkeeper.bookkeeper       import Bookkeeper
+from ...bookkeeper.api       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
 from ..plan.form                   import E_NodeKind
 from ..plan.tree                   import determine_tree

@@ -1,0 +1,16 @@
+--- stdout, exit 0
+STIMULUS: python3 -m vut.services.pype --help
+usage: hwut.pype [--trace] SCRIPT < input
+       hwut.pype --example SCRIPT   (print generated example input)
+       hwut.pype --dry-run SCRIPT   (check the script, read no input)
+       --trace: show, on stderr, input lines against the
+                handlers they trigger, and the executed
+                lines inside python blocks; gcc-style
+                'file:line:' prefixes
+       --trace-plain: the same trace with a plain
+                'TRACE|' line starter instead
+       SCRIPT may be followed by INPUT-FILE arguments,
+       read in order as one stream instead of stdin
+EXIT:     0
+--- and nothing on stderr
+<hwut-end>

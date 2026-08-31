@@ -50,7 +50,7 @@ DESCRIPTION
        and keeps the ones that keep the machine alive; 'OUT/COVERAGE'
        is admitted to the write sandbox.
 
-       THE RECORD LIVES IN THE STORE'S OWN GROUND, '.hwut-store/
+       THE RECORD LIVES IN THE STORE'S OWN GROUND, 'TMP/store/
        <test>--<choice>.cover': it is a measurement of the LAST run of
        that choice, kept per run (D-8), never a nominal, never a
        subject.
@@ -60,11 +60,11 @@ from   dataclasses import dataclass
 from   enum        import Enum
 from   pathlib     import Path
 
-from   ..procsitter.procsitter import Procsitter, E_Containment
+from   ..procsitter.api import Procsitter, E_Containment
 from   .result                 import E_TestRunResult
-from   ..coverage.reader       import artifact_directory_of
-from   ..coverage.record       import seated
-from   ..coverage.binary       import pack_record
+from   ..coverage.api       import artifact_directory_of
+from   ..coverage.api       import seated
+from   ..coverage.api       import pack_record
 
 
 #  THE CAPS THAT ARE LUXURY (D-19): a time cap guards the author's

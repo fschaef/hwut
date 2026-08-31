@@ -69,14 +69,21 @@ ______________________________________________________________________________
 """
 import io
 import os
-import subprocess
 import textwrap
 import sys
 import config                                                       # noqa: F401
 
-from   vut.language_support.python.hwut_runner  import HwutRunner
-from   vut.language_support.python.script_runner import CRunScript
-from   vut.engine.hwut_pype.hwut_pype          import parse, Interpreter, PypeError, generate_example_input
+from   vut.test_writing_support.python.hwut_runner  import HwutRunner
+from   vut.test_writing_support.python.script_runner import CRunScript
+from   vut.engine.procsitter.api                   import spawn
+from   vut.test_writing_support.hwut_pype.hwut_pype          import parse, Interpreter, PypeError, generate_example_input
+
+#  TWO WAYS IN. 'python3 hwut_pype.py' drives the INTERPRETER itself, which
+#  is what this suite tests; a she-bang line names the LAUNCHER 'hwut.pype',
+#  since that is what a she-bang line names in the wild.
+LAUNCHER_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                 "bin", "hwut.pype"))
 
 
 def banner(label):
@@ -596,8 +603,7 @@ def _run_pipe_file_inputs():
                      order as one stream; trace positions name the file.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-file-input-work")
     os.makedirs(work_dir, exist_ok=True)
@@ -611,14 +617,14 @@ def _run_pipe_file_inputs():
         with open(b_path, "w") as fh: fh.write("l3 x\n")
 
         banner("two input files read in order as one stream")
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter_path, script_path, a_path, b_path],
             capture_output=True, text=True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         for line in result.stdout.splitlines(): print("    " + line)
 
         banner("trace positions name the input file, per-file line count")
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter_path, "--trace",
              script_path, a_path, b_path],
             capture_output=True, text=True)
@@ -637,8 +643,7 @@ def run_examples():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
@@ -649,11 +654,11 @@ def run_examples():
         print("INPUT: {")
         for line in input_txt.splitlines(): print("    " + line)
         print("}")
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter, script_path],
             input          = input_txt,
             capture_output = True, text = True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         print("OUTPUT: {")
         for line in result.stdout.splitlines(): print("    " + line)
         print("}")
@@ -671,19 +676,18 @@ def run_generate():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
         script_path = os.path.join(example_dir, stem + ".pype")
-        generated = subprocess.run(
+        generated = spawn(
             ["python3", interpreter, "--example", script_path],
             capture_output = True, text = True)
         print("GENERATED (exit %d): {" % generated.returncode)
         for line in generated.stdout.splitlines(): print("    " + line)
         print("}")
-        round_trip = subprocess.run(
+        round_trip = spawn(
             ["python3", interpreter, script_path],
             input          = generated.stdout,
             capture_output = True, text = True)
@@ -1126,11 +1130,10 @@ def run_boundaries_stack():
 
     banner("--trace: gcc-style 'file:line:' diagnostics on stderr")
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     with CRunScript(
             file_name       = "tmp-trace.pype",
-            shebang         = "#!" + interpreter_path,
+            shebang         = "#!" + LAUNCHER_PATH,
             script_txt_list = [
                 'on: "x" <n = int> => {',
                 '    print("seen", n)',
@@ -1144,12 +1147,12 @@ def run_boundaries_stack():
             display_f       = False) as script_path:
         for flag, label in (("--trace", "gcc style (default)"),
                             ("--trace-plain", "plain style")):
-            result = subprocess.run(
+            result = spawn(
                 ["python3", interpreter_path, flag,
                  os.path.abspath(script_path)],
                 input          = "x 7\ngo\nmystery\nup\n",
                 capture_output = True, text = True)
-            print("EXIT:", result.returncode)
+            exit_shown(result)
             print("STDOUT (the clean filter stream): {")
             for line in result.stdout.splitlines(): print("    " + line)
             print("}")
@@ -1162,7 +1165,7 @@ def run_boundaries_stack():
     banner("--trace with mode-name filters traces only those modes")
     with CRunScript(
             file_name       = "tmp-trace-filter.pype",
-            shebang         = "#!" + interpreter_path,
+            shebang         = "#!" + LAUNCHER_PATH,
             script_txt_list = [
                 'on: "go" => push DEEP;',
                 'on: "x" => ignore;',
@@ -1171,7 +1174,7 @@ def run_boundaries_stack():
                 'DEEP/on: <else> => ignore;',
             ],
             display_f       = False) as script_path:
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter_path, "--trace", "DEEP",
              os.path.abspath(script_path)],
             input          = "x\ngo\nmystery\nup\nx\n",
@@ -1184,34 +1187,33 @@ def run_boundaries_stack():
 
     banner("--dry-run checks the script and reads no input")
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     with CRunScript(
             file_name       = "tmp-dry.pype",
-            shebang         = "#!" + interpreter,
+            shebang         = "#!" + LAUNCHER_PATH,
             script_txt_list = [
                 'on: "x" => ignore;',
                 'on: <else> => ignore;',
             ],
             display_f       = False) as script_path:
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter, "--dry-run",
              os.path.abspath(script_path)],
             capture_output = True, text = True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         print("STDOUT:", result.stdout.strip())
     with CRunScript(
             file_name       = "tmp-dry-bad.pype",
-            shebang         = "#!" + interpreter,
+            shebang         = "#!" + LAUNCHER_PATH,
             script_txt_list = [
                 'on: "x" => ignore;',
             ],
             display_f       = False) as script_path:
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter, "--dry-run",
              os.path.abspath(script_path)],
             capture_output = True, text = True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         print("STDERR:", result.stderr.strip().replace(
             os.path.abspath(script_path), "tmp-dry-bad.pype"))
 
@@ -1308,8 +1310,7 @@ def run_imports():
                      pipeline exit status.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-import-work")
     lib_dir  = os.path.join(work_dir, "lib")
@@ -1329,10 +1330,10 @@ def run_imports():
                      '}\n')
 
         banner("import resolved via --pype-dir; inherited library mode")
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter_path, "--pype-dir", lib_dir, main_path],
             input="own\nshared\nnoise\n", capture_output=True, text=True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         for line in result.stdout.splitlines(): print("    " + line)
         if result.stderr: print("STDERR:", result.stderr.strip())
 
@@ -1346,11 +1347,11 @@ def run_imports():
                      '}\n')
         env = dict(os.environ)
         env["PYPE_TEST_LIB"] = lib_dir
-        result = subprocess.run(
+        result = spawn(
             ["python3", interpreter_path, env_main],
             input="own\nshared\n", capture_output=True, text=True,
             env=env)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         for line in result.stdout.splitlines(): print("    " + line)
 
         banner("unquoted import path rejected")
@@ -1401,7 +1402,7 @@ def run_imports():
                      '}\n')
         for input_txt, label in (("ok\nFAIL x\n", "with a failure"),
                                  ("ok\n", "clean")):
-            result = subprocess.run(
+            result = spawn(
                 ["python3", interpreter_path, gate_path],
                 input=input_txt, capture_output=True, text=True)
             print("%s: exit %d, stdout %r"
@@ -1477,14 +1478,22 @@ def run_errors():
         print("PypeError (expected): %s" % e)
 
 
+def exit_shown(result):
+    """RETURN: None. The exit code; and where the call never STARTED,
+    the reason -- a she-bang naming nothing runnable, an execute bit
+    missing -- since 'None' alone is a riddle."""
+    print("EXIT:", result.returncode)
+    if not result.launched_f():
+        for line in result.stderr.splitlines(): print("    " + line)
+
+
 def run_pipe():
     """RETURN: None. She-bang script used as an OS-level pipe filter;
                      INPUT-FILE arguments as the stream source.
     """
     _run_pipe_file_inputs()
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                     "bin", "hwut.pype"))
+        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
     script_txt_list = [
         'SCAN/on: "PASS" <n = int> ":" <f = "*.txt"> => {',
         '    print("ok %d %s" % (n, f))',
@@ -1499,14 +1508,14 @@ def run_pipe():
     print("}")
     with CRunScript(
             file_name       = "tmp-filter.pype",
-            shebang         = "#!" + interpreter,
+            shebang         = "#!" + LAUNCHER_PATH,
             script_txt_list = script_txt_list,
             display_f       = False) as script_path:
-        result = subprocess.run(
+        result = spawn(
             [os.path.abspath(script_path)],
             input          = "PASS 1 : a.txt\nnoise\nPASS 2 : b.txt\n",
             capture_output = True, text = True)
-        print("EXIT:", result.returncode)
+        exit_shown(result)
         print("STDOUT: {")
         for line in result.stdout.splitlines(): print("    " + line)
         print("}")

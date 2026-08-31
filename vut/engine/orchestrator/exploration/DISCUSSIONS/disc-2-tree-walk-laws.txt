@@ -9,6 +9,7 @@ Taken to build R-69; reported, not settled; each one line to change.
  2  The ROOT itself is never a test directory unless its own name
     equals the marker -- 'hwut.plan --directory=X' remains the face
     for one directory taken as a test directory regardless of name.
- 3  'language_setup' inherits CHILD-WINS WHOLE, not per language.
+ 3  CLOSED by R-73: 'language_setup' stands in 'hwut-root.conf' only;
+    there is nothing to inherit. (Was: child-wins whole.)
  4  'ignore' inherits child-wins whole (a child stating 'ignore'
     replaces the parent's, it does not add to it).

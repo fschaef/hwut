@@ -5,7 +5,7 @@ PURPOSE: One file through the reading pipeline:
 
     detect -> unwrap -> parse -> validate -> plain record
 
-The parser is test-writing support and lives in 'language_support'; it
+The parser is test-writing support and lives in 'test_writing_support'; it
 states its own faults. They are converted here into the engine's, one for
 one, positions carried.
 
@@ -15,7 +15,7 @@ keys that were good and a fault for the one that was not. Whether such a
 record is usable is the explorer's call, not this reader's.
 ______________________________________________________________________________
 """
-from vut.language_support.python import hwut_hocon
+from vut.test_writing_support.python import hwut_hocon
 
 from .      import source_file_detector
 from .      import unwrapper

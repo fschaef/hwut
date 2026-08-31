@@ -16,7 +16,7 @@ two-line shell shims, nothing importable. Each resolves its own location
                         hwut.stability  hwut.wishlist  hwut.report
                         hwut.remove   hwut.remove-choice
                         hwut.rename   hwut.rename-choice
-                        hwut.sanitize
+                        hwut.sanitize hwut.pype
 
     hwut            THE DEFAULT FACE: 'hwut' alone is 'hwut.run'. A
                     bare 'hwut' states no wish, and a wish that states
@@ -29,9 +29,10 @@ two-line shell shims, nothing importable. Each resolves its own location
                     a module name, and a module name is what the naming
                     law binds.
 
-    hwut.pype       runs 'engine/hwut_pype/hwut_pype.py' as a script.
-                    A '#! /usr/bin/env hwut.pype' she-bang line reaches
-                    it when this directory is on PATH.
+    hwut.pype       is one of them: 'services/pype.py', the face over
+                    'test_writing_support/hwut_pype'. A '#! /usr/bin/env
+                    hwut.pype' she-bang line reaches it when this
+                    directory is on PATH.
 
 A launcher holds no logic: no argument is read, no default is chosen,
 no path but its own is resolved. The face behind it owns everything the

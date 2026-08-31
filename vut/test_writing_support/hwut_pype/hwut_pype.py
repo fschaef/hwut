@@ -1578,6 +1578,21 @@ def generate_example_input(mode_db, start_mode_name):
     return line_list
 
 
+USAGE = ("usage: hwut.pype [--trace] SCRIPT < input\n"
+         "       hwut.pype --example SCRIPT   "
+         "(print generated example input)\n"
+         "       hwut.pype --dry-run SCRIPT   "
+         "(check the script, read no input)\n"
+         "       --trace: show, on stderr, input lines against the\n"
+         "                handlers they trigger, and the executed\n"
+         "                lines inside python blocks; gcc-style\n"
+         "                'file:line:' prefixes\n"
+         "       --trace-plain: the same trace with a plain\n"
+         "                'TRACE|' line starter instead\n"
+         "       SCRIPT may be followed by INPUT-FILE arguments,\n"
+         "       read in order as one stream instead of stdin")
+
+
 def main(argv=None, stream=None):
     """RETURN: int, 0 if the script ran to completion.
                     1, else.
@@ -1632,20 +1647,7 @@ def main(argv=None, stream=None):
     trace_filter = [DEFAULT_MODE if name == "default" else name
                     for name in trace_filter]
     if len(argv) < 2 or argv[1] in ("-h", "--help"):
-        print("usage: hwut.pype [--trace] SCRIPT < input\n"
-              "       hwut.pype --example SCRIPT   "
-              "(print generated example input)\n"
-              "       hwut.pype --dry-run SCRIPT   "
-              "(check the script, read no input)\n"
-              "       --trace: show, on stderr, input lines against the\n"
-              "                handlers they trigger, and the executed\n"
-              "                lines inside python blocks; gcc-style\n"
-              "                'file:line:' prefixes\n"
-              "       --trace-plain: the same trace with a plain\n"
-              "                'TRACE|' line starter instead\n"
-              "       SCRIPT may be followed by INPUT-FILE arguments,\n"
-              "       read in order as one stream instead of stdin",
-              file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         return 1
     file_name = argv[1]
     try:

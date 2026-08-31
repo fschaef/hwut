@@ -25,7 +25,7 @@ STDOUT {
     
     FAILURES:
     
-        suite/TEST: test-diff.sh -- not-equivalent-with-nominal
+        suite/TEST: test-diff.sh -- not-equivalent-diverged
     
     ------------------------------------------------------------------------------
                                                                          (2 tests)

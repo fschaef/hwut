@@ -34,7 +34,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 import config                                                    # noqa F401
-from vut.language_support.python.script_runner import tree_boundary  # noqa: E402
+from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.services.cov import main          # noqa E402

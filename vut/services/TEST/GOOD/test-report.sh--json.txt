@@ -17,7 +17,7 @@ STDOUT {
               "choice": null,
               "file": "test-diff.sh",
               "name": "test-diff.sh",
-              "reason": "not-equivalent-with-nominal",
+              "reason": "not-equivalent-diverged",
               "stained": false,
               "verdict": false,
               "when": "<instant>"

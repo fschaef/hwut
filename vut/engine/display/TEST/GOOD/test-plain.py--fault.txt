@@ -2,7 +2,7 @@
 --- faults, never swallowed ---
 FAULT ROOT: the task file names 'gone/', which is not there
 DIR   SUIT = suite/TEST
-END   SUIT test-ok.sh ................................................... [OK]
+END   test-ok.sh ........................................................ [OK]
 FAULT SUIT: OSError: the directory vanished mid-walk
 
 ==============================================================================

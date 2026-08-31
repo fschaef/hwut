@@ -1,0 +1,66 @@
+disc-1  SCRATCH DIRECTORIES LEAK INTO THE MACHINE'S /tmp      ** CLOSED **
+______________________________________________________________________________
+
+OBSERVED (2026-08-30): '/tmp' fills with 'vut_ids_*', 'vut_mutex_*',
+'vut_multi_*', 'vut_store_*', 'vut_provider_*' -- 108 of them after
+one afternoon's sweeps on the author's machine.
+
+WHERE THEY COME FROM. 33 test applications call 'tempfile.mkdtemp'
+(prefixes 'vut_prov_', 'vut_acc_', 'vut_eq_', 'vut_cov_', 'vut_walk_',
+... and the five above). The removal is not guaranteed:
+
+    test-directory-mutex.py     mkdtemp 1, rmtree 0
+    test-provider.py            mkdtemp 1, rmtree 0
+    test-stream_store.py        mkdtemp 1, rmtree 0
+    test-multi-execute.py       mkdtemp 1, rmtree 1, no 'finally'
+    test-test_id_db.py          rmtree at the END of each choice: a
+                                choice killed by the supervisor (the
+                                seven of disc-6 r-2) leaves every one
+
+Two causes, then: tests that never remove, and tests that remove only
+on the happy path -- and the interactive runner keeps the process
+alive across choices, so an 'atexit' would fire only at the session's
+end, and a kill never lets it fire at all.
+
+THE FIX THAT WAS TRIED AND TAKEN BACK. Launch every test process with
+'TMPDIR=<test dir>/TMP/scratch', so that whatever 'tempfile' makes
+lands under the transient root and 'rm -rf TMP/' -- or 'hwut.sanitize
+--transient' -- clears it. Built, run, reverted in the same pass:
+
+  -  it is a BEHAVIOUR CHANGE, and bookkeeper todo-1 ruled pass A
+     'no behaviour changes, wide, mechanical';
+  -  a fixture tree made under 'TMP/scratch' stands INSIDE the
+     project's tree, and its climb finds the project's own
+     'hwut-root.conf' -- so 'test-tree.py root' ("RootConfMissing,
+     as owed") stopped being owed, and every fixture reading that
+     relied on standing outside any tree derived a language it never
+     had. Fixtures that want a boundary already write one
+     ('script_runner.tree_boundary'); fixtures that want NONE have no
+     way to say so once '/tmp' is inside the tree.
+
+RECOMMENDATION, two parts, one ruling:
+
+  1  'script_runner.scratch(prefix)' -- ONE way to make a scratch
+     directory in a test: registers the path with the reference runner,
+     which removes every registered path when the CHOICE ends, happy
+     path or exception, and at process exit for what is left. The 33
+     call sites become one call each. A kill still leaks, and that is
+     honest: a killed process cannot clean.
+
+  2  The runner's scratch ground is '<test dir>/TMP/scratch' by
+     DEFAULT, with 'scratch(prefix, outside=True)' for the handful of
+     tests that must stand outside any tree ('test-tree.py root'). The
+     leak of a killed process then lands where '--transient' clears it,
+     and the machine's '/tmp' sees nothing of this project.
+
+     Part 2 is the behaviour change; it is the runner's (test-writing
+     support), not the framework's, and reaches the framework's own
+     suites only. Ruled together with part 1 or after it.
+
+CLOSED (2026-08-30, E-27, R-76). Part 2 was ruled and built: the
+procsitter exports 'TEST/TMP/scratch/<call>' as TMPDIR and lists what
+the call left ('created_tuple'); the climb ends at 'TEST/TMP', so a
+fixture built there stands outside every tree. Part 1 -- one
+'scratch()' in the runner that removes at the choice's end -- is
+still worth having and is not built; it is now a tidiness, not a
+leak.

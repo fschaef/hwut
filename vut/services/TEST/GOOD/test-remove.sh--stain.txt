@@ -1,10 +1,10 @@
 stained, so not run:
 STATUS: 1
-    END   SUIT test-app.sh ........................... UNSTABLE -- not run  [FAIL]
+    END   test-app.sh ................................ UNSTABLE -- not run  [FAIL]
         test-app.sh                  UNSTABLE -- not run
 removed:
     the stain went with the book: True
 runs again, with no history:
 STATUS: 1
-    END   SUIT test-app.sh .................................. GOOD missing  [FAIL]
+    END   test-app.sh ....................................... GOOD missing  [FAIL]
         test-app.sh                  GOOD missing

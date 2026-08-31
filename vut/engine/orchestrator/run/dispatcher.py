@@ -35,10 +35,10 @@ from ...operations.run.core         import Provision
 from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
 from dataclasses import replace
-from ...bookkeeper.bookkeeper   import Bookkeeper
-from ...bookkeeper.test_id_db   import TestIdDb
-from ...bookkeeper.stream_store import Store, DirectoryBusy
-from ...procsitter.procsitter       import Procsitter, ProcsitterConfig
+from ...bookkeeper.api   import Bookkeeper
+from ...bookkeeper.api   import TestIdDb
+from ...bookkeeper.api import Store, DirectoryBusy
+from ...procsitter.api       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
 from .adapter                       import (naming_of,
                                             test_configuration_of)
@@ -110,15 +110,17 @@ class TestRunDispatcher(I_Dispatcher):
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
         #  every tool leaves its artefact in the directory's OUT/COVERAGE.
         self.cov_lock   = None if coverage is None else asyncio.Lock()
-        variant_db      = getattr(getattr(entry, "app_set", None),
+        directory_spec  = getattr(getattr(entry, "app_set", None),
                                   "directory_spec", None)
-        variant_db      = getattr(variant_db, "variant_db", None)
+        variant_db      = getattr(directory_spec, "variant_db", None)
+        language_setup  = getattr(directory_spec, "language_setup", None)
         self.config_db  = {app.source_file:
                                test_configuration_of(app, directory,
                                                      coverage,
                                                      variant_tuple,
                                                      variant_db,
-                                                     timing_f)
+                                                     timing_f,
+                                                     language_setup)
                            for app in entry.app_set}
         #  BUILD action name -> the configuration whose build it is.
         self.build_db   = {}

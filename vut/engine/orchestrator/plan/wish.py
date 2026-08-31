@@ -72,6 +72,22 @@ short form can never mean what the long form cannot say.
                         a wish that asks no label does not want what
                         'meta' labels. Naming a label lifts the
                         silence.
+    --faster-than=<seconds>
+                        the runs THIS MACHINE last saw finish in less
+                        than that: the 'Run' operation's duration, from
+                        the local observation database (E-22). Seconds,
+                        a decimal fraction allowed. A run this machine
+                        has NOT observed is NOT selected -- silence is
+                        not selected, and a fresh checkout selects
+                        nothing here, which is the correct answer.
+    --language=<name>   the runs whose test application is of that
+                        LANGUAGE -- the header's word, or the one its
+                        extension selects in 'language-setup' (R-73).
+                        May stand several times: a UNION among the
+                        names, NARROWING against the rest of the wish
+                        (R-75). A name no 'language-setup' entry
+                        declares is refused by name. It SELECTS; it
+                        states nothing about any file.
 
 A <point> is a SPAN back from now, or an ANCHOR:
 
@@ -131,7 +147,8 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--exclude <target>]...",
                      "[--dir <glob>]...",
                      "[--exclude-dir <glob>]...",
-                     "[--wishlist <file>]...", "[--label <expr>]")
+                     "[--wishlist <file>]...", "[--label <expr>]",
+                     "[--language=<name>]...", "[--faster-than=<sec>]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -170,6 +187,12 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         against the rest; absent, 'meta' is silent --
                         which a LITERAL target overrides, and a glob
                         does not (it warns instead)
+    --language=<name>   the runs of test applications of that language;
+                        several are a union, narrowing against the rest
+    --faster-than=<seconds>
+                        the runs this machine last saw finish faster
+                        than that; one this machine never saw is not
+                        wanted
     <app> [<choice>...] the short form: bare words are targets, the
                         first naming files, each further one a
                         choice; globbing allowed in both"""
@@ -198,6 +221,10 @@ class Wish:
     exclude_dir_tuple: tuple = ()
     dir_tuple:         tuple = ()
     label_spec: str | None = None
+    language_tuple:    tuple = ()
+    #  Integer MILLISECONDS, and the unit is in the name: the command
+    #  line takes human seconds and converts at the boundary (E-23).
+    faster_than_ms:    int | None = None
 
     def states_nothing_f(self):
         """
@@ -216,7 +243,8 @@ class Wish:
                     or self.wishlist_f or self.exclude_tuple
                     or self.exclude_dir_tuple or self.dir_tuple) \
                and self.since_spec is None and self.until_spec is None \
-               and self.label_spec is None
+               and self.label_spec is None and not self.language_tuple \
+               and self.faster_than_ms is None
 
     def asks_glob_f(self):
         """
@@ -236,12 +264,14 @@ class Wish:
     def asks_base_f(self):
         """
         RETURN: bool, True where a question can only be answered out
-                of the Bookkeeper's base: --fail, --pass, --since,
-                --until.
+                of the Bookkeeper's base or this machine's local
+                observations: --fail, --pass, --since, --until,
+                --faster-than.
         """
         return self.fail_f or self.pass_f \
                or self.since_spec is not None \
-               or self.until_spec is not None
+               or self.until_spec is not None \
+               or self.faster_than_ms is not None
 
     def __str__(self):
         """
@@ -266,6 +296,11 @@ class Wish:
                          for text in self.exclude_dir_tuple)
         if self.label_spec is not None:
             part_list.append('--label "%s"' % self.label_spec)
+        part_list.extend("--language=%s" % name
+                         for name in self.language_tuple)
+        if self.faster_than_ms is not None:
+            part_list.append("--faster-than=%g"
+                             % (self.faster_than_ms / 1000.0))
         return " ".join(part_list)
 
 
@@ -295,6 +330,8 @@ def parse_wish(argv):
     dir_list         = []
     wishlist_f       = False
     label_spec       = None
+    language_list    = []
+    faster_than_ms   = None
     rest_list        = []
 
     index = 0
@@ -364,6 +401,30 @@ def parse_wish(argv):
                 raise WishError("'--label %s' cannot be read -- %s"
                                 % (text, error)) from None
             label_spec = text
+        elif argument == "--faster-than" \
+             or argument.startswith("--faster-than="):
+            text = argument[len("--faster-than="):] \
+                   if "=" in argument else ""
+            if not text:
+                raise WishError("'--faster-than' stands without a span; "
+                                "write '--faster-than=2.5' -- seconds")
+            try:
+                seconds = float(text)
+            except ValueError:
+                raise WishError("'--faster-than=%s' is not a number of "
+                                "seconds" % text) from None
+            if seconds <= 0.0:
+                raise WishError("'--faster-than=%s': a span must be "
+                                "positive" % text)
+            faster_than_ms = int(seconds * 1000)
+        elif argument == "--language":
+            raise WishError("'--language' stands without a name; write "
+                            "'--language=python'")
+        elif argument.startswith("--language="):
+            name = argument[len("--language="):].strip()
+            if not name:
+                raise WishError("'--language=' names nothing")
+            if name not in language_list: language_list.append(name)
         else:
             rest_list.append(argument)
 
@@ -381,7 +442,8 @@ def parse_wish(argv):
     return (Wish(fail_f, pass_f, since_spec, until_spec,
                  tuple(glob_list), wishlist_f,
                  tuple(exclude_list), tuple(exclude_dir_list),
-                 tuple(dir_list), label_spec),
+                 tuple(dir_list), label_spec, tuple(language_list),
+                 faster_than_ms),
             rest_list)
 
 

@@ -37,6 +37,7 @@ ______________________________________________________________________________
 import json
 from   pathlib     import Path
 from .configuration import StoreConfig   # noqa: F401
+from .bookkeeper    import STORE_DIRECTORY_NAME   # noqa: F401
 
 #  The lock mechanism lives in the auxiliary; these names are part of
 #  THIS component's face and are re-exported here.

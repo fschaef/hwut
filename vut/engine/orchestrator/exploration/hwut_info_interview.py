@@ -132,7 +132,7 @@ def _config_of(caps):
     spend is the cap that matters, and refusing every interview over
     a flag procsitter never claimed would refuse them all.
     """
-    from ...procsitter.procsitter import ProcsitterConfig
+    from ...procsitter.api import ProcsitterConfig
 
     import dataclasses
 
@@ -163,8 +163,8 @@ def _procsitter_runner(path, caps):
     """
     import asyncio
 
-    from ...procsitter.construction import chain, Link
-    from ...procsitter.procsitter   import Procsitter, E_Containment
+    from ...procsitter.api import chain, Link
+    from ...procsitter.api   import Procsitter, E_Containment
 
     config = _config_of(caps)
     if config is None: return None

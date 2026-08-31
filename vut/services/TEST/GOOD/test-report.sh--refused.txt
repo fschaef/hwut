@@ -1,24 +1,24 @@
 STATUS: 2
 STDOUT {
     REFUSED: '--format' takes one of traditional, junit, tap, json, not 'yaml'
-    hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                [--out=<file>] [--width=<n>] [--directory=<path>]
+    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
+                       [--out=<file>] [--width=<n>] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: '--width' takes a positive integer, not '0'
-    hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                [--out=<file>] [--width=<n>] [--directory=<path>]
+    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
+                       [--out=<file>] [--width=<n>] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: 'hwut.report' does not take: --sideways
-    hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                [--out=<file>] [--width=<n>] [--directory=<path>]
+    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
+                       [--out=<file>] [--width=<n>] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: the directory 'nowhere' does not exist
-    hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                [--out=<file>] [--width=<n>] [--directory=<path>]
+    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
+                       [--out=<file>] [--width=<n>] [--directory=<path>]
 }

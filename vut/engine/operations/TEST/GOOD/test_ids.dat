@@ -1,0 +1,13 @@
+##VUT-TEST-IDS 5
+G:8
+N:2
+A:0 test-coverage_provision.py
+N:0.5
+C:0.0 no_target
+C:0.1 harvested
+C:0.2 incomplete
+C:0.3 not_asked
+C:0.4 nothing_borne
+A:1 test-session.py
+N:1.1
+C:1.0 the_arc

@@ -31,7 +31,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
-from ..bookkeeper.configuration import E_StderrNote
+from ..bookkeeper.api import E_StderrNote
 
 from   .result                        import E_TestRunResult
 from .consume.accept             import (Accept, AcceptConfig,
@@ -48,7 +48,7 @@ from .run.core                import provision_of
 from .consume.loaded              import loaded
 from   .nominal                       import RecordNominal
 from   pathlib import Path
-from   ..bookkeeper.stream_store import (source_digest_of,
+from   ..bookkeeper.api import (source_digest_of,
                                               Store)
 
 

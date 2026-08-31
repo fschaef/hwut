@@ -26,26 +26,16 @@ class CoverageConfig:
     (RATIONALE D-3). An empty 'include' means 'whatever the tool would
     take by itself'; 'omit' subtracts from that.
 
-    'language' selects the candidate tools by GLOB match (D-2). None
-    asks for DERIVATION from the source file's extension -- stated,
-    never silent: the language that served appears in the record's
-    header and in any refusal.
-
     'counts' asks for per-range HIT COUNTS. Off by default: counts are
     what prevent the interval collapse, and the question HWUT asks is
     'did this test reach this code', not 'how often' (D-5).
 
-    'tool' names the coverage tool outright and SKIPS the election: the
-    reader registered under that name serves, or the request is refused
-    by name. None asks for election (D-2). Caps under coverage are not
-    stated here: the policy is fixed (D-19) -- time is lifted, the rest
-    stands.
-    """
+    THE LANGUAGE AND THE TOOL ARE NOT HERE (D-26): both come from the
+    'language-setup' entry the test's language selects, in
+    'hwut-root.conf'. What stands here is what THIS RUN GATHERS."""
     include:       Sequence[str] = field(default_factory=tuple)
     omit:          Sequence[str] = field(default_factory=tuple)
-    language:      str | None    = None
     counts:        bool          = False
-    tool:          str | None    = None
 
 
 class CoverageRefused(ValueError):

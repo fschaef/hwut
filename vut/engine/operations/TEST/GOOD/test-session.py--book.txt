@@ -2,7 +2,6 @@ INSPECT: operations booked = {'demo.py': {'<none>': ['Accept', 'Run']}}
          Run entry  = {'verdict': True, 'report': 'ok', 'canonicaliser': {'stdout': ['cat']}}
   OK  : one entry per operation, both kept
   OK  : the canonicaliser is recorded: a record is HISTORY, and a later Replay must be able to tell it was freed differently
-  OK  : when and host are recorded for the speed reference
-  OK  : the attribution rides with it -- the record of the process that produced a result is PART of that result
+  OK  : the instant, the host and the attribution are NOT in the book: a run makes them again, so they are observations, and stand in the local database (E-20, E-22)
 SUCCESS: what happened is booked, and never appended to.
 <hwut-end>

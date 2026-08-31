@@ -42,11 +42,11 @@ import os
 from   dataclasses import dataclass
 
 from   .explorer         import explore
-from   .tree_explorer    import explore_tree
+from   .tree_explorer    import explore_tree, ascended_spec
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery
 from   ..plan.label      import swallowed_warning_tuple
-from   ...bookkeeper.bookkeeper import Bookkeeper
+from   ...bookkeeper.api import Bookkeeper
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,8 +110,12 @@ def of_directory(directory, wish, label_view=None, inherited=None,
     Raises SelectionError out of the query, unchanged: a wish that
     names a label no view can answer is refused, never guessed at.
     """
-    result     = explore(directory, inherited=inherited) \
-                 if inherited is not None else explore(directory)
+    #  THE ROOT'S WORD REACHES A SINGLE DIRECTORY TOO (R-73): a face
+    #  that has not ascended itself gets the climb here, so
+    #  'language-setup' governs 'hwut.play' as it governs 'hwut.run'.
+    if inherited is None:
+        inherited, _ascent_fault_list = ascended_spec(directory)
+    result     = explore(directory, inherited=inherited)
     #  'base_f' OVERRIDES THE WISH'S OWN ANSWER, for the face that
     #  needs the book whatever the wish asked: 'hwut.accept' reads
     #  candidates, and a bare wish asks no base.

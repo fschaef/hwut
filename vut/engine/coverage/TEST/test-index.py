@@ -56,12 +56,12 @@ ______________________________________________________________________________
 import sys
 import config                                                   # noqa: F401
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record import (ranges_of, FileCoverage,
                                         CoverageRecord, merge)
 from vut.engine.coverage.index    import (TestIndex, index_of, Gathered,
                                           TestRunId, EMPTY_GROUP)
-from vut.engine.bookkeeper.test_run_id import run_id_of_text
+from vut.engine.bookkeeper.api import run_id_of_text
 
 
 def banner(label):

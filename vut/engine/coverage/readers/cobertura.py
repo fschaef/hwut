@@ -225,8 +225,8 @@ def _language_of(file_db):
     than defaulted to the commonest one.
     """
     suffix_db = {".py": "python", ".java": "java", ".kt": "kotlin",
-                 ".scala": "scala", ".groovy": "groovy", ".cs": "c#",
-                 ".vb": "vb.net", ".fs": "f#", ".rb": "ruby",
+                 ".scala": "scala", ".groovy": "groovy", ".cs": "csharp",
+                 ".vb": "vbdotnet", ".fs": "fsharp", ".rb": "ruby",
                  ".php": "php", ".js": "javascript", ".ts": "typescript",
                  ".c": "c", ".h": "c", ".cpp": "c++", ".cc": "c++"}
     name_set = set()

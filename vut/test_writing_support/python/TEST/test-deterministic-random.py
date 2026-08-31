@@ -45,8 +45,8 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from vut.language_support.python.hwut_runner          import HwutRunner
-from vut.language_support.python.deterministic_random import (DeterministicStream,
+from vut.test_writing_support.python.hwut_runner          import HwutRunner
+from vut.test_writing_support.python.deterministic_random import (DeterministicStream,
                                                               SelectionMarker)
 
 SEED = 0x42

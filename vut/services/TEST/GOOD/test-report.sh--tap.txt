@@ -5,7 +5,7 @@ STDOUT {
     ok 1 - suite/TEST: test-app.sh
     not ok 2 - suite/TEST: test-diff.sh
       ---
-      reason: not-equivalent-with-nominal
-      message: the run reported 'not-equivalent-with-nominal'
+      reason: not-equivalent-diverged
+      message: the run reported a difference from GOOD; the stored candidate and the nominal, read whole, are 'not-equivalent-diverged'
       ...
 }

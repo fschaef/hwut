@@ -45,9 +45,9 @@ import sys
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                        import (RootConfMissing,
                                                                ascended_spec)
-from   vut.engine.bookkeeper.test_id_db                import TestIdDb
-from   vut.engine.bookkeeper.configuration             import E_StderrNote
-from   vut.engine.bookkeeper.stream_store              import Store
+from   vut.engine.bookkeeper.api                import TestIdDb
+from   vut.engine.bookkeeper.api             import E_StderrNote
+from   vut.engine.bookkeeper.api              import Store
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
 from   vut.engine.orchestrator.exploration            import selection
 from   vut.services.labels                             import view_at

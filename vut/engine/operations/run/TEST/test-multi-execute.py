@@ -46,7 +46,7 @@ import asyncio
 import tempfile
 import config                                                       # noqa: F401
 
-from   vut.language_support.python.hwut_runner import HwutRunner    # noqa: E402
+from   vut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
 from   vut.engine.operations.run.multi_execute \
                                           import MultiExecute       # noqa: E402
 from   vut.engine.operations.run.provider \
@@ -58,7 +58,7 @@ from   vut.engine.operations.run.stage_canonicalise \
 from   vut.engine.operations.configuration import (TestConfiguration, # noqa: E402
                                                  TestChoiceConfiguration,
                                                  E_SourceKind)
-from   vut.engine.procsitter.procsitter  import ProcsitterConfig    # noqa: E402
+from   vut.engine.procsitter.api  import ProcsitterConfig    # noqa: E402
 
 
 def _check(pair_list):
@@ -85,7 +85,7 @@ _FIXTURE = """\
 import sys
 sys.path.insert(0, %(root)r)
 with open('launch.log', 'a') as fh: fh.write('launched\\n')
-from vut.language_support.python.hwut_runner import HwutRunner
+from vut.test_writing_support.python.hwut_runner import HwutRunner
 
 def run_alpha():
     print('alpha speaks')
@@ -163,7 +163,7 @@ def test_session():
 
     a, b, record = asyncio.run(scene())
     session_dir = os.path.join(configuration.test_directory,
-                               ".hwut-session")
+                               "TMP/session")
     print("INSPECT: the application was launched %i time(s) for 2 choices"
           % _launch_count(configuration))
     print("         alpha stdout = %r" % a.product[0]["stdout"])

@@ -24,14 +24,13 @@ from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
 from   ..result                 import E_TestRunResult
-from   ...compare.configuration import Configuration
+from   ...compare.api           import Configuration, is_equivalent
 from   ..interaction.feed       import (NullDisplay, feed_down,
                                         ProtocolMismatch)
 from   ..nominal                import NominalNotAvailable
 from   ..observer               import notify
 from   ..report                 import Comparison, TestResult
 
-from   ...compare               import main as compare_main
 
 
 @dataclass(frozen=True)
@@ -117,7 +116,7 @@ class DifferenceDisplay:
 
         subject_reader = provided[name].open()
         try:
-            ok = bool(await compare_main.is_equivalent(options,
+            ok = bool(await is_equivalent(options,
                                                        subject_reader,
                                                        nominal_reader))
         finally:

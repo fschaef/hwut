@@ -42,6 +42,15 @@ NOT ASKED WHERE NOBODY CAN ANSWER. Where the input is not a terminal
 -- a script, a pipe, a suite -- the offer is not made: a question
 nobody can hear is a hang, not a courtesy. The face refuses as before
 and says what would have been offered.
+
+WHAT IS WRITTEN IS NOT AN EMPTY BLOCK (E-25). The file carries the
+whole 'language-setup' table: every language with its coverage
+candidates in preference order, its 'extensions' -- every one owned
+by a single entry -- its 'interpreter' where a launcher takes a source file, and
+'coverage_target = "%.cov.exe"' for the gcc family. A root conf placed
+by hand, or
+before this, carries no table and runs only what a she-bang can run;
+'hwut.show --root-conf-template' prints the template for pasting.
 ______________________________________________________________________________
 """
 import os
@@ -51,7 +60,220 @@ LETTER_TUPLE = ("A", "B", "C", "D", "E", "F", "G", "H")
 
 ROOT_CONF_NAME = "hwut-root.conf"
 
-EMPTY_TEXT = "hwut {\n}\n"
+#  WHAT IS WRITTEN (E-25): the boundary WITH the language table. Every
+#  per-language default HWUT once carried in code -- the coverage
+#  candidates of coverage D-2, the interpreters of the adapter -- stands
+#  here, in the one file an author reads, and nowhere else (exploration
+#  R-73, coverage D-26). This text is the ONE template; 'offered_text'
+#  shows it, 'placed' writes it, byte for byte.
+ROOT_CONF_TEXT = """\
+#  SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#  --------------------------------------------------------------------------
+#
+#  THE ROOT OF THIS TREE, and the boundary of the climb.
+#
+#  Every face ASCENDS from where it is called, collecting each
+#  'hwut.conf' it passes, until it reaches this file. What is collected
+#  is then applied OUTERMOST FIRST -- this file first of all -- so the
+#  innermost word wins and a test directory's own 'hwut.conf' has the
+#  last word before the source headers.
+#
+#  It plays TWO ROLES: it is the MOST DOMINANT configuration there is,
+#  and it STOPS the climb, so nothing above this project can reach into
+#  it. An empty block is a complete statement -- it says only 'the tree
+#  ends here', which is what this one says.
+#
+#  LOCAL KEYS ARE REFUSED HERE -- 'on_entry', 'on_exit', 'collision',
+#  'dependency' and the directory's own targets name local matters and
+#  belong in a test directory's own 'hwut.conf'.
+#
+#  'language-setup' STANDS HERE AND NOWHERE ELSE (exploration R-73): one
+#  block per language, holding everything HWUT does WITH that language.
+#  The block's NAME is the language; a source file's 'language' word
+#  selects it by that name, and the name is free -- 'dep4711_c' is a
+#  language. Where a header states no language, 'extensions' selects.
+#
+#      extensions       the file extensions that select this entry
+#      interpreter      the call for an interpreted test; the entry's
+#                       own name where unstated
+#      coverage         the candidate coverage tools, PREFERENCE ORDER;
+#                       the first one this machine has serves, and an
+#                       EMPTY LIST IS AN ANSWER: nobody vouches for a tool
+#      coverage_target  the coverage-capable build target of a compiled
+#                       test; '%' is the source file's stem (R-74)
+#
+#  THE ORDER OF A 'coverage' LIST IS PART OF THE TABLE: a tool whose
+#  format this build reads stands first, since election takes the first
+#  candidate the machine HAS. A candidate with no reader is still worth
+#  listing -- it is how a machine refuses BY NAME. 'hwut.cov formats'
+#  prints what this build reads.
+#
+#  WHAT IS LEFT OUT IS LEFT OUT ON PURPOSE. No 'interpreter' where a
+#  language is compiled, or where no launcher takes a source file as
+#  its first argument. Every extension is owned by ONE entry: '.m' is
+#  objective-c's (a MATLAB or Octave file states 'language'), '.pl' is
+#  perl's (Prolog has '.pro'), '.sh' is bash's ('shell' names 'sh' and
+#  claims nothing). '.h' is not claimed: a header is not a test. A
+#  language's name is a bare word, shell-safe: 'csharp', 'fsharp',
+#  'vbdotnet'.
+#  --------------------------------------------------------------------------
+hwut {
+    language-setup {
+        c             { extensions      = [".c"]
+                        coverage        = ["gcov", "llvm-cov", "kcov"]
+                        coverage_target = "%.cov.exe" }
+        c++           { extensions      = [".cpp", ".cc", ".cxx"]
+                        coverage        = ["gcov", "llvm-cov", "kcov"]
+                        coverage_target = "%.cov.exe" }
+        objective-c   { extensions      = [".m"]
+                        coverage        = ["gcov", "llvm-cov"]
+                        coverage_target = "%.cov.exe" }
+        objective-c++ { extensions      = [".mm"]
+                        coverage        = ["gcov", "llvm-cov"]
+                        coverage_target = "%.cov.exe" }
+        fortran       { extensions      = [".f", ".for", ".f77", ".f90", ".f95", ".f03", ".f08"]
+                        coverage        = ["gcov", "kcov"]
+                        coverage_target = "%.cov.exe" }
+        ada           { extensions      = [".adb", ".ads"]
+                        coverage        = ["gcov", "gnatcoverage"]
+                        coverage_target = "%.cov.exe" }
+        modula-2      { extensions      = [".mod", ".def"]
+                        coverage        = ["gcov"]
+                        coverage_target = "%.cov.exe" }
+        cobol         { extensions      = [".cob", ".cbl"]
+                        coverage        = ["gcov"]
+                        coverage_target = "%.cov.exe" }
+        vala          { extensions      = [".vala"]
+                        coverage        = ["gcov"]
+                        coverage_target = "%.cov.exe" }
+        nim           { extensions      = [".nim"]
+                        interpreter     = "nim r"
+                        coverage        = ["gcov", "lcov"] }
+        assembly      { extensions      = [".s", ".asm"]
+                        coverage        = ["kcov", "gcov"]
+                        coverage_target = "%.cov.exe" }
+        python        { extensions      = [".py", ".pyw"]
+                        interpreter     = "python3"
+                        coverage        = ["coverage", "slipcover", "trace"] }
+        cython        { extensions      = [".pyx"]
+                        coverage        = ["coverage"] }
+        lua           { extensions      = [".lua"]
+                        interpreter     = "luau"
+                        coverage        = ["luacov"] }
+        go            { extensions      = [".go"]
+                        interpreter     = "go run"
+                        coverage        = ["go", "gcov"] }
+        rust          { extensions      = [".rs"]
+                        coverage        = ["cargo-llvm-cov", "grcov", "llvm-cov", "kcov", "tarpaulin"] }
+        swift         { extensions      = [".swift"]
+                        interpreter     = "swift"
+                        coverage        = ["llvm-cov", "xccov"] }
+        d             { extensions      = [".d", ".di"]
+                        interpreter     = "rdmd"
+                        coverage        = ["dmd", "gcov", "llvm-cov"] }
+        zig           { extensions      = [".zig"]
+                        interpreter     = "zig run"
+                        coverage        = ["kcov", "llvm-cov"] }
+        crystal       { extensions      = [".cr"]
+                        interpreter     = "crystal run"
+                        coverage        = ["kcov"] }
+        julia         { extensions      = [".jl"]
+                        interpreter     = "julia"
+                        coverage        = ["lcov", "julia"] }
+        r             { extensions      = [".r", ".R"]
+                        interpreter     = "Rscript"
+                        coverage        = ["covr"] }
+        haskell       { extensions      = [".hs", ".lhs"]
+                        interpreter     = "runghc"
+                        coverage        = ["hpc"] }
+        erlang        { extensions      = [".erl", ".hrl"]
+                        interpreter     = "escript"
+                        coverage        = ["cover"] }
+        elixir        { extensions      = [".ex", ".exs"]
+                        interpreter     = "elixir"
+                        coverage        = ["excoveralls", "cover"] }
+        ocaml         { extensions      = [".ml", ".mli"]
+                        interpreter     = "ocaml"
+                        coverage        = ["bisect-ppx"] }
+        clojure       { extensions      = [".clj", ".cljs", ".cljc"]
+                        interpreter     = "clojure"
+                        coverage        = ["cloverage"] }
+        common-lisp   { extensions      = [".lisp", ".lsp"]
+                        interpreter     = "sbcl --script"
+                        coverage        = ["sb-cover"] }
+        prolog        { extensions      = [".pro"]
+                        interpreter     = "swipl"
+                        coverage        = ["swipl"] }
+        solidity      { extensions      = [".sol"]
+                        coverage        = ["solidity-coverage"] }
+        dart          { extensions      = [".dart"]
+                        interpreter     = "dart"
+                        coverage        = ["lcov", "dart"] }
+        flutter       { coverage        = ["lcov", "flutter"] }
+        java          { extensions      = [".java"]
+                        interpreter     = "java"
+                        coverage        = ["jacoco", "cobertura", "clover", "jcov"] }
+        kotlin        { extensions      = [".kt", ".kts"]
+                        interpreter     = "kotlinc -script"
+                        coverage        = ["jacoco", "cobertura", "kover"] }
+        scala         { extensions      = [".scala", ".sc"]
+                        interpreter     = "scala"
+                        coverage        = ["scoverage", "jacoco", "cobertura"] }
+        groovy        { extensions      = [".groovy"]
+                        interpreter     = "groovy"
+                        coverage        = ["jacoco", "cobertura"] }
+        javascript    { extensions      = [".js", ".mjs", ".cjs", ".jsx"]
+                        interpreter     = "node"
+                        coverage        = ["node", "c8", "lcov", "cobertura", "nyc", "istanbul"] }
+        typescript    { extensions      = [".ts", ".tsx"]
+                        interpreter     = "ts-node"
+                        coverage        = ["node", "c8", "lcov", "cobertura", "nyc", "istanbul"] }
+        ruby          { extensions      = [".rb"]
+                        interpreter     = "ruby"
+                        coverage        = ["cobertura", "simplecov"] }
+        php           { extensions      = [".php"]
+                        interpreter     = "php"
+                        coverage        = ["cobertura", "phpunit", "xdebug", "pcov", "phpdbg"] }
+        perl          { extensions      = [".pl", ".pm", ".t"]
+                        interpreter     = "perl"
+                        coverage        = ["cover", "Devel::Cover"] }
+        shell         { interpreter     = "sh"
+                        coverage        = ["kcov", "bashcov"] }
+        bash          { extensions      = [".sh", ".bash"]
+                        interpreter     = "bash"
+                        coverage        = ["kcov", "bashcov"] }
+        zsh           { extensions      = [".zsh"]
+                        interpreter     = "zsh"
+                        coverage        = [] }
+        powershell    { extensions      = [".ps1"]
+                        interpreter     = "pwsh"
+                        coverage        = ["pester"] }
+        tcl           { extensions      = [".tcl"]
+                        interpreter     = "tclsh"
+                        coverage        = [] }
+        csharp        { extensions      = [".cs", ".csx"]
+                        coverage        = ["coverlet", "cobertura", "dotcover", "opencover", "altcover"] }
+        fsharp        { extensions      = [".fs", ".fsx"]
+                        interpreter     = "dotnet fsi"
+                        coverage        = ["coverlet", "cobertura", "altcover"] }
+        vbdotnet      { extensions      = [".vb"]
+                        coverage        = ["coverlet", "cobertura", "opencover"] }
+        matlab        { coverage        = ["matlab"] }
+        octave        { interpreter     = "octave"
+                        coverage        = ["octave"] }
+        verilog       { extensions      = [".v", ".vh"]
+                        coverage        = ["verilator", "verilator_coverage", "vcover", "urg", "imc"] }
+        systemverilog { extensions      = [".sv", ".svh"]
+                        coverage        = ["verilator", "verilator_coverage", "vcover", "urg", "imc"] }
+        vhdl          { extensions      = [".vhd", ".vhdl"]
+                        coverage        = ["gcov", "ghdl", "vcover", "urg", "imc"] }
+        pascal        { extensions      = [".pas", ".pp"]
+                        coverage        = [] }
+        delphi        { extensions      = [".dpr"]
+                        coverage        = [] }
+    }
+}
+"""
 
 
 def candidate_tuple(directory):
@@ -200,7 +422,7 @@ def placed(directory, write, ask=None):
     path  = os.path.join(where, ROOT_CONF_NAME)
     try:
         with open(path, "w", encoding="utf-8") as file_handle:
-            file_handle.write(EMPTY_TEXT)
+            file_handle.write(ROOT_CONF_TEXT)
     except OSError as error:
         write("FAULT: '%s' cannot be written -- %s" % (path, error))
         return None

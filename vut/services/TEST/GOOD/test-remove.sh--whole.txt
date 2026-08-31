@@ -1,36 +1,38 @@
 BEFORE {
-    .hwut-store/test-app.sh.stderr
-    .hwut-store/test-app.sh.stderr.when
-    .hwut-store/test-app.sh.stdout
-    .hwut-store/test-app.sh.stdout.times
-    .hwut-store/test-app.sh.stdout.when
     GOOD/result_db.json
     GOOD/test-app.sh.txt
     GOOD/test_ids.dat
+    TMP/store/observations.bin
+    TMP/store/test-app.sh.stderr
+    TMP/store/test-app.sh.stderr.when
+    TMP/store/test-app.sh.stdout
+    TMP/store/test-app.sh.stdout.times
+    TMP/store/test-app.sh.stdout.when
     book: ['test-app.sh']
 }
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
       test-app.sh -- 6 file(s), the book entry, the register id
-          .hwut-store/test-app.sh.stderr
-          .hwut-store/test-app.sh.stderr.when
-          .hwut-store/test-app.sh.stdout
-          .hwut-store/test-app.sh.stdout.times
-          .hwut-store/test-app.sh.stdout.when
           GOOD/test-app.sh.txt
+          TMP/store/test-app.sh.stderr
+          TMP/store/test-app.sh.stderr.when
+          TMP/store/test-app.sh.stdout
+          TMP/store/test-app.sh.stdout.times
+          TMP/store/test-app.sh.stdout.when
     test-app.sh:
-        forgotten: .hwut-store/test-app.sh.stderr
-        forgotten: .hwut-store/test-app.sh.stderr.when
-        forgotten: .hwut-store/test-app.sh.stdout
-        forgotten: .hwut-store/test-app.sh.stdout.times
-        forgotten: .hwut-store/test-app.sh.stdout.when
         forgotten: GOOD/test-app.sh.txt
+        forgotten: TMP/store/test-app.sh.stderr
+        forgotten: TMP/store/test-app.sh.stderr.when
+        forgotten: TMP/store/test-app.sh.stdout
+        forgotten: TMP/store/test-app.sh.stdout.times
+        forgotten: TMP/store/test-app.sh.stdout.when
         book entry: removed
         register: id retired
 }
 AFTER {
     GOOD/result_db.json
     GOOD/test_ids.dat
+    TMP/store/observations.bin
     book: []
 }

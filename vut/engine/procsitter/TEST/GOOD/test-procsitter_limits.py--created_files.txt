@@ -1,0 +1,18 @@
+INSPECT: created_tuple ->
+           <scratch>/handle_<random>
+           <scratch>/leak_<random>
+           <scratch>/leak_<random>/inside.txt
+           left.txt
+           made
+           made/deep
+           made/deep/file.txt
+  OK  : a file made beside the source is listed
+  OK  : a directory and what it holds, both listed
+  OK  : a file made and removed is NOT listed
+  OK  : what stood before the call is NOT listed
+  OK  : the work dir's own 'TMP/' is the framework's, never listed
+  OK  : a scratch directory the call leaked is listed, absolute, with what it holds
+  OK  : an unlinked-never temp file is listed
+  OK  : the call completed; listing is observation, not a cap
+SUCCESS: created_tuple names what the call made and left.
+<hwut-end>

@@ -38,7 +38,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 from   dataclasses import FrozenInstanceError                    # noqa E402
 
-from   vut.engine.procsitter.procsitter import ProcsitterConfig  # noqa E402
+from   vut.engine.procsitter.api import ProcsitterConfig  # noqa E402
 from   vut.engine.operations.configuration import (                # noqa E402
                                         TestConfiguration,
                                         TestChoiceConfiguration,

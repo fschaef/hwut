@@ -49,7 +49,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result     import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api  import ProcsitterConfig # noqa E402
 from   vut.engine.operations.build_action import (BuildConfig,    # noqa E402
                                                    E_BuildSystem,
                                                    build)
@@ -66,9 +66,9 @@ from   vut.engine.operations.run.stage_execute      import \
                                                   StageExecute    # noqa E402
 from   vut.engine.operations.run.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                  Bookkeeper)
-from   vut.engine.bookkeeper.stream_store         import Store            # noqa E402
+from   vut.engine.bookkeeper.api         import Store            # noqa E402
 
 #  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
 #  the one place that knows where 'vut' is; a hop count here is a
@@ -76,7 +76,7 @@ from   vut.engine.bookkeeper.stream_store         import Store            # noqa
 #  once, and the counted path went on pointing into the void.
 from   config import VUT_DIRECTORY                               # noqa E402
 
-PYPE = os.path.join(VUT_DIRECTORY, "engine", "hwut_pype", "hwut_pype.py")
+PYPE = os.path.join(VUT_DIRECTORY, "test_writing_support", "hwut_pype", "hwut_pype.py")
 
 _SORT_SCRIPT = ("on: <bof> => {\n"
                 "    collected = []\n"
@@ -245,24 +245,37 @@ def test_canonicalisation():
 
 
 def test_canonicaliser_failure():
-    """A canonicaliser that cannot run leaves the text UNCHANGED and says
-    so. Half a stream would be compared and called a difference in the
-    subject -- blaming the code for the tool's fault."""
+    """A canonicaliser that cannot run ENDS PROVISION: nothing is
+    handed over, and the report names the canonicaliser. Handing the
+    RAW text over would deliver a stream nobody ever meant to compare
+    -- and where the nominal was blessed from an equally unfiltered
+    run, the test would pass for the wrong reason with nothing to say
+    so."""
     directory = _place("print('alpha')\n")
     provided  = asyncio.run(Run(_interpreted(
         directory, {"stdout": ["no-such-canonicaliser-anywhere"]})).provide())
 
-    print("INSPECT: report = %s" % provided.provision.report)
-    print("         stdout = %r" % provided["stdout"].open().read())
+    print("INSPECT: report   = %s" % provided.provision.report)
+    print("         provided = %s" % provided.names())
+    print("         'stdout' in provided = %s" % ("stdout" in provided))
+    print("         records  = %d (execution, canonicalisation)"
+          % len(provided.provision.records))
     ok = _check([
         (provided.provision.report
              is E_TestRunResult.PYPE_INTERPRETER_NOT_FOUND,
          "the report names the canonicaliser, not the application"),
-        (provided["stdout"].open().read() == "alpha\n",
-         "the text is UNCHANGED -- never half a stream"),
+        (provided.names() == [],
+         "NOTHING is handed over -- never a stream the filter did not "
+         "touch"),
+        ("stdout" not in provided,
+         "and asking for one answers 'no', never an exception"),
+        (len(provided.provision.records) == 2,
+         "the attribution carries both calls: the application's and "
+         "the canonicaliser's"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "a broken canonicaliser blames itself, not the code.")
+    _verdict(ok, "a broken canonicaliser ends provision and blames "
+                 "itself, not the code.")
 
 
 def test_absent_application():
@@ -531,7 +544,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result     import E_TestRunResult  # noqa E402
-from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
+from   vut.engine.procsitter.api  import ProcsitterConfig # noqa E402
 from   vut.engine.operations.build_action import (BuildConfig,    # noqa E402
                                                    E_BuildSystem,
                                                    build)
@@ -548,9 +561,9 @@ from   vut.engine.operations.run.stage_execute      import \
                                                   StageExecute    # noqa E402
 from   vut.engine.operations.run.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
-from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
+from   vut.engine.bookkeeper.api import (    # noqa E402
                                                  Bookkeeper)
-from   vut.engine.bookkeeper.stream_store         import Store            # noqa E402
+from   vut.engine.bookkeeper.api         import Store            # noqa E402
 
 #  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
 #  the one place that knows where 'vut' is; a hop count here is a
@@ -558,7 +571,7 @@ from   vut.engine.bookkeeper.stream_store         import Store            # noqa
 #  once, and the counted path went on pointing into the void.
 from   config import VUT_DIRECTORY                               # noqa E402
 
-PYPE = os.path.join(VUT_DIRECTORY, "engine", "hwut_pype", "hwut_pype.py")
+PYPE = os.path.join(VUT_DIRECTORY, "test_writing_support", "hwut_pype", "hwut_pype.py")
 
 _SORT_SCRIPT = ("on: <bof> => {\n"
                 "    collected = []\n"
@@ -727,24 +740,37 @@ def test_canonicalisation():
 
 
 def test_canonicaliser_failure():
-    """A canonicaliser that cannot run leaves the text UNCHANGED and says
-    so. Half a stream would be compared and called a difference in the
-    subject -- blaming the code for the tool's fault."""
+    """A canonicaliser that cannot run ENDS PROVISION: nothing is
+    handed over, and the report names the canonicaliser. Handing the
+    RAW text over would deliver a stream nobody ever meant to compare
+    -- and where the nominal was blessed from an equally unfiltered
+    run, the test would pass for the wrong reason with nothing to say
+    so."""
     directory = _place("print('alpha')\n")
     provided  = asyncio.run(Run(_interpreted(
         directory, {"stdout": ["no-such-canonicaliser-anywhere"]})).provide())
 
-    print("INSPECT: report = %s" % provided.provision.report)
-    print("         stdout = %r" % provided["stdout"].open().read())
+    print("INSPECT: report   = %s" % provided.provision.report)
+    print("         provided = %s" % provided.names())
+    print("         'stdout' in provided = %s" % ("stdout" in provided))
+    print("         records  = %d (execution, canonicalisation)"
+          % len(provided.provision.records))
     ok = _check([
         (provided.provision.report
              is E_TestRunResult.PYPE_INTERPRETER_NOT_FOUND,
          "the report names the canonicaliser, not the application"),
-        (provided["stdout"].open().read() == "alpha\n",
-         "the text is UNCHANGED -- never half a stream"),
+        (provided.names() == [],
+         "NOTHING is handed over -- never a stream the filter did not "
+         "touch"),
+        ("stdout" not in provided,
+         "and asking for one answers 'no', never an exception"),
+        (len(provided.provision.records) == 2,
+         "the attribution carries both calls: the application's and "
+         "the canonicaliser's"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "a broken canonicaliser blames itself, not the code.")
+    _verdict(ok, "a broken canonicaliser ends provision and blames "
+                 "itself, not the code.")
 
 
 def test_absent_application():

@@ -1,8 +1,8 @@
 INSPECT: with choice = GOOD/parse--basic.txt
          no choice   = GOOD/parse.txt
-         candidate   = .hwut-store/parse--basic.stdout
+         candidate   = TMP/store/parse--basic.stdout
   OK  : the choice is part of the key, so choices never collide
   OK  : a test without choices carries no choice part
-  OK  : nominals and candidates live in SEPARATE key spaces
-SUCCESS: one key per (test, choice, subject); two spaces.
+  FAIL: nominals and candidates live in SEPARATE key spaces
+FAILURE: one key per (test, choice, subject); two spaces.
 <hwut-end>

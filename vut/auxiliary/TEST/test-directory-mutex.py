@@ -50,7 +50,7 @@ import tempfile
 import subprocess
 import config                                                       # noqa: F401
 
-from   vut.language_support.python.hwut_runner import HwutRunner    # noqa: E402
+from   vut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
 from   vut.auxiliary.directory_mutex           import (             # noqa: E402
                                                MkdirMutex,
                                                DirectoryBusy,

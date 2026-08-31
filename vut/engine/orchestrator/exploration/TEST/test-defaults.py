@@ -122,14 +122,21 @@ def test_declared():
     class Silent:
         numeric_tolerance_ratio: float
 
-    for cls in (Renamed, Silent):
-        RELATION["numeric"] = (cls, "numeric_tolerance_ratio")
-        try:
-            _assert_relation()
-            print("%s: NOT CAUGHT" % cls.__name__)
-        except ImportError as error:
-            print("%s -> %s" % (cls.__name__, str(error).splitlines()[-1]
-                                                        .strip()))
+    #  THE TABLE IS MODULE STATE and this process may run the next
+    #  choice too (the interactive runner keeps the interpreter): put
+    #  the entry back, or 'instantiate' meets a class of this test's.
+    standing = RELATION["numeric"]
+    try:
+        for cls in (Renamed, Silent):
+            RELATION["numeric"] = (cls, "numeric_tolerance_ratio")
+            try:
+                _assert_relation()
+                print("%s: NOT CAUGHT" % cls.__name__)
+            except ImportError as error:
+                print("%s -> %s" % (cls.__name__,
+                                    str(error).splitlines()[-1].strip()))
+    finally:
+        RELATION["numeric"] = standing
 
 
 def test_refused():

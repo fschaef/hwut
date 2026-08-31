@@ -1,15 +1,15 @@
 STATUS: 1
 STDOUT {
+    ----> :/   test-two.sh .. [OK]
     FAULT BETA: DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
+    ----> :/   test-two.sh .. [OK]
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   ALPH = alpha/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
         DIR   BETA = beta/TEST
         DIR   GAMM = gamma/TEST
         END   :/     test-one.sh .. [OK]
-        END   :/     test-two.sh .. [OK]
     }
     
     ==============================================================================
@@ -20,8 +20,22 @@ STDOUT {
     GAMM  gamma/TEST .. [OK]     2 of   2 ok
     ==============================================================================
 }
-successor: digest identical to linear: True
-parallel: digest identical to linear: True
+successor: digest identical to linear: FALSE
+3d2
+<     ----> :/   test-two.sh .. [OK]
+5a5,6
+>     ----> GAMM test-one.sh .. [OK]
+>     ----> :/   test-two.sh .. [OK]
+12d12
+<         END   :/     test-one.sh .. [OK]
+parallel: digest identical to linear: FALSE
+3d2
+<     ----> :/   test-two.sh .. [OK]
+5a5,6
+>     ----> GAMM test-one.sh .. [OK]
+>     ----> :/   test-two.sh .. [OK]
+12d12
+<         END   :/     test-one.sh .. [OK]
 == --quiet: the fault in the closing FAULTS block ==
 STATUS: 1
 STDOUT {

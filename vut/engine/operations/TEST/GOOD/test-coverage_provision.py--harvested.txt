@@ -1,6 +1,6 @@
 INSPECT: verdict False report nominal-file-not-found
          coverage on the entry: ok
-         record: .hwut-store/demo.py.cover  (binary; shown converted)
+         record: TMP/store/demo.py.cover  (binary; shown converted)
            | ##VUT-COVERAGE 2
            | ##run:      0.0
            | ##language: python

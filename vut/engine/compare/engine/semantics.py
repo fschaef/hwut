@@ -195,7 +195,7 @@ def verdict_to_edit_id(verdict_id, subject_le, nominal_le, analogy_db, analogy):
             else:
                 return E_EditId.GOOD
         case _:
-            assert False, verdict_id
+            raise AssertionError(verdict_id)
 
 
 def analogy_commitment(analogy_db):

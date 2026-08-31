@@ -13,7 +13,7 @@ STDOUT {
 }
 --- 2. hwut.run does not run it: unstable, the directory fails
 STATUS: 1
-END   SUIT test-app.sh ........................... UNSTABLE -- not run  [FAIL]
+END   test-app.sh ................................ UNSTABLE -- not run  [FAIL]
 SUIT  suite/TEST ........................................ [FAIL]   0 of   1 ok
     test-app.sh                  UNSTABLE -- not run
 --- 3. hwut.accept refuses to bless it

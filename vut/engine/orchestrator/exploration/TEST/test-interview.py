@@ -51,7 +51,7 @@ import shutil
 import tempfile
 import config                                                       # noqa: F401
 
-from vut.language_support.python.hwut_runner    import HwutRunner
+from vut.test_writing_support.python.hwut_runner    import HwutRunner
 from vut.engine.orchestrator.exploration.hwut_info_interview import (specification_of,
                                                         interview,
                                                         INTERVIEW_CAPS)

@@ -3,7 +3,7 @@ STDOUT {
     SANITIZE, in 'tree': lock, orphans, out, session  (reporting only; '--apply' acts)
     
       session -- 1 found:
-          suite/TEST/.hwut-session                             a session that did not finish; 1 sink file(s), read by nobody
+          suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody
     
       out -- 1 found:
           suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
@@ -13,12 +13,13 @@ STANDING {
     hwut-root.conf
     suite
     suite/TEST
-    suite/TEST/.hwut-session
-    suite/TEST/.hwut-session/a.out
     suite/TEST/GOOD
     suite/TEST/GOOD/test-app.sh.txt
     suite/TEST/OUT
     suite/TEST/OUT/product.txt
+    suite/TEST/TMP
+    suite/TEST/TMP/session
+    suite/TEST/TMP/session/a.out
     suite/TEST/hwut.conf
     suite/TEST/test-app.sh
 }

@@ -1,7 +1,7 @@
 
 --- unknown kind ignored; unknown verdict reads not-ok; a misfit is a fault ---
 DIR   SUIT = suite/TEST
-END   SUIT test-q.sh ..................................... quarantined  [FAIL]
+END   test-q.sh .......................................... quarantined  [FAIL]
 FAULT SUIT: event of kind 'run-ended' does not fit the vocabulary
 
 ==============================================================================

@@ -1035,3 +1035,413 @@ COST      A face reading the entry set now says 'open_labels.entry_db'
 VERIFIED  17 label choices unmoved, 352 declared choices unmoved. Six
           imports fell out: the three faces no longer know what a
           'SelectionError' or a missing boundary is -- the brick does.
+
+
+E-25  THE BOUNDARY FACE WRITES THE LANGUAGE TABLE               (2026-08-30)
+______________________________________________________________________________
+PROBLEM   Exploration R-73 and coverage D-26 moved every per-language
+          default out of the code. Something has to put it in front
+          of the author.
+DECISION  '_boundary.placed' writes 'hwut-root.conf' WITH the full
+          'language-setup' block: every language the coverage registry
+          vouched for, its candidate tools in preference order; its
+          'extensions', every one owned by a single entry ('.m' is
+          objective-c's, '.pl' perl's; MATLAB and Prolog files say so
+          in their header or use '.pro'); its 'interpreter' wherever a
+          launcher takes the source file as its first argument
+          ('python3', 'node', 'go run', 'sbcl --script', 'dotnet fsi'
+          ...); and 'coverage_target = "%.cov.exe"' for the gcc family,
+          whose instrumented build is one more target of the author's
+          own build rules. The text is the one template in
+          '_boundary.py'; a face that prints it prints exactly what it
+          would write. A language's NAME IS A BARE, SHELL-SAFE WORD:
+          'csharp', 'fsharp', 'vbdotnet' -- it travels on a command
+          line ('--language=csharp') and in a HOCON key unquoted.
+COST      A new root conf is ~200 lines instead of two. The two-line
+          form is still valid HOCON and still a boundary. A launcher
+          named here that is not installed refuses by name when a test
+          of that language runs; nothing is guessed.
+
+E-26  '--language' STANDS IN THE WISH, FOR EVERY FACE            (2026-08-30)
+______________________________________________________________________________
+DECISION  Exploration R-75, adopted: parsed by 'parse_wish', printed
+          by 'Wish.__str__', settled by 'CTestTaskListQuery' at the one
+          door every face guards. No face parses it itself.
+
+
+E-27  THE PROCSITTER NAMES WHAT A CALL MADE AND LEFT            (2026-08-30)
+______________________________________________________________________________
+PROBLEM   '/tmp' filled with 'vut_ids_*', 'vut_mutex_*' and their kin:
+          33 tests make scratch through 'tempfile', several never
+          remove it, several remove it only on the happy path, and a
+          killed choice removes nothing. Nobody could say which call
+          left what.
+DECISION  Two things, ruled together (chat, 2026-08-30).
+          THE PROCSITTER SUPERVISES THE CALL FOR CREATED FILES: a
+          before-and-after listing over the work dir and the call's
+          scratch ground, reported as 'ProcsitterResult.created_tuple'
+          -- what stands at exit and did not before. The work dir's
+          own 'TMP/' is the framework's and is never listed. It is an
+          OBSERVATION, not a cap: the procsitter deletes nothing.
+          EVERY CALL GETS A SCRATCH GROUND OF ITS OWN,
+          'TEST/TMP/scratch/<file>[--<choice>]', exported to it as
+          TMPDIR, so that what 'tempfile' leaves is attributable to
+          one call and lands where 'hwut.sanitize --transient' clears
+          it. The machine's '/tmp' sees nothing of a test.
+          The observation rides with the other telemetry into the
+          record; where it lands for good is pass D's (todo-2), and
+          'hwut.sanitize' reading it is later.
+COST      One listing before the spawn and one after, over the test
+          directory -- the walk the disk watchdog already makes on
+          every poll. A test that wants the machine's '/tmp' must ask
+          for it by name.
+GRAVEYARD A watch (inotify) in place of the listing: not portable, and
+          the interesting set -- what was LEFT -- is exactly what a
+          listing at exit sees.
+
+
+E-28  THE PYPE CALL IS OPERATIONS', AND EVERY CALL IS SUPERVISED    (2026-08-30)
+______________________________________________________________________________
+PROBLEM   A stated 'pype = "./tidy.pype"' was exec'd as stated, so the
+          script's she-bang line and execute bit decided whether a
+          test's stream could be canonicalised -- a bundle extracted
+          without its chmod script turned every pype-d test red with
+          'Permission denied'. And the language suite ran its own
+          launches through 'subprocess.run', which answers a missing
+          execute bit with a traceback out of the test.
+DECISION  Inside the framework THE CALL IS FORMED IN ONE PLACE,
+          'operations.run.stage_canonicalise.pype_call': a first word
+          ending in '.pype' runs as '[python, hwut_pype.py, <script>,
+          ...]' -- the interpreter, this Python -- whatever the file's
+          she-bang or mode. Any other first word is the author's own
+          command and runs as stated. Under the procsitter, as before.
+          A TEST THAT RUNS A COMMAND OF ITS OWN asks the supervisor
+          too: 'engine/procsitter/spawn.py' gives 'spawn(argv, ...)'
+          in 'subprocess.run''s shape, and a command that cannot be
+          launched comes back as 'FAIL_LAUNCH' with the reason on
+          'stderr', never as an exception. It stands beside the
+          procsitter, since the test-writing support is SEALED.
+COST      The she-bang of a '.pype' still matters to a SHELL -- a
+          person typing './tidy.pype' or a test through 'spawn' -- and
+          that is where it belongs. 'bin/hwut.pype' is that person's
+          door, and the extraction's chmod script is not optional.
+
+
+E-29  THE SHAPE OF A DIFFERENCE, AND WHO IS NOT TOLD BY IT     (2026-08-30)
+______________________________________________________________________________
+PROBLEM   'differs from GOOD' sends every reader to the same place. A
+          GOOD blessed under a framework that SWALLOWED output is
+          missing lines it should always have carried, and the reader
+          who must re-record it reads it the same way as one hunting a
+          regression.
+DECISION  A difference wears one of three SHAPES, and the shape is the
+          word:
+              GREW      every recorded line stands, in order; lines
+                        stand between or around them
+                        -> 'extra lines; GOOD intact'
+              SHRANK    every line that stands was recorded, in order;
+                        lines the GOOD holds are gone
+                        -> 'lines missing; rest intact'
+              DIVERGED  neither: a recorded line changed or moved
+                        -> 'differs from GOOD'
+          ALL THREE ARE [FAIL]. The badge does not move, and the shape
+          is the explanation beside it.
+          THE SHAPE SAYS WHERE TO LOOK, NEVER WHO IS WRONG. A stale
+          GOOD grows; so does A FILTER THAT STOPPED FILTERING -- and
+          that second one is the defect a golden master exists to
+          catch. They wear the same shape. Reading 'GREW' as 'safe to
+          bless' would bless noise into the oracle, which is the one
+          unrecoverable act in this tree.
+          'adm/good_audit.py' reads a whole tree's shapes at once from
+          what a run already left, in these same words. It stays in
+          'adm/' and is NOT an aspect of 'hwut.sanitize': sanitize's
+          subject is rubbish and its findings are decidable from the
+          tree alone, while a shape is evidence about the oracle; and
+          an aspect of sanitize would give '--apply' the meaning
+          'overwrite the nominals'. 'hwut.accept' is the one door a
+          nominal changes through.
+COST      One extra read of both texts per failing subject.
+GRAVEYARD 'STALE' as a verdict name -- rejected on the author's
+          objection: it names a culprit the test cannot identify.
+          A '--stale-goods' aspect of 'hwut.sanitize' -- see above.
+
+E-30  THE REPEAT MARK STANDS UNDER WHAT IT REPEATS            (2026-08-30)
+______________________________________________________________________________
+DECISION  Where an application repeats, its ':' stands in the
+          APPLICATION'S COLUMN, under the first letter of the name --
+          ':/ :' and not ':/:'. A mark that says 'the same as above'
+          belongs above what it repeats.
+
+
+E-31  THE SHAPE IS THE REPORT'S TO SAY, NOT THE RUN'S          (2026-08-30)
+______________________________________________________________________________
+PROBLEM   E-29 took the shape AT THE COMPARE SITE, on fresh readers.
+          That contradicts the compare's own law: 'is_equivalent'
+          aborts as soon as 'False' can be stated and CONSUMES NO
+          FURTHER INPUT, so the caller may terminate the producer.
+          At verdict time neither text has been read whole -- and
+          GREW and SHRANK are claims ABOUT THE WHOLE TEXT. Re-reading
+          both entire, at that moment, pays exactly the cost early
+          abort exists to avoid, and on a stream cut short at the
+          abort it would classify a fiction.
+DECISION  THE RUN SAYS 'differs from GOOD', AND NO MORE. The shape is
+          taken by 'hwut.report' ('services/report.py.difference_shape'),
+          afterwards, from the stored candidate and the nominal --
+          whole files, no producer to starve, no economy to keep. It
+          is asked only of a difference the run already found, of
+          'stdout', and it DECLINES -- leaving the run's own word --
+          where a file is missing or cannot be read.
+          'adm/good_audit.py' is the tree-wide reading of the same
+          question and stands unchanged.
+COST      A shape needs a stored candidate; a report of a run whose
+          'TMP/' was cleared says 'differs from GOOD', which is true
+          and all that is left to say.
+OPEN      WAS THE CANDIDATE THE WHOLE OUTPUT? A comparison that
+          aborted early may have left a PREFIX, and a prefix read as
+          'shrank' would be the false claim this entry removes. The
+          note -- ran to the end / aborted at the first difference --
+          is machine-local, per (test, choice, operation), and
+          regenerable: the local observation database's shape exactly
+          (bookkeeper todo-2, pass D). BUILT THERE, NOT BEFORE: a
+          field added to the base now is one pass B must strip. Until
+          it stands, 'difference_shape' is honest about what it reads
+          and nothing warns that the candidate might be a prefix.
+
+
+E-32  ONE USAGE LINE PER FACE, GENERATED                        (2026-08-30)
+______________________________________________________________________________
+PROBLEM   'hwut.report --help' printed its usage TWICE and the two
+          disagreed: a hand-written block inside the module docstring,
+          which named neither the target globs, and the generated
+          'USAGE' appended at the end, which did. 'hwut.sanitize' and
+          'hwut.wishlist' carried the same pair. A usage line written
+          by hand drifts from the tokens the face actually reads --
+          which is the defect 'usage_line' exists to prevent.
+DECISION  THE DOCSTRING STATES NO USAGE. One 'USAGE = usage_line(...)'
+          per face, built from the token tuples, appended to 'HELP'.
+          And every prefix reads 'usage: hwut.<face>': five faces said
+          only 'hwut.<face>', so their line was the one line in the
+          help that did not say what it was.
+COST      Six GOODs re-recorded.
+OPEN      'hwut.accept', 'hwut.run' and 'hwut.plan' hold a hand-written
+          'HELP' string and do NOT append their 'USAGE' -- it is
+          printed only on a refusal. Their help therefore ends without
+          a usage line while the others end with one. One shape or the
+          other; not decided here.
+
+
+E-33  THE FLOW SAYS ONLY WHAT CHANGED                          (2026-08-30)
+______________________________________________________________________________
+PROBLEM   Two columns of the flow repeated things the reader already
+          knew. A run that never leaves ONE directory printed that
+          directory's nickname on the first line and ':/' -- 'the same
+          as above' -- on every line after, about a thing that was
+          never in question. And a block of twenty runs beginning at
+          once printed 'START' twenty times, the word carrying no more
+          information the nineteenth time than the fill dots do.
+DECISION  ONE DIRECTORY, NO DIRECTORY COLUMN. Where 'tree-begun' names
+          a single directory the column is not drawn at all; what
+          repeats is the application alone, and its ':' stands under
+          its name (E-30). The 'DIR' line still names the directory:
+          which place this is remains worth saying once.
+          A BADGE THAT REPEATS BECOMES AN ARROW. The first of a run of
+          'START's says 'START'; those under it say '---->', as wide
+          as a badge so no column moves. Only the flow badges elide --
+          'DIR', 'TREE' and 'FRAME' announce something and are never a
+          run.
+COST      Thirteen GOODs re-recorded, all of them the columns
+          themselves.
+
+
+E-34  THE LOCAL OBSERVATION DATABASE IS BUILT                 (2026-08-30)
+______________________________________________________________________________
+DECISION  E-22 and E-23, built (bookkeeper todo-2, pass D).
+          'engine/bookkeeper/observation.py': 'TMP/store/observations.bin',
+          keyed (test, choice, operation), state now, overwritten;
+          'when' as epoch seconds, 'duration_ms', 'cpu_time_ms', the
+          host, the three peaks, 'created_tuple' (E-27) and
+          'compare_complete_f' -- the note E-31 left open now has its
+          home, and a reader that finds it False knows the stored
+          candidate may be a prefix.
+          ONE FILE PER DIRECTORY, not one per key: a query asks about
+          every key at once, and a hundred tiny files are a hundred
+          opens to answer it. Read whole, changed, written whole, as
+          the book is.
+          THE CODEC IS THE TREE'S ONE, at the foundation:
+          'auxiliary/binary_codec.py' holds the writer and the reader
+          the coverage record used privately; both spellers import it.
+          Not the coverage module's -- the bookkeeper stands below
+          coverage and may not reach up (the layering check said so).
+          'Bookkeeper.record' writes the observation beside the entry
+          and SWALLOWS a fault doing so: an observation nobody can
+          store costs a re-run and must never fail a verdict.
+          '--faster-than=<seconds>' on every face, human seconds
+          converted at the boundary, reading the 'Run' duration only;
+          '--since' reads the local instant. SILENCE IS NOT SELECTED:
+          with 'TMP/' cleared, both select nothing -- verified.
+COST      31 kB of local files across the framework's own tree, none
+          of it in git, all of it under 'rm -rf TMP/'.
+
+E-35  THE BASE HOLDS DECISIONS                                 (2026-08-30)
+______________________________________________________________________________
+DECISION  E-20 and E-21, built (bookkeeper todo-3, pass B), after D.
+          'when', 'host' and 'records' leave the entry; 'verdict',
+          'report', 'canonicaliser', 'compare', 'coverage' and
+          'first_accept' stay -- the last as the ONLY instant, because
+          acceptance is a decision and no run makes it again. A
+          re-accept moves nothing in the book: where the LAST accept
+          was is an observation. 'hwut.report' dates its page from the
+          observations and says '<no date>' where this machine has
+          seen none -- the truth about what it knows.
+MEASURED  like for like, 'services/TEST/GOOD/result_db.json':
+          83,413 B before, 46,563 B after -- 55.8%. todo-3 predicted
+          40.8% on a 288-entry sample; the difference is the
+          per-choice 'configuration' blocks, which this base carries
+          more of and which stay by E-20. Still plain, readable JSON.
+COST      Eight GOODs re-recorded; five test assertions turned from
+          'when and host are here' to 'they are not, and here is where
+          they went'.
+
+
+E-36  THE CRITERION IS TIME AND PLACE, NOT REPRODUCIBILITY   (2026-08-30)
+______________________________________________________________________________
+PROBLEM   E-20 asked "can a run make it again, identically?" and then
+          kept 'verdict' and 'report', which a run makes again every
+          time. The criterion did not decide its own leading case, and
+          a rule that needs an exception on its first application is
+          the wrong rule.
+DECISION  THE QUESTION IS WHETHER A THING DEPENDS ON WHEN AND WHERE.
+
+          THE BOOK HOLDS WHAT THE SOFTWARE IS. A verdict and a report
+          are a statement about the software and the test applications
+          AS THEY WERE CONFIGURED at the time of the test, and about
+          nothing else. They must not depend on history, on the host,
+          on the weather in Los Angeles, or on what the Chancellor had
+          for breakfast. That is what makes them worth keeping: THEY
+          TELL A READER WHETHER THE SOFTWARE IS RELIABLE WITHOUT
+          RUNNING IT AGAIN.
+
+          THE LOCAL DATABASE HOLDS WHAT THIS MACHINE SAW. Execution
+          time, memory, pids, disk, the host, the instant: queryable,
+          and queryable with the understanding that they are LOCAL TO
+          THE TIME AND PLACE the test was executed. The same test on
+          another machine answers differently, and that is the correct
+          answer (E-22).
+
+          Where a thing is place-dependent it goes local, whether or
+          not a run reproduces it; where it is a claim about the
+          software it stays in the book, whether or not a run
+          reproduces it. 'verdict' and 'report' stay by the second
+          clause -- and now they stay BY THE RULE, not despite it.
+
+          TWO CONSEQUENCES, ruled with it (chat, 2026-08-30):
+
+          THE BOOK WRITES THE CAPS THAT HELD, by the name an author
+          states them under, through the adapter's '_CAPS_FIELD_DB' --
+          the one list of that vocabulary. The framework's defaults
+          ride with the stated ones, because THE DEFAULT IS WHAT HELD
+          and a reader asking what this test was configured to do must
+          be told it. Writing the procsitter's dataclass whole had put
+          'scratch_dir' and 'env' into every oracle: the EXECUTOR'S
+          fields, place-dependent, and growing whenever the procsitter
+          grows.
+
+          'first_accept' BECOMES 'last_accept'. The book dates the
+          nominal NOW STANDING -- a fact about the oracle in front of
+          the reader -- and a re-accept moves it. Every earlier
+          acceptance is HISTORY, and history is the configuration
+          management system's: git holds each one dated, attributed
+          and undoable, and a second, poorer copy in the book is a
+          copy that can disagree.
+COST      A book written before this entry carries 'first_accept'; it
+          is not read, and the next acceptance writes 'last_accept'
+          beside it.
+GRAVEYARD "Machine-authored is transient": bins 'GOOD/test_ids.dat'
+          wrong (B-2 -- ids are issued once and a re-run issues
+          different ones), which is why E-20 reached for
+          reproducibility in the first place. Time-and-place bins it
+          right: an id is a decision about a file, not an observation
+          of a machine.
+
+
+E-37  A COMPONENT MAY HAVE ONE DOOR                            (2026-08-30)
+______________________________________________________________________________
+PROBLEM   'engine/compare' is the largest component of the tree and the
+          one whose insides move most -- regions, solvers, edit
+          operations, readers. The rest of the tree reached it at four
+          different depths, one of them ('region/registry') for a
+          single exception class. Nothing said where the component
+          ended, so nothing could tell a rearrangement from a breach.
+DECISION  'engine/compare/api.py' is the ONE DOOR, and holds five
+          names: 'Configuration', 'is_equivalent', 'associate',
+          'RegionSyntaxError', 'feeder_ui'. Nothing of its own -- a
+          door with logic in it becomes a component, and then there
+          are two compares. 'RegionSyntaxError' moved to
+          'compare/contract/enums.py' on the way: a class the CALLER
+          CATCHES crosses the wall, and what crosses is vocabulary.
+          THE RULE IS EXECUTABLE. 'adm/LAYERING.txt' gains a third
+          line shape beside '->' and 'SEALED':
+              DOOR <module>   nothing outside the component may import
+                              anything beneath it but this
+          judged at MODULE depth like a seal, and the component's own
+          modules are unaffected -- a door is for callers, and a part
+          is not a caller. A seal says NOTHING LEAVES; a door says
+          NOTHING ENTERS BUT HERE.
+          THIS IS A TEMPLATE. Any component whose surface is small and
+          whose insides move may take a door the same way; the check
+          reads as many as are declared. Three followed at once
+          (E-38).
+COST      Seven modules touched, no behaviour change. The door was
+          proved by breaking it: one import restored to its old
+          spelling, and the check named the module, the target and the
+          door.
+FOUND ON THE WAY, and fixed: 'bookkeeper -> orchestrator', an
+          inversion E-36 had just introduced -- the book read the caps
+          vocabulary from the adapter, which stands above it. The
+          vocabulary now stands at 'bookkeeper/configuration.CAPS_FIELD_DB',
+          below both its readers. The layering check found it, which is
+          the argument for the whole mechanism in one line.
+
+
+E-38  FOUR DOORS, AND THE CONFIGURATION LAW                    (2026-08-30)
+______________________________________________________________________________
+PROBLEM   'operations' and 'orchestrator' depend on the same
+          components, which reads like a case for ONE SHARED API.
+          Measured, it is not: of nineteen names crossing, six overlap
+          -- the procsitter's five and 'compare.Configuration'.
+          Operations RUNS things ('pack_record', 'harvest',
+          'is_equivalent'); orchestrator ARRANGES them ('Bookkeeper',
+          'elect', 'ObservationDb', 'event'). A common api would be
+          the UNION of two vocabularies, and each caller would see nine
+          names it must not use: a bag, not a door.
+DECISION  DOORS ON WHAT THEY BOTH CALL, not a door between them. Three
+          more, by E-37's rule: 'engine/procsitter/api' (sealed AND
+          doored -- nothing leaves, nothing enters but here),
+          'engine/coverage/api', 'engine/bookkeeper/api'. With
+          'compare', four.
+
+          A CONFIGURATION CONFIGURES A COMPONENT, SO IT STANDS ON THE
+          COMPONENT'S DOOR. There is no question about it: the type a
+          caller must build in order to call at all is the first thing
+          the door owes them. 'ProcsitterConfig', 'CoverageConfig',
+          'StoreConfig', 'NamingConfig', 'CAPS_FIELD_DB' and
+          'compare.Configuration' each stand on the door of the
+          component they configure, and each door's docstring names it
+          first.
+
+          SUBSTITUTE AT THE DOOR, stated in every door's docstring: a
+          re-export binds its names ONCE, at import, so 'api.X' and
+          'module.X' are two names for one object and rebinding one
+          does not touch the other. A test replacing a class must
+          replace it at the door, because the door is what the product
+          reads; patching behind it leaves the door holding the
+          original, the substitution appears to succeed, and the code
+          under test runs against the old class. Found by
+          'test-bookkeeper.py setup_delta', which invents a future
+          'compare.Configuration' and had been patching the module the
+          door imports from.
+COST      71 files rewritten, mechanically, no behaviour change. The
+          bookkeeper's door carries 25 names -- the widest of the four,
+          because the component owns TWO databases; if that is too
+          wide, the answer is to split the component, and the door now
+          makes the width visible.

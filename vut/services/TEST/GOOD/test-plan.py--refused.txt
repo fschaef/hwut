@@ -6,6 +6,7 @@ $ hwut.plan --since=noon
                      [--glob <target>]... [--exclude <target>]...
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [--label <expr>]
+                     [--language=<name>]... [--faster-than=<sec>]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
@@ -16,6 +17,7 @@ $ hwut.plan --fail --pass
                      [--glob <target>]... [--exclude <target>]...
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [--label <expr>]
+                     [--language=<name>]... [--faster-than=<sec>]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
@@ -26,6 +28,7 @@ $ hwut.plan --sideways
                      [--glob <target>]... [--exclude <target>]...
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [--label <expr>]
+                     [--language=<name>]... [--faster-than=<sec>]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 <hwut-end>

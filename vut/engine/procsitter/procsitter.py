@@ -195,6 +195,19 @@ class ProcsitterResult:
                                          # the work dir (watchdog walk);
                                          # the WHY beside
                                          # FAIL_DISK_USAGE_EXCEEDED
+    created_tuple:  tuple = ()           # FILES THAT APPEARED AND STAYED:
+                                         # under the work dir (relative
+                                         # to it) and under the scratch
+                                         # ground (absolute), standing at
+                                         # exit and absent before the
+                                         # spawn. What the call made and
+                                         # did not remove -- the ground
+                                         # 'hwut.sanitize' clears and the
+                                         # author reads when a test
+                                         # litters. A file made and
+                                         # removed during the call is
+                                         # not here: the listing is
+                                         # before and after, not a watch.
                                          #
                                          # SUCCESS is 'containment is
                                          # E_Containment.OK_COMPLETED' --
@@ -269,6 +282,8 @@ class Procsitter:
         state              = _RunState()
         preexec, unenforced = self._make_preexec()
         rusage_before      = self._rusage_children()
+        env_overlay        = self._env_overlay()
+        standing_before    = self._standing_set()
         t0                 = time.monotonic()
 
         try:
@@ -278,8 +293,8 @@ class Procsitter:
                 stdout = asyncio.subprocess.PIPE,
                 stderr = asyncio.subprocess.PIPE,
                 cwd    = self.work_dir,
-                env    = (None if self.config.env is None
-                          else {**os.environ, **self.config.env}),
+                env    = (None if env_overlay is None
+                          else {**os.environ, **env_overlay}),
                 **self._spawn_kwargs(preexec))
         except (FileNotFoundError, PermissionError, NotADirectoryError):
             return ProcsitterResult(E_Containment.FAIL_LAUNCH, None,
@@ -385,12 +400,13 @@ class Procsitter:
             stderr_lines.append(bytes(stderr_pending)[-_STDERR_LINE_MAX:])
         stderr_text = b"".join(stderr_lines).decode("utf-8", errors="replace")
         return self._make_result(process.returncode, state, wall, cpu,
-                                 unenforced, stderr_text)
+                                 unenforced, stderr_text,
+                                 standing_before)
 
     # ------------------------------------------------------- result shaping
 
     def _make_result(self, returncode, state, wall, cpu, unenforced,
-                     stderr_last_100_lines):
+                     stderr_last_100_lines, standing_before=frozenset()):
         """
         RETURN: ProcsitterResult, the verdict derived from the recorded
                 watchdog/stop cause first, else the death signal
@@ -417,7 +433,63 @@ class Procsitter:
                              unenforced     = unenforced,
                              stderr_last_100_lines = stderr_last_100_lines,
                              peak_pids      = state.peak_pids,
-                             peak_disk_mb   = state.peak_disk_mb)
+                             peak_disk_mb   = state.peak_disk_mb,
+                             created_tuple  = self._created_tuple(
+                                                  standing_before))
+
+    def _env_overlay(self):
+        """
+        RETURN: dict | None, the configured overlay with the scratch
+                ground exported as the temp directory, where one is
+                configured; the scratch ground exists on return.
+        """
+        scratch = self.config.scratch_dir
+        if scratch is None: return self.config.env
+        with suppress(OSError):
+            os.makedirs(scratch, exist_ok=True)
+        return {**(self.config.env or {}),
+                "TMPDIR": scratch, "TMP": scratch, "TEMP": scratch}
+
+    def _standing_set(self):
+        """
+        RETURN: set[str], every file and directory standing under the
+                work dir (relative to it) and under the scratch ground
+                (absolute) -- the 'before' of 'created_tuple'.
+        """
+        found = set()
+        roots = [str(self.work_dir)]
+        if self.config.scratch_dir is not None:
+            roots.append(os.path.abspath(self.config.scratch_dir))
+        for root in roots:
+            under_work_f = root == str(self.work_dir)
+            stack = [root]
+            while stack:
+                path = stack.pop()
+                try:
+                    with os.scandir(path) as entry_iter:
+                        entry_list = list(entry_iter)
+                except OSError:
+                    continue
+                for entry in entry_list:
+                    shown = (os.path.relpath(entry.path, root)
+                             if under_work_f else entry.path)
+                    #  The work dir's own 'TMP/' is the FRAMEWORK'S
+                    #  ground (E-24): sinks and records written beside
+                    #  the call are not the call's doing. The scratch
+                    #  ground, though under it, is walked as its own
+                    #  root above.
+                    if under_work_f and shown == "TMP": continue
+                    found.add(shown)
+                    with suppress(OSError):
+                        if entry.is_dir(follow_symlinks=False):
+                            stack.append(entry.path)
+        return found
+
+    def _created_tuple(self, standing_before):
+        """
+        RETURN: tuple[str], sorted: what stands now and did not before.
+        """
+        return tuple(sorted(self._standing_set() - standing_before))
 
     def _cpu_time(self, rusage_before, state):
         """

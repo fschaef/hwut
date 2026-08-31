@@ -27,6 +27,10 @@ STDOUT {
 --- and PLAY RECORDED NOTHING:
 STANDING {
     GOOD
+    TMP
+    TMP/scratch
+    TMP/scratch/test-exact.sh
+    TMP/scratch/test-loose.sh
     hwut.conf
     test-exact.sh
     test-loose.sh

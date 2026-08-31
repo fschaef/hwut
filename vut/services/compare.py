@@ -71,7 +71,7 @@ async def compare_view(subject_text, nominal_text, adapter,
     adapter renders it. The verdict is read off the rendering's own
     count, not derived a second way.
     """
-    from vut.engine.compare.configuration import Configuration
+    from vut.engine.compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
     await feed_down(compare_options,
                     io.StringIO(subject_text), io.StringIO(nominal_text),
@@ -90,7 +90,7 @@ async def reading_view(text, adapter, subject_name="reading",
     which regions frame it. (The adapter should be a reading-marking
     one; this function does not police it.)
     """
-    from vut.engine.compare.configuration import Configuration
+    from vut.engine.compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
     await feed_down(compare_options,
                     io.StringIO(text), io.StringIO(text),

@@ -85,7 +85,7 @@ about whether coverage was wanted.
         |
         v
     harvest() --------> CoverageRecord --seated(run id)-->
-                        (homogeneous)   .hwut-store/<test>--<choice>.cover
+                        (homogeneous)   TMP/store/<test>--<choice>.cover
 
 Four seams outside this component: the adapter's target
 ('orchestrator/run/adapter.py'), the execute stage's argv
@@ -246,7 +246,7 @@ THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov <wishlist>' or
     report   'report_argv', the tool's second call, supervised.
     harvest  the run's closing act: the reader reads 'OUT/COVERAGE',
              the record is seated with the run id and written to
-             '.hwut-store/<test>--<choice>.cover' in its BINARY
+             'TMP/store/<test>--<choice>.cover' in its BINARY
              spelling (D-20; 'hwut.cov convert' shows it). Raw
              artefacts are run debris under 'OUT/'.
 
@@ -444,8 +444,11 @@ see DISCUSSIONS disc-9 and its amendment.
 ------------------------------------------------------------------------------
 
     (1) an entry in 'registry.EXTENSION_DB' if the extension is new
-    (2) an entry in 'registry.DEFAULT_TOOL_DB': language glob -> the
-        candidate tools, in PREFERENCE order
+        (it serves 'hwut.cov convert' and the record's header)
+    (2) the language's 'coverage' list in the SHIPPED ROOT CONF
+        ('services/_boundary.ROOT_CONF_TEXT', D-26): the candidate
+        tools, in PREFERENCE order. A tree already placed carries its
+        own copy in 'hwut-root.conf' and edits that.
     (3) a module under 'readers/' with 'wrap', 'report_argv' and
         'harvest', passed to 'reader.register', and imported by
         'readers/__init__.py'

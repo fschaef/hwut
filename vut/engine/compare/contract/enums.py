@@ -50,4 +50,15 @@ class E_ToleranceId(int, Enum):
     CONSTRAINT_BINDING  = 7
 
 
+class RegionSyntaxError(Exception):
+    """Region framing of the INPUT is broken (unknown handler, bad
+    parameter, nesting, stray/missing '####'). Deliberately loud: a
+    region marker must never be silently reinterpreted as content.
 
+    IN THE CONTRACT because THE CALLER CATCHES IT: it crosses the
+    component's wall, and what crosses is vocabulary, not private
+    matter.
+    """
+    def __init__(self, line_n, message):
+        self.line_n = line_n
+        super().__init__("line %s: %s" % (line_n, message))

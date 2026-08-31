@@ -57,7 +57,9 @@ except ImportError:
     psutil = None
 
 
-LOCK_DIRECTORY_NAME = ".hwut-lock"
+#  UNDER THE TRANSIENT ROOT 'TMP/' (services E-24): 'rm -rf TMP/' is
+#  always safe to type, the lock included.
+LOCK_DIRECTORY_NAME = "TMP/lock"
 _HOLDER_FILE_NAME   = "holder.json"
 
 

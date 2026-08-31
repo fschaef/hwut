@@ -13,6 +13,10 @@ PURPOSE: THE 'hwut.show' COMMAND LINE -- what the framework READ. It
     --provenance                name the place of every stated value
     --gnu                       name it as 'file:line:column'
     --directory=<path>          where to read; the current one else
+    --root-conf-template        the 'hwut-root.conf' the boundary face
+                                would write -- the language table
+                                (E-25) -- for pasting into a root conf
+                                placed by hand; reads nothing
     --help                      this text
 
 The plan -- what the framework INTENDS -- is 'hwut.plan', a face of its
@@ -31,13 +35,14 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                               root_conf_directory)
 from   vut.engine.orchestrator.plan.label             import STANDARD_LABEL
 from   vut.services.labels                            import _file
-from   vut.engine.bookkeeper.test_id_db               import (TestIdDb,
+from   vut.engine.bookkeeper.api               import (TestIdDb,
                                                               TestIdFault)
 from   ._exit                                         import E_ExitCode
 
 
 USAGE = "usage: hwut.show [<source file>] [--no-default] " \
-        "[--provenance] [--gnu] [--directory=<path>]"
+        "[--provenance] [--gnu] [--directory=<path>] | " \
+        "hwut.show --root-conf-template"
 
 HELP = """hwut.show -- the configuration the framework READ
 
@@ -172,6 +177,10 @@ def main(argv=None, write=None):
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
         write(HELP)
+        return E_ExitCode.OK
+    if "--root-conf-template" in argv:
+        from vut.services._boundary import ROOT_CONF_TEXT
+        for line in ROOT_CONF_TEXT.rstrip("\n").split("\n"): write(line)
         return E_ExitCode.OK
 
     directory  = "."

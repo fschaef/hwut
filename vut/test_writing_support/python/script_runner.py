@@ -143,3 +143,4 @@ class CRunScript(ContextManager[str]):
                 #  reason to raise out of '__exit__' and mask whatever
                 #  the block was already raising. NARROWED to OSError.
                 pass
+

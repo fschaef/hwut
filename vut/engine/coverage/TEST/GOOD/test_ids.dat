@@ -1,0 +1,9 @@
+##VUT-TEST-IDS 5
+G:4
+N:2
+A:0 test-record.py
+N:0.1
+C:0.0 election
+A:1 test-affected.py
+N:1.1
+C:1.0 refused

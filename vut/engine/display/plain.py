@@ -129,6 +129,12 @@ APP_COLUMN = 20
 #  (--pype), and the run suite takes both roads.
 START_DELAY_SECONDS = 2.0
 
+#  THE BADGES OF THE FLOW, which come in runs and therefore elide, and
+#  the mark that stands under a repeat. As wide as a badge, so the body
+#  column does not move.
+FLOW_BADGE_TUPLE = ("START", "END  ", "SKIP ")
+BADGE_REPEAT     = "---->"
+
 
 class CPlainFlow(CRunReportReceiver):
     """The tier-1 renderer: derive of the receiver, one flow line per
@@ -178,6 +184,9 @@ class CPlainFlow(CRunReportReceiver):
         self.began_set   = set()     # (directory, node) with run-begun
 
         self.nick_db     = {}        # directory -> nickname
+        self.solo_dir_f  = False     # ONE directory: the column goes
+        self.last_badge  = None      # the badge last written, for the
+                                     # run of repeats beneath it
         self.nick_index  = {}        # directory -> colour index
         self.dir_order   = []        # walk order ('tree-begun'), else
                                      # first-seen
@@ -284,9 +293,9 @@ class CPlainFlow(CRunReportReceiver):
                         A  test-app.sh  one
                         :/ test-solo.sh
                         A2 test-app.sh  one
-                        :/:             two
+                        :/ :            two
 
-                    ':/' stands where the DIRECTORY repeats, ':/:'
+                    ':/' stands where the DIRECTORY repeats, ':/ :'
                     where the application does too -- the same one
                     mark, two positions, that a sorted wishlist uses
                     (disc-8). What repeats is not read again; what
@@ -302,6 +311,15 @@ class CPlainFlow(CRunReportReceiver):
         choice        = rest.strip()
         nick          = self._nick(directory)
         key           = (directory, file)
+        if self.solo_dir_f:
+            #  NO DIRECTORY COLUMN, and so no ':/': what repeats is the
+            #  application alone, and its ':' stands under its name.
+            shown    = ":" if self.last_key == key else file
+            self.last_key = key
+            pad      = " " * max(APP_COLUMN - len(shown), 0)
+            body     = "%s%s" % (shown, pad)
+            if not choice: return body.rstrip(), body.rstrip()
+            return "%s %s" % (body, choice), "%s %s" % (body, choice)
         #  THE COLUMNS ARE FIXED, not grown as names arrive: a width
         #  that widens mid-run moves every column under it, and a
         #  reader following one column down the page loses it. A name
@@ -311,7 +329,10 @@ class CPlainFlow(CRunReportReceiver):
         app_width      = APP_COLUMN
 
         if self.last_key == key:
-            mark, mark_ink, shown = ":/:", self.ink.dim(":/:"), ""
+            #  THE THIRD ':' STANDS IN THE APPLICATION'S COLUMN, under
+            #  the first letter of the name it repeats -- a mark that
+            #  says 'the same as above' belongs above what it repeats.
+            mark, mark_ink, shown = ":/", self.ink.dim(":/"), ":"
         elif self.last_key is not None \
              and self.last_key[0] == directory:
             mark, mark_ink, shown = ":/", self.ink.dim(":/"), file
@@ -334,7 +355,20 @@ class CPlainFlow(CRunReportReceiver):
                 then -- where a right part stands -- a dotted fill
                 aiming at 'width', the right part, and 'tail' beyond
                 the width math.
+
+        A BADGE THAT REPEATS BECOMES AN ARROW (E-33). The first of a
+        run of 'START's says 'START'; those under it say '---->', so
+        the eye reads one block and the word marks where the block
+        begins. Only the flow badges elide -- 'DIR', 'TREE' and the
+        rest announce something and are never a run.
         """
+        if badge in FLOW_BADGE_TUPLE:
+            if badge == self.last_badge:
+                badge, badge_ink = BADGE_REPEAT, self.ink.dim(BADGE_REPEAT)
+            else:
+                self.last_badge = badge
+        else:
+            self.last_badge = None
         prefix, prefix_ink = self._prefix(when)
         if not right:
             self.write("%s%s %s%s" % (prefix_ink, badge_ink, body_ink,
@@ -359,7 +393,13 @@ class CPlainFlow(CRunReportReceiver):
 
     def on_tree_begun(self, when, directory_list):
         """RETURN: None. Nicknames and the roll-call's order registered
-        in walk order; a line in the VERBOSE tier alone."""
+        in walk order; a line in the VERBOSE tier alone.
+
+        ONE DIRECTORY, NO DIRECTORY COLUMN: where the whole run happens
+        in one place, a nickname repeated down the page names nothing
+        the reader does not already know, and ':/' says 'the same as
+        above' about a thing that was never in question (E-33)."""
+        self.solo_dir_f = len(directory_list) == 1
         for directory in directory_list:
             self._nick(directory)
             if directory not in self.dir_order:

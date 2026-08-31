@@ -987,3 +987,31 @@ GRAVEYARD Recomputing the gathered table on read instead of shipping
          An unversioned snapshot: a copy that claims to still match.
          Writing the gathered groups into each directory: the gather's
          view frozen as identity (D-14).
+
+
+D-26  THE TABLE MOVES OUT: NO SECOND SOURCE                     (2026-08-30)
+------------------------------------------------------------------------------
+PROBLEM  D-2 shipped 'DEFAULT_TOOL_DB' and let 'hwut.conf' override it;
+         'CoverageConfig' carried 'language' and 'tool' beside; the
+         exploration's 'language-setup' had a 'coverage' word nobody
+         read. Three ways to say which tool, and a reader of any one
+         of them could not know what the other two said.
+DECISION 'language-setup' in 'hwut-root.conf' is THE ONE PLACE
+         (exploration R-73). Its 'coverage' list is D-2's candidate
+         tuple, preference order and the EMPTY LIST AS AN ANSWER both
+         kept. 'DEFAULT_TOOL_DB' is deleted from the registry; its
+         content is what the boundary face writes into a new root
+         conf. 'candidate_tuple_of' and the glob match go with it;
+         'elect' takes the candidate tuple it is given.
+         'CoverageConfig' loses 'language' and 'tool': what remains is
+         what THIS RUN GATHERS ('include', 'omit', 'counts'), which is
+         a demand, not tooling. 'EXTENSION_DB' and 'language_of' stay:
+         they answer 'hwut.cov convert' and the record's header for a
+         file the exploration never saw.
+COST     'hwut.cov formats' prints tools, formats and aliases only; the
+         language column now lives in the author's own root conf.
+         A root conf written before this entry carries no table and
+         must be renovated by hand: 'hwut.show --root-conf-template'
+         prints the block for pasting.
+GRAVEYARD Keeping 'DEFAULT_TOOL_DB' as the fallback beneath an absent
+         entry: the second source under another name.

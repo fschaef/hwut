@@ -1,38 +1,41 @@
 
 --- every report word ---
 DIR   SUIT = suite/TEST
-END   SUIT test-00.sh ............................ source file missing  [FAIL]
-END   :/   test-01.sh ............................ interpreter missing  [FAIL]
-END   :/   test-02.sh .............................. differs from GOOD  [FAIL]
-END   :/   test-03.sh ............................ UNSTABLE -- not run  [FAIL]
-END   :/   test-04.sh ............... the application would not launch  [FAIL]
-END   :/   test-05.sh ....................... killed by the supervisor  [FAIL]
-END   :/   test-06.sh ............................. produced no output  [FAIL]
-END   :/   test-07.sh ............................. stalled, no output  [FAIL]
-END   :/   test-08.sh ......................... no recording to replay  [FAIL]
-END   :/   test-09.sh ............................ output file missing  [FAIL]
-END   :/   test-10.sh ................................... GOOD missing  [FAIL]
-END   :/   test-11.sh ............... output cut short (no <hwut-end>)  [FAIL]
-END   :/   test-12.sh .............................. unexpected stderr  [FAIL]
-END   :/   test-13.sh ....................... region framing is broken  [FAIL]
-END   :/   test-14.sh ............................... stderr undecided  [FAIL]
-END   :/   test-15.sh ....................... pype interpreter missing  [FAIL]
-END   :/   test-16.sh ............................ pype script missing  [FAIL]
-END   :/   test-17.sh ................. pype script has a syntax error  [FAIL]
-END   :/   test-18.sh .................. pype killed by the supervisor  [FAIL]
-END   :/   test-19.sh .................................... pype failed  [FAIL]
-END   :/   test-20.sh ............................. build tool missing  [FAIL]
-END   :/   test-21.sh ................. build killed by the supervisor  [FAIL]
-END   :/   test-22.sh ............................... the build failed  [FAIL]
-END   :/   test-23.sh ............................... target not built  [FAIL]
-END   :/   test-24.sh ............. a dependency would not be acquired  [FAIL]
-END   :/   test-25.sh ..................... display target unreachable  [FAIL]
-END   :/   test-26.sh .......................... a token nobody taught  [FAIL]
+END   test-00.sh ................................. source file missing  [FAIL]
+----> test-01.sh ................................. interpreter missing  [FAIL]
+----> test-02.sh ................................... differs from GOOD  [FAIL]
+----> test-03.sh ............................ extra lines; GOOD intact  [FAIL]
+----> test-04.sh .......................... lines missing; rest intact  [FAIL]
+----> test-05.sh ................................... differs from GOOD  [FAIL]
+----> test-06.sh ................................. UNSTABLE -- not run  [FAIL]
+----> test-07.sh .................... the application would not launch  [FAIL]
+----> test-08.sh ............................ killed by the supervisor  [FAIL]
+----> test-09.sh .................................. produced no output  [FAIL]
+----> test-10.sh .................................. stalled, no output  [FAIL]
+----> test-11.sh .............................. no recording to replay  [FAIL]
+----> test-12.sh ................................. output file missing  [FAIL]
+----> test-13.sh ........................................ GOOD missing  [FAIL]
+----> test-14.sh .................... output cut short (no <hwut-end>)  [FAIL]
+----> test-15.sh ................................... unexpected stderr  [FAIL]
+----> test-16.sh ............................ region framing is broken  [FAIL]
+----> test-17.sh .................................... stderr undecided  [FAIL]
+----> test-18.sh ............................ pype interpreter missing  [FAIL]
+----> test-19.sh ................................. pype script missing  [FAIL]
+----> test-20.sh ...................... pype script has a syntax error  [FAIL]
+----> test-21.sh ....................... pype killed by the supervisor  [FAIL]
+----> test-22.sh ......................................... pype failed  [FAIL]
+----> test-23.sh .................................. build tool missing  [FAIL]
+----> test-24.sh ...................... build killed by the supervisor  [FAIL]
+----> test-25.sh .................................... the build failed  [FAIL]
+----> test-26.sh .................................... target not built  [FAIL]
+----> test-27.sh .................. a dependency would not be acquired  [FAIL]
+----> test-28.sh .......................... display target unreachable  [FAIL]
+----> test-29.sh ............................... a token nobody taught  [FAIL]
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 27 fail, 00:00:27
+DIRECTORIES                                            0 ok, 30 fail, 00:00:30
 ------------------------------------------------------------------------------
-SUIT  suite/TEST ........................................ [FAIL]   0 of  27 ok
+SUIT  suite/TEST ........................................ [FAIL]   0 of  30 ok
 
 ==============================================================================
 FAILURES
@@ -41,30 +44,33 @@ SUIT  suite/TEST
     test-00.sh                   source file missing
     test-01.sh                   interpreter missing
     test-02.sh                   differs from GOOD
-    test-03.sh                   UNSTABLE -- not run
-    test-04.sh                   the application would not launch
-    test-05.sh                   killed by the supervisor
-    test-06.sh                   produced no output
-    test-07.sh                   stalled, no output
-    test-08.sh                   no recording to replay
-    test-09.sh                   output file missing
-    test-10.sh                   GOOD missing
-    test-11.sh                   output cut short (no <hwut-end>)
-    test-12.sh                   unexpected stderr
-    test-13.sh                   region framing is broken
-    test-14.sh                   stderr undecided
-    test-15.sh                   pype interpreter missing
-    test-16.sh                   pype script missing
-    test-17.sh                   pype script has a syntax error
-    test-18.sh                   pype killed by the supervisor
-    test-19.sh                   pype failed
-    test-20.sh                   build tool missing
-    test-21.sh                   build killed by the supervisor
-    test-22.sh                   the build failed
-    test-23.sh                   target not built
-    test-24.sh                   a dependency would not be acquired
-    test-25.sh                   display target unreachable
-    test-26.sh                   a token nobody taught
+    test-03.sh                   extra lines; GOOD intact
+    test-04.sh                   lines missing; rest intact
+    test-05.sh                   differs from GOOD
+    test-06.sh                   UNSTABLE -- not run
+    test-07.sh                   the application would not launch
+    test-08.sh                   killed by the supervisor
+    test-09.sh                   produced no output
+    test-10.sh                   stalled, no output
+    test-11.sh                   no recording to replay
+    test-12.sh                   output file missing
+    test-13.sh                   GOOD missing
+    test-14.sh                   output cut short (no <hwut-end>)
+    test-15.sh                   unexpected stderr
+    test-16.sh                   region framing is broken
+    test-17.sh                   stderr undecided
+    test-18.sh                   pype interpreter missing
+    test-19.sh                   pype script missing
+    test-20.sh                   pype script has a syntax error
+    test-21.sh                   pype killed by the supervisor
+    test-22.sh                   pype failed
+    test-23.sh                   build tool missing
+    test-24.sh                   build killed by the supervisor
+    test-25.sh                   the build failed
+    test-26.sh                   target not built
+    test-27.sh                   a dependency would not be acquired
+    test-28.sh                   display target unreachable
+    test-29.sh                   a token nobody taught
 ==============================================================================
-[fold: good_f=False fail_n=27 verdict_n=27 fault_n=0]
+[fold: good_f=False fail_n=30 verdict_n=30 fault_n=0]
 <hwut-end>

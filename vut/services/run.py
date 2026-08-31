@@ -263,7 +263,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
         elif argument == "--no-store":  record   = False
         elif argument == "--timing":    timing_f = True
         elif argument == "--coverage":
-            from vut.engine.coverage.configuration import CoverageConfig
+            from vut.engine.coverage.api import CoverageConfig
             coverage = demand if demand is not None else CoverageConfig()
         elif argument.startswith("--variant="):
             variant_text = argument[len("--variant="):]

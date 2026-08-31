@@ -78,7 +78,7 @@ face() {                # <command> <args...> -- status and stdout
 standing() {            # <label> -- what the framework holds, sorted
     echo "$1 {"
     ( cd tree/suite/TEST \
-      && find GOOD .hwut-store -type f 2>/dev/null | sort \
+      && find GOOD TMP/store -type f 2>/dev/null | sort \
          | sed 's/^/    /' )
     echo "    book: $(python3 -c "
 import json,sys

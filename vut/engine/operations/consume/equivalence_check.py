@@ -27,10 +27,9 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-from   ...compare               import main as compare_main
 from   ..result                 import E_TestRunResult
-from   ...compare.configuration import Configuration
-from   ...compare.region.registry import RegionSyntaxError
+from   ...compare.api           import (Configuration, RegionSyntaxError,
+                                        is_equivalent)
 from   ..nominal                import NominalNotAvailable
 from   .terminal                import ends_in_terminal
 from   ..observer               import notify
@@ -146,7 +145,7 @@ class EquivalenceCheck:
 
             subject_reader = provided[name].open()
             try:
-                ok = await compare_main.is_equivalent(options,
+                ok = await is_equivalent(options,
                                                       subject_reader,
                                                       nominal_reader)
             except RegionSyntaxError as error:

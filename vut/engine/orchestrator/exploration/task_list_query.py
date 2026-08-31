@@ -102,6 +102,7 @@ class CTestTaskListQuery(CTestTaskList):
         self.label_view = label_view
         self.label_tree = None
         self.label_settled_f = False
+        self.language_db     = {}       # source_file -> language | None
 
     def get_test_cases(self, app_set):
         """
@@ -109,6 +110,7 @@ class CTestTaskListQuery(CTestTaskList):
                 every question the wish asks -- empty where none does.
         """
         self._settle_label()
+        self._settle_language(app_set)
         every = CTestTaskListAll().get_test_cases(app_set)
         #  A wish stating nothing takes ALL AVAILABLE -- unless a
         #  standard label stands somewhere, for then 'available' is
@@ -129,6 +131,7 @@ class CTestTaskListQuery(CTestTaskList):
         """
         if self._label_hidden_f(case):                      return False
         if self._outside_dir_f():                           return False
+        if self._outside_language_f(case):                  return False
         if self._excluded_f(case):                          return False
         if self.wish.asks_glob_f() and not self._glob_hit_f(case):
             return False
@@ -137,6 +140,7 @@ class CTestTaskListQuery(CTestTaskList):
 
         entry = self.bookkeeper.result(case.source_file, case.choice,
                                        RUN_OPERATION)
+        observed = self._observation(case)
         if entry is None:
             #  NEVER RUN. It has no last verdict and lies since no
             #  point -- but it is older than every point: '--until='
@@ -148,7 +152,19 @@ class CTestTaskListQuery(CTestTaskList):
         if self.wish.fail_f and entry.get("verdict"):       return False
         if self.wish.pass_f and not entry.get("verdict"):   return False
 
-        instant = self._instant(entry.get("when"))
+        #  THE INSTANT AND THE DURATION ARE OBSERVATIONS, and live in
+        #  THIS MACHINE'S local database, never in the book (E-22).
+        #  SILENCE IS NOT SELECTED: a case this machine has not
+        #  observed answers no observation question, and a fresh
+        #  checkout selects nothing here -- the correct answer, not a
+        #  defect.
+        if self.wish.faster_than_ms is not None:
+            if observed is None or observed.duration_ms is None:
+                return False
+            if observed.duration_ms >= self.wish.faster_than_ms:
+                return False
+        instant = None if observed is None \
+                  else self._instant_of_epoch(observed.when)
         if self.wish.since_spec is not None:
             cutoff = cutoff_instant(self.wish.since_spec, self._now())
             if instant is None or instant < cutoff:         return False
@@ -156,6 +172,60 @@ class CTestTaskListQuery(CTestTaskList):
             cutoff = cutoff_instant(self.wish.until_spec, self._now())
             if instant is None or instant >= cutoff:        return False
         return True
+
+    def _observation(self, case):
+        """
+        RETURN: Observation | None -- what THIS MACHINE last saw the
+                'Run' of that case do; None where it has seen none, or
+                where the local file cannot be read (a corrupt local
+                file selects nothing rather than refusing a whole run).
+        """
+        from .observation_access import observation_of_case
+        return observation_of_case(self.bookkeeper, case, RUN_OPERATION)
+
+    @staticmethod
+    def _instant_of_epoch(when):
+        """
+        RETURN: datetime | None, the epoch second as an aware UTC
+                instant -- the shape the window compares against.
+        """
+        if when is None: return None
+        from datetime import datetime, timezone
+        return datetime.fromtimestamp(int(when), tz=timezone.utc)
+
+    def _settle_language(self, app_set):
+        """
+        RETURN: None. Settles the wish's language question for THIS
+                app set: every name '--language' gives must stand as an
+                entry of 'language-setup' (R-75), and each test
+                application's resolved language is noted for the
+                predicate.
+
+        Raises SelectionError, naming the name and the declared
+        entries, where a name no entry declares is asked for: a
+        misspelt language silently selecting nothing is how an author
+        comes to believe a set is empty.
+        """
+        if not self.wish.language_tuple: return
+        setup_db = getattr(app_set.directory_spec, "language_setup", None) \
+                   or {}
+        for name in self.wish.language_tuple:
+            if name not in setup_db:
+                raise SelectionError(
+                    "'--language=%s' names no entry of 'language-setup' "
+                    "in 'hwut-root.conf'; declared: %s"
+                    % (name, ", ".join(sorted(setup_db)) or "(none)"))
+        self.language_db = {app.source_file: app.language
+                            for app in app_set}
+
+    def _outside_language_f(self, case):
+        """
+        RETURN: bool, True where the wish names languages and the
+                case's test application is of none of them.
+        """
+        if not self.wish.language_tuple: return False
+        return self.language_db.get(case.source_file) \
+               not in self.wish.language_tuple
 
     def _settle_label(self):
         """

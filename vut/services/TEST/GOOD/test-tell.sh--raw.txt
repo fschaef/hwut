@@ -10,9 +10,9 @@ REACTION  exit code : 0   stderr : 0 bytes
               files:
                 demo.py                                      29 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
-                .hwut-store/demo.py--basic.stdout.raw        19 bytes  (out raw stdout)
-                .hwut-store/demo.py--basic.stdout            11 bytes  (out stdout)
-                .hwut-store/demo.py--basic.stdout.times      51 bytes  (out timing stdout)
+                TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
+                TMP/store/demo.py--basic.stdout              11 bytes  (out stdout)
+                TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
               coverage: none recorded
               cadence: sections verbatim
               
@@ -24,15 +24,15 @@ REACTION  exit code : 0   stderr : 0 bytes
               alpha
               beta
               
-              ==[ OUT RAW STDOUT: .hwut-store/demo.py--basic.stdout.raw ]=====================
+              ==[ OUT RAW STDOUT: TMP/store/demo.py--basic.stdout.raw ]=======================
               raw alpha
               raw BETA
               
-              ==[ OUT STDOUT: .hwut-store/demo.py--basic.stdout ]=============================
+              ==[ OUT STDOUT: TMP/store/demo.py--basic.stdout ]===============================
               alpha
               BETA
               
-              ==[ TIMING (verbatim): .hwut-store/demo.py--basic.stdout.times ]================
+              ==[ TIMING (verbatim): TMP/store/demo.py--basic.stdout.times ]==================
               {"unit": "second", "delta_list": [0.0121, 1.5034]}
           }
 
