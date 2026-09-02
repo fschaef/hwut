@@ -54,7 +54,7 @@ Text "(integration_steps: 212341)" travels:
 
 
 --------------------------------------------------------------------------------
-2. NEW TOLERANCE ID  (engine/enums.py)
+2. NEW TOLERANCE ID  (contract/enums.py)
 --------------------------------------------------------------------------------
 Add one member to E_ToleranceId:
 

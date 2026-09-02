@@ -14,7 +14,7 @@ never in CLASSIFICATION. A line is one of:
     IGNORED            carries the ignored-line markers ('##...' / '...##').
     CONTENT            everything else -- subject to comparison.
 
-INSIGNIFICANCE INVARIANT (single-sourced with 'engine/semantics.py'):
+INSIGNIFICANCE INVARIANT (single-sourced with 'contract/semantics.py'):
 
     classify(line, pf) in INSIGNIFICANT_LINE_CLASS_SET
         <=>  semantics.is_insignificant_line(line, ...)

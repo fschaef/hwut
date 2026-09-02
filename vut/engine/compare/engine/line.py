@@ -98,7 +98,7 @@ class Line:
 
         THE shared definition of whole-line skippability: the Lawyer's
         sequence search classifies such lines as GOOD_INSERT/GOOD_DELETE
-        (equivalence-preserving, see 'engine/semantics.py'); the Judge's
+        (equivalence-preserving, see 'contract/semantics.py'); the Judge's
         equivalence pipe skips them up-front. Both faces MUST use this
         predicate, or THE LAW breaks.
         """

@@ -71,7 +71,7 @@ async def is_equivalent(config: Configuration,
     CROSS-CHECK (debug): with 'config.cross_check_f' set (or environment
     variable VUT_COMPARE_CROSS_CHECK=1) the verdict is ADDITIONALLY derived
     through the Lawyer's full association and both must agree -- THE LAW of
-    'engine/semantics.py', asserted live on every call. This mode buffers
+    'contract/semantics.py', asserted live on every call. This mode buffers
     the input streams entirely (no early-abort economy).
     """
     if config.cross_check_f:
@@ -137,7 +137,7 @@ async def is_equivalent_by_association(config: Configuration,
 
     The 'degenerate Judge': instead of the hand-tuned fast path, the complete
     edit search of 'associate()' runs and its result is reduced to a boolean
-    via 'ChunkPair.is_equivalent()'. By THE LAW ('engine/semantics.py') the
+    via 'ChunkPair.is_equivalent()'. By THE LAW ('contract/semantics.py') the
     result MUST equal 'is_equivalent()'. Used by the cross-check mode and by
     benchmarking; also the reference implementation should the fast path ever
     be in doubt.
@@ -154,7 +154,7 @@ async def is_equivalent_by_association(config: Configuration,
 
 class CrossCheckError(AssertionError):
     """Judge and Lawyer disagreed on an input pair -- THE LAW of
-    'engine/semantics.py' is broken. Carries the complete buffered input so
+    'contract/semantics.py' is broken. Carries the complete buffered input so
     the counterexample is reproducible.
     """
     def __init__(self, verdict_judge, verdict_lawyer, subject_txt, nominal_txt):

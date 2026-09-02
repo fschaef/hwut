@@ -79,3 +79,31 @@ DECISION  'SEALED <glob>' in the declaration, JUDGED AT MODULE DEPTH.
 COST      A second line shape in the declaration, and a second kind of
           reading. The refusal message names both, so a malformed line
           says which shapes exist.
+
+C-3   THE ORIGIN OF A LIFT DOES NOT STAY BEHIND            (2026-09-01)
+
+PROBLEM   C-1 lifted the four shared names -- 'enums', 'semantics',
+          'analogy_db', 'frozen_analogy_db' -- into 'contract/'. The
+          copies in 'engine/' were never removed. Nothing imported
+          them (the two that imported at all imported each other),
+          so 'import_graph.py' could not see them: a reachability
+          tool is blind to what nothing reaches. They had drifted:
+          'engine/enums.py' lacked 'RegionSyntaxError'. Fourteen
+          docstrings and documents still pointed at 'engine/...' as
+          the single source, naming a file that was the stale one.
+          Found by clone detection (PMD CPD, identifiers ignored),
+          which sees what the import graph cannot.
+
+DECISION  The four files in 'engine/' are deleted. Every pointer
+          'engine/<name>.py' in code comments, README, ARCHITECTURE,
+          SEMANTICS and IMPLEMENTATION-happy-constraints now reads
+          'contract/<name>.py'. The DOC history files are left as
+          they were: they record what was, not what is.
+
+COST      None in behaviour: the compare tree answers 119 ok, 6 fail
+          before and after, the same six (region framing, memory
+          cap -- both open elsewhere). 'import_graph.py --check'
+          answers the same twelve findings before and after.
+
+GRAVEYARD Re-exporting from 'engine/' for compatibility -- rejected:
+          there was nobody to be compatible with.

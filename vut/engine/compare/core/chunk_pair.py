@@ -68,7 +68,7 @@ class ChunkPair(list):
                           both sides exist, the chunk types agree).
                     False, else.
 
-        This is the Lawyer's side of THE LAW (see 'engine/semantics.py'):
+        This is the Lawyer's side of THE LAW (see 'contract/semantics.py'):
 
             is_equivalent(subject, nominal) is True
                 <=>  every ChunkPair of associate(subject, nominal)

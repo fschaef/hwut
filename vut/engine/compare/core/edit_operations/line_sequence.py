@@ -43,7 +43,7 @@ INSERT          = E_EditId.INSERT
 SUBSTITUTE      = E_EditId.SUBSTITUTE     
 
 # The cost table is part of the shared comparison semantics -- see
-# 'engine/semantics.py' (single source for Judge and Lawyer).
+# 'contract/semantics.py' (single source for Judge and Lawyer).
 from vut.engine.compare.contract.semantics import line_cost_db as cost_db
 
 cost_GOOD          = cost_db[GOOD]

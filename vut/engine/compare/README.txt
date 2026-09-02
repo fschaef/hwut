@@ -105,7 +105,7 @@ ARCHITECTURE & PERFORMANCE
 
 NOTES
     Software engineers should refer to 'feeder/ui.py' to see how the 'associate' 
-    output is serialized for UI consumption, and 'engine/enums.py' for a 
+    output is serialized for UI consumption, and 'contract/enums.py' for a 
     complete list of verdict types.
 
 AUTHOR

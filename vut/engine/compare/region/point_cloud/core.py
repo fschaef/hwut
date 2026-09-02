@@ -2,7 +2,7 @@
 ________________________________________________________________________________
 PURPOSE: The shared decision core of the 'point-cloud' region -- BOTH faces
 derive their judgment from the classification computed here, so THE LAW
-holds by construction (compare 'engine/semantics.py' for the general
+holds by construction (compare 'contract/semantics.py' for the general
 principle).
 ________________________________________________________________________________
 """

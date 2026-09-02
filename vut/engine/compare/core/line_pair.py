@@ -248,11 +248,11 @@ class LinePair:
     def is_equivalent(self):
         """RETURNS: True, if every cell of the pair carries an equivalence-
                           preserving relation (the GOOD family of
-                          'engine/semantics.py'), i.e. the associated subject
+                          'contract/semantics.py'), i.e. the associated subject
                           and nominal line count as EQUAL.
                     False, else.
 
-        NOT a cost test (see 'engine/semantics.py'): a visible-nothing skip
+        NOT a cost test (see 'contract/semantics.py'): a visible-nothing skip
         carries cost 1e-10 yet preserves equivalence; a one-sided pair
         carries cost 0.0 yet does not.
 

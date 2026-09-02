@@ -504,7 +504,7 @@ D-1  (2026-07-18) Region-major directory layout: region kinds are the OPEN
      touching shared machinery. [Stage M; whole tree]
 
 D-2  (2026-07-18) All shared comparison semantics live in ONE module,
-     engine/semantics.py; both faces import from it. -- Judge/Lawyer
+     contract/semantics.py; both faces import from it. -- Judge/Lawyer
      consistency by construction, not by discipline. [Stage 1]
 
 D-3  (2026-07-18) Equivalence is edit-class membership (GOOD family),
@@ -696,5 +696,5 @@ SEE ALSO
 
     ARCHITECTURE.txt      how the engine is built (modules, pipelines,
                           algorithms, extension points)
-    engine/semantics.py   the executable form of sections 1, 5, 6
+    contract/semantics.py   the executable form of sections 1, 5, 6
     TEST/test-consistency-fuzz.py   the generative pinning of this document

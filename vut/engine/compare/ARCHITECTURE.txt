@@ -182,7 +182,7 @@ LinePair (core/line_pair.py)
     reduction ('.is_equivalent()', derived from semantics.GOOD_EDIT_ID_SET)
     -- the Lawyer's side of THE LAW (see DOC/SEMANTICS.txt).
 
-AnalogyDb / FrozenAnalogyDb (engine/analogy_db.py, frozen_analogy_db.py)
+AnalogyDb / FrozenAnalogyDb (contract/analogy_db.py, frozen_analogy_db.py)
     Bidirectional mapping between subject-side and nominal-side analogy
     strings. AnalogyDb is mutable and used during top-level streaming;
     FrozenAnalogyDb is immutable, interned, and used inside the inner
@@ -262,7 +262,7 @@ Fixed-radius grid index (region/point_cloud/spatial.py)
     Expression metrics carry no guaranteed triangle inequality and are
     therefore scanned exactly (nothing may prune them).
 
-Flyweight FrozenAnalogyDb (engine/frozen_analogy_db.py)
+Flyweight FrozenAnalogyDb (contract/frozen_analogy_db.py)
     The hottest inner-loop operation is "given two analogy databases, are
     they consistent with each other?". Naive implementations rebuild the
     bidict and compare; FrozenAnalogyDb interns each (subject, nominal)

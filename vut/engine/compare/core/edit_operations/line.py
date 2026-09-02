@@ -87,7 +87,7 @@ SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
 # The cost table and transposition cost are part of the shared comparison
-# semantics -- see 'engine/semantics.py' (single source for Judge and Lawyer).
+# semantics -- see 'contract/semantics.py' (single source for Judge and Lawyer).
 import vut.engine.compare.contract.semantics as semantics
 from vut.engine.compare.contract.semantics import element_cost_db as cost_db
 from vut.engine.compare.contract.semantics import cost_TRANSPOSE
@@ -223,7 +223,7 @@ class WorkItem(WorkListBase):
         good_id = None
 
         # THE verdict -> edit-class mapping is shared semantics -- see
-        # 'engine/semantics.py'. Only the step mechanics remain here.
+        # 'contract/semantics.py'. Only the step mechanics remain here.
         edit_id = semantics.verdict_to_edit_id(verdict_id, subject_le, nominal_le,
                                                self.edit_list.analogy_db, analogy)
         if   edit_id in semantics.GOOD_EDIT_ID_SET:

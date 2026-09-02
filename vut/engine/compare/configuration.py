@@ -76,7 +76,7 @@ class Configuration:
 
     'cross_check_f' is debug mode: every 'is_equivalent' call ALSO derives
     the verdict via the Lawyer's full association and asserts agreement
-    (THE LAW, see 'engine/semantics.py'). Costly; buffers input streams
+    (THE LAW, see 'contract/semantics.py'). Costly; buffers input streams
     entirely. Never enable in production.
     """
     pattern_finder: ConfigurationPatternFinder = \
