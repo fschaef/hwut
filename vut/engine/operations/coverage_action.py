@@ -159,6 +159,7 @@ _NOT_TESTIFIED = frozenset((
     E_TestRunResult.INTERPRETER_NOT_FOUND,
     E_TestRunResult.TEST_APP_LAUNCH_FAILED,
     E_TestRunResult.TEST_APP_CONTAINED,
+    E_TestRunResult.TEST_APP_SESSION_GONE,       # O-21: never served
     E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
     E_TestRunResult.TEST_APP_CPU_TIME_EXCEEDED,
     E_TestRunResult.TEST_APP_MEMORY_EXCEEDED,
@@ -203,6 +204,8 @@ async def harvest(configuration, bookkeeper, test, choice, run_id,
     work_dir = str(configuration.test_directory)
     argv     = setup.reader.report_argv(setup.config, work_dir)
     if argv is not None:
+        #  THE APPLICATION'S CAPS (O-20): the harvest is the
+        #  application's, made once for every choice together.
         record = await Procsitter(configuration.caps,
                                   work_dir=work_dir).run(list(argv))
         if record.containment not in (E_Containment.OK_COMPLETED,

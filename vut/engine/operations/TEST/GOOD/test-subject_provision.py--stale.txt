@@ -1,0 +1,9 @@
+  younger: provide   (A.1)
+  forced:  provide   (A.1)
+  OK  : a younger source executes
+  OK  : step (A.1) decided
+  OK  : the new recording is the new text's
+  OK  : force_run executes regardless
+  OK  : and says it was forced
+SUCCESS: a changed text re-runs; a forced run runs.
+<hwut-end>

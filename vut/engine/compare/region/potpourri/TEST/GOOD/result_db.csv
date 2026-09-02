@@ -1,0 +1,16 @@
+test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+test-exact-fail-quickly.py;analogy;true;ok
+;basic;true;ok
+;border;true;ok
+;wild;true;ok
+test-exact.py;analogy;true;ok
+;basic;true;ok
+;border;true;ok
+;special;true;ok
+;wild;true;ok
+;wild-2;true;ok
+test-match_db.py;analogy_interferences;true;ok
+;extract_ultimates;true;ok
+;pairing;true;ok
+test-similar.py;basic;true;ok
+;restricted_cmp;true;ok

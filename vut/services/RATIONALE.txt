@@ -1782,5 +1782,13 @@ CHECKED   The test was run against the DEFECT REINSTATED: all five
           choices go red, and green again on the fix. A regression
           test that passes on the broken code is not one.
 
-COST      None. Services answers 131 ok where it answered 126, the
+FOUND     'plan/TEST/test-wish.py' carried a 'BookStub' whose
+          'result()' took the OLD four arguments -- a double that
+          accepted what the real book never did, and so had hidden
+          the defect from the one test that drove '_wanted_f'. The
+          stub now takes what the book takes. Caught by the plan
+          census, which this entry did not re-run before delivering;
+          the fix and the lesson travel together.
+
+COST      None. Services answers 132 ok where it answered 126, the
           five being the new choices.

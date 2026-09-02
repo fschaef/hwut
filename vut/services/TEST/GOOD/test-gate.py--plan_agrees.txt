@@ -1,0 +1,8 @@
+  plan refuses: test-new.py
+  plan refuses: test-old.py.backup
+  plan refuses: test-two.py b
+  OK  : the plan refuses the copy, the new test and the new choice
+  OK  : and the run refuses the same
+  OK  : the accepted test is in the plan
+SUCCESS: plan and run admit by the same gate.
+<hwut-end>

@@ -1,0 +1,5 @@
+  selected: test-bad.py
+  OK  : the failing case is selected
+  OK  : the passing one is not
+SUCCESS: --fail selects what last failed.
+<hwut-end>

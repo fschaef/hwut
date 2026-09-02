@@ -4,7 +4,16 @@
 # @hwut {
 #     title      = "The pype service called as a shell citizen -- its natural habitat."
 #     choices    = ["absent_script", "exit_code", "filter"]
-#     tolerance { eq_pattern = ["SUCCESS.*"] }
+#     #  THE PLATFORM'S WORDS ARE NOT PYPE'S. After 'pype: ' the line
+#     #  is the operating system's and Python's: the errno number, the
+#     #  'strerror' phrase (locale-bound: "No such file or directory"
+#     #  here, "Datei oder Verzeichnis nicht gefunden" under de_DE),
+#     #  the quotes around the path, and the path's separator ('/'
+#     #  here, '\' on DOS). The pattern tolerates all of it and
+#     #  requires only what IS pype's: it spoke on stderr, with its
+#     #  prefix, and the offending file's NAME appears.
+#     tolerance { eq_pattern = ["SUCCESS.*",
+#                               "stderr   : pype: .*no-such\\.pype.*"] }
 # }
 #
 # ---------------------------------------------------------------------------

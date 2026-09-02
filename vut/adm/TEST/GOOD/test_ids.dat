@@ -1,0 +1,14 @@
+##VUT-TEST-IDS 5
+G:9
+N:2
+A:0 test-import_graph.sh
+N:0.7
+C:0.0 depth
+C:0.1 formats
+C:0.2 layering
+C:0.3 refused
+C:0.4 shared
+C:0.5 unreadable
+C:0.6 vut
+A:1 test-static-analysis.sh
+N:1.0

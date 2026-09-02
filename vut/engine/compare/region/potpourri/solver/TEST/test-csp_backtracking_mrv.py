@@ -2,8 +2,23 @@
 #
 # @hwut {
 #     title      = "CSP Backtracking MRV: Friends Pairing Stress Test"
-#     choices    = ["backtracking", "lane-trap", "massive-pipe",
-#                   "soduko"]
+#     #  TWO OF THE FOUR ARE STRESS TESTS AND SAY SO (C-6). Measured
+#     #  UNCONSTRAINED they need 1069 MB, so the 512 MB default kills
+#     #  them; the cap is raised where it is needed and NOWHERE ELSE
+#     #  (O-20: caps travel by inheritance, a choice's word standing
+#     #  over the application's). 'backtracking' and 'lane-trap' keep
+#     #  the default, so a regression that makes THEM grow is caught.
+#     #
+#     #  READ THE KILL MESSAGE WITH CARE: its 'peak' is where the
+#     #  process STOOD WHEN KILLED, not what it needs -- at cap 512 it
+#     #  reports 518, at cap 1024 it reports 1048. Only an
+#     #  unconstrained run tells you the requirement.
+#     choices {
+#         backtracking { }
+#         lane-trap    { }
+#         massive-pipe { caps { memory_mb = 2048 } }
+#         soduko       { caps { memory_mb = 2048 } }
+#     }
 # }
 #
 import sys

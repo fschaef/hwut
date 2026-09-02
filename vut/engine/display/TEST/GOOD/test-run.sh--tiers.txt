@@ -28,3 +28,4 @@ STDERR {
 }
 == --plain, statable redundantly ==
 STATUS: 0
+<hwut-end>

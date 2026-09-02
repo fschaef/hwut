@@ -202,3 +202,26 @@ COST      'reading_view' answers a bool where it answered None, and
           takes a 'write'. Both its callers read it: play and compare
           return FAULT where the reading could not be shown, rather
           than OK with a refusal printed in the middle.
+
+C-6   A STRESS TEST SAYS WHAT IT COSTS                          (2026-09-02)
+
+PROBLEM   'solver/TEST/test-csp_backtracking_mrv.py' was killed on two
+          of its four choices -- 'massive-pipe' and 'soduko' -- for
+          exceeding the 512 MB default memory cap. The two build the
+          whole pairing space in memory; that is what they are for.
+          Open since disc-6 r-3.
+
+DECISION  The application states 'caps { memory_mb = 2048 }'. Raised,
+          not removed: a cap nobody can exceed catches nothing, and
+          2048 still catches a regression that doubles the space
+          again. Measured UNCONSTRAINED, the two need 1069 MB.
+
+FOUND     THE KILL MESSAGE'S 'peak' IS NOT THE REQUIREMENT. It is
+          where the process stood when it was killed, so it tracks
+          the cap: 518 MB reported at cap 512, 1048 MB at cap 1024,
+          for the same run. Two caps were set on that reading before
+          the pattern was visible. Only an unconstrained measurement
+          answers "how much does it need"; the message is worth a
+          word saying so, and 'procsitter' is the place for it.
+
+COST      compare answers 131 ok / 0 fail, where it answered 129 / 2.

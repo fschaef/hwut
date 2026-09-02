@@ -1,0 +1,7 @@
+  test-old.py.backup   backup-shaped name: not a source candidate
+  OK  : the copy stands once in the REFUSED block
+  OK  : the reason is the name
+  OK  : it never appears in the flow
+  OK  : the book has no entry for it
+SUCCESS: a backup-shaped name is refused, not run.
+<hwut-end>

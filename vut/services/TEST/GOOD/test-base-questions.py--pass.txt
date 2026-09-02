@@ -1,0 +1,5 @@
+  selected: test-good.py
+  OK  : the passing case is selected
+  OK  : the failing one is not
+SUCCESS: --pass selects what last passed.
+<hwut-end>

@@ -1,0 +1,186 @@
+==============================================================================
+intend/configuration -- CONFIGURATION MANAGEMENT
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS CONCERNED: engine/orchestrator/exploration (today's carrier),
+    engine/operations (TestConfiguration), engine/compare, engine/procsitter,
+    engine/bookkeeper, the build component, the pype component -- every
+    owner of a configuration face.
+
+This file states the INTENT behind configuration management in VUT, so
+that anyone who ponders how configuration comes into place finds ONE
+path, stated ONCE, and finds it obvious. It is intent, not mechanics:
+each component's documentation carries the mechanics; RATIONALE carries
+the rulings this intent rests on (R-37..R-43, R-54..R-57, R-64..R-66,
+E-37).
+
+______________________________________________________________________________
+
+THE ONE PATH
+
+    FILES                  RECORD                 CONFIGURATION
+    what the tree          what the author        what WILL happen,
+    CARRIES                CHOSE                  COMPLETE
+       |                      |                        |
+       v                      v                        v
+    +-----------+       +------------+          +--------------+
+    | (A) PARSE |------>| plain tree |--------->| (B) COMPLETE |
+    |           |       | None =     |  defaults|              |
+    | inherit,  |       | unstated   |  filled  | every member |
+    | merge     |       |            |  in ONCE | carries its  |
+    +-----------+       +------------+          | value        |
+                                                +------+-------+
+                                                       |
+                                                       v  (C) HAND IN
+                                                +--------------+
+                                                | COMPONENT    |
+                                                | its OWN      |
+                                                | struct, at   |
+                                                | its DOOR     |
+                                                +--------------+
+
+Three stages, in this order, never interleaved. Parsing does not
+resolve a default; completion does not read a file; a component does
+neither -- it is handed its configuration complete, at its door, and
+refuses there rather than at step seven.
+
+______________________________________________________________________________
+
+(A) PARSING -- WHAT WAS WRITTEN, AND ONLY THAT
+
+The tree's boundary is 'hwut-root.conf'. From it downward, every
+'hwut.conf' inherits what stands above and may overwrite it, down to
+the TEST directory's own 'hwut.conf', and from there into each test
+application's specification. A specification arrives on one of three
+carriers -- CONF ('apps' in 'hwut.conf'), HEADER (the 'hwut { }'
+region in the file), INTERVIEW ('--hwut-info', the migration path) --
+and whatever the carrier, it lands in ONE shape: the plain tree of
+typed, slotted, frozen records.
+
+Within a specification the same law repeats at smaller scale: the root
+parameters hold for every choice, a choice overwrites for itself
+alone, and a scope merges field by field -- stating one field of
+'caps' in a choice leaves its siblings at the inherited value.
+
+Two invariants the parse stage guards:
+
+  -  A FIELD THE AUTHOR DID NOT STATE IS 'None'. Absence is data.
+     The parse stage NEVER substitutes a default -- doing so would
+     destroy the knowledge of what was chosen, and the store must
+     record what was CHOSEN, not what happened to apply.
+
+  -  FAULTS ARE VALUES, WITH POSITIONS. A file that half-parses
+     yields the record for the keys that were good and a named,
+     positioned fault for the one that was not. Refusal is by name,
+     at the place, never a stack trace.
+
+______________________________________________________________________________
+
+(B) COMPLETION -- ONE SOURCE OF DEFAULTS
+
+The one source of a default is the OWNER'S OWN DECLARATION: each
+component declares its configuration as a frozen dataclass on its door
+(E-37), and the default of every member stands in that declaration --
+its own members, in its own words, judged by the one who enforces
+them.
+
+There is no second place. A central table of default VALUES would be a
+second declaration of every default, kept in step by discipline alone;
+the day the two drift, the framework lies about what it does. So the
+centre holds no values. What the centre holds is the CONTRACT:
+
+  -  THE VOCABULARY -- HWUT's parameter names, fixed; an unknown
+     name is refused, not defaulted.
+
+  -  THE RELATION TABLE -- ONE table binding each of our words to
+     '(owning class, member)', with adapters where one word of ours
+     is several members of theirs; 'backward' DERIVES the default
+     from the owner's declaration, so nothing is restated.
+
+  -  INSTANTIATION -- the one function that takes a plain record and
+     yields one COMPLETE configuration per owning class, every
+     'None' of the record replaced by the owner's declared default.
+
+The table is checked AT IMPORT against the classes it names, and
+'test-defaults.py' prints every declared default -- a changed default
+is a visible contract change, in a GOOD file, blessed by a human.
+
+Where an owner declares 'None', 'None' IS the value: it documents that
+the thing is absent -- no build framework, no canonicalisation -- and
+nothing substitutes for it. A default may be null; it may not be
+unstated.
+
+______________________________________________________________________________
+
+(C) COMMUNICATION -- HANDED IN COMPLETE, AT THE DOOR
+
+A component receives its OWN struct, verbatim, at its door.
+'TestConfiguration' aggregates -- procsitter's caps are a
+'ProcsitterConfig', not ten numbers copied out and translated back --
+and nothing downstream of instantiation resolves, defaults, or reads a
+file. AGGREGATION, NOT RESTATEMENT: a field is declared by the
+component that enforces it, once.
+
+The record travels BESIDE the configuration, not inside it. The record
+says what the author CHOSE; the configuration says what WILL HAPPEN.
+The store records the record -- so a default setting adds nothing to
+an entry, and a deliberate setting is recorded the day it is used.
+
+Verification stands at the door: 'verify()' refuses a configuration
+that cannot serve any goal before a single step runs, naming the ONE
+first fault. Refuse rather than guess, at the door.
+
+______________________________________________________________________________
+
+WHAT "CENTRAL AND OBVIOUS" MEANS, OPERATIONALLY
+
+  1  ONE MODULE TO POINT TO. Whoever asks "how does configuration
+     come into place" is pointed at the contract-specifier component;
+     its documentation carries stages (A), (B), (C) and nothing else
+     does.
+
+  2  ONE COMMAND THAT SHOWS IT. 'hwut.parse' shows every effective
+     value WITH ITS ORIGIN -- default, hwut-root.conf, hwut.conf,
+     header, --hwut-info -- so the resolution is not merely central
+     in the code, it is inspectable at the terminal.
+
+  3  ONE CONTRACT TEST. The vocabulary and the table cover each
+     other exactly; every related member exists and declares a
+     default; the declared values are printed. Drift fails at import
+     or in a GOOD file, never in the field.
+
+  4  ONE SPECIFICATION DOCUMENT (disc-4, OPEN): normative over both
+     carriers, from which usage prose and validator behaviour are
+     derived -- not the other way round. Its birthplace is
+     'adm/WORK/spec/configuration.txt', derived from this file.
+
+______________________________________________________________________________
+
+OPEN -- THE PLACEMENT FORK
+
+Today the contract lives under 'orchestrator/exploration'
+('configuration_tree.py', 'relation.py', 'instantiate.py',
+'validator.py'), a placement that hides it: a newcomer looking for
+"configuration" does not look inside the orchestrator's reading end.
+The lift of 'exploration+plan' to 'engine/selection' is already ruled;
+the fork is whether the contract specifier travels with it or stands
+alone:
+
+    (a) engine/selection carries it        the lift as ruled, contract
+                                           inside -- one move, but the
+                                           contract stays a sub-part
+                                           of a component whose name
+                                           says "selection"
+
+    (b) engine/configuration               the contract specifier is
+        stands alone                       its own component with its
+                                           own door; selection READS
+                                           it like everyone else --
+                                           the name says what it is
+
+This fork is Frank-Rene's to close; nothing in this file presupposes
+either answer. When it closes, the build steps enter
+'adm/WORK/plan/configuration.txt' and, at transfer, the component's
+own 'WORK/'.

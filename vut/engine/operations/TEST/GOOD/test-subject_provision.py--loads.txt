@@ -1,0 +1,8 @@
+  decision: recorded   (A.2) the recording is current
+  OK  : a Loaded provider
+  OK  : the word is RECORDED
+  OK  : step (A.2) decided
+  OK  : the recording is what is provided
+  OK  : last_provided remembers
+SUCCESS: a current recording is read back, not re-run.
+<hwut-end>

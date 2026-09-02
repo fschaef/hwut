@@ -1,0 +1,8 @@
+test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+test-directory-mutex.py;age;true;ok
+;dead;true;ok
+;foreign;true;ok
+;hold_timeout;true;ok
+;reentry;true;ok
+;taken;true;ok
+;waiting;true;ok

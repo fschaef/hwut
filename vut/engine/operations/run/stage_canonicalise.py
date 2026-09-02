@@ -19,6 +19,7 @@ from   ...procsitter.api import Link, chain
 from   ..nominal                  import BytesNominal
 from   .core                      import Supply, read_all
 from   .provider                  import I_CanonicaliseProvider
+from   ..configuration            import caps_of
 
 
 #  THE PYPE CALL IS FORMED HERE, and nowhere else (E-28). A stated
@@ -118,7 +119,9 @@ class StageCanonicalise(I_CanonicaliseProvider):
         swallowed.
         """
         configuration = self.configuration
-        procsitter = Procsitter(configuration.caps,
+        #  THE CASE'S CAPS (O-20): a pype is the choice's filter and
+        #  runs under the choice's cap, as its application does.
+        procsitter = Procsitter(caps_of(configuration, self.choice_name),
                                 work_dir=str(configuration.test_directory))
         reader_db   = {}
         report      = E_TestRunResult.OK

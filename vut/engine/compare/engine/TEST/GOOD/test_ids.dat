@@ -1,0 +1,30 @@
+##VUT-TEST-IDS 5
+G:22
+N:5
+A:0 test-compare_line_sequence.py
+N:0.2
+C:0.0 info
+C:0.1 judge
+A:1 test-compare_lines.py
+N:1.2
+C:1.0 info
+C:1.1 judge
+A:2 test-compare_potpourris.py
+N:2.2
+C:2.0 info
+C:2.1 judge
+A:3 test-frozen_analogy_db.py
+N:3.5
+C:3.0 consistency
+C:3.1 flyweight
+C:3.2 hybrid_masks
+C:3.3 immutability
+C:3.4 member_functions
+A:4 test-line-pair-report.py
+N:4.6
+C:4.0 accordion
+C:4.1 circular
+C:4.2 exhaustion
+C:4.3 monkey
+C:4.4 transpose
+C:4.5 visible-nothing

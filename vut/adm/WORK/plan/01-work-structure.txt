@@ -1,0 +1,78 @@
+==============================================================================
+plan/01-work-structure -- THE MIGRATION, IN ORDERED STEPS
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: all.
+INTEND:     adm/WORK/intend/01-work-structure.txt
+SPEC:       adm/WORK/spec/01-work-structure.txt
+
+This plan is written to be HANDED TO A WORKER AT SESSION START: read
+intend, spec, and this file; find the STATE section; perform the next
+step and ONLY the next step; verify; bump STATE and this file's
+version; deliver. A step that exposes a fork STOPS and reports --
+nothing moves past an unreported fork.
+
+______________________________________________________________________________
+
+STATE
+
+    next step:      G-1
+    gathered:       (none)
+    sorted:         (none)
+    gates open:     s-1 (README split depth), s-2 (checker),
+                    s-3 (DISCUSSIONS seeding)
+
+______________________________________________________________________________
+
+PHASE G -- GATHER (everything to adm/WORK, nothing interpreted)
+
+  G-1  Inventory. List every file under any 'DISCUSSIONS/' directory
+       of the tree; count per component; grep-census every E-/R-/D-/
+       B-number they contain into 'adm/WORK/ruling-census-before.txt'.
+       Nothing moves in this step.
+
+  G-2  Gather, smallest component first (measured order: adm 1,
+       test_writing_support/python 1, display 2, operations 2,
+       scheduler 2, run 3, plan 5, services 11, exploration 13).
+       Per component, per file:
+         - move to 'adm/WORK/gathered/<id>-<origname>.txt', id
+           allocated per spec section 1;
+         - prepend VERSION: 1 and 'COMPONENTS: <origin>';
+         - content otherwise UNTOUCHED -- gathering interprets
+           nothing.
+       One component per bundle; census from clean extraction.
+
+  G-3  Ruling census after gathering equals the census before
+       (spec section 2 invariant). Any difference stops the phase.
+
+PHASE R -- REVIEW (the reason gathering exists)
+
+  R-1  Side-by-side staleness pass: mark each gathered file LIVE,
+       STALE (superseded by built reality), or CONTRADICTED (conflicts
+       with another file or with RATIONALE). Marks are a report to
+       Frank-Rene, not an action; contradictions are forks.
+
+PHASE S -- SORT (per spec section 2; gated on s-1..s-3)
+
+  S-1  For each LIVE gathered file, distribute per the sorting rule:
+       open forks -> intend files; decided parts -> RATIONALE (self-
+       contained, cited per spec section 4); unbuilt parts -> spec +
+       plan of one id; DONE lists -> deleted.
+  S-2  README splits into README + INTERNALS      [gated on s-1]
+  S-3  DISCUSSIONS.txt of each component          [gated on s-3]
+  S-4  Checker, if ruled                          [gated on s-2]
+  S-5  Final ruling census; empty 'gathered/'; the old Guideline
+       documents superseded; this issue completes globally per spec
+       section 5.
+
+______________________________________________________________________________
+
+SESSION PROTOCOL (the prompt, in five lines)
+
+    Read adm/WORK/{intend,spec,plan}/01-work-structure.txt.
+    Perform the next step named in STATE, and only it.
+    Verify by the step's own check; census where files move.
+    Report forks; close none.
+    Update STATE, bump this VERSION, deliver the bundle.

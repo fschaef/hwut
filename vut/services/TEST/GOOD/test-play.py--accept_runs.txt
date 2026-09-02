@@ -1,0 +1,7 @@
+  RUN: test-new.py
+  OK  : accept status OK
+  OK  : accept said it ran, once
+  OK  : and named the step that decided
+  OK  : the nominal is the NEW text's output
+SUCCESS: a stale candidate is re-run by accept, not refused.
+<hwut-end>

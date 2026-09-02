@@ -1,13 +1,14 @@
 ##VUT-TEST-IDS 5
-G:25
+G:26
 N:5
 A:0 test-adapter.py
-N:0.5
+N:0.6
 C:0.0 refused
 C:0.1 caps
 C:0.2 compare
 C:0.3 naming
 C:0.4 sweep
+C:0.5 caps_inherit
 A:1 test-endtoend.py
 N:1.3
 C:1.0 frame

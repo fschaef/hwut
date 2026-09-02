@@ -20,6 +20,7 @@ ______________________________________________________________________________
 """
 import os
 import shlex
+from dataclasses import replace
 
 from ...bookkeeper.api  import NamingConfig, StoreConfig
 from ...operations.build_action  import BuildConfig, E_BuildSystem
@@ -119,7 +120,15 @@ def test_configuration_of(app, directory, coverage=None,
     setup = None if coverage is None \
             else _coverage_setup_of(app, root, coverage, entry)
     build = _build_of(root, app.source_file, setup, entry)
-    caps  = _caps_of(root)
+    #  THE APPLICATION'S CAPS COME FROM ITS RESOLVED ROOT (O-20, O-21):
+    #  'app.root' -- the directory's default folded with the header's
+    #  root, what every choice inherits before its own word. Never
+    #  from '_root_of', which answers the FIRST CHOICE BY NAME and
+    #  would make one choice's cap the baseline its siblings inherit;
+    #  and not from 'choice_db.get(None)' either, which exists only
+    #  where the header names no choice at all.
+    caps  = _caps_of(app.root) if app.root is not None \
+            else ProcsitterConfig()
     if setup is not None:
         from ...operations.coverage_action import uncapped
         caps = uncapped(caps)          # time is luxury under coverage (D-19)
@@ -132,7 +141,10 @@ def test_configuration_of(app, directory, coverage=None,
         source_kind = E_SourceKind.INTERPRETED
         interpreter = interpreter_of(app.language, language_setup)
 
-    choice_db = {choice: _choice_of(parameters)
+    #  EVERY CHOICE CARRIES ITS OWN CAPS, COMPLETE (O-20): the record
+    #  resolves no default, so the fold happens HERE, once, and the
+    #  consumers read what they are handed.
+    choice_db = {choice: _choice_of(parameters, _caps_of(parameters, caps))
                  for choice, parameters in app.choice_db.items()}
 
     return TestConfiguration(
@@ -208,27 +220,34 @@ def _coverage_setup_of(app, root, coverage, entry):
     return CoverageSetup(reader=reader, config=coverage, note=note)
 
 
-def _caps_of(parameters):
+def _caps_of(parameters, inherited=None):
     """
-    RETURN: ProcsitterConfig, the stated caps folded onto procsitter's
-            own defaults.
+    RETURN: ProcsitterConfig, the stated caps folded onto 'inherited',
+            or onto procsitter's own defaults where none is given.
+
+    CAPS TRAVEL BY INHERITANCE (O-20): the application's word stands
+    over procsitter's, and a choice's word stands over both. A cap the
+    choice does not state is the application's, exactly as every other
+    parameter of a choice behaves.
     """
+    base = inherited if inherited is not None else ProcsitterConfig()
     field_db = {}
     caps = parameters.caps
     if caps is not None:
         for source, target in _CAPS_FIELD_DB.items():
             value = getattr(caps, source)
             if value is not None: field_db[target] = value
-    return ProcsitterConfig(**field_db)
+    return replace(base, **field_db) if field_db else base
 
 
-def _choice_of(parameters):
+def _choice_of(parameters, caps):
     """
     RETURN: TestChoiceConfiguration of one choice: the stated 'pype'
-            as the stdout canonicaliser (the D of the equivalence), and
+            as the stdout canonicaliser (the D of the equivalence),
             every stated TOLERANCE as compare's own Configuration (the
             T) -- 'None' where the author stated no tolerance at all,
-            which is compare's default throughout.
+            which is compare's default throughout -- and the choice's
+            CAPS, already folded onto the application's (O-20).
     """
     canonicalisers = {}
     if parameters.pype is not None:
@@ -242,7 +261,8 @@ def _choice_of(parameters):
                        for name in parameters.output)
     return TestChoiceConfiguration(canonicalisers = canonicalisers,
                                    compare        = _compare_of(parameters),
-                                   output         = output)
+                                   output         = output,
+                                   caps           = caps)
 
 
 def _compare_of(parameters):

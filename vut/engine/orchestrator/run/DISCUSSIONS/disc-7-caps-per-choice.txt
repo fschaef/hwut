@@ -1,0 +1,64 @@
+disc-7   CAPS ARE ACCEPTED PER CHOICE AND IGNORED PER CHOICE
+         (opened 2026-09-02, found while settling C-6)
+
+THE FACTS, measured
+
+  The header vocabulary ADMITS 'caps' inside a choice:
+
+      choices {
+          massive-pipe { caps { memory_mb = 2048 } }
+          soduko       { caps { memory_mb = 2048 } }
+      }
+
+  the validator accepts it, and 'hwut.show' PRINTS it per choice --
+  two choices at 512, two at 2048, exactly as written.
+
+  The run ignores it. 'adapter.test_configuration_of' reads
+
+      caps = _caps_of(root)                      # ONE value
+
+  and 'TestConfiguration.caps' is a single ProcsitterConfig for the
+  whole application; 'TestChoiceConfiguration' holds no caps at all.
+  So the stated cap never reaches procsitter, and the choice runs
+  under the root's.
+
+  Worse, with the SCOPE form of 'choices' and no root statement there
+  is no 'None' choice, so '_root_of' answers THE FIRST CHOICE BY NAME
+  ('backtracking' here) -- and every other choice silently runs under
+  the caps of whichever choice sorts first.
+
+WHY IT MATTERS
+
+  A parameter that is stated, validated, displayed and then ignored is
+  worse than one that is refused: 'hwut.show' becomes a document that
+  lies, and the author has no way to learn it. C-6 had to state the
+  cap at the application root instead, raising it for two choices that
+  do not need it.
+
+THE FORK
+
+  (a)  CAPS BECOME PER CHOICE
+       'TestChoiceConfiguration' gains 'caps'; the session takes the
+       choice's where stated and the application's else, as every
+       other choice parameter already works.
+       +  the vocabulary means what it says
+       +  a stress choice is capped as a stress choice, its siblings
+          are not
+       -  procsitter's configuration is built per case rather than
+          per application; the DOOR's law (E-37) needs re-reading
+
+  (b)  CAPS ARE THE APPLICATION'S, AND THE VALIDATOR SAYS SO
+       'caps' inside a choice is REFUSED, naming the root as its
+       place; 'hwut.show' stops printing it there.
+       +  one law, one place, and it is the law already built
+       -  a test with one expensive choice must raise the cap for all
+          of them, which is what C-6 had to do
+
+  RECOMMENDATION (a). The cap exists to catch a runaway, and the
+  finest grain at which a runaway is meaningful is the case, not the
+  application -- C-6 raised 'backtracking' and 'lane-trap' from 512
+  to 2048 for no reason but the shape of the structure.
+
+  '_root_of' answering "the first choice by name" wants a word either
+  way: it is a silent default that decides which caps everyone runs
+  under.

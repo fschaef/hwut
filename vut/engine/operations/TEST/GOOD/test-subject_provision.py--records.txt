@@ -1,0 +1,8 @@
+  recorded: ['stderr', 'stdout']
+  OK  : stdout was recorded
+  OK  : the candidate stands in the store
+  OK  : the candidate holds what the application printed
+  OK  : the second provider LOADS
+  OK  : a Loaded provider records nothing
+SUCCESS: record() writes an execution, never a read-back.
+<hwut-end>

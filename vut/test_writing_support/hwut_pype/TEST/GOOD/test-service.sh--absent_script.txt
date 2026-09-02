@@ -1,0 +1,6 @@
+STIMULUS  hwut_pype no-such.pype   (the file does not exist)
+REACTION  exit code: 1
+          stdout   : 0 bytes
+          stderr   : pype: [Errno 2] No such file or directory: '<work>/no-such.pype'
+SUCCESS: the fault is spoken on stderr; stdout stays clean.
+<hwut-end>

@@ -1,0 +1,8 @@
+  '##! potpourri' reads as REGION_BEGIN
+  '####'          reads as REGION_END
+  OK  : the shebang opens a region
+  OK  : the rule closes it
+  OK  : a well-framed text is equivalent to itself
+  OK  : an unknown handler is refused, by name
+SUCCESS: with regions on, the markers frame and faults are loud.
+<hwut-end>

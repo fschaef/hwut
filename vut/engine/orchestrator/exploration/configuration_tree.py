@@ -81,7 +81,7 @@ class Caps(_Scope):
 
     A cap procsitter cannot enforce refuses the test (R-48)."""
     timeout_sec:          float | None = None
-    cpu_sec:              float | None = None
+    cpu_sec:              int   | None = None   # RLIMIT_CPU: whole seconds
     memory_mb:            int   | None = None
     file_size_mb:         int   | None = None
     child_process_max_n:  int   | None = None
@@ -305,6 +305,11 @@ class CTestApp:
     origin:      E_Origin
     position:    Position
     origin_db:   dict = None              # choice -> {name: str}
+    #  THE APPLICATION'S OWN WORD, RESOLVED (O-21): the directory's
+    #  'default_app' folded, then the header's root -- what every
+    #  choice inherits BEFORE its own statement. The caps a multi
+    #  session or a build run under are these, never one choice's.
+    root:        object = None            # TestParameters
     #  R-73: True where 'language' was DERIVED from the file's extension
     #  through 'language-setup', not stated by the header. Never silent.
     language_derived_f: bool = False

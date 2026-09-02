@@ -1,0 +1,6 @@
+  regions on:  line 3: region handler 'potpourri' knows no parameter '|'; known: duplicates, max_comparisons, subset
+  regions off: equivalent
+  OK  : with regions on the table cannot be read, and says why
+  OK  : with regions off it is equivalent to itself
+SUCCESS: a text that talks about framing can be read.
+<hwut-end>

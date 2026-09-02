@@ -1,0 +1,8 @@
+  SAVED: test-new.py.stderr, test-new.py.stdout
+  OK  : status OK
+  OK  : the face says what it saved
+  OK  : the candidate stands in the store
+  OK  : no nominal: play blesses nothing
+  OK  : no book entry: play judges nothing
+SUCCESS: --save records the candidate, and only that.
+<hwut-end>

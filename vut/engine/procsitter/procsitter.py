@@ -548,8 +548,15 @@ class Procsitter:
             unenforced += ["max_cpu_time_sec", "max_file_size_mb"]
             return None, tuple(unenforced)
 
-        cpu_sec    = self.config.max_cpu_time_sec
-        fsize_byte = self.config.max_file_size_mb * 1024 * 1024
+        #  RLIMIT_CPU AND RLIMIT_FSIZE ARE INTEGERS by the kernel's
+        #  definition. A cap stated as '1.0' must not kill the child
+        #  in preexec with a TypeError nobody can catch there (the
+        #  suppress below covers only what setrlimit itself raises);
+        #  it is rounded UP, so a stated cap is never silently
+        #  tightened.
+        import math
+        cpu_sec    = int(math.ceil(self.config.max_cpu_time_sec))
+        fsize_byte = int(math.ceil(self.config.max_file_size_mb * 1024 * 1024))
 
         def preexec():
             # Child context, post-fork pre-exec: keep it minimal; a cap
@@ -557,10 +564,10 @@ class Procsitter:
             # NOTE: RLIMIT_NPROC is NOT set here -- it is a per-REAL-USER
             # cap, not per-call, and starves legitimate builds on a busy
             # machine (module header). max_pids is the watchdog's job.
-            with suppress(ValueError, OSError):
+            with suppress(ValueError, OSError, TypeError):
                 resource.setrlimit(resource.RLIMIT_CPU,
                                    (cpu_sec, cpu_sec + 1))
-            with suppress(ValueError, OSError):
+            with suppress(ValueError, OSError, TypeError):
                 resource.setrlimit(resource.RLIMIT_FSIZE,
                                    (fsize_byte, fsize_byte))
 

@@ -1,0 +1,17 @@
+test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+test-line-2.py;transpose;true;ok
+;visible-nothing;true;ok
+test-line-permutation.py;different;true;ok
+;different-2;true;ok
+;different-good-2;true;ok
+;different-void-2;true;ok
+;same;true;ok
+test-line.py;analogies;true;ok
+;basic;true;ok
+;special;true;ok
+;visible-nothing;true;ok
+test-line_sequence.py;nominal;true;ok
+;special;true;ok
+;subject;true;ok
+test-string.py;basic;true;ok
+;long;true;ok

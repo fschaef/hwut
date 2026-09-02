@@ -2,3 +2,4 @@ piped, nothing spoken     : plain
 --colour                  : escapes present
 --colour, NO_COLOR set    : escapes present
 --no-colour               : plain
+<hwut-end>

@@ -17,7 +17,7 @@
     {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-cut.sh", "node_kind": "TEST", "when": "T15"}
     {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-cut.sh", "node_kind": "TEST", "report": "terminated-without-hwut-end", "verdict": "test-failed", "when": "T16"}
     {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-dead.sh x", "node_kind": "TEST", "when": "T17"}
-    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-dead.sh x", "node_kind": "TEST", "report": "test-app-contained", "verdict": "test-failed", "when": "T18"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-dead.sh x", "node_kind": "TEST", "report": "test-app-session-gone", "verdict": "test-failed", "when": "T18"}
     {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-diff.sh", "node_kind": "TEST", "when": "T19"}
     {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-diff.sh", "node_kind": "TEST", "report": "not-equivalent-with-nominal", "verdict": "test-failed", "when": "T20"}
     {"directory": "suite/TEST", "format": 1, "kind": "run-begun", "node": "test-m.sh", "node_kind": "TEST", "when": "T21"}

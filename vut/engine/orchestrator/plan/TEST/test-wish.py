@@ -76,10 +76,16 @@ class BookStub:
                                 duration_ms=(duration_db or {})
                                             .get((test, choice))))
 
-    def result(self, test, choice, operation):
+    def result(self, test, choice):
         """
-        RETURN: dict, the entry for that call / None, where the book
+        RETURN: dict, the entry for that case / None, where the book
                 has none.
+
+        THE SIGNATURE IS THE REAL BOOK'S (E-43): a verdict for a
+        (test, choice), and no operation -- the operation names an
+        observation, which the local database answers, never the
+        book. A stub that takes what the real thing does not is a
+        stub that hides the very call it should test.
         """
         entry = self.entry_db.get((test, choice))
         if entry is None: return None

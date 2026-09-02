@@ -1,0 +1,12 @@
+  '##! potpourri' reads as IGNORED
+  '####'          reads as IGNORED
+  with comments off too:  CONTENT / CONTENT
+  OK  : the shebang no longer opens a region
+  OK  : the rule no longer closes one
+  OK  : they fall to the ordinary rules, where '##' means comment
+  OK  : with comments off too, nothing claims them: CONTENT
+  OK  : the framed text is still equivalent to itself
+  OK  : an unknown handler is no fault: it was never a handler
+  OK  : and the other classes are untouched: a blank is BLANK
+SUCCESS: switching regions off removes a class, it invents none.
+<hwut-end>

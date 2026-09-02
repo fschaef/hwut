@@ -478,3 +478,150 @@ COST      'result.py' tokens; 'stage_execute' maps containment to
           it; the vocabulary declares it; 'summary.py' folds it; the
           display prints it after the phrase; 'word.py' phrases the
           six tokens. The protocol's suite re-recorded once.
+
+O-20  CAPS TRAVEL BY INHERITANCE, TO THE CHOICE THAT ASKS       (2026-09-02)
+
+PROBLEM   The header vocabulary admitted 'caps' inside a choice, the
+          validator accepted it, and 'hwut.show' printed it per choice
+          -- two choices at 512, two at 2048, exactly as written. The
+          run IGNORED it: 'adapter' read '_caps_of(root)', one value
+          for the application, and 'TestChoiceConfiguration' held no
+          caps at all. A parameter stated, validated, displayed and
+          silently discarded; 'hwut.show' a document that lied. Found
+          settling C-6, which had to raise the cap for two choices
+          that did not need it (disc-7, now closed).
+
+RULED     (Frank-Rene) "caps travel through inheritance to choices".
+
+DECISION  'TestChoiceConfiguration.caps', COMPLETE AS HANDED IN, as
+          every member of that record is: the adapter folds, once,
+          procsitter's defaults <- the application's word <- the
+          choice's word. 'configuration.caps_of(configuration,
+          choice)' is the ONE accessor: the choice's where it has
+          them, the application's else.
+
+          WHO ASKS WHICH:
+            stage_execute       the case's      it knows its choice
+            stage_canonicalise  the case's      a pype is the choice's
+                                                filter
+            multi_execute       the APPLICATION's, deliberately: one
+                                process holds every choice, so no
+                                single cap can govern it; an author
+                                who needs a choice capped apart must
+                                not state 'same'
+            build_action        the application's: built once for all
+            coverage_action     the application's: harvested once for
+                                all
+          Each of the four that reads 'configuration.caps' directly
+          now says why beside the read.
+
+FOUND     THE APPLICATION'S CAPS MUST COME FROM ITS TRUE ROOT. The
+          first cut read them through '_root_of', which -- where an
+          application states no root -- answers THE FIRST CHOICE BY
+          NAME. The regression test went red on that: a choice
+          'hungry' stating 2048 sorted before 'plain', became the
+          application's baseline, and 'plain' inherited 2048. Caps
+          now come from 'choice_db.get(None)' and from procsitter's
+          defaults where there is none. '_root_of' is untouched for
+          'same' and 'interactive', which are root-only words and a
+          different question -- but a silent default that elects a
+          choice to speak for the application is worth a word of its
+          own.
+
+CHECKED   'test-adapter.py caps_inherit': the choice's own cap
+          governs it; a sibling stating nothing keeps the
+          application's; a cap the choice does not state is INHERITED
+          not reset; the application is not raised by what a choice
+          states. On the real test: 'massive-pipe' and 'soduko' at
+          2048, 'backtracking' and 'lane-trap' at 512, every unstated
+          cap inherited whole.
+
+COST      C-6 restated as it should have been: the cap raised where
+          it is needed and nowhere else. solver 7 ok / 0 fail.
+
+O-21  A KILL NAMES ITS CAP ON EVERY ROAD                        (2026-09-02)
+
+PROBLEM   Four choices of 'procsitter/TEST/test-procsitter_limits.py'
+          reported "killed by the supervisor" under 'hwut.run' and
+          passed standalone -- the x-th time that phrase reached a
+          reader. O-19 had given every cap its token and its numbers,
+          and 'stage_execute' spoke them; but that test is
+          'interactive', which takes the MULTI road, and
+          'multi_execute' answered 'TEST_APP_CONTAINED' for every
+          'session-ended', unconditionally. The session KNEW: its
+          record said FAIL_PIDS_EXCEEDED, peak 66; 'supply()' never
+          asked. And the phrase said "killed" of three choices that
+          had never begun.
+
+RULED     (Frank-Rene) the supervisor's complaints must be reported
+          properly, and a test at the OUTER level, in a shell script
+          through 'hwut.run', shall check that every procsitter event
+          is -- rather than 'killed by the supervisor'.
+
+DECISION  ONE PLACE: 'run/containment.py' -- 'token_of(containment)'
+          and 'detail_of(record, caps)', moved out of stage_execute
+          and read by both roads, so no road can fall back while the
+          other names the cap.
+
+          THE MULTI ROAD TELLS TWO STORIES, because two things
+          happened. The session remembers 'died_during': the first
+          unresolved ticket in submission order when the wire fell
+          silent -- the application serves 'run' lines in the order
+          they arrive, so that choice was IN FLIGHT. Where the record
+          names a cap, that choice owns the kill, named and numbered
+          as the plain road names it. Every other unresolved choice
+          gets 'TEST_APP_SESSION_GONE', "not run: the process had
+          already died": not killed -- never begun.
+
+          THE RECORD IS AWAITED AT THE WIRE'S END, in '_read_up',
+          before the leftovers fail -- not first in 'close()', which
+          comes after the providers have already read their tickets
+          and asked why.
+
+          THE APPLICATION'S ROOT IS KEPT. Exploration folds the
+          directory's default and the header's root into every choice
+          and dropped the fold itself; O-20 reached for
+          'choice_db.get(None)', which exists only where the header
+          names no choice. 'CTestApp.root' now carries the resolved
+          root and the adapter reads the application's caps from it.
+          Without this, a cap stated at the root of an application
+          with named choices reached every choice and NOT the
+          application -- so the multi session ran under procsitter's
+          defaults whatever the header said.
+
+FOUND     A FLOAT CAP KILLED A WHOLE DIRECTORY. 'cpu_sec = 1' reached
+          procsitter as 1.0; 'setrlimit' demands integers and raised a
+          TypeError in 'preexec', which the suppress there did not
+          catch -- the directory FAULTED and no test ran. Procsitter
+          rounds up and suppresses TypeError; 'cpu_sec' is typed int
+          (RLIMIT_CPU is whole seconds).
+
+          TWO TESTS OF THE SUPERVISOR STORM ON PURPOSE and now say
+          so: 'test-procsitter_limits.py' (64 forks against an inner
+          8, racing past the outer 32) and the new 'test-reporting.sh'
+          both state 'caps { child_process_max_n = 128 }'.
+
+CHECKED   'procsitter/TEST/test-reporting.sh', run through 'hwut.run'
+          and read at the HINTS alone, numbers stripped:
+            caps   five applications, one cap each, each 'exec'ing
+                   its offence -- the wall clock, cpu time, memory,
+                   file size, process count -- every one NAMED, and
+                   "killed by the supervisor" nowhere
+            multi  one interactive process, four choices served in
+                   SORTED order: 'a_first' passes, 'b_blow' is named
+                   with its cap, 'c_after' and 'd_last' say the
+                   process had already died, and neither is "killed"
+          Written red first, on both roads, then made green.
+
+          Its first offenders were WRONG twice, and both mistakes
+          stand as comments in the script: a bash wrapper whose CHILD
+          blew the cap left bash to print '<hwut-end>' and exit 0, so
+          "unexpected stderr" was the truth; and an interactive
+          fixture that never spoke the wire protocol hung, which read
+          like the defect and was not.
+
+COST      'test-endtoend frame/stream' re-recorded: 'test-dead.sh',
+          an interactive app that dies before the protocol, reads
+          "not run: the process had already died" where it read
+          "killed by the supervisor" -- nothing killed it. procsitter
+          19 ok / 4 fail -> 25 / 0.

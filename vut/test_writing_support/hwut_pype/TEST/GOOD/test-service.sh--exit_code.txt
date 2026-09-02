@@ -1,0 +1,5 @@
+STIMULUS  a clean run          -> exit code: 0
+          a broken script      -> exit code: 1
+REACTION  stderr says: pype: <work>/broken.pype:1: cannot read pattern at '<else'
+SUCCESS: zero on success, non-zero with a spoken reason.
+<hwut-end>

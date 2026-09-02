@@ -1,0 +1,7 @@
+STIMULUS  printf 'zebra\napple\nmango\n' | hwut_pype sort.pype
+REACTION
+    apple
+    mango
+    zebra
+SUCCESS: the filter is one stage of a pipe, like any other.
+<hwut-end>

@@ -2,7 +2,8 @@
 #
 # @hwut {
 #     title      = "The translation: stated parameters reach their owners"
-#     choices    = ["caps", "compare", "naming", "refused", "sweep"]
+#     choices    = ["caps", "caps_inherit", "compare", "naming",
+#                   "refused", "sweep"]
 #     interactive = true
 # }
 #
@@ -33,6 +34,12 @@ compare  the TOLERANCES, member by member, into compare's own
          Configuration: the ratio, the pattern lists, the marker
          PAIRS, and the stated OFF (the empty tuple).
 
+caps_inherit  CAPS TRAVEL BY INHERITANCE (O-20): a choice's word
+         stands over the application's, the application's over
+         procsitter's, and a cap nobody states keeps the owner's own.
+         A sibling that states nothing is untouched by what its
+         neighbour states.
+
 caps     the CAPS into procsitter's configuration; an unstated cap
          keeps procsitter's own default, never a zero.
 
@@ -56,7 +63,7 @@ from vut.engine.orchestrator.exploration.configuration_tree import (
 from vut.engine.orchestrator.run.adapter import (naming_of,
                                                  test_configuration_of,
                                                  _compare_of)
-from vut.engine.operations.configuration import E_SourceKind
+from vut.engine.operations.configuration import E_SourceKind, caps_of
 
 
 def _check(result_list):
@@ -75,14 +82,21 @@ def _verdict(ok, sentence):
 
 
 def _app(parameters=None, language="bash", choice_db=None):
-    """RETURN: CTestApp over the given parameters, one root choice."""
+    """RETURN: CTestApp over the given parameters, RESOLVED as the
+    explorer resolves: 'root' is the application's own word, and every
+    choice carries it folded under its own (O-21). A choiceless app's
+    root IS its one choice."""
+    root = parameters if parameters is not None else TestParameters()
     if choice_db is None:
-        choice_db = {None: parameters if parameters is not None
-                           else TestParameters()}
+        choice_db = {None: root}
+    else:
+        choice_db = {name: root.overwritten_by(p)
+                     for name, p in choice_db.items()}
     return CTestApp(source_file = "test-demo.sh",
                     title       = "Demo",
                     language    = language,
                     choice_db   = choice_db,
+                    root        = root,
                     origin      = E_Origin.HEADER,
                     position    = Position(1, 1))
 
@@ -257,6 +271,38 @@ def test_caps():
     _verdict(ok, "caps arrive; silence keeps the owner's default.")
 
 
+def test_caps_inherit():
+    """RETURN: None. Caps travel to the choices, and only where stated."""
+    configuration = test_configuration_of(
+        _app(choice_db={
+            "plain":  TestParameters(),
+            "hungry": TestParameters(caps=Caps(memory_mb=2048)),
+        }),
+        "/tmp")
+    application = configuration.caps
+    plain       = caps_of(configuration, "plain")
+    hungry      = caps_of(configuration, "hungry")
+    print("INSPECT: application -> memory %s" % application.max_memory_mb)
+    print("         'plain'     -> memory %s (states nothing)"
+          % plain.max_memory_mb)
+    print("         'hungry'    -> memory %s (states 2048)"
+          % hungry.max_memory_mb)
+    print("         inherited   -> cpu %s, wall %s on both"
+          % (hungry.max_cpu_time_sec, hungry.max_wall_clock_sec))
+    ok = _check([
+        (hungry.max_memory_mb == 2048,
+         "the choice's own cap governs the choice"),
+        (plain.max_memory_mb == application.max_memory_mb,
+         "a sibling that states nothing keeps the application's"),
+        (hungry.max_cpu_time_sec == application.max_cpu_time_sec
+         and hungry.max_wall_clock_sec == application.max_wall_clock_sec,
+         "a cap the choice does not state is INHERITED, not reset"),
+        (application.max_memory_mb != 2048,
+         "and the application is not raised by what a choice states"),
+    ])
+    _verdict(ok, "caps travel by inheritance, to the choice that asks.")
+
+
 def test_naming():
     """RETURN: None. 'same' into the bookkeeper's naming law."""
     plain = naming_of(_app(TestParameters()))
@@ -315,6 +361,7 @@ if __name__ == "__main__":
             "sweep":   test_sweep,
             "compare": test_compare,
             "caps":    test_caps,
+            "caps_inherit": test_caps_inherit,
             "naming":  test_naming,
             "refused": test_refused,
         }).run()

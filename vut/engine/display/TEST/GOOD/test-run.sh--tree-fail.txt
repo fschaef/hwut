@@ -1,9 +1,31 @@
-STATUS: 120
+STATUS: 1
 STDOUT {
-}
-STDERR {
-    Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
-    BrokenPipeError: [Errno 32] Broken pipe
+    FRAME gamma/TEST:on_entry .. the frame failed  [FAIL]
+    FLOW DIGEST (sorted; the launch order is no fact of the
+                 subject, and is not recorded) {
+        DIR   alpha/TEST
+        DONE  test-one.sh .. [OK]
+        DONE  test-two.sh .. [OK]
+        DIR   beta/TEST
+        DONE  test-one.sh .. [OK]
+        DONE  test-two.sh .. [FAIL]
+        DIR   gamma/TEST
+    }
+    
+    ==============================================================================
+    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
+    ------------------------------------------------------------------------------
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      1/2
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . . [FAIL]      0/0
+    
+    ==============================================================================
+    HINTS
+    ------------------------------------------------------------------------------
+    gamma/TEST
+        frame on_entry   the frame failed
+    ==============================================================================
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True
+<hwut-end>

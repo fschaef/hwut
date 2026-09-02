@@ -72,6 +72,10 @@ PHRASE_DB = {
     "test-app-file-size-exceeded":  "killed: over the file-size cap",
     "test-app-pids-exceeded":       "killed: over the process cap",
     "test-app-disk-exceeded":       "killed: over the disk cap",
+    #  THE MULTI ROAD (O-21): the process serving every choice was
+    #  already gone when this one's turn came. The choice it died on
+    #  carries the cap; this one carries only that it never ran.
+    "test-app-session-gone":        "not run: the process had already died",
     "test-app-no-output":          "produced no output",
     "test-app-stalled":            "stalled, no output",
     "recording-missing":           "no recording to replay",

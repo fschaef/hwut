@@ -1,0 +1,136 @@
+==============================================================================
+intend/work-structure -- THE STRUCTURING OF WORK IN THE PROJECT
+==============================================================================
+
+COMPONENTS CONCERNED: every component of the tree, and 'adm/'. This is
+    the discipline itself; nothing is exempt.
+
+This file states the INTENT behind the WORK structure: where a piece of
+work is born, where it lives while it is thought about, planned, and
+built, and where its residue goes when it is done. The aim is that
+NOTHING TO DO EXISTS ONLY IN A CONVERSATION OR A HEAD: every open item
+has exactly one file, and that file has exactly one home at every
+moment of its life.
+
+______________________________________________________________________________
+
+THE SHAPE
+
+    adm/                                   GLOBAL
+        WORK/
+            intend/<name>.txt              WHY and what-for; born here
+            spec/<name>.txt                WHAT, precisely; derived
+            plan/<name>.txt                HOW, in ordered steps
+
+    <component>/                           LOCAL
+        README.txt                         how to USE it, what it does
+        INTERNALS.txt                      for those who dive in
+        RATIONALE.txt                      RESULTS of discussions
+        DISCUSSIONS.txt                    the history, while relevant
+        WORK/
+            intend/  spec/  plan/          received by TRANSFER
+
+One name threads the three stages: 'intend/configuration.txt' begets
+'spec/configuration.txt' begets 'plan/configuration.txt'. Whoever holds
+one end of the thread finds the others by the name alone.
+
+______________________________________________________________________________
+
+THE LIFE OF A PIECE OF WORK
+
+    born                thought              transferred           done
+     |                     |                      |                  |
+     v                     v                      v                  v
+    adm/WORK/intend --> adm/WORK/spec --> <component>/WORK/* --> deleted;
+                        adm/WORK/plan                            residue in
+                                                                 RATIONALE,
+                                                                 README,
+                                                                 INTERNALS
+
+  1  EVERYTHING IS BORN GLOBALLY. A todo enters 'adm/WORK/intend/'
+     first, even where one component seems obviously concerned --
+     because whether it concerns one component is itself a finding,
+     not a premise. The intend file NAMES the components concerned in
+     its head.
+
+  2  INTENT BEFORE SPEC BEFORE PLAN. The intend says WHY; the spec
+     says WHAT, precisely enough to check code against; the plan says
+     HOW, in steps. A spec without an intend is an answer without a
+     question; a plan without a spec is motion without a target.
+
+  3  TRANSFER when the work becomes a component's: the files move into
+     '<component>/WORK/', same names. What stays global is what spans
+     components.
+
+  4  DELETION when built and blessed. WORK holds only what is open.
+     The residue is distributed to the permanent bins:
+
+         the ruling, and rejected alternatives   ->  RATIONALE.txt
+         usage that changed                      ->  README.txt
+         mechanics a maintainer needs            ->  INTERNALS.txt
+         history still worth keeping             ->  DISCUSSIONS.txt
+
+______________________________________________________________________________
+
+THE FOUR PERMANENT BINS
+
+    README.txt        FOR THE USER of the component: how to use it and
+                      what it does. May state purpose; states no
+                      internals.
+
+    INTERNALS.txt     FOR THE ONE WHO DIVES IN: structure, invariants,
+                      the mechanics behind the door. Nothing a user
+                      needs stands here.
+
+    RATIONALE.txt     THE RESULTS of discussions -- rulings, and the
+                      graveyard of rejected alternatives, which are
+                      results too -- NOT the history of how they were
+                      reached. Append-only.
+
+    DISCUSSIONS.txt   THE HISTORY, kept only while relevant; pruned
+                      without ceremony when it no longer is.
+
+One item, one bin. A sentence that fits two bins is two sentences.
+
+______________________________________________________________________________
+
+WHAT THIS SUPERSEDES
+
+The per-component 'DISCUSSIONS/' DIRECTORY with its 'disc-N-*.txt' and
+'todo-N-*.txt' files. Under this intent:
+
+    disc-N (open fork)          ->  adm/WORK/intend/<name>.txt, the
+                                    fork stated OPEN inside it
+    todo-N (decided, unbuilt)   ->  spec and plan of the same name
+    the argument itself         ->  DISCUSSIONS.txt, while relevant
+    the ruling                  ->  RATIONALE.txt
+
+The migration of the existing disc-N/todo-N population is itself a
+piece of work and gets its own plan; nothing migrates as a side effect.
+
+______________________________________________________________________________
+
+OPEN
+
+  o-1  TRANSFER MECHANICS. When a file moves to a component's WORK/,
+       does the global side keep a one-line pointer (so 'adm/WORK/'
+       remains the complete index of everything open anywhere), or is
+       the move clean (one file, one home, no shadow)?
+
+  o-2  MULTI-COMPONENT WORK AT TRANSFER TIME. Work naming three
+       components: does it stay global until it can be cut into three
+       transferable pieces, or may it be copied into three WORK/
+       directories? (A copy is a second declaration; the intent above
+       leans against it, but it is not ruled.)
+
+  o-3  README/INTERNALS AND THE DEFENCE TEST. The Defence Test
+       ('no because/due to/intended to/avoids') was written for the
+       one-README world. Does it bind README.txt alone, both README
+       and INTERNALS, or is it retired in favour of the bin
+       definitions above?
+
+  o-4  NUMBERING. E-/R-/D-/B-numbers live on. Do WORK files carry
+       numbers too, or is the NAME the whole identity? (The thread-of-
+       one-name mechanism above needs no numbers; but a ruling inside
+       an intend file still wants an E-number when it lands in
+       RATIONALE.)

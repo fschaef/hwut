@@ -9,6 +9,14 @@
 #                   "wall_clock", "created_files"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
+#     #  A TEST OF THE SUPERVISOR STORMS ON PURPOSE (O-21). 'pids' forks
+#     #  64 against an INNER cap of 8, and the storm races the inner
+#     #  watchdog before it is caught -- past the OUTER supervisor's
+#     #  default of 32, which then killed the whole interactive session
+#     #  and every choice after it. The outer cap is raised to what the
+#     #  storm can reach; 'interactive' keeps every choice in ONE
+#     #  process, so the cap is the application's (O-20).
+#     caps { child_process_max_n = 128 }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

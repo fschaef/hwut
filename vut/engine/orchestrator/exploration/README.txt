@@ -780,6 +780,8 @@ refused): a file whose name matches 'REFUSED_NAME_GLOB_TUPLE' ('*~',
 '*.copy', '*.swp', '*.tmp') is no candidate and is named, with its
 reason, in 'ExplorationResult.refused_tuple'. An ignored file ('ignore'
 in 'hwut.conf', the default globs) is silent; a refused one is reported.
+'*.pype' is among the default globs: a pype is a CANONICALISER the test
+names, never a candidate, and the nominal gate never sees it.
 
 THE TOLERANCE SCOPE (E-42) holds every lexical tolerance and there is no
 second place one may be written:

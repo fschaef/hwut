@@ -192,6 +192,8 @@ async def build(configuration, caps=None, stop_event=None, observer=None):
     directory = configuration.build_directory
     directory.mkdir(parents=True, exist_ok=True)
 
+    #  THE APPLICATION'S CAPS (O-20): a build is the application's,
+    #  built once for every choice; no choice governs it.
     procsitter = Procsitter(caps if caps is not None else configuration.caps,
                             work_dir=str(directory))
     record     = await procsitter.run(make_argv(build_configuration),

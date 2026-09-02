@@ -1,0 +1,9 @@
+  kept: .: register test-reg.py -- a disagreement is mended by hand
+  kept: .: GOOD/ test-nom.py -- a disagreement is mended by hand
+  kept: .: book test-book.py -- a disagreement is mended by hand
+  OK  : three kept, none removed
+  OK  : the nominal stands
+  OK  : the register entry stands
+  OK  : the book entry stands
+SUCCESS: a disagreement is mended by hand, never by --apply.
+<hwut-end>

@@ -1,0 +1,128 @@
+==============================================================================
+intend/01-work-structure -- THE STRUCTURING OF WORK IN THE PROJECT
+==============================================================================
+
+VERSION: 5
+
+COMPONENTS: all. This is the discipline itself; nothing is exempt.
+
+This file states the INTENT behind the WORK structure: where a piece of
+work is born, where it lives while it is thought about, planned, and
+built, and where its residue goes when it is done. The aim is that
+NOTHING TO DO EXISTS ONLY IN A CONVERSATION OR A HEAD: every open item
+has exactly one file, that file has exactly one home at every moment of
+its life, and one rule -- not the project's history -- says where any
+sentence lives.
+
+This intent binds what stands as much as what comes: the existing
+documentation (the disc-N/todo-N population, the READMEs that mix
+usage with mechanics) is not grandfathered; it enters the same order.
+HOW it enters is the spec's and the plan's matter, not this file's.
+
+______________________________________________________________________________
+
+THE SHAPE
+
+    adm/                                   GLOBAL
+        WORK/
+            intend/<name>.txt              WHY and what-for; born here
+            spec/<name>.txt                WHAT, precisely; derived
+            plan/<name>.txt                HOW, in ordered steps
+
+    <component>/                           LOCAL
+        README.txt                         how to USE it, what it does
+        INTERNALS.txt                      for those who dive in
+        RATIONALE.txt                      RESULTS of discussions
+        DISCUSSIONS.txt                    the history, while relevant
+        WORK/
+            intend/  spec/  plan/          received by TRANSFER
+
+EVERY ISSUE CARRIES AN ID, allocated at birth, its identity for
+life. Id and name thread the three stages: 'intend/00-configuration'
+begets 'spec/00-configuration' begets 'plan/00-configuration', and the
+id MOVES WITH THE FILE at transfer -- so no pointer remains behind,
+and one glob over the tree's WORK directories finds any issue anywhere.
+The id's digits and width are the spec's matter, not this file's.
+
+______________________________________________________________________________
+
+THE LIFE OF A PIECE OF WORK
+
+    born                thought              transferred           done
+     |                     |                      |                  |
+     v                     v                      v                  v
+    adm/WORK/intend --> adm/WORK/spec --> <component>/WORK/* --> deleted;
+                        adm/WORK/plan                            residue in
+                                                                 RATIONALE,
+                                                                 README,
+                                                                 INTERNALS
+
+  1  EVERYTHING IS BORN GLOBALLY -- new work, and existing documents
+     alike: what stands in the tree today is GATHERED into 'adm/WORK'
+     before it is sorted, because side by side in one place is where
+     inconsistency and staleness become visible; scattered across nine
+     components they never do.
+
+  2  PROVENANCE IS WRITTEN ON THE DOCUMENT. Every WORK file carries a
+     'COMPONENTS:' line naming where it came from and whom it
+     concerns. The file's location says which stage it is in; the
+     line says whose it is. Neither is inferred.
+
+  3  INTENT BEFORE SPEC BEFORE PLAN. The intend says WHY; the spec
+     says WHAT, precisely enough to check code against; the plan says
+     HOW, in steps. A spec without an intend is an answer without a
+     question; a plan without a spec is motion without a target.
+
+  4  TRANSFER when the work becomes a component's: the files move into
+     '<component>/WORK/', same names. What spans components STAYS
+     GLOBAL until it can be CUT into pieces of one owner each -- never
+     copied, for a copy is a second declaration of the same open item.
+     A piece carries its parent's id inside its own, so lineage reads
+     off the filename.
+
+  5  DELETION when built and blessed. WORK holds only what is open.
+     The residue is distributed to the permanent bins:
+
+         the ruling, and rejected alternatives   ->  RATIONALE.txt
+         usage that changed                      ->  README.txt
+         mechanics a maintainer needs            ->  INTERNALS.txt
+         history still worth keeping             ->  DISCUSSIONS.txt
+
+______________________________________________________________________________
+
+THE FOUR PERMANENT BINS
+
+    README.txt        FOR THE USER of the component: how to use it and
+                      what it does. May state purpose; states no
+                      internals.
+
+    INTERNALS.txt     FOR THE ONE WHO DIVES IN: structure, invariants,
+                      the mechanics behind the door. Nothing a user
+                      needs stands here.
+
+    RATIONALE.txt     THE RESULTS of discussions -- rulings, and the
+                      graveyard of rejected alternatives, which are
+                      results too -- NOT the history of how they were
+                      reached. Append-only, and SELF-CONTAINED: an
+                      entry is readable without following a single
+                      reference.
+
+    DISCUSSIONS.txt   THE HISTORY, kept only while relevant; pruned
+                      without ceremony when it no longer is.
+
+One item, one bin. A sentence that fits two bins is two sentences.
+
+THE PERMANENT BINS CITE ONLY EACH OTHER -- never a WORK file (it is
+deletable, so a reference to it rots by design), never a chat. Every
+document states its VERSION at the top, so a citation can pin the
+document AS IT WAS when cited.
+
+______________________________________________________________________________
+
+WHAT THIS SUPERSEDES
+
+The per-component 'DISCUSSIONS/' DIRECTORY with its 'disc-N-*.txt' and
+'todo-N-*.txt' files, and the one-README world those files grew beside.
+Measured, so the weight is known: 40 disc/todo files across 9
+components; 20 READMEs, of which the largest (operations, 1264 lines;
+exploration, 779) visibly mix usage with mechanics.

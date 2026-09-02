@@ -103,7 +103,8 @@ from   pathlib import Path
 
 from   ..result                   import E_TestRunResult
 from   .stage_execute             import read_declared_files
-from   ...procsitter.api   import Procsitter
+from   ...procsitter.api   import Procsitter, E_Containment
+from   .containment               import token_of, detail_of
 from   ...procsitter.api import Link, chain
 from   .core                      import (Supply, STDOUT, STDERR,
                                           scratch_dir_of,
@@ -145,7 +146,11 @@ class MultiExecute(I_MultiProvider):
         self._stderr       = None    # Link off the app's stderr
         self._task_tuple   = None
         self._reader_task  = None
-        self._ticket_db    = {}      # token -> asyncio.Future
+        self._ticket_db    = {}      # token -> asyncio.Future (in
+                                     # SUBMISSION order: dicts keep it)
+        self.died_during   = None    # the token in flight when the
+                                     # session ended before 'bye'; the
+                                     # cap, if any, is ITS (O-21)
         self._started      = False
         self._closed       = False
 
@@ -168,6 +173,10 @@ class MultiExecute(I_MultiProvider):
         pype_owned_f = any("stdout" in c.canonicalisers
                            for c in configuration.choice_db.values()
                            if c is not None)
+        #  THE APPLICATION'S CAPS, deliberately (O-20): a MULTI run
+        #  holds every choice in ONE process, so no single choice's
+        #  cap can govern it. An author who needs a choice capped
+        #  apart from its siblings must not state 'same'.
         caps = configuration.caps
         if pype_owned_f:
             caps = replace(caps, env={**(caps.env or {}),
@@ -207,6 +216,14 @@ class MultiExecute(I_MultiProvider):
                     break
                 case _:
                     pass                       # pre-session line: skipped
+        #  THE RECORD BEFORE THE LEFTOVERS FAIL (O-21): a ticket that
+        #  resolves 'session-ended' is read by a provider that asks
+        #  at once WHY the session ended -- which cap, on which
+        #  choice. That answer is the supervised call's record, so it
+        #  is awaited HERE, at the wire's end, and not first in
+        #  'close()' where it would come too late to be told.
+        record_list = await asyncio.gather(*self._task_tuple)
+        self.record = record_list[0]
         self._fail_leftovers()
 
     def _resolve(self, token, answer):
@@ -218,9 +235,15 @@ class MultiExecute(I_MultiProvider):
 
     def _fail_leftovers(self):
         """RETURN: None. The session ended: every unresolved ticket is
+        failed with 'session-ended'. THE FIRST UNRESOLVED IN SUBMISSION
+        ORDER WAS IN FLIGHT -- the application serves 'run' lines in
+        the order they arrive -- and is remembered as 'died_during':
+        where the session died of a cap, that choice is the offender
+        and the others were merely never served (O-21).
         failed -- an absent answer is REPORTED, never invented."""
-        for ticket in self._ticket_db.values():
+        for token, ticket in self._ticket_db.items():
             if not ticket.done():
+                if self.died_during is None: self.died_during = token
                 ticket.set_result("session-ended")
 
     async def close(self):
@@ -238,9 +261,7 @@ class MultiExecute(I_MultiProvider):
         if not self._started: return None
         await self._down.feed(b"quit\n")
         self._down.close()
-        record_list = await asyncio.gather(*self._task_tuple)
-        self.record = record_list[0]
-        await self._reader_task
+        await self._reader_task                  # sets 'record' (O-21)
         self._stderr.close()
         return self.record
 
@@ -402,13 +423,24 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                 return Supply(
                         product     = None,
                         report      = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
-                        record_list = record)
+                        record_list = record,
+                        detail      = None)
             case "session-ended":
-                #  The wire fell silent before this ticket was served.
+                #  THE WIRE FELL SILENT before this ticket was served.
+                #  Which story is this choice's (O-21)?
+                #    - the session died OF A CAP and THIS choice was in
+                #      flight: the kill is its, named with its cap and
+                #      its numbers, as the plain road names it;
+                #    - the session died of a cap on ANOTHER choice, or
+                #      simply ended: this one was never served -- not
+                #      killed, never begun.
+                report, detail = _session_gone_report(session, self.choice_name)
+                self.detail = detail
                 return Supply(
                         product     = None,
-                        report      = E_TestRunResult.TEST_APP_CONTAINED,
-                        record_list = record)
+                        report      = report,
+                        record_list = record,
+                        detail      = detail)
             case _:
                 #  THE SINKS MUST BE THERE. 'done' says the choice ran
                 #  and its files are complete and closed; where one is
@@ -434,8 +466,15 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                 #  CHOICE: B never reads A's leftover.
                 missing = read_declared_files(session.configuration,
                                               self.choice_name, raw_db)
-                report = E_TestRunResult.OK if answer >= 0 \
-                         else E_TestRunResult.TEST_APP_CONTAINED
+                #  A NEGATIVE STATUS IS A TERMINATING SIGNAL the app
+                #  reported for one choice's command; where the
+                #  session's own record names a cap, that is the
+                #  reason, else the bare containment.
+                if answer >= 0: report = E_TestRunResult.OK
+                else:           report, self.detail = \
+                                    _session_gone_report(session,
+                                                         self.choice_name,
+                                                         in_flight_f=True)
                 if report is E_TestRunResult.OK and missing is not None:
                     #  Containment speaks first: a contained run
                     #  explains a missing file better than the file's
@@ -443,7 +482,38 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                     report = missing
                 return Supply(product     = (raw_db, None),
                               report      = report,
-                              record_list = record)
+                              record_list = record,
+                              detail      = getattr(self, "detail", None))
+
+
+def _session_gone_report(session, choice_name, in_flight_f=None):
+    """
+    RETURN: [0] E_TestRunResult, what the session's end means for THIS
+                choice: the cap's own token where the session died of
+                a cap and this choice was the one in flight;
+                'TEST_APP_SESSION_GONE' where another choice was, or
+                the session ended without a cap and this one was never
+                served; 'TEST_APP_CONTAINED' for a containment the
+                table cannot name.
+            [1] str, the cap and its numbers ('cap 4, peak 42'), or
+                None where there is nothing to measure.
+
+    'in_flight_f' None: decided from 'session.died_during'; True: the
+    caller knows this choice's command was the one that ended.
+    """
+    record = session.record
+    if in_flight_f is None:
+        token       = session._token(choice_name)
+        in_flight_f = (session.died_during == token)
+    containment = getattr(record, "containment", None)
+    ended_by_cap_f = containment is not None \
+                     and containment is not E_Containment.OK_COMPLETED \
+                     and containment is not E_Containment.FAIL_COMPLETED
+    if ended_by_cap_f and in_flight_f:
+        return token_of(containment), detail_of(record, session.configuration.caps)
+    if in_flight_f:
+        return E_TestRunResult.TEST_APP_CONTAINED, None
+    return E_TestRunResult.TEST_APP_SESSION_GONE, None
 
 
 def _is_int(text):

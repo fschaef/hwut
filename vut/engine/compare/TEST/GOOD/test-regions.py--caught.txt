@@ -1,0 +1,7 @@
+  REFUSED: the region framing of this text is broken --
+      line 3: region handler 'potpourri' knows no parameter '|'; known: duplicates, max_comparisons, subset
+  OK  : the reading answers False, and does not raise
+  OK  : it says REFUSED
+  OK  : and names the line that could not be read
+SUCCESS: the fault is caught on the road that meets it.
+<hwut-end>

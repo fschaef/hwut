@@ -23,51 +23,8 @@ from   .core                      import (Supply, scratch_dir_of,
                                           read_all,
                                           read_all_timed)
 from   .provider                  import I_ExecuteProvider
-
-
-#  Which cap a containment names (O-19).
-_CONTAINMENT_TOKEN_DB = {
-    E_Containment.FAIL_WALL_CLOCK_EXCEEDED: E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
-    E_Containment.FAIL_CPU_TIME_EXCEEDED:   E_TestRunResult.TEST_APP_CPU_TIME_EXCEEDED,
-    E_Containment.FAIL_MEMORY_EXCEEDED:     E_TestRunResult.TEST_APP_MEMORY_EXCEEDED,
-    E_Containment.FAIL_FILE_SIZE_EXCEEDED:  E_TestRunResult.TEST_APP_FILE_SIZE_EXCEEDED,
-    E_Containment.FAIL_PIDS_EXCEEDED:       E_TestRunResult.TEST_APP_PIDS_EXCEEDED,
-    E_Containment.FAIL_DISK_USAGE_EXCEEDED: E_TestRunResult.TEST_APP_DISK_EXCEEDED,
-}
-
-
-def _detail_of(record, caps):
-    """
-    RETURN: str, the cap that was hit and how far the run went past it,
-                 e.g. 'cap 512 MB, peak 1069 MB' -- from the record's
-                 peaks and the caps in force
-            None, where the containment names no cap this can measure.
-
-    A PEAK IS WHAT THIS MACHINE SAW (E-36): the detail is spoken, in
-    HINTS and the log, and never written to the book.
-    """
-    c = record.containment
-    if c is E_Containment.FAIL_MEMORY_EXCEEDED:
-        peak = record.peak_memory_mb
-        return "cap %s MB, peak %s MB" % (caps.max_memory_mb,
-                                          "?" if peak is None else "%.0f" % peak)
-    if c is E_Containment.FAIL_WALL_CLOCK_EXCEEDED:
-        return "cap %s s, ran %.1f s" % (caps.max_wall_clock_sec,
-                                          record.wall_clock_sec)
-    if c is E_Containment.FAIL_CPU_TIME_EXCEEDED:
-        used = record.cpu_time_sec
-        return "cap %s s cpu, used %s s" % (caps.max_cpu_time_sec,
-                                            "?" if used is None else "%.1f" % used)
-    if c is E_Containment.FAIL_FILE_SIZE_EXCEEDED:
-        return "cap %s MB per file" % caps.max_file_size_mb
-    if c is E_Containment.FAIL_PIDS_EXCEEDED:
-        return "cap %s, peak %s" % (caps.max_pids,
-                                   "?" if record.peak_pids is None else record.peak_pids)
-    if c is E_Containment.FAIL_DISK_USAGE_EXCEEDED:
-        peak = record.peak_disk_mb
-        return "cap %s MB, peak %s MB" % (caps.max_disk_mb,
-                                          "?" if peak is None else "%.0f" % peak)
-    return None
+from   ..configuration            import caps_of
+from   .containment               import token_of, detail_of
 
 
 class StageExecute(I_ExecuteProvider):
@@ -99,7 +56,9 @@ class StageExecute(I_ExecuteProvider):
         choice = configuration.choice_db.get(self.choice_name)
         pype_owned_f = (choice is not None
                         and "stdout" in choice.canonicalisers)
-        caps = configuration.caps
+        #  THE CASE'S CAPS, not the application's (O-20): a choice may
+        #  state its own, and this stage knows which choice it is.
+        caps = caps_of(configuration, self.choice_name)
         if pype_owned_f:
             caps = replace(caps, env={**(caps.env or {}),
                                       "HWUT_NO_TERMINAL": "1"})
@@ -143,9 +102,8 @@ class StageExecute(I_ExecuteProvider):
              and record.containment is not E_Containment.FAIL_COMPLETED:
             #  A KILL NAMES ITS CAP (O-19): the token says which, the
             #  detail says the cap and the peak.
-            report = _CONTAINMENT_TOKEN_DB.get(record.containment,
-                                               E_TestRunResult.TEST_APP_CONTAINED)
-            self.detail = _detail_of(record, caps)
+            report      = token_of(record.containment)
+            self.detail = detail_of(record, caps)
         elif missing_report is not None:
             #  Containment speaks first: a contained run explains a
             #  missing file better than the file's absence does.

@@ -720,8 +720,26 @@ class CPlainFlow(CRunReportReceiver):
         RETURN: None. The tree written depth-first.
 
         THE CONNECTOR SAYS WHETHER ANYTHING FOLLOWS AT ITS OWN LEVEL:
-        "+---o " where a sibling stands below it, "'---o " where none
+        "+--- " where a sibling stands below it, "'--- " where none
         does -- so the last of a group closes it visibly.
+
+        AND WHETHER THE NODE IS A PLACE OR A WAY TO ONE. A LEAF ends
+        in one blank: "'--- suite/TEST". A JUNCTION -- no run of its
+        own, sub-branches below it -- ends in a DOT: "'---. suite".
+        The dot is a way, not a destination, and the eye can tell the
+        two apart without reading the name.
+
+        A JUNCTION IS SIX COLUMNS WIDE because the indent below it is
+        four per level and must not step sideways; a leaf hangs
+        nothing below it, so it may be five. A place that also
+        branches keeps six.
+
+        THE INK, where the ink is on: everything that is TREE -- the
+        bars, the connectors, a junction's name -- is the directory's
+        ORANGE, the one colour a directory has wherever it is named.
+        A leaf's name is two things: the ROAD to it, green, with the
+        '/' that ends the road; and the PLACE, the TEST directory
+        itself, red.
 
         A NODE THAT ONLY LEADS SOMEWHERE IS NOT A LEVEL. A segment
         with exactly one child and no run of its own is joined to that
@@ -750,15 +768,46 @@ class CPlainFlow(CRunReportReceiver):
                 node = node["children"][only]
             return part, node
 
+        def leaf_label(label):
+            """
+            RETURN: str, the leaf's name PAINTED: the way to it green,
+                    the '/' included, and the last part -- the TEST
+                    directory itself -- red. 'TEST' is the place; what
+                    precedes it is the road, and the two are read
+                    differently.
+            """
+            head, sep, tail = label.rpartition("/")
+            return "%s%s" % (self.ink.ok(head + sep) if sep else "",
+                             self.ink.fail(tail))
+
         def recurse(node, indent):
             child_n = len(node["order"])
             for i, part in enumerate(node["order"]):
                 label, child = collapse(part, node["children"][part])
                 last_f    = (i == child_n - 1)
-                connector = "'---o " if last_f else "+---o "
+                directory = child["directory"]
+                branch_f  = bool(child["order"])
+                #  THE CONNECTOR: a JUNCTION ends in a dot; a LEAF ends
+                #  in one blank; a place that ALSO branches keeps two,
+                #  so that the indent of what hangs below it -- four
+                #  per level -- is unmoved. A leaf hangs nothing, so
+                #  its width need not match.
+                if directory is None:   end = ". "
+                elif branch_f:          end = "  "
+                else:                   end = " "
+                connector = ("'---%s" if last_f else "+---%s") % end
                 left      = "%s%s%s%s" % (TREE_INDENT, indent,
                                           connector, label)
-                directory = child["directory"]
+                #  THE INK: everything that is TREE -- the indent's
+                #  bars, the connector, a junction's name -- is the
+                #  directory's orange; a leaf's name is road and
+                #  place, green and red.
+                tree_ink  = self.ink.directory("%s%s%s" % (TREE_INDENT,
+                                                            indent,
+                                                            connector))
+                label_ink = leaf_label(label) if directory is not None \
+                            else self.ink.directory(label)
+                left_ink  = "%s%s" % (tree_ink, label_ink)
                 if directory is not None:
                     good   = self.dir_good_db.get(directory)
                     tag    = "[OK]" if good else "[FAIL]"
@@ -777,10 +826,10 @@ class CPlainFlow(CRunReportReceiver):
                                       tag_ink, count_field)
                     fill = max(w - len(left) - len(right) - 2, 1)
                     dots = _dot_space_fill(fill)
-                    write("%s %s %s" % (left, self.ink.dim(dots),
+                    write("%s %s %s" % (left_ink, self.ink.dim(dots),
                                         right_ink))
                 else:
-                    write(left)
+                    write(left_ink)
                 recurse(child, indent + ("    " if last_f else "|   "))
         #  ONE DIRECTORY IS NOT A TREE. A connector says "this branches
         #  from something"; with nothing to branch from, the name

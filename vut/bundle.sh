@@ -83,7 +83,8 @@ Output:
   -p NAME              Load argument vector NAME from ${PROFILE_FILE}
   -n, --dry-run        Report what would be bundled; write nothing
   -N NUM               Largest files to list in dry-run (Default: ${TOP_N})
-      --verify FILE... Re-hash the manifest of FILE against the working tree
+      --verify FILE... Recompute FILE's content crc64, and re-hash its
+                       manifest against the working tree
   -h, --help           Show this help message
 
 Within a follower list, '--' takes the next token literally.
@@ -384,6 +385,53 @@ candidates_collect() {
     rm -f "$stream"
 }
 
+# --- Content Signature -----------------------------------------------------
+# RETURN: 16 upper-case hex digits, the CRC-64/XZ of the bytes read from
+#         standard input (ECMA-182 polynomial 0xC96C5795D7870F42, reflected,
+#         initial and final value all-ones -- the 'xz' checksum, so
+#         'xz --check=crc64' and any CRC-64/XZ implementation answer the same
+#         number for the same bytes).
+#
+# Exits with status 1 where python3 is absent: this tree is a Python project,
+# and a signature computed by two different means is two signatures.
+crc64_stdin() {
+    command -v python3 >/dev/null 2>&1 \
+        || die "crc64 needs python3; no interpreter found"
+    python3 -c '
+import sys
+
+POLYNOMIAL = 0xC96C5795D7870F42
+TABLE      = []
+for index in range(256):
+    entry = index
+    for _ in range(8):
+        entry = (entry >> 1) ^ POLYNOMIAL if entry & 1 else entry >> 1
+    TABLE.append(entry)
+
+crc = 0xFFFFFFFFFFFFFFFF
+while True:
+    block = sys.stdin.buffer.read(1 << 20)
+    if not block: break
+    for byte in block:
+        crc = TABLE[(crc ^ byte) & 0xFF] ^ (crc >> 8)
+sys.stdout.write("%016X" % (crc ^ 0xFFFFFFFFFFFFFFFF))
+'
+}
+
+# RETURN: 16 upper-case hex digits, the CRC-64/XZ of the CONTENT of the given
+#         bundle -- everything from its first 'diff --git' line to its end,
+#         the introductory comment and the manifest excluded.
+#
+# THE COMMENT CANNOT BE PART OF WHAT IT REPORTS. The signature stands in the
+# header, so a signature over the whole file could never be recomputed from
+# the file. What it covers is exactly what 'git apply' and 'patch' read: the
+# diff. A member's own line may begin with '#', but only as '+#', so the
+# first line at column zero beginning 'diff --git ' is the content's start
+# and cannot be forged by a member's text.
+bundle_content_crc64() {
+    sed -n '/^diff --git /,$p' "$1" | crc64_stdin
+}
+
 # --- Member Rendering ------------------------------------------------------
 # RETURN: 0, if the file is non-empty and its last byte is not a newline
 #         1, else
@@ -442,7 +490,7 @@ member_render() {
 # Everything before the first 'diff --git' is skipped by 'git apply' and by
 # 'patch', so the manifest travels inside the bundle without disturbing it.
 header_write() {
-    local target="$1" part="$2" total="$3"; shift 3
+    local target="$1" part="$2" total="$3" crc="$4" content_bytes="$5"; shift 5
     local members=("$@") path
     {
         printf '%s\n' '# This bundle is a unified diff against /dev/null. To undump:'
@@ -450,8 +498,12 @@ header_write() {
         printf '%s\n' '#   patch -p1 < <this-file>        # alternative, if git is unavailable'
         printf '%s\n' '# Lines beginning with "#" are ignored by both tools.'
         printf '%s\n' '# To check a bundle against the working tree: bundle.sh --verify <this-file>'
+        printf '%s\n' '# The crc64 below covers the CONTENT ONLY -- these comment lines are not'
+        printf '%s\n' '# in it, so it can be recomputed from the bundle: --verify does that.'
         printf '# bundle: %s  part %s of %s\n' "$(basename "$OUTPUT_FILE")" "$part" "$total"
         printf '# members: %s\n' "${#members[@]}"
+        printf '# crc64 %s  %s bytes of content (from the first "diff --git")\n' \
+               "$crc" "$content_bytes"
         for path in ${members[@]+"${members[@]}"}; do
             printf '# sha256 %s  %s\n' "$(sha256sum "$path" | cut -d' ' -f1)" "$path"
         done
@@ -531,11 +583,20 @@ bundle_write() {
         for idx in "${!parts_of[@]}"; do
             [[ "${parts_of[$idx]}" -eq "$p" ]] && members+=("${ACCEPTED[$idx]}")
         done
-        : > "$scratch/out"
-        header_write "$scratch/out" "$p" "$total" ${members[@]+"${members[@]}"}
+        #  THE CONTENT IS ASSEMBLED FIRST, then signed, then the header is
+        #  written before it: a signature over the content cannot be
+        #  computed while the header that carries it is already in the file.
+        : > "$scratch/body"
         for idx in "${!parts_of[@]}"; do
-            [[ "${parts_of[$idx]}" -eq "$p" ]] && cat "$scratch/m.$idx" >> "$scratch/out"
+            [[ "${parts_of[$idx]}" -eq "$p" ]] && cat "$scratch/m.$idx" >> "$scratch/body"
         done
+        local crc content_bytes
+        crc=$(crc64_stdin < "$scratch/body")
+        content_bytes=$(stat -c%s "$scratch/body")
+        : > "$scratch/out"
+        header_write "$scratch/out" "$p" "$total" "$crc" "$content_bytes" \
+                     ${members[@]+"${members[@]}"}
+        cat "$scratch/body" >> "$scratch/out"
         if [[ "$name" == "-" ]]; then cat "$scratch/out"
         else cp "$scratch/out" "$name"; fi
         WRITTEN_PARTS+=("$name")
@@ -551,9 +612,38 @@ bundle_write() {
 # Differences are reported one per line as MISSING or DIFFERS with the path.
 verify_bundles() {
     local bundle hash path actual bad=0 checked=0
+    local stated_crc actual_crc stated_bytes actual_bytes crc_bad=0
     for bundle in "${VERIFY_FILES[@]}"; do
         [[ -f "$bundle" ]] || die "bundle '$bundle' not found"
+
+        #  THE BUNDLE'S OWN INTEGRITY FIRST. The manifest answers whether the
+        #  working tree still matches; the crc64 answers whether the bundle
+        #  itself arrived whole. A truncated bundle would otherwise report
+        #  every missing member as a tree difference.
+        stated_crc=$(sed -n 's/^# crc64 \([0-9A-F]*\) .*/\1/p' "$bundle" | head -n1)
+        if [[ -z "$stated_crc" ]]; then
+            echo "NO CRC   $bundle -- written before bundle.sh carried one"
+        else
+            stated_bytes=$(sed -n 's/^# crc64 [0-9A-F]*  \([0-9]*\) .*/\1/p' \
+                           "$bundle" | head -n1)
+            actual_crc=$(bundle_content_crc64 "$bundle")
+            actual_bytes=$(sed -n '/^diff --git /,$p' "$bundle" | wc -c | tr -d ' ')
+            if [[ "$actual_crc" == "$stated_crc" ]]; then
+                echo "CRC64 OK $bundle  ${actual_crc}  ${actual_bytes} bytes"
+            else
+                echo "CRC64 MISMATCH  $bundle"
+                echo "    stated: ${stated_crc}  ${stated_bytes} bytes"
+                echo "    actual: ${actual_crc}  ${actual_bytes} bytes"
+                crc_bad=$((crc_bad + 1))
+            fi
+        fi
+
         while read -r _ _ hash path; do
+            #  A TRUNCATED BUNDLE ends mid-manifest: the last line read is
+            #  half a line, and reporting it as a missing file would name a
+            #  file nobody asked for. The crc64 above already said what is
+            #  wrong with such a bundle.
+            [[ -n "$path" && -n "$hash" ]] || continue
             checked=$((checked + 1))
             if [[ ! -f "$path" ]]; then
                 echo "MISSING  $path"; bad=$((bad + 1)); continue
@@ -562,8 +652,9 @@ verify_bundles() {
             [[ "$actual" == "$hash" ]] || { echo "DIFFERS  $path"; bad=$((bad + 1)); }
         done < <(grep '^# sha256 ' "$bundle")
     done
-    echo "Verified: ${checked} members, ${bad} mismatch(es)"
-    [[ $bad -eq 0 ]]
+    echo "Verified: ${checked} members, ${bad} mismatch(es)," \
+         "${crc_bad} bundle(s) with a broken crc64"
+    [[ $bad -eq 0 && $crc_bad -eq 0 ]]
 }
 
 # --- Dry Run ---------------------------------------------------------------
@@ -694,6 +785,14 @@ main() {
     echo "Success: bundle written to ${WRITTEN_PARTS[*]}" >&2
     [[ $CHMOD_SCRIPT -eq 1 ]] && chmod_script_write
     statistics_report
+    #  Not for a bundle that went to stdout: there is no file to read back,
+    #  and reading '-' would take the terminal for a bundle. The signature
+    #  stands in the header either way.
+    if [[ "${WRITTEN_PARTS[0]}" != "-" ]]; then
+        echo "Content:   crc64 $(bundle_content_crc64 "${WRITTEN_PARTS[0]}")" \
+             "over $(sed -n '/^diff --git /,$p' "${WRITTEN_PARTS[0]}" \
+                     | wc -c | tr -d ' ') bytes"
+    fi
     echo "To undump: git apply ${WRITTEN_PARTS[0]}   (or: patch -p1 < ${WRITTEN_PARTS[0]})"
     [[ -n "$CHMOD_FILE" ]] && \
         echo "Then:      sh ${CHMOD_FILE}   -- a diff carries no execute bit"

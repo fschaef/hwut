@@ -1,0 +1,7 @@
+  absent: absent   (0) nothing recorded for this choice
+  stale:  stale   (A.1)
+  OK  : nothing recorded: a Loaded, and the word ABSENT
+  OK  : old recording: a Loaded, and the word STALE
+  OK  : the stale recording is still delivered
+SUCCESS: a face that only reads is never made to run.
+<hwut-end>

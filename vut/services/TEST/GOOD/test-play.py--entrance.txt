@@ -1,0 +1,7 @@
+  OK  : accept status OK
+  OK  : accept did not need to run: the saved candidate was current
+  OK  : a nominal stands in GOOD/
+  OK  : and it is what the application printed
+  OK  : the register has the test
+SUCCESS: a new test enters by play --save, then accept.
+<hwut-end>

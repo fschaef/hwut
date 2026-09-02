@@ -53,6 +53,10 @@ class E_TestRunResult(Enum):
     # THE TEST APPLICATION:
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_CONTAINED          = "test-app-contained"
+    #  THE MULTI ROAD (O-21): the one process serving every choice
+    #  died -- of a cap, named on the choice that was running -- and
+    #  THIS choice was never served. Not killed: never begun.
+    TEST_APP_SESSION_GONE       = "test-app-session-gone"
     #  ONE TOKEN PER CAP (O-19): which cap was hit is the verdict's word.
     TEST_APP_WALL_CLOCK_EXCEEDED = "test-app-wall-clock-exceeded"
     TEST_APP_CPU_TIME_EXCEEDED   = "test-app-cpu-time-exceeded"

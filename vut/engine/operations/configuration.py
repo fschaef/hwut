@@ -73,6 +73,27 @@ class TestChoiceConfiguration:
     #  is absent is the verdict 'output-file-not-found'. None: the
     #  default, ('stdout',). stderr is NEVER here (E-5).
     output:         Sequence[str] | None       = None
+    #  THE CAPS THIS CHOICE RUNS UNDER, COMPLETE (O-20): the author's
+    #  word for the choice folded onto the application's, folded onto
+    #  procsitter's. None where whoever built the configuration stated
+    #  none -- then the application's ('TestConfiguration.caps') is
+    #  the answer, and 'caps_of()' is the one place that says so.
+    caps:           object                     = None
+
+
+def caps_of(configuration, choice_name):
+    """
+    RETURN: ProcsitterConfig, the caps THIS CASE runs under -- the
+            choice's where it has them, the application's else.
+
+    ONE PLACE ANSWERS IT. A consumer that knows its choice asks here;
+    one that does not (the build, the coverage harvest -- both the
+    application's business, not a case's) reads 'configuration.caps'
+    directly, and says so where it does.
+    """
+    choice = configuration.choice_db.get(choice_name)
+    if choice is None or choice.caps is None: return configuration.caps
+    return choice.caps
 
 
 @dataclass(frozen=True)

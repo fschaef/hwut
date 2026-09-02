@@ -1,0 +1,9 @@
+  test-new.py          no nominal stands in GOOD/: not accepted, not run ('hwut.play --save', then 'hwut.accept')
+  2 ok, 0 fail
+  OK  : the new test stands once in the REFUSED block
+  OK  : the reason names the way in
+  OK  : it is not counted: two ok, none failed
+  OK  : the book has no entry for it
+  OK  : the run is OK
+SUCCESS: no nominal, no run -- and the way in is named.
+<hwut-end>

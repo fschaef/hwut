@@ -32,7 +32,7 @@ _STRUCTURAL_KEY_SET = ("title", "language", "choices")
 
 #  The caps that are a positive quantity, and the type each carries.
 _CAP_POSITIVE_SET   = {"timeout_sec":         float,
-                       "cpu_sec":             float,
+                       "cpu_sec":             int,    # RLIMIT_CPU: whole seconds
                        "memory_mb":           int,
                        "file_size_mb":        int,
                        "child_process_max_n": int,

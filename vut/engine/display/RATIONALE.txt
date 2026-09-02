@@ -307,3 +307,78 @@ GRAVEYARD MASKING IN TWO PLACES, shell and pype -- rejected as
           which no digest reads, are masked in the suite; the
           digested ones in the pype; both swallow the same kinds of
           fact.
+
+D-11  THE JUNCTION AND THE PLACE                                (2026-09-02)
+
+PROBLEM   Every node of the DIRECTORIES tree ended in the same "o",
+          whether it had run something or only led somewhere:
+          "'---o region/potpourri" and "'---o solver/TEST" read alike,
+          and the eye had to parse the name to tell a branch point
+          from a test directory.
+
+RULED     (Frank-Rene) drop the "o"; a node that only branches ends
+          in ".".
+
+DECISION  A PLACE ends in nothing, "'---  solver/TEST"; a JUNCTION
+          ends in a dot, "'---. region/potpourri". Both six columns
+          wide -- the indent below is four per level, and two widths
+          would step the whole subtree sideways.
+
+ALSO      'test-run.sh' now prints '<hwut-end>' as its last line.
+          None of its sixteen GOODs carried the token, so
+          'hwut.accept' refused every one of them and the suite could
+          not be corrected -- three of them recorded 'STATUS: 120', a
+          timed-out run accepted as the oracle, with nobody able to
+          replace it. The token stands after 'esac', so the
+          '--hwut-info' arm exits before reaching it. All sixteen
+          re-recorded; no GOOD records a timeout any more.
+
+          'jobs-budget' had looked like a timeout for days. It was
+          'test-run--jobs-budget.pype' with its EXECUTE BIT LOST -- a
+          mode a patch does not carry -- dying on 'Permission denied'
+          every run. Restored, with five more pypes under 'test_
+          writing_support/hwut_pype/examples/' that had lost theirs.
+
+          Four 'test-plain.py' GOODs were stale since the display
+          rework and read as "skip lines vanished". They had MOVED:
+          the reason left the flow line for HINTS, as ruled. Every
+          differing line named before blessing.
+
+COST      display 20 ok / 4 fail -> 24 ok / 0 fail.
+
+D-12  THE TREE'S INK                                            (2026-09-02)
+
+RULED     (Frank-Rene) one blank after a leaf's connector; everything
+          that is TREE in the directory's orange, a junction's name
+          included; a leaf's name green up to and including the '/',
+          the TEST directory itself red.
+
+DECISION  As ruled, in 'plain.py's tree emitter:
+
+              <208>   +--- <32>alpha/<196>TEST
+              <208>   +---. <208>deep
+              <208>   |   +--- <32>inner/<196>TEST
+
+          Orange is 256-colour 208, the one colour a directory has
+          wherever it is named (DIR band, HINTS head, now the tree).
+          Red is 196, pinned, for the reason FAIL_CODE gives: a
+          theme may paint palette slot 1 orange, and the place must
+          not share a hue with the road. Green is base 32.
+
+          A leaf's connector is five wide, a junction's six. A leaf
+          hangs nothing below it, so its width is free; a junction's
+          must not step the indent below it sideways. A place that
+          ALSO branches keeps six.
+
+          The fill and the tag are measured on the UNPAINTED text and
+          painted after, so the dots land where they landed before.
+
+CHECKED   'test-run.sh tree-ink' reduces the coloured tree to its SGR
+          codes -- which colour paints which part, and nothing else --
+          so the ruling has an oracle. The display's other GOODs are
+          the plain rendering and cannot see ink.
+
+COST      Eight GOODs re-recorded for the one blank ('tree-green',
+          'tree-fail', 'busy', 'jobs-budget', 'labels', 'linear-raw',
+          'short-form'; 'test-plain mixed'); the width was their only
+          difference. display 24 ok / 0 fail -> 25 / 0.

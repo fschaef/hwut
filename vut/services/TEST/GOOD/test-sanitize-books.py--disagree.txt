@@ -1,0 +1,9 @@
+  .: register test-reg.py registered, and no nominal stands
+  .: GOOD/ test-nom.py a nominal stands, and the register lacks it
+  .: book test-book.py a nominal stands, and 'last_accept' is empty -- accepted outside the book
+  OK  : three findings
+  OK  : the register ahead: registered, no nominal
+  OK  : the register behind: a nominal, not registered
+  OK  : the book: a nominal, and 'last_accept' empty
+SUCCESS: every disagreement is named by its record.
+<hwut-end>

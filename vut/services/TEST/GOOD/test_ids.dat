@@ -1,6 +1,6 @@
 ##VUT-TEST-IDS 5
-G:128
-N:20
+G:134
+N:21
 A:0 test-pype.sh
 N:0.6
 C:0.0 exit
@@ -149,3 +149,10 @@ C:19.6 select
 C:19.7 short-form
 C:19.8 spent
 C:19.9 travels
+A:20 test-base-questions.py
+N:20.5
+C:20.0 asked
+C:20.1 fail
+C:20.2 never_run
+C:20.3 pass
+C:20.4 until

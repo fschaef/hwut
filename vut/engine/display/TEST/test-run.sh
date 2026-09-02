@@ -4,6 +4,7 @@
 # @hwut {
 #     title      = "The hwut.run face: the tree run, rendered live."
 #     choices    = ["busy", "colour", "empty", "fail", "green",
+#                   "tree-ink",
 #                   "jobs-budget", "labels", "linear-raw", "nostore",
 #                   "refused", "short-form", "strategy-refused",
 #                   "tiers", "timing", "tree-fail", "tree-green"]
@@ -261,6 +262,33 @@ tiers)
     head -1 plain.txt
     ;;
 
+tree-ink)
+    #  THE TREE'S INK, BY CODE NOT BY EYE (display D-12). Escapes are
+    #  made visible and the tree lines are kept; each is then reduced
+    #  to the SEQUENCE OF SGR CODES it carries, so the oracle states
+    #  which colour paints which part and nothing else:
+    #      38;5;208  orange  the tree and a junction's name
+    #      32        green   the road to a leaf, its '/' included
+    #      38;5;196  red     the TEST directory itself
+    fixture_tree
+    #  and one JUNCTION: a directory that only leads somewhere, to
+    #  TWO places -- one would collapse into its child's road.
+    for d in inner other; do
+        mkdir -p tree/deep/$d/TEST/GOOD
+        printf 'hwut {\n}\n' > tree/deep/$d/TEST/hwut.conf
+        printf '#!/bin/bash\n# @hwut { title = "d" }\necho "d"\necho "<hwut-end>"\n' \
+            > tree/deep/$d/TEST/test-d.sh
+        chmod +x tree/deep/$d/TEST/test-d.sh
+        printf 'd\n<hwut-end>\n' > tree/deep/$d/TEST/GOOD/test-d.sh.txt
+    done
+    $RUN --directory=tree --colour 2> /dev/null \
+        | sed -n '/^DIRECTORIES/,/^====/p' \
+        | grep -e "+---" -e "'---" \
+        | sed 's/\x1b\[\([0-9;]*\)m/<\1>/g; s/<0>//g' \
+        | sed 's/ <2>.*$//' \
+        | sed 's/^ *//'
+    ;;
+
 colour)
     #  THE DECISION, not the escapes' spelling: presence alone.
     fixture_green
@@ -395,3 +423,10 @@ labels)
     echo "unknown choice '$1'"
     exit 1 ;;
 esac
+
+#  THE CLOSING TOKEN, PRINTED BY THE APPLICATION ITSELF. An
+#  application the framework does not run prints it as its last line;
+#  without it 'hwut.accept' refuses the candidate -- a stream with no
+#  terminal token never COMPLETED, and an oracle that cannot be
+#  re-recorded is an oracle that can never be corrected.
+echo "<hwut-end>"

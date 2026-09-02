@@ -1,0 +1,4 @@
+  OK  : --fail does not want a case with no verdict
+  OK  : --pass does not want it either
+SUCCESS: no verdict is no match for a verdict question.
+<hwut-end>

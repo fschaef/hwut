@@ -1,0 +1,7 @@
+  declaration: regions_f = True
+  hwut word:   tolerance.regions -> regions_f
+  OK  : compare declares it, and its default is ON
+  OK  : the hwut word 'tolerance.regions' names it
+  OK  : so the default is derivable, as every other's is
+SUCCESS: the declaration is the announcement.
+<hwut-end>

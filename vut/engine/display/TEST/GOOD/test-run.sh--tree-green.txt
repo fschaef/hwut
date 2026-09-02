@@ -1,9 +1,26 @@
-STATUS: 120
+STATUS: 0
 STDOUT {
-}
-STDERR {
-    Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
-    BrokenPipeError: [Errno 32] Broken pipe
+    FLOW DIGEST (sorted; the launch order is no fact of the
+                 subject, and is not recorded) {
+        DIR   alpha/TEST
+        DONE  test-one.sh .. [OK]
+        DONE  test-two.sh .. [OK]
+        DIR   beta/TEST
+        DONE  test-one.sh .. [OK]
+        DONE  test-two.sh .. [OK]
+        DIR   gamma/TEST
+        DONE  test-one.sh .. [OK]
+        DONE  test-two.sh .. [OK]
+    }
+    
+    ==============================================================================
+    DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
+    ------------------------------------------------------------------------------
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+    ==============================================================================
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True
+<hwut-end>

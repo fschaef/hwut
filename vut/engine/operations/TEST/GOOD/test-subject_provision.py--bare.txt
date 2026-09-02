@@ -1,0 +1,8 @@
+  before: absent   (0) nothing recorded for this choice
+  after:  recorded   (A.2) the recording is current
+  OK  : before: a Loaded, and ABSENT
+  OK  : after: a Loaded, and RECORDED
+  OK  : the recording is read back
+  OK  : and it records nothing
+SUCCESS: without a configuration the channel reads, never runs.
+<hwut-end>

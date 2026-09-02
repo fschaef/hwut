@@ -37,7 +37,13 @@ ROOT_CONF_NAME     = "hwut-root.conf"
 
 #  THE FRAMEWORK'S OWN FILES: never source file candidates.
 OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME)
-DEFAULT_IGNORE_SET = ("*.txt", "*.xml", "*.json")
+#  A PYPE IS A CANONICALISER, NOT A TEST. It stands beside the test
+#  that names it ('pype = "strip.pype"') and filters that test's
+#  output; it is never a candidate and the nominal gate (E-41) never
+#  sees it. Ignored by NAME here, rather than left for the header
+#  reader to find no '@hwut' in -- a file that is not a test should
+#  not be READ as one to be found not to be one.
+DEFAULT_IGNORE_SET = ("*.txt", "*.xml", "*.json", "*.pype")
 
 #  BACKUP-SHAPED NAMES: refused as source candidates, by name (E-41).
 REFUSED_NAME_GLOB_TUPLE = ("*~", "#*#", "*.bak", "*.backup", "*.orig",

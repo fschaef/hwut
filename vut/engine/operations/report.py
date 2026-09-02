@@ -55,6 +55,7 @@ _PRECEDENCE = (
     # -- the run itself
     E_TestRunResult.TEST_APP_LAUNCH_FAILED,
     E_TestRunResult.TEST_APP_CONTAINED,
+    E_TestRunResult.TEST_APP_SESSION_GONE,       # O-21: never served
     E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
     E_TestRunResult.TEST_APP_CPU_TIME_EXCEEDED,
     E_TestRunResult.TEST_APP_MEMORY_EXCEEDED,

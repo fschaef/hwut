@@ -1,0 +1,177 @@
+==============================================================================
+spec/01-work-structure -- THE WORK STRUCTURE, PRECISELY
+==============================================================================
+
+VERSION: 4
+
+COMPONENTS: all.
+INTEND:     adm/WORK/intend/01-work-structure.txt
+
+This spec states WHAT the work structure is, precisely enough that a
+tree can be checked against it. It grows as the intend's OPEN items
+close; a section standing here is RULED, a question standing here is
+marked OPEN. Nothing here says why (the intend's matter) or in which
+order it is built (the plan's).
+
+______________________________________________________________________________
+
+1  THE ISSUE ID                                                    ** RULED **
+
+FORMAT      two characters, base36, lowercase: digits '0'-'9' then
+            'a'-'z'; zero-padded. '00' .. 'zz', 1296 ids.
+
+WHY THIS SHAPE IS LAW-GRADE (one sentence each, then no more):
+fixed width makes lexical order numeric order in every 'ls';
+lowercase-only survives a case-insensitive checkout; base36 is the
+largest alphabet with both properties.
+
+FILE NAME   <id>-<name>.txt        e.g.  00-configuration.txt
+
+ALLOCATION  the highest id standing in ANY 'WORK/' directory of the
+            tree, plus one. No counter file. An id is NEVER reused,
+            not even after its issue is deleted -- deletion retires
+            the id.
+
+IDENTITY    the id is the issue; the name after the dash may be
+            renamed, the id may not. intend, spec and plan of one
+            issue carry one id. At transfer the file moves WITH its
+            id; nothing remains at the old place.
+
+FINDING     any issue, anywhere, by id alone:
+
+                ls */WORK/*/<id>-*   adm/WORK/*/<id>-*
+
+SUFFIX      a piece cut from an issue carries the parent id, a dot,
+            and one base36 character, counted from '0':
+
+                07-build.txt   cut ->   07.0-build-compare.txt
+                                        07.1-build-procsitter.txt
+
+            The dash still ends the identity; the dot separates
+            generations, recursively ('07.1.0-' is a piece of a
+            piece). Lexical order remains lineage order. On the cut,
+            the parent file is DELETED -- the pieces carry everything
+            -- and the parent id is retired like any other.
+
+EXHAUSTION  at 'zz' the width grows to three characters for NEW ids;
+            old two-character ids stand unchanged. '0a-' and '00a-'
+            cannot collide: the dash ends the id. A cut of more than
+            36 pieces widens the suffix the same way.
+
+ALLOCATED SO FAR
+            00  configuration
+            01  work-structure        (this issue)
+
+______________________________________________________________________________
+
+2  THE SORTING RULE FOR EXISTING DOCUMENTS                          ** RULED **
+
+The migration gathers EVERYTHING into 'adm/WORK' first (intend, law 1);
+each gathered file receives an id and a 'COMPONENTS:' line naming its
+origin. Sorting then distributes:
+
+    disc-N (open fork)          -> intend/<id>-<name>.txt, the fork in
+                                   its OPEN section
+    todo-N, decided part        -> RATIONALE.txt of the owning
+                                   component (the ruling, with its
+                                   number) -- results, not history
+    todo-N, unbuilt part        -> spec + plan of one id
+    todo-N, DONE lists          -> deleted; git holds history
+    README, usage half          -> README.txt
+    README, mechanics half      -> INTERNALS.txt
+    argument worth keeping      -> DISCUSSIONS.txt, pruned without
+                                   ceremony when stale
+
+One item, one destination. An artefact that resists the rule is a
+fork, reported before it moves.
+
+INVARIANT: no ruling is lost, none is born. Every E-/R-/D-/B-number
+found in the old files is found in the new -- verifiable by grep
+before and after.
+
+INVARIANT: no silent rewrite. Wording may be condensed; meaning may
+not move. A contradiction between two old files is REPORTED, not
+resolved in transit.
+
+______________________________________________________________________________
+
+3  THE BINS BIND POSITIVELY                                         ** RULED **
+
+The Defence Test is RETIRED. Each bin is defined by what it IS FOR,
+not by forbidden words:
+
+    README.txt        usage and purpose, for the user
+    INTERNALS.txt     structure, invariants, mechanics, for the diver
+    RATIONALE.txt     why -- rulings and graveyard, append-only
+    DISCUSSIONS.txt   history, while relevant
+
+A 'because' in INTERNALS explaining an invariant is mechanics doing
+its job; a 'because' in README arguing a design is a RATIONALE
+sentence in the wrong bin. The bin, not the word, is the test.
+
+______________________________________________________________________________
+
+4  CITATIONS AND VERSIONS                                           ** RULED **
+
+EVERY document -- the four bins and every WORK file -- carries its
+version at the top, beside the title:
+
+    VERSION: <n>
+
+where <n> is a monotone integer, starting at 1, bumped on ANY content
+change. No dates, no major/minor: a version is unique, ordered, and
+carries no judgement.
+
+A RATIONALE entry is SELF-CONTAINED: it is readable, whole, without
+following any reference. References are permitted ONLY to README,
+INTERNALS, and RATIONALE files -- never to a WORK file (deletable),
+never to a conversation. In the text they stand citation-style:
+
+    ... the door carries the configuration [12], and nothing else ...
+
+and resolve at the entry's end:
+
+    CITATIONS:
+        [12]  engine/compare/README.txt, version <v>
+
+The citation pins document AND version: what was cited is what stood,
+even after the document moves on.
+
+The E-/R-/D-/B-series continue as the LABELS of rulings -- a label
+names, it does not reference. The issue id never enters RATIONALE:
+the id dies with its issue; the ruling text carries everything.
+
+______________________________________________________________________________
+
+5  MULTI-COMPONENT WORK                                             ** RULED **
+
+An issue whose COMPONENTS: line names more than one component stays in
+'adm/WORK'. It is NEVER copied into component WORK/ directories. It
+leaves the global directory in exactly two ways:
+
+    CUT        into pieces of ONE owner each, ids per the SUFFIX rule
+               of section 1, each piece's COMPONENTS: line naming its
+               one owner; the pieces transfer, the parent is deleted.
+
+    COMPLETED  globally, where the work is by nature tree-wide (this
+               issue, 01, is such a case).
+
+That an issue resists cutting is information, not failure: the work is
+not yet understood at component grain, and it says so by its address.
+
+______________________________________________________________________________
+
+OPEN
+
+  s-1  README/INTERNALS SPLIT DEPTH. Every README in one discipline
+       pass, or only where a README demonstrably mixes usage with
+       mechanics, leaving small pure ones untouched?
+
+  s-2  A CHECKER, OR DISCIPLINE ALONE. Shall an 'adm/doc_audit.py'
+       hold the bins to their definitions (README free of internals
+       vocabulary, RATIONALE append-only, WORK names threaded
+       id-consistent), the way import_graph.py holds LAYERING?
+
+  s-3  DISCUSSIONS.txt SEEDING. Seeded from the old files'
+       argumentative passages during migration, or born EMPTY --
+       history before the cut left to git?

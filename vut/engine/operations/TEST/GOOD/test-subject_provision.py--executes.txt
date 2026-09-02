@@ -1,0 +1,8 @@
+  decision: provide   (0) nothing recorded for this choice
+  OK  : an executing Provision
+  OK  : the word is PROVIDE
+  OK  : step (0) decided
+  OK  : provide() answered Subjects with stdout
+  OK  : last_provided remembers
+SUCCESS: nothing recorded: the channel executes.
+<hwut-end>

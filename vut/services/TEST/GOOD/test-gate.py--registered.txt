@@ -1,0 +1,8 @@
+  REGISTERED test-old.py: a nominal stands and the register had no entry -- accepted outside the book (E-41)
+  OK  : before: no register entry
+  OK  : after: the register has the test
+  OK  : the run said so, once (NOTE)
+  OK  : the book has the run's verdict
+  OK  : and no 'last_accept': the mark for sanitize
+SUCCESS: a nominal's word registers the test, and says so.
+<hwut-end>

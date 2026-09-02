@@ -213,6 +213,7 @@ def _resolve(spec, directory_spec=None):
                     language    = language,
                     language_derived_f = derived_f,
                     choice_db   = choice_db,
+                    root        = base,
                     origin      = spec.origin,
                     position    = spec.position,
                     origin_db   = origin_db)
