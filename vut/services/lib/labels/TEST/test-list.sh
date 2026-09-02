@@ -21,11 +21,11 @@
 # refused     an argument the face does not take, by name.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../../../.." && pwd)
+ROOT=$(cd "$HERE/../../../../.." && pwd)
 export PYTHONPATH="$ROOT"
-CREATE="python3 -m vut.services.labels.create"
-ADD="python3 -m vut.services.labels.add"
-LIST="python3 -m vut.services.labels.list"
+CREATE="python3 -m vut.services.lib.labels.create"
+ADD="python3 -m vut.services.lib.labels.add"
+LIST="python3 -m vut.services.lib.labels.list"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

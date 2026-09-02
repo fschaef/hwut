@@ -124,7 +124,7 @@ labels)
     #  failure this feature exists to prevent, arriving from the
     #  other side.
     fixture
-    python3 -m vut.services.labels.add meta \
+    python3 -m vut.services.lib.labels.add meta \
         --glob "test-two.sh a" --directory=tree > /dev/null
     echo "== a BARE accept passes the silenced run by =="
     face --directory=tree/suite/TEST --yes
@@ -136,7 +136,7 @@ labels)
     good | sed 's/^/    /'
     echo "== a GLOB wholly swallowed warns instead =="
     fixture
-    python3 -m vut.services.labels.add meta \
+    python3 -m vut.services.lib.labels.add meta \
         --glob "test-two.sh a" --directory=tree > /dev/null
     face --directory=tree/suite/TEST --yes "test-two.s?" a
     echo "GOOD holds:"

@@ -207,6 +207,8 @@ class Supply:
     product:     object
     report:      E_TestRunResult = E_TestRunResult.OK
     record_list: tuple           = ()
+    detail:      object          = None   # the report's numbers (O-19):
+                                          # 'cap 512 MB, peak 1069 MB'
 
 
 @dataclass(frozen=True)
@@ -299,7 +301,8 @@ class Provision:
             with 'supply's token and everything attributed so far."""
             return Subjects({}, ProvisionRecord(
                 report  = supply.report,
-                records = tuple(record_list)))
+                records = tuple(record_list),
+                detail  = supply.detail))
 
         executed = await self.stage_execute.supply(stop_event=stop_event)
         record_list += executed.record_list
@@ -322,9 +325,13 @@ class Provision:
                  if executed.report is not E_TestRunResult.OK \
                  else canonicalised.report
 
+        detail = executed.detail \
+                 if executed.report is not E_TestRunResult.OK \
+                 else canonicalised.detail
         return Subjects(canonicalised.product,
                         ProvisionRecord(report  = report,
-                                        records = tuple(record_list)),
+                                        records = tuple(record_list),
+                                        detail  = detail),
                         raw_db    = dict(raw_db) if self.keep_raw else None,
                         #  the cadence rides IN the delivery: a dict where
                         #  the provider measured, None where it could not

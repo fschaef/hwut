@@ -1466,3 +1466,70 @@ DECISION  The climb ('root_conf_directory', 'ascended_spec') ENDS at a
 COST      A test directory with no 'GOOD/' yet -- one that has never
           accepted -- has a 'TMP/' the climb passes through. Rare, and
           the cost is the one this entry removes, not a new one.
+
+
+R-77  THE TOLERANCES ARE ONE SCOPE                                (2026-09-01)
+______________________________________________________________________________
+PROBLEM   Three parameters loosen the comparison and none of them says
+          so by its name. 'numeric' reads as a type, not a tolerance
+          -- an author guesses it is 'the numeric mode' and looks for
+          'numeric = exact'. 'slash_eqv' and 'whitespace_eqv' hide the
+          same nature behind a suffix, and stand nowhere near
+          'numeric' in the vocabulary though the three are the same
+          question asked of three lexical kinds: HOW FAR MAY THE
+          SUBJECT DIFFER AND STILL PASS.
+DECISION  A scope, 'tolerance', holding the three, named for what each
+          loosens and how:
+
+              tolerance {
+                  numeric_ratio = 0.01     # was  numeric
+                  whitespace    = true     # was  whitespace_eqv
+                  slash         = true     # was  slash_eqv
+              }
+
+          Modelled exactly as 'caps' and 'build' are: a frozen record
+          'Tolerance' on 'TestParameters', its leaves in the relation
+          table as 'tolerance.<leaf>', provenance per leaf, printed as
+          a scope. The three old keys are REMOVED, not aliased: a
+          grammar that keeps its old words is a language with two
+          spellings for one thing, and 'hwut.renovate' (todo-1) is the
+          place an old header is translated, once.
+          The compare face's own '--numeric' flag is NOT this
+          parameter and keeps its name: it is a command-line switch on
+          a stream-level tool, not a word of the specification.
+COST      'configuration_tree', 'relation', 'validator', 'printer',
+          'run/adapter'; every header and 'hwut.conf' in the tree
+          that stated one of the three (10 files); 41 GOODs that show
+          the old words, re-recorded on real infrastructure.
+GRAVEYARD 'numeric_tol_ratio' as a flat rename: the least change, and
+          it leaves the other two tolerances scattered.
+          Aliases for the old keys: see DECISION.
+
+
+R-78  THE CAPS READ THEIR DEFAULTS FROM THE SUPERVISOR'S DOOR     (2026-09-01)
+______________________________________________________________________________
+PROBLEM   'hwut.show' printed 'timeout_sec' and 'network' for a test's
+          caps and nothing for 'memory_mb' -- while the supervisor
+          enforced 512 MB and killed the test for it. The relation
+          table resolved 'caps.*' through 'owner_faces_provisional.
+          ConfigCaps', the stand-in todo-1 left "until the owner
+          declares its face". Procsitter HAS declared it since:
+          'ProcsitterConfig' on its door, 'max_memory_mb = 512'. The
+          table never switched, so the one number a reader of a
+          killed test needs was stated nowhere it could read.
+DECISION  Every cap the supervisor enforces resolves to '(Procsitter
+          Config, <member>)' through 'bookkeeper.configuration.
+          CAPS_FIELD_DB', the mapping the tree already had --
+          'timeout_sec' -> 'max_wall_clock_sec', 'cpu_sec' ->
+          'max_cpu_time_sec', 'memory_mb' -> 'max_memory_mb',
+          'file_size_mb' -> 'max_file_size_mb', 'child_process_max_n'
+          -> 'max_pids'. The provisional 'ConfigCaps' keeps only what
+          the supervisor does not enforce ('network', 'write_
+          directory_list', 'file_handle_max_n'), and says so.
+          'hwut.show' then prints 'memory_mb = 512   # default', and
+          a reader of "killed by the supervisor" can find the cap.
+          This completes todo-1 for the caps; the mapping lives in one
+          place, and a default the supervisor moves moves in 'show'
+          without anyone sweeping.
+COST      Six lines in 'relation.py'; one import from the supervisor's
+          door (permitted: orchestrator -> procsitter).

@@ -52,7 +52,7 @@ class TestRunDispatcher(I_Dispatcher):
 
     def __init__(self, directory, entry, record=None, coverage=None,
                  variant_tuple=(), timing_f=False,
-                 despite_stain_f=False):
+                 despite_stain_f=False, force_run_f=False):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
                 and Store made here, the directory LOCK taken here and
@@ -105,6 +105,7 @@ class TestRunDispatcher(I_Dispatcher):
                 "the directory '%s' is held by a live process"
                 % directory)
         self.despite_stain_f = despite_stain_f
+        self.force_run_f    = force_run_f
         self.coverage   = coverage
         self.id_db      = None if coverage is None else TestIdDb(directory)
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
@@ -136,6 +137,7 @@ class TestRunDispatcher(I_Dispatcher):
             self.build_db[action] = self.config_db[app.source_file]
         self.session_db = {}
         self.report_db  = {}
+        self.detail_db = {}
 
     async def close(self):
         """RETURN: None. Any standing session shut down; the lock
@@ -151,6 +153,13 @@ class TestRunDispatcher(I_Dispatcher):
                 (E_TestRunResult, verbatim); 'None' where none stands.
         """
         return self.report_db.get(node_name)
+
+    def detail_of(self, node_name):
+        """
+        RETURN: str, the report's numbers (O-19) -- which cap, the cap,
+                the peak; 'None' where the report carries none.
+        """
+        return self.detail_db.get(node_name)
 
     # -- the five doors ------------------------------------------------
     async def run_script(self, role, command):
@@ -246,17 +255,21 @@ class TestRunDispatcher(I_Dispatcher):
                 configuration = replace(configuration, coverage=None)
         outcome = await run_test_held(
             configuration,
-            Request(choice=node.choice, record=self.record),
+            Request(choice=node.choice, record=self.record,
+                    force_run=self.force_run_f),
             store=self.store_db.get(node.file, self.store),
             provision=provision, run_id=run_id)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
+            detail = getattr(outcome.result.provision, "detail", None)
+            if detail: self.detail_db[node.name()] = detail
         return bool(outcome.verdict)
 
 
 def test_run_dispatcher_factory(record=None, coverage=None,
                                 variant_tuple=(), timing_f=False,
-                 despite_stain_f=False):
+                                despite_stain_f=False,
+                                force_run_f=False):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
             factory 'orchestrator()' consumes, the store knob, the
@@ -268,4 +281,5 @@ def test_run_dispatcher_factory(record=None, coverage=None,
                                         coverage=coverage,
                                         variant_tuple=variant_tuple,
                                         timing_f=timing_f,
-                                        despite_stain_f=despite_stain_f)
+                                        despite_stain_f=despite_stain_f,
+                                        force_run_f=force_run_f)

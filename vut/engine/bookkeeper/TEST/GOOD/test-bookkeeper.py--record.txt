@@ -1,10 +1,9 @@
-INSPECT: entry keys = ['canonicaliser', 'report', 'verdict']
+INSPECT: entry keys = ['report', 'verdict']
          verdict True, report ok
-         canonicaliser = {'stdout': ['cat']}
          observed: host True, duration True
-  OK  : THE BASE HOLDS DECISIONS: the verdict, the report, and what says what they meant -- nothing a run can make again
+  OK  : THE BASE HOLDS DECISIONS: the verdict and the report -- nothing a run can make again, and NO CONFIGURATION (B-6)
   OK  : the verdict and the report come from the result
-  OK  : the canonicaliser comes from the choice's configuration
+  OK  : the canonicaliser and the compare setup are the header's and hwut.conf's, versioned by git beside the book (B-6)
   OK  : the attribution, the instant and the host are OBSERVATIONS and are not in the book
   OK  : they are in the LOCAL database instead, under (test, choice, operation) -- added here, not by the caller
 SUCCESS: an entry is derived; decisions to the book, observations to the local database.

@@ -2,14 +2,16 @@
 --- --provenance ---
 test-a.py {
     title = "Tolerances"
-    choices {
+    choices {                                 # app
         two {
             caps {
                 timeout_sec = 30.0            # test-a.py:4
             }
-            numeric = 0.05                    # test-a.py:5
+            tolerance {
+                numeric_ratio = 0.05          # test-a.py:5
+                slash = false                 # hwut.conf:3
+            }
             comment = ["//", "//"]            # hwut.conf:4
-            slash_eqv = false                 # hwut.conf:3
         }
     }
 }
@@ -23,9 +25,11 @@ test-a.py:1:10:         two {
 test-a.py:4:17:             caps {
 test-a.py:4:17:                 timeout_sec = 30.0
 test-a.py:4:17:             }
-test-a.py:5:23:             numeric = 0.05
+test-a.py:5:35:             tolerance {
+test-a.py:5:35:                 numeric_ratio = 0.05
+hwut.conf:3:21:                 slash = false
+test-a.py:5:35:             }
 hwut.conf:4:9:              comment = ["//", "//"]
-hwut.conf:3:9:              slash_eqv = false
 test-a.py:1:10:         }
 test-a.py:1:10:     }
 test-a.py:1:10: }

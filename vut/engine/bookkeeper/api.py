@@ -30,7 +30,14 @@ WHAT A CALLER ASKS:
     ObservationDb, Observation, ObservationFault, observation_of
                         THIS MACHINE'S local observations -- the other
                         half of a record, and not the book (E-22)
-    STORE_DIRECTORY_NAME, NO_CHOICE_KEY
+    STORE_DIRECTORY_NAME, BOOK_FORBIDDEN_IN_NAME
+    GOOD_OWNED_FILE_TUPLE
+                        the bookkeeper's own files under GOOD/ (book,
+                        legacy book, register): a walker of GOOD/ for
+                        oracles skips these, asked here, never listed
+                        what a test or choice name may not carry, so
+                        the book's table survives it: the enforcer
+                        asks, and adapts when this changes
                         the two names a caller must spell the same way
                         the component does
     GroupTable, GroupDb, parse_group_table, GroupFault
@@ -56,7 +63,8 @@ THE RULE IS EXECUTABLE: 'adm/LAYERING.txt' names this module in a
 'DOOR' line. The component's own suites are inside the wall.
 ______________________________________________________________________________
 """
-from .bookkeeper    import (Bookkeeper, NO_CHOICE_KEY,
+from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
+                            GOOD_OWNED_FILE_TUPLE,
                             STORE_DIRECTORY_NAME, compare_setup_delta)
 from .configuration import (CAPS_FIELD_DB, E_StderrNote, NamingConfig,
                             StoreConfig)
@@ -71,7 +79,7 @@ from .test_id_db    import TestIdDb, TestIdFault
 from .test_run_id   import RunIdFault, TestRunId, run_id_of_text
 
 __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
-           "DirectoryLock", "E_StderrNote", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "LOCK_DIRECTORY_NAME", "NO_CHOICE_KEY",
+           "DirectoryLock", "E_StderrNote", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
            "NamingConfig", "Observation", "ObservationDb",
            "ObservationFault", "RunIdFault", "STORE_DIRECTORY_NAME",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",

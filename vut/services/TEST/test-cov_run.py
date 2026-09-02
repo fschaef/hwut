@@ -220,7 +220,7 @@ def show_book(root):
     for key in ("test-py.py--a", "test-py.py--b", "test-hang.py--x",
                 "test-new.py"):
         app, _, choice = key.partition("--")
-        entry = keeper.result(app, choice or None, "Run")
+        entry = keeper.result(app, choice or None)
         token = entry.get("coverage", "<absent>") if entry else "<no entry>"
         token_db[key] = token
         print("      %-14s report %-24s coverage %s"

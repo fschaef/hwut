@@ -1,7 +1,7 @@
 
 --- the fault prints; the plan of what stands follows ---
 $ hwut.plan
-    test-broken.py:1:39: TYPE: 'numeric' must be a number
+    test-broken.py:1:29: VOCABULARY: unknown key 'numeric'
     WISH: (all)
     TEST PLAN: 5 node(s), 3 link(s), 1 exclusion set(s)
     NODES

@@ -45,6 +45,7 @@ DESCRIPTION
        and its loss must never fail a run.
 ______________________________________________________________________________
 """
+import csv
 import json
 import os
 import sys
@@ -61,7 +62,36 @@ from .configuration import CAPS_FIELD_DB, E_StderrNote, NamingConfig
 STORE_DIRECTORY_NAME = "TMP/store"
 
 
-RESULT_DB_FILE_NAME = "result_db.json"
+#  THE BOOK IS A TABLE (B-6): one row per (test, choice, operation), and
+#  one row per choice with 'operation' empty for the choice's own facts.
+RESULT_DB_FILE_NAME        = "result_db.csv"
+#  Read once, then replaced: a book written before B-6.
+LEGACY_RESULT_DB_FILE_NAME = "result_db.json"
+#  THE TABLE (B-7, B-8): one row per (test, choice); ';' between cells,
+#  never quoted -- a name carrying ';' is refused at the validator. AN
+#  EMPTY 'test' CELL MEANS "the same as the row above": an empty name
+#  means nothing else, so it needs no mark.
+BOOK_SEPARATOR = ";"
+
+#  WHAT A NAME MAY NOT CARRY, because the table would not survive it.
+#  THE BOOK NAMES THESE, AND WHOEVER ENFORCES THEM ASKS -- the
+#  specification's door refuses a name at the moment it is read
+#  ('orchestrator/exploration/validator.py'), and does so from THIS
+#  tuple, so a separator that changes here changes there without the
+#  bookkeeper knowing who its clients are.
+BOOK_FORBIDDEN_IN_NAME = (BOOK_SEPARATOR,)
+
+#  WHAT THE BOOKKEEPER OWNS UNDER 'GOOD/', by name -- the book, the book
+#  it replaced, the register. Everything else there is a NOMINAL, an
+#  oracle. Whoever walks 'GOOD/' for oracles ('hwut.sanitize',
+#  operations' hygiene suite) ASKS THIS, and never carries a list: a
+#  file the bookkeeper adds is then skipped everywhere without the
+#  bookkeeper knowing who walks.
+from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
+GOOD_OWNED_FILE_TUPLE = (RESULT_DB_FILE_NAME, LEGACY_RESULT_DB_FILE_NAME,
+                         _REGISTER_FILE_NAME)
+_COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",
+                  "coverage", "stderr", "stain_repeat_n", "stain_when")
 
 NO_CHOICE_KEY       = "<none>"
 
@@ -90,28 +120,142 @@ def this_host():
                          platform.node())
 
 
+
+#  THE TABLE CODEC (B-6). The model the accessors answer from stays
+#  what it was; only its life on disk is a table.
+
+def _rows_of_model(content):
+    """
+    YIELD: [0] dict  one row per (test, choice), in that order -- the
+                     file is stable under re-writing and a diff honest.
+                     The 'test' cell is EMPTY where it repeats the
+                     row above (B-8).
+    """
+    last_test = None
+    for test in sorted(content):
+        choice_db = content[test].get("choices", {})
+        for key in sorted(choice_db, key=lambda k: (k != NO_CHOICE_KEY, k)):
+            book  = choice_db[key]
+            stain = book.get("stain") or {}
+            yield {"test":   "" if test == last_test else test,
+                   "choice": "" if key == NO_CHOICE_KEY else key,
+                   "verdict":        _bool_text(book.get("verdict")),
+                   "report":         book.get("report") or "",
+                   "last_accept":    book.get("last_accept") or "",
+                   "coverage":       book.get("coverage") or "",
+                   "stderr":         book.get("stderr") or "",
+                   "stain_repeat_n": str(stain["repeat_n"])
+                                     if "repeat_n" in stain else "",
+                   "stain_when":     stain.get("when") or ""}
+            last_test = test
+
+
+def _model_of_rows(row_iterable):
+    """
+    RETURN: dict, the model rebuilt from the table's rows -- the exact
+            inverse of '_rows_of_model'. An EMPTY 'test' cell is the
+            row above's (B-8; B-7's one-day ':' is read the same way);
+            an unknown column is ignored and a missing one reads as
+            absent. A table with an 'operation' column (the
+            one-day shape of B-6) is folded: its 'Run' row is the
+            choice's decision, its operation-less row the facts.
+    """
+    content   = {}
+    last_test = None
+    for row in row_iterable:
+        test = row.get("test") or ""
+        if test in ("", ":"): test = last_test or ""
+        if not test: continue              # a first row with no name
+        last_test = test
+        key  = row.get("choice") or NO_CHOICE_KEY
+        book = content.setdefault(test, {}).setdefault("choices", {}) \
+                      .setdefault(key, {})
+        operation = row.get("operation")
+        if operation == "Accept":          # B-6's Accept row: its instant
+            if row.get("last_accept"): book["last_accept"] = row["last_accept"]
+            continue
+        if operation is not None and operation not in ("", "Run"):
+            continue                       # B-6's Display rows
+        if row.get("verdict"):
+            book["verdict"] = _bool_of_text(row["verdict"])
+            book["report"]  = row.get("report") or ""
+        for name in ("last_accept", "coverage", "stderr"):
+            if row.get(name): book[name] = row[name]
+        if row.get("stain_repeat_n"):
+            book["stain"] = {"repeat_n": int(row["stain_repeat_n"]),
+                             "when":     row.get("stain_when") or ""}
+        elif row.get("stain"):                          # B-6's one cell
+            legacy = _stain_of_text(row["stain"])
+            if legacy is not None:
+                book["stain"] = {"repeat_n": legacy["repeat_n"],
+                                 "when":     legacy["when"]}
+    return content
+
+
+def _model_of_legacy(content):
+    """
+    RETURN: dict, a pre-B-6 book ('result_db.json') as the model: the
+            'Run' operation's verdict and report become the choice's,
+            'Accept's instant its 'last_accept'; every configuration
+            key is dropped, since it left the book.
+    """
+    model = {}
+    for test, test_book in content.items():
+        if not isinstance(test_book, dict): continue
+        choice_db = test_book.get("choices", {})
+        if not isinstance(choice_db, dict): continue
+        for key, choice_book in choice_db.items():
+            if not isinstance(choice_book, dict): continue
+            out = model.setdefault(test, {}).setdefault("choices", {}) \
+                       .setdefault(key, {})
+            if "stderr" in choice_book: out["stderr"] = choice_book["stderr"]
+            stain = choice_book.get("stain")
+            if isinstance(stain, dict) and "repeat_n" in stain:
+                out["stain"] = {"repeat_n": stain["repeat_n"],
+                                "when":     stain.get("when", "")}
+            operation_db = choice_book.get("operations", {})
+            if not isinstance(operation_db, dict): continue
+            run = operation_db.get("Run")
+            if isinstance(run, dict) and "verdict" in run:
+                out["verdict"] = run["verdict"]
+                out["report"]  = run.get("report", "")
+                if "coverage" in run: out["coverage"] = run["coverage"]
+            accept = operation_db.get("Accept")
+            if isinstance(accept, dict) and accept.get("last_accept"):
+                out["last_accept"] = accept["last_accept"]
+    return model
+
+
+def _bool_text(value):
+    """RETURN: str, 'true'/'false' for a bool; '' for None."""
+    if value is None: return ""
+    return "true" if value else "false"
+
+
+def _bool_of_text(text):
+    """RETURN: bool, of 'true'/'false'; None for anything else."""
+    if text == "true":  return True
+    if text == "false": return False
+    return None
+
+
+
+def _stain_of_text(text):
+    """RETURN: dict, a stain in B-6's one-cell form '<n>@<when>|...';
+    None where malformed. Read only, for a table of that one day."""
+    try:
+        count, _, rest = text.partition("@")
+        when, _, verdicts = rest.partition("|")
+        return {"repeat_n":     int(count),
+                "when":         when,
+                "verdict_list": [v for v in verdicts.split(";") if v]}
+    except (ValueError, AttributeError):
+        return None
+
 def _now():
     """RETURN: str, the current UTC instant, seconds resolution, ISO."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-
-def _stated_caps(caps):
-    """
-    RETURN: dict, THE CAPS THAT HELD, by the name an author states
-            them under -- 'timeout_sec', not 'max_wall_clock_sec'.
-            A cap with no value at all is absent, never a null; a cap
-            the author did not state stands at the framework's default,
-            because THE DEFAULT IS WHAT HELD and a reader asking what
-            this test was configured to do must be told it.
-
-    The vocabulary is 'configuration.CAPS_FIELD_DB', the one list of
-    what a header may say, read by the adapter too: a field the procsitter grows for its
-    own purposes -- a scratch ground, an environment overlay -- is the
-    EXECUTOR'S and has no place in an oracle.
-    """
-    return {stated: _plain(getattr(caps, field))
-            for stated, field in sorted(CAPS_FIELD_DB.items())
-            if getattr(caps, field, None) is not None}
 
 
 def _plain(value):
@@ -166,6 +310,16 @@ def compare_setup_delta(options):
         if chosen != plain:
             difference[name] = _plain(chosen)
     return difference
+
+
+def _subsequence_f(small, large):
+    """
+    RETURN: bool, True where every line of 'small' stands in 'large' in
+            the same order -- 'large' may hold lines between and around
+            them, and holds no line of 'small' out of turn.
+    """
+    it = iter(large)
+    return all(line in it for line in small)
 
 
 class Bookkeeper:
@@ -259,26 +413,145 @@ class Bookkeeper:
         path = self.candidate_path(test, choice, subject)
         return path.with_suffix(path.suffix + ".times")
 
+    def outdated_f(self, test, choice, subject, source_path):
+        """
+        RETURN: True, where the recorded candidate is OLDER than the
+                      test file that produced it -- the application
+                      has been edited since the run that recorded it,
+                      so what stands in the store describes a test
+                      that no longer exists
+                False, where the candidate is at least as new as its
+                      source, and where EITHER file cannot be stat'ed
+                      (an unreadable clock accuses nobody, and a
+                      missing candidate is a different complaint with
+                      its own words).
+
+        MTIME, NOT CONTENT. A test whose text changed and whose output
+        did not is still a test that must be RE-RUN before anything is
+        blessed: the store's business is what THIS text produced, and
+        only running it can say. Comparing content would answer a
+        different question, and answer it too late.
+
+        THE SOURCE IS ONE FILE, not a closure. What a test reads --
+        its configuration, its pype script, the library under test --
+        is not walked here: an mtime check that tried to be complete
+        would be a build system, and being nearly complete is worse
+        than being plainly one file, because a reader would trust it.
+        """
+        try:
+            candidate = self.candidate_path(test, choice, subject)
+            return os.stat(str(source_path)).st_mtime \
+                   > os.stat(str(candidate)).st_mtime
+        except OSError:
+            return False
+
+    def shape_of(self, test, choice, subject="stdout"):
+        """
+        RETURN: str, WHERE TO LOOK in a difference the RUN already
+                found, read afterwards from the candidate and nominal
+                WHOLE (B-5):
+                'not-equivalent-grew'      every recorded line still
+                                           stands, in order, and lines
+                                           stand between or around them
+                'not-equivalent-shrank'    every line that stands was
+                                           recorded, in order, and lines
+                                           the GOOD holds are gone
+                'not-equivalent-diverged'  neither: a recorded line
+                                           changed or moved
+                'not-equivalent-with-nominal'
+                                           the shape IS NOT CLAIMED: a
+                                           file is missing or cannot be
+                                           read, so the run's own word
+                                           stands
+
+        THIS IS THE REPORT'S TO SAY, NOT THE RUN'S (E-31). Comparison
+        aborts at the first difference it can state and consumes no
+        further input, so at verdict time neither text has been read
+        whole. GREW and SHRANK are claims ABOUT THE WHOLE TEXT; only a
+        reader that has both files entire may make them, and only
+        where the stored candidate IS the whole output.
+
+        ALL FOUR ARE FAIL. The shape says nothing about WHICH SIDE is
+        wrong: a GOOD blessed under a framework that swallowed output
+        grows, and so does a filter that stopped filtering. One is
+        stale ground, the other is the defect a golden master exists
+        to catch, and they wear the same shape. Only the reader
+        decides.
+
+        THIS METHOD, NOT A STANDALONE FUNCTION (B-5): its only two
+        inputs, the candidate and the nominal, are paths this
+        Bookkeeper already names; a caller elsewhere kept its own copy
+        of the same two-file read, which is the one law this method
+        removes a second place from.
+        """
+        candidate_path = self.candidate_path(test, choice, subject)
+        nominal_path   = self.nominal_path(test, choice, subject)
+        try:
+            with open(candidate_path, encoding="utf-8",
+                     errors="replace") as fh:
+                new = fh.read().splitlines()
+            with open(nominal_path, encoding="utf-8",
+                     errors="replace") as fh:
+                old = fh.read().splitlines()
+        except OSError:
+            return "not-equivalent-with-nominal"
+        if len(new) > len(old) and _subsequence_f(old, new):
+            return "not-equivalent-grew"
+        if len(old) > len(new) and _subsequence_f(new, old):
+            return "not-equivalent-shrank"
+        return "not-equivalent-diverged"
+
     # -- the base -----------------------------------------------------
     @property
     def result_db_path(self):
         """RETURN: Path, the ONE base of this directory."""
         return self.directory / "GOOD" / RESULT_DB_FILE_NAME
 
+    @property
+    def legacy_result_db_path(self):
+        """RETURN: Path, where a book written before B-6 stands."""
+        return self.directory / "GOOD" / LEGACY_RESULT_DB_FILE_NAME
+
     def book(self):
         """
-        RETURN: dict, the whole base -- test -> {'configuration',
-                'choices'}. Empty when nothing was recorded.
+        RETURN: dict, the whole base as the MODEL every accessor answers
+                from: test -> {'choices': {key -> {'operations': {op ->
+                {'verdict', 'report', ...}}, 'stderr'?, 'stain'?}}}.
+                Empty when nothing was recorded.
+
+        THE MODEL IS PRIVATE (B-6, E-37): its shape is answered
+        through 'tests()', 'choices()', 'result()', 'stain()',
+        'stderr_note()'; a reader that indexes it directly is reading
+        past the door.
 
         A missing or unreadable base reads as empty: the base is a
-        record, and its loss must never fail a run.
+        record, and its loss must never fail a run. A book written
+        before B-6 ('result_db.json') is read where no '.csv' stands,
+        its configuration dropped on the way in.
         """
+        path = self.result_db_path
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8", newline="") as fh:
+                    head = fh.readline()
+                    fh.seek(0)
+                    #  B-6's one-day table was ','-separated with an
+                    #  'operation' column; told apart by its header,
+                    #  read once, rewritten as B-7 on the next write.
+                    delimiter = BOOK_SEPARATOR if BOOK_SEPARATOR in head \
+                                else ","
+                    return _model_of_rows(
+                               csv.DictReader(fh, delimiter=delimiter))
+            except Exception:
+                return {}
         try:
-            with open(self.result_db_path, "r", encoding="utf-8") as fh:
+            with open(self.legacy_result_db_path, "r",
+                      encoding="utf-8") as fh:
                 content = json.load(fh)
         except Exception:
             return {}
-        return content if isinstance(content, dict) else {}
+        return _model_of_legacy(content) if isinstance(content, dict) \
+               else {}
 
     def _write_book(self, content):
         """
@@ -294,12 +567,26 @@ class Bookkeeper:
         if path.exists():
             os.chmod(path, stat.S_IRUSR | stat.S_IWUSR
                            | stat.S_IRGRP | stat.S_IROTH)
-        temporary = path.with_suffix(".json.tmp")
-        with open(temporary, "w", encoding="utf-8") as fh:
-            json.dump(content, fh, indent=2, sort_keys=True)
-            fh.write("\n")
+        temporary = path.with_suffix(".csv.tmp")
+        with open(temporary, "w", encoding="utf-8", newline="") as fh:
+            fh.write(BOOK_SEPARATOR.join(_COLUMN_TUPLE) + "\n")
+            for row in _rows_of_model(content):
+                #  A ROW ENDS WITH ITS LAST FACT (B-8): trailing empty
+                #  cells are not written; a middle one keeps its place.
+                cells = [str(row.get(name, "")) for name in _COLUMN_TUPLE]
+                while cells and cells[-1] == "": cells.pop()
+                fh.write(BOOK_SEPARATOR.join(cells) + "\n")
         os.replace(temporary, path)
         os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        #  ONE BASE, NEVER TWO (B-6): the pre-B-6 book, once read and
+        #  rewritten as the table, is removed.
+        legacy = self.legacy_result_db_path
+        if legacy.exists():
+            try:
+                os.chmod(legacy, stat.S_IRUSR | stat.S_IWUSR)
+                legacy.unlink()
+            except OSError:
+                pass
 
     # -- recording ----------------------------------------------------
     def record(self, result, configuration, goal, choice_name=None,
@@ -327,8 +614,8 @@ class Bookkeeper:
         part of that result, and a run makes it again, identically.
 
         OVERWRITES exactly one (test, choice, operation) entry and
-        leaves every other untouched; refreshes the test's and the
-        choice's reproducible configuration beside it.
+        leaves every other untouched. No configuration rides with it
+        (B-6).
 
         AN ACCEPT KEEPS ITS INSTANT (E-36): 'last_accept' says when the
         NOMINAL NOW STANDING was blessed -- a fact about the oracle in
@@ -346,13 +633,10 @@ class Bookkeeper:
         #  configuration that says what the entry meant.
         entry     = {"verdict": bool(result.verdict),
                      "report":  str(result.report)}
-        choice_entry = configuration.choice_configuration(choice_name)
-        if choice_entry.canonicalisers:
-            entry["canonicaliser"] = {name: list(argv) for name, argv
-                                      in choice_entry.canonicalisers.items()}
-        setup = compare_setup_delta(choice_entry.compare)
-        if setup:
-            entry["compare"] = setup
+        #  NO CONFIGURATION IN THE BOOK (B-6): what held is the same
+        #  commit's header and 'hwut.conf', which git versions with
+        #  this file. A copy here was read by nobody and churned with
+        #  every moved default.
         records = tuple(getattr(result.provision, "records", ()) or ())
         #  WHAT THIS MACHINE MERELY OBSERVED goes to the local database
         #  (E-22), not here: a run can make it again. The book keeps the
@@ -363,12 +647,15 @@ class Bookkeeper:
 
         content    = self.book()
         test_book  = content.setdefault(result.name, {})
-        test_book["configuration"] = self._test_facts(configuration)
         choice_key = NO_CHOICE_KEY if choice_name is None else choice_name
         choice_db  = test_book.setdefault("choices", {})
         choice_book = choice_db.setdefault(choice_key, {})
-        choice_book["configuration"] = self._choice_facts(choice_entry)
-        operation_db = choice_book.setdefault("operations", {})
+        #  ONE ROW PER CHOICE (B-7): the verdict and report are THE
+        #  choice's, of its last run; an operation is not a dimension
+        #  of a decision.
+        choice_book["verdict"] = entry["verdict"]
+        choice_book["report"]  = entry["report"]
+        if "coverage" in entry: choice_book["coverage"] = entry["coverage"]
         if operation == "Accept":
             #  'last_accept' IS THE ONLY INSTANT LEFT IN THE BASE, and
             #  belongs here because ACCEPTANCE IS A DECISION: it says
@@ -379,7 +666,7 @@ class Bookkeeper:
             #  attributed and undoable, and the book need not keep a
             #  second, poorer copy (E-36).
             entry["last_accept"] = _now()
-        operation_db[operation] = entry
+            choice_book["last_accept"] = entry["last_accept"]
         self._write_book(content)
         return entry
 
@@ -406,38 +693,8 @@ class Bookkeeper:
             print("NOTE: local observation not written -- %s" % fault,
                   file=sys.stderr)
 
-    @staticmethod
-    def _test_facts(configuration):
-        """
-        RETURN: dict, the test application's reproducible facts:
-                source file and kind, interpreter, interactive, caps.
-        """
-        facts = {"source_file": configuration.source_file,
-                 "source_kind": str(configuration.source_kind),
-                 "interactive": bool(configuration.interactive)}
-        if configuration.interpreter is not None:
-            facts["interpreter"] = list(configuration.interpreter)
-        if configuration.caps is not None:
-            facts["caps"] = _stated_caps(configuration.caps)
-        return facts
 
-    @staticmethod
-    def _choice_facts(choice_entry):
-        """
-        RETURN: dict, the choice's reproducible facts: the
-                canonicalisers and the compare setup's differences.
-                Empty facts are absent, not empty.
-        """
-        facts = {}
-        if choice_entry.canonicalisers:
-            facts["canonicaliser"] = {name: list(argv) for name, argv
-                                      in choice_entry.canonicalisers.items()}
-        setup = compare_setup_delta(choice_entry.compare)
-        if setup:
-            facts["compare"] = setup
-        return facts
 
-    # -- queries ------------------------------------------------------
     def tests(self):
         """RETURN: list, every recorded test's name, sorted."""
         return sorted(self.book())
@@ -531,9 +788,9 @@ class Bookkeeper:
         test_book = content.setdefault(test, {})
         choice_db = test_book.setdefault("choices", {})
         key       = NO_CHOICE_KEY if choice is None else choice
-        stain     = {"repeat_n":     int(repeat_n),
-                     "when":         _now(),
-                     "verdict_list": list(verdict_list)}
+        #  THE DECISION ALONE (B-7): the verdicts that convicted are
+        #  what this machine saw, and are not the book's.
+        stain     = {"repeat_n": int(repeat_n), "when": _now()}
         choice_db.setdefault(key, {})["stain"] = stain
         self._write_book(content)
         return stain
@@ -628,32 +885,22 @@ class Bookkeeper:
         if gone is not None: self._write_book(content)
         return gone
 
-    def result(self, test, choice, operation):
+    def result(self, test, choice):
         """
-        RETURN: dict, the most recent entry of that operation.
-                None, no such entry.
+        RETURN: dict, the choice's decision as last recorded --
+                'verdict', 'report', and 'last_accept' / 'coverage'
+                where they stand.
+                None, no such choice was ever recorded.
         """
-        key = NO_CHOICE_KEY if choice is None else choice
-        return self.book().get(test, {}).get("choices", {}) \
-                          .get(key, {}).get("operations", {}).get(operation)
+        key   = NO_CHOICE_KEY if choice is None else choice
+        book  = self.book().get(test, {}).get("choices", {}).get(key)
+        if book is None or "verdict" not in book: return None
+        return {name: book[name] for name in
+                ("verdict", "report", "last_accept", "coverage")
+                if name in book}
 
-    def test_configuration(self, test):
-        """
-        RETURN: dict, the test's reproducible facts as last recorded.
-                None, the test is not in the book.
-        """
-        return self.book().get(test, {}).get("configuration")
 
-    def choice_configuration(self, test, choice):
-        """
-        RETURN: dict, the choice's reproducible facts as last recorded.
-                None, the choice is not in the book.
-        """
-        key = NO_CHOICE_KEY if choice is None else choice
-        return self.book().get(test, {}).get("choices", {}) \
-                          .get(key, {}).get("configuration")
 
-    # -- divergence, ON CALL -------------------------------------------
     def divergence(self, declared_db):
         """
         RETURN: dict, the verdicts on what is recorded but declared no

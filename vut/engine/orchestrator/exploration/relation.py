@@ -8,7 +8,7 @@ PURPOSE: One table relating HWUT's parameter names to the configuration
     read     the default a component DECLARES for a member
 
     RELATION = {
-        "numeric":  (ConfigCompare, "numeric_tolerance_ratio"),
+        "tolerance.numeric_ratio":  (ConfigCompare, "numeric_tolerance_ratio"),
         "analogy":  (ConfigCompare, ("analogy_f", "analogy_begin_marker",
                                      "analogy_end_marker"), ANALOGY),
     }
@@ -39,6 +39,8 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, fields, replace, MISSING
 
+from ...procsitter.api             import ProcsitterConfig
+from ...bookkeeper.api             import CAPS_FIELD_DB
 from .owner_faces_provisional import (ConfigBuild, ConfigCaps,
                                       ConfigCanonicalise, ConfigCompare,
                                       ConfigRunner, ConfigStore)
@@ -116,18 +118,21 @@ RELATION = {
     "build.framework":           (ConfigBuild, "framework"),
     "build.executable":          (ConfigBuild, "executable"),
 
-    "caps.timeout_sec":          (ConfigCaps, "timeout_sec"),
-    "caps.cpu_sec":              (ConfigCaps, "cpu_sec"),
-    "caps.memory_mb":            (ConfigCaps, "memory_mb"),
-    "caps.file_size_mb":         (ConfigCaps, "file_size_mb"),
-    "caps.child_process_max_n":  (ConfigCaps, "child_process_max_n"),
+    #  THE SUPERVISOR'S OWN DOOR ANSWERS FOR WHAT IT ENFORCES (R-78):
+    #  the default 'hwut.show' prints is the default the kill obeys,
+    #  and the mapping is 'CAPS_FIELD_DB', the tree's one word for it.
+    "caps.timeout_sec":          (ProcsitterConfig, CAPS_FIELD_DB["timeout_sec"]),
+    "caps.cpu_sec":              (ProcsitterConfig, CAPS_FIELD_DB["cpu_sec"]),
+    "caps.memory_mb":            (ProcsitterConfig, CAPS_FIELD_DB["memory_mb"]),
+    "caps.file_size_mb":         (ProcsitterConfig, CAPS_FIELD_DB["file_size_mb"]),
+    "caps.child_process_max_n":  (ProcsitterConfig, CAPS_FIELD_DB["child_process_max_n"]),
     "caps.file_handle_max_n":    (ConfigCaps, "file_handle_max_n"),
     "caps.network":              (ConfigCaps, "network"),
     "caps.write_directory_list": (ConfigCaps, "write_directory_list"),
 
     "pype":            (ConfigCanonicalise, "pype"),
 
-    "numeric":         (ConfigCompare, "numeric_tolerance_ratio"),
+    "tolerance.numeric_ratio": (ConfigCompare, "numeric_tolerance_ratio"),
     "eq-pattern":      (ConfigCompare, "equivalent_pattern_list"),
     "nothing":         (ConfigCompare, "visible_nothing_pattern_list"),
     "analogy":         (ConfigCompare, ("analogy_f",
@@ -139,8 +144,8 @@ RELATION = {
                                         "ignored_line_begin_marker",
                                         "ignored_line_end_marker"),
                                        COMMENT),
-    "slash_eqv":       (ConfigCompare, "backslash_f"),
-    "whitespace_eqv":  (ConfigCompare, "whitespace_f"),
+    "tolerance.slash":         (ConfigCompare, "backslash_f"),
+    "tolerance.whitespace":    (ConfigCompare, "whitespace_f"),
 
     "same":            (ConfigStore,  "same_nominal_f"),
     "interactive":     (ConfigRunner, "interactive_f"),

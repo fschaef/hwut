@@ -1,6 +1,6 @@
 
 --- a case stating two things, and what it yields ---
-record: numeric 0.05  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)  comment None
+record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, slash=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)  comment None
 
 ConfigBuild:
     framework                      None

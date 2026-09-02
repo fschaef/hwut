@@ -1,5 +1,5 @@
 INSPECT: default setup  -> verdict False entry 'compare' False
-         loose setup    -> verdict True  entry 'compare' {'numeric_tolerance_ratio': 0.01}
+         loose setup    -> verdict True  entry 'compare' None
 
          THE SWEEP -- every declared member of compare's pattern finder
          member                         default        chosen         in entry
@@ -17,8 +17,7 @@ INSPECT: default setup  -> verdict False entry 'compare' False
          analogy_begin_marker           '(('           '((!'          yes
          analogy_end_marker             '))'           '))!'          yes
   OK  : the setup decided the verdict -- same subject, same nominal
-  OK  : a DEFAULT setup adds nothing to the entry
-  OK  : a chosen one is recorded, and only what was chosen
+  OK  : NO SETUP REACHES THE ENTRY (B-6): the verdict is recorded, the setup that produced it is the header's; the delta below is still 'compare_setup_delta's to compute for whoever asks
   OK  : EVERY declared member surfaces when chosen -- none is silently dropped
 SUCCESS: what the verdict meant is recorded beside the verdict.
 <hwut-end>

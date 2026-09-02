@@ -9,7 +9,7 @@ $ hwut.cov --sideways
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
     [status 2]
 $ hwut.cov convert --to yaml <dir>/a
     REFUSED: '--to' takes one of binary, text

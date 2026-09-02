@@ -47,7 +47,7 @@ from   vut.engine.operations.configuration   import (              # noqa E402
 from   vut.engine.operations.consume.difference_display import (           # noqa E402
                                                               DifferenceDisplay,
                                                               DifferenceDisplayConfig)
-from   vut.engine.operations.interaction.feed import (              # noqa E402
+from   vut.engine.operations.interaction.port import (              # noqa E402
                                                     CollectingDisplay,
                                                     NullDisplay,
                                                     ProtocolMismatch,

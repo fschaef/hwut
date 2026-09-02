@@ -254,39 +254,44 @@ def _compare_of(parameters):
 
     THE MAPPING, stated parameter -> compare's pattern finder:
 
-        numeric         -> numeric_tolerance_ratio
+        tolerance.numeric_ratio -> numeric_tolerance_ratio   (R-77)
+        tolerance.whitespace    -> whitespace_f
+        tolerance.slash         -> backslash_f
         eq_pattern      -> equivalent_pattern_list
         nothing         -> visible_nothing_pattern_list
         analogy         -> analogy_begin/end_marker      (the PAIR)
         comment         -> ignored_line_begin/end_marker (the PAIR)
         constraints     -> constraint expressions
-        slash_eqv       -> backslash_f
-        whitespace_eqv  -> whitespace_f
 
     'analogy' and 'comment' are MARKER PAIRS: the empty tuple is the
     stated OFF (exploration's law -- 'None' is absence, '()' is off),
     and off is expressed to compare by the flag beside the markers.
     """
     stated = {name: getattr(parameters, name)
-              for name in ("numeric", "eq_pattern", "nothing", "analogy",
-                           "constraints", "comment", "slash_eqv",
-                           "whitespace_eqv")}
+              for name in ("eq_pattern", "nothing", "analogy",
+                           "constraints", "comment")}
+    #  THE TOLERANCE SCOPE flattens onto the same table: absent scope,
+    #  absent leaves.
+    tolerance = parameters.tolerance
+    for leaf in ("numeric_ratio", "whitespace", "slash"):
+        stated["tolerance.%s" % leaf] = \
+            getattr(tolerance, leaf) if tolerance is not None else None
     if all(value is None for value in stated.values()): return None
 
     from ...compare.api import Configuration
     options = Configuration()
     finder  = options.pattern_finder
 
-    if stated["numeric"]        is not None:
-        finder.numeric_tolerance_ratio      = stated["numeric"]
+    if stated["tolerance.numeric_ratio"] is not None:
+        finder.numeric_tolerance_ratio      = stated["tolerance.numeric_ratio"]
     if stated["eq_pattern"]     is not None:
         finder.equivalent_pattern_list      = list(stated["eq_pattern"])
     if stated["nothing"]        is not None:
         finder.visible_nothing_pattern_list = list(stated["nothing"])
-    if stated["slash_eqv"]      is not None:
-        finder.backslash_f                  = stated["slash_eqv"]
-    if stated["whitespace_eqv"] is not None:
-        finder.whitespace_f                 = stated["whitespace_eqv"]
+    if stated["tolerance.slash"]      is not None:
+        finder.backslash_f                  = stated["tolerance.slash"]
+    if stated["tolerance.whitespace"] is not None:
+        finder.whitespace_f                 = stated["tolerance.whitespace"]
 
     for name, flag, begin, end in (
             ("analogy", "analogy_f",      "analogy_begin_marker",

@@ -2,63 +2,43 @@
 --- a file with two choices ---
 test-a.py {
     title = "Tolerances"
-    choices {
+    choices {                                 # app
         one {
-            build {
-                framework = null              # default
-                executable = null             # default
-            }
             caps {
                 timeout_sec = 30.0            # app
-                cpu_sec = null                # default
-                memory_mb = null              # default
-                file_size_mb = null           # default
-                child_process_max_n = null    # default
-                file_handle_max_n = null      # default
                 network = true                # default
-                write_directory_list = null   # default
             }
-            pype = null                       # default
-            numeric = 0.01                    # app
+            tolerance {
+                numeric_ratio = 0.01          # app
+                slash = true                  # default
+                whitespace = true             # default
+            }
             eq-pattern = []                   # default
             nothing = []                      # default
             analogy = ["((", "))"]            # default
             constraints = []                  # default
             comment = ["##", "##"]            # default
-            slash_eqv = true                  # default
-            whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
-            execute = null                    # default
             output = ["<stdout>"]             # default
         }
         two {
-            build {
-                framework = null              # default
-                executable = null             # default
-            }
             caps {
                 timeout_sec = 30.0            # app
-                cpu_sec = null                # default
-                memory_mb = null              # default
-                file_size_mb = null           # default
-                child_process_max_n = null    # default
-                file_handle_max_n = null      # default
                 network = false
-                write_directory_list = null   # default
             }
-            pype = null                       # default
-            numeric = 0.05
+            tolerance {
+                numeric_ratio = 0.05
+                slash = true                  # default
+                whitespace = true             # default
+            }
             eq-pattern = []                   # default
             nothing = []                      # default
             analogy = ["((", "))"]            # default
             constraints = []                  # default
             comment = ["##", "##"]            # default
-            slash_eqv = true                  # default
-            whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
-            execute = null                    # default
             output = ["<stdout>"]             # default
         }
     }

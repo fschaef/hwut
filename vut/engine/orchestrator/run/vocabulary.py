@@ -37,7 +37,8 @@ KIND_DB = {
                     "node_kind": str}, {}),
     "run-ended":  ({"directory": str, "node": str, "node_kind": str,
                     "good": bool, "verdict": str}, {"cause": str,
-                                                    "report": str}),
+                                                    "report": str,
+                                                    "detail": str}),
     "fault":      ({"directory": str, "text": str}, {}),
     "report":     ({"directory": str, "text": str}, {}),
     "dir-done":   ({"directory": str, "good": bool,
@@ -60,6 +61,8 @@ _FIELD_TEXT_DB = {
                       + ", ... (open; unknown reads not-ok)",
     "cause":          "the node whose breaking failed this one; "
                       "absent else",
+    "detail":         "the report's numbers, where it has them: which "
+                      "cap, the cap, the peak (O-19); absent else",
     "report":         "the operation's own word for WHY (open list, "
                       "e.g. 'pype-failed', 'test-app-stalled'); "
                       "absent where nothing finer than the verdict "

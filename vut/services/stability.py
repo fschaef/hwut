@@ -539,7 +539,13 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
                          write=lambda line: None,
                          write_error=lambda line: None,
                          event_sink=event_list.append,
-                         despite_stain_f=True)
+                         despite_stain_f=True,
+                         #  EVERY REPEAT MUST EXECUTE: subject
+                         #  provision (disc-2) would otherwise hand
+                         #  the second repeat the first one's
+                         #  recording, and five readings of one file
+                         #  agree about anything.
+                         force_run_f=True)
         snapshot_list.append(
             snapshot_of(root, fold(event_list).verdict_db, subject_tuple))
     return snapshot_list

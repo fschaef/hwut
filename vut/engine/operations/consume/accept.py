@@ -48,7 +48,7 @@ from   typing      import Mapping, Optional
 from ...bookkeeper.api import E_StderrNote
 
 from   ..result           import E_TestRunResult
-from   ..interaction.feed import E_Intent, merge_session
+from   ..interaction.port import E_Intent, merge_session
 from   ..nominal          import (NominalNotAvailable,
                                              RecordNominal)
 from   ..observer         import notify
@@ -218,7 +218,20 @@ class Accept:
         subject_text, nominal_text = await self._material(subject_name)
         if subject_text is None:
             return None, E_TestRunResult.RECORDING_MISSING
-        text, intent = await merge_session(self.config.compare,
+        #  THE ALIGNER IS HANDED IN: the dialogue knows an alignment's
+        #  shape, this ceremony knows where alignments come from --
+        #  compare's one door, with this acceptance's options applied.
+        import io
+        from ...compare.api import feeder_ui as compare_feeder
+        from ...compare.api import Configuration
+        options = self.config.compare if self.config.compare is not None \
+                  else Configuration()
+        def align(subject, working):
+            """RETURN: AsyncIterable[DisplayInst], the alignment of
+            'subject' against 'working', from compare's one door."""
+            return compare_feeder.feed(options, io.StringIO(subject),
+                                       io.StringIO(working))
+        text, intent = await merge_session(align,
                                            subject_text, nominal_text,
                                            session, subject_name)
         if intent is not E_Intent.COMMIT:

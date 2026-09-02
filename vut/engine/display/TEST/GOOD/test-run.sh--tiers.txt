@@ -5,18 +5,18 @@ STDOUT {
     ==============================================================================
     DIRECTORIES                                             0 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    SUIT  suite/TEST ........................................ [FAIL]   0 of   1 ok
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/1
     
     ==============================================================================
     FAULTS
     ------------------------------------------------------------------------------
-    FAULT SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+    FAULT suite/TEST: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
     
     ==============================================================================
-    FAILURES
+    HINTS
     ------------------------------------------------------------------------------
-    SUIT  suite/TEST
-        test-ok.sh                   missing dependency
+    suite/TEST
+        test-ok.sh   missing dependency
     ==============================================================================
 }
 == --silent ==
@@ -24,7 +24,7 @@ STATUS: 1
 STDOUT {
 }
 STDERR {
-    FAULT SUIT: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+    FAULT suite/TEST: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
 }
 == --plain, statable redundantly ==
 STATUS: 0

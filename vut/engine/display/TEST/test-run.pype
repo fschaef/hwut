@@ -45,10 +45,11 @@ on: <bof> => {
     closed_f  = False       # the first ruler has passed
     last_dir  = None        # the arrival-order elision being expanded
     last_app  = None
+    last_badge = ""         # the badge a blank one repeats
 
-    BADGE_TUPLE = ("START", "END", "SKIP", "DIR", "FRAME", "DONE",
+    BADGE_TUPLE = ("START", "DONE", "SKIP", "DIR", "FRAME", "ROLL",
                    "TREE", "FAULT", "NOTE")
-    RUN_BADGE_TUPLE = ("START", "END", "SKIP")
+    RUN_BADGE_TUPLE = ("START", "DONE", "SKIP")
 
     def masked(text):
         text = re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
@@ -62,41 +63,68 @@ on: <bof> => {
         #  THE WALL CLOCK of the closing blocks: how long the suite
         #  took is a fact about the machine and the morning.
         return re.sub(r"\d{2}:\d{2}:\d{2}", "hh:mm:ss", text)
+
+    def consume_run(text, badge):
+        """One flow line naming a run, into 'run_list'.
+
+        NO DIRECTORY COLUMN: the line is 'BADGE app [choice] .. [OK]'
+        and ':' stands where the APPLICATION repeats. The directory is
+        the DIR band's to say, and is carried from the last one seen.
+        'badge' is passed in because an elided one is blank on the
+        line and only the reader knows what it repeats.
+        """
+        global standing, peak, last_app
+        field = text.split()
+        if field and field[0] == badge: field = field[1:]
+        if   badge == "START": standing += 1; peak = max(peak, standing)
+        elif badge == "DONE":  standing -= 1
+        mark = field[0] if field else ""
+        if mark == ":": app, rest = last_app, field[1:]
+        else:           app, rest = mark,     field[1:]
+        last_app = app
+        head, dot, tail = " ".join(rest).partition("..")
+        run_list.append((last_dir, app, head.strip(), badge,
+                         (dot + tail).strip()))
 }
 
 on: <bol> <"[A-Z]*"> => {
     text  = masked(pype.line())
     field = text.split()
     badge = field[0] if field else ""
+    if badge in BADGE_TUPLE: last_badge = badge
     if closed_f or badge not in BADGE_TUPLE:
         print(text)
     elif badge == "DIR":
+        #  THE BAND NAMES THE DIRECTORY ALONE. It used to read
+        #  'DIR  NICK = path'; no nickname is derived any more, so
+        #  the whole of the line after the badge is the path.
         last_dir = field[1] if len(field) > 1 else last_dir
         last_app = None
-        run_list.append((last_dir, "", "", badge,
-                         " ".join(field[2:])))
+        #  A BAND IS NOT A RUN. Under parallel directories the band is
+        #  reprinted at every switch (the display's rule: the marker
+        #  comes when the directory CHANGES); the digest, which is
+        #  about WHAT RAN, keeps one row per directory.
+        band_row = (last_dir, "", "", badge, "")
+        if band_row not in run_list: run_list.append(band_row)
     elif badge not in RUN_BADGE_TUPLE:
         last_app = None
         print(text)
     else:
-        if   badge == "START": standing += 1; peak = max(peak, standing)
-        elif badge == "END":   standing -= 1
-        mark = field[1]
-        if   mark == ":/:": directory, app, rest = last_dir, last_app, field[2:]
-        elif mark == ":/":  directory, app, rest = last_dir, field[2], field[3:]
-        else:               directory, app, rest = mark, field[2], field[3:]
-        last_dir, last_app = directory, app
-        remainder = " ".join(rest)
-        head, dot, tail = remainder.partition("..")
-        run_list.append((directory, app, head.strip(), badge,
-                         (dot + tail).strip()))
+        consume_run(text, badge)
 }
 
 on: <else> => {
-    #  Everything that does not open with a badge: the blank lines of
-    #  the flow are the digest's own business; after the first ruler
-    #  every line passes through.
-    if closed_f or pype.line().strip(): print(masked(pype.line()))
+    #  Everything that does not open with a badge. TWO KINDS reach
+    #  here: the flow's blank lines, and A LINE WHOSE BADGE WAS
+    #  ELIDED -- a badge that repeats prints as blanks, so every run
+    #  after the first of a block opens with spaces and never matches
+    #  the badge rule above.
+    text = masked(pype.line())
+    if not closed_f and text[:5].strip() == "" and text.strip() \
+       and last_badge in RUN_BADGE_TUPLE:
+        consume_run(text, last_badge)
+    elif closed_f or pype.line().strip():
+        print(text)
 }
 
 on: <bol> "=====" => {
@@ -107,26 +135,21 @@ on: <bol> "=====" => {
         seen_dir = None
         seen_app = None
         for directory, app, choice, badge, tail in sorted(run_list):
-            if   (directory, app) == (seen_dir, seen_app): mark = ":/:"
-            elif directory == seen_dir:                    mark = ":/"
-            else:                                          mark = directory
-            #  ':/:' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE.
-            #  A choiceless run elided to ':/:' would name nothing at
-            #  all -- the mark says 'the same application', and with
-            #  no choice beside it nothing tells one line from the
-            #  next.
-            if mark == ":/:" and not choice: mark = ":/"
+            #  ':' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE. A
+            #  choiceless run elided to ':' would name nothing at all
+            #  -- the mark says 'the same application', and with no
+            #  choice beside it nothing tells one line from the next.
+            repeat_f = ((directory, app) == (seen_dir, seen_app)
+                        and bool(choice))
             seen_dir, seen_app = directory, app
             if badge == "DIR":
-                #  The directory's own line names the directory, not
-                #  a run under it: it opens the block and elides
-                #  nothing.
+                #  The band names the directory and opens the block;
+                #  it elides nothing.
                 seen_app = None
-                print(("    %-5s %s %s"
-                       % (badge, directory, tail)).rstrip())
+                print(("    %-5s %s" % (badge, directory)).rstrip())
                 continue
-            shown = "" if mark == ":/:" else app
-            line  = "    %-5s %-6s %-20s %s" % (badge, mark, shown, choice)
+            shown = ":" if repeat_f else app
+            line  = "    %-5s %-24s %s" % (badge, shown, choice)
             line  = line.rstrip()
             print("%s %s" % (line, tail) if tail else line)
         if peak_f: print("    peak standing at once: %d" % peak)

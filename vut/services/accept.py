@@ -50,14 +50,15 @@ from   vut.engine.bookkeeper.api             import E_StderrNote
 from   vut.engine.bookkeeper.api              import Store
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
 from   vut.engine.orchestrator.exploration            import selection
-from   vut.services.labels                             import view_at
-from   vut.services.labels._file                       import LabelFileError
+from   vut.services.lib.labels                             import view_at
+from   vut.services.lib.labels._file                       import LabelFileError
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
                                                                parse_wish,
                                                                with_targets)
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
+from   vut.engine.operations                           import subject_provision
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
 
@@ -461,6 +462,43 @@ def main(argv=None, write=None, read_line=None):
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+
+    #  SUBJECT PROVISION DECIDES, BEFORE ANY CANDIDATE IS READ
+    #  (operations disc-2): the ONE update check, in the one place it
+    #  lives. This face never executes ('production=False'): where the
+    #  recording is STALE or ABSENT it refuses and says to re-run,
+    #  rather than reading evidence that describes a test that no
+    #  longer exists.
+    undecided_list = []
+    for case in case_sequence:
+        configuration = found.configuration_db.get(
+                            (case.source_file, case.choice)) \
+                        if hasattr(found, "configuration_db") else None
+        candidate = store.bookkeeper.candidate_path(case.source_file,
+                                                    case.choice, "stdout")
+        if configuration is None:
+            #  No configuration in hand: the selection did not carry
+            #  one. Fall back to the source file alone -- the (A)
+            #  closure without coverage targets -- so the check still
+            #  stands rather than silently not.
+            class _Bare:
+                build = None
+                source_file = os.path.join(directory, case.source_file)
+            configuration = _Bare()
+        decision = subject_provision.decide(configuration, candidate,
+                                            production=False)
+        if decision.what in (subject_provision.E_Decision.STALE,
+                             subject_provision.E_Decision.ABSENT):
+            undecided_list.append((case.source_file, case.choice,
+                                   decision.because))
+    if undecided_list:
+        write("REFUSED: the recording is not current --")
+        for test, choice, because in undecided_list:
+            write("    %s%s   %s" % (test,
+                                     "" if choice is None else " " + choice,
+                                     because))
+        write("re-run the test ('hwut.run'), then accept.")
+        return E_ExitCode.FAULT
 
     #  STDERR FIRST: where it spoke and nothing tolerates it, the
     #  whole choice is refused before any pole is touched.

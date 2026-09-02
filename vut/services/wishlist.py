@@ -44,8 +44,8 @@ import sys
 
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration          import selection
-from   vut.services.labels                           import view_at
-from   vut.services.labels._file                     import LabelFileError
+from   vut.services.lib.labels                           import view_at
+from   vut.services.lib.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                      import (RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,

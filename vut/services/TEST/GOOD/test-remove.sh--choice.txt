@@ -1,5 +1,5 @@
 BEFORE {
-    GOOD/result_db.json
+    GOOD/result_db.csv
     GOOD/test-app.sh--one.txt
     GOOD/test-app.sh--two.txt
     GOOD/test_ids.dat
@@ -7,44 +7,39 @@ BEFORE {
     TMP/store/test-app.sh--one.stderr
     TMP/store/test-app.sh--one.stderr.when
     TMP/store/test-app.sh--one.stdout
-    TMP/store/test-app.sh--one.stdout.times
     TMP/store/test-app.sh--one.stdout.when
     TMP/store/test-app.sh--two.stderr
     TMP/store/test-app.sh--two.stderr.when
     TMP/store/test-app.sh--two.stdout
-    TMP/store/test-app.sh--two.stdout.times
     TMP/store/test-app.sh--two.stdout.when
     book: ['test-app.sh']
 }
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh one -- 6 file(s), the book entry, the register id
+      test-app.sh one -- 5 file(s), the book entry, the register id
           GOOD/test-app.sh--one.txt
           TMP/store/test-app.sh--one.stderr
           TMP/store/test-app.sh--one.stderr.when
           TMP/store/test-app.sh--one.stdout
-          TMP/store/test-app.sh--one.stdout.times
           TMP/store/test-app.sh--one.stdout.when
     test-app.sh one:
         forgotten: GOOD/test-app.sh--one.txt
         forgotten: TMP/store/test-app.sh--one.stderr
         forgotten: TMP/store/test-app.sh--one.stderr.when
         forgotten: TMP/store/test-app.sh--one.stdout
-        forgotten: TMP/store/test-app.sh--one.stdout.times
         forgotten: TMP/store/test-app.sh--one.stdout.when
         book entry: removed
         register: choice id retired
 }
 AFTER {
-    GOOD/result_db.json
+    GOOD/result_db.csv
     GOOD/test-app.sh--two.txt
     GOOD/test_ids.dat
     TMP/store/observations.bin
     TMP/store/test-app.sh--two.stderr
     TMP/store/test-app.sh--two.stderr.when
     TMP/store/test-app.sh--two.stdout
-    TMP/store/test-app.sh--two.stdout.times
     TMP/store/test-app.sh--two.stdout.when
     book: ['test-app.sh']
 }

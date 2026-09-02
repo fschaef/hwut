@@ -106,11 +106,11 @@ def test_file():
     show_file("a file with two choices",
               {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
-                            '#     numeric = 0.01\n'
+                            '#     tolerance { numeric_ratio = 0.01 }\n'
                             '#     caps    { timeout_sec = 30 }\n'
                             '#     choices {\n'
                             '#         one { }\n'
-                            '#         two { numeric = 0.05\n'
+                            '#         two { tolerance { numeric_ratio = 0.05 }\n'
                             '#               caps { network = false } }\n'
                             '#     }\n'
                             '# }\n'},
@@ -121,9 +121,9 @@ def test_no_default():
     """RETURN: None. With and without the values nobody stated."""
     file_db = {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
-                            '#     numeric = 0.01\n'
+                            '#     tolerance { numeric_ratio = 0.01 }\n'
                             '#     caps    { timeout_sec = 30 }\n'
-                            '#     choices { two { numeric = 0.05 } }\n'
+                            '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                             '# }\n',
                "hwut.conf": 'hwut {\n'
                             '    default_app { comment = ["//", ""] }\n'
@@ -152,11 +152,11 @@ def test_origins():
                    {"legacy.bas": "REM an hwut 1.0 application\n",
                     "test-own.py": '# @hwut {\n'
                                    '#     title   = "own"\n'
-                                   '#     numeric = 0.01\n'
-                                   '#     choices { two { numeric = 0.05 } }\n'
+                                   '#     tolerance { numeric_ratio = 0.01 }\n'
+                                   '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                                    '# }\n',
                     "hwut.conf":  'hwut {\n'
-                                  '    default_app { slash_eqv = yes }\n'
+                                  '    default_app { tolerance { slash = yes } }\n'
                                   '    apps {\n'
                                   '        gen.c { title = "generated"\n'
                                   '                comment = ["//", "//"] }\n'
@@ -172,13 +172,13 @@ def test_places():
     """RETURN: None. The two ways of naming a place."""
     file_db = {"test-a.py": '# @hwut {\n'
                             '#     title   = "Tolerances"\n'
-                            '#     numeric = 0.01\n'
+                            '#     tolerance { numeric_ratio = 0.01 }\n'
                             '#     caps    { timeout_sec = 30 }\n'
-                            '#     choices { two { numeric = 0.05 } }\n'
+                            '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                             '# }\n',
                "hwut.conf": 'hwut {\n'
                             '    default_app {\n'
-                            '        slash_eqv = no\n'
+                            '        tolerance { slash = no }\n'
                             '        comment   = ["//", "//"]\n'
                             '    }\n'
                             '}\n'}
@@ -215,7 +215,7 @@ def test_faults():
     show_file("a header with a fault prints no tree",
               {"test-bad.py": '# @hwut {\n'
                               '#     title   = "Bad"\n'
-                              '#     numeric = 1.5\n'
+                              '#     tolerance { numeric_ratio = 1.5 }\n'
                               '#     pype    = unquoted\n'
                               '# }\n'},
               "test-bad.py")

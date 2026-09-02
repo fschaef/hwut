@@ -9,13 +9,13 @@ THE OUTER PICTURE {
         imports nothing of this tree
     }
     engine {
-        178 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (172 more)
+        181 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (175 more)
         --> adm
         --> auxiliary
         --> test_writing_support
     }
     services {
-        33 module(s): _boundary.py, _config.py, _core.py, _exit.py, _follow.py, accept.py, ... (27 more)
+        36 module(s): _boundary.py, _config.py, _core.py, _exit.py, _follow.py, accept.py, ... (30 more)
         --> auxiliary
         --> engine
         --> test_writing_support
@@ -27,7 +27,7 @@ THE OUTER PICTURE {
 }
 STATUS: 0
 THE LAYERING {
-    LAYERING: every edge obeys 'adm/LAYERING.txt' (14 component(s), 30 edge(s))
+    LAYERING: every edge obeys 'adm/LAYERING.txt' (14 component(s), 31 edge(s))
     SEALED: engine/compare/contract, engine/protocol, engine/procsitter, auxiliary, test_writing_support -- nothing leaves
     DOORS: engine/compare/api, engine/procsitter/api, engine/coverage/api, engine/bookkeeper/api -- nothing enters but here
 }

@@ -54,8 +54,9 @@ if __package__ in (None, ""):
     __package__ = _config.PACKAGE
 from ._exit import E_ExitCode  # delayed past _config adoption
 
-from   vut.engine.operations.interaction.feed import feed_down
-from   vut.engine.operations.interaction.tui  import TuiDisplay
+from   vut.engine.operations.interaction.port import deliver
+from   vut.services.lib.viewers.tui           import TuiDisplay
+from   vut.engine.compare.api                 import feeder_ui as compare_feeder
 from   ._core              import (read_source,
                                   add_setup_arguments,
                                   setup_from_arguments)
@@ -67,15 +68,16 @@ async def compare_view(subject_text, nominal_text, adapter,
     RETURN: int, the count of DIFFERING pairs the display carried --
             0 is equivalence, by the Lawyer/Judge agreement law.
 
-    One DOWN generation through the display door ('feed_down'); the
-    adapter renders it. The verdict is read off the rendering's own
-    count, not derived a second way.
+    ONE ALIGNMENT, obtained at compare's own door and handed to the
+    port's delivery loop; the adapter renders it. The verdict is read
+    off the rendering's own count, not derived a second way.
     """
     from vut.engine.compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
-    await feed_down(compare_options,
-                    io.StringIO(subject_text), io.StringIO(nominal_text),
-                    adapter, subject_name)
+    await deliver(compare_feeder.feed(compare_options,
+                                      io.StringIO(subject_text),
+                                      io.StringIO(nominal_text)),
+                  adapter, subject_name)
     return adapter.bad_pair_n
 
 
@@ -92,9 +94,10 @@ async def reading_view(text, adapter, subject_name="reading",
     """
     from vut.engine.compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
-    await feed_down(compare_options,
-                    io.StringIO(text), io.StringIO(text),
-                    adapter, subject_name)
+    await deliver(compare_feeder.feed(compare_options,
+                                      io.StringIO(text),
+                                      io.StringIO(text)),
+                  adapter, subject_name)
 
 
 def main(argv=None):

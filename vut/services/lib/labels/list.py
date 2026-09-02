@@ -30,8 +30,8 @@ import sys
 
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                              import RootConfMissing
-from   .._core                               import usage_line
-from   .._exit                               import E_ExitCode
+from   ..._core                               import usage_line
+from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 from   ._faces                               import split_directory
 

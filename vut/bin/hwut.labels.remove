@@ -1,8 +1,8 @@
 #! /bin/sh
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
-# The launcher of 'hwut.labels.remove': 'services/labels/remove.py' run
+# The launcher of 'hwut.labels.remove': 'services/lib/labels/remove.py' run
 # as a module, from wherever 'hwut.labels.remove' is called, by PATH or
 # by path.
 HERE=$(dirname "$(readlink -f "$0")")
 PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
-    exec python3 -m vut.services.labels.remove "$@"
+    exec python3 -m vut.services.lib.labels.remove "$@"

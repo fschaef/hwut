@@ -3,63 +3,43 @@
 $ hwut.show test-a.py
     test-a.py {
         title = "A"
-        choices {
+        choices {                                 # app
             one {
-                build {
-                    framework = null              # default
-                    executable = null             # default
-                }
                 caps {
                     timeout_sec = 60.0            # default
-                    cpu_sec = null                # default
-                    memory_mb = null              # default
-                    file_size_mb = null           # default
-                    child_process_max_n = null    # default
-                    file_handle_max_n = null      # default
                     network = true                # default
-                    write_directory_list = null   # default
                 }
-                pype = null                       # default
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                    slash = true                  # default
+                    whitespace = true             # default
+                }
                 eq-pattern = []                   # default
                 nothing = []                      # default
                 analogy = ["((", "))"]            # default
                 constraints = []                  # default
                 comment = ["##", "##"]            # default
-                slash_eqv = true                  # default
-                whitespace_eqv = true             # default
                 same = false                      # default
                 interactive = false               # default
-                execute = null                    # default
                 output = ["<stdout>"]             # default
             }
             two {
-                build {
-                    framework = null              # default
-                    executable = null             # default
-                }
                 caps {
                     timeout_sec = 60.0            # default
-                    cpu_sec = null                # default
-                    memory_mb = null              # default
-                    file_size_mb = null           # default
-                    child_process_max_n = null    # default
-                    file_handle_max_n = null      # default
                     network = true                # default
-                    write_directory_list = null   # default
                 }
-                pype = null                       # default
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                    slash = true                  # default
+                    whitespace = true             # default
+                }
                 eq-pattern = []                   # default
                 nothing = []                      # default
                 analogy = ["((", "))"]            # default
                 constraints = []                  # default
                 comment = ["##", "##"]            # default
-                slash_eqv = true                  # default
-                whitespace_eqv = true             # default
                 same = false                      # default
                 interactive = false               # default
-                execute = null                    # default
                 output = ["<stdout>"]             # default
             }
         }
@@ -70,12 +50,16 @@ $ hwut.show test-a.py
 $ hwut.show test-a.py --no-default
     test-a.py {
         title = "A"
-        choices {
+        choices {                                 # app
             one {
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                }
             }
             two {
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                }
             }
         }
     }

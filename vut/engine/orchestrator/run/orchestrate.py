@@ -114,12 +114,23 @@ class CDirectoryWork:
             emit("fault", directory=directory, text=str(fault))
         for report in entry.report_tuple:
             emit("report", directory=directory, text=str(report))
-        broken_tuple = _broken_app_tuple(entry)
+        broken_tuple  = _broken_app_tuple(entry)
+        vanished_tuple = _vanished_tuple(self.root, entry)
         emit("dir-begun", directory=directory,
-             node_n=len(entry.plan) + len(broken_tuple))
+             node_n=len(entry.plan) + len(broken_tuple)
+                    + len(vanished_tuple))
         for name in broken_tuple:
             emit("run-ended", directory=directory, node=name,
                  node_kind="TEST", good=False, verdict="spec-broken")
+        #  THE BOOK DOCUMENTS WHAT TESTS EXIST, and a test it records
+        #  that no longer stands is a FAILING TEST, not a silence: the
+        #  documentation and the tree disagree, and only a person can
+        #  say which of the two is wrong. Reported exactly as a broken
+        #  specification is -- terminal before anything runs, counted,
+        #  and named in HINTS.
+        for name, verdict in vanished_tuple:
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict=verdict)
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
         #  their 'run-ended' comes first, verdict named.
@@ -145,6 +156,8 @@ class CDirectoryWork:
                 extra = {} if cause is None else {"cause": cause}
                 report = report_of(node.name())
                 if report is not None: extra["report"] = report
+                detail = detail_of(node.name())
+                if detail is not None: extra["detail"] = detail
                 good_f  = state is E_NodeState.ENDED_GOOD
                 verdict = _verdict(state, node.kind)
                 if not good_f and report == "test-app-launch-failed":
@@ -159,6 +172,8 @@ class CDirectoryWork:
                          entry)
         report_of  = getattr(dispatcher, "report_of",
                              lambda name: None)
+        detail_of  = getattr(dispatcher, "detail_of",
+                             lambda name: None)
         scheduler  = Scheduler(dispatcher,
                                on_entry     = entry.on_entry,
                                on_exit      = entry.on_exit,
@@ -169,7 +184,8 @@ class CDirectoryWork:
         if close is not None: await close()
         fail_db = {name: state.name for name, state
                    in sorted(report.failure_db().items())}
-        good_f  = report.good_f() and not entry.fault_tuple
+        good_f  = report.good_f() and not entry.fault_tuple \
+                  and not vanished_tuple
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
         return CDirDone(good_f, len(fail_db))
@@ -278,6 +294,45 @@ def _broken_app_tuple(entry):
     return tuple(sorted(named))
 
 
+def _vanished_tuple(root, entry):
+    """
+    RETURN: tuple[(str, str)], one (node name, verdict) for every test
+            the BOOK records that the directory no longer declares:
+                'test-vanished'         the application is gone
+                'test-choice-vanished'  the application stands, that
+                                        choice of it does not
+            Empty where book and tree agree, and where no book stands.
+
+    THE DECLARATION IS THE APP SET, NEVER THE PLAN. 'entry.app_set' is
+    what EXISTS in the directory; 'entry.plan' is what the WISH
+    selected of it. Asking against the plan would read every
+    unselected choice as vanished, so 'hwut.run test-x.py one' would
+    accuse 'two' of not existing -- the wish narrows what runs, and
+    narrows nothing about what is there.
+
+    A BOOK THAT CANNOT BE READ SAYS NOTHING. The absence of a base, or
+    a base that will not open, is not evidence that a test vanished.
+    """
+    app_set = getattr(entry, "app_set", None)
+    if app_set is None: return ()
+    declared_db = {app.source_file: list(app.choice_db)
+                   for app in app_set}
+    try:
+        book = Bookkeeper(os.path.normpath(os.path.join(root,
+                                                        entry.directory)))
+        divergence = book.divergence(declared_db)
+    except (OSError, ValueError):
+        return ()
+    result = [(test, "test-vanished")
+              for test in divergence.get("deleted", [])]
+    for test, choice_list in sorted(divergence.get("non-responsive",
+                                                   {}).items()):
+        for choice in choice_list:
+            name = test if choice is None else "%s %s" % (test, choice)
+            result.append((name, "test-choice-vanished"))
+    return tuple(result)
+
+
 def orchestrate(root, wish, build_interview=None, label_view=None):
     """
     RETURN: CTreePlan, what 'wish' comes to on the tree below 'root':
@@ -287,7 +342,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     The Bookkeeper of each directory is made HERE and handed down,
     and only where the wish asks the base. THE LABEL VIEW IS NOT: the
     engine never opens 'hwut-root.labels' -- a face builds it
-    ('services/labels.view_at') and hands it in, and 'None' means no
+    ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
     """
     tree = explore_tree(root)

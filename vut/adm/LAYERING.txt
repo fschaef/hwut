@@ -124,8 +124,9 @@ services*           -> auxiliary
 services*           -> engine/*
 services*           -> test_writing_support*
 
-#  A FACE FAMILY AND ITS PARENT. 'services -> services/labels' is a
-#  face reaching for a family's door; 'services/labels -> services'
+#  A FACE FAMILY AND ITS PARENT. 'services -> services/lib' is a face
+#  reaching for a family's door ('lib/labels', 'lib/viewers');
+#  'services/lib -> services'
 #  is that door reaching back for what every face shares ('_core',
 #  '_exit').
 #
@@ -147,5 +148,5 @@ services*           -> test_writing_support*
 #  A cycle inside a component is not a layering violation, and this
 #  declaration does not forbid one. Whether each is a design or an
 #  accretion is a question for the review, not for this file.
-services            -> services/labels
-services/labels     -> services
+services            -> services/lib
+services/lib        -> services

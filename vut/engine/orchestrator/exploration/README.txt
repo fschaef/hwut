@@ -284,7 +284,7 @@ compiler or interpreter reads it.
      *     build = "make"                      build = "make"
      *     choices {                           choices {
      *         one { }                             one { }
-     *         two { numeric = 0.05 }              two { numeric = 0.05 }
+     *         two { tolerance { numeric_ratio = 0.05 } }              two { tolerance { numeric_ratio = 0.05 } }
      *     }                                   }
      * } */                              }
 
@@ -539,7 +539,7 @@ is the shape he is shown.
                     timeout_sec = 30.0            # app
                     network     = true            # default
                 }
-                numeric = 0.05
+                tolerance { numeric_ratio = 0.05 }
                 comment = "//"                    # hwut.conf:3
             }
         }
@@ -568,8 +568,8 @@ where an editor's error parser looks for it:
     test-a.py:4:17:                 timeout_sec = 30.0
     test-a.py:1:9:                  network = true
     test-a.py:4:17:             }
-    test-a.py:5:23:             numeric = 0.05
-    hwut.conf:2:19:             slash_eqv = false
+    test-a.py:5:23:             tolerance { numeric_ratio = 0.05 }
+    hwut.conf:2:19:             tolerance { slash = false }
 
 The places stand in a column of their own, padded to the longest of them,
 and the specification's own indentation stands underneath.

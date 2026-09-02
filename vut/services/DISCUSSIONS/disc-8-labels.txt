@@ -154,7 +154,7 @@ longer close.
 3.  THE FACES
 ==============================================================================
 Naming law extended (section 7): 'hwut.labels.<verb>' <=>
-'services/labels/<verb>.py', launcher 'bin/hwut.labels.<verb>'.
+'services/lib/labels/<verb>.py', launcher 'bin/hwut.labels.<verb>'.
 
 EVERY FACE TAKES A WISH -- the wish module's whole option group, one
 parser, the same words everywhere. '<wish>' below is that group,
@@ -320,7 +320,7 @@ aloud; the feature unused costs no line of output.
                             flows into the engine, the engine imports
                             nothing back. The file's READER AND
                             WRITER stay the faces' own
-                            ('services/labels/_file.py'): the engine
+                            ('services/lib/labels/_file.py'): the engine
                             never opens 'hwut-root.labels'; a face
                             builds the view and hands it down. A face
                             the view does not reach REFUSES
@@ -346,7 +346,7 @@ aloud; the feature unused costs no line of output.
                             questions: a case is hidden where the
                             expression does not name it, or -- no
                             label asked -- where 'meta' labels it.
-    services/labels/__init__.py
+    services/lib/labels/__init__.py
                             'view_at(directory)': THE ONE DOOR any
                             other face obtains the view through --
                             climb, read, build. 'RootConfMissing' is
@@ -361,7 +361,7 @@ aloud; the feature unused costs no line of output.
                             'run.main', so one threading serves
                             three faces.
     services/_follow.py     section 5, as built.
-    services/labels/        the five faces; '_file.py' the reader and
+    services/lib/labels/        the five faces; '_file.py' the reader and
                             writer; '_faces.py' what the five share.
     services/rename.py, remove.py, remove_choice.py
                             the follow-through of section 5.
@@ -373,7 +373,7 @@ LAUNCHER NAME IS A PACKAGE.
     hwut.<n>          <=>  services/<n>.py          ('-' <=> '_')
     hwut.<p>.<n>      <=>  services/<p>/<n>.py      NEW
     its launcher      <=>  bin/hwut.<p>.<n>
-    its suite         <=>  services/labels/TEST/test-<n>.sh (or .py)
+    its suite         <=>  services/lib/labels/TEST/test-<n>.sh (or .py)
 
 Five acts on one file is a FAMILY; the dot says so, and the law
 extends rather than bends. Rejected: 'hwut.labels-add' (five

@@ -64,8 +64,8 @@ from   vut.engine.display.console                    import USAGE_TOKEN_TUPLE \
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                     import RootConfMissing
-from   vut.services.labels                          import view_at
-from   vut.services.labels._file                    import LabelFileError
+from   vut.services.lib.labels                          import view_at
+from   vut.services.lib.labels._file                    import LabelFileError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
@@ -101,7 +101,11 @@ HELP = """hwut.run -- the tree run, rendered live
 
 EXECUTION
     --directory=<path>  the root to run below; the current one else
-    --no-store          the store knob: no subject is recorded
+    --no-store          the store knob: no subject is recorded under
+                        'TMP/store/'. The verdict still enters THE
+                        BOOK ('GOOD/result_db.csv'): what the
+                        software IS is recorded whether or not what
+                        it printed is kept
     --timing            keep the run's cadence beside each candidate
     --jobs=<n>          the host-global bound on work standing at
                         once, across every directory; unbounded where
@@ -138,6 +142,7 @@ TICK_SECONDS = 0.25
 async def _drive(root, wish, record, worker_max_n, strategy, flow,
                  coverage=None, variant_tuple=(), timing_f=False,
                  event_sink=None, despite_stain_f=False,
+                 force_run_f=False,
                  label_view=None, warn=None):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
@@ -152,7 +157,8 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow,
                              record=record, coverage=coverage,
                              variant_tuple=variant_tuple,
                              timing_f=timing_f,
-                             despite_stain_f=despite_stain_f),
+                             despite_stain_f=despite_stain_f,
+                             force_run_f=force_run_f),
                          worker_max_n=worker_max_n, strategy=strategy,
                          label_view=label_view, warn=warn)
     event_list = []
@@ -179,7 +185,7 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow,
 
 
 def main(argv=None, write=None, write_error=None, demand=None,
-         event_sink=None, despite_stain_f=False):
+         event_sink=None, despite_stain_f=False, force_run_f=False):
     """
     RETURN: E_ExitCode, the exit status of the run (E-1): OK where
             every test stood and no fault was met, FAULT where one
@@ -208,14 +214,14 @@ def main(argv=None, write=None, write_error=None, demand=None,
         lambda line: print(line, file=sys.stderr)
     try:
         return _main(argv, write, write_error, captured_f, demand,
-                     event_sink, despite_stain_f)
+                     event_sink, despite_stain_f, force_run_f)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         return E_ExitCode.SIGPIPE
 
 
 def _main(argv, write, write_error, captured_f, demand=None,
-          event_sink=None, despite_stain_f=False):
+          event_sink=None, despite_stain_f=False, force_run_f=False):
     """
     RETURN: E_ExitCode -- 'main' without the pipe guard.
 
@@ -262,6 +268,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
             directory = argument[len("--directory="):]
         elif argument == "--no-store":  record   = False
         elif argument == "--timing":    timing_f = True
+        elif argument == "--force-run": force_run_f = True
         elif argument == "--coverage":
             from vut.engine.coverage.api import CoverageConfig
             coverage = demand if demand is not None else CoverageConfig()
@@ -331,21 +338,44 @@ def _main(argv, write, write_error, captured_f, demand=None,
     #  The face knows its own sink; display knows what a terminal is
     #  worth. Tier, ink and width are decided there, once.
     tty_f = (not captured_f) and sys.stdout.isatty()
-    flow  = console_view(rendering_wish, write, write_error,
-                         os.environ, tty_f)
+
+    #  THE LOG IS THE FACE'S FILE, opened here and closed here.
+    #  Display says a log stands and what belongs in it; a renderer
+    #  that opened files would hold a resource it cannot promise to
+    #  release. A log that cannot be opened is a fault about the log,
+    #  not a reason to lose the run: the marginalia fall back to
+    #  stderr, which is where '--no-log' puts them anyway.
+    log_file = None
+    if not rendering_wish.no_log_f:
+        try:
+            log_file = open(rendering_wish.log_path, "w",
+                            encoding="utf-8")
+        except OSError as error:
+            write_error("FAULT: the log '%s' cannot be written (%s); "
+                        "faults and notes go to stderr"
+                        % (rendering_wish.log_path, error))
+            log_file = None
+    write_log = None if log_file is None \
+                else lambda line: print(line, file=log_file)
+
     try:
-        event_list = asyncio.run(
-            _drive(directory, wish, record, worker_max_n, strategy,
-                   flow, coverage, name_tuple_of(variant_text),
-                   timing_f, event_sink, despite_stain_f,
-                   label_view, write))
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except SelectionError as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    flow.tail()
+        flow = console_view(rendering_wish, write, write_error,
+                            os.environ, tty_f, write_log=write_log)
+        try:
+            event_list = asyncio.run(
+                _drive(directory, wish, record, worker_max_n, strategy,
+                       flow, coverage, name_tuple_of(variant_text),
+                       timing_f, event_sink, despite_stain_f, force_run_f,
+                       label_view, write))
+        except RootConfMissing as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
+        except SelectionError as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
+        flow.tail()
+    finally:
+        if log_file is not None: log_file.close()
 
     summary = fold(event_list)
     fail_n  = summary.fail_n if summary.fail_n is not None else 0

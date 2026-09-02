@@ -1,5 +1,5 @@
 
 --- effective = chosen, or the owner's default ---
-record    numeric 0.25  comment None  analogy None
-effective numeric 0.25  comment ('##', '##')  analogy ('((', '))')
+record    tolerance Tolerance(numeric_ratio=0.25, whitespace=None, slash=None)  comment None  analogy None
+effective numeric_ratio 0.25  comment ('##', '##')  analogy ('((', '))')
 <hwut-end>

@@ -30,14 +30,12 @@ KEY_TO_FIELD = {
     "build":       "build",
     "caps":        "caps",
     "pype":        "pype",
-    "numeric":     "numeric",
+    "tolerance":   "tolerance",
     "eq-pattern":  "eq_pattern",
     "nothing":     "nothing",
     "analogy":     "analogy",
     "constraints": "constraints",
     "comment":     "comment",
-    "slash_eqv":      "slash_eqv",
-    "whitespace_eqv": "whitespace_eqv",
     "same":        "same",
     "interactive": "interactive",
     "execute":     "execute",
@@ -114,6 +112,22 @@ class Build(_Scope):
 
 
 @dataclass(frozen=True, slots=True)
+class Tolerance(_Scope):
+    """HOW FAR THE SUBJECT MAY DIFFER AND STILL PASS, per lexical kind
+    (R-77). Compare owns every default; this record holds only what the
+    author stated.
+
+    'numeric_ratio' the relative ratio two numbers may differ by, in
+                    [0..1]; 0 is exact
+    'whitespace'    runs of blanks are one blank
+    'slash'         a backslash and a slash are the same separator
+    """
+    numeric_ratio: float | None = None
+    whitespace:    bool  | None = None
+    slash:         bool  | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class TestParameters(_Scope):
     """One choice's test parameters, as stated. 'None' throughout means:
     nothing stated -- the default table answers at the point of use.
@@ -127,14 +141,12 @@ class TestParameters(_Scope):
     build:       Build | None = None
     caps:        Caps  | None = None
     pype:        str   | None = None
-    numeric:     float | None = None
+    tolerance:   Tolerance | None = None
     eq_pattern:  tuple | None = None
     nothing:     tuple | None = None
     analogy:     tuple | None = None
     constraints: tuple | None = None
     comment:     tuple | None = None
-    slash_eqv:       bool | None = None
-    whitespace_eqv:  bool | None = None
     same:        bool  | None = None
     interactive: bool  | None = None
     execute:     str   | None = None

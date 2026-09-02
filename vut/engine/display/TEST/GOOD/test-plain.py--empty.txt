@@ -1,12 +1,11 @@
 
 --- an empty selection ---
-NOTE  SUIT: the selection is empty: no test case answers the wish
-DIR   SUIT = suite/TEST
 
 ==============================================================================
 DIRECTORIES                                             0 ok, 0 fail, 00:00:00
 ------------------------------------------------------------------------------
-SUIT  suite/TEST ........................................ [OK]     0 of   0 ok
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
 ==============================================================================
+stderr> NOTE  suite/TEST: the selection is empty: no test case answers the wish
 [fold: good_f=True fail_n=0 verdict_n=0 fault_n=0]
 <hwut-end>

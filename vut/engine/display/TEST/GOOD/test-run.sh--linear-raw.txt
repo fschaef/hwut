@@ -1,29 +1,27 @@
 == --strategy=linear --jobs=1 ==
 STATUS: 1
 STDOUT {
-    DIR   ALPH = alpha/TEST
-    END   ALPH test-one.sh .................................................. [OK]
-    END   :/   test-two.sh .................................................. [OK]
-    DIR   BETA = beta/TEST
-    END   BETA test-one.sh .................................................. [OK]
-    END   :/   test-two.sh ............................. differs from GOOD  [FAIL]
-    DIR   GAMM = gamma/TEST
-    FRAME GAMM:on_entry ................................. the frame failed  [FAIL]
+    DIR  alpha/TEST                                                               
+    DONE  test-one.sh ....................................................... [OK]
+          test-two.sh ....................................................... [OK]
+    DIR  beta/TEST                                                                
+    DONE  test-one.sh ....................................................... [OK]
+          test-two.sh ..................................................... [FAIL]
+    DIR  gamma/TEST                                                               
+    FRAME gamma/TEST:on_entry ........................... the frame failed  [FAIL]
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
-    BETA  beta/TEST ......................................... [FAIL]   1 of   2 ok
-    GAMM  gamma/TEST ........................................ [FAIL]   0 of   0 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . . [FAIL]      1/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/0
     
     ==============================================================================
-    FAILURES
+    HINTS
     ------------------------------------------------------------------------------
-    BETA  beta/TEST
-        test-two.sh                  differs from GOOD
-    GAMM  gamma/TEST
-        frame on_entry               the frame failed
+    gamma/TEST
+        frame on_entry   the frame failed
     ==============================================================================
 }
 == --dbd --jobs=1 ==
@@ -33,17 +31,15 @@ STDOUT {
     ==============================================================================
     DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
-    BETA  beta/TEST ......................................... [FAIL]   1 of   2 ok
-    GAMM  gamma/TEST ........................................ [FAIL]   0 of   0 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . . [FAIL]      1/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/0
     
     ==============================================================================
-    FAILURES
+    HINTS
     ------------------------------------------------------------------------------
-    BETA  beta/TEST
-        test-two.sh                  differs from GOOD
-    GAMM  gamma/TEST
-        frame on_entry               the frame failed
+    gamma/TEST
+        frame on_entry   the frame failed
     ==============================================================================
 }
 == --directory-by-directory, the long spelling ==
@@ -53,16 +49,14 @@ STDOUT {
     ==============================================================================
     DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
-    BETA  beta/TEST ......................................... [FAIL]   1 of   2 ok
-    GAMM  gamma/TEST ........................................ [FAIL]   0 of   0 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . . [FAIL]      1/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/0
     
     ==============================================================================
-    FAILURES
+    HINTS
     ------------------------------------------------------------------------------
-    BETA  beta/TEST
-        test-two.sh                  differs from GOOD
-    GAMM  gamma/TEST
-        frame on_entry               the frame failed
+    gamma/TEST
+        frame on_entry   the frame failed
     ==============================================================================
 }

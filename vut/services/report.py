@@ -5,7 +5,7 @@ PURPOSE: THE 'hwut.report' COMMAND LINE -- what the RESULT DATABASES
          hold, rendered for somebody else.
 
 IT READS THE BOOKS, NOT A RUN. A report may be asked of a run that
-happened yesterday, and only 'GOOD/result_db.json' remembers it. So
+happened yesterday, and only 'GOOD/result_db.csv' remembers it. So
 this face explores the tree for its SHAPE -- which applications, which
 choices, what they are called -- and asks each directory's book for the
 VERDICT. A case the book has never seen is reported as never run,
@@ -47,11 +47,10 @@ import shutil
 import sys
 import xml.sax.saxutils as saxutils
 
-from   vut.engine.bookkeeper.api              import (NO_CHOICE_KEY)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration          import selection
-from   vut.services.labels                           import view_at
-from   vut.services.labels._file                     import LabelFileError
+from   vut.services.lib.labels                           import view_at
+from   vut.services.lib.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                      import (RootConfMissing)
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
@@ -153,16 +152,6 @@ def directory_title(directory):
     return ""
 
 
-def subsequence_f(small, large):
-    """
-    RETURN: bool, True where every line of 'small' stands in 'large' in
-            the same order -- 'large' may hold lines between and around
-            them, and holds no line of 'small' out of turn.
-    """
-    it = iter(large)
-    return all(line in it for line in small)
-
-
 def _observed_instant(bookkeeper, case):
     """
     RETURN: str, WHEN THIS MACHINE LAST SAW that case run, as the page
@@ -187,50 +176,6 @@ def _observed_instant(bookkeeper, case):
                    .strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def difference_shape(candidate_path, nominal_path):
-    """
-    RETURN: str, WHERE TO LOOK in a difference the RUN already found,
-            read afterwards from the two whole files:
-            'not-equivalent-grew'      every recorded line still
-                                       stands, in order, and lines
-                                       stand between or around them
-            'not-equivalent-shrank'    every line that stands was
-                                       recorded, in order, and lines
-                                       the GOOD holds are gone
-            'not-equivalent-diverged'  neither: a recorded line changed
-                                       or moved
-            'not-equivalent-with-nominal'
-                                       the shape IS NOT CLAIMED: a file
-                                       is missing or cannot be read, so
-                                       the run's own word stands
-
-    THIS IS THE REPORT'S TO SAY, NOT THE RUN'S (E-31). Comparison
-    aborts at the first difference it can state and consumes no
-    further input, so at verdict time neither text has been read
-    whole. GREW and SHRANK are claims ABOUT THE WHOLE TEXT; only a
-    reader that has both files entire may make them, and only where
-    the stored candidate IS the whole output.
-
-    ALL FOUR ARE FAIL. The shape says nothing about WHICH SIDE is
-    wrong: a GOOD blessed under a framework that swallowed output
-    grows, and so does a filter that stopped filtering. One is stale
-    ground, the other is the defect a golden master exists to catch,
-    and they wear the same shape. Only the reader decides.
-    """
-    try:
-        with open(candidate_path, encoding="utf-8", errors="replace") as fh:
-            new = fh.read().splitlines()
-        with open(nominal_path, encoding="utf-8", errors="replace") as fh:
-            old = fh.read().splitlines()
-    except OSError:
-        return "not-equivalent-with-nominal"
-    if len(new) > len(old) and subsequence_f(old, new):
-        return "not-equivalent-grew"
-    if len(old) > len(new) and subsequence_f(new, old):
-        return "not-equivalent-shrank"
-    return "not-equivalent-diverged"
-
-
 def row_list_of(root, wish):
     """
     RETURN: list[(str, str, list[CRow])] -- per directory, in walk
@@ -253,14 +198,15 @@ def row_list_of(root, wish):
     for directory, result in found.result_db.items():
         whole      = os.path.join(root, directory)
         bookkeeper = found.bookkeeper_db[directory]
-        book       = bookkeeper.book()
         app_db     = {app.source_file: app for app in result.app_set}
         row_list   = []
         for case in by_dir.get(directory, ()):
             test   = case.source_file
-            key    = NO_CHOICE_KEY if case.choice is None else case.choice
-            entry  = book.get(test, {}).get("choices", {}).get(key, {})
-            run    = entry.get("operations", {}).get("Run", {})
+            #  THROUGH THE DOOR, SHAPE-BLIND: 'result()' and 'stain()'
+            #  answer the two questions a row asks; how the book files
+            #  them is the bookkeeper's, and may change under this face
+            #  without it noticing.
+            run    = bookkeeper.result(test, case.choice) or {}
             report = run.get("report", "")
             #  THE SHAPE, HERE AND NOT IN THE RUN (E-31): this face
             #  reads whole files, with no producer to starve and no
@@ -268,11 +214,7 @@ def row_list_of(root, wish):
             #  the run already found, and only of 'stdout' -- the one
             #  subject every test has.
             if report == "not-equivalent-with-nominal":
-                report = difference_shape(
-                    str(bookkeeper.candidate_path(test, case.choice,
-                                                  "stdout")),
-                    str(bookkeeper.nominal_path(test, case.choice,
-                                                "stdout")))
+                report = bookkeeper.shape_of(test, case.choice, "stdout")
             row_list.append(CRow(
                 directory   = directory,
                 source_file = case.source_file,
@@ -280,7 +222,7 @@ def row_list_of(root, wish):
                 verdict     = run.get("verdict"),
                 report      = report,
                 when        = _observed_instant(bookkeeper, case),
-                stain       = entry.get("stain"),
+                stain       = bookkeeper.stain(test, case.choice),
                 title       = getattr(app_db.get(case.source_file),
                                       "title", "") or ""))
         entry_list.append((directory, directory_title(whole), row_list))

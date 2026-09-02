@@ -81,9 +81,8 @@ standing() {            # <label> -- what the framework holds, sorted
       && find GOOD TMP/store -type f 2>/dev/null | sort \
          | sed 's/^/    /' )
     echo "    book: $(python3 -c "
-import json,sys
-try:    print(sorted(json.load(open('tree/suite/TEST/GOOD/result_db.json'))))
-except Exception: print('unreadable')")"
+from vut.engine.bookkeeper.api import Bookkeeper
+print(Bookkeeper('tree/suite/TEST').tests())")"
     echo "}"
 }
 
@@ -119,7 +118,7 @@ labels)
     #  in 'hwut-root.labels' but no longer offered would look merely
     #  unlabelled, which is the silent failure this forbids.
     choice_app
-    python3 -m vut.services.labels.create concern \
+    python3 -m vut.services.lib.labels.create concern \
         --glob "test-app.sh" --directory=tree > /dev/null
     echo "THE FILE, BEFORE {"; grep -v "^#" hwut-root.labels \
         | sed 's/^/    /'; echo "}"
@@ -193,8 +192,8 @@ stain)
     echo "removed:"
     $REMOVE --directory=tree/suite/TEST test-app.sh --yes > /dev/null 2>&1
     echo "    the stain went with the book: $(python3 -c "
-import json
-print(json.load(open('tree/suite/TEST/GOOD/result_db.json')) == {})")"
+from vut.engine.bookkeeper.api import Bookkeeper
+print(Bookkeeper('tree/suite/TEST').tests() == [])")"
     echo "runs again, with no history:"
     $RUN --directory=tree --plain > run.txt 2>&1
     echo "STATUS: $?"

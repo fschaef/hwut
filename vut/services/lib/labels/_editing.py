@@ -36,7 +36,7 @@ from   vut.engine.orchestrator.exploration.task_list \
                                              import SelectionError
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                              import RootConfMissing
-from   .._exit                               import E_ExitCode
+from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 from   ._faces                               import selected_key_tuple
 

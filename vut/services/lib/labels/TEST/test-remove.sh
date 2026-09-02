@@ -2,35 +2,35 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "hwut.labels.add: grow a STANDING label."
-#     choices    = ["doors", "grow", "standard"]
+#     title      = "hwut.labels.remove: take a label off what a wish selects."
+#     choices    = ["delete", "doors", "take"]
 #     eq-pattern = ["STATUS: [0-9]"]
 # }
 #
 # ---------------------------------------------------------------------------
 #
-# 'hwut.labels.add <label> <wish>' -- grow a STANDING label (disc-8).
+# 'hwut.labels.remove <label> <wish>' -- take a label off (disc-8).
 #
-# grow        '+' enrolled, '=' already carrying: the report states
-#             which half of the selection was news; nothing rewritten
-#             where nothing was news.
-# standard    'meta' always stands and needs no create; labels
-#             ACCUMULATE -- an application's entry and a choice's own
-#             entry unite.
-# doors       refused by name: a label that does not stand (naming
-#             'create'), the universe, a wish that states nothing.
+# take        '-' removed, '=' untouched: removing what is not there
+#             is a no-op, not a fault.
+# delete      a label left with no members is DELETED and the report
+#             says so; a labels file left with no entries is removed
+#             whole -- absent and empty mean the same.
+# doors       refused by name: a label that does not stand, a wish
+#             that states nothing (the remedy names the label).
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../../../.." && pwd)
+ROOT=$(cd "$HERE/../../../../.." && pwd)
 export PYTHONPATH="$ROOT"
-CREATE="python3 -m vut.services.labels.create"
-ADD="python3 -m vut.services.labels.add"
+CREATE="python3 -m vut.services.lib.labels.create"
+ADD="python3 -m vut.services.lib.labels.add"
+REMOVE="python3 -m vut.services.lib.labels.remove"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "hwut.labels.add: grow a STANDING label.;"
-        echo "CHOICES: grow, standard, doors;"
+        echo "hwut.labels.remove: take a label off what a wish selects.;"
+        echo "CHOICES: take, delete, doors;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -75,32 +75,35 @@ fixture() {
 # ---------------------------------------------------------------------------
 case "$1" in
 
-grow)
+take)
     fixture
     $CREATE concern --glob "tree/messaging/*/TEST/test-b.sh" > /dev/null
-    echo "--- half news, half already carrying"
-    face "$ADD" concern --glob "test-b.sh"
+    echo "--- one carried it, one never did"
+    face "$REMOVE" concern \
+         --glob "tree/messaging/net/TEST/test-b.sh" \
+         --glob "tree/storage/TEST/test-b.sh"
     the_file
     ;;
 
-standard)
+delete)
     fixture
-    echo "--- 'meta' needs no create"
-    face "$ADD" meta --glob "tree/storage/TEST/test-a.sh"
-    echo "--- labels accumulate: the choice's own entry adds to it"
-    $CREATE concern --glob "tree/storage/TEST/test-a.sh one" > /dev/null
+    $CREATE concern --glob "test-b.sh" > /dev/null
+    $ADD    meta    --glob "tree/storage/TEST/test-a.sh one" > /dev/null
+    echo "--- the whole set, asked for in words"
+    face "$REMOVE" concern --label concern
+    the_file
+    echo "--- the last label goes; the file goes with it"
+    face "$REMOVE" meta --label meta
     the_file
     ;;
 
 doors)
     fixture
     $CREATE concern --glob "test-b.sh" > /dev/null
-    echo "--- a label that does not stand, 'create' named"
-    face "$ADD" cocnern --glob "test-b.sh"
-    echo "--- the universe"
-    face "$ADD" all --glob "test-b.sh"
-    echo "--- a wish that states nothing"
-    face "$ADD" concern
+    echo "--- a label that does not stand"
+    face "$REMOVE" ghost --glob "test-b.sh"
+    echo "--- a wish that states nothing; the remedy names the label"
+    face "$REMOVE" concern
     ;;
 
 *)

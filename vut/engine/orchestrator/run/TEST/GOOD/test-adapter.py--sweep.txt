@@ -3,14 +3,12 @@ INSPECT: every member of 'TestParameters', stated alone
          build            source_kind, interpreter, build
          caps             caps
          pype             canonicalisers
-         numeric          compare
+         tolerance        compare
          eq_pattern       compare
          nothing          compare
          analogy          compare
          constraints      compare
          comment          compare
-         slash_eqv        compare
-         whitespace_eqv   compare
          same             naming
          interactive      interactive
          execute          execute

@@ -56,7 +56,7 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.exploration.configuration_tree import (TestParameters, Caps,
+from vut.engine.orchestrator.exploration.configuration_tree import (TestParameters, Caps, Tolerance,
                                                      KEY_TO_FIELD)
 from vut.engine.orchestrator.exploration.relation         import (RELATION, default_of,
                                                      effective, value_db_of,
@@ -125,10 +125,10 @@ def test_declared():
     #  THE TABLE IS MODULE STATE and this process may run the next
     #  choice too (the interactive runner keeps the interpreter): put
     #  the entry back, or 'instantiate' meets a class of this test's.
-    standing = RELATION["numeric"]
+    standing = RELATION["tolerance.numeric_ratio"]
     try:
         for cls in (Renamed, Silent):
-            RELATION["numeric"] = (cls, "numeric_tolerance_ratio")
+            RELATION["tolerance.numeric_ratio"] = (cls, "numeric_tolerance_ratio")
             try:
                 _assert_relation()
                 print("%s: NOT CAUGHT" % cls.__name__)
@@ -136,7 +136,7 @@ def test_declared():
                 print("%s -> %s" % (cls.__name__,
                                     str(error).splitlines()[-1].strip()))
     finally:
-        RELATION["numeric"] = standing
+        RELATION["tolerance.numeric_ratio"] = standing
 
 
 def test_refused():
@@ -153,9 +153,9 @@ def test_refused():
 def test_instantiate():
     """RETURN: None. Complete configurations out of one record."""
     banner("a case stating two things, and what it yields")
-    parameters = TestParameters(numeric=0.05, caps=Caps(network=False))
-    print("record: numeric %r  caps %r  comment %r"
-          % (parameters.numeric, parameters.caps, parameters.comment))
+    parameters = TestParameters(tolerance=Tolerance(numeric_ratio=0.05), caps=Caps(network=False))
+    print("record: tolerance %r  caps %r  comment %r"
+          % (parameters.tolerance, parameters.caps, parameters.comment))
     print()
     for cls, instance in configurations_of(parameters):
         print("%s:" % cls.__name__)
@@ -167,10 +167,10 @@ def test_merge():
     """RETURN: None. Stated wins, unstated defaults, OFF is a
     statement."""
     banner("stated, unstated, and stated OFF")
-    parameters = TestParameters(numeric=0.25, analogy=(),
+    parameters = TestParameters(tolerance=Tolerance(numeric_ratio=0.25), analogy=(),
                                 caps=Caps(timeout_sec=5))
     value_db   = value_db_of(parameters)
-    for name in ("numeric", "analogy", "comment",
+    for name in ("tolerance.numeric_ratio", "analogy", "comment",
                  "caps.timeout_sec", "caps.network"):
         print("%-18s record %-14r effective %r"
               % (name, value_db[name], effective(parameters, name)))

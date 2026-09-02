@@ -28,7 +28,7 @@ from .printer   import app_text
 
 
 def text_of_file(directory, name, no_default_f=False,
-                 provenance_f=False, gnu_f=False):
+                 provenance_f=False, gnu_f=False, verbose_f=False):
     """
     RETURN: [0] str, the file's specification as a tree; '' where the
                 file carries no specification.
@@ -46,7 +46,7 @@ def text_of_file(directory, name, no_default_f=False,
 
     from .explorer import _resolve
     return app_text(_resolve(spec, _inherited_of(directory)),
-                    no_default_f, provenance_f, gnu_f), fault_list
+                    no_default_f, provenance_f, gnu_f, verbose_f), fault_list
 
 
 def _inherited_of(directory):
@@ -64,7 +64,7 @@ def _inherited_of(directory):
 
 def text_of_directory(directory, interview_runner=None,
                       no_default_f=False, provenance_f=False,
-                      gnu_f=False):
+                      gnu_f=False, verbose_f=False):
     """
     RETURN: [0] str, every test application of the directory as a tree.
             [1] list[Fault], every fault met.
@@ -88,7 +88,7 @@ def text_of_directory(directory, interview_runner=None,
 
     for app in result.app_set:
         text_list.append(app_text(app, no_default_f,
-                                  provenance_f, gnu_f))
+                                  provenance_f, gnu_f, verbose_f))
         text_list.append("")
 
     for case in sorted(result.app_set.misdep_set,

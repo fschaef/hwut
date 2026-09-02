@@ -2,6 +2,6 @@
 --- root is the default; a choice overwrites ---
 directory keys: on_entry None ignore ()
 app 'test-tol.py'  title 'tolerances'  origin HEADER
-    choice one   caps={timeout_sec=30.0 network=False}  pype='strip.pype'  numeric=0.01
-    choice two   caps={timeout_sec=5.0 network=False}  pype='strip.pype'  numeric=0.05
+    choice one   caps={timeout_sec=30.0 network=False}  pype='strip.pype'  tolerance={numeric_ratio=0.01}
+    choice two   caps={timeout_sec=5.0 network=False}  pype='strip.pype'  tolerance={numeric_ratio=0.05}
 <hwut-end>

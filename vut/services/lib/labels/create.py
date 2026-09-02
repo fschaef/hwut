@@ -39,8 +39,8 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
                                                      USAGE_TOKEN_TUPLE,
                                                      WishError,
                                                      parse_wish)
-from   .._core                               import usage_line
-from   .._exit                               import E_ExitCode
+from   ..._core                               import usage_line
+from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 from   .                                    import _editing
 from   ._faces                               import split_directory

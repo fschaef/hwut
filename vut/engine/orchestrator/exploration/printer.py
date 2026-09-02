@@ -13,7 +13,7 @@ PURPOSE: Print a resolved configuration IN THE SPECIFICATION LANGUAGE. What
                     timeout_sec = 30.0            # app
                     network     = true            # default
                 }
-                numeric = 0.05
+                tolerance { numeric_ratio = 0.05 }
                 comment = "//"                    # hwut.conf:3
             }
         }
@@ -30,8 +30,8 @@ this choice's own word (see provenance.py).
                     BEGINNING where an editor's error parser looks for
                     it:
 
-                        test-a.py:5:23:     numeric = 0.05
-                        hwut.conf:3:21:     slash_eqv = false
+                        test-a.py:5:23:     tolerance { numeric_ratio = 0.05 }
+                        hwut.conf:3:21:     tolerance { slash = false }
                                             title = "T"
 
                     EVERY line carries a place. A line with none of
@@ -44,13 +44,22 @@ this choice's own word (see provenance.py).
 ______________________________________________________________________________
 """
 from .relation      import RELATION, default_of
+from .configuration_tree import E_Origin
 from .configuration_tree import KEY_TO_FIELD
 
 _INDENT      = "    "
 _VALUE_COLUMN = 46
 
 
-def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
+#  What the 'choices {' line says about where the list came from --
+#  the provenance vocabulary of 'provenance.py', applied to the whole.
+_CHOICES_ORIGIN_WORD = {E_Origin.HEADER:    "app",
+                        E_Origin.CONF:      "hwut.conf",
+                        E_Origin.INTERVIEW: "--hwut-info"}
+
+
+def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False,
+             verbose_f=False):
     """
     RETURN: str, the whole test application in the specification
             language: its title and every choice, with every parameter
@@ -59,7 +68,10 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
     'no_default_f' drops the values nobody stated -- the noise an author
     already knows -- leaving what somebody chose. 'provenance_f' names
     the place of every stated value; 'gnu_f' names it in the GNU error
-    format.
+    format. 'verbose_f' keeps the NULL parameters: a null says "nothing
+    is set here", which a reader assumes for every line he does not
+    see, so absent the flag the nulls are not written -- and a scope
+    ('build', 'caps') whose every member is null is not written either.
     """
     #  THE APPLICATION'S OWN PLACE: what every line of it inherits that
     #  has none nearer to hand.
@@ -77,7 +89,18 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
                    % text.ljust(_VALUE_COLUMN)
         pair_list.append((place, text))
 
-    pair_list.append((app_place, "%schoices {" % _INDENT))
+    #  THE CHOICE LIST HAS A PROVENANCE OF ITS OWN -- the specification's
+    #  source, which is the application's 'origin' -- and it reads in
+    #  the leaves' own words: 'app' (the header), 'hwut.conf', or
+    #  '--hwut-info'. A block whose members all say where they came
+    #  from while the block itself says nothing left the one question a
+    #  reader of choices asks first unanswered.
+    choices_text = "%schoices {" % _INDENT
+    choices_word = _CHOICES_ORIGIN_WORD.get(app.origin)
+    if choices_word is not None and not gnu_f:
+        choices_text = "%s# %s" % (choices_text.ljust(_VALUE_COLUMN),
+                                   choices_word)
+    pair_list.append((app_place, choices_text))
     for choice in sorted(app.choice_db, key=lambda c: (c is None, c or "")):
         pair_list.append((app_place, "%s%s {" % (_INDENT * 2,
                                                  "-" if choice is None
@@ -85,7 +108,7 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
         pair_list.extend(_parameter_line_list(
             app.choice_db[choice],
             (app.origin_db or {}).get(choice, {}), 3, no_default_f,
-            provenance_f, gnu_f, app_place))
+            provenance_f, gnu_f, app_place, verbose_f))
         pair_list.append((app_place, "%s}" % (_INDENT * 2)))
     pair_list.append((app_place, "%s}" % _INDENT))
     pair_list.append((app_place, "}"))
@@ -93,7 +116,7 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False):
 
 
 def case_text(case, origin_db=None, no_default_f=False,
-              provenance_f=False, gnu_f=False):
+              provenance_f=False, gnu_f=False, verbose_f=False):
     """
     RETURN: str, one test case in the specification language -- the same
             shape as 'app_text', for a single choice.
@@ -107,13 +130,13 @@ def case_text(case, origin_db=None, no_default_f=False,
                    + _parameter_line_list(case.parameters,
                                           origin_db or {}, 1,
                                           no_default_f, provenance_f,
-                                          gnu_f, case_place)
+                                          gnu_f, case_place, verbose_f)
                    + [(case_place, "}")], case_place))
 
 
 def _parameter_line_list(parameters, origin_db, depth, no_default_f,
                          provenance_f=False, gnu_f=False,
-                         enclosing_place=None):
+                         enclosing_place=None, verbose_f=False):
     """
     YIELD is a list here: [0] str | None  the line's PLACE, in the GNU
                                           error format, where it has one
@@ -123,7 +146,8 @@ def _parameter_line_list(parameters, origin_db, depth, no_default_f,
     scopes.
 
     A scope whose every leaf would be dropped is dropped whole: an empty
-    brace pair says nothing.
+    brace pair says nothing. A NULL leaf is dropped unless 'verbose_f':
+    "nothing set here" is what every unwritten line already says.
     """
     result = []
     for key in KEY_TO_FIELD:
@@ -133,9 +157,11 @@ def _parameter_line_list(parameters, origin_db, depth, no_default_f,
                      if name.startswith("%s." % key)]
 
         if not leaf_list:
-            origin = origin_db.get(key)
+            origin    = origin_db.get(key)
+            effective = _effective(key, value)
             if no_default_f and _default_f(origin): continue
-            result.append(_line(key, _effective(key, value), origin, depth,
+            if effective is None and not verbose_f: continue
+            result.append(_line(key, effective, origin, depth,
                                 provenance_f, gnu_f))
             continue
 
@@ -144,11 +170,10 @@ def _parameter_line_list(parameters, origin_db, depth, no_default_f,
             member = name.split(".", 1)[1]
             leaf   = getattr(value, member) if value is not None else None
             origin = origin_db.get(name)
+            shown  = leaf if leaf is not None else default_of(name)
             if no_default_f and _default_f(origin): continue
-            inner_list.append(_line(member,
-                                    leaf if leaf is not None
-                                         else default_of(name),
-                                    origin, depth + 1,
+            if shown is None and not verbose_f: continue
+            inner_list.append(_line(member, shown, origin, depth + 1,
                                     provenance_f, gnu_f))
         if not inner_list: continue
         #  A SCOPE'S BRACES take the place of the first thing STATED

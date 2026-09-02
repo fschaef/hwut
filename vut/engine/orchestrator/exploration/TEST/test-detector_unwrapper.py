@@ -103,7 +103,7 @@ def test_hash():
          '# @hwut {\n'
          '#     title = "T"\n'
          '#     # a comment INSIDE the specification\n'
-         '#     numeric = 0.01\n'
+         '#     tolerance { numeric_ratio = 0.01 }\n'
          '# }\n'
          'import sys\n')
 
@@ -132,7 +132,7 @@ def test_blank():
     show('# @hwut {\n'
          '#     title = "T"\n'
          '\n'
-         '#     numeric = 0.5\n'
+         '#     tolerance { numeric_ratio = 0.5 }\n'
          '# }\n')
 
 

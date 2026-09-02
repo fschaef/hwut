@@ -52,7 +52,7 @@ from vut.engine.orchestrator.exploration.configuration_tree import (
                                                   Build, Caps,
                                                   CTestApp, E_Origin,
                                                   Position,
-                                                  TestParameters)
+                                                  TestParameters, Tolerance)
 from vut.engine.orchestrator.run.adapter import (naming_of,
                                                  test_configuration_of,
                                                  _compare_of)
@@ -104,15 +104,16 @@ def _stated_value(member):
         case "build":       return Build(framework="make",
                                          executable="app")
         case "caps":        return Caps(timeout_sec=11)
+        case "tolerance":   return Tolerance(numeric_ratio=0.25)
         case "pype":        return "python3 filter.py"
-        case "numeric":     return 0.25
+        case "tolerance.numeric_ratio": return 0.25
         case "eq_pattern":  return ("alpha|beta",)
         case "nothing":     return ("~",)
         case "analogy":     return ("<<", ">>")
         case "constraints": return ("x < y",)
         case "comment":     return ("/*", "*/")
-        case "slash_eqv":   return False
-        case "whitespace_eqv": return False
+        case "tolerance.slash":      return False
+        case "tolerance.whitespace": return False
         case "same":        return True
         case "interactive": return True
         case "execute":     return "./run-me --now"
@@ -181,16 +182,15 @@ def test_compare():
     print("INSPECT: nothing stated -> %s"
           % _compare_of(TestParameters()))
 
-    options = _compare_of(TestParameters(numeric        = 0.01,
+    options = _compare_of(TestParameters(tolerance = Tolerance(numeric_ratio = 0.01, slash = False, whitespace = False),
                                          eq_pattern     = ("a|b",),
                                          nothing        = ("~",),
                                          analogy        = ("<<", ">>"),
                                          comment        = ("/*", "*/"),
                                          constraints    = ("x < y",),
-                                         slash_eqv      = False,
-                                         whitespace_eqv = False))
+                                         ))
     finder = options.pattern_finder
-    print("         numeric        -> %s" % finder.numeric_tolerance_ratio)
+    print("         tolerance.numeric_ratio -> %s" % finder.numeric_tolerance_ratio)
     print("         eq_pattern     -> %s" % finder.equivalent_pattern_list)
     print("         nothing        -> %s"
           % finder.visible_nothing_pattern_list)
@@ -201,8 +201,8 @@ def test_compare():
           % (finder.ignored_line_begin_marker,
              finder.ignored_line_end_marker, finder.ignored_line_f))
     print("         constraints    -> %s" % options.constraint_expression_list)
-    print("         slash_eqv      -> backslash_f %s" % finder.backslash_f)
-    print("         whitespace_eqv -> whitespace_f %s" % finder.whitespace_f)
+    print("         tolerance.slash      -> backslash_f %s" % finder.backslash_f)
+    print("         tolerance.whitespace -> whitespace_f %s" % finder.whitespace_f)
 
     off = _compare_of(TestParameters(analogy=(), comment=()))
     print("         stated OFF: analogy_f %s, ignored_line_f %s"

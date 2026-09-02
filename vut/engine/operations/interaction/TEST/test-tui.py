@@ -44,13 +44,40 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.engine.operations.interaction.feed import (E_DisplayTarget,      # noqa E402
-                                                    E_Intent,
-                                                    driver_for,
-                                                    feed_down,
-                                                    merge_session)
-from   vut.engine.operations.interaction.tui  import TuiDisplay             # noqa E402
+from   vut.services.lib.viewers               import (E_DisplayTarget,      # noqa E402
+                                                      driver_for)
+from   vut.engine.operations.interaction.port import (E_Intent,             # noqa E402
+                                                      deliver)
+from   vut.services.lib.viewers.tui           import TuiDisplay             # noqa E402
 from   vut.engine.compare.configuration     import Configuration          # noqa E402
+
+#  HARNESS SHIM for the port's inverted 'merge_session' (door count:
+#  one): these suites were written against the corridor's signature,
+#  first argument the COMPARE OPTIONS. The port now takes an ALIGNER;
+#  this wrapper builds one at compare's own door, exactly as a face
+#  does, so every scenario below reads unchanged.
+import io as _io
+from vut.engine.compare.api import feeder_ui as _compare_feeder
+from vut.engine.compare.api import Configuration as _CompareConfiguration
+from vut.engine.operations.interaction.port import \
+                                  merge_session as _port_merge_session
+
+def _feed_down(options, subject_reader, nominal_reader, adapter, name):
+    #  HARNESS SHIM: the corridor's 'feed_down' is gone; the alignment
+    #  is obtained at compare's door and handed to the port's
+    #  'deliver', as every consumer now does.
+    o = options if options is not None else _CompareConfiguration()
+    return deliver(_compare_feeder.feed(o, subject_reader,
+                                        nominal_reader), adapter, name)
+
+
+def merge_session(options, *argument_list, **argument_db):
+    o = options if options is not None else _CompareConfiguration()
+    def align(subject, working):
+        return _compare_feeder.feed(o, _io.StringIO(subject),
+                                    _io.StringIO(working))
+    return _port_merge_session(align, *argument_list, **argument_db)
+
 
 MOCK_EDITOR = os.path.join(os.path.dirname(__file__), "mock", "mock_editor.py")
 
@@ -303,7 +330,7 @@ def test_reading_view():
                         reading_f=True)
     #  THE READING is the stream fed against ITSELF -- straight through
     #  the display door; the services' reading face is just this call.
-    asyncio.run(feed_down(configuration, io.StringIO(text),
+    asyncio.run(_feed_down(configuration, io.StringIO(text),
                           io.StringIO(text), driver, "reading-probe"))
     rendering = out.getvalue()
 

@@ -6,19 +6,23 @@ $ hwut.show --no-default
 
     test-a.py {
         title = "A"
-        choices {
+        choices {                                 # app
             one {
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                }
             }
             two {
-                numeric = 0.01                    # app
+                tolerance {
+                    numeric_ratio = 0.01          # app
+                }
             }
         }
     }
 
     test-b.py {
         title = "B"
-        choices {
+        choices {                                 # app
             - {
             }
         }

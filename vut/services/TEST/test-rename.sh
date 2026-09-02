@@ -88,9 +88,9 @@ case "$1" in
 
 labels)
     fixture
-    python3 -m vut.services.labels.create concern \
+    python3 -m vut.services.lib.labels.create concern \
         --glob "test-app.sh" --directory=tree > /dev/null
-    python3 -m vut.services.labels.add meta \
+    python3 -m vut.services.lib.labels.add meta \
         --glob "test-app.sh one" --directory=tree > /dev/null
     the_file
     echo "--- the whole test renamed: every entry follows"

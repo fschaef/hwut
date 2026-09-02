@@ -369,7 +369,7 @@ short-form)
 labels)
     #  The silence, live in the run itself.
     fixture_tree
-    python3 -m vut.services.labels.add meta \
+    python3 -m vut.services.lib.labels.add meta \
         --glob "tree/*/TEST/test-two.sh" > /dev/null
     echo "--- bare: the standard label is silent (no test-two runs)"
     face --plain --strategy=linear --jobs=1 --no-store --directory=tree

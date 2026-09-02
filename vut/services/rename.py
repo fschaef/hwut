@@ -28,7 +28,7 @@ WHAT MOVES, each step announced:
     CANDIDATES   'TMP/store/<key>.<subject>' and every sidecar
                  beside it -- the freshness stamp, the raw stream, the
                  cadence, the coverage record
-    THE BOOK     'GOOD/result_db.json': the entry re-keyed
+    THE BOOK     'GOOD/result_db.csv': the entry re-keyed
     THE REGISTER the name beside the id; THE ID ITSELF IS UNCHANGED
 
 WHAT IS NOT TOUCHED: the test application file itself. Renaming the
@@ -55,7 +55,7 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.bookkeeper.api   import Bookkeeper, NO_CHOICE_KEY
+from   vut.engine.bookkeeper.api   import Bookkeeper
 from   vut.engine.bookkeeper.api import Store
 from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_renamed
@@ -95,12 +95,11 @@ def move_tuple(store, test, choice, fresh_test, fresh_choice,
     declaration has since been edited away, or it leaves an orphan
     under the old name.
     """
-    book_choice_db = store.bookkeeper.book().get(test, {}) \
-                          .get("choices", {})
+    #  THROUGH THE DOOR: 'choices()' already speaks None for the
+    #  choiceless case, so the key spelling is the book's own business.
+    recorded_choice_list = store.bookkeeper.choices(test)
     if whole_test_f:
-        pair_list = [(None if key == NO_CHOICE_KEY else key,
-                      None if key == NO_CHOICE_KEY else key)
-                     for key in book_choice_db]
+        pair_list = [(c, c) for c in recorded_choice_list]
         if not pair_list: pair_list = [(choice, choice)]
     else:
         pair_list = [(choice, fresh_choice)]
@@ -256,18 +255,19 @@ def main(argv=None, write=None, read_line=None, choice_form_f=False):
                                 word_list[i + 1], None))
 
     store = Store(Bookkeeper(directory))
-    book  = store.bookkeeper.book()
+    recorded_test_set = set(store.bookkeeper.tests())
 
     #  A COLLISION IS REFUSED BEFORE ANYTHING MOVES: half a rename
     #  onto a live name is worse than none.
     for test, choice, fresh_test, fresh_choice in target_list:
-        if not choice_form_f and fresh_test in book and fresh_test != test:
+        if not choice_form_f and fresh_test in recorded_test_set \
+           and fresh_test != test:
             write("REFUSED: '%s' already stands in the book -- a rename "
                   "onto it would swallow its history" % fresh_test)
             return E_ExitCode.REFUSED
         if choice_form_f:
-            choice_db = book.get(test, {}).get("choices", {})
-            if fresh_choice in choice_db and fresh_choice != choice:
+            if fresh_choice in store.bookkeeper.choices(test) \
+               and fresh_choice != choice:
                 write("REFUSED: '%s' already stands among the choices "
                       "of '%s'" % (fresh_choice, test))
                 return E_ExitCode.REFUSED

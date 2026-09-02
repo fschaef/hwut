@@ -23,7 +23,7 @@ WHAT IS FORGOTTEN, in this order, each step announced:
     CANDIDATES   'TMP/store/<key>' and every sidecar beside it: the
                  freshness stamp, the raw stream, the cadence, the
                  coverage record.
-    THE BOOK     'GOOD/result_db.json': the recorded runs, the stderr
+    THE BOOK     'GOOD/result_db.csv': the recorded runs, the stderr
                  note, and THE STAIN with them.
     THE REGISTER the id, retired -- never reissued, so no later test
                  inherits an old test's coverage history.
@@ -50,7 +50,7 @@ ______________________________________________________________________________
 import os
 import sys
 
-from   vut.engine.bookkeeper.api   import Bookkeeper, NO_CHOICE_KEY
+from   vut.engine.bookkeeper.api   import Bookkeeper
 from   vut.engine.bookkeeper.api import Store
 from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_forgotten
@@ -95,11 +95,10 @@ def victim_tuple(store, test, choice, whole_test_f):
     configuration says: removal must reach a subject whose declaration
     has since been edited away, or it leaves an orphan.
     """
-    book_choice_db = store.bookkeeper.book().get(test, {}) \
-                          .get("choices", {})
+    #  THROUGH THE DOOR: 'choices()' speaks None for the choiceless
+    #  case; the book's key spelling is its own.
     if whole_test_f:
-        choice_list = [None if key == NO_CHOICE_KEY else key
-                       for key in book_choice_db]
+        choice_list = store.bookkeeper.choices(test)
         if not choice_list: choice_list = [choice]
     else:
         choice_list = [choice]

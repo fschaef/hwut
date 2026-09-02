@@ -42,9 +42,9 @@ from .consume.difference_display import (DifferenceDisplay,
                                               DifferenceDisplayConfig)
 from .consume.equivalence_check  import (EquivalenceCheck,
                                               EquivalenceCheckConfig)
-from   .interaction.feed              import (driver_for,
-                                              E_DisplayTarget)
+from   .interaction.port              import DisplayAdapter  # noqa: F401 -- the port, not a viewer
 from .run.core                import provision_of
+from .                        import subject_provision
 from .consume.loaded              import loaded
 from   .nominal                       import RecordNominal
 from   pathlib import Path
@@ -66,21 +66,18 @@ class E_Goal(Enum):
 
 @dataclass(frozen=True)
 class Display:
-    """WHERE a comparison is shown. A target names a driver; an adapter
-    handed in directly WINS, because a caller that built its own driver
-    has said exactly what it wants."""
-    target:      Optional[E_DisplayTarget] = None
+    """WHERE a comparison is shown: an adapter the CALLER constructed.
+    The engine never turns a target name into a driver -- the viewers
+    are the services' ('services/lib/viewers'), and a face that wants
+    one builds it there and hands it in. None: nothing is shown."""
     adapter:     Optional[object]          = None
-    argument_db: Mapping[str, object]      = field(default_factory=dict)
 
     def driver(self):
         """
         RETURN: DisplayAdapter, the one to carry this session.
                 None,           nothing is to be shown.
         """
-        if self.adapter is not None: return self.adapter
-        if self.target  is None:     return None
-        return driver_for(self.target, **dict(self.argument_db))
+        return self.adapter
 
 
 @dataclass(frozen=True)
@@ -97,6 +94,9 @@ class Request:
     choice:      Optional[str]     = None
     subjects:    Sequence[str]     = ("stdout",)
     replay:      bool              = False
+    force_run:   bool              = False  # subject provision (A.1)/
+                                            # (B.2) taken as younger:
+                                            # execute regardless
     display:     Display           = field(default_factory=Display)
     observer:    Optional[object]  = None
     stderr:      Optional[object]  = None   # E_StderrNote to WRITE at
@@ -129,14 +129,36 @@ class Outcome:
 
 
 def _groundwork(configuration, store, test_name, choice_name, replay,
-                observer):
+                observer, force_run=False):
     """
     RETURN: [0] a provider of Subjects: a Provision wired for
-                execution, or -- where the request says 'replay' --
-                the store read back through 'consume/loaded.py'.
-                Both answer one shape; nothing below ever asks which.
+                execution, or the store read back through
+                'consume/loaded.py'. Both answer one shape; nothing
+                below ever asks which.
+
+    WHICH OF THE TWO IS SUBJECT PROVISION'S TO SAY (operations
+    disc-2): 'subject_provision.decide()' walks the ruled steps
+    (0)/(A)/(B), and THIS is the one place its word becomes a wiring.
+    'replay' remains the caller's explicit 'read the store, execute
+    nothing' -- the production=False road; 'force_run' its opposite.
+    A decision of RECORDED loads the recording: what stands is what
+    this text produced, and comparing it again costs a read, not a
+    run.
     """
     if replay:
+        return _Loaded(store, test_name, choice_name)
+    candidate = store.bookkeeper.candidate_path(test_name, choice_name,
+                                                "stdout")
+    #  THE SOURCE IS NAMED RELATIVE TO ITS OWN DIRECTORY, and the
+    #  process's cwd is the caller's business, not a coordinate
+    #  system: resolve against the book's directory, which IS the
+    #  test's, before any clock is read -- a mis-anchored stat reads
+    #  as 'no clock' and would silently call every recording current.
+    decision = subject_provision.decide(
+                   configuration, candidate,
+                   source_directory=store.bookkeeper.directory,
+                   force_run=force_run)
+    if decision.what is subject_provision.E_Decision.RECORDED:
         return _Loaded(store, test_name, choice_name)
     return provision_of(configuration, choice_name, observer=observer)
 
@@ -272,7 +294,8 @@ async def run_test_held(configuration, request=None, store=None,
 
     groundwork = provision if provision is not None \
                  else _groundwork(configuration, store, test_name,
-                                  choice_name, request.replay, observer)
+                                  choice_name, request.replay, observer,
+                                  force_run=request.force_run)
     if goal is E_Goal.NOMINAL:
         result = await Accept(
             AcceptConfig(name       = test_name,
@@ -330,8 +353,12 @@ async def run_test_held(configuration, request=None, store=None,
         coverage = await harvest(configuration, store.bookkeeper,
                                  test_name, choice_name, run_id,
                                  result.report)
-    entry = store.bookkeeper.record(result, configuration, goal,
-                                    choice_name, coverage=coverage)
+    #  A DISPLAY DOES NOT RECORD (B-7): a viewing is not a run of
+    #  record, and must not write a verdict into the book.
+    entry = None
+    if goal is not E_Goal.DISPLAY:
+        entry = store.bookkeeper.record(result, configuration, goal,
+                                        choice_name, coverage=coverage)
     return Outcome(result=result, recorded_db=recorded_db, entry=entry,
                    coverage=coverage)
 

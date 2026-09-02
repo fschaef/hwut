@@ -48,7 +48,7 @@ from   vut.engine.operations.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
                                                    E_SourceKind)
-from   vut.engine.operations.interaction.feed import (              # noqa E402
+from   vut.engine.operations.interaction.port import (              # noqa E402
                                                     E_Intent,
                                                     MergeToolDisplay,
                                                     PROTOCOL_SIGNATURE,
@@ -58,11 +58,30 @@ from   vut.engine.operations.interaction.feed import (              # noqa E402
                                                     envelope,
                                                     merge_session,
                                                     resolution_of)
-from   vut.engine.operations.interaction.feed import RemoteDisplay  # noqa E402
+from   vut.engine.operations.interaction.port import RemoteDisplay  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
 from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper)
 from   vut.engine.bookkeeper.api           import Store          # noqa E402
+
+#  HARNESS SHIM for the port's inverted 'merge_session' (door count:
+#  one): these suites were written against the corridor's signature,
+#  first argument the COMPARE OPTIONS. The port now takes an ALIGNER;
+#  this wrapper builds one at compare's own door, exactly as a face
+#  does, so every scenario below reads unchanged.
+import io as _io
+from vut.engine.compare.api import feeder_ui as _compare_feeder
+from vut.engine.compare.api import Configuration as _CompareConfiguration
+from vut.engine.operations.interaction.port import \
+                                  merge_session as _port_merge_session
+
+def merge_session(options, *argument_list, **argument_db):
+    o = options if options is not None else _CompareConfiguration()
+    def align(subject, working):
+        return _compare_feeder.feed(o, _io.StringIO(subject),
+                                    _io.StringIO(working))
+    return _port_merge_session(align, *argument_list, **argument_db)
+
 
 
 def _check(pair_list):
@@ -495,7 +514,7 @@ def test_unknown_intent_and_target():
     """An UP message with an intent this hub does not know, and a display
     target with no driver: both are REFUSED. Guessing would act on a
     message nobody sent."""
-    from vut.engine.operations.interaction.feed import driver_for, E_DisplayTarget
+    from vut.services.lib.viewers import driver_for, E_DisplayTarget
     unknown_intent = unknown_target = None
     try:
         resolution_of({"signature": PROTOCOL_SIGNATURE,

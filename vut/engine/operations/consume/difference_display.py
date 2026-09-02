@@ -24,8 +24,9 @@ from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
 from   ..result                 import E_TestRunResult
-from   ...compare.api           import Configuration, is_equivalent
-from   ..interaction.feed       import (NullDisplay, feed_down,
+from   ...compare.api           import (Configuration, is_equivalent,
+                                        feeder_ui as compare_feeder)
+from   ..interaction.port       import (NullDisplay, deliver,
                                         ProtocolMismatch)
 from   ..nominal                import NominalNotAvailable
 from   ..observer               import notify
@@ -128,10 +129,14 @@ class DifferenceDisplay:
             return True, E_TestRunResult.OK
 
         try:
-            await feed_down(options,
-                            provided[name].open(),
-                            self.config.subjects[name].open(),
-                            adapter, name)
+            #  THE ALIGNMENT COMES FROM COMPARE'S ONE DOOR, obtained
+            #  HERE by the consumer and handed to the port's delivery
+            #  loop -- no module fetches it on our behalf.
+            await deliver(compare_feeder.feed(
+                              options,
+                              provided[name].open(),
+                              self.config.subjects[name].open()),
+                          adapter, name)
         except ProtocolMismatch:
             return ok, E_TestRunResult.DISPLAY_TARGET_UNREACHABLE
         except NominalNotAvailable:

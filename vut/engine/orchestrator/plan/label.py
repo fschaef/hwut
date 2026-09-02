@@ -19,7 +19,7 @@ grows is a language nobody documents.
 
 THIS MODULE PARSES AND EVALUATES; it does not read the labels file.
 The file is 'hwut-root.labels' and its reader and writer are the label
-faces' ('services/labels/_file.py'). What the engine needs of the
+faces' ('services/lib/labels/_file.py'). What the engine needs of the
 file's CONTENT arrives as a 'CLabelView', built there, handed down
 here -- data flows into the engine, the engine imports nothing back.
 ______________________________________________________________________________
@@ -117,7 +117,7 @@ def evaluate_f(tree, label_set):
 class CLabelView:
     """What the engine sees of 'hwut-root.labels': WHERE the file's
     ground is, WHAT it assigns, and WHICH labels stand. Built by the
-    file's reader ('services/labels/_file.py'), handed down, read
+    file's reader ('services/lib/labels/_file.py'), handed down, read
     only.
 
     'entry_db' maps '(<file>, <choice>)' -- the file path RELATIVE to

@@ -23,8 +23,9 @@ from .fault         import Fault, E_FaultKind
 from vut.test_writing_support.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
                                                       ObjectNode)
+from vut.engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
-                            LanguageSetup, Build, Caps, Target, E_Origin,
+                            LanguageSetup, Build, Caps, Tolerance, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
 
 _STRUCTURAL_KEY_SET = ("title", "language", "choices")
@@ -42,6 +43,31 @@ _CONF_KEY_SET       = ("on_entry", "on_exit", "ignore", "collision",
                        "apps")
 
 
+#  THE BOOK'S NAME LAW (bookkeeper B-7, B-8), ASKED FOR AND NOT COPIED.
+#  The book is a separated table that never quotes, so a name carrying
+#  its separator would break it. WHERE it is refused is here -- at the
+#  moment a specification is read, once, so the codec may assume what
+#  this door enforced. WHAT is refused is 'BOOK_FORBIDDEN_IN_NAME', the
+#  book's own word through its door: a separator that changes there
+#  changes here, with nothing to sweep and no client for the bookkeeper
+#  to remember. (An EMPTY name, not ':', says "as above" -- B-8.)
+
+
+def _book_name_fault(name, what, file, position, fault_list):
+    """
+    RETURN: bool, True where 'name' may stand in the book; False where
+            it carries ';' -- a fault is recorded, naming it.
+    """
+    for mark in BOOK_FORBIDDEN_IN_NAME:
+        if mark in str(name):
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, position,
+                "%s '%s' carries '%s', which the book's table uses; "
+                "choose another name" % (what, name, mark)))
+            return False
+    return True
+
+
 def validate_header(hwut_node, file, origin=E_Origin.HEADER,
                     source_file=None):
     """
@@ -55,6 +81,8 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
     """
     if source_file is None: source_file = file
     fault_list  = []
+    #  The application's own name stands in the book's key column.
+    _book_name_fault(source_file, "test", file, None, fault_list)
     parameters  = {}
     position_db = {}
     title       = None
@@ -190,6 +218,9 @@ def _choices(entry, file, fault_list, choice_position_db=None):
                     E_FaultKind.TYPE, file, item.position,
                     "the list form of 'choices' carries names only"))
                 continue
+            if not _book_name_fault(item.value, "choice", file,
+                                    item.position, fault_list):
+                continue
             result[item.value] = TestParameters()
         return result
 
@@ -200,6 +231,9 @@ def _choices(entry, file, fault_list, choice_position_db=None):
                 fault_list.append(Fault(
                     E_FaultKind.TYPE, file, choice.key_position,
                     "choice '%s' must carry an object" % choice.key))
+                continue
+            if not _book_name_fault(choice.key, "choice", file,
+                                    choice.key_position, fault_list):
                 continue
             parameters  = {}
             position_db = {}
@@ -235,7 +269,8 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     key = entry.key
     if position_db is not None:
         position_db[key] = entry.key_position
-        if isinstance(entry.node, ObjectNode) and key in ("caps", "build"):
+        if isinstance(entry.node, ObjectNode) \
+           and key in ("caps", "build", "tolerance"):
             for inner in entry.node.entry_list:
                 position_db["%s.%s" % (key, inner.key)] = \
                                                     inner.key_position
@@ -255,15 +290,9 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
                     % ", ".join("'$%s'" % name for name in unknown)))
             else:
                 parameter_db["execute"] = value
-    elif key == "numeric":
-        value = _number(entry, file, fault_list)
-        if value is not None:
-            if not 0.0 <= value <= 1.0:
-                fault_list.append(Fault(
-                    E_FaultKind.TYPE, file, entry.node.position,
-                    "'numeric' is a relative ratio in [0..1]"))
-            else:
-                parameter_db["numeric"] = float(value)
+    elif key == "tolerance":
+        value = _tolerance(entry, file, fault_list)
+        if value is not None: parameter_db["tolerance"] = value
     elif key in ("eq-pattern", "nothing"):
         value = _string_list(entry, file, fault_list)
         if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
@@ -277,8 +306,7 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
         else:
             value = _string_list(entry, file, fault_list)
             if value is not None: parameter_db["constraints"] = value
-    elif key in ("slash_eqv", "whitespace_eqv", "same",
-                 "interactive"):
+    elif key in ("same", "interactive"):
         value = _bool(entry, file, fault_list)
         if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
     elif key == "build":
@@ -371,6 +399,44 @@ def _build(entry, file, fault_list):
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in 'build'" % inner.key))
     return Build(**field_db)
+
+
+def _tolerance(entry, file, fault_list):
+    """
+    RETURN: Tolerance, how far the subject may differ and still pass,
+            per lexical kind (R-77): 'numeric_ratio' in [0..1],
+            'whitespace' and 'slash' as booleans.
+            None, the value is no scope (fault recorded).
+
+    Compare owns every default; this record holds only what was stated.
+    """
+    node = entry.node
+    if not isinstance(node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, _position_of(node, entry),
+            "'tolerance' is a scope: numeric_ratio, whitespace, slash"))
+        return None
+
+    field_db = {}
+    for inner in node.entry_list:
+        if inner.key == "numeric_ratio":
+            value = _number(inner, file, fault_list)
+            if value is None: continue
+            if not 0.0 <= value <= 1.0:
+                fault_list.append(Fault(
+                    E_FaultKind.TYPE, file, inner.node.position,
+                    "'numeric_ratio' is a relative ratio in [0..1]"))
+                continue
+            field_db["numeric_ratio"] = float(value)
+        elif inner.key in ("whitespace", "slash"):
+            value = _bool(inner, file, fault_list)
+            if value is not None: field_db[inner.key] = value
+        else:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "unknown tolerance '%s'; known: numeric_ratio, "
+                "whitespace, slash" % inner.key))
+    return Tolerance(**field_db)
 
 
 def _caps(entry, file, fault_list):

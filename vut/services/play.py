@@ -77,7 +77,7 @@ import asyncio
 import os
 import sys
 
-from   vut.engine.operations.interaction.tui       import TuiDisplay
+from   vut.services.lib.viewers.tui                import TuiDisplay
 from   vut.engine.orchestrator.exploration          import selection
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                                    import RootConfMissing

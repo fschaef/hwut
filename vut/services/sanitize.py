@@ -32,9 +32,24 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 is scratch.
 
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
-                candidate under 'TMP/store/', a book entry or a
-                register id whose (test, choice) NO LONGER EXISTS in
-                the directory's configuration.
+                candidate under 'TMP/store/', an entry in the book
+                ('GOOD/result_db.csv') or a register id whose
+                (test, choice) NO LONGER EXISTS in the directory's
+                configuration.
+
+                WHERE THINGS LIVE, since every flag above names one:
+                    GOOD/result_db.csv    THE BOOK: what the software
+                                          IS -- verdicts, reports, the
+                                          configuration that held.
+                                          Versioned with the tests.
+                    GOOD/<test>.txt       THE NOMINALS: the oracles.
+                    TMP/store/            THE STORE: the recorded
+                                          candidates, and the LOCAL
+                                          DATABASE ('observations.bin')
+                                          of what this machine saw --
+                                          when, where, how long.
+                Only the last is transient: a wiped 'TMP/' loses no
+                verdict, because verdicts are the book's.
 
                 THIS IS THE ONE THAT CAN LOSE WORK. A nominal is
                 blessed; if exploration is wrong -- a header that
@@ -92,7 +107,7 @@ import sys
 from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
-                                                             NO_CHOICE_KEY)
+                                                             GOOD_OWNED_FILE_TUPLE)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
@@ -294,7 +309,8 @@ def orphan_finding_list(root, directory, app_set):
         for name in sorted(os.listdir(base)):
             path = os.path.join(base, name)
             if not os.path.isfile(path):                  continue
-            if name in ("result_db.json", "test_ids.dat"): continue
+            if name in GOOD_OWNED_FILE_TUPLE: continue   # the book's,
+                                                        # asked, not listed
             key = record_key_of(name)
             if key is None:                               continue
             test, choice = key
@@ -320,9 +336,10 @@ def orphan_finding_list(root, directory, app_set):
 
     #  -- the book -------------------------------------------------------
     bookkeeper = Bookkeeper(directory)
-    for test, entry in sorted(bookkeeper.book().items()):
-        for key in sorted(entry.get("choices", {})):
-            choice = None if key == NO_CHOICE_KEY else key
+    #  THROUGH THE DOOR: what is recorded is 'tests()' and 'choices()';
+    #  the book's own shape stays behind it.
+    for test in bookkeeper.tests():
+        for choice in bookkeeper.choices(test):
             if (test, choice) in offered: continue
             yield CFinding("orphans",
                            "%s: book %s%s"
@@ -342,7 +359,7 @@ def record_key_of(name):
     THE GATE IS THAT THE TEST PART CARRIES A SOURCE EXTENSION. A record
     is keyed by the source file WHOLE (configuration.key_name), so
     'test-x.py' and 'regression-1.py' both qualify and 'notes.md' and
-    'result_db.json' do not. A PREFIX WOULD BE THE WRONG GATE: this
+    'result_db.csv' do not. A PREFIX WOULD BE THE WRONG GATE: this
     tree holds applications named 'regression-1.py' and
     'verify_signature.sh', and a face that judged only 'test-*' would
     pass over their records in silence.

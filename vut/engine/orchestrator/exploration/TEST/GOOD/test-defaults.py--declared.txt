@@ -20,14 +20,14 @@ eq-pattern         ConfigCompare       equivalent_pattern_list                  
 execute            ConfigRunner        execute                                        None
 interactive        ConfigRunner        interactive_f                                  False
 nothing            ConfigCompare       visible_nothing_pattern_list                   ()
-numeric            ConfigCompare       numeric_tolerance_ratio                        0.0
 output             ConfigRunner        output                                         ('<stdout>',)
 pype               ConfigCanonicalise  pype                                           None
 same               ConfigStore         same_nominal_f                                 False
-slash_eqv          ConfigCompare       backslash_f                                    True
-whitespace_eqv     ConfigCompare       whitespace_f                                   True
+tolerance.numeric_ratio ConfigCompare       numeric_tolerance_ratio                        0.0
+tolerance.slash    ConfigCompare       backslash_f                                    True
+tolerance.whitespace ConfigCompare       whitespace_f                                   True
 
 --- a member renamed behind our back ---
-Renamed -> 'numeric': Renamed has no member 'numeric_tolerance_ratio'
-Silent -> 'numeric': Silent.numeric_tolerance_ratio declares no default
+Renamed -> 'tolerance.numeric_ratio': Renamed has no member 'numeric_tolerance_ratio'
+Silent -> 'tolerance.numeric_ratio': Silent.numeric_tolerance_ratio declares no default
 <hwut-end>

@@ -1,0 +1,52 @@
+
+--- VERBOSE ---
+TREE  1 directory(ies)
+DIR  suite/TEST                                                               
+FRAME suite/TEST:on_entry ............................................... [OK]
+DONE  test-a.sh ......................................................... [OK]
+      test-b.sh ....................................................... [FAIL]
+FRAME suite/TEST:on_exit ............................ the frame failed  [FAIL]
+ROLL  suite/TEST ........................................... 1 of 2 ok  [FAIL]
+TREE  done, 2 failure(s)
+
+==============================================================================
+DIRECTORIES                                             1 ok, 1 fail, 00:00:03
+------------------------------------------------------------------------------
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      1/2
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+suite/TEST
+    frame on_exit   the frame failed
+    test-b.sh       stalled, no output
+==============================================================================
+stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+[fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
+
+--- QUIET ---
+
+==============================================================================
+DIRECTORIES                                             1 ok, 1 fail, 00:00:03
+------------------------------------------------------------------------------
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      1/2
+
+==============================================================================
+FAULTS
+------------------------------------------------------------------------------
+FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+suite/TEST
+    frame on_exit   the frame failed
+    test-b.sh       stalled, no output
+==============================================================================
+stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+[fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
+
+--- SILENT ---
+stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+[fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
+<hwut-end>

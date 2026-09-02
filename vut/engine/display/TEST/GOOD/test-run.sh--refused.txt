@@ -5,12 +5,13 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }
 == an option nobody knows ==
 STATUS: 2
@@ -19,12 +20,13 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }
 == tiers beside one another ==
 STATUS: 2
@@ -33,12 +35,13 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }
 == colour beside no-colour ==
 STATUS: 2
@@ -47,12 +50,13 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }
 == jobs without a number ==
 STATUS: 2
@@ -61,10 +65,11 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }

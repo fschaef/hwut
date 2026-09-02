@@ -158,3 +158,165 @@ GRAVEYARD 'reserve' / 'commit' / 'discard' as a transaction over the
           register: a second lifetime for an entry, a file that must be
           understood in two states, and a recovery question for every
           crash between the two calls.
+
+
+B-5  THE SHAPE OF A RUN IS THE BOOK'S TO READ                (2026-08-31)
+______________________________________________________________________________
+PROBLEM   'display' wanted GREW/SHRANK/DIVERGED (E-29) live, in its
+          HINTS block. E-31 forbids the RUN taking a shape -- its
+          compare aborts on the first mismatch and has read neither
+          text whole; only a post-hoc reader of both WHOLE files may
+          say GREW from SHRANK. 'hwut.report' owned that reader
+          ('services/report.py.difference_shape'). Could 'display'
+          reach the same answer without 'engine/*' importing
+          'services/*' -- the one edge 'adm/LAYERING.txt' forbids?
+DECISION  'difference_shape' MOVES onto 'Bookkeeper' as
+          'shape_of(test, choice, subject="stdout")'. It took only a
+          candidate path and a nominal path, and 'Bookkeeper' is
+          already the one place that knows both (E-34: "the record of
+          the process that produced a result is part of that
+          result"). It is a THIRD thing beside the book and the
+          observations (E-36) -- a READING of what those two already
+          point at, computed on demand, never stored.
+          'services/report.py' calls 'bookkeeper.shape_of(...)' in
+          place of its own copy of the same two-file read. ONE LAW,
+          ONE PLACE: the shape of a difference was becoming two
+          functions in two layers that would drift the day one of
+          them learned a new shape.
+NOT DONE  No new 'engine/display -> engine/bookkeeper' edge opens.
+          'display's HINTS block excludes a plain 'differs from GOOD'
+          outright (E- pending in 'engine/display/RATIONALE.txt') and
+          so never needs a shape; nothing currently asks 'display' to
+          reach the bookkeeper. If that changes, the edge is a
+          one-line addition to 'adm/LAYERING.txt' and the door
+          already carries the answer.
+COST      One method moved (not rewritten) from 'services/report.py'
+          to 'engine/bookkeeper/bookkeeper.py'; one call site in
+          'services/report.py' updated. 'test-report.py' touches the
+          boundary and wants a verdict-count check on real
+          infrastructure, not fabricated here.
+
+
+
+B-6  THE BOOK IS A TABLE, AND HOLDS NO CONFIGURATION            (2026-09-01)
+______________________________________________________________________________
+PROBLEM   The book carried a copy of the configuration beside every
+          verdict: per test the source, its kind, the caps WITH THE
+          FRAMEWORK'S DEFAULTS FOLDED IN; per choice the canonicalisers
+          and the compare-setup delta. E-36 ruled it in ("a reader
+          asking what this test was configured to do must be told
+          it") and, two lines later, ruled the same kind of copy OUT
+          for acceptance history ("a second, poorer copy in the book
+          is a copy that can disagree") -- one entry, two standards.
+          Measured: NOTHING READS THE COPY BACK. It is write-only
+          data in an oracle file, it is a second source beside the
+          header and 'hwut.conf' that git already versions with the
+          book, and it CHURNS: a moved default rewrites every book in
+          the tree with no verdict having changed.
+DECISION  THE CONFIGURATION LEAVES THE BOOK, all of it -- test facts,
+          choice facts, canonicalisers, compare delta. What held is
+          recoverable from the same commit's header and 'hwut.conf',
+          exactly as E-36 already argued for history. What remains is
+          a DECISION about a (test, choice), and nothing else:
+
+              test  choice  operation  verdict  report  coverage
+                                       last_accept  stderr  stain
+
+          THAT IS A TABLE, AND THE BOOK IS WRITTEN AS ONE:
+          'GOOD/result_db.csv', one row per (test, choice, operation)
+          and one row per choice with 'operation' empty carrying the
+          choice's own facts ('stderr' note, 'stain'). A git diff of
+          GOOD/ then reads as "this verdict changed", one line, and
+          nothing else. JSON earned its keep only for the nesting
+          that has just left.
+          THE SHAPE STAYS BEHIND THE DOOR. Every face reads through
+          the accessors ('result', 'choices', 'tests', 'stain',
+          'stderr_note', ...; E-37, and the leak closed the day
+          before); the model those answer from is the bookkeeper's
+          private business and did not change. Only 'record()', the
+          serialisation and the file name changed.
+          A BOOK WRITTEN BEFORE THIS ENTRY IS READ, ONCE. Where
+          'result_db.json' stands and no '.csv', it is loaded, its
+          configuration dropped, and the first write lays down the
+          '.csv' and removes the '.json' -- ONE base, never two.
+          'hwut.sanitize' knows both names for that one transition.
+COST      'record()', '_write_book()', 'book()' and the file name;
+          '_test_facts', '_choice_facts', '_stated_caps' and the two
+          unused configuration accessors removed; one suite that
+          printed the raw dict ('operations/TEST/test-session.py')
+          re-recorded.
+GRAVEYARD The framework VERSION in the book, as the one fact git of
+          the test tree does not hold: rejected for now -- it would
+          be the same number on every row of every book in the tree,
+          and belongs, if anywhere, in one place at the root.
+          Choice facts REPEATED on every operation row: one schema,
+          but a stain change would then touch every row of the
+          choice, and the diff would lie about what changed.
+
+
+B-7  ONE ROW PER CHOICE; ';' AND ':'; NO NESTED SYNTAX            (2026-09-01)
+______________________________________________________________________________
+AMENDS    B-6, the same day, before any tree carried its table.
+PROBLEM   B-6 carried the MODEL'S shape onto disk -- an 'operation'
+          column -- without asking whether the shape was right. It is
+          not: 'Accept' never records (the face promotes through
+          'Store.accept()' and the book never hears of it), and
+          'Display' recorded a VIEWING as a verdict of record. The
+          column held one value everywhere, and forced a second row
+          per choice to carry facts that have no operation. B-6 also
+          hid a mini-language in one cell ('3@<when>|ok;fail;ok') and
+          leaned on CSV quoting for a name carrying the separator --
+          a quoted name in a diff is the noise a table exists to
+          remove.
+DECISION  ONE ROW PER (TEST, CHOICE). The columns are the decision
+          about that choice, flat:
+              test;choice;verdict;report;last_accept;coverage;
+              stderr;stain_repeat_n;stain_when
+          THE SEPARATOR IS ';', AND IT IS NEVER QUOTED: a test or
+          choice name containing ';' or ':' is REFUSED at the
+          specification's door ('validator'), once, and the codec
+          assumes what the door enforced. Refuse rather than quote.
+          ':' IN THE 'test' COLUMN MEANS "THE SAME AS THE ROW ABOVE"
+          -- the mark the display already speaks for a repeated
+          application. Key columns only: a ':' under 'verdict' would
+          make "did this verdict change" a two-row question. COST OF
+          THE MARK, accepted: removing a test's first row turns the
+          next row's ':' into a name, so that deletion shows as two
+          lines -- the display makes the same trade.
+          THE STAIN IS TWO PLAIN COLUMNS. 'repeat_n' and 'when' are
+          the decision (disqualified until re-proved that often). The
+          'verdict_list' that convicted it is what THIS machine SAW
+          (E-36) and leaves the book; nothing read it.
+          A DISPLAY DOES NOT RECORD. 'session.py' enters the book for
+          VERDICT and NOMINAL goals only; a viewing writes nothing.
+          'last_accept' lands on the choice's row when the acceptance
+          face is made to enter the book -- a separate, named gap.
+INDEX     The rulings that shape the book, wherever they stand:
+              E-20, E-22  (services)  the run's base; observations
+              E-34, E-36  (services)  the local database; time-and-
+                                      place as the membership law
+              E-37        (services)  the door
+              B-1..B-7    (here)
+          See 'adm/DISCUSSIONS/disc-1-document-consistency.txt'.
+COST      The codec and the model ('record', 'result', 'stain'), the
+          validator's name law, 'session.py's goal gate, 'report.py's
+          one call; the bookkeeper's suites re-recorded ONCE.
+GRAVEYARD Quoting instead of refusing: correct, and unreadable.
+          The verdict list in the observation database: right home,
+          and no reader -- deferred until one asks.
+
+
+B-8  THE EMPTY NAME SAYS "AS ABOVE"                              (2026-09-01)
+______________________________________________________________________________
+AMENDS    B-7, the same day.
+PROBLEM   B-7 borrowed the display's ':' for "the same as the row
+          above" in the 'test' column, and so had to forbid ':' in
+          every name. But the mark carried no information the CELL
+          did not already carry: an empty test name means nothing in
+          itself, so an empty cell can mean "as above" with nothing
+          added and nothing forbidden.
+DECISION  AN EMPTY 'test' CELL IS THE ROW ABOVE'S. No mark; ':' is
+          an ordinary character in a name again; only ';' -- the
+          separator itself -- stays refused at the validator. A table
+          of B-7's one day with ':' cells is read the same way.
+COST      Three lines in the codec, one tuple in the validator.

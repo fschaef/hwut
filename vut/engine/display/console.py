@@ -39,7 +39,8 @@ USAGE_TOKEN_TUPLE = ("[-v|--verbose|--plain|--quiet|--silent]",
                      "[--colour|--no-colour]", "[--show-timing]",
                      "[--show-jobs]", "[--show-details]",
                      "[--no-failure-summary]",
-                     "[--start-delay=<seconds>]")
+                     "[--start-delay=<seconds>]",
+                     "[--log <file>|--no-log]")
 
 HELP = """RENDERING -- one tier, the flags mutually exclusive
     -v, --verbose       every event as it arrives, the swallowed ones
@@ -63,8 +64,19 @@ COLUMNS AND BLOCKS -- what the flow line carries, and what closes it
                         speak -- a FAILING provision node always does,
                         for a failed precondition is a test result
     --no-failure-summary
-                        drop the closing FAILURES block; absent, every
-                        failure is named there
+                        drop the closing HINTS block; absent, every
+                        hint is named there
+
+THE LOG -- where the run's marginalia go
+    --log <file>        the file FAULT and NOTE lines are written to;
+                        default 'hwut.log'. These are the run's
+                        marginalia -- a configuration line that did
+                        not parse, a wish that selected nothing --
+                        true and worth keeping, and not what a reader
+                        watching a run is watching for
+    --no-log            write no log file. The marginalia then go to
+                        STDERR: a fault is never swallowed, and this
+                        flag asks for no file, not for silence
     --start-delay=<seconds>
                         how long a test's 'START' line is held back;
                         a test finishing inside the window never
@@ -100,6 +112,10 @@ PLAIN_FLAG = "--plain"
 COLOUR_FLAG    = "--colour"
 NO_COLOUR_FLAG = "--no-colour"
 
+#  WHERE THE MARGINALIA GO by default. A name, not a path: the log is
+#  written where the face was called, which is where its reader is.
+DEFAULT_LOG_NAME = "hwut.log"
+
 DEFAULT_WIDTH = 78
 MINIMUM_WIDTH = 40
 MAXIMUM_WIDTH = 120
@@ -111,6 +127,8 @@ class CRenderingWish:
     colour was enforced or refused, which columns the flow line
     carries, and whether the closing FAILURES block stands."""
     tier:      E_Tier = E_Tier.PLAIN
+    log_path:  str    = DEFAULT_LOG_NAME
+    no_log_f:  bool   = False
     force_f:   bool   = False
     veto_f:    bool   = False
     timing_f:  bool   = False
@@ -128,8 +146,9 @@ def parse_rendering(argument_list):
             [1] list, the words this module did not touch, in order.
 
     Raises 'RenderingError' where the words cannot want anything: two
-    tiers at once, '--plain' beside another tier, or '--colour' beside
-    '--no-colour'.
+    tiers at once, '--plain' beside another tier, '--colour' beside
+    '--no-colour', '--no-log' beside '--log', or a '--log' naming no
+    file.
     """
     tier_flag_list = []
     plain_f        = False
@@ -140,8 +159,33 @@ def parse_rendering(argument_list):
     detail_f       = False
     summary_f      = True
     start_delay    = START_DELAY_SECONDS
+    log_path       = DEFAULT_LOG_NAME
+    no_log_f       = False
+    log_named_f    = False
     rest_list      = []
-    for argument in argument_list:
+    argument_i     = -1
+    while argument_i + 1 < len(argument_list):
+        argument_i += 1
+        argument    = argument_list[argument_i]
+        #  '--log <file>' TAKES THE WORD AFTER IT, and '--log=<file>'
+        #  says the same thing in one word; both are spelt in the
+        #  wild and neither is worth refusing.
+        if argument == "--log":
+            if argument_i + 1 >= len(argument_list):
+                raise RenderingError("'--log' wants a file name after it")
+            argument_i += 1
+            log_path    = argument_list[argument_i]
+            log_named_f = True
+            continue
+        if argument.startswith("--log="):
+            log_path    = argument[len("--log="):]
+            log_named_f = True
+            if not log_path:
+                raise RenderingError("'--log=' wants a file name after it")
+            continue
+        if argument == "--no-log":
+            no_log_f = True
+            continue
         if   argument in TIER_FLAG_DB:      tier_flag_list.append(argument)
         elif argument == PLAIN_FLAG:        plain_f = True
         elif argument == COLOUR_FLAG:       force_f = True
@@ -174,6 +218,9 @@ def parse_rendering(argument_list):
     if force_f and veto_f:
         raise RenderingError("'--colour' beside '--no-colour' can want "
                              "nothing")
+    if no_log_f and log_named_f:
+        raise RenderingError("'--no-log' beside '--log' can want "
+                             "nothing")
 
     tier = TIER_FLAG_DB[tier_flag_list[0]] if tier_flag_list \
            else E_Tier.PLAIN
@@ -181,7 +228,8 @@ def parse_rendering(argument_list):
                           timing_f=timing_f, jobs_f=jobs_f,
                           detail_f=detail_f,
                           failure_summary_f=summary_f,
-                          start_delay=start_delay), \
+                          start_delay=start_delay,
+                          log_path=log_path, no_log_f=no_log_f), \
            rest_list
 
 
@@ -203,13 +251,20 @@ def console_width(environ, tty_f):
     return DEFAULT_WIDTH
 
 
-def console_view(rendering_wish, write, write_error, environ, tty_f):
+def console_view(rendering_wish, write, write_error, environ, tty_f,
+                 write_log=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
 
     The colour decision is taken HERE, once, and handed to the view as
     a constructed pen; no line re-sniffs (D-2).
+
+    'write_log' is the face's, exactly as 'write' and 'write_error'
+    are: THE FACE OWNS ITS SINKS. This module says a log stands and
+    what goes in it; opening a file, and closing it, is the caller's
+    -- a renderer that opened files would own a resource it cannot
+    promise to release.
     """
     ink = CInk(colour_decision(environ, tty_f,
                                force_f=rendering_wish.force_f,
@@ -222,4 +277,5 @@ def console_view(rendering_wish, write, write_error, environ, tty_f):
                       detail_f=rendering_wish.detail_f,
                       failure_summary_f
                           =rendering_wish.failure_summary_f,
-                      start_delay=rendering_wish.start_delay)
+                      start_delay=rendering_wish.start_delay,
+                      write_log=write_log)

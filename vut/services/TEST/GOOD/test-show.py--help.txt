@@ -15,6 +15,11 @@ $ hwut.show --help
         --show-ids          print the register instead of the tree
         --no-default        drop every value nobody stated, leaving what
                             somebody chose
+        -v, --verbose       write the NULL parameters too. Absent, a null
+                            is not written -- "nothing set here" is what
+                            every unwritten line already says -- and a
+                            scope ('build', 'caps') whose every member is
+                            null is not written either
         --provenance        name the place of every stated value -- the
                             file and the line it stands on
         --gnu               name it in the GNU error format,

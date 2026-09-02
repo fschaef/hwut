@@ -51,6 +51,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.operations.result import E_TestRunResult      # noqa E402
+from   vut.engine.bookkeeper.api    import GOOD_OWNED_FILE_TUPLE  # noqa E402
 import vut.engine.operations.report    as     report_module        # noqa E402
 
 COMPONENT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -80,8 +81,12 @@ def _good_file_list():
     for test_directory in _test_directory_list():
         good = os.path.join(test_directory, "GOOD")
         if not os.path.isdir(good): continue
+        #  THE BOOKKEEPER'S OWN FILES ARE NOT ORACLES: the book and the
+        #  register stand in GOOD/ too, and are skipped by asking the
+        #  door what it owns -- never by a list kept here.
         pair_list += ((name, os.path.join(good, name))
-                      for name in os.listdir(good))
+                      for name in os.listdir(good)
+                      if name not in GOOD_OWNED_FILE_TUPLE)
     return sorted(pair_list)
 
 #  Shapes an environment chooses. A test may READ any of them; what

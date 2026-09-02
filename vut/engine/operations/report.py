@@ -55,6 +55,12 @@ _PRECEDENCE = (
     # -- the run itself
     E_TestRunResult.TEST_APP_LAUNCH_FAILED,
     E_TestRunResult.TEST_APP_CONTAINED,
+    E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
+    E_TestRunResult.TEST_APP_CPU_TIME_EXCEEDED,
+    E_TestRunResult.TEST_APP_MEMORY_EXCEEDED,
+    E_TestRunResult.TEST_APP_FILE_SIZE_EXCEEDED,
+    E_TestRunResult.TEST_APP_PIDS_EXCEEDED,
+    E_TestRunResult.TEST_APP_DISK_EXCEEDED,
     E_TestRunResult.TEST_APP_STALLED,
     E_TestRunResult.TEST_APP_NO_OUTPUT,
     E_TestRunResult.RECORDING_MISSING,
@@ -109,6 +115,8 @@ class Provision:
     """WHAT WAS PROVIDED. One per attempt, always."""
     report:  E_TestRunResult      = E_TestRunResult.OK
     records: Sequence[object]     = field(default_factory=tuple)
+    detail:  Optional[str]        = None   # the report's numbers (O-19);
+                                           # spoken, never booked
     #  'records' is empty when provision was by stored data: nothing ran,
     #  so nothing was contained, and there is no attribution to make.
 

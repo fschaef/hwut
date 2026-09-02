@@ -54,7 +54,7 @@ FILE_DB = {
     "hwut.conf": 'hwut {\n'
                  '    dependency { "test-b.py" = ["test-a.py one"] }\n'
                  '}\n',
-    "test-a.py": '# @hwut { title = "A"  numeric = 0.01\n'
+    "test-a.py": '# @hwut { title = "A"  tolerance { numeric_ratio = 0.01 }\n'
                  '#        choices = ["one", "two"] }\n',
     "test-b.py": '# @hwut { title = "B" }\n',
 }
@@ -118,7 +118,7 @@ def test_directory():
 def test_faults():
     """RETURN: None. A broken header yields faults, no tree."""
     directory = build_directory(
-        {"test-broken.py": '# @hwut { title = "Broken"  numeric = yes }\n'})
+        {"test-broken.py": '# @hwut { title = "Broken"  tolerance { numeric_ratio = yes } }\n'})
     try:
         banner("the broken file alone")
         call(directory, ["test-broken.py"])

@@ -1,8 +1,8 @@
 #! /bin/sh
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
-# The launcher of 'hwut.labels.query': 'services/labels/query.py' run
+# The launcher of 'hwut.labels.query': 'services/lib/labels/query.py' run
 # as a module, from wherever 'hwut.labels.query' is called, by PATH or
 # by path.
 HERE=$(dirname "$(readlink -f "$0")")
 PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
-    exec python3 -m vut.services.labels.query "$@"
+    exec python3 -m vut.services.lib.labels.query "$@"

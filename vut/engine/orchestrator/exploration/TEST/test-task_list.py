@@ -67,10 +67,10 @@ def build_app_set():
                      '    dependency { "test-c.py y" = ["test-z.py"] }\n'
                      '}\n',
         "test-a.py": '# @hwut {\n#     title   = "A"\n'
-                     '#     numeric = 0.01\n'
+                     '#     tolerance { numeric_ratio = 0.01 }\n'
                      '#     caps    { timeout_sec = 30  network = false }\n'
                      '#     choices { one { }\n'
-                     '#               two { numeric = 0.05\n'
+                     '#               two { tolerance { numeric_ratio = 0.05 }\n'
                      '#                     caps { timeout_sec = 5 } } }\n'
                      '# }\n',
         "test-b.sh": '# @hwut { title = "B" }\n',
@@ -89,8 +89,10 @@ def show(sequence):
     print("%d cases:" % len(sequence))
     for case in sequence:
         choice = "-" if case.choice is None else case.choice
-        print("    %-10s %-5s numeric=%-6r caps=%-40s %s"
-              % (case.source_file, choice, case.parameters.numeric,
+        print("    %-10s %-5s numeric_ratio=%-6r caps=%-40s %s"
+              % (case.source_file, choice,
+                 case.parameters.tolerance.numeric_ratio
+                 if case.parameters.tolerance is not None else None,
                  stated(case.parameters.caps), case.token()))
 
 

@@ -1,8 +1,8 @@
 INSPECT: VERDICT -> True, ok
          DISPLAY -> True, adapter saw 0 items
-         operations recorded = ['Accept', 'Display', 'Run']
+         the choice's row     = ['last_accept', 'report', 'verdict']
   OK  : both goals read the same test and agree
   OK  : a MATCHING subject is not carried out to the display
-  OK  : each goal booked its own entry
+  OK  : VERDICT and NOMINAL enter the one row; a DISPLAY does not record (B-7) -- a viewing is not a run of record
 SUCCESS: a caller asks for an outcome, not for a class.
 <hwut-end>

@@ -781,7 +781,7 @@ DECISION  ONE FILE, 'hwut-root.labels', beside 'hwut-root.conf' at
           every face; the GRAMMAR ('AND', 'OR', 'NOT', 'all'; ',' is
           'OR') lives with the engine ('plan/label.py') because the
           selection evaluates it; the file's reader and writer are
-          the faces' own ('services/labels/_file.py'). ABSENT A LABEL
+          the faces' own ('services/lib/labels/_file.py'). ABSENT A LABEL
           QUESTION, the standard label 'meta' is SILENT -- and the
           silence is THE WISH'S, not one face's, or 'hwut.wishlist'
           and 'hwut.run --wishlist' would select different sets and
@@ -824,7 +824,7 @@ PROBLEM   E-19 delivered the file and its faces, but '--label'
           file does not follow loses a member SILENTLY -- unlabelled
           looks exactly like never labelled.
 
-DECISION  'view_at(directory)' ('services/labels/__init__.py') is THE
+DECISION  'view_at(directory)' ('services/lib/labels/__init__.py') is THE
           ONE DOOR a face obtains the view through; 'hwut.plan',
           'hwut.wishlist', 'hwut.report' and 'hwut.accept' build it
           at their doors, and 'hwut.run' threads it through
@@ -1445,3 +1445,56 @@ COST      71 files rewritten, mechanically, no behaviour change. The
           because the component owns TWO databases; if that is too
           wide, the answer is to split the component, and the door now
           makes the width visible.
+
+
+E-39  A RECORDING OLDER THAN ITS TEST IS NOT EVIDENCE          (2026-08-31)
+______________________________________________________________________________
+PROBLEM   An author edits a test, runs it BY HAND to look at the
+          output, and accepts. 'hwut.accept' reads the STORE, not the
+          terminal, and the store still holds what the PREVIOUS text
+          printed. Every refusal it can make -- the token (R-70),
+          stderr, the standing pole -- is then a verdict on the wrong
+          evidence, and the most confusing kind: right about what it
+          read, wrong about what is there. The observed case: a test
+          gained its '<hwut-end>' and accept went on reporting the
+          token missing, from a recording made before the edit.
+DECISION  THE UPDATE CHECK STANDS BEFORE EVERY OTHER CHECK. Where a
+          candidate's mtime is older than the test file that produced
+          it, acceptance REFUSES, names the test, and says to re-run.
+          Nothing is read from that candidate first: a check that
+          reads stale evidence in order to complain about it has
+          already misled.
+          THE LAW IS THE BOOK'S ('Bookkeeper.outdated_f'), beside
+          'candidate_path' -- the component that knows where a
+          recording lives is the one that can say whether it is out of
+          date. Compare B-5.
+          MTIME, NOT CONTENT: a test whose text changed and whose
+          output did not must still be re-run, because the store's
+          business is what THIS text produced and only running it can
+          say.
+          ONE FILE, NOT A CLOSURE: the application's own mtime, not
+          what it reads -- its configuration, its pype script, the
+          library under test. A check that tried to be complete would
+          be a build system; being NEARLY complete is worse than being
+          plainly one file, because a reader would trust it.
+NOT DONE  ACCEPT DOES NOT RE-RUN, it refuses and says to. Running the
+          selected cases means driving the orchestrator, and
+          'services -> services' is not a permitted edge
+          ('adm/LAYERING.txt'): accept cannot call 'run'. Duplicating
+          run's drive loop inside accept would be one law in two
+          places. The way in is to move 'drive these cases' down into
+          'engine' as a brick both faces stand on -- a fork, not a
+          detail, and not closed here. Nor is the BUILD half done: a
+          test that must be built before it runs is the same question
+          one step earlier.
+COST      One method on the Bookkeeper, one check in 'accept.main'
+          before 'stderr_decision', one paragraph in the README.
+          SUPERSEDED the same day by 'engine/operations/DISCUSSIONS/
+          disc-2-subject-provision.txt': the update check is part of
+          ONE subject-provision procedure in 'operations', not a
+          check this face performs on its own. The check in
+          'accept.main' stands only until provision carries it.
+          DONE 2026-08-31, later the same day: the check now lives in
+          'engine/operations/subject_provision.py: decide()', steps
+          (0)/(A)/(B) explicit, and this face calls it with
+          'production=False'. 'accept.main' carries no check of its own.

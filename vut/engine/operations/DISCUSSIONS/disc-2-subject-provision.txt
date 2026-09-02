@@ -1,0 +1,110 @@
+disc-2  ONE SUBJECT PROVISION, WITH THE UPDATE CHECK INSIDE IT
+______________________________________________________________________________
+
+RULED (Frank-Rene, 2026-08-31)
+          Wherever a subject stream is required, obtaining it is ONE
+          procedure, and the update check is PART OF THAT PROCEDURE --
+          never a check a face performs on its own before reading the
+          store. The procedure, as ruled:
+
+            (0)   no subject stream recorded            -> provide it
+            (A)   the application is INTERPRETED (no build)
+            (A.1) the application's source, OR any code it declares
+                  it covers, is younger than the recorded subject
+                                                        -> re-run
+            (A.2) provide the subject stream
+            (B)   the application is BUILT from source
+            (B.1) build it -- and the build must be clever enough to
+                  do nothing when every dependency is up to date
+            (B.2) the built application is younger than the recorded
+                  subject                               -> re-run
+
+          IMPLEMENTED ONCE, referred to from everywhere that wants a
+          subject. Parameters ('force_build' and the like) may exist;
+          a second implementation may not.
+
+WHERE IT ALREADY IS
+          'engine/operations/run/core.py: Provision.provide()' IS this
+          procedure's body: it returns 'Subjects', runs the stages in
+          "their one lawful order", and REMEMBERS its product so no
+          caller provisions twice. 'build_action.py' is already "a
+          step inside provision, for a COMPILED test" -- (B.1) has a
+          home. What 'provide()' lacks is the DECISION: it executes
+          unconditionally. Steps (0), (A.1) and (B.2) are the decision,
+          and they belong in 'provide()' or immediately before it, in
+          'operations', and nowhere else.
+
+WHAT THIS SUPERSEDES -- named, not overridden in silence
+          'provision_of' (core.py) states: "The LOADED counterpart is
+          no provision: a consumer reads a stored subject through
+          'consume/loaded.py' ... and the two never meet in one
+          wiring." 'consume/loaded.py' repeats it: "Loading is NO
+          PROVISION". THIS RULING REVERSES THAT. Provision now decides
+          between the recorded stream and a fresh execution, and the
+          loaded reader becomes ONE OUTCOME of provision -- the (0)-is-
+          false, (A.1)/(B.2)-are-false branch -- rather than a separate
+          wiring a face picks by hand. Both docstrings are to be
+          rewritten when the code is; the RATIONALE entry that settled
+          the separation (to be located) gets a superseding note.
+
+          E-39 (services/RATIONALE.txt, this session) is SUPERSEDED
+          before the ink is dry: it put the update check in
+          'accept.main' and the mtime law on the Bookkeeper. The
+          check moves into provision; 'accept' calls 'provide()' and
+          gets a fresh-or-recorded stream like every other consumer.
+          E-39's two judgement calls are re-ruled here: MTIME-not-
+          content stands; ONE-FILE-not-a-closure DOES NOT -- (A.1)
+          says the closure is {the application} U {what it declares
+          it covers}, and that is walked. 'Bookkeeper.outdated_f'
+          stays as the one-file primitive the provision calls per
+          member of that closure, or goes; either way the DECISION is
+          not the book's. The check in 'accept.main' is REMOVED the
+          moment provision carries it -- not before, so nothing is
+          unprotected in between.
+
+SUB-FORKS -- still wanting a word before code
+          f-1  THE CLOSURE OF (A.1). "code mentioned in what it
+               covers" = the 'coverage_target' declaration (R-73,
+               'configuration_tree.py'). Is that the whole closure,
+               or also the pype script, 'hwut.conf', the language
+               setup? RECOMMENDATION: the application and its
+               coverage targets, exactly as ruled, and nothing more --
+               a wider closure is a build system again. The
+               configuration files are a different question: a
+               changed 'hwut.conf' changes how EVERY test in the
+               directory runs, which is 'hwut.run's business to
+               notice, not one provision's.
+          f-2  (B.1) "clever enough". 'build_action.py' runs ONE
+               supervised call and checks no mtime of its own; the
+               cleverness is the build TOOL's ('make' has it; a bare
+               compiler line does not). Does provision trust the tool,
+               or check the built application's mtime against the
+               sources itself before calling it? RECOMMENDATION: trust
+               the tool and always call it -- 'make' returning at once
+               costs nothing, and a provision that second-guessed the
+               build tool would be a second build system beside the
+               first. 'force_build' then means: ignore what the tool
+               would decide.
+          f-3  WHO ANSWERS "younger". mtime is the ruled criterion. A
+               checkout that resets every mtime (git does not; some
+               archivers do) makes everything look re-run-worthy at
+               once -- harmless, one extra run. A clock skew between
+               a network filesystem and the host can make a recording
+               look OLDER than a source edited before it -- an
+               unrunnable test until touched. Accept that, or add a
+               content digest beside the mtime? RECOMMENDATION: mtime
+               alone, as ruled; the digest is a second mechanism for
+               a case nobody has met.
+          f-4  THE FACE THAT ONLY READS. 'hwut.report' reads stored
+               subjects and never executes -- it is a report of what
+               happened. Does report call provision (and so may
+               trigger a run), or is there a 'never execute'
+               parameter to provision that yields the recorded stream
+               or its absence and nothing else? RECOMMENDATION: the
+               parameter. A report that runs tests is not a report.
+
+COST      'Provision.provide()' gains the decision; 'consume/loaded.py'
+          becomes provision's own recorded-stream branch; two
+          docstrings rewritten; 'accept' rewired to call 'provide()'
+          and its own check removed; E-39 annotated; one RATIONALE
+          entry here when the sub-forks are ruled.

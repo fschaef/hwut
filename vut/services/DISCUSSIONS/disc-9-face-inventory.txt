@@ -16,7 +16,7 @@ THE ACTIONS
 ==============================================================================
     SELECT     given a wish, which runs        'exploration/selection'
     WISH       read the command line's wish    'plan/wish'
-    LABELS     open 'hwut-root.labels'         'services/labels'
+    LABELS     open 'hwut-root.labels'         'services/lib/labels'
     BOUNDARY   climb to 'hwut-root.conf'       'tree_explorer'
     BOOK       the record: name it, hold it    'bookkeeper'
     PLAN       nodes, links, exclusions        'plan/determine'

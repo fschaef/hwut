@@ -26,18 +26,17 @@ import config                                                   # noqa: F401
 from vut.test_writing_support.python.hwut_hocon import parse, SourceLine
 
 
-HEADER = '''@hwut {
+HEADER = "@" + '''hwut {
     title       = "Parser corner cases"
     build       { framework = "make"  executable = "special.exe" }
     caps        { timeout_sec = 30  network = false  memory_mb = 512 }
     pype        = "strip.pype"
-    numeric     = 0.01
+    tolerance { numeric_ratio = 0.01  slash = yes }
     eq-pattern  = ["bonjour|hello", "v[0-9.]+-build[0-9]+"]
     nothing     = ["_"]
     analogy     = ["((", "))"]
     constraints = ["x < y + 2", "abs(z) < epsilon"]
     comment     = "##"
-    slash_eqv   = yes
     mask        = 0xDEAD_BEEF
     pattern     = 0b0111_11_01
     choices {
@@ -48,7 +47,7 @@ HEADER = '''@hwut {
 }
 '''
 
-SHORT = '''# @hwut {
+SHORT = "# @" + '''hwut {
 #     title   = "A modest header"
 #     choices = ["one", "two"]
 # }

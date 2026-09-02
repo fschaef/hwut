@@ -26,11 +26,11 @@
 #             option the face does not take.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../../../.." && pwd)
+ROOT=$(cd "$HERE/../../../../.." && pwd)
 export PYTHONPATH="$ROOT"
-CREATE="python3 -m vut.services.labels.create"
-ADD="python3 -m vut.services.labels.add"
-QUERY="python3 -m vut.services.labels.query"
+CREATE="python3 -m vut.services.lib.labels.create"
+ADD="python3 -m vut.services.lib.labels.add"
+QUERY="python3 -m vut.services.lib.labels.query"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

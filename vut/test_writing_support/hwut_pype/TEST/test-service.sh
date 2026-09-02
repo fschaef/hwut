@@ -55,6 +55,7 @@ EOF
     echo "REACTION"
     printf 'zebra\napple\nmango\n' | $PYPE "$WORK/sort.pype" | sed 's/^/    /'
     echo "SUCCESS: the filter is one stage of a pipe, like any other."
+    echo "<hwut-end>"
     ;;
 
 exit_code)
@@ -71,6 +72,7 @@ EOF
     echo "          a broken script      -> exit code: $?"
     echo "REACTION  stderr says: $(head -1 "$WORK/err" | sed "s|$WORK|<work>|")"
     echo "SUCCESS: zero on success, non-zero with a spoken reason."
+    echo "<hwut-end>"
     ;;
 
 absent_script)
@@ -82,6 +84,7 @@ absent_script)
     echo "          stdout   : $(wc -c < "$WORK/out") bytes"
     echo "          stderr   : $(head -1 "$WORK/err" | sed "s|$WORK|<work>|")"
     echo "SUCCESS: the fault is spoken on stderr; stdout stays clean."
+    echo "<hwut-end>"
     ;;
 
 *)

@@ -192,7 +192,7 @@ labels)
     #  One set, both directions: what a bare wishlist prints is what
     #  a bare run takes -- the silence lives in the wish they share.
     fixture
-    python3 -m vut.services.labels.add meta \
+    python3 -m vut.services.lib.labels.add meta \
         --glob "tree/messaging/*/TEST/test-a.sh one" > /dev/null
     echo "--- bare: the silenced runs are not printed"
     face --directory=tree

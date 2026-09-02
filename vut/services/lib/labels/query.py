@@ -51,8 +51,8 @@ from   vut.engine.orchestrator.plan.label    import (STANDARD_LABEL,
                                                      evaluate_f,
                                                      label_name_tuple,
                                                      parse_expression)
-from   .._core                               import usage_line
-from   .._exit                               import E_ExitCode
+from   ..._core                               import usage_line
+from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 
 USAGE = usage_line("hwut.labels.query",

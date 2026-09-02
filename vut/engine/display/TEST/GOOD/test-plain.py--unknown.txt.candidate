@@ -1,0 +1,19 @@
+
+--- unknown kind ignored; unknown verdict reads not-ok; a misfit is a fault ---
+DIR  suite/TEST                                                               
+DONE  test-q.sh ....................................................... [FAIL]
+
+==============================================================================
+DIRECTORIES                                             0 ok, 1 fail, 00:00:02
+------------------------------------------------------------------------------
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/1
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+suite/TEST
+    test-q.sh   quarantined
+==============================================================================
+stderr> FAULT suite/TEST: event of kind 'run-ended' does not fit the vocabulary
+[fold: good_f=False fail_n=1 verdict_n=1 fault_n=0]
+<hwut-end>

@@ -158,13 +158,12 @@ def test_header():
            '        write_directory_list = ["tmp", "out"]\n'
            '    }\n'
            '    pype        = \"strip.pype\"\n'
-           '    numeric     = 0.01\n'
+           '    tolerance { numeric_ratio = 0.01  slash = yes }\n'
            '    eq-pattern  = ["bonjour|hello"]\n'
            '    nothing     = "_"\n'
            '    analogy     = ["((", "))"]\n'
            '    constraints = ["x < y + 2", "abs(sin(z) - x) < eps"]\n'
            '    comment     = ["##", "##"]\n'
-           '    slash_eqv   = yes\n'
            '    same        = yes\n'
            '    interactive = yes\n'
            '    choices {\n'
@@ -188,7 +187,7 @@ def test_choiceless():
     header("choice-less: root parameters are the one call's",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    numeric = 0.5\n'
+           '    tolerance { numeric_ratio = 0.5 }\n'
            '}\n')
 
 
@@ -205,12 +204,12 @@ def test_vocabulary():
     header("a key bound to nothing, where something is required",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    numeric =\n'
+           '    tolerance { numeric_ratio =  }\n'
            '    comment = null\n'
            '}\n')
     header("'title' absent",
            '@hwut {\n'
-           '    numeric = 0.5\n'
+           '    tolerance { numeric_ratio = 0.5 }\n'
            '}\n')
 
 
@@ -219,9 +218,8 @@ def test_types():
     header("wrong shapes, each named",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    numeric = 1.5\n'
+           '    tolerance { numeric_ratio = 1.5  slash = "maybe" }\n'
            '    build   = yes\n'
-           '    slash_eqv = "maybe"\n'
            '    caps    { timeout_sec = \"fast\"  memory_mb = -1\n'
            '              bandwidth   = 10 }\n'
            '    analogy = ["((", "))", "extra"]\n'
@@ -271,7 +269,7 @@ def test_root_only():
            '    title       = "T"\n'
            '    same        = yes\n'
            '    interactive = yes\n'
-           '    choices { one { } two { numeric = 0.05 } }\n'
+           '    choices { one { } two { tolerance { numeric_ratio = 0.05 } } }\n'
            '}\n')
     header("inside a choice: refused, by name",
            '@hwut {\n'
@@ -316,7 +314,7 @@ def test_exclusivity():
     """RETURN: None. A test parameter at the conf root."""
     conf("test parameters do not stand at the conf root",
          '@hwut {\n'
-         '    numeric  = 0.01\n'
+         '    tolerance { numeric_ratio = 0.01 }\n'
          '    title    = "T"\n'
          '    on_entry = "setup.sh"\n'
          '}\n')

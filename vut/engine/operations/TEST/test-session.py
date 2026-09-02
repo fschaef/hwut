@@ -57,7 +57,7 @@ from   vut.engine.operations.session         import (              # noqa E402
 from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper,
                                                    compare_setup_delta)
-from   vut.engine.operations.interaction.feed import (            # noqa E402
+from   vut.services.lib.viewers               import (            # noqa E402
                                                     E_DisplayTarget,
                                                     driver_for)
 from   vut.engine.bookkeeper.api           import (Store,        # noqa E402
@@ -190,19 +190,20 @@ def test_entry_is_booked():
     book    = store.bookkeeper.book()
 
     print("INSPECT: operations booked = %s"
-          % {t: {c: sorted(v["choices"][c]["operations"])
+          % {t: {c: sorted(v["choices"][c])
                  for c in v["choices"]}
              for t, v in book.items()})
     print("         Run entry  = %s"
           % {k: v for k, v in outcome.entry.items()
              if k not in ("when", "host", "records")})
     ok = _check([
-        (sorted(book["demo.py"]["choices"]["<none>"]["operations"])
-             == ["Accept", "Run"],
-         "one entry per operation, both kept"),
-        ("canonicaliser" in outcome.entry,
-         "the canonicaliser is recorded: a record is HISTORY, and a later "
-         "Replay must be able to tell it was freed differently"),
+        ("verdict" in book["demo.py"]["choices"]["<none>"]
+         and "last_accept" in book["demo.py"]["choices"]["<none>"],
+         "one row per choice (B-7): the run's verdict and the "
+         "acceptance's instant on it"),
+        ("canonicaliser" not in outcome.entry,
+         "the canonicaliser is NOT recorded (B-6): what a choice was "
+         "configured to do is the header's, versioned beside the book"),
         ("when" not in outcome.entry and "host" not in outcome.entry
          and "records" not in outcome.entry,
          "the instant, the host and the attribution are NOT in the "
@@ -294,20 +295,21 @@ def test_goal_selects():
     display = asyncio.run(run_test(
         configuration,
         Request(goal=E_Goal.DISPLAY, display=Display(adapter=Adapter()))))
-    operation_list = sorted(store.bookkeeper.book()["demo.py"]["choices"]
-                                                  ["<none>"]["operations"])
+    row = store.bookkeeper.result("demo.py", None) or {}
 
     print("INSPECT: VERDICT -> %s, %s" % (verdict.verdict, verdict.report))
     print("         DISPLAY -> %s, adapter saw %i items"
           % (display.verdict, collected.count("item")))
-    print("         operations recorded = %s" % operation_list)
+    print("         the choice's row     = %s" % sorted(row))
     ok = _check([
         (verdict.verdict is display.verdict is True,
          "both goals read the same test and agree"),
         (collected == [],
          "a MATCHING subject is not carried out to the display"),
-        (operation_list == ["Accept", "Display", "Run"],
-         "each goal booked its own entry"),
+        ("verdict" in row and "last_accept" in row
+         and display.entry is None,
+         "VERDICT and NOMINAL enter the one row; a DISPLAY does not "
+         "record (B-7) -- a viewing is not a run of record"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "a caller asks for an outcome, not for a class.")
@@ -596,11 +598,11 @@ def test_the_compare_setup_is_recorded():
     ok = _check([
         (strict_outcome.verdict is False and loose_outcome.verdict is True,
          "the setup decided the verdict -- same subject, same nominal"),
-        ("compare" not in strict_outcome.entry,
-         "a DEFAULT setup adds nothing to the entry"),
-        (loose_outcome.entry["compare"]
-             == {"numeric_tolerance_ratio": 0.01},
-         "a chosen one is recorded, and only what was chosen"),
+        ("compare" not in strict_outcome.entry
+         and "compare" not in loose_outcome.entry,
+         "NO SETUP REACHES THE ENTRY (B-6): the verdict is recorded, "
+         "the setup that produced it is the header's; the delta below "
+         "is still 'compare_setup_delta's to compute for whoever asks"),
         (not unreached,
          "EVERY declared member surfaces when chosen -- none is "
          "silently dropped"),

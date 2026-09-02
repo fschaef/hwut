@@ -142,12 +142,12 @@ def test_resolve():
     directory = build_directory({
         "test-tol.py": '# @hwut {\n'
                        '#     title   = "tolerances"\n'
-                       '#     numeric = 0.01\n'
+                       '#     tolerance { numeric_ratio = 0.01 }\n'
                        '#     pype    = \"strip.pype\"\n'
                        '#     caps    { timeout_sec = 30  network = false }\n'
                        '#     choices {\n'
                        '#         one { }\n'
-                       '#         two { numeric = 0.05\n'
+                       '#         two { tolerance { numeric_ratio = 0.05 }\n'
                        '#               caps { timeout_sec = 5 } }\n'
                        '#     }\n'
                        '# }\n',
@@ -189,17 +189,17 @@ def test_defaults():
     banner("effective = chosen, or the owner's default")
     directory = build_directory({
         "test-t.py": '# @hwut { title = "T"\n'
-                     '#        numeric = 0.25 }\n',
+                     '#        tolerance { numeric_ratio = 0.25 } }\n',
     })
     try:
         result = explore(directory)
         app        = result.app_set.app_db["test-t.py"]
         parameters = app.choice_db[None]
-        print("record    numeric %r  comment %r  analogy %r"
-              % (parameters.numeric, parameters.comment,
+        print("record    tolerance %r  comment %r  analogy %r"
+              % (parameters.tolerance, parameters.comment,
                  parameters.analogy))
-        print("effective numeric %r  comment %r  analogy %r"
-              % (effective(parameters, "numeric"),
+        print("effective numeric_ratio %r  comment %r  analogy %r"
+              % (effective(parameters, "tolerance.numeric_ratio"),
                  effective(parameters, "comment"),
                  effective(parameters, "analogy")))
     finally:

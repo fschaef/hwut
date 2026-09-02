@@ -1,7 +1,7 @@
-INSPECT: Run report was 'ok', now 'not-equivalent-with-nominal'
-         operations recorded = ['Accept', 'Run']
+INSPECT: report was 'ok', now 'not-equivalent-with-nominal'
+         rows for the choice = 1
   OK  : the second write REPLACED the first
-  OK  : one entry per operation -- Run and Accept, not three
-  OK  : a sibling operation is untouched
+  OK  : ONE ROW PER CHOICE (B-7): an operation is not a dimension
+  OK  : the acceptance's instant stands on the same row, and a later run leaves it where it is
 SUCCESS: state now, never a log -- and no entry disturbs another.
 <hwut-end>

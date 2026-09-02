@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-THE LABEL FACES -- 'hwut.labels.<verb>' <=> 'services/labels/<verb>.py'
+THE LABEL FACES -- 'hwut.labels.<verb>' <=> 'services/lib/labels/<verb>.py'
 (the naming law's dotted clause, disc-8): 'create', 'add', 'remove',
 'list', 'query', five acts on one file, 'hwut-root.labels'. The
 underscore modules are theirs alone: '_file.py' reads and writes the
@@ -50,7 +50,7 @@ def view_at_or_offer(directory, write):
     just arrived in a tree they did not build should be told WHERE ONE
     GOES, not merely that one is missing ('services/_boundary.py').
     """
-    from .._boundary import placed
+    from ..._boundary import placed
     try:
         return view_at(directory)
     except RootConfMissing:

@@ -1,10 +1,10 @@
-INSPECT: test facts   = {'interactive': False, 'interpreter': ['python3', '-u'], 'source_file': 'demo.py', 'source_kind': 'interpreted'}
-         caps recorded: {'child_process_max_n': 32, 'cpu_sec': 300, 'file_size_mb': 10, 'memory_mb': 512, 'timeout_sec': 20.0}
-         choice facts = {'canonicaliser': {'stdout': ['cat']}, 'compare': {'numeric_tolerance_ratio': 0.01}}
-         unknown test -> None, unknown choice -> None
-  OK  : the test application is reproducible from the base
-  OK  : the caps that HELD ride with it -- the stated one and the defaults beneath it -- under the name an author states them by, and nothing the EXECUTOR added (E-36)
-  OK  : the choice is reproducible: both halves of freeing
-  OK  : what was never recorded answers None, not a guess
-SUCCESS: the base alone reproduces what a test is configured to do.
+INSPECT: entry           = {'verdict': True, 'report': 'ok'}
+         table header    = test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+         rows            = 1
+         any 'caps' word = False
+  OK  : the entry is the decision and nothing else
+  OK  : THE BOOK IS A TABLE (B-7): one row per choice, ';' between, every column a decision
+  OK  : no configuration word reaches the oracle directory
+  OK  : the accessors that read the copy back are gone with it
+SUCCESS: the book holds what was DECIDED; what was CONFIGURED is git's, beside it.
 <hwut-end>

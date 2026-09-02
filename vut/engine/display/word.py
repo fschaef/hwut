@@ -21,6 +21,13 @@ ______________________________________________________________________________
 
 #  Wire token -> the phrase. Verdict words first, the operations'
 #  report words after, one voice throughout.
+#
+#  THIS TABLE IS THE WHOLE OF THE FRAMEWORK'S ENGLISH. Every phrase a
+#  rendering speaks stands here and nowhere else -- the flow line, the
+#  roll-call and the HINTS block all read it -- so the vocabulary can
+#  be reviewed in one screen, and translated by replacing one object.
+#  A phrase written inline at a call site is a word no reviewer of
+#  this table would ever see, and no translator would ever find.
 PHRASE_DB = {
     "ok":                          "ok",
     "test-failed":                 "the test failed",
@@ -28,7 +35,24 @@ PHRASE_DB = {
     "launch-failed":               "the launch failed",
     "unsupported":                 "not supported here",
     "misdep":                      "missing dependency",
-    "spec-broken":                 "the specification does not parse",
+
+    #  THE APPLICATION'S OWN HEADER, not 'hwut.conf': the file the
+    #  fault names carries an '@hwut { ... }' block that does not
+    #  parse, so it never became a node ('orchestrate._broken_app_tuple'
+    #  skips '.conf' deliberately). 'the specification' alone left the
+    #  reader to guess which of the two it was.
+    "spec-broken":                 "the test's own @hwut header does not parse",
+
+    #  The frame of a directory -- its setup or its teardown.
+    "frame-failed":                "the frame failed",
+
+    #  THE BOOK DOCUMENTS WHAT TESTS EXIST. Where it records one the
+    #  tree no longer declares, the two disagree and only a person can
+    #  say which is wrong -- so it is a failing test, never a silence.
+    #  ('hwut.remove' / 'hwut.remove-choice' heal the book where the
+    #  removal was intended.)
+    "test-vanished":               "recorded in the book, but no such test stands",
+    "test-choice-vanished":        "recorded in the book, but the test offers no such choice",
 
     "unstable":                    "UNSTABLE -- not run",
 
@@ -40,6 +64,14 @@ PHRASE_DB = {
     "not-equivalent-diverged":     "differs from GOOD",
     "test-app-launch-failed":      "the application would not launch",
     "test-app-contained":          "killed by the supervisor",
+    #  ONE PHRASE PER CAP (O-19): the HINT names what was hit; the
+    #  numbers follow it in parentheses, from the event's 'detail'.
+    "test-app-wall-clock-exceeded": "killed: over the wall-clock cap",
+    "test-app-cpu-time-exceeded":   "killed: over the cpu-time cap",
+    "test-app-memory-exceeded":     "killed: over the memory cap",
+    "test-app-file-size-exceeded":  "killed: over the file-size cap",
+    "test-app-pids-exceeded":       "killed: over the process cap",
+    "test-app-disk-exceeded":       "killed: over the disk cap",
     "test-app-no-output":          "produced no output",
     "test-app-stalled":            "stalled, no output",
     "recording-missing":           "no recording to replay",
@@ -107,9 +139,21 @@ def colour_decision(environ, tty_f, force_f=False, veto_f=False):
     return True
 
 
-#  One colour per directory, cycling; red and green stay reserved for
-#  [FAIL] and [OK].
-_NICK_CODE_TUPLE = (36, 35, 34, 33)          # cyan magenta blue yellow
+#  ORANGE IS THE DIRECTORY'S COLOUR, wherever a directory is named:
+#  the DIR band's ground, and the name at the head of a HINTS block.
+#  ONE NOUN, ONE COLOUR -- a reader who has learnt what orange means
+#  in the band reads the same thing in the hints. 256-colour 208;
+#  there is no orange in the base 16, and red and green stay reserved
+#  for [FAIL] and [OK].
+DIRECTORY_CODE_TUPLE = (38, 5, 208)
+
+#  RED IS PINNED, NOT ASKED FOR BY NAME. The base-16 codes 31/41 name
+#  PALETTE SLOT 1, and a theme is free to render that slot as it
+#  likes -- several popular ones make it orange, which put a failure
+#  in the same hue as a directory and made the two unreadable side by
+#  side. 256-colour 196 is red wherever it is drawn.
+FAIL_CODE      = (38, 5, 196)
+FAIL_TAG_CODE  = (97, 48, 5, 196)
 
 
 class CInk:
@@ -133,7 +177,7 @@ class CInk:
                % (";".join(str(code) for code in code_tuple), text)
 
     def ok(self, text):      return self.paint(text, 32)
-    def fail(self, text):    return self.paint(text, 31)
+    def fail(self, text):    return self.paint(text, *FAIL_CODE)
 
     #  THE VERDICT TAG CARRIES A GROUND, the phrase beside it does
     #  not: the tag is what an eye scans a long report for, and a
@@ -142,18 +186,25 @@ class CInk:
     #  competing with the first. White on green, white on red -- 97
     #  the bright foreground, 42 and 41 the grounds.
     def tag_ok(self, text):   return self.paint(text, 97, 42)
-    def tag_fail(self, text): return self.paint(text, 97, 41)
+    def tag_fail(self, text): return self.paint(text, *FAIL_TAG_CODE)
     def warn(self, text):    return self.paint(text, 33)
     def start(self, text):   return self.paint(text, 34)
     def dim(self, text):     return self.paint(text, 2)
     def bold(self, text):    return self.paint(text, 1)
 
-    def nick(self, text, index):
+    def dir_band(self, text):
         """
-        RETURN: str, 'text' in the cycling per-directory colour of
-                'index' -- the directory's own hue, stable for the
-                whole report.
+        RETURN: str, 'text' as a FULL-WIDTH BAND: bright white on the
+                directory's orange. The caller pads 'text' to the
+                width it wants the ground to span; this paints, it
+                does not measure.
         """
-        return self.paint(text,
-                          _NICK_CODE_TUPLE[index
-                                           % len(_NICK_CODE_TUPLE)])
+        return self.paint(text, 97, 48, 5, 208)
+
+    def directory(self, text):
+        """
+        RETURN: str, a directory's name in the directory's own colour
+                -- orange, the same hue the DIR band carries as its
+                ground.
+        """
+        return self.paint(text, *DIRECTORY_CODE_TUPLE)

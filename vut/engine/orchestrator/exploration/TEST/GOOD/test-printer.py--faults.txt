@@ -2,5 +2,5 @@
 --- a header with a fault prints no tree ---
 no specification
 FAULT test-bad.py:4:17: SYNTAX: a string is written in double quotes: "unquoted"
-FAULT test-bad.py:3:17: TYPE: 'numeric' is a relative ratio in [0..1]
+FAULT test-bad.py:3:35: TYPE: 'numeric_ratio' is a relative ratio in [0..1]
 <hwut-end>

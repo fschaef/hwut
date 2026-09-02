@@ -162,24 +162,24 @@ def test_record_derives():
                         E_Goal.VERDICT, "basic")
 
     fresh    = Bookkeeper(directory)
-    read     = fresh.result("demo", "basic", "Run")
+    read     = fresh.result("demo", "basic")
     observed = ObservationDb(directory).get("demo", "basic", "Run")
 
     print("INSPECT: entry keys = %s" % sorted(entry))
     print("         verdict %s, report %s"
           % (read["verdict"], read["report"]))
-    print("         canonicaliser = %s" % read["canonicaliser"])
     print("         observed: host %s, duration %s"
           % (observed.host is not None,
              observed.duration_ms is not None))
     ok = _check([
-        (sorted(entry) == ["canonicaliser", "report", "verdict"],
-         "THE BASE HOLDS DECISIONS: the verdict, the report, and what "
-         "says what they meant -- nothing a run can make again"),
+        (sorted(entry) == ["report", "verdict"],
+         "THE BASE HOLDS DECISIONS: the verdict and the report -- "
+         "nothing a run can make again, and NO CONFIGURATION (B-6)"),
         (read["verdict"] is True and read["report"] == "ok",
          "the verdict and the report come from the result"),
-        (read["canonicaliser"] == {"stdout": ["cat"]},
-         "the canonicaliser comes from the choice's configuration"),
+        ("canonicaliser" not in read and "compare" not in read,
+         "the canonicaliser and the compare setup are the header's "
+         "and hwut.conf's, versioned by git beside the book (B-6)"),
         ("records" not in entry and "when" not in entry
          and "host" not in entry,
          "the attribution, the instant and the host are OBSERVATIONS "
@@ -203,26 +203,27 @@ def test_overwrite():
 
     book.record(result, configuration, E_Goal.VERDICT)
     book.record(result, configuration, E_Goal.NOMINAL)
-    first = book.result("demo", None, "Run")["report"]
+    first    = book.result("demo", None)["report"]
+    accepted = book.result("demo", None).get("last_accept")
 
     failed = TestResult(name       = "demo",
                         provision  = result.provision,
                         comparison = Comparison({"stdout": False}))
     book.record(failed, configuration, E_Goal.VERDICT)
-    second = book.result("demo", None, "Run")
+    second = book.result("demo", None)
 
-    operations = sorted(book.book()["demo"]["choices"]["<none>"]
-                                   ["operations"])
-    print("INSPECT: Run report was '%s', now '%s'"
-          % (first, second["report"]))
-    print("         operations recorded = %s" % operations)
+    with open(book.result_db_path, encoding="utf-8") as fh:
+        row_n = len(fh.read().splitlines()) - 1
+    print("INSPECT: report was '%s', now '%s'" % (first, second["report"]))
+    print("         rows for the choice = %d" % row_n)
     ok = _check([
         (second["report"] == "not-equivalent-with-nominal",
          "the second write REPLACED the first"),
-        (operations == ["Accept", "Run"],
-         "one entry per operation -- Run and Accept, not three"),
-        (book.result("demo", None, "Accept") is not None,
-         "a sibling operation is untouched"),
+        (row_n == 1,
+         "ONE ROW PER CHOICE (B-7): an operation is not a dimension"),
+        (accepted is not None and second.get("last_accept") == accepted,
+         "the acceptance's instant stands on the same row, and a later "
+         "run leaves it where it is"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "state now, never a log -- and no entry disturbs "
@@ -276,7 +277,7 @@ def test_damage():
         fh.write("{ this is not json")
     damaged = book.book()
     book.record(result, configuration, E_Goal.VERDICT)
-    after   = book.result("demo", None, "Run")
+    after   = book.result("demo", None)
 
     print("INSPECT: damaged base reads as %r" % damaged)
     print("         a later write recovers: verdict = %s"
@@ -292,9 +293,11 @@ def test_damage():
 
 
 def test_reproduce():
-    """Each write refreshes the reproducible configurations, so a query
-    answers what a test is configured to do FROM THE BASE ALONE -- the
-    configuration objects long gone."""
+    """THE BOOK HOLDS NO CONFIGURATION (B-6). What a test was configured
+    to do is the same commit's header and 'hwut.conf', which git
+    versions beside the book; a copy here was read by nobody and
+    churned with every moved default. The table carries the decision
+    and nothing else."""
     import vut.engine.compare.configuration as compare_configuration
     loose = compare_configuration.Configuration()
     loose.pattern_finder.numeric_tolerance_ratio = 0.01
@@ -308,43 +311,33 @@ def test_reproduce():
     Bookkeeper(directory).record(_ran(configuration, "basic"),
                                  configuration, E_Goal.VERDICT, "basic")
 
-    fresh       = Bookkeeper(directory)
-    test_facts  = fresh.test_configuration("demo")
-    choice_facts = fresh.choice_configuration("demo", "basic")
+    fresh = Bookkeeper(directory)
+    read  = fresh.result("demo", "basic")
+    with open(fresh.result_db_path, encoding="utf-8") as fh:
+        table = fh.read()
 
-    print("INSPECT: test facts   = %s"
-          % {k: test_facts[k] for k in sorted(test_facts)
-             if k != "caps"})
-    print("         caps recorded: %s" % test_facts.get("caps"))
-    print("         choice facts = %s" % choice_facts)
-    print("         unknown test -> %s, unknown choice -> %s"
-          % (fresh.test_configuration("ghost"),
-             fresh.choice_configuration("demo", "ghost")))
+    print("INSPECT: entry           = %s" % read)
+    print("         table header    = %s" % table.splitlines()[0])
+    print("         rows            = %d" % (len(table.splitlines()) - 1))
+    print("         any 'caps' word = %s" % ("caps" in table))
     ok = _check([
-        (test_facts["source_file"] == "demo.py"
-         and test_facts["source_kind"] == "interpreted"
-         and test_facts["interpreter"] == ["python3", "-u"],
-         "the test application is reproducible from the base"),
-        #  THE AUTHOR'S NAME, not the procsitter's: the book writes
-        #  what a header may STATE, through the one vocabulary
-        #  ('_CAPS_FIELD_DB'), so a field the procsitter grows for its
-        #  own use never reaches an oracle (E-36).
-        (test_facts.get("caps", {}).get("timeout_sec") == 20.0
-         and "scratch_dir" not in test_facts.get("caps", {})
-         and "env" not in test_facts.get("caps", {}),
-         "the caps that HELD ride with it -- the stated one and the "
-         "defaults beneath it -- under the name an author states them "
-         "by, and nothing the EXECUTOR added (E-36)"),
-        (choice_facts == {"canonicaliser": {"stdout": ["cat"]},
-                          "compare": {"numeric_tolerance_ratio": 0.01}},
-         "the choice is reproducible: both halves of freeing"),
-        (fresh.test_configuration("ghost") is None
-         and fresh.choice_configuration("demo", "ghost") is None,
-         "what was never recorded answers None, not a guess"),
+        (sorted(read) == ["report", "verdict"],
+         "the entry is the decision and nothing else"),
+        (table.splitlines()[0]
+         == "test;choice;verdict;report;last_accept;coverage;"
+            "stderr;stain_repeat_n;stain_when",
+         "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
+         "every column a decision"),
+        ("caps" not in table and "canonicaliser" not in table
+         and "numeric" not in table,
+         "no configuration word reaches the oracle directory"),
+        (not hasattr(fresh, "test_configuration")
+         and not hasattr(fresh, "choice_configuration"),
+         "the accessors that read the copy back are gone with it"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "the base alone reproduces what a test is configured "
-                 "to do.")
+    _verdict(ok, "the book holds what was DECIDED; what was CONFIGURED "
+                 "is git's, beside it.")
 
 
 def test_divergence():

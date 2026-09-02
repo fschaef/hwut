@@ -7,7 +7,8 @@ PURPOSE
 
 DESCRIPTION
        A PLANNER, in the house sense: it wires existing pieces --
-       'merge_session' (feed.py) and a driver ('driver_for') -- and adds
+       'merge_session' (interaction/port.py) and a viewer
+       ('services/lib/viewers.driver_for') -- and adds
        nothing of its own. What git mergetool cannot do, this can:
        equivalence under tolerances, analogies with provenance, and a
        guided merge whose alignment is compare's.
@@ -36,6 +37,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import io
+import os
 import sys
 import asyncio
 import argparse
@@ -49,8 +51,10 @@ if __package__ in (None, ""):
     __package__ = _config.PACKAGE
 from ._exit import E_ExitCode  # delayed past _config adoption
 
-from   vut.engine.operations.interaction.feed import (merge_session, driver_for,
-                                  E_DisplayTarget, E_Intent,
+from   vut.services.lib.viewers               import (driver_for,
+                                  E_DisplayTarget)
+from   vut.engine.operations.interaction.port import (merge_session,
+                                  E_Intent,
                                   MERGE_ROUND_MAX)
 from   ._core              import (read_source,
                                   add_setup_arguments,
@@ -70,7 +74,17 @@ async def merge_text(subject_text, nominal_text, adapter,
     CLI) reduces to it. It is 'merge_session' with the service's
     argument order -- the material first, the machinery after.
     """
-    return await merge_session(compare_options, subject_text, nominal_text,
+    import io
+    from vut.engine.compare.api import feeder_ui as compare_feeder
+    from vut.engine.compare.api import Configuration
+    options = compare_options if compare_options is not None \
+              else Configuration()
+    def align(subject, working):
+        """RETURN: AsyncIterable[DisplayInst], the alignment of
+        'subject' against 'working', from compare's one door."""
+        return compare_feeder.feed(options, io.StringIO(subject),
+                                   io.StringIO(working))
+    return await merge_session(align, subject_text, nominal_text,
                                adapter, subject_name,
                                max_round_n=max_round_n)
 
@@ -108,9 +122,17 @@ def _main(argv):
     parser.add_argument("subject",
                         help="the subject stream: a file path, or '-' "
                              "for stdin")
-    parser.add_argument("nominal",
+    parser.add_argument("nominal", nargs="?", default=None,
                         help="the nominal stream: a file path, or '-' "
-                             "for stdin")
+                             "for stdin. OMITTED: the STORE FORM -- the "
+                             "first word names a TEST, the store supplies "
+                             "candidate and nominal (see --choice, "
+                             "--directory)")
+    parser.add_argument("--choice", default=None,
+                        help="store form: the test's choice")
+    parser.add_argument("--directory", default=".",
+                        help="store form: the TEST directory "
+                             "(default: '.')")
     parser.add_argument("-o", "--out", default=None,
                         help="where a COMMIT's artifact is written "
                              "(default: stdout)")
@@ -133,8 +155,53 @@ def _main(argv):
         parser.error("only one of SUBJECT and NOMINAL may be '-': stdin "
                      "is one stream, not two")
 
-    subject_text = read_source(arguments.subject)
-    nominal_text = read_source(arguments.nominal)
+    if arguments.nominal is None:
+        #  THE STORE FORM. One word names a TEST; the store supplies
+        #  both streams -- and SUBJECT PROVISION says whether they may
+        #  be used (operations disc-2, production=False: this face
+        #  never executes). A stale or absent recording is refused
+        #  with the step that decided, exactly as 'hwut.accept'
+        #  refuses: a merge over what the PREVIOUS text printed would
+        #  bless the wrong evidence one screen later.
+        from vut.engine.bookkeeper.api import Bookkeeper
+        from vut.engine.operations            import subject_provision
+        test      = arguments.subject
+        book      = Bookkeeper(arguments.directory)
+        candidate = book.candidate_path(test, arguments.choice, "stdout")
+        nominal   = book.nominal_path(test, arguments.choice, "stdout")
+
+        class _Bare:
+            build       = None
+            source_file = os.path.join(arguments.directory, test)
+        decision = subject_provision.decide(_Bare, str(candidate),
+                                            production=False)
+        if decision.what is not subject_provision.E_Decision.RECORDED:
+            sys.stderr.write("REFUSED: %s --\n    %s%s\n"
+                             "re-run the test ('hwut.run'), then merge.\n"
+                             % (decision.because, test,
+                                "" if arguments.choice is None
+                                else " " + arguments.choice))
+            return E_ExitCode.FAULT
+        try:
+            with io.open(str(nominal), encoding="utf-8") as fh:
+                nominal_text = fh.read()
+        except OSError:
+            sys.stderr.write("REFUSED: no nominal stands for '%s'%s -- "
+                             "there is nothing to merge AGAINST.\n"
+                             "A first nominal is 'hwut.accept's to "
+                             "create, not a merge's.\n"
+                             % (test, "" if arguments.choice is None
+                                     else " '" + arguments.choice + "'"))
+            return E_ExitCode.FAULT
+        with io.open(str(candidate), encoding="utf-8") as fh:
+            subject_text = fh.read()
+        #  THE ARTIFACT NEVER LANDS IN GOOD/ BY THIS FACE's HAND: a
+        #  merged nominal committed here goes to '-o'/stdout, and
+        #  BECOMES the nominal only through 'hwut.accept' -- the one
+        #  way a nominal comes to exist, books and all.
+    else:
+        subject_text = read_source(arguments.subject)
+        nominal_text = read_source(arguments.nominal)
 
     editor_argv = None
     if arguments.editor is not None:

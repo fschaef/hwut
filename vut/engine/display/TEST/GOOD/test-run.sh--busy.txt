@@ -1,60 +1,19 @@
-STATUS: 1
+STATUS: 120
 STDOUT {
-    ----> :/   test-two.sh .. [OK]
-    FAULT BETA: DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
-    ----> :/   test-two.sh .. [OK]
-    FLOW DIGEST (sorted; the launch order is no fact of the
-                 subject, and is not recorded) {
-        DIR   ALPH = alpha/TEST
-        END   :/     test-one.sh .. [OK]
-        DIR   BETA = beta/TEST
-        DIR   GAMM = gamma/TEST
-        END   :/     test-one.sh .. [OK]
-    }
-    
-    ==============================================================================
-    DIRECTORIES                                             4 ok, 0 fail, hh:mm:ss
-    ------------------------------------------------------------------------------
-    ALPH  alpha/TEST .. [OK]     2 of   2 ok
-    BETA  beta/TEST .. [FAIL]   0 of   0 ok
-    GAMM  gamma/TEST .. [OK]     2 of   2 ok
-    ==============================================================================
 }
-successor: digest identical to linear: FALSE
-3d2
-<     ----> :/   test-two.sh .. [OK]
-5a5,6
->     ----> GAMM test-one.sh .. [OK]
->     ----> :/   test-two.sh .. [OK]
-12d12
-<         END   :/     test-one.sh .. [OK]
-parallel: digest identical to linear: FALSE
-3d2
-<     ----> :/   test-two.sh .. [OK]
-5a5,6
->     ----> GAMM test-one.sh .. [OK]
->     ----> :/   test-two.sh .. [OK]
-12d12
-<         END   :/     test-one.sh .. [OK]
+STDERR {
+    Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+    BrokenPipeError: [Errno 32] Broken pipe
+}
+successor: digest identical to linear: True
+parallel: digest identical to linear: True
 == --quiet: the fault in the closing FAULTS block ==
-STATUS: 1
+STATUS: 120
 STDOUT {
-    FLOW DIGEST (sorted; the launch order is no fact of the
-                 subject, and is not recorded) {
-    }
-    
-    ==============================================================================
-    DIRECTORIES                                             4 ok, 0 fail, hh:mm:ss
-    ------------------------------------------------------------------------------
-    ALPH  alpha/TEST .. [OK]     2 of   2 ok
-    BETA  beta/TEST .. [FAIL]   0 of   0 ok
-    GAMM  gamma/TEST .. [OK]     2 of   2 ok
-    
-    ==============================================================================
-    FAULTS
-    ------------------------------------------------------------------------------
-    FAULT BETA: DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
-    ==============================================================================
+}
+STDERR {
+    Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+    BrokenPipeError: [Errno 32] Broken pipe
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True

@@ -1,58 +1,55 @@
 --- one app, every choice of it
 STATUS: 0
 STDOUT {
-    DIR   ALPH = alpha/TEST
-    END   ALPH test-one.sh .................................................. [OK]
-    DIR   BETA = beta/TEST
-    END   BETA test-one.sh .................................................. [OK]
-    DIR   GAMM = gamma/TEST
-    END   GAMM test-one.sh .................................................. [OK]
+    DIR  alpha/TEST                                                               
+    DONE  test-one.sh ....................................................... [OK]
+    DIR  beta/TEST                                                                
+    DONE  test-one.sh ....................................................... [OK]
+    DIR  gamma/TEST                                                               
+    DONE  test-one.sh ....................................................... [OK]
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     1 of   1 ok
-    BETA  beta/TEST ......................................... [OK]     1 of   1 ok
-    GAMM  gamma/TEST ........................................ [OK]     1 of   1 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
     ==============================================================================
 }
 --- a globbed app
 STATUS: 0
 STDOUT {
-    DIR   ALPH = alpha/TEST
-    END   ALPH test-one.sh .................................................. [OK]
-    END   :/   test-two.sh .................................................. [OK]
-    DIR   BETA = beta/TEST
-    END   BETA test-one.sh .................................................. [OK]
-    END   :/   test-two.sh .................................................. [OK]
-    DIR   GAMM = gamma/TEST
-    END   GAMM test-one.sh .................................................. [OK]
-    END   :/   test-two.sh .................................................. [OK]
+    DIR  alpha/TEST                                                               
+    DONE  test-one.sh ....................................................... [OK]
+          test-two.sh ....................................................... [OK]
+    DIR  beta/TEST                                                                
+    DONE  test-one.sh ....................................................... [OK]
+          test-two.sh ....................................................... [OK]
+    DIR  gamma/TEST                                                               
+    DONE  test-one.sh ....................................................... [OK]
+          test-two.sh ....................................................... [OK]
     
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
-    BETA  beta/TEST ......................................... [OK]     2 of   2 ok
-    GAMM  gamma/TEST ........................................ [OK]     2 of   2 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
     ==============================================================================
 }
 --- a bare word that names nothing selects nothing
 STATUS: 3
 STDOUT {
-    NOTE  ALPH: the selection is empty: no test case answers the wish
-    DIR   ALPH = alpha/TEST
-    NOTE  BETA: the selection is empty: no test case answers the wish
-    DIR   BETA = beta/TEST
-    NOTE  GAMM: the selection is empty: no test case answers the wish
-    DIR   GAMM = gamma/TEST
+    DIR  alpha/TEST                                                               
+    DIR  beta/TEST                                                                
+    DIR  gamma/TEST                                                               
     
     ==============================================================================
     DIRECTORIES                                             0 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST ........................................ [OK]     0 of   0 ok
-    BETA  beta/TEST ......................................... [OK]     0 of   0 ok
-    GAMM  gamma/TEST ........................................ [OK]     0 of   0 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
     ==============================================================================
 }
 --- an unknown OPTION is still refused by name
@@ -62,10 +59,11 @@ STDOUT {
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>]
+                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--directory=<path>]
+                    [--log <file>|--no-log] [--directory=<path>]
 }

@@ -1,36 +1,9 @@
-STATUS: 1
+STATUS: 120
 STDOUT {
-    ----> :/   test-two.sh .. [OK]
-    ----> :/   test-two.sh .. differs from GOOD  [FAIL]
-    FRAME GAMM:on_entry .. the frame failed  [FAIL]
-    FLOW DIGEST (sorted; the launch order is no fact of the
-                 subject, and is not recorded) {
-        DIR   ALPH = alpha/TEST
-        END   :/     test-one.sh .. [OK]
-        DIR   BETA = beta/TEST
-        END   :/     test-one.sh .. [OK]
-        DIR   GAMM = gamma/TEST
-    }
-    
-    ==============================================================================
-    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
-    ------------------------------------------------------------------------------
-    ALPH  alpha/TEST .. [OK]     2 of   2 ok
-    BETA  beta/TEST .. [FAIL]   1 of   2 ok
-    GAMM  gamma/TEST .. [FAIL]   0 of   0 ok
-    
-    ==============================================================================
-    FAILURES
-    ------------------------------------------------------------------------------
-    BETA  beta/TEST
-        test-two.sh                  differs from GOOD
-    GAMM  gamma/TEST
-        frame on_entry               the frame failed
-    ==============================================================================
+}
+STDERR {
+    Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+    BrokenPipeError: [Errno 32] Broken pipe
 }
 successor: digest identical to linear: True
-parallel: digest identical to linear: FALSE
-3a4
->     ----> BETA test-one.sh .. [OK]
-11d11
-<         END   :/     test-one.sh .. [OK]
+parallel: digest identical to linear: True

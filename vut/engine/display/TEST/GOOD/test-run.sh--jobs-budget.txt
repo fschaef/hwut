@@ -3,30 +3,30 @@ STATUS: 0
 STDOUT {
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
-        DIR   ALPH = alpha/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
-        DIR   BETA = beta/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
-        DIR   GAMM = gamma/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
+        DIR   alpha/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
+        DIR   beta/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
+        DIR   gamma/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
         peak standing at once: 2
     }
     
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST .. [OK]     2 of   2 ok
-    BETA  beta/TEST .. [OK]     2 of   2 ok
-    GAMM  gamma/TEST .. [OK]     2 of   2 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
     ==============================================================================
 }
 successor: digest identical to linear: True
@@ -36,30 +36,30 @@ STATUS: 0
 STDOUT {
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
-        DIR   ALPH = alpha/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
-        DIR   BETA = beta/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
-        DIR   GAMM = gamma/TEST
-        END   :/     test-one.sh .. [OK]
-        START :/     test-one.sh
-        END   :/     test-two.sh .. [OK]
-        START :/     test-two.sh
+        DIR   alpha/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
+        DIR   beta/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
+        DIR   gamma/TEST
+        DONE  test-one.sh .. [OK]
+        START test-one.sh
+        DONE  test-two.sh .. [OK]
+        START test-two.sh
         peak standing at once: 1
     }
     
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-    ALPH  alpha/TEST .. [OK]     2 of   2 ok
-    BETA  beta/TEST .. [OK]     2 of   2 ok
-    GAMM  gamma/TEST .. [OK]     2 of   2 ok
+       +---o alpha/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
+       +---o beta/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       '---o gamma/TEST . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
     ==============================================================================
 }
 successor: digest identical to linear: True

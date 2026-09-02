@@ -71,6 +71,11 @@ The faces:
                  it IGNORED. A stdout candidate whose last line is
                  not '<hwut-end>' is refused outright: an incomplete
                  stream is never promotable, and no flag bypasses.
+                 THE UPDATE CHECK stands before every other: a
+                 recording whose mtime is older than the test file's
+                 is refused, by name, and the test is named to be
+                 re-run. One file is consulted -- the application --
+                 not what it reads.
 
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language

@@ -454,8 +454,9 @@ def test_containment_reaches_the_report():
     ok = _check([
         (stalled.provision.report is E_TestRunResult.TEST_APP_STALLED,
          "FAIL_STALLED becomes TEST_APP_STALLED"),
-        (timed_out.provision.report is E_TestRunResult.TEST_APP_CONTAINED,
-         "any other cap becomes TEST_APP_CONTAINED"),
+        (timed_out.provision.report
+             is E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
+         "a cap names itself (O-19): the wall clock, here"),
         ("one line" in stalled["stdout"].open().read(),
          "and what the run DID produce is still handed over"),
     ])
@@ -949,8 +950,9 @@ def test_containment_reaches_the_report():
     ok = _check([
         (stalled.provision.report is E_TestRunResult.TEST_APP_STALLED,
          "FAIL_STALLED becomes TEST_APP_STALLED"),
-        (timed_out.provision.report is E_TestRunResult.TEST_APP_CONTAINED,
-         "any other cap becomes TEST_APP_CONTAINED"),
+        (timed_out.provision.report
+             is E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,
+         "a cap names itself (O-19): the wall clock, here"),
         ("one line" in stalled["stdout"].open().read(),
          "and what the run DID produce is still handed over"),
     ])

@@ -18,9 +18,64 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
                       as one number, in 'GOOD/group_ids.dat'.
     bookkeeper.py     THE BOOK of one directory: the naming of every
                       file that carries a record, the entries, the
-                      reproducible configurations, the divergence
-                      verdicts.
+                      divergence verdicts. (Configuration: none --
+                      B-6.)
     stream_store.py   The candidate/nominal streams beneath the naming.
+
+1a WHAT GOES WHERE
+------------------------------------------------------------------------------
+
+TWO DATABASES under one directory, sorted by ONE question -- does the
+thing depend on WHEN and WHERE it was made? (E-36, in services/RATIONALE)
+
+    GOOD/result_db.csv          THE BOOK. What was DECIDED about the
+                                software. Versioned with the tests.
+    TMP/store/observations.bin  THE LOCAL DATABASE. What THIS machine
+                                SAW: when, where, how long, host, pids.
+                                Transient.
+
+Beside them, not in them:
+
+    GOOD/<test>[--<choice>].txt the NOMINALS (the oracles)
+    GOOD/test_ids.dat           the REGISTER of run ids (B-2)
+    TMP/store/<test>....stdout  the CANDIDATES (the recorded streams)
+    the header, hwut.conf       the CONFIGURATION -- git's, beside the
+                                book; never copied into it (B-6)
+
+THE BOOK IS A TABLE (B-7): 'GOOD/result_db.csv', ONE ROW PER (TEST,
+CHOICE), separator ';', no quoting -- a name containing ';' is
+refused at the specification's door.
+
+    test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+
+    test            the application's file name; EMPTY means "the
+                    same as the row above" -- an empty name means
+                    nothing else, so it needs no mark (B-8)
+    choice          the choice; empty where the test has none
+    verdict         true / false -- of the last run
+    report          the run's report token (word.py phrases it)
+    last_accept     the instant the STANDING nominal was blessed;
+                    empty until one is
+    coverage        the coverage step's token; empty where not asked
+    stderr          the stderr note ('ignored', 'forbidden'); empty
+                    where none
+    stain_repeat_n  the repeats a proof must make to clear the stain
+    stain_when      the instant of the conviction
+                    -- both empty where the choice is clean
+
+An empty cell is ABSENCE. No row carries a configuration, an
+operation name, a host, a duration or an attribution: the first is
+git's, the last three the local database's, and an operation is not
+a dimension of a decision.
+
+READ THROUGH THE DOOR: 'tests()', 'choices()', 'result()', 'stain()',
+'stderr_note()', 'divergence()'. The model these answer from is
+private; the file's shape may change under a face without it
+noticing (E-37).
+
+A BOOK WRITTEN BEFORE B-6/B-7 ('result_db.json', or a '.csv' with an
+'operation' column) is read once, and the first write lays down the
+current table and removes the old file.
 
 2  THE ONE SENTENCE
 ------------------------------------------------------------------------------

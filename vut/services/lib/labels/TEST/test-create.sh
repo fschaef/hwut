@@ -25,9 +25,9 @@
 #             already stands.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../../../.." && pwd)
+ROOT=$(cd "$HERE/../../../../.." && pwd)
 export PYTHONPATH="$ROOT"
-CREATE="python3 -m vut.services.labels.create"
+CREATE="python3 -m vut.services.lib.labels.create"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

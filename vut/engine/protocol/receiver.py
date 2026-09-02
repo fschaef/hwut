@@ -105,11 +105,12 @@ class CRunReportReceiver:
         """RETURN: None. One node's work was dispatched."""
 
     def on_run_ended(self, when, directory, node, node_kind, good,
-                     verdict, cause=None, report=None):
+                     verdict, cause=None, report=None, detail=None):
         """RETURN: None. One node's work ended; 'verdict' says WHY
         coarsely, 'report' is the operation's own finer word where one
-        is known, and 'cause' names the node whose breaking failed
-        this one, where one did."""
+        is known, 'detail' the report's numbers where it has them
+        (O-19), and 'cause' names the node whose breaking failed this
+        one, where one did."""
 
     def on_fault(self, when, directory, text):
         """RETURN: None. A fault of exploration or the walk."""

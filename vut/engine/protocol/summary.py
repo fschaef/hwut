@@ -25,6 +25,7 @@ class CRunSummary:
     directory_tuple: tuple = ()
     verdict_db:      dict  = field(default_factory=dict)
     cause_db:        dict  = field(default_factory=dict)
+    detail_db:       dict  = field(default_factory=dict)   # O-19
     frame_db:        dict  = field(default_factory=dict)
     fault_tuple:     tuple = ()
     report_tuple:    tuple = ()
@@ -52,6 +53,7 @@ def fold(event_iterable):
     directory_list = []
     verdict_db     = {}
     cause_db       = {}
+    detail_db      = {}
     frame_db       = {}
     fault_list     = []
     report_list    = []
@@ -76,6 +78,7 @@ def fold(event_iterable):
             key             = (item["directory"], item["node"])
             verdict_db[key] = item["verdict"]
             if "cause" in item: cause_db[key] = item["cause"]
+            if "detail" in item: detail_db[key] = item["detail"]
         elif kind == "frame":
             if not fits("directory", "role", "good"): continue
             frame_db[(item["directory"], item["role"])] = item["good"]
@@ -96,6 +99,7 @@ def fold(event_iterable):
     return CRunSummary(directory_tuple = tuple(directory_list),
                        verdict_db      = verdict_db,
                        cause_db        = cause_db,
+                       detail_db       = detail_db,
                        frame_db        = frame_db,
                        fault_tuple     = tuple(fault_list),
                        report_tuple    = tuple(report_list),

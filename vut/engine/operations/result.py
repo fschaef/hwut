@@ -53,6 +53,13 @@ class E_TestRunResult(Enum):
     # THE TEST APPLICATION:
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_CONTAINED          = "test-app-contained"
+    #  ONE TOKEN PER CAP (O-19): which cap was hit is the verdict's word.
+    TEST_APP_WALL_CLOCK_EXCEEDED = "test-app-wall-clock-exceeded"
+    TEST_APP_CPU_TIME_EXCEEDED   = "test-app-cpu-time-exceeded"
+    TEST_APP_MEMORY_EXCEEDED     = "test-app-memory-exceeded"
+    TEST_APP_FILE_SIZE_EXCEEDED  = "test-app-file-size-exceeded"
+    TEST_APP_PIDS_EXCEEDED       = "test-app-pids-exceeded"
+    TEST_APP_DISK_EXCEEDED       = "test-app-disk-exceeded"
     TEST_APP_NO_OUTPUT          = "test-app-no-output"
     TEST_APP_STALLED            = "test-app-stalled"
 

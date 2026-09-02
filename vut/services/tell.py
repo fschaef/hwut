@@ -204,7 +204,7 @@ def coverage_section_text(directory, application, choice):
 
     keeper = Bookkeeper(directory)
     stem   = application[:-3] if application.endswith(".py") else application
-    entry  = keeper.result(stem, choice, "Run") or {}
+    entry  = keeper.result(stem, choice) or {}
     token  = entry.get("coverage")
     path   = keeper.coverage_path(stem, choice)
     if token is None and not path.is_file(): return None

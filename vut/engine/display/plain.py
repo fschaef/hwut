@@ -6,15 +6,22 @@ PURPOSE: TIER 1, THE PLAIN CONSOLE REPORT (D-1) -- the flow as the
 
 One line per event as it arrives:
 
-    hh:mm:ss | NNN | [EVENT] NICK:base [choice] ...
+    hh:mm:ss | NNN | [EVENT] base [choice] ...
 
 'hh:mm:ss' is the event's own 'when' relative to the stream's first --
 the display NEVER reads a clock of its own; a 'when' that is not an
 ISO instant prints verbatim, right-aligned. 'NNN' is the count of
-parallel executions AFTER the event. 'NICK' is the directory's
-deterministic nickname, expanded once at its 'DIR  ' line and again
-in both closing blocks. '[SKIP ]' marks a 'run-ended' that never had a
-'run-begun' -- a node that never ran must not claim it did.
+parallel executions AFTER the event. NO ABBREVIATION IS GENERATED for
+a directory: it is named IN FULL, once, on its own banner line ('DIR')
+when the run enters it -- every line beneath speaks of what ran, not
+of where, until the next banner says otherwise. '[SKIP ]' marks a
+'run-ended' that never had a 'run-begun' -- a node that never ran must
+not claim it did.
+
+PENDING RATIONALE: this supersedes D-1's 'NICK:base' column, E-30's
+repeat mark and E-33's badge-arrow and single-directory elision, on
+Frank-Rene's direct instruction (2026-08-31); the RATIONALE entries
+themselves are not yet rewritten -- see the component's DISCUSSIONS.
 
 Every token on a line is English through 'word.phrase()' -- one
 vocabulary, one reading (D-6). An unknown event kind is ignored; an
@@ -33,7 +40,6 @@ receiver and summary; NOTHING imports display back. The queue is the
 only door.
 ______________________________________________________________________________
 """
-import re
 from datetime import datetime
 from enum     import Enum
 
@@ -47,28 +53,6 @@ class E_Tier(Enum):
     PLAIN   = "plain"
     QUIET   = "quiet"
     SILENT  = "silent"
-
-
-def derive_nickname(directory):
-    """
-    RETURN: str, the deterministic nickname of a directory path: the
-            initials of its hyphen/underscore/dot-separated words, a
-            trailing 'TEST' component dropped, upper-cased; the first
-            four letters where only one word remains; 'ROOT' for '.'.
-            Collisions are the registry's business, not this
-            function's.
-    """
-    part_list = [part for part in str(directory).split("/")
-                 if part and part != "."]
-    if part_list and part_list[-1] == "TEST":
-        part_list = part_list[:-1]
-    word_list = []
-    for part in part_list:
-        word_list += [word for word in re.split(r"[-_.]+", part)
-                      if word]
-    if not word_list:         return "ROOT"
-    if len(word_list) == 1:   return word_list[0][:4].upper()
-    return "".join(word[0] for word in word_list).upper()
 
 
 def _split_node(node):
@@ -112,9 +96,35 @@ def _display_name(node):
     return "%s %s" % (base, choice)
 
 
-#  The application-name column of the flow line. FIXED, so a column
-#  never moves under a reader following it down the page.
-APP_COLUMN = 20
+#  THE BLANK BETWEEN AN APPLICATION'S NAME AND ITS FIRST CHOICE. The
+#  choice column itself is not fixed tree-wide: each application sets
+#  its own from its own name, and the ':' lines beneath it hold that
+#  width ('_run_body'). A new application opens a new column.
+#
+#  TWO BLANKS, NOT A FIELD. The choice belongs to the name beside it,
+#  and a wide gap reads as two columns that have nothing to do with
+#  each other.
+CHOICE_GAP = 2
+
+#  The blank before a HINTS briefing, which IS a column of its own and
+#  wants to be seen as one.
+BRIEF_GAP = 3
+
+#  THE DIRECTORIES TREE. Indented off the left margin so the block
+#  reads as a figure rather than as more lines of report; the tag
+#  right-aligned in its own width, the count beyond it in its own.
+TREE_INDENT = "   "
+TAG_WIDTH   = 6
+COUNT_WIDTH = 9
+
+
+def _dot_space_fill(width):
+    """
+    RETURN: str, '. . . .' of exactly 'width' characters -- a rule
+            light enough to stand beside the tree's own connectors
+            without reading as another one of them.
+    """
+    return (". " * (width // 2 + 1))[:width]
 
 #  HOW LONG A START IS HELD BACK. A test that finishes inside the
 #  window never announces its beginning: the pair says nothing the
@@ -130,10 +140,15 @@ APP_COLUMN = 20
 START_DELAY_SECONDS = 2.0
 
 #  THE BADGES OF THE FLOW, which come in runs and therefore elide, and
-#  the mark that stands under a repeat. As wide as a badge, so the body
-#  column does not move.
-FLOW_BADGE_TUPLE = ("START", "END  ", "SKIP ")
-BADGE_REPEAT     = "---->"
+#  the mark that stands under a repeat: PLAIN WHITESPACE, as wide as a
+#  badge, so the body column does not move and a repeated badge says
+#  nothing the position does not already say.
+FLOW_BADGE_TUPLE = ("START", "DONE ", "SKIP ")
+BADGE_REPEAT     = "     "
+
+#  'DONE ' is now the per-RUN completion badge (was 'END  '). The
+#  per-DIRECTORY roll-up line, VERBOSE tier only, is renamed 'ROLL '
+#  so the two are never the same word about two different things.
 
 
 class CPlainFlow(CRunReportReceiver):
@@ -143,15 +158,25 @@ class CPlainFlow(CRunReportReceiver):
     def __init__(self, write, write_error=None, width=78, ink=None,
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
-                 start_delay=START_DELAY_SECONDS):
+                 start_delay=START_DELAY_SECONDS, write_log=None):
         """
-        RETURN: CPlainFlow writing flow lines through 'write' and, in
-                the SILENT tier, faults through 'write_error'.
+        RETURN: CPlainFlow writing flow lines through 'write', faults
+                and notes through 'write_log', and -- in the SILENT
+                tier -- faults through 'write_error'.
 
         'width'  the line width the dotted fill aims at -- a
                  CONSTRUCTOR argument, never sniffed from a terminal,
                  so a suite pins it.
         'ink'    the CInk of word.py; a transparent one where None.
+        'write_log'
+                 where a FAULT or a NOTE goes. These are the run's
+                 MARGINALIA -- a configuration line that did not
+                 parse, a wish that selected nothing -- true, worth
+                 keeping, and not what a reader watching a run is
+                 watching for. None means no log stands, and then
+                 they go to 'write_error' rather than into the flow:
+                 A FAULT IS NEVER SWALLOWED, and the absence of a log
+                 is not permission to lose one.
 
         THE COLUMNS ARE ASKED FOR, never assumed. 'timing_f' puts a
         seconds column before the line, 'jobs_f' a '|<n>|' one; absent
@@ -159,11 +184,12 @@ class CPlainFlow(CRunReportReceiver):
         person reads is what ran, not when it ran or how many stood
         beside it. 'detail_f' shows the SESSION and BUILD nodes,
         which are otherwise silent unless they FAIL. 'failure_summary_f'
-        keeps the closing FAILURES block, which stands by default.
+        keeps the closing HINTS block, which stands by default.
         """
         self.write       = write
         self.write_error = write_error if write_error is not None \
                            else write
+        self.write_log   = write_log
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
         self.tier        = tier
@@ -176,6 +202,9 @@ class CPlainFlow(CRunReportReceiver):
                                      # START line would have said
         self.last_key    = None      # (directory, file) of the last
                                      # flow line that named a run
+        self.choice_column = 0       # where the CURRENT application's
+                                     # choices stand; reset by each
+                                     # new application (_run_body)
 
         self.t0          = None      # first parseable 'when'
         self.when_first  = None      # first 'when', raw
@@ -183,16 +212,16 @@ class CPlainFlow(CRunReportReceiver):
         self.parallel_n  = 0
         self.began_set   = set()     # (directory, node) with run-begun
 
-        self.nick_db     = {}        # directory -> nickname
-        self.solo_dir_f  = False     # ONE directory: the column goes
+        self.last_dir_shown = None   # the directory the last DIR band
+                                     # named; a repeat prints nothing
         self.last_badge  = None      # the badge last written, for the
                                      # run of repeats beneath it
-        self.nick_index  = {}        # directory -> colour index
         self.dir_order   = []        # walk order ('tree-begun'), else
                                      # first-seen
         self.verdict_db  = {}        # (directory, node) -> verdict
         self.report_db   = {}        # (directory, node) -> report word
-        self.cause_db    = {}        # (directory, node) -> cause node
+        self.cause_db    = {}
+        self.detail_db  = {}        # (directory, node) -> the report's numbers (O-19)        # (directory, node) -> cause node
         self.frame_bad_db = {}       # directory -> [role, ...]
         self.fault_list  = []        # (directory, rendered fault line),
                                      # in arrival order
@@ -210,29 +239,10 @@ class CPlainFlow(CRunReportReceiver):
         if item is None: return
         self._dispatch(item)
 
-    def _nick(self, directory):
-        """
-        RETURN: str, the nickname of 'directory' -- registered on
-                first sight, collisions resolved by an appended 2, 3,
-                ... in first-seen order.
-        """
-        known = self.nick_db.get(directory)
-        if known is not None: return known
-        nick  = derive_nickname(directory)
-        if nick in self.nick_db.values():
-            count = 2
-            while "%s%d" % (nick, count) in self.nick_db.values():
-                count += 1
-            nick = "%s%d" % (nick, count)
-        self.nick_db[directory]    = nick
-        self.nick_index[directory] = len(self.nick_index)
-        return nick
-
-    def _ink_nick(self, directory):
-        """RETURN: str, the nickname, painted in the directory's own
-        cycling colour."""
-        return self.ink.nick(self._nick(directory),
-                             self.nick_index.get(directory, 0))
+    def _ink_dir(self, directory):
+        """RETURN: str, 'directory' (the full path, verbatim), in the
+        directory's own colour."""
+        return self.ink.directory(str(directory))
 
     def _clock(self, when):
         """
@@ -287,66 +297,46 @@ class CPlainFlow(CRunReportReceiver):
 
     def _run_body(self, directory, node):
         """
-        RETURN: [0] str, the run's name column, ELIDED against the
-                    line before it and column-aligned:
+        RETURN: [0] str, the run's name column: the application's
+                    file, or ':' where it repeats the line above it
+                    (the same mark a sorted wishlist uses, disc-8) --
+                    then its choice, where it carries one.
+                [1] str, the same (no colour differs here; a run's
+                    body carries none of its own).
 
-                        A  test-app.sh  one
-                        :/ test-solo.sh
-                        A2 test-app.sh  one
-                        :/ :            two
+        THE APPLICATION SETS ITS OWN CHOICE COLUMN. The choices of one
+        application stand under one another, at the width THAT NAME
+        asks for -- not at a width every application in the tree
+        shares. A NEW APPLICATION IS A NEW COLUMN:
 
-                    ':/' stands where the DIRECTORY repeats, ':/ :'
-                    where the application does too -- the same one
-                    mark, two positions, that a sorted wishlist uses
-                    (disc-8). What repeats is not read again; what
-                    changed stands out.
-                [1] str, the same, the nickname painted.
+            test-x.py    one
+            :            two
+            test-longer-name.py    alpha
+            :                      beta
 
-        The columns are padded so applications of one directory sit
-        under one another and the choices of one application do the
-        same.
+        A single fixed column would be as wide as the longest name
+        anywhere in the run, and every short name would trail a field
+        of blanks to reach it.
+
+        NO DIRECTORY COLUMN. The DIR band already named the directory
+        once, in full, when the run entered it; a line here says only
+        what ran. ':' compares '(directory, file)', so two directories
+        sharing an application's name are never confused for a repeat.
         """
         name          = _display_name(node)
         file, _, rest = name.partition(" ")
         choice        = rest.strip()
-        nick          = self._nick(directory)
         key           = (directory, file)
-        if self.solo_dir_f:
-            #  NO DIRECTORY COLUMN, and so no ':/': what repeats is the
-            #  application alone, and its ':' stands under its name.
-            shown    = ":" if self.last_key == key else file
-            self.last_key = key
-            pad      = " " * max(APP_COLUMN - len(shown), 0)
-            body     = "%s%s" % (shown, pad)
-            if not choice: return body.rstrip(), body.rstrip()
-            return "%s %s" % (body, choice), "%s %s" % (body, choice)
-        #  THE COLUMNS ARE FIXED, not grown as names arrive: a width
-        #  that widens mid-run moves every column under it, and a
-        #  reader following one column down the page loses it. A name
-        #  longer than the column overflows its own line alone.
-        nick_width     = max([len(n) for n in self.nick_db.values()]
-                             + [3])
-        app_width      = APP_COLUMN
-
-        if self.last_key == key:
-            #  THE THIRD ':' STANDS IN THE APPLICATION'S COLUMN, under
-            #  the first letter of the name it repeats -- a mark that
-            #  says 'the same as above' belongs above what it repeats.
-            mark, mark_ink, shown = ":/", self.ink.dim(":/"), ":"
-        elif self.last_key is not None \
-             and self.last_key[0] == directory:
-            mark, mark_ink, shown = ":/", self.ink.dim(":/"), file
-        else:
-            mark, mark_ink, shown = nick, self._ink_nick(directory), \
-                                    file
+        repeat_f      = (self.last_key == key)
+        if not repeat_f:
+            #  THE COLUMN IS SET BY THE NAME THAT OPENS THE GROUP and
+            #  held for every ':' beneath it.
+            self.choice_column = len(file) + CHOICE_GAP
         self.last_key = key
-
-        pad_mark = " " * max(nick_width - len(mark), 0)
-        pad_app  = " " * max(app_width - len(shown), 0)
-        body     = "%s%s %s%s" % (mark, pad_mark, shown, pad_app)
-        body_ink = "%s%s %s%s" % (mark_ink, pad_mark, shown, pad_app)
-        if not choice: return body.rstrip(), body_ink.rstrip()
-        return "%s %s" % (body, choice), "%s %s" % (body_ink, choice)
+        shown         = ":" if repeat_f else file
+        if not choice: return shown, shown
+        body = "%-*s%s" % (self.choice_column, shown, choice)
+        return body, body
 
     def _line(self, when, badge, badge_ink, body, body_ink,
               right="", right_ink="", tail=""):
@@ -392,16 +382,9 @@ class CPlainFlow(CRunReportReceiver):
         self.when_last = when
 
     def on_tree_begun(self, when, directory_list):
-        """RETURN: None. Nicknames and the roll-call's order registered
-        in walk order; a line in the VERBOSE tier alone.
-
-        ONE DIRECTORY, NO DIRECTORY COLUMN: where the whole run happens
-        in one place, a nickname repeated down the page names nothing
-        the reader does not already know, and ':/' says 'the same as
-        above' about a thing that was never in question (E-33)."""
-        self.solo_dir_f = len(directory_list) == 1
+        """RETURN: None. The roll-call's order registered in walk
+        order; a line in the VERBOSE tier alone."""
         for directory in directory_list:
-            self._nick(directory)
             if directory not in self.dir_order:
                 self.dir_order.append(directory)
         if self.tier is not E_Tier.VERBOSE: return
@@ -409,16 +392,40 @@ class CPlainFlow(CRunReportReceiver):
                    "%d directory(ies)" % len(directory_list),
                    "%d directory(ies)" % len(directory_list))
 
+    def _band(self, when, directory):
+        """
+        RETURN: None. THE DIR BAND, printed exactly where the directory
+                the flow speaks of CHANGES -- a full-width band naming
+                it in full, on an orange ground -- and nowhere else.
+
+        THE RULING IS 'WHEN THE DIRECTORY CHANGES', NOT 'WHEN IT
+        BEGINS'. With one directory at a time the two coincide. With
+        directories running in parallel ('--jobs', 'successor',
+        'parallel') their lines INTERLEAVE, and a band printed only at
+        each beginning leaves every later line under whichever band
+        came last -- unreadable for a person, unattributable for a
+        digest. So every flow line asks: is this the directory the
+        last band named? If not, the band comes first. A line carries
+        no directory column of its own (the ruling), and so the band
+        is the ONE place the directory is ever said.
+        """
+        if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
+        if directory == self.last_dir_shown: return
+        self.last_dir_shown = directory
+        self.last_badge     = None   # a band ends any badge run above it
+        self.last_key       = None   # and any ':' elision: the application
+                                     # above is another directory's
+        prefix, _ = self._prefix(when)
+        text = "%sDIR  %s" % (prefix, directory)
+        pad  = " " * max(self.width - len(text), 0)
+        self.write(self.ink.dir_band(text + pad))
+
     def on_dir_begun(self, when, directory, node_n):
-        """RETURN: None. The directory's nickname declared, once."""
+        """RETURN: None. The directory registered for the roll-call;
+        its band is printed by '_band' the moment its first line
+        needs it, not here -- see '_band' for why."""
         if directory not in self.dir_order:
             self.dir_order.append(directory)
-        nick = self._nick(directory)
-        if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
-        body = "%s = %s" % (nick, directory)
-        self._line(when, "DIR  ", self.ink.warn("DIR  "),
-                   body, "%s = %s" % (self._ink_nick(directory),
-                                      directory))
 
     def on_frame(self, when, directory, role, good):
         """RETURN: None. A failed frame is a failure of the directory
@@ -426,10 +433,10 @@ class CPlainFlow(CRunReportReceiver):
         if not good:
             self.frame_bad_db.setdefault(directory, []).append(role)
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
+        self._band(when, directory)
         if good and self.tier is not E_Tier.VERBOSE:   return
-        nick = self._nick(directory)
-        body = "%s:%s" % (nick, role)
-        body_ink = "%s:%s" % (self._ink_nick(directory), role)
+        body = "%s:%s" % (directory, role)
+        body_ink = "%s:%s" % (self._ink_dir(directory), role)
         if good:
             self._line(when, "FRAME", "FRAME", body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
@@ -462,6 +469,7 @@ class CPlainFlow(CRunReportReceiver):
         self.parallel_n += 1
         self.began_set.add((directory, node))
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
+        self._band(when, directory)
         if self._provision_hidden_f(node_kind):        return
         if self.start_delay > 0:
             #  HELD, not dropped: the body is computed when the line
@@ -507,10 +515,16 @@ class CPlainFlow(CRunReportReceiver):
         return self.held_db.pop(key, None) is not None
 
     def on_run_ended(self, when, directory, node, node_kind, good,
-                     verdict, cause=None, report=None):
-        """RETURN: None. 'END  ' where the node had begun, 'SKIP '
-        else; the failing line carries its phrase inline; the count
-        falls only for what had risen."""
+                     verdict, cause=None, report=None, detail=None):
+        """RETURN: None. 'DONE ' where the node had begun, 'SKIP '
+        else; the count falls only for what had risen.
+
+        THE FLOW SAYS [OK] OR [FAIL] AND NO MORE. A reason belongs to
+        the reader who has stopped to ask why, and that reader is
+        reading HINTS; carrying it here spends the width of every
+        failing line on a phrase the eye is not scanning for while a
+        run is still going.
+        """
         key      = (directory, node)
         began_f  = key in self.began_set
         if began_f:
@@ -519,72 +533,98 @@ class CPlainFlow(CRunReportReceiver):
         self.verdict_db[key] = verdict
         if report is not None: self.report_db[key] = report
         if cause  is not None: self.cause_db[key]  = cause
+        if detail is not None: self.detail_db[key] = detail
         if directory not in self.dir_order:
             self.dir_order.append(directory)
 
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
+        self._band(when, directory)
         #  A FAILING provision node speaks even where its kind is
         #  otherwise silent: a failed precondition is a test result.
         if good and self._provision_hidden_f(node_kind):  return
         self._release_held((directory, node))
         body, body_ink = self._run_body(directory, node)
-        word     = phrase(report if report is not None else verdict)
-        tail     = "" if cause is None else "  <- %s" % cause
 
         if not began_f:
-            self._line(when, "SKIP ", self.ink.warn("SKIP "),
-                       "%s  %s" % (body, word),
-                       "%s  %s" % (body_ink, self.ink.warn(word)),
-                       tail=tail)
+            #  A NODE THAT NEVER RAN STILL CARRIES ITS VERDICT. An
+            #  application that would not launch, would not parse or
+            #  would not build never reaches a 'run-begun', and it is
+            #  a FAILING TEST all the same -- reading '[FAIL]' like
+            #  every other. 'SKIP ' says it never ran; the tag says
+            #  how it came out; HINTS says which of the three it was.
+            if good:
+                self._line(when, "SKIP ", self.ink.warn("SKIP "),
+                           body, body_ink,
+                           "[OK]", self.ink.tag_ok("[OK]"))
+            else:
+                self._line(when, "SKIP ", self.ink.warn("SKIP "),
+                           body, body_ink,
+                           "[FAIL]", self.ink.tag_fail("[FAIL]"))
             return
         if good:
-            self._line(when, "END  ", "END  ", body, body_ink,
+            self._line(when, "DONE ", "DONE ", body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
         else:
-            right     = "%s  [FAIL]" % word
-            right_ink = "%s  %s" % (self.ink.fail(word),
-                                    self.ink.tag_fail("[FAIL]"))
-            self._line(when, "END  ", "END  ", body, body_ink,
-                       right, right_ink, tail=tail)
+            self._line(when, "DONE ", "DONE ", body, body_ink,
+                       "[FAIL]", self.ink.tag_fail("[FAIL]"))
+
+    def _marginal(self, plain_line, ink_line):
+        """
+        RETURN: None. One FAULT or NOTE line placed where marginalia
+                belong: THE LOG, where one stands.
+
+        THESE ARE NOT THE RUN REPORT. A configuration line that did
+        not parse and a wish that selected nothing are true and worth
+        keeping, and neither is what a reader watching a run is
+        watching for; three of them bury the verdict they stand
+        beside.
+
+        WITH NO LOG they go to 'write_error' -- never into the flow,
+        and never nowhere: A FAULT IS NEVER SWALLOWED, and '--no-log'
+        asks for no file, not for silence.
+        """
+        if self.write_log is not None: self.write_log(plain_line)
+        else:                          self.write_error(ink_line)
 
     def on_fault(self, when, directory, text):
-        """RETURN: None. A fault is never swallowed: a flow line, or
-        -- SILENT -- the same line on 'write_error'; QUIET holds it
-        for the tail's FAULTS block."""
+        """RETURN: None. A fault is never swallowed: a line in the
+        log (or, with none, on 'write_error'); QUIET additionally
+        holds it for the tail's FAULTS block."""
         prefix, prefix_ink = self._prefix(when)
         line = "%sFAULT %s: %s" % (prefix_ink,
-                                     self._ink_nick(directory), text)
-        self.fault_list.append((directory, "%sFAULT %s: %s"
-                                % (prefix, self._nick(directory), text)))
-        if   self.tier is E_Tier.SILENT: self.write_error(line)
-        elif self.tier is E_Tier.QUIET:  pass
-        else:                            self.write(line)
+                                     self._ink_dir(directory), text)
+        plain = "%sFAULT %s: %s" % (prefix, directory, text)
+        self.fault_list.append((directory, plain))
+        if self.tier is E_Tier.SILENT: self.write_error(line)
+        else:                          self._marginal(plain, line)
 
     def on_report(self, when, directory, text):
         """RETURN: None. Determination's note, e.g. an empty
-        selection."""
+        selection -- marginalia, and so the log's (or, with none,
+        'write_error')."""
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
         prefix, prefix_ink = self._prefix(when)
-        self.write("%sNOTE  %s: %s" % (prefix_ink,
-                                         self._ink_nick(directory),
-                                         text))
+        self._marginal("%sNOTE  %s: %s" % (prefix, directory, text),
+                       "%sNOTE  %s: %s" % (prefix_ink,
+                                           self._ink_dir(directory),
+                                           text))
 
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. Accounted for the roll-call; a line in the
-        VERBOSE tier alone."""
+        VERBOSE tier alone -- badge 'ROLL ', distinct from a single
+        run's own 'DONE ' (they used to share the word)."""
         if directory not in self.dir_order:
             self.dir_order.append(directory)
         self.dir_good_db[directory] = good
         if self.tier is not E_Tier.VERBOSE: return
-        nick   = self._nick(directory)
         ok_n, total_n = self._count(directory)
         tag    = "[OK]" if good else "[FAIL]"
         right  = "%d of %d ok  %s" % (ok_n, total_n, tag)
         right_ink = "%d of %d ok  %s" \
                     % (ok_n, total_n,
                        self.ink.tag_ok(tag) if good else self.ink.tag_fail(tag))
-        self._line(when, "DONE ", "DONE ", nick,
-                   self._ink_nick(directory), right, right_ink)
+        self._line(when, "ROLL ", "ROLL ", directory,
+                   self._ink_dir(directory), right, right_ink)
 
     def _fault_lines(self):
         """
@@ -610,18 +650,17 @@ class CPlainFlow(CRunReportReceiver):
 
     def on_misfit(self, kind, **fields):
         """RETURN: None. A known kind whose structure does not fit: a
-        fault line, the stream walks on."""
+        fault, and so the log's; the stream walks on."""
         directory = fields.get("directory", ".")
         when      = fields.get("when", "")
         prefix, prefix_ink = self._prefix(when)
         text = "event of kind '%s' does not fit the vocabulary" % kind
         line = "%sFAULT %s: %s" % (prefix_ink,
-                                     self._ink_nick(directory), text)
-        self.fault_list.append((directory, "%sFAULT %s: %s"
-                                % (prefix, self._nick(directory), text)))
-        if   self.tier is E_Tier.SILENT: self.write_error(line)
-        elif self.tier is E_Tier.QUIET:  pass
-        else:                            self.write(line)
+                                     self._ink_dir(directory), text)
+        plain = "%sFAULT %s: %s" % (prefix, directory, text)
+        self.fault_list.append((directory, plain))
+        if self.tier is E_Tier.SILENT: self.write_error(line)
+        else:                          self._marginal(plain, line)
 
     # -- the closing blocks ------------------------------------------------
     def _count(self, directory):
@@ -643,10 +682,138 @@ class CPlainFlow(CRunReportReceiver):
         return sorted(key for key, verdict in self.verdict_db.items()
                       if key[0] == directory and verdict != "ok")
 
+    def _directory_tree(self):
+        """
+        RETURN: dict, the root of a tree built from every path in
+                'self.dir_order', one node per '/'-separated segment.
+                A node that is itself one of the run's directories
+                carries 'directory' (the full path); a node that is
+                only a path segment on the way to one does not.
+
+        '.' (the walk's own root) becomes a single node named '.'; a
+        path never splits into zero segments.
+        """
+        root = {"children": {}, "order": [], "directory": None}
+        for directory in self.dir_order:
+            part_list = [p for p in str(directory).split("/") if p] \
+                        or ["."]
+            node = root
+            for part in part_list:
+                if part not in node["children"]:
+                    node["children"][part] = {"children": {}, "order": [],
+                                              "directory": None}
+                    node["order"].append(part)
+                node = node["children"][part]
+            node["directory"] = directory
+        return root
+
+    def _write_directory_tree(self, write, w):
+        """
+        RETURN: None. The tree written depth-first.
+
+        THE CONNECTOR SAYS WHETHER ANYTHING FOLLOWS AT ITS OWN LEVEL:
+        "+---o " where a sibling stands below it, "'---o " where none
+        does -- so the last of a group closes it visibly.
+
+        A NODE THAT ONLY LEADS SOMEWHERE IS NOT A LEVEL. A segment
+        with exactly one child and no run of its own is joined to that
+        child by '/' rather than given a line: 'adm/TEST' is one
+        place, and drawing it as two says there was a choice at 'adm'
+        that was never there. Where sub-branches DO exist the segment
+        is named alone, because there the choice is real.
+
+        The right side is '[OK]'/'[FAIL]' RIGHT-ALIGNED -- the two
+        differ in width and their ends must still stand in one column
+        -- with the '<ok>/<total>' count beyond it, right-aligned to
+        'w'. The fill is DOT-SPACE: the tree already draws lines of
+        its own, and a solid rule beside them reads as a second set
+        of them.
+        """
+        def collapse(part, node):
+            """
+            RETURN: [0] str, the label -- the segment, joined by '/'
+                        to each single onward child that carries no
+                        run of its own.
+                    [1] dict, the node the label ends at.
+            """
+            while node["directory"] is None and len(node["order"]) == 1:
+                only = node["order"][0]
+                part = "%s/%s" % (part, only)
+                node = node["children"][only]
+            return part, node
+
+        def recurse(node, indent):
+            child_n = len(node["order"])
+            for i, part in enumerate(node["order"]):
+                label, child = collapse(part, node["children"][part])
+                last_f    = (i == child_n - 1)
+                connector = "'---o " if last_f else "+---o "
+                left      = "%s%s%s%s" % (TREE_INDENT, indent,
+                                          connector, label)
+                directory = child["directory"]
+                if directory is not None:
+                    good   = self.dir_good_db.get(directory)
+                    tag    = "[OK]" if good else "[FAIL]"
+                    counts = "%d/%d" % self._count(directory)
+                    #  THE TAG IS RIGHT-ALIGNED, so '[OK]' and
+                    #  '[FAIL]' end in one column though they differ
+                    #  in width; the count hangs beyond it, itself
+                    #  right-aligned to 'w'.
+                    tag_field   = "%*s" % (TAG_WIDTH, tag)
+                    count_field = "%*s" % (COUNT_WIDTH, counts)
+                    right       = "%s%s" % (tag_field, count_field)
+                    tag_ink     = self.ink.tag_ok(tag) if good \
+                                  else self.ink.tag_fail(tag)
+                    right_ink   = "%s%s%s" % (
+                                      " " * (TAG_WIDTH - len(tag)),
+                                      tag_ink, count_field)
+                    fill = max(w - len(left) - len(right) - 2, 1)
+                    dots = _dot_space_fill(fill)
+                    write("%s %s %s" % (left, self.ink.dim(dots),
+                                        right_ink))
+                else:
+                    write(left)
+                recurse(child, indent + ("    " if last_f else "|   "))
+        #  ONE DIRECTORY IS NOT A TREE. A connector says "this branches
+        #  from something"; with nothing to branch from, the name
+        #  stands alone at the indent, and the right side as usual.
+        if len(self.dir_order) == 1:
+            directory = self.dir_order[0]
+            good      = self.dir_good_db.get(directory)
+            tag       = "[OK]" if good else "[FAIL]"
+            counts    = "%d/%d" % self._count(directory)
+            left      = "%s%s" % (TREE_INDENT, directory)
+            tag_field   = "%*s" % (TAG_WIDTH, tag)
+            count_field = "%*s" % (COUNT_WIDTH, counts)
+            right       = "%s%s" % (tag_field, count_field)
+            tag_ink     = self.ink.tag_ok(tag) if good \
+                          else self.ink.tag_fail(tag)
+            right_ink   = "%s%s%s" % (" " * (TAG_WIDTH - len(tag)),
+                                      tag_ink, count_field)
+            fill = max(w - len(left) - len(right) - 2, 1)
+            write("%s %s %s" % (left, self.ink.dim(_dot_space_fill(fill)),
+                                right_ink))
+            return
+        recurse(self._directory_tree(), "")
+
+    def _hint_key_list(self, directory):
+        """
+        RETURN: list, the directory's not-ok (directory, node) keys
+                whose word is NOT 'differs from GOOD' -- a plain
+                compare mismatch is the ordinary business a test suite
+                exists to catch, not a hint. What earns a line here is
+                why a test never got as far as a comparison at all:
+                killed by the supervisor, a broken pipe, a missing
+                pype script, an interpreter not found, and the like.
+        """
+        return [key for key in self._failure_key_list(directory)
+                if phrase(self.report_db.get(key, self.verdict_db[key]))
+                   != "differs from GOOD"]
+
     def tail(self):
         """
         RETURN: None. The DIRECTORIES roll-call, the FAULTS met (QUIET
-        tier), and the FAILURES block, last -- nothing in the SILENT
+        tier), and the HINTS block, last -- nothing in the SILENT
         tier.
         """
         if self.tier is E_Tier.SILENT: return
@@ -663,25 +830,8 @@ class CPlainFlow(CRunReportReceiver):
         write("-" * w)
         if not self.dir_order:
             write("    (no directory ran)")
-        nick_width = max([len(self.nick_db[d])
-                          for d in self.dir_order], default=0)
-        for directory in self.dir_order:
-            nick   = self.nick_db[directory]
-            good   = self.dir_good_db.get(directory)
-            ok_n, total_n = self._count(directory)
-            tag    = "[OK]" if good else "[FAIL]"
-            counts = "%3d of %3d ok" % (ok_n, total_n)
-            plain_left  = "%-*s  %s" % (nick_width, nick, directory)
-            plain_right = "%-6s %s" % (tag, counts)
-            fill = max(w - len(plain_left) - len(plain_right) - 2, 1)
-            tag_ink  = ink.tag_ok(tag) if good else ink.tag_fail(tag)
-            ink_left = "%s%s  %s" % (ink.nick(nick,
-                                       self.nick_index[directory]),
-                                     " " * (nick_width - len(nick)),
-                                     directory)
-            write("%s %s %s%s %s"
-                  % (ink_left, ink.dim("." * fill), tag_ink,
-                     " " * (6 - len(tag)), counts))
+        else:
+            self._write_directory_tree(write, w)
         if self.event_f and self.good_f is None:
             write("    the stream ended without 'tree-done'")
 
@@ -694,7 +844,7 @@ class CPlainFlow(CRunReportReceiver):
                 write(line)
 
         fail_dir_list = [d for d in self.dir_order
-                         if self._failure_key_list(d)
+                         if self._hint_key_list(d)
                          or self.frame_bad_db.get(d)]
         if not self.failure_summary_f: fail_dir_list = []
         if not fail_dir_list:
@@ -702,24 +852,66 @@ class CPlainFlow(CRunReportReceiver):
             return
         write("")
         write("=" * w)
-        write("FAILURES")
+        write("HINTS")
         write("-" * w)
-        name_width = 28
+        #  'HINTS' was 'FAILURES'. A plain 'differs from GOOD' is left
+        #  out (see '_hint_key_list') and never carries a shape
+        #  (GREW/SHRANK/DIVERGED, E-29): E-31 rules the RUN never
+        #  takes one, since its compare aborts on the first mismatch
+        #  and has read neither text whole. That stays 'hwut.report's
+        #  question, unchanged.
+        #
+        #  EVERY PHRASE HERE COMES THROUGH 'word.phrase()' AND FROM
+        #  NOWHERE ELSE -- one table to review, and one table to
+        #  translate (D-6). A phrase written inline at a call site is
+        #  a word no reviewer of the table would ever see.
+        #
+        #  THE COLUMNS READ AS THE FLOW'S DO: the application once,
+        #  ':' beneath where it repeats, and THE APPLICATION'S OWN
+        #  NAME setting where its choices stand. A new application is
+        #  a new column, exactly as in the flow ('_run_body').
+        #
+        #  THE BRIEFING FOLLOWS THE WIDEST OF THEM, so the reasons
+        #  stand in one column down the whole block: the reason is
+        #  what this block exists to be read for, and a reason that
+        #  moves is one the eye must hunt for on every line.
+        brief_column = 0
         for directory in fail_dir_list:
-            for key in self._failure_key_list(directory):
-                name_width = max(name_width,
-                                 len(_display_name(key[1])) + 2)
-        for directory in fail_dir_list:
-            write("%s  %s" % (self._ink_nick(directory), directory))
             for role in self.frame_bad_db.get(directory, []):
-                write("    %-*s %s"
-                      % (name_width, "frame %s" % role,
-                         ink.fail("the frame failed")))
-            for key in self._failure_key_list(directory):
+                brief_column = max(brief_column,
+                                   len("frame %s" % role) + BRIEF_GAP)
+            for key in self._hint_key_list(directory):
+                file, _, rest = _display_name(key[1]).partition(" ")
+                choice        = rest.strip()
+                width         = len(file)
+                if choice: width += CHOICE_GAP + len(choice)
+                brief_column  = max(brief_column, width + BRIEF_GAP)
+        for directory in fail_dir_list:
+            #  THE DIRECTORY, ONCE, and in the directory's colour.
+            write(self._ink_dir(directory))
+            last_file    = None
+            choice_column = 0
+            for role in self.frame_bad_db.get(directory, []):
+                write("    %-*s%s"
+                      % (brief_column, "frame %s" % role,
+                         ink.fail(phrase("frame-failed"))))
+            for key in self._hint_key_list(directory):
+                name          = _display_name(key[1])
+                file, _, rest = name.partition(" ")
+                choice        = rest.strip()
+                repeat_f      = (last_file == file)
+                if not repeat_f: choice_column = len(file) + CHOICE_GAP
+                last_file     = file
+                shown         = ":" if repeat_f else file
+                left          = "%-*s%s" % (choice_column, shown,
+                                            choice) if choice else shown
                 token = self.report_db.get(key, self.verdict_db[key])
-                line  = "    %-*s %s" % (name_width,
-                                         _display_name(key[1]),
-                                         ink.fail(phrase(token)))
+                line  = "    %-*s%s" % (brief_column, left,
+                                        ink.fail(phrase(token)))
+                #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the cap,
+                #  the peak -- what a reader of a kill asks first.
+                detail = self.detail_db.get(key)
+                if detail is not None: line += "  (%s)" % detail
                 cause = self.cause_db.get(key)
                 if cause is not None: line += "  <- %s" % cause
                 write(line)

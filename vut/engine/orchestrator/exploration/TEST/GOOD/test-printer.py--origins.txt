@@ -2,34 +2,24 @@
 --- every provenance in one directory ---
 gen.c {
     title = "generated"
-    choices {
+    choices {                                 # hwut.conf
         - {
-            build {
-                framework = null              # default
-                executable = null             # default
-            }
             caps {
                 timeout_sec = 60.0            # default
-                cpu_sec = null                # default
-                memory_mb = null              # default
-                file_size_mb = null           # default
-                child_process_max_n = null    # default
-                file_handle_max_n = null      # default
                 network = true                # default
-                write_directory_list = null   # default
             }
-            pype = null                       # default
-            numeric = 0.0                     # default
+            tolerance {
+                numeric_ratio = 0.0           # default
+                slash = true                  # hwut.conf:2
+                whitespace = true             # default
+            }
             eq-pattern = []                   # default
             nothing = []                      # default
             analogy = ["((", "))"]            # default
             constraints = []                  # default
             comment = ["//", "//"]            # hwut.conf:5
-            slash_eqv = true                  # hwut.conf:2
-            whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
-            execute = null                    # default
             output = ["<stdout>"]             # default
         }
     }
@@ -37,34 +27,24 @@ gen.c {
 
 legacy.bas {
     title = "Iron and Blood"
-    choices {
+    choices {                                 # --hwut-info
         one {
-            build {
-                framework = null              # default
-                executable = null             # default
-            }
             caps {
                 timeout_sec = 60.0            # default
-                cpu_sec = null                # default
-                memory_mb = null              # default
-                file_size_mb = null           # default
-                child_process_max_n = null    # default
-                file_handle_max_n = null      # default
                 network = true                # default
-                write_directory_list = null   # default
             }
-            pype = null                       # default
-            numeric = 0.0                     # default
+            tolerance {
+                numeric_ratio = 0.0           # default
+                slash = true                  # hwut.conf:2
+                whitespace = true             # default
+            }
             eq-pattern = []                   # default
             nothing = []                      # default
             analogy = ["((", "))"]            # default
             constraints = []                  # default
             comment = ["##", "##"]            # default
-            slash_eqv = true                  # hwut.conf:2
-            whitespace_eqv = true             # default
             same = true                       # --hwut-info
             interactive = false               # default
-            execute = null                    # default
             output = ["<stdout>"]             # default
         }
     }
@@ -72,34 +52,24 @@ legacy.bas {
 
 test-own.py {
     title = "own"
-    choices {
+    choices {                                 # app
         two {
-            build {
-                framework = null              # default
-                executable = null             # default
-            }
             caps {
                 timeout_sec = 60.0            # default
-                cpu_sec = null                # default
-                memory_mb = null              # default
-                file_size_mb = null           # default
-                child_process_max_n = null    # default
-                file_handle_max_n = null      # default
                 network = true                # default
-                write_directory_list = null   # default
             }
-            pype = null                       # default
-            numeric = 0.05
+            tolerance {
+                numeric_ratio = 0.05
+                slash = true                  # hwut.conf:2
+                whitespace = true             # default
+            }
             eq-pattern = []                   # default
             nothing = []                      # default
             analogy = ["((", "))"]            # default
             constraints = []                  # default
             comment = ["##", "##"]            # default
-            slash_eqv = true                  # hwut.conf:2
-            whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
-            execute = null                    # default
             output = ["<stdout>"]             # default
         }
     }

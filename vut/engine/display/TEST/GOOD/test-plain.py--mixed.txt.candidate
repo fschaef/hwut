@@ -1,0 +1,34 @@
+
+--- the mixed tree ---
+DIR  time-stamping-pio-tests/TEST                                             
+SKIP  test-m.sh ....................................................... [FAIL]
+DONE  build[make  test-built.c] ....................................... [FAIL]
+SKIP  test-built.c .................................................... [FAIL]
+DONE  test-app.sh  a .................................................... [OK]
+      :            b .................................................... [OK]
+      test-cut.sh ..................................................... [FAIL]
+      test-dead.sh  x ................................................. [FAIL]
+      test-diff.sh .................................................... [FAIL]
+      test-ok.sh ........................................................ [OK]
+DIR  compare/TEST                                                             
+DONE  test-region.py  nested ............................................ [OK]
+
+==============================================================================
+DIRECTORIES                                             4 ok, 6 fail, 00:00:12
+------------------------------------------------------------------------------
+   +---o time-stamping-pio-tests/TEST . . . . . . . . . . . .  [FAIL]      3/9
+   '---o compare/TEST . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+time-stamping-pio-tests/TEST
+    build[make  test-built.c]   the build failed
+    test-built.c                not supported here  <- build[make test-built.c]
+    test-cut.sh                 output cut short (no <hwut-end>)
+    test-dead.sh  x             killed by the supervisor
+    test-m.sh                   missing dependency
+==============================================================================
+stderr> FAULT time-stamping-pio-tests/TEST: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+[fold: good_f=False fail_n=6 verdict_n=10 fault_n=1]
+<hwut-end>

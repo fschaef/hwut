@@ -32,8 +32,10 @@ class ConfigBuild:
 
 @dataclass(frozen=True, slots=True)
 class ConfigCaps:
-    """OWED TO: procsitter. It runs the process and knows what it may
-    spend.
+    """OWED TO: procsitter -- and PAID for what it enforces (R-78): the
+    wall clock, cpu, memory, file size and pids now read their defaults
+    from 'ProcsitterConfig' on the supervisor's door. What stands here
+    is only what the supervisor does not enforce.
 
     'write_directory_list' defaults to the directory of the test source
     and all of its sub-directories; 'None' here says exactly that -- the

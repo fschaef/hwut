@@ -447,3 +447,34 @@ COST      A test whose pype is broken now FAILS rather than comparing
 VERIFIED  A pype without a shebang: 'pype interpreter missing [FAIL]'.
           A pype whose language is wrong: 'pype failed [FAIL]'. The
           same pype, corrected: '[OK]'.
+
+
+O-19  A KILL NAMES ITS CAP, AND ITS NUMBER                        (2026-09-01)
+______________________________________________________________________________
+PROBLEM   "killed by the supervisor" -- and nothing else. 'stage_
+          execute' folded every 'E_Containment.FAIL_*_EXCEEDED' into
+          one token, 'test-app-contained', and the record's
+          'peak_memory_mb' never left the operation. A reader could
+          not tell a memory kill from a wall-clock kill, let alone
+          how far over the cap the test went; the observed case was a
+          solver at well over 512 MB, reported as a bare kill.
+DECISION  ONE TOKEN PER CAP: 'test-app-wall-clock-exceeded',
+          'test-app-cpu-time-exceeded', 'test-app-memory-exceeded',
+          'test-app-file-size-exceeded', 'test-app-pids-exceeded',
+          'test-app-disk-exceeded'; 'test-app-contained' remains for a
+          containment none of these names. The token is the VERDICT'S
+          word and enters the book: which cap was hit is a fact about
+          the software as configured, not about the machine.
+          THE NUMBERS TRAVEL AS 'detail', a new optional field of
+          'run-ended' beside 'cause' and 'report' (protocol
+          vocabulary): "cap 512 MB, peak 1069 MB". A peak is what THIS
+          machine saw (E-36) -- so 'detail' is spoken in HINTS and the
+          log and is NOT written to the book. 'cause' is not reused:
+          it names the node whose breaking failed this one, a
+          different thing, and a field with two meanings is no field.
+COST      'result.py' tokens; 'stage_execute' maps containment to
+          token and composes 'detail' from the record and the caps in
+          force; 'TestResult' carries 'detail'; the dispatcher emits
+          it; the vocabulary declares it; 'summary.py' folds it; the
+          display prints it after the phrase; 'word.py' phrases the
+          six tokens. The protocol's suite re-recorded once.

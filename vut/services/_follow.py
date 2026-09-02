@@ -30,7 +30,7 @@ import os
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                   import (RootConfMissing,
                                           root_conf_directory)
-from   .labels                    import _file
+from   .lib.labels                    import _file
 
 
 def labels_renamed(test_directory, test, choice, fresh_test,

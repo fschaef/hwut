@@ -166,7 +166,7 @@ def fixture(entry_command="true"):
     put(test, "test-tol.sh",
         '#!/bin/bash\n'
         '# @hwut { title   = "Tolerance"\n'
-        '#        numeric = 0.01 }\n'
+        '#        tolerance { numeric_ratio = 0.01 } }\n'
         'echo "value 100.4"\n'
         'echo "<hwut-end>"\n', executable=True)
     put(good, "test-tol.sh.txt", "value 100.0\n<hwut-end>\n")

@@ -102,10 +102,10 @@ def test_walk():
 def test_inherit():
     """RETURN: None. The configuration tree, three levels deep."""
     tree, root = tree_of({
-        "hwut.conf":            'hwut { default_app { numeric = 0.5\n'
+        "hwut.conf":            'hwut { default_app { tolerance { numeric_ratio = 0.5 }\n'
                                 '                     pype = "root.pype" '
                                 '} }\n',
-        "sub/hwut.conf":        'hwut { default_app { numeric = 0.1 } '
+        "sub/hwut.conf":        'hwut { default_app { tolerance { numeric_ratio = 0.1 } } '
                                 '}\n',
         "sub/TEST/test-a.py":   '# @hwut { title = "A" }\n',
         "sub/TEST/hwut.conf":   'hwut { default_app { pype = '
@@ -114,7 +114,7 @@ def test_inherit():
     })
     try:
         banner("parameter by parameter: the nearer word wins")
-        show(tree, detail="numeric")
+        show(tree, detail="tolerance")
         banner("the untouched sibling still flows from the root")
         show(tree, detail="pype")
     finally:

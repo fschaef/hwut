@@ -34,14 +34,14 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                       import (RootConfMissing,
                                                               root_conf_directory)
 from   vut.engine.orchestrator.plan.label             import STANDARD_LABEL
-from   vut.services.labels                            import _file
+from   vut.services.lib.labels                            import _file
 from   vut.engine.bookkeeper.api               import (TestIdDb,
                                                               TestIdFault)
 from   ._exit                                         import E_ExitCode
 
 
 USAGE = "usage: hwut.show [<source file>] [--no-default] " \
-        "[--provenance] [--gnu] [--directory=<path>] | " \
+        "[--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | " \
         "hwut.show --root-conf-template"
 
 HELP = """hwut.show -- the configuration the framework READ
@@ -58,6 +58,11 @@ OPTIONS
     --show-ids          print the register instead of the tree
     --no-default        drop every value nobody stated, leaving what
                         somebody chose
+    -v, --verbose       write the NULL parameters too. Absent, a null
+                        is not written -- "nothing set here" is what
+                        every unwritten line already says -- and a
+                        scope ('build', 'caps') whose every member is
+                        null is not written either
     --provenance        name the place of every stated value -- the
                         file and the line it stands on
     --gnu               name it in the GNU error format,
@@ -194,7 +199,7 @@ def main(argv=None, write=None):
         else:
             name_list.append(argument)
 
-    known_set = {"--no-default", "--provenance", "--gnu",
+    known_set = {"--no-default", "--provenance", "--gnu", "-v", "--verbose",
                  "--show-ids"}
     unknown   = sorted(option_set - known_set)
     if unknown:
@@ -213,15 +218,16 @@ def main(argv=None, write=None):
     no_default_f = "--no-default" in option_set
     provenance_f = "--provenance" in option_set
     gnu_f        = "--gnu"        in option_set
+    verbose_f    = "-v" in option_set or "--verbose" in option_set
 
     if name_list:
         text, fault_list = text_of_file(directory, name_list[0],
                                         no_default_f, provenance_f,
-                                        gnu_f)
+                                        gnu_f, verbose_f)
     else:
         text, fault_list = text_of_directory(directory, None,
                                              no_default_f, provenance_f,
-                                             gnu_f)
+                                             gnu_f, verbose_f)
     for fault in fault_list:
         write(str(fault))
     if text:
