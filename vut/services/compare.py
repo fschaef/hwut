@@ -82,22 +82,42 @@ async def compare_view(subject_text, nominal_text, adapter,
 
 
 async def reading_view(text, adapter, subject_name="reading",
-                       compare_options=None):
+                       compare_options=None, write=None):
     """
-    RETURN: None. Displays the READING of 'text': the stream fed
-            against ITSELF, marks by tolerance kind.
+    RETURN: True,  the reading was displayed.
+            False, the text's REGION FRAMING is broken and could not be
+                   read; the reason is written, naming the line.
 
     Self-feeding makes every pair equivalent by construction, so the
     rendering shows pure interpretation: what was lexed as what, and
     which regions frame it. (The adapter should be a reading-marking
     one; this function does not police it.)
+
+    THE ONE FAULT A CALLER MUST CATCH ('compare/api.py') IS CAUGHT
+    HERE, for every road that shows a reading -- 'hwut.compare' and
+    'hwut.play' alike. A text whose framing does not parse is a text
+    this face cannot show, and saying so IS the answer; raised
+    through, it reaches the person as a traceback, which tells them
+    the framework broke when it was their text that could not be
+    read. The VERDICT road states the same law in its own words
+    ('consume/equivalence_check.py').
     """
-    from vut.engine.compare.api import Configuration
+    from vut.engine.compare.api import Configuration, RegionSyntaxError
+    if write is None: write = print
     if compare_options is None: compare_options = Configuration()
-    await deliver(compare_feeder.feed(compare_options,
-                                      io.StringIO(text),
-                                      io.StringIO(text)),
-                  adapter, subject_name)
+    try:
+        await deliver(compare_feeder.feed(compare_options,
+                                          io.StringIO(text),
+                                          io.StringIO(text)),
+                      adapter, subject_name)
+    except RegionSyntaxError as error:
+        write("REFUSED: the region framing of this text is broken --")
+        write("    %s" % error)
+        write("Region framing ('##! <handler>', '####') is read in every")
+        write("text. A text that CONTAINS such lines as content cannot")
+        write("be shown under the reading until it can be switched off.")
+        return False
+    return True
 
 
 def main(argv=None):
@@ -157,10 +177,12 @@ def _main(argv):
                            reading_f = reading_f)
 
     if arguments.nominal is None:
-        asyncio.run(reading_view(read_source(arguments.subject), adapter,
-                                 subject_name=arguments.subject,
-                                 compare_options=setup))
-        return E_ExitCode.OK
+        shown_f = asyncio.run(
+            reading_view(read_source(arguments.subject), adapter,
+                         subject_name=arguments.subject,
+                         compare_options=setup,
+                         write=lambda line: sys.stderr.write(line + "\n")))
+        return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
 
     bad_pair_n = asyncio.run(compare_view(
         read_source(arguments.subject), read_source(arguments.nominal),

@@ -107,3 +107,98 @@ COST      None in behaviour: the compare tree answers 119 ok, 6 fail
 
 GRAVEYARD Re-exporting from 'engine/' for compatibility -- rejected:
           there was nobody to be compatible with.
+
+C-4   REGION FRAMING IS SWITCHABLE, LIKE EVERY OTHER FEATURE (2026-09-02)
+
+PROBLEM   '##! <handler>' and '####' were read in EVERY text, always.
+          Every other lexical feature has a flag -- 'analogy_f',
+          'ignored_line_f', 'whitespace_f', 'backslash_f' -- and this
+          one had none. A text that TALKS ABOUT framing therefore
+          could not be read at all: this tree's own
+          'test-equivalence-vs-association.py' prints a side-by-side
+          table whose CELLS hold '##! potpourri', and the reader saw
+          a shebang with a parameter '|'. Four choices of the compare
+          suite failed on it, carried as open; 'hwut.play' on any of
+          them ended in a traceback.
+
+DECISION  'ConfigurationPatternFinder.regions_f: bool = True'. False:
+          the markers are NO LONGER REGIONS -- they fall to the
+          ordinary rules, where '##! ...' meets the ignored-line
+          marker '##' and reads as a comment; with comments off too,
+          as content. Switching regions off REMOVES A CLASS; it
+          invents none.
+
+          THE NAME, in two turns: 'region_f' was refused as too weak,
+          'regions_enabled' proposed and built, then ruled back to
+          'regions_f' -- the plural says what is switched and the
+          '_f' keeps the habit of its five neighbours
+          ('analogy_f', 'ignored_line_f', 'whitespace_f',
+          'backslash_f', 'strip_whitespace_f'). One suffix for one
+          kind of member is worth more than one member's clarity.
+
+          JUDGED IN ONE PLACE: 'reading/line_scanner.classify()', the
+          one function where a line becomes a class. Nothing
+          downstream can see a region the reader was told not to
+          read, so no second gate exists to disagree with the first.
+
+          THE HWUT WORD IS 'tolerance.regions', beside
+          'tolerance.whitespace' and 'tolerance.slash', stated per
+          choice or per application:
+
+              # @hwut { title = "..."  tolerance { regions = false } }
+
+          Related in 'relation.py' to 'regions_f', so
+          'hwut.show' prints its default like every other parameter
+          and 'test-defaults.py' checks it.
+
+COST      One member in compare's declaration, its mirror in
+          'owner_faces_provisional.ConfigCompare', one leaf on
+          'Tolerance', one line in the validator's vocabulary, one
+          in the adapter's mapping. The hwut word is 'tolerance.
+          regions' -- the word drops the suffix, as
+          'tolerance.whitespace' does for 'whitespace_f'. Two tests of this tree state
+          'regions = false' and stop failing:
+          'test-equivalence-vs-association.py' (3 choices) and
+          'reading/test-chunk_pipe.py' (1). Compare: 119 ok / 6 fail
+          -> 123 ok / 2 fail, the two remaining being the memory-cap
+          kills (disc-6 r-3), untouched.
+
+GRAVEYARD Escaping the marker in the text -- rejected: the text is
+          the subject, and a framework that requires the author to
+          alter their program's output to be testable has failed at
+          the one thing it is for.
+          Auto-detection ("this looks like content") -- rejected: a
+          reader that guesses would silently reinterpret a region
+          somebody meant, which is the very thing 'RegionSyntaxError'
+          exists to make loud.
+
+C-5   THE ONE FAULT A CALLER MUST CATCH, CAUGHT ON EVERY ROAD (2026-09-02)
+
+PROBLEM   'RegionSyntaxError' stands in the contract BECAUSE THE
+          CALLER CATCHES IT -- its own docstring says so, and
+          'consume/equivalence_check.py' states the law with the
+          reason: "a broken region framing is a VERDICT WITH A
+          REASON, not an exception". Of the three roads into
+          compare's door, only that one obeyed. 'consume/
+          difference_display.py' and 'services/compare.reading_view'
+          let it through, so 'hwut.play' and 'hwut.compare' answered
+          a text they could not read with a Python traceback -- which
+          tells the person the framework broke when it was their text
+          that could not be read.
+
+DECISION  Each ROAD catches once, in the operation that owns it, and
+          says it in that road's own vocabulary:
+              VERDICT   consume/equivalence_check   (unchanged)
+              DISPLAY   consume/difference_display  -> the report
+                        'region-syntax-error', diagnosed by name
+              READING   services/compare.reading_view -> a REFUSED
+                        line naming the line, and a FAULT exit; the
+                        one place for both faces that show a reading
+                        ('hwut.compare' and 'hwut.play')
+          Not four faces each rolling their own: three roads, three
+          catches.
+
+COST      'reading_view' answers a bool where it answered None, and
+          takes a 'write'. Both its callers read it: play and compare
+          return FAULT where the reading could not be shown, rather
+          than OK with a refusal printed in the middle.

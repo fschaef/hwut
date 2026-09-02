@@ -7,7 +7,7 @@
 #                   "jacoco", "lcov", "luacov", "native", "psl",
 #                   "python", "resultset", "roles", "ucis", "verilator",
 #                   "witnessed"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

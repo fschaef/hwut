@@ -1,6 +1,8 @@
 == a BARE accept passes the silenced run by ==
 STATUS: 0
 STDOUT {
+    RUN: test-ok.sh   (0) nothing recorded for this choice
+    RUN: test-two.sh b   (0) nothing recorded for this choice
     
     ==============================================================================
     ACCEPTED  2 of 2
@@ -16,6 +18,7 @@ GOOD holds:
 == NAMING it literally blesses it ==
 STATUS: 0
 STDOUT {
+    RUN: test-two.sh a   (0) nothing recorded for this choice
     
     ==============================================================================
     ACCEPTED  1 of 1

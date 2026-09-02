@@ -4,8 +4,8 @@
 #     title      = "Orthogonal Space Consistency Check"
 #     choices    = ["analogy", "leakage", "numeric", "potpourri",
 #                   "sudoku"]
-#     eq-pattern = ["Consistency:         OK"]
 #     interactive = true
+#     tolerance { regions = false  eq_pattern = ["Consistency:         OK"] }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

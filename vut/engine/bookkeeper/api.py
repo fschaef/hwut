@@ -65,7 +65,8 @@ ______________________________________________________________________________
 """
 from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             GOOD_OWNED_FILE_TUPLE,
-                            STORE_DIRECTORY_NAME, compare_setup_delta)
+                            STORE_DIRECTORY_NAME, compare_setup_delta,
+                            nominal_stands_f)
 from .configuration import (CAPS_FIELD_DB, E_StderrNote, NamingConfig,
                             StoreConfig)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
@@ -83,5 +84,6 @@ __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "NamingConfig", "Observation", "ObservationDb",
            "ObservationFault", "RunIdFault", "STORE_DIRECTORY_NAME",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",
-           "TestRunId", "compare_setup_delta", "observation_of",
+           "TestRunId", "compare_setup_delta", "nominal_stands_f",
+           "observation_of",
            "parse_group_table", "run_id_of_text", "source_digest_of")

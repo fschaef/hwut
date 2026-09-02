@@ -76,6 +76,7 @@ class ConfigCompare:
     equivalent_pattern_list:      tuple = ()
     visible_nothing_pattern_list: tuple = ()
     ignored_line_f:               bool  = True
+    regions_f:              bool  = True
     ignored_line_begin_marker:    str   = "##"
     ignored_line_end_marker:      str   = "##"
     analogy_begin_marker:         str   = "(("

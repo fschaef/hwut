@@ -5,7 +5,7 @@
 #     title      = "The hwut.accept face: promotion, and what it refuses."
 #     choices    = ["ask", "bless", "labels", "merge", "stderr",
 #                   "sugar", "token"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

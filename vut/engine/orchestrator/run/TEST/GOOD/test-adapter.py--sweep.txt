@@ -4,11 +4,6 @@ INSPECT: every member of 'TestParameters', stated alone
          caps             caps
          pype             canonicalisers
          tolerance        compare
-         eq_pattern       compare
-         nothing          compare
-         analogy          compare
-         constraints      compare
-         comment          compare
          same             naming
          interactive      interactive
          execute          execute

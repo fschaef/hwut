@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "hwut.labels.remove: take a label off what a wish selects."
 #     choices    = ["delete", "doors", "take"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

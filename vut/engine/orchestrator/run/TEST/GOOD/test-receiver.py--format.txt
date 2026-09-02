@@ -37,14 +37,20 @@ run-ended
     verdict          str    WHY it ended so: ok, test-failed, build-failed, launch-failed, unsupported, misdep, ... (open; unknown reads not-ok)
     cause            str    (optional) the node whose breaking failed this one; absent else
     report           str    (optional) the operation's own word for WHY (open list, e.g. 'pype-failed', 'test-app-stalled'); absent where nothing finer than the verdict is known
+    detail           str    (optional) the report's numbers, where it has them: which cap, the cap, the peak (O-19); absent else
 
 fault
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
 
 report
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
+
+refused
+    directory        str    the test directory, RELATIVE to the root, '/'-separated
+    node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
 
 dir-done
     directory        str    the test directory, RELATIVE to the root, '/'-separated

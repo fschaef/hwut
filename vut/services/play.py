@@ -5,15 +5,19 @@ PURPOSE: THE 'hwut.play' COMMAND LINE -- run one test, show the
          READING of what it produced, under the test's OWN setup
          (disc-4).
 
-    hwut.play <test-app> [<choice>] [--directory=<path>]
+    hwut.play <test-app> [<choice>] [--save] [--directory=<path>]
 
 IT IS WIRING, NOT MACHINERY. Play is the composition of bricks that
 already exist, and owns no ceremony of its own:
 
     the wish + CTestTaskListQuery   which run is meant
-    provision_of(...)               SUBJECT PROVISION: build, launch,
-                                    contain, collect, canonicalise --
-                                    the very provision a run consumes
+    subject_provision.provider_of   SUBJECT PROVISION, through the ONE
+                                    channel (operations disc-2): build,
+                                    launch, contain, collect,
+                                    canonicalise -- the very provision
+                                    a run consumes, asked to execute
+                                    ('force_run': a play IS the request
+                                    to run now)
     compare's reading               INTERPRETATION: the lexical
                                     analysis, marks by tolerance kind
     TuiDisplay                      DISPLAY
@@ -48,20 +52,26 @@ an artifact that may contain errors, and therefore part of the oracle
 (engine/display/DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt).
 An author debugging one needs to see what it did to the stream.
 
-PLAY JUDGES NOTHING AND RECORDS NOTHING; IT RENDERS. No nominal is
-read, no verdict is reached, no Bookkeeper is touched, no result is
-written. 'hwut.run' is the face that judges and records, and the
-distinction is the whole point of this one: an author who wants to
-SEE how the framework reads their output must be able to ask without
-the asking becoming a result.
+PLAY JUDGES NOTHING; IT RENDERS. No nominal is read, no verdict is
+reached, no result is written. 'hwut.run' is the face that judges and
+records, and the distinction is the whole point of this one: an author
+who wants to SEE how the framework reads their output must be able to
+ask without the asking becoming a result.
+
+    --save      the subjects are ALSO stored as the run's candidates,
+                through the channel's own 'record()' -- what
+                'hwut.run' would have stored, and nothing else: no
+                verdict, no book entry. This is a NEW test's entrance:
+                'hwut.play --save', look, then 'hwut.accept'. Without
+                it nothing is written anywhere.
 
 This closes the seam '_core.py' names -- "a service run inside a test
 run receives that Configuration object directly". Play is the command
 line's way to stand inside.
 
-THE STREAM IS NOT KEPT. Nothing is written anywhere: what a run would
+THE STREAM IS NOT KEPT unless '--save' says so: what a run would
 store, play shows and forgets. A person who wants the bytes redirects
-the rendering.
+the rendering, or saves the candidate.
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       the choice ran and its reading is displayed
@@ -97,7 +107,7 @@ from   .compare                                    import reading_view
 
 USAGE = usage_line("usage: hwut.play",
                    ("<test-app>", "[<choice>]", "[--raw]", "[--pyped]",
-                    "[--stderr]", "[--plain]",
+                    "[--stderr]", "[--plain]", "[--save]",
                     "[--directory=<path>]"))
 
 #  THE REGION BANNER. One shape wherever a stream is named, so a
@@ -139,12 +149,14 @@ def main(argv=None, write=None):
     stderr_f  = False
     raw_f     = False
     pyped_f   = False
+    save_f    = False
     word_list = []
     for argument in argv:
         if   argument == "--plain":  plain_f  = True
         elif argument == "--stderr": stderr_f = True
         elif argument == "--raw":    raw_f    = True
         elif argument == "--pyped":  pyped_f  = True
+        elif argument == "--save":   save_f   = True
         elif argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument.startswith("-"):
@@ -164,8 +176,11 @@ def main(argv=None, write=None):
 
     #  ONE ACTION, ONE PLACE ('exploration/selection.py').
     try:
+        #  'base_f=True': the channel needs the Store over the book --
+        #  to decide against the candidate path, and to write one on
+        #  '--save'. Nothing is written without that word.
         found  = selection.of_directory(os.path.abspath(directory),
-                                        Wish())
+                                        Wish(), base_f=True)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -187,8 +202,9 @@ def main(argv=None, write=None):
                                              .language_setup)
     try:
         return asyncio.run(_play(configuration, choice_name,
+                                 found.bookkeeper_db["."],
                                  plain_f, stderr_f, raw_f, pyped_f,
-                                 write))
+                                 save_f, write))
     except DirectoryBusy as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -247,32 +263,50 @@ def _case_name(case):
     return "%s %s" % (case.source_file, case.choice)
 
 
-async def _play(configuration, choice_name, plain_f, stderr_f,
-                raw_f, pyped_f, write):
+async def _play(configuration, choice_name, bookkeeper, plain_f,
+                stderr_f, raw_f, pyped_f, save_f, write):
     """
     RETURN: E_ExitCode, the exit status.
 
     THE PROVISION DOES EVERYTHING A RUN'S PROVISION DOES -- build,
     launch, contain, collect, canonicalise -- because it IS a run's
-    provision ('provision_of'). Play adds no ceremony: it asks for
-    the subjects, and renders them.
+    provision, obtained through the one channel ('subject_provision',
+    'force_run': play means run now). Play adds no ceremony: it asks
+    for the subjects, and renders them; with '--save' it also hands
+    them to the channel's 'record()', which stores what a run stores.
 
-    THE DIRECTORY IS HELD while the author's program runs. Play
-    records nothing, but it RUNS something, and what it runs may
-    write -- a concurrent run meeting half-written artifacts would be
-    the same fault by another door. The lock is released before the
-    rendering, which touches nothing.
+    THE DIRECTORY IS HELD while the author's program runs, and while
+    the candidates are written. What runs may write -- a concurrent
+    run meeting half-written artifacts would be the same fault by
+    another door. The lock is released before the rendering, which
+    touches nothing.
     """
-    from vut.engine.operations.run.core import provision_of
+    from vut.engine.operations           import subject_provision
+    from vut.engine.operations.session   import store_of
 
-    #  ASK FOR THE RAW STREAMS TOO: 'keep_raw' is the provision's own
-    #  switch ('record_raw'), and the raw stream is the material for
+    store = store_of(configuration, bookkeeper)
+    #  ASK FOR THE RAW STREAMS TOO: the raw stream is the material for
     #  '--raw' and for telling whether a pype touched anything.
-    provision = provision_of(configuration, choice_name)
-    provision.keep_raw = True
+    provision, _ = subject_provision.provider_of(configuration, store,
+                                                 choice_name,
+                                                 force_run=True,
+                                                 keep_raw=True)
 
     with MkdirMutex(str(configuration.test_directory)):
         subjects = await provision.provide()
+        if save_f and subjects is not None:
+            recorded_db = subject_provision.record(store, configuration,
+                                                   choice_name, provision,
+                                                   wanted=True)
+            if recorded_db is None:
+                write("NOTE: nothing saved -- the provision did not "
+                      "complete, and a partial subject is never "
+                      "stored as if whole")
+            else:
+                write("SAVED: %s" % ", ".join(
+                    store.candidate_path(configuration.key_name,
+                                         choice_name, name).name
+                    for name in sorted(recorded_db)))
 
     if subjects is None:
         write("FAULT: nothing was provided -- the build failed, or "
@@ -314,10 +348,10 @@ async def _play(configuration, choice_name, plain_f, stderr_f,
     adapter = TuiDisplay(out=sys.stdout,
                          color_f=False if plain_f else None,
                          merge_f=False, reading_f=True)
-    await reading_view(text, adapter,
-                       subject_name=_subject_name(configuration,
-                                                  choice_name),
-                       compare_options=options)
+    shown_f = await reading_view(text, adapter,
+                                 subject_name=_subject_name(configuration,
+                                                            choice_name),
+                                 compare_options=options, write=write)
 
     if stderr_f:
         error_text = subject_db.get(STDERR, "") \
@@ -329,7 +363,9 @@ async def _play(configuration, choice_name, plain_f, stderr_f,
         #  to show an author what their program produced may show it,
         #  and the banner keeps the two apart.
         _write_indented(error_text or "(nothing)", write)
-    return E_ExitCode.OK
+    #  THE READING IS THE PRODUCT: a text this face could not read is
+    #  a FAULT, not an OK with a refusal printed in the middle of it.
+    return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
 
 
 def _write_provision_report(provision, write):

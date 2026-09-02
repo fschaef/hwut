@@ -5,6 +5,7 @@ FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 
 --- a key bound to nothing, where something is required ---
 no specification
+FAULT f.py:4:5: SYNTAX: duplicate key 'tolerance'; the first stands, this one is refused
 FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 
 --- 'title' absent ---

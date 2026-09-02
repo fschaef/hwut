@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "hwut.cov: convert, formats, and the door"
 #     choices    = ["convert", "formats", "help", "refused"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

@@ -4,7 +4,7 @@
 #     title      = "The homogeneous coverage record: intervals, delta coding, merge, election"
 #     choices    = ["election", "encoding", "faults", "intervals",
 #                   "merge", "roundtrip"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

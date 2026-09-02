@@ -5,7 +5,7 @@
 #     choices    = ["down_stream", "every_subject", "no_provision",
 #                   "only_differing", "sequence", "signature",
 #                   "verdict_safe"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

@@ -63,6 +63,10 @@ def tree_of():
                                  '"make" }\n',
         "alpha/TEST/test-b.py":  '# @hwut { title = "B" }\n',
         "beta/TEST/test-z.py":   '# @hwut { title = "Z" }\n',
+        #  ACCEPTED (E-41): a nominal per test, or the gate refuses it.
+        "alpha/TEST/GOOD/test-a.py.txt": "",
+        "alpha/TEST/GOOD/test-b.py.txt": "",
+        "beta/TEST/GOOD/test-z.py.txt":  "",
     }
     for relative, content in file_db.items():
         path = os.path.join(root, relative)

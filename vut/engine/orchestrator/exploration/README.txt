@@ -655,7 +655,7 @@ carry them:
     RELATION = {
         "numeric":          (ConfigCompare, "numeric_tolerance_ratio"),
         "caps.timeout_sec": (ConfigCaps,    "timeout_sec"),
-        "analogy":          (ConfigCompare, ("analogy_f",
+        "tolerance.analogy": (ConfigCompare, ("analogy_f",
                                              "analogy_begin_marker",
                                              "analogy_end_marker"),
                                             ANALOGY),
@@ -773,3 +773,23 @@ the position at which its specification begins.
 
 'CTestCaseSequence' is a flat, ordered sequence of such elements. Run, diff,
 merge, and accept each act on one element and read nothing else.
+
+CANDIDACY REFUSAL (E-41). 'finder.candidate_list' answers (candidates,
+refused): a file whose name matches 'REFUSED_NAME_GLOB_TUPLE' ('*~',
+'#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save', '*.rej',
+'*.copy', '*.swp', '*.tmp') is no candidate and is named, with its
+reason, in 'ExplorationResult.refused_tuple'. An ignored file ('ignore'
+in 'hwut.conf', the default globs) is silent; a refused one is reported.
+
+THE TOLERANCE SCOPE (E-42) holds every lexical tolerance and there is no
+second place one may be written:
+
+    tolerance { numeric_ratio  whitespace  slash  regions
+                eq_pattern  nothing  analogy  constraints  comment }
+
+Each is a RELATION key 'tolerance.<leaf>', so 'hwut.show' prints it
+inside the braces and 'default_of' derives its default from compare's
+own declaration. The five that moved in from the root ('eq-pattern',
+'nothing', 'analogy', 'constraints', 'comment') are REFUSED where they
+stood, by a message naming the new place; 'eq-pattern' is spelled
+'eq_pattern' inside the scope, which has one convention.

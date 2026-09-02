@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "Static analysis: what this tree tolerates"
-#     eq-pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+"]
+#     tolerance { eq_pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+"] }
 # }
 #
 # ---------------------------------------------------------------------------

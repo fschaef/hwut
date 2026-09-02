@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "hwut.cov end to end"
 #     choices    = ["door", "run"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #
@@ -41,8 +41,9 @@ PURPOSE: 'hwut.cov' END TO END -- the demand through the real door, the
 CHOICES: run, door;
 
 run     'hwut.cov' over the directory: every registered choice is
-        harvested or noted, the unregistered one runs plain; the book
-        says which; the records carry the register's ids.
+        harvested or noted; the one the register lacked is REGISTERED
+        on its nominal's word (E-41) and harvested like the rest; the
+        book says which; the records carry the register's ids.
 door    the same wish through 'hwut.run --coverage' says the same
         thing; a wish that asks for nothing is EMPTY; the verbs still
         answer.
@@ -273,8 +274,9 @@ def test_run():
         (token_db["test-hang.py--x"] == "run-incomplete",
          "a run that ended without '<hwut-end>' did not testify: not "
          "harvested, though it left an artefact"),
-        (token_db["test-new.py"] == "<absent>",
-         "an unregistered test ran plain: no id, no key, no record"),
+        (token_db["test-new.py"] == "ok",
+         "a test the register lacked was registered on its nominal's "
+         "word and harvested (E-41)"),
         (status == 1,
          "the exit status is the run's: the unfinished test failed"),
     ])

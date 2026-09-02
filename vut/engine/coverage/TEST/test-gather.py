@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "The gather: many directories, one index, one bundle"
 #     choices    = ["bundle", "fold", "groups", "refused", "stale"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

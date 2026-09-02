@@ -1,8 +1,8 @@
 
 --- stated, unstated, and stated OFF ---
 tolerance.numeric_ratio record 0.25           effective 0.25
-analogy            record ()             effective ()
-comment            record None           effective ('##', '##')
+tolerance.analogy  record ()             effective ()
+tolerance.comment  record None           effective ('##', '##')
 caps.timeout_sec   record 5              effective 5
 caps.network       record None           effective True
 <hwut-end>

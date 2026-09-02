@@ -31,6 +31,14 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 read as subjects only DURING that run. Between runs it
                 is scratch.
 
+    --books     THE THREE RECORDS OF ACCEPTANCE DISAGREE (E-41): a
+                registered test with no nominal in 'GOOD/'; a nominal
+                whose test the register ('GOOD/test_ids.dat') lacks; a
+                book entry with a nominal and no 'last_accept'. Named,
+                and NEVER removed by '--apply': only a person can say
+                which of the three is wrong ('hwut.accept',
+                'hwut.remove').
+
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
                 candidate under 'TMP/store/', an entry in the book
                 ('GOOD/result_db.csv') or a register id whose
@@ -107,7 +115,8 @@ import sys
 from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
-                                                             GOOD_OWNED_FILE_TUPLE)
+                                                             GOOD_OWNED_FILE_TUPLE,
+                                                             TestIdDb, TestIdFault)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
@@ -134,13 +143,14 @@ TRANSIENT_ROOT_TUPLE   = ("OUT", "TMP")           # services E-24
 
 #  What a bare command line asks about. Not the targets: running
 #  somebody's script is never implied.
-ASPECT_TUPLE = ("session", "lock", "out", "orphans")
+ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books")
 #  Asked for by name only; a bare call never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
 USAGE = usage_line("usage: hwut.sanitize",
                    ("[<wish>]", "[--apply]", "[--target <name>]...",
                     "[--session]", "[--lock]", "[--out]", "[--orphans]",
+                    "[--books]",
                     "[--transient]", "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
@@ -415,6 +425,63 @@ class DirectoryLive(Exception):
     pass
 
 
+def books_finding_list(root, directory):
+    """
+    YIELD: [0] CFinding  one disagreement between the three records of
+                         acceptance -- GOOD/ (the nominals), 'test_ids.
+                         dat' (the register) and 'result_db.csv' (the
+                         book) -- named, and NEVER offered for removal:
+                         a disagreement is mended by a person
+                         ('hwut.accept', 'hwut.remove'), not by unlink.
+
+    THE THREE MUST AGREE (E-41). A nominal in GOOD/ is THE evidence of
+    acceptance; the register is written at accept; the book's
+    'last_accept' is written at accept. So:
+
+        a registered test with no nominal          -- register ahead
+        a nominal whose test the register lacks    -- register behind
+        a book entry with a nominal and no          -- accepted outside
+        'last_accept'                                  the book
+
+    A directory with none of the three is not judged: nothing was ever
+    accepted there, and there is nothing to disagree about.
+    """
+    good_dir = os.path.join(directory, "GOOD")
+    if not os.path.isdir(good_dir): return
+    where    = shown(root, directory)
+    try:
+        register = TestIdDb(directory)
+    except TestIdFault as error:
+        yield CFinding("books", "%s: register" % where,
+                       "cannot be read -- %s" % error, None)
+        return
+    nominal_test_set = set()
+    for name in sorted(os.listdir(good_dir)):
+        if name in GOOD_OWNED_FILE_TUPLE: continue
+        key = record_key_of(name)
+        if key is not None: nominal_test_set.add(key[0])
+    registered_set = set(register.roster())
+    for test in sorted(registered_set - nominal_test_set):
+        yield CFinding("books", "%s: register %s" % (where, test),
+                       "registered, and no nominal stands", None)
+    for test in sorted(nominal_test_set - registered_set):
+        yield CFinding("books", "%s: GOOD/ %s" % (where, test),
+                       "a nominal stands, and the register lacks it",
+                       None)
+    bookkeeper = Bookkeeper(directory)
+    for test in bookkeeper.tests():
+        if test not in nominal_test_set: continue
+        for choice in bookkeeper.choices(test):
+            entry = bookkeeper.result(test, choice)
+            if entry is None or entry.get("last_accept"): continue
+            yield CFinding("books",
+                           "%s: book %s%s"
+                           % (where, test,
+                              "" if choice is None else " " + choice),
+                           "a nominal stands, and 'last_accept' is empty "
+                           "-- accepted outside the book", None)
+
+
 def directory_finding_list(root, directory, result, aspect_set, wanted_f):
     """
     RETURN: [0] list[CFinding], everything the asked-for aspects found
@@ -446,6 +513,9 @@ def directory_finding_list(root, directory, result, aspect_set, wanted_f):
             print("REFUSED: %s" % error, file=sys.stderr)
             refusal_list.append(str(error))
 
+    if "books" in aspect_set:
+        finding_list.extend(books_finding_list(root, directory))
+
     if "orphans" in aspect_set:
         if result.fault_list:
             #  A TREE THAT CANNOT BE READ CANNOT BE JUDGED. A header
@@ -476,7 +546,15 @@ def removed(finding, root, write):
     A BOOK ENTRY IS NOT A FILE: a finding whose path names one is
     forgotten through the bookkeeper, which keeps the base well-formed
     -- a JSON file edited by unlink would be a base nobody could read.
+
+    A 'books' FINDING IS NEVER REMOVED: it names a disagreement between
+    the nominals, the register and the book, and only a person can say
+    which of them is wrong.
     """
+    if finding.kind == "books":
+        write("    kept: %s -- a disagreement is mended by hand"
+              % finding.path)
+        return False
     if ": book " in finding.path:
         where, _, rest = finding.path.partition(": book ")
         test, _, choice = rest.partition(" ")
@@ -657,7 +735,10 @@ def main(argv=None, write=None):
         for finding in finding_list:
             if removed(finding, root, write):
                 write("    gone: %s" % finding.path)
-            else:
+            elif finding.kind != "books":
+                #  A 'books' finding is KEPT by design, and said so
+                #  ('removed'); a kept disagreement is no fault of
+                #  the removal.
                 good_f = False
 
     if target_list:

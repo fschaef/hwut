@@ -37,6 +37,11 @@ from .task_list     import (CTestTaskList, CTestTaskListAll,
                             SelectionError)
 
 
+#  THE OPERATION NAMES AN OBSERVATION, NEVER A DECISION (E-36): the
+#  local database records what THIS MACHINE SAW, per operation, and
+#  'observation_of_case' is the only thing that may be handed it. The
+#  Bookkeeper's 'result()' answers what the software IS -- a verdict
+#  for a (test, choice) -- and knows no operation at all.
 RUN_OPERATION = "Run"
 
 
@@ -138,8 +143,7 @@ class CTestTaskListQuery(CTestTaskList):
         if not self.wish.asks_base_f():
             return True
 
-        entry = self.bookkeeper.result(case.source_file, case.choice,
-                                       RUN_OPERATION)
+        entry = self.bookkeeper.result(case.source_file, case.choice)
         observed = self._observation(case)
         if entry is None:
             #  NEVER RUN. It has no last verdict and lies since no

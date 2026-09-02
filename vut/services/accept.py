@@ -39,6 +39,7 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+import asyncio
 import os
 import sys
 
@@ -59,6 +60,11 @@ from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
 from   vut.engine.operations                           import subject_provision
+from   vut.engine.operations.session                   import (run_test,
+                                                               Request)
+from   vut.engine.orchestrator.run.adapter             import \
+                                                       test_configuration_of
+from   vut.auxiliary.directory_mutex                   import DirectoryBusy
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
 
@@ -433,6 +439,10 @@ def main(argv=None, write=None, read_line=None):
         write(str(fault))
 
     wish = with_targets(wish, word_list)
+    #  ONE COORDINATE SYSTEM: the Bookkeeper, the Store and the
+    #  configuration of a case this face RUNS (E-40) must name the
+    #  same directory, and the process's cwd is none of theirs.
+    directory = os.path.abspath(directory)
     try:
         label_view = view_at(directory)
     except LabelFileError as error:
@@ -463,42 +473,32 @@ def main(argv=None, write=None, read_line=None):
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
 
-    #  SUBJECT PROVISION DECIDES, BEFORE ANY CANDIDATE IS READ
-    #  (operations disc-2): the ONE update check, in the one place it
-    #  lives. This face never executes ('production=False'): where the
-    #  recording is STALE or ABSENT it refuses and says to re-run,
-    #  rather than reading evidence that describes a test that no
-    #  longer exists.
-    undecided_list = []
+    #  SUBJECT PROVISION, THROUGH THE ONE CHANNEL (operations disc-2):
+    #  'provider_of' decides per case whether the recording is current
+    #  or the test must run; where it must, it RUNS -- this face is
+    #  the source of the nominal and cannot wait on a run somebody
+    #  else makes (E-40). The run goes through the session, so it is
+    #  held, recorded and booked exactly as 'hwut.run' books it.
+    language_setup = result.app_set.directory_spec.language_setup
     for case in case_sequence:
-        configuration = found.configuration_db.get(
-                            (case.source_file, case.choice)) \
-                        if hasattr(found, "configuration_db") else None
-        candidate = store.bookkeeper.candidate_path(case.source_file,
-                                                    case.choice, "stdout")
-        if configuration is None:
-            #  No configuration in hand: the selection did not carry
-            #  one. Fall back to the source file alone -- the (A)
-            #  closure without coverage targets -- so the check still
-            #  stands rather than silently not.
-            class _Bare:
-                build = None
-                source_file = os.path.join(directory, case.source_file)
-            configuration = _Bare()
-        decision = subject_provision.decide(configuration, candidate,
-                                            production=False)
-        if decision.what in (subject_provision.E_Decision.STALE,
-                             subject_provision.E_Decision.ABSENT):
-            undecided_list.append((case.source_file, case.choice,
-                                   decision.because))
-    if undecided_list:
-        write("REFUSED: the recording is not current --")
-        for test, choice, because in undecided_list:
-            write("    %s%s   %s" % (test,
-                                     "" if choice is None else " " + choice,
-                                     because))
-        write("re-run the test ('hwut.run'), then accept.")
-        return E_ExitCode.FAULT
+        configuration = test_configuration_of(
+                            result.app_set.app_db[case.source_file],
+                            directory, language_setup=language_setup)
+        _, decision = subject_provision.provider_of(configuration, store,
+                                                    case.choice)
+        if decision.what is not subject_provision.E_Decision.PROVIDE:
+            continue
+        write("RUN: %s%s   %s" % (case.source_file,
+                                  "" if case.choice is None
+                                  else " " + case.choice,
+                                  decision.because))
+        try:
+            asyncio.run(run_test(configuration,
+                                 Request(choice=case.choice, record=True),
+                                 bookkeeper=bookkeeper))
+        except DirectoryBusy as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
 
     #  STDERR FIRST: where it spoke and nothing tolerates it, the
     #  whole choice is refused before any pole is touched.
@@ -602,6 +602,10 @@ def main(argv=None, write=None, read_line=None):
         #  THE REGISTER: an id is born at first accept (test_id_db).
         #  Idempotent -- a standing run returns its standing id.
         id_db.run_id_of(key.test, key.choice, allocate_f=True)
+        #  THE BOOK: the acceptance's instant (E-36), so the three
+        #  records of acceptance agree (E-41). Before this line the
+        #  face itself accepted outside the book.
+        store.bookkeeper.note_accept(key.test, key.choice)
         blessed_list.append(key)
 
     write("")

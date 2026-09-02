@@ -260,9 +260,11 @@ ONE TOKEN PER RUN on the book entry, 'coverage':
     (absent)            coverage was not asked
 
 A run that bore nothing writes no record; the book says why. Coverage
-is measured for ACCEPTED tests: the run id is the register's, and a run
-of an unregistered choice is a plain run. Built: 'operations/
-coverage_action.py', tested in 'operations/TEST/test-coverage_provision.py'.
+is measured for ACCEPTED tests: the run id is the register's, and every
+run has one -- 'hwut.run' admits a case on its nominal's word and
+registers it before the run where the register lacked it (E-41).
+Built: 'operations/coverage_action.py', tested in 'operations/TEST/
+test-coverage_provision.py'.
 
 
 ------------------------------------------------------------------------------
@@ -271,8 +273,9 @@ coverage_action.py', tested in 'operations/TEST/test-coverage_provision.py'.
 
     -- it is not a replay: a replay executed nothing and harvests
        nothing; the entry carries no 'coverage' key.
-    -- it is not a run of an unregistered choice: no run id, no
-       record; the run is a plain run.
+    -- it is not a run of a case with no nominal: such a case is not
+       run at all (E-41); a case with a nominal is registered before
+       it runs, so every coverage run has its id.
     -- it is not a harvest of a run that did not TESTIFY (D-21): a run
        that was killed, stalled, was contained, or ended without
        '<hwut-end>' is noted 'run-incomplete' and nothing is read.

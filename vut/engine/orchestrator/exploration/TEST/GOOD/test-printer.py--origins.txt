@@ -5,19 +5,24 @@ gen.c {
     choices {                                 # hwut.conf
         - {
             caps {
-                timeout_sec = 60.0            # default
+                timeout_sec = 300.0           # default
+                cpu_sec = 300                 # default
+                memory_mb = 512               # default
+                file_size_mb = 10             # default
+                child_process_max_n = 32      # default
                 network = true                # default
             }
             tolerance {
                 numeric_ratio = 0.0           # default
                 slash = true                  # hwut.conf:2
                 whitespace = true             # default
+                eq_pattern = []               # default
+                nothing = []                  # default
+                analogy = ["((", "))"]        # default
+                constraints = []              # default
+                comment = ["//", "//"]        # hwut.conf:5
+                regions = true                # default
             }
-            eq-pattern = []                   # default
-            nothing = []                      # default
-            analogy = ["((", "))"]            # default
-            constraints = []                  # default
-            comment = ["//", "//"]            # hwut.conf:5
             same = false                      # default
             interactive = false               # default
             output = ["<stdout>"]             # default
@@ -30,19 +35,24 @@ legacy.bas {
     choices {                                 # --hwut-info
         one {
             caps {
-                timeout_sec = 60.0            # default
+                timeout_sec = 300.0           # default
+                cpu_sec = 300                 # default
+                memory_mb = 512               # default
+                file_size_mb = 10             # default
+                child_process_max_n = 32      # default
                 network = true                # default
             }
             tolerance {
                 numeric_ratio = 0.0           # default
                 slash = true                  # hwut.conf:2
                 whitespace = true             # default
+                eq_pattern = []               # default
+                nothing = []                  # default
+                analogy = ["((", "))"]        # default
+                constraints = []              # default
+                comment = ["##", "##"]        # default
+                regions = true                # default
             }
-            eq-pattern = []                   # default
-            nothing = []                      # default
-            analogy = ["((", "))"]            # default
-            constraints = []                  # default
-            comment = ["##", "##"]            # default
             same = true                       # --hwut-info
             interactive = false               # default
             output = ["<stdout>"]             # default
@@ -55,19 +65,24 @@ test-own.py {
     choices {                                 # app
         two {
             caps {
-                timeout_sec = 60.0            # default
+                timeout_sec = 300.0           # default
+                cpu_sec = 300                 # default
+                memory_mb = 512               # default
+                file_size_mb = 10             # default
+                child_process_max_n = 32      # default
                 network = true                # default
             }
             tolerance {
                 numeric_ratio = 0.05
                 slash = true                  # hwut.conf:2
                 whitespace = true             # default
+                eq_pattern = []               # default
+                nothing = []                  # default
+                analogy = ["((", "))"]        # default
+                constraints = []              # default
+                comment = ["##", "##"]        # default
+                regions = true                # default
             }
-            eq-pattern = []                   # default
-            nothing = []                      # default
-            analogy = ["((", "))"]            # default
-            constraints = []                  # default
-            comment = ["##", "##"]            # default
             same = false                      # default
             interactive = false               # default
             output = ["<stdout>"]             # default

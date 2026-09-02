@@ -107,6 +107,15 @@ def tree_of(file_db):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as _fh:
             _fh.write(content)
+    #  ACCEPTED (E-41): every fixture test gets a nominal, or the
+    #  gate refuses it and nothing here is orchestrated.
+    for relative in file_db:
+        head, name = os.path.split(relative)
+        if os.path.basename(head) != "TEST" or not name.startswith("test-"):
+            continue
+        good = os.path.join(root, head, "GOOD")
+        os.makedirs(good, exist_ok=True)
+        with open(os.path.join(good, name + ".txt"), "a"): pass
     return root
 
 

@@ -1,6 +1,6 @@
 ##VUT-TEST-IDS 5
-G:26
-N:4
+G:128
+N:20
 A:0 test-pype.sh
 N:0.6
 C:0.0 exit
@@ -31,3 +31,121 @@ C:3.2 file
 C:3.3 help
 C:3.4 labels
 C:3.5 refused
+A:4 test-accept.sh
+N:4.7
+C:4.0 ask
+C:4.1 bless
+C:4.2 labels
+C:4.3 merge
+C:4.4 stderr
+C:4.5 sugar
+C:4.6 token
+A:5 test-compare.sh
+N:5.3
+C:5.0 differing
+C:5.1 reading
+C:5.2 tolerated
+A:6 test-cov_run.py
+N:6.2
+C:6.0 door
+C:6.1 run
+A:7 test-exit.sh
+N:7.1
+C:7.0 law
+A:8 test-gate.py
+N:8.5
+C:8.0 backup_shaped
+C:8.1 new_choice
+C:8.2 not_accepted
+C:8.3 plan_agrees
+C:8.4 registered
+A:9 test-merge.sh
+N:9.3
+C:9.0 cancel
+C:9.1 commit
+C:9.2 stdout_artifact
+A:10 test-play.py
+N:10.4
+C:10.0 accept_runs
+C:10.1 entrance
+C:10.2 forgets
+C:10.3 save
+A:11 test-play.sh
+N:11.7
+C:11.0 build
+C:11.1 pyped
+C:11.2 reading
+C:11.3 refused
+C:11.4 silent
+C:11.5 solo
+C:11.6 stderr
+A:12 test-remove.sh
+N:12.8
+C:12.0 asking
+C:12.1 choice
+C:12.2 labels
+C:12.3 refused
+C:12.4 stain
+C:12.5 unknown
+C:12.6 untouched
+C:12.7 whole
+A:13 test-rename.sh
+N:13.1
+C:13.0 labels
+A:14 test-report.sh
+N:14.8
+C:14.0 json
+C:14.1 junit
+C:14.2 never_run
+C:14.3 refused
+C:14.4 stain
+C:14.5 tap
+C:14.6 traditional
+C:14.7 width
+A:15 test-sanitize-books.py
+N:15.3
+C:15.0 agree
+C:15.1 apply_keeps
+C:15.2 disagree
+A:16 test-sanitize.sh
+N:16.11
+C:16.0 apply
+C:16.1 lock
+C:16.2 nameless
+C:16.3 orphans
+C:16.4 out
+C:16.5 refused
+C:16.6 report
+C:16.7 session
+C:16.8 target
+C:16.9 transient
+C:16.10 unreachable
+A:17 test-stability.sh
+N:17.8
+C:17.0 bytes
+C:17.1 cadence
+C:17.2 length
+C:17.3 refused
+C:17.4 stain
+C:17.5 steady
+C:17.6 verbose
+C:17.7 verdict
+A:18 test-tell.sh
+N:18.5
+C:18.0 bare
+C:18.1 coverage
+C:18.2 flags
+C:18.3 pack
+C:18.4 raw
+A:19 test-wishlist.sh
+N:19.10
+C:19.0 elided
+C:19.1 empty
+C:19.2 labels
+C:19.3 print
+C:19.4 refused
+C:19.5 roundtrip
+C:19.6 select
+C:19.7 short-form
+C:19.8 spent
+C:19.9 travels

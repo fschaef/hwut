@@ -34,7 +34,6 @@ from ...operations.run.stage_canonicalise import StageCanonicalise
 from ...operations.run.core         import Provision
 from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
-from dataclasses import replace
 from ...bookkeeper.api   import Bookkeeper
 from ...bookkeeper.api   import TestIdDb
 from ...bookkeeper.api import Store, DirectoryBusy
@@ -70,10 +69,10 @@ class TestRunDispatcher(I_Dispatcher):
         'coverage' a CoverageConfig where coverage is asked (coverage
                    D-19): every configuration is then made for the
                    coverage target, and every run harvests. The run id
-                   comes from the directory's register; a run of an
-                   unregistered choice harvests under NO id and is
-                   noted 'NOT_ASKED' -- coverage is measured for
-                   accepted tests.
+                   comes from the directory's register -- and every
+                   run here HAS one: the gate admitted the case on its
+                   nominal's word (E-41), and a case the register did
+                   not name is registered before it runs, said so.
         'despite_stain_f' runs a STAINED choice anyway. THE PROVER'S
                    SEAM ALONE: 'hwut.stability' must be able to run
                    what it disqualified, or a stain could never be
@@ -108,6 +107,14 @@ class TestRunDispatcher(I_Dispatcher):
         self.force_run_f    = force_run_f
         self.coverage   = coverage
         self.id_db      = None if coverage is None else TestIdDb(directory)
+        #  THE REGISTER, for the E-41 attention: a test that runs here
+        #  passed the nominal gate, so something was accepted for it;
+        #  where the register has no entry, one is made and the run
+        #  says so ('notice_list', emitted as NOTE by the orchestrator).
+        #  'hwut.sanitize --books' reads the same disagreement.
+        self.register    = self.id_db if self.id_db is not None \
+                           else TestIdDb(directory)
+        self.notice_list = []
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
         #  every tool leaves its artefact in the directory's OUT/COVERAGE.
         self.cov_lock   = None if coverage is None else asyncio.Lock()
@@ -236,6 +243,15 @@ class TestRunDispatcher(I_Dispatcher):
         if stain is not None:
             self.report_db[node.name()] = E_TestRunResult.UNSTABLE.value
             return False
+        if self.register.run_id_of(configuration.key_name,
+                                   node.choice) is None:
+            self.register.run_id_of(configuration.key_name, node.choice,
+                                    allocate_f=True)
+            self.notice_list.append(
+                "REGISTERED %s%s: a nominal stands and the register "
+                "had no entry -- accepted outside the book (E-41)"
+                % (configuration.key_name,
+                   "" if node.choice is None else " " + node.choice))
         provision     = None
         multi         = self.session_db.get(node.file)
         if multi is not None:
@@ -249,10 +265,6 @@ class TestRunDispatcher(I_Dispatcher):
             prepare(configuration)
             run_id = self.id_db.run_id_of(configuration.key_name,
                                           node.choice)
-            if run_id is None:
-                #  Unregistered: never accepted, so no id to seat. The
-                #  run proceeds as a plain run; the entry says NOT_ASKED.
-                configuration = replace(configuration, coverage=None)
         outcome = await run_test_held(
             configuration,
             Request(choice=node.choice, record=self.record,

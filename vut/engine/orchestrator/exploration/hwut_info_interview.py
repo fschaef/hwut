@@ -28,7 +28,8 @@ ______________________________________________________________________________
 """
 import os
 
-from .configuration_tree import (TestParameters, TestAppSpec, Caps, E_Origin)
+from .configuration_tree import (TestParameters, TestAppSpec, Caps, E_Origin,
+                                 Tolerance)
 from .fault         import Position
 
 #  Caps of the interview itself. An interview is a question, not a test:
@@ -87,8 +88,11 @@ def specification_of(text, name):
 
     if title is None: return None
 
+    #  'HAPPY:' NAMES AN EQUIVALENCE TOLERANCE, and every tolerance
+    #  stands in the one scope (E-42).
     root = TestParameters(
-        eq_pattern  = tuple(happy_list) if happy_list else None,
+        tolerance   = (Tolerance(eq_pattern=tuple(happy_list))
+                       if happy_list else None),
         same        = True if same_f        else None,
         interactive = True if interactive_f else None)
 

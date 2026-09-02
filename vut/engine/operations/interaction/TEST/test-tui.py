@@ -5,7 +5,7 @@
 #     choices    = ["display_only", "editor_loop", "elements", "reading",
 #                   "regions", "rendering", "target_wiring",
 #                   "undecided_author"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

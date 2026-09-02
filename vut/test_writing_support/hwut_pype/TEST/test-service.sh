@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The pype service called as a shell citizen -- its natural habitat."
 #     choices    = ["absent_script", "exit_code", "filter"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
 # ---------------------------------------------------------------------------

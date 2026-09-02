@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The report service face: one command packs one test whole."
 #     choices    = ["bare", "coverage", "flags", "pack", "raw"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
 # ---------------------------------------------------------------------------

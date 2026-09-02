@@ -25,6 +25,7 @@ from   typing      import Mapping, Optional
 
 from   ..result                 import E_TestRunResult
 from   ...compare.api           import (Configuration, is_equivalent,
+                                        RegionSyntaxError,
                                         feeder_ui as compare_feeder)
 from   ..interaction.port       import (NullDisplay, deliver,
                                         ProtocolMismatch)
@@ -120,6 +121,9 @@ class DifferenceDisplay:
             ok = bool(await is_equivalent(options,
                                                        subject_reader,
                                                        nominal_reader))
+        except RegionSyntaxError as error:
+            notify(self.observer, "diagnosis", name, str(error))
+            return False, E_TestRunResult.REGION_SYNTAX_ERROR
         finally:
             for reader in (subject_reader, nominal_reader):
                 close = getattr(reader, "close", None)
@@ -141,4 +145,12 @@ class DifferenceDisplay:
             return ok, E_TestRunResult.DISPLAY_TARGET_UNREACHABLE
         except NominalNotAvailable:
             return False, E_TestRunResult.NOMINAL_FILE_NOT_FOUND
+        except RegionSyntaxError as error:
+            #  THE TEXT ARRIVED AND CANNOT BE READ -- the same law the
+            #  VERDICT road states ('equivalence_check.py'): a broken
+            #  framing is a REPORT, not an exception. Raised through, it
+            #  dies in the scheduler and the display shows nothing at
+            #  all rather than the one line that explains itself.
+            notify(self.observer, "diagnosis", name, str(error))
+            return False, E_TestRunResult.REGION_SYNTAX_ERROR
         return ok, E_TestRunResult.OK

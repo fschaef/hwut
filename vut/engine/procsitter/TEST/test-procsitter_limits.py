@@ -7,7 +7,7 @@
 #                   "file_size", "memory", "no_psutil", "output_gap",
 #                   "pids", "self_exit_codes", "stderr_tail_cap",
 #                   "wall_clock", "created_files"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

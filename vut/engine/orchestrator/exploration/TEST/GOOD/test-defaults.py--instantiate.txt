@@ -1,10 +1,21 @@
 
 --- a case stating two things, and what it yields ---
-record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, slash=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)  comment None
+record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, slash=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)
 
 ConfigBuild:
     framework                      None
     executable                     None
+ProcsitterConfig:
+    max_wall_clock_sec             300.0
+    max_cpu_time_sec               300
+    max_memory_mb                  512
+    max_pids                       32
+    max_file_size_mb               10
+    max_disk_mb                    100
+    max_output_gap_sec             None
+    min_free_disk_mb               128
+    env                            None
+    scratch_dir                    None
 ConfigCaps:
     timeout_sec                    60.0
     cpu_sec                        None
@@ -26,6 +37,7 @@ ConfigCompare:
     equivalent_pattern_list        ()
     visible_nothing_pattern_list   ()
     ignored_line_f                 True
+    regions_f                      True
     ignored_line_begin_marker      '##'
     ignored_line_end_marker        '##'
     analogy_begin_marker           '(('

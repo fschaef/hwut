@@ -34,6 +34,7 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                     import (RootConfMissing,
                                                             ascended_spec)
 from   vut.engine.orchestrator.plan.determine          import determine
+from   vut.engine.orchestrator.plan.tree               import admit_of
 from   vut.engine.orchestrator.plan.printer            import print_plan
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
@@ -159,7 +160,8 @@ def main(argv=None, write=None):
         write(str(fault))
     task_list = found.query_db["."]
     try:
-        plan, report_list = determine(result.app_set, task_list)
+        plan, report_list, refused_list = determine(
+            result.app_set, task_list, admit=admit_of(directory))
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -170,6 +172,8 @@ def main(argv=None, write=None):
     write("WISH: %s" % wish)
     for report in report_list:
         write("REPORT: %s" % report)
+    for name, reason in tuple(result.refused_tuple) + tuple(refused_list):
+        write("REFUSED: %s -- %s" % (name, reason))
     print_plan(plan, write)
     if result.fault_list:   return E_ExitCode.FAULT
     if not plan.node_tuple: return E_ExitCode.EMPTY

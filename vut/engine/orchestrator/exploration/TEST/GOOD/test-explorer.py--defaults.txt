@@ -1,5 +1,5 @@
 
 --- effective = chosen, or the owner's default ---
-record    tolerance Tolerance(numeric_ratio=0.25, whitespace=None, slash=None)  comment None  analogy None
+record    tolerance Tolerance(numeric_ratio=0.25, whitespace=None, slash=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
 effective numeric_ratio 0.25  comment ('##', '##')  analogy ('((', '))')
 <hwut-end>

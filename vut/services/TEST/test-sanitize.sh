@@ -6,7 +6,7 @@
 #     choices    = ["report", "session", "lock", "nameless", "out",
 #                   "orphans", "unreachable", "apply", "target",
 #                   "refused", "transient"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

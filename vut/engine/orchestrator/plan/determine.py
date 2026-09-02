@@ -5,7 +5,7 @@ PURPOSE: DETERMINATION -- the policy that turns a wish and what the
          directory offers into a CTestPlan. The form is next door and
          holds no policy (P-1).
 
-    determine(app_set, task_list, ...) -> CTestPlan
+    determine(app_set, task_list, ...) -> CTestPlan, reports, refusals
 
 THE STEPS, in order:
 
@@ -48,15 +48,23 @@ from .form import (CExclusionSet, CPlanLink, CPlanNode, CTestPlan,
                    E_LinkKind, E_Provenance)
 
 
-def determine(app_set, task_list, build_interview=None):
+def determine(app_set, task_list, build_interview=None, admit=None):
     """
     RETURN: [0] CTestPlan, what the wish comes to on this directory.
             [1] list[str], the reports met -- an empty selection says
                 so here (P-9), naming no machine-chosen path; empty
                 where there is nothing to report.
+            [2] list[(str, str)], (name, reason) for every selected
+                case 'admit' REFUSED -- 'test' or 'test choice', as a
+                node is named: it does not enter the plan, and the
+                refusal is named once. Empty where nothing was
+                refused, or no 'admit' given.
 
     'build_interview' answers which build actions the selected cases
     need; the specification's own answer where none is handed down.
+    'admit(source_file, choice)' answers None where the case may run
+    and a one-line reason where it may not (E-41: no nominal stands);
+    None admits everything.
 
     Raises SelectionError out of the task list, unchanged: a wish
     naming what does not exist is refused at the door, by name.
@@ -64,9 +72,21 @@ def determine(app_set, task_list, build_interview=None):
     if build_interview is None:
         build_interview = SpecificationBuildInterview()
 
-    case_list   = list(task_list.get_test_cases(app_set))
-    report_list = []
-    if not case_list:
+    case_list    = list(task_list.get_test_cases(app_set))
+    report_list  = []
+    refused_list = []
+    if admit is not None:
+        admitted_list = []
+        for case in case_list:
+            reason = admit(case.source_file, case.choice)
+            if reason is None:
+                admitted_list.append(case)
+                continue
+            name = case.source_file if case.choice is None \
+                   else "%s %s" % (case.source_file, case.choice)
+            refused_list.append((name, reason))
+        case_list = admitted_list
+    if not case_list and not refused_list:
         report_list.append("the selection is empty: no test case "
                            "answers the wish")
 
@@ -100,7 +120,7 @@ def determine(app_set, task_list, build_interview=None):
                      ordering_link_list + build_link_list
                                         + session_link_list,
                      exclusion_list)
-    return plan, report_list
+    return plan, report_list, refused_list
 
 
 def _closed(case_list, app_set):

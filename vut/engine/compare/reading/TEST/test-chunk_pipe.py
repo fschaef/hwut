@@ -3,6 +3,7 @@
 # @hwut {
 #     title      = "ChunkPipe"
 #     choices    = ["comment", "normal", "special"]
+#     tolerance { regions = false }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

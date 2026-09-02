@@ -2,20 +2,20 @@ STATUS: 2
 STDOUT {
     REFUSED: 'hwut.sanitize' does not take: --sideways
     usage: hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session]
-                         [--lock] [--out] [--orphans] [--transient]
+                         [--lock] [--out] [--orphans] [--books] [--transient]
                          [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: '--target' stands without a name
     usage: hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session]
-                         [--lock] [--out] [--orphans] [--transient]
+                         [--lock] [--out] [--orphans] [--books] [--transient]
                          [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: the directory 'nowhere' does not exist
     usage: hwut.sanitize [<wish>] [--apply] [--target <name>]... [--session]
-                         [--lock] [--out] [--orphans] [--transient]
+                         [--lock] [--out] [--orphans] [--books] [--transient]
                          [--directory=<path>]
 }

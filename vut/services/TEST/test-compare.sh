@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The compare service face: the diff convention, on stdout."
 #     choices    = ["differing", "reading", "tolerated"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
 # ---------------------------------------------------------------------------

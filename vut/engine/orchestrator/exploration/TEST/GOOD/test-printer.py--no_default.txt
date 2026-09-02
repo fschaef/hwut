@@ -6,18 +6,23 @@ test-a.py {
         two {
             caps {
                 timeout_sec = 30.0            # app
+                cpu_sec = 300                 # default
+                memory_mb = 512               # default
+                file_size_mb = 10             # default
+                child_process_max_n = 32      # default
                 network = true                # default
             }
             tolerance {
                 numeric_ratio = 0.05
                 slash = true                  # default
                 whitespace = true             # default
+                eq_pattern = []               # default
+                nothing = []                  # default
+                analogy = ["((", "))"]        # default
+                constraints = []              # default
+                comment = ["//", ""]          # hwut.conf:2
+                regions = true                # default
             }
-            eq-pattern = []                   # default
-            nothing = []                      # default
-            analogy = ["((", "))"]            # default
-            constraints = []                  # default
-            comment = ["//", ""]              # hwut.conf:2
             same = false                      # default
             interactive = false               # default
             output = ["<stdout>"]             # default
@@ -36,8 +41,8 @@ test-a.py {
             }
             tolerance {
                 numeric_ratio = 0.05
+                comment = ["//", ""]          # hwut.conf:2
             }
-            comment = ["//", ""]              # hwut.conf:2
         }
     }
 }

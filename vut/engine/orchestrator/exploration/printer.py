@@ -13,8 +13,10 @@ PURPOSE: Print a resolved configuration IN THE SPECIFICATION LANGUAGE. What
                     timeout_sec = 30.0            # app
                     network     = true            # default
                 }
-                tolerance { numeric_ratio = 0.05 }
-                comment = "//"                    # hwut.conf:3
+                tolerance {
+                    numeric_ratio = 0.05          # test-a.py:5
+                    comment = ["//", ""]          # hwut.conf:3
+                }
             }
         }
     }

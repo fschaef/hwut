@@ -1,9 +1,9 @@
 
 --- parameter by parameter: the nearer word wins ---
     other/TEST               test-b.py
-        test-b.py    tolerance=Tolerance(numeric_ratio=0.5, whitespace=None, slash=None)
+        test-b.py    tolerance=Tolerance(numeric_ratio=0.5, whitespace=None, slash=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
     sub/TEST                 test-a.py
-        test-a.py    tolerance=Tolerance(numeric_ratio=0.1, whitespace=None, slash=None)
+        test-a.py    tolerance=Tolerance(numeric_ratio=0.1, whitespace=None, slash=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
 
 --- the untouched sibling still flows from the root ---
     other/TEST               test-b.py

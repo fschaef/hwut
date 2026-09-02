@@ -1,6 +1,30 @@
 ##VUT-TEST-IDS 5
-G:2
-N:1
+G:24
+N:3
 A:0 test-provision.py
-N:0.1
+N:0.10
 C:0.0 canonicaliser_broken
+C:0.1 absent_application
+C:0.2 argv
+C:0.3 canonicalisation
+C:0.4 containment
+C:0.5 loaded
+C:0.6 same_shape
+C:0.7 source_kinds
+C:0.8 stages
+C:0.9 subjects
+A:1 test-multi-execute.py
+N:1.6
+C:1.0 files
+C:1.1 plugged
+C:1.2 refused
+C:1.3 session
+C:1.4 status
+C:1.5 unknown
+A:2 test-provider.py
+N:2.5
+C:2.0 cadence
+C:2.1 door
+C:2.2 foreign
+C:2.3 roles
+C:2.4 scheme

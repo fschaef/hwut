@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "hwut.labels.add: grow a STANDING label."
 #     choices    = ["doors", "grow", "standard"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

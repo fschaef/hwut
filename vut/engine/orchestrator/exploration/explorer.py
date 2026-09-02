@@ -47,10 +47,12 @@ def _execute_interactive_refused(app):
 
 @dataclass(frozen=True, slots=True)
 class ExplorationResult:
-    """What one TEST directory yields: the set of what exists, and every
-    fault met on the way."""
-    app_set:    CTestAppSet
-    fault_list: tuple
+    """What one TEST directory yields: the set of what exists, every
+    fault met on the way, and every file REFUSED as a candidate by its
+    name (E-41) -- (name, reason), reported and never silent."""
+    app_set:       CTestAppSet
+    fault_list:    tuple
+    refused_tuple: tuple = ()
 
 
 def explore(directory, interview_runner=None, inherited=None):
@@ -100,7 +102,9 @@ def explore(directory, interview_runner=None, inherited=None):
 
     #  THE WALK, then the headers.
     app_db = {}
-    for name in finder.candidate_list(directory, directory_spec.ignore):
+    candidate_list, refused_list = finder.candidate_list(
+                                       directory, directory_spec.ignore)
+    for name in candidate_list:
         with open(os.path.join(directory, name), "r",
                   encoding="utf-8", errors="replace") as fh:
             content = fh.read()
@@ -157,7 +161,8 @@ def explore(directory, interview_runner=None, inherited=None):
                                  app_db         = app_db,
                                  directory_spec = directory_spec,
                                  misdep_set     = misdep_set),
-        fault_list = tuple(fault_list))
+        fault_list    = tuple(fault_list),
+        refused_tuple = tuple(refused_list))
 
 
 def _language_of(spec, directory_spec):

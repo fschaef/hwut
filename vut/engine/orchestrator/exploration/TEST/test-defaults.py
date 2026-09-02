@@ -154,8 +154,8 @@ def test_instantiate():
     """RETURN: None. Complete configurations out of one record."""
     banner("a case stating two things, and what it yields")
     parameters = TestParameters(tolerance=Tolerance(numeric_ratio=0.05), caps=Caps(network=False))
-    print("record: tolerance %r  caps %r  comment %r"
-          % (parameters.tolerance, parameters.caps, parameters.comment))
+    print("record: tolerance %r  caps %r"
+          % (parameters.tolerance, parameters.caps))
     print()
     for cls, instance in configurations_of(parameters):
         print("%s:" % cls.__name__)
@@ -167,10 +167,11 @@ def test_merge():
     """RETURN: None. Stated wins, unstated defaults, OFF is a
     statement."""
     banner("stated, unstated, and stated OFF")
-    parameters = TestParameters(tolerance=Tolerance(numeric_ratio=0.25), analogy=(),
+    parameters = TestParameters(tolerance=Tolerance(numeric_ratio=0.25, analogy=()),
                                 caps=Caps(timeout_sec=5))
     value_db   = value_db_of(parameters)
-    for name in ("tolerance.numeric_ratio", "analogy", "comment",
+    for name in ("tolerance.numeric_ratio", "tolerance.analogy",
+                 "tolerance.comment",
                  "caps.timeout_sec", "caps.network"):
         print("%-18s record %-14r effective %r"
               % (name, value_db[name], effective(parameters, name)))

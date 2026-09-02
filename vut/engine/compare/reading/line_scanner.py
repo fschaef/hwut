@@ -67,15 +67,19 @@ def classify(line, pattern_finder):
     'semantics.is_insignificant_line' -- THE single definition.
     """
     stripped = line.strip()
-    if stripped.startswith(REGION_BEGIN_MARKER):
+    #  REGIONS OFF: the markers are CONTENT (C-4). Judged HERE, the one
+    #  place a line becomes a class, so nothing downstream can see a
+    #  region the reader was told not to read.
+    if not pattern_finder.regions_f:
+        pass
+    elif stripped.startswith(REGION_BEGIN_MARKER):
         return E_LineClass.REGION_BEGIN
     elif stripped == REGION_END_LINE:
         return E_LineClass.REGION_END
-    elif not stripped:
+    if not stripped:
         return E_LineClass.BLANK
-    elif is_insignificant_line(line,
-                               pattern_finder.ignored_line_begin_marker,
-                               pattern_finder.ignored_line_end_marker):
+    if is_insignificant_line(line,
+                             pattern_finder.ignored_line_begin_marker,
+                             pattern_finder.ignored_line_end_marker):
         return E_LineClass.IGNORED
-    else:
-        return E_LineClass.CONTENT
+    return E_LineClass.CONTENT

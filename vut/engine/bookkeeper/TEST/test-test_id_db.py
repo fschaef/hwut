@@ -3,7 +3,7 @@
 #     title      = "The test register: ids that survive renames"
 #     choices    = ["allocation", "face", "faults", "healing", "retire",
 #                   "tables", "vanished"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

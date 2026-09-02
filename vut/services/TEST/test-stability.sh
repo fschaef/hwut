@@ -5,7 +5,7 @@
 #     title      = "The hwut.stability face: what did not stay the same."
 #     choices    = ["bytes", "cadence", "length", "refused", "stain",
 #                   "steady", "verbose", "verdict"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -157,7 +157,7 @@ bytes)
 length)
     #  Lines a 'nothing' pattern swallows, a differing NUMBER of them
     #  each run: the verdict holds, the cadence cannot be aligned.
-    conf '    test-app.sh { nothing = ["noise.*"] }'
+    conf '    test-app.sh { tolerance { nothing = ["noise.*"] } }'
     app "Length" \
         'n=0' \
         '[ -f count.txt ] && n=$(cat count.txt)' \

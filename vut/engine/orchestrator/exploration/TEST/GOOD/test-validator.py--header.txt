@@ -1,5 +1,6 @@
 
 --- a full header ---
 no specification
+FAULT f.py:21:5: SYNTAX: duplicate key 'tolerance'; the first stands, this one is refused
 FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 <hwut-end>

@@ -2,6 +2,7 @@
 --- ConfigurationPatternFinder ---
     strip_whitespace_f             True
     ignored_line_f                 True
+    regions_f                      True
     analogy_f                      True
     constraint_f                   True
     whitespace_f                   True

@@ -132,20 +132,30 @@ RELATION = {
 
     "pype":            (ConfigCanonicalise, "pype"),
 
+    #  EVERY LEXICAL TOLERANCE IS ONE SCOPE (E-42): there is no second
+    #  place a tolerance may be written, and 'hwut.show' prints them
+    #  inside the braces because the printer walks THESE keys.
     "tolerance.numeric_ratio": (ConfigCompare, "numeric_tolerance_ratio"),
-    "eq-pattern":      (ConfigCompare, "equivalent_pattern_list"),
-    "nothing":         (ConfigCompare, "visible_nothing_pattern_list"),
-    "analogy":         (ConfigCompare, ("analogy_f",
-                                        "analogy_begin_marker",
-                                        "analogy_end_marker"), ANALOGY),
-    "constraints":     (ConfigCompare, ("constraint_f",
-                                        "constraint_db"), CONSTRAINTS),
-    "comment":         (ConfigCompare, ("ignored_line_f",
-                                        "ignored_line_begin_marker",
-                                        "ignored_line_end_marker"),
-                                       COMMENT),
     "tolerance.slash":         (ConfigCompare, "backslash_f"),
     "tolerance.whitespace":    (ConfigCompare, "whitespace_f"),
+    "tolerance.eq_pattern":    (ConfigCompare, "equivalent_pattern_list"),
+    "tolerance.nothing":       (ConfigCompare,
+                                "visible_nothing_pattern_list"),
+    "tolerance.analogy":       (ConfigCompare, ("analogy_f",
+                                                "analogy_begin_marker",
+                                                "analogy_end_marker"),
+                                               ANALOGY),
+    "tolerance.constraints":   (ConfigCompare, ("constraint_f",
+                                                "constraint_db"),
+                                               CONSTRAINTS),
+    "tolerance.comment":       (ConfigCompare, ("ignored_line_f",
+                                                "ignored_line_begin_marker",
+                                                "ignored_line_end_marker"),
+                                               COMMENT),
+    #  REGION FRAMING, SWITCHABLE LIKE EVERY OTHER LEXICAL FEATURE
+    #  (C-4). 'tolerance.regions = false': '##!' and '####' are
+    #  ordinary content -- what a text that TALKS ABOUT framing needs.
+    "tolerance.regions":       (ConfigCompare, "regions_f"),
 
     "same":            (ConfigStore,  "same_nominal_f"),
     "interactive":     (ConfigRunner, "interactive_f"),

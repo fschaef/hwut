@@ -119,6 +119,10 @@ class CRunReportReceiver:
         """RETURN: None. A report of determination -- e.g. an empty
         selection."""
 
+    def on_refused(self, when, directory, node, text):
+        """RETURN: None. A file or test NOT RUN, by name and reason
+        (E-41): a backup-shaped candidate, a test with no nominal."""
+
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. One directory's run ended."""
 

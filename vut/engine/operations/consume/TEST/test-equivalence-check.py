@@ -6,7 +6,7 @@
 #                   "nominal_missing", "observer", "provision_failed",
 #                   "terminated", "unexpected_stderr", "unjudged",
 #                   "verdict"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

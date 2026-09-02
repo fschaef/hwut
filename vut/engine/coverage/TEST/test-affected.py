@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "hwut.affected: the runs that executed a change"
 #     choices    = ["answer", "bare", "diff", "empty", "help", "refused"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #
@@ -180,12 +180,20 @@ def show(status, out, err, root=None):
     A framed line is right-stripped: an empty line must not become a
     prefix with a blank after it -- a byte nobody meant is a byte an
     oracle inherits.
+
+    STDERR IS COUNTED IN LINES, NEVER IN BYTES. The fixture root is a
+    temporary path and its LENGTH is machine-chosen, so a byte count
+    is a machine-chosen value in an oracle -- it differs on every
+    machine and on every run. The line count says the same thing
+    (did the call complain, and how much) and says it stably; the
+    lines themselves follow, masked.
     """
     def masked(text):
         """RETURN: str, with the machine-chosen root spoken as '<work>'."""
         return text if root is None else text.replace(root, "<work>")
 
-    print("REACTION  status %s   stderr %i byte(s)" % (status, len(err)))
+    print("REACTION  status %s   stderr %i line(s)"
+          % (status, len(err.splitlines())))
     for line in masked(out).splitlines():
         print(("          | %s" % line).rstrip())
     for line in masked(err).splitlines():

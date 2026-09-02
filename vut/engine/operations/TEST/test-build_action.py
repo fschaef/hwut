@@ -4,7 +4,7 @@
 #     title      = "The build step of provision"
 #     choices    = ["argv", "contained", "reasons", "silent_failure",
 #                   "success"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

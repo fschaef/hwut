@@ -361,9 +361,29 @@ directory; pin what you fetch (a commit, a checksum, an exact version)
 or the test is not reproducible.
 
 'Run' (3) is a PLANNER -- a function that wires the one
-Provision type; 'provision_of' chooses between them from the request.
-Nothing downstream can tell a subject's provenance by type (2.4); the
-'.kind' attribute exists for OBSERVATION only.
+Provision type; 'provision_of' reads the recording appetite from the
+configuration. Nothing downstream can tell a subject's provenance by
+type (2.4); the '.kind' attribute exists for OBSERVATION only.
+
+THE ONE CHANNEL: 'subject_provision.py'. Whoever needs a subject stream
+-- session, accept, play, merge, stability -- calls
+
+  provider_of(configuration, store, choice, production=, force_run=,
+              force_build=, observer=, keep_raw=, subject_name_list=)
+      -> (provider, Decision)
+
+which walks the update check (0)/(A)/(B) against the store's candidate
+and hands back the provider it chose: an executing Provision (3) or a
+Loaded (5). 'production=False' never executes and hands back a Loaded
+with STALE or ABSENT beside it. 'bare_provider_of(store, test, choice,
+subject_name_list)' is the road for a caller holding a directory and a
+file name and no configuration: a Loaded, never an executor.
+
+  record(store, configuration, choice, provider, wanted=None) -> dict|None
+
+stores what an EXECUTING provider produced as the candidates (raw and
+cadence riding along where kept); a Loaded provider records nothing,
+a provision whose report is not OK records nothing.
 
 ----------------------------------------------------------------------------
 3  RUN -- provision by execution
@@ -534,7 +554,9 @@ BOOK ENTRY (section 6).
 No execution: the stored CANONICALISED readers of a previous Run are read
 straight into compare. NO source, NO caps, NO pype, NO procsitter --
 provision is already done. The procsitter/pype configuration is
-EXCLUSIVELY a Run concern.
+EXCLUSIVELY a Run concern. This is the channel's RECORDED-STREAM branch
+('subject_provision.Loaded' over 'consume/loaded.py'); no face reaches
+'loaded()' directly.
 
   loaded(store, test, choice, subjects):
       record_directory: str        # where a prior Run recorded

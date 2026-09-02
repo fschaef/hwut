@@ -5,7 +5,7 @@
 #     choices    = ["cancel", "commit", "display_only", "empty_commit",
 #                   "envelope", "loop", "loop_pipe", "loop_realigns",
 #                   "rich_client", "sequence", "unknown", "widened_down"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

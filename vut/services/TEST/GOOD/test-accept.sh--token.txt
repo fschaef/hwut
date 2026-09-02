@@ -1,5 +1,9 @@
 STATUS: 1
 STDOUT {
+    RUN: test-cut.sh   (0) nothing recorded for this choice
+    RUN: test-ok.sh   (0) nothing recorded for this choice
+    RUN: test-two.sh a   (0) nothing recorded for this choice
+    RUN: test-two.sh b   (0) nothing recorded for this choice
     REFUSED: the closing token '<hwut-end>' does not appear --
         test-cut.sh .stdout
     a stream without its terminal token never COMPLETED; nothing here is

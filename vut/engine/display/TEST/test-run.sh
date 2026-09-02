@@ -7,7 +7,7 @@
 #                   "jobs-budget", "labels", "linear-raw", "nostore",
 #                   "refused", "short-form", "strategy-refused",
 #                   "tiers", "timing", "tree-fail", "tree-green"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

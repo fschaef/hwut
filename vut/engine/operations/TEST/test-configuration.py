@@ -4,7 +4,7 @@
 #     title      = "The configuration of one test application"
 #     choices    = ["aggregation", "choices", "frozen", "interpreted",
 #                   "places", "refusal"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

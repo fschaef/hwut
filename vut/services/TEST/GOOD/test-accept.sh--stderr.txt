@@ -1,6 +1,9 @@
 == stderr spoke, no flag ==
 STATUS: 1
 STDOUT {
+    RUN: test-ok.sh   (0) nothing recorded for this choice
+    RUN: test-two.sh a   (0) nothing recorded for this choice
+    RUN: test-two.sh b   (0) nothing recorded for this choice
     REFUSED: stderr SPOKE and no note tolerates it --
         test-ok.sh   (10 bytes)
     stderr is for ERROR REPORTING and is never subject to

@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "Variant groups: dimensions of configuration"
 #     choices    = ["declared", "refused", "selected", "vocabulary"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

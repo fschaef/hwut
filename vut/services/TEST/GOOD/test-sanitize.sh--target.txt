@@ -1,9 +1,14 @@
 --- a target NO directory binds:
 STATUS: 2
 STDOUT {
-    SANITIZE, in 'tree': lock, orphans, out, session
+    SANITIZE, in 'tree': books, lock, orphans, out, session
     
-      nothing to sanitize
+      books -- 1 found:
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+    
+    
+    REMOVING:
+        kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
     
     TARGETS:
       target 'clean':
@@ -13,9 +18,14 @@ STDOUT {
 --- a target one directory binds:
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': lock, orphans, out, session
+    SANITIZE, in 'tree': books, lock, orphans, out, session
     
-      nothing to sanitize
+      books -- 1 found:
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+    
+    
+    REMOVING:
+        kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
     
     TARGETS:
       target 'clean':
@@ -26,9 +36,11 @@ STDOUT {
 --- and without '--apply' it only says so:
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': lock, orphans, out, session  (reporting only; '--apply' acts)
+    SANITIZE, in 'tree': books, lock, orphans, out, session  (reporting only; '--apply' acts)
     
-      nothing to sanitize
+      books -- 1 found:
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+    
     
     TARGETS:
       target 'clean': would run in every directory that binds it ('--apply' runs it)

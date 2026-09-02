@@ -4,7 +4,7 @@
 #     title      = "Products, the derived result, and the progress seam"
 #     choices    = ["console", "empty_comparison", "failed_build",
 #                   "observer", "precedence", "products"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

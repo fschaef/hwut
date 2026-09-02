@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "The binary spelling of the coverage record"
 #     choices    = ["faults", "large", "measures", "witnessed"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

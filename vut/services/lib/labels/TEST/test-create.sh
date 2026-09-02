@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "hwut.labels.create: a NEW label, a snapshot of a wish."
 #     choices    = ["doors", "empty", "snapshot", "union"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

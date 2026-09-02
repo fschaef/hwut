@@ -1533,3 +1533,35 @@ DECISION  Every cap the supervisor enforces resolves to '(Procsitter
           without anyone sweeping.
 COST      Six lines in 'relation.py'; one import from the supervisor's
           door (permitted: orchestrator -> procsitter).
+
+R-79  THE SIX GOODS R-78 LEFT BEHIND                            (2026-09-02)
+
+PROBLEM   R-78 moved the caps to 'ProcsitterConfig' on procsitter's
+          door, because the stand-in 'ConfigCaps' had LIED: it
+          announced 'timeout_sec = 60.0' where 300 was enforced, and
+          held 'None' for 'memory_mb', 'cpu_sec', 'file_size_mb' and
+          'child_process_max_n' -- caps that do stand. The ruling was
+          made; six GOODs were never re-recorded, and went on quoting
+          the lie: 'test-defaults declared/instantiate' and
+          'test-printer directory/file/no_default/origins'.
+
+DECISION  Re-recorded. The output now reads the DOOR'S OWN
+          DECLARATION, value for value:
+
+              caps.timeout_sec         -> max_wall_clock_sec   300.0
+              caps.cpu_sec             -> max_cpu_time_sec     300
+              caps.memory_mb           -> max_memory_mb        512
+              caps.file_size_mb        -> max_file_size_mb     10
+              caps.child_process_max_n -> max_pids             32
+
+          and shows the members the stand-in never had at all
+          ('min_free_disk_mb', 'env', 'scratch_dir').
+
+CHECKED   Every differing line was attributed to one of TWO ruled
+          causes before a single GOOD was blessed -- R-78's caps, and
+          E-42/C-4's tolerance leaves. A filter naming both left NO
+          residue in any of the six. A difference nobody can name is
+          a difference nobody may bless.
+
+COST      None. Exploration answers 66 ok, 0 fail, where it answered
+          60 ok, 6 fail before and had done since R-78.

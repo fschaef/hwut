@@ -79,3 +79,16 @@ Every wire token becomes a phrase through 'phrase()'. The PHRASE_DB
 maps verdict words and every 'E_TestRunResult' value. A token the
 table does not carry prints with its hyphens opened -- the stability
 promise: the wire grows, the display keeps reading.
+
+REFUSED (E-41). The event kind 'refused' (directory, node, text) is
+held by 'on_refused' and written by the tail as one block after HINTS,
+in every tier but SILENT:
+
+    ==============================================================
+    REFUSED -- not run
+    --------------------------------------------------------------
+    <directory>
+        <node>        <reason>
+
+Nothing is written where nothing was refused. A refused node is no node
+of the plan: it is never a flow line and never counted.

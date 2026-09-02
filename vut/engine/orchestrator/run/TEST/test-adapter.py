@@ -106,14 +106,15 @@ def _stated_value(member):
         case "caps":        return Caps(timeout_sec=11)
         case "tolerance":   return Tolerance(numeric_ratio=0.25)
         case "pype":        return "python3 filter.py"
-        case "tolerance.numeric_ratio": return 0.25
-        case "eq_pattern":  return ("alpha|beta",)
-        case "nothing":     return ("~",)
-        case "analogy":     return ("<<", ">>")
-        case "constraints": return ("x < y",)
-        case "comment":     return ("/*", "*/")
-        case "tolerance.slash":      return False
-        case "tolerance.whitespace": return False
+        case "tolerance.numeric_ratio":  return 0.25
+        case "tolerance.eq_pattern":     return ("alpha|beta",)
+        case "tolerance.nothing":        return ("~",)
+        case "tolerance.analogy":        return ("<<", ">>")
+        case "tolerance.constraints":    return ("x < y",)
+        case "tolerance.comment":        return ("/*", "*/")
+        case "tolerance.slash":          return False
+        case "tolerance.whitespace":     return False
+        case "tolerance.regions":        return False
         case "same":        return True
         case "interactive": return True
         case "execute":     return "./run-me --now"
@@ -182,17 +183,19 @@ def test_compare():
     print("INSPECT: nothing stated -> %s"
           % _compare_of(TestParameters()))
 
-    options = _compare_of(TestParameters(tolerance = Tolerance(numeric_ratio = 0.01, slash = False, whitespace = False),
-                                         eq_pattern     = ("a|b",),
-                                         nothing        = ("~",),
-                                         analogy        = ("<<", ">>"),
-                                         comment        = ("/*", "*/"),
-                                         constraints    = ("x < y",),
-                                         ))
+    options = _compare_of(TestParameters(
+                              tolerance = Tolerance(numeric_ratio = 0.01,
+                                                    slash         = False,
+                                                    whitespace    = False,
+                                                    eq_pattern    = ("a|b",),
+                                                    nothing       = ("~",),
+                                                    analogy       = ("<<", ">>"),
+                                                    comment       = ("/*", "*/"),
+                                                    constraints   = ("x < y",))))
     finder = options.pattern_finder
     print("         tolerance.numeric_ratio -> %s" % finder.numeric_tolerance_ratio)
-    print("         eq_pattern     -> %s" % finder.equivalent_pattern_list)
-    print("         nothing        -> %s"
+    print("         tolerance.eq_pattern   -> %s" % finder.equivalent_pattern_list)
+    print("         tolerance.nothing      -> %s"
           % finder.visible_nothing_pattern_list)
     print("         analogy pair   -> %s %s (on: %s)"
           % (finder.analogy_begin_marker, finder.analogy_end_marker,
@@ -200,11 +203,12 @@ def test_compare():
     print("         comment pair   -> %s %s (on: %s)"
           % (finder.ignored_line_begin_marker,
              finder.ignored_line_end_marker, finder.ignored_line_f))
-    print("         constraints    -> %s" % options.constraint_expression_list)
+    print("         tolerance.constraints  -> %s" % options.constraint_expression_list)
     print("         tolerance.slash      -> backslash_f %s" % finder.backslash_f)
     print("         tolerance.whitespace -> whitespace_f %s" % finder.whitespace_f)
 
-    off = _compare_of(TestParameters(analogy=(), comment=()))
+    off = _compare_of(TestParameters(
+              tolerance=Tolerance(analogy=(), comment=())))
     print("         stated OFF: analogy_f %s, ignored_line_f %s"
           % (off.pattern_finder.analogy_f,
              off.pattern_finder.ignored_line_f))
@@ -281,7 +285,7 @@ def test_refused():
                                    LanguageSetup(interpreter="python3 -u")})
     refusal = []
     try:
-        _compare_of(TestParameters(analogy=("<<",)))
+        _compare_of(TestParameters(tolerance=Tolerance(analogy=("<<",))))
         refusal.append("(none)")
     except AssertionError as error:
         refusal.append(str(error))

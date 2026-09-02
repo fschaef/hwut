@@ -1,6 +1,6 @@
 
 --- a change in a region nobody reached ---
-REACTION  status 3   stderr 0 byte(s)
+REACTION  status 3   stderr 0 line(s)
           | ==[ HWUT AFFECTED ]==========================================================
           | change:  1 file(s), 1 range(s)
           | index:   3 run(s), 1 source file(s)

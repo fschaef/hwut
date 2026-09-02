@@ -4,7 +4,7 @@
 #     title      = "Accept: write the nominal"
 #     choices    = ["all_or_nothing", "initiate", "ledger", "pulls_run",
 #                   "stderr", "take_dump", "the_loop"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

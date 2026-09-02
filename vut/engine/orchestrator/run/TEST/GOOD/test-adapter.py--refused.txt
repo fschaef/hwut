@@ -1,6 +1,6 @@
 INSPECT: an unknown language  -> interpreter ['klingon']
          a stated interpreter -> interpreter ['python3', '-u']
-         a marker pair of one -> 'analogy' is a marker PAIR; 1 stated
+         a marker pair of one -> 'tolerance.analogy' is a marker PAIR; 1 stated
   OK  : the unknown language is called by its own name
   OK  : 'language-setup' names the call, split as a shell would
   OK  : the malformed pair is named in its refusal

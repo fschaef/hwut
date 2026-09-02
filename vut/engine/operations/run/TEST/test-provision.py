@@ -5,7 +5,7 @@
 #     choices    = ["absent_application", "argv", "canonicalisation",
 #                   "canonicaliser_broken", "containment", "loaded",
 #                   "same_shape", "source_kinds", "stages", "subjects"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

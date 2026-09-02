@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The exit status law: one enum, every face relates."
 #     choices    = ["law"]
-#     eq-pattern = ["[0-9]+"]
+#     tolerance { eq_pattern = ["[0-9]+"] }
 # }
 #
 # ---------------------------------------------------------------------------

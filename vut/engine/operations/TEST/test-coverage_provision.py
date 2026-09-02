@@ -4,7 +4,7 @@
 #     title      = "The coverage provision chain"
 #     choices    = ["harvested", "incomplete", "no_target", "not_asked",
 #                   "nothing_borne"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

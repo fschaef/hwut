@@ -5,12 +5,15 @@ PURPOSE
        THE LOADED SUBJECTS -- a stored run, read back for consumption.
 
 DESCRIPTION
-       Loading is NO PROVISION: nothing executes, nothing is contained,
-       there is no attribution to make. A consumer -- diff, merge,
-       accept, or a re-judgement -- reads what a run RECORDED, through
-       the Store's candidate paths (the Bookkeeper's naming), and
-       receives the SAME 'Subjects' shape an execution delivers, so
-       nothing downstream ever asks which one it got.
+       THE RECORDED-STREAM BRANCH OF PROVISION (disc-2): nothing
+       executes, nothing is contained, there is no attribution to
+       make. The channel ('subject_provision.provider_of') hands out a
+       'Loaded' provider over this reader whenever its decision is
+       RECORDED, STALE or ABSENT; the provider reads what a run
+       RECORDED, through the Store's candidate paths (the Bookkeeper's
+       naming), and delivers the SAME 'Subjects' shape an execution
+       delivers, so nothing downstream ever asks which one it got.
+       No face calls this module directly.
 
        A STORED SUBJECT IS ALREADY CANONICAL (run/core.py): pype is
        part of execution; the consumer never canonicalises.

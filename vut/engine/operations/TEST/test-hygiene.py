@@ -4,7 +4,7 @@
 #     title      = "The component's hygiene, checked rather than remembered"
 #     choices    = ["good_files", "no_crash", "no_orphans",
 #                   "return_first", "token_ranks"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

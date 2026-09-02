@@ -1,10 +1,10 @@
 INSPECT: nothing stated -> None
          tolerance.numeric_ratio -> 0.01
-         eq_pattern     -> ['a|b']
-         nothing        -> ['~']
+         tolerance.eq_pattern   -> ['a|b']
+         tolerance.nothing      -> ['~']
          analogy pair   -> << >> (on: True)
          comment pair   -> /* */ (on: True)
-         constraints    -> ['x < y']
+         tolerance.constraints  -> ['x < y']
          tolerance.slash      -> backslash_f False
          tolerance.whitespace -> whitespace_f False
          stated OFF: analogy_f False, ignored_line_f False

@@ -35,6 +35,7 @@ tolerant comparison.
  * .numeric_tolerance_ratio:   
     defines the precision for NUMERIC.
 
+ * .regions_f: False -- '##!' and '####' are ordinary content.
  * .ignored_line_begin_marker, .ignored_line_end_marker:   
     define a marker at the for the begin/end of a line. If such a marker appears 
     the line is ignored.
@@ -143,6 +144,10 @@ class PatternFinder:
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
         self.ignored_line_begin_marker  = config.ignored_line_begin_marker
         self.ignored_line_end_marker    = config.ignored_line_end_marker
+        #  REGION FRAMING is a lexical feature like the rest, and like
+        #  the rest its switch travels with the finder (C-4): the one
+        #  reader of it is 'line_scanner.classify'.
+        self.regions_f            = config.regions_f
 
         # Master Regex Compilation
         # <= One master regular expression where particular

@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "hwut.labels.query: the runs a label expression names."
 #     choices    = ["doors", "forms", "silence", "wishlist"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

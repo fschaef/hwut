@@ -126,7 +126,7 @@ def test_no_default():
                             '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                             '# }\n',
                "hwut.conf": 'hwut {\n'
-                            '    default_app { comment = ["//", ""] }\n'
+                            '    default_app { tolerance { comment = ["//", ""] } }\n'
                             '}\n'}
     banner("everything")
     directory = build_directory(file_db)
@@ -159,7 +159,7 @@ def test_origins():
                                   '    default_app { tolerance { slash = yes } }\n'
                                   '    apps {\n'
                                   '        gen.c { title = "generated"\n'
-                                  '                comment = ["//", "//"] }\n'
+                                  '                tolerance { comment = ["//", "//"] } }\n'
                                   '    }\n'
                                   '}\n',
                     "gen.c":      "int main() { return 0; }\n"},

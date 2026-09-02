@@ -31,12 +31,14 @@ HEADER = "@" + '''hwut {
     build       { framework = "make"  executable = "special.exe" }
     caps        { timeout_sec = 30  network = false  memory_mb = 512 }
     pype        = "strip.pype"
-    tolerance { numeric_ratio = 0.01  slash = yes }
-    eq-pattern  = ["bonjour|hello", "v[0-9.]+-build[0-9]+"]
-    nothing     = ["_"]
-    analogy     = ["((", "))"]
-    constraints = ["x < y + 2", "abs(z) < epsilon"]
-    comment     = "##"
+    tolerance {
+        numeric_ratio = 0.01  slash = yes
+        eq_pattern  = ["bonjour|hello", "v[0-9.]+-build[0-9]+"]
+        nothing     = ["_"]
+        analogy     = ["((", "))"]
+        constraints = ["x < y + 2", "abs(z) < epsilon"]
+        comment     = "##"
+    }
     mask        = 0xDEAD_BEEF
     pattern     = 0b0111_11_01
     choices {

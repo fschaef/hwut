@@ -1,4 +1,7 @@
 STATUS: 0
+    RUN: test-ok.sh   (0) nothing recorded for this choice
+    RUN: test-two.sh a   (0) nothing recorded for this choice
+    RUN: test-two.sh b   (0) nothing recorded for this choice
     
     ==============================================================================
     ACCEPT  test-ok.sh .stdout

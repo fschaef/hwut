@@ -1,6 +1,6 @@
 
 --- a change in the region both parse runs executed ---
-REACTION  status 0   stderr 0 byte(s)
+REACTION  status 0   stderr 0 line(s)
           | ==[ HWUT AFFECTED ]==========================================================
           | change:  1 file(s), 2 range(s)
           | index:   3 run(s), 1 source file(s)
@@ -17,7 +17,7 @@ REACTION  status 0   stderr 0 byte(s)
           |       calling the suite green is a false green.
 
 --- a change at line 51 -- a different region, a different run ---
-REACTION  status 0   stderr 0 byte(s)
+REACTION  status 0   stderr 0 line(s)
           | ==[ HWUT AFFECTED ]==========================================================
           | change:  1 file(s), 1 range(s)
           | index:   3 run(s), 1 source file(s)

@@ -1498,3 +1498,289 @@ COST      One method on the Bookkeeper, one check in 'accept.main'
           'engine/operations/subject_provision.py: decide()', steps
           (0)/(A)/(B) explicit, and this face calls it with
           'production=False'. 'accept.main' carries no check of its own.
+
+E-40  ONE CHANNEL FOR SUBJECTS, AND THE FACES THAT WENT AROUND IT  (2026-09-02)
+
+PROBLEM   Operations disc-2 (ruled 2026-08-31) said: obtaining a
+          subject stream is ONE procedure, "IMPLEMENTED ONCE, referred
+          to from everywhere that wants a subject ... a second
+          implementation may not." What was built was the DECISION
+          only ('subject_provision.decide()': stats files, chooses
+          a word). Every consumer then wired the outcome itself:
+          'session.py' with a private '_Loaded' and '_groundwork';
+          'accept' and 'merge' with a hand-rolled 'class _Bare' to
+          fake a configuration and a REFUSAL where the word was not
+          RECORDED; 'play' calling 'provision_of()' directly, no
+          decision at all; 'stability' opening the candidate path
+          with 'open()'. Five consumers, four ways to obtain a
+          stream -- the second implementation, four times over,
+          wearing the channel's clothes.
+
+          Two of those were dead on arrival: 'accept' read
+          'found.configuration_db', an attribute 'selection.of_
+          directory' has never had, so its '_Bare' fallback was the
+          only path ever taken; and E-39's NOT DONE ("accept does not
+          re-run") stood because the channel it was ruled to call
+          could not run.
+
+DECISION  The channel is made whole. 'subject_provision.py' owns
+          three verbs: 'decide()' (unchanged), 'provider_of()' -- the
+          decision made into a wiring, an executing Provision or a
+          Loaded, both answering 'provide()' with 'Subjects' -- and
+          'record()' (moved from session). 'Loaded' moves there from
+          session; 'consume/loaded.py' is its body and no face calls
+          it. A caller with no configuration takes 'bare_provider_of'
+          (read, never execute), the one place that fallback is
+          written.
+
+          The five consumers call it:
+            session    provider_of(); record()       privates removed
+            accept     provider_of() per case; on PROVIDE it RUNS the
+                       case through 'session.run_test' -- the source
+                       of the nominal cannot wait on a run somebody
+                       else makes. E-39's NOT DONE is closed: no
+                       'services -> services' edge, no drive loop
+                       duplicated; the session is the brick both
+                       faces stand on. The configuration is built
+                       honestly ('test_configuration_of', as play and
+                       the dispatcher build it); '_Bare' and the dead
+                       'configuration_db' read go.
+            play       provider_of(force_run=True, keep_raw=True);
+                       '--save' hands the result to record(). Default
+                       unchanged: shows and forgets. With '--save' a
+                       NEW test has an entrance -- play, look, accept
+                       -- which the coming GOOD gate on 'hwut.run'
+                       needs (a test with no nominal is not run).
+            merge      bare_provider_of(); '_Bare' goes
+            stability  bare_provider_of() per subject; 'open()' goes
+
+          Operations disc-2 is settled and deleted; its sub-forks
+          f-1 (closure = application + coverage targets), f-2 (trust
+          the build tool), f-3 (mtime alone), f-4 (the 'production'
+          parameter) are as recommended there and as the code already
+          stood. Mechanics in operations README 2.5b and 5.
+
+COST      'hwut.accept' may now run a test. It says so, by name and
+          with the step that decided, before it does:
+              RUN: test-x.py choice   (A.1) 'test-x.py' is younger ...
+          'hwut.play' now opens the Bookkeeper ('base_f=True') even
+          without '--save', to find the candidate path the decision
+          is made against; it still writes nothing without the word.
+          'stability' reads text where it read bytes; the snapshot
+          compares repeats against each other only, so nothing
+          changes in what it finds.
+
+          Bookkeeper.shape_of (B-5) still opens candidate and nominal
+          itself: that is the book classifying two files it names,
+          not a face obtaining a subject, and it is left where B-5
+          put it.
+
+GRAVEYARD A 'production=False' refusal in the channel itself --
+          rejected: the channel hands back the recording and the
+          word; whether STALE is a refusal is the face's ("a report
+          of what happened" may show it, a merge may not).
+          'accept' provisioning through 'provider.provide()' directly
+          instead of the session -- rejected: the run would be
+          unheld, unrecorded and unbooked; the session is the
+          ceremony, and a second run path beside it is the very thing
+          this entry removes.
+
+E-41  THE GATE IS ON THE NOMINAL                                (2026-09-02)
+
+PROBLEM   A copy of a test source -- 'mytest.py.backup', with the
+          header it was copied with -- was found by exploration, read
+          as a test application, run, failed to launch, and ENTERED
+          THE BOOK as it failed. Nothing asked whether the thing had
+          ever been accepted. The first remedy proposed -- run only
+          what 'test_ids.dat' or 'result_db.csv' names -- fails twice:
+          the register is written at accept, which needs a run, so a
+          new test could never be run; the book is written BY the
+          run, so the stray's first run admits it for ever after. And
+          the two books already disagreed in 17 of 17 directories.
+
+RULED     (Frank-Rene, 2026-09-01/02)
+          1  A GOOD FILE IS THE EVIDENCE OF ACCEPTANCE. A nominal
+             stands => something was accepted => the case may run.
+             No nominal => the case is NOT RUN. The gate is on the
+             goal that REQUIRES a nominal -- 'hwut.run' -- and on
+             nothing else: 'hwut.play' is the explicit run and
+             'hwut.accept' is the source of the nominal (E-40).
+          2  A missing register entry is INSANITY, not grounds for
+             refusal: where a nominal stands the case runs, the entry
+             is made, and the making is BROUGHT TO ATTENTION.
+          3  Backup-shaped names are REFUSED at candidacy, explicitly:
+             never silent, collected, one comment at the end.
+          4  'hwut.sanitize' checks the records of acceptance against
+             each other.
+          The gate is judged PER CASE, "analogously": a test with one
+          accepted choice and one new one runs the first and refuses
+          the second, by name.
+
+DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
+          'determine()' for every selected case, for 'hwut.run' and
+          'hwut.plan' alike; the evidence is 'bookkeeper.nominal_
+          stands_f(directory, test, choice)' -- a look at GOOD/ by
+          NAME, never at the book. A refused case is no node: not
+          run, not booked, not counted.
+
+          ONE BLOCK: the protocol gains the kind 'refused' (add-only;
+          FORMAT stays 1) and the display a closing 'REFUSED -- not
+          run' block, by directory, name and reason, in every tier
+          but SILENT. Exploration's refusals (finder.py, 'REFUSED_
+          NAME_GLOB_TUPLE': '*~', '#*#', '.bak', '.backup', '.orig',
+          '.old', '.save', '.rej', '.copy', '.swp', '.tmp') and the
+          gate's stand in the same block. Each refusal names its way
+          in: "'hwut.play --save', then 'hwut.accept'".
+
+          THE ATTENTION: the dispatcher opens the register for every
+          run; a case that runs on a nominal's word and has no entry
+          gets one, and the run says so once, as a NOTE:
+              REGISTERED test choice: a nominal stands and the
+              register had no entry -- accepted outside the book
+          Its book row is the run's, with 'last_accept' empty -- the
+          mark 'sanitize' reads.
+
+          'hwut.sanitize --books', a default aspect, names every
+          disagreement between the three records -- a registered
+          case with no nominal; a nominal the register lacks; a
+          nominal with a book row and no 'last_accept' -- and
+          '--apply' removes NONE of them: only a person can say which
+          record is wrong.
+
+FOUND     'hwut.accept' ITSELF accepted outside the book: it wrote
+          GOOD/ and the register and never 'last_accept'; only the
+          engine's NOMINAL goal did. So every directory accepted by
+          the face would have lit up under '--books'. 'Bookkeeper.
+          note_accept(test, choice)' is added and the face calls it
+          beside 'Store.accept()'. Found by the regression test's
+          'agree' choice, which could not be made to pass otherwise.
+
+COST      A directory with no register file gets one on its first run
+          (the seven compare directories here), and twelve NOTE lines
+          the first time; then silence. Fifteen files in this tree
+          would be refused by the gate and all but two are already
+          excluded ('benchmark*', 'ON_HOLD-*', the pype filters); the
+          two are the known open items ('test-service.sh', 'benchmark-
+          hwut_hocon.py'). '--books' on today's tree reports every
+          face-accepted row as lacking 'last_accept' until each is
+          re-accepted or the rows are healed; that is the state of
+          the tree told truthfully, not a defect of the aspect.
+
+GRAVEYARD The gate at the session (E_Goal) -- rejected: the case would
+          still be scheduled, built, and would reach the book before
+          the refusal; "not run at all" means no node.
+          The gate on 'hwut.play' -- rejected: play requires no
+          nominal, and with '--save' it is the way in.
+          Refusal as a FAULT of exploration -- rejected: a fault makes
+          the directory unreadable and 'hwut.play' refuses the whole
+          directory; a stray copy is not a broken specification.
+          '--books' findings removable under '--apply' -- rejected: a
+          disagreement has no side the tool may take.
+
+E-42  EVERY LEXICAL TOLERANCE IN THE ONE SCOPE                  (2026-09-02)
+
+PROBLEM   'tolerance' held three leaves -- 'numeric_ratio',
+          'whitespace', 'slash', and since C-4 'regions'. Five more
+          words of the same kind stood at the ROOT beside 'build',
+          'caps', 'same' and 'output': 'eq-pattern', 'nothing',
+          'analogy', 'constraints', 'comment'. Every one of them says
+          HOW FAR THE SUBJECT MAY DIFFER AND STILL PASS, and every one
+          of them lands on compare's pattern finder. Two places for
+          one kind of statement, and an author with no way to tell
+          which held what.
+
+RULED     (Frank-Rene) "eq-pattern, nothing, analogy, constraints,
+          comment, must all be in the tolerance scope", and the
+          spelling inside the scope is 'eq_pattern'.
+
+DECISION  The five become leaves of 'Tolerance'. 'eq-pattern' LOSES
+          ITS HYPHEN on the way in: the scope had one convention
+          ('numeric_ratio') and now keeps it, so both walks that read
+          the scope -- the validator and 'hwut.show's printer -- stay
+          generic over the record and need no key-to-field map for a
+          single word.
+
+              # @hwut {
+              #     title = "..."
+              #     tolerance { eq_pattern = ["SUCCESS.*"] }
+              # }
+
+          THE OLD PLACE REFUSES, BY NAME:
+              'eq-pattern' moved into 'tolerance'; write
+              tolerance { eq_pattern = ... }
+          Accepting both would be a grammar that grows. A refusal
+          that names the new place costs the author one edit and
+          tells them exactly which.
+
+          Moved with it: the five RELATION keys become
+          'tolerance.<leaf>' (so 'hwut.show' prints them inside the
+          braces without a line of new code -- the printer walks
+          RELATION); the adapter flattens all nine leaves in one
+          loop; 'hwut_info_interview' builds 'Tolerance(eq_pattern=)'
+          from 'HAPPY:', since HAPPY names an equivalence tolerance.
+
+COST      69 statements across 60 files, swept. Recorded again where
+          the new shape is the whole difference: 'test-adapter'
+          (3 choices), exploration's 'test-defaults merge',
+          'test-explorer defaults', 'test-interview block',
+          'test-printer places', 'test-tree inherit',
+          'test-validator' (3). NOT recorded: 'test-defaults
+          declared/instantiate' and 'test-printer directory/file/
+          no_default/origins', whose GOODs are ALREADY stale from
+          R-78's caps rename -- their base differs by 5 to 21 lines
+          before this change, and blessing them would smuggle in a
+          difference this entry did not cause. They fail before and
+          after, six of six.
+
+FOUND     The sweep was written as a regular expression over whole
+          files and ate three CODE lines that merely looked like
+          statements: a keyword argument list in 'test-adapter.py',
+          a docstring example in 'printer.py', a HOCON fixture
+          string in 'benchmark-hwut_hocon.py' (and a 'nothing ='
+          assignment in 'operations/TEST/test-report.py' dragged up
+          into its header). All four restored from the previous
+          revision and redone by hand. THE CHECK THAT FOUND THEM is
+          the one that should have run first: 'ast.parse' over every
+          '.py' in the tree, and a diff of every removed line against
+          the statement pattern WITH a comment prefix required.
+          A regex sweep cannot tell a header from the code beneath it.
+
+E-43  THE OPERATION NAMES AN OBSERVATION, NEVER A DECISION   (2026-09-02)
+
+PROBLEM   Every BASE QUESTION -- '--fail', '--pass', '--since',
+          '--until', '--faster-than' -- died in a TypeError before a
+          single case was judged:
+
+              Bookkeeper.result() takes 3 positional arguments
+              but 4 were given
+
+          'task_list_query._wanted_f' handed 'result()' a third
+          argument, 'RUN_OPERATION', which that method has never
+          taken. Five of the wishes 'asks_base_f' names were
+          therefore unusable, and no test asked any of them.
+
+          E-36 split the two records: the BOOK holds what the
+          software IS (a verdict for a (test, choice)) and knows no
+          operation; the LOCAL DATABASE holds what THIS MACHINE SAW,
+          per operation. The call was left over from before that
+          split -- ten lines below it, the same constant is handed to
+          'observation_of_case', which is the road that does take it.
+
+DECISION  The operation is dropped from the book's call.
+          'RUN_OPERATION' keeps its one legitimate use and gains the
+          note that says which road it belongs to, so the next reader
+          does not put it back.
+
+FOUND     By Frank-Rene running 'hwut --fail'. Present on the dump
+          and on every bundle since; not introduced this week. That
+          no test asked a base question is the reason it survived --
+          'services/TEST/test-base-questions.py' now asks all five,
+          and asks them of a book with a passing case, a failing
+          case, and a case the book has never seen.
+
+CHECKED   The test was run against the DEFECT REINSTATED: all five
+          choices go red, and green again on the fix. A regression
+          test that passes on the broken code is not one.
+
+COST      None. Services answers 131 ok where it answered 126, the
+          five being the new choices.

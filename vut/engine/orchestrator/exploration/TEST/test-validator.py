@@ -159,11 +159,13 @@ def test_header():
            '    }\n'
            '    pype        = \"strip.pype\"\n'
            '    tolerance { numeric_ratio = 0.01  slash = yes }\n'
-           '    eq-pattern  = ["bonjour|hello"]\n'
-           '    nothing     = "_"\n'
-           '    analogy     = ["((", "))"]\n'
-           '    constraints = ["x < y + 2", "abs(sin(z) - x) < eps"]\n'
-           '    comment     = ["##", "##"]\n'
+           '    tolerance {\n'
+           '        eq_pattern  = ["bonjour|hello"]\n'
+           '        nothing     = "_"\n'
+           '        analogy     = ["((", "))"]\n'
+           '        constraints = ["x < y + 2", "abs(sin(z) - x) < eps"]\n'
+           '        comment     = ["##", "##"]\n'
+           '    }\n'
            '    same        = yes\n'
            '    interactive = yes\n'
            '    choices {\n'
@@ -205,7 +207,7 @@ def test_vocabulary():
            '@hwut {\n'
            '    title   = "T"\n'
            '    tolerance { numeric_ratio =  }\n'
-           '    comment = null\n'
+           '    tolerance { comment = null }\n'
            '}\n')
     header("'title' absent",
            '@hwut {\n'
@@ -222,7 +224,7 @@ def test_types():
            '    build   = yes\n'
            '    caps    { timeout_sec = \"fast\"  memory_mb = -1\n'
            '              bandwidth   = 10 }\n'
-           '    analogy = ["((", "))", "extra"]\n'
+           '    tolerance { analogy = ["((", "))", "extra"] }\n'
            '    choices = [\"one\", { a = 1 }]\n'
            '}\n')
 

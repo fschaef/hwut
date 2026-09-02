@@ -65,12 +65,14 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+import asyncio
 import os
 import statistics
 import sys
 
 from   vut.engine.bookkeeper.api              import Bookkeeper
 from   vut.engine.bookkeeper.api            import Store
+from   vut.engine.operations                import subject_provision
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
@@ -222,10 +224,11 @@ def snapshot_of(root, verdict_db, subject_tuple):
     RETURN: dict, (directory, node) -> (verdict, {subject: text},
             {subject: cadence}) for every test node of one repeat.
 
-    The Bookkeeper names every record; this reads what it names. A
-    subject with no candidate is absent from the text map, a subject
-    with no cadence absent from the cadence map -- never an empty
-    stand-in for either.
+    THE STREAMS COME THROUGH THE ONE CHANNEL (operations disc-2,
+    'subject_provision.bare_provider_of': read, never execute -- a
+    snapshot is of what a repeat produced). A subject with no
+    candidate is absent from the text map, a subject with no cadence
+    absent from the cadence map -- never an empty stand-in for either.
     """
     result   = {}
     store_db = {}
@@ -241,10 +244,14 @@ def snapshot_of(root, verdict_db, subject_tuple):
         text_db = {}
         time_db = {}
         for subject in subject_tuple:
-            path = store.candidate_path(test, choice, subject)
-            if os.path.isfile(path):
-                with open(path, "rb") as file_handle:
-                    text_db[subject] = file_handle.read()
+            provider, decision = subject_provision.bare_provider_of(
+                                     store, test, choice,
+                                     subject_name_list=(subject,))
+            if decision.what is not subject_provision.E_Decision.ABSENT:
+                subjects = asyncio.run(provider.provide())
+                if subject in subjects:
+                    with subjects[subject].open() as reader:
+                        text_db[subject] = reader.read()
             cadence = store.timing(test, choice, subject)
             if cadence is not None:
                 time_db[subject] = cadence

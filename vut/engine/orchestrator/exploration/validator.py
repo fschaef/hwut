@@ -293,19 +293,10 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     elif key == "tolerance":
         value = _tolerance(entry, file, fault_list)
         if value is not None: parameter_db["tolerance"] = value
-    elif key in ("eq-pattern", "nothing"):
-        value = _string_list(entry, file, fault_list)
-        if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
     elif key == "output":
         value = _string_list(entry, file, fault_list)
         if value is not None:
             _output(entry, value, parameter_db, file, fault_list)
-    elif key == "constraints":
-        if _off_f(entry.node):
-            parameter_db["constraints"] = ()
-        else:
-            value = _string_list(entry, file, fault_list)
-            if value is not None: parameter_db["constraints"] = value
     elif key in ("same", "interactive"):
         value = _bool(entry, file, fault_list)
         if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
@@ -315,8 +306,15 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     elif key == "caps":
         value = _caps(entry, file, fault_list)
         if value is not None: parameter_db["caps"] = value
-    elif key in ("analogy", "comment"):
-        _marker_pair(entry, parameter_db, file, fault_list)
+    elif key in MOVED_INTO_TOLERANCE_DB:
+        #  MOVED, AND SAID SO (E-42). Accepting both places would be a
+        #  grammar that grows; a refusal that names the new one costs
+        #  the author a single edit and tells them exactly which.
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, entry.key_position,
+            "'%s' moved into 'tolerance'; write "
+            "tolerance { %s = ... }"
+            % (key, MOVED_INTO_TOLERANCE_DB[key])))
 
 
 def _output(entry, value, parameter_db, file, fault_list):
@@ -401,20 +399,29 @@ def _build(entry, file, fault_list):
     return Build(**field_db)
 
 
+#  THE SCOPE'S VOCABULARY, in one string, for both messages that name it.
+TOLERANCE_KEYS = ("numeric_ratio, whitespace, slash, regions, "
+                  "eq_pattern, nothing, analogy, constraints, comment")
+
+
 def _tolerance(entry, file, fault_list):
     """
     RETURN: Tolerance, how far the subject may differ and still pass,
-            per lexical kind (R-77): 'numeric_ratio' in [0..1],
-            'whitespace' and 'slash' as booleans.
+            per lexical kind (R-77): 'numeric_ratio' in [0..1];
+            'whitespace', 'slash', 'regions' as booleans; 'eq_pattern'
+            and 'nothing' as string lists; 'analogy' and 'comment' as
+            marker PAIRS; 'constraints' as expressions.
             None, the value is no scope (fault recorded).
 
     Compare owns every default; this record holds only what was stated.
+    EVERY TOLERANCE IS STATED HERE (E-42) -- there is no second place
+    a lexical tolerance may be written.
     """
     node = entry.node
     if not isinstance(node, ObjectNode):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, _position_of(node, entry),
-            "'tolerance' is a scope: numeric_ratio, whitespace, slash"))
+            "'tolerance' is a scope: %s" % TOLERANCE_KEYS))
         return None
 
     field_db = {}
@@ -428,14 +435,25 @@ def _tolerance(entry, file, fault_list):
                     "'numeric_ratio' is a relative ratio in [0..1]"))
                 continue
             field_db["numeric_ratio"] = float(value)
-        elif inner.key in ("whitespace", "slash"):
+        elif inner.key in ("whitespace", "slash", "regions"):
             value = _bool(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
+        elif inner.key in ("eq_pattern", "nothing"):
+            value = _string_list(inner, file, fault_list)
+            if value is not None: field_db[inner.key] = value
+        elif inner.key == "constraints":
+            if _off_f(inner.node):
+                field_db["constraints"] = ()
+            else:
+                value = _string_list(inner, file, fault_list)
+                if value is not None: field_db["constraints"] = value
+        elif inner.key in _MARKER_PAIR_DB:
+            _marker_pair(inner, field_db, file, fault_list)
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, inner.key_position,
-                "unknown tolerance '%s'; known: numeric_ratio, "
-                "whitespace, slash" % inner.key))
+                "unknown tolerance '%s'; known: %s"
+                % (inner.key, TOLERANCE_KEYS)))
     return Tolerance(**field_db)
 
 
@@ -483,6 +501,14 @@ def _caps(entry, file, fault_list):
 _MARKER_PAIR_DB = {"analogy": "the analogy markers",
                    "comment": "the markers of an ignored line"}
 
+#  THE FIVE THAT MOVED INTO 'tolerance' (E-42): old key -> its leaf.
+#  'eq-pattern' loses its hyphen on the way in: one scope, one spelling.
+MOVED_INTO_TOLERANCE_DB = {"eq-pattern":  "eq_pattern",
+                           "nothing":     "nothing",
+                           "analogy":     "analogy",
+                           "constraints": "constraints",
+                           "comment":     "comment"}
+
 
 def _marker_pair(entry, parameter_db, file, fault_list):
     """RETURN: None. A marker pair -- 'analogy' and 'comment' alike: two
@@ -495,7 +521,7 @@ def _marker_pair(entry, parameter_db, file, fault_list):
     key   = entry.key
     node  = entry.node
     what  = _MARKER_PAIR_DB[key]
-    field = KEY_TO_FIELD[key]
+    field = key
 
     if isinstance(node, ScalarNode) and node.value is True:
         fault_list.append(Fault(

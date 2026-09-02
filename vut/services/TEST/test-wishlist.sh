@@ -6,7 +6,7 @@
 #     choices    = ["elided", "empty", "labels", "print", "refused",
 #                   "roundtrip", "select", "short-form", "spent",
 #                   "travels"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

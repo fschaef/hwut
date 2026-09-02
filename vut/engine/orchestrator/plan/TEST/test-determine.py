@@ -96,7 +96,7 @@ def build_directory():
 
 def determined(app_set, wish):
     """RETURN: None. Prints the wish, the reports and the plan."""
-    plan, report_list = determine(app_set,
+    plan, report_list, _refused = determine(app_set,
                                   CTestTaskListQuery(wish))
     print("WISH: %s" % wish)
     for report in report_list:
@@ -169,7 +169,7 @@ def test_deterministic():
         text_set = set()
         line_list = []
         for _ in range(10):
-            plan, _report = determine(app_set, CTestTaskListQuery(Wish()))
+            plan, _report, _refused = determine(app_set, CTestTaskListQuery(Wish()))
             line_list = []
             print_plan(plan, line_list.append)
             text_set.add("\n".join(line_list))

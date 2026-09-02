@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "hwut.labels.list: every label, with a count beside it."
 #     choices    = ["counts", "empty", "refused"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

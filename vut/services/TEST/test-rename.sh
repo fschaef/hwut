@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The rename faces: the boundary records follow the name."
 #     choices    = ["labels"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

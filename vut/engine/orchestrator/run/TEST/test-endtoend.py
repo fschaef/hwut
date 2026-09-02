@@ -129,6 +129,10 @@ def fixture(entry_command="true"):
         '                  executable = "app" } } */\n')
     put(test, "Makefile",
         'app:\n\tfalse\n')
+    #  ACCEPTED (E-41): the gate admits by the nominal; the built and
+    #  the misdep tests need one to be RUN at all.
+    put(good, "test-built.c.txt", "")
+    put(good, "test-m.sh.txt",    "")
     put(test, "test-noise.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Noise"\n'

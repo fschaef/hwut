@@ -5,7 +5,7 @@
 #     title      = "adm/import_graph.py: who depends on whom, and the layering"
 #     choices    = ["depth", "formats", "layering", "refused", "shared",
 #                   "unreadable", "vut"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

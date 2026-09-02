@@ -31,11 +31,6 @@ KEY_TO_FIELD = {
     "caps":        "caps",
     "pype":        "pype",
     "tolerance":   "tolerance",
-    "eq-pattern":  "eq_pattern",
-    "nothing":     "nothing",
-    "analogy":     "analogy",
-    "constraints": "constraints",
-    "comment":     "comment",
     "same":        "same",
     "interactive": "interactive",
     "execute":     "execute",
@@ -121,10 +116,33 @@ class Tolerance(_Scope):
                     [0..1]; 0 is exact
     'whitespace'    runs of blanks are one blank
     'slash'         a backslash and a slash are the same separator
+    'regions'       region framing is READ ('##! <handler>' ... '####');
+                    false: those lines are ordinary content (C-4) --
+                    what a text that TALKS ABOUT framing needs
+    'eq_pattern'    lines matching any of these are equivalent whatever
+                    they hold -- a clock, a path, a run id
+    'nothing'       lines matching any of these are VISIBLE NOTHING:
+                    present, and weighing nothing in the comparison
+    'analogy'       the marker PAIR bracketing an analogy, '("((", "))")';
+                    the empty tuple is the stated OFF
+    'constraints'   the expressions every binding must satisfy; the
+                    empty tuple is the stated OFF
+    'comment'       the marker PAIR of an ignored line, '("##", "##")';
+                    the empty tuple is the stated OFF
+
+    EVERY LEAF SPELLS ITSELF WITH UNDERSCORES (E-42): one scope, one
+    convention, and both walks that read it -- the validator and
+    'hwut.show's printer -- stay generic over the record.
     """
     numeric_ratio: float | None = None
     whitespace:    bool  | None = None
     slash:         bool  | None = None
+    regions:       bool  | None = None
+    eq_pattern:    tuple | None = None
+    nothing:       tuple | None = None
+    analogy:       tuple | None = None
+    constraints:   tuple | None = None
+    comment:       tuple | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,11 +160,6 @@ class TestParameters(_Scope):
     caps:        Caps  | None = None
     pype:        str   | None = None
     tolerance:   Tolerance | None = None
-    eq_pattern:  tuple | None = None
-    nothing:     tuple | None = None
-    analogy:     tuple | None = None
-    constraints: tuple | None = None
-    comment:     tuple | None = None
     same:        bool  | None = None
     interactive: bool  | None = None
     execute:     str   | None = None

@@ -33,6 +33,12 @@ from vut.engine.compare.engine.constraint_namespace import (
 class ConfigurationPatternFinder:
     strip_whitespace_f:           bool  = True
     ignored_line_f:               bool  = True
+    #  REGION FRAMING IS A LEXICAL FEATURE LIKE THE REST, and like the
+    #  rest it can be switched off (C-4). False: '##! <handler>' and
+    #  '####' are ORDINARY CONTENT, compared as they stand. A text
+    #  that TALKS ABOUT framing -- a test of the region handlers, a
+    #  report quoting one -- needs this, and had no way to say it.
+    regions_f:              bool  = True
     analogy_f:                    bool  = True
     constraint_f:                 bool  = True   # '((name: value))' bindings
     whitespace_f:                 bool  = True

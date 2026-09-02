@@ -322,6 +322,34 @@ def _subsequence_f(small, large):
     return all(line in it for line in small)
 
 
+def nominal_stands_f(directory, test, choice=None):
+    """
+    RETURN: True,  an ACCEPTED record of that (test, choice) stands in
+                   the directory's GOOD/ -- any subject: 'test--choice.
+                   txt', 'test--choice.stderr', ...; and, for any
+                   choice, the choice-less form 'test.txt', which is the
+                   nominal every choice shares under 'same'. Something
+                   was accepted for this case.
+            False, nothing does: never accepted, or the nominals were
+                   removed.
+
+    THE GATE 'hwut.run' ADMITS BY (E-41): a case with no nominal is not
+    run, since a verdict needs something to compare against; a test
+    with one accepted choice and one new one runs the first and refuses
+    the second, by name. The look is by NAME ONLY and never by the
+    book: the book records runs, GOOD/ records acceptance, and only
+    the latter is the evidence asked for here.
+    """
+    good = Path(directory) / "GOOD"
+    if not good.is_dir(): return False
+    prefix_tuple = (test + ".",) if choice is None \
+                   else (test + ".", "%s--%s." % (test, choice))
+    for name in os.listdir(str(good)):
+        if name in GOOD_OWNED_FILE_TUPLE: continue
+        if name.startswith(prefix_tuple): return True
+    return False
+
+
 class Bookkeeper:
     """ONE test directory's book: the naming, the entries, the
     reproducible configurations, and the divergence verdicts.
@@ -757,6 +785,31 @@ class Bookkeeper:
         path = self.nominal_path(test, choice, "stderr")
         if path.exists(): path.unlink()
         return note
+
+    def note_accept(self, test, choice):
+        """
+        RETURN: str, the instant now standing as 'last_accept' for that
+                choice -- written into its row, which is created where
+                none stood.
+
+        ACCEPTANCE IS A DECISION AND THE BOOK HOLDS DECISIONS (E-20,
+        E-36): whoever makes a nominal stand enters it here, or the
+        book says "accepted outside the book" ('hwut.sanitize --books',
+        E-41). 'hwut.accept' calls this beside 'Store.accept()'; the
+        engine's NOMINAL goal reaches the same row through 'record()'.
+        A fresh acceptance means the candidate IS the nominal, so the
+        row's verdict reads true and its report 'ok'.
+        """
+        content   = self.book()
+        test_book = content.setdefault(test, {})
+        choice_db = test_book.setdefault("choices", {})
+        key       = NO_CHOICE_KEY if choice is None else choice
+        row       = choice_db.setdefault(key, {})
+        row["verdict"]     = True
+        row["report"]      = "ok"
+        row["last_accept"] = _now()
+        self._write_book(content)
+        return row["last_accept"]
 
     # -- THE STAIN: a test that switched results is disqualified ------
     def stain(self, test, choice):

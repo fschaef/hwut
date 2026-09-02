@@ -1,7 +1,7 @@
 
 --- a run-ended with a cause ---
     any      run-ended  fields: cause, directory, good, node, node_kind, verdict, when
-    run-ended when=T01 directory=alpha/TEST node=test-a.py good=False verdict=unsupported cause=build[make] report=None
+    run-ended when=T01 directory=alpha/TEST node=test-a.py good=False verdict=unsupported cause=build[make] report=None detail=None
 
 --- a NEWER stream's extra field: on_any sees it, the named handler does not ---
     any      tree-done  fields: fail_n, good, walltime_sec, when

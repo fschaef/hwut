@@ -5,7 +5,7 @@
 #     title      = "The hwut.play face: run one test, show the reading"
 #     choices    = ["build", "pyped", "reading", "refused", "silent",
 #                   "solo", "stderr"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

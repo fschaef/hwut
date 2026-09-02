@@ -80,9 +80,15 @@ def build_directory(extra_db=None):
     #  'hwut.conf' until it meets this file; a tree without one
     #  is refused, so a fixture states its own.
     tree_boundary(directory)
+    os.makedirs(os.path.join(directory, "GOOD"))
     for name, content in dict(FILE_DB, **(extra_db or {})).items():
         with open(os.path.join(directory, name), "w") as fh:
             fh.write(content)
+        #  ACCEPTED (E-41): a nominal per test, or the gate refuses it;
+        #  a choice-less nominal is the one every choice shares.
+        if name.startswith("test-"):
+            with open(os.path.join(directory, "GOOD", name + ".txt"),
+                      "w"): pass
     return directory
 
 

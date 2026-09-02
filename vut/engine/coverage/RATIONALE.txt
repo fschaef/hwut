@@ -1015,3 +1015,22 @@ COST     'hwut.cov formats' prints tools, formats and aliases only; the
          prints the block for pasting.
 GRAVEYARD Keeping 'DEFAULT_TOOL_DB' as the fallback beneath an absent
          entry: the second source under another name.
+
+D-27  A BYTE COUNT IS A MACHINE-CHOSEN VALUE                    (2026-09-02)
+
+PROBLEM   'test-affected.py' printed "stderr %i byte(s)". The fixture
+          root is a temporary directory whose PATH LENGTH is chosen by
+          the machine, and the refusals it provokes name that path, so
+          the byte count differed on every machine and every run. Five
+          GOODs held such a count; the suite failed on any tree whose
+          temporary path was not the length of the recording machine's.
+
+DECISION  Counted in LINES. The message content is fixed and only the
+          path's length varies, so the line count is stable, says the
+          same thing (did the call complain, and how much), and the
+          lines themselves already follow, masked to '<work>'.
+
+COST      Five GOODs re-recorded ('answer', 'bare', 'empty', 'help',
+          'refused'); the count was their only difference. Coverage
+          answers 62 ok / 0 fail where it answered 61 / 1, and does so
+          on any machine.

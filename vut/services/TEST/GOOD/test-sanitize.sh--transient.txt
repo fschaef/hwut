@@ -14,7 +14,7 @@ STDOUT {
 --- a bare call never takes them
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': lock, orphans, out, session  (reporting only; '--apply' acts)
+    SANITIZE, in 'tree': books, lock, orphans, out, session  (reporting only; '--apply' acts)
     
       session -- 1 found:
           suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody
@@ -26,7 +26,11 @@ STDOUT {
           other/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
           suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
     
-      4 item(s), <size> kB
+      books -- 2 found:
+          other/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+    
+      6 item(s), <size> kB
 }
 --- apply: 'other' holds a live lock and is refused whole
 STATUS: 0

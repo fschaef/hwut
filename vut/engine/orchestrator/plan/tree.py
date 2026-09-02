@@ -11,10 +11,28 @@ stands on the CTreePlan, so no entry carries a machine-chosen path.
 ______________________________________________________________________________
 """
 
+import os
 from dataclasses import dataclass
 
 from ..exploration.task_list_query import CTestTaskListQuery
 from .determine import determine
+from ...bookkeeper.api import nominal_stands_f
+
+NOT_ACCEPTED_REASON = ("no nominal stands in GOOD/: not accepted, not "
+                       "run ('hwut.play --save', then 'hwut.accept')")
+
+
+def admit_of(directory):
+    """
+    RETURN: callable, 'admit(test, choice)' for 'determine()': None
+            where a nominal of that case stands in 'directory/GOOD',
+            the E-41 refusal reason else. THE GATE, in one place, for
+            the plan face and the run alike, judged per CASE: a test
+            with one accepted choice and one new one runs the first.
+    """
+    return lambda test, choice: (None if nominal_stands_f(directory,
+                                                         test, choice)
+                                 else NOT_ACCEPTED_REASON)
 from .label     import swallowed_warning_tuple
 from .printer   import print_plan
 
@@ -27,10 +45,11 @@ class CTreePlanEntry:
     directory:    str            # relative to the tree plan's root
     plan:         object         # CTestPlan
     app_set:      object         # the CTestAppSet it was determined from
-    on_entry:     str | None
-    on_exit:      str | None
-    report_tuple: tuple
-    fault_tuple:  tuple
+    on_entry:      str | None
+    on_exit:       str | None
+    report_tuple:  tuple
+    fault_tuple:   tuple
+    refused_tuple: tuple = ()   # (name, reason): not run, and said so
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +99,16 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
                                  directory=directory,
                                  root=tree_exploration.root,
                                  label_view=label_view)
-        plan, report_list  = determine(result.app_set, task_list)
+        #  THE GATE (E-41): a test with no nominal in GOOD/ is not
+        #  run -- a verdict needs something to compare against -- and
+        #  the refusal is named, once per test, in the run's closing
+        #  REFUSED block. 'hwut.play --save' then 'hwut.accept' is a
+        #  new test's way in. Exploration's own refusals (backup-
+        #  shaped names, finder.py) stand in the same block.
+        plan, report_list, refused_list = determine(
+            result.app_set, task_list,
+            admit=admit_of(os.path.join(tree_exploration.root, directory)))
+        refused_list = list(result.refused_tuple) + refused_list
         if label_view is not None and wish.glob_tuple:
             met, visible = task_list.glob_reach(result.app_set)
             met_set.update(met)
@@ -93,7 +121,8 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
             on_entry     = spec.on_entry,
             on_exit      = spec.on_exit,
             report_tuple = tuple(report_list),
-            fault_tuple  = tuple(result.fault_list)))
+            fault_tuple  = tuple(result.fault_list),
+            refused_tuple = tuple(refused_list)))
     return CTreePlan(
         root          = tree_exploration.root,
         entry_tuple   = tuple(entry_list),
@@ -119,4 +148,6 @@ def print_tree_plan(tree_plan, write=None):
             write(str(fault))
         for report in entry.report_tuple:
             write("REPORT: %s" % report)
+        for name, reason in entry.refused_tuple:
+            write("REFUSED: %s -- %s" % (name, reason))
         print_plan(entry.plan, write)

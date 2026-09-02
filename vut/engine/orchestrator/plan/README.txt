@@ -209,3 +209,13 @@ Determination is organised by the ladder: 'provision_build.py' raises
 BUILD nodes from the interview; 'provision_execute.py' raises SESSION
 nodes for the shared facet of execution; 'determine.py' raises the
 TEST nodes, walks, closes and assembles. The scheduler is stage-blind.
+
+THE GATE (E-41). 'determine(app_set, task_list, admit=)' asks
+'admit(test, choice)' for every selected case; a reason refuses the
+case, which enters no plan, and '(name, reason)' is the third return
+value. 'tree.admit_of(directory)' is the one gate: None where
+'bookkeeper.nominal_stands_f(directory, test, choice)' -- a nominal of
+the case, or the choice-less nominal every choice shares, in GOOD/ --
+and 'NOT_ACCEPTED_REASON' else. 'hwut.run' (determine_tree) and
+'hwut.plan' ask the same gate. 'CTreePlanEntry.refused_tuple' carries
+exploration's refusals followed by the gate's.

@@ -11,7 +11,6 @@ test-a.py {
                 numeric_ratio = 0.05          # test-a.py:5
                 slash = false                 # hwut.conf:3
             }
-            comment = ["//", "//"]            # hwut.conf:4
         }
     }
 }
@@ -29,7 +28,6 @@ test-a.py:5:35:             tolerance {
 test-a.py:5:35:                 numeric_ratio = 0.05
 hwut.conf:3:21:                 slash = false
 test-a.py:5:35:             }
-hwut.conf:4:9:              comment = ["//", "//"]
 test-a.py:1:10:         }
 test-a.py:1:10:     }
 test-a.py:1:10: }

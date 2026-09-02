@@ -4,7 +4,7 @@
 #     title      = "The Bookkeeper: the naming, the base, the verdicts"
 #     choices    = ["damage", "divergence", "naming", "overwrite",
 #                   "protection", "record", "reproduce", "setup_delta"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

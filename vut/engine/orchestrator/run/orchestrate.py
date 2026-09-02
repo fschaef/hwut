@@ -114,6 +114,12 @@ class CDirectoryWork:
             emit("fault", directory=directory, text=str(fault))
         for report in entry.report_tuple:
             emit("report", directory=directory, text=str(report))
+        #  NOT RUN, AND SAID SO (E-41): exploration's refusals and the
+        #  nominal gate's, one event each, collected by the display
+        #  into the closing REFUSED block. None is a node of the plan
+        #  and none is counted.
+        for name, reason in entry.refused_tuple:
+            emit("refused", directory=directory, node=name, text=reason)
         broken_tuple  = _broken_app_tuple(entry)
         vanished_tuple = _vanished_tuple(self.root, entry)
         emit("dir-begun", directory=directory,
@@ -182,6 +188,10 @@ class CDirectoryWork:
         report = await scheduler.run(entry.plan)
         close  = getattr(dispatcher, "close", None)
         if close is not None: await close()
+        #  BROUGHT TO ATTENTION (E-41): a test that ran on a nominal's
+        #  word and had no register entry got one; the run says so.
+        for text in getattr(dispatcher, "notice_list", ()):
+            emit("report", directory=directory, text=text)
         fail_db = {name: state.name for name, state
                    in sorted(report.failure_db().items())}
         good_f  = report.good_f() and not entry.fault_tuple \

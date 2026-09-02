@@ -41,6 +41,7 @@ KIND_DB = {
                                                     "detail": str}),
     "fault":      ({"directory": str, "text": str}, {}),
     "report":     ({"directory": str, "text": str}, {}),
+    "refused":    ({"directory": str, "node": str, "text": str}, {}),
     "dir-done":   ({"directory": str, "good": bool,
                     "fail_db": dict}, {}),
     "tree-done":  ({"good": bool, "fail_n": int}, {}),
@@ -67,7 +68,8 @@ _FIELD_TEXT_DB = {
                       "e.g. 'pype-failed', 'test-app-stalled'); "
                       "absent where nothing finer than the verdict "
                       "is known",
-    "text":           "one line, verbatim",
+    "text":           "one line, verbatim; on 'refused': WHY the node "
+                      "named was not run (E-41)",
     "fail_db":        "node name -> terminal state, the failures "
                       "alone",
     "fail_n":         "how many nodes failed, tree-wide",

@@ -5,7 +5,7 @@
 #     title      = "The removal faces: a test, or one choice, forgotten."
 #     choices    = ["asking", "choice", "labels", "refused", "stain",
 #                   "unknown", "untouched", "whole"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

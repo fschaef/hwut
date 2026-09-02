@@ -195,13 +195,11 @@ def test_defaults():
         result = explore(directory)
         app        = result.app_set.app_db["test-t.py"]
         parameters = app.choice_db[None]
-        print("record    tolerance %r  comment %r  analogy %r"
-              % (parameters.tolerance, parameters.comment,
-                 parameters.analogy))
+        print("record    tolerance %r" % (parameters.tolerance,))
         print("effective numeric_ratio %r  comment %r  analogy %r"
               % (effective(parameters, "tolerance.numeric_ratio"),
-                 effective(parameters, "comment"),
-                 effective(parameters, "analogy")))
+                 effective(parameters, "tolerance.comment"),
+                 effective(parameters, "tolerance.analogy")))
     finally:
         shutil.rmtree(directory, ignore_errors=True)
 

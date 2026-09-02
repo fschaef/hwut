@@ -99,7 +99,6 @@ def main(argv=None):
     stdout), so a reader that leaves early is an ORDINARY ending, not
     a crash -- the unix answer, quietly.
     """
-    import os
     try:
         return _main(argv)
     except BrokenPipeError:
@@ -163,18 +162,14 @@ def _main(argv):
         #  with the step that decided, exactly as 'hwut.accept'
         #  refuses: a merge over what the PREVIOUS text printed would
         #  bless the wrong evidence one screen later.
-        from vut.engine.bookkeeper.api import Bookkeeper
-        from vut.engine.operations            import subject_provision
+        from vut.engine.bookkeeper.api import Bookkeeper, Store
+        from vut.engine.operations     import subject_provision
         test      = arguments.subject
-        book      = Bookkeeper(arguments.directory)
-        candidate = book.candidate_path(test, arguments.choice, "stdout")
-        nominal   = book.nominal_path(test, arguments.choice, "stdout")
-
-        class _Bare:
-            build       = None
-            source_file = os.path.join(arguments.directory, test)
-        decision = subject_provision.decide(_Bare, str(candidate),
-                                            production=False)
+        store     = Store(Bookkeeper(arguments.directory))
+        nominal   = store.nominal_path(test, arguments.choice, "stdout")
+        provider, decision = subject_provision.bare_provider_of(
+                                 store, test, arguments.choice,
+                                 subject_name_list=("stdout",))
         if decision.what is not subject_provision.E_Decision.RECORDED:
             sys.stderr.write("REFUSED: %s --\n    %s%s\n"
                              "re-run the test ('hwut.run'), then merge.\n"
@@ -193,7 +188,8 @@ def _main(argv):
                              % (test, "" if arguments.choice is None
                                      else " '" + arguments.choice + "'"))
             return E_ExitCode.FAULT
-        with io.open(str(candidate), encoding="utf-8") as fh:
+        subjects = asyncio.run(provider.provide())
+        with subjects["stdout"].open() as fh:
             subject_text = fh.read()
         #  THE ARTIFACT NEVER LANDS IN GOOD/ BY THIS FACE's HAND: a
         #  merged nominal committed here goes to '-o'/stdout, and

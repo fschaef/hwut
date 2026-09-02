@@ -4,7 +4,7 @@
 #     title      = "The store: records and the directory lock"
 #     choices    = ["keys", "lock_dead", "lock_live", "nominal_kinds",
 #                   "promotion"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

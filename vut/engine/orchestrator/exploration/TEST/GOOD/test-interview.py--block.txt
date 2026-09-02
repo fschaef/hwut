@@ -1,7 +1,7 @@
 
 --- a full block ---
 title 'My Title'  origin INTERVIEW
-root: eq_pattern=('[0-9]+', '0x[0-9a-f]+')  same=True  interactive=True
+root: tolerance=Tolerance(numeric_ratio=None, whitespace=None, slash=None, regions=None, eq_pattern=('[0-9]+', '0x[0-9a-f]+'), nothing=None, analogy=None, constraints=None, comment=None)  same=True  interactive=True
 choices: alpha, beta
 
 --- a choice-less application ---

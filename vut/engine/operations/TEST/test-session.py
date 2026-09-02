@@ -5,7 +5,7 @@
 #     choices    = ["book", "busy", "goal", "lock", "recording",
 #                   "refused", "request", "setup", "sidecars", "target",
 #                   "the_arc", "where"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

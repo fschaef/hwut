@@ -1,22 +1,22 @@
 
 --- no '--records' ---
-REACTION  status 2   stderr 95 byte(s)
+REACTION  status 2   stderr 1 line(s)
           ! REFUSED: '--records DIR' is required: this face reads coverage records, it does not run tests.
 
 --- a root that is no directory ---
-REACTION  status 2   stderr 121 byte(s)
+REACTION  status 2   stderr 1 line(s)
           ! REFUSED: '<work>/nope' is no directory
 
 --- '-p' that is no number ---
-REACTION  status 2   stderr 48 byte(s)
+REACTION  status 2   stderr 1 line(s)
           ! REFUSED: '-p x' is no number of path components
 
 --- a word the face does not know ---
-REACTION  status 2   stderr 45 byte(s)
+REACTION  status 2   stderr 1 line(s)
           ! REFUSED: '--deep' is no word this face knows
 
 --- a diff that touches nothing ---
-REACTION  status 2   stderr 53 byte(s)
+REACTION  status 2   stderr 1 line(s)
           ! REFUSED: the diff touches no line this face can read
   OK  : every one is REFUSED, by name, with nothing printed to stdout
 SUCCESS: what cannot mean anything is refused at the door.

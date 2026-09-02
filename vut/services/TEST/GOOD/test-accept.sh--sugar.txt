@@ -1,6 +1,7 @@
 == hwut.accept 'test-two.sh' a ==
 STATUS: 0
 STDOUT {
+    RUN: test-two.sh a   (0) nothing recorded for this choice
     
     ==============================================================================
     ACCEPTED  1 of 1
@@ -14,6 +15,7 @@ GOOD holds:
 == the same thing, spelled as the wish ==
 STATUS: 0
 STDOUT {
+    RUN: test-two.sh a   (0) nothing recorded for this choice
     
     ==============================================================================
     ACCEPTED  1 of 1

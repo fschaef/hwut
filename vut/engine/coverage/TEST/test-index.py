@@ -4,7 +4,7 @@
 #     title      = "The coverage index: who executed this line, and what to run when it changes"
 #     choices    = ["change", "economy", "honest", "keys", "lossy",
 #                   "query", "segments"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

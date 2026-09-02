@@ -224,6 +224,8 @@ class CPlainFlow(CRunReportReceiver):
         self.detail_db  = {}        # (directory, node) -> the report's numbers (O-19)        # (directory, node) -> cause node
         self.frame_bad_db = {}       # directory -> [role, ...]
         self.fault_list  = []        # (directory, rendered fault line),
+        self.refused_db  = {}        # directory -> [(node, reason), ...]
+                                     # (E-41): not run, said at the end
                                      # in arrival order
         self.dir_good_db = {}        # directory -> dir-done's 'good'
         self.good_f      = None
@@ -609,6 +611,12 @@ class CPlainFlow(CRunReportReceiver):
                                            self._ink_dir(directory),
                                            text))
 
+    def on_refused(self, when, directory, node, text):
+        """RETURN: None. Not run, by name and reason: held for the
+        closing REFUSED block, which stands in every tier but SILENT
+        -- a refusal is never marginalia."""
+        self.refused_db.setdefault(directory, []).append((node, text))
+
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. Accounted for the roll-call; a line in the
         VERBOSE tier alone -- badge 'ROLL ', distinct from a single
@@ -848,6 +856,7 @@ class CPlainFlow(CRunReportReceiver):
                          or self.frame_bad_db.get(d)]
         if not self.failure_summary_f: fail_dir_list = []
         if not fail_dir_list:
+            self._write_refused(write, w)
             write("=" * w)
             return
         write("")
@@ -915,7 +924,29 @@ class CPlainFlow(CRunReportReceiver):
                 cause = self.cause_db.get(key)
                 if cause is not None: line += "  <- %s" % cause
                 write(line)
+        self._write_refused(write, w)
         write("=" * w)
+
+    def _write_refused(self, write, w):
+        """
+        RETURN: None. The REFUSED block (E-41): everything not run, by
+                directory, name and reason -- one block at the end,
+                never a line in the flow. Nothing where nothing was
+                refused.
+        """
+        if not self.refused_db: return
+        write("")
+        write("=" * w)
+        write("REFUSED -- not run")
+        write("-" * w)
+        column = max(len(node) for pair_list in self.refused_db.values()
+                     for node, _ in pair_list) + BRIEF_GAP
+        for directory in self.dir_order:
+            pair_list = self.refused_db.get(directory)
+            if not pair_list: continue
+            write(self._ink_dir(directory))
+            for node, reason in pair_list:
+                write("    %-*s%s" % (column, node, reason))
 
 
 def render(event_iterable, write, write_error=None, width=78,

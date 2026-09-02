@@ -257,23 +257,26 @@ def _compare_of(parameters):
         tolerance.numeric_ratio -> numeric_tolerance_ratio   (R-77)
         tolerance.whitespace    -> whitespace_f
         tolerance.slash         -> backslash_f
-        eq_pattern      -> equivalent_pattern_list
-        nothing         -> visible_nothing_pattern_list
-        analogy         -> analogy_begin/end_marker      (the PAIR)
-        comment         -> ignored_line_begin/end_marker (the PAIR)
-        constraints     -> constraint expressions
+        tolerance.regions       -> regions_f                  (C-4)
+        tolerance.eq_pattern    -> equivalent_pattern_list
+        tolerance.nothing       -> visible_nothing_pattern_list
+        tolerance.analogy       -> analogy_begin/end_marker      (PAIR)
+        tolerance.comment       -> ignored_line_begin/end_marker (PAIR)
+        tolerance.constraints   -> constraint expressions
+
+    EVERY ONE IS A LEAF OF 'tolerance' (E-42): one scope, one walk.
 
     'analogy' and 'comment' are MARKER PAIRS: the empty tuple is the
     stated OFF (exploration's law -- 'None' is absence, '()' is off),
     and off is expressed to compare by the flag beside the markers.
     """
-    stated = {name: getattr(parameters, name)
-              for name in ("eq_pattern", "nothing", "analogy",
-                           "constraints", "comment")}
-    #  THE TOLERANCE SCOPE flattens onto the same table: absent scope,
+    #  THE TOLERANCE SCOPE flattens onto one table: absent scope,
     #  absent leaves.
     tolerance = parameters.tolerance
-    for leaf in ("numeric_ratio", "whitespace", "slash"):
+    stated    = {}
+    for leaf in ("numeric_ratio", "whitespace", "slash", "regions",
+                 "eq_pattern", "nothing", "analogy", "constraints",
+                 "comment"):
         stated["tolerance.%s" % leaf] = \
             getattr(tolerance, leaf) if tolerance is not None else None
     if all(value is None for value in stated.values()): return None
@@ -284,20 +287,24 @@ def _compare_of(parameters):
 
     if stated["tolerance.numeric_ratio"] is not None:
         finder.numeric_tolerance_ratio      = stated["tolerance.numeric_ratio"]
-    if stated["eq_pattern"]     is not None:
-        finder.equivalent_pattern_list      = list(stated["eq_pattern"])
-    if stated["nothing"]        is not None:
-        finder.visible_nothing_pattern_list = list(stated["nothing"])
+    if stated["tolerance.eq_pattern"]     is not None:
+        finder.equivalent_pattern_list      = list(stated["tolerance.eq_pattern"])
+    if stated["tolerance.nothing"]        is not None:
+        finder.visible_nothing_pattern_list = list(stated["tolerance.nothing"])
     if stated["tolerance.slash"]      is not None:
         finder.backslash_f                  = stated["tolerance.slash"]
     if stated["tolerance.whitespace"] is not None:
         finder.whitespace_f                 = stated["tolerance.whitespace"]
+    if stated["tolerance.regions"]    is not None:
+        finder.regions_f                    = stated["tolerance.regions"]
 
     for name, flag, begin, end in (
-            ("analogy", "analogy_f",      "analogy_begin_marker",
-                                          "analogy_end_marker"),
-            ("comment", "ignored_line_f", "ignored_line_begin_marker",
-                                          "ignored_line_end_marker")):
+            ("tolerance.analogy", "analogy_f",
+                                  "analogy_begin_marker",
+                                  "analogy_end_marker"),
+            ("tolerance.comment", "ignored_line_f",
+                                  "ignored_line_begin_marker",
+                                  "ignored_line_end_marker")):
         pair = stated[name]
         if pair is None: continue
         match len(pair):
@@ -311,10 +318,10 @@ def _compare_of(parameters):
                 raise AssertionError("'%s' is a marker PAIR; %d stated" \
                        % (name, len(pair)))
 
-    if stated["constraints"] is not None:
-        finder.constraint_f = bool(stated["constraints"])
+    if stated["tolerance.constraints"] is not None:
+        finder.constraint_f = bool(stated["tolerance.constraints"])
         options.constraint_expression_list = \
-                                     list(stated["constraints"])
+                                     list(stated["tolerance.constraints"])
 
     return options
 

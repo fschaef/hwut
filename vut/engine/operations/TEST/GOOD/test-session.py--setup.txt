@@ -5,6 +5,7 @@ INSPECT: default setup  -> verdict False entry 'compare' False
          member                         default        chosen         in entry
          strip_whitespace_f             True           False          yes
          ignored_line_f                 True           False          yes
+         regions_f                      True           False          yes
          analogy_f                      True           False          yes
          constraint_f                   True           False          yes
          whitespace_f                   True           False          yes

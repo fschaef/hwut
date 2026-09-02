@@ -5,7 +5,7 @@
 #     title      = "The hwut.report face: the databases, rendered."
 #     choices    = ["json", "junit", "never_run", "refused", "stain",
 #                   "tap", "traditional", "width"]
-#     eq-pattern = ["STATUS: [0-9]"]
+#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------

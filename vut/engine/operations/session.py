@@ -33,7 +33,6 @@ from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
 from ..bookkeeper.api import E_StderrNote
 
-from   .result                        import E_TestRunResult
 from .consume.accept             import (Accept, AcceptConfig,
                                               AcceptStep)
 from   .configuration                 import (verify,
@@ -43,13 +42,9 @@ from .consume.difference_display import (DifferenceDisplay,
 from .consume.equivalence_check  import (EquivalenceCheck,
                                               EquivalenceCheckConfig)
 from   .interaction.port              import DisplayAdapter  # noqa: F401 -- the port, not a viewer
-from .run.core                import provision_of
 from .                        import subject_provision
-from .consume.loaded              import loaded
 from   .nominal                       import RecordNominal
-from   pathlib import Path
-from   ..bookkeeper.api import (source_digest_of,
-                                              Store)
+from   ..bookkeeper.api               import Store
 
 
 class E_Goal(Enum):
@@ -126,61 +121,6 @@ class Outcome:
     def report(self):
         """RETURN: E_TestRunResult, the operation's report."""
         return self.result.report
-
-
-def _groundwork(configuration, store, test_name, choice_name, replay,
-                observer, force_run=False):
-    """
-    RETURN: [0] a provider of Subjects: a Provision wired for
-                execution, or the store read back through
-                'consume/loaded.py'. Both answer one shape; nothing
-                below ever asks which.
-
-    WHICH OF THE TWO IS SUBJECT PROVISION'S TO SAY (operations
-    disc-2): 'subject_provision.decide()' walks the ruled steps
-    (0)/(A)/(B), and THIS is the one place its word becomes a wiring.
-    'replay' remains the caller's explicit 'read the store, execute
-    nothing' -- the production=False road; 'force_run' its opposite.
-    A decision of RECORDED loads the recording: what stands is what
-    this text produced, and comparing it again costs a read, not a
-    run.
-    """
-    if replay:
-        return _Loaded(store, test_name, choice_name)
-    candidate = store.bookkeeper.candidate_path(test_name, choice_name,
-                                                "stdout")
-    #  THE SOURCE IS NAMED RELATIVE TO ITS OWN DIRECTORY, and the
-    #  process's cwd is the caller's business, not a coordinate
-    #  system: resolve against the book's directory, which IS the
-    #  test's, before any clock is read -- a mis-anchored stat reads
-    #  as 'no clock' and would silently call every recording current.
-    decision = subject_provision.decide(
-                   configuration, candidate,
-                   source_directory=store.bookkeeper.directory,
-                   force_run=force_run)
-    if decision.what is subject_provision.E_Decision.RECORDED:
-        return _Loaded(store, test_name, choice_name)
-    return provision_of(configuration, choice_name, observer=observer)
-
-
-class _Loaded:
-    """The loaded counterpart of a Provision: 'provide()' answers the
-    stored subjects; 'last_provided' remembers them, the same bargain
-    as Provision's (a caller that compares and records reads once)."""
-
-    kind = "Loaded"
-
-    def __init__(self, store, test_name, choice_name):
-        self.store         = store
-        self.test_name     = test_name
-        self.choice_name   = choice_name
-        self.last_provided = None
-
-    async def provide(self, stop_event=None):
-        """RETURN: Subjects, the recorded candidates, read back."""
-        self.last_provided = loaded(self.store, self.test_name,
-                                    self.choice_name)
-        return self.last_provided
 
 
 def _nominal_db(store, test_name, choice_name, subject_name_list):
@@ -264,7 +204,7 @@ async def run_test_held(configuration, request=None, store=None,
     own lock: the standalone law, untouched.
 
     'provision' -- a pre-wired Provision (an orchestrator's plugged
-    providers); None: planned by 'provision_of', as ever.
+    providers); None: the channel's ('subject_provision.provider_of').
     'store'     -- the holder's Store, already OVER a Bookkeeper; where
     only a 'bookkeeper' is handed in, the Store is made here.
 
@@ -292,10 +232,24 @@ async def run_test_held(configuration, request=None, store=None,
         store = store_of(configuration, bookkeeper)
     test_name = configuration.key_name
 
-    groundwork = provision if provision is not None \
-                 else _groundwork(configuration, store, test_name,
-                                  choice_name, request.replay, observer,
-                                  force_run=request.force_run)
+    #  THE ONE CHANNEL (subject_provision): decides execute-or-load and
+    #  hands back the provider; 'replay' is its 'production=False'.
+    if provision is not None: groundwork = provision
+    else:
+        #  THE DECLARED SUBJECTS ARE WHAT A LOADED PROVIDER READS BACK:
+        #  a declared file ('output = ["<stdout>", "result.csv"]') is a
+        #  recorded candidate like stdout, and a read-back of the
+        #  standard pair alone would report it missing (E-41, found).
+        groundwork, _ = subject_provision.provider_of(
+                            configuration, store, choice_name,
+                            production = not request.replay,
+                            force_run  = request.force_run,
+                            observer   = observer,
+                            subject_name_list = tuple(subject_name_list)
+                                                + (("stderr",)
+                                                   if "stderr" not in
+                                                      subject_name_list
+                                                   else ()))
     if goal is E_Goal.NOMINAL:
         result = await Accept(
             AcceptConfig(name       = test_name,
@@ -337,9 +291,9 @@ async def run_test_held(configuration, request=None, store=None,
                                                   choice_name)),
                 observer=observer)
         result      = await operation.run(stop_event=stop_event)
-        recorded_db = await _record(store, configuration, test_name,
-                                    choice_name, groundwork,
-                                    request.record)
+        recorded_db = subject_provision.record(store, configuration,
+                                               choice_name, groundwork,
+                                               request.record)
 
     coverage = None
     if configuration.coverage is not None and not request.replay:
@@ -372,45 +326,3 @@ def _compare_options(configuration, choice_name):
     default.
     """
     return configuration.choice_configuration(choice_name).compare
-
-
-async def _record(store, configuration, test_name, choice_name, groundwork,
-                  record):
-    """
-    RETURN: dict, subject name -> what was stored as a candidate.
-            None, nothing was recorded.
-
-    A LOADED groundwork records nothing: it would write back what it
-    just read. A PARTIAL subject -- an execution whose provision report
-    is not OK -- is never stored as if whole: the abort is the
-    outcome's to tell, and the store stays silent (stream_store's
-    completeness law, judged HERE, the one place it is known).
-
-    'record' is THE STORE KNOB (n-1): stated at operation initiation;
-    'None' follows the configuration; a command line's '--no-store' is
-    a later word over it.
-    """
-    if getattr(groundwork, "stage_execute", None) is None: return None
-    wanted = record if record is not None else (configuration.store is not None)
-    if not wanted:                                return None
-
-    provided = getattr(groundwork, "last_provided", None)
-    if provided is None:                          return None
-    if provided.provision.report is not E_TestRunResult.OK:
-        return None
-    source_digest = source_digest_of(
-        Path(configuration.test_directory) / configuration.source_file)
-    recorded_db = {}
-    for name in provided.names():
-        with provided[name].open() as reader:
-            text = reader.read()
-        store.write_candidate(test_name, choice_name, name, text,
-                              source_digest=source_digest)
-        recorded_db[name] = text
-        if provided.raw_db and name in provided.raw_db:
-            store.write_raw(test_name, choice_name, name,
-                            provided.raw_db[name])
-        if provided.timing_db and name in provided.timing_db:
-            store.write_timing(test_name, choice_name, name,
-                               provided.timing_db[name])
-    return recorded_db

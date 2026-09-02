@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "The group table: a set of runs is a number, issued once"
 #     choices    = ["faults", "groups", "persisted", "tables"]
-#     eq-pattern = ["SUCCESS.*"]
+#     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
 #

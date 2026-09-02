@@ -375,9 +375,11 @@ def provision_of(configuration, choice_name=None, observer=None):
     RETURN: Provision, wired for execution, with the recording appetite
             (raw, cadence) read from the configuration's store keys.
 
-    The LOADED counterpart is no provision: a consumer reads a stored
-    subject through 'consume/loaded.py' -- the Bookkeeper's ground --
-    and the two never meet in one wiring.
+    CALLED BY THE CHANNEL ONLY ('subject_provision.provider_of'): the
+    channel decides whether to execute or to read the recording back
+    (disc-2), and this planner is its EXECUTE branch. The recorded-
+    stream branch is 'subject_provision.Loaded' over 'consume/
+    loaded.py'; both answer 'provide()' with the one 'Subjects' shape.
     """
     store_config = configuration.store
     return Run(configuration, choice_name, observer=observer,
