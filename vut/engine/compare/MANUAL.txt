@@ -480,14 +480,10 @@ output, put it inside a 'verbatim' or 'ignore' region.
 --------------------------------------------------------------------------------
 
 Earlier versions framed potpourri blocks with '||||' delimiters. That
-syntax has been retired in favour of the shebang framing. To convert your
-GOOD files, run:
-
-    tool/migrate_region_syntax.py  <file> ...
-
-It rewrites each '||||' ... '||||' block to '##! potpourri' ... '####',
-preserving indentation, and reports any file that ended with a block left
-open. A literal '||||' now has no special meaning; it is ordinary content.
+syntax was retired in favour of the shebang framing; the one-shot
+migration tool that converted old GOOD files ('tool/migrate_region_
+syntax.py') has done its work and is gone (compare RATIONALE C-7). A
+literal '||||' now has no special meaning; it is ordinary content.
 
 
 --------------------------------------------------------------------------------

@@ -225,3 +225,37 @@ FOUND     THE KILL MESSAGE'S 'peak' IS NOT THE REQUIREMENT. It is
           word saying so, and 'procsitter' is the place for it.
 
 COST      compare answers 131 ok / 0 fail, where it answered 129 / 2.
+
+C-7   E-9's DELETION, EXECUTED                                   (2026-09-03)
+
+PROBLEM   E-9 (2026-08-26) retired 'tool/hwut_compare.py': "the tool's
+          suite and four GOOD files go with it." The deletion was
+          decided and never carried out -- the same shape as C-3's
+          origin-of-a-lift, a ruling standing unexecuted in the tree.
+          'tool/hwut.compare' (the shim), 'tool/migrate_region_
+          syntax.py' (E-9: "stands alone and untested" -- the one-shot
+          '||||' migration, and zero occurrences of '||||' remain
+          anywhere outside 'tool/' itself) and the retired suite's
+          four GOODs stood alongside it, inert but not free: the
+          census walked 'tool/TEST' and reported it '[OK] 0/0', a
+          green line for a directory that tests nothing.
+
+DECISION  'engine/compare/tool/' deleted whole -- seven files: the
+          shim, the tool, the migration script, the suite, its four
+          GOODs. 'MANUAL.txt' no longer instructs a reader to run a
+          script that is gone; 'ARCHITECTURE.txt's directory listing
+          no longer names a directory that does not exist.
+          'DOC/SEMANTICS.txt's D-19 entry and 7.6 section, which
+          record the migration as HISTORY rather than instruct
+          anyone to run it, are left standing (C-3: a DOC history
+          records what was, not what is).
+
+CHECKED   Every reference outside 'tool/' read before deleting:
+          'services/RATIONALE.txt' (E-9's own text), 'services/
+          DISCUSSIONS/disc-3-compare-confs.txt' (already past tense:
+          "took to its grave"), the three documentation files above.
+          None is code; nothing imports or executes any of the seven.
+
+COST      None. compare's census is unaffected; 'import_graph.py
+          --check' answers the same twelve findings before and
+          after.

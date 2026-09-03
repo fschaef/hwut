@@ -117,8 +117,6 @@ are the CLOSED axis -- an interface contract each region package fulfills.
         ui.py                ChunkPair stream -> DisplayInst protocol
         html_feeder.py       Side-by-side HTML diff renderer
 
-    /tool/                   Maintenance utilities
-        migrate_region_syntax.py   one-shot '||||' -> shebang migration
 
     main.py                  Public API: is_equivalent(), associate(),
                              is_equivalent_by_association (reference Judge);

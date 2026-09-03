@@ -22,7 +22,15 @@
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 BIN=$(cd "$HERE/.." && pwd)
-unset COLUMNS NO_COLOR
+#  COLUMNS IS PINNED, NOT MERELY UNSET (adm/DEVELOPMENT.txt: a test
+#  app's output is controlled by the test app, not the machine).
+#  Three of these shims wrap their usage line through argparse, and
+#  where it wraps depends on the terminal width the environment
+#  reports -- 'unset' alone still leaves that to whatever the
+#  machine falls back on. 300 is wide enough that every one of them
+#  answers on a single line regardless.
+export COLUMNS=300
+unset NO_COLOR
 
 case "$1" in
     --hwut-info)

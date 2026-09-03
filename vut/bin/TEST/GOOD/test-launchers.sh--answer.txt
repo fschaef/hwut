@@ -4,8 +4,8 @@ hwut.run           exit 0: hwut.run -- the tree run, rendered live
 hwut.accept        exit 0: hwut.accept -- PROMOTION: a candidate becomes the nominal
 hwut.target        exit 0: hwut.target -- run one user-defined target over the tree
 hwut.cov           exit 0: PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with
-hwut.compare       exit 0: usage: hwut.compare [-h] [--reading] [--plain] [--numeric RATIO]
-hwut.merge         exit 0: usage: hwut.merge [-h] [-o OUT] [--display-only] [--plain] [--editor EDITOR]
+hwut.compare       exit 0: usage: hwut.compare [-h] [--reading] [--plain] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] subject [nominal]
+hwut.merge         exit 0: usage: hwut.merge [-h] [--choice CHOICE] [--directory DIRECTORY] [-o OUT] [--display-only] [--plain] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] subject [nominal]
 hwut.tell          exit 0: usage: hwut.tell [-h] [-r] [--no-coverage] application [choice]
 hwut.stability     exit 0: PURPOSE: THE 'hwut.stability' COMMAND LINE -- run the same wish SEVERAL
 hwut.wishlist      exit 0: PURPOSE: THE 'hwut.wishlist' COMMAND LINE -- print, one per line, every
