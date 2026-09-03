@@ -94,6 +94,32 @@ def module_tuple(root, exclude_tuple=()):
     return tuple(sorted(found))
 
 
+def by_dotted_db(path_tuple):
+    """
+    RETURN: dict, DOTTED NAME -> module path, the index a dotted import
+            is resolved against ('_matched' searches its longest tail).
+
+    A PACKAGE ANSWERS TO TWO NAMES: its '__init__.py' is reached both
+    as 'pkg.__init__' and as 'pkg' itself, so both are entered -- an
+    import naming the package must find the file that is the package.
+    'setdefault' keeps the FIRST module claiming a name, so the index
+    is stable however the paths were ordered.
+
+    ONE INDEX, ONE PLACE: four readers here and one next door ('adm/
+    unread_modules.py') each built this same map by hand before it was
+    named -- five copies of a rule that must not drift apart, since a
+    name resolved differently by two of them would mean two different
+    graphs of one tree.
+    """
+    by_dotted = {}
+    for path in path_tuple:
+        dotted = path[:-len(".py")].replace("/", ".")
+        by_dotted.setdefault(dotted, path)
+        if dotted.endswith(".__init__"):
+            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    return by_dotted
+
+
 def imported_tuple(root, module_path):
     """
     RETURN: [0] tuple[str], every module this one imports, as DOTTED
@@ -188,12 +214,7 @@ def edge_db_of(root, depth, exclude_tuple=()):
     not part of it.
     """
     path_tuple = module_tuple(root, exclude_tuple)
-    by_dotted  = {}
-    for path in path_tuple:
-        dotted = path[:-len(".py")].replace("/", ".")
-        by_dotted.setdefault(dotted, path)
-        if dotted.endswith(".__init__"):
-            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    by_dotted  = by_dotted_db(path_tuple)
 
     edge_db   = {}
     member_db = {}
@@ -422,12 +443,7 @@ def shared_text(root, depth, exclude_tuple, least_n):
     'is there a cycle' but 'WHAT WOULD MOVING ONE NAME DO'.
     """
     path_tuple = module_tuple(root, exclude_tuple)
-    by_dotted  = {}
-    for path in path_tuple:
-        dotted = path[:-len(".py")].replace("/", ".")
-        by_dotted.setdefault(dotted, path)
-        if dotted.endswith(".__init__"):
-            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    by_dotted  = by_dotted_db(path_tuple)
 
     reader_db = {}          # name -> set of components importing it
     home_db   = {}          # name -> component it is imported FROM
@@ -590,12 +606,7 @@ def seal_violation_tuple(root, exclude_tuple, sealed_tuple):
     """
     if not sealed_tuple: return ()
     path_tuple = module_tuple(root, exclude_tuple)
-    by_dotted  = {}
-    for path in path_tuple:
-        dotted = path[:-len(".py")].replace("/", ".")
-        by_dotted.setdefault(dotted, path)
-        if dotted.endswith(".__init__"):
-            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    by_dotted  = by_dotted_db(path_tuple)
 
     def sealed_f(path):
         where = path.rsplit("/", 1)[0] if "/" in path else ""
@@ -635,12 +646,7 @@ def door_violation_tuple(root, exclude_tuple, door_tuple):
     """
     if not door_tuple: return ()
     path_tuple = module_tuple(root, exclude_tuple)
-    by_dotted  = {}
-    for path in path_tuple:
-        dotted = path[:-len(".py")].replace("/", ".")
-        by_dotted.setdefault(dotted, path)
-        if dotted.endswith(".__init__"):
-            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    by_dotted  = by_dotted_db(path_tuple)
 
     #  The door's own directory is the wall it stands in.
     wall_db = {door: door.rsplit("/", 1)[0] for door in door_tuple}

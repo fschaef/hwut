@@ -60,9 +60,7 @@ import xml.etree.ElementTree as ElementTree
 
 from ..configuration import CoverageRefused
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import ranges_of, FileCoverage, CoverageRecord
+                      line_record_of, register, artifact_directory_of)
 
 
 XML_SUFFIX = (".xml",)
@@ -202,33 +200,16 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
     they are recorded only where counts were asked for, and what they
     mean is stated here rather than left to look like hit counts.
     """
-    file_db = {}
-    for raw_path in sorted(entry_db):
-        path = relative_path(raw_path, source_root)
-        if not wanted(path, config): continue
-        line_db    = entry_db[raw_path]
-        executable = sorted(line_db)
-        covered    = [n for n in executable if line_db[n][0] > 0]
+    def branch_of(line_db, executable):
+        """RETURN: tuple, (line, covered, total) per line that carries
+        a branch at all; JaCoCo counts COVERED and MISSED, so the
+        total is their sum and a line with neither has no branch."""
+        return tuple((n, line_db[n][2], line_db[n][2] + line_db[n][3])
+                     for n in executable
+                     if line_db[n][2] + line_db[n][3] > 0)
 
-        count_list = None
-        if counts_f:
-            count_list = tuple(max(line_db[n][0] for n in range(begin, end)
-                                   if n in line_db)
-                               for begin, end in ranges_of(covered))
-        point_tuple = tuple((n, line_db[n][2], line_db[n][2] + line_db[n][3])
-                            for n in executable
-                            if line_db[n][2] + line_db[n][3] > 0)
-        measure_db  = {"branch": point_tuple} if point_tuple else {}
-
-        file_db[path] = FileCoverage(path, ranges_of(executable),
-                                     ranges_of(covered), count_list,
-                                     measure_db)
-
-    return CoverageRecord(language = _language_of(file_db),
-                          tool     = "",
-                          source   = fmt.name,
-                          counts_f = counts_f,
-                          file_db  = file_db)
+    return line_record_of(fmt, entry_db, config, source_root, counts_f,
+                          _language_of, branch_of)
 
 
 def _language_of(file_db):

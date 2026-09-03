@@ -61,9 +61,7 @@ import os
 import xml.etree.ElementTree as ElementTree
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import ranges_of, FileCoverage, CoverageRecord
+                      line_record_of, register, artifact_directory_of)
 
 
 XML_SUFFIX = (".xml",)
@@ -182,37 +180,19 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
     RETURN: CoverageRecord, with the branch measurement seated beside the
             line one.
 
-    Built here rather than through 'reader.record_of' because that helper
-    knows only lines, and this is the first reader that carries a
-    measure. What it does with the line part is identical.
+    The line part is 'reader.line_record_of'; what is COBERTURA's is the
+    branch below -- a condition's taken count and its total, where the
+    document carried one.
     """
-    file_db = {}
-    for raw_path in sorted(entry_db):
-        path = relative_path(raw_path, source_root)
-        if not wanted(path, config): continue
-        line_db    = entry_db[raw_path]
-        executable = sorted(line_db)
-        covered    = [n for n in executable if line_db[n][0] > 0]
+    def branch_of(line_db, executable):
+        """RETURN: tuple, (line, taken, total) per line the document
+        gave a condition for; empty where it gave none."""
+        return tuple((n, line_db[n][1], line_db[n][2])
+                     for n in executable
+                     if line_db[n][2] is not None)
 
-        count_list = None
-        if counts_f:
-            count_list = tuple(max(line_db[n][0] for n in range(begin, end)
-                                   if n in line_db)
-                               for begin, end in ranges_of(covered))
-        point_tuple = tuple((n, line_db[n][1], line_db[n][2])
-                            for n in executable
-                            if line_db[n][2] is not None)
-        measure_db  = {"branch": point_tuple} if point_tuple else {}
-
-        file_db[path] = FileCoverage(path, ranges_of(executable),
-                                     ranges_of(covered), count_list,
-                                     measure_db)
-
-    return CoverageRecord(language = _language_of(file_db),
-                          tool     = "",
-                          source   = fmt.name,
-                          counts_f = counts_f,
-                          file_db  = file_db)
+    return line_record_of(fmt, entry_db, config, source_root, counts_f,
+                          _language_of, branch_of)
 
 
 def _language_of(file_db):

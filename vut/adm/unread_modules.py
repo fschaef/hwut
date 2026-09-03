@@ -97,12 +97,7 @@ def unread_db(root, exclude_tuple=()):
     from inside its own island.
     """
     path_tuple = G.module_tuple(root, exclude_tuple)
-    by_dotted  = {}
-    for path in path_tuple:
-        dotted = path[:-len(".py")].replace("/", ".")
-        by_dotted.setdefault(dotted, path)
-        if dotted.endswith(".__init__"):
-            by_dotted.setdefault(dotted[:-len(".__init__")], path)
+    by_dotted  = G.by_dotted_db(path_tuple)
 
     edge_db = {}
     for path in path_tuple:

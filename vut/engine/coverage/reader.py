@@ -238,6 +238,58 @@ def record_of(fmt, language, entry_iterable, counts_f=False):
                           file_db  = file_db)
 
 
+def line_record_of(fmt, entry_db, config, source_root, counts_f,
+                   language_of, branch_of=None):
+    """
+    RETURN: CoverageRecord, built from a LINE DATABASE -- the shape
+            'path -> {line number: format-specific tuple}' that every
+            line-oriented format arrives at once its own parsing is
+            done.
+
+    THE COMMON FOLD: relativise the path, drop what the configuration
+    does not want, split executable from covered, and -- where
+    'counts_f' -- the per-range maximum hit count. Field [0] of each
+    line's tuple is ITS HIT COUNT, which is all this fold reads of a
+    format's own shape.
+
+    'branch_of' IS THE FORMAT'S OWN PART, and the only part: given the
+    line database and the executable line numbers it answers a tuple
+    of branch measure points, or None where the format carries none.
+    Cobertura counts a condition's taken/total; JaCoCo sums covered
+    and missed; the fields differ and so does the predicate that says
+    a line HAS a branch at all -- so the fold takes the answer and
+    does not guess at it.
+
+    'language_of' is likewise the format's: a document that names no
+    language of its own works it out from the extensions it carries.
+    """
+    file_db = {}
+    for raw_path in sorted(entry_db):
+        path = relative_path(raw_path, source_root)
+        if not wanted(path, config): continue
+        line_db    = entry_db[raw_path]
+        executable = sorted(line_db)
+        covered    = [n for n in executable if line_db[n][0] > 0]
+
+        count_list = None
+        if counts_f:
+            count_list = tuple(max(line_db[n][0] for n in range(begin, end)
+                                   if n in line_db)
+                               for begin, end in ranges_of(covered))
+        point_tuple = branch_of(line_db, executable) if branch_of else ()
+        measure_db  = {"branch": point_tuple} if point_tuple else {}
+
+        file_db[path] = FileCoverage(path, ranges_of(executable),
+                                     ranges_of(covered), count_list,
+                                     measure_db)
+
+    return CoverageRecord(language = language_of(file_db),
+                          tool     = "",
+                          source   = fmt.name,
+                          counts_f = counts_f,
+                          file_db  = file_db)
+
+
 # ------------------------------------------------------------ registry
 
 _FRAMEWORK_DB  = {}

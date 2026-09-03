@@ -365,3 +365,51 @@ CENSUS bin/, ADM/, AND EVERY OTHER DIRECTORY THAT LOOKS LIKE
 INFRASTRUCTURE RATHER THAN PRODUCT. A suite testing the launchers
 themselves is exactly as liable to drift, unnoticed, as any other --
 more so, since nothing routes through it during ordinary work.
+
+______________________________________________________________________________
+CLONE DETECTION: WHAT IT FOUND, AND WHAT IT ONLY LOOKED LIKE
+______________________________________________________________________________
+A PMD CPD run over the tree returned 160 findings. Most were noise of
+three predictable kinds, and a future run should exclude them at the
+source: the 'TEST/config.py' bootstrap family (one canonical text, by
+design -- it cannot import what it exists to make importable),
+'TEST/TMP/scratch' fixture debris, and 'ON_HOLD-*' files parked on
+purpose. What remained divided into three honest kinds.
+
+DUPLICATION THAT WAS A DEFECT. 'operations/run/TEST/test-provision.py'
+was 980 lines: its ENTIRE BODY written twice, 506 + 474. Both halves
+were complete and identical; the first carried the '@hwut' header and
+'test_stages', the second the runner block. Python executed both, so
+every test ran from the second half's definitions and 'test_stages'
+survived only from the first. Now 525 lines, every function defined
+once, all ten choices byte-identical before and after.
+
+DUPLICATION THAT WAS A LAW WRITTEN FIVE TIMES. 'import_graph.py' built
+its dotted-name index in four places, and 'unread_modules.py' -- whose
+own docstring claimed to REUSE that reading -- had copied it a fifth.
+A name resolved differently by two of them would mean two different
+graphs of one tree. Now 'by_dotted_db()', called from all five.
+Similarly 'display/plain.py' assembled its tag-and-count twice (tree
+node, single directory) and the labels faces wrote one '--help /
+parse_wish / split_directory' prologue three times; both now stand
+once ('_tag_and_count', '_faces.opened').
+
+DUPLICATION THAT WAS SCAFFOLDING AROUND A REAL DIFFERENCE. Cobertura
+and JaCoCo shared an entire line-record fold and differed in exactly
+one thing: the branch extraction, in BOTH its tuple fields and its
+predicate. The fold moved to 'reader.line_record_of' and the differing
+part is passed in as 'branch_of' -- taken, never guessed at.
+
+AND THE ONES DELIBERATELY LEFT. 'ucis' and 'gcov' appear in the same
+findings and were NOT folded in: ucis carries an axis database
+(line/branch/toggle) whose lines are bare integers, gcov is a
+GENERATOR feeding the older 'record_of'. Bending the helper to fit
+either would make the shared function worse than the duplication it
+removed. A clone detector reports token overlap; whether two things
+are the SAME THING is a judgement it cannot make.
+
+THE SUITES ARE THE PROOF. Every extraction here was made under the
+rule that no GOOD file may be touched -- so behaviour preservation is
+not asserted, it is demonstrated: any drift would have shown up as a
+failing byte-exact comparison against an oracle nobody was allowed to
+adjust.

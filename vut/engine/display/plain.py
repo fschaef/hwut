@@ -126,6 +126,28 @@ def _dot_space_fill(width):
     """
     return (". " * (width // 2 + 1))[:width]
 
+
+def _tag_and_count(tag, counts, good, ink):
+    """
+    RETURN: [0] str, the right side UNPAINTED -- the tag and the count
+                in their fixed columns. Its LENGTH is what the fill is
+                measured against, so it must carry no escape.
+            [1] str, the same right side PAINTED, the tag alone
+                inked and the count left plain.
+
+    THE TAG IS RIGHT-ALIGNED so '[OK]' and '[FAIL]' end in one column
+    though they differ in width; the count hangs beyond it, itself
+    right-aligned. MEASURED UNPAINTED, PAINTED AFTER: an escape
+    sequence has length and no width, and a fill measured over one
+    would pull every dot rule out of true.
+    """
+    tag_field   = "%*s" % (TAG_WIDTH, tag)
+    count_field = "%*s" % (COUNT_WIDTH, counts)
+    tag_ink     = ink.tag_ok(tag) if good else ink.tag_fail(tag)
+    return ("%s%s" % (tag_field, count_field),
+            "%s%s%s" % (" " * (TAG_WIDTH - len(tag)), tag_ink,
+                        count_field))
+
 #  HOW LONG A START IS HELD BACK. A test that finishes inside the
 #  window never announces its beginning: the pair says nothing the
 #  end line does not, and two lines per run buries the one that
@@ -812,18 +834,8 @@ class CPlainFlow(CRunReportReceiver):
                     good   = self.dir_good_db.get(directory)
                     tag    = "[OK]" if good else "[FAIL]"
                     counts = "%d/%d" % self._count(directory)
-                    #  THE TAG IS RIGHT-ALIGNED, so '[OK]' and
-                    #  '[FAIL]' end in one column though they differ
-                    #  in width; the count hangs beyond it, itself
-                    #  right-aligned to 'w'.
-                    tag_field   = "%*s" % (TAG_WIDTH, tag)
-                    count_field = "%*s" % (COUNT_WIDTH, counts)
-                    right       = "%s%s" % (tag_field, count_field)
-                    tag_ink     = self.ink.tag_ok(tag) if good \
-                                  else self.ink.tag_fail(tag)
-                    right_ink   = "%s%s%s" % (
-                                      " " * (TAG_WIDTH - len(tag)),
-                                      tag_ink, count_field)
+                    right, right_ink = _tag_and_count(tag, counts,
+                                                      good, self.ink)
                     fill = max(w - len(left) - len(right) - 2, 1)
                     dots = _dot_space_fill(fill)
                     write("%s %s %s" % (left_ink, self.ink.dim(dots),
@@ -840,13 +852,7 @@ class CPlainFlow(CRunReportReceiver):
             tag       = "[OK]" if good else "[FAIL]"
             counts    = "%d/%d" % self._count(directory)
             left      = "%s%s" % (TREE_INDENT, directory)
-            tag_field   = "%*s" % (TAG_WIDTH, tag)
-            count_field = "%*s" % (COUNT_WIDTH, counts)
-            right       = "%s%s" % (tag_field, count_field)
-            tag_ink     = self.ink.tag_ok(tag) if good \
-                          else self.ink.tag_fail(tag)
-            right_ink   = "%s%s%s" % (" " * (TAG_WIDTH - len(tag)),
-                                      tag_ink, count_field)
+            right, right_ink = _tag_and_count(tag, counts, good, self.ink)
             fill = max(w - len(left) - len(right) - 2, 1)
             write("%s %s %s" % (left, self.ink.dim(_dot_space_fill(fill)),
                                 right_ink))

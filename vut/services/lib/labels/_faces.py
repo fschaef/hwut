@@ -15,8 +15,57 @@ merely convenient.
 ______________________________________________________________________________
 """
 import os
+import sys
 
 from   vut.engine.orchestrator.exploration          import selection
+from   vut.engine.orchestrator.plan.wish             import (WishError,
+                                                             parse_wish)
+from   vut.services._exit                            import E_ExitCode
+
+
+class Refused(Exception):
+    """THE PROLOGUE REFUSED, and what it wrote is already written. The
+    face catches this and returns the carried code -- nothing more to
+    say, since 'opened()' has said it."""
+
+    def __init__(self, exit_code):
+        Exception.__init__(self, str(exit_code))
+        self.exit_code = exit_code
+
+
+def opened(argv, write, help_text, usage_text):
+    """
+    RETURN: [0] callable, the 'write' to use -- the caller's, or
+                'print' where none was given.
+            [1] CWish, the wish parsed from the arguments.
+            [2] str, the '--directory=<path>' value, '.' where none.
+            [3] list[str], the arguments left after the wish and the
+                directory are taken out.
+
+    Raises 'Refused' where the face must stop AND THE REASON IS
+    ALREADY WRITTEN: '--help' (code OK, the help stands), or a wish
+    that does not parse (code REFUSED, the error and the usage stand).
+
+    WHAT EVERY LABEL FACE DOES BEFORE IT DOES ITS OWN WORK -- default
+    the writer, answer '--help', parse the wish, split the directory
+    off. Five faces wrote it out; one drifting from the others would
+    be a face that answers '--help' differently from its siblings for
+    no reason a reader could find.
+    """
+    if write is None: write = print
+    if argv is None:  argv  = sys.argv[1:]
+    if "--help" in argv:
+        write(help_text)
+        raise Refused(E_ExitCode.OK)
+
+    try:
+        wish, rest_list = parse_wish(argv)
+    except WishError as error:
+        write("REFUSED: %s" % error)
+        write(usage_text)
+        raise Refused(E_ExitCode.REFUSED)
+    directory, rest_list = split_directory(rest_list)
+    return write, wish, directory, rest_list
 
 
 def split_directory(argument_list):

@@ -34,14 +34,12 @@ import sys
 from   vut.engine.orchestrator.plan.label    import (STANDARD_LABEL,
                                                      reserved_reason)
 from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
-                                                     USAGE_TOKEN_TUPLE,
-                                                     WishError,
-                                                     parse_wish)
+                                                     USAGE_TOKEN_TUPLE)
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 from   .                                    import _editing
-from   ._faces                               import split_directory
+from   ._faces                               import Refused, opened
 
 USAGE = usage_line("hwut.labels.add",
                    ("<label>",) + USAGE_TOKEN_TUPLE
@@ -59,19 +57,10 @@ def main(argv=None, write=None):
     what is there is not a fault, and the report says which half of
     the selection was news.
     """
-    if write is None: write = print
-    if argv is None:  argv  = sys.argv[1:]
-    if "--help" in argv:
-        write(HELP)
-        return E_ExitCode.OK
-
     try:
-        wish, rest_list = parse_wish(argv)
-    except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
-        return E_ExitCode.REFUSED
-    directory, rest_list = split_directory(rest_list)
+        write, wish, directory, rest_list = opened(argv, write, HELP, USAGE)
+    except Refused as refusal:
+        return refusal.exit_code
 
     if len(rest_list) != 1:
         write("REFUSED: 'hwut.labels.add' takes ONE label, and "

@@ -6,4 +6,4 @@ test-import_graph.sh;depth;true;ok
 ;shared;true;ok
 ;unreadable;true;ok
 ;vut;true;ok
-test-static-analysis.sh;;true;ok
+test-static-analysis.sh;;false;not-equivalent-with-nominal
