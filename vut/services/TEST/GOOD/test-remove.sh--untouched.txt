@@ -1,3 +1,4 @@
 the application stands:  True
 the hwut.conf stands:    True
 it is still executable:  True
+<hwut-end>

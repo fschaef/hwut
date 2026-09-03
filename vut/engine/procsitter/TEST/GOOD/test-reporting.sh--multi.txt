@@ -1,0 +1,14 @@
+STATUS: 1
+HINTS {
+    suite/TEST
+     test-multi.sh b_blow killed: over the process cap
+     : c_after not run: the process had already died
+     : d_last not run: the process had already died
+}
+  OK  : the choice before the offence passed
+  OK  : the offending choice is named with its cap
+  OK  : the choice after it says the process had already died
+  OK  : and is NOT reported as killed
+  OK  : 'killed by the supervisor' appears nowhere
+SUCCESS: one process, one offence, every choice told the truth.
+<hwut-end>

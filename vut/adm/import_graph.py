@@ -119,7 +119,21 @@ def imported_tuple(root, module_path):
         if isinstance(node, ast.Import):
             name_list.extend(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            name_list.append(_resolved(node, package))
+            resolved = _resolved(node, package)
+            #  'from X import Y' IS AMBIGUOUS, relative or absolute
+            #  alike: 'Y' may be an ATTRIBUTE defined inside module X
+            #  (the edge is to X, and 'resolved' alone is it), or 'Y'
+            #  may be a SUBMODULE of package X (the edge is to X.Y,
+            #  which 'resolved' alone never names -- 'from . import
+            #  finder' and 'from vut.engine...exploration import
+            #  selection' are the bare and the absolute shape of the
+            #  same gap). Both candidates are offered per name; '_
+            #  matched's tail search harmlessly finds nothing for
+            #  whichever guess is wrong.
+            if resolved:
+                name_list.append(resolved)
+                name_list.extend("%s.%s" % (resolved, alias.name)
+                                 for alias in node.names)
     return tuple(name for name in name_list if name), None
 
 

@@ -94,7 +94,7 @@ case "$1" in
 reading)
     #  THE TEST'S OWN SETUP GOVERNS.
     fixture
-    app test-loose.sh 'title = "L"  numeric = 0.01' \
+    app test-loose.sh 'title = "L"  tolerance { numeric_ratio = 0.01 }' \
         'echo "value 3.14159 done"'
     app test-exact.sh 'title = "E"' \
         'echo "value 3.14159 done"'
@@ -194,3 +194,7 @@ refused)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+#  THE CLOSING TOKEN, PRINTED BY THE SCRIPT ITSELF -- without it
+#  'hwut.accept' refuses every candidate this suite ever produces.
+echo "<hwut-end>"

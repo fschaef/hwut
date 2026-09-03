@@ -43,3 +43,4 @@ AFTER {
     TMP/store/test-app.sh--two.stdout.when
     book: ['test-app.sh']
 }
+<hwut-end>

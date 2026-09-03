@@ -8,3 +8,4 @@ STDOUT {
     
     TALLY: 0 unstable, 1 warned, 0 steady
 }
+<hwut-end>

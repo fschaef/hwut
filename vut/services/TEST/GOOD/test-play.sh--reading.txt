@@ -35,3 +35,4 @@ STANDING {
     test-exact.sh
     test-loose.sh
 }
+<hwut-end>

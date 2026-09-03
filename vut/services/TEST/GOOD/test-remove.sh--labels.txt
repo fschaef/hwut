@@ -46,3 +46,4 @@ STDOUT {
         labels: dropped (1 entry)
 }
 THE FILE: absent -- no label exists
+<hwut-end>

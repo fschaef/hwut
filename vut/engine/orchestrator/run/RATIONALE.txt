@@ -625,3 +625,73 @@ COST      'test-endtoend frame/stream' re-recorded: 'test-dead.sh',
           "not run: the process had already died" where it read
           "killed by the supervisor" -- nothing killed it. procsitter
           19 ok / 4 fail -> 25 / 0.
+
+O-22  A LIFT'S SIBLINGS DRIFT TOO, IF THEY ARE LEFT BEHIND        (2026-09-03)
+
+PROBLEM   The lift that gave 'engine/protocol' its 'vocabulary.py',
+          'receiver.py' and 'summary.py' left all three origins
+          standing in 'orchestrator/run/'. Left standing, the two
+          that carried no reference at all then DRIFTED: 'protocol/
+          receiver.py' gained 'on_refused' (E-41), 'protocol/
+          summary.py' gained 'detail_db' (O-19), and the dead copies
+          here had neither. A stale twin does not merely sit still;
+          every ruling that touches its live sibling widens the gap.
+
+          'orchestrator/run/vocabulary.py' was a THIRD, older sibling
+          of the same lift, found and reported at the very start of
+          this session alongside 'engine/operations/interaction/
+          feed.py' and 'tui.py' -- and none of the three was ever
+          actually removed. 'feed.py' and 'tui.py' import ONE
+          ANOTHER and nothing else in the tree imports either: a
+          mutual island, the identical shape C-3 found in 'compare/
+          engine' ("the two that imported at all imported each
+          other"), and it defeats a plain in-degree count -- each has
+          exactly one incoming edge, from its own dead sibling.
+
+FOUND     By 'adm/unread_modules.py' (new): every module walked from
+          every entry point (a script run by name, a TEST file, a
+          package's own '__init__.py'), reachability, not bare
+          in-degree -- an island answers to no root and is DEAD
+          however many edges point at it from inside itself.
+
+          Getting a trustworthy answer needed a real fix to 'import_
+          graph.py' first: 'imported_tuple()' collapsed 'from X
+          import Y' to the edge 'X' alone whenever 'Y' named a
+          SUBMODULE rather than an attribute -- true for the bare
+          relative form ('from . import finder') and the absolute
+          form alike ('from vut.engine...exploration import
+          selection'), and it had been losing 37 such edges across 16
+          files, silently, since before this session. Every module
+          the fix newly reconnected ('finder.py', 'validator.py',
+          'selection.py', every coverage reader) was checked by hand
+          before trusting the DEAD bucket at all.
+
+DECISION  'engine/orchestrator/run/{vocabulary,receiver,summary}.py'
+          and 'engine/operations/interaction/{feed,tui}.py' deleted --
+          five files, one lift's leftovers and one mutual island.
+          Every road into their live counterparts checked by class
+          name as well as module path ('CRunReportReceiver',
+          'CRunSummary', 'KIND_DB') so a reader mistaking one file
+          for the other would still be found.
+
+          'imported_tuple()' now offers BOTH readings of every
+          'from X import Y' -- 'X' alone, and 'X.Y' -- and leaves
+          '_matched's existing tail search to find whichever is real;
+          the wrong guess costs one failed lookup, the same cost the
+          tool already pays for every import naming nothing of this
+          tree.
+
+COST      None in behaviour: nothing outside the five imported any of
+          them. 'import_graph.py --check' answers the same twelve
+          findings before and after the fix -- the edges it recovers
+          do not cross a DOOR.
+
+GRAVEYARD Leaving the fix narrow (relative bare imports only) --
+          rejected: 'services/accept.py's absolute
+          'from vut.engine...exploration import selection' hits the
+          identical gap, and a narrow fix would have kept the false
+          DEAD reading for 'selection.py' while calling itself done.
+          A plain in-degree=0 filter -- rejected: it missed 'feed.py'/
+          'tui.py' entirely, each showing one incoming edge from its
+          own dead sibling; only a walk from real roots finds an
+          island.

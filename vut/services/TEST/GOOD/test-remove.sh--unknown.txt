@@ -7,3 +7,4 @@ STDOUT {
         book entry: none stood
         register: not registered
 }
+<hwut-end>

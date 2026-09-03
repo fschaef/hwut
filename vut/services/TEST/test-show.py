@@ -131,7 +131,10 @@ def test_refused():
     directory = build_directory()
     try:
         banner("an unknown option")
-        call(directory, ["--verbose"])
+        #  '--verbose' was this example until it became a real flag
+        #  (-v|--verbose, "write the NULL parameters too"); a genuinely
+        #  unknown one stands in its place.
+        call(directory, ["--frobnicate"])
         banner("two source files")
         call(directory, ["test-a.py", "test-b.py"])
     finally:

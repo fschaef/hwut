@@ -197,7 +197,9 @@ print(Bookkeeper('tree/suite/TEST').tests() == [])")"
     echo "runs again, with no history:"
     $RUN --directory=tree --plain > run.txt 2>&1
     echo "STATUS: $?"
-    grep -E "GOOD missing" run.txt | mask | sed 's/^/    /'
+    #  THE GOOD WENT WITH IT (E-41): no nominal, so the gate refuses
+    #  the case outright rather than running it into "GOOD missing".
+    grep -E "no nominal stands" run.txt | mask | sed 's/^/    /'
     ;;
 
 refused)
@@ -213,3 +215,7 @@ refused)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+#  THE CLOSING TOKEN, PRINTED BY THE SCRIPT ITSELF -- without it
+#  'hwut.accept' refuses every candidate this suite ever produces.
+echo "<hwut-end>"

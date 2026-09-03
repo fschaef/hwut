@@ -259,3 +259,7 @@ refused)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+#  THE CLOSING TOKEN, PRINTED BY THE SCRIPT ITSELF -- without it
+#  'hwut.accept' refuses every candidate this suite ever produces.
+echo "<hwut-end>"

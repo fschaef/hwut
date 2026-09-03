@@ -1,13 +1,13 @@
 
 --- an unknown option ---
-$ hwut.show --verbose
-    REFUSED: unknown option(s): --verbose
-    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [--directory=<path>] | hwut.show --root-conf-template
+$ hwut.show --frobnicate
+    REFUSED: unknown option(s): --frobnicate
+    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | hwut.show --root-conf-template
     [status 2]
 
 --- two source files ---
 $ hwut.show test-a.py test-b.py
     REFUSED: 2 source files named; 'hwut.show' reads one, or the directory
-    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [--directory=<path>] | hwut.show --root-conf-template
+    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | hwut.show --root-conf-template
     [status 2]
 <hwut-end>

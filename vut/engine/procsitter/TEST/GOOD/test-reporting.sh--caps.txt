@@ -1,0 +1,17 @@
+STATUS: 1
+HINTS {
+    suite/TEST
+     test-cpu.sh killed: over the cpu-time cap
+     test-fsize.sh killed: over the file-size cap
+     test-memory.sh killed: over the memory cap
+     test-pids.sh killed: over the process cap
+     test-wall.sh killed: over the wall-clock cap
+}
+  OK  : wall-clock: named
+  OK  : cpu-time: named
+  OK  : memory: named
+  OK  : file-size: named
+  OK  : process count: named
+  OK  : 'killed by the supervisor' appears nowhere
+SUCCESS: every cap is named where it was hit.
+<hwut-end>

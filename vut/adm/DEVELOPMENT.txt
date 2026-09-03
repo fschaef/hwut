@@ -244,3 +244,99 @@ WHAT A SEAL DOES NOT FORBID: a sealed component's own modules may
 speak among themselves. The pair that results is INSIDE the seal,
 where nothing outside can be made to wait on it.
 ______________________________________________________________________________
+
+______________________________________________________________________________
+A TEST APP'S OUTPUT IS CONTROLLED BY THE TEST APP, NOT BY THE MACHINE
+______________________________________________________________________________
+An OUTCOME any oracle may state: what a test app or the software under
+it PRINTS, decides, or fails on. Never in the running: the LOCALE, the
+timezone, the terminal width, the number of CPUs, a path's LENGTH, an
+environment variable nobody in the test set.
+
+The tell is always the same: a GOOD passes here and fails there, both
+runs correct, because the machine spoke a line the test never asked
+for. Found twice already, both in the same class:
+
+    'test-affected.py'    stderr's BYTE COUNT, which moves with the
+                          length of the temporary path the machine
+                          chose (D-27, engine/coverage/RATIONALE.txt)
+    'test-service.sh'     an OSError's TEXT, which is the C library's
+                          'strerror' and follows LC_MESSAGES -- "No
+                          such file or directory" here, "Datei oder
+                          Verzeichnis nicht gefunden" under de_DE
+
+NEITHER WAS THE SOFTWARE'S FAULT. 'hwut_pype' named the file and the
+errno correctly on every machine; nothing needed fixing there. The
+GOOD had simply recorded MORE than the software controls: the byte
+count is a fact about the path, not about the pipe; the phrase is a
+fact about glibc, not about pype. What was owed was a NARROWER
+assertion, not a translated program.
+
+TWO WAYS TO NARROW, and the fixture chooses which:
+
+    COUNT WHAT IS STABLE, NOT WHAT VARIES.  A byte count that tracks a
+    temporary path is unstable; the LINE it appears on, or whether it
+    is present at all, usually is not.
+
+    AN 'eq_pattern' AROUND THE PLATFORM'S WORDS, LEAVING WHAT THE CODE
+    CONTROLS REQUIRED. Not "tolerate the locale phrase" alone --
+    'errno' NUMBERS, quote characters, and path SEPARATORS ('/' vs
+    '\') are equally the platform's, not the code's, and a pattern
+    that stops at the first one found is still too narrow:
+
+        tolerance { eq_pattern = ["stderr   : pype: .*no-such\\.pype.*"] }
+
+    requires only that pype spoke on stderr and named the offending
+    file -- the two things pype actually decided.
+
+GETTING THIS RIGHT TOOK THREE PASSES on the same line, each one
+anchoring on whatever had just been shown to vary and missing the
+next thing that would: first only the errno's phrase, then the errno
+NUMBER too, then the quoting and the separator. The question that
+finds all of it in one pass is not "what have I seen vary" but "what
+does the code under test actually decide" -- everything else is the
+platform's and belongs outside the pattern.
+
+THE STATED EXCEPTION: a suite that is KNOWN to run only inside one
+fixed container or VM image may fix the locale, the timezone, and the
+rest as PROPERTIES OF THAT IMAGE, and assert on their output directly
+-- the image is then a controlled variable, not an unnoticed one. That
+is a decision to make and to WRITE DOWN where the suite states its own
+setup, not a default to fall into.
+
+______________________________________________________________________________
+'import_graph.py': 'from X import Y' HAD A BLIND SPOT
+______________________________________________________________________________
+'imported_tuple()' turned 'from X import Y' into the one edge 'X',
+whatever 'Y' named. Where 'Y' is an attribute defined inside module X,
+that is right. Where 'Y' is a SUBMODULE of package X -- 'from . import
+finder', 'from vut.engine...exploration import selection' -- the real
+edge is 'X.Y', and it was silently dropped: 37 such statements across
+16 files, in both the bare relative form and the absolute one alike.
+
+FOUND BY adm/unread_modules.py (new: every module walked from every
+entry point -- a script run by name, a TEST file, a package's own
+'__init__.py' -- reachability, not bare in-degree), which reused this
+tool's own reading and returned modules central to the whole tree --
+'finder.py', 'validator.py', 'selection.py', every coverage reader --
+as unreachable. They were not; the graph could not see the edge.
+
+REACHABILITY MATTERED A SECOND WAY, independent of this bug: two
+modules that import only EACH OTHER ('engine/operations/interaction/
+feed.py' and 'tui.py') show one incoming edge apiece and pass a bare
+"zero incoming edges" filter clean, while nothing live reaches either
+-- the same island shape 'compare/engine's dead twins had (RATIONALE
+C-3: "the two that imported at all imported each other"). Only a walk
+from real entry points, not an in-degree count, finds an island.
+
+FIXED by offering BOTH readings of every 'from X import Y' -- 'X'
+alone, and 'X.Y' -- and leaving '_matched's existing tail search to
+find whichever is real. The wrong guess costs one failed lookup,
+already the tool's cost for any import naming nothing of this tree.
+'import_graph.py --check' answers the same findings before and after:
+none of the recovered edges crosses a DOOR.
+
+CHECK A GRAPH TOOL AGAINST ITS OWN CENTRAL MODULES before trusting an
+"unused" report from it. A false DEAD reading on something everyone
+knows is live is the tool telling you it cannot see, not the module
+telling you it is dead.

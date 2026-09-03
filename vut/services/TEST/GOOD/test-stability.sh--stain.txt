@@ -13,9 +13,7 @@ STDOUT {
 }
 --- 2. hwut.run does not run it: unstable, the directory fails
 STATUS: 1
-END   test-app.sh ................................ UNSTABLE -- not run  [FAIL]
-SUIT  suite/TEST ........................................ [FAIL]   0 of   1 ok
-    test-app.sh                  UNSTABLE -- not run
+    test-app.sh   UNSTABLE -- not run
 --- 3. hwut.accept refuses to bless it
 FAULT: hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block
 REFUSED to bless: 'test-app.sh' bears a STAIN -- it switched results between repeats.
@@ -43,4 +41,4 @@ STDOUT {
 }
 --- 6. and it runs again
 STATUS: 1
-SUIT  suite/TEST ........................................ [FAIL]   1 of   1 ok
+<hwut-end>

@@ -1,0 +1,10 @@
+INSPECT: application -> memory 512
+         'plain'     -> memory 512 (states nothing)
+         'hungry'    -> memory 2048 (states 2048)
+         inherited   -> cpu 300, wall 300.0 on both
+  OK  : the choice's own cap governs the choice
+  OK  : a sibling that states nothing keeps the application's
+  OK  : a cap the choice does not state is INHERITED, not reset
+  OK  : and the application is not raised by what a choice states
+SUCCESS: caps travel by inheritance, to the choice that asks.
+<hwut-end>

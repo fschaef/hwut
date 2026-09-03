@@ -27,3 +27,4 @@ STDOUT {
     ===== STDERR -- shown, never tested (E-5) ====================
         a warning
 }
+<hwut-end>
