@@ -17,6 +17,5 @@ def do(subject, nominal, analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
                     no analogy state in or out, DOC/SEMANTICS.txt 5.2; in
                     'verbatim' analogies do not even exist as a concept).
     """
-    verdict = ([_raw(l) for l in subject.line_list]
-               == [_raw(l) for l in nominal.line_list])
+    verdict = ([_raw(line_a) for line_a in subject.line_list] == [_raw(line_b) for line_b in nominal.line_list])
     return verdict, analogy_db

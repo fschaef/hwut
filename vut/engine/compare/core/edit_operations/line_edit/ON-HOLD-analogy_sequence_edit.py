@@ -1,6 +1,9 @@
 import vut.engine.compare.core.edit_operations.line_edit.common as     edit_operation_search
 from   vut.engine.compare.core.edit_operations.edit             import E_EditId, EditSequence
+
 from   collections import defaultdict
+from   itertools   import zip_longest
+from   collections import Counter
 
 
 def do(subject_list, nominal_list):
@@ -64,9 +67,6 @@ def do(subject_list, nominal_list):
     cost = sum(1 for op in final_sequence if op['code'] != 'MATCH')
     
     return cost, final_sequence, analogy_map
-
-from itertools import zip_longest
-from collections import Counter
 
 def find_best_analogies(subject_list, nominal_list):
     """

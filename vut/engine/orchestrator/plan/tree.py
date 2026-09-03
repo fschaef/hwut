@@ -10,13 +10,14 @@ An entry names its directory RELATIVE to the root; the root itself
 stands on the CTreePlan, so no entry carries a machine-chosen path.
 ______________________________________________________________________________
 """
+from ..exploration.task_list_query import CTestTaskListQuery
+from .determine                    import determine
+from ...bookkeeper.api             import nominal_stands_f
+from .label     import swallowed_warning_tuple
+from .printer   import print_plan
 
 import os
-from dataclasses import dataclass
-
-from ..exploration.task_list_query import CTestTaskListQuery
-from .determine import determine
-from ...bookkeeper.api import nominal_stands_f
+from  dataclasses import dataclass
 
 NOT_ACCEPTED_REASON = ("no nominal stands in GOOD/: not accepted, not "
                        "run ('hwut.play --save', then 'hwut.accept')")
@@ -33,8 +34,6 @@ def admit_of(directory):
     return lambda test, choice: (None if nominal_stands_f(directory,
                                                          test, choice)
                                  else NOT_ACCEPTED_REASON)
-from .label     import swallowed_warning_tuple
-from .printer   import print_plan
 
 
 @dataclass(frozen=True, slots=True)

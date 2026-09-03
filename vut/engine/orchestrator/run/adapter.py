@@ -29,6 +29,11 @@ from ...operations.configuration import (E_SourceKind,
                                          TestConfiguration)
 from ...procsitter.api    import ProcsitterConfig
 
+from ...bookkeeper.api    import CAPS_FIELD_DB as _CAPS_FIELD_DB
+
+_BUILD_SYSTEM_DB = {"make": E_BuildSystem.MAKE}
+
+
 
 def stem_expanded(text, source_file):
     """
@@ -51,15 +56,6 @@ def interpreter_of(language, language_setup):
     if setup is not None and setup.interpreter:
         return shlex.split(setup.interpreter)
     return [language]
-
-
-#  Caps field (exploration) -> ProcsitterConfig field. Unmapped caps
-#  keep procsitter's own defaults.
-#  THE AUTHOR'S CAPS VOCABULARY stands at the bookkeeper, below both
-#  its readers ('bookkeeper/configuration.CAPS_FIELD_DB').
-from ...bookkeeper.api import CAPS_FIELD_DB as _CAPS_FIELD_DB
-
-_BUILD_SYSTEM_DB = {"make": E_BuildSystem.MAKE}
 
 
 def naming_of(app):

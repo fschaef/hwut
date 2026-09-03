@@ -112,8 +112,9 @@ class Judgment:
                 self.verdict = False
             matched_nominals = set(self.pairing.values())
             for si, entry in enumerate(self.subject_class):
-                if entry is not None: continue
-                if si in self.pairing:
+                if entry is not None: 
+                    continue
+                elif si in self.pairing:
                     self.subject_class[si] = ("ok", self.pairing[si])
                 else:
                     self.subject_class[si] = ("bad", "unpaired")
@@ -137,11 +138,11 @@ class Judgment:
             if grid_f:
                 index_n = spatial.FixedRadiusIndex(n_points, limit)
                 index_s = spatial.FixedRadiusIndex(s_points, limit)
-                nearest_n = lambda p: index_n.nearest_within(p, dist)
-                nearest_s = lambda p: index_s.nearest_within(p, dist)
+                def nearest_n(p): return index_n.nearest_within(p, dist)
+                def nearest_s(p): return index_s.nearest_within(p, dist)
             else:
-                nearest_n = lambda p: nearest_within_brute(p, n_points)
-                nearest_s = lambda p: nearest_within_brute(p, s_points)
+                def nearest_n(p): return nearest_within_brute(p, n_points)
+                def nearest_s(p): return nearest_within_brute(p, s_points)
 
             for si, entry in enumerate(self.subject_class):
                 if entry is not None: continue

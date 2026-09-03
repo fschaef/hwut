@@ -27,7 +27,7 @@ from   vut.engine.compare.core.edit_operations.core  import (WorkListBase,
                                                                            WorkItemBase, 
                                                                            position_increment_db)
 from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
-
+from   vut.engine.compare.contract.semantics         import line_cost_db as cost_db
 from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 from   vut.engine.compare.reading.pattern_finder     import E_ToleranceId
 
@@ -42,9 +42,6 @@ DELETE          = E_EditId.DELETE
 INSERT          = E_EditId.INSERT
 SUBSTITUTE      = E_EditId.SUBSTITUTE     
 
-# The cost table is part of the shared comparison semantics -- see
-# 'contract/semantics.py' (single source for Judge and Lawyer).
-from vut.engine.compare.contract.semantics import line_cost_db as cost_db
 
 cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]

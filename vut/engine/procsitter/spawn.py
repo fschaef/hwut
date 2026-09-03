@@ -17,6 +17,14 @@ support is SEALED (imports nothing of this tree), and a test that
 wants the supervisor asks the supervisor.
 ______________________________________________________________________________
 """
+from vut.engine.procsitter.procsitter   import (Procsitter,
+                                                ProcsitterConfig,
+                                                E_Containment)
+from vut.engine.procsitter.construction import Link
+
+import asyncio
+import os
+
 class CSpawned:
     """WHAT A SUPERVISED CALL ANSWERED, in the shape 'subprocess.run'
     answers so that a test reads it the same way -- and one thing more:
@@ -58,12 +66,6 @@ def spawn(argv, input=None, cwd=None, env=None, max_wall_clock_sec=60.0,
     are accepted so that a 'subprocess.run' call site reads unchanged;
     output is always captured, always text.
     """
-    import asyncio, os
-    from vut.engine.procsitter.procsitter   import (Procsitter,
-                                                    ProcsitterConfig,
-                                                    E_Containment)
-    from vut.engine.procsitter.construction import Link
-
     async def go():
         out, err = [], []
         async def take_out(data): out.append(data)

@@ -55,12 +55,12 @@ from   dataclasses import fields, is_dataclass
 from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
-from .configuration import CAPS_FIELD_DB, E_StderrNote, NamingConfig
+from .configuration import E_StderrNote, NamingConfig
+from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
 
 #  THE STORE'S GROUND, under the transient root 'TMP/' (services E-24).
 #  Re-exported by 'stream_store'.
 STORE_DIRECTORY_NAME = "TMP/store"
-
 
 #  THE BOOK IS A TABLE (B-6): one row per (test, choice, operation), and
 #  one row per choice with 'operation' empty for the choice's own facts.
@@ -87,7 +87,6 @@ BOOK_FORBIDDEN_IN_NAME = (BOOK_SEPARATOR,)
 #  operations' hygiene suite) ASKS THIS, and never carries a list: a
 #  file the bookkeeper adds is then skipped everywhere without the
 #  bookkeeper knowing who walks.
-from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
 GOOD_OWNED_FILE_TUPLE = (RESULT_DB_FILE_NAME, LEGACY_RESULT_DB_FILE_NAME,
                          _REGISTER_FILE_NAME)
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",

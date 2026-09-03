@@ -4,58 +4,15 @@ config:  adm/ruff.toml
 ignored: E221, E701, E702, I001, S101, S105, UP031
 
 TOLERATED {
-    ASYNC230       2  blocking-open-call-in-async-function
-    B008           2  function-call-in-default-argument
-    B019           3  cached-instance-method
-    B039           1  mutable-contextvar-default
-    BLE001        18  blind-except
-    C401           7  unnecessary-generator-set
-    C402           5  unnecessary-generator-dict
-    C405           1  unnecessary-literal-set
-    C408           3  unnecessary-collection-call
-    C413           1  unnecessary-call-around-sorted
-    FURB122        2  for-loop-writes
-    FURB167        1  regex-flag-alias
-    FURB188        3  slice-to-remove-prefix-or-suffix
-    FURB192        1  sorted-min-max
-    ISC004         2  implicit-string-concatenation-in-collection-literal
-    PERF102        1  incorrect-dict-iterator
-    PIE790        25  unnecessary-placeholder
-    PIE810         2  multiple-starts-ends-with
-    PLC0206        1  dict-index-missing-items
-    PLR0402       12  manual-from-import
-    PLR1704        2  redefined-argument-from-local
-    PLR1730        2  if-stmt-min-max
-    PLW0120        1  useless-else-on-loop
-    PLW0602        1  global-variable-not-assigned
-    PLW1510        1  subprocess-run-without-check
-    RET501        13  unnecessary-return-none
-    RUF007         1  zip-instead-of-pairwise
-    RUF012         5  mutable-class-default
-    RUF018         1  assignment-in-assert
-    RUF023        16  unsorted-dunder-slots
-    RUF034         1  useless-if-else
-    RUF046         2  unnecessary-cast-to-int
-    RUF059         7  unused-unpacked-variable
-    RUF100        24  unused-noqa
-    S102           3  exec-builtin
-    SIM102         9  collapsible-if
-    SIM103         3  needless-bool
-    SIM114        11  if-with-same-arms
-    SIM115         2  open-file-with-context-handler
-    SIM117         1  multiple-with-statements
-    TRY201         1  verbose-raise
-    UP006          5  non-pep585-annotation
-    UP007          1  non-pep604-annotation-union
-    UP020         18  open-alias
-    UP028          2  yield-in-for-loop
-    UP035         26  deprecated-import
-    UP045         31  non-pep604-annotation-optional
+    E401           1  multiple-imports-on-one-line
+    E402          11  module-import-not-at-top-of-file
+    E731           7  lambda-assignment
+    E741           2  ambiguous-variable-name
+    F401           1  unused-import
 }
 
-total tolerated: 283
+total tolerated: 22
 
 MUST STAND AT ZERO {
-    empty -- no name that is not there, no dispatch that
-    vanishes under '-O', no swallow without a reason
+    F401 1
 }

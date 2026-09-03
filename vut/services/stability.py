@@ -385,10 +385,13 @@ def main(argv=None, write=None, write_error=None):
     'write' takes one line at a time; 'print' where none is given, so a
     suite captures the face without a process.
     """
-    if write is None:       write       = print
-    if write_error is None: write_error = \
-        lambda line: print(line, file=sys.stderr)
-    if argv is None: argv = sys.argv[1:]
+    if write is None:       
+        write = print
+    if write_error is None: 
+        def write_error(line): \
+           print(line, file=sys.stderr)
+    if argv is None: 
+        argv = sys.argv[1:]
     if "--help" in argv:
         write(HELP)
         return E_ExitCode.OK

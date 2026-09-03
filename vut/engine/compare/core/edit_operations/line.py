@@ -62,11 +62,16 @@ from  vut.engine.compare.core.edit_operations.edit  import E_EditId, Edit, EditS
 from  vut.engine.compare.core.edit_operations.core  import (WorkListBase, 
                                                                           WorkItemBase, 
                                                                           position_increment_db)
-from  vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
-from  vut.engine.compare.reading.pattern_finder  import E_ToleranceId
-from  vut.engine.compare.reading.line_element    import LineElement
-from  vut.engine.compare.contract.enums          import E_Verdict
+from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
+from   vut.engine.compare.reading.pattern_finder                 import E_ToleranceId
+from   vut.engine.compare.reading.line_element                   import LineElement
+from   vut.engine.compare.contract.enums                         import E_Verdict
 from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
+# The cost table and transposition cost are part of the shared comparison
+# semantics -- see 'contract/semantics.py' (single source for Judge and Lawyer).
+import vut.engine.compare.contract.semantics as     semantics
+from   vut.engine.compare.contract.semantics import element_cost_db as cost_db
+from   vut.engine.compare.contract.semantics import cost_TRANSPOSE
 
 from  functools   import lru_cache
 from  typeguard   import typechecked
@@ -85,12 +90,6 @@ SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 ANALOGY         = E_ToleranceId.ANALOGY
 SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
-
-# The cost table and transposition cost are part of the shared comparison
-# semantics -- see 'contract/semantics.py' (single source for Judge and Lawyer).
-import vut.engine.compare.contract.semantics as semantics
-from vut.engine.compare.contract.semantics import element_cost_db as cost_db
-from vut.engine.compare.contract.semantics import cost_TRANSPOSE
 
 cost_INSERT_DELETE = cost_db[INSERT]
 

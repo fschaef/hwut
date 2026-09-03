@@ -117,6 +117,7 @@ from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
                                                              GOOD_OWNED_FILE_TUPLE,
                                                              TestIdDb, TestIdFault)
+from   vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
                                                      import CTestTaskListQuery
@@ -126,8 +127,8 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
-from   ._core                                        import usage_line
-from   ._exit                                        import E_ExitCode
+from   ._core import usage_line
+from   ._exit import E_ExitCode
 
 #  A record's TEST PART ends in one of these: it is the source file
 #  whole. The set is the languages a test application is written in;
@@ -137,7 +138,6 @@ SOURCE_EXTENSION_SET   = frozenset((
     "py", "sh", "bash", "lua", "pl", "rb", "c", "cpp", "cc", "bas",
     "exe", "bat", "ps1", "js", "ts", "vhd", "v", "sv"))
 
-from vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 OUT_DIRECTORY_NAME     = "OUT"
 TRANSIENT_ROOT_TUPLE   = ("OUT", "TMP")           # services E-24
 
