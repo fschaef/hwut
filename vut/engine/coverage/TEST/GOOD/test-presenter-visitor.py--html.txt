@@ -1,0 +1,10 @@
+  registered axes: branch, cover, mcdc, toggle
+  declared unrendered: mcdc
+  OK  : 'branch' is rendered
+  OK  : 'cover' is rendered
+  OK  : 'mcdc' is declared unrendered, and said
+  OK  : 'toggle' is rendered
+  OK  : the presenter produced output
+  OK  : the output NAMES the gap, so a reader sees it
+SUCCESS: the page accounts for every registered axis.
+<hwut-end>

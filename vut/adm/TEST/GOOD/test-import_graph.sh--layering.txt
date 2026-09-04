@@ -49,3 +49,4 @@ STDOUT {
     LAYERING: every edge obeys 'door.txt' (4 component(s), 3 edge(s))
     DOORS: engine/plan/api -- nothing enters but here
 }
+<hwut-end>

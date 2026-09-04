@@ -9,7 +9,7 @@ THE OUTER PICTURE {
         imports nothing of this tree
     }
     engine {
-        171 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (165 more)
+        172 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (166 more)
         --> adm
         --> auxiliary
         --> test_writing_support
@@ -31,3 +31,4 @@ THE LAYERING {
     SEALED: engine/compare/contract, engine/protocol, engine/procsitter, auxiliary, test_writing_support -- nothing leaves
     DOORS: engine/compare/api, engine/procsitter/api, engine/coverage/api, engine/bookkeeper/api -- nothing enters but here
 }
+<hwut-end>

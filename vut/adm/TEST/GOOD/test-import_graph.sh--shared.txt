@@ -11,3 +11,4 @@ STDOUT {
     helper                       from base                     read by 3: engine/plan, engine/store, faces
     Book                         from engine/store             read by 2: engine/plan, faces
 }
+<hwut-end>

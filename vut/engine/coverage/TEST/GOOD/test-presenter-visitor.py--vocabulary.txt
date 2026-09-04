@@ -1,0 +1,8 @@
+  the base declares: done, file_close, file_open, header, lines, measure, unrendered
+  the walk called:   done, file_close, file_open, header, lines, measure
+  OK  : html defines nothing outside the vocabulary
+  OK  : tex defines nothing outside the vocabulary
+  OK  : text defines nothing outside the vocabulary
+  OK  : every declared step is a step the walk takes
+SUCCESS: the base declares the vocabulary, and nothing else stands.
+<hwut-end>

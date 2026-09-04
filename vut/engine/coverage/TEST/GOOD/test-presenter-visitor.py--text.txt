@@ -1,0 +1,9 @@
+  registered axes: branch, cover, mcdc, toggle
+  declared unrendered: (none)
+  OK  : 'branch' is rendered
+  OK  : 'cover' is rendered
+  OK  : 'mcdc' is rendered
+  OK  : 'toggle' is rendered
+  OK  : the presenter produced output
+SUCCESS: the storage form writes every registered axis.
+<hwut-end>

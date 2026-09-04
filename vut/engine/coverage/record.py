@@ -58,6 +58,7 @@ DESCRIPTION
 
 ______________________________________________________________________________
 """
+from abc          import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing      import Mapping
 
@@ -381,38 +382,191 @@ def run_set_of_text(text):
     return frozenset(result)
 
 
+class I_Presenter(ABC):
+    """WHAT A RECORD IS TURNED INTO -- the operation half of the walk
+    ('walk' below), so that a new rendering is a new class here and no
+    second traversal anywhere.
+
+    THE VISITOR'S TRADE, and why this shape rather than methods on the
+    record: a visitor makes a NEW OPERATION cheap and a NEW ELEMENT
+    dear -- the element being, here, a registered MEASURE. GoF's
+    condition for it is that THE ELEMENT SET IS STABLE, and that is
+    not a precondition to route around when it fails: it is an
+    instruction about SEQUENCING. The set of coverage axes was settled
+    first -- deliberately, and at cost -- and the visitor is written
+    over the settled set.
+
+    A NEW AXIS THEREFORE COSTS EVERY PRESENTER AN EDIT, and that is
+    correct rather than regrettable. A presenter that met 'mcdc' and
+    rendered it from a generic (covered, total) summary would print
+    'mcdc 3/7' -- which LOOKS like a presentation and is not one: what
+    makes MC/DC MC/DC is WHICH condition combinations were exercised,
+    and a fraction has thrown that away. The presenter would be
+    deficient and would not say so, which is worse than not rendering
+    it at all.
+
+    SO THE DEFAULT SPEAKS THE ABSENCE. 'measure' below does not render
+    an unknown axis; it records that the axis went UNRENDERED, and
+    'done' is expected to say so where the presenter's medium allows.
+    A presenter handles an axis by overriding 'measure' and answering
+    True for it. Adding a measure then makes every presenter announce
+    a gap until somebody closes it -- the deficiency is VISIBLE, which
+    is the whole of what a default can honestly do.
+
+    THE BASE DECLARES THE WHOLE VOCABULARY AND NOTHING ELSE IS
+    CALLED. Every step of the walk is an abstract method here, so a
+    presenter must answer each ONE WAY OR THE OTHER -- rendering it,
+    or stating plainly that it emits nothing there. A presenter is
+    not permitted to be silent by inheritance: 'TexPresenter' dropping
+    the line axis by simply never mentioning it is the same silent
+    deficiency as a fraction standing in for MC/DC.
+
+    AND A NAME OUTSIDE THE VOCABULARY IS A DEFECT, not an extension.
+    A presenter defining 'file_opened' for 'file_open' is never
+    called, and nothing complains: the walk asks for the name it
+    knows. 'TEST/test-presenter-visitor.py' refuses any public method
+    a presenter defines that the base does not declare.
+    """
+
+    def __init__(self):
+        self.unrendered_set = set()
+
+    @abstractmethod
+    def header(self, record):
+        """RETURN: None. The record's provenance -- language, tool,
+        format, whether counts stand, which runs it is of."""
+
+    @abstractmethod
+    def file_open(self, path, entry):
+        """RETURN: None. One source file begins. 'entry' carries the
+        ranges and 'uncovered'/'ratio' derive from them."""
+
+    @abstractmethod
+    def lines(self, executable, covered, count_tuple):
+        """RETURN: None. The line axis: EX, CV, and the per-covered-
+        range hit counts where the record carries them, None else."""
+
+    @abstractmethod
+    def measure(self, measure, point_tuple):
+        """
+        RETURN: None. One OTHER axis of this file -- branch, toggle,
+                cover, or whatever registered since.
+
+        A presenter renders the axes it knows and calls 'unrendered'
+        for the rest; it may not simply ignore one, because an axis
+        silently dropped is a document that looks complete and is
+        not.
+        """
+
+    def unrendered(self, measure):
+        """RETURN: None. THIS PRESENTER CANNOT RENDER THAT AXIS, and
+        says so: the name is collected, and 'done' is expected to
+        state it where the medium allows. Not an override point -- the
+        bookkeeping is the base's so that every presenter announces a
+        gap the same way."""
+        self.unrendered_set.add(measure.name)
+
+    @abstractmethod
+    def file_close(self, path, entry):
+        """RETURN: None. The file ends."""
+
+    @abstractmethod
+    def done(self):
+        """RETURN: object, whatever the presenter built -- the value
+        'walk' hands back."""
+        return None
+
+
+def walk(record, presenter):
+    """
+    RETURN: object, 'presenter.done()' -- whatever it built.
+
+    THE ONE TRAVERSAL of a record. Files in SORTED order, so two runs
+    of one test present identically; measures in REGISTERED-NAME
+    order, so the sequence is stable as the registry grows. A measure
+    with no point is not visited: the point set IS what was measured,
+    and absence stays absent.
+
+    'format_record' is this walk with the storage presenter, which is
+    what keeps the two from drifting -- there is no second traversal
+    to fall out of step.
+    """
+    presenter.header(record)
+    for path in sorted(record.file_db):
+        entry = record.file_db[path]
+        presenter.file_open(path, entry)
+        presenter.lines(entry.executable, entry.covered,
+                        entry.counts if record.counts_f else None)
+        for name in measure_name_tuple():
+            point_tuple = entry.measure_db.get(name)
+            if not point_tuple: continue
+            presenter.measure(measure_of(name), point_tuple)
+        presenter.file_close(path, entry)
+    return presenter.done()
+
+
+class TextPresenter(I_Presenter):
+    """THE STORAGE FORM: the record as it is written to disk, and the
+    form 'parse_record' reads back. Its bytes are an oracle in every
+    coverage GOOD file, so this presenter's output is fixed."""
+
+    def __init__(self):
+        I_Presenter.__init__(self)
+        self.line_list = []
+        self.counts_f  = False
+
+    def header(self, record):
+        """RETURN: None. The six comment lines that name provenance."""
+        self.counts_f = record.counts_f
+        self.line_list += [
+            "%sVUT-COVERAGE %i" % (_COMMENT, record.version),
+            "%srun:      %s"    % (_COMMENT, run_text_of(record.run)),
+            "%slanguage: %s"    % (_COMMENT, record.language),
+            "%stool:     %s"    % (_COMMENT, record.tool),
+            "%sformat:   %s"    % (_COMMENT, record.source),
+            "%scounts:   %s"    % (_COMMENT, "yes" if record.counts_f
+                                             else "no")]
+
+    def file_open(self, path, entry):
+        """RETURN: None. 'SF:' names the file the block is of."""
+        self.line_list.append("SF:%s" % path)
+
+    def lines(self, executable, covered, count_tuple):
+        """RETURN: None. 'EX:' and 'CV:', delta coded."""
+        self.line_list.append("EX:%s" % encode(executable))
+        self.line_list.append("CV:%s" % encode(covered, count_tuple))
+
+    def measure(self, measure, point_tuple):
+        """
+        RETURN: None. One line under the measure's own tag, encoded by
+                the measure itself.
+
+        THE STORAGE FORM IS NEVER DEFICIENT, and is the one presenter
+        that cannot be: it asks the measure to ENCODE, which every
+        measure must answer to be storable at all, and stores the
+        points whole rather than any reading of them. A measure that
+        registers is written the day it registers.
+        """
+        self.line_list.append("%s:%s" % (measure.tag,
+                                         measure.encode(point_tuple)))
+
+    def file_close(self, path, entry):
+        """RETURN: None. NOTHING IS EMITTED: the storage form has no
+        closing delimiter -- a block ends where the next 'SF:' begins,
+        or at the end of the text."""
+
+    def done(self):
+        """RETURN: str, the record's text, newline terminated."""
+        return "\n".join(self.line_list) + "\n"
+
+
 def format_record(record) -> str:
     """
     RETURN: str, the record as it is stored -- header, then one block per
             source file, files in sorted order so two runs of one test
             produce the same bytes.
     """
-    line_list = ["%sVUT-COVERAGE %i" % (_COMMENT, record.version),
-                 "%srun:      %s"    % (_COMMENT,
-                                        run_text_of(record.run)),
-                 "%slanguage: %s"    % (_COMMENT, record.language),
-                 "%stool:     %s"    % (_COMMENT, record.tool),
-                 "%sformat:   %s"    % (_COMMENT, record.source),
-                 "%scounts:   %s"    % (_COMMENT,
-                                        "yes" if record.counts_f else "no")]
-    for path in sorted(record.file_db):
-        entry = record.file_db[path]
-        line_list.append("SF:%s" % path)
-        line_list.append("EX:%s" % encode(entry.executable))
-        line_list.append("CV:%s" % encode(entry.covered,
-                                          entry.counts
-                                          if record.counts_f else None))
-        #  THE OTHER MEASUREMENTS, in registered-name order so the bytes
-        #  are stable. A measure with no point writes NO LINE: a record
-        #  that measured only lines looks exactly as it did before any
-        #  measure was registered.
-        for name in measure_name_tuple():
-            point_tuple = entry.measure_db.get(name)
-            if not point_tuple: continue
-            measure = measure_of(name)
-            line_list.append("%s:%s" % (measure.tag,
-                                        measure.encode(point_tuple)))
-    return "\n".join(line_list) + "\n"
+    return walk(record, TextPresenter())
 
 
 def parse_record(text):

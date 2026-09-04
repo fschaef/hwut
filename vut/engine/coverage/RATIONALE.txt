@@ -1129,3 +1129,100 @@ COST      None in behaviour. Coverage answers 62 ok / 0 fail before
           refactoring was made under that rule, so behaviour
           preservation is demonstrated against byte-exact oracles
           nobody was allowed to adjust, rather than asserted.
+
+D-29  THE VISITOR IS WRITTEN OVER A SETTLED SET                  (2026-09-03)
+
+PROBLEM   'format_record' was HALF a visitor. Its traversal was already
+          right and already double-dispatching -- files in sorted
+          order, measures in registered order, each asked to encode
+          itself, the walk knowing what none of them mean. But the
+          traversal and the storage syntax were one function, so a
+          second rendering (HTML, TeX) could not reuse the walk; it
+          could only reimplement it, and would have been the next
+          duplication.
+
+DECISION  'record.walk(record, presenter)' is the one traversal;
+          'I_Presenter' is the operation half; 'TextPresenter' is the
+          storage form and 'format_record' is 'walk' with it -- which
+          is what keeps the two from drifting, there being no second
+          traversal to fall out of step. 'present.py' adds
+          'HtmlPresenter' and 'TexPresenter'.
+
+THE FORK, AND THE CORRECTION
+          Asked what the textbook says, this proposed a DEFAULT
+          VISITOR: every measure answers 'summary(entry)' with
+          (covered, total), so a presenter overriding nothing would
+          still render any axis that ever registers, and both axes of
+          the Expression Problem would stay open. The reasoning was
+          that 'measure.py' is a live registry, so GoF's condition --
+          THE ELEMENT SET IS STABLE -- did not hold.
+
+          Frank-Rene refused it, on two grounds, and both stand.
+
+          FIRST, THE CONDITION IS AN INSTRUCTION ABOUT SEQUENCING, not
+          a precondition to route around when it fails: settle the set
+          of axes, THEN write visitors over it. The work of finding a
+          general set of coverage types was that settling, already
+          done and paid for.
+
+          SECOND, AND DECISIVELY: if a new axis is added, every
+          presenter MUST change, or it is deficient. A presenter
+          meeting 'mcdc' and printing 'mcdc 3/7' from a generic
+          fraction looks complete and is not -- what makes MC/DC
+          MC/DC is WHICH condition combinations ran, and a fraction
+          has discarded exactly that. The default would not have made
+          presenters work with a new measure; it would have made them
+          SILENTLY WRONG, which is this tree's worst failure mode and
+          the one every other law here guards against.
+
+          SO THE DEFAULT SPEAKS THE ABSENCE instead. An axis a
+          presenter does not name is not rendered; its name is
+          collected and SAID -- '<p>not rendered by this presenter:
+          mcdc</p>', '%% not rendered by this presenter: mcdc'. The
+          gap stands where a reader sees it until somebody closes it.
+          Each presenter declares its 'RENDERED_SET'.
+
+FOUND     THE DEFICIENCY WAS NOT HYPOTHETICAL. 'mcdc' is already
+          registered -- 'branch', 'cover', 'mcdc', 'toggle' -- so the
+          first draft of these presenters was rendering a real axis as
+          a bare fraction on the day it was written. The corrected
+          form announces it instead.
+
+          THE STORAGE PRESENTER ALONE CANNOT BE DEFICIENT, and says
+          why: it asks the measure to ENCODE, which every measure must
+          answer to be storable at all, and keeps the points whole
+          rather than any reading of them. A measure that registers is
+          written the day it registers.
+
+CHECKED   'TEST/test-presenter-visitor.py', whose choices ARE the
+          presenters. Each builds a record carrying a point of EVERY
+          REGISTERED MEASURE -- asked of the registry, never a list
+          written in the test -- walks the presenter over it, and
+          requires every axis to be ACCOUNTED FOR: rendered, or
+          declared unrendered AND named in the output. An axis
+          registered tomorrow enters this test tomorrow, with no edit.
+
+          THE 'vocabulary' CHOICE CHECKS THE OTHER DIRECTION, and is
+          Frank-Rene's: 'I_Presenter' is an ABC declaring the whole
+          vocabulary as abstract methods, and no presenter may define
+          a public name the base does not declare. A presenter writing
+          'file_closed' for 'file_close' is NEVER CALLED and nothing
+          complains -- the walk asks for the name it knows. It also
+          checks the converse, that every declared step is a step the
+          walk actually takes, so the vocabulary cannot become a
+          promise the traversal does not keep.
+
+          BOTH WERE RUN AGAINST THE DEFECT REINSTATED. A presenter
+          silently ignoring an axis: red, naming the axis. A presenter
+          misspelling a method: red, "found file_closed". A check that
+          cannot fail is not one.
+
+          MAKING THE VOCABULARY ABSTRACT ALSO FOUND ONE: 'TexPresenter'
+          never defined 'lines' and had been dropping the line axis by
+          inheritance -- the same silent deficiency in a different
+          place. It now states that it emits nothing there, and why.
+
+COST      None in behaviour: the storage bytes are byte-identical --
+          the GOOD files are the proof, and none of the existing ones
+          was touched. Coverage answers 68 ok / 0 fail, the six new
+          choices being the presenters' own.

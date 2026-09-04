@@ -1,0 +1,17 @@
+    header
+    open:a/first.c
+    lines
+    measure:branch
+    close:a/first.c
+    open:z/last.c
+    lines
+    close:z/last.c
+    done
+  OK  : the header comes first
+  OK  : 'done' comes last
+  OK  : files are visited in SORTED order, not insertion order
+  OK  : the file carrying a point is visited for it
+  OK  : a file carrying NO point is not visited for any measure
+  OK  : the line axis precedes the other measures
+SUCCESS: the traversal is ordered, sorted, and visits no absence.
+<hwut-end>
