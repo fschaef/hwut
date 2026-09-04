@@ -1,0 +1,168 @@
+==============================================================================
+review-r9 -- BAND E MEASURED: WHAT IS STILL WAITING, AND WHAT NEVER WAS
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: all.
+FOLLOWS:    'adm/WORK/TODO.txt' band E, after B-1 and gathered/0j, 0m
+            proved built while listed as waiting.
+
+Band B was measured and was wrong in both directions. This is the same
+pass over band E. Every item checked against the tree; none read off a
+marker.
+
+______________________________________________________________________________
+
+0  B-14 FIRST -- IT IS NOT NONSENSE, AND IT STAYS
+
+'gathered/05', THE MODEL IS A TREE. Decided, unbuilt, parked behind a
+stated trigger. It has everything a parked decision should have and one
+thing stale.
+
+    THE DECISION      the presentation model is a TREE with
+                      annotations, and three things do NOT sit as
+                      children -- a fault attaches to the ROOT as
+                      readily as to a directory, a frame to a
+                      DIRECTORY, and a cause is a CROSS-LINK between
+                      nodes.
+    THE ARGUMENT      VERIFIED. The wire already IS a tree walk, and
+                      flat is the step that throws it away. The
+                      grouping is then rebuilt by filtering on
+                      'key[0]': 'plain.py' line 696 '_count', line
+                      706 '_failure_key_list', line 713
+                      'if key[0] == directory', and
+                      'protocol/summary.py' line 36 'failure_db'.
+                      The claim holds against the code.
+    THE TRIGGER       "the day a SECOND emitter is actually being
+                      written". One emitter does not pay for the
+                      grouping; two do. Precedent named: the pype
+                      foreign-executor seam, parked on the same
+                      reasoning.
+    WHAT IS OPEN      incremental (fed by the receiver, so a live
+                      console walks it as it grows) or folded at the
+                      end (so a document emitter takes it whole).
+                      The file reasons that terminal is the base case
+                      and an incremental model yields the complete
+                      one but not the reverse, so it likely settles
+                      itself -- and says it is NOT ruled.
+
+    STALE, ONE LINE: 'NOT AFFECTED' says 'CRunSummary' "stays FLAT,
+    stays in 'orchestrator/run/'". It is now 'engine/protocol/
+    summary.py' -- O-17 moved the protocol out of the producer. FLAT
+    is still true; the address is not.
+
+    VERDICT: KEEP. A parked decision with a measurable argument, a
+    falsifiable trigger and a named precedent is the best shape an
+    unbuilt item can have. Fix the one address.
+
+______________________________________________________________________________
+
+1  BAND E -- NOT WAITING AFTER ALL
+
+1.1  'gathered/0n' hwut 2.0 ROOT CAUSES        ** HALF CLOSED **
+     Four causes, and the file already marks two of them:
+
+       r-1  567 x 'GOOD missing' -- the subject suffix   ** OPEN **
+            The tree holds '...--groups.txt'; the framework asks
+            '...--groups.stdout'. Half the 1.0 naming is in place.
+            RULED 'not now', deliberately: the 1.0 GOODs are the ones
+            that RUN today. E-14 holds the question.
+       r-2  'hwut-info.dat' is not read                ** CLOSED **
+            by R-73 -- the root cause was NO DERIVATION in
+            exploration, not the unread file.
+       r-3  caps bite honestly                          ** OPEN **
+            And it carries a REAL QUESTION, not a chore: whether a
+            CONTAINMENT TEST should be capped at all. "A cap it
+            cannot exceed makes the test meaningless, and a cap it
+            can makes the outer report indistinguishable from the
+            inner one." That is the sharpest unruled thing left in
+            band E.
+       r-4  a domain error thrown where a report is owed ** CLOSED **
+            VERIFIED BUILT: 'E_TestRunResult.REGION_SYNTAX_ERROR' is
+            raised at 'consume/difference_display.py' lines 126 and
+            155, and C-5 ('the one fault a caller must catch, caught
+            on every road') stands as the ruling.
+
+     SO 0n IS NOT ONE OPEN ITEM BUT TWO OPEN AND TWO CLOSED. Its two
+     closed halves may be struck from the file; r-1 and r-3 stay, and
+     r-3 deserves to be a fork of its own rather than a bullet inside
+     a survey.
+
+1.2  'gathered/0o' CADENCE NEEDS A THEORY      ** PARTLY ANSWERED **
+     The face is BUILT ('bin/hwut.stability', 'services/stability.py')
+     and E-11 rules the meaning: "THE STAIN: INSTABILITY IS FALSE
+     TESTIMONY, NOT A FAILURE". What the file asks for beyond that --
+     a THEORY of cadence, so the measurement is not a witch hunt --
+     is not in any RATIONALE. The tool exists; its interpretation
+     does not. STAYS OPEN, but narrower than written.
+
+1.3  'gathered/07', '09', '0f' PROVISIONAL CHOICES  ** THINNER **
+     Each had its ruled item struck already (O-11, O-12, P-15). What
+     remains is genuinely provisional: two "the other way" items in
+     07, two in 0f, and nine notes in 09. These are worker decisions
+     awaiting a word, and none blocks anything -- each is, as the
+     files say, "one line to change".
+
+1.4  'gathered/0v' THE CONFIGURATION SPECIFICATION  ** GENUINELY OWED **
+     No 'SPECIFICATION.txt' anywhere. Confirmed absent. This is the
+     one subject of RATIONALE-LOGIC still without a floor.
+
+1.5  'gathered/0d' SCENARIO KINDS and '0e' MULTI-DIRECTORY
+     Both PARKED BY RULING, and both about a walk that is now built
+     ('orchestrate.py' names CTreePlan fifteen times). The parking
+     stands -- neither asks for work, both ask whether a shape should
+     grow. NOT overtaken; correctly parked.
+
+1.6  'gathered/0t' TEST SEQUENCE FORM and '0u' TREE WALK LAWS
+     0t says of itself "NOTED, NOT RULED ... nothing here is built and
+     nothing here is decided". 0u is provisional laws taken to build
+     R-69. Both honest, both open, neither blocking.
+
+1.7  'gathered/02' DOCUMENT CONSISTENCY
+     IS GOALS (2) AND (3), and those are delivered -- TODO.txt,
+     RATIONALE-INDEX, RATIONALE-LOGIC, README-INDEX. What 02 asked
+     for is substantially DONE, though not by the session it
+     imagined. It should be re-read against those four files before
+     it is either struck or re-aimed.
+
+______________________________________________________________________________
+
+2  WHAT THE SWEEP CHANGES
+
+  STRIKEABLE NOW, on the same evidence as bundle-22:
+      0n r-2, r-4   two closed causes inside an open file
+
+  NOT WAITING ON A RULING, though listed as such:
+      0o            the face is built and E-11 rules the meaning;
+                    only the theory is owed
+      02            its ask is substantially delivered
+
+  DESERVES PROMOTION OUT OF A SURVEY:
+      0n r-3        should a containment test be capped at all? A
+                    real fork, currently a bullet in a list of
+                    residue.
+
+  GENUINELY WAITING, and correctly so:
+      0v 0d 0e 0t 0u 07 09 0f, coverage disc-1..7 and disc-9,
+      operations disc-8 disc-9 todo-15..18 todo-20, and B-15's
+      staleness law.
+
+______________________________________________________________________________
+
+OPEN -- FOR FRANK-RENE
+
+  r-9a  0n r-3: SHOULD A CONTAINMENT TEST BE CAPPED AT ALL?
+        Four procsitter tests fail because the outer supervisor
+        contains the test that is testing containment. The file
+        states the bind exactly and does not choose. It is the only
+        item in band E that is a DESIGN QUESTION rather than a
+        deferral, and it has four failing tests attached to it.
+
+  r-9b  Strike 0n's r-2 and r-4 (closed, verified), leaving 0n as the
+        two open causes it actually is?
+
+  r-9c  Re-read 02 against the four aggregates before deciding
+        whether it is struck or re-aimed. It asked for a document
+        consistency session; four documents now exist that did not
+        when it was written.

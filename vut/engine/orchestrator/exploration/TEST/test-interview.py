@@ -42,7 +42,7 @@ precedence  the interview is reached ONLY where both carriers are
 The runner is a parameter here: what is under test is the reading of the
 answer and the place of the interview in the order, not the running of a
 process. The procsitter call is owed at integration
-(DISCUSSIONS/todo-3-hwut-info-hints.txt).
+(adm/WORK/gathered/0z-todo-3-hwut-info-hints.txt).
 ______________________________________________________________________________
 """
 import os

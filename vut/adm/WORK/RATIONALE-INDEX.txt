@@ -1,0 +1,387 @@
+==============================================================================
+RATIONALE-INDEX -- EVERY RULING IN THE TREE, ONE LINE EACH
+==============================================================================
+
+VERSION: 1
+
+Goal (2a) of three: the rationale logic INDEXED, so any ruling can be
+found in one look. NOTHING WAS MOVED and no entry rewritten -- this file
+is DERIVED, and a ruling's own words stay in its own RATIONALE. It can
+be regenerated at any time; where it disagrees with a RATIONALE, the
+RATIONALE is right.
+
+Method: every 'RATIONALE*.txt' in the tree, every heading standing at
+column 0. Line numbers drift; labels do not.
+
+TOTAL: 237 rulings across 13 carriers.
+
+------------------------------------------------------------------------------
+1  THE SERIES, AND WHO OWNS THEM
+------------------------------------------------------------------------------
+
+  B-   bookkeeper     8 entries, 1..8
+          engine/bookkeeper/RATIONALE.txt
+
+  C-   compare        8 entries, 1..8
+          engine/compare/RATIONALE.txt
+
+  D-   doctrine      53 entries, 1..30
+       PER-COMPONENT BY DESIGN -- four independent D- namespaces.
+       D-1 in display is NOT D-1 in coverage. A bare 'D-4' does not
+       identify a ruling; the component must be said with it.
+          1..3   auxiliary/RATIONALE-directory_mutex.txt
+          1..30  engine/coverage/RATIONALE.txt
+          1..12  engine/display/RATIONALE.txt
+          1..8   engine/orchestrator/RATIONALE.txt
+
+  E-   engineering   44 entries, 1..43
+          engine/orchestrator/exploration/RATIONALE.txt
+          services/RATIONALE.txt
+       ONE NUMBER, TWO RULINGS: E-9   ** DEFECT **
+          exploration  variant groups: a dimension of configuration
+          services     hwut_compare.py retired -- the reading view
+                       supersedes
+
+  O-   operations    22 entries, 1..22
+          engine/orchestrator/run/RATIONALE.txt
+
+  P-   plan          16 entries, 1..18
+          engine/orchestrator/plan/RATIONALE.txt
+       HOLES: P-13, P-14
+
+  R-   rules         82 entries, 1..79
+          engine/operations/RATIONALE.txt
+          engine/orchestrator/RATIONALE.txt
+          engine/orchestrator/exploration/RATIONALE.txt
+       ONE NUMBER, TWO RULINGS: R-73, R-74   (R-70 appears twice
+       too, but as a SIGNPOST plus its entry -- see 2.2)
+
+  S-   scheduler      4 entries, 1..4
+          engine/orchestrator/scheduler/RATIONALE.txt
+
+------------------------------------------------------------------------------
+2  ANOMALIES
+------------------------------------------------------------------------------
+
+2.1  R-73 AND R-74 EACH NAME TWO DIFFERENT RULINGS.  ** DEFECT **
+     orchestrator: the selection brick / the wish names directories
+     exploration:  'language-setup' is the one table / '%' is the stem
+     A bare 'R-73' does not identify a ruling. Fork r-2, open.
+
+2.2  R-70 STANDS OUTSIDE ITS SERIES, BY RULING (2026-09-04).  ** BY DESIGN **
+     The R- series is exploration's; R-70 is in operations, because the
+     terminal token is content and operations owns the reading law. A
+     signpost stands at exploration's R-69/R-71. Deliberate, not a hole.
+
+2.3  'auxiliary/RATIONALE-directory_mutex.txt' USES D-1..D-3.
+     A FOURTH D- namespace, beside display, coverage and orchestrator.
+     Nothing cites it from outside, so nothing is ambiguous today.
+
+2.4  'test_writing_support/python/RATIONALE-hwut_runner.txt' HAS NO
+     LABELLED ENTRIES AT ALL -- bare PROBLEM/DECISION/COST/GRAVEYARD
+     blocks, no handles. ITS RULINGS CANNOT BE CITED. It carries real
+     doctrine: interactive mode as a pure ACCELERATOR (byte-exact with
+     normal mode, one set of GOODs), and the file-name channel protocol.
+     Both are load-bearing and neither has a number.
+
+2.5  P-13 and P-14 are retired, not reused.  (engine/orchestrator/plan/RATIONALE.txt)
+     A retirement recorded in the series itself -- the right way to
+     leave a hole, and the only one in the tree that says so.
+
+2.6  E-7's title begins lowercase ('hwut.target -- ...') where every
+     other heading is uppercase. Harmless, but it defeated a first
+     extraction pass and would defeat a checker written the same way.
+
+------------------------------------------------------------------------------
+3  THE RULINGS, BY CARRIER
+------------------------------------------------------------------------------
+
+==============================================================================
+engine/orchestrator/exploration/RATIONALE.txt   [80]
+==============================================================================
+  R-1    SPECIFICATION IN THE FILE, NOT IN THE PROCESS
+  R-2    '--hwut-info' SURVIVES AS A HINT SOURCE
+  R-3    HOCON
+  R-4    ALL LOWERCASE; A STRUCTURAL FENCE, NOT A CASE FENCE
+  R-5    THE ROOT IS THE DEFAULT; A CHOICE OVERWRITES
+  R-6    THE CHOICE NAME IS THE CALL
+  R-7    ONE FILE, ONE CARRIER
+  R-8    NOTHING ABOVE THE TEST DIRECTORY
+  R-9    THE REGION IS FOUND WITHOUT KNOWING THE LANGUAGE
+  R-10   'language' AND 'language-setup' ARE TWO WORDS
+  R-11   'build' AND 'app'
+  R-12   'happy' IS 'eq-pattern'
+  R-13   POSITIONS ARE FILE-RELATIVE FROM THE START
+  R-14   POSITION PER NODE, NOT PER VALUE
+  R-15   TWO TREES; THE VALIDATOR IS THE ONLY CONSUMER OF THE FIR
+  R-16   TYPED, SLOTTED, FROZEN RECORDS
+  R-17   UNSTATED IS 'None'; ONE DEFAULT TABLE, POINTING TO OWNER
+  R-18   THIS COMPONENT KNOWS THE TABLE; THE EXPLORER INSTANTIATE
+  R-19   THREE STAGES; THE UNIT CHANGES ONCE
+  R-20   'CTestTaskList' IS AN INTERFACE, NOT A STRUCTURE
+  R-21   'app' IS STRUCK; 'build' IS THE FRAMEWORK OR THE SCOPE
+  R-22   'caps' IS PROCSITTER'S SCOPE; 'timeout' MOVES INTO IT
+  R-23   DEFAULT PROVISION IS CONTRACT
+  R-24   'analogy' IS THE MARKER PAIR; ABSENCE IS NEVER OFF
+  R-25   'constraints', PLURAL, IS A LIST OF EXPRESSIONS
+  R-26   A SCOPE MERGES FIELD BY FIELD
+  R-27   THE HOCON PARSER IS TEST-WRITING SUPPORT, PER LANGUAGE
+  R-28   THE CONFIGURATION FILE IS 'hwut.conf'
+  R-29   'hwut.parse' -- CHECK, RESOLVE, PRINT
+  R-30   'CTestAppSet' IS THE RESULT OF PARSING; NOTHING ELSE PRO
+  R-31   'on_entry' AND 'on_exit'
+  R-32   'collision' REPLACES 'parallel' AND 'isolated'
+  R-33   'dependency' REPLACES 'sequence'
+  R-34   A TARGET IS THE CALL
+  R-35   '[MISDEP]': THE DEPENDENCIES CANNOT BE MET
+  R-36   'dependency' IS ORDER, NOT SUCCESS
+  R-37   NO PARAMETER IS 'None' AS AN END RESULT
+  R-38   THE COMPONENT DECLARES; WE POINT AT MEMBERS
+  R-39   ONE RELATION TABLE, BOTH DIRECTIONS
+  R-40   THE ENTRY IS '(class, member name)'; THE FACE IS FLAT
+  R-41   THE DECLARATION IS THE ANNOUNCEMENT
+  R-42   THE RELATION IS CHECKED AT IMPORT
+  R-43   A DECLARED 'None' IS THE VALUE
+  R-44   '--hwut-info' IS THE THIRD CARRIER: MIGRATION
+  R-45   'same': ONE NOMINAL FILE FOR ALL CHOICES
+  R-46   'interactive': THE APPLICATION SERVES A SESSION
+  R-47   THE CAPS ARE A FIXED VOCABULARY
+  R-48   AN UNENFORCEABLE CAP REFUSES THE TEST
+  R-49   A STRING VALUE IS WRITTEN IN DOUBLE QUOTES
+  R-50   THE PRINTED CONFIGURATION IS WRITTEN IN THE SPECIFICATIO
+  R-51   THE PROVENANCE IS A COMMENT; '--no-default' DROPS THE RE
+  R-52   'default_app' IN 'hwut.conf'
+  R-53   'app', NOT 'root'; AND A CONF-BORNE VALUE NAMES ITS LINE
+  R-54   'whitespace_eqv' AND 'slash_eqv': A CLASS OF DIFFERENCE
+  R-55   'constraints' IS A LIST; COMPARE BUILDS THE DATABASE
+  R-56   COMPARE'S CONFIGURATION BECOMES FROZEN DATACLASSES
+  R-57   AN ENTRY MAY CARRY AN ADAPTER; NO COMPONENT OWES A FACE
+  R-58   EXPLORATION LIVES UNDER THE ORCHESTRATOR
+  R-59   'config.py' AND 'hwut-info.dat' FOLLOW THE HOUSE FORM
+  R-60   THE PARSER'S BRANCHES ARE EXCLUSIVE AND SAY SO
+  R-61   THE PARSER SCANS RUNS, NOT CHARACTERS
+  R-62   NUMBERS IN EVERY RADIX, WITH VISUAL HELPERS
+  R-63   THE LANGUAGE IS DOCUMENTED WHERE IT IS IMPLEMENTED
+  R-64   'comment' IS A MARKER PAIR, READ LIKE 'analogy'
+  R-65   'whitespace_eqv' IS THE WHITESPACE PARAMETER; 'strip' IS
+  R-66   THE CONSTRAINT NAMESPACE CARRIES MATHS, AND A GLOB MATCH
+  R-67   '--provenance' AND '--gnu' NAME THE PLACE
+  R-68   'execute' -- THE CALL ITSELF, STATED VERBATIM
+  R-69   THE CONFIGURATION TREE
+  R-70   THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
+  R-71   'output' -- SUBJECTS ARE DECLARED, NEVER DISCOVERED
+  E-9    VARIANT GROUPS: A DIMENSION OF CONFIGURATION             2026-08-25
+  R-72   THE MARKER IS '@hwut {' -- A SIGIL, NOT A KEY
+  R-73   'language-setup' IS THE ONE TABLE, AND IT STANDS AT THE  2026-08-30
+  R-74   '%' IS THE SOURCE FILE'S STEM, WHEREVER A NAME IS STATED 2026-08-30
+  R-75   '--language' IS A SELECTOR OF THE WISH                   2026-08-30
+  R-76   THE CLIMB ENDS AT 'TEST/TMP'                             2026-08-30
+  R-77   THE TOLERANCES ARE ONE SCOPE                             2026-09-01
+  R-78   THE CAPS READ THEIR DEFAULTS FROM THE SUPERVISOR'S DOOR  2026-09-01
+  R-79   THE SIX GOODS R-78 LEFT BEHIND                           2026-09-02
+
+==============================================================================
+services/RATIONALE.txt   [43]
+==============================================================================
+  E-1    THE EXIT STATUS LAW
+  E-2    PLAN EMPTY-SELECTION EXIT STATUS RETROACTIVE CHANGE
+  E-3    FOLD HARDENING (FORCED FIX, NOT A DESIGN CHOICE)
+  E-4    ACCEPTANCE, AND WHAT IT REFUSES
+  E-5    STDERR IS NEVER SUBJECT TO TESTING
+  E-6    ACCEPT REFUSES THE STREAM THAT NEVER COMPLETED
+  E-7    hwut.target -- USER-DEFINED DIRECTORY TARGETS
+  E-8    THE LAUNCHER ROOF 'bin/'
+  E-9    hwut_compare.py RETIRED -- THE READING VIEW SUPERSEDES
+  E-10   '--timing' RAISES THE STORE; 'hwut.stability' READS IT
+  E-11   THE STAIN: INSTABILITY IS FALSE TESTIMONY, NOT A FAILURE
+  E-12   REMOVAL FORGETS WHAT THE FRAMEWORK RECORDED, AND NOTHING
+  E-13   A WISHLIST IS A FILE OF TARGETS, AND THE ROUND TRIP CLOS
+  E-14   'hwut.tell' TELLS ABOUT ONE TEST; 'hwut.report' REPORTS
+  E-15   THE EXCLUSIONS, AND 'hwut' AS THE DEFAULT FACE
+  E-16   'hwut.rename' FOLLOWS THE NAME; NO RECORD CONTENT IS TOU
+  E-17   'hwut.report' -- FOUR FORMATS, AND THE STAIN IN EACH
+  E-18   'hwut.sanitize' -- REPORTS BY DEFAULT; NEVER GUESSES AT
+  E-19   LABELS -- SETS OF RUNS IN ONE FILE; THE NAMING LAW'S DOT
+  E-20   THE LABELS GO LIVE -- THE VIEW IN EVERY WISH; NAMES FOLL
+  E-21   THE SHORT FORM OF HWUT 1.0; AN EXPLICIT TARGET OVERRIDES
+  E-22   'hwut.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A
+  E-23   A PACK STATES ITS PLACE, AND TELLS BOTH READINGS
+  E-24   OPENING THE LABELS IS ONE BRICK -- 'labels/_editing.py'
+  E-25   THE BOUNDARY FACE WRITES THE LANGUAGE TABLE              2026-08-30
+  E-26   '--language' STANDS IN THE WISH, FOR EVERY FACE          2026-08-30
+  E-27   THE PROCSITTER NAMES WHAT A CALL MADE AND LEFT           2026-08-30
+  E-28   THE PYPE CALL IS OPERATIONS', AND EVERY CALL IS SUPERVIS 2026-08-30
+  E-29   THE SHAPE OF A DIFFERENCE, AND WHO IS NOT TOLD BY IT     2026-08-30
+  E-30   THE REPEAT MARK STANDS UNDER WHAT IT REPEATS             2026-08-30
+  E-31   THE SHAPE IS THE REPORT'S TO SAY, NOT THE RUN'S          2026-08-30
+  E-32   ONE USAGE LINE PER FACE, GENERATED                       2026-08-30
+  E-33   THE FLOW SAYS ONLY WHAT CHANGED                          2026-08-30
+  E-34   THE LOCAL OBSERVATION DATABASE IS BUILT                  2026-08-30
+  E-35   THE BASE HOLDS DECISIONS                                 2026-08-30
+  E-36   THE CRITERION IS TIME AND PLACE, NOT REPRODUCIBILITY     2026-08-30
+  E-37   A COMPONENT MAY HAVE ONE DOOR                            2026-08-30
+  E-38   FOUR DOORS, AND THE CONFIGURATION LAW                    2026-08-30
+  E-39   A RECORDING OLDER THAN ITS TEST IS NOT EVIDENCE          2026-08-31
+  E-40   ONE CHANNEL FOR SUBJECTS, AND THE FACES THAT WENT AROUND 2026-09-02
+  E-41   THE GATE IS ON THE NOMINAL                               2026-09-02
+  E-42   EVERY LEXICAL TOLERANCE IN THE ONE SCOPE                 2026-09-02
+  E-43   THE OPERATION NAMES AN OBSERVATION, NEVER A DECISION     2026-09-02
+
+==============================================================================
+engine/coverage/RATIONALE.txt   [30]
+==============================================================================
+  D-1    COVERAGE IS A COMPONENT, NOT A SPREAD OF OPTIONS         2026-08-22
+  D-2    THE COMPONENT CHOOSES THE TOOL; THE CONF NAMES IT        2026-08-22
+  D-3    THE GATHER SET IS TWO GLOB LISTS, FOR EFFICIENCY ONLY    2026-08-22
+  D-4    COVERAGE IS ITS OWN ANIMAL                               2026-08-22
+  D-5    THE HOMOGENEOUS RECORD: LCOV'S SKELETON, NOT ITS GRAIN   2026-08-22
+  D-6    A CONVERTER MAKES THE STORAGE FORMAT PRIVATE             2026-08-22
+  D-7    THE RECORD NAMES THE TOOL AND FORMAT THAT MADE IT        2026-08-22
+  D-8    WHO COVERED IT: A DIFFERENT FOLD, NOT A RICHER MERGE     2026-08-22
+  D-9    A SEGMENT CARRIES A NUMBER: TEST IDS AND GROUP IDS       2026-08-22
+  D-10   A READER NAMES A SECOND CALL; IT NEVER MAKES ONE         2026-08-22
+  D-11   A MEASURE IS REGISTERED, NOT BUILT IN                    2026-08-22
+  D-12   A NAMED POINT MERGES WHERE A DIGEST CANNOT               2026-08-24
+  D-13   THE TOOL/FORMAT TABLES ARE GENERATED, NOT WRITTEN        2026-08-24
+  D-14   IDENTITY IS DIRECTORY-LOCAL; THE GATHER QUALIFIES        2026-08-24
+  D-15   THE REGISTER NUMBERS; THIS COMPONENT GROUPS              2026-08-25
+  D-16   THE RUN SHAPE IS THE BOOKKEEPER'S                        2026-08-25
+  D-17   IDENTITY.PY DISSOLVED; IDS COUNT FROM 0 AND ARE ISSUED O 2026-08-25
+  D-18   A RECORD NAMES RUN IDS, AND NAMES A SET OF THEM          2026-08-25
+  D-19   THE DEMAND SHAPES THE RUN: THE PROVISION CHAIN           2026-08-25
+  D-20   THE RECORD ON DISK IS BINARY; THE TEXT IS THE PRESENTATI 2026-08-25
+  D-21   COVERAGE RIDES ON TESTIMONY                              2026-08-25
+  D-22   ONE ARTEFACT DIRECTORY PER TEST DIRECTORY, SO ONE RUN AT
+  D-23   TWO ROLES: THE FRAMEWORK IS INVOKED, THE FORMAT IS READ  2026-08-25
+  D-24   A FAILURE REPORT CARRIES ITS COVERAGE                    2026-08-25
+  D-25   THE GATHER, AND WHAT A DELIVERY CARRIES                  2026-08-25
+  D-26   THE TABLE MOVES OUT: NO SECOND SOURCE                    2026-08-30
+  D-27   A BYTE COUNT IS A MACHINE-CHOSEN VALUE                   2026-09-02
+  D-28   THE BASE CLASS DECLARED A CONTRACT AND SUPPLIED NO SHAPE 2026-09-03
+  D-29   THE VISITOR IS WRITTEN OVER A SETTLED SET                2026-09-03
+  D-30   THE REAL ARTEFACTS ARE TEST INPUT, FILED BY THE FORMAT   2026-09-04
+
+==============================================================================
+engine/orchestrator/run/RATIONALE.txt   [22]
+==============================================================================
+  O-1    THE OUTER FACE
+  O-2    THE STREAM'S SHAPE
+  O-3    EVERYTHING THAT LEADS TO EXECUTABILITY IS THE TEST
+  O-4    THE SUMMARY IS A FOLD
+  O-5    THE RECEIVER
+  O-6    THE VERDICT WORD LAW
+  O-7    THE REAL DISPATCHER
+  O-8    THE STORE'S OWN GROUND
+  O-9    THE TRANSLATION: WHAT AN AUTHOR STATES, A COMPONENT RECE
+  O-10   A CONFIGURATION LIVES IN 'configuration.py'
+  O-11   DIRECTORIES RUN IN PARALLEL; A DIRECTORY IS A CLOSED ENV
+  O-12   '--jobs' IS ONE HOST-GLOBAL BUDGET; EVERY DISPATCH TAKES
+  O-13   THE UNIT OF PLACEABLE WORK IS THE DIRECTORY
+  O-14   PARALLEL-RUN SUITES BLESS THE FLOW THROUGH A PYPE FILTER
+  O-15   THE STRATEGY SAYS WHEN A DIRECTORY STARTS; THE DIGEST IS
+  O-16   'E_TestRunResult' STAYS WHERE IT IS -- SHARED IS NOT CRO
+  O-17   THE PROTOCOL LEAVES THE PRODUCER -- 'engine/protocol'
+  O-18   A FAILING CANONICALISER ENDS PROVISION -- IT DOES NOT DE
+  O-19   A KILL NAMES ITS CAP, AND ITS NUMBER                     2026-09-01
+  O-20   CAPS TRAVEL BY INHERITANCE, TO THE CHOICE THAT ASKS      2026-09-02
+  O-21   A KILL NAMES ITS CAP ON EVERY ROAD                       2026-09-02
+  O-22   A LIFT'S SIBLINGS DRIFT TOO, IF THEY ARE LEFT BEHIND     2026-09-03
+
+==============================================================================
+engine/orchestrator/plan/RATIONALE.txt   [16]
+==============================================================================
+  P-1    OWNERSHIP AND ROLE
+  P-2    THE NOUN
+  P-3    WHAT THE PLAN STATES
+  P-4    REPRESENTATION
+  P-5    WORK NODES AND THE SUPPORTS LAW
+  P-6    [MISDEP] IN THE PLAN
+  P-7    IMPLICATION CLOSURE, MARKED
+  P-8    THE WISH: FIXED KEYWORDS, GLOBS
+  P-9    EMPTY SELECTION
+  P-10   THE FRAME
+  P-11   SPECIAL COMMANDS
+  P-12   PRINT ORDER
+  P-15   THE WISH GROWS: --pass, --until=, ANCHORS
+  P-16   TWO FACES: hwut.show AND hwut.plan
+  P-17   THE TREE PLAN
+  P-18   THE PROVISION LADDER
+
+==============================================================================
+engine/display/RATIONALE.txt   [12]
+==============================================================================
+  D-1    THE FLOW LINE FORMAT
+  D-2    THE COLOUR DECISION
+  D-3    / E-1  THE EXIT STATUS LAW
+  D-4    THE DEFAULT TIER
+  D-5    THE TIER LADDER
+  D-6    ONE ENGLISH DOOR
+  D-7    ONE HOME FOR RENDERING
+  D-8    THE FACE IS OPERATIONAL; DISPLAY OWNS THE RENDERING WORD
+  D-9    THE FLOW LINE CARRIES WHAT WAS ASKED FOR, AND NAMES WHAT
+  D-10   THE RUN'S GOOD IS A DIGEST, AND THE DIGEST IS PART OF TH
+  D-11   THE JUNCTION AND THE PLACE                               2026-09-02
+  D-12   THE TREE'S INK                                           2026-09-02
+
+==============================================================================
+engine/orchestrator/RATIONALE.txt   [10]
+==============================================================================
+  D-1    ONE BASE REPLACES THE FOOTPRINT
+  D-2    PROTECTION IS A GUARD, NOT A BLESSING
+  D-3    JSON
+  D-4    DIVERGENCE ON CALL; RENAME IS THE KIND THAT MATTERS
+  D-5    THE COMPONENT AND ITS SEAM
+  D-6    ENTRIES ARE DERIVED (the seam faces the Bookkeeper)
+  D-7    THE TEST REGISTER: RELATIONAL, LOWEST-UNUSED, DELETE-FRE 2026-08-25
+  D-8    IDS IN RECORDS; ONE HOLDING FREES AND DELETES            2026-08-25
+  R-73   THE SELECTION IS ONE BRICK -- 'exploration/selection.py'
+  R-74   THE WISH NAMES DIRECTORIES -- '--dir <glob>'
+
+==============================================================================
+engine/bookkeeper/RATIONALE.txt   [8]
+==============================================================================
+  B-1    THE BOOKKEEPER IS A COMPONENT, NOT PART OF THE ORCHESTRA
+  B-2    AN ID IS ISSUED ONCE; EACH SCOPE COUNTS FROM 0 TO 2**32  2026-08-25
+  B-3    A SET OF RUNS IS A NUMBER, AND THE NUMBER IS THE BOOKKEE
+  B-4    AN ABORTED ACCEPT HANDS ITS ID BACK                      2026-08-25
+  B-5    THE SHAPE OF A RUN IS THE BOOK'S TO READ                 2026-08-31
+  B-6    THE BOOK IS A TABLE, AND HOLDS NO CONFIGURATION          2026-09-01
+  B-7    ONE ROW PER CHOICE; ';' AND ':'; NO NESTED SYNTAX        2026-09-01
+  B-8    THE EMPTY NAME SAYS "AS ABOVE"                           2026-09-01
+
+==============================================================================
+engine/compare/RATIONALE.txt   [8]
+==============================================================================
+  C-1    THE CONTRACT -- A SHARED NAME BELONGS WHERE ALL ITS READ
+  C-2    THE SEAL -- 'NOTHING LEAVES' IS CHECKABLE, AND SO IT IS
+  C-3    THE ORIGIN OF A LIFT DOES NOT STAY BEHIND                2026-09-01
+  C-4    REGION FRAMING IS SWITCHABLE, LIKE EVERY OTHER FEATURE   2026-09-02
+  C-5    THE ONE FAULT A CALLER MUST CATCH, CAUGHT ON EVERY ROAD  2026-09-02
+  C-6    A STRESS TEST SAYS WHAT IT COSTS                         2026-09-02
+  C-7    E-9's DELETION, EXECUTED                                 2026-09-03
+  C-8    A SLOTTED STRUCT REFUSES A MISSPELT FIELD                2026-09-04
+
+==============================================================================
+engine/orchestrator/scheduler/RATIONALE.txt   [4]
+==============================================================================
+  S-1    THE SCHEDULER'S SEAM
+  S-2    A TERMINAL STATE SATISFIES AN ORDERING LINK
+  S-3    READINESS IS ASKED ANEW BEFORE EVERY START
+  S-4    THE BOUND IS A BUDGET, AND IT MAY BE SHARED
+
+==============================================================================
+auxiliary/RATIONALE-directory_mutex.txt   [3]
+==============================================================================
+  D-1    THE MECHANISM IS AN AUXILIARY, NOT A STORE DETAIL        2026-08-09
+  D-2    NON-RECURSIVE, REFUSED BY NAME                           2026-08-09
+  D-3    THE STEAL LAW STANDS; HOLD AND WAIT ARE OPT-INS          2026-08-09
+
+==============================================================================
+engine/operations/RATIONALE.txt   [1]
+==============================================================================
+  R-70   THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
+
+==============================================================================
+test_writing_support/python/RATIONALE-hwut_runner.txt   [0]
+==============================================================================
+    NO LABELLED ENTRIES -- see 2.4.

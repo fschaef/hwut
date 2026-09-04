@@ -297,7 +297,7 @@ INDEX     The rulings that shape the book, wherever they stand:
                                       place as the membership law
               E-37        (services)  the door
               B-1..B-7    (here)
-          See 'adm/DISCUSSIONS/disc-1-document-consistency.txt'.
+          See 'adm/WORK/gathered/02-disc-1-document-consistency.txt'.
 COST      The codec and the model ('record', 'result', 'stain'), the
           validator's name law, 'session.py's goal gate, 'report.py's
           one call; the bookkeeper's suites re-recorded ONCE.

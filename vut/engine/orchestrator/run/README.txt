@@ -192,7 +192,7 @@ The one accumulation that legitimately lives here is 'summary.fold()',
 because 'CRunSummary' answers an OPERATIONAL question: did anything
 fail, i.e. what is the exit status. It carries no text and names no
 English. The presentation model is display's, and is a different shape
-for a different question (display/DISCUSSIONS/todo-1).
+for a different question (adm/WORK/gathered/05-todo-1-tree-model.txt).
 
 The law is cheap to keep and easy to lose: one 'print()' left behind
 after debugging breaks it silently. 'TEST/' does not police this;

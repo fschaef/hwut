@@ -2,7 +2,7 @@
 plan/01-work-structure -- THE MIGRATION, IN ORDERED STEPS
 ==============================================================================
 
-VERSION: 9
+VERSION: 23
 
 COMPONENTS: all.
 INTEND:     adm/WORK/intend/01-work-structure.txt
@@ -120,6 +120,271 @@ STATE
              todo-23s), r-5e (coverage disc-6 is moot -- its subject
              file is gone), r-5f (coverage's text names a layout that
              no longer exists).
+
+    THE GOAL RESTATED (2026-09-04, Frank-Rene): three aggregates,
+    'those three kinds of information properly at hand' --
+        (1) the TODOs gathered          -> 'adm/WORK/TODO.txt'  DONE
+        (2a) the rationale logic INDEXED
+             -> 'adm/WORK/RATIONALE-INDEX.txt'          DONE
+        (2b) the rationale logic AGGREGATED BY SUBJECT
+             -> 'adm/WORK/RATIONALE-LOGIC.txt'          DONE
+        (3) the README knowledge indexed
+            -> 'adm/WORK/README-INDEX.txt'              DONE
+    Referencing hygiene is NOT a goal; r-7's repair stands because it
+    is done, and r-7a/r-7b are dropped as goals in their own right.
+
+    (1) DONE: 'adm/WORK/TODO.txt' -- every piece of owed labour from
+    the 40 gathered files, coverage's and operations' DISCUSSIONS.txt,
+    and the new services/DISCUSSIONS.txt, in five bands: BLOCKED (5),
+    READY (17), PARTLY BUILT (7), MEASUREMENT FIRST (3), WAITING ON A
+    RULING (24, not labour). B-1, the dispatcher into operations, is
+    what everything downstream of a run waits on.
+
+    (2a) DONE: 'adm/WORK/RATIONALE-INDEX.txt' -- all 237 rulings
+    across 13 carriers, one line each, with the series and their
+    owners. DERIVED: nothing was moved, and where it disagrees with a
+    RATIONALE the RATIONALE is right. Four anomalies recorded:
+    R-73/R-74 and E-9 each name TWO different rulings (a bare number
+    does not identify one); D- is FOUR independent per-component
+    namespaces, so a bare 'D-4' names nothing either;
+    'RATIONALE-hwut_runner.txt' has NO labelled entries at all, so its
+    doctrine -- interactive mode as a pure accelerator, the file-name
+    channel protocol -- CANNOT BE CITED; P-13/P-14 are retired, and
+    say so in the series, which is the only hole in the tree that
+    announces itself.
+
+    (2b) DONE: 'adm/WORK/RATIONALE-LOGIC.txt' -- the 237 rulings in
+    TWELVE SUBJECTS, each in reading order rather than number order,
+    with its thread and its tensions. Derived like the index; a
+    ruling's words stay in its own RATIONALE.
+    The subjects cut ACROSS components, which is the point: identity
+    (subject 4) spans bookkeeper, orchestrator, coverage and services
+    and carries three supersessions; the oracle (subject 5) spans
+    operations R-70, services E-6/E-39, coverage D-21 and display
+    D-10. No component's RATIONALE shows either subject whole.
+    THREE SUBJECTS HAVE NO SETTLED FLOOR and nothing in them should be
+    built: subject 2 ('target { }' inheritance, gathered/0j), subject
+    6 (the pole vs PHILOSOPHY 1.1, fork r-5c), subject 1 (the
+    configuration specification itself, gathered/0v).
+
+    (3) DONE: 'adm/WORK/README-INDEX.txt' -- 4786 lines across 20
+    READMEs, sectioned where sections exist. Operations (1283) and
+    exploration (798) are 43% of all README text.
+    DRIFT MEASURED, not suspected: every module path quoted in a
+    README was looked up in the tree. Three do not resolve --
+    'provision/provider.py' (operations; provision was dissolved into
+    'subject_provision.py', which is exactly what operations' todo-23
+    warns of), 'parser/core.py' (coverage), and 'adm/census.py' (not
+    in adm/ at all; 'bundle.sh' likewise stands at the tree root).
+    The last two should be re-checked against a --complete dump
+    (r-6a) before being acted on.
+    SEVEN READMEs still say 'test_run', a component that became
+    'operations'; live references were NOT separated from historical
+    prose, because that needs reading rather than grepping.
+    SIX READMEs have NO numbered sections, 'services/README.txt'
+    (164 lines) among them -- the component with the most faces and
+    the most E- rulings has no navigable structure.
+
+    THE COMPLETE DUMP ARRIVED (2026-09-04, 631 members, 5.2 MB) and
+    CLOSED r-6a. It also overturned work done against the incomplete
+    one, and the corrections are recorded rather than quietly applied:
+      todo-9 VERIFIED  '_local_resolver' occurs in zero '.py' files.
+                       The r-5a strike stands on measurement. The
+                       withdrawal in review-r5 v4 is lifted.
+      README drift     of FIVE flagged paths, TWO are real and THREE
+                       were false positives of my own extraction --
+                       'parser/core.py' is an 'SF:' field inside an
+                       EXAMPLE LCOV RECORD, and 'plan/wish.py' and
+                       'feeder/html_feeder.py' both exist.
+      'adm/census.py'  real, but wrongly diagnosed as untracked. It is
+                       a RETIRED BOOTSTRAP: 'census' is a VERB here
+                       and 'hwut.run' is what does it -- adm/ and bin/
+                       carry 'TEST/hwut-info.dat', so the framework
+                       censuses itself. Ruled by Frank-Rene.
+      'provision/      real but milder: a STALE PATH. The module is
+       provider.py'    'operations/run/provider.py'; only the path in
+                       the README is wrong.
+
+    THE METHOD LESSON, and it is r-5's lesson turned on my own work:
+    A MEASUREMENT IS ONLY AS GOOD AS WHAT IT MEASURED AGAINST. The
+    README drift check was run against a tree that could not import,
+    and shrank by three fifths when re-run against the complete one.
+
+    NOTE ON DUMPS: this dump was made in GIT-MODE, so it carries the
+    plan and the older reviews (tracked) but NOT the files bundles
+    11..15 CREATED -- review-r7, TODO.txt, RATIONALE-INDEX.txt,
+    RATIONALE-LOGIC.txt, README-INDEX.txt are untracked and therefore
+    absent. Third time the silent omission of r-6b has cost a
+    measurement.
+
+    r-5c CLOSED BY RULING (2026-09-04):
+
+        Eq( d(b_subject), d(b_nominal), t )   with   t( d(b_nominal) )
+
+    The tolerance is a function of the NOMINAL'S DESCRIPTION -- we
+    always operate on descriptions, never on behaviour. Nominals are
+    POLES, subjects are TRABANTS, Eq is only ever called
+    subject-against-nominal, and THE ASYMMETRY IS THE DOCTRINE.
+    'nominal.epsilon' is correct; nothing is owed to compare;
+    todo-19's second half is refused and the entry may be struck.
+    Recorded in 'adm/WORK/intend/16-pole-and-tolerance.txt', id 16.
+
+    'adm/WORK/review-r8.txt' IS WITHDRAWN IN WHOLE, and kept as a
+    trace. It argued from a paragraph of PHILOSOPHY 1.1 that is
+    ITSELF STALE -- "Eq MUST BE SYMMETRIC ... the larger magnitude",
+    standing three paragraphs after the pole passage it contradicts.
+    I read it, believed it, and produced wrong work from it.
+
+    THIS IS THE FIRST TIME IN THIS MIGRATION THAT A STALE DOCUMENT
+    COST SOMETHING rather than merely confusing a reader, and it is
+    exactly the case '02-disc-1-document-consistency' was raised for.
+    A symmetric band would also have been WORSE than what stands: a
+    subject drifting from the pole would widen its own tolerance.
+
+    B-17 AND B-18 BUILT the same day (2026-09-04):
+      PHILOSOPHY.txt 1.1  the 'Eq MUST BE SYMMETRIC' paragraph is
+                          replaced by 'THE TOLERANCE IS THE POLE'S',
+                          stating T = t( D(b_nominal) ), naming
+                          nominals POLES and subjects TRABANTS, and
+                          saying why a band from both sides is WORSE
+                          than none. The 0.815/0.816 illustration is
+                          KEPT and re-read: it falsifies the
+                          ACCEPTANCE, not Eq. The warning that nothing
+                          checks the margin is kept verbatim. The
+                          criterion's own 'Eq(x, y, T)' now says which
+                          argument is which.
+      operations          todo-19 struck whole, with the reason in the
+                          file's header.
+
+    THE NOTATION IS 'D' (ruled (a), 2026-09-04). 'D' is the
+    description function, as this project already named it; 'd' keeps
+    its meaning as the distance Eq thresholds. The edit had used 'D'
+    already, so nothing was built for this. intend/16 section 6 is
+    CLOSED, and intend/16 now has nothing open.
+
+    THE MEASURED PASS OVER 'TODO.txt' IS DONE (2026-09-04), and the
+    file was WRONG IN BOTH DIRECTIONS:
+      BUILT, listed as owed   B-1 (the dispatcher, wired end to end),
+                              B-8 ('hwut.convert_to_lcov', built as
+                              'hwut.cov convert'), gathered/0j (the
+                              TARGET SERVICE -- E-7 rules its two
+                              hardest forks and 'services/target.py'
+                              is 414 lines), gathered/0m (the
+                              WISHLIST -- E-13, and '--wishlist' sits
+                              in 'plan/wish.py' exactly where the
+                              entry argued it belonged).
+      GENUINELY OWED          B-3, B-4 (decisive: 'collision' is read
+                              with '_target_list', a FLAT list), B-5,
+                              B-6, B-7, B-9, B-11, B-16, and
+                              gathered/0v (no SPECIFICATION.txt).
+      HALF                    B-2 (face built, '--format' absent),
+                              B-15.
+      UNCERTAIN               B-10, B-12, B-13 -- needing reading,
+                              not grepping.
+
+    RATIONALE-LOGIC CORRECTED WITH IT: subject 2 never had a missing
+    floor. E-7 ruled 'target { }' LOCAL before I wrote that its
+    inheritance was "the hardest fork of the cluster". ONE subject is
+    now without a floor, not three -- subject 1, the configuration
+    specification, which is genuinely owed.
+
+    THE CAUSE OF BOTH ERRORS IS ONE THING, and it is the doctrine
+    stated backwards: I built TODO.txt and RATIONALE-LOGIC from the
+    GATHERED DISCUSSION ENTRIES, which say what was owed WHEN THEY
+    WERE WRITTEN. The RATIONALE says what was RULED. WHERE THE TWO
+    DISAGREE, THE RATIONALE IS THE LAW AND THE DISCUSSION IS RESIDUE
+    -- which is the whole premise of phase S, applied too late to the
+    documents that were meant to guide it.
+
+    PHASE S HAS BEGUN (2026-09-04). SIX GATHERED FILES DELETED, each
+    verified against the tree and each with its ruling standing as a
+    RATIONALE entry, so nothing was carried anywhere -- the sorting
+    rule's 'DONE lists -> deleted' branch, exercised for the first
+    time:
+
+        08  the dispatcher into operations    O-7; built and wired
+        0j  the target service                E-7 rules ALL FIVE forks
+                                              -- inheritance LOCAL,
+                                              membership by definition,
+                                              the face, the two phases,
+                                              and the exit law ("targets
+                                              are not tests; exit codes
+                                              are informational").
+                                              'services/target.py', 414
+                                              lines.
+        0l  'hwut.play'                       E-5, E-22; four forks
+                                              ruled AND built
+        0m  'hwut.wishlist'                   E-13; and its ONE blocking
+                                              question is answered --
+                                              'CTestTaskListQuery' takes
+                                              'directory' and 'root'
+        11  the directory keys, rebuilt       R-31..R-36; its forward
+                                              pointer is 0t, which stands
+        12  the parser relocation             R-27, R-34; says of itself
+                                              "Nothing waits on this"
+
+    AND coverage's todo-3 struck: 'hwut.convert_to_lcov' is BUILT as
+    'hwut.cov convert'.
+
+    NOT DELETED, though they looked deletable -- each carries live
+    labour a marker did not show:
+        03  a tidiness remains unbuilt
+        0i  two halves say "NOT BUILT HERE"
+        0y  "UNBUILT: the blessing against the REAL components"
+        10  OWED TO PROCSITTER (= TODO A-4)
+        15  OWED (todo-1), the owners' real faces (= TODO A-5)
+        0q  bin not ruled (r-4b)
+
+    THE TREE GETS SMALLER FOR THE FIRST TIME IN THIS MIGRATION:
+    gathered/ 40 -> 34 files.
+
+    THE FOUR UNCERTAIN ITEMS ARE SETTLED BY READING (2026-09-04), and
+    'TODO.txt' now states counts that were MEASURED rather than read:
+      B-10  OWED. 'report.py' names COVERAGE nowhere; 'tell.py' does
+            ('section("COVERAGE", ...)'), so the rendering exists for
+            one face and not for the pack.
+      B-12  HALF. Declaration and carriage BUILT -- relation table,
+            'validator.py', and 'run/adapter.py' resolving '<stdout>'
+            into 'TestChoiceConfiguration.output'. Consumption NOT:
+            a second real subject still needs a file at the accepting
+            end.
+      B-13  OWED AND ACTIVELY REFUSED. 'language-setup' is in
+            ROOT_ONLY_KEY_SET and the validator faults it inside a
+            choice by name. R-73 intends a variant may restate it, so
+            the work is to RELAX one refusal for one key -- the
+            smallest item in the band.
+      B-15  NOT LABOUR AT ALL. The freshness sidecar is built; THE LAW
+            over it is unruled, and the entry says "nothing depends on
+            the ruling". Moved to band E.
+
+    TEN ITEMS ARE BUILDABLE TODAY and none blocks another. The largest
+    is B-7, 'hwut.renovate' -- ruled, unbuilt, and the one that must be
+    developed against the real quex project, which is also the next
+    major milestone. The smallest is B-13.
+
+    A HONEST MEASUREMENT OF THIS MIGRATION'S TEXT COST (2026-09-04):
+    the tree's .txt/.md went 38953 -> 41411 lines, +6.3%. Deleted
+    outright: 204 lines. Added: 2113 lines of index, map and review.
+    THE MIGRATION HAS NOT YET REDUCED ANYTHING -- it has made it
+    knowable what is safe to delete. Phase S is where the reduction
+    happens: 11 of the 40 gathered files are terminated residue, and
+    coverage and operations still hold 1210 lines of which much is
+    decided-and-built.
+
+    SECOND PASS OVER THE GATHERED WORK, 'adm/WORK/review-r7.txt':
+    G-2 BROKE 20 CROSS-REFERENCES -- every citation in the tree that
+    named a 'DISCUSSIONS/' file, in RATIONALE files, READMEs and
+    PYTHON SOURCE COMMENTS alike. All twenty repointed at their
+    gathered ids; two cannot be repaired and are named (r-7a).
+    Three DONE items were found inside lists titled 'NOT RULED' and
+    struck in place (07/1 by O-11-O-12, 09/1 by O-11, 0f/1 by P-15),
+    each verified to be a standing entry first.
+    Double entries: the three 'provisional choices' files are three
+    different lists, not duplicates, but 0f's items 3/5/9 were STUBS
+    duplicating 07's items 1/2/3; exploration carries TWO todo-1 and
+    TWO todo-7, which is why a citation of 'exploration/DISCUSSIONS/
+    todo-1' was ambiguous until the two-char ids existed.
+    A BASENAME IS NOT A KEY: 07 and 09 share a file name.
 
     THE LESSON OF r-5, three times over: A SELF-MARKER IS NOT EVIDENCE.
     orchestrator's disc-1 was parked as 'not built yet' over a built

@@ -2,7 +2,7 @@
 review-r6 -- THE DUMP IS INCOMPLETE, AND ONE EARLIER VERIFICATION FALLS
 ==============================================================================
 
-VERSION: 1
+VERSION: 3
 
 COMPONENTS: engine/coverage (the gap); adm (the cause)
 PLAN:       adm/WORK/plan/01-work-structure.txt   (fork r-5f, answered here)
@@ -62,7 +62,41 @@ layout. The dump is describing an incomplete one.
 
 ______________________________________________________________________________
 
-3  WHAT THIS COSTS THE EARLIER WORK
+2b  CONFIRMED BY A SECOND DUMP (2026-09-04, 'dump-vut-text-only.txt')
+
+A documentation-only dump -- every '.txt'/'.md' EXCEPT under 'GOOD/'
+and 'TEST/', 112 members -- settles section 2 by observation:
+
+    vut/engine/coverage/database/FORMAT.txt          EXISTS (317 lines)
+    vut/engine/coverage/readers/TEST/REAL_PARSING_INPUT/
+                                     PROVENANCE.txt  EXISTS
+
+So 'coverage/database/' and 'coverage/readers/TEST/' are real
+directories in the working tree, and coverage's todo-13 is CORRECT AND
+CURRENT. The first dump's gap was selection, not design, exactly as
+section 2 supposed.
+
+THE .py FILES ARE STILL NOT REACHABLE. This dump is text-only, so the
+six missing modules remain unread and todo-9 (section 3) remains
+UNVERIFIED. r-6a stands.
+
+A FOURTH DISCUSSIONS FILE EXISTS, and is NEW -- created the same day,
+absent from the first dump:
+
+    services/DISCUSSIONS.txt   70 lines, one entry
+
+Its todo-1 is 'hwut.rename' / 'hwut.rename-choice' ACROSS A DIRECTORY
+BOUNDARY -- ruled during the database/readers split, and precisely the
+blocker coverage's todo-13 names ("Waits on 'services' todo-1"). The
+entry is careful: it states no fork ("no disc-N stands yet because no
+fork has been found, only labour"), inventories the primitives that
+already exist ('TestIdDb.register()', 'hwut.remove''s retirement,
+'rename.move_tuple()', 'record.seated()'), and names what is actually
+new -- the command shape, which today binds ONE Store per call and
+would need a source and a target.
+
+review-r5's count of THREE DISCUSSIONS.txt files was right when it was
+written. It is now four.
 
 Every strike of r-5a was re-examined against the gap. Five stand; ONE
 DOES NOT.
@@ -105,11 +139,23 @@ ______________________________________________________________________________
 
 OPEN -- FOR FRANK-RENE
 
-  r-6a  RE-DUMP. A dump made with '--complete' would carry the six
-        modules and let todo-9 be checked properly. Recommended before
-        any further measurement of coverage: everything concluded
-        about that component so far rests on a tree that cannot
-        import.
+  r-6a  CLOSED (2026-09-04). The complete dump arrived: 631 members,
+        5.2 MB. All six modules are there --
+        'coverage/database/{api,binary,gather,index,measure,present,
+        record}.py' and 'coverage/readers/{api,reader,registry}.py'.
+        The component imports. TODO-9 IS VERIFIED: '_local_resolver'
+        occurs in zero '.py' files, only in RATIONALE prose recording
+        its deletion, so the strike of r-5a stands on measurement and
+        not on D-18 alone. Section 3's 'FALLS' is lifted.
+
+        WHAT THE COMPLETE TREE ALSO OVERTURNED: three of the five
+        README drift findings (README-INDEX 1.2, 1.4) were FALSE
+        POSITIVES of measuring against the incomplete tree, and one
+        (1.3, 'adm/census.py') was correctly found but WRONGLY
+        DIAGNOSED here as untracked. It is a retired tool: 'census' is
+        a VERB in this project and 'hwut.run' is what does it --
+        'adm/TEST/hwut-info.dat' and 'bin/TEST/hwut-info.dat' exist,
+        so the framework censuses itself.
 
   r-6b  Should 'bundle.sh' WARN when a default-mode selection omits
         untracked files? Today the omission is silent. A one-line
@@ -122,3 +168,19 @@ OPEN -- FOR FRANK-RENE
         'compare/core/edit_operations/TEST/config.py' and
         'compare/feeder/TEST/config.py', resolves to nothing here
         either. Untracked too, or genuinely external?
+
+  r-6d  services/DISCUSSIONS.txt IS A RE-SEEDING, and it is the live
+        instance of gate s-3. 'services/DISCUSSIONS/' was emptied and
+        removed by G-2; a 'services/DISCUSSIONS.txt' was then created
+        on the same day. Under the work structure, new work of this
+        kind belongs in 'adm/WORK/' as an intend/spec/plan triple, not
+        in a component's DISCUSSIONS. Two readings:
+          (a) THE ENTRY IS WELL-FORMED WHERE IT STANDS and the
+              structure should accept a component-local DISCUSSIONS
+              for pure labour that carries no fork. It says so itself:
+              "no disc-N stands yet ... only labour".
+          (b) IT SHOULD BE AN adm/WORK ISSUE, gathered like the other
+              forty, and DISCUSSIONS stays retired.        <- I have
+              no recommendation here: this is what s-3 exists to
+              decide, and it is a question about the discipline
+              rather than about this entry.

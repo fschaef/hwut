@@ -8,9 +8,11 @@ Each of these was decided by the worker so that the scheduler and the
 service could stand. Each is one line to change. None is in
 RATIONALE.txt: they are reported, not settled.
 
- 1  DISSOLVED BY RULING (P-15): both readings exist under their own
-    words -- '--since=' the recently run, '--until=' the stale, the
-    never-run counted by the second alone.
+ 1  STRUCK 2026-09-04: DISSOLVED BY RULING, plan/RATIONALE P-15
+    ('the wish grows: --pass, --until=, anchors'), which stands as an
+    entry. Both readings exist under their own words -- '--since='
+    the recently run, '--until=' the stale, the never-run counted by
+    the second alone. Nothing is owed.
 
  2  THE COMBINATION LAW. Several '--glob' occurrences are OR'ed among
     themselves; keywords of DIFFERENT kinds are AND'ed.
@@ -18,7 +20,8 @@ RATIONALE.txt: they are reported, not settled.
                        case must match all of them (matches nothing,
                        normally)
 
- 3  MOVED to orchestrator/scheduler/DISCUSSIONS (the worker bound).
+ 3  MOVED to 'adm/WORK/gathered/07-disc-1-provisional-choices.txt'
+    item 1 (the worker bound).
 
  4  THE BUILD INTERVIEW'S DEFAULT. 'SpecificationBuildInterview' reads
     'build.framework' off each case and answers one action per (file,
@@ -31,8 +34,8 @@ RATIONALE.txt: they are reported, not settled.
                        is one action supporting the cases of both,
                        which the form already carries.
 
- 5  MOVED to orchestrator/scheduler/DISCUSSIONS (session never
-    launched, never closed).
+ 5  MOVED to 'adm/WORK/gathered/07-disc-1-provisional-choices.txt'
+    item 2 (session never launched, never closed).
 
  6  '--directory=<path>' on the services. The current directory else.
         open           whether the walk over several directories takes
@@ -47,8 +50,8 @@ RATIONALE.txt: they are reported, not settled.
     header prints the fault, then the plan of what stands.
         the other way  refuse to plan at all while a fault stands
 
- 9  MOVED to orchestrator/scheduler/DISCUSSIONS (nodes PENDING after an
-    entry-script failure).
+ 9  MOVED to 'adm/WORK/gathered/07-disc-1-provisional-choices.txt'
+    item 3 (nodes PENDING after an entry-script failure).
 
 10  ANCHOR RECKONING IN UTC, at 00:00, weekday and month counting
     today/this one as 'most recent' (P-15 states the vocabulary; these

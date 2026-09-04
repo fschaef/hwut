@@ -1,0 +1,183 @@
+==============================================================================
+review-r8 -- r-5c IS ANSWERED BY PHILOSOPHY.txt, AND NOT THE WAY I SAID
+==============================================================================
+
+VERSION: 2  ** WITHDRAWN **
+
+COMPONENTS: engine/compare
+FORK:       r-5c (review-r5), subject 6 of RATIONALE-LOGIC
+
+** WITHDRAWN IN WHOLE, 2026-09-04, by Frank-Rene's ruling. **
+** See 'adm/WORK/intend/16-pole-and-tolerance.txt'.         **
+
+    THIS FILE IS WRONG. It argued from a paragraph of PHILOSOPHY 1.1
+    that is ITSELF STALE and contradicts the pole doctrine standing
+    three paragraphs above it. The ruling:
+
+        Eq( d(b_subject), d(b_nominal), t )   with   t( d(b_nominal) )
+
+    The tolerance is a function of the NOMINAL'S DESCRIPTION. Nominals
+    are poles, subjects are trabants, and THE ASYMMETRY IS THE
+    DOCTRINE, not a defect of it. Eq is only ever called
+    subject-against-nominal, so what the reversed call would answer is
+    idle -- and a symmetric band is WORSE than none, because a subject
+    drifting from the pole would widen its own tolerance.
+
+    'nominal.epsilon' is correct. Nothing is owed to compare.
+
+    KEPT, NOT DELETED: a withdrawn finding that leaves no trace
+    teaches nothing, and what this one teaches is that A STALE
+    DOCUMENT PRODUCES WRONG WORK -- the first instance in this
+    migration where that cost something rather than merely confusing a
+    reader. It is the case '02-disc-1-document-consistency' was raised
+    for.
+
+    THE TEXT BELOW IS LEFT AS IT WAS WRITTEN. Read it as a record of
+    the error, not as an argument.
+
+I recommended reading (a): that the asymmetry of the numeric tolerance
+is ANSWERED by the pole doctrine -- the nominal is the declared centre,
+so Eq(s,n) and Eq(n,s) are not meant to be the same question.
+
+THAT RECOMMENDATION WAS WRONG. 'adm/PHILOSOPHY.txt' 1.1 states both
+doctrines at once and explicitly refuses the trade I proposed. This is
+not a new ruling; it is the standing one, found on reading the document
+that the complete dump finally carried.
+
+______________________________________________________________________________
+
+1  WHAT PHILOSOPHY 1.1 ACTUALLY SAYS
+
+It holds THE POLE and THE SYMMETRY together, and they are about
+different things:
+
+    THE POLE is about WHICH member of GOOD is accepted.
+        "TO ACCEPT IS TO DECLARE THE POLE OF GOODNESS: not any member
+        of GOOD, but the one all the others are arranged around."
+        Its gain is measurable and stated: the required tolerance falls
+        from diameter(D(GOOD)) to radius(D(GOOD)) -- roughly half.
+
+    THE SYMMETRY is about THE FORM OF Eq.
+        "THE VERDICT MUST NOT DEPEND ON WHICH GOOD BEHAVIOUR WAS
+        ACCEPTED... Eq(D(b0), D(b), T) is not a function of b0."
+
+And then, in the paragraph headed 'Two demands follow', it says the
+thing that settles this fork outright:
+
+        Eq MUST BE SYMMETRIC. 'within r of the NOMINAL' is not: it
+        makes the nominal an anchor, and the criterion is NOT EVEN
+        WELL POSED. A relative tolerance must be relative to something
+        symmetric -- THE LARGER MAGNITUDE, or the mean -- or be
+        absolute.
+
+So the document ANTICIPATED the defence I offered and named it as the
+error. 'The band belongs to the nominal' is the exact phrase
+PHILOSOPHY calls ill-posed.
+
+Nor is the pole weakened by symmetry. The document keeps both: every
+comparison has the same fixed anchor (which is why non-transitivity
+never bites -- "nothing is ever chained"), AND the band's WIDTH is
+computed symmetrically. Anchor and width are separate choices; I had
+collapsed them.
+
+______________________________________________________________________________
+
+2  WHAT THE CODE DOES, MEASURED
+
+'engine/compare/reading/line_element.py', LineElementNumber:
+
+    __init__     self.epsilon = abs(self.number) * ratio
+                 -- stored PER ELEMENT, from that element's own
+                 magnitude. The comment says "tolerance band radius
+                 when this element serves as pole (nominal)".
+
+    compare      abs(self.number - nominal.number) <= nominal.epsilon
+    cost         error = max(|s - n| - nominal.epsilon, 0.0)
+
+Both readings take the band from THE NOMINAL ALONE. So
+
+    Eq(s, n)  uses  |n| * ratio
+    Eq(n, s)  uses  |s| * ratio
+
+which is 'within r of the NOMINAL' precisely, and therefore the form
+PHILOSOPHY 1.1 refuses.
+
+THE UNSIGNED HALF IS GENUINELY FIXED: 'abs()' is present, and the
+comment "a radius carries no sign" records why. That half of todo-19
+is closed and should be struck when the rest is settled.
+
+______________________________________________________________________________
+
+3  THE FIX IS ALREADY HALF-WRITTEN
+
+'edit_distance_relative' ALREADY COMPUTES the symmetric magnitude, one
+line below the place that needs it:
+
+        error = max(abs(self.number - nominal.number)
+                    - nominal.epsilon, 0.0)      <- asymmetric band
+        mag   = max(abs(self.number), abs(nominal.number))   <- symmetric
+        return min(1.0, error / mag)
+
+'mag' is exactly what PHILOSOPHY names ("the larger magnitude"). It is
+used for the SCALE of the cost and not for the WIDTH of the band. What
+todo-19's OWED list asks for --
+
+        'max(abs(s), abs(n)) * ratio' at comparison time,
+        not stored per element
+
+-- is that same quantity, moved one line up and multiplied by the
+ratio.
+
+WHAT IT COSTS, honestly:
+  - 'epsilon' stops being a stored slot and becomes a computed value;
+    the ratio must then be reachable at comparison time, which it is
+    not today (it is consumed in '__init__' and discarded).
+  - the pole's ROLE is unchanged: the nominal is still the anchor,
+    still the thing every subject is compared against. Only the WIDTH
+    calculation changes.
+  - Contract 3 must be re-checked: 'equivalent == True' iff
+    'cost == 0.0' at the boundary. Both readings must take the new
+    band or they will disagree exactly at the edge -- which is the one
+    place the contract is testable.
+  - test choices, as todo-19 already lists: a negative pair inside the
+    band is TOLERATED; d(x,y) == d(y,x) for signed pairs across the
+    boundary.
+
+______________________________________________________________________________
+
+4  WHY THIS WAS NOT SEEN EARLIER
+
+'adm/PHILOSOPHY.txt' was not in the first dump's reach for this
+question -- I read the code's docstring, saw 'the pole', and took the
+docstring as doctrine. The docstring is a fair description of what the
+code DOES; it is not the law. The law is PHILOSOPHY 1.1, and it
+disagrees with the code.
+
+A DOCSTRING IS NOT EVIDENCE OF CORRECTNESS, which is the same lesson
+as r-5's 'a self-marker is not evidence', one level down: there it was
+a file claiming to be built, here it is a function claiming to be
+right.
+
+______________________________________________________________________________
+
+STANDING FOR FRANK-RENE
+
+  r-5c  My recommendation (a) is WITHDRAWN. The evidence says (b): the
+        asymmetry is a DEFECT, PHILOSOPHY 1.1 already names its fix
+        ("the larger magnitude, or the mean"), and 'mag' in
+        'edit_distance_relative' already computes it.
+
+        I have NOT closed the fork and have NOT touched the code. Two
+        things are yours and not mine:
+          -- whether PHILOSOPHY 1.1 governs here as I read it;
+          -- whether the fix is 'the larger magnitude' or 'the mean',
+             which the document offers as alternatives and does not
+             choose between.
+
+  r-8a  IF IT IS A DEFECT, IS IT A LIVE ONE? Nothing measures how many
+        standing GOOD files sit near a band edge, so nothing says
+        whether tightening the band would move any recorded output.
+        That is checkable in the way operations' todo-2 (a) is
+        checkable: make the change, census the tree, see whether a
+        GOOD moves. Worth knowing BEFORE the change is ruled, not
+        after.

@@ -1,0 +1,445 @@
+==============================================================================
+RATIONALE-LOGIC -- THE REASONING, GROUPED BY SUBJECT
+==============================================================================
+
+VERSION: 4
+
+Goal (2b) of three. (2a) was the INDEX -- where every ruling stands.
+This is the MAP -- what the rulings mean together.
+
+WHAT THIS IS. Twelve subjects. Each names the rulings that constitute
+it, IN READING ORDER (not number order), says what the subject settles,
+and names the TENSIONS -- places where two rulings pull against each
+other, or where one superseded another and both still stand.
+
+WHAT IT IS NOT. Not a second copy of the reasoning. A ruling's words
+stay in its own RATIONALE; this file is a route through them. Where it
+disagrees with a RATIONALE, the RATIONALE is right.
+
+WHY BY SUBJECT. The rulings cluster ACROSS components, not within them.
+Identity runs through bookkeeper B-, orchestrator D-, coverage D- and
+services E-. The token runs through operations R-70, services E-6/E-39
+and coverage D-21. No component's RATIONALE shows a subject whole, and
+reading one in isolation gives half a law.
+
+==============================================================================
+1  WHAT A TEST IS, AND WHERE IT SAYS SO
+==============================================================================
+     R-1  R-7  R-28  R-72  R-8  R-76  R-2  R-44  R-59  R-27  R-3
+
+THE LAW. A test STATES what it is, in its own file, in a language with
+one carrier per file. The specification is IN THE FILE, not in the
+process (R-1) -- so reading a test does not mean running it.
+
+    R-1   specification in the file, not in the process
+    R-7   one file, one carrier
+    R-72  the marker is '@hwut {' -- a SIGIL, not a key
+    R-28  the configuration file is 'hwut.conf'
+    R-8   nothing above the test directory
+    R-76  the climb ends at 'TEST/TMP'
+    R-2   '--hwut-info' survives as a HINT SOURCE
+    R-44  '--hwut-info' is the third carrier: MIGRATION
+    R-3   HOCON, and R-27 its parser is test-writing support, per
+          language
+    R-59  'config.py' and 'hwut-info.dat' follow the house form
+
+THE TENSION. R-2 and R-44 admit a THIRD carrier ('--hwut-info') against
+R-7's 'one file, one carrier'. It is deliberate and bounded: R-44 calls
+it MIGRATION, and R-2 demotes its answers to HINTS. The seam is honest
+only while both readings stay -- a hint that hardened into a source
+would break R-7 silently.
+
+==============================================================================
+2  THE CONFIGURATION TREE, AND WHAT INHERITS
+==============================================================================
+     R-69  R-5  R-26  R-73  R-8  R-76  D-2(coverage)
+
+    R-69  THE CONFIGURATION TREE -- the spine of this subject
+    R-5   the root is the default; a choice overwrites
+    R-26  a scope merges FIELD BY FIELD
+    R-73  'language-setup' is the ONE table, and it stands at the ROOT
+    R-8   nothing above the test directory  (the ceiling)
+    R-76  the climb ends at 'TEST/TMP'      (the floor)
+
+THE LAW IS LOCALITY, with two named exceptions. R-69 makes inheritance
+local; R-73 lifts exactly one table to the root because per-language
+tooling was being stated in four places; coverage D-2 lets the
+component choose the tool while the conf names it.
+
+THE TENSION IS RULED, AND WAS ALREADY (found 2026-09-04 by measuring,
+not reading). gathered/0j asks whether 'target { }' inherits like R-73
+or stays local, and calls it "the hardest fork of the cluster". E-7
+answers it: "The scope is LOCAL, never inherited (R-69's locality law);
+a parent cannot bind a target for a subtree." E-7 also settles the walk
+question -- "a directory binding any target is WALKED, test
+applications or none: definition is membership" -- and the service is
+BUILT ('services/target.py', 'bin/hwut.target').
+
+SO LOCALITY HAS EXACTLY ONE EXCEPTION, R-73's one table at the root,
+and 'target { }' is not a second one. Subject 2 is settled throughout.
+
+==============================================================================
+3  WHO OWNS A DEFAULT
+==============================================================================
+     R-17  R-38  R-39  R-40  R-41  R-42  R-43  R-37  R-18  R-57
+     R-78  R-79  E-37  E-38
+
+THE LAW. UNSTATED IS 'None' (R-17), and the value that fills it comes
+from THE OWNER'S OWN DECLARATION -- never from a second table beside it.
+
+    R-17  unstated is 'None'; ONE default table, pointing at owners
+    R-38  the component declares; we point at MEMBERS
+    R-39  one relation table, BOTH directions
+    R-40  the entry is '(class, member name)'; the face is flat
+    R-41  the declaration IS the announcement
+    R-42  the relation is CHECKED AT IMPORT
+    R-43  a declared 'None' IS the value
+    R-37  no parameter is 'None' as an END RESULT
+    R-18  this component knows the table; the explorer instantiates
+    R-57  an entry may carry an adapter; no component OWES a face
+    E-37  a component may have ONE DOOR
+    E-38  four doors, and the configuration law
+    R-78  the caps read their defaults from THE SUPERVISOR'S DOOR
+    R-79  the six GOODs R-78 left behind
+
+READ R-42 AS THE KEYSTONE. Every other ruling here is a convention;
+R-42 is what makes the convention CHECKABLE, at import, before anything
+runs. The pattern to copy elsewhere.
+
+R-79 IS THE HONEST FOOTNOTE. A ruling that names the GOOD files its
+predecessor moved -- the cost stated rather than absorbed.
+
+==============================================================================
+4  IDENTITY: WHAT A TEST IS CALLED, AND WHAT IT IS NUMBERED
+==============================================================================
+     B-1  D-7(orch)  B-2  D-17(cov)  D-14(cov)  D-15(cov)  B-3
+     D-8(orch)  D-9(cov)  D-18(cov)  B-4  E-16  E-12  D-4(orch)
+
+THE MOST TANGLED SUBJECT IN THE TREE -- four components, three
+supersessions, and the only place where rulings openly overwrite each
+other. Read in this order or it will not make sense:
+
+    B-1   the bookkeeper is a COMPONENT, not part of the orchestrator
+    D-7   (orchestrator) the test register: relational -- and its own
+          header records that it MOVED here and was SUPERSEDED IN PART
+          the same day
+    B-2   an id is ISSUED ONCE, from 0, ceiling 2**32
+          -- this KILLS D-7's lowest-unused/delete-frees law, one day
+          after it was written
+    D-17  (coverage) 'identity.py' dissolved; ids count from 0
+    D-14  (coverage) identity is DIRECTORY-LOCAL; the gather qualifies
+          -- this is what dissolved the scope question entirely
+    D-15  (coverage) the register numbers; THIS COMPONENT GROUPS
+    B-3   a set of runs is a NUMBER, and the number is the
+          bookkeeper's
+    D-8   (orchestrator) ids in records; ONE HOLDING frees and deletes
+    D-9   (coverage) a segment carries a number  [SUPERSEDED by D-7]
+    D-18  (coverage) a record names RUN IDS, and a SET of them
+    B-4   an aborted accept HANDS ITS ID BACK
+    E-16  'hwut.rename' follows the name; NO record content is touched
+    E-12  removal forgets what the framework recorded, and nothing else
+    D-4   (orchestrator) divergence on call; RENAME is the kind that
+          matters
+
+THE THREAD. Rename must not break attribution -> so a record must name
+a NUMBER, not a name (D-8, D-18) -> so the number must survive a rename
+(B-2) -> so it must never be reissued -> so removal must delete every
+persisted reference in the SAME HOLDING (D-8). Each ruling exists
+because the one before it created an obligation.
+
+THE TENSION. D-7 and D-9 are SUPERSEDED and still stand, correctly
+marked. This is the tree's best practice on display -- the superseding
+note is IN the superseded entry, so a reader cannot follow the old law
+by accident. Compare subject 12.
+
+==============================================================================
+5  THE ORACLE: WHAT COUNTS AS EVIDENCE
+==============================================================================
+     R-70  E-6  E-39  D-21(cov)  E-5  E-41  O-18  O-14  D-10(disp)
+     E-11  R-71
+
+THE LAW. A run must TESTIFY. Output that arrives is not evidence that
+the thing finished.
+
+    R-70  (operations) THE TOKEN IS THE STREAM'S OWN TESTIMONY OF
+          COMPLETENESS -- the spine
+    E-6   accept refuses the stream that never completed
+    E-39  a recording OLDER than its test is not evidence
+    D-21  (coverage) coverage rides on testimony
+    O-18  a failing canonicaliser ENDS provision -- it does not deliver
+    E-5   stderr is NEVER subject to testing
+    E-41  the gate is on the NOMINAL
+    O-14  parallel-run suites bless the flow through a pype filter
+    D-10  (display) the run's GOOD is a digest, and the digest is PART
+          OF THE ORACLE
+    E-11  the stain: instability is FALSE TESTIMONY, not a failure
+    R-71  'output' -- subjects are DECLARED, never discovered
+
+THE THREAD, AND IT IS ONE ARGUMENT. Only the thing that ends a stream
+can say the stream ended (R-70). Everything else follows: acceptance
+refuses an untestified stream (E-6) and stale evidence (E-39); coverage
+refuses to harvest one (D-21); provision refuses to deliver a broken
+canonicalisation (O-18); and instability is reclassified from FAILURE
+to FALSE TESTIMONY (E-11), which is the same idea applied to a run that
+cannot say the same thing twice.
+
+E-41 IS THE SUBTLE ONE. Participation is decided by the NOMINAL, not by
+a switch -- which is why R-70 needed no migration flag anywhere.
+
+R-71 CLOSES IT. Discovery cannot tell 'produced' from 'forgot'; a
+declared subject can.
+
+==============================================================================
+6  TOLERANCE, AND THE POLE
+==============================================================================
+     R-77  E-42  R-54  R-65  R-12  R-24  R-64  R-55  R-56  C-4  C-8
+     R-66
+
+    R-77  THE TOLERANCES ARE ONE SCOPE  -- the consolidation
+    E-42  every lexical tolerance in the ONE scope
+    R-54  'whitespace_eqv' and 'slash_eqv': a class of difference is
+          NONE
+    R-65  'whitespace_eqv' is the whitespace parameter; 'strip' is not
+    R-12  'happy' IS 'eq-pattern'
+    R-24  'analogy' is the marker pair; ABSENCE IS NEVER OFF
+    R-64  'comment' is a marker pair, read like 'analogy'
+    R-55  'constraints' is a list; COMPARE builds the database
+    R-66  the constraint namespace carries maths, and a glob match
+    R-56  compare's configuration becomes FROZEN dataclasses
+    C-4   region framing is SWITCHABLE, like every other feature
+    C-8   a slotted struct refuses a MISSPELT FIELD
+
+THE THREAD. A tolerance is a named class of difference that is not a
+difference (R-54). The rulings converge on ONE SCOPE (R-77, E-42) after
+a period of flat parameters -- the same consolidation R-73 did for
+language-setup.
+
+THE FLOOR, RULED 2026-09-04 (adm/WORK/intend/16-pole-and-tolerance.txt):
+
+        Eq( d(b_subject), d(b_nominal), t )    with    t( d(b_nominal) )
+
+The tolerance is a function of THE NOMINAL'S DESCRIPTION. Nominals are
+POLES, subjects are TRABANTS, and Eq is only ever called
+subject-against-nominal. THE ASYMMETRY IS THE DOCTRINE. A symmetric
+band would be worse than none: a subject drifting from the pole would
+widen its own tolerance, and a centre whose scale is set by the thing
+measured against it is not a centre.
+
+'nominal.epsilon' in 'compare/reading/line_element.py' is therefore
+CORRECT. todo-19's first defect (the missing 'abs()') was real and is
+fixed; its second half is REFUSED by this ruling and the entry may be
+struck whole.
+
+OWED IN THE DOCUMENT, NOT THE CODE: PHILOSOPHY 1.1 still carries a
+paragraph demanding a symmetric Eq and naming 'the larger magnitude' as
+the remedy -- three paragraphs after the pole passage it contradicts.
+It is STALE. Its durable half is the warning that follows it: "the
+danger is not that the rule is missing; it is that NOTHING CHECKS IT,
+and a tolerance can break it quietly."
+
+==============================================================================
+7  THE RUN, AND WHAT BOUNDS IT
+==============================================================================
+     O-1  O-2  O-3  O-4  O-5  O-6  S-1  S-2  S-3  S-4  O-7  O-11
+     O-12  O-13  O-15  O-16  O-17
+
+    O-1   the outer face          O-2   the stream's shape
+    O-3   everything that leads to executability IS the test
+    O-4   the summary is a FOLD   O-5   the receiver
+    O-6   the verdict word law    O-7   the real dispatcher
+    S-1   the scheduler's seam
+    S-2   a TERMINAL state satisfies an ordering link
+    S-3   readiness is asked ANEW before every start
+    S-4   the bound is a BUDGET, and it may be shared
+    O-11  directories run in PARALLEL; a directory is a CLOSED
+          environment
+    O-12  '--jobs' is ONE host-global budget
+    O-13  the unit of placeable work is THE DIRECTORY
+    O-15  the strategy says WHEN a directory starts; the digest is
+          STRATEGY-FREE
+    O-16  'E_TestRunResult' stays where it is
+    O-17  the protocol leaves the producer
+
+O-15 IS THE HOMOGENEITY LAW IN ITS RATIONALE FORM: strategy may change
+WHEN, never WHAT. It is why O-11's parallelism costs the GOOD files
+nothing, and it is the load-bearing ruling of this subject.
+
+O-13 IS THE REMOTE SEAM. The unit is the directory precisely so that
+placing work elsewhere needs no new unit (gathered/0c, unbuilt).
+
+==============================================================================
+8  SUPERVISION: WHAT A CALL COSTS AND WHAT KILLED IT
+==============================================================================
+     R-22  R-47  R-48  R-78  O-19  O-20  O-21  E-27  E-28
+
+    R-22  'caps' is PROCSITTER'S scope; 'timeout' moves into it
+    R-47  the caps are a FIXED vocabulary
+    R-48  an UNENFORCEABLE cap refuses the test
+    R-78  the caps read their defaults from the supervisor's door
+    O-20  caps travel by INHERITANCE, to the choice that asks
+    O-19  a kill NAMES ITS CAP, and its NUMBER
+    O-21  a kill names its cap ON EVERY ROAD
+    E-27  the procsitter names what a call MADE and LEFT
+    E-28  the pype call is operations', and EVERY call is supervised
+
+R-48 AND O-19 ARE THE SAME PRINCIPLE TWICE. A limit that cannot be
+enforced must refuse rather than pretend; a limit that fired must say
+which one and what number. Both are 'never fail silently', once at
+setup and once at runtime. O-21 is the sweep that found the roads where
+O-19 was not yet true -- a ruling whose whole content is 'the previous
+ruling was not universal, and now is'.
+
+==============================================================================
+9  THE FACES, AND THE EXIT STATUS
+==============================================================================
+     E-1  E-2  E-15  E-8  E-32  E-14  E-4  E-22  E-18  E-13  E-19
+     E-20  E-21  E-24  E-26  E-17  E-23  E-10  E-3  P-16
+
+    E-1   the EXIT STATUS LAW    (= display D-3, see subject 12)
+    E-2   plan empty-selection exit status, changed RETROACTIVELY
+    E-15  the exclusions, and 'hwut' as the default face
+    E-8   the launcher roof 'bin/'
+    E-32  one usage line per face, GENERATED
+    E-14  'hwut.tell' tells about ONE TEST; 'hwut.report' about A RUN
+    E-4   acceptance, and what it refuses
+    E-22  'hwut.play' -- the command line's way to stand INSIDE a test
+    E-18  'hwut.sanitize' -- reports by default; never guesses at
+          blessed work
+    E-13  a wishlist is a file of targets, and THE ROUND TRIP CLOSES
+    E-19  labels -- sets of runs in one file
+    E-20  the labels go live -- the view in EVERY wish
+    E-21  the short form of hwut 1.0; an explicit target overrides
+    E-24  opening the labels is ONE BRICK
+    E-26  '--language' stands in the wish, FOR EVERY FACE
+    E-17  'hwut.report' -- four formats, and the stain in each
+    E-23  a pack states its place, and tells BOTH readings
+    E-10  '--timing' raises the store; 'hwut.stability' reads it
+    P-16  two faces: 'hwut.show' and 'hwut.plan'
+
+THE RECURRING SHAPE, four times over: E-24, E-26, E-20 and P-16 all say
+'this belongs in ONE brick that every face imports, not in each face'.
+That is the ONE LAW ONE PLACE doctrine, discovered separately per
+concern. gathered/0q (the face inventory) is the measurement behind it.
+
+E-2 IS WORTH READING FOR ITS HONESTY: a retroactive change to a
+published exit status, recorded as such rather than smoothed over.
+
+==============================================================================
+10  DISPLAY: WHAT A READER IS TOLD
+==============================================================================
+     D-1..D-12 (display)  E-29  E-30  E-31  E-33  E-40
+
+    D-1   the flow line format     D-2   the colour decision
+    D-4   the default tier         D-5   the tier ladder
+    D-6   ONE ENGLISH DOOR         D-7   one home for rendering
+    D-8   the face is operational; DISPLAY owns the rendering words
+    D-9   the flow line carries what was ASKED FOR, and names what RAN
+    D-10  the run's good is a digest, and the digest is PART OF THE
+          ORACLE
+    D-11  the junction and the place    D-12  the tree's ink
+    E-29  the shape of a difference, and WHO IS NOT TOLD BY IT
+    E-30  the repeat mark stands UNDER what it repeats
+    E-31  the shape is THE REPORT'S to say, not the run's
+    E-33  the flow says ONLY WHAT CHANGED
+    E-40  ONE CHANNEL for subjects, and the faces that went around it
+
+D-6 AND D-8 ARE ONE RULING SEEN TWICE: English belongs behind one door,
+and the door is display's. E-31 is the same law from the other side --
+the RUN does not choose the shape.
+
+D-10 BELONGS TO SUBJECT 5 AS MUCH AS HERE: a digest is not decoration,
+it is part of the oracle.
+
+==============================================================================
+11  COVERAGE
+==============================================================================
+     D-1  D-4  D-23  D-2  D-3  D-5  D-6  D-20  D-7  D-13  D-10  D-30
+     D-11  D-12  D-19  D-22  D-24  D-26  D-27  D-28  D-29  (all
+     coverage)
+
+    D-1   coverage is a COMPONENT, not a spread of options
+    D-4   coverage is ITS OWN ANIMAL
+    D-23  two roles: the framework is INVOKED, the format is READ
+    D-2   the component chooses the tool; the conf names it
+    D-5   the homogeneous record: LCOV's skeleton, not its grain
+    D-6   a converter makes the storage format PRIVATE
+    D-20  the record on disk is BINARY; the text is the presentation
+    D-7   the record names the tool and format that MADE it
+    D-13  the tool/format tables are GENERATED, not written
+    D-10  a reader names a second call; it NEVER MAKES ONE
+    D-30  the real artefacts are TEST INPUT, filed by the format
+    D-11  a measure is REGISTERED, not built in
+    D-12  a named point MERGES where a digest cannot
+    D-19  the demand shapes the run: the provision chain
+    D-22  one artefact directory per test directory, SO ONE RUN AT A
+          TIME
+    D-24  a failure report carries ITS coverage
+    D-26  the table moves out: NO SECOND SOURCE
+    D-27  a byte count is a MACHINE-CHOSEN VALUE
+    D-28  the base class declared a contract and SUPPLIED NO SHAPE
+    D-29  the visitor is written over a SETTLED set
+
+D-30 IS THE COMPONENT'S DISCIPLINE IN ONE LINE, and it is the same law
+as 'GOOD files are never fabricated': every reader was written against
+a real artefact of the real tool. Eleven readers, eleven real artefacts.
+
+D-22 CONTRADICTS NOTHING BUT CONSTRAINS SUBJECT 7: one artefact
+directory per test directory means ONE RUN AT A TIME there, which is
+the exception to O-11's parallelism.
+
+==============================================================================
+12  THE TENSIONS, COLLECTED
+==============================================================================
+
+12.1  ONE NUMBER, TWO RULINGS -- THREE TIMES.
+      E-9   exploration: variant groups / services: hwut_compare
+            retired
+      R-73  orchestrator: the selection brick / exploration:
+            language-setup
+      R-74  orchestrator: the wish names directories / exploration:
+            '%' is the stem
+      A bare E-9, R-73 or R-74 does not identify a ruling. Fork r-2.
+
+12.2  D- IS FOUR NAMESPACES.
+      display, coverage, orchestrator, auxiliary. 'D-4' names four
+      different rulings. Deliberate, and it means the component must
+      always be said.
+
+12.3  E-1 AND display D-3 ARE THE SAME RULING, TWICE.
+      display D-3 is even titled '/ E-1  THE EXIT STATUS LAW'. Honest,
+      and the only cross-series pointer of its kind in the tree.
+
+12.4  RATIONALE-hwut_runner.txt HAS NO NUMBERS AT ALL.
+      Interactive mode as a PURE ACCELERATOR -- byte-exact with normal
+      mode, ONE set of GOODs -- is load-bearing doctrine for subject 5
+      and subject 7, and cannot be cited from either.
+
+12.5  SUPERSESSION IS HANDLED WELL, AND ONLY IN SUBJECT 4.
+      D-7 and D-9 carry their own supersession notes. No other subject
+      does this, because no other subject has needed to -- but subject
+      6 will, the moment r-5c is ruled.
+
+==============================================================================
+WHERE A SUBJECT HAS NO FLOOR
+==============================================================================
+
+    (subject 2 REMOVED 2026-09-04: E-7 rules 'target { }' LOCAL, and
+     the service is built. It never had a missing floor; I had not
+     looked.)
+    subject 6   RULED 2026-09-04. t( d(b_nominal) ): the pole sets the
+                scale, the asymmetry is the doctrine, the code is
+                correct. What is owed is a DOCUMENT edit -- see
+                'adm/WORK/intend/16-pole-and-tolerance.txt'.
+    subject 1   the configuration SPECIFICATION itself is owed and
+                unwritten -- gathered/0v
+
+ONE SUBJECT ONLY -- subject 1, the configuration specification, which
+is genuinely owed: no 'SPECIFICATION.txt' stands anywhere in the tree.
+
+VERSION 1 NAMED THREE. Subject 6 was ruled on 2026-09-04; subject 2
+had been ruled by E-7 long before I wrote that it was open. BOTH
+ERRORS HAVE ONE CAUSE: this file was written from the gathered
+DISCUSSION entries, which state what was owed WHEN THEY WERE WRITTEN,
+and not from the RATIONALE entries, which state what was ruled. Where
+the two disagree, THE RATIONALE IS THE LAW and the discussion is
+residue.

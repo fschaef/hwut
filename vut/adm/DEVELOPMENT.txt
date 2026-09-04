@@ -1,7 +1,7 @@
 
 ============================================================================
   OPEN, PROMINENT:  A SESSION ON DOCUMENT CONSISTENCY IS DUE.
-  See 'adm/DISCUSSIONS/disc-1-document-consistency.txt'. Until it is held,
+  See 'adm/WORK/gathered/02-disc-1-document-consistency.txt'. Until it is held,
   a README sentence may lag its ruling and a component's laws may stand in
   another component's RATIONALE -- read the RATIONALE index lines first.
 ============================================================================

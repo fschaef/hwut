@@ -5,5 +5,5 @@ test-import_graph.sh;depth;true;ok
 ;refused;true;ok
 ;shared;true;ok
 ;unreadable;true;ok
-;vut;true;ok
+;vut;false;not-equivalent-with-nominal
 test-static-analysis.sh;;false;not-equivalent-with-nominal

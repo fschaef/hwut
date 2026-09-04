@@ -1,0 +1,143 @@
+==============================================================================
+review-r7 -- THE GATHERED WORK: DONE ITEMS, DOUBLE ENTRIES, BROKEN REFERENCES
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: all.
+PLAN:       adm/WORK/plan/01-work-structure.txt   (phase R, second pass)
+
+A pass over the 40 gathered files looking for what is DONE and what is
+recorded TWICE. It found a third thing, larger than either: G-2 broke
+every cross-reference in the tree that named a DISCUSSIONS file.
+
+______________________________________________________________________________
+
+1  G-2 BROKE 20 CROSS-REFERENCES                              ** REPAIRED **
+
+Moving 40 files out of nine 'DISCUSSIONS/' directories left every
+citation of them pointing at a directory that no longer exists.
+Nothing warned; the references are prose, and prose does not compile.
+
+FIFTEEN outside 'adm/WORK', in RATIONALE files, READMEs and PYTHON
+SOURCE COMMENTS:
+
+    services/play.py                          -> gathered/06
+    services/RATIONALE.txt        (x3)        -> gathered/0p, 0w, 0k
+    engine/display/RATIONALE.txt              -> gathered/06
+    engine/compare/RATIONALE.txt              -> gathered/0k
+    engine/bookkeeper/RATIONALE.txt           -> gathered/02
+    adm/DEVELOPMENT.txt                       -> gathered/02
+    exploration/owner_faces_provisional.py    -> gathered/0x
+    exploration/TEST/test-interview.py        -> gathered/0z
+    run/RATIONALE.txt             (x2)        -> gathered/0c, 06
+    run/README.txt                            -> gathered/05
+    operations/run/stage_canonicalise.py      -> gathered/06
+    operations/consume/TEST/test-accept.py    -> gathered/0w
+
+FIVE inside the gathered files themselves:
+
+    0f  (x3)  -> gathered/07, items 1, 2 and 3
+    0v        -> gathered/0j
+    0l        -> gathered/06
+
+All twenty repointed. Two references CANNOT be repaired and are left
+standing, named here so they are not mistaken for oversights:
+
+    services/RATIONALE.txt:1493
+        'engine/operations/DISCUSSIONS/disc-2-subject-provision.txt'
+        -- never gathered, because it was DELETED WHEN SETTLED, as the
+        law says. The citation outlived its target. The subject
+        provision it names is built ('operations/subject_provision.py').
+    engine/compare/DOC/SEMANTICS.txt:652
+        'DISCUSSIONS/disc-stateful-constraints.txt' -- no such file in
+        any DISCUSSIONS carrier, gathered or not. It was either never
+        written or deleted before the census.
+
+THE GENERAL LESSON. A citation by PATH breaks when the path moves; a
+citation by RULING NUMBER does not. Every reference above named a file;
+none named an E-/R-/O-/D- entry. Where the thing cited is settled, the
+number is the better citation and the path is the worse one.
+
+______________________________________________________________________________
+
+2  DONE ITEMS FOUND INSIDE OPEN FILES                         ** STRUCK **
+
+Three items sat in lists titled 'PROVISIONAL CHOICES, TAKEN TO BUILD,
+NOT RULED' having in fact been ruled, each naming the entry that ruled
+it. Each was verified to be a standing entry, then struck in place:
+
+    07 item 1  the worker bound        run/RATIONALE  O-11 / O-12
+    09 item 1  directories in parallel run/RATIONALE  O-11
+    0f item 1  --since / --until       plan/RATIONALE P-15
+
+The files stay OPEN: each still carries genuinely unruled items.
+
+______________________________________________________________________________
+
+3  DOUBLE ENTRIES
+
+3.1  THREE FILES SHARE ONE TITLE -- and it is NOT duplication.
+
+    07  scheduler   disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD...
+    09  run         disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD...
+    0f  plan        disc-3  PROVISIONAL CHOICES, TAKEN TO BUILD...
+
+    Read together, they are three DIFFERENT lists -- one per component,
+    each about that component's own provisional decisions. The title is
+    a genre, not a subject.
+
+    BUT they are entangled: 0f's items 3, 5 and 9 are STUBS reading
+    'MOVED to orchestrator/scheduler/DISCUSSIONS', and their contents
+    are 07's items 1, 2 and 3. So the same three decisions were
+    recorded twice -- once as content, once as a pointer. The pointers
+    now name the gathered file and its item number.
+
+3.2  TWO NUMBER COLLISIONS INSIDE ONE COMPONENT.
+
+    exploration has TWO todo-1 and TWO todo-7:
+
+        0w  todo-1  THE 'output' PARAMETER -- SUBJECTS ARE THE TEST'S
+                    DESIGN
+        0x  todo-1  OWNER FACES: WHAT EACH COMPONENT OWES
+
+        13  todo-7  THE 'hwut.parse' SERVICE
+        14  todo-7  A VARIANT RESTATING A 'language-setup' ENTRY
+
+    This is not cosmetic. 'services/RATIONALE.txt' and
+    'operations/consume/TEST/test-accept.py' both cited
+    'exploration/DISCUSSIONS/todo-1', and WHICH todo-1 was meant could
+    only be recovered from the surrounding sentence (both meant 0w,
+    the 'output' parameter). The two-char ids now disambiguate, which
+    is one of the things the id scheme is for.
+
+    Operations carries the same defect independently: TWO todo-23s
+    (r-5d, still open).
+
+3.3  A BASENAME IS NOT A KEY.
+
+    07 and 09 share the FILE NAME 'disc-1-provisional-choices.txt'.
+    Any repair that maps old citations to new files by basename alone
+    resolves this pair wrongly. The mapping must carry the component.
+    Recorded because the next such sweep will meet it again.
+
+______________________________________________________________________________
+
+OPEN -- FOR FRANK-RENE
+
+  r-7a  THE TWO UNREPAIRABLE CITATIONS (section 1). Delete them, or
+        replace each with the ruling number that now carries the
+        meaning? For 'disc-2-subject-provision' the subject is built
+        and something in a RATIONALE surely states it; for
+        'disc-stateful-constraints' I could find no successor at all.
+        RECOMMENDED: replace the first by number, delete the second
+        and say in SEMANTICS.txt what it settled, since a citation
+        nobody can follow is worse than no citation.
+
+  r-7b  SHOULD A CITATION EVER NAME A PATH? Section 1's lesson
+        suggests a rule -- cite a settled thing by its ruling number,
+        cite an open thing by its adm/WORK id -- which would make this
+        class of breakage impossible. That is a doctrine question, and
+        it belongs with gate s-2 (the checker): a checker could verify
+        every cited id resolves, which is exactly what nothing did
+        here.

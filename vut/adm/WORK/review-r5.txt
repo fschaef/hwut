@@ -2,7 +2,7 @@
 review-r5 -- THE THREE 'DISCUSSIONS.txt' FILES, TRIAGED BY ACCOMPLISHMENT
 ==============================================================================
 
-VERSION: 4
+VERSION: 5
 
 COMPONENTS: engine/orchestrator, engine/coverage, engine/operations
 PLAN:       adm/WORK/plan/01-work-structure.txt   (fork r-5)
@@ -84,17 +84,19 @@ ______________________________________________________________________________
                                             ruled', i.e. residue.
       todo-1   homogeneous record, merge,   record format v2 in use,
                index                        'services/cov.py' stands
-      todo-9   is the orchestrator's t-9    D-18 stands. THE SECOND
-                                            HALF OF THIS VERIFICATION
-                                            FALLS -- see review-r6:
-                                            'resolve' and
-                                            '_local_resolver' would
-                                            live in 'coverage/
-                                            database/', which is
-                                            ABSENT FROM THE DUMP. What
-                                            was measured is the
-                                            absence of the file, not
-                                            of the symbol.
+      todo-9   is the orchestrator's t-9    D-18 stands, AND THE REST
+                                            IS NOW VERIFIED TOO
+                                            (2026-09-04, against the
+                                            complete tree):
+                                            '_local_resolver' occurs
+                                            in ZERO '.py' files
+                                            anywhere -- only in
+                                            RATIONALE prose recording
+                                            its deletion. The strike
+                                            was correct. Version 4 of
+                                            this review withdrew the
+                                            verification; the
+                                            withdrawal is now lifted.
       todo-10  'hwut.cov gather' / 'stale'  D-25 stands; both verbs in
                                             'services/cov.py'
       todo-11  the two refusals             RETIRED

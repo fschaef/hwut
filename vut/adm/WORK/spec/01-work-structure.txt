@@ -2,7 +2,7 @@
 spec/01-work-structure -- THE WORK STRUCTURE, PRECISELY
 ==============================================================================
 
-VERSION: 6
+VERSION: 7
 
 COMPONENTS: all.
 INTEND:     adm/WORK/intend/01-work-structure.txt
@@ -130,6 +130,8 @@ ALLOCATED SO FAR
                                        engine/orchestrator/exploration)
             15  same-and-interactive             (gathered, ex
                                        engine/orchestrator/exploration)
+            16  pole-and-tolerance    (born global 2026-09-04; the
+                                       PHILOSOPHY 1.1 edit is owed)
 
 ______________________________________________________________________________
 

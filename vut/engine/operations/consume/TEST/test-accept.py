@@ -127,8 +127,8 @@ def test_pulls_provision():
     pulling one provision. STDERR IS NEVER A SUBJECT (E-5): the
     fixture that named it is a fixture that named an impossible thing,
     not a defect the removal exposed. A second REAL subject needs a
-    file, which needs the 'output' parameter (exploration/DISCUSSIONS/
-    todo-1) -- not yet built. Reduced to the one subject that still
+    file, which needs the 'output' parameter (adm/WORK/gathered/
+    0w-todo-1-output-subjects.txt) -- not yet built. Reduced to the one subject that still
     stands; re-widen to two once a file subject exists."""
     directory = _place("print('to stdout')\n")
     store  = Store(Bookkeeper(directory))

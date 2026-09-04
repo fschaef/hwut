@@ -37,7 +37,9 @@ ______________________________________________________________________________
 
 Write D for the transformation from BEHAVIOUR to DESCRIPTION -- what the
 unit does, turned into the text a test reads. Write Eq(x, y, T) for the
-comparison of two descriptions under a stated tolerance T. Let GOOD be
+comparison of two descriptions under a stated tolerance T, x the
+SUBJECT's description and y the NOMINAL's -- the order is fixed and it
+matters (see 'the tolerance is the pole's', below). Let GOOD be
 the admissible behaviours and BAD the inadmissible ones, and let
 
     GOOD  intersect  BAD  =  {}
@@ -146,10 +148,30 @@ DEPENDING ON WHICH RUN HAPPENED TO BE ACCEPTED:
 
 Two demands follow.
 
-  Eq MUST BE SYMMETRIC. 'within r of the NOMINAL' is not: it makes the
-  nominal an anchor, and the criterion is not even well posed. A relative
-  tolerance must be relative to something symmetric -- the larger
-  magnitude, or the mean -- or be absolute.
+  THE TOLERANCE IS THE POLE'S. Written out:
+
+      Eq( D(b_subject), D(b_nominal), T )   where   T = t( D(b_nominal) )
+
+  The tolerance is a function of THE NOMINAL'S DESCRIPTION -- of the
+  DESCRIPTION, because we operate on descriptions and never on
+  behaviour, and of the NOMINAL, because the pole is what declares the
+  centre. Nominals are POLES; subjects are TRABANTS. Eq is only ever
+  asked subject-against-nominal, and the asymmetry of its two arguments
+  is the doctrine rather than a lapse in it.
+
+  A BAND COMPUTED FROM BOTH SIDES IS WORSE THAN NONE. Make the radius
+  'the larger magnitude' or 'the mean' and a subject DRIFTING AWAY FROM
+  THE POLE WIDENS ITS OWN TOLERANCE -- the further it strays, the more
+  leniency it buys. A centre whose scale is set by the thing measured
+  against it is not a centre.
+
+  SO THE 0.815/0.816 CASE ABOVE IS NOT A DEFECT OF Eq. It is the
+  acceptance hypothesis falsifying itself: the accepted run was not the
+  pole. The answer is to MOVE THE NOMINAL toward the centre, or to
+  widen D until the spread vanishes -- never to widen T.
+
+  WHAT REMAINS TRUE IS THE WARNING, and it is the durable half: nothing
+  checks the margin, and a tolerance can break it quietly.
 
   THE MARGIN CONDITION. Let d be the distance Eq thresholds, so that
   Eq(x, y, T) holds exactly when d(x, y) <= T. Since every comparison is

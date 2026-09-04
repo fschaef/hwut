@@ -42,8 +42,10 @@ TRIGGER -- when this gets built
     demonstrated need.
 
 NOT AFFECTED
-    'CRunSummary' stays FLAT, stays in 'orchestrator/run/', and stays
-    the operational source for the 'E_ExitCode' decision. Two shapes,
+    'CRunSummary' stays FLAT and stays the operational source for the
+    'E_ExitCode' decision. (ADDRESS CORRECTED 2026-09-04: it is
+    'engine/protocol/summary.py' now, not 'orchestrator/run/' -- O-17
+    moved the protocol out of the producer. FLAT is unchanged.) Two shapes,
     two questions:
 
         CRunSummary   "did anything fail"      -> exit status

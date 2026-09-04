@@ -1,0 +1,511 @@
+==============================================================================
+TODO -- ALL OUTSTANDING LABOUR, IN ONE PLACE
+==============================================================================
+
+VERSION: 9
+
+Goal (1) of three: the TODOs gathered. Rationale logic is goal (2),
+README knowledge goal (3).
+
+WHAT THIS IS. Every piece of LABOUR OWED anywhere in the tree, from
+'adm/WORK/gathered/' (40 files), 'engine/coverage/DISCUSSIONS.txt',
+'engine/operations/DISCUSSIONS.txt' and 'services/DISCUSSIONS.txt'.
+An item is here if a DECISION EXISTS and the WORK DOES NOT. Pure
+forks -- where the choice itself is still owed -- are NOT here; they
+are listed at the foot under WAITING ON A RULING, because labour
+cannot start on them.
+
+WHAT IT IS NOT. Not a schedule and not a priority order. Where one
+item blocks another, it says so.
+
+==============================================================================
+A  BLOCKED -- something else must land first
+==============================================================================
+
+A-1  hwut.rename / hwut.rename-choice ACROSS A DIRECTORY BOUNDARY
+     services/DISCUSSIONS.txt todo-1
+     Both faces carry a test's book entry, register entry, nominals
+     and candidates from one directory's tree into another's. Every
+     primitive exists ('TestIdDb.register()', hwut.remove's
+     retirement, 'rename.move_tuple()', 'record.seated()'); what is
+     new is the COMMAND SHAPE -- today one Store per call, needed:
+     a source and a target.
+     BLOCKS: A-2. Worth a spike on the two-Store shape first.
+
+A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE
+     coverage/DISCUSSIONS.txt todo-13
+     'GOOD/result_db.csv' and 'GOOD/test_ids.dat' under
+     'coverage/TEST/', 'coverage/database/TEST/' and
+     'coverage/readers/TEST/' still describe the pre-split single
+     directory. Hand-editing refused, correctly.
+     WAITS ON: A-1. Becomes its first real exercise.
+
+A-3  THE PROCSITTER CALL IN '--hwut-info'
+     gathered/0z todo-3
+     '_procsitter_runner' raises NotImplementedError. The call is
+     written at integration, and the GOOD file of the choice that
+     exercises it is recorded THEN -- against the real procsitter,
+     never a stand-in.
+     WAITS ON: procsitter being in the tree.
+
+A-4  THE CAPS DEFAULTS, DECLARED ON PROCSITTER'S OWN FACE
+     gathered/10 todo-4
+     Values in 'owner_faces_provisional.ConfigCaps' are stand-ins and
+     were never ruled one by one.
+     WAITS ON: procsitter's own face (same integration as A-3).
+
+A-5  'same' AND 'interactive' -- THE OWNERS' REAL FACES
+     gathered/15 todo-8
+     Both faces are stand-ins. The store declares whether one nominal
+     per file is its default; the runner already carries an
+     'interactive' flag whose member name may differ.
+     WAITS ON: the same owner-face work as A-4.
+
+==============================================================================
+B  READY -- decided, unblocked, nothing in the way
+==============================================================================
+
+B-1  THE DISPATCHER INTO operations            ** BUILT -- STRIKE **
+     gathered/08 todo-1
+     MEASURED 2026-09-04 against the complete tree: BUILT AND WIRED.
+     'engine/orchestrator/run/dispatcher.py', 297 lines,
+     'TestRunDispatcher(I_Dispatcher)', carrying ALL FIVE methods the
+     entry calls owed -- 'run_test', 'run_build', 'open_session',
+     'close_session', 'run_script' -- plus 'close', 'report_of' and
+     'detail_of'. Wired end to end: 'services/run.py' imports
+     'test_run_dispatcher_factory'; 'orchestrate.py' hands it to
+     'CTreeScheduler'; 'run/TEST/test-endtoend.py' exercises it. The
+     ruling is O-7, which stands as an entry.
+     gathered/08 is RESIDUE and may be struck. Its banner reads
+     '** LABOUR OWED **' -- THE FOURTH SELF-MARKER IN THIS MIGRATION
+     TO DISAGREE WITH THE TREE.
+
+     VERSION 1 OF THIS FILE CALLED B-1 'the one everything downstream
+     of a run waits on'. THAT WAS WRONG, and wrong for the reason
+     r-5 named twice: this file was built by READING the entries, not
+     by measuring them. See the note at the foot.
+
+B-2  'hwut.run' AND '--format'
+     gathered/0b todo-1
+     The command-line face over 'orchestrator()': run the tree, drive
+     a consumer, fold to a summary, print it, exit status from it.
+
+B-3  THE 'hwut.parse' SERVICE -- THE COMMAND LINE
+     gathered/13 todo-7
+     Built except the face. Owed: (a) 'hwut.parse [<file>]' beside the
+     other services, not inside the component; (b) the extraction
+     shown -- which region, which line, what leader stripped, because
+     an author whose header will not parse needs that before the tree;
+     (c) '--test-sequence'.
+
+B-4  SEVERAL COLLISION GROUPS
+     gathered/0h todo-7
+     Exploration accepts a directory stating several groups;
+     'DirectorySpec.collision' carries one flat group today.
+     Determination needs ONE LINE changed once it arrives.
+
+B-5  THE 'special' KEY AND 'hwut.special'
+     gathered/0g todo-4
+     The choice is made (P-11); nothing is built. Labour lands in
+     exploration (the key) and services (the face).
+
+B-6  'hwut.affected' -- THE SERVICE SHIM
+     coverage/DISCUSSIONS.txt todo-6      [part]
+     'coverage/affected.py' is built and 'E_ExitCode' stands in
+     'services/_exit.py'. Owed: 'services/affected.py'.
+
+B-7  'hwut.renovate'
+     gathered/0r todo-1
+     Ruled, unbuilt. 'services/renovate.py' per the naming law;
+     '--directory=X [--apply]'; must enter the books as 'hwut.accept'
+     does; must be developed against the real quex project; reads
+     'hwut-info.dat' to know candidacy.
+     SEE ALSO C-6 (the stderr survey belongs with it).
+
+B-8  'hwut.convert_to_lcov'
+     coverage/DISCUSSIONS.txt todo-3
+     The export face (D-6): the reader registry run backwards.
+
+B-9  '--global-conf [<file>]' ON THE SERVICES
+     coverage/DISCUSSIONS.txt todo-5
+     Plus the upward search: nearest enclosing 'hwut.conf' wins,
+     layered over what stands further out (D-2).
+
+B-10 THE PACK STOPS RESERVING AND STARTS SHOWING
+     coverage/DISCUSSIONS.txt todo-4
+     'services/report.py' renders per source file the percentage and
+     the uncovered line ranges -- which is what the stored form
+     already is, so no conversion at display time. Retires
+     operations' todo-22. Moves two GOODs, both INTENDED.
+
+B-11 COMMAND-LINE COMPLETION
+     gathered/0s todo-2
+     Every face completes on TAB, in bash, zsh and PowerShell at
+     least. Design done, nothing built.
+
+B-12 THE 'output' PARAMETER -- SUBJECTS ARE DECLARED
+     gathered/0w todo-1
+     Decided (R-71), unbuilt. Blocks a second REAL subject in
+     'operations/consume/TEST/test-accept.py'.
+
+B-13 A VARIANT RESTATING A 'language-setup' ENTRY
+     gathered/14 todo-7
+     R-73 intends it; unbuilt.
+
+B-14 THE MODEL IS A TREE                       ** KEEP, PARKED **
+     gathered/05 todo-1
+     MEASURED 2026-09-04: the argument holds against the code. The
+     grouping IS rebuilt by filtering on 'key[0]' -- 'plain.py' 696
+     '_count', 706 '_failure_key_list', 713 'key[0] == directory',
+     and 'protocol/summary.py' 36 'failure_db'.
+     THE TRIGGER IS FALSIFIABLE: "the day a SECOND emitter is
+     actually being written". One emitter does not pay for the
+     grouping; two do. Precedent: the pype foreign-executor seam.
+     ONE ADDRESS WAS STALE and is corrected in place: 'CRunSummary'
+     is 'engine/protocol/summary.py', not 'orchestrator/run/' (O-17).
+     STILL OPEN INSIDE IT: incremental or folded. The file reasons
+     it likely settles itself -- terminal is the base case, and an
+     incremental model yields the complete one but not the reverse.
+
+B-15 THE STALENESS LAW, SECOND HALF
+     operations/DISCUSSIONS.txt todo-24
+     Every stored candidate carries a freshness sidecar; the second
+     half of s-4b is owed.
+
+B-16 THE FACE OF THE SECOND QUESTION
+     operations/DISCUSSIONS.txt todo-25
+     S-1 is built beneath -- three states, the refusal, the mark. The
+     face over it is not.
+
+B-17 DONE 2026-09-04. PHILOSOPHY 1.1: STALE SYMMETRY PARAGRAPH STRUCK
+     adm/WORK/intend/16-pole-and-tolerance.txt, section 3
+     The paragraph demanding a symmetric Eq contradicts the pole
+     passage three paragraphs above it, and names 'the larger
+     magnitude' -- the very form the ruling rejects. Its durable half
+     (nothing checks the tolerance) is kept; the remedy goes. Sweep
+     the notation with it: 't' and 't(b, b_nominal)' become
+     't( d(b_nominal) )'.
+
+B-18 DONE 2026-09-04. operations' todo-19 STRUCK WHOLE.
+
+B-19 __slots__-CLASS DEFECTS ALREADY FIXED -- nothing owed
+     (recorded so the next sweep does not re-open it: operations'
+     todo-12 is BUILT and struck, C-8.)
+
+==============================================================================
+C  PARTLY BUILT -- a body exists, a named piece is missing
+==============================================================================
+
+C-1  THE EXPLAIN SEAM
+     operations/DISCUSSIONS.txt todo-21
+     DELIVERED: 'diagnosis.py' + its TEST; explain() renders request,
+     resolution chain, per-record containment/exit/stderr-tail, report
+     token, channels, wrong-channel hint; DiagnosisObserver on seam 12.
+     OWED: the resolution chain CARRIED IN THE RECORD (today
+     recomputed at render time -- honest live, dishonest archived),
+     and session-level wiring (a request flag installing the observer).
+
+C-2  PROXY PROVISION
+     operations/DISCUSSIONS.txt todo-23 (the first of two)
+     BUILT: the seam, one interface per role, refused at the door,
+     planner-declared 'kind', cadence in the delivery. The rest open.
+
+C-3  THE PER-LANGUAGE READERS
+     coverage/DISCUSSIONS.txt todo-2      [11 built]
+     Eleven readers built, each against a real artifact of the real
+     tool. Further languages as they are wanted; each new reading
+     written against a real artifact, never invented.
+
+C-4  THE MEASUREMENTS BESIDE THE LINE AXIS
+     coverage/DISCUSSIONS.txt todo-8      [part]
+     BUILT: 'measure.py' registration (D-11), 'branch' and 'mcdc',
+     cobertura reading branch data, named-point measures (D-12).
+     OPEN: 'condition' as a third measure if the MC/DC distinction is
+     wanted; moving branch and mcdc onto the named-point shape so they
+     merge -- which costs their record TAGS a format change, and waits
+     for somebody who actually wants an aggregate over branch data.
+
+C-5  THE NUMERIC TOLERANCE                          ** RESOLVED **
+     operations/DISCUSSIONS.txt todo-19
+     RULED 2026-09-04 (intend/16): the first defect (missing 'abs()')
+     was real and is FIXED; the second is NOT A DEFECT -- the pole
+     sets the scale, t( d(b_nominal) ), and the asymmetry is the
+     doctrine. NOTHING IS OWED TO COMPARE. todo-19 may be struck
+     whole; it moves to band B below as a one-line strike.
+
+C-6  RENOVATE AND THE STDERR SURVEY
+     operations/DISCUSSIONS.txt todo-26
+     'hwut.renovate' should report which tests would newly refuse
+     under S-1. Belongs with B-7 and should be built with it.
+
+C-7  README DEEP-SECTION POLISH AFTER THE SURGERY
+     operations/DISCUSSIONS.txt todo-23 (the second of two -- NUMBER
+     COLLIDES with C-2)
+     The surgery (test_run -> operations; provision pruned) left deep
+     README sections describing the old shape.
+     THIS IS GOAL (3) WORK, and should be folded into it rather than
+     done twice.
+
+==============================================================================
+D  A MEASUREMENT IS OWED BEFORE THE WORK CAN BE JUDGED
+==============================================================================
+
+D-1  THE MEASUREMENT THAT RULES coverage disc-1
+     coverage/DISCUSSIONS.txt todo-7
+     Write of one run, read of a cross-directory aggregate, forms (a)
+     and (c). Until it exists, disc-1 (text or binary) stays open --
+     and disc-1 says explicitly it is NOT TO BE RULED WITHOUT NUMBERS.
+
+D-2  THE OUTER-TEXT BLOCK BOUNDARY
+     operations/DISCUSSIONS.txt todo-2 (a)
+     Whether to cut the outer text, and on what boundary. CHECKABLE
+     rather than arguable: split it, run compare's own suite, see
+     whether any GOOD moves. If none does, the boundary is free.
+
+D-3  THE TWO-Store SHAPE FOR A CROSS-DIRECTORY RENAME
+     services/DISCUSSIONS.txt todo-1
+     A spike measuring the two-Store shape against 'move_tuple()'
+     before ruling further. (Same item as A-1; listed here because
+     the measurement comes first.)
+
+==============================================================================
+E  WAITING ON A RULING -- no labour can start
+==============================================================================
+
+     gathered/0j   the target service: five forks (a..e), inheritance
+                   the hardest
+     gathered/0k   --confs: the file's language; implicit reading
+     gathered/0m   the wishlist: does CTestTaskListQuery learn its
+                   directory? BLOCKS the consuming half
+     gathered/0v   the configuration specification's form
+     gathered/0t   a formal form for the test sequence (noted, not
+                   ruled)
+     gathered/0d   scenario kinds beyond the test run (parked)
+     gathered/0e   the multi-directory law (parked)
+     gathered/0n   hwut 2.0 root causes
+     gathered/0o   cadence needs a theory
+     gathered/02   the document-consistency session -- WHICH IS
+                   GOALS (2) AND (3)
+     gathered/07/09/0f  the remaining provisional choices of
+                   scheduler, run and plan
+     gathered/0u   tree-walk provisional laws
+     coverage      disc-1..disc-7, disc-9
+     operations    disc-8, disc-9 (both parked), todo-15 (parked
+                   behind todo-16), todo-16, todo-17, todo-18, todo-20
+     (r-5c CLOSED 2026-09-04 -- see B-17, B-18)
+     r-5b          split operations' DISCUSSIONS, or let it stand
+     r-5d          operations' two todo-23s (C-2 and C-7 above)
+     r-5e          coverage disc-6 is moot -- strike or keep
+     r-6a          re-dump with --complete; todo-9 unverified
+     r-6d          services/DISCUSSIONS.txt is a re-seeding: gate s-3
+     r-7a          two unrepairable citations
+
+==============================================================================
+COUNTS
+==============================================================================
+
+     A  blocked                     5
+     B  ready                      17   (B-17, B-18 built same day)
+     C  partly built                6   (-1: C-5 resolved)
+     D  measurement first           3
+     E  waiting on a ruling        23   (-1: r-5c closed)
+
+     READY TO BUILD TODAY: the seventeen of B, of which B-1 (the
+     dispatcher) is the one everything downstream of a run waits on.
+     B-17 and B-18 were built on the day they were listed; r-5c is
+     closed in the code, the documents and the discussion files alike.
+     The 'd'/'D' collision is CLOSED (2026-09-04, ruling (a)): 'D' is
+     the description function, 'd' stays the distance. Nothing to
+     build -- the edit already used 'D'.
+
+==============================================================================
+THE MEASURED PASS, DONE
+==============================================================================
+
+VERSION 1 was assembled by READING the discussion entries. The complete
+tree arrived afterwards. Measured against it, THE FILE WAS WRONG IN
+BOTH DIRECTIONS -- items listed as owed are built, and items listed as
+awaiting a ruling were ruled long ago.
+
+This is the same error r-5 found three times in the DISCUSSIONS files,
+committed here by me, from the same cause: a marker read instead of a
+tree measured.
+
+------------------------------------------------------------------------------
+BAND B -- WHAT IS ACTUALLY OWED
+------------------------------------------------------------------------------
+
+  BUILT, STRIKE THE ENTRY:
+
+    B-1   the dispatcher into operations
+          'run/dispatcher.py' 297 lines, all five methods, wired
+          through 'services/run.py' -> 'orchestrate.py' ->
+          'CTreeScheduler', exercised by 'run/TEST/test-endtoend.py'.
+          Ruling O-7 stands.
+    B-8   'hwut.convert_to_lcov'
+          BUILT UNDER ANOTHER NAME: 'hwut.cov convert
+          [--from <form>] [--to <form>] FILE'. The entry names a face
+          that was never going to exist as its own launcher; the verb
+          set (todo-12, already struck) absorbed it.
+
+  HALF BUILT:
+
+    B-2   'hwut.run' AND '--format'
+          The face is built ('bin/hwut.run', 'services/run.py'). No
+          '--format' option exists. The option is owed, the face is
+          not.
+    B-15  the staleness law, second half
+          'subject_provision.py' carries the STALE state and the
+          freshness reasoning ("production=False and the recording
+          is ..."). What s-4b's second half adds beyond that was NOT
+          determined here.
+
+  OWED, CONFIRMED ABSENT FROM THE TREE:
+
+    B-3   'hwut.parse'        no 'bin/hwut.parse', no 'services/parse.py'
+    B-4   several collision groups
+          DECISIVE: 'validator.py' reads 'collision' with
+          '_target_list' -- a FLAT list, one group. The plural word
+          'collision_list' in 'explorer.py' and 'satisfiability.py'
+          names the singular group's members, not several groups.
+    B-5   the 'special' key and 'hwut.special'   no launcher, no key
+    B-6   'services/affected.py'                 absent
+    B-7   'hwut.renovate'     no service, no launcher
+    B-9   '--global-conf'     no occurrence anywhere
+    B-11  command-line completion                absent
+    B-16  the face of the second question        absent
+
+  SETTLED BY READING (2026-09-04) -- the four that were uncertain:
+
+    B-10  the pack stops reserving              ** OWED **
+          'services/report.py' names COVERAGE nowhere. The word IS in
+          'services/tell.py' ('section("COVERAGE", coverage_text)'),
+          so the rendering exists for ONE face and not for the pack.
+          Coverage's todo-4 is right as written.
+    B-12  the 'output' parameter                ** HALF **
+          THE DECLARATION AND THE CARRIAGE ARE BUILT: 'output' stands
+          in the relation table, 'validator.py' reads the subject
+          list, and 'run/adapter.py' carries it into
+          'TestChoiceConfiguration.output' -- resolving '<stdout>' to
+          the plain subject name and passing file entries verbatim.
+          THE CONSUMPTION IS NOT: 'consume/TEST/test-accept.py' still
+          reduces itself to one subject because a second REAL subject
+          needs a file. R-71 is built as far as the run; what is owed
+          is the file subject at the accepting end.
+    B-13  a variant restating 'language-setup'  ** OWED, AND BLOCKED
+                                                   BY A REFUSAL **
+          'language-setup' is in ROOT_ONLY_KEY_SET, and 'validator.py'
+          FAULTS any root-only key found inside a choice:
+          "'%s' cannot be a choice attribute". So a variant restating
+          it is not merely unbuilt -- it is actively REFUSED today.
+          R-73 intends it be allowed, so the work is to relax that
+          refusal for this one key, not to add a reader.
+    B-15  the staleness law, second half       ** NOT LABOUR **
+          MOVES TO BAND E. The sidecar is built ('<candidate>.when':
+          instant plus the sha256 CONTENT digest of the test source).
+          THE LAW OVER IT IS NOT RULED -- refuse, warn, or stay silent
+          when an accept or diff consumes a stored subject whose
+          source digest no longer matches. The entry says so itself:
+          "Nothing depends on the ruling; history is being recorded
+          either way." It was never owed labour.
+
+------------------------------------------------------------------------------
+BAND E -- TWO ENTRIES ARE NOT WAITING ON ANYTHING
+------------------------------------------------------------------------------
+
+    gathered/0j  THE TARGET SERVICE      ** RULED AND BUILT **
+        E-7 ('hwut.target -- USER-DEFINED DIRECTORY TARGETS') stands
+        as an entry and RULES THE TWO HARDEST FORKS of the file:
+          fork (a) inheritance -- "The scope is LOCAL, never inherited
+                   (R-69's locality law); a parent cannot bind a
+                   target for a subtree."
+          fork (b) walk membership -- "A directory binding any target
+                   is WALKED, test applications or none: definition
+                   is membership."
+        And it is BUILT: 'services/target.py' (414 lines),
+        'bin/hwut.target', 'target { }' read by the validator into
+        'field_db["target_db"]'.
+        I CALLED FORK (a) "the hardest fork of the cluster" AND IT WAS
+        SETTLED BEFORE I SAID IT.
+
+    gathered/0m  'hwut.wishlist'         ** RULED AND BUILT **
+        E-13 ('a wishlist is a file of targets, and THE ROUND TRIP
+        CLOSES') stands. Built: 'bin/hwut.wishlist',
+        'services/wishlist.py', and '--wishlist' in
+        'plan/wish.py' -- exactly the one place the entry argued it
+        belonged, "not in one face".
+
+    gathered/0v  THE CONFIGURATION SPECIFICATION   ** STILL OWED **
+        No 'SPECIFICATION.txt' anywhere in the tree. This one is as
+        the entry describes it.
+
+------------------------------------------------------------------------------
+WHAT THIS COSTS THE COUNTS
+------------------------------------------------------------------------------
+
+THE COUNTS, MEASURED (2026-09-04). Every item checked against the
+tree; none read off a marker.
+
+     A  blocked                     5
+     B  OWED, and buildable        10   B-3 B-4 B-5 B-6 B-7 B-9
+                                        B-10 B-11 B-13 B-16
+     B  half built                  2   B-2 (face yes, '--format' no)
+                                        B-12 (declared and carried,
+                                              not consumed)
+     B  parked behind a trigger     1   B-14
+     C  partly built                6
+     D  measurement first           3
+     E  waiting on a ruling        20   (23 - 0j - 0m, + B-15)
+
+     TEN ITEMS ARE BUILDABLE TODAY, and none of them blocks another.
+     THE LARGEST IS B-7, 'hwut.renovate' -- ruled, unbuilt, and the
+     one that must be developed against the real quex project.
+     THE SMALLEST IS B-13: one refusal relaxed for one key.
+
+==============================================================================
+DELETED 2026-09-04 -- PHASE S, FIRST PASS
+==============================================================================
+
+Six gathered files and one coverage entry are GONE, each verified built
+against the tree and each with its ruling standing as a RATIONALE entry.
+Nothing was carried anywhere: where the RATIONALE already holds the law,
+the discussion is residue and the sorting rule says DELETE.
+
+    gathered/08  the dispatcher       O-7      (was B-1)
+    gathered/0j  the target service   E-7      (was band E)
+    gathered/0l  'hwut.play'          E-5,E-22
+    gathered/0m  'hwut.wishlist'      E-13     (was band E)
+    gathered/11  the directory keys   R-31..36
+    gathered/12  the parser move      R-27,R-34
+    coverage     todo-3               built as 'hwut.cov convert'
+                                               (was B-8)
+
+    gathered/ : 40 -> 34 files.
+
+B-1 AND B-8 ARE GONE FROM BAND B. What remains owed in B is nine
+confirmed, two half, three uncertain, one parked.
+
+==============================================================================
+BAND E MEASURED -- see 'adm/WORK/review-r9.txt'
+==============================================================================
+
+    NOT WAITING, though listed as waiting:
+        0o   the face is BUILT ('bin/hwut.stability') and E-11 rules
+             the meaning; only the THEORY is owed
+        02   its ask is substantially DELIVERED by TODO.txt,
+             RATIONALE-INDEX, RATIONALE-LOGIC and README-INDEX
+
+    HALF CLOSED INSIDE ONE FILE:
+        0n   r-2 CLOSED by R-73, r-4 CLOSED and VERIFIED BUILT
+             ('E_TestRunResult.REGION_SYNTAX_ERROR' at
+             'difference_display.py' 126 and 155; ruling C-5).
+             r-1 (the subject suffix) and r-3 (caps) stay open.
+
+    DESERVES ITS OWN FORK, not a bullet in a survey:
+        0n r-3   SHOULD A CONTAINMENT TEST BE CAPPED AT ALL? The outer
+                 supervisor contains the test that is testing
+                 containment. A cap it cannot exceed makes the test
+                 meaningless; a cap it can makes the outer report
+                 indistinguishable from the inner one. FOUR FAILING
+                 TESTS are attached to it. It is the only DESIGN
+                 QUESTION left in band E -- the rest are deferrals.

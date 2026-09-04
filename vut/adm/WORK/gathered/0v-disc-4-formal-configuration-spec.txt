@@ -29,7 +29,8 @@ WHAT IS MISSING:
     ROOT_ONLY_KEY_SET and nowhere else; every refusal the document
     states is demonstrated; every default the document states matches
     test-defaults.py's printing.
- -  The 'target { }' dictionary (services/DISCUSSIONS/disc-2) enters
+ -  The 'target { }' dictionary ('adm/WORK/gathered/
+    0j-disc-2-target-service.txt') enters
     the specification and the vocabulary TOGETHER, never one without
     the other.
 

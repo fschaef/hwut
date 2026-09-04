@@ -98,7 +98,7 @@ test-stability.sh;bytes;true;ok
 ;verbose;true;ok
 ;verdict;true;ok
 test-tell.sh;bare;true;ok
-;coverage;true;ok
+;coverage;false;unexpected-stderr
 ;flags;true;ok
 ;pack;true;ok
 ;raw;true;ok

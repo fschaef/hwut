@@ -12,6 +12,17 @@ settled goes into the README as mechanics.
 STRUCK 2026-09-04, by the law above, verified BUILT against the tree
 (adm/WORK/review-r5.txt):
 
+    todo-19  the numeric tolerance is unsigned and asymmetric
+             STRUCK WHOLE. Its FIRST defect (epsilon computed without
+             'abs()', so a negative number's band ran backwards) was
+             real and is FIXED. Its SECOND is REFUSED by ruling
+             (2026-09-04, 'adm/WORK/intend/16-pole-and-tolerance.txt'):
+             the tolerance is t( d(b_nominal) ), the pole sets the
+             scale, and the asymmetry of Eq's two arguments is the
+             doctrine. A band from 'max(abs(s), abs(n))' would let a
+             subject drifting from the pole widen its own tolerance.
+             Nothing is owed to compare.
+
     todo-12  a misspelt tolerance is accepted silently
              '@dataclass(slots=True)' now stands on
              'ConfigurationPatternFinder', and 'compare/TEST/
@@ -400,72 +411,6 @@ OWED, when wanted:
       the merge loop (todo-16) wants full duplex
 
 ----------------------------------------------------------------------------
-todo-19  THE NUMERIC TOLERANCE IS UNSIGNED AND ASYMMETRIC  (compare)
-----------------------------------------------------------------------------
-
-MEASURED AGAINST THE TREE 2026-09-04. THE FIRST DEFECT IS FIXED, THE
-SECOND IS NOT -- and the second may have been ANSWERED rather than
-left, which is a fork, not labour:
-
-  (1) UNSIGNED -- FIXED. The file moved to 'compare/reading/
-      line_element.py' and now reads
-          self.epsilon = abs(self.number) * numeric_tolerance_ratio ...
-      The 'abs()' is there; a 1% tolerance no longer makes negative
-      numbers harder to match.
-
-  (2) ASYMMETRIC -- STANDS, BUT PERHAPS BY DESIGN. The epsilon is
-      still STORED PER ELEMENT and taken from the nominal alone
-      ('nominal.epsilon' in both 'cost' and 'compare'), not computed
-      as 'max(abs(s), abs(n)) * ratio' at comparison time as the OWED
-      list below asks. But 'cost' now documents this deliberately:
-      "The band belongs to the nominal, the 'pole'". Under the pole
-      doctrine the asymmetry is the POINT -- the nominal is the
-      declared centre of the good cluster and the subject is not, so
-      Eq(s,n) and Eq(n,s) are not meant to be the same question.
-      WHETHER THAT ANSWERS PHILOSOPHY 1.1's demand, or merely renames
-      the defect, IS FRANK-RENE'S TO RULE. Until then the OWED list
-      below stands as written and is NOT struck.
-
-PHILOSOPHY 1.1 demands that Eq(D(b0), D(b), T) NOT be a function of b0 --
-the verdict must not depend on which good run happened to be accepted.
-Checking our own compare against that found two defects, measured:
-
-    'compare/engine/input/line_element.py', LineElementNumber
-
-        self.epsilon = self.number * numeric_tolerance_ratio
-
-    NO abs(). For a NEGATIVE number the epsilon is negative, and
-
-        error = max(|s - n| - epsilon, 0)
-
-    becomes |s - n| + |epsilon|. The tolerance works BACKWARDS: a 1%
-    tolerance makes negative numbers HARDER to match than no tolerance.
-
-        epsilon( 100.0) =  1.0    d( 100.0,  100.5) = 0.0       tolerated
-        epsilon(-100.0) = -1.0    d(-100.0, -100.5) = 0.014925  NOT
-
-    ASYMMETRIC. The epsilon comes from 'self' alone, so Eq(s, n) and
-    Eq(n, s) use different bands:
-
-        d(-100.0, -100.5) = 0.014925
-        d(-100.5, -100.0) = 0.014975
-
-    Which is precisely the failure PHILOSOPHY 1.1 names: accept 0.815 and
-    the band sits there; accept 0.816 and it sits elsewhere; a value near
-    the edge is admissible or not depending on WHICH RUN WAS ACCEPTED.
-
-OWED, in compare:
-    epsilon from the magnitude, symmetrically -- 'max(abs(s), abs(n)) *
-      ratio' at comparison time, not stored per element
-    test choices: a negative pair inside the band is TOLERATED; d(x,y)
-      equals d(y,x) for signed pairs across the boundary
-    then state the MARGIN CONDITION in compare's own manual:
-      diameter(D(GOOD)) <= T < distance(D(GOOD), D(BAD))
-
-NOTHING IS OWED HERE. 'TestChoiceConfiguration' holds compare's struct
-verbatim; the defect and its fix are entirely compare's.
-============================================================================
-
 todo-20  DOWN CARRIES THE MEASUREMENT, NOT JUST THE VERDICT  (compare feeder)
 ----------------------------------------------------------------------------
 The TUI tier (interaction/tui.py) rendered every element and region kind, and the

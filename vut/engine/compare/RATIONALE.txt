@@ -252,7 +252,7 @@ DECISION  'engine/compare/tool/' deleted whole -- seven files: the
 
 CHECKED   Every reference outside 'tool/' read before deleting:
           'services/RATIONALE.txt' (E-9's own text), 'services/
-          DISCUSSIONS/disc-3-compare-confs.txt' (already past tense:
+          adm/WORK/gathered/0k-disc-3-compare-confs.txt' (already past tense:
           "took to its grave"), the three documentation files above.
           None is code; nothing imports or executes any of the seven.
 

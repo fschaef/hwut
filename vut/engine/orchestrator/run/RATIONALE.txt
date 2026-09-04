@@ -288,7 +288,7 @@ DECISION  'CDirectoryWork(root, entry, dispatcher_factory).run(emit,
           the directory is. Nothing crosses the edge but 'emit' and the
           budget; no display, no bookkeeper. A placement backend
           answers a different 'run' for the same unit and streams the
-          same events back (DISCUSSIONS/todo-2).
+          same events back (adm/WORK/gathered/0c-todo-2-placement-backend.txt).
 COST      The tree scheduler no longer sees the dispatcher; what it
           knows of a directory is its CDirDone and its events.
 GRAVEYARD A unit per node (the lock and the bookkeeper are the
@@ -435,7 +435,8 @@ DECISION  'product' is None where any canonicaliser fails, so
           provision, and the stages beyond never run".
 
           THE PYPE IS PART OF THE TEST APPLICATION and may contain
-          errors (display/DISCUSSIONS/todo-2). A missing shebang, a
+          errors (adm/WORK/gathered/06-todo-2-pype-is-part-of-the-oracle
+          .txt). A missing shebang, a
           syntax error, a mode with no '<else>' handler, a file that
           is not there: each is a DEFECT IN THE TEST, and a defect in
           a test is a RESULT -- stated, not swallowed.

@@ -113,7 +113,8 @@ class StageCanonicalise(I_CanonicaliseProvider):
         PASSES FOR THE WRONG REASON and nothing says so.
 
         THE PYPE IS PART OF THE TEST APPLICATION and may contain
-        errors (display/DISCUSSIONS/todo-2): a missing shebang, a
+        errors (adm/WORK/gathered/06-todo-2-pype-is-part-of-the-oracle.txt):
+        a missing shebang, a
         syntax error, a file that is not there. Each is a defect in
         the TEST, and a defect in a test is a result -- stated, not
         swallowed.

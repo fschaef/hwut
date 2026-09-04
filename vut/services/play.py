@@ -49,7 +49,7 @@ stream they are looking at:
 
 THE PYPE VIEW EARNS ITS KEEP: a pype is part of the test application,
 an artifact that may contain errors, and therefore part of the oracle
-(engine/display/DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt).
+(adm/WORK/gathered/06-todo-2-pype-is-part-of-the-oracle.txt).
 An author debugging one needs to see what it did to the stream.
 
 PLAY JUDGES NOTHING; IT RENDERS. No nominal is read, no verdict is

@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 PURPOSE: PROVISIONAL flat configuration faces, standing in until each owning
          component declares its own
-         (DISCUSSIONS/todo-1-owner-defaults-relocation.txt).
+         (adm/WORK/gathered/0x-todo-1-owner-defaults-relocation.txt).
 
 Each class below belongs to a named owner. When the owner declares its face,
 this class is deleted and 'relation.RELATION' names the owner's class

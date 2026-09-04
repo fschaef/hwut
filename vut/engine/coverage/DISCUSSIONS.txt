@@ -443,9 +443,6 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
              format change; nobody has yet wanted an aggregate over
              branch data, so it waits for somebody who does.
 
-todo-3  'hwut.convert_to_lcov'
-        The export face (D-6). The reader registry run backwards.
-
 todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
         'services/report.py' renders per source file the
         percentage and the UNCOVERED line ranges -- which the stored form

@@ -124,8 +124,8 @@ PROBLEM   A run records a stderr candidate; accept blessed it; the
 DECISION  stderr is for ERROR REPORTING; that is its whole job. Never
           a nominal, never compared, never pype-d. Where error
           reporting is itself under test, the application FLUSHES IT
-          TO A FILE and names that file in 'output' (exploration/
-          DISCUSSIONS/todo-1). 'E_StderrNote.NOMINAL' is retired;
+          TO A FILE and names that file in 'output' (adm/WORK/
+          gathered/0w-todo-1-output-subjects.txt). 'E_StderrNote.NOMINAL' is retired;
           its code removal is its own step (a blessed suite iterates
           it).
 
@@ -303,7 +303,8 @@ DECISION  The tool is RETIRED; the face keeps the name. The readings
 
 COST      The '--config <file>' path to a richer setup is gone until
           the face gains a configuration-file argument
-          (DISCUSSIONS/disc-3); until then the command line reaches
+          (adm/WORK/gathered/0k-disc-3-compare-confs.txt); until then the
+          command line reaches
           only '--numeric', '--pattern', '--nothing'. The tool's
           suite and four GOOD files go with it;
           'tool/migrate_region_syntax.py' stands alone and untested,
@@ -794,7 +795,7 @@ DECISION  ONE FILE, 'hwut-root.labels', beside 'hwut-root.conf' at
           for in words ('--label all', '--label <label>'). A glob
           that met only silenced runs draws a WARNING naming it: the
           silence must speak where it swallows an explicit match.
-          The whole design: services/DISCUSSIONS/disc-8-labels.txt.
+          The whole design: adm/WORK/gathered/0p-disc-8-labels.txt.
 
 COST      Every selection that would honour labels must be HANDED the
           view -- construction sites change one by one (the label

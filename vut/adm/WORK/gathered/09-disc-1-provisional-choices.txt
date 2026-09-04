@@ -4,7 +4,9 @@ COMPONENTS: engine/orchestrator/run
 disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD, NOT RULED       ** OPEN **
 ______________________________________________________________________________
 
- 1  (ruled: O-11 -- directories run in parallel; '--dbd' serial.)
+ 1  STRUCK 2026-09-04: SETTLED, not provisional. Ruled by
+    run/RATIONALE O-11 (directories run in parallel; a directory is a
+    closed environment), which stands as an entry.
 
  2  EVENT 'directory' FIELDS ARE ROOT-RELATIVE, '/'-separated; the
     walk's own faults carry '.'. No event carries a machine-chosen
