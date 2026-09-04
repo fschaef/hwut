@@ -1,3 +1,39 @@
+REAL PARSING INPUT -- PROVENANCE
+==============================================================================
+
+WHAT STANDS HERE is every real artefact the coverage readers are tested
+against: written by the actual tool, on a real run, kept as evidence,
+NEVER constructed to suit a reader. Organised BY THE FORMAT THAT READS
+IT, not by the language that produced it -- so 'lcov/' holds
+verilator's export beside c8's and llvm's, and 'cobertura/' holds
+simplecov's export beside kcov's. A reader author asks "what real
+files does MY format have", and that is the directory to open.
+
+    verilator/   coverage.dat, and the design that produced it
+    ucis/        coverage.ucis.xml
+    lcov/        verilator-export, llvm, node-c8, node-typescript
+    ghdl_psl/    psl.json, and the design
+    gcov/        one '.gcov' per language: ada, cobol, d, fortran,
+                 objc, vala, vhdl -- each beside its source
+    simplecov/   resultset.json, and the ruby that produced it
+    cobertura/   simplecov's export, kcov over a shell script, kcov
+                 over a binary
+
+THIS DIRECTORY IS SCENARIO COVERAGE MADE CONCRETE (adm/DEVELOPMENT.txt):
+at least one real artefact per format, and every syntax element at
+least once in every environment it may occur. 'TEST/test-readers.py'
+reads these files -- it does not carry copies of them -- and
+'test-real-input.py' asks the registry whether every format has one.
+
+'hwut.run' never enters here: the walk explores a directory named
+'TEST' one level deep and does not descend, so nothing below is ever
+mistaken for a test application.
+
+The two sections that follow are the RECORD of how the HDL artefacts
+came to exist, kept as written on 2026-08-24, because they document a
+decision overturned by evidence.
+
+______________________________________________________________________________
 disc-9 AMENDMENT -- THE ARTIFACTS EXIST NOW
 ==============================================================================
 

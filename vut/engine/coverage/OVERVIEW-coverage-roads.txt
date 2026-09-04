@@ -64,7 +64,7 @@ THE WITNESS LEDGER OF THIS SESSION (2026-08-24, all artifacts kept):
                                  in pocket; registry road CONFIRMED
 
 THE SWEEP (2026-08-24, second pass -- 'so much more coverable by the
-formats we have', confirmed by artifact; all under WITNESS-more/):
+formats we have', confirmed by artifact; all under TEST/REAL_PARSING_INPUT/):
 
     javascript  NODE ITSELF: 'node --test --experimental-test-coverage
                 --test-reporter=lcov' writes a tracefile with NO package

@@ -291,7 +291,7 @@ key space is already the law.
 disc-9  HARDWARE DESCRIPTION LANGUAGES -- the record cannot hold what a
         simulator measures
 ------------------------------------------------------------------------------
-SUPERSEDED IN PART (2026-08-24) by WITNESS-hdl-artifacts.txt and
+SUPERSEDED IN PART (2026-08-24) by TEST/REAL_PARSING_INPUT/PROVENANCE.txt and
 RATIONALE D-12. The text below is kept AS IT WAS RULED; it is not
 rewritten, because the reasoning was sound on what it knew and the
 correction is a matter of EVIDENCE, not of argument. What the witnesses

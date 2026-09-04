@@ -1,0 +1,14 @@
+  21 tools registered, writing 11 distinct formats
+  gap : go           (go) no real artefact -- tool not at hand; witnesses against a constructed fixture
+  gap : luacov       (luacov) no real artefact -- tool not at hand; witnesses against a constructed fixture
+  gap : python_coverage (coverage) no real artefact -- tool not at hand; witnesses against a constructed fixture
+  OK  : cobertura    (cobertura, coverlet, kcov, scoverage): kcov-bin.xml, kcov-shell.xml, simplecov-export.xml
+  OK  : gcov         (gcov): ada-calc.adb.gcov, cobol-calc.c.gcov, d-calc.d.gcov, fortran-calc.f90.gcov, objc-calc.m.gcov, vala-calc.vala.gcov, vhdl-blinker.vhdl.gcov
+  OK  : ghdl_psl     (ghdl): psl.json
+  OK  : jacoco       (jacoco): jacoco.xml
+  OK  : lcov         (c8, cargo-llvm-cov, gcovr, grcov, lcov, llvm-cov, node, verilator_coverage): llvm.info, node-c8.info, node-typescript.info, verilator-export.info
+  OK  : simplecov    (simplecov): .resultset.json
+  OK  : ucis         (ucis): coverage.ucis.xml
+  OK  : verilator    (verilator): coverage.dat
+SUCCESS: every format outside the named gaps has a real artefact.
+<hwut-end>

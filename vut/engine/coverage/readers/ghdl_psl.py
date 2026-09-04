@@ -5,7 +5,7 @@ PURPOSE: THE READER FOR GHDL'S PSL REPORT -- cover directives as named
          points.
 
 DESCRIPTION
-       WHAT IS READ, witnessed (WITNESS-hdl-artifacts.txt): the json
+       WHAT IS READ, witnessed (TEST/REAL_PARSING_INPUT/PROVENANCE.txt): the json
        'ghdl -r ... --psl-report=FILE' writes -- a 'details' list, one
        entry per PSL directive:
 

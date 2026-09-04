@@ -110,7 +110,7 @@ verilator  THE EXPORT OF A REAL VERILATOR RUN -- '--coverage', then
            is the one honest zero. The reader reads what the artifact
            says; the misfiling is the EXPORT's, and is why the registry
            road must say '--coverage-line'
-           (../WITNESS-hdl-artifacts.txt, finding 3).
+           (../TEST/REAL_PARSING_INPUT/PROVENANCE.txt, finding 3).
 
 ghdl       VHDL THROUGH GHDL'S GCC BACKEND: gcov over a VHDL source,
            read by the EXISTING gcov reader -- no new code, as disc-9
@@ -204,6 +204,29 @@ def raised(action):
     except Exception as x:
         return type(x).__name__
     return "nothing"
+
+
+
+# ---------------------------------------------------------------------------
+#  THE REAL ARTEFACTS ARE READ, NOT COPIED (REAL_PARSING_INPUT/PROVENANCE
+#  .txt). A witnessed fixture used to be pasted here as a literal beside
+#  a comment naming the file it came from -- two copies of one truth,
+#  and nothing checking they agreed. One of them HAD diverged: the
+#  artefact 'verilator/coverage.dat' held display glyphs (U+2401/2402)
+#  where verilator writes the bytes 0x01/0x02, and would not have parsed
+#  -- the literal was the true copy and the file was not. Reading the
+#  file makes the provenance claim enforced rather than asserted.
+_REAL = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "REAL_PARSING_INPUT")
+
+
+def real(relative):
+    """RETURN: str, the artefact's text, exactly as the tool wrote it --
+    read with newline translation OFF, since a byte the tool wrote is a
+    byte the reader must meet."""
+    with open(os.path.join(_REAL, relative), "r", encoding="utf-8",
+              newline="") as fh:
+        return fh.read()
 
 
 #  ---- REAL ARTIFACTS ------------------------------------------------
@@ -346,164 +369,20 @@ LUACOV_WIDE = (
     + "=" * 78 + "\n")
 
 #  THE EXPORT OF A REAL VERILATOR RUN, VERBATIM: 'verilator
-#  --coverage' over blinker.v/top2.v/tb.v (WITNESS-hdl/verilog/),
+#  --coverage' over blinker.v/top2.v/tb.v (TEST/REAL_PARSING_INPUT/verilator/),
 #  then 'verilator_coverage --write-info'. The export FLATTENS every
 #  coverage page onto 'DA' lines: blinker.v line 7 is the DECLARATION
 #  'output reg [3:0] count', and its 0 is 'count[3]' never toggling;
 #  line 32 is a 'cover property' that never hit. Line 23, the case
 #  default, is the one honest zero.
-VERILATOR_INFO = """TN:verilator_coverage
-SF:blinker.v
-DA:3,48
-DA:4,4
-DA:5,1
-DA:6,1
-DA:7,0
-DA:11,24
-DA:12,2
-DA:13,2
-DA:14,2
-DA:15,22
-DA:16,22
-DA:17,1
-DA:18,4
-DA:19,4
-DA:20,1
-DA:22,5
-DA:23,0
-DA:30,1
-DA:31,5
-DA:32,0
-end_of_record
-SF:tb.v
-DA:3,1
-DA:7,24
-DA:9,1
-DA:10,1
-DA:11,1
-DA:12,1
-end_of_record
-SF:top2.v
-DA:2,24
-DA:3,2
-DA:4,1
-DA:6,0
-DA:7,0
-end_of_record
-"""
+VERILATOR_INFO = real("lcov/verilator-export.info")
 
 #  VHDL THROUGH GHDL'S GCC BACKEND, VERBATIM: 'ghdl-gcc -a
 #  -Wc,-fprofile-arcs -Wc,-ftest-coverage', the run, 'gcov -b'
-#  (WITNESS-hdl/vhdl/). The 'Source:' header names an ABSOLUTE path
+#  (TEST/REAL_PARSING_INPUT/ghdl_psl/). The 'Source:' header names an ABSOLUTE path
 #  on the machine that ran. Elaboration functions re-annotate lines
 #  in per-function sections below the main one.
-GHDL_GCOV = """        -:    0:Source:/home/claude/hdl-demo/vhdl/gcovwork/blinker.vhdl
-        -:    0:Graph:blinker.gcno
-        -:    0:Data:blinker.gcda
-        -:    0:Runs:1
-        3:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
-        -:    2:library ieee;
-        -:    3:use ieee.std_logic_1164.all;
-        -:    4:use ieee.numeric_std.all;
-        -:    5:
-      30*:    6:entity blinker is
-------------------
-work__blinker__STMT_ELAB:
-function work__blinker__STMT_ELAB called 1 returned 100% blocks executed 100%
-        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
-        -:    2:library ieee;
-        -:    3:use ieee.std_logic_1164.all;
-        -:    4:use ieee.numeric_std.all;
-        -:    5:
-        1:    6:entity blinker is
-------------------
-work__blinker__DECL_ELAB:
-function work__blinker__DECL_ELAB called 1 returned 100% blocks executed 100%
-        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
-        -:    2:library ieee;
-        -:    3:use ieee.std_logic_1164.all;
-        -:    4:use ieee.numeric_std.all;
-        -:    5:
-        1:    6:entity blinker is
-call    0 returned 100%
-call    1 returned 100%
-call    2 returned 100%
-call    3 returned 100%
-------------------
-work__blinker__PKG_ELAB:
-function work__blinker__PKG_ELAB called 1 returned 100% blocks executed 80%
-        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
-        -:    2:library ieee;
-        -:    3:use ieee.std_logic_1164.all;
-        -:    4:use ieee.numeric_std.all;
-        -:    5:
-       1*:    6:entity blinker is
-branch  0 taken 0% (fallthrough)
-branch  1 taken 100%
-call    2 never executed
-branch  3 taken 100% (fallthrough)
-branch  4 taken 0%
-call    5 returned 100%
-------------------
-        -:    7:  port (
-        -:    8:    clk    : in  std_logic;
-        -:    9:    rst    : in  std_logic;
-        -:   10:    enable : in  std_logic;
-        -:   11:    done   : out std_logic
-        -:   12:  );
-        -:   13:end entity;
-        -:   14:
-        -:   15:architecture rtl of blinker is
-        -:   16:  type state_t is (IDLE, RUN, DONE_S);
-        1:   17:  signal state : state_t := IDLE;
-       10:   18:  signal count : unsigned(3 downto 0) := (others => '0');
-        -:   19:begin
-        5:   20:  process (clk)
-        -:   21:  begin
-       25:   22:    if rising_edge(clk) then
-       12:   23:      if rst = '1' then
-       1*:   24:        state <= IDLE;
-       9*:   25:        count <= (others => '0');
-        -:   26:      else
-       11:   27:        case state is
-        -:   28:          when IDLE =>
-        2:   29:            if enable = '1' then
-       2*:   30:              state <= RUN;
-        -:   31:            end if;
-        -:   32:          when RUN =>
-      20*:   33:            count <= count + 1;
-        4:   34:            if count = 3 then
-       4*:   35:              state <= DONE_S;
-        -:   36:            end if;
-        -:   37:          when DONE_S =>
-function work__blinker__ARCH__rtl__P1__PROC called 3 returned 100% blocks executed 83%
-       8*:   38:            state <= DONE_S;
-        -:   39:        end case;
-        -:   40:      end if;
-        -:   41:    end if;
-        -:   42:  end process;
-        -:   43:
-       5*:   44:  done <= '1' when state = DONE_S else '0';
-call    0 returned 100%
-branch  1 taken 33% (fallthrough)
-branch  2 taken 67%
-branch  3 taken 0% (fallthrough)
-branch  4 taken 100%
-branch  5 taken 100% (fallthrough)
-branch  6 taken 0%
-call    7 returned 100%
-branch  8 taken 0% (fallthrough)
-branch  9 taken 100%
-branch 10 taken 50% (fallthrough)
-branch 11 taken 50%
-call   12 returned 100%
-        -:   45:
-        -:   46:  -- psl default clock is rising_edge(clk);
-        -:   47:  -- psl COVER_REACH_DONE : cover {state = DONE_S};
-        -:   48:  -- psl COVER_ABORT      : cover {state = RUN; state = IDLE};
-        -:   49:  -- psl ASSERT_COUNT_RUN : assert always (count > 0 -> state /= IDLE);
-        -:   50:end architecture;
-"""
+GHDL_GCOV = real("gcov/vhdl-blinker.vhdl.gcov")
 
 #  A JACOCO REPORT -- CONSTRUCTED from the DTD, not witnessed: no
 #  machine at hand could run JaCoCo. It is checked against the format's
@@ -566,453 +445,38 @@ JACOCO_MUTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 #
 #  The single line is JaCoCo's own -- the tool writes no newlines,
 #  and verbatim means verbatim.
-JACOCO_WITNESSED_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"><report name="JaCoCo Coverage Report"><sessioninfo id="vm-380e3b57" start="1787552075395" dump="1787552075493"/><package name="com/example"><class name="com/example/Calculator" sourcefilename="Calculator.java"><method name="&lt;init&gt;" desc="()V" line="3"><counter type="INSTRUCTION" missed="0" covered="3"/><counter type="LINE" missed="0" covered="1"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="absoluteValue" desc="(I)I" line="5"><counter type="INSTRUCTION" missed="2" covered="5"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="2"/><counter type="COMPLEXITY" missed="1" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="main" desc="([Ljava/lang/String;)V" line="12"><counter type="INSTRUCTION" missed="0" covered="11"/><counter type="LINE" missed="0" covered="3"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></class><sourcefile name="Calculator.java"><line nr="3" mi="0" ci="3" mb="0" cb="0"/><line nr="5" mi="0" ci="2" mb="1" cb="1"/><line nr="6" mi="0" ci="3" mb="0" cb="0"/><line nr="8" mi="2" ci="0" mb="0" cb="0"/><line nr="12" mi="0" ci="4" mb="0" cb="0"/><line nr="14" mi="0" ci="6" mb="0" cb="0"/><line nr="15" mi="0" ci="1" mb="0" cb="0"/><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></sourcefile><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></package><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></report>"""
+JACOCO_WITNESSED_XML = real("jacoco/jacoco.xml")
 
 #  VERILATOR'S NATIVE '.dat', VERBATIM up to spelling: the artifact
 #  separates key fields with the bytes 0x01/0x02, spelled '\\x01'/
 #  '\\x02' here so the fixture is printable; the decoded string is
-#  byte-identical to what the tool wrote (WITNESS-hdl/verilog/,
+#  byte-identical to what the tool wrote (TEST/REAL_PARSING_INPUT/verilator/,
 #  same run as VERILATOR_INFO above).
-VERILATOR_DAT = """# SystemC::Coverage-3
-C '\x01f\x02blinker.v\x01l\x0211\x01n\x025\x01page\x02v_line/blinker\x01o\x02block\x01S\x0211\x01h\x02TOP.tb.dut.*' 24
-C '\x01f\x02blinker.v\x01l\x0212\x01n\x0210\x01page\x02v_branch/blinker\x01o\x02else\x01S\x0215-16\x01h\x02TOP.tb.dut.*' 22
-C '\x01f\x02blinker.v\x01l\x0212\x01n\x029\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0212-14\x01h\x02TOP.tb.dut.*' 2
-C '\x01f\x02blinker.v\x01l\x0217\x01n\x0221\x01page\x02v_line/blinker\x01o\x02case\x01S\x0217\x01h\x02TOP.tb.dut.*' 13
-C '\x01f\x02blinker.v\x01l\x0217\x01n\x0223\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0217\x01h\x02TOP.tb.dut.*' 1
-C '\x01f\x02blinker.v\x01l\x0217\x01n\x0224\x01page\x02v_branch/blinker\x01o\x02else\x01h\x02TOP.tb.dut.*' 12
-C '\x01f\x02blinker.v\x01l\x0218\x01n\x0220\x01page\x02v_line/blinker\x01o\x02case\x01S\x0218-19\x01h\x02TOP.tb.dut.*' 4
-C '\x01f\x02blinker.v\x01l\x0220\x01n\x0221\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0220\x01h\x02TOP.tb.dut.*' 1
-C '\x01f\x02blinker.v\x01l\x0220\x01n\x0222\x01page\x02v_branch/blinker\x01o\x02else\x01h\x02TOP.tb.dut.*' 3
-C '\x01f\x02blinker.v\x01l\x0222\x01n\x0221\x01page\x02v_line/blinker\x01o\x02case\x01S\x0222\x01h\x02TOP.tb.dut.*' 5
-C '\x01f\x02blinker.v\x01l\x0223\x01n\x0217\x01page\x02v_line/blinker\x01o\x02case\x01S\x0223\x01h\x02TOP.tb.dut.*' 0
-C '\x01f\x02blinker.v\x01l\x023\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02clk\x01h\x02TOP.tb.dut.*' 48
-C '\x01f\x02blinker.v\x01l\x0230\x01n\x0231\x01page\x02v_toggle/blinker_cov\x01o\x02clk\x01h\x02TOP.tb.dut.cov' 24
-C '\x01f\x02blinker.v\x01l\x0230\x01n\x0253\x01page\x02v_toggle/blinker_cov\x01o\x02state[0]\x01h\x02TOP.tb.dut.cov' 2
-C '\x01f\x02blinker.v\x01l\x0230\x01n\x0253\x01page\x02v_toggle/blinker_cov\x01o\x02state[1]\x01h\x02TOP.tb.dut.cov' 1
-C '\x01f\x02blinker.v\x01l\x0231\x01n\x025\x01page\x02v_user/blinker_cov\x01o\x02cover\x01S\x0231\x01h\x02TOP.tb.dut.cov' 5
-C '\x01f\x02blinker.v\x01l\x0232\x01n\x025\x01page\x02v_user/blinker_cov\x01o\x02cover\x01S\x0232\x01h\x02TOP.tb.dut.cov' 0
-C '\x01f\x02blinker.v\x01l\x024\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02rst\x01h\x02TOP.tb.dut.*' 4
-C '\x01f\x02blinker.v\x01l\x025\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02enable\x01h\x02TOP.tb.dut.*' 1
-C '\x01f\x02blinker.v\x01l\x026\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02state[0]\x01h\x02TOP.tb.dut.*' 2
-C '\x01f\x02blinker.v\x01l\x026\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02state[1]\x01h\x02TOP.tb.dut.*' 1
-C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[0]\x01h\x02TOP.tb.dut.*' 4
-C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[1]\x01h\x02TOP.tb.dut.*' 2
-C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[2]\x01h\x02TOP.tb.dut.*' 1
-C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[3]\x01h\x02TOP.tb.dut.*' 0
-C '\x01f\x02tb.v\x01l\x023\x01n\x0215\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
-C '\x01f\x02tb.v\x01l\x023\x01n\x0218\x01page\x02v_toggle/tb\x01o\x02rst\x01h\x02TOP.tb' 2
-C '\x01f\x02tb.v\x01l\x023\x01n\x0224\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
-C '\x01f\x02tb.v\x01l\x023\x01n\x0227\x01page\x02v_toggle/tb\x01o\x02go\x01h\x02TOP.tb' 1
-C '\x01f\x02tb.v\x01l\x023\x01n\x0232\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
-C '\x01f\x02tb.v\x01l\x023\x01n\x029\x01page\x02v_toggle/tb\x01o\x02clk\x01h\x02TOP.tb' 24
-C '\x01f\x02tb.v\x01l\x027\x01n\x025\x01page\x02v_line/tb\x01o\x02block\x01S\x027\x01h\x02TOP.tb' 24
-C '\x01f\x02tb.v\x01l\x029\x01n\x025\x01page\x02v_line/tb\x01o\x02block\x01S\x029-12\x01h\x02TOP.tb' 1
-C '\x01f\x02top2.v\x01l\x022\x01n\x0217\x01page\x02v_toggle/top\x01o\x02clk\x01h\x02TOP.tb.dut' 24
-C '\x01f\x02top2.v\x01l\x023\x01n\x0217\x01page\x02v_toggle/top\x01o\x02rst\x01h\x02TOP.tb.dut' 2
-C '\x01f\x02top2.v\x01l\x024\x01n\x0217\x01page\x02v_toggle/top\x01o\x02go\x01h\x02TOP.tb.dut' 1
-C '\x01f\x02top2.v\x01l\x026\x01n\x0216\x01page\x02v_toggle/top\x01o\x02state_a[0]\x01h\x02TOP.tb.dut' 2
-C '\x01f\x02top2.v\x01l\x026\x01n\x0216\x01page\x02v_toggle/top\x01o\x02state_a[1]\x01h\x02TOP.tb.dut' 1
-C '\x01f\x02top2.v\x01l\x026\x01n\x0225\x01page\x02v_toggle/top\x01o\x02state_b[0]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x026\x01n\x0225\x01page\x02v_toggle/top\x01o\x02state_b[1]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[0]\x01h\x02TOP.tb.dut' 4
-C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[1]\x01h\x02TOP.tb.dut' 2
-C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[2]\x01h\x02TOP.tb.dut' 1
-C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[3]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[0]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[1]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[2]\x01h\x02TOP.tb.dut' 0
-C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[3]\x01h\x02TOP.tb.dut' 0
-"""
+VERILATOR_DAT = real("verilator/coverage.dat")
 
 #  GHDL'S PSL REPORT, VERBATIM: 'ghdl -r tb --psl-report=psl.json'
 #  over blinker.vhdl -- two covers (one never finished) and one
-#  assert (WITNESS-hdl/vhdl/).
-PSL_JSON = """{ "details" : [
- { "directive": "cover",
-   "name": ".tb(sim).dut@blinker(rtl).cover_reach_done",
-   "file": "blinker.vhdl",
-   "line": 47,
-   "finished-count": 5,
-   "started-count": 12,
-   "status": "covered"},
- { "directive": "cover",
-   "name": ".tb(sim).dut@blinker(rtl).cover_abort",
-   "file": "blinker.vhdl",
-   "line": 48,
-   "finished-count": 0,
-   "started-count": 12,
-   "status": "not covered"},
- { "directive": "assertion",
-   "name": ".tb(sim).dut@blinker(rtl).assert_count_run",
-   "file": "blinker.vhdl",
-   "line": 49,
-   "finished-count": 0,
-   "started-count": 12,
-   "status": "passed"}],
- "summary" : {
-  "assert": 1,
-  "assert-failure": 0,
-  "assert-pass": 1,
-  "assume": 0,
-  "assume-failure": 0,
-  "assume-pass": 0,
-  "cover": 2,
-  "cover-failure": 1,
-  "cover-pass": 1}
-}
-"""
+#  assert (TEST/REAL_PARSING_INPUT/ghdl_psl/).
+PSL_JSON = real("ghdl_psl/psl.json")
 
 #  SIMPLECOV'S RESULTSET AND ITS OWN COBERTURA EXPORT, VERBATIM --
 #  one ruby run, two artifacts, the 'agreement' cross-check's HDL-
 #  era sibling. calc.rb: an 'if' arm never taken (line 4), a method
 #  never called (line 11).
-SIMPLECOV_RESULTSET = """{"Unknown Test Framework":{"coverage":{"/home/claude/hdl-demo/ruby/calc.rb":{"lines":[null,1,3,0,null,3,null,null,null,1,0,null,null,1,4,1]}},"timestamp":1787567995.2356343,"run_id":"edd8a0ad-f963-49c3-a003-ed5ef63bd9ff","worker_id":"1440"}}
-"""
+SIMPLECOV_RESULTSET = real("simplecov/.resultset.json")
 
-SIMPLECOV_COBERTURA = """<?xml version='1.0'?>
-<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<!--Generated by simplecov-cobertura version 4.0.0 (https://github.com/jessebs/simplecov-cobertura)-->
-<coverage line-rate="0.7778" lines-covered="7" lines-valid="9" complexity="0" version="0" timestamp="1787567995">
-  <sources>
-    <source>/home/claude/hdl-demo/ruby</source>
-  </sources>
-  <packages>
-    <package name="ruby" line-rate="0.7778" complexity="0">
-      <classes>
-        <class name="calc.rb" filename="calc.rb" line-rate="0.7778" complexity="0">
-          <methods/>
-          <lines>
-            <line number="2" hits="1"/>
-            <line number="3" hits="3"/>
-            <line number="4" hits="0"/>
-            <line number="6" hits="3"/>
-            <line number="10" hits="1"/>
-            <line number="11" hits="0"/>
-            <line number="14" hits="1"/>
-            <line number="15" hits="4"/>
-            <line number="16" hits="1"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-  </packages>
-</coverage>"""
+SIMPLECOV_COBERTURA = real("cobertura/simplecov-export.xml")
 
 #  UCIS XML, VERBATIM, PRODUCED BY AN INDEPENDENT IMPLEMENTATION:
 #  'pyucis convert coverage.dat -if vltcov -of xml' (fvutils/pyucis)
 #  over THIS PROJECT'S OWN witnessed VERILATOR_DAT above -- not
 #  fetched, not hand-written; checked against 'ucis.xsd', the format's
-#  own schema, shipped with the tool that wrote this (WITNESS-hdl-
-#  artifacts.txt, ucis addendum). The conversion has its own real
+#  own schema, shipped with the tool that wrote this (REAL_PARSING_
+#  INPUT/PROVENANCE.txt, ucis addendum). The conversion has its own real
 #  defect, read faithfully rather than hidden: every distinct SIGNAL
 #  of one file collapses into one 'toggleBit name="bit0"' (readers/
 #  ucis.py's toggle paragraph).
-UCIS_XML = """<UCIS xmlns:ucis="http://www.w3.org/2001/XMLSchema-instance" writtenBy="root" writtenTime="2026-08-24T11:46:02" ucisVersion="1.0">
-  <sourceFiles fileName="__null__file__" id="1"/>
-  <sourceFiles fileName="tb.v" id="2"/>
-  <sourceFiles fileName="top2.v" id="3"/>
-  <sourceFiles fileName="blinker.v" id="4"/>
-  <historyNodes historyNodeId="0" logicalName="verilator_test" physicalName="coverage.dat" kind="1" testStatus="true" simtime="0.0" timeunit="ns" runCwd="." cpuTime="0.0" seed="0" cmd="" args="" compulsory="0" date="2026-08-24T11:46:02" userName="user" cost="0.0" toolCategory="verilator" ucisVersion="1.0" vendorId="unknown" vendorTool="unknown" vendorToolVersion="unknown"/>
-  <instanceCoverages name="TOP" key="0" instanceId="0" moduleName="verilator_design">
-    <id file="1" line="1" inlineCount="1"/>
-  </instanceCoverages>
-  <instanceCoverages name="tb" key="0" instanceId="1" moduleName="TOP">
-    <id file="1" line="1" inlineCount="1"/>
-    <toggleCoverage>
-      <toggleObject name="toggle_tb_v" key="0">
-        <id file="2" line="1" inlineCount="1"/>
-        <toggleBit name="bit0" key="0">
-          <toggle from="" to="ggle_3_18">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_3_27">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_3_9">
-            <bin>
-              <contents coverageCount="24"/>
-            </bin>
-          </toggle>
-        </toggleBit>
-      </toggleObject>
-    </toggleCoverage>
-    <blockCoverage>
-      <statement alias="line_3">
-        <id file="2" line="3" inlineCount="15"/>
-        <bin>
-          <contents coverageCount="1"/>
-        </bin>
-      </statement>
-      <statement alias="line_3">
-        <id file="2" line="3" inlineCount="24"/>
-        <bin>
-          <contents coverageCount="1"/>
-        </bin>
-      </statement>
-      <statement alias="line_3">
-        <id file="2" line="3" inlineCount="32"/>
-        <bin>
-          <contents coverageCount="1"/>
-        </bin>
-      </statement>
-      <statement alias="line_7">
-        <id file="2" line="7" inlineCount="5"/>
-        <bin>
-          <contents coverageCount="24"/>
-        </bin>
-      </statement>
-      <statement alias="line_9">
-        <id file="2" line="9" inlineCount="5"/>
-        <bin>
-          <contents coverageCount="1"/>
-        </bin>
-      </statement>
-    </blockCoverage>
-  </instanceCoverages>
-  <instanceCoverages name="dut" key="0" instanceId="2" moduleName="tb">
-    <id file="1" line="1" inlineCount="1"/>
-    <toggleCoverage>
-      <toggleObject name="toggle_top2_v" key="0">
-        <id file="3" line="1" inlineCount="1"/>
-        <toggleBit name="bit0" key="0">
-          <toggle from="" to="ggle_2_17">
-            <bin>
-              <contents coverageCount="24"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_3_17">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_4_17">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_16">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_16">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_16">
-            <bin>
-              <contents coverageCount="4"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_16">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_16">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_16">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_25">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-        </toggleBit>
-      </toggleObject>
-    </toggleCoverage>
-  </instanceCoverages>
-  <instanceCoverages name="*" key="0" instanceId="3" moduleName="dut">
-    <id file="1" line="1" inlineCount="1"/>
-    <toggleCoverage>
-      <toggleObject name="toggle_blinker_v" key="0">
-        <id file="4" line="1" inlineCount="1"/>
-        <toggleBit name="bit0" key="0">
-          <toggle from="" to="ggle_3_23">
-            <bin>
-              <contents coverageCount="48"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_4_23">
-            <bin>
-              <contents coverageCount="4"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_5_23">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_23">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_6_23">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_23">
-            <bin>
-              <contents coverageCount="4"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_23">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_23">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_7_23">
-            <bin>
-              <contents coverageCount="0"/>
-            </bin>
-          </toggle>
-        </toggleBit>
-      </toggleObject>
-    </toggleCoverage>
-    <blockCoverage>
-      <statement alias="line_11">
-        <id file="4" line="11" inlineCount="5"/>
-        <bin>
-          <contents coverageCount="24"/>
-        </bin>
-      </statement>
-      <statement alias="line_17">
-        <id file="4" line="17" inlineCount="21"/>
-        <bin>
-          <contents coverageCount="13"/>
-        </bin>
-      </statement>
-      <statement alias="line_18">
-        <id file="4" line="18" inlineCount="20"/>
-        <bin>
-          <contents coverageCount="4"/>
-        </bin>
-      </statement>
-      <statement alias="line_22">
-        <id file="4" line="22" inlineCount="21"/>
-        <bin>
-          <contents coverageCount="5"/>
-        </bin>
-      </statement>
-      <statement alias="line_23">
-        <id file="4" line="23" inlineCount="17"/>
-        <bin>
-          <contents coverageCount="0"/>
-        </bin>
-      </statement>
-    </blockCoverage>
-    <branchCoverage>
-      <statement statementType="if" branchExpr="branch_blinker_v">
-        <id file="4" line="1" inlineCount="1"/>
-        <branch>
-          <id file="4" line="12" inlineCount="10"/>
-          <branchBin alias="branch_12_10">
-            <contents coverageCount="22"/>
-          </branchBin>
-        </branch>
-        <branch>
-          <id file="4" line="12" inlineCount="9"/>
-          <branchBin alias="branch_12_9">
-            <contents coverageCount="2"/>
-          </branchBin>
-        </branch>
-        <branch>
-          <id file="4" line="17" inlineCount="23"/>
-          <branchBin alias="branch_17_23">
-            <contents coverageCount="1"/>
-          </branchBin>
-        </branch>
-        <branch>
-          <id file="4" line="17" inlineCount="24"/>
-          <branchBin alias="branch_17_24">
-            <contents coverageCount="12"/>
-          </branchBin>
-        </branch>
-        <branch>
-          <id file="4" line="20" inlineCount="21"/>
-          <branchBin alias="branch_20_21">
-            <contents coverageCount="1"/>
-          </branchBin>
-        </branch>
-        <branch>
-          <id file="4" line="20" inlineCount="22"/>
-          <branchBin alias="branch_20_22">
-            <contents coverageCount="3"/>
-          </branchBin>
-        </branch>
-      </statement>
-    </branchCoverage>
-  </instanceCoverages>
-  <instanceCoverages name="cov" key="0" instanceId="4" moduleName="dut">
-    <id file="1" line="1" inlineCount="1"/>
-    <toggleCoverage>
-      <toggleObject name="toggle_blinker_v" key="0">
-        <id file="4" line="1" inlineCount="1"/>
-        <toggleBit name="bit0" key="0">
-          <toggle from="" to="ggle_30_31">
-            <bin>
-              <contents coverageCount="24"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_30_53">
-            <bin>
-              <contents coverageCount="2"/>
-            </bin>
-          </toggle>
-          <toggle from="" to="ggle_30_53">
-            <bin>
-              <contents coverageCount="1"/>
-            </bin>
-          </toggle>
-        </toggleBit>
-      </toggleObject>
-    </toggleCoverage>
-  </instanceCoverages>
-</UCIS>
-"""
+UCIS_XML = real("ucis/coverage.ucis.xml")
 
 #  prog.c, built with '--coverage' and run once.
 PROG_GCOV = """        -:    0:Source:prog.c

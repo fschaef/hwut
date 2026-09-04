@@ -185,6 +185,17 @@ empty because a reader knows the artefact and not the run -- whoever
 holds the id calls 'record.seated' (D-8, D-18). Four readers filled
 those five fields by hand before it existed.
 
+SCENARIO COVERAGE IS THE ADMISSION TEST for the material, and it is
+not what line or branch coverage measures (adm/DEVELOPMENT.txt). A
+reader can reach 100% line coverage against one small artefact and
+never have met an element the format permits. So: AT LEAST ONE REAL
+ARTEFACT, written by the tool itself on a real run and kept as
+evidence -- never constructed to suit the reader -- and every syntax
+element present at least once IN EVERY ENVIRONMENT IT MAY OCCUR. The
+witnessed artefacts of the existing formats stand under 'TEST/REAL_PARSING_INPUT/'
+and 'TEST/REAL_PARSING_INPUT/', with their provenance in
+'TEST/REAL_PARSING_INPUT/PROVENANCE.txt'.
+
 The laws a format must obey -- absence is None, paths made relative,
 the gather set applied, EX never invented, the pair never the
 percentage, no tool stamped -- and a framework -- spawn nothing, name

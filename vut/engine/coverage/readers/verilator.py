@@ -5,7 +5,7 @@ PURPOSE: THE READER FOR VERILATOR'S NATIVE '.dat' -- the artifact the
          lcov export flattens, read whole.
 
 DESCRIPTION
-       WHAT IS READ, witnessed (WITNESS-hdl-artifacts.txt): a text file
+       WHAT IS READ, witnessed (TEST/REAL_PARSING_INPUT/PROVENANCE.txt): a text file
        headed '# SystemC::Coverage-3', one point per line --
 
            C '<key>' <count>

@@ -413,3 +413,45 @@ rule that no GOOD file may be touched -- so behaviour preservation is
 not asserted, it is demonstrated: any drift would have shown up as a
 failing byte-exact comparison against an oracle nobody was allowed to
 adjust.
+
+______________________________________________________________________________
+SCENARIO COVERAGE
+______________________________________________________________________________
+A THIRD KIND OF COVERAGE, beside line and branch, and the one that
+decides whether a READER is actually tested: does the test material
+contain, for every input format, EVERY SYNTAX ELEMENT AT LEAST ONCE IN
+EVERY ENVIRONMENT IT MAY OCCUR?
+
+Line coverage says a parser's statements ran. Branch coverage says its
+decisions went both ways. NEITHER SAYS THE PARSER MET THE LANGUAGE. A
+reader can reach 100% line coverage against one small artefact and
+still have never seen an element the format permits -- an empty block,
+a repeated key, a field the tool omits when it is zero, a construct
+that appears only in one environment. The gap does not show as a
+number; it shows as a defect the first time a real file carries the
+element.
+
+TWO OBLIGATIONS FOLLOW, and both are about MATERIAL rather than about
+assertions:
+
+    ONE REAL ARTEFACT PER FORMAT, AT MINIMUM. Written by the actual
+    tool, on a real run, kept as evidence -- never constructed to suit
+    the reader. A fixture a developer invented tests the reader
+    against that developer's BELIEF about the format; an artefact
+    tests it against the format.
+
+    EVERY SYNTAX ELEMENT, IN EVERY ENVIRONMENT IT MAY OCCUR. The same
+    element can differ by surrounding: a count field the tool omits at
+    top level but writes inside a block, a path spelled relative in
+    one emitter and absolute in another. One occurrence somewhere is
+    not the same as one occurrence in each place it may stand.
+
+THE WITNESSED ARTEFACTS under 'engine/coverage' are this discipline
+already practised -- and they earned it: 'TEST/REAL_PARSING_INPUT/PROVENANCE.txt'
+records a decision (disc-9) that was OVERTURNED by running the tools
+and reading what they actually wrote. A belief about the format lost
+to an artefact of it. That is what this kind of coverage is for.
+
+IT IS NOT MEASURED BY A TOOL. No instrument counts it, which is why it
+has to be written down and asked deliberately: for each format, WHICH
+elements does the material contain, and which does it not?

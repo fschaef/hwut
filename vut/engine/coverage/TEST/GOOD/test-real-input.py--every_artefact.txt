@@ -1,0 +1,21 @@
+  OK  : cobertura    kcov-bin.xml                 absorbed
+  OK  : cobertura    kcov-shell.xml               absorbed
+  OK  : cobertura    simplecov-export.xml         absorbed
+  OK  : gcov         ada-calc.adb.gcov            annotates calc.adb, 4 line(s)
+  OK  : gcov         cobol-calc.c.gcov            annotates calc.c, 93 line(s)
+  OK  : gcov         d-calc.d.gcov                annotates calc.d, 4 line(s)
+  OK  : gcov         fortran-calc.f90.gcov        annotates calc.f90, 6 line(s)
+  OK  : gcov         objc-calc.m.gcov             annotates calc.m, 4 line(s)
+  OK  : gcov         vala-calc.vala.gcov          annotates calc.vala, 3 line(s)
+  OK  : gcov         vhdl-blinker.vhdl.gcov       annotates blinker.vhdl, 17 line(s)
+  OK  : ghdl_psl     psl.json                     absorbed
+  OK  : jacoco       jacoco.xml                   absorbed
+  OK  : lcov         llvm.info                    parsed 1 file(s)
+  OK  : lcov         node-c8.info                 parsed 2 file(s)
+  OK  : lcov         node-typescript.info         parsed 1 file(s)
+  OK  : lcov         verilator-export.info        parsed 3 file(s)
+  OK  : simplecov    .resultset.json              absorbed
+  OK  : ucis         coverage.ucis.xml            absorbed
+  OK  : verilator    coverage.dat                 absorbed
+SUCCESS: every real artefact is read by the format it is filed under.
+<hwut-end>

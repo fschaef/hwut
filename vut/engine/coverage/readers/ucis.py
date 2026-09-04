@@ -8,7 +8,7 @@ DESCRIPTION
        WHAT IS READ, against 'ucis.xsd' (shipped with fvutils/pyucis) and
        a REAL artifact -- pyucis' own 'convert' converting this
        component's own witnessed 'verilator' fixture into UCIS XML
-       (WITNESS-hdl-artifacts.txt, ucis addendum). Not fetched, not
+       (TEST/REAL_PARSING_INPUT/PROVENANCE.txt, ucis addendum). Not fetched, not
        hand-written: an independent implementation's encoding, checked
        against the schema that defines it.
 

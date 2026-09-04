@@ -5,7 +5,7 @@ PURPOSE: THE READER FOR SIMPLECOV'S RESULTSET -- ruby's own record of a
          run.
 
 DESCRIPTION
-       WHAT IS READ, witnessed (WITNESS-hdl-artifacts.txt session,
+       WHAT IS READ, witnessed (TEST/REAL_PARSING_INPUT/PROVENANCE.txt session,
        simplecov + simplecov-cobertura vendored): 'coverage/
        .resultset.json' --
 

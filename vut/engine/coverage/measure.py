@@ -58,8 +58,8 @@ DESCRIPTION
        aggregate over branch data is ever wanted (DISCUSSIONS todo-8).
 
        A MEASURE WITHOUT LINES CANNOT LIVE HERE -- AND FEWER LACK ONE
-       THAN disc-9 BELIEVED. The witnessed artifacts (WITNESS-hdl-
-       artifacts.txt) seat toggle points at the signal's DECLARATION
+       THAN disc-9 BELIEVED. The witnessed artifacts (TEST/REAL_
+       PARSING_INPUT/PROVENANCE.txt) seat toggle points at the signal's DECLARATION
        line and cover points at their statement, so both live here as
        NAMED points. What truly has no line -- a covergroup BIN behind
        UCIS -- still cannot, and the registration below is deliberately
@@ -187,7 +187,7 @@ class PointMeasure(I_Measure):
 class NamedPointMeasure(I_Measure):
     """A measure recorded PER NAMED POINT: (line, name, covered, total).
 
-    The point of the NAME (WITNESS-hdl-artifacts.txt, finding 4): the
+    The point of the NAME (TEST/REAL_PARSING_INPUT/PROVENANCE.txt, finding 4): the
     artifact names every bit and every cover point, so two runs can be
     UNIONED -- point identity is carried, which is exactly what the
     anonymous (covered, total) digest of 'branch' threw away and why
@@ -373,7 +373,7 @@ BRANCH = register(PointMeasure("branch", "BR", same_line_f=False))
 MCDC = register(PointMeasure("mcdc", "MC", same_line_f=True))
 
 #  THE NAMED-POINT MEASURES, witnessed before they were written
-#  (WITNESS-hdl-artifacts.txt): verilator's native '.dat' names every
+#  (TEST/REAL_PARSING_INPUT/PROVENANCE.txt): verilator's native '.dat' names every
 #  toggle point PER BIT at the signal's declaration line, and every
 #  'cover property' at its statement; GHDL's psl-report names every
 #  'cover' directive at its line. Both are read ('readers/verilator.py',

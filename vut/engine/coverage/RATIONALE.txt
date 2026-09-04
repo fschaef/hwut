@@ -408,7 +408,7 @@ D-12  A NAMED POINT MERGES WHERE A DIGEST CANNOT               (2026-08-24)
 SUPERSEDES IN PART D-11's closing paragraph ('a measure with NO LINE
           cannot live here at all') and disc-9's 'NO LINE' column. Both
           were sound on what they knew; the correction is EVIDENCE, not
-          argument, and the evidence is in WITNESS-hdl-artifacts.txt.
+          argument, and the evidence is in TEST/REAL_PARSING_INPUT/PROVENANCE.txt.
 PROBLEM   D-11 refused merge on 'branch' because (covered, total) does
           not carry WHICH arms, and concluded that measures without a
           line -- toggle, functional cover -- could not live in this
@@ -1226,3 +1226,89 @@ COST      None in behaviour: the storage bytes are byte-identical --
           the GOOD files are the proof, and none of the existing ones
           was touched. Coverage answers 68 ok / 0 fail, the six new
           choices being the presenters' own.
+
+D-30  THE REAL ARTEFACTS ARE TEST INPUT, FILED BY THE FORMAT      (2026-09-04)
+      THAT READS THEM
+
+PROBLEM   The witnessed artefacts stood at component level as
+          'WITNESS-hdl/' and 'WITNESS-more/'. Frank-Rene named it a
+          failure of categorising, and the names prove it: 'WITNESS-
+          hdl/' held 'ruby/' (simplecov) and 'shell/' (kcov), neither
+          of them HDL; 'WITNESS-more/' is not a category at all. The
+          split was the chronology of two sessions, presented as a
+          taxonomy. And they were filed by the LANGUAGE that produced
+          them, which hid what a reader author needs: 'verilog/
+          coverage.info' is an LCOV artefact, 'ruby/coverage.xml' a
+          COBERTURA one.
+
+          WORSE, THEY WERE NOT READ. Every witnessed input was copied
+          into 'test-readers.py' as a string literal, with the file
+          cited in a comment as provenance: two copies of one truth
+          and nothing checking they agreed. The check, once written,
+          found that one HAD diverged -- and in the direction nobody
+          would guess. 'verilator/coverage.dat' on disk held the
+          display glyphs U+2401/U+2402 where verilator writes the
+          bytes 0x01/0x02; the test literal had the true bytes. An
+          editor or a copy had rendered the control characters
+          visibly and saved them back. The artefact on disk could not
+          be parsed by the reader it claimed to witness, and had
+          stood so for weeks.
+
+RULED     (Frank-Rene) Their place is in the TEST directory, along the
+          lines of TEST/REAL_PARSING_INPUT. Every format needs at
+          least one real-world artefact; and for every format, each
+          syntax element present at least once in every environment
+          it may occur -- SCENARIO COVERAGE (adm/DEVELOPMENT.txt).
+
+DECISION  'TEST/REAL_PARSING_INPUT/<format>/', keyed by the READER
+          MODULE that consumes the artefact, with the sources that
+          produced each artefact kept beside it as provenance.
+          Thirty-eight files, every one accounted for by the plan
+          before the move. 'WITNESS-hdl-artifacts.txt' moved with
+          them as 'PROVENANCE.txt', prefixed with what the directory
+          is; its two sections stand as written on 2026-08-24,
+          because they record a decision overturned by evidence.
+
+          THE LITERALS READ THE FILES. Eight fixtures in 'test-
+          readers.py' are now 'real("<format>/<file>")' -- read with
+          newline translation off, since a byte the tool wrote is a
+          byte the reader must meet. The provenance claim is enforced
+          rather than asserted; there is one copy.
+
+          'TEST/test-real-input.py' ASKS THE CRITERION OF THE
+          REGISTRY:
+            every_format    21 tools registered, writing 11 distinct
+                            formats; each format outside the three
+                            named gaps ('go', 'luacov',
+                            'python_coverage' -- tools not at hand,
+                            witnessing against constructed fixtures,
+                            stated rather than hidden) has at least
+                            one real artefact under its directory.
+            every_artefact  every artefact is READ by the format it
+                            is filed under -- by the format's own
+                            single-file road, 'absorb' on the base
+                            walk, the per-file parser for the two
+                            that keep their own 'read'.
+          Both run against the defect reinstated: an artefact removed
+          fails the first by name; the glyph-corrupted '.dat'
+          reinstated fails the second with ABSORBED NOTHING -- the
+          exact rot that sat undetected.
+
+FOUND     Asking the registry found two more gaps the language-keyed
+          layout had hidden. 'jacoco' had a witnessed JaCoCo 0.8.12
+          report -- but only as a literal in the test file, never
+          filed; it stands now as 'jacoco/jacoco.xml'. 'simplecov's
+          artefact was named 'resultset.json' while the format's own
+          suffix is '.resultset.json', the name the tool writes; the
+          file did not match its own format's suffix and the base
+          walk would not have collected it.
+
+          'hwut.run' NEVER ENTERS THE DIRECTORY, checked before the
+          move: the tree walk explores a child named 'TEST' one level
+          deep and does not descend, so 'greet.sh' below it is never
+          mistaken for a test application.
+
+COST      None in behaviour: every reader test is byte-identical
+          reading from disk, and NO EXISTING GOOD WAS TOUCHED.
+          Coverage answers 71 ok / 0 fail, the three new choices
+          being the criterion's own.
