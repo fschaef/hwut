@@ -43,19 +43,19 @@ DESCRIPTION
        AN INTERVAL IS HALF-OPEN: [begin, end), 'end' the first line AFTER
        the range. One convention, everywhere, so a length is a
        subtraction and a union is a comparison.
+       THIS IS A CONVENTION FOR A DISCRETE DOMAIN, and it holds because
+       line numbers are integers: 'end' is the first integer NOT in the
+       set. It does not generalise to a continuous one -- there is no
+       first real not in a set, adjacency stops being an arithmetic
+       question, and a range type serving both would need explicit
+       open/closed flags at each endpoint that nothing here would ever
+       read.
 
        ABSENT AND EMPTY DO NOT COLLAPSE. A source file that was not
        measured has NO block. A source file measured and found to have no
        executable line has a block with an EMPTY 'EX'. The two are
        different facts and the record says which.
 
-NOTE   'vut/system/helper.py' carries an 'Interval' class and an
-       'iterable_from_integer_list' that folds adjacent integers into
-       ranges. It is NOT used here: its 'end' is inclusive where its own
-       docstring promises exclusive, it drops a single-line run that
-       falls at the end of the list, and its 'split' names undefined
-       variables. Whether the two are unified -- and that one repaired --
-       is DISCUSSIONS disc-6.
 ______________________________________________________________________________
 """
 from dataclasses import dataclass, field

@@ -62,7 +62,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from fnmatch import fnmatch
 
 from .configuration import CoverageRefused
@@ -78,10 +78,71 @@ class CCoverageFormat(ABC):
     'name' lands in the record's header as 'format' (RATIONALE D-7).
     A format knows how to READ; it knows nothing of the tool that ran,
     and stamps no tool into the record -- the framework does (D-23).
-    """
-    name = None
 
-    @abstractmethod
+    THE WALK IS THE BASE'S, THE THREE VARIABLE POINTS ARE THE
+    FORMAT'S. 'read' below is CONCRETE: it finds the artefact
+    directory, takes every file ending in 'suffix' in sorted order,
+    hands each to 'absorb', and distinguishes ABSENT from an empty
+    measurement. What differs between formats is only:
+
+        suffix       the artefact's file suffix(es)
+        empty()      a fresh accumulator
+        absorb()     one file into it
+        record_of()  the accumulator into a CoverageRecord
+
+    Ten readers wrote that walk out by hand to reach those three
+    points -- the base declared the CONTRACT and gave no SHAPE, so
+    the shape was copied, along with the one-line policy
+    'counts_f = bool(config is not None and config.counts)'. A format
+    whose reading does not fit the walk at all overrides 'read'
+    itself and says why ('lcov' merges text after the walk;
+    'python_coverage' reaches the directory twice).
+    """
+    name   = None
+    suffix = None                 # tuple[str] | str, the artefact's
+
+    def empty(self):
+        """RETURN: object, a fresh accumulator for one read -- a dict
+        for most formats, which is the default."""
+        return {}
+
+    def absorb(self, accumulator, path):
+        """RETURN: None. One artefact file folded into 'accumulator'.
+        A format that cannot read a file leaves the accumulator
+        untouched: an unreadable artefact is not a measurement of
+        zero."""
+        raise NotImplementedError
+
+    def record_of(self, accumulator, source_root, config, counts_f):
+        """RETURN: CoverageRecord over what was absorbed."""
+        raise NotImplementedError
+
+    def record_from(self, file_db, counts_f, language):
+        """
+        RETURN: CoverageRecord over a FILE DATABASE the format built
+                itself -- for a format whose artefact is not
+                line-shaped and so cannot use 'line_record_of'.
+
+        THE HEADER IS FILLED THE ONE CORRECT WAY, which is why this
+        exists rather than four hand-written constructors:
+
+            'source' IS THE FORMAT'S NAME, never the framework's -- one
+                     format is written by several tools (c8 and
+                     cargo-llvm-cov both write LCOV).
+            'tool'   IS LEFT EMPTY. The FRAMEWORK stamps it in
+                     'harvest', because with a candidate list which
+                     tool served is decided at run time (D-7). A format
+                     that stamped it would be guessing.
+            'run'    IS LEFT EMPTY, its default. A reader knows the
+                     ARTEFACT, not the run; whoever holds the id calls
+                     'record.seated' (D-8, D-18).
+        """
+        return CoverageRecord(language = language,
+                              tool     = "",
+                              source   = self.name,
+                              counts_f = counts_f,
+                              file_db  = file_db)
+
     def read(self, work_dir, source_root, config=None):
         """
         RETURN: CoverageRecord, read from the artefact under
@@ -96,6 +157,18 @@ class CCoverageFormat(ABC):
         that a format whose tool could not apply the gather set can
         apply it itself.
         """
+        accumulator = self.empty()
+        directory   = artifact_directory_of(work_dir)
+        if os.path.isdir(directory):
+            suffix_tuple = (self.suffix,) if isinstance(self.suffix, str) \
+                           else tuple(self.suffix)
+            for name in sorted(os.listdir(directory)):
+                if not name.endswith(suffix_tuple): continue
+                self.absorb(accumulator, os.path.join(directory, name))
+        if not accumulator: return None
+
+        counts_f = bool(config is not None and config.counts)
+        return self.record_of(accumulator, source_root, config, counts_f)
 
 
 class CCoverageFramework(ABC):
@@ -114,14 +187,24 @@ class CCoverageFramework(ABC):
     name   = None
     format = None                 # a CCoverageFormat instance
 
-    @abstractmethod
     def wrap(self, argv, config, work_dir):
         """
         RETURN: list[str], the argv that runs 'argv' UNDER the coverage
                 tool -- the only change a coverage run makes to the
-                execute stage. 'argv' unchanged where the tool
-                instruments at build time.
+                execute stage. 'argv' UNCHANGED by default, which is
+                the answer for every tool that instruments somewhere
+                this component does not reach: at BUILD time (gcov's
+                '--coverage', verilator's, ghdl's '-fpsl'), on the
+                run's OWN command line ('go test -coverprofile'),
+                through a JVM AGENT (jacoco), or from INSIDE the
+                process (simplecov, luacov). Eight of the registered
+                frameworks are in that position and said so eight
+                times before this default existed; each states WHY in
+                its own class docstring, which is per-format and worth
+                keeping, and overrides this only where there is
+                genuinely something to wrap.
         """
+        return list(argv)
 
     def report_argv(self, config, work_dir):
         """
@@ -133,7 +216,7 @@ class CCoverageFramework(ABC):
         The framework NAMES it; the execute stage MAKES it, under the
         procsitter like every other process.
         """
-        return None
+        return
 
     def instrumented_f(self, target, work_dir):
         """
@@ -148,7 +231,7 @@ class CCoverageFramework(ABC):
         OPTIONAL. A None is reported as 'unchecked', never as a
         finding: guessing here is detection by another name (D-19).
         """
-        return None
+        return
 
     def harvest(self, work_dir, source_root, config=None):
         """
@@ -168,6 +251,42 @@ class CCoverageFramework(ABC):
 
 
 # ------------------------------------------------------------- helpers
+
+def language_of(file_db, suffix_db, collapse_tuple=()):
+    """
+    RETURN: str, the language the report is OF, worked out from the
+            extensions the paths carry; 'unknown' where they disagree
+            or say nothing.
+
+    A DOCUMENT THAT NAMES NO LANGUAGE OF ITS OWN must work it out, and
+    five formats are in that position: Cobertura is shared by five
+    ecosystems, a JaCoCo report covers the JVM rather than one
+    language of it, UCIS covers a whole verification environment.
+    They differ in exactly two things, which are their own and stay
+    theirs -- the SUFFIX MAP, and which mixes are LEGITIMATE:
+
+        'collapse_tuple'  ((member_set, answer), ...): where every
+                          language found lies inside 'member_set', the
+                          answer is 'answer' rather than 'unknown'.
+                          Verilog and SystemVerilog mix by design and
+                          read 'verilog' -- the subset relation makes
+                          that honest, where java and kotlin's would
+                          not, so JaCoCo declares no collapse and its
+                          mix reads 'unknown'.
+
+    'unknown' IS SAID, never defaulted to the commonest member: a
+    header that guesses is a header nobody can trust.
+    """
+    name_set = set()
+    for path in file_db:
+        name = suffix_db.get(os.path.splitext(path)[1].lower())
+        if name is not None: name_set.add(name)
+    if not name_set:          return "unknown"
+    if len(name_set) == 1:    return name_set.pop()
+    for member_set, answer in collapse_tuple:
+        if name_set <= set(member_set): return answer
+    return "unknown"
+
 
 def artifact_directory_of(work_dir):
     """RETURN: str, where a tool leaves its artifact for this run."""

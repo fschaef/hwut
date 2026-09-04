@@ -99,7 +99,13 @@ class GcovFormat(CCoverageFormat):
 
 
 class GcovFramework(CCoverageFramework):
-    """gcov: invocation; reads GcovFormat. The one framework that can
+    """gcov: invocation; reads GcovFormat.
+
+    NOTHING TO WRAP (the base's default): gcov instruments at BUILD
+    time ('--coverage'), not at launch, and a wrapper that did nothing
+    would be worse than none. Whether the build carried the flag is
+    the BUILD's business, and this reader reports its absence by
+    finding no '.gcda'. The one framework that can
     CHECK instrumentation: gcc leaves a '.gcno' beside every object it
     instrumented, before anything runs."""
     name   = "gcov"
@@ -118,17 +124,6 @@ class GcovFramework(CCoverageFramework):
                 return True
         return False
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        gcov instruments at BUILD time ('--coverage'), not at launch:
-        there is nothing to wrap, and a wrapper that did nothing would be
-        worse than none. Whether the build carried the flag is the
-        BUILD's business, and this reader reports its absence by finding
-        no '.gcda'.
-        """
-        return list(argv)
 
     def report_argv(self, config, work_dir):
         """

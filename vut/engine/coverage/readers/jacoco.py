@@ -56,11 +56,11 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import os
-import xml.etree.ElementTree as ElementTree
+from xml.etree import ElementTree
 
 from ..configuration import CoverageRefused
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      line_record_of, register, artifact_directory_of)
+                      language_of, line_record_of, register)
 
 
 XML_SUFFIX = (".xml",)
@@ -70,60 +70,44 @@ class JacocoFormat(CCoverageFormat):
     """JaCoCo's XML report."""
     name = "jacoco-xml"
 
-    def read(self, work_dir, source_root, config=None):
+    suffix = XML_SUFFIX
+
+    def absorb(self, accumulator, path):
         """
-        RETURN: CoverageRecord, of every JaCoCo report under the artifact
-                directory, unioned.
-                None, where none stands -- ABSENT.
+        RETURN: None. One JaCoCo report folded in; a file that does not
+                parse leaves the accumulator untouched.
 
         Raises CoverageRefused where a report carries '<line>' elements
         with no instruction counts: it is well-formed and cannot say
-        which lines ran.
+        which lines ran. THE FILE'S OWN NAME travels with it, since
+        that is what the refusal names.
         """
-        entry_db = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(XML_SUFFIX): continue
-                path = os.path.join(directory, name)
-                root = _read(path)
-                if root is None: continue
-                _absorb(entry_db, root, name)
-        if not entry_db: return None
+        root = _read(path)
+        if root is not None:
+            _absorb(accumulator, root, os.path.basename(path))
 
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, entry_db, source_root, config, counts_f)
+    def record_of(self, accumulator, source_root, config, counts_f):
+        """RETURN: CoverageRecord over the unioned reports."""
+        return _record_of(self, accumulator, source_root, config, counts_f)
 
 
 class JacocoFramework(CCoverageFramework):
-    """jacoco: invocation; reads JacocoFormat."""
+    """jacoco: invocation; reads JacocoFormat.
+
+    NOTHING TO WRAP (the base's default): JaCoCo instruments through a
+    JVM AGENT ('-javaagent:jacocoagent.jar'), which belongs to the java
+    command line the build already writes -- not to a wrapper around
+    it. Whether the agent was attached is the BUILD's business, and
+    this reader reports its absence by finding no report.
+
+    NO SECOND CALL (the base's default): the agent leaves 'jacoco.exec',
+    which IS binary and DOES need one -- 'java -jar jacococli.jar
+    report ...'. But that call needs the CLASS FILES and the SOURCE
+    ROOTS the build used, and this component knows neither. Naming a
+    call that could not run would be worse than naming none: the build
+    writes the xml, as it already writes the jar."""
     name   = "jacoco"
     format = JacocoFormat()
-
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
-
-        JaCoCo instruments through a JVM AGENT ('-javaagent:jacocoagent
-        .jar'), which belongs to the java command line the build already
-        writes -- not to a wrapper around it. Whether the agent was
-        attached is the BUILD's business, and this reader reports its
-        absence by finding no report.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """
-        RETURN: None.
-
-        The agent leaves 'jacoco.exec', which IS binary and DOES need a
-        second call -- 'java -jar jacococli.jar report ...'. But that
-        call needs the CLASS FILES and the SOURCE ROOTS the build used,
-        and this component knows neither. Naming a call that could not
-        run would be worse than naming none: the build writes the xml,
-        as it already writes the jar.
-        """
-        return None
 
 
 def _read(path):
@@ -212,23 +196,19 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
                           _language_of, branch_of)
 
 
-def _language_of(file_db):
-    """
-    RETURN: str, the language the report is OF, from the extensions it
-            names; 'unknown' where they disagree or say nothing.
+#  THE JVM'S SUFFIXES. A JaCoCo report covers the JVM, not one
+#  language of it: java, kotlin, scala and groovy compile to the same
+#  class files and appear in the same report. NO COLLAPSE is declared,
+#  so a mix reads 'unknown' rather than one of them chosen -- these
+#  are siblings, not a subset relation like verilog/systemverilog's.
+_SUFFIX_DB = {".java": "java", ".kt": "kotlin", ".kts": "kotlin",
+              ".scala": "scala", ".groovy": "groovy"}
 
-    A JaCoCo report covers the JVM, not one language of it: java, kotlin,
-    scala and groovy compile to the same class files and appear in the
-    same report. Where they MIX, 'unknown' is said rather than one of
-    them chosen.
-    """
-    suffix_db = {".java": "java", ".kt": "kotlin", ".kts": "kotlin",
-                 ".scala": "scala", ".groovy": "groovy"}
-    name_set = set()
-    for path in file_db:
-        name = suffix_db.get(os.path.splitext(path)[1].lower())
-        if name is not None: name_set.add(name)
-    return name_set.pop() if len(name_set) == 1 else "unknown"
+
+def _language_of(file_db):
+    """RETURN: str, the language the report is OF; 'unknown' where the
+    JVM languages mix or the paths say nothing."""
+    return language_of(file_db, _SUFFIX_DB)
 
 
 register(JacocoFramework())

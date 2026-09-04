@@ -39,14 +39,12 @@ DESCRIPTION
        'details' list of directives is not this report.
 ______________________________________________________________________________
 """
-import io
 import json
 import os
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import FileCoverage, CoverageRecord
+                      register, relative_path, wanted)
+from ..record import FileCoverage
 
 
 JSON_SUFFIX = (".json",)
@@ -56,21 +54,19 @@ class GhdlPslFormat(CCoverageFormat):
     """GHDL's '--psl-report' json."""
     name = "ghdl-psl-json"
 
-    def read(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every PSL report under the artifact
-                directory, unioned -- 'cover' points per source file,
-                EX/CV deliberately empty (see the module header).
-                None, where none stands -- ABSENT.
-        """
-        point_db  = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(JSON_SUFFIX): continue
-                _absorb(point_db, os.path.join(directory, name))
-        if not point_db: return None
+    suffix = JSON_SUFFIX
 
+    def absorb(self, accumulator, path):
+        """RETURN: None. One PSL report folded in -- 'cover' points,
+        keyed (source, line, label)."""
+        _absorb(accumulator, path)
+
+    def record_of(self, point_db, source_root, config, counts_f):
+        """
+        RETURN: CoverageRecord over the unioned reports -- 'cover'
+                points per source file, EX/CV deliberately empty (see
+                the module header), so 'counts_f' says nothing here.
+        """
         file_db = {}
         for raw_path in sorted(set(source for source, _, _ in point_db)):
             path = relative_path(raw_path, source_root)
@@ -82,32 +78,22 @@ class GhdlPslFormat(CCoverageFormat):
             file_db[path] = FileCoverage(path, (), (), None,
                                          {"cover": point_tuple})
 
-        return CoverageRecord(language = _language_of(file_db),
-                              tool     = "",
-                              source   = self.name,
-                              counts_f = False,
-                              file_db  = file_db)
+        return self.record_from(file_db, False, _language_of(file_db))
 
 
 class GhdlPslFramework(CCoverageFramework):
-    """ghdl: invocation; reads GhdlPslFormat."""
+    """ghdl: invocation; reads GhdlPslFormat.
+
+    NOTHING TO WRAP (the base's default): the report is asked for ON
+    the run command line ('--psl-report=FILE'), and the PSL itself was
+    compiled in with '-fpsl' -- both the build's and the test's own
+    business; this reader reports their absence by finding no
+    report.
+    """
     name   = "ghdl"
     format = GhdlPslFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
 
-        The report is asked for ON the run command line
-        ('--psl-report=FILE'), and the PSL itself was compiled in with
-        '-fpsl' -- both the build's and the test's own business; this
-        reader reports their absence by finding no report.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The run writes the report itself."""
-        return None
 
 
 def _absorb(point_db, path):
@@ -119,7 +105,7 @@ def _absorb(point_db, path):
     A json that is not this report is LEFT ALONE.
     """
     try:
-        with io.open(path, encoding="utf-8") as handle:
+        with open(path, encoding="utf-8") as handle:
             document = json.load(handle)
     except (OSError, ValueError):
         return

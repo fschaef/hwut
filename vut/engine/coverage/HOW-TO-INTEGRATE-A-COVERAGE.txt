@@ -98,14 +98,14 @@ way: one 'CCoverageFramework' subclass naming the existing format.
     class FooFramework(CCoverageFramework):
         name   = "foo"
         format = LcovFormat()                        # what it writes
-        def wrap(self, argv, config, work_dir):      return argv
-        def report_argv(self, config, work_dir):     return None
-        def instrumented_f(self, target, work_dir):  return None  # optional
 
     register(FooFramework())
 
-'instrumented_f' is OPTIONAL and answers None where the tool leaves no
-trace to check; it never answers False for want of a way to know.
+'wrap', 'report_argv' and 'instrumented_f' ALL HAVE BASE DEFAULTS --
+'argv unchanged', 'no second call', 'cannot check'. State one only
+where the tool genuinely does that thing; where it does not, say WHY
+in the class docstring rather than writing the default out. 'instru-
+mented_f' never answers False for want of a way to know.
 
 
 FORMAT
@@ -115,16 +115,75 @@ The artifact is a new format: one module under 'readers/' holding a
 'CCoverageFormat' and the framework that writes it.
 
     class FooFormat(CCoverageFormat):
-        name = "foo-json"
-        def read(self, work_dir, source_root, config=None):
-            ...                    # artefact -> record_of(self, ...) | None
+        name   = "foo-json"
+        suffix = (".json",)                  # what the walk collects
+
+        def absorb(self, accumulator, path):
+            ...                              # ONE artefact file, folded in
+
+        def record_of(self, accumulator, source_root, config, counts_f):
+            ...                              # -> a CoverageRecord
 
     class FooFramework(CCoverageFramework):
         name   = "foo"
         format = FooFormat()
-        def wrap(self, argv, config, work_dir): ...
 
     register(FooFramework())
+
+'read' IS THE BASE'S, and is not overridden: it walks the artifact
+directory, collects by 'suffix' in sorted order, calls 'absorb' per
+file, answers None where nothing was absorbed (ABSENT, which is not an
+empty measurement), and computes 'counts_f' from the configuration.
+Override it only where that walk genuinely does not fit -- 'go' does,
+because its 'counts_f' depends on a mode discovered DURING the walk.
+
+'wrap' and 'report_argv' ARE THE BASE'S TOO, defaulting to 'argv
+unchanged' and 'no second call'. Eight of the registered frameworks
+instrument somewhere this component does not reach -- at build time,
+on the run's own command line, through a JVM agent, from inside the
+process -- and say so in a line of their class docstring rather than
+in code.
+
+THE RECORD IS REACHED BY ONE OF THREE DOORS, never built by hand:
+
+                        the artefact's own shape
+                                   |
+          +------------------------+------------------------+
+          |                        |                        |
+     line-shaped              an ENTRY               a FILE DATABASE
+   path -> {line: ...}         ITERABLE            the format built itself
+          |                        |                        |
+          v                        v                        v
+  reader.line_record_of     reader.record_of      self.record_from
+   cobertura, jacoco       gcov, go, lcov,      ghdl_psl, simplecov,
+                           luacov, python_cov     ucis, verilator
+          |                        |                        |
+          +------------------------+------------------------+
+                                   |
+                                   v
+                        record.CoverageRecord
+                    +----------------------------+
+                    | language  tool  source     |
+                    | counts_f  version  run     |
+                    | file_db: path -> FileCov.  |
+                    +----------------------------+
+                                   |
+                                   v
+                        record.FileCoverage
+                    +----------------------------+
+                    | path        RELATIVE (D-4) |
+                    | executable  EX, ranges     |
+                    | covered     CV, ranges     |
+                    | counts      per CV range   |
+                    | measure_db  tag -> points  |
+                    +----------------------------+
+
+'record_from' EXISTS SO THE HEADER IS FILLED ONCE: 'source' is the
+FORMAT's name (one format is written by several tools), 'tool' is left
+EMPTY for the framework to stamp in 'harvest' (D-7), and 'run' is left
+empty because a reader knows the artefact and not the run -- whoever
+holds the id calls 'record.seated' (D-8, D-18). Four readers filled
+those five fields by hand before it existed.
 
 The laws a format must obey -- absence is None, paths made relative,
 the gather set applied, EX never invented, the pair never the

@@ -89,24 +89,18 @@ class GoFormat(CCoverageFormat):
 
 
 class GoFramework(CCoverageFramework):
-    """go: invocation; reads GoFormat."""
+    """go: invocation; reads GoFormat.
+
+    NOTHING TO WRAP (the base's default): 'go test' takes
+    '-coverprofile' as an argument of ITS OWN command line, not as a
+    wrapper around somebody else's. A test application that is a go
+    test invocation states that flag itself; one that is a compiled
+    binary cannot be wrapped at all.
+    """
     name   = "go"
     format = GoFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
 
-        'go test' takes '-coverprofile' as an argument of ITS OWN
-        command line, not as a wrapper around somebody else's. A test
-        application that is a go test invocation states that flag
-        itself; one that is a compiled binary cannot be wrapped at all.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The profile is text, written by the run."""
-        return None
 
 
 def module_prefix_of(work_dir):

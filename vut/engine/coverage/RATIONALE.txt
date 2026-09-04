@@ -1034,3 +1034,98 @@ COST      Five GOODs re-recorded ('answer', 'bare', 'empty', 'help',
           'refused'); the count was their only difference. Coverage
           answers 62 ok / 0 fail where it answered 61 / 1, and does so
           on any machine.
+
+D-28  THE BASE CLASS DECLARED A CONTRACT AND SUPPLIED NO SHAPE (2026-09-03)
+
+PROBLEM   Clone detection over the tree returned eleven findings
+          confined to 'readers/', and Frank-Rene named the cause
+          before the code was read: functionality that had not been
+          moved properly to a common base class. Three functions, one
+          failure.
+
+          'CCoverageFormat.read' WAS ABSTRACT. Ten of eleven readers
+          therefore reimplemented one skeleton -- walk the artifact
+          directory, filter by suffix, absorb each file, ABSENT (None)
+          where nothing was absorbed, compute 'counts_f' -- in order
+          to reach their own three variable points. The readers had
+          ALREADY converged on the decomposition by hand: '_read',
+          '_absorb', '_record_of', named identically in file after
+          file. The base declared the CONTRACT and gave the SHAPE
+          nowhere to live, so the shape was copied. The tell was
+          'counts_f = bool(config is not None and config.counts)': one
+          line of policy about reading configuration, written out ten
+          times.
+
+          'wrap' AND 'report_argv' WERE ABSTRACT TOO. Eight
+          frameworks answered 'return list(argv)' and 'return None' --
+          identical code, differing only in the prose explaining why
+          the tool instruments somewhere this component does not
+          reach (at build time, on the run's own command line, through
+          a JVM agent, from inside the process). Eight authors each
+          wrote the default out and justified it separately.
+
+          '_language_of' WAS FIVE COPIES of one algorithm -- scan the
+          paths' extensions into a name set, then decide -- differing
+          in exactly two things that are genuinely their own: the
+          SUFFIX MAP, and which mixes are LEGITIMATE.
+
+DECISION  'read' becomes CONCRETE, with 'suffix', 'empty', 'absorb'
+          and 'record_of' as the members a format states. Six readers
+          lose 'read' entirely (cobertura, jacoco, ucis, verilator,
+          simplecov, ghdl_psl).
+
+          'wrap' and 'report_argv' gain the defaults. Nine overrides
+          go; each framework keeps its REASONING as a line of its
+          class docstring, because that prose is per-format and worth
+          keeping -- what was duplicated was the code, not the
+          explanation.
+
+          'language_of(file_db, suffix_db, collapse_tuple)' is shared.
+          A collapse states where a mix is honest: verilog and
+          systemverilog read 'verilog' because the subset relation
+          makes that true, while JaCoCo declares NO collapse and a
+          java/kotlin mix reads 'unknown' -- siblings, not a subset.
+
+          THE RECORD ITSELF WAS THE FOURTH COPY. Asked whether the
+          common representation stands prominently and is referenced
+          by every reader, the honest answer was no: four readers
+          built 'CoverageRecord(...)' BY HAND, which meant four copies
+          of the header convention -- 'source' the format's name,
+          'tool' left EMPTY for the framework to stamp (D-7), 'run'
+          left empty for whoever holds the id (D-8, D-18). A
+          convention written four times with nothing enforcing it,
+          and 'tool = ""' the kind of thing that goes wrong silently.
+          'CCoverageFormat.record_from(file_db, counts_f, language)'
+          fills it once. Readers now reach the record by exactly
+          THREE named doors and never around them: 'line_record_of'
+          for line-shaped artefacts, 'record_of' for an entry
+          iterable, 'record_from' for a file database the format
+          built itself. The three are drawn in
+          'HOW-TO-INTEGRATE-A-COVERAGE.txt', which had gone stale in
+          the same way -- still instructing a new author to override
+          'read' and 'wrap'.
+
+DELIBERATELY LEFT
+          'gcov', 'go', 'lcov', 'luacov' and 'python_coverage' keep
+          their own 'read'. gcov and luacov walk differently; 'go'
+          computes 'counts_f' from a MODE discovered DURING the walk,
+          which the base's fixed computation cannot serve; lcov
+          accumulates raw text and merges after; python_coverage
+          genuinely wraps and reaches the directory twice. A base
+          class that contorts to cover every case stops being a shape
+          and becomes a switch.
+
+FOUND     A LATENT RUNTIME BREAK, unrelated to duplication and caught
+          only by reading every reader: 'jacoco.py' held a function
+          renamed '_LANG_MARKER' by an earlier edit of mine while the
+          call site still named '_language_of'. Python resolves a
+          module global at CALL time, so the file imported cleanly and
+          would have raised NameError on the first JaCoCo report read.
+          No test covers that path. Now correct, and verified by
+          calling it.
+
+COST      None in behaviour. Coverage answers 62 ok / 0 fail before
+          and after, and NO GOOD FILE WAS TOUCHED -- the whole
+          refactoring was made under that rule, so behaviour
+          preservation is demonstrated against byte-exact oracles
+          nobody was allowed to adjust, rather than asserted.

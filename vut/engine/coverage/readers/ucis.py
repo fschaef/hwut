@@ -94,12 +94,11 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import os
-import xml.etree.ElementTree as ElementTree
+from xml.etree import ElementTree
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import ranges_of, FileCoverage, CoverageRecord
+                      register, relative_path, wanted)
+from ..record import ranges_of, FileCoverage
 
 
 XML_SUFFIX = (".xml",)
@@ -109,46 +108,34 @@ class UcisFormat(CCoverageFormat):
     """UCIS XML, Accellera's interchange format."""
     name = "ucis-xml"
 
-    def read(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every UCIS XML document under the
-                artifact directory, unioned -- line coverage in EX/CV,
-                branch arms in 'branch', toggle bits in 'toggle'.
-                None, where none stands -- ABSENT.
-        """
-        entry_db  = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(XML_SUFFIX): continue
-                root = _read(os.path.join(directory, name))
-                if root is None: continue
-                _absorb(entry_db, root)
-        if not entry_db: return None
+    suffix = XML_SUFFIX
 
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, entry_db, source_root, config, counts_f)
+    def absorb(self, accumulator, path):
+        """RETURN: None. One UCIS document folded in -- line coverage,
+        branch arms, toggle bits; a file that does not parse leaves the
+        accumulator untouched."""
+        root = _read(path)
+        if root is not None: _absorb(accumulator, root)
+
+    def record_of(self, accumulator, source_root, config, counts_f):
+        """RETURN: CoverageRecord over the unioned documents."""
+        return _record_of(self, accumulator, source_root, config, counts_f)
 
 
 class UcisFramework(CCoverageFramework):
-    """ucis: invocation; reads UcisFormat."""
+    """ucis: invocation; reads UcisFormat.
+
+    NOTHING TO WRAP, AND NO SECOND CALL (the base's defaults): UCIS XML
+    stands at the end of a CONVERSION step (a vendor export, or 'pyucis
+    convert' over a native database) that this component neither runs
+    nor names -- the same posture 'readers/jacoco.py' takes toward the
+    agent that produces ITS artifact. Naming a call that could not run
+    would be worse than naming none.
+    """
     name   = "ucis"
     format = UcisFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """RETURN: list[str], 'argv' unchanged. UCIS XML stands at the
-        end of a CONVERSION step (a vendor export, or 'pyucis convert'
-        over a native database) that this component neither runs nor
-        names -- the same posture 'readers/jacoco.py' takes toward the
-        agent that produces ITS artifact."""
-        return list(argv)
 
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The conversion that produces UCIS XML needs the
-        source database and its own tool choice, which this reader does
-        not own; naming a call that could not run would be worse than
-        naming none (readers/jacoco.py carries the same reasoning)."""
-        return None
 
 
 def _read(path):
@@ -260,11 +247,7 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
                                      ranges_of(covered), count_list,
                                      measure_db)
 
-    return CoverageRecord(language = _language_of(file_db),
-                          tool     = "",
-                          source   = fmt.name,
-                          counts_f = counts_f,
-                          file_db  = file_db)
+    return fmt.record_from(file_db, counts_f, _language_of(file_db))
 
 
 def _language_of(file_db):

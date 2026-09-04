@@ -90,25 +90,16 @@ class LcovFormat(CCoverageFormat):
 
 
 class LcovFramework(CCoverageFramework):
-    """lcov: invocation; reads LcovFormat."""
+    """lcov: invocation; reads LcovFormat.
+
+    NOTHING TO WRAP (the base's default): the tools that write LCOV
+    tracefiles are driven by the build or by the test's own command
+    line, not by a wrapper this component could put around them.
+    """
     name   = "lcov"
     format = LcovFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
 
-        The tools behind this format instrument at BUILD time or run
-        their own supervisor; none of them wraps a command line the way
-        'coverage run' does. Pretending to wrap would be a call that
-        does nothing, which is worse than no call.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. A tracefile is text already; see the module
-        header."""
-        return None
 
 
 def count_db_of(text):

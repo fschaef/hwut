@@ -49,9 +49,8 @@ ______________________________________________________________________________
 import os
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import ranges_of, FileCoverage, CoverageRecord
+                      register, relative_path, wanted)
+from ..record import ranges_of, FileCoverage
 
 
 DAT_SUFFIX = (".dat",)
@@ -65,48 +64,31 @@ class VerilatorFormat(CCoverageFormat):
     """Verilator's native coverage data file."""
     name = "verilator-dat"
 
-    def read(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every verilator '.dat' under the
-                artifact directory, unioned -- line coverage in EX/CV,
-                branch arms in 'branch', toggle bits in 'toggle',
-                cover properties in 'cover'.
-                None, where none stands -- ABSENT.
-        """
-        point_db  = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(DAT_SUFFIX): continue
-                _absorb(point_db, os.path.join(directory, name))
-        if not point_db: return None
+    suffix = DAT_SUFFIX
 
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, point_db, source_root, config, counts_f)
+    def absorb(self, accumulator, path):
+        """RETURN: None. One '.dat' folded in -- line coverage, branch
+        arms, toggle bits, cover properties."""
+        _absorb(accumulator, path)
+
+    def record_of(self, accumulator, source_root, config, counts_f):
+        """RETURN: CoverageRecord over the unioned '.dat' files."""
+        return _record_of(self, accumulator, source_root, config, counts_f)
 
 
 class VerilatorFramework(CCoverageFramework):
-    """verilator: invocation; reads VerilatorFormat."""
+    """verilator: invocation; reads VerilatorFormat.
+
+    NOTHING TO WRAP (the base's default): instrumentation happens when
+    the model is VERILATED ('--coverage' on the verilator command
+    line), not when it runs -- the build's business, as the JaCoCo
+    agent is the java command line's. The run then writes the '.dat'
+    itself.
+    """
     name   = "verilator"
     format = VerilatorFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
 
-        Instrumentation happens when the model is VERILATED
-        ('--coverage' on the verilator command line), not when it runs
-        -- the build's business, as the JaCoCo agent is the java
-        command line's. The run then writes the '.dat' itself.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """
-        RETURN: None. The '.dat' the run leaves IS the artifact this
-                reader reads; no second call stands between them.
-        """
-        return None
 
 
 def _absorb(point_db, path):
@@ -233,11 +215,7 @@ def _record_of(fmt, point_db, source_root, config, counts_f):
                                      ranges_of(covered), count_list,
                                      measure_db)
 
-    return CoverageRecord(language = _language_of(file_db),
-                          tool     = "",
-                          source   = fmt.name,
-                          counts_f = counts_f,
-                          file_db  = file_db)
+    return fmt.record_from(file_db, counts_f, _language_of(file_db))
 
 
 def _language_of(file_db):

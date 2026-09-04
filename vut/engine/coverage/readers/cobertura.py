@@ -57,55 +57,40 @@ DESCRIPTION
        pretending to would be a call that does nothing.
 ______________________________________________________________________________
 """
-import os
-import xml.etree.ElementTree as ElementTree
+from xml.etree import ElementTree
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      line_record_of, register, artifact_directory_of)
+                      line_record_of, language_of, register)
 
 
 XML_SUFFIX = (".xml",)
 
 
 class CoberturaFormat(CCoverageFormat):
-    """Cobertura XML, whoever wrote it."""
-    name = "cobertura-xml"
+    """Cobertura XML, whoever wrote it. Every xml under the artifact
+    directory is unioned; the walk is the base's ('reader.py')."""
+    name   = "cobertura-xml"
+    suffix = XML_SUFFIX
 
-    def read(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every Cobertura xml under the artifact
-                directory, unioned.
-                None, where none stands -- ABSENT.
-        """
-        entry_db = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(XML_SUFFIX): continue
-                root = _read(os.path.join(directory, name))
-                if root is None: continue
-                _absorb(entry_db, root)
-        if not entry_db: return None
+    def absorb(self, accumulator, path):
+        """RETURN: None. One Cobertura document folded in; a file that
+        does not parse leaves the accumulator untouched."""
+        root = _read(path)
+        if root is not None: _absorb(accumulator, root)
 
-        counts_f = bool(config is not None and config.counts)
-        return _record_of(self, entry_db, source_root, config, counts_f)
+    def record_of(self, accumulator, source_root, config, counts_f):
+        """RETURN: CoverageRecord over the unioned documents."""
+        return _record_of(self, accumulator, source_root, config, counts_f)
 
 
 class CoberturaFramework(CCoverageFramework):
-    """cobertura: invocation; reads CoberturaFormat."""
+    """cobertura: invocation; reads CoberturaFormat.
+
+    NOTHING TO WRAP, AND NO SECOND CALL (the base's defaults): the
+    ecosystems that write this format drive their own runs (see the
+    module header), and the xml is text already."""
     name   = "cobertura"
     format = CoberturaFormat()
-
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged. The ecosystems that write
-        this format drive their own runs; see the module header.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The xml is text already."""
-        return None
 
 
 def _read(path):
@@ -195,27 +180,22 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
                           _language_of, branch_of)
 
 
-def _language_of(file_db):
-    """
-    RETURN: str, the language the report is OF, from the extensions it
-            names; 'unknown' where they disagree or say nothing.
+#  A COBERTURA DOCUMENT CARRIES NO LANGUAGE OF ITS OWN -- the price of
+#  a format five ecosystems share. C and C++ appear in one report by
+#  design and read 'c++'; any other mix reads 'unknown', SAID rather
+#  than defaulted to the commonest member.
+_SUFFIX_DB = {".py": "python", ".java": "java", ".kt": "kotlin",
+              ".scala": "scala", ".groovy": "groovy", ".cs": "csharp",
+              ".vb": "vbdotnet", ".fs": "fsharp", ".rb": "ruby",
+              ".php": "php", ".js": "javascript", ".ts": "typescript",
+              ".c": "c", ".h": "c", ".cpp": "c++", ".cc": "c++"}
+_COLLAPSE_TUPLE = ((("c", "c++"), "c++"),)
 
-    A Cobertura document carries no language of its own -- which is the
-    price of a format five ecosystems share. 'unknown' is SAID rather
-    than defaulted to the commonest one.
-    """
-    suffix_db = {".py": "python", ".java": "java", ".kt": "kotlin",
-                 ".scala": "scala", ".groovy": "groovy", ".cs": "csharp",
-                 ".vb": "vbdotnet", ".fs": "fsharp", ".rb": "ruby",
-                 ".php": "php", ".js": "javascript", ".ts": "typescript",
-                 ".c": "c", ".h": "c", ".cpp": "c++", ".cc": "c++"}
-    name_set = set()
-    for path in file_db:
-        name = suffix_db.get(os.path.splitext(path)[1].lower())
-        if name is not None: name_set.add(name)
-    if len(name_set) == 1:       return name_set.pop()
-    if name_set == {"c", "c++"}: return "c++"
-    return "unknown"
+
+def _language_of(file_db):
+    """RETURN: str, the language the report is OF; 'unknown' where the
+    extensions disagree or say nothing."""
+    return language_of(file_db, _SUFFIX_DB, _COLLAPSE_TUPLE)
 
 
 register(CoberturaFramework())

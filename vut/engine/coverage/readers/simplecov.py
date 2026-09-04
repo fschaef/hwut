@@ -39,12 +39,10 @@ ______________________________________________________________________________
 """
 import io
 import json
-import os
 
 from ..reader import (CCoverageFramework, CCoverageFormat,
-                      register, artifact_directory_of,
-                      relative_path, wanted)
-from ..record import ranges_of, FileCoverage, CoverageRecord
+                      register, relative_path, wanted)
+from ..record import ranges_of, FileCoverage
 
 
 RESULTSET_SUFFIX = (".resultset.json",)
@@ -54,21 +52,14 @@ class SimplecovFormat(CCoverageFormat):
     """SimpleCov's .resultset.json."""
     name = "simplecov-resultset"
 
-    def read(self, work_dir, source_root, config=None):
-        """
-        RETURN: CoverageRecord, of every resultset under the artifact
-                directory, suites and files unioned.
-                None, where none stands -- ABSENT.
-        """
-        line_db_by_file = {}
-        directory = artifact_directory_of(work_dir)
-        if os.path.isdir(directory):
-            for name in sorted(os.listdir(directory)):
-                if not name.endswith(RESULTSET_SUFFIX): continue
-                _absorb(line_db_by_file, os.path.join(directory, name))
-        if not line_db_by_file: return None
+    suffix = RESULTSET_SUFFIX
 
-        counts_f = bool(config is not None and config.counts)
+    def absorb(self, accumulator, path):
+        """RETURN: None. One resultset folded in, suites unioned."""
+        _absorb(accumulator, path)
+
+    def record_of(self, line_db_by_file, source_root, config, counts_f):
+        """RETURN: CoverageRecord over the unioned resultsets."""
         file_db  = {}
         for raw_path in sorted(line_db_by_file):
             path = relative_path(raw_path, source_root)
@@ -85,32 +76,21 @@ class SimplecovFormat(CCoverageFormat):
             file_db[path] = FileCoverage(path, ranges_of(executable),
                                          ranges_of(covered), count_list)
 
-        return CoverageRecord(language = "ruby",
-                              tool     = "",
-                              source   = self.name,
-                              counts_f = counts_f,
-                              file_db  = file_db)
+        return self.record_from(file_db, counts_f, "ruby")
 
 
 class SimplecovFramework(CCoverageFramework):
-    """simplecov: invocation; reads SimplecovFormat."""
+    """simplecov: invocation; reads SimplecovFormat.
+
+    NOTHING TO WRAP (the base's default): SimpleCov starts INSIDE the
+    ruby process ('SimpleCov.start' before the code under test loads)
+    -- the test's own first lines, not a wrapper around them. This
+    reader reports its absence by finding no resultset.
+    """
     name   = "simplecov"
     format = SimplecovFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged.
 
-        SimpleCov starts INSIDE the ruby process ('SimpleCov.start'
-        before the code under test loads) -- the test's own first lines,
-        not a wrapper around them. This reader reports its absence by
-        finding no resultset.
-        """
-        return list(argv)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: None. The process writes the resultset at exit."""
-        return None
 
 
 def _absorb(line_db_by_file, path):

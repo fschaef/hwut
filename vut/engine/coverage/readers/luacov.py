@@ -91,23 +91,18 @@ class LuacovFormat(CCoverageFormat):
 
 
 class LuacovFramework(CCoverageFramework):
-    """luacov: invocation; reads LuacovFormat."""
+    """luacov: invocation; reads LuacovFormat.
+
+    NOTHING TO WRAP (the base's default): luacov is switched on from
+    INSIDE the application ('require("luacov")'), not from outside it:
+    there is nothing here to wrap. NO SECOND CALL either -- producing
+    the report needs the LUA_PATH the test ran under, which this
+    component does not know.
+    """
     name   = "luacov"
     format = LuacovFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """
-        RETURN: list[str], 'argv' unchanged. luacov is switched on from
-        INSIDE the application ('require("luacov")'), not from outside
-        it: there is nothing here to wrap.
-        """
-        return list(argv)
 
-    def report_argv(self, config, work_dir):
-        """RETURN: None. See the module header: producing the report
-        needs the LUA_PATH the test ran under, which this component does
-        not know."""
-        return None
 
 
 def read_report(text):
