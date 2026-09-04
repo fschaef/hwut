@@ -1,0 +1,16 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/plan
+
+todo-7  SEVERAL COLLISION GROUPS                         ** LABOUR OWED **
+______________________________________________________________________________
+
+The plan's form carries SEVERAL exclusion sets; 'DirectorySpec.collision'
+carries ONE flat group. Determination therefore emits at most one set.
+
+Owed in exploration: a directory stating several groups --
+
+    collision = [ ["test-net.py", "test-port.py two"],
+                  ["test-gpu.py", "test-render.py"] ]
+
+-- and the validator law that goes with it. Determination needs one line
+changed once it arrives.

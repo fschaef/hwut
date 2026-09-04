@@ -25,7 +25,7 @@ class SelectionMarker:
 
 class DeterministicStream:
     """
-    A platform-independent random number generator using a 
+    A platform-independent random number generator using a
     Linear Congruential Generator (LCG).
     """
     def __init__(self, seed: int = 0x42):
@@ -84,7 +84,7 @@ class DeterministicStream:
 
     def gauss(self, mu: float, sigma: float, lower: float=-math.inf, upper: float=math.inf) -> float:
         """
-        Box-Muller transform to generate Gaussian distribution 
+        Box-Muller transform to generate Gaussian distribution
         independently of platform libraries.
         """
         u1 = self.next_float() + 1e-9 # Avoid log(0)
@@ -118,7 +118,7 @@ class DeterministicStream:
     # @typechecked -- to costly
     def sample(self, population: list, n: int):
         assert len(population) >= n
-        return [ 
+        return [
             population[i] for i in self.sample_indices(len(population), n)
         ]
 

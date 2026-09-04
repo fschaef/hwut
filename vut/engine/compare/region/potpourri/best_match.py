@@ -3,8 +3,8 @@ ________________________________________________________________________________
 
 PURPOSE: Pairing lines according to similarity (not only equivalent lines).
 
-Where 'exact.py' (or equivalence_check) only tried to find exactly equivalent lines, 
-this module tries to associate similar lines. The goal, here, is to provide a 
+Where 'exact.py' (or equivalence_check) only tried to find exactly equivalent lines,
+this module tries to associate similar lines. The goal, here, is to provide a
 line-up that can be displayed to expose the 'diff function' via a user interface.
 ________________________________________________________________________________
 """
@@ -20,10 +20,10 @@ from   vut.engine.compare.contract.frozen_analogy_db                import Froze
 def do(subject, nominal, analogy_db, max_comparison_count,
        subset_f=False):
     """RETURNS: [0] list of (subject line number, nominal line number)
-                [1] required analogy db 
+                [1] required analogy db
 
-    This function (tries to) associates subject lines with nominal lines 
-    as good as possible. The analogy db reflects an attempt to find 
+    This function (tries to) associates subject lines with nominal lines
+    as good as possible. The analogy db reflects an attempt to find
     consistent analogies. Since we do not assume equivalence, the analogy
     db may be inconsistent with some of the entries.
     """
@@ -74,10 +74,10 @@ def _core(subject_line_list,
           analogy_db, max_comparison_count,
           abort_early_f=False, analogies_involved_f = True, subset_f=False):
     """RETURNS: sorted list of LinePair objects.
-        
-    Sort order: sorted by line number of subject. 
 
-    'max_comparison_count' may restrict the number of comparisons. With 
+    Sort order: sorted by line number of subject.
+
+    'max_comparison_count' may restrict the number of comparisons. With
     large number of lines, this may restrict the complexity, therefore,
     feasibility.
 
@@ -109,24 +109,24 @@ def _core(subject_line_list,
 def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db,
                     max_comparison_count, subset_f=False):
     result = []
-    
+
     # 2. INTEGRATE STRICT MATCHES
-    # We must calculate the edit operations for strict matches to populate the 
+    # We must calculate the edit operations for strict matches to populate the
     # visual diff (LinePair) and ensure the analogy_db is fully up to date.
     for si, ni in sorted(couples.items()):
         subject_seq, nominal_seq = subject_db[si], nominal_db[ni]
-        
+
         # NOTE: edit_operations_line.do returns an EditSequence object
-        edit_seq = edit_operations_line.do(subject_seq.sequence, 
-                                           nominal_seq.sequence, 
+        edit_seq = edit_operations_line.do(subject_seq.sequence,
+                                           nominal_seq.sequence,
                                            analogy_db)
-        
+
         # Adopt the potentially updated analogy_db (strict matches dictate truth)
         analogy_db = edit_seq.analogy_db
-        
-        result.append(LinePair(subject_seq, 
-                               nominal_seq, 
-                               edit_seq.edit_list, 
+
+        result.append(LinePair(subject_seq,
+                               nominal_seq,
+                               edit_seq.edit_list,
                                cost=edit_seq.cost))
 
     if not verdict:
@@ -158,16 +158,16 @@ def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db,
     return result, analogy_db.to_AnalogyDb()
 
 @typechecked
-def _couple_remainders(couples, 
-                       subject_db, 
-                       nominal_db, 
+def _couple_remainders(couples,
+                       subject_db,
+                       nominal_db,
                        analogy_db: AnalogyDb | FrozenAnalogyDb | None, max_comparison_count):
     """RETURNS: [0] list of 'LinePair' objects.
                 [1] line numbers of unpaired subject lines
                 [2] line numbers of unpaired nominal lines
 
-    subject_db:    line number -> Line object 
-    nominal_db:    line number -> Line object 
+    subject_db:    line number -> Line object
+    nominal_db:    line number -> Line object
 
 
     Find couples in the set of remainders according to a least cost
@@ -176,11 +176,11 @@ def _couple_remainders(couples,
     """
     subject_done = set(couples.keys())
     nominal_done = set(couples.values())
-    
+
     # Identify available objects for the window calculation
     subjects_avail = [x for x in subject_db.values() if x.line_n not in subject_done]
     nominals_avail = [x for x in nominal_db.values() if x.line_n not in nominal_done]
-    
+
     # Use windowed cost calculation for performance
     cost_db = _get_cost_db(subjects_avail, nominals_avail, max_comparison_count)
 
@@ -190,10 +190,10 @@ def _couple_remainders(couples,
             continue
 
         # "Develop analogy_db along the way":
-        # We pass the CURRENT analogy_db. If the fuzzy match implies new, 
+        # We pass the CURRENT analogy_db. If the fuzzy match implies new,
         # consistent analogies, edit_operations_line returns a new DB containing them.
-        edit_seq = edit_operations_line.do(subject.sequence, 
-                                           nominal.sequence, 
+        edit_seq = edit_operations_line.do(subject.sequence,
+                                           nominal.sequence,
                                            analogy_db)
 
         # If consistent, we adopt the new analogies.
@@ -202,7 +202,7 @@ def _couple_remainders(couples,
         analogy_db = edit_seq.analogy_db
 
         result.append(LinePair(subject, nominal, edit_seq.edit_list, cost=edit_seq.cost))
-        
+
         subject_done.add(subject.line_n)
         nominal_done.add(nominal.line_n)
 
@@ -215,8 +215,8 @@ def _get_cost_db(subjects_available, nominals_available, window_size):
     """RETURNS: list of (cost, subject line, nominal line)
 
     where the list is sorted by cost.
-    
-    Uses a WINDOWED approach. We only compare lines that are within 
+
+    Uses a WINDOWED approach. We only compare lines that are within
     'window_size' of each other in the remaining lists. This avoids O(N^2).
     """
     cost_db = []
@@ -227,24 +227,24 @@ def _get_cost_db(subjects_available, nominals_available, window_size):
         return tuple(len(le._string) for le in le_seq)
     subjects_available.sort(key=key)
     nominals_available.sort(key=key)
-    
+
     for i, subject in enumerate(subjects_available):
         # Determine window
         start_j = max(0, i - window_size)
         end_j   = min(n_len, i + window_size + 1)
-        
+
         for j in range(start_j, end_j):
             nominal = nominals_available[j]
-            
+
             # Use heuristic quick compare
             cost = subject.compare_quickly(nominal)
-            
+
             # Optimization: Only consider if there is at least some similarity
             if cost < 1.0:
                 cost_db.append((cost, subject, nominal))
 
-    # Sort logic: 
+    # Sort logic:
     # 1. Cost (lowest first)
     # 2. Physical closeness (how far apart are they in the file?)
-    cost_db.sort(key=lambda x: (x[0], abs(x[1].line_n - x[2].line_n))) 
+    cost_db.sort(key=lambda x: (x[0], abs(x[1].line_n - x[2].line_n)))
     return cost_db

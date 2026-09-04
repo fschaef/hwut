@@ -9,7 +9,7 @@ the lines to appear in the sequence that they are registered in the nominal.
 The algorithm matches subject lines and nominal lines which are equivalent.
 
 The additional 'abort_f' flag may instruct the algorithm to abort, as soon
-as a complete solution is impossible. Such a quick abort means, that the two 
+as a complete solution is impossible. Such a quick abort means, that the two
 Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
@@ -61,8 +61,8 @@ def do(subject, nominal, analogy_db, abort_early_f, subset_f=False):
 
     return verdict, pair_db, analogy_db
 
-def _core_non_analogy(subject_line_list, 
-                      nominal_line_list, 
+def _core_non_analogy(subject_line_list,
+                      nominal_line_list,
                       abort_early_f=False):
     """RETURNS:   [0] verdict
                   [1] map: subject line number --> nominal line number
@@ -90,7 +90,7 @@ def _core(subject_line_list, nominal_line_list, analogy_db,
     def _assert_progress(state, previous_pair_n):
         assert previous_pair_n <= (pair_n := len(state.pair_db))
         return pair_n
-        
+
     aborted_f = False
     if (state := m.get_initial_state(subject_line_list, nominal_line_list,
                                      analogy_db, abort_early_f,
@@ -103,10 +103,10 @@ def _core(subject_line_list, nominal_line_list, analogy_db,
 
     previous_pair_n = _assert_progress(state, 0)
 
-    if not m.complete_pairing_is_possible(state): 
+    if not m.complete_pairing_is_possible(state):
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
-    
+
     if (state := m.extract_ultimates_and_hopeless(state, abort_early_f,
                                                   subset_f)).aborted_f:
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
@@ -117,10 +117,10 @@ def _core(subject_line_list, nominal_line_list, analogy_db,
     if state.required_pair_n == len(state.pair_db):
         return True, state.pair_db, state.analogy_constraint_db
 
-    elif not m.complete_pairing_is_possible(state): 
+    elif not m.complete_pairing_is_possible(state):
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
-    
+
     if analogies_involved_f: state = m.pairing_analogy_lines(state)
     else:                    state = m.pairing_non_analogy_lines(state)
 

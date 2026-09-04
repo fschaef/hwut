@@ -5,21 +5,21 @@ PURPOSE: Transform a line of text --> LineElement objects.
 A 'PatternFinder' finds patterns in lines of texts and represents the text line
 by a list of 'LineElement'-s (classes derived from 'LineElement').  The
 understanding of a line as a sequence of 'LineElement'-s is the key for
-tolerant comparison. 
+tolerant comparison.
 
- * EQUIVALENCE PATTERN: lets two strings be considered equivalent, even if 
-                        they are literally not the same. 
+ * EQUIVALENCE PATTERN: lets two strings be considered equivalent, even if
+                        they are literally not the same.
 
                         Those may also defined by the user.
-                        
- * NUMERIC PATTERN: may only require a certain numeric precission for 
-                    equivalence. 
-                    
- * ANALOGY: pattern allows for different strings to appear, as long as it is 
+
+ * NUMERIC PATTERN: may only require a certain numeric precission for
+                    equivalence.
+
+ * ANALOGY: pattern allows for different strings to appear, as long as it is
             always the same strings and their counterpart.
 
- * SLASH: the exact number of characters of that type is unimportant for 
-          equivalence. The 'slash' pattern helps with output of file names 
+ * SLASH: the exact number of characters of that type is unimportant for
+          equivalence. The 'slash' pattern helps with output of file names
           under different operating systems.
 
  * SEPERATOR: not under consideration for comparison, but sperates elements
@@ -29,15 +29,15 @@ tolerant comparison.
 
  Additionally, there are further configuration options:
 
- * .strip_whitespace_f:        
+ * .strip_whitespace_f:
     cuts the whitespace at the begin/end of each line.
 
- * .numeric_tolerance_ratio:   
+ * .numeric_tolerance_ratio:
     defines the precision for NUMERIC.
 
  * .regions_f: False -- '##!' and '####' are ordinary content.
- * .ignored_line_begin_marker, .ignored_line_end_marker:   
-    define a marker at the for the begin/end of a line. If such a marker appears 
+ * .ignored_line_begin_marker, .ignored_line_end_marker:
+    define a marker at the for the begin/end of a line. If such a marker appears
     the line is ignored.
 
 The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
@@ -73,7 +73,7 @@ class PatternFinder:
         if config.analogy_f:
             b = re.escape(config.analogy_begin_marker)
             e = re.escape(config.analogy_end_marker)
-            
+
             # Extractor: Capture content BETWEEN markers
             # Pattern: marker_begin + (captured_content) + marker_end
             self._analogy_extractor_re = re.compile(f"{b}(.*?){e}")
@@ -82,11 +82,11 @@ class PatternFinder:
             if not re_str: return
             group_name = f"G{len(self._group_map)}"
             p_idx = next(equiv_id_gen) if tol_id == E_ToleranceId.EQUIVALENCE_PATTERN else None
-            
+
             # Create metadata object (still used for 'table' and group mapping)
             tp = TolerancePattern(tol_id, re.compile(re_str), p_idx)
             self._group_map[group_name] = tp
-            
+
             # Add to the master regex parts
             re_parts.append(f"(?P<{group_name}>{re_str})")
 
@@ -186,32 +186,32 @@ class PatternFinder:
 
         result = []
         last_idx = 0
-        
+
         for m in self.master_re.finditer(string):
             start, end = m.span()
-            
+
             # Add text between matches
             if start > last_idx:
                 result.append(LineElementString(string[last_idx:start]))
 
             group_name = m.lastgroup
             tolerance = self._group_map[group_name]
-            
+
             pattern_indices = None
             if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
                 # Use the cached overlap checker
                 pattern_indices = self._get_matching_pattern_indices(m.group(), tolerance.pattern_index)
 
             match_obj = LineElement.from_match(
-                tolerance.id, 
-                m.group(), 
-                self.numeric_tolerance_ratio, 
+                tolerance.id,
+                m.group(),
+                self.numeric_tolerance_ratio,
                 pattern_i_set=pattern_indices
             )
-            
+
             if match_obj:
                 result.append(match_obj)
-            
+
             last_idx = end
 
         # Add remaining text

@@ -23,7 +23,7 @@ from   itertools import zip_longest
 def get_Potpourri(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    result = InputChunk_factory(E_Chunk.POTPOURRI, 
+    result = InputChunk_factory(E_Chunk.POTPOURRI,
                                 start_line_n, end_line_n,
                                 [Line(line_n, line_text, pattern_finder)
                                  for line_n, line_text in enumerate(line_text_list)],
@@ -60,7 +60,7 @@ line_element_db = {
     "V":  [ LineElementVisibleNothing("nothing") ],
     "1":  [ LineElementString("a") ],
     "2":  [ LineElementString("b") ],
-    "3":  [ LineElementString("a"), 
+    "3":  [ LineElementString("a"),
             LineElementEquivalencePattern("a b"[1:2], [0 ]),
             LineElementString("a b"[2:3])  ],
     "s":  [ LineElementString("string"[0:6]) ],
@@ -69,7 +69,7 @@ line_element_db = {
     "x":  [ LineElementAnalogy("((x))") ],
     "y":  [ LineElementAnalogy("((y))") ],
     "z":  [ LineElementAnalogy("((z))") ],
-    "n":  [ LineElementNumber("4711", 0.01) ], 
+    "n":  [ LineElementNumber("4711", 0.01) ],
     "nr": [ LineElementNumber("4711") ]
 }
 

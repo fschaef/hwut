@@ -1,0 +1,56 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/exploration
+
+todo-5  THE DIRECTORY KEYS, REBUILT
+______________________________________________________________________________
+
+DECIDED (R-31..R-36). BUILT. This file records what was done and what is
+left open for the orchestrator.
+
+    old                     new
+    ---                     ---
+    enter                   on_entry
+    leave                   on_exit
+    parallel, isolated      collision   = [ <target>, ... ]
+    sequence                dependency  { <target> = [ <target>, ... ] }
+
+A TARGET is a file name, or a file name and a choice name with one blank
+between; a bare file name means every choice of that file.
+
+DONE:
+  1  'DirectorySpec': rename two fields, strike three, add two.
+  2  'validator._directory_key': the two new readers, and the target
+     reader they share. A target naming a file or choice that neither
+     carrier offers is refused AT EXPLORATION -- both carriers are read
+     there, so it is knowable, and it is the same class of fault as the
+     ghost 'apps' entry (E_FaultKind.DIRECTORY).
+  3  Satisfiability over the graph, computed at exploration: a case in a
+     cycle, depending on a cycle member, depending on a [MISDEP] case, or
+     naming a target that does not exist, carries [MISDEP]. The token is
+     a property of the CASE and belongs on 'CTestCase'.
+  4  The cycle itself, named in the directory failure's message.
+  5  TEST: 'test-explorer.py graph' -- targets that exist, a target the
+     directory does not offer, and a cycle with two cases hanging off it,
+     all five carrying [MISDEP] while the fault names the three that
+     form the cycle. 'test-validator.py conf' carries the keys;
+     'test-task_list.py all' shows the token on a selected case.
+
+FOR THE ORCHESTRATOR -- what the two relations MEAN, so that nothing has to
+be inferred from the keys:
+
+    collision    a group of test runs -- a test application together with
+                 its choices -- MAY NOT RUN IN PARALLEL. Every member of
+                 a collision group runs alone with respect to the others.
+                 What is named in no group may run in parallel with
+                 anything.
+
+    dependency   what it says: the named targets must have RUN before
+                 this one starts. An ordering relation and not a success
+                 relation (R-36) -- the verdict of a dependency does not
+                 enter, and a dependant runs once its dependencies have
+                 run to completion.
+
+Exploration states the relations and settles satisfiability ([MISDEP],
+R-35). HOW the orchestrator schedules what remains -- the order it picks
+among the free ones, how many run at once -- is its own ruling, and
+disc-1-test-sequence-form.txt is where that begins.

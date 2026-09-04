@@ -1,7 +1,0 @@
-disc-1  SCENARIO KINDS BEYOND THE TEST RUN                    ** OPEN **
-______________________________________________________________________________
-
-PARKED by ruling. The plan form is built for TEST RUNS. Whether accept,
-diff display and merge become node kinds of their own, plans of their
-own, or something else entirely is undecided. Nothing in form.py binds
-it: E_NodeKind is an enum, and a new kind is a new member plus its laws.

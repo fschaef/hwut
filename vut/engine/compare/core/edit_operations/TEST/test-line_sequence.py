@@ -21,7 +21,7 @@ involved, though, are only 'substitute', 'insert', and 'delete'. A 'transpose'
 operation does not make sense, since the sequence of lines is imperativ.
 
 The tests take a sequence of subject and nominal lines and display their
-line up. 
+line up.
 ______________________________________________________________________________
 """
 import sys

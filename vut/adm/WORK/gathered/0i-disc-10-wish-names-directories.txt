@@ -1,0 +1,186 @@
+VERSION: 1
+COMPONENTS: services
+
+disc-10  THE WISH NAMES DIRECTORIES TOO                     ** SETTLED **
+______________________________________________________________________________
+
+RAISED (chat, 2026-08-29) out of the face inventory (disc-9), which
+found 'hwut.target' sharing NOTHING with any other face. The reason is
+not that target is peculiar. It is that THE WISH CANNOT SAY WHAT
+TARGET NEEDS.
+
+==============================================================================
+1.  THE GAP
+==============================================================================
+THE WISH SELECTS RUNS. A directory enters only as a FILTER on a run's
+path -- '--exclude-dir vendor', or a path-bearing glob
+'messaging/*/TEST/test-a.sh'. There is no way to say THESE
+DIRECTORIES.
+
+THE ASYMMETRY IS ALREADY VISIBLE AND ALREADY WRONG:
+
+    --exclude-dir <glob>    exists
+    --dir <glob>            does not
+
+A vocabulary that can SUBTRACT a thing and cannot NAME it is a
+vocabulary with a hole in it, and the hole was there before anybody
+wanted the feature.
+
+'hwut.target' EXPOSES IT because its subject genuinely IS directories.
+It iterates every directory whose 'hwut.conf' binds the named target
+and executes it there -- one directory implementing 'clean' as 'make
+clean', another as 'rm *.o *.so', and what unifies them is not the
+script but THE USER'S NOTION OF CLEANING. Target therefore parses its
+own arguments and shares no selection with anybody, which is exactly
+the shape a missing brick leaves behind.
+
+==============================================================================
+2.  THE TWO SETS, AND THE TRANSLATION BETWEEN THEM
+==============================================================================
+    A CHOSEN SET OF RUNS          what the wish selects today
+    A CHOSEN SET OF DIRECTORIES   what target needs, and what nothing
+                                  provides
+
+THESE ARE TWO VIEWS OF ONE SELECTION, not two selections, and the
+translation runs BOTH WAYS:
+
+    IN A RUN-RELATED MODE, a chosen directory means EVERY RUN IN IT --
+    or, where runs are also named, it RESTRICTS to those within it.
+        'hwut.run --dir "messaging/*"'          every run below there
+        'hwut.run --dir "messaging/*" --fail'   the failing ones there
+
+    IN A DIRECTORY-RELATED MODE, the directories ARE the subject and
+    the runs are not consulted at all.
+        'hwut.target clean --dir "messaging/*"' clean, in each
+
+    AND A RUN NAMES ITS DIRECTORY. A wish stating only runs still
+    answers the directory question: the directories are those the
+    selected runs stand in. So a directory-related face may take a
+    wish of any shape and get a sensible answer.
+
+THAT LAST RULE IS WHAT MAKES THIS ONE VOCABULARY rather than two. A
+face asks for the view it needs; the wish need not know which face
+asked.
+
+==============================================================================
+3.  WHAT IT COSTS -- ALMOST NOTHING, AND THAT IS THE ARGUMENT
+==============================================================================
+THE MATCHER ALREADY EXISTS. 'task_list_query._directory_hit_f' does
+precisely the matching '--dir' needs, and has since '--exclude-dir'
+was built: a glob carrying '/' is matched against the whole relative
+path, a BARE NAME against every path COMPONENT, so 'TEST' names
+'a/TEST' and 'a/b/TEST' alike.
+
+THE SELECTION ALREADY KEYS BY DIRECTORY. 'selection.of_tree' answers a
+'result_db' keyed by directory and a 'case_list' whose entries each
+carry theirs. The directory view is nearly there already.
+
+SO THE WORK IS: one field on 'Wish', one option at the door, one
+condition in the query, and one new door on the selection.
+
+==============================================================================
+4.  HOW IT HARMONISES WITH WHAT STANDS
+==============================================================================
+THE EMPTY-WISH LAW IS UNTOUCHED (E-20). A bare command line takes all
+available; an empty wishlist FILE is an empty wish, nothing to do.
+'--dir' is a statement like any other, so a wish carrying only '--dir'
+STATES SOMETHING and 'states_nothing_f' must say so.
+
+AN EXCLUSION STILL OUTRANKS EVERY INCLUDE. '--dir a --exclude-dir a/b'
+takes 'a' and not 'a/b'. The existing law needs no amendment; '--dir'
+joins the includes, which exclusions already outrank.
+
+THE UNION LAW OF '--label' IS THE MODEL. Several '--dir' globs are a
+UNION among themselves -- naming two directories asks for both -- and
+NARROW against the rest of the wish, exactly as '--label' does
+(disc-8). One rule, learnt once.
+
+THE SHORT FORM IS UNAFFECTED. Bare words are TARGETS (E-21), and a
+target names a file and optionally a choice. A directory is named by
+'--dir', never positionally: 'hwut.run messaging' must stay a target
+that matches nothing rather than silently becoming a directory.
+
+LITERAL TARGETS AND THE SILENCE (disc-8). A literal target overrides
+the standard label's silence; A '--dir' GLOB DOES NOT, because a glob
+over directories is a pattern and names a set nobody has seen yet.
+Same line, drawn the same way.
+
+THE WISHLIST FILE holds targets, one per line. IT DOES NOT GAIN
+DIRECTORIES: a wishlist is a list of RUNS, and a directory line would
+make a file that reads differently depending on which face read it.
+Where a person wants a directory in a list, they write the glob.
+
+==============================================================================
+5.  WHAT IT MIGHT FOLD IN
+==============================================================================
+'hwut.sanitize' also works PER DIRECTORY -- session wreckage, stale
+locks, 'OUT/'. RULED (chat, 2026-08-29): IT TAKES A WISH AND DOES NOT
+PARSE ITS OWN, and 'selection.directory_tuple' is the door it takes it
+through.
+
+NOT BUILT HERE, and for a plain reason: 'services/sanitize.py' does
+not stand in this tree. E-18 records its design; the face and its
+suite live elsewhere and must be migrated before the wish can reach
+them. THE RULING STANDS AND WAITS.
+
+WHAT IT WILL LOOK LIKE:
+
+    hwut.sanitize --session --dir "messaging/*"
+    hwut.sanitize --orphans --fail
+
+-- the second being the case that shows why a WISH rather than a
+directory option: 'the orphans of directories holding a failing run'
+is a sentence only the wish can say.
+
+AND A FIX SCRIPT (chat, 2026-08-29): 'hwut.sanitize --script' should
+write a script the person READS AND THEN RUNS, rather than acting
+itself. That is better than '--apply' for the reason E-18 already
+gives -- sanitize never guesses at blessed work -- because a script
+is REVIEWABLE BEFORE IT RUNS: every removal visible, lines deletable,
+the whole kept as a record of what was cleaned. '--apply' asks for
+trust; a script asks for a reading.
+
+    hwut.sanitize --session --dir "messaging/*" --script > clean.sh
+
+ALSO NOT BUILT, and for the same reason: the face is not in this
+tree.
+
+==============================================================================
+RULED, AND BUILT (2026-08-29)
+==============================================================================
+ a  RULED: IT RESTRICTS. Where a wish names both runs and
+    directories -- 'hwut.run --glob "test-a.sh" --dir "messaging/*"'
+    -- is the answer 'test-a.sh anywhere, PLUS everything under
+    messaging', or 'test-a.sh, but only under messaging'?
+    '--label' narrows against the rest of the wish and is a union
+    only among its own labels; '--dir' reads the same way, and 'the
+    failing ones under messaging' is the sentence people want. A
+    person wanting the union writes two commands, or a wishlist.
+
+ b  RULED: UNCHANGED. What does a directory-related face do with a
+    directory that binds nothing?
+    'hwut.target clean --dir "messaging/*"' where a matched directory
+    binds no 'clean'. Today target reports 'no directory binds any
+    target' only when NONE does.
+    A directory that does not bind the target is not an error, and
+    'hwut.target' already says so.
+
+WHAT WAS BUILT
+______________________________________________________________________________
+
+    Wish.dir_tuple                  the field
+    '--dir <glob>', '--dir=<glob>'  the door, in the ONE wish parser
+    query._outside_dir_f            the narrowing, using the matcher
+                                    '--exclude-dir' already had
+    selection.directory_tuple       THE OTHER VIEW: the directories a
+                                    wish names, however it names them
+    hwut.target --dir               the first directory-related face
+                                    to read the wish's own word
+
+AND ONE LAW HAD TO BE STATED RATHER THAN CHANGED. 'hwut.target' passes
+EVERYTHING AFTER THE TARGET NAME to each directory's script,
+argv-style and untouched -- so '--dir' names directories where it
+stands FIRST, and is a word for the script where it stands second.
+That was this face's oldest law; '--dir' does not get to break it, and
+the help now says so where a person will read it.
+______________________________________________________________________________

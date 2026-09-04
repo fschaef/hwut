@@ -1,0 +1,15 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/plan
+
+todo-4  THE 'special' KEY AND 'hwut.special'              ** LABOUR OWED **
+______________________________________________________________________________
+
+The choice is made (P-11); nothing is built. The labour lands in
+exploration (the key) and services/ (the service).
+
+    special = { "clean" = "clean_this.sh" }     root-only, string values
+
+'hwut.special <name>': walks directories, executes where present, skips
+silently where absent. Framed: on_entry -> special -> on_exit; entry
+failure => not executed, reported. Procsitter-supervised, directory
+caps. No test machinery.

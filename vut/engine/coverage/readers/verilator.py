@@ -48,9 +48,9 @@ ______________________________________________________________________________
 """
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, relative_path, wanted)
-from ..record import ranges_of, FileCoverage
+from ..database.record import ranges_of, FileCoverage
 
 
 DAT_SUFFIX = (".dat",)
@@ -168,7 +168,7 @@ def _record_of(fmt, point_db, source_root, config, counts_f):
     RETURN: CoverageRecord over the absorbed points, one FileCoverage
             per source file, each measure on its own axis.
     """
-    from ..measure import BRANCH, TOGGLE, COVER               # noqa: F401
+    from ..database.measure import BRANCH, TOGGLE, COVER               # noqa: F401
     by_file = {}
     for (source, kind, line, name), count in point_db.items():
         by_file.setdefault(source, {}).setdefault(kind, {})[

@@ -358,7 +358,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     tree = explore_tree(root)
     factory = None
     if wish.asks_base_f():
-        def factory(directory): 
+        def factory(directory):
             return Bookkeeper(os.path.normpath(os.path.join(root, directory)))
     return determine_tree(tree, wish,
                           bookkeeper_factory = factory,

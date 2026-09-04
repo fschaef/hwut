@@ -16,8 +16,8 @@ This test renders the behavior of the two internal engines:
   1. 'is_equivalent' (The Judge): Fast, boolean result.
   2. 'associate'     (The Lawyer): Detailed, visual result.
 
-It traverses the critical intersections of the problem space (Structure, 
-Token Logic, Complexity). The output documents the input scenario and 
+It traverses the critical intersections of the problem space (Structure,
+Token Logic, Complexity). The output documents the input scenario and
 verifies if Judge and Lawyer agree.
 ________________________________________________________________________________
 """
@@ -38,7 +38,7 @@ def get_config():
     pf = c.pattern_finder
     pf.analogy_f = True
     pf.numeric_tolerance_ratio = 0.1  # 10% Tolerance
-    pf.equivalent_pattern_list = [r"happy|glad"] 
+    pf.equivalent_pattern_list = [r"happy|glad"]
     return c
 
 CONFIG = get_config()
@@ -51,7 +51,7 @@ async def verify(name, subject, nominal, expected_verdict):
     """
     print(f"\nSCENARIO: {name}")
     print("-" * 60)
-    
+
     # Visualizing Input (Side-by-Side for "The Ruler Effect")
     s_lines = subject.strip().splitlines()
     n_lines = nominal.strip().splitlines()
@@ -63,49 +63,49 @@ async def verify(name, subject, nominal, expected_verdict):
     if len(s_lines) != len(n_lines):
         print(f"... (Lines count mismatch: {len(s_lines)} vs {len(n_lines)})")
     print("-" * 60)
-    
+
     # 1. Equivalence Check (The Judge)
-    
-    judge_bool = await main.is_equivalent(CONFIG, 
-                                          io.StringIO(subject), 
+
+    judge_bool = await main.is_equivalent(CONFIG,
+                                          io.StringIO(subject),
                                           io.StringIO(nominal))
-    
+
     # 2. Association Check (The Lawyer)
     lawyer_bool = True
     bad_relations = set()
-    async for chunk in main.associate(CONFIG, 
-                                      io.StringIO(subject), 
+    async for chunk in main.associate(CONFIG,
+                                      io.StringIO(subject),
                                       io.StringIO(nominal)):
         for lp in chunk:
             if lp.cost > 0:
                 lawyer_bool = False
-            
+
             for c in lp.subject_list() + lp.nominal_list():
                 if "BAD_" in c.relation_id.name:
                     lawyer_bool = False
                     bad_relations.add(c.relation_id.name)
-    
+
     # 3. Report Results
     print(f"Judge (is_equivalent): {judge_bool}")
     print(f"Lawyer (associate):    {lawyer_bool}")
-    
+
     if not lawyer_bool and bad_relations:
         print(f"  -> Errors: {sorted(list(bad_relations))}")
 
     # 4. Verdicts
     consistency = "OK" if judge_bool == lawyer_bool else "FAIL (DIVERGENCE)"
     expectation = "MATCH" if judge_bool == expected_verdict else f"FAIL (Expected {expected_verdict})"
-    
+
     print(f"Consistency:         {consistency}")
     print(f"Expectation:         {expectation}")
 
 async def test_numeric():
     print("=== AXIS: TOKEN LOGIC (Numeric 10%) ===")
-    
+
     # PROBE: [Lower_Bound, Nominal, Upper_Bound]
     # Nominal is 100.
     # 10% tolerance means range [90, 110] (depending on <= implementation)
-    
+
     # Case 1: All Inside (90, 100, 110)
     sub_in = "Values: 90.0  100.0 110.0"
     nom_in = "Values: 100.0 100.0 100.0"
@@ -118,13 +118,13 @@ async def test_numeric():
 
 async def test_analogy():
     print("=== AXIS: TOKEN LOGIC (Analogy) ===")
-    
+
     # Case 1: Simple Mapping (A->1, B->2)
     # Note: Analogies must appear on BOTH sides to be treated as such.
     sub_ok = "Map ((A)) to ((B))"
     nom_ok = "Map ((1)) to ((2))"
     await verify("Analogy: Basic Consistent", sub_ok, nom_ok, True)
-    
+
     # Case 2: Inconsistency (A->1, then A->2)
     sub_bad = "Map ((A)) ... and ... ((A))"
     nom_bad = "Map ((1)) ... and ... ((2))"
@@ -132,18 +132,18 @@ async def test_analogy():
 
 async def test_potpourri():
     print("=== AXIS: STRUCTURE (Potpourri) ===")
-    
+
     # Shuffled lines test
     sub = """##! potpourri
     Item ((A))
     Item ((B))
     ####"""
-    
+
     nom = """##! potpourri
     Item ((2))
     Item ((1))
     ####"""
-    
+
     # Should Pass: A maps to 2, B maps to 1 (or vice versa).
     # Since they are in a potpourri, the engine aligns them to find a consistent mapping.
     await verify("Potpourri: Shuffle + Analogy", sub, nom, True)
@@ -154,17 +154,17 @@ async def test_sudoku():
     # Nominal: Two different lines using ((1)) and ((2)).
     # Constraint: ((A)) can map to ((1)) OR ((2)), but NOT both simultaneously.
     # Result: Pigeonhole violation.
-    
+
     sub = """##! potpourri
     Val ((A))
     Val ((A))
     ####"""
-    
+
     nom = """##! potpourri
     Val ((1))
     Val ((2))
     ####"""
-    
+
     await verify("Sudoku: Pigeonhole (2 items into 1 slot)", sub, nom, False)
 
 async def test_leakage():
@@ -191,10 +191,10 @@ async def test_leakage():
         # 1. Define the raw segments
         def_s, def_n = "Define ((A))", "Define ((1))"
         use_s, use_n = "Use ((A))",    f"Use (({nom_val_2}))"
-        
+
         # 2. Wrap segments based on direction
         def pot_wrapper(s): return f"##! potpourri\n{s}\n####"
-        
+
         if direction == "line->pot":
             # Line region defines state -> Potpourri must respect it
             part1_s, part1_n = def_s, def_n
@@ -210,7 +210,7 @@ async def test_leakage():
         # 3. Assemble
         sub = f"{part1_s}\n{part2_s}"
         nom = f"{part1_n}\n{part2_n}"
-        
+
         # 4. Detailed Test Name
         consistency = "Consistent" if nom_val_2 == "1" else "Conflicting"
         test_name = f"{desc}: {consistency} ({'1->' + nom_val_2})"
@@ -250,7 +250,7 @@ if __name__ == "__main__":
         "leakage":   test_leakage,
     }
 
-    HwutRunner(sys.argv, 
-               "Orthogonal Space Consistency Check", 
+    HwutRunner(sys.argv,
+               "Orthogonal Space Consistency Check",
                choices,
                happy="Consistency:         OK").run()

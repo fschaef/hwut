@@ -1,0 +1,54 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/exploration
+
+disc-1  A FORMAL FORM FOR THE TEST SEQUENCE                     ** OPEN **
+______________________________________________________________________________
+
+NOTED, NOT RULED. Written down so it is not lost; nothing here is built and
+nothing here is decided.
+
+THE THOUGHT
+
+The test sequence is a RESULT, not a thing an author writes:
+
+    test case specification  +  test configuration  ->  test sequence
+
+and it may have a small grammar of its own -- a sequence of STEPS, each step
+saying how its members stand to one another:
+
+    parallel [ test0, test1 ]
+    select   [ test1 -> test2 ]
+
+Sketched, not settled. 'parallel' says these may run at once; 'select' names
+an ordering between two. What the full set of step kinds is, and what an
+arrow means exactly, is open.
+
+WHY IT IS WORTH HAVING
+
+A formal test sequence is something 'hwut.parse --test-sequence' can PRINT.
+An author would then see not only what he configured (todo-7) but what the
+framework intends to DO with it -- the schedule itself, before anything
+runs.
+
+WHERE IT MAY LEAD
+
+The note is kept because it looks like it may help considerably later. A
+sequence with a form of its own is a thing that can be printed, diffed,
+recorded, replayed, and reasoned about -- and a scheduler that emits one is
+answerable for its decisions in a way that a scheduler emitting only
+behaviour is not.
+
+WHAT IT STANDS ON
+
+Exploration already settles the inputs: 'collision' says what may not run at
+the same time, 'dependency' says what must have run first, and [MISDEP] says
+what cannot be reached at all (R-32, R-33, R-35, R-36). The sequence is what
+a scheduler makes of those three, and the scheduler is the orchestrator's.
+
+OPEN, all of it:
+  -  the step kinds and their grammar
+  -  whether the form is written down anywhere or exists only in flight
+  -  who owns it: exploration produces the relations, the orchestrator
+     produces the sequence -- so the form is probably the orchestrator's
+     and this note belongs there once that component is opened
+  -  what '--test-sequence' prints when the graph carries a cycle

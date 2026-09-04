@@ -46,10 +46,10 @@ def TEST_transpose():
 def TEST_visible_nothing():
     print("TEST: Visible Nothing (Placeholder Alignment)")
     subject = FRAME_create_line(1, ["Hello", "World"])
-    nominal = FRAME_create_line(1, ["Hello", "[VN]", "World"]) 
+    nominal = FRAME_create_line(1, ["Hello", "[VN]", "World"])
     edit_list = [
         Edit(E_EditId.GOOD),
-        Edit(E_EditId.GOOD_INSERT), 
+        Edit(E_EditId.GOOD_INSERT),
         Edit(E_EditId.GOOD),
     ]
     FRAME_execute_and_print(subject, nominal, edit_list)
@@ -69,9 +69,9 @@ def TEST_exhaustion():
     subject = FRAME_create_line(1, ["RealSubject"])
     nominal = FRAME_create_line(1, ["RealNominal"])
     edit_list = [
-        Edit(E_EditId.GOOD),      
+        Edit(E_EditId.GOOD),
         Edit(E_EditId.SUBSTITUTE),
-        Edit(E_EditId.DELETE),    
+        Edit(E_EditId.DELETE),
     ]
     FRAME_execute_and_print(subject, nominal, edit_list)
 
@@ -91,10 +91,10 @@ def TEST_monkey_chaos():
     subject = FRAME_create_line(10, ["S0", "S1"])
     nominal = FRAME_create_line(10, ["N0"])
     edit_list = [
-        Edit(E_EditId.INSERT),    
-        Edit(E_EditId.DELETE),    
+        Edit(E_EditId.INSERT),
+        Edit(E_EditId.DELETE),
         Edit(E_EditId.TRANSPOSE, transpose_ai=0),
-        Edit(E_EditId.DELETE)     
+        Edit(E_EditId.DELETE)
     ]
     FRAME_execute_and_print(subject, nominal, edit_list)
 
@@ -112,13 +112,13 @@ def FRAME_execute_and_print(subject, nominal, edit_list):
     subject._UT_set_sequence([el for el in subject.sequence if el.tolerance_id is not E_ToleranceId.SEPERATOR])
     nominal._UT_set_sequence([el for el in nominal.sequence if el.tolerance_id is not E_ToleranceId.SEPERATOR])
     lp = LinePair(subject, nominal, edit_list)
-    
+
     print("INPUT SEQUENCES:")
     s_txt = [el._string for el in subject.sequence] if subject else []
     n_txt = [el._string for el in nominal.sequence] if nominal else []
     print(f"  Subject: {s_txt}")
     print(f"  Nominal: {n_txt}")
-    
+
     print("EDIT LIST:")
     for i, e in enumerate(edit_list):
         aux = f" (aux:{e.transpose_ai})" if e.transpose_ai is not None else ""

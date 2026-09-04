@@ -1308,7 +1308,21 @@ FOUND     Asking the registry found two more gaps the language-keyed
           deep and does not descend, so 'greet.sh' below it is never
           mistaken for a test application.
 
+FOUND, ASKED    "is every file under REAL_PARSING_INPUT actually
+          used" -- and the honest answer needed a third check. Twenty
+          files are never opened: the SOURCE beside each artefact
+          (blinker.v, calc.rb, tb.vhdl...), which a real tool ran to
+          PRODUCE the artefact and which no reader is meant to open.
+          Legitimate, but nothing had SAID so where a machine could
+          check it -- an orphan file with no format's suffix would sit
+          among them, silently unused, indistinguishable from
+          provenance. 'test-real-input.py no_orphan': every file under
+          a format's directory is either that format's own artefact or
+          ends in a NAMED provenance suffix; anything else is an
+          orphan, named. Run against a planted stray file first, which
+          it caught by name.
+
 COST      None in behaviour: every reader test is byte-identical
           reading from disk, and NO EXISTING GOOD WAS TOUCHED.
-          Coverage answers 71 ok / 0 fail, the three new choices
-          being the criterion's own.
+          Coverage answers 72 ok / 0 fail, the four new choices being
+          the criterion's own.

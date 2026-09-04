@@ -21,12 +21,12 @@ This test checks on different LineElement types inteferring and ensuring that
 the resulting edit sequence is meaningful. Currently the different types
 of 'LineElement'-s dependent on their 'E_ToleranceId':
 
-        STRING              
-        VISIBLE_NOTHING     
-        ANALOGY              
-        NUMERIC              
-        EQUIVALENCE_PATTERN  
-        SEPERATOR            
+        STRING
+        VISIBLE_NOTHING
+        ANALOGY
+        NUMERIC
+        EQUIVALENCE_PATTERN
+        SEPERATOR
 
 This enumeration is checked upon entry, such that all tests fail if the
 enumeration struct is different.
@@ -114,9 +114,9 @@ if "different-2" in sys.argv:
     def test(a, b):
         subject = tuple() if a == -1 else (get_example(tolerance_db[a]),)
         nominal = tuple() if b == -1 else (get_example(tolerance_db[b]),)
-        new_subject = subject 
+        new_subject = subject
         new_nominal = nominal + subject
-        # new_subject = subject + subject 
+        # new_subject = subject + subject
         # new_nominal = subject + nominal + subject
         test_core(new_subject, new_nominal)
 
@@ -128,9 +128,9 @@ if "different-good-2" in sys.argv:
     def test(a, b):
         subject = tuple() if a == -1 else (get_example(tolerance_db[a]),)
         nominal = tuple() if b == -1 else (get_example(tolerance_db[b]),)
-        new_subject = nominal + subject 
+        new_subject = nominal + subject
         new_nominal = nominal + nominal + subject
-        # new_subject = subject + subject 
+        # new_subject = subject + subject
         # new_nominal = subject + nominal + subject
         test_core(new_subject, new_nominal)
 
@@ -142,9 +142,9 @@ if "different-void-2" in sys.argv:
     def test(a, b):
         subject = tuple() if a == -1 else (get_example(tolerance_db[a]),)
         nominal = tuple() if b == -1 else (get_example(tolerance_db[b]),)
-        new_subject = subject + subject 
+        new_subject = subject + subject
         new_nominal = nominal + nominal + subject
-        # new_subject = subject + subject 
+        # new_subject = subject + subject
         # new_nominal = subject + nominal + subject
         test_core(new_subject, new_nominal)
 

@@ -24,7 +24,7 @@ this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../"
 sys.path.insert(0, this_directory)
 
 from vut.engine.compare.region.potpourri.solver.csp_arc_consistency import (propagate_blockers,  #noqa E402
-                                                                     bitmask_to_pad_ids, 
+                                                                     bitmask_to_pad_ids,
                                                                      pad_ids_to_bitmask)
 
 if "--hwut-info" in sys.argv:
@@ -38,7 +38,7 @@ def print_db(label, db_list):
     if not db_list or all(mask == 0 for mask in db_list):
         print("    <empty>")
         return
-    
+
     for pid, mask in enumerate(db_list):
         if mask == 0: continue
         blocked_ids = bitmask_to_pad_ids(mask)
@@ -57,7 +57,7 @@ def test(lane_definition, initial_blockers):
 
     # 2. Setup Data Structures
     lane_mask_db = [pad_ids_to_bitmask(lane) for lane in lane_definition]
-    
+
     # Create Dense List (Initialize with 0)
     pad_blocker_db = [0] * (max_id + 1)
     for pid, blocked_list in initial_blockers.items():
@@ -67,7 +67,7 @@ def test(lane_definition, initial_blockers):
     print("Lanes:")
     for i, lane in enumerate(lane_definition):
         print("  Lane %d: %s" % (i, lane))
-    
+
     print_db("\nInitial Blockers:", pad_blocker_db)
 
     # 3. Run Algorithm
@@ -99,7 +99,7 @@ if "basic" in sys.argv:
         lane_definition = [ [0], [1, 2], [3] ],
         initial_blockers = { 1: [3], 2: [] }
     )
-    
+
     print("## Scenario 2: Implicit Blocking (Forced Move).")
     print("## Pad 0 MUST go to Pad 1. Pad 1 blocks 2. Thus 0 blocks 2.")
     test(
@@ -114,7 +114,7 @@ if "dead_end" in sys.argv:
         lane_definition = [ [0], [1, 2] ],
         initial_blockers = { 0: [1, 2] }
     )
-    
+
     print("## Scenario 2: Distant Death.")
     print("## Pad 0 skips Lane 1 (valid), but kills Lane 2.")
     test(
@@ -134,7 +134,7 @@ if "chain" in sys.argv:
                      # If 0 blocks 2, and Lane 1 is [1, 2], then 0 MUST go to 1.
             1:  [4], # 1 blocks 4. Lane 2 is [3, 4]. So 1 forces 3.
             3:  [5], # 3 blocks 5. Lane 3 is [5]. So 3 is a dead end.
-            2: [], 4: [] 
+            2: [], 4: []
         }
     )
 
@@ -145,7 +145,7 @@ if "oscillation" in sys.argv:
         lane_definition = [ [0], [1, 2], [3, 4] ],
         initial_blockers = { 1: [3], 2: [3] }
     )
-    
+
     print("## Scenario 2: Partial Overlap.")
     print("## Blockers differ ({3} vs {4}). Intersection empty. No propagation.")
     test(
@@ -160,7 +160,7 @@ if "missing_keys" in sys.argv:
         lane_definition = [ [0], [1, 2], [3] ],
         initial_blockers = { 1: [3] } # 2 is missing (implicitly 0)
     )
-    
+
     print("## Scenario 2: Missing key causes death.")
     print("## Pad 0 blocks 2. Pad 1 (missing) allows survival in Lane 1.")
     print("## But Pad 0 is checked against Lane 2 and kills [2].")
@@ -182,9 +182,9 @@ if "unsolvable" in sys.argv:
     print("## Both die. Lane 1 becomes empty. Abort.")
     test(
         lane_definition = [ [0], [1, 2], [3] ],
-        initial_blockers = { 
-            1: [3], 
-            2: [3] 
+        initial_blockers = {
+            1: [3],
+            2: [3]
         }
     )
 
@@ -201,7 +201,7 @@ if "unsolvable" in sys.argv:
     print("##   - Pad 0 dies. Lane 0 becomes empty. Abort.")
     test(
         lane_definition = [ [0], [1, 2], [3] ],
-        initial_blockers = { 
+        initial_blockers = {
             0:  [2], # Forces 1
             1:  [3]  # 1 is a dead end
         }

@@ -1,0 +1,45 @@
+VERSION: 1
+COMPONENTS: adm
+
+disc-1  A SESSION ON DOCUMENT CONSISTENCY IS DUE                  ** OPEN **
+______________________________________________________________________________
+
+WHY       The tree's documents have drifted from the tree, and from each
+          other, in ways a reader cannot see from any one of them:
+
+          - THE RULINGS THAT SHAPE A COMPONENT STAND IN ANOTHER'S
+            RATIONALE. The book's membership law (E-20, E-22, E-34,
+            E-36) is in 'services/RATIONALE.txt'; the bookkeeper's own
+            RATIONALE begins at B-1 and never mentions them. The
+            provision inversion (disc-2) is in 'engine/operations';
+            the door doctrine (E-37, E-38) is in services. A reader of
+            a component cannot find its laws from its own directory.
+          - README SENTENCES OUTLIVE THEIR RULINGS. 'bookkeeper/
+            README.txt' said the book held "the reproducible
+            configurations" the day after B-6 removed them; 'run/
+            RATIONALE.txt' ruled 'specification.py' keeps its name,
+            and the live module was 'configuration_tree.py' with the
+            named one a dead twin.
+          - TWO NAMES, ONE THING: 'feed'/'port'; 'labels' under two
+            paths; 'numeric'/'tolerance.numeric_ratio'; 'first_accept'/
+            'last_accept'; 'FAILURES'/'HINTS'. Each was swept in code;
+            not every sweep reached every document.
+          - RATIONALE IS APPEND-ONLY BY LAW, so a superseded entry
+            still reads as current unless annotated, and annotation
+            has been uneven (E-36 has one; E-31 and E-20 do not).
+
+WHAT      One session, nothing else on the table:
+          1. Every component's RATIONALE gains an INDEX of the rulings
+             that shape it, wherever they stand.
+          2. Every superseded entry carries a one-line note naming
+             its successor.
+          3. Every README is read against its component as it IS
+             (Defence Test, 'Guideline-for-README-Reviews.txt').
+          4. A terminology table: one noun per concept, and the
+             graveyard of old nouns, so a sweep has a checklist.
+          5. The three-bin rule re-checked per component: README
+             mechanics only, RATIONALE decisions, DISCUSSIONS forks.
+
+MARKED    2026-09-01, on Frank-Rene's instruction, while amending B-6
+          to B-7 -- the second amendment to the book's shape in two
+          days, each of which found a document saying otherwise.

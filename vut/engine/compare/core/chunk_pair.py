@@ -22,10 +22,10 @@ class ChunkPair(list):
 
     """
     @typechecked
-    def __init__(self, 
-                 subject_type_id:       E_Chunk, 
-                 nominal_type_id:       E_Chunk, 
-                 line_association_list: list, 
+    def __init__(self,
+                 subject_type_id:       E_Chunk,
+                 nominal_type_id:       E_Chunk,
+                 line_association_list: list,
                  analogy_db:            AnalogyDb | FrozenAnalogyDb | None):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
@@ -34,10 +34,10 @@ class ChunkPair(list):
 
     @typechecked
     @staticmethod
-    def from_input_chunks(subject:    InputChunk | None, 
-                          nominal:    InputChunk | None, 
+    def from_input_chunks(subject:    InputChunk | None,
+                          nominal:    InputChunk | None,
                           analogy_db: AnalogyDb | None) -> "ChunkPair":
-        """RETURNS: 'ChunkPair' generated from a subject and nominal input 
+        """RETURNS: 'ChunkPair' generated from a subject and nominal input
                     chunk.
         """
         if subject is None:
@@ -50,7 +50,7 @@ class ChunkPair(list):
             nominal_type    = E_Chunk.NONE
             line_pair_list  = [LinePair(s, None, []) for s in subject.line_list]
             new_analogy_db  = analogy_db
-        else: 
+        else:
             assert subject.type() == nominal.type()
             subject_type    = subject.type()
             nominal_type    = subject_type
@@ -97,7 +97,7 @@ class ChunkPair(list):
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        if self.__subject_type_id == self.__nominal_type_id: 
+        if self.__subject_type_id == self.__nominal_type_id:
             type_name = self.__subject_type_id.name
         else:
             type_name = "(%s,%s)" % (self.__subject_type_id.name, self.__nominal_type_id.name)

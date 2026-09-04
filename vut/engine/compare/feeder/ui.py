@@ -3,11 +3,11 @@ PURPOSE:   Implementation of feeds for UIs in terms of DisplayInst objects.
 
 SIGNATURE: mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8
 
-   This signature identifies the structure of the protocol. A receiver 
+   This signature identifies the structure of the protocol. A receiver
    may check the ProtocolHeader for this signature in order to be safe
    to be compliant.
 
-NOTE: > python path/to/this/file.py 
+NOTE: > python path/to/this/file.py
 
         shows the protocol signature.
 
@@ -42,7 +42,7 @@ import base64                                       #noqa: E402
 from   bidict      import bidict                    #noqa: E402
 
 class AnalogyProvenanceDb(bidict):
-    """Bidirectional mapping for analogies that also tracks the line numbers 
+    """Bidirectional mapping for analogies that also tracks the line numbers
     where each relationship was first established.
     """
     def __init__(self, *args, **kwargs):
@@ -55,11 +55,11 @@ class AnalogyProvenanceDb(bidict):
         Scans a ChunkPair for analogy cells and records new sightings.
         """
         for lp in chunk_pair:
-            if lp.subject_line_n == -1 or lp.nominal_line_n == -1: 
+            if lp.subject_line_n == -1 or lp.nominal_line_n == -1:
                 continue
             cells_s, cells_n = lp.subject_list(), lp.nominal_list()
             for sc, nc in zip(cells_s, cells_n, strict=False):
-                if sc.tolerance_id is not E_ToleranceId.ANALOGY: 
+                if sc.tolerance_id is not E_ToleranceId.ANALOGY:
                     continue
                 s_val, n_val = sc.subject, nc.nominal
                 if s_val is None or n_val is None:                    # no anology claimed
@@ -142,14 +142,14 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
             # 2. Bake provenance info into the instruction cells
             baked_lp_inst = bake_line_pair_inst(line_pair, prov_db)
             yield baked_lp_inst
-            
+
     yield EndOfStreamInst()
 
 def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairInst:
     """Transforms an engine LinePair into a protocol LinePairInst with baked info."""
     engine_cells_s = lp.subject_list()
     engine_cells_n = lp.nominal_list()
-    
+
     baked_s = []
     baked_n = []
 
@@ -159,10 +159,10 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
         if sc.tolerance_id == E_ToleranceId.ANALOGY and sc.subject:
             # Look up current mapping in this specific line pair
             current_n = engine_cells_n[sc.nominal_ref_i].nominal
-            
+
             # Case A: Perfect match found in provenance
             s_orig, n_orig = prov_db.get_origin(sc.subject, current_n)
-            
+
             if s_orig is not None:
                 lnp = LineNumberPair(s_orig, n_orig)
             elif n_orig is not None:
@@ -185,10 +185,10 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
         lnp = None
         if nc.tolerance_id == E_ToleranceId.ANALOGY and nc.nominal:
             current_s = engine_cells_s[nc.subject_ref_i].subject
-            
+
             # Case A: Perfect match
             s_orig, n_orig = prov_db.get_origin(current_s, nc.nominal)
-            
+
             if s_orig is not None:
                 lnp = LineNumberPair(s_orig, n_orig)
             else:
@@ -217,8 +217,8 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
 def _get_protocol_hash() -> str:
     """RETURNS: 256-bit SHA-256 hash of the protocol structure as base64"""
     inst_classes = [
-        obj for obj in globals().values() 
-        if isclass(obj) and issubclass(obj, (DisplayInst, SubjectCell, NominalCell)) 
+        obj for obj in globals().values()
+        if isclass(obj) and issubclass(obj, (DisplayInst, SubjectCell, NominalCell))
         and obj not in (DisplayInst, SubjectCell, NominalCell)
     ]
     # We explicitly add the baked cells to the hash calculation
@@ -230,14 +230,14 @@ def _get_protocol_hash() -> str:
     for cls in inst_classes:
         fields = cls.__dataclass_fields__.keys()
         protocol_strs.append(f"{cls.__name__}({','.join(fields)})")
-    
+
     fingerprint = "|".join(protocol_strs).encode('utf-8')
     raw_hash = hashlib.sha256(fingerprint).digest()
     return base64.urlsafe_b64encode(raw_hash).decode('utf-8').rstrip('=')
 
 # BEGIN: DO NOT REMOVE THIS!
 #
-# This code is used to produce a 'protocol hash', i.e. something that allows the 
+# This code is used to produce a 'protocol hash', i.e. something that allows the
 # receiver to verify that it is parsing content of a compliant version.
 #
 if __name__ == "__main__":

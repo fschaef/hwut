@@ -16,7 +16,7 @@ def extract_matches_and_transposes(s, n):
     ops  = []
 
     # SPEED: binding global functions to local variables
-    ops_append = ops.append 
+    ops_append = ops.append
 
     # fast path: MATCH
     for i, (a, b) in enumerate(zip(s, n, strict=False)):
@@ -50,8 +50,8 @@ def extract_matches_and_transposes(s, n):
             last_unmatched_s_pop(b, None)
             last_unmatched_n_pop(a, None)
         else:
-            last_unmatched_s[a] = i 
-            last_unmatched_n[b] = i 
+            last_unmatched_s[a] = i
+            last_unmatched_n[b] = i
 
     # build residue for Levenshtein
     s_remain = [s[i] for i in range(len(s)) if not used[i]]
@@ -64,7 +64,7 @@ def merge_ops(pre_ops, s_used, n_used, lev_ops):
 
     Merge MATCH / TRANSPOSE ops with Levenshtein ops on the residue.
 
-    ARGS: 
+    ARGS:
 
       pre_ops: list of (opcode, i, j)
                MATCH and TRANSPOSE detected in step (1), using original indices

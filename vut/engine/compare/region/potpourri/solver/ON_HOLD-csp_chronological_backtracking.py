@@ -3,12 +3,12 @@ from vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 
 def do(db):
     """
-    High-speed backtracking solver. 
+    High-speed backtracking solver.
     RETURNS: (dict: {subject: nominal}, AnalogyDb: final_constraints) or None
     """
     subject_i_by_sidx = sorted(db.keys())
     lane_n = len(subject_i_by_sidx)
-    
+
     # 1. Pre-process lanes into frozen options
     lane_options = []
     for s_i in subject_i_by_sidx:
@@ -23,7 +23,7 @@ def do(db):
     while decision_vector:
         sidx = len(decision_vector) - 1
         current_path_adb, used_noms, c_idx = decision_vector[-1]
-        
+
         candidates = lane_options[sidx]
         found_candidate = None
 
@@ -31,10 +31,10 @@ def do(db):
         while c_idx < len(candidates):
             nom_i, pad_adb = candidates[c_idx]
             c_idx += 1
-            
+
             if nom_i in used_noms: continue
             if not current_path_adb.is_all_consistent(pad_adb): continue
-                
+
             found_candidate = (nom_i, pad_adb)
             break
 
@@ -44,10 +44,10 @@ def do(db):
             continue
 
         # --- COMMIT DECISION ---
-        decision_vector[-1][2] = c_idx 
+        decision_vector[-1][2] = c_idx
         new_nom, new_adb = found_candidate
         next_path_adb    = current_path_adb.merge(new_adb)
-        
+
         # --- CHECK SUCCESS ---
         if sidx + 1 == lane_n:
             mapping = {}
@@ -55,7 +55,7 @@ def do(db):
                 subj = subject_i_by_sidx[i]
                 nom  = lane_options[i][state[2]-1][0]
                 mapping[subj] = nom
-            
+
             # Return the formal Result object
             return Result(
                 potential_pair_db     = db,

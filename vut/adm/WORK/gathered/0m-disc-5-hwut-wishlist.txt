@@ -1,0 +1,64 @@
+VERSION: 1
+COMPONENTS: services
+
+disc-5  'hwut.wishlist' -- THE LIST, PRINTED AND SPENT       ** OPEN **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-26): a face that PRINTS what a wish selects, and a
+'--wishlist' option that READS such a file back --
+
+    hwut.wishlist [<wish>]        prints, one per line:
+
+        ./<path>/test-app [choice]
+
+    hwut.run --wishlist FILE      spends it
+
+THE ROUND TRIP CLOSES: the printed form and the accepted form are the
+same form, so an author asks once, prunes and comments the file, and
+maintains it as text. 'hwut.run --wishlist messaging.txt' then names a
+suite by intent rather than by pattern.
+
+RULED with it:
+
+  - './' in a wishlist line is '$(dirname <the wishlist file>)'. A list
+    is relative to ITSELF, so it travels with the directory it
+    describes.
+  - GLOBBING IS ALLOWED throughout a line, path member included.
+  - Lines starting with '#' are comments; blank lines are ignored.
+  - '--wishlist' belongs in 'plan/wish.py', not in one face: every
+    face that takes a wish gains it at once, one parser, one place to
+    be wrong. (The same homogeneity that put '--confs' in '_core.py',
+    disc-3.)
+
+OPEN -- ONE RULING, AND IT BLOCKS THE CONSUMING HALF:
+
+    Does 'CTestTaskListQuery' LEARN ITS DIRECTORY (relative to the run
+    root), so that a glob may carry a path member?          <- needed
+
+    Today it cannot. The query is built per directory and matches
+    'case.source_file' against the glob; a 'CTestCase' carries
+    'source_file', 'choice', 'parameters', 'origin', 'position' -- no
+    path. So a path-qualified target has nothing to match against.
+
+    RECOMMENDED: yes. It is the smallest change that lets ONE matching
+    law serve both '--glob' and '--wishlist', and the path member is
+    what makes a cross-directory list worth maintaining. '--glob' then
+    gains paths too, which is a plain gain.
+
+    COST: the query's constructor changes, and every construction site
+    with it (the dispatcher, the explorer, the faces that build one).
+
+NOT AFFECTED: 'collision' and 'dependency' keep the bare R-34 target
+and keep REFUSING a path. They are different animals -- dependencies
+are RESOLVED within a directory, and collisions only prevent parallel
+running of sensitive neighbours. Neither has any use for a path, and
+admitting one would invite a cross-directory dependency, which the
+plan does not mean. THE ASYMMETRY IS DELIBERATE and belongs in the
+exploration RATIONALE beside R-34 when this is built:
+
+    a path is legal where a target SELECTS ACROSS A TREE,
+    illegal where a target NAMES A NEIGHBOUR.
+
+THE PRINTING HALF needs none of this and could stand alone; delivering
+it without the consuming half would be half a round trip, which is why
+it waits.

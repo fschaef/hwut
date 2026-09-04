@@ -1,0 +1,10 @@
+  OK  : cobertura    every file is an artefact or named provenance
+  OK  : gcov         every file is an artefact or named provenance
+  OK  : ghdl_psl     every file is an artefact or named provenance
+  OK  : jacoco       every file is an artefact or named provenance
+  OK  : lcov         every file is an artefact or named provenance
+  OK  : simplecov    every file is an artefact or named provenance
+  OK  : ucis         every file is an artefact or named provenance
+  OK  : verilator    every file is an artefact or named provenance
+SUCCESS: nothing stands unaccounted for between the two categories.
+<hwut-end>

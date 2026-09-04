@@ -13,9 +13,9 @@ def complete_bipartite(n):
 
 def long_augmenting_path(n):
     """
-    Forces a chain reaction. 
+    Forces a chain reaction.
     Subject i can match Nominal i or i+1.
-    If processed in order, matching Subject N might require 
+    If processed in order, matching Subject N might require
     shifting all previous N-1 matches.
     """
     adj = {i: {i, i + 1} for i in range(n - 1)}

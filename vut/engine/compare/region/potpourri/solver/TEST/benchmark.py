@@ -12,8 +12,8 @@ import vut.engine.compare.region.potpourri.matching                             
 from   vut.engine.compare.contract.analogy_db                                 import AnalogyDb  #noqa E402
 import vut.engine.compare.region.potpourri.solver.TEST.benchmark_scenario_generator as scn            #noqa E402
 
-def run_benchmark(n_range:     list[int], 
-                  k_range:     list[float], 
+def run_benchmark(n_range:     list[int],
+                  k_range:     list[float],
                   ratio_range: list[float],
                   iterations:  int = 1) -> None:
     """
@@ -38,7 +38,7 @@ def run_benchmark(n_range:     list[int],
 
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming 'PotentialPairDb' can be initialized from our dict
-        state = m.Result(potential_pair_db     = db, 
+        state = m.Result(potential_pair_db     = db,
                          pair_db               = {}, # Start with empty paired graph
                          analogy_constraint_db = AnalogyDb(),
                          required_pair_n       = n,
@@ -62,17 +62,17 @@ def run_benchmark(n_range:     list[int],
 if __name__ == "__main__":
     import sys
     if "simple" in sys.argv:
-        N_SAMPLES = [ 10000 ] 
+        N_SAMPLES = [ 10000 ]
         K_SAMPLES = [ 10 ]
         RATIO_SAMPLES = [ 0.5 ]
     else:
         # Define the variations you want to test
         # Example: See how scaling N from 10 to 100 affects time
         N_SAMPLES = [ 1000 * i for i in range(1, 7) ]
-       
+
         # Example: See how 'ambiguity' (partners per entry) affects backtracking
         K_SAMPLES = [2, 5, 10]
-        
+
         # Example: See how constraint density affects speed
         RATIO_SAMPLES = [0.1, 0.2, 0.5 ]
 

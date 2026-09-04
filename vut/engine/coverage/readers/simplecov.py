@@ -40,9 +40,9 @@ ______________________________________________________________________________
 import io
 import json
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, relative_path, wanted)
-from ..record import ranges_of, FileCoverage
+from ..database.record import ranges_of, FileCoverage
 
 
 RESULTSET_SUFFIX = (".resultset.json",)

@@ -1,0 +1,105 @@
+============================================================================
+VUT-OPERATIONS -- RATIONALE
+============================================================================
+Settled. Read-only. Operations cites, and does not own, the R-N series
+of exploration; O-N is orchestrator/run, P-N plan, S-N scheduler.
+
+R-70 STANDS HERE BY RULING (2026-09-04). The R-N series is
+exploration's, and exploration's RATIONALE runs R-1..R-79 with a hole
+at 70. The hole is deliberate: the terminal token is CONTENT of a
+subject stream, 'consume/terminal.py' holds the word and the reading
+law, and this component owns both. A law filed under a component that
+does not own it is the drift the tree is trying to stop; a hole with a
+signpost is honest. The signpost stands at exploration's R-69/R-71.
+
+----------------------------------------------------------------------------
+R-70  THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
+                                                              (2026-09-04)
+----------------------------------------------------------------------------
+PROBLEM   A subject stream can end for reasons that have nothing to do
+          with the subject finishing: a cap blew, a process was
+          killed, a crash landed mid-write, a run was cut short. The
+          bytes that arrived are indistinguishable, on inspection,
+          from the bytes of a stream that ran to its end. Every
+          consumer downstream then reasons on evidence whose
+          completeness it cannot establish -- acceptance would bless a
+          truncated stream as the pole every later run is judged
+          against; coverage would harvest lines from a process that
+          testified to nothing; a comparison would report a wall of
+          line differences where the honest reading is 'this stream
+          never finished'.
+
+          Nothing outside the stream can settle this. Exit codes speak
+          for the process, not the output; wall-clock and byte counts
+          are circumstantial. The completeness of a stream is a fact
+          only the thing that ends the stream can state.
+
+DECISION  A SUBJECT STREAM STATES ITS OWN COMPLETENESS. Its last
+          non-empty line is the terminal token
+
+              <hwut-end>
+
+          The token is CONTENT -- compared, stored and displayed like
+          any other line; the compare framework knows no plumbing.
+          'consume/terminal.py' holds the word and the reading law.
+
+          THE NOMINAL DECIDES PARTICIPATION. A nominal ending in the
+          token requires its subject to end in the token; a nominal
+          without it imposes no check. No switch is needed anywhere
+          for the migration: 'hwut.renovate' appends tokens to
+          nominals, and new tests carry them from birth through the
+          reference runner.
+
+          ABSENCE HAS ITS OWN NAME. A participating subject without
+          the token draws 'terminated-without-hwut-end', placed in the
+          report precedence ABOVE the judgement, so an incomplete
+          stream never masquerades as an ordinary mismatch.
+
+          WHO ENDS A STREAM ends it:
+              plain        the application; HwutRunner emits the token
+                           as the choice's last act
+              interactive  the application, per choice, into the
+                           stdout sink before 'done' -- each choice's
+                           stream self-delimits, in band
+              pype-d       THE PYPE SCRIPT, from its '<eof>' handler;
+                           the application MUST NOT emit it
+
+          The pype case is not a convenience. An application feeding a
+          pype cannot place the token safely: subject to buffering,
+          threads or races, it would be testifying to a completeness
+          it is not in a position to observe. The pype's '<eof>'
+          firing is the one honest proof that the pipe ran dry. So a
+          pype-d stream that ends without the token is THE PYPE
+          SCRIPT'S FAULT, and the diagnosis names the script, never
+          the application. The framework enforces the application's
+          side for the reference runner through 'HWUT_NO_TERMINAL'.
+
+          FILE SUBJECTS ARE EXEMPT: their completeness is the READING
+          POINT (after the token), not a token of their own.
+
+COST      Every fixture and every hand-run application must speak the
+          law and print the token as its last line -- the suites' own
+          bash fixtures included, which were corrected rather than
+          exempted. Every pype script gains an '<eof>' handler that
+          prints it. A deliberate 'sys.exit(n)' from a pype block
+          skips pending '<eof>' handlers and so forgoes the token; the
+          nominal, recorded through the same road, agrees, and no
+          check stands.
+
+GRAVEYARD An out-of-band completeness flag (a sidecar file, a field in
+          the store): a second carrier of one truth, and one that a
+          hand-run application would never write. Inferring
+          completeness from the exit code: the code speaks for the
+          process, and a process can exit 0 having printed half of
+          what it meant to. Making the token a framework concern
+          stripped before comparison: it would then be invisible in
+          the GOOD file, and a reader could not see why a stream was
+          refused.
+
+CITED BY  E-6 and E-39 (services): acceptance refuses a candidate
+          whose last line is not the token, and refuses evidence older
+          than the test that produced it. The coverage harvest law
+          (coverage/RATIONALE): "covered" means executed by a test
+          that testified, and an ending without the token is not
+          testimony. 'hwut.renovate' (services, planned) appends the
+          token to standing nominals.

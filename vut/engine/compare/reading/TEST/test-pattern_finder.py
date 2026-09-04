@@ -12,14 +12,14 @@ PURPOSE:  PatternFinder -- identfiying tolerance pattern in text lines.
 
 CHOICES:  setup, tolerance_id, do;
 
-The 'PatternFinder' searches patterns in a line of text and produces 
+The 'PatternFinder' searches patterns in a line of text and produces
 'LineElement'-s. Each line element corresponds to an identified pattern
 and the *lexeme* that is matching.
 
                  PatternFinder.do(string)
 
 
-setup: 
+setup:
 
    setup the tolerance table in the PatterFinder according to configuration
    settings.
@@ -29,7 +29,7 @@ tolerance_id:
    verify that each pattern is associated with the correct tolerance_id.
 
 do:
-    sample runs of 'PatterFinder.do()', i.e. running the complete pattern 
+    sample runs of 'PatterFinder.do()', i.e. running the complete pattern
     finding process.
 ______________________________________________________________________________
 """
@@ -135,7 +135,7 @@ if "aggressive" in sys.argv:
     config.analogy_f = True
     config.numeric_tolerance_ratio = 0.01
     # Overlapping equivalence patterns: 'funny' belongs to three groups
-    config.equivalent_pattern_list = [ 
+    config.equivalent_pattern_list = [
         r"funny|happy", # ID 0
         r"funny|smart", # ID 1
         r"funny|glad",  # ID 2

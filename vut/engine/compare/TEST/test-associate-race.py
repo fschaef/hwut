@@ -10,7 +10,7 @@ ________________________________________________________________________________
 PURPOSE: Testing 'associate' with deterministic async race conditions.
 
 DESCRIPTION:
-    This test verifies the engine's ability to yield association chunks 
+    This test verifies the engine's ability to yield association chunks
     while stream data arrives at different rates. It uses the TriggerDispatcher
     to force a specific, repeatable interleaving of input lines.
 
@@ -35,11 +35,11 @@ from   vut.test_writing_support.python.deterministic_random import Deterministic
 
 async def test(subject_timeline, nominal_timeline):
     config = Configuration()
-    
+
     # Test Data: A mix of standard lines and potpourri regions
     subject_content = ["heidi", "heinz", "##! potpourri", "albert", "berta",  "carlos",   "damian", "####", "kasper", "friedrich"]
     nominal_content = ["trudi", "hein",  "##! potpourri", "karlos", "damian", "adelbert", "berta",  "####", "crisper", "friedolin"]
-    
+
     subject, nominal, \
     dispatcher_handle = line_provider.prepare_dispatcher(subject_timeline, subject_content,
                                                   nominal_timeline, nominal_content)

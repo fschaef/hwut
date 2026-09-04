@@ -2,7 +2,7 @@
 plan/01-work-structure -- THE MIGRATION, IN ORDERED STEPS
 ==============================================================================
 
-VERSION: 1
+VERSION: 9
 
 COMPONENTS: all.
 INTEND:     adm/WORK/intend/01-work-structure.txt
@@ -18,11 +18,119 @@ ______________________________________________________________________________
 
 STATE
 
-    next step:      G-1
-    gathered:       (none)
+    next step:      PHASE S, blocked on forks r-2..r-5 of
+                    'adm/WORK/review-r1.txt' (r-1 is CLOSED)
+    gathered:       all 9 components, 40/40 files, ids 02..15
     sorted:         (none)
     gates open:     s-1 (README split depth), s-2 (checker),
                     s-3 (DISCUSSIONS seeding)
+
+    G-1 done: 'adm/WORK/ruling-census-before.txt' written -- 40 files
+    under DISCUSSIONS/ across 9 components, 67 distinct E-/R-/O-/B-
+    labels. One discrepancy REPORTED, not resolved: this plan's G-2
+    text below reads 'operations 2, run 3' where the tree measured
+    'operations 1, run 4' -- total (40) unaffected; gathering order
+    below was run using the CORRECTED counts (operations moved into
+    the size-1 tier, ahead of display). Frank-Rene's to rule on
+    whether the G-2 text itself is corrected to match.
+
+    G-2 complete, all 9 components, ids 02..15, smallest-first by
+    CORRECTED count:
+
+        02  adm                              1 file
+        03  test_writing_support/python      1 file
+        04  engine/operations                1 file
+        05..06  engine/display                2 files
+        07..08  engine/orchestrator/scheduler 2 files
+        09..0c  engine/orchestrator/run       4 files
+        0d..0h  engine/orchestrator/plan      5 files
+        0i..0s  services                      11 files
+        0t..15  engine/orchestrator/exploration  13 files
+
+    Every DISCUSSIONS/ directory in the tree is now empty and removed.
+    Content of every gathered file is the original, UNTOUCHED, with
+    'VERSION: 1' and 'COMPONENTS: <origin>' prepended (per G-2).
+
+    G-3 CHECK PERFORMED: the set of distinct E-/R-/O-/B- labels across
+    all 40 gathered files equals the set in
+    'ruling-census-before.txt' exactly -- 67 labels, none added, none
+    lost. G-3 as written only says the census must match; it does,
+    so this state note marks G-3 satisfied without a further separate
+    delivery.
+
+    R-1 DONE, as a REPORT: 'adm/WORK/review-r1.txt' (version 2).
+    All 40 gathered files classified -- 11 TERMINATED, 14
+    DECIDED-NOT-BUILT, 15 OPEN. Nothing sorted, nothing migrated.
+
+    R-1 MEASURED, and it changes what PHASE S means: 65 of the 67
+    labels cited in the gathered files are ALREADY entries in a
+    RATIONALE file. A 'migration of results into RATIONALE' would
+    therefore mostly duplicate what stands; the sorting rule's
+    'DONE lists -> deleted' is the operative branch for most files.
+
+    r-1 CLOSED by ruling (2026-09-04): R-70 -- cited four times as
+    law, never written as an entry, its mechanics standing in
+    operations/README.txt and hwut_pype/MANUAL.txt -- is now an entry
+    in 'engine/operations/RATIONALE.txt', a file created for it.
+    Exploration's hole at R-70 is left standing with a signpost.
+    OWED as a consequence, NOT done: trim operations/README.txt and
+    hwut_pype/MANUAL.txt back to mechanics, since their rationale
+    sentences now stand in R-70 as well.
+
+    PHASE S REMAINS BLOCKED, on forks at the foot of review-r1.txt:
+        r-2  R-73 and R-74 each name TWO different rulings, one in
+             orchestrator/RATIONALE and one in exploration/RATIONALE.
+        r-3  '0p labels' is bannered SETTLED and carries two OPEN
+             sections.
+        r-4a 06: RATIONALE entry or manual only, and under which
+             owner -- its COMPONENTS line says display, its subject
+             is pype and the oracle.
+        r-4b 0q: INTERNALS prose, or a GENERATED check under s-2.
+        r-5  THE GATHER WAS INCOMPLETE -- three DISCUSSIONS.txt FILES
+             (orchestrator 121, coverage 563, operations 721 lines)
+             were missed by a directory-only search. RULED
+             (2026-09-04): treat them BEFORE phase S, and an
+             ACCOMPLISHED entry needs no split -- it may enter README
+             or RATIONALE directly, or simply go.
+             TRIAGED in 'adm/WORK/review-r5.txt'.
+             engine/orchestrator/DISCUSSIONS.txt is DONE and DELETED:
+             every entry verified built against the tree, and the two
+             rulings of its todo-4 that no RATIONALE carried (R1, R2)
+             are now an AMENDED block on D-7.
+             r-5a DONE: engine/coverage/DISCUSSIONS.txt lost its six
+             accomplished entries (disc-8, todo-1, 9, 10, 11, 12), 98
+             lines, each verified built against the tree. Nothing
+             entered RATIONALE -- D-15, D-17, D-18, D-25 already carry
+             them. todo-6 was NOT struck: its '[BUILT]' marker
+             disagreed with the tree ('services/affected.py' absent),
+             and was corrected in place to '[part]'.
+             engine/operations/DISCUSSIONS.txt: todo-12 struck, BUILT
+             and verified; its ruling stood in no RATIONALE, so it was
+             written as C-8 in 'compare/RATIONALE.txt' first -- the
+             only entry in this migration whose result had to ENTER a
+             RATIONALE rather than already stand in one. todo-19
+             corrected: its FIRST defect is fixed (abs() present), its
+             SECOND stands and may be answered by the pole doctrine
+             rather than owed.
+             ALL THREE FILES ARE NOW TREATED. Orchestrator deleted;
+             coverage 563 -> 480; operations 721 -> 696+.
+             Open: r-5b (split operations, or let it stand -- nothing
+             more is accomplished in it), r-5c (todo-19's asymmetry:
+             answered by the pole, or still a defect), r-5d (two
+             todo-23s), r-5e (coverage disc-6 is moot -- its subject
+             file is gone), r-5f (coverage's text names a layout that
+             no longer exists).
+
+    THE LESSON OF r-5, three times over: A SELF-MARKER IS NOT EVIDENCE.
+    orchestrator's disc-1 was parked as 'not built yet' over a built
+    explorer; coverage's todo-6 read '[BUILT]' with its service shim
+    absent; operations carried no markers at all and hid a built entry.
+    Every claim of built in this phase was checked against the tree,
+    and every one of the three files disagreed with itself somewhere.
+
+    Sorting into a substrate whose census is a floor rather than a
+    total would carry the gap forward, so nothing moves until r-5 at
+    least is ruled.
 
 ______________________________________________________________________________
 

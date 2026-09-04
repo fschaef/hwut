@@ -1,0 +1,31 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/exploration
+
+todo-7  A VARIANT RESTATING A 'language-setup' ENTRY        (ruled, unbuilt)
+______________________________________________________________________________
+
+R-73 intends that a variant may restate an entry of 'language-setup':
+
+    variant_group {
+        interp { cpython { language-setup { python { interpreter = "python3" } } }
+                 pypy    { language-setup { python { interpreter = "pypy3"   } } } }
+    }
+
+so one tree runs under another interpreter, or elects another
+coverage tool, with no other edit.
+
+WHAT STANDS: a 'Variant' holds TEST PARAMETERS and is merged over an
+application's root choice ('variant.merged_parameters'). It has no
+reach into 'DirectorySpec.language_setup', which is resolved once, at
+the root, before any application is read.
+
+WHAT IT TAKES: 'Variant' gains an optional 'language_setup' dict; the
+validator reads it inside an alternative; 'ascended_spec' (or the
+walk) merges the selected alternatives' entries over the root's,
+child-wins-whole per entry, BEFORE the derivation and the adapter read
+them. The selection ('--variant') must therefore be known to the
+exploration, which today it is not -- it is applied in the adapter.
+
+One ruling before building: whether the merge is per ENTRY (restating
+'python' replaces the whole python block) or per FIELD. Recommendation:
+per entry, the rule 'language-setup' had under disc-2 item 3.

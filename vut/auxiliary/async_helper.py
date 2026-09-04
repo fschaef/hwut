@@ -32,7 +32,7 @@ class AsyncStreamReaderAdapter(collections.abc.AsyncIterator):
         if self._readline:
             if self._is_async: return await self._read_call()
             else:              return self._read_call()
-        
+
         # 2. Handle generators/iterators (common in tests)
         try:
             # We use next() because it's a synchronous generator
@@ -58,12 +58,12 @@ async def async_zip_longest(aiter1, aiter2, sentinel=None):
 
         if res1 is sentinel and res2 is sentinel:
             break
-            
+
         yield (None if res1 is sentinel else res1), \
               (None if res2 is sentinel else res2)
 
 def AsyncIterator_ensured(input_obj) -> AsyncIterator:
-    """RETURNS: Either 
+    """RETURNS: Either
                 (1) 'input_obj' itself, if it can serve as an 'AsyncIterator'
                 (2) A wrapper version of 'input_obj', which can serve as 'AsyncIterator'
     """
@@ -75,14 +75,14 @@ def AsyncIterator_ensured(input_obj) -> AsyncIterator:
 
 async def prefetch(aiter, buffer_size=1):
     """
-    Decouples I/O from computation by pre-fetching items in the background. This 
+    Decouples I/O from computation by pre-fetching items in the background. This
     allows the OS to fetch the next chunk of data while the CPU is busy computing
     other things (usefule in an async for loop).
     """
     # Maxsize limits memory usage; the producer will 'wait' if the engine
     # falls too far behind.
     queue = asyncio.Queue(maxsize=buffer_size)
-    
+
     # Internal sentinel to mark the end of the stream
     _EOF = object()
 

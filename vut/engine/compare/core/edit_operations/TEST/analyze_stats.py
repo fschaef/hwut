@@ -1,6 +1,6 @@
 """SPDX-License: MIT; (C) Frank-Rene Schaefer; Project: VUT
 ________________________________________________________________________________
-PURPOSE: Analyze cProfile stats to find which functions are triggering 
+PURPOSE: Analyze cProfile stats to find which functions are triggering
          typeguard overhead.
 ________________________________________________________________________________
 """
@@ -9,7 +9,7 @@ import sys
 
 def analyze(stats_file):
     print(f"Analyzing {stats_file} to find callers of type-checking functions...\n")
-    
+
     # Load stats
     p = pstats.Stats(stats_file)
     p.strip_dirs()

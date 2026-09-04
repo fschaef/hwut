@@ -175,6 +175,27 @@ GRAVEYARD One id per (test, choice) pair: a fifty-choice rename is
           the coordination dir-locality (coverage D-14) exists to
           remove.
 
+AMENDED (2026-09-04, on retiring 'orchestrator/DISCUSSIONS.txt', whose
+         todo-4 carried these two rulings of 2026-08-25 and whose every
+         entry is now built):
+
+         WHAT A VANISHMENT COSTS EACH FACE. 'hwut.run' NOTES
+         MISSING/FAIL for a registered run whose test or choice is no
+         longer there -- a renamed choice among them -- AND THE SUITE
+         CONTINUES. A vanished test does not abort a run: the other
+         tests still have something to say. Services that need the
+         test SOURCE ('hwut.show <file>' among them) REFUSE, because
+         there is nothing to read; every other face MENTIONS the
+         vanishment and proceeds.
+
+         AN EXPLICIT NAME OUTRANKS THE ROSTER. There is no
+         'hwut.register' face: the FIRST 'hwut.accept' creates the
+         entry, as above. The roster restricts THE WALK, and nothing
+         else -- a file named EXPLICITLY on a command line is
+         interviewed regardless of whether it stands in the register.
+         That is how a new test runs before it exists in the register,
+         and why no registration step is owed to the author.
+
 
 D-8  IDS IN RECORDS; ONE HOLDING FREES AND DELETES               (2026-08-25)
 ------------------------------------------------------------------------------

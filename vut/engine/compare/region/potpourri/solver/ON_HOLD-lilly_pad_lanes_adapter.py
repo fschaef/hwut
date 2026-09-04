@@ -8,7 +8,7 @@ from vut.engine.compare.contract.analogy_db           import AnalogyDb
 
 class LillyPadLanesAdapter:
     """
-    Adapts a constrained matching problem into a linearized state-space search 
+    Adapts a constrained matching problem into a linearized state-space search
     modeled as a traversal across sequential 'lily pad lanes'. The pairing of
     two elements is translated into a 'lilly pad'. The consistency constraint
     of a pairing (=pad) is translated into an interferring consistency blocks
@@ -24,8 +24,8 @@ class LillyPadLanesAdapter:
 
     FORMALISM:
 
-    The problem is a Stage-Based Constraint Satisfaction Problem (CSP). 
-    Occupying a 'pad' at Lane 'i' triggers a 'sink' event, disabling 
+    The problem is a Stage-Based Constraint Satisfaction Problem (CSP).
+    Occupying a 'pad' at Lane 'i' triggers a 'sink' event, disabling
     incompatible pads in all future lanes 'k > i'.
 
     LOGIC OF INTERFERENCE (The 'Sink'):
@@ -37,16 +37,16 @@ class LillyPadLanesAdapter:
 
     OBJECTIVE:
 
-    Find a traversal path selecting exactly one pad per lane such that no 
-    future lane suffers a 'domain wipe-out' (all pads sunk). This transforms 
+    Find a traversal path selecting exactly one pad per lane such that no
+    future lane suffers a 'domain wipe-out' (all pads sunk). This transforms
     the matching problem into a depth-first search with forward-checking pruning.
 
-    NOTE: 
+    NOTE:
 
-    It is sufficient to determine if a pad-touched blocks a pad ahead. What 
-    the analogy requires is that on the path (set of all pairings) there are 
+    It is sufficient to determine if a pad-touched blocks a pad ahead. What
+    the analogy requires is that on the path (set of all pairings) there are
     no two pairings (=two pads) with interferring consistencies. This is
-    implemented by preventing the blocked pad to be accepted on the path 
+    implemented by preventing the blocked pad to be accepted on the path
     when the blocking pad is touched.
     """
 
@@ -58,7 +58,7 @@ class LillyPadLanesAdapter:
         # 1. Coordinate Mapping: Convert DB to flat list of 'Pads'
         # pad_info[pad_id] -> (sidx, nominal_i, frozen_adb)
         self.pad_info = self._linearize_board(self.potential_pair_db)
-        
+
         # 2. Constraint Mapping: Identify 'Sinks'
         # pad_db[pad_id] -> set of blocked future pad_ids
         self.pad_db = self._build_sink_database()
@@ -77,7 +77,7 @@ class LillyPadLanesAdapter:
         """Calculate the ripple effect (sink) for every pad."""
         pad_db = {}
         total_pads = len(self.pad_info)
-        
+
         # Monogamy Index: Map nominal_i -> list of pad_ids that use it
         nom_map = {}
         for p_id, (_, nominal_i, _) in enumerate(self.pad_info):
@@ -110,10 +110,10 @@ class LillyPadLanesAdapter:
         """RETURNS: [0] pad_db, [1] pad_ids_by_lane_db"""
         lane_n = len(self.subject_i_by_sidx)
         pad_ids_by_lane_db = [[] for _ in range(lane_n)]
-        
+
         for p_id, (sidx, _, _) in enumerate(self.pad_info):
             pad_ids_by_lane_db[sidx].append(p_id)
-            
+
         return self.pad_db, pad_ids_by_lane_db
 
     def interprete_solution(self, lilly_pad_path: Iterable[int]) -> tuple[dict[int, int], AnalogyDb]:

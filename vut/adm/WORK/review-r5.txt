@@ -1,0 +1,261 @@
+==============================================================================
+review-r5 -- THE THREE 'DISCUSSIONS.txt' FILES, TRIAGED BY ACCOMPLISHMENT
+==============================================================================
+
+VERSION: 4
+
+COMPONENTS: engine/orchestrator, engine/coverage, engine/operations
+PLAN:       adm/WORK/plan/01-work-structure.txt   (fork r-5)
+
+RULED (2026-09-04): these three files are treated BEFORE phase S, and
+an entry that is ACCOMPLISHED needs no split -- it may enter README or
+RATIONALE directly, or simply go.
+
+Each file is ONE document holding MANY entries, not the
+one-issue-per-file disc-N/todo-N form gathered in G-2. They were missed
+by G-1, which searched for DISCUSSIONS DIRECTORIES.
+
+Every claim of 'built' below was checked AGAINST THE TREE, not read off
+the file's own marker.
+
+______________________________________________________________________________
+
+1  engine/orchestrator/DISCUSSIONS.txt   121 lines      ** DONE, DELETED **
+
+    Every entry accomplished. Verified:
+
+      todo-1  test_run rewiring        'FOOTPRINT_FILE_NAME',
+                                       '_write_footprint' and
+                                       'footprint_facts' have ZERO
+                                       occurrences in the tree
+      todo-2  the services             'services/rename.py',
+                                       'rename_choice.py',
+                                       'remove.py', 'remove_choice.py',
+                                       'report.py' all stand
+      todo-3  configuration parsers    'exploration/hwut_parse.py' and
+                                       'test_writing_support/python/
+                                       hwut_hocon.py' stand (R-9, R-29)
+      todo-4  the test register        'bookkeeper/test_id_db.py' with
+                                       'roster()' (t-5, consumed by
+                                       'services/sanitize.py') and
+                                       'vanished()' (t-4, consumed by
+                                       'services/show.py'); record
+                                       format v2 in use
+                                       ('##VUT-COVERAGE 2', '##run:');
+                                       t-11 'services/sanitize.py'
+                                       stands
+      disc-1  the explorer             PARKED as 'not built yet' -- but
+                                       'exploration/explorer.py',
+                                       'tree_explorer.py', 'finder.py'
+                                       and 'hwut_info_interview.py' all
+                                       stand. The entry was STALE: the
+                                       question it parks was answered
+                                       by R-69 and R-76.
+
+    BEFORE DELETING, two rulings of todo-4 were found NOT fully carried
+    by any RATIONALE entry. R3 was carried whole by D-8 ('hwut.rename'
+    touches no record content, ever). R1 and R2 were not, and are now
+    an AMENDED block on D-7 in 'engine/orchestrator/RATIONALE.txt':
+
+      R1  what a vanishment costs each face -- 'hwut.run' notes
+          MISSING/FAIL and THE SUITE CONTINUES; source-needing services
+          REFUSE; every other face MENTIONS and proceeds.
+      R2  an explicit name outranks the roster -- the roster restricts
+          THE WALK and nothing else, so a file named on a command line
+          is interviewed regardless. This is how a new test runs before
+          it is registered, and why no registration step is owed.
+
+    The file is then DELETED, by its own header's law: 'an entry is
+    deleted the moment it is settled'.
+
+______________________________________________________________________________
+
+2  engine/coverage/DISCUSSIONS.txt      563 lines            ** MIXED **
+
+    STRUCK (2026-09-04, ruling r-5a). Each was measured against the
+    tree, NOT read off its own marker:
+
+      disc-8   whose table is the test id   CLOSED by its own head
+                                            (D-15, D-17; orchestrator
+                                            D-7, D-8) -- all four are
+                                            entries that stand. The
+                                            body below the head was
+                                            explicitly 'kept as it was
+                                            ruled', i.e. residue.
+      todo-1   homogeneous record, merge,   record format v2 in use,
+               index                        'services/cov.py' stands
+      todo-9   is the orchestrator's t-9    D-18 stands. THE SECOND
+                                            HALF OF THIS VERIFICATION
+                                            FALLS -- see review-r6:
+                                            'resolve' and
+                                            '_local_resolver' would
+                                            live in 'coverage/
+                                            database/', which is
+                                            ABSENT FROM THE DUMP. What
+                                            was measured is the
+                                            absence of the file, not
+                                            of the symbol.
+      todo-10  'hwut.cov gather' / 'stale'  D-25 stands; both verbs in
+                                            'services/cov.py'
+      todo-11  the two refusals             RETIRED
+      todo-12  the 'hwut.cov' verb set      VERB_TUPLE == ('gather',
+                                            'stale', 'convert',
+                                            'formats') verified
+
+    Nothing entered RATIONALE for these: D-15, D-17, D-18 and D-25
+    already carry them. The file lost 98 lines and now holds only what
+    is open.
+
+    CORRECTED WHILE STRIKING -- todo-6 IS NOT ACCOMPLISHED.  Version 1
+    of this review listed it among the six, on the strength of its
+    '[BUILT]' marker. Measuring says otherwise: 'coverage/affected.py'
+    stands and the shared 'E_ExitCode' stands ('services/_exit.py'),
+    but there is NO 'services/affected.py' -- the thin service shim the
+    entry itself calls OWED. The marker was corrected in place to
+    '[part]' and the entry KEPT. This is the second time in this
+    migration that a self-marker disagreed with the tree; the first was
+    orchestrator's disc-1, parked as 'not built yet' over a built
+    explorer.
+
+    STILL OPEN -- nine discussions and three part-built todos:
+
+      disc-1   text or binary (explicitly: not to be ruled without
+               numbers -- and todo-7 is the measurement that would rule
+               it, itself unbuilt)
+      disc-2   the session road: what is a coverage measurement OF
+      disc-3   in-directory parallelism during a coverage run
+      disc-4   cross-directory aggregation
+      disc-5   a merge meets hit counts
+      disc-6   'system/helper.py' Interval: unify or leave
+               -- MOOT, and NOT struck without your word. The entry
+               documents four defects in 'vut/system/helper.py'. THAT
+               FILE DOES NOT EXIST, and neither 'Interval' nor
+               'iterable_from_integer_list' occurs anywhere in the
+               tree. Its recommendation (b), 'leave the two apart',
+               is what stands, permanently, by deletion rather than by
+               ruling. Its warning that defect (2) 'is a live bug for
+               whoever calls it today' has no subject left.
+      disc-7   what consumes the index
+      disc-8   whose table is the test id -- SUPERSEDED, per the
+               orchestrator file's t-10, which says 'coverage disc-8
+               CLOSED' by D-7/D-8. Reads as accomplished; the entry
+               itself does not say so.
+      disc-9   hardware description languages
+      todo-2   the per-language readers            [11 built, not all]
+      todo-8   measurements beside the line axis   [part]
+      todo-3   'hwut.convert_to_lcov'
+      todo-4   the pack stops reserving
+      todo-5   '--global-conf' on the services
+      todo-7   the measurement that rules disc-1
+      todo-13  the three 'TEST/' books are stale -- DATED TODAY
+               (2026-09-04, the database/readers split). Blocked on
+               'services' todo-1: 'hwut.rename' carrying a book entry
+               ACROSS a directory boundary, not only re-keying within
+               one. Hand-editing was refused, correctly (never
+               fabricated).
+
+______________________________________________________________________________
+
+3  engine/operations/DISCUSSIONS.txt   721 -> 696 lines   ** MOSTLY OPEN **
+
+    Version 2 of this review said 'nothing is accomplished'. THAT WAS
+    MARKER-READING, and wrong -- the operations entries carry no
+    [BUILT] markers at all, so reading markers found nothing. Measuring
+    against the tree found one entry fully built and one half built.
+
+    STRUCK (2026-09-04):
+
+      todo-12  a misspelt tolerance is accepted silently
+               '@dataclass(slots=True)' now stands on
+               'ConfigurationPatternFinder' in
+               'compare/configuration.py'; the owed test choice stands
+               too ('compare/TEST/test-configuration.py', choice
+               'slots', with its GOOD file). The ruling was recorded
+               NOWHERE -- compare's series ran C-1..C-7 with no entry
+               for it -- so it was written as C-8 in
+               'compare/RATIONALE.txt' BEFORE the entry was struck.
+               This is the first entry in this migration whose result
+               actually had to ENTER a RATIONALE rather than already
+               standing in one.
+
+    CORRECTED, NOT STRUCK -- todo-19, the one BUG REPORT of the three
+    files, is HALF FIXED:
+
+      (1) UNSIGNED: FIXED. 'compare/reading/line_element.py' (the file
+          moved) now reads 'abs(self.number) * numeric_tolerance_ratio'.
+      (2) ASYMMETRIC: STANDS -- epsilon is still stored per element and
+          taken from the nominal alone. BUT 'cost' now documents that
+          deliberately: "The band belongs to the nominal, the 'pole'".
+          Under the pole doctrine the asymmetry is the POINT: the
+          nominal is the declared centre of the good cluster, the
+          subject is not, so Eq(s,n) and Eq(n,s) are not the same
+          question. Whether that ANSWERS PHILOSOPHY 1.1 or merely
+          renames the defect is a ruling, not labour -- see r-5c.
+
+    The rest, unchanged and open. Two parked discussions and fifteen
+    todos, most of them live design rather than residue.
+
+      disc-8   the greater map                     parked by ruling
+      disc-9   the configuration file              parked, OUTSIDE this
+                                                   component
+      todo-2   re-association, what is still open        (compare)
+      todo-15  the channel                         parked, after todo-16
+      todo-16  the merge loop does not loop
+      todo-17  a second IDE
+      todo-18  a browser client
+      todo-19  the numeric tolerance -- HALF FIXED, see above
+      todo-20  down carries the measurement             (compare feeder)
+      todo-21  the explain seam
+      todo-22  coverage in the pack
+      todo-23  proxy provision -- what remains open
+      todo-23  README deep-section polish     <- NUMBER COLLIDES with
+                                                 the entry above; two
+                                                 different todos both
+                                                 called todo-23
+      todo-24  the staleness law (s-4b, second half)
+      todo-25  the face of the second question
+      todo-26  renovate and the stderr survey
+
+______________________________________________________________________________
+
+OPEN -- FOR FRANK-RENE
+
+  r-5a  DONE (2026-09-04). Six entries struck -- disc-8, todo-1, 9,
+        10, 11, 12. todo-6 was NOT struck: it is [part], not [BUILT].
+        See section 2.
+
+  r-5b  OPERATIONS: nothing is accomplished, so nothing can be struck.
+        Does the file stand as it is until its items are built, or is
+        it split into issues now? Splitting seventeen live todos is
+        the largest single piece of work in this migration, and its
+        value is not obvious while they remain in one component.
+
+  r-5c  todo-19's SECOND defect. The epsilon is taken from the nominal
+        alone, which the entry calls asymmetric and a violation of
+        PHILOSOPHY 1.1, and which 'cost' now documents as the pole
+        doctrine working as intended. Two readings of the same code:
+          (a) ANSWERED. The nominal IS the pole; asymmetry is the
+              meaning of declaring one. Strike the rest of todo-19 and
+              record the pole reading as a C- entry.   <- recommended
+          (b) STILL A DEFECT. 'max(abs(s), abs(n)) * ratio' at
+              comparison time, as the OWED list asks, and the pole
+              doctrine is about WHICH run is blessed, not about which
+              side owns the band.
+        Nothing else in the three files turns on this; it is compare's
+        alone.
+
+  r-5d  operations has TWO todo-23s. Renumber, or leave until the file
+        is split?
+
+  r-5e  COVERAGE disc-6 is MOOT: the file it discusses no longer
+        exists. Strike it, or keep it as a record that the defects
+        were carried out with the file?
+
+  r-5f  ANSWERED (2026-09-04) -- and the answer is not about coverage.
+        THE LAYOUT EXISTS; THE DUMP DOES NOT CARRY IT. Six modules
+        that present code imports are absent, so 'engine/coverage'
+        cannot import as the dump stands. 'bundle.sh' selects with
+        'git ls-files' by default -- tracked files only -- so a new,
+        uncommitted file is silently omitted. coverage's todo-13,
+        dated today, is CORRECT AND CURRENT. Full account, and what it
+        costs the strikes above, in 'adm/WORK/review-r6.txt'.

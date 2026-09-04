@@ -19,18 +19,18 @@ possible, i.e. the number of associations is
 
               max(subject line number, nominal line number)
 
-First, equivalent lines are associated. 
+First, equivalent lines are associated.
 
 Seconds, associations are done according to similarity in terms of their 'edit
 distance'. That is, it is measured how many editions of (SUBSTITUTE, DELETE,
-INSERT, TRANSPOSE) are necessary to transform the subject into the nominal 
-line. Line pairs which require less of edit operations than others are 
-considered more similar.  
+INSERT, TRANSPOSE) are necessary to transform the subject into the nominal
+line. Line pairs which require less of edit operations than others are
+considered more similar.
 
 Third, if there are more lines of one kind than the other, it associates the
 existing lines with 'None'.
 
-'restricted_cmp' tests on the restricted amount of comparisons. This is 
+'restricted_cmp' tests on the restricted amount of comparisons. This is
 introduced in order to avoid a computational overload in case of many
 similar lines.
 ______________________________________________________________________________

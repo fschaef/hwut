@@ -36,6 +36,12 @@ SOURCE is the author's act -- 'git mv' -- and this face follows it; it
 does not perform it. A face that moved source would be editing the
 author's tree, which the framework does not do.
 
+'--directory=<path>' NAMES ONE DIRECTORY, both ends of the rename. A
+test that has physically moved to a DIFFERENT directory's tree is not
+reached by either face yet -- its old directory's book and register
+keep the stale entry, and its new directory's book and register never
+learn of it (services/DISCUSSIONS.txt todo-1).
+
 IT REFUSES A COLLISION. Renaming onto a name that already stands would
 swallow another test's history; it is refused at the door, by name,
 and nothing is moved.

@@ -57,10 +57,10 @@ class InputChunk(ABC):
     def line_list(self):
         return self.__line_list
 
-    def type(self): 
+    def type(self):
         return self._chunk_type
 
-    def __repr__(self): 
+    def __repr__(self):
         sep = ":" if self._chunk_type is E_Chunk.LINE_SEQUENCE else "|"
         return "\n".join("%03i%s %s" % (line.line_n, sep, line) for line in self.line_list)
 
@@ -79,7 +79,7 @@ class EquivalenceRelatedInputChunk(InputChunk):
         irrelevant, since the global comparison needs to stop. For display
         (see .line_pairs()), this different.
         """
-        if self.__class__ is not nominal.__class__: 
+        if self.__class__ is not nominal.__class__:
             return False, analogy_db
         return self._is_equivalent_to_nominal(nominal, analogy_db)
 
@@ -94,7 +94,7 @@ class AssociationRelatedInputChunk(InputChunk):
         irrelevant, since the global comparison needs to stop. For display
         (see .line_pairs()), this different.
         """
-        if self.__class__ is not nominal.__class__: 
+        if self.__class__ is not nominal.__class__:
             return False, analogy_db
         return self._associate_with_nominal(nominal, analogy_db)
 

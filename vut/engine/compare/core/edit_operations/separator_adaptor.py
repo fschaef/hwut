@@ -3,19 +3,19 @@ ______________________________________________________________________________
 PURPOSE:
 
 Separators are elements of a line which appear (often) between line
-elements. Their exact 'shape' is irrelevant. Two patterns matching a 
-separator are always equivalent. 
+elements. Their exact 'shape' is irrelevant. Two patterns matching a
+separator are always equivalent.
 
 IDEA: Separate the separators from the line element sequence in order
-      to reduce the required amount of matching. Later, once the 
-      edit list is determined, re-insert the separator related 
+      to reduce the required amount of matching. Later, once the
+      edit list is determined, re-insert the separator related
       content.
 
 The constructor takes to line element sequences, subject and nominal.
 It then strips out the separators, but stores their original position.
 
-strip_separators(): returns the two line element sequences for 
-                    subject and nominal where the separators are 
+strip_separators(): returns the two line element sequences for
+                    subject and nominal where the separators are
                     stripped.
 
 Now, edit operations are determined based on the 'content' sequences
@@ -26,7 +26,7 @@ reinsert_separators(raw_edit_list): produces an edit list that takes
                                     consideration.
 
 """
-from  vut.engine.compare.core.edit_operations.core     import (max_cost, 
+from  vut.engine.compare.core.edit_operations.core     import (max_cost,
                                                                              position_increment_db)
 from  vut.engine.compare.core.edit_operations.edit     import E_EditId
 from  vut.engine.compare.reading.pattern_finder import E_ToleranceId
@@ -44,8 +44,8 @@ SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 SEPERATOR       = E_ToleranceId.SEPERATOR
 
 class SeparatorAdaptor:
-    def __init__(self, subject_seq, nominal_seq, 
-                 cost_SUBSTITUTION, cost_INSERT_DELETE, 
+    def __init__(self, subject_seq, nominal_seq,
+                 cost_SUBSTITUTION, cost_INSERT_DELETE,
                  Edit_constructor):
         self.subject_sequence = subject_seq
         self.nominal_sequence = nominal_seq
@@ -62,9 +62,9 @@ class SeparatorAdaptor:
 
         length_relevant_subject_seq = sum(subject_flags)
         length_relevant_nominal_seq = sum(nominal_flags)
-        self.original_max_cost      = max_cost(length_relevant_subject_seq, 
+        self.original_max_cost      = max_cost(length_relevant_subject_seq,
                                                length_relevant_nominal_seq,
-                                               cost_SUBSTITUTION, 
+                                               cost_SUBSTITUTION,
                                                cost_INSERT_DELETE)
 
         self.Edit = Edit_constructor
@@ -72,8 +72,8 @@ class SeparatorAdaptor:
     def strip_separators(self):
         return \
             [x for x in self.subject_sequence if not self._is_separator(x)], \
-            [x for x in self.nominal_sequence if not self._is_separator(x)]  
-                
+            [x for x in self.nominal_sequence if not self._is_separator(x)]
+
     def reinsert_separators(self, edit_list_raw):
         """RETURNS: Edit-operations considering separators being present.
 
@@ -84,10 +84,10 @@ class SeparatorAdaptor:
         on the edit operations derived from the content comparison.
         """
         def iterable(edit_iterable):
-            """Ensure, that adjacent 'DELETE' and 'INSERTS' are combined into 
-            'SUBSTITUTE_TYPE' operations.  The cases of adjacent 'INSERT/DELETE' 
-            operations come from separators being inserted into the list. 
-            Separators are always of different type than content => 'SUBSTITUTE_TYPE' 
+            """Ensure, that adjacent 'DELETE' and 'INSERTS' are combined into
+            'SUBSTITUTE_TYPE' operations.  The cases of adjacent 'INSERT/DELETE'
+            operations come from separators being inserted into the list.
+            Separators are always of different type than content => 'SUBSTITUTE_TYPE'
             is safe to use.
             """
             def _iterable(edit_list):
@@ -98,14 +98,14 @@ class SeparatorAdaptor:
                 for i, x in enumerate(edit_iterable[:-1]):
                     yield x, edit_iterable[i+1].id
                 yield edit_iterable[-1], NONE
-                   
+
             skip_n = 0
             for current, ahead_id in _iterable(edit_iterable):
                 if skip_n: skip_n -= 1; continue
 
                 combined_id = self._pair_db.get((current.id, ahead_id))
                 if combined_id is not None:
-                    yield self.Edit(combined_id, None) 
+                    yield self.Edit(combined_id, None)
                     skip_n = 1
                     continue
 
@@ -156,7 +156,7 @@ class SeparatorAdaptor:
             s_incr, n_incr = position_increment_db[edit.id]
             si += s_incr
             ni += n_incr
-        
+
     _pair_db = {} # must be defined by derived class
 
     def _is_separator(self, x):
@@ -164,7 +164,7 @@ class SeparatorAdaptor:
                     False, else.
         """
         return False
-        
+
     def _good_Edit(self, subject, nominal):
         """RETURNS: The appropriate 'Edit' object for the pair of 'subject', and 'nominal'.
 

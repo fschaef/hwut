@@ -96,9 +96,9 @@ ______________________________________________________________________________
 import os
 from xml.etree import ElementTree
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, relative_path, wanted)
-from ..record import ranges_of, FileCoverage
+from ..database.record import ranges_of, FileCoverage
 
 
 XML_SUFFIX = (".xml",)
@@ -215,7 +215,7 @@ def _coverage_count(bin_node):
 
 def _record_of(fmt, entry_db, source_root, config, counts_f):
     """RETURN: CoverageRecord over the absorbed points."""
-    from ..measure import BRANCH, TOGGLE                      # noqa: F401
+    from ..database.measure import BRANCH, TOGGLE                      # noqa: F401
     file_db = {}
     for raw_path in sorted(entry_db):
         path = relative_path(raw_path, source_root)

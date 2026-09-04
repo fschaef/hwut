@@ -6,12 +6,12 @@ from collections import defaultdict
 from typeguard   import typechecked
 
 class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
-    """Map: 
+    """Map:
 
            subject index  --> list of tuples (nominal index, analogy constraints)
 
-    This map indicates what subject lines may potentially be paired with what 
-    lines in the nominal. The 'analogy constraints' indicate what analogies 
+    This map indicates what subject lines may potentially be paired with what
+    lines in the nominal. The 'analogy constraints' indicate what analogies
     need to hold in order to mate 'subject index' to 'nominal index'.
     """
     @staticmethod
@@ -20,9 +20,9 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         """RETURNS: PotentialPairDb, if successful.
                     None,                   else.
 
-        Set 'abort_early_f' = True, if further processing becomes obsolete in case 
+        Set 'abort_early_f' = True, if further processing becomes obsolete in case
                                     impossible success of complete matching.
-                                     
+
                                     => in 'judgement mode' get a quick 'NO'.
         """
         def _match_candidates(subject_le_seq, nominal_hash_db):
@@ -38,8 +38,8 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
                     yield nominal_le_seq.line_n, analogy_db
 
         def _iterable(subject_line_list, nominal_hash_db, abort_early_f):
-            """YIELDS: 
-                
+            """YIELDS:
+
             subject line number --> list of (nominal line number, required analogeis)
             """
             for subject_le_seq in subject_line_list:
@@ -82,7 +82,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             return None
 
     def unconstrained_clone(self) -> dict[int, set[int]]:
-        """RETURNS:  subject_i -> set of nominal_i 
+        """RETURNS:  subject_i -> set of nominal_i
 
         The returned dictionary returns an 'analogy unconstrained' version of
         the 'self'. It may be used to check QUICKLY whether a solution exists.
@@ -153,17 +153,17 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         return ok_f, analogy_db
 
     def extract_ultimate_nominal_partners(self, pair_db, analogy_db, abort_early_f: bool):
-        """Find 'ib'-s which have only one possible matching 'ia'. 
-        
-        Even if 'ia' has multiple options, if 'ib' can ONLY be matched with 
+        """Find 'ib'-s which have only one possible matching 'ia'.
+
+        Even if 'ia' has multiple options, if 'ib' can ONLY be matched with
         this 'ia', then this pairing is mandatory.
-        
+
         RETURNS: True, in case of success
                  False, else.
         """
         ok_f = True
         if len(self) == 0: return ok_f, analogy_db
-        
+
         # Map each ib to the ia-s that can match it
         ib_to_ia_map = defaultdict(list)
         for ia, mate_list in self.items():
@@ -176,7 +176,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         # Sort by ib for deterministic behavior in tests
         for ib, mate_list in sorted(ib_to_ia_map.items()):
             if len(mate_list) != 1: continue
-            
+
             ia, required_analogy_db = mate_list[0]
 
             if ok_f := (ia not in self):
@@ -199,12 +199,12 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         if len(self) == 0: return ok_f
 
         for ia, mate_list in sorted(self.items()):
-            new_mate_list = [ 
-                (ib, req_adb) 
-                for ib, req_adb in mate_list 
-                if ib not in nominal_set 
+            new_mate_list = [
+                (ib, req_adb)
+                for ib, req_adb in mate_list
+                if ib not in nominal_set
             ]
-            if not new_mate_list:             
+            if not new_mate_list:
                 # This subject now has no possible mates left
                 ok_f = False
                 if abort_early_f: break
@@ -225,12 +225,12 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         if len(self) == 0: return ok_f
 
         for ia, mate_list in sorted(self.items()):
-            new_mate_list = [ 
-                (ib, required_analogy_db) 
-                for ib, required_analogy_db in mate_list 
+            new_mate_list = [
+                (ib, required_analogy_db)
+                for ib, required_analogy_db in mate_list
                 if analogy_db.is_all_consistent(required_analogy_db)
             ]
-            if not new_mate_list: 
+            if not new_mate_list:
                 ok_f = False
                 del self[ia]
                 if abort_early_f: break

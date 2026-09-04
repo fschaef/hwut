@@ -1,0 +1,52 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/exploration
+
+todo-7  THE 'hwut.parse' SERVICE
+______________________________________________________________________________
+
+DECIDED (R-9, R-29). BUILT, except the command line itself.
+
+    hwut.parse <source file>    scan for the trigger token, extract the
+                                specification, check, resolve, print
+    hwut.parse                  act as the explorer: 'hwut.conf' first,
+                                then the files
+
+It checks the syntax, RESOLVES the defaults, and prints the complete
+configuration, prettily -- what the framework READ, not what was written.
+
+DONE:
+  1  'printer.py'. It walks 'KEY_TO_FIELD' and 'RELATION', so a
+     parameter added to the vocabulary appears here without a line
+     being written -- the second rendering follows the first by
+     construction.
+  2  PROVENANCE per value ('provenance.py'), settled at resolution
+     while the three sources still stand apart, and annotated in a
+     HOCON comment only where the value is not this choice's own word:
+     'app', 'hwut.conf:<line>', '--hwut-info', 'default' (R-51, R-53).
+  2b '--no-default' drops every line that reads 'default'; a scope
+     whose every leaf would go is dropped whole.
+  2d '--provenance' names the PLACE of every stated value; '--gnu'
+     names it in the GNU error format, 'file:line:column' (R-67).
+  2c The printed form IS the specification language (R-50): what is
+     printed can be read back.
+  3  'hwut_parse.text_of_file' and 'text_of_directory'. A file whose
+     specification carries a fault yields NO tree and its faults
+     instead: the service shows what exploration will do, and
+     exploration refuses rather than guesses.
+  4  TEST/test-printer.py: file, origins, directory, faults.
+
+OWED:
+  a  The command line itself -- 'hwut.parse [<file>]' -- which belongs
+     with the other services, not inside this component.
+  b  The extraction shown: which region was found, at which line, what
+     leader was stripped. An author whose header does not parse needs
+     that before he needs the tree.
+  c  '--test-sequence' (disc-1): the schedule the framework intends.
+
+  5  '--test-sequence': print the schedule the framework intends, not
+     only the configuration it read. The form of that sequence is open
+     and noted in disc-1-test-sequence-form.txt; the switch is named
+     here so the service is not built in a shape that cannot carry it.
+
+OPEN: the printed form itself. It is a face an author reads daily and is
+worth drawing before it is built.

@@ -22,7 +22,7 @@ class FrozenAnalogyRegistry:
         # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
         # 256 bits = 32 bytes (CPU word efficient)
         self._MASK_LIMIT     = 256
-    
+
     def get_symbol_id(self, s: str) -> int:
         if s not in self.symbols:
             self.symbols[s] = len(self.symbols_inv)
@@ -47,7 +47,7 @@ class FrozenAnalogyRegistry:
 # Context variables are local to thread / asyncio Task
 # => parallel execution of 'is_equivalent' and 'associate' on multiple
 #    streams does not cause problems.
-context_frozen_analogy_db_registry = contextvars.ContextVar("context_frozen_analogy_db_registry", 
+context_frozen_analogy_db_registry = contextvars.ContextVar("context_frozen_analogy_db_registry",
                                                             default = FrozenAnalogyRegistry())
 
 class FrozenAnalogyDb:
@@ -58,21 +58,21 @@ class FrozenAnalogyDb:
         (1) 'is_consistent(other)' -> bool
         (2) 'merge(other)' -> new FrozenAnalogyDb
 
-    The fast and efficient implementation is crucial for performance 
-    of related algorithms, particularly in large-scale backtracking search 
+    The fast and efficient implementation is crucial for performance
+    of related algorithms, particularly in large-scale backtracking search
     where consistency checks are the primary bottleneck.
 
     Performance Characteristics:
     --------------------------
-    - Flyweight Pattern: Uses __new__ to intern all instances. If two paths 
-      result in the same constraints, they share the same memory address, 
+    - Flyweight Pattern: Uses __new__ to intern all instances. If two paths
+      result in the same constraints, they share the same memory address,
       reducing 'is_all_consistent' to an O(1) pointer identity check.
 
-    - Hybrid Bit-Vector Representation: For small IDs (< 256), constraints 
-      are bitmasks for O(1) checks. For large IDs, bitmasks are disabled 
+    - Hybrid Bit-Vector Representation: For small IDs (< 256), constraints
+      are bitmasks for O(1) checks. For large IDs, bitmasks are disabled
       to prevent memory explosion, falling back to efficient ID lookups.
 
-    - Memory Efficiency: Replaces heavy dictionary objects with low-level 
+    - Memory Efficiency: Replaces heavy dictionary objects with low-level
       integer masks and tuples of integer Pair-IDs.
 
     Algorithm Logic:
@@ -83,14 +83,14 @@ class FrozenAnalogyDb:
     1. A subject string cannot map to two different nominal strings.
 
     2. Two different subject strings cannot map to the same nominal string.
-     
-    By representing (subject, nominal) pairs as unique 'Pair-IDs', the 
-    'is_consistent' operation validates these rules using bitwise 
+
+    By representing (subject, nominal) pairs as unique 'Pair-IDs', the
+    'is_consistent' operation validates these rules using bitwise
     intersections (if small) or Pair-ID set comparisons.
     """
     # Lazy-lookup cache slots: _s2n (subject-to-nominal), _n2s (nominal-to-subject)
     __slots__ = ('_registry', '_pair_ids', '_subj_mask', '_nom_mask', '_s2n', '_n2s', '__weakref__')
-    
+
     @property
     def subj_mask(self) -> int: return self._subj_mask
 
@@ -110,7 +110,7 @@ class FrozenAnalogyDb:
         registry = context_frozen_analogy_db_registry.get()
 
         if adb.__class__ is cls: return adb
-        
+
         # Determine pair_ids (Key for the flyweight pool)
         if _pair_ids is not None:
             pair_ids = _pair_ids
@@ -130,11 +130,11 @@ class FrozenAnalogyDb:
         instance = super().__new__(cls)
         instance._registry = registry
         instance._pair_ids = pair_ids
-        
+
         s_mask, n_mask = 0, 0
         limit = registry._MASK_LIMIT
         _info = registry.pair_to_info
-        
+
         # Single-pass mask generation
         for pid in pair_ids:
             s_id, n_id = _info[pid]
@@ -146,7 +146,7 @@ class FrozenAnalogyDb:
 
         instance._subj_mask = s_mask
         instance._nom_mask  = n_mask
-        
+
         if not pair_ids and not registry._EMPTY_INSTANCE:
             registry._EMPTY_INSTANCE = instance
 
@@ -172,9 +172,9 @@ class FrozenAnalogyDb:
         subject_db = {}
         nominal_db = {}
         for s, n in analogy_list:
-            if (exist_n := subject_db.get(s)) is not None and exist_n != n: 
+            if (exist_n := subject_db.get(s)) is not None and exist_n != n:
                 return None
-            if (exist_s := nominal_db.get(n)) is not None and exist_s != s: 
+            if (exist_s := nominal_db.get(n)) is not None and exist_s != s:
                 return None
 
             subject_db[s] = n
@@ -183,8 +183,8 @@ class FrozenAnalogyDb:
 
     def to_AnalogyDb(self):
         """RETURNS: A mutable AnalogyDb containing all analogies and provenance.
-        
-        Reconstructs the full dictionary and line number metadata from the 
+
+        Reconstructs the full dictionary and line number metadata from the
         internal integer IDs.
         """
         _str_pair = self._registry.string_pair # Cache registry lookups for speed
@@ -211,19 +211,19 @@ class FrozenAnalogyDb:
         if   other is None or other is self: return self
         elif not self._pair_ids:             return other
         elif not other._pair_ids:            return self
-        
-        # Optimized: Merge integer IDs directly. 
+
+        # Optimized: Merge integer IDs directly.
         s1, s2 = set(self._pair_ids), set(other._pair_ids)
         if   s1.issuperset(s2): return self
         elif s2.issuperset(s1): return other
-        
+
         return FrozenAnalogyDb(_pair_ids=tuple(sorted(s1 | s2)))
 
     @lru_cache(maxsize=8196)
     def is_all_consistent(self, other: FrozenAnalogyDb) -> bool:
         if self is other: return True
 
-        # Bitmask Fast-Fail 
+        # Bitmask Fast-Fail
         # Only use bitmasks if they are enabled (not -1).
         # If disabled, we must fall through to deep ID validation.
         if self._subj_mask != -1 and other._subj_mask != -1:
@@ -239,7 +239,7 @@ class FrozenAnalogyDb:
         # Optimized Deep Check
         self._ensure_lookups()
         _info = self._registry.pair_to_info
-        
+
         # Bi-directional O(1) check per pair in 'other'
         for pid in other._pair_ids:
             os_id, on_id = _info[pid]
@@ -265,8 +265,8 @@ class FrozenAnalogyDb:
         return self.is_all_consistent(FrozenAnalogyDb({analogy[0]: analogy[1]}))
     def items(self):
         """RETURNS: A list of (subject, nominal) string pairs.
-        
-        This reconstructs the original string representations from the 
+
+        This reconstructs the original string representations from the
         interned integer IDs stored in the registry.
         """
         _get = self._registry.string_pair
@@ -279,7 +279,7 @@ class FrozenAnalogyDb:
 
     def __repr__(self) -> str:
         if not self._pair_ids: return "<empty>"
-        
+
         # Group analogies by their first occurrence for a clean report
         grouped = []
         for pid in self._pair_ids:

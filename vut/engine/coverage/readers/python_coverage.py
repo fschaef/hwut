@@ -46,7 +46,7 @@ import io
 import json
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, artifact_directory_of,
                       relative_path, wanted, record_of)
 

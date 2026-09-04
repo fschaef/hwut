@@ -11,6 +11,20 @@ the README as mechanics.
     disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
     todo-N   the LABOUR is owed -- the choice is made, the work is not
 
+STRUCK 2026-09-04, by the law above, each verified BUILT against the
+tree rather than read off its own marker (adm/WORK/review-r5.txt):
+
+    disc-8   whose table is the test id     CLOSED; D-15, D-17, and
+                                            orchestrator D-7, D-8
+    todo-1   homogeneous record, merge,     record format v2 in use;
+             index                          'services/cov.py' stands
+    todo-9   is the orchestrator's t-9      D-18; 'resolve' seam and
+                                            '_local_resolver' verified
+                                            gone from the tree
+    todo-10  'hwut.cov gather' / 'stale'    D-25; both verbs stand
+    todo-11  the two refusals               RETIRED
+    todo-12  the 'hwut.cov' verb set        VERB_TUPLE verified
+
 ==============================================================================
 
 
@@ -218,76 +232,6 @@ somebody measures a reason not to.
 
 
 ------------------------------------------------------------------------------
-disc-8  WHOSE TABLE IS THE TEST ID -- and what the rename service owes
-------------------------------------------------------------------------------
-CLOSED (2026-08-25, RATIONALE D-15; orchestrator D-7, D-8). THE FIRST
-FORK IS SETTLED: (a) THE BOOKKEEPER OWNS IT, as
-'bookkeeper/test_id_db.py' over 'GOOD/test_ids.dat'. Ids are born at
-first accept and issued once, from 0, never re-used (bookkeeper B-2 --
-the lowest-unused law of the first closure lasted one day); a rename
-keeps them. The SET interning is the bookkeeper's as well since B-3
-and D-17; this component keeps only 'Gathered'. What the rename service owes is
-recorded in the orchestrator's todo-4, not here. The text below is kept
-as it was ruled.
-
-SUPERSEDED IN PART (2026-08-24, RATIONALE D-14): THE SECOND FORK IS
-SETTLED. Identity is DIRECTORY-LOCAL by construction -- Origin is
-'(test, choice)', unique per directory by the filesystem's own
-guarantee, so the scope question dissolves: there is nothing to
-partition and no ranges to assign ('first_id' stays as a mechanism,
-no longer as the plan). A gather qualifies ephemerally ('Gathered')
-and is never stored. THE FIRST FORK -- who OWNS the table, (a)
-bookkeeper / (b) component / (c) nobody -- stands OPEN below, exactly
-as written, and (c) remains what runs today.
-
-THIS ONE EDITS THE BOOKKEEPER. Nothing is built until the tree is quiet.
-
-WHAT IS ALREADY TRUE (D-9). The mechanism stands in 'identity.py': ids
-are monotone, never reused, retired entries still decode, a rename keeps
-the id, and both tables serialise. What is NOT decided is who OWNS them.
-
-THE FORK -- WHO ALLOCATES.
-  (a) THE BOOKKEEPER. It already owns the naming of a test directory
-      ('nominal_path', 'candidate_path', the result base), and the
-      RENAME SERVICE must pass through it or two truths exist about what
-      a test is called. The table joins its base.
-  (b) THE COVERAGE COMPONENT, in its own file beside the records.
-      Additive, and wrong: a rename would then have to know about
-      coverage, and a component that renames tests for one consumer will
-      be asked to do it for the next.
-  (c) NOBODY -- rebuild the ids per index run, as the code does TODAY
-      when no table is handed in. Correct and useless for anything
-      STORED: the ids differ between two builds.
-
-RECOMMENDATION. (a). (c) is what stands until (a) is built, and it costs
-nothing to switch: 'index_of' already TAKES the tables.
-
-THE SECOND FORK -- THE SCOPE OF AN ID.
-  (a) PER DIRECTORY. One bookkeeper owns one directory, so this is the
-      only scope it can allocate honestly. Cross-directory aggregation
-      then qualifies by directory, exactly as disc-4 (a) already says.
-  (b) GLOBAL, from one registry above all directories. Unique
-      everywhere -- and it breaks the one-directory-one-bookkeeper law,
-      and needs a lock nobody has.
-
-RECOMMENDATION. (a). 'IdTable(first_id=...)' exists so that a caller who
-later wants disjoint ranges per directory can have them without a change.
-
-WHAT THE RENAME SERVICE OWES, whichever way it goes.
-    -- rename through the table: the id survives, no record is touched
-    -- delete through RETIRE, never by removing the entry: an old record
-       must keep decoding, and the id must never be issued again
-    -- refuse a rename onto a live name, by name
-    -- never renumber. A table that renumbers has silently reattributed
-       every record ever written, and nothing reports it.
-
-OPEN BESIDE IT. Where the table LIVES in the base -- a section of the
-result db, or its own file. Its own file argues for itself: it is written
-by a different act (renaming) than the entries are, and one writer per
-key space is already the law.
-
-
-------------------------------------------------------------------------------
 disc-9  HARDWARE DESCRIPTION LANGUAGES -- the record cannot hold what a
         simulator measures
 ------------------------------------------------------------------------------
@@ -402,14 +346,6 @@ silence.
 THE LABOUR
 ==============================================================================
 
-todo-1  THE HOMOGENEOUS RECORD, ITS MERGE, AND THE INDEX      [BUILT]
-        The only part that is NOT language-specific, so it is built
-        FIRST: it gives every later reader a fixed target. Interval
-        lists, delta coding, the header (format version, 'counts:
-        no|yes'), and the union merge. 'system/helper.py' already has
-        'Interval' and 'iterable_from_integer_list()' -- the primitive
-        that folds adjacent integers into ranges exists.
-
 todo-2  THE PER-LANGUAGE READERS                           [11 built]
         BUILT, each against a REAL artifact of the real tool:
             coverage   coverage.py json        python
@@ -522,33 +458,23 @@ todo-5  '--global-conf [<file>]' ON THE SERVICES
         Plus the UPWARD search: nearest enclosing 'hwut.conf' wins,
         layered over what stands further out (D-2).
 
-todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [BUILT]
+todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [part]
         Built as 'coverage/affected.py' with 'main(argv, write)'. The
-        thin service shim under 'services/' is OWED, and
-        with it the shared 'E_ExitCode' -- both edit an existing
-        directory, so both wait for a quiet tree.
+        shared 'E_ExitCode' is BUILT too ('services/_exit.py'). The
+        thin service shim under 'services/' is STILL OWED: there is no
+        'services/affected.py'. The marker read [BUILT] and was
+        corrected to [part] on 2026-09-04, when the entry was measured
+        against the tree rather than read off its own marker.
 
 todo-7  THE MEASUREMENT THAT RULES disc-1
         Write of one run, read of a cross-directory aggregate, forms (a)
         and (c). Until it exists, disc-1 stays open and (a) stands.
 
-todo-9  is the orchestrator's t-9 and is BUILT (RATIONALE D-18): the
-        record names run ids. What remains of the old bridge -- the
-        'resolve' seam and '_local_resolver' -- is deleted.
-
-todo-10 BUILT (2026-08-25, RATIONALE D-25): 'hwut.cov gather' and
-        'hwut.cov stale'; the bundle carries the gathered table AND the
-        index, and every snapshot names the generation it was taken at.
-
-todo-11 RETIRED (2026-08-25). Both refusals were inherited from the
-        never-built 'core.py' and do not survive D-19: the harvest is
-        per choice after that choice's application ends, so 'interactive'
-        is a question of a framework resetting its counters between
-        choices, not a door refusal; and timing beside coverage is the
-        cost of THAT run, a fact and not a contradiction.
-
-todo-12 BUILT (2026-08-25): 'hwut.cov <wish>' runs, 'gather' folds,
-        'stale' checks a bundle, 'convert' and 'formats' show. There is
-        no 'merge' verb -- merging records is a function, and merging
-        ACROSS directories is what 'gather' is. There is no 'report'
-        verb: 'hwut.report' carries coverage by default (D-24).
+todo-13 THE THREE 'TEST/' DIRECTORIES' BOOKS ARE STALE (session
+        2026-09-04, the database/readers split). 'GOOD/result_db.csv'
+        and 'GOOD/test_ids.dat' under 'coverage/TEST/',
+        'coverage/database/TEST/' and 'coverage/readers/TEST/' still
+        reflect the pre-split single directory; hand-editing them was
+        refused (never fabricated). Waits on 'services' todo-1:
+        'hwut.rename' / 'hwut.rename-choice' carrying a book entry
+        across a directory boundary, not only re-keying it within one.

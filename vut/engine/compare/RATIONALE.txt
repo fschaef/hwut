@@ -259,3 +259,37 @@ CHECKED   Every reference outside 'tool/' read before deleting:
 COST      None. compare's census is unaffected; 'import_graph.py
           --check' answers the same twelve findings before and
           after.
+
+C-8   A SLOTTED STRUCT REFUSES A MISSPELT FIELD                 (2026-09-04)
+------------------------------------------------------------------------------
+RECORDED 2026-09-04, on striking 'operations/DISCUSSIONS' todo-12, which
+raised this and is now built. The number is the next free one in this
+component's series; the ruling itself is older than the entry.
+PROBLEM   'Configuration' was slotted and refused a misspelt field on
+          itself. 'ConfigurationPatternFinder' was NOT, so
+
+              c.pattern_finder.numeric_tolerence_ratio = 0.01
+
+          was ACCEPTED and 'numeric_tolerance_ratio' stayed 0. The
+          author believes a tolerance is in force; it is not. Under
+          'absent and empty never collapse' this is the worst shape a
+          defect can take: the test then passes or fails for a reason
+          NOBODY WROTE DOWN, and no error is raised anywhere to say so.
+          It is silent, and it is silent in the direction of a false
+          pass.
+DECISION  EVERY CONFIGURATION STRUCT IS SLOTTED.
+          '@dataclass(slots=True)' on 'ConfigurationPatternFinder' as
+          on 'Configuration', so a misspelt attribute raises at the
+          point of the mistake rather than being kept as a new
+          attribute nothing reads. A test choice demonstrates the
+          refusal ('TEST/test-configuration.py', choice 'slots'), so
+          the law is checked and not merely stated.
+          Nothing changes for the callers: 'TestChoiceConfiguration'
+          holds this struct verbatim either way.
+COST      A field cannot be added to a configuration by assignment from
+          outside; it must be declared. That is the point, and it is
+          paid once per new field.
+GRAVEYARD A validator that walks the struct after construction and
+          reports unknown names: it runs LATER than the mistake, needs
+          a list of legal names beside the class (a second place to be
+          wrong), and catches nothing the language catches for free.

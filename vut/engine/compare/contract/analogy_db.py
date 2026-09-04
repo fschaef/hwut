@@ -70,7 +70,7 @@ class AnalogyDb(bidict):
         assert analogy is not None
         result = AnalogyDb(self)
         subject, nominal = analogy
-        # Note: This might raise ValueDuplicationError if nominal is already 
+        # Note: This might raise ValueDuplicationError if nominal is already
         # assigned to a different subject, ensuring integrity.
         result[subject] = nominal
         return result
@@ -87,7 +87,7 @@ class AnalogyDb(bidict):
             if n in subjects.inverse and subjects.inverse[n] != s: return None
             # Check 2: Is subject 's' already mapped to a different nominal?
             elif s in subjects and subjects[s] != n: return None
-            
+
             subjects[s] = n
         return subjects
 
@@ -122,7 +122,7 @@ class AnalogyDb(bidict):
             return True
 
         # HERE: Check internal consistency of the incoming data
-        # If the input itself is contradictory (e.g. A->1 and A->2), 
+        # If the input itself is contradictory (e.g. A->1 and A->2),
         # it cannot be consistent with us.
         if isinstance(analogy_db, (list, tuple)):
              if AnalogyDb.from_iterable(analogy_db) is None:
@@ -169,7 +169,7 @@ class AnalogyDb(bidict):
             if   n is None:          return 1 # -> " "
             elif isinstance(n, str): return len(n)
             elif n <= 1:             return 1
-            else:                    return number_of_decimal_digits(n) 
+            else:                    return number_of_decimal_digits(n)
 
         def prefix(p, Ls, Ln):
             return ""
@@ -187,6 +187,6 @@ class AnalogyDb(bidict):
             (prefix(p, Ls, Ln), show(analogy_list))
             for p, analogy_list in sorted(content_db.items())
         ]
-        
+
         return "AnalogyDb", txt
 

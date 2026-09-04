@@ -2,7 +2,7 @@
 """SPDX-License: MIT; (C) Frank-Rene Schaefer; Project: VUT
 ________________________________________________________________________________
 
-PURPOSE: Benchmark suite for evaluating performance and accuracy of 
+PURPOSE: Benchmark suite for evaluating performance and accuracy of
          edit-distance algorithms using correct LineElement factory logic.
          Supports configurable ratio of lines containing analogies.
 ________________________________________________________________________________
@@ -29,12 +29,12 @@ class MutationProfile:
     insert: float     = 0.05
     delete: float     = 0.05
     transpose: float  = 0.05
-    # good: float       = 0.75 
+    # good: float       = 0.75
     analogy_ratio: float = 0.2  # Ratio of lines that may contain analogies
 
 class ScenarioGenerator:
     """Generates deterministic pairs of sequences for benchmarking."""
-    
+
     def __init__(self, seed: int = 0x12345):
         self.stream = DeterministicStream(seed=seed)
         self.type_pool_all = [
@@ -54,7 +54,7 @@ class ScenarioGenerator:
     def _random_le(self, pool: List[E_ToleranceId], content_len=5):
         """Creates a mock LineElement using the provided factory logic and a specific pool."""
         tol_id = pool[self.stream.next_int(0, len(pool) - 1)]
-        
+
         # Context-aware content generation
         if tol_id == E_ToleranceId.NUMERIC:
             # Generate digits '0'-'9' so LineElementNumber can actually parse it
@@ -68,15 +68,15 @@ class ScenarioGenerator:
         else:
             # Standard alphabetic strings
             content = "".join(chr(self.stream.next_int(97, 122)) for _ in range(content_len))
-        
+
         # STRING is special: it's not generated from tokens/factory
         if tol_id == E_ToleranceId.STRING:
             return LineElementString(content)
-        
+
         # Use the requested factory for all other types
         return LineElement.from_match(
-            tolerance_id=tol_id, 
-            content=content, 
+            tolerance_id=tol_id,
+            content=content,
             numeric_tolerance_ratio=0.1
         )
 
@@ -97,7 +97,7 @@ class ScenarioGenerator:
         i = 0
         while i < length:
             r = self.stream.next_int(0, 1000) / 1000.0
-            
+
             if r < profile.delete:
                 le = base[i]
                 subject.append(le)
@@ -114,7 +114,7 @@ class ScenarioGenerator:
                 subject.append(base[i])
                 nominal.append(base[i])
                 nominal.append(base[i+1])
-                expected_cost += 0.5 
+                expected_cost += 0.5
                 i += 2
             elif r < (profile.delete + profile.insert + profile.transpose + profile.substitute):
                 subject.append(base[i])
@@ -125,21 +125,21 @@ class ScenarioGenerator:
                 subject.append(base[i])
                 nominal.append(base[i])
                 i += 1
-                
+
         return subject, nominal, expected_cost
 
     def generate_line_seq_pair(self, num_lines: int, line_len: int, profile: MutationProfile):
         """Generates a pair of Line sequences (files) with distributed analogy types."""
         subject_lines = []
         nominal_lines = []
-        
+
         # We use generate_le_pair logic to create diverse lines
         for i in range(num_lines):
             sub_elements, nom_elements, _ = self.generate_le_pair(line_len, profile)
             subject_lines.append(Line(i, sub_elements))
             nominal_lines.append(Line(i, nom_elements))
-            
-        return subject_lines, nominal_lines 
+
+        return subject_lines, nominal_lines
 
 class VUTBenchmark:
     def __init__(self):
@@ -150,7 +150,7 @@ class VUTBenchmark:
         profile = MutationProfile(analogy_ratio=analogy_ratio)
         total_time = 0.0
         total_elements = 0
-        
+
         for _ in range(iterations):
             sub, nom, _ = self.gen.generate_le_pair(length, profile)
             start = time.perf_counter()
@@ -167,7 +167,7 @@ class VUTBenchmark:
         print(f"--- Line Sequence Benchmark (N={iterations}, Lines={num_lines}, AnalogyRatio={analogy_ratio}) ---")
         profile = MutationProfile(analogy_ratio=analogy_ratio)
         total_time = 0.0
-        
+
         for _ in range(iterations):
             sub, nom = self.gen.generate_line_seq_pair(num_lines, 10, profile)
             start = time.perf_counter()

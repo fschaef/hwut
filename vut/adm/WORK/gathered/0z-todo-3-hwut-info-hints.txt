@@ -1,0 +1,76 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/exploration
+
+todo-3  '--hwut-info' IS THE THIRD CARRIER (MIGRATION)
+______________________________________________________________________________
+
+DECIDED (R-44). BUILT, except the procsitter call.
+
+THE ORDER, per candidate file. Nothing changes for a file that carries a
+header or stands under 'apps':
+
+    file not ignored
+        |
+        +-- named under 'apps' in hwut.conf?      -> CONF carrier
+        |
+        +-- 'hwut {' trigger in the file?         -> HEADER carrier
+        |
+        +-- neither: it may be an hwut 1.0 test application.
+            INTERVIEW it:  'app --hwut-info'      -> INTERVIEW carrier
+
+'otto-von-bismarck.bas' has no trigger because it predates the trigger. The
+interview is what an hwut 1.0 application has always answered, and it is
+read as a specification.
+
+WHAT IS READ. Only what hwut 1.0 defines, as 'HwutRunner' emits it:
+
+    <title>;                    -> title
+    CHOICES: <name>, ...;       -> choices, empty bodies
+    HAPPY: <pattern>;           -> eq-pattern (R-12: 'happy' was renamed)
+    SAME;                       -> same        (R-45)
+    INTERACTIVE;                -> interactive  (R-46)
+
+Nothing else is looked for. A line the block carries that hwut 1.0 does not
+define is passed over in silence, not faulted: this is a migration path and
+an old application owes us nothing.
+
+CONSEQUENCE, worth stating plainly: exploration EXECUTES. It was a function
+of the directory's text alone (R-1, R-19); with the interview it runs a
+program -- once per header-less, unnamed candidate, and only for those. The
+cost of the static specification was computed choices; the interview buys
+them back for legacy files without buying them back for new ones.
+
+  -  the interview runs under procsitter, with caps: an old application
+     that hangs must not hang exploration.
+  -  a non-zero exit, a timeout, or an unreadable answer means: this file
+     is NOT a test application. Silence is not a fault (R-2).
+  -  what comes back is a specification like any other, marked
+     'E_Origin.INTERVIEW', and it resolves and runs like any other.
+
+DONE:
+  1  'hwut_info_interview.py'. 'specification_of(text, name)' reads the
+     block; 'interview(directory, name, runner)' asks and reads. The
+     answer becomes a TestAppSpec with 'E_Origin.INTERVIEW'; every way
+     of failing to be a test application yields None, which is no fault.
+  2  'explorer.explore' takes the third branch where both carriers are
+     silent, and 'interview_runner' is a parameter so a test may drive
+     it without a process.
+  3  'INTERVIEW_CAPS' -- timeout_sec 10, network false,
+     child_process_max_n 1. An interview is a question, not a test: it
+     may not spend and it may not reach.
+  4  TEST/test-interview.py: block, silence, directory, precedence.
+
+OWED: '_procsitter_runner' raises NotImplementedError. The call itself is
+written at integration, when procsitter is in the tree, and the GOOD file of
+a choice that exercises it is recorded THEN -- against the real procsitter,
+never against a stand-in.
+  2  'explorer': the third branch, reached only where both carriers are
+     silent.
+  3  The block reader: loose, tolerant, and looking only for the lines
+     hwut 1.0 defines.
+  4  TEST: a directory holding a 1.0-style application; the interview
+     read; a file that answers nothing; a file that exits non-zero; a
+     file that hangs and is capped.
+
+OPEN: nothing blocking. 'hwut.parse' shows the ORIGIN of each value --
+"default", "--hwut-info", and the rest -- which is recorded in todo-7.

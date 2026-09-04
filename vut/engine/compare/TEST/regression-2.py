@@ -50,7 +50,7 @@ def create_numeric_conflict_db():
 
     # Generate the DB from raw lines.
     # This ensures 'AnalogyDb' objects are created correctly (as empty, but present).
-    # Since they are Numeric matches, they impose NO analogy constraints, 
+    # Since they are Numeric matches, they impose NO analogy constraints,
     # making them "Unconstrained" candidates.
     return PotentialPairDb.from_raw(s_lines, n_lines, abort_early_f=False)
 
@@ -60,7 +60,7 @@ def test_csp_crash():
     print_header("CSP Solver Crash / Mutable State Check")
     print("OBJECTIVE: Verify 'pairing_analogy_lines' handles the AnalogyDb object correctly.")
     print("BUG:       Passing a mutable AnalogyDb causes AttributeError (.merge missing).")
-    
+
     # Setup manually as this is a specific type-safety check
     pp_db = PotentialPairDb()
     # Subject 0 matches Nominal 0 with constraint A=1
@@ -68,12 +68,12 @@ def test_csp_crash():
     pp_db[0] = [(0, constraint)]
 
     # Setup Result object with MUTABLE Global AnalogyDb
-    mutable_global_db = AnalogyDb() 
-    
+    mutable_global_db = AnalogyDb()
+
     state = Result(
         potential_pair_db     = pp_db,
         pair_db               = PairedGraph(),
-        analogy_constraint_db = mutable_global_db, 
+        analogy_constraint_db = mutable_global_db,
         required_pair_n       = 1,
         aborted_f             = False
     )
@@ -99,11 +99,11 @@ def test_bool_logic():
 
     # 1. Create a real DB with a conflict
     pp_db = create_numeric_conflict_db()
-    
+
     # Verify setup validity
     print(f"SETUP: Potential Pair DB keys (Subject IDs): {list(pp_db.keys())}")
     # We expect 2 keys (subjects) pointing to the same nominal
-    
+
     state = Result(
         potential_pair_db     = pp_db,
         pair_db               = PairedGraph(),
@@ -113,7 +113,7 @@ def test_bool_logic():
     )
 
     print(f"INPUT state.aborted_f: {state.aborted_f}")
-    
+
     # EXECUTE
     # 1. extract_unconstrained will find 2 subjects (1 and 2) competing for Nominal 1.
     # 2. solver_max_bpm will match one of them.
@@ -132,10 +132,10 @@ def get_le_lists(s_text, n_text, visible_nothing="_"):
     c = Configuration()
     c.pattern_finder.visible_nothing_pattern_list = [visible_nothing]
     pf = PatternFinder(c.pattern_finder)
-    
+
     s_l = Line(1, s_text, pf)
     n_l = Line(1, n_text, pf)
-    
+
     # We pass the raw sequence (including Visible Nothing)
     return s_l.sequence, n_l.sequence
 
@@ -159,24 +159,24 @@ def test_visible_nothing_alignment():
     # This function is used for optimized "Happy Path" matching
     # We rely on the internal lambdas similar to how 'list_EditGOOD_line' calls it
     # But since we import list_EditGOOD_line directly, we use that.
-    
+
     ops = list_EditGOOD_line(s_seq, n_seq)
-    
+
     op_names = [op.id.name for op in ops]
     print(f"RESPONSE: {op_names}")
-    
+
     # Analysis
-    # Correct Path: 
+    # Correct Path:
     # 1. Subject '_': Visible Nothing. Nominal 'A'. -> Skip Subject (GOOD_DELETE).
     # 2. Subject 'A': Content. Nominal 'A'. -> Match (GOOD).
     # Expected: ['GOOD_DELETE', 'GOOD']
-    
+
     # Buggy Path:
     # 1. Subject '_'. Nominal 'A'. -> Skip Nominal (GOOD_INSERT). (Subject still '_')
     # 2. Subject '_'. Nominal End. -> Skip Subject (GOOD_DELETE). (Subject now 'A')
     # 3. Subject 'A'. Nominal End. -> Skip Subject (GOOD_DELETE).
     # Result: ['GOOD_INSERT', 'GOOD_DELETE', 'GOOD_DELETE']
-    
+
     if "GOOD" in op_names and "GOOD_DELETE" in op_names and len(op_names) == 2:
         print("VERDICT: PASS")
         print("  Sequence aligned correctly.")
@@ -189,10 +189,10 @@ def get_lines(s_text_list, n_text_list):
     c = Configuration()
     # Default PatternFinder treats empty lines as separators
     pf = PatternFinder(c.pattern_finder)
-    
+
     s_lines = [Line(i+1, txt, pf) for i, txt in enumerate(s_text_list)]
     n_lines = [Line(i+1, txt, pf) for i, txt in enumerate(n_text_list)]
-    
+
     return s_lines, n_lines
 
 def analyze_merge(s_list, n_list, label):
@@ -210,16 +210,16 @@ def analyze_merge(s_list, n_list, label):
     print(f"CASE: {label}")
     print(f"  Subject: {s_list}")
     print(f"  Nominal: {n_list}")
-    
+
     s_lines, n_lines = get_lines(s_list, n_list)
     result = calc_seq_ops(s_lines, n_lines)
     ops = [op.id.name for op in result.edit_list]
-    
+
     print(f"  Ops:     {ops}")
-    
+
     # We accept SUBSTITUTE or SUBSTITUTE_TYPE
     # We REJECT split operations like ['GOOD_DELETE', 'INSERT']
-    
+
     if len(ops) == 1 and "SUBSTITUTE" in ops[0]:
         print("  -> OK (Merged)")
         return True
@@ -233,22 +233,22 @@ def test_edit_merging():
     print_header("Line Sequence Edit Merging")
     print("OBJECTIVE: Verify that Separator/Content mismatches merge into SUBSTITUTE.")
     print("BUG:       Adaptor missing _pair_db entries for (GOOD_DELETE, INSERT) etc.")
-    
+
     all_passed = True
-    
+
     # Case 1: Subject=Separator(""), Nominal=Content("A")
     # Generates: GOOD_DELETE (S) + INSERT (N)
     if not analyze_merge([""], ["ContentA"], "Separator vs Content"):
         all_passed = False
-        
+
     print("-" * 40)
-        
+
     # Case 2: Subject=Content("A"), Nominal=Separator("")
     # Generates: GOOD_INSERT (N) + DELETE (S)
     if not analyze_merge(["ContentA"], [""], "Content vs Separator"):
         all_passed = False
 
-    # Note: Inverse pairs (INSERT+GOOD_DELETE) are structurally impossible 
+    # Note: Inverse pairs (INSERT+GOOD_DELETE) are structurally impossible
     # due to the loop priority in reinsert_separators.
 
     if all_passed:
@@ -264,7 +264,7 @@ if __name__ == "__main__":
         "visible-nothing": test_visible_nothing_alignment,
         "edit-merge":      test_edit_merging
     }
-    
+
     runner = HwutRunner(
         argv=sys.argv,
         title="VUT Potpourri Regression Suite",

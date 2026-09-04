@@ -59,7 +59,7 @@ import os
 from xml.etree import ElementTree
 
 from ..configuration import CoverageRefused
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       language_of, line_record_of, register)
 
 

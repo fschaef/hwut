@@ -1,7 +1,7 @@
 """
 PURPOSE:
-       Iteration over all possible combinations of parameters of a 
-       parameter basis. Useful for function argument generation or 
+       Iteration over all possible combinations of parameters of a
+       parameter basis. Useful for function argument generation or
        scenario parameterization in general.
 
 SYNOPSIS:
@@ -25,7 +25,7 @@ SYNOPSIS:
                ...
 
 DESCRIPTION:
-       
+
        'do(basis)' yields the cartesian product of an orthogonal basis.
 
        The basis is given as a list of iterables, where each iterable

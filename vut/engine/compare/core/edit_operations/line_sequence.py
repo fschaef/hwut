@@ -18,13 +18,13 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from   vut.engine.compare.core.edit_operations.edit  import (E_EditId, 
-                                                                           Edit, 
-                                                                           EditSequence, 
-                                                                           list_EditGOOD_line_sequence, 
+from   vut.engine.compare.core.edit_operations.edit  import (E_EditId,
+                                                                           Edit,
+                                                                           EditSequence,
+                                                                           list_EditGOOD_line_sequence,
                                                                            list_EditGOOD_line)
-from   vut.engine.compare.core.edit_operations.core  import (WorkListBase, 
-                                                                           WorkItemBase, 
+from   vut.engine.compare.core.edit_operations.core  import (WorkListBase,
+                                                                           WorkItemBase,
                                                                            position_increment_db)
 from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 from   vut.engine.compare.contract.semantics         import line_cost_db as cost_db
@@ -40,7 +40,7 @@ GOOD_INSERT     = E_EditId.GOOD_INSERT
 GOOD_DELETE     = E_EditId.GOOD_DELETE
 DELETE          = E_EditId.DELETE
 INSERT          = E_EditId.INSERT
-SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE      = E_EditId.SUBSTITUTE
 
 
 cost_GOOD          = cost_db[GOOD]
@@ -48,8 +48,8 @@ cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
 cost_INSERT_DELETE = cost_db[INSERT]
 
 @typechecked
-def do(subject_match_seq_list, 
-       nominal_match_seq_list, 
+def do(subject_match_seq_list,
+       nominal_match_seq_list,
        analogy_db:  FrozenAnalogyDb = FrozenAnalogyDb()) -> EditSequence:
     """RETURNS: EditSequence
 
@@ -70,7 +70,7 @@ def do(subject_match_seq_list,
                                                 Edit)
 
     if separator_db and separator_db.original_max_cost == 0.0:
-        best = EditSequence(0, list_EditGOOD_line_sequence(subject_match_seq_list, nominal_match_seq_list), 
+        best = EditSequence(0, list_EditGOOD_line_sequence(subject_match_seq_list, nominal_match_seq_list),
                             analogy_db)
     else:
         initial_edit_sequence = EditSequence(0, [], analogy_db)
@@ -78,7 +78,7 @@ def do(subject_match_seq_list,
         subject_le_seq, \
         nominal_le_seq  = separator_db.strip_separators()
         initial_item    = WorkItem(0, 0, edit_list=initial_edit_sequence)
-        work_list       = WorkList(subject_le_seq, nominal_le_seq, 
+        work_list       = WorkList(subject_le_seq, nominal_le_seq,
                                    initial_item)
         best            = work_list.run()
 
@@ -213,7 +213,7 @@ class WorkItem(WorkItemBase):
        else:               self.history = history
 
    def __repr__(self):
-       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, 
+       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost,
                                           [x[0].name for x in self.edit_list.edit_list])
 
    def subsequent_steps(self, subject_list, nominal_list, cache):
@@ -222,9 +222,9 @@ class WorkItem(WorkItemBase):
        line_editions = cache.get(self.si, self.ni, subject_list, nominal_list)
 
        if not line_editions.analogy_db.is_all_consistent(self.edit_list.analogy_db):
-           # If there is a clash in analogy considerations, the comparison must be 
+           # If there is a clash in analogy considerations, the comparison must be
            # redone, such that edit operations adapt.
-           line_editions = subject_list[self.si].edit_operations(nominal_list[self.ni], 
+           line_editions = subject_list[self.si].edit_operations(nominal_list[self.ni],
                                                                  self.edit_list.analogy_db)
 
        assert isinstance(line_editions, EditSequence)

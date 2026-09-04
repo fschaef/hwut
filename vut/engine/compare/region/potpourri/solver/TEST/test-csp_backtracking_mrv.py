@@ -49,11 +49,11 @@ def test(name, potential_db):
     start = time.time()
     res = do(potential_db, global_adb, global_pdb, required_n)
     end = time.time()
-    
+
     print(f"  Success:  {not res.aborted_f}")
     print(f"  Matching: {len(res.pair_db)}/{required_n}")
     print(f"##Time:     {end - start} [sec]")
-    
+
     # In HWUT, we print results for the golden master
     if not res.aborted_f:
         c = 0
@@ -61,7 +61,7 @@ def test(name, potential_db):
             print(f"    [{s_i}] -> {res.pair_db[s_i]}")
             c += 1
             if c == 10: print("..."); break
-            
+
     else:
         print("    FAILED to find full consistent matching.")
 

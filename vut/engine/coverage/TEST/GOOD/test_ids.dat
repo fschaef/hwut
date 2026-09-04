@@ -1,6 +1,6 @@
 ##VUT-TEST-IDS 5
-G:62
-N:7
+G:72
+N:9
 A:0 test-record.py
 N:0.6
 C:0.0 election
@@ -70,3 +70,15 @@ C:6.16 roles
 C:6.17 ucis
 C:6.18 verilator
 C:6.19 witnessed
+A:7 test-presenter-visitor.py
+N:7.5
+C:7.0 html
+C:7.1 tex
+C:7.2 text
+C:7.3 vocabulary
+C:7.4 walk
+A:8 test-real-input.py
+N:8.3
+C:8.0 every_artefact
+C:8.1 every_format
+C:8.2 no_orphan

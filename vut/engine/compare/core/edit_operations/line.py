@@ -59,8 +59,8 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 from  vut.engine.compare.core.edit_operations.edit  import E_EditId, Edit, EditSequence, list_EditGOOD_line
-from  vut.engine.compare.core.edit_operations.core  import (WorkListBase, 
-                                                                          WorkItemBase, 
+from  vut.engine.compare.core.edit_operations.core  import (WorkListBase,
+                                                                          WorkItemBase,
                                                                           position_increment_db)
 from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 from   vut.engine.compare.reading.pattern_finder                 import E_ToleranceId
@@ -84,7 +84,7 @@ GOOD_INSERT     = E_EditId.GOOD_INSERT
 GOOD_DELETE     = E_EditId.GOOD_DELETE
 DELETE          = E_EditId.DELETE
 INSERT          = E_EditId.INSERT
-SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE      = E_EditId.SUBSTITUTE
 SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 
 ANALOGY         = E_ToleranceId.ANALOGY
@@ -95,8 +95,8 @@ cost_INSERT_DELETE = cost_db[INSERT]
 
 @lru_cache(maxsize=65536)
 @typechecked
-def do(subject_le_seq: tuple[LineElement,...] | list[LineElement], 
-       nominal_le_seq: tuple[LineElement,...] | list[LineElement], 
+def do(subject_le_seq: tuple[LineElement,...] | list[LineElement],
+       nominal_le_seq: tuple[LineElement,...] | list[LineElement],
        analogy_db:     FrozenAnalogyDb = FrozenAnalogyDb()) -> EditSequence:
     """RETURNS: EditSequence
 
@@ -116,7 +116,7 @@ def do(subject_le_seq: tuple[LineElement,...] | list[LineElement],
 
 
     if separator_db and separator_db.original_max_cost == 0.0:
-        best = EditSequence(0, list_EditGOOD_line(subject_le_seq, nominal_le_seq), 
+        best = EditSequence(0, list_EditGOOD_line(subject_le_seq, nominal_le_seq),
                             analogy_db)
     else:
         initial_edit_sequence = EditSequence(0, [], analogy_db)
@@ -158,26 +158,26 @@ class WorkList(WorkListBase):
 
     def _append_subject_overhead(self, item):
         visible_list   = [
-            self.subject[si].tolerance_id != VISIBLE_NOTHING 
+            self.subject[si].tolerance_id != VISIBLE_NOTHING
             for si in range(item.si, self.subject_length)
         ]
         extra_cost = sum(visible_list) * cost_INSERT_DELETE
-        overhead   = [ 
+        overhead   = [
             Edit(DELETE, None) if visible else Edit(GOOD_DELETE, None)
             for visible in visible_list
-        ] 
+        ]
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
         visible_list   = [
-            self.nominal[ni].tolerance_id != VISIBLE_NOTHING 
+            self.nominal[ni].tolerance_id != VISIBLE_NOTHING
             for ni in range(item.ni, self.nominal_length)
         ]
         extra_cost = sum(visible_list) * cost_INSERT_DELETE
-        overhead   = [ 
+        overhead   = [
             Edit(INSERT, None) if visible else Edit(GOOD_INSERT, None)
             for visible in visible_list
-        ] 
+        ]
         return self._append_overhead(item, overhead, extra_cost)
 
 class WorkItem(WorkListBase):
@@ -210,7 +210,7 @@ class WorkItem(WorkListBase):
         """
         if self.subject_modified: subject = self.subject_modified
 
-        verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal) 
+        verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal)
 
         subject_le = subject[self.si]
         nominal_le = nominal[self.ni]
@@ -261,7 +261,7 @@ class WorkItem(WorkListBase):
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + cost_db[edit_id] * cost_factor,
                                                   self.edit_list.edit_list + [ Edit(edit_id, None) ],
-                                                  self.edit_list.analogy_db), 
+                                                  self.edit_list.analogy_db),
                         subject_modified = self.subject_modified)
 
     def _step_transpose(self, transpose_ai, subject, new_analogy=None):
@@ -274,25 +274,25 @@ class WorkItem(WorkListBase):
             new_analogy_db = self.edit_list.analogy_db.clone_and_add(new_analogy)
         else:
             new_analogy_db = self.edit_list.analogy_db
-        
+
         increment_ai, increment_bi = position_increment_db[TRANSPOSE]
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + actual_cost,
                                                   self.edit_list.edit_list + [ Edit(TRANSPOSE, transpose_ai) ],
-                                                  new_analogy_db), 
+                                                  new_analogy_db),
                         subject_modified = tuple(new_subject))
 
     def _step_analogy(self, edit_id, new_analogy):
         """Transition specifically for operations that update the Analogy Database."""
         new_analogy_db = self.edit_list.analogy_db.clone_and_add(new_analogy)
-        
+
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + cost_db[edit_id],
                                                   self.edit_list.edit_list + [ Edit(edit_id, None) ],
-                                                  new_analogy_db), 
+                                                  new_analogy_db),
                         subject_modified = self.subject_modified)
 
     def min_cost_remaining(self, subject_length, nominal_length):

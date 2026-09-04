@@ -47,7 +47,7 @@ class E_SubjectRelationId(Enum):
     BAD_NOMINAL_HAS_NOT        = auto()  # Heal: 'element' from nominal is inserted.
     BAD_NOMINAL_DIFFERS        = auto()  # Bad:  Content of subject and nominal 'element' differs.
     BAD_NOMINAL_TYPE_DIFFERS   = auto()  # Bad:  Type of subject and nominal 'element' differs.
-    
+
 E_NominalRelationId.db = {
     E_EditId.GOOD:            E_NominalRelationId.OK_GOOD,
     E_EditId.GOOD_TOLERATED:  E_NominalRelationId.OK_TOLERATED,
@@ -87,8 +87,8 @@ class Cell(ABC):
 
 @dataclass(frozen=True)
 class LineNumberPair:
-    line_n_in_subject: int 
-    line_n_in_nominal: int 
+    line_n_in_subject: int
+    line_n_in_nominal: int
 
 @dataclass(frozen=True)
 class SubjectCell(Cell):
@@ -125,7 +125,7 @@ class LinePairRaw:
             if n_incr > 0:
                 nominal_element_to_cell_map[ni] = cell_i
             ni += n_incr
-        
+
         ni = 0 # Reset
         for cell_i, edit in enumerate(self.edit_list):
             s_incr, n_incr = position_increment_db[edit.id]
@@ -133,12 +133,12 @@ class LinePairRaw:
             # Extract Subject Data
             if s_incr > 0 and self.subject and si < len(self.subject.sequence):
                 s_txt, s_tol = self.subject.sequence[si]._string, self.subject.sequence[si].tolerance_id
-            else: 
+            else:
                 s_txt, s_tol = None, E_ToleranceId.STRING
 
             if edit.id == E_EditId.TRANSPOSE:
-                n_ref = nominal_element_to_cell_map.get(edit.transpose_ai, cell_i) 
-            else: 
+                n_ref = nominal_element_to_cell_map.get(edit.transpose_ai, cell_i)
+            else:
                 n_ref = cell_i
 
             # Extract Subject Data
@@ -167,12 +167,12 @@ class LinePairRaw:
         subject_list, nominal_list = [], []
         if self.subject and not self.nominal:
             subject_list = [
-                SubjectCell(E_SubjectRelationId.BAD_NOMINAL_HAS_NOT, el.tolerance_id, el._string, -1) 
+                SubjectCell(E_SubjectRelationId.BAD_NOMINAL_HAS_NOT, el.tolerance_id, el._string, -1)
                 for el in self.subject.sequence
             ]
         elif self.nominal and not self.subject:
             nominal_list = [
-                NominalCell(E_NominalRelationId.BAD_SUBJECT_HAS, el.tolerance_id, el._string, -1) 
+                NominalCell(E_NominalRelationId.BAD_SUBJECT_HAS, el.tolerance_id, el._string, -1)
                 for el in self.nominal.sequence
             ]
         return subject_list, nominal_list
@@ -218,11 +218,11 @@ class LinePair:
         # edit list (separator-merged SUBSTITUTE-s, one-sided pairs) -- then
         # the cells alone cannot testify, but this id can.
         self._seq_edit_id = seq_edit_id
-        
+
         # JIT Cache
         self._subject_cell_list = None
         self._nominal_cell_list = None
-        
+
         # Publicly accessible metadata
         self.cost   = cost
         self.subject_line_n = subject.line_n if subject else -1
@@ -290,8 +290,8 @@ class LinePair:
         """
         def subject_cell(c):
             return "[%s:%s(%s) '%s']" % (c.relation_id.name, c.tolerance_id.name, c.nominal_ref_i, c.subject)
-                                                                                                 
-        def nominal_cell(c):                                                                     
+
+        def nominal_cell(c):
             return "[%s:%s(%s) '%s']" % (c.relation_id.name, c.tolerance_id.name, c.subject_ref_i, c.nominal)
 
         return "LinePair", [

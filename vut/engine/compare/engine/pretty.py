@@ -61,7 +61,7 @@ def _iterable(element):
 def _call_pretty_function(obj):
     class_name, member_list = obj.__pretty__()
     assert type(member_list) is list
-    if not member_list: 
+    if not member_list:
         return [class_name]
     elif type(member_list[0]) is tuple and len(member_list[0]) == 2:
         return _member_sequence(member_list, class_name)
@@ -83,4 +83,4 @@ def _list(obj_list, list_name="list"):
     txt.extend([-1])
     return txt
 
-        
+

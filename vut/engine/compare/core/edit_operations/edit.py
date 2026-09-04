@@ -4,14 +4,14 @@ ________________________________________________________________________________
 PURPOSE: Classes for 'E_EditId, 'Edit' and 'EditSequence'.
 
 An edit operation at a specific position in the subject sequence in order to
-adapt to a setting of an accordin position in the nominal sequence. 
+adapt to a setting of an accordin position in the nominal sequence.
 
 E_EditId:     identifies the operation (INSERT, DELETE, SUBSTITUTE, etc.)
 
-Edit:         identifies names the operation and provides a possible 
+Edit:         identifies names the operation and provides a possible
               additional parameter (the transpose index, if required)
 
-EditSequence: maintains a list of edit objects. 
+EditSequence: maintains a list of edit objects.
 """
 from  vut.engine.compare.reading.line_element import E_ToleranceId
 # E_EditId lives in the shared semantics module (single source of the
@@ -66,15 +66,15 @@ class EditSequence:
 
     def prepare_as_best(self, separator_db=None, relative_f=False):
         if separator_db:
-            if relative_f and self.cost != 0: 
+            if relative_f and self.cost != 0:
                 self.cost /= separator_db.original_max_cost
             self.edit_list = separator_db.reinsert_separators(self.edit_list)
         return self
 
 
 def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_visible_nothing, func_is_identical):
-    """RETURNS: List of Edit GOOD/GOOD_TOLERATED/GOOD_INSERT/GOOD_DELETE 
-                objects depending on the according line element being 
+    """RETURNS: List of Edit GOOD/GOOD_TOLERATED/GOOD_INSERT/GOOD_DELETE
+                objects depending on the according line element being
                 'visible nothing' or not.
 
     ASSUMPTION: 'subject_line_element_list' and 'nominal_line_element_list' are judged
@@ -85,17 +85,17 @@ def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_
         si, ni = 0, 0
         while 1 + 1 == 2:
             if si >= Ls:
-                for _ in range(Ln - ni): 
+                for _ in range(Ln - ni):
                     yield Edit(E_EditId.GOOD_INSERT)
                 break
             elif ni >= Ln:
-                for _ in range(Ls - si): 
+                for _ in range(Ls - si):
                     yield Edit(E_EditId.GOOD_DELETE)
                 break
             else:
                 subject = subject_line_element_list[si]
                 nominal = nominal_line_element_list[ni]
-                if is_identical(subject, nominal): 
+                if is_identical(subject, nominal):
                     op = E_EditId.GOOD
                 elif is_visible_nothing(subject):
                     if is_visible_nothing(nominal): op = E_EditId.GOOD_TOLERATED
@@ -112,7 +112,7 @@ def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_
             else:                               raise AssertionError(
                                                     "no edit id '%s'" % op)
 
-    return list(iterable(subject_line_element_list, nominal_line_element_list, 
+    return list(iterable(subject_line_element_list, nominal_line_element_list,
                          func_is_visible_nothing, func_is_identical))
 
 
@@ -125,9 +125,9 @@ def list_EditGOOD_line(subject_list, nominal_list):
 # @typed(subject_list=[Line], nominal_list=[Line])
 def list_EditGOOD_line_sequence(subject_list, nominal_list):
     return list_EditGOOD([x.sequence for x in subject_list], [x.sequence for x in nominal_list],
-                         lambda le_list: 
+                         lambda le_list:
                          all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in le_list),
-                         lambda subject, nominal: 
+                         lambda subject, nominal:
                          len(subject) == len(nominal) \
                          and all(s._string == n._string for s, n in zip(subject, nominal, strict=False)))
 

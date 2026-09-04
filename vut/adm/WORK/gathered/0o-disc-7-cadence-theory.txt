@@ -1,0 +1,160 @@
+VERSION: 1
+COMPONENTS: services
+
+disc-7  CADENCE NEEDS A THEORY, OR IT IS A WITCH HUNT     ** OPEN **
+______________________________________________________________________________
+
+OBSERVED (2026-08-27): 'hwut.stability --repeat=5' over 64 keys.
+
+    TALLY: 1 unstable, 14 warned, 49 steady
+
+The ONE was real: 'test-stability.sh verbose' flipped ok / test-failed
+/ ok / ok / ok, and was rightly stained.
+
+THE FOURTEEN WERE ALL THE SAME SENTENCE. Every one of them --
+'test-accept.sh', 'test-remove.sh', 'test-report.sh',
+'test-wishlist.sh' -- is a suite that SPAWNS PROCESSES. What the
+warning told the reader is 'this test runs subprocesses', fourteen
+times, in the vocabulary of instability.
+
+A WARNING THAT FIRES ON A PROPERTY OF THE TEST RATHER THAN ON ITS
+INSTABILITY IS NOT EVIDENCE. It is a hunt: a reader who acts on it
+changes tests that were never broken, and a reader who learns to
+ignore it stops reading the one line that mattered.
+
+----------------------------------------------------------------------------
+WHAT IS WRONG WITH 'rt = stddev(delta) / average(delta)'
+----------------------------------------------------------------------------
+The measure is not wrong; it is UNCALIBRATED and MEASURES THE WRONG
+CLOCK. Four faults, each independently sufficient.
+
+f-1  IT IS WALL CLOCK.  'operations/run/core.py' marks with
+     'time.monotonic()'. A line that WAITS ON A SUBPROCESS is timing
+     the operating system's scheduler, not the test. Under load it
+     varies hugely and honestly. THE TEST DID NOTHING DIFFERENT.
+
+f-2  THERE IS NO NULL MODEL.  No one has measured what 'rt' looks
+     like for a KNOWN-STEADY line on THIS machine under THIS load. A
+     threshold without that is a number somebody liked. 'Unsteady'
+     means 'more variable than steady', and nothing in the run says
+     what steady is.
+
+f-3  THE SAMPLE IS FAR TOO SMALL.  At n = 5 the standard error of a
+     standard-deviation estimate is roughly 35% of the value. An 'rt'
+     computed from five repeats cannot separate a doubled variance
+     from noise. Any threshold at that n has a false-positive rate
+     nobody has computed -- and fourteen of sixty-four is 22%, which
+     is about what one would expect from thresholding noise.
+
+f-4  THE LOAD IS COMMON AND UNSUBTRACTED.  The repeats of ALL keys run
+     under the same machine at the same time. A slow repeat is slow
+     for EVERYONE. That common factor inflates every key's 'rt'
+     together, and is exactly the part that is not the test's.
+
+----------------------------------------------------------------------------
+RULED (chat, 2026-08-27): OFF BY DEFAULT; THE CAUTIOUS TESTER ASKS
+----------------------------------------------------------------------------
+TIMING IS A MESS AND WILL STAY ONE, and the framework cannot measure
+its way out. It sets '--jobs', which is ITS OWN parallelism -- NOT the
+machine's load. A hundred niced processes and ten busy ones are not
+comparable, and nothing the framework records tells them apart. A
+'processes now / processes then' ratio multiplies a number we know by
+a number we do not.
+
+SO: STABILITY DOES NOT CHECK TIMING UNLESS ASKED.
+
+    default        the VERDICT detectors only. Two runs of one test
+                   that disagree on a verdict disagree, full stop --
+                   no statistics between the reading and the report.
+    '--cadence'    the timing findings, for a tester who knows the
+                   machine, chose the moment, and knows what the
+                   number is worth. THEY are the calibration; the
+                   framework has none.
+
+CADENCE IS NEVER A SHOW STOPPER: it does not stain, and it does not
+move the exit status, asked for or not.
+
+SHOULD IT BE ASKED FOR, it speaks only of the GROSS: a deviation above
+5 SECONDS -- far past any resolution question -- AND some 50x the
+usual delta for that line. Not 2x, not 5x. Nothing clearing both bars
+is noise, and nothing below them can be told from noise by any means
+the framework has.
+
+FOUND WHILE BUILDING IT: 'THE USUAL DELTA' MUST BE THE MEDIAN, NOT
+THE AVERAGE. 'spread / average' CANNOT EXCEED THE REPEAT COUNT -- one
+slow run among four is at most 4x, whatever its size, because the
+outlier drags up the very average it is measured against. A 50x bar
+against the average is therefore unreachable below fifty repeats, and
+would have been silent for ever. Against the MEDIAN the same outlier
+scores thousands, and one slow repeat does not move it -- which is
+exactly what 'usually' means.
+
+The same arithmetic says what shape the rule describes: a line that is
+USUALLY instant and ONCE was not. An ALTERNATING slowness puts half
+the samples either side of the median and collapses the factor to 2x
+-- correctly, because a line that is slow half the time is not an
+outlier, it is a bimodal test.
+
+WHAT REMAINS OPEN is whether the option is worth its code. Nobody has
+measured whether a cadence finding predicts a later verdict flip. Off
+by default, it can at least do no harm while that stays unknown.
+
+----------------------------------------------------------------------------
+THE THEORY IT WOULD NEED
+----------------------------------------------------------------------------
+WHAT CADENCE IS FOR, stated first, because the measure follows from
+it: a line whose duration varies across repeats MAY be a race, a
+timeout-dependent path, or contention -- a thing that will LATER
+become a verdict flip. Cadence is a LEADING INDICATOR of instability,
+never instability itself. That is why it warns and does not stain,
+and that part of the design is right.
+
+A leading indicator earns its place only if a reading of 'unsteady'
+raises the probability of a future flip. Nothing has ever measured
+that. THE FIRST WORK IS NOT A THRESHOLD, IT IS THAT MEASUREMENT: keep
+cadence findings and verdict flips over many runs and ask whether the
+first predicts the second. If it does not, the detector should go, and
+the honest answer to this discussion may be its removal.
+
+Should it survive, three corrections, in order of how much they buy:
+
+t-1  MEASURE CPU, NOT WALL CLOCK.  A line that waits on a subprocess
+     costs no CPU; a line that spins, races or retries does. procsitter
+     already reports CPU time. This alone would silence most of the
+     fourteen for a reason, not by tuning.
+
+     COST: the timing sidecar records a second number, and 'D-x' would
+     have to say which one a cadence reads. Wall clock stays -- it is
+     what a person feels -- but it is REPORTED, not JUDGED.
+
+t-2  SUBTRACT THE COMMON MODE.  Per repeat, form a load proxy from all
+     keys that ran in it; a key is unsteady only where its variation
+     exceeds what the common factor explains. The framework already
+     has the data: it runs every key over the same repeats. This is
+     ordinary common-mode rejection and it is the difference between
+     'the machine was busy' and 'this test is unsteady'.
+
+t-3  CALIBRATE, AND SAY THE SAMPLE SIZE.  Run a known-steady control
+     line in the same repeats; the threshold is a multiple of the
+     control's own 'rt', not a constant. And refuse the finding below
+     a repeat count at which it can mean anything -- if that count is
+     20, then '--repeat=5' should say 'too few repeats to judge
+     cadence' and judge only the verdicts. ABSENCE OF EVIDENCE, NAMED.
+
+----------------------------------------------------------------------------
+THE STEPS, SHOULD IT SURVIVE
+----------------------------------------------------------------------------
+RECOMMENDED, as the smallest honest step: the cadence finding is not
+printed by default. '--cadence' asks for it, and the help says what it
+is -- a leading indicator, uncalibrated. The verdict detectors
+(VERDICT, BYTES, LENGTH) keep the terminal, and they are the ones that
+have a theory: two runs of one test that disagree on a VERDICT
+disagree, full stop, with no statistics in between.
+
+This costs one flag and removes fourteen sentences that mean nothing,
+without deleting work that may yet be made sound.
+
+OPEN: whether to correct it (t-1..t-3) or to withdraw it pending the
+predictive measurement. The measurement is the honest first move and
+nobody has made it.
+______________________________________________________________________________

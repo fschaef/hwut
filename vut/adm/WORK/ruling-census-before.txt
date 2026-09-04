@@ -1,0 +1,183 @@
+==============================================================================
+ruling-census-before -- E-/R-/D-/B- (and O-) LABELS FOUND IN DISCUSSIONS/
+BEFORE the work-structure migration (plan/01-work-structure.txt, step G-1)
+==============================================================================
+
+VERSION: 1
+
+Produced by step G-1 of adm/WORK/plan/01-work-structure.txt. Nothing in
+the tree moved to produce this file; it is the BEFORE half of the G-3
+invariant (census after gathering == census before gathering).
+
+Method: every file under a 'DISCUSSIONS/' directory, grepped for
+\b[EROBD]-[0-9]+\b, deduplicated per file.
+
+------------------------------------------------------------------------------
+FILES FOUND: 40 (matches intend/01-work-structure.txt's
+stated measurement of 40 disc/todo files across 9 components)
+------------------------------------------------------------------------------
+
+PER-COMPONENT FILE COUNTS
+
+     1  adm/DISCUSSIONS
+     2  engine/display/DISCUSSIONS
+     1  engine/operations/DISCUSSIONS
+    13  engine/orchestrator/exploration/DISCUSSIONS
+     5  engine/orchestrator/plan/DISCUSSIONS
+     4  engine/orchestrator/run/DISCUSSIONS
+     2  engine/orchestrator/scheduler/DISCUSSIONS
+    11  services/DISCUSSIONS
+     1  test_writing_support/python/DISCUSSIONS
+
+------------------------------------------------------------------------------
+PER-FILE LABELS
+------------------------------------------------------------------------------
+
+./adm/DISCUSSIONS/disc-1-document-consistency.txt
+    B-1 B-6 B-7 E-20 E-22 E-31 E-34 E-36 E-37 E-38
+
+./engine/display/DISCUSSIONS/todo-1-tree-model.txt
+    (none)
+
+./engine/display/DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt
+    (none)
+
+./engine/operations/DISCUSSIONS/todo-1-judgement-timing.txt
+    R-70 R-71
+
+./engine/orchestrator/exploration/DISCUSSIONS/disc-1-test-sequence-form.txt
+    R-32 R-33 R-35 R-36
+
+./engine/orchestrator/exploration/DISCUSSIONS/disc-2-tree-walk-laws.txt
+    R-69 R-73
+
+./engine/orchestrator/exploration/DISCUSSIONS/disc-4-formal-configuration-spec.txt
+    (none)
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-1-output-subjects.txt
+    E-5
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-1-owner-defaults-relocation.txt
+    R-24 R-25 R-37 R-40 R-41 R-43 R-45 R-46 R-54 R-55 R-56 R-57 R-64 R-65 R-66
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-2-instantiation-blessing.txt
+    R-18 R-37 R-41
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-3-hwut-info-hints.txt
+    R-1 R-2 R-12 R-19 R-44 R-45 R-46
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-4-caps-vocabulary.txt
+    R-22 R-47 R-48
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-5-directory-keys-rebuilt.txt
+    R-31 R-35 R-36
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-6-parser-relocation.txt
+    R-27 R-34
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-7-hwut-parse-service.txt
+    R-9 R-29 R-50 R-51 R-53 R-67
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-7-variant-restates-language-entry.txt
+    R-73
+
+./engine/orchestrator/exploration/DISCUSSIONS/todo-8-same-and-interactive.txt
+    R-45 R-46
+
+./engine/orchestrator/plan/DISCUSSIONS/disc-1-scenario-kinds.txt
+    (none)
+
+./engine/orchestrator/plan/DISCUSSIONS/disc-2-multi-directory.txt
+    (none)
+
+./engine/orchestrator/plan/DISCUSSIONS/disc-3-provisional-choices.txt
+    (none)
+
+./engine/orchestrator/plan/DISCUSSIONS/todo-4-special-key.txt
+    (none)
+
+./engine/orchestrator/plan/DISCUSSIONS/todo-7-collision-groups.txt
+    (none)
+
+./engine/orchestrator/run/DISCUSSIONS/disc-1-provisional-choices.txt
+    O-11
+
+./engine/orchestrator/run/DISCUSSIONS/disc-7-caps-per-choice.txt
+    E-37
+
+./engine/orchestrator/run/DISCUSSIONS/todo-1-run-face.txt
+    O-7
+
+./engine/orchestrator/run/DISCUSSIONS/todo-2-placement-backend.txt
+    O-12 O-13 O-15
+
+./engine/orchestrator/scheduler/DISCUSSIONS/disc-1-provisional-choices.txt
+    O-12
+
+./engine/orchestrator/scheduler/DISCUSSIONS/todo-1-dispatcher-to-operations.txt
+    (none)
+
+./services/DISCUSSIONS/disc-10-wish-names-directories.txt
+    E-18 E-20 E-21
+
+./services/DISCUSSIONS/disc-2-target-service.txt
+    R-69
+
+./services/DISCUSSIONS/disc-3-compare-confs.txt
+    E-9
+
+./services/DISCUSSIONS/disc-4-hwut-play.txt
+    E-5
+
+./services/DISCUSSIONS/disc-5-hwut-wishlist.txt
+    R-34
+
+./services/DISCUSSIONS/disc-6-hwut-2-residue.txt
+    E-14 R-73
+
+./services/DISCUSSIONS/disc-7-cadence-theory.txt
+    (none)
+
+./services/DISCUSSIONS/disc-8-labels.txt
+    E-7 E-12 E-18
+
+./services/DISCUSSIONS/disc-9-face-inventory.txt
+    E-24 R-73
+
+./services/DISCUSSIONS/todo-1-hwut-renovate.txt
+    B-2 E-14 R-12 R-44 R-45 R-46 R-70
+
+./services/DISCUSSIONS/todo-2-command-line-completion.txt
+    (none)
+
+./test_writing_support/python/DISCUSSIONS/disc-1-scratch-leaks-into-tmp.txt
+    E-27 R-76
+
+------------------------------------------------------------------------------
+TOTALS -- ALL DISTINCT LABELS FOUND, BY SERIES
+------------------------------------------------------------------------------
+
+B-  (4)
+    B-1 B-2 B-6 B-7
+
+E-  (16)
+    E-5 E-7 E-9 E-12 E-14 E-18 E-20 E-21 E-22 E-24 E-27 E-31 E-34 E-36 E-37 E-38
+
+O-  (5)
+    O-7 O-11 O-12 O-13 O-15
+
+R-  (42)
+    R-1 R-2 R-9 R-12 R-18 R-19 R-22 R-24 R-25 R-27 R-29 R-31 R-32 R-33 R-34 R-35 R-36 R-37 R-40 R-41 R-43 R-44 R-45 R-46 R-47 R-48 R-50 R-51 R-53 R-54 R-55 R-56 R-57 R-64 R-65 R-66 R-67 R-69 R-70 R-71 R-73 R-76
+
+TOTAL DISTINCT LABELS: 67
+
+NOTE (report, not resolved here): plan/01-work-structure.txt's G-2
+measured gathering order lists 'operations 2' and 'run 3'; this tree
+measures operations 1 and run 4. Total files (40) matches the intend
+file's count exactly, so nothing has gone missing -- the two counts
+are transposed against each other, most likely a file moved between
+'engine/operations/DISCUSSIONS' and 'engine/orchestrator/run/DISCUSSIONS'
+after the plan's numbers were measured. Left for Frank-Rene; G-2's
+gathering order is unaffected in substance (adm and
+test_writing_support/python remain smallest, exploration and services
+remain largest).

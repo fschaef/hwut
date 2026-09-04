@@ -14,7 +14,7 @@ DESCRIPTION:
 
 Testing pretty printing of 'ChunkPair', which is the only
 object communicated through the main API.
-                                                   
+
 The receiver of an object through the main API, shall be able to reflect on the
 objects contents conveniently. Thus, all objects communicated through the main
 API shall provide a pretty print functionality through a member function:
@@ -23,7 +23,7 @@ API shall provide a pretty print functionality through a member function:
                 ...
 
 An object providing this operator can be transformed into a nice-looking
-string by means of 
+string by means of
 
             vut.engine.pretty.do(object)
 

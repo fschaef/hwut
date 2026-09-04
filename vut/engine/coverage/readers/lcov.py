@@ -50,7 +50,7 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
@@ -169,7 +169,7 @@ def entry_iterable(count_db, source_root, config, counts_f):
     are formed -- one count per RANGE, not per line: a range exists
     because its lines agree.
     """
-    from ..record import ranges_of
+    from ..database.record import ranges_of
     for raw_path in sorted(count_db):
         path = relative_path(raw_path, source_root)
         if not wanted(path, config): continue

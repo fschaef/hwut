@@ -1,0 +1,35 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/run
+
+disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD, NOT RULED       ** OPEN **
+______________________________________________________________________________
+
+ 1  (ruled: O-11 -- directories run in parallel; '--dbd' serial.)
+
+ 2  EVENT 'directory' FIELDS ARE ROOT-RELATIVE, '/'-separated; the
+    walk's own faults carry '.'. No event carries a machine-chosen
+    path -- which also keeps the streams blessable.
+
+ 3  'tree-done.good' = every directory good AND no fault anywhere,
+    walk faults included. 'fail_n' counts failed NODES, tree-wide.
+
+ 4  THE CLOSING SENTINEL is one 'None' after 'tree-done'.
+
+ 5  THE CLOCK is injectable ('clock=' on CTreeScheduler and
+    orchestrator); the default is UTC now, seconds resolution.
+
+ 6  'orchestrator()' requires a RUNNING LOOP and uses
+    asyncio.ensure_future; it does not create a loop of its own.
+
+ 7  THE FACTORY takes (directory, entry) -- the entry's app_set is
+    what the real dispatcher resolves nodes against; a double ignores
+    it.
+ 8  FRAME_CAPS: frame scripts run under a fixed 60 s procsitter cap;
+    a directory-level word for it is unruled.
+ 9  'test-app-contained' is the report of a choice whose session fell
+    before serving it -- the mapping ChoiceExecute always spoke;
+    whether a finer word ('session-ended' as its own E_TestRunResult)
+    is warranted is unruled.
+10  A directory whose dispatcher construction or run RAISES emits
+    'fault' + 'dir-done good=false' and the tree walks on -- the
+    stream never hangs on a broken directory.

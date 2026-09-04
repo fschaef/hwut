@@ -40,7 +40,7 @@ class Statistics:
         # 1. Pad Distribution Stats (Density per Lane)
         self.total_pads   = total_pads
         self.total_lanes  = len(lane_definition)
-        
+
         lane_lengths      = [len(ld) for ld in lane_definition]
         self.lane_pad_min = min(lane_lengths)
         self.lane_pad_max = max(lane_lengths)
@@ -49,7 +49,7 @@ class Statistics:
         # 2. Blocker Stats (Constraints per Pad)
         # We look only at pads that actually block something (Active Blockers)
         active_blocker_counts = [len(targets) for targets in initial_blockers.values()]
-        
+
         if active_blocker_counts:
             self.block_per_pad_min = min(active_blocker_counts)
             self.block_per_pad_max = max(active_blocker_counts)
@@ -58,7 +58,7 @@ class Statistics:
             self.block_per_pad_min = 0
             self.block_per_pad_max = 0
             self.block_per_pad_avg = 0.0
-            
+
         self.total_constraints = sum(active_blocker_counts)
         self.global_block_avg  = self.total_constraints / total_pads
 
@@ -70,7 +70,7 @@ class Statistics:
             for pad in lane:
                 count += len(initial_blockers.get(pad, []))
             lane_constraint_counts.append(count)
-            
+
         self.block_per_lane_min = min(lane_constraint_counts)
         self.block_per_lane_max = max(lane_constraint_counts)
         self.block_per_lane_avg = sum(lane_constraint_counts) / len(lane_constraint_counts)
@@ -97,7 +97,7 @@ class Statistics:
 
 def generate_lanes(M_PADS, N_LANES, rng):
     """
-    Generates a lane structure with a guaranteed 'good path' and a Gaussian 
+    Generates a lane structure with a guaranteed 'good path' and a Gaussian
     distribution of 'bad pads' across the lanes.
 
     Returns:
@@ -108,7 +108,7 @@ def generate_lanes(M_PADS, N_LANES, rng):
     # 1. Setup Good Path (Guaranteed Solution)
     all_pads  = list(range(M_PADS))
     good_path = rng.sample(all_pads, N_LANES)
-    
+
     # 2. Distribute Remaining Pads (Gaussian Distribution of Lane Counts)
     bad_pads = set(all_pads) - set(good_path)
     # Shuffle deterministically so we don't just put IDs sequentially
@@ -121,30 +121,30 @@ def generate_lanes(M_PADS, N_LANES, rng):
     # Calculate average bad pads per lane
     mu    = num_bad / float(N_LANES)
     sigma = mu / 2.0
-    
+
     # Generate target count for each lane independently
     # This creates random fluctuations in lane density (some heavy, some light)
     target_counts = [
         rng.gauss_int(mu=mu, sigma=sigma, lower=0, upper=num_bad)
         for _ in range(N_LANES)
     ]
-    
+
     # Normalize to ensure sum equals exactly num_bad
     current_sum = sum(target_counts)
     if current_sum == 0: current_sum = 1 # Avoid division by zero
-    
+
     scale = num_bad / float(current_sum)
     final_counts = [int(round(c * scale)) for c in target_counts]
-    
+
     # Fix rounding errors (dump remainder into random or first lane)
     diff = num_bad - sum(final_counts)
     final_counts[0] += diff
-    
+
     # Fill lanes linearly
     cursor = 0
     for lane_idx, count in enumerate(final_counts):
         if count <= 0: continue
-        
+
         chunk = bad_pads_list[cursor : cursor + count]
         lane_definition[lane_idx].extend(chunk)
         cursor += count
@@ -152,20 +152,20 @@ def generate_lanes(M_PADS, N_LANES, rng):
     # Sort lanes
     for ld in lane_definition:
         ld.sort()
-        
+
     return lane_definition, good_path
 
-def generate_nasty_blockers(lane_definition, good_path_set, rng, 
+def generate_nasty_blockers(lane_definition, good_path_set, rng,
                             min_block_n, max_block_n):
     """
     Generates a dense set of blockers (constraints) for the given lanes.
-    
+
     Parameters:
     - lane_definition: List of lists containing pad IDs per lane.
     - good_path_set: Set of pad IDs that constitute the guaranteed solution.
     - rng: DeterministicStream instance.
     - block_ratio_min/max: Fraction of future pads to block (0.0 to 1.0).
-    
+
     Returns:
     - initial_blockers: Dictionary {pad_id: [blocked_pad_ids]}
     """
@@ -184,11 +184,11 @@ def generate_nasty_blockers(lane_definition, good_path_set, rng,
     for lane_idx, lane in enumerate(lane_definition):
         pads_ahead = pads_ahead_by_lane[lane_idx]
         if not pads_ahead: continue
-        
+
         for pad in lane:
             is_good_pad = (pad in good_path_set)
             blocked = []
-            
+
             # Potential victims
             candidate_n = rng.next_int(int(min_block_n), int(max_block_n))
             candidates  = rng.sample(pads_ahead, min(len(pads_ahead), candidate_n))
@@ -199,7 +199,7 @@ def generate_nasty_blockers(lane_definition, good_path_set, rng,
                 if is_good_pad and victim in good_path_set:
                     continue
                 blocked.append(victim)
-            
+
             if blocked:
                 initial_blockers[pad] = blocked
 
@@ -217,9 +217,9 @@ lane_definition, good_path = generate_lanes(M_PADS, N_LANES, rng)
 
 # 3. Generate Blockers
 # (Using the extracted function from previous step)
-initial_blockers = generate_nasty_blockers(lane_definition, 
-                                           set(good_path), 
-                                           rng, 
+initial_blockers = generate_nasty_blockers(lane_definition,
+                                           set(good_path),
+                                           rng,
                                            min_block_n = 1,
                                            max_block_n = M_PADS / N_LANES)
 

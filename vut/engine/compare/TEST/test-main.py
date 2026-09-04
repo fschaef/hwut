@@ -19,7 +19,7 @@ The main API provides two functions:
 
     compare(): judges on equivalence of subject and nominal.
 
-    edit_operations(): determines how to transform subject into nominal. This 
+    edit_operations(): determines how to transform subject into nominal. This
                        is to be used for diff-display.
 
 The first function provides a verdict, the second provides line associations.
@@ -98,7 +98,7 @@ async def test_line_associations_core(subject_txt, nominal_txt):
         st, nt = chunk.types()
         print("TYPE:", st.name, nt.name)
         if CONFIGURATION_print_only_chunk_type: continue
-        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, 
+        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0,
                                          chunk, [], line_offset=-1)
         print()
     print()
@@ -169,10 +169,10 @@ else:
     asyncio.run(test("Hallo\n##! potpourri\nWelt\n####", "Hallo\n##! potpourri\nWelt\n####"))
     asyncio.run(test("Hallo\n##! potpourri\nWelt\n####", "Hallo\n##! potpourri\nWelt\n####"))
     asyncio.run(test("Hallo\n##! potpourri\nWelt\nLe Monde\n####", "Hallo\n##! potpourri\nLe Monde\nWelt\n####"))
-                 
+
     asyncio.run(test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood"))
     asyncio.run(test("##! potpourri\nHallo##\n##Welt\nGood\n####", "##! potpourri\n##Hello\nWorld##\nGood\n####"))
-                 
+
     asyncio.run(test("Hallo\nWelt",                 "##! potpourri\nHello\nWorld\n####"))
     asyncio.run(test("##! potpourri\nHello\nLe Monde\n####", "##! potpourri\nHello\nWorld\n####"))
 

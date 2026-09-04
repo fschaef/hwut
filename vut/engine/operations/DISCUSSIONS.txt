@@ -9,6 +9,17 @@ settled goes into the README as mechanics.
     disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
     todo-N   the LABOUR is owed -- the choice is made, the work is not
 
+STRUCK 2026-09-04, by the law above, verified BUILT against the tree
+(adm/WORK/review-r5.txt):
+
+    todo-12  a misspelt tolerance is accepted silently
+             '@dataclass(slots=True)' now stands on
+             'ConfigurationPatternFinder', and 'compare/TEST/
+             test-configuration.py' carries the 'slots' choice with
+             its GOOD file. The ruling was NOT recorded anywhere, so
+             it was written into 'compare/RATIONALE.txt' as C-8
+             before the entry went.
+
 ============================================================================
 
 
@@ -108,31 +119,6 @@ gaps between that shape and the code.
 
 CORRECTNESS NEEDS NO JUDGEMENT and no measurement: re-folding from block B
 must equal 'feed(subject, working nominal)'. An exact oracle.
-
-
-----------------------------------------------------------------------------
-todo-12  A MISSPELT TOLERANCE IS ACCEPTED SILENTLY  (compare)
-----------------------------------------------------------------------------
-
-'compare.Configuration' is slotted, so a misspelt field on IT is refused.
-'ConfigurationPatternFinder' is not:
-
-    c.pattern_finder.numeric_tolerence_ratio = 0.01   accepted
-    c.pattern_finder.numeric_tolerance_ratio          still 0
-
-The author believes a tolerance is in force; it is not. Under 'absent and
-empty never collapse' this is the worst shape: the test then passes or
-fails for a reason nobody wrote down, and no error is raised anywhere.
-
-It is COMPARE's to fix -- '__slots__' on the pattern finder, as
-'Configuration' already has -- but it is recorded here because it is this
-component's authors who would be bitten.
-
-OWED, in the compare component:
-    '__slots__' on 'ConfigurationPatternFinder', listing its fields
-    a test choice: a misspelt attribute RAISES rather than being kept
-    nothing here changes -- 'TestChoiceConfiguration' holds compare's
-    struct verbatim either way
 
 
 ----------------------------------------------------------------------------
@@ -416,6 +402,29 @@ OWED, when wanted:
 ----------------------------------------------------------------------------
 todo-19  THE NUMERIC TOLERANCE IS UNSIGNED AND ASYMMETRIC  (compare)
 ----------------------------------------------------------------------------
+
+MEASURED AGAINST THE TREE 2026-09-04. THE FIRST DEFECT IS FIXED, THE
+SECOND IS NOT -- and the second may have been ANSWERED rather than
+left, which is a fork, not labour:
+
+  (1) UNSIGNED -- FIXED. The file moved to 'compare/reading/
+      line_element.py' and now reads
+          self.epsilon = abs(self.number) * numeric_tolerance_ratio ...
+      The 'abs()' is there; a 1% tolerance no longer makes negative
+      numbers harder to match.
+
+  (2) ASYMMETRIC -- STANDS, BUT PERHAPS BY DESIGN. The epsilon is
+      still STORED PER ELEMENT and taken from the nominal alone
+      ('nominal.epsilon' in both 'cost' and 'compare'), not computed
+      as 'max(abs(s), abs(n)) * ratio' at comparison time as the OWED
+      list below asks. But 'cost' now documents this deliberately:
+      "The band belongs to the nominal, the 'pole'". Under the pole
+      doctrine the asymmetry is the POINT -- the nominal is the
+      declared centre of the good cluster and the subject is not, so
+      Eq(s,n) and Eq(n,s) are not meant to be the same question.
+      WHETHER THAT ANSWERS PHILOSOPHY 1.1's demand, or merely renames
+      the defect, IS FRANK-RENE'S TO RULE. Until then the OWED list
+      below stands as written and is NOT struck.
 
 PHILOSOPHY 1.1 demands that Eq(D(b0), D(b), T) NOT be a function of b0 --
 the verdict must not depend on which good run happened to be accepted.

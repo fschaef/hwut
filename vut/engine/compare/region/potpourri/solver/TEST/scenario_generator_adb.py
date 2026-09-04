@@ -17,18 +17,18 @@ def analogy_pipe(n):
 
 def mrv_trap(n):
     """
-    A true MRV Trap: 
+    A true MRV Trap:
     1. Subjects 1..N-1 are highly constrained (1 choice) and consistent.
     2. Subject 0 is less constrained (2 choices).
     3. One choice of Subject 0 conflicts with the ONLY choice of Subject 1.
     """
     adj = {}
-    
+
     # Subjects 1 to N-1: All consistent with each other.
     # They all map unique wildcards.
     for i in range(1, n):
         adj[i] = [(i, _adb({f"Wildcard_{i}": f"Value_{i}"}))]
-    
+
     # Subject 0: The "Sudoku" decision.
     # Choice A (Nominal 0): Conflicts with Subject 1's wildcard mapping.
     # Choice B (Nominal N): Clean, allows the whole chain to work.
@@ -45,23 +45,23 @@ def combinatorial_explosion(n):
         # Choice A: Subject i maps wildcard 'Common' to a UNIQUE value (Conflict!)
         # Choice B: Subject i maps unique wildcard 'K{i}' to 'V{i}' (Clean)
         adj[i] = [
-            (i,     _adb({"COMMON": f"Value_{i}"})), 
+            (i,     _adb({"COMMON": f"Value_{i}"})),
             (i + n, _adb({f"K{i}": f"V{i}"}))
         ]
     return adj
 
 def lane_trap(n):
     """
-    s0...sN-1 have two choices each. 
+    s0...sN-1 have two choices each.
     Choice A maps a 'Global_Constraint' wildcard to 'Value_A'.
     Choice B maps a 'Global_Constraint' wildcard to 'Value_B'.
-    
+
     The final subject sN ONLY has candidates that require 'Value_B'.
     If the solver picked 'Value_A' at any point in the first N-1 subjects,
     the final subject will fail to match ANY of its nominals.
     """
     adj = {}
-    
+
     # Global wildcard that will act as the 'Lock'
     lock = "GLOBAL_LOCK"
 
@@ -74,7 +74,7 @@ def lane_trap(n):
             (i,          _adb({lock: "POISON"})),
             (i + n + 1,  _adb({lock: "CLEAN"}))
         ]
-    
+
     # 2. THE DEAD END: sN
     # Subject sN has many nominals, but all of them require the lock to be 'CLEAN'.
     # If ANY previous subject chose the 'POISON' lane, this subject fails.
@@ -83,6 +83,6 @@ def lane_trap(n):
     for j in range(n):
         # All potential nominals for the last subject require 'CLEAN'
         s_n_candidates.append((j + (2 * n), _adb({lock: "CLEAN"})))
-        
+
     adj[last_idx] = s_n_candidates
     return adj

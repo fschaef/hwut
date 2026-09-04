@@ -16,7 +16,7 @@ CHOICES: basic, analogy, wild, wild-2, border, special;
 DESCRIPTION:
 
 This algorithm only associates lines which are *EQUIVALENT* according to
-defined tolerance principles. The lines can be considered as the lines of 
+defined tolerance principles. The lines can be considered as the lines of
 Potpourri. The comparison of two Potpourri-s succeeds or fails depending
 on this algorithm being able to construct a valid association.
 
@@ -42,8 +42,8 @@ match [1] from the nominal lines. However, since 101-99 > 1% deviation, lines
 This test validates the 'friends-pairing' of lines in the context of comparison
 tolerance principles,
 
-Some of the tests are chosen, purposely, to be exhaustive with respect to 
-computation effort. If these tests are performed in a reasonable amount of 
+Some of the tests are chosen, purposely, to be exhaustive with respect to
+computation effort. If these tests are performed in a reasonable amount of
 time, their efficiency, is somehow guaranteed.
 ______________________________________________________________________________
 """

@@ -7,15 +7,15 @@ class ParentChildTreeList:
     __slots__ = ('_chunk', '_parent', '_length', '_last_item')
 
     def __init__(self, chunk=None, parent=None):
-        # We store 'chunks' (lists of items) to reduce recursion depth 
+        # We store 'chunks' (lists of items) to reduce recursion depth
         # vs storing 1 item per node.
         self._chunk = chunk if chunk else []
         self._parent = parent
-        
+
         # Cache length for O(1) access
         prev_len = parent._length if parent else 0
         self._length = len(self._chunk) + prev_len
-        
+
         # Cache last item for O(1) access
         if self._chunk:
             self._last_item = self._chunk[-1]
@@ -51,7 +51,7 @@ class ParentChildTreeList:
             if curr._chunk:
                 path.append(curr._chunk)
             curr = curr._parent
-        
+
         # 2. Iterate forwards
         while path:
             yield from path.pop()

@@ -12,9 +12,9 @@ line elements only require that the string matches some regular expressions.
 LineElement provide:
 
    .compare(other)  --> if line element is equivalent to 'other'.
-   
-   .edit_distance_relative(other) --> a value between 0 to 1 indicating 
-                                     the amount of edit operations to 
+
+   .edit_distance_relative(other) --> a value between 0 to 1 indicating
+                                     the amount of edit operations to
                                      transform 'self' to 'other'.
 ________________________________________________________________________________
 """
@@ -35,10 +35,10 @@ class TolerancePattern:
 class LineElement:
     """Base class for all 'LineElement' classes. It contains:
 
-     .tolerance_id:  identifies the line element type, i.e. the type of 
+     .tolerance_id:  identifies the line element type, i.e. the type of
                      tolerance which is to be applied.
 
-     ._string:   reference to a string in the sys.intern() string pool 
+     ._string:   reference to a string in the sys.intern() string pool
                 => same strings are kept as same objects.
     """
     # OPTIMIZATION: __slots__ saves massive memory by removing __dict__ overhead
@@ -47,7 +47,7 @@ class LineElement:
     # @typechecked -- likely to be too expensive, called mio-s of times!
     def __init__(self, tolerance_id: E_ToleranceId, content):
         self.tolerance_id = tolerance_id
-        
+
         # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
         # We slice ONCE here. Accessing ._string later is now O(1).
         # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
@@ -108,7 +108,7 @@ class LineElement:
 
     def is_equivalent(self, nominal, analogy_db):
         """RETURNS: True, if self is equivalent to 'nominal' under the given
-                          analogy_db; 
+                          analogy_db;
                     False, else.
         """
         verdict_id, _ = self.compare(nominal)
@@ -169,7 +169,7 @@ class LineElementString(LineElement):
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
         # LineElementAnalogy implements 'compare()' completely self
-        # LineElementVisibleNothing implements 'compare()' 
+        # LineElementVisibleNothing implements 'compare()'
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
         if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
             return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
@@ -205,9 +205,9 @@ class LineElementAnalogy(LineElement):
             return E_Verdict.EQUIVALENT, (self._string, nominal._string)
 
     def is_equivalent(self, nominal, analogy_db):
-        if self.tolerance_id != nominal.tolerance_id: 
+        if self.tolerance_id != nominal.tolerance_id:
             return False
-        elif self._string == nominal._string:       
+        elif self._string == nominal._string:
             return True
         else:
             # IMPORTANT: analogy_db MUST be defined here!
@@ -321,7 +321,7 @@ class LineElementNumber(LineElement):
             return E_Verdict.MISFIT, None
         elif abs(self.number - nominal.number) <= nominal.epsilon:
             return E_Verdict.EQUIVALENT, None
-        else:       
+        else:
             return E_Verdict.DIFFERENT, None
 
     def __pretty__(self):
@@ -375,7 +375,7 @@ class LineElementEquivalencePattern(LineElement):
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
         # LineElementAnalogy implements 'compare()'
-        # LineElementVisibleNothing implements 'compare()' 
+        # LineElementVisibleNothing implements 'compare()'
         # LineElementString implements 'compare()'
         # LineElementSeparator
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
@@ -385,7 +385,7 @@ class LineElementEquivalencePattern(LineElement):
             return E_Verdict.MISFIT, None
         elif not nominal.pattern_index_set.isdisjoint(self.pattern_index_set):
             return E_Verdict.EQUIVALENT, None
-        else:       
+        else:
             return E_Verdict.DIFFERENT, None
 
     def edit_distance_relative(self, nominal):
@@ -400,25 +400,25 @@ class LineElementEquivalencePattern(LineElement):
 
     def __repr__(self):
         tolerance_str   = self.tolerance_id.name
-        pattern_ids_str = list(sorted(self.pattern_index_set)) 
+        pattern_ids_str = list(sorted(self.pattern_index_set))
         content_str     = self._string
         return "%s %s '%s'" % (tolerance_str, pattern_ids_str, content_str)
 
 def structural_hash(line_element_list: list[LineElement]) -> int:
     """RETURNS: hash representing the structural 'skeleton' of a line.
-    
+
     Two lines with the same structural hash are CANDIDATES for equivalence.
     Two lines with different structural hashes are DEFINITELY NOT equivalent.
-    
+
     Logic:
       - Fixed elements (String): Hash includes Type + Content.
       - Variable elements (Separator, Number, Analogy, Patterns): Hash includes ONLY Type.
     """
     if not line_element_list:
         return 0
-        
+
     current_hash = 0
-    
+
     for element in line_element_list:
         # 1. Start with the Type ID (Skeleton)
         # We rotate/mix bits to ensure order matters (tuple-like hashing)

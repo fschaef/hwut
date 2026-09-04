@@ -46,7 +46,7 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
@@ -175,7 +175,7 @@ def entry_iterable(block_db, prefix, source_root, config, counts_f):
     boundary line must union rather than sit beside each other -- the
     columns that told them apart are gone.
     """
-    from ..record import ranges_of
+    from ..database.record import ranges_of
     for raw_path in sorted(block_db):
         path = raw_path
         if prefix is not None and path.startswith(prefix):

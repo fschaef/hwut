@@ -59,7 +59,7 @@ ______________________________________________________________________________
 """
 from xml.etree import ElementTree
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       line_record_of, language_of, register)
 
 

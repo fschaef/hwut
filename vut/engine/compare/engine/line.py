@@ -45,7 +45,7 @@ class Line:
         return self.__uniform_string
 
     def analogy_strings(self):
-        if self.__analogy_strings is None: 
+        if self.__analogy_strings is None:
             self.__analogy_strings = self.lexer.extract_analogy_strings(self._string)
         return self.__analogy_strings
 
@@ -74,9 +74,9 @@ class Line:
     def sequence_v(self):
         if self.__sequence_v is None:
             # 'self.sequence' instantiates lazily. see property 'sequence'
-            self.__sequence_v = [ 
-                le for le in self.sequence 
-                if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING 
+            self.__sequence_v = [
+                le for le in self.sequence
+                if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
             ]
         return self.__sequence_v
 
@@ -118,7 +118,7 @@ class Line:
         investigates (1) their length, (2) their types, (3) the content of the line
         elements. This is fundamentally *less computationally* expensive than
         determining edit operations (insert, delete, transpose, substitute) and
-        then computing their cost. 
+        then computing their cost.
         """
         subject   = self.sequence
         nominal   = nominal_line.sequence
@@ -154,7 +154,7 @@ class Line:
                     [1] analogy_db required for equivalence to hold,
                         None, else
 
-        IMPORTANT: 'analogy_db' does not evolve here, 
+        IMPORTANT: 'analogy_db' does not evolve here,
                    a new one is created with updated content.
 
         In case of failure, the old 'analogy_db' is returned. That is, two lines
@@ -163,7 +163,7 @@ class Line:
         verdict, analogy_list = self.__compare_core(nominal)
         if not verdict:        return False, None
         elif not analogy_list: return True, None
-            
+
         analogy_db = FrozenAnalogyDb.if_consistent(analogy_list)
         # analogy_db = AnalogyDb.from_iterable(analogy_list)
         if analogy_db is None: return False, None
@@ -202,8 +202,8 @@ class Line:
         """
         analogy_db = FrozenAnalogyDb(analogy_db)
 
-        result = edit_operations_line.do(self.sequence, 
-                                         nominal.sequence, 
+        result = edit_operations_line.do(self.sequence,
+                                         nominal.sequence,
                                          analogy_db)
 
         if result.cost == 0:

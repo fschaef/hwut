@@ -112,7 +112,7 @@ class Judgment:
                 self.verdict = False
             matched_nominals = set(self.pairing.values())
             for si, entry in enumerate(self.subject_class):
-                if entry is not None: 
+                if entry is not None:
                     continue
                 elif si in self.pairing:
                     self.subject_class[si] = ("ok", self.pairing[si])

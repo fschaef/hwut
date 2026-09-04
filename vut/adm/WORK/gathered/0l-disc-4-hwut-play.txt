@@ -1,0 +1,123 @@
+VERSION: 1
+COMPONENTS: services
+
+disc-4  'hwut.play' -- RUN ONE TEST, SHOW THE READING            ** SETTLED **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-26), the four forks RULED AND BUILT
+(2026-08-28). A new face, named 'hwut.play' --
+
+    hwut.play TEST-APP [CHOICE]
+
+-- explores the directory, resolves the test's OWN compare
+configuration, performs the optional build, runs the choice, and
+displays the READING of the produced output under that configuration:
+the stream fed against itself, marks by tolerance kind, exactly the
+face 'hwut.compare FILE' shows -- but under the test's setup, not the
+command line's.
+
+PLAY JUDGES NOTHING AND RECORDS NOTHING; it renders. 'hwut.run' is the
+face that judges and records; the README holds the distinction in one
+line. This is the closing of the seam '_core.py' names: "a service run
+inside a test run receives that Configuration object directly" -- play
+is the command line's way to stand inside.
+
+Per the naming law: 'services/play.py', launcher 'bin/hwut.play',
+suite 'TEST/test-play.*'.
+
+RULED, and built:
+
+ a  CHOICE ABSENT -- REFUSED where the application offers SEVERAL, the
+    choices listed by name; PLAYED UNASKED where it offers exactly
+    one; and a choiceless application plays its one run.
+    Refuse-rather-than-guess, and here the guess would be expensive:
+    playing 'the first' RUNS THE AUTHOR'S PROGRAM under a choice
+    nobody asked for, and renders an answer to a question nobody put.
+    (Note for the builder: a choiceless application keys its single
+    entry 'None' -- exploration's law, absence is None, never an empty
+    stand-in -- and 'None' is not a name a person may type, so it is
+    not among the choices offered back.)
+
+ b  WHICH STREAM -- THREE VIEWS, each a named region:
+
+        (default)  THE SUBJECT: what is going to enter the
+                   comparator, under the READING.
+        --raw      what came out of the APPLICATION, before any pype.
+                   Shown plainly: compare never reads this text, so
+                   marking it would state a thing that is not so.
+        --pyped    what the PYPE made of it. Where none stands, the
+                   view says so rather than printing the stream twice.
+
+    THE DEFAULT IS THE SUBJECT because that is the stream the question
+    is about. An author asking 'how does the framework read my output'
+    is asking about what the framework reads, which for any test with
+    a pype is NOT what the application printed.
+
+    THE REGION BANNER IS ONE SHAPE, '===== <name> =====', padded to
+    one width: a reader must never have to work out which picture
+    they are looking at.
+
+    THE PYPE VIEW EARNS ITS KEEP: a pype is part of the test
+    application, an artifact that may contain errors, and therefore
+    part of the ORACLE (display/DISCUSSIONS/todo-2). An author
+    debugging one needs to see what it did to the stream.
+
+    STDERR is shown only on '--stderr', and shown MARKED. E-5 says
+    stderr is never subject to testing, and it stands: play does not
+    test it. But SEEING IS NOT JUDGING, and a face whose whole purpose
+    is to show an author what their program produced may show what
+    their program produced. The mark is what keeps the two apart.
+
+ c  THE FAILING BUILD -- the report is named, every missing target is
+    named, the build tool's OWN STREAMS are shown, and play STOPS with
+    FAULT. It does not go on to run a subject that was never built.
+    In a run a failed build is a failing TEST (the differentiator);
+    here there is no verdict to reach, so it is simply the reason
+    there is nothing to play.
+
+ d  THE DIRECTORY MUTEX -- TAKEN, for the duration of build and
+    execution. Play records nothing, but it RUNS something, and what
+    it runs may write: a concurrent run meeting half-written artifacts
+    would be the same fault arriving by another door. The lock is
+    released before the rendering, which touches nothing.
+
+PLAY IS WIRING, NOT MACHINERY -- ruled, and it is the reason the
+face can be trusted. It owns no ceremony of its own:
+
+    the wish + CTestTaskListQuery   which run is meant -- so the 1.0
+                                    short form and globbing come free,
+                                    and a choice that does not stand
+                                    is refused in the words the whole
+                                    framework uses
+    provision_of(...)               SUBJECT PROVISION: build, launch,
+                                    contain, collect, CANONICALISE --
+                                    the very provision a run consumes
+    compare's reading               INTERPRETATION: the lexical
+                                    analysis, marks by tolerance kind
+    TuiDisplay                      DISPLAY
+
+WHAT PLAY SHOWS IS WHAT A RUN COMPARES, BY CONSTRUCTION rather than
+by re-implementation -- which is the only way the answer can be
+trusted to be the framework's answer and not this face's.
+
+    THE FIRST BUILD GOT THIS WRONG, and instructively: it reached
+    past 'provision_of' for 'StageExecute' alone, and so displayed
+    the RAW stream. For any test with a pype -- every
+    nondeterministic test there is -- that is the wrong stream in the
+    one place it matters, and nothing in the picture said so.
+
+BUILT: 'services/play.py', 'bin/hwut.play',
+'services/TEST/test-play.sh' -- seven choices, recorded.
+
+WHAT THE SUITE SHOWS, and why the face exists: two applications with
+identical output and different declared tolerance, side by side --
+
+    setup | numeric=+/-0.01 | ...     1  1 | value {3.14159} done
+    setup | numeric=exact   | ...     1  1 | value 3.14159 done
+
+-- the same bytes, read two ways, because the READING IS THE TEST'S,
+not the command line's.
+
+AND THE 'reading' CHOICE PROVES PLAY RECORDS NOTHING: it lists the
+directory afterwards, and the directory holds exactly what it held
+before -- no session directory, no result database, no book.

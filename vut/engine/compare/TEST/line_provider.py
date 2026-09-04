@@ -46,7 +46,7 @@ class LineTrigger(Trigger):
             self.pseudo_time_at_preparation = pseudo_time
 
     async def fire(self, pseudo_time: int):
-        if self.prepared_line is not None: 
+        if self.prepared_line is not None:
             return
         if self.lines: self.prepared_line = self.lines.pop(0)
         else:          self.prepared_line = ""
@@ -62,7 +62,7 @@ class LineTrigger(Trigger):
         return result
 
 @typechecked
-def prepare_dispatcher(subject_timeline: str, subject_line_list: list[str], 
+def prepare_dispatcher(subject_timeline: str, subject_line_list: list[str],
                        nominal_timeline: str, nominal_line_list: list[str]):
     print("SUBJECT timeline: |%s|" % subject_timeline)
     print("NOMINAL timeline: |%s|" % nominal_timeline)

@@ -14,10 +14,10 @@ DESCRIPTION:
 
 The 'edit distance' measures the difference between two strings by a scalar
 value. It is determined as the minimum number of operations with CHARACTERS to
-transform one string into the other (https://en.wikipedia.org/wiki/Edit_distance). 
+transform one string into the other (https://en.wikipedia.org/wiki/Edit_distance).
 The operations are 'substitute', 'transpose', 'insert', and 'delete'.
 
-The tests examine the edit distance in the presence of the mentioned 
+The tests examine the edit distance in the presence of the mentioned
 necessary operations.
 ______________________________________________________________________________
 """

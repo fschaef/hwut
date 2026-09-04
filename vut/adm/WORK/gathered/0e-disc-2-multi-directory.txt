@@ -1,0 +1,13 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/plan
+
+disc-2  THE MULTI-DIRECTORY LAW                               ** OPEN **
+______________________________________________________________________________
+
+PARKED. This session's law is ONE test directory. Open, when the walk
+over many directories comes:
+
+    - a glob's empty-match report over the UNION of directories, not
+      per directory (P-9 stands per directory today)
+    - whether one plan spans directories or one plan stands per
+      directory with the walk above them

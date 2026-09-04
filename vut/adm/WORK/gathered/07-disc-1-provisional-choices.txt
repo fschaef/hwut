@@ -1,0 +1,25 @@
+VERSION: 1
+COMPONENTS: engine/orchestrator/scheduler
+
+disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD, NOT RULED       ** OPEN **
+______________________________________________________________________________
+
+Decided by the worker so that the scheduler could stand; reported, not
+settled; each one line to change.
+
+ 1  THE WORKER BOUND. 'Scheduler(worker_max_n=None)' -- no bound, the
+    plan's exclusion sets the only limit. A bound below one is refused.
+        (ruled: run/RATIONALE O-12 -- '--jobs' on 'hwut.run', one
+        host-global CBudget; a directory key and the core count are
+        not spoken.)
+
+ 2  A SESSION THAT DID NOT LAUNCH IS NEVER CLOSED. There is no process
+    to let go of.
+        the other way  close always, so a dispatcher has one place to
+                       clean up whatever half-stood
+
+ 3  AFTER AN ENTRY-SCRIPT FAILURE the nodes stand PENDING, not
+    UNSUPPORTED: nothing was dispatched and no supporter broke. The
+    run's report carries 'entry_f = False' and 'good_f()' is False.
+        the other way  drive every node terminal so that a report
+                       never carries a PENDING node

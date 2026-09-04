@@ -5,9 +5,16 @@ PURPOSE: THE READERS -- one module per artifact FORMAT, and the table
          that says which tool speaks which.
 
 DESCRIPTION
-       IMPORTING THIS PACKAGE REGISTERS EVERY READER; that is its whole
-       purpose, and 'reader.reader_of' imports it on its first miss so
-       that a caller who elects no tool pays for none of them.
+       IMPORTING THIS PACKAGE REGISTERS EVERY READER -- and it always
+       runs before 'reader.py' is reachable, by the ordinary rule that
+       a submodule cannot be imported ahead of its own package's
+       '__init__.py'. Before the component split (session 2026-09-04)
+       'reader.py' stood OUTSIDE this package and deferred importing
+       it until 'framework_of' was actually called, so a caller who
+       elected no tool paid for none of them; that deferral is no
+       longer reachable now that 'reader.py' lives inside the package
+       whose loading it used to defer ('reader._load' says so at its
+       own definition).
 
        A FORMAT, NOT A TOOL, IS WHAT A READER KNOWS. The LCOV tracefile
        is written by 'lcov', 'gcovr' and 'grcov' alike, so ONE
@@ -62,7 +69,7 @@ DESCRIPTION
        rather than reporting no coverage at all.
 ______________________________________________________________________________
 """
-from ..reader import register, CCoverageFramework, _FRAMEWORK_DB
+from .reader import register, CCoverageFramework, _FRAMEWORK_DB
 
 from . import python_coverage      # noqa: F401
 from . import lcov                 # noqa: F401

@@ -12,7 +12,7 @@ PURPOSE: Testing 'is_equivalent' early abort under race conditions.
 DESCRIPTION:
     This test verifies that the equivalence check aborts as soon as a mismatch
     is found, even if one provider is significantly faster than the other.
-    
+
     The TriggerDispatcher ensures that the "Fast" provider pushes many lines
     into the buffer, while the "Slow" provider lags behind. The test succeeds
     only if the engine stops reading before consuming the entire stream.
@@ -33,7 +33,7 @@ from   vut.test_writing_support.python.deterministic_random import Deterministic
 
 async def run_test(subject_timeline, nominal_timeline):
     config = Configuration()
-    
+
     # Test Data: 100 lines, with a mismatch at line 5 (Index 4)
     n = 25
     subject_line_list      = [""] * n
@@ -47,7 +47,7 @@ async def run_test(subject_timeline, nominal_timeline):
 
     subject,          \
     nominal,          \
-    dispatcher_handle = line_provider.prepare_dispatcher(subject_timeline, subject_line_list, 
+    dispatcher_handle = line_provider.prepare_dispatcher(subject_timeline, subject_line_list,
                                                   nominal_timeline, nominal_line_list)
 
     try:
@@ -56,10 +56,10 @@ async def run_test(subject_timeline, nominal_timeline):
         await line_provider.cleanup(dispatcher_handle)
 
     print(f"Verdict: {verdict}")
-    
+
     # VERIFICATION: Did we stop early?
-    # We started with 100 lines. 
-    # Mismatch is at line 5. 
+    # We started with 100 lines.
+    # Mismatch is at line 5.
     # Even with buffering, we shouldn't have read all 100 lines.
     print(f"Lines Consumed - Subject: {subject.lines_consumed}, Nominal: {nominal.lines_consumed}")
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     elif "nominal-slow" in sys.argv:
         # Subject is dense, Nominal is sparse
         asyncio.run(run_test("11111"*10, "1    "*10))
-    elif "jittery" in sys.argv: 
+    elif "jittery" in sys.argv:
         rg = DeterministicStream(seed=17)
         t_sub = "".join(rg.select("12  ") for _ in range(80))
         t_nom = "".join(rg.select("12  ") for _ in range(80))

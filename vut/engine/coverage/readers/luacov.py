@@ -57,7 +57,7 @@ ______________________________________________________________________________
 import io
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, artifact_directory_of,
                       relative_path, wanted, record_of)
 
@@ -197,7 +197,7 @@ def entry_iterable(section_db, source_root, config, counts_f):
     EX is every line the report gave a field to -- counted or '*0'. CV is
     those whose count is not None and above zero.
     """
-    from ..record import ranges_of
+    from ..database.record import ranges_of
     for raw_path in sorted(section_db):
         path = relative_path(raw_path, source_root)
         if not wanted(path, config): continue

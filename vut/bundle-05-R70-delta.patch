@@ -1,0 +1,486 @@
+diff --git a/vut/adm/WORK/plan/01-work-structure.txt b/vut/adm/WORK/plan/01-work-structure.txt
+--- a/vut/adm/WORK/plan/01-work-structure.txt
++++ b/vut/adm/WORK/plan/01-work-structure.txt
+@@ -2,7 +2,7 @@
+ plan/01-work-structure -- THE MIGRATION, IN ORDERED STEPS
+ ==============================================================================
+ 
+-VERSION: 4
++VERSION: 5
+ 
+ COMPONENTS: all.
+ INTEND:     adm/WORK/intend/01-work-structure.txt
+@@ -18,8 +18,8 @@
+ 
+ STATE
+ 
+-    next step:      G-3 (ruling census after gathering; verified below
+-                    -- this step is complete, see note. Then PHASE R.)
++    next step:      PHASE S, blocked on forks r-2..r-5 of
++                    'adm/WORK/review-r1.txt' (r-1 is CLOSED)
+     gathered:       all 9 components, 40/40 files, ids 02..15
+     sorted:         (none)
+     gates open:     s-1 (README split depth), s-2 (checker),
+@@ -58,12 +58,42 @@
+     so this state note marks G-3 satisfied without a further separate
+     delivery.
+ 
+-    PHASE R (review) is NEXT and UNSTARTED: R-1's staleness pass
+-    (LIVE / STALE / CONTRADICTED) has not been done. Nothing has been
+-    sorted; nothing has been interpreted. This is a REPORT boundary,
+-    not a fork, but it is the natural stopping point before PHASE R
+-    begins, since R-1 is a judgement call on every one of the 40
+-    files and wants Frank-Rene's eyes, not a mechanical step.
++    R-1 DONE, as a REPORT: 'adm/WORK/review-r1.txt' (version 2).
++    All 40 gathered files classified -- 11 TERMINATED, 14
++    DECIDED-NOT-BUILT, 15 OPEN. Nothing sorted, nothing migrated.
++
++    R-1 MEASURED, and it changes what PHASE S means: 65 of the 67
++    labels cited in the gathered files are ALREADY entries in a
++    RATIONALE file. A 'migration of results into RATIONALE' would
++    therefore mostly duplicate what stands; the sorting rule's
++    'DONE lists -> deleted' is the operative branch for most files.
++
++    r-1 CLOSED by ruling (2026-09-04): R-70 -- cited four times as
++    law, never written as an entry, its mechanics standing in
++    operations/README.txt and hwut_pype/MANUAL.txt -- is now an entry
++    in 'engine/operations/RATIONALE.txt', a file created for it.
++    Exploration's hole at R-70 is left standing with a signpost.
++    OWED as a consequence, NOT done: trim operations/README.txt and
++    hwut_pype/MANUAL.txt back to mechanics, since their rationale
++    sentences now stand in R-70 as well.
++
++    PHASE S REMAINS BLOCKED, on forks at the foot of review-r1.txt:
++        r-2  R-73 and R-74 each name TWO different rulings, one in
++             orchestrator/RATIONALE and one in exploration/RATIONALE.
++        r-3  '0p labels' is bannered SETTLED and carries two OPEN
++             sections.
++        r-4a 06: RATIONALE entry or manual only, and under which
++             owner -- its COMPONENTS line says display, its subject
++             is pype and the oracle.
++        r-4b 0q: INTERNALS prose, or a GENERATED check under s-2.
++        r-5  THE GATHER IS INCOMPLETE -- three DISCUSSIONS.txt FILES
++             (orchestrator 121, coverage 563, operations 721 lines)
++             were missed by a directory-only search. Each holds MANY
++             entries, so gathering them is a SPLIT, not a move.
++
++    Sorting into a substrate whose census is a floor rather than a
++    total would carry the gap forward, so nothing moves until r-5 at
++    least is ruled.
+ 
+ ______________________________________________________________________________
+ 
+diff --git a/vut/adm/WORK/review-r1.txt b/vut/adm/WORK/review-r1.txt
+new file mode 100644
+--- /dev/null
++++ b/vut/adm/WORK/review-r1.txt
+@@ -0,0 +1,276 @@
++==============================================================================
++review-r1 -- ARE THE DISCUSSIONS TERMINATED, AND WHERE DO THE RESULTS STAND
++==============================================================================
++
++VERSION: 2
++
++COMPONENTS: all.
++INTEND:     adm/WORK/intend/01-work-structure.txt
++SPEC:       adm/WORK/spec/01-work-structure.txt
++PLAN:       adm/WORK/plan/01-work-structure.txt   (phase R, step R-1)
++
++This is a REPORT, per R-1: marks are a report to Frank-Rene, not an
++action. Nothing has been sorted, nothing migrated, no fork closed.
++
++The question asked was: are the discussions terminated, and can the
++results be migrated into the RATIONALE files. The short answer is that
++MOST RESULTS ARE ALREADY THERE -- 65 of the 67 labels cited across the
++40 gathered files are already entries in a RATIONALE file -- so a
++migration as such would mostly DUPLICATE what stands. What the gathered
++files hold, beyond those entries, is residue: what was built, what is
++owed, and what is still open. The sorting rule already covers that
++case ('todo-N, DONE lists -> deleted'), but three defects in the
++RATIONALE substrate itself stand in the way and are reported below.
++
++______________________________________________________________________________
++
++1  TERMINATION STATUS, ALL 40 FILES
++
++TERMINATED -- nothing open, nothing owed                            (11)
++
++    03  scratch-leaks-into-tmp        CLOSED; E-27, R-76 recorded
++    06  pype-is-part-of-the-oracle    ruled, nothing to build
++    0i  wish-names-directories        SETTLED; E-18, E-20, E-21
++    0l  hwut-play                     SETTLED; four forks ruled AND built
++    0q  face-inventory                a MEASUREMENT, not a discussion
++    0y  instantiation-blessing        decided AND built
++    10  caps-vocabulary               decided AND built
++    11  directory-keys-rebuilt        decided AND built
++    12  parser-relocation             decided AND built
++    15  same-and-interactive          decided AND built
++    0a  caps-per-choice               facts measured; ruled into O-20/O-21
++
++DECIDED, NOT (FULLY) BUILT -- the ruling stands, labour is owed       (14)
++
++    04  judgement-timing              decided; rests on R-70 (see 2.1)
++    05  tree-model                    decided, parked behind a trigger
++    08  dispatcher-to-operations      seam built, implementation owed
++    0b  run-face                      labour owed
++    0c  placement-backend             decided, not built (O-13 seam)
++    0g  special-key                   choice made, nothing built
++    0h  collision-groups              form carries several, spec one
++    0r  hwut-renovate                 ruled, unbuilt; rests on R-70
++    0s  command-line-completion        design, not built
++    0w  output-subjects               decided, unbuilt
++    0x  owner-defaults-relocation     built; two items still open at foot
++    0z  hwut-info-hints               built except the procsitter call
++    13  hwut-parse-service            built except the command line
++    14  variant-restates-language-entry   ruled, unbuilt
++
++OPEN -- a live fork stands; NOT terminated                           (15)
++
++    02  document-consistency          the meta-issue; this review is
++                                      part of its subject matter
++    07  scheduler provisional choices  taken to build, not ruled
++    09  run provisional choices        taken to build, not ruled
++    0d  scenario-kinds                PARKED by ruling
++    0e  multi-directory               PARKED
++    0f  plan provisional choices      taken to build, not ruled
++    0j  target-service                ruled in part; five forks (a..e)
++    0k  compare-confs                 ruled in part; two forks (a, b)
++    0m  hwut-wishlist                 ruled in part; one fork BLOCKS the
++                                      consuming half
++    0n  hwut-2-residue                measured; root causes open
++    0o  cadence-theory                observed; theory owed
++    0p  labels                        banner says SETTLED, body carries
++                                      two OPEN sections (see 2.3)
++    0t  test-sequence-form            noted, explicitly NOT ruled
++    0u  tree-walk-laws                provisional laws, not settled
++    0v  formal-configuration-spec     ruled that it is OWED; form open
++
++A NOTE ON THE 'OPEN' BANNERS. Four files (0j, 0k, 0m, 0v) read
++'** OPEN **' at the head and 'RULED (chat, <date>)' three lines below.
++This is NOT a contradiction: each records a settled trunk and a live
++branch. The banner speaks for the FILE, the RULED paragraph for the
++part already decided. Read as intended, they are honest.
++
++______________________________________________________________________________
++
++2  DEFECTS FOUND IN THE RATIONALE SUBSTRATE
++
++These were found by measuring, not by reading prose: every label cited
++anywhere in the 40 gathered files was looked up against every entry
++standing in every RATIONALE.txt of the tree.
++
++2.1  R-70 HAD NO RATIONALE ENTRY                            ** SETTLED **
++
++    CORRECTED, version 2. Version 1 of this review said R-70 was
++    'defined nowhere' and 'has no entry a reader can reach'. THAT WAS
++    WRONG, and wrong in the direction that matters: the LAW was fully
++    written; only the RATIONALE ENTRY was missing.
++
++    exploration/RATIONALE.txt runs R-1 .. R-79 with exactly one hole
++    at 70, and R-70 is cited four times as settled law:
++
++        services/RATIONALE.txt:152   an application that does not
++                                     speak R-70
++        services/RATIONALE.txt:162   R-70 (the token is the stream's
++                                     own ...)
++        services/RATIONALE.txt:1455  the token (R-70)
++        coverage/RATIONALE.txt:840   R-70: the token IS the statement
++
++    But the law itself stands, in full, in TWO documents that already
++    carry the number as a heading annotation:
++
++        test_writing_support/hwut_pype/MANUAL.txt:84
++            1b  THE TERMINAL TOKEN '<hwut-end>'  (R-70) -- READ THIS
++        engine/operations/README.txt:1219
++            THE TERMINAL TOKEN  (R-70)
++
++    Frank-Rene's git search settled the history: the heading 'R-70'
++    never stood in any blob on any branch. The number was allocated in
++    conversation, cited immediately, and the entry was never written --
++    while the MECHANICS were written twice, to a README and a MANUAL.
++
++    RULED (2026-09-04), fork (a): the entry is WRITTEN, and it stands
++    in 'engine/operations/RATIONALE.txt' -- a file that did not exist
++    and was created for it. The token is CONTENT of a subject stream
++    and 'operations/consume/terminal.py' holds the word and the
++    reading law, so the entry stands with its owner. Exploration's
++    hole at 70 is LEFT STANDING, with a signpost between R-69 and R-71
++    naming where the law lives. A hole with a signpost is honest; a
++    law filed under a component that does not own it is the drift this
++    migration exists to stop.
++
++    STILL OWED, as a consequence: both documents carry RATIONALE in
++    the middle of mechanics -- the MANUAL's 'it cannot place the token
++    safely -- an application subject to buffering, threads or races
++    would lie about its own completeness', operations/README's 'the
++    token is CONTENT ... the compare framework knows no plumbing'.
++    That reasoning now stands in R-70 as well, so it is stated twice.
++    Trimming the two documents back to mechanics is a separate edit,
++    against user-facing manual text, and is NOT done here.
++
++2.2  R-73 AND R-74 EACH NAME TWO DIFFERENT RULINGS             ** FORK **
++
++    R-73   orchestrator/RATIONALE.txt:212
++               THE SELECTION IS ONE BRICK -- 'exploration/selection.py'
++           exploration/RATIONALE.txt:1384
++               'language-setup' IS THE ONE TABLE, AND IT STANDS AT THE
++               ROOT                                       (2026-08-30)
++
++    R-74   orchestrator/RATIONALE.txt:261
++               THE WISH NAMES DIRECTORIES -- '--dir <glob>'
++           exploration/RATIONALE.txt:1428
++               '%' IS THE SOURCE FILE'S STEM, WHEREVER A NAME IS STATED
++                                                          (2026-08-30)
++
++    Two laws, one name, twice over. Three gathered files cite 'R-73'
++    (0n, 0q, 0u) and cannot be read without knowing WHICH R-73 is
++    meant. 0u ('taken to build R-69') points at exploration; 0q's
++    face-inventory context points at orchestrator's selection brick.
++
++    NOTE: the D- series is NOT affected. D-1..D-12 stand in coverage,
++    display and orchestrator alike because D- is a PER-COMPONENT
++    series by design. B- and O- are single-owner and collision-free.
++    E- is clean. Only R- collides, and only where the orchestrator
++    began a series that exploration was already running.
++
++2.3  '0p LABELS' IS BANNERED SETTLED AND CARRIES TWO OPEN SECTIONS
++
++    The head reads '** SETTLED **' and 'AMENDED AND CLOSED (chat,
++    2026-08-28)', naming the three forks that were closed. Two OPEN
++    sections nonetheless stand in the body. Either they are the
++    already-closed three (and the banner is right, the sections stale)
++    or they are new (and the banner is wrong). 467 lines; not
++    resolvable by inspection without your reading.
++
++______________________________________________________________________________
++
++3  WHAT MIGRATION WOULD ACTUALLY MEAN
++
++Measured: 67 distinct labels are cited across the 40 gathered files.
++65 are already entries in a RATIONALE file. The two that are not are
++R-70 (defect 2.1) and nothing else -- E-7 appeared missing on a first
++pass and proved a false alarm of the search, not of the tree.
++
++So 'migrate the results into RATIONALE' resolves, per file, into:
++
++    where the result is already an entry     the gathered file is
++                                             RESIDUE; the sorting rule
++                                             says its DONE list is
++                                             DELETED, its unbuilt part
++                                             becomes spec + plan, its
++                                             open part an intend file.
++                                             NOTHING is copied into
++                                             RATIONALE.
++
++    where the result is NOT an entry         a new entry is owed, and
++                                             writing one ALLOCATES A
++                                             LABEL -- a ruling act,
++                                             not a worker's.
++
++Only two gathered files carry a result with no label at all:
++
++    06  pype-is-part-of-the-oracle    'a pype script is part of the
++                                      test application, and may contain
++                                      errors' -- ruled 2026-08-28,
++                                      never given a number. Marked
++                                      FOR THE DEVELOPER'S MANUAL, so
++                                      its bin may be the manual and not
++                                      RATIONALE at all.
++    0q  face-inventory                a measurement of what each face
++                                      calls. Arguably INTERNALS, not
++                                      RATIONALE: it states mechanics,
++                                      rules nothing.
++
++______________________________________________________________________________
++
++OPEN -- FOR FRANK-RENE
++
++  r-1  CLOSED (2026-09-04) by ruling (a): R-70 written into
++       'engine/operations/RATIONALE.txt'; exploration's hole left
++       standing with a signpost. See 2.1. The consequent trim of
++       operations/README.txt and hwut_pype/MANUAL.txt is OWED and not
++       done.
++
++  r-2  R-73/R-74 collision. Renumber the orchestrator pair (later
++       series, two entries, three citing files to sweep), renumber the
++       exploration pair (older, more cited, worse), or rule R- to be
++       per-component like D- and let both stand?
++
++  r-3  0p labels: are the two OPEN sections the closed three, or new?
++
++  r-4  Two questions, not one:
++       r-4a  '06 pype-is-part-of-the-oracle' rules something real (a
++             pype script is part of the test application and may
++             contain errors -- so a wrong GOOD is the author's fault,
++             not the framework's) but carries NO label, and was
++             written as manual copy. Does it become a RATIONALE entry
++             (allocating a label) with derived manual text, or manual
++             text only? And under which owner: its COMPONENTS line
++             says 'engine/display' because that is the directory it
++             sat in, but the subject is pype and the oracle. Display
++             may simply be the wrong owner, in which case the bin
++             question cannot be answered before the owner question.
++       r-4b  '0q face-inventory' rules nothing -- it is a matrix of
++             which face calls which action, read from the code on
++             2026-08-29. Mechanics, so INTERNALS by the positive
++             binding. BUT a document stating what the code currently
++             does goes stale the first time a face changes, and
++             nothing notices: that is the disease 02 was raised
++             about. The alternative is to GENERATE it -- a suite
++             choice rebuilding the matrix from 'import_graph.py' plus
++             a call scan, with the GOOD file as the record. That is
++             larger than a filing decision and may belong behind
++             gate s-2 (the checker).
++
++  r-5  THE GATHER IS INCOMPLETE.  G-1 searched for DISCUSSIONS
++       DIRECTORIES and so missed three DISCUSSIONS FILES:
++
++           engine/orchestrator/DISCUSSIONS.txt      121 lines
++           engine/coverage/DISCUSSIONS.txt          563 lines
++           engine/operations/DISCUSSIONS.txt        721 lines
++
++       1405 lines in all. Each is a SINGLE document holding MANY
++       entries, not the one-issue-per-file disc-N/todo-N form, so
++       gathering them is not a move but a SPLIT -- each entry judged
++       and given its own id. That is a step of its own, and the
++       ruling-census-before.txt figure of '40 files, 67 labels' is
++       therefore a floor, not a total.
++
++       Two RATIONALE files with non-standard names were likewise
++       outside the census glob and should be swept into any future
++       count:
++           auxiliary/RATIONALE-directory_mutex.txt
++           test_writing_support/python/RATIONALE-hwut_runner.txt
+diff --git a/vut/engine/operations/RATIONALE.txt b/vut/engine/operations/RATIONALE.txt
+new file mode 100644
+--- /dev/null
++++ b/vut/engine/operations/RATIONALE.txt
+@@ -0,0 +1,105 @@
++============================================================================
++VUT-OPERATIONS -- RATIONALE
++============================================================================
++Settled. Read-only. Operations cites, and does not own, the R-N series
++of exploration; O-N is orchestrator/run, P-N plan, S-N scheduler.
++
++R-70 STANDS HERE BY RULING (2026-09-04). The R-N series is
++exploration's, and exploration's RATIONALE runs R-1..R-79 with a hole
++at 70. The hole is deliberate: the terminal token is CONTENT of a
++subject stream, 'consume/terminal.py' holds the word and the reading
++law, and this component owns both. A law filed under a component that
++does not own it is the drift the tree is trying to stop; a hole with a
++signpost is honest. The signpost stands at exploration's R-69/R-71.
++
++----------------------------------------------------------------------------
++R-70  THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
++                                                              (2026-09-04)
++----------------------------------------------------------------------------
++PROBLEM   A subject stream can end for reasons that have nothing to do
++          with the subject finishing: a cap blew, a process was
++          killed, a crash landed mid-write, a run was cut short. The
++          bytes that arrived are indistinguishable, on inspection,
++          from the bytes of a stream that ran to its end. Every
++          consumer downstream then reasons on evidence whose
++          completeness it cannot establish -- acceptance would bless a
++          truncated stream as the pole every later run is judged
++          against; coverage would harvest lines from a process that
++          testified to nothing; a comparison would report a wall of
++          line differences where the honest reading is 'this stream
++          never finished'.
++
++          Nothing outside the stream can settle this. Exit codes speak
++          for the process, not the output; wall-clock and byte counts
++          are circumstantial. The completeness of a stream is a fact
++          only the thing that ends the stream can state.
++
++DECISION  A SUBJECT STREAM STATES ITS OWN COMPLETENESS. Its last
++          non-empty line is the terminal token
++
++              <hwut-end>
++
++          The token is CONTENT -- compared, stored and displayed like
++          any other line; the compare framework knows no plumbing.
++          'consume/terminal.py' holds the word and the reading law.
++
++          THE NOMINAL DECIDES PARTICIPATION. A nominal ending in the
++          token requires its subject to end in the token; a nominal
++          without it imposes no check. No switch is needed anywhere
++          for the migration: 'hwut.renovate' appends tokens to
++          nominals, and new tests carry them from birth through the
++          reference runner.
++
++          ABSENCE HAS ITS OWN NAME. A participating subject without
++          the token draws 'terminated-without-hwut-end', placed in the
++          report precedence ABOVE the judgement, so an incomplete
++          stream never masquerades as an ordinary mismatch.
++
++          WHO ENDS A STREAM ends it:
++              plain        the application; HwutRunner emits the token
++                           as the choice's last act
++              interactive  the application, per choice, into the
++                           stdout sink before 'done' -- each choice's
++                           stream self-delimits, in band
++              pype-d       THE PYPE SCRIPT, from its '<eof>' handler;
++                           the application MUST NOT emit it
++
++          The pype case is not a convenience. An application feeding a
++          pype cannot place the token safely: subject to buffering,
++          threads or races, it would be testifying to a completeness
++          it is not in a position to observe. The pype's '<eof>'
++          firing is the one honest proof that the pipe ran dry. So a
++          pype-d stream that ends without the token is THE PYPE
++          SCRIPT'S FAULT, and the diagnosis names the script, never
++          the application. The framework enforces the application's
++          side for the reference runner through 'HWUT_NO_TERMINAL'.
++
++          FILE SUBJECTS ARE EXEMPT: their completeness is the READING
++          POINT (after the token), not a token of their own.
++
++COST      Every fixture and every hand-run application must speak the
++          law and print the token as its last line -- the suites' own
++          bash fixtures included, which were corrected rather than
++          exempted. Every pype script gains an '<eof>' handler that
++          prints it. A deliberate 'sys.exit(n)' from a pype block
++          skips pending '<eof>' handlers and so forgoes the token; the
++          nominal, recorded through the same road, agrees, and no
++          check stands.
++
++GRAVEYARD An out-of-band completeness flag (a sidecar file, a field in
++          the store): a second carrier of one truth, and one that a
++          hand-run application would never write. Inferring
++          completeness from the exit code: the code speaks for the
++          process, and a process can exit 0 having printed half of
++          what it meant to. Making the token a framework concern
++          stripped before comparison: it would then be invisible in
++          the GOOD file, and a reader could not see why a stream was
++          refused.
++
++CITED BY  E-6 and E-39 (services): acceptance refuses a candidate
++          whose last line is not the token, and refuses evidence older
++          than the test that produced it. The coverage harvest law
++          (coverage/RATIONALE): "covered" means executed by a test
++          that testified, and an ending without the token is not
++          testimony. 'hwut.renovate' (services, planned) appends the
++          token to standing nominals.
+diff --git a/vut/engine/orchestrator/exploration/RATIONALE.txt b/vut/engine/orchestrator/exploration/RATIONALE.txt
+--- a/vut/engine/orchestrator/exploration/RATIONALE.txt
++++ b/vut/engine/orchestrator/exploration/RATIONALE.txt
+@@ -1214,6 +1214,19 @@
+           every child).
+ 
+ ----------------------------------------------------------------------------
++R-70  THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
++----------------------------------------------------------------------------
++          NOT HERE. R-70 stands in 'engine/operations/RATIONALE.txt'.
++          The terminal token '<hwut-end>' is CONTENT of a subject
++          stream and 'operations/consume/terminal.py' holds the word
++          and the reading law, so the entry stands with its owner. The
++          number was allocated in this series and cited from four
++          places before the entry existed; the hole is left standing
++          with this signpost rather than closed by filing the law
++          under a component that does not own it.
++                                                    (ruled 2026-09-04)
++
++----------------------------------------------------------------------------
+ R-71  'output' -- SUBJECTS ARE DECLARED, NEVER DISCOVERED
+ ----------------------------------------------------------------------------
+ PROBLEM   A test may produce more than its stdout: files written during

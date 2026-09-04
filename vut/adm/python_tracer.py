@@ -7,7 +7,7 @@ SYNOPSIS
 
 DESCRIPTION
     trace_runner executes a Python script with active line-by-line tracing.
-    It logs execution flow, the actual source code line being run, and 
+    It logs execution flow, the actual source code line being run, and
     the current state of local variables.
 
     Tracing is restricted to specific modules or directories to prevent
@@ -40,7 +40,7 @@ import linecache
 
 # 1. Filter by Module Name
 TARGET_MODULES = [
-    "vut.engine.compare.main", 
+    "vut.engine.compare.main",
     "vut.engine.potpourri"
 ]
 
@@ -74,9 +74,9 @@ def tracer(frame, event, arg):
     """
     if event != 'line':
         return tracer
-    
+
     should_trace = False
-    
+
     # 1. Check Module Name
     module_name = frame.f_globals.get("__name__", "")
     if any(module_name.startswith(t) for t in TARGET_MODULES):
@@ -115,9 +115,9 @@ def tracer(frame, event, arg):
                 print("  VARS:")
                 for name, value in local_vars.items():
                     # Filter out some internal python noise if desired
-                    if not name.startswith("__"): 
+                    if not name.startswith("__"):
                         print(f"    {name} = {truncate(value)}")
-        
+
         print("-" * 40) # Separator for readability
 
     return tracer
@@ -128,10 +128,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     script_path = sys.argv[1]
-    
+
     # Adjust sys.argv
     sys.argv = sys.argv[1:]
-    
+
     # Set path
     sys.path.insert(0, os.path.dirname(os.path.abspath(script_path)))
 

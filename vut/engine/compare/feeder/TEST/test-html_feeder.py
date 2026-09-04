@@ -96,9 +96,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--inspect", type=int, help="Print cell data for a specific line number to stdout instead of HTML")
     parser.add_argument("--hwut-info", action="store_true", help="Show test purpose")
-    
+
     args = parser.parse_args()
-    
+
     s_stream = io.StringIO(subject)
     n_stream = io.StringIO(nominal)
 

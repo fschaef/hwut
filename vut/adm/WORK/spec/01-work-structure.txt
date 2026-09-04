@@ -2,7 +2,7 @@
 spec/01-work-structure -- THE WORK STRUCTURE, PRECISELY
 ==============================================================================
 
-VERSION: 4
+VERSION: 6
 
 COMPONENTS: all.
 INTEND:     adm/WORK/intend/01-work-structure.txt
@@ -61,6 +61,75 @@ EXHAUSTION  at 'zz' the width grows to three characters for NEW ids;
 ALLOCATED SO FAR
             00  configuration
             01  work-structure        (this issue)
+            02  document-consistency  (gathered, ex adm/DISCUSSIONS/
+                                       disc-1-document-consistency.txt)
+            03  scratch-leaks-into-tmp        (gathered, ex
+                                       test_writing_support/python)
+            04  judgement-timing              (gathered, ex
+                                       engine/operations)
+            05  tree-model                     (gathered, ex
+                                       engine/display)
+            06  pype-is-part-of-the-oracle     (gathered, ex
+                                       engine/display)
+            07  provisional-choices            (gathered, ex
+                                       engine/orchestrator/scheduler)
+            08  dispatcher-to-operations        (gathered, ex
+                                       engine/orchestrator/scheduler)
+            09  provisional-choices            (gathered, ex
+                                       engine/orchestrator/run)
+            0a  caps-per-choice                 (gathered, ex
+                                       engine/orchestrator/run)
+            0b  run-face                        (gathered, ex
+                                       engine/orchestrator/run)
+            0c  placement-backend               (gathered, ex
+                                       engine/orchestrator/run)
+            0d  scenario-kinds                  (gathered, ex
+                                       engine/orchestrator/plan)
+            0e  multi-directory                 (gathered, ex
+                                       engine/orchestrator/plan)
+            0f  provisional-choices             (gathered, ex
+                                       engine/orchestrator/plan)
+            0g  special-key                     (gathered, ex
+                                       engine/orchestrator/plan)
+            0h  collision-groups                (gathered, ex
+                                       engine/orchestrator/plan)
+            0i  wish-names-directories          (gathered, ex services)
+            0j  target-service                  (gathered, ex services)
+            0k  compare-confs                   (gathered, ex services)
+            0l  hwut-play                       (gathered, ex services)
+            0m  hwut-wishlist                   (gathered, ex services)
+            0n  hwut-2-residue                  (gathered, ex services)
+            0o  cadence-theory                  (gathered, ex services)
+            0p  labels                          (gathered, ex services)
+            0q  face-inventory                  (gathered, ex services)
+            0r  hwut-renovate                   (gathered, ex services)
+            0s  command-line-completion         (gathered, ex services)
+            0t  test-sequence-form              (gathered, ex
+                                       engine/orchestrator/exploration)
+            0u  tree-walk-laws                  (gathered, ex
+                                       engine/orchestrator/exploration)
+            0v  formal-configuration-spec       (gathered, ex
+                                       engine/orchestrator/exploration)
+            0w  output-subjects                 (gathered, ex
+                                       engine/orchestrator/exploration)
+            0x  owner-defaults-relocation       (gathered, ex
+                                       engine/orchestrator/exploration)
+            0y  instantiation-blessing          (gathered, ex
+                                       engine/orchestrator/exploration)
+            0z  hwut-info-hints                 (gathered, ex
+                                       engine/orchestrator/exploration)
+            10  caps-vocabulary                 (gathered, ex
+                                       engine/orchestrator/exploration)
+            11  directory-keys-rebuilt          (gathered, ex
+                                       engine/orchestrator/exploration)
+            12  parser-relocation                (gathered, ex
+                                       engine/orchestrator/exploration)
+            13  hwut-parse-service               (gathered, ex
+                                       engine/orchestrator/exploration)
+            14  variant-restates-language-entry  (gathered, ex
+                                       engine/orchestrator/exploration)
+            15  same-and-interactive             (gathered, ex
+                                       engine/orchestrator/exploration)
 
 ______________________________________________________________________________
 

@@ -209,9 +209,9 @@ def main(argv=None, write=None, write_error=None, demand=None,
     at -- 'hwut.stability' does. None: nobody is listening.
     """
     captured_f = write is not None
-    if write is None:       
+    if write is None:
         write = print
-    if write_error is None: 
+    if write_error is None:
         def write_error(line):
             print(line, file=sys.stderr)
     try:
@@ -231,7 +231,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
     the seam through which 'hwut.cov' and its tests state the tool
     until '--variant' selects it from the configuration (todo-13).
     """
-    if argv is None: 
+    if argv is None:
         argv = sys.argv[1:]
     if "--help" in argv:
         write(HELP)

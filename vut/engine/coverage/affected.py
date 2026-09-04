@@ -55,13 +55,9 @@ ______________________________________________________________________________
 import os
 import sys
 
-from .record   import (ranges_of, RecordFault, CoverageRecord,
-                       FileCoverage)
-from .binary   import unpack_record
-from .index    import index_of, Gathered
-
-
-RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.cov convert' shows it
+from .database.api import (ranges_of, RecordFault, CoverageRecord,
+                           FileCoverage, unpack_record, index_of,
+                           Gathered)
 
 
 class E_ExitCode:
@@ -140,83 +136,14 @@ def change_db_of_diff(text, strip=1):
 
 
 # ---------------------------------------------------------------- records
-
-def record_iterable(root, suffix=RECORD_SUFFIX):
-    """
-    YIELD: [0] Gathered         who made the record, AS THIS GATHER SEES
-                                IT: a RUN ID the record's own header
-                                names, qualified by the DIRECTORY it was
-                                found in, relative to 'root'. The
-                                qualification is THIS gather's and is
-                                never stored (D-14).
-           [1] CoverageRecord   what it says
-
-    THE RECORD CARRIES ITS OWN IDS (D-18), so nothing here resolves a
-    name: the register issued them and only the EDGE that prints an
-    answer needs it to decode. A MERGED record names several runs and
-    is yielded once per run -- the fold is over runs, and an aggregate
-    that reached a line means every run in it reached that line.
-
-    THE WALK IS SORTED so that the fold allocates group ids identically
-    from any two invocations over one tree: found-directory first, then
-    the record file's name, then the run id.
-
-    THE SEAM. The store's naming is the BOOKKEEPER'S; walking for a
-    suffix is a stand-in until this face can ask it. Nothing else in this
-    module knows where a record lives.
-
-    A file that does not parse is SKIPPED and named on stderr, and so is
-    one that names NO run -- it cannot be attributed, and attributing it
-    to a guess is worse than losing it. One broken record must not cost
-    the whole selection, and it must not vanish either.
-    """
-    for base, dir_list, file_list in sorted(os.walk(root)):
-        dir_list[:] = sorted(d for d in dir_list if not d.startswith("."))
-        for name in sorted(file_list):
-            if not name.endswith(suffix): continue
-            path = os.path.join(base, name)
-            try:
-                with open(path, "rb") as handle:
-                    record = unpack_record(handle.read())
-            except (OSError, RecordFault) as fault:
-                sys.stderr.write("skipped '%s': %s\n" % (path, fault))
-                continue
-            relative  = os.path.relpath(base, root).replace(os.sep, "/")
-            directory = None if relative == "." else relative
-            if not record.run:
-                sys.stderr.write("skipped '%s': the record names no run\n"
-                                 % path)
-                continue
-            for run_id in sorted(record.run):
-                yield (Gathered(directory, run_id),
-                       rebased(record, directory))
-
-
-def rebased(record, directory):
-    """
-    RETURN: CoverageRecord, the same record with every source path made
-            relative to the ROOT instead of to its test directory.
-
-    'parser/TEST' + '../core.py' -> 'parser/core.py'. Without this the
-    diff's paths and the record's paths never meet, and every query
-    answers 'nobody' -- an empty selection that looks like an answer, and
-    therefore the worst possible failure of this face.
-
-    A record found AT the root ('directory' None) is already root
-    relative and is handed back untouched.
-    """
-    if directory is None: return record
-    file_db = {}
-    for path, entry in record.file_db.items():
-        fresh = os.path.normpath(os.path.join(directory, path))
-        fresh = fresh.replace(os.sep, "/")
-        file_db[fresh] = FileCoverage(fresh, entry.executable,
-                                      entry.covered, entry.counts)
-    return CoverageRecord(language=record.language, tool=record.tool,
-                          source=record.source, counts_f=record.counts_f,
-                          file_db=file_db, version=record.version,
-                          run=record.run)
-
+#
+#  'record_iterable' and 'rebased' moved to 'database/index.py'
+#  (session 2026-09-04, applying a recommendation from the prior
+#  session's report): 'gather.py' needs them too, and a database-
+#  side module importing this face -- itself built ON the database
+#  api -- closed a circular import. Both are re-exported through
+#  '.database.api' so nothing else in this module changes.
+from .database.api import record_iterable, rebased
 
 # ------------------------------------------------------------------- face
 

@@ -42,9 +42,9 @@ ______________________________________________________________________________
 import json
 import os
 
-from ..reader import (CCoverageFramework, CCoverageFormat,
+from .reader import (CCoverageFramework, CCoverageFormat,
                       register, relative_path, wanted)
-from ..record import FileCoverage
+from ..database.record import FileCoverage
 
 
 JSON_SUFFIX = (".json",)

@@ -11,8 +11,8 @@ ________________________________________________________________________________
 PURPOSE: Test the UI Feeder Protocol (feeder/ui.py).
 
 DESCRIPTION:
-    The UI feeder acts as an adapter between the comparison engine and a 
-    visualizer. It serializes the comparison results into a stream of 
+    The UI feeder acts as an adapter between the comparison engine and a
+    visualizer. It serializes the comparison results into a stream of
     DisplayInst objects.
 
     This test verifies:
@@ -42,11 +42,11 @@ import vut.engine.compare.feeder.ui          as ui
 def get_cell_str(c):
     """Formats a cell for side-by-side display."""
     if c is None: return ""
-    
+
     # 1. Content
     content = c.subject if hasattr(c, 'subject') else c.nominal
     if content is None: content = "<None>"
-    
+
     # 2. Status & Tolerance Type
     # We strip "OK_" and "BAD_" to keep it compact, but keep the core status
     status_full = c.relation_id.name
@@ -61,31 +61,31 @@ def get_cell_str(c):
     if c.analogy_origin_line_number_pair:
         lnp = c.analogy_origin_line_number_pair
         prov = f" [Orig:S={lnp.line_n_in_subject},N={lnp.line_n_in_nominal}]"
-    
+
     return f"({tol}) '{content}' [{status}]{prov}"
 
 async def run_feeder(name, subject_str, nominal_str, config):
     print(f"--- TEST: {name} ---")
-    
+
     s_stream = io.StringIO(subject_str)
     n_stream = io.StringIO(nominal_str)
-    
+
     # Run the feeder
     async for inst in ui.feed(config, s_stream, n_stream):
         if isinstance(inst, ui.ProtocolHeader):
             print(f"Packet: HEADER (Signature: (({inst.signature})) )")
-            
+
         elif isinstance(inst, ui.ConfigInst):
             print("Packet: CONFIG")
-            
+
         elif isinstance(inst, ui.SectionBeginInst):
             print(f"Packet: SECTION '{inst.title}' Type: {inst.chunk_type}")
-            
+
         elif isinstance(inst, ui.LinePairInst):
             ls = f"{inst.line_n_s:02d}" if inst.line_n_s != -1 else "--"
             ln = f"{inst.line_n_n:02d}" if inst.line_n_n != -1 else "--"
             print(f"Packet: ROW S:{ls} | N:{ln} (Cost: {inst.cost:.2f})")
-            
+
             # Side-by-side display
             for sc, nc in zip_longest(inst.cells_s, inst.cells_n):
                 s_str = get_cell_str(sc)
@@ -93,10 +93,10 @@ async def run_feeder(name, subject_str, nominal_str, config):
                 # 65 chars width for Subject column to accommodate detailed status
                 print(f"    {s_str:<65} | {n_str}")
             print()
-                
+
         elif isinstance(inst, ui.EndOfStreamInst):
             print("Packet: EOS")
-            
+
     print("----")
     with open(os.path.dirname(__file__) + "/../../../../adm/SIGNATURE_UI_PROTOCOL.txt") as fh:
         print(f"Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': (({fh.read().strip()}))")
@@ -159,15 +159,15 @@ async def test_structural_mismatch():
     Cover insertion and deletion of lines (Subject has line / Nominal has line).
     """
     cfg = Configuration()
-    
+
     # 1. Match
     # 2. Subject Extra (Delete)
     # 3. Nominal Extra (Insert)
     # 4. Match
-    
+
     s = "Match 1\nExtra Subject Line\nMatch 2"
     n = "Match 1\nExtra Nominal Line\nMatch 2"
-    
+
     await run_feeder("Structural Mismatch (LineSequence)", s, n, cfg)
 
 async def test_potpourri_mismatch():
@@ -175,14 +175,14 @@ async def test_potpourri_mismatch():
     Cover Potpourri logic including orphan lines (no match found).
     """
     cfg = Configuration()
-    
+
     # Subject has A, B, C
     # Nominal has A, D
     # Expect: A matches A. B, C are orphans (BAD_SUBJECT_HAS). D is orphan (BAD_NOMINAL_HAS).
-    
+
     s = "##! potpourri\nCommon\nSubjectOnly_1\nSubjectOnly_2\n####"
     n = "##! potpourri\nNominalOnly_1\nCommon\n####"
-    
+
     await run_feeder("Potpourri Mismatch", s, n, cfg)
 
 # --- Main Execution ---
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         "structure": test_structural_mismatch,
         "potpourri": test_potpourri_mismatch,
     }
-    
-    HwutRunner(sys.argv, 
-               "UI Feeder Protocol (Comprehensive)", 
+
+    HwutRunner(sys.argv,
+               "UI Feeder Protocol (Comprehensive)",
                choices).run()

@@ -7,18 +7,18 @@ from vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
 from typeguard import typechecked
 
 @typechecked
-def do(potential_pair_db, 
-       global_analogy_db: FrozenAnalogyDb, 
-       global_pair_db, 
+def do(potential_pair_db,
+       global_analogy_db: FrozenAnalogyDb,
+       global_pair_db,
        required_pair_n) -> Result:
     if not potential_pair_db:
         return Result({}, global_pair_db, global_analogy_db, required_pair_n, True)
 
     # 1. FIXED ORDERING (MRV)
-    subj_order = sorted(potential_pair_db.keys(), 
+    subj_order = sorted(potential_pair_db.keys(),
                         key=lambda s: len(potential_pair_db[s]))
     L = len(subj_order)
-    
+
     # 2. THE EXPLICIT STACK
     # CHANGE: Use pmap() and pset() for O(1) memory updates
     stack = [(0, pmap(), global_analogy_db, pset())]
@@ -34,15 +34,15 @@ def do(potential_pair_db,
 
         if idx == L:
             # Convert back to standard dict for the result
-            return Result({}, global_pair_db | dict(best_pairs), best_adb, 
+            return Result({}, global_pair_db | dict(best_pairs), best_adb,
                           required_pair_n, False)
 
         s_i = subj_order[idx]
         candidates = potential_pair_db[s_i]
-        
+
         # 4. BRANCHING
         for n_i, local_adb in reversed(candidates):
-            
+
             if n_i in used_noms:
                 continue
 
@@ -53,12 +53,12 @@ def do(potential_pair_db,
             # CRITICAL CHANGE:
             # pairs.set(k, v) returns a NEW pmap, but shares memory with the old one.
             # NO COPYING HAPPENS HERE. Memory usage is near zero for this step.
-            stack.append((idx + 1, 
-                          pairs.set(s_i, n_i), 
-                          new_adb, 
+            stack.append((idx + 1,
+                          pairs.set(s_i, n_i),
+                          new_adb,
                           used_noms.add(n_i)))
 
-    return Result({}, global_pair_db | dict(best_pairs), best_adb, 
+    return Result({}, global_pair_db | dict(best_pairs), best_adb,
                   required_pair_n, True)
 
 @lru_cache(maxsize=4096)

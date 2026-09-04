@@ -12,7 +12,7 @@ PURPOSE: Comparison of two potpourris.
 
 CHOICES: judge, info;
 
-'judge': compare two line sequences on equivalence. 
+'judge': compare two line sequences on equivalence.
          Result: 'True' or 'False'.
 
 'info':  provide information about similarity.
@@ -56,7 +56,7 @@ if "judge" in sys.argv:
         # Create full sequences PURELY for the print function (to maintain visual output)
         subject_full = get_sequence_of_Line(pf, subject_list, config)
         nominal_full = get_sequence_of_Line(pf, nominal_list, config)
-        print_match_sequences_lists([i for x in subject_full for i in x.line_list], 
+        print_match_sequences_lists([i for x in subject_full for i in x.line_list],
                                     [k for x in nominal_full for k in x.line_list])
         subject_full += [InputChunkTerminal()]
         nominal_full += [InputChunkTerminal()]
@@ -65,14 +65,14 @@ if "judge" in sys.argv:
         overall_verdict = True
 
         for s_chunk, n_chunk in zip(subject_full, nominal_full):
-            # Pass the *current* analogy_db. 
+            # Pass the *current* analogy_db.
             # It accumulates constraints from previous lines (e.g. A=1).
             step_verdict, analogy_db = s_chunk.is_equivalent_to_nominal(n_chunk, analogy_db)
 
             if not step_verdict:
                 overall_verdict = False
                 # In equivalence mode, one mismatch fails the whole sequence
-                break 
+                break
 
         print("=> %s, %s" % (overall_verdict, analogy_db))
 

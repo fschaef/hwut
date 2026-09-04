@@ -30,9 +30,13 @@ DESCRIPTION
        silently preferring one.
 ______________________________________________________________________________
 """
-from .configuration import CoverageConfig, CoverageRefused
-from .registry      import language_of, elect
-from .reader        import reader_of, ARTIFACT_DIRECTORY
+from .configuration  import CoverageConfig, CoverageRefused
+from .readers.api    import ARTIFACT_DIRECTORY, elect, language_of
+#  'reader_of' is NOT on the door: 'readers/reader.py' has never
+#  defined it (pre-existing, see the session's report). Reaching
+#  straight into the submodule reproduces the standing bug unchanged
+#  rather than silently repairing it in the course of a house move.
+from .readers.reader import reader_of
 
 
 class Coverage:

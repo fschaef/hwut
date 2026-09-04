@@ -14,7 +14,7 @@ CHOICES: judge, info;
 
 DESCRIPTION:
 
-'judge': compare two lines on equivalence. 
+'judge': compare two lines on equivalence.
          Result: 'True' or 'False'.
 
 'info':  provide information about similarity.
@@ -23,17 +23,17 @@ DESCRIPTION:
 The first is used to determine the correctness of unit tests, the later is
 used to display the difference of a subject's output and the nominal output.
 
-The tests play with several line elements, indicated in the tests by 
+The tests play with several line elements, indicated in the tests by
 characters, namely:
 
         "s": LineElementString("string")      # strings
         "S": LineElementString("strong")
-        "x": LineElementAnalogy(0,5,"((x))")      # analogies 
+        "x": LineElementAnalogy(0,5,"((x))")      # analogies
         "y": LineElementAnalogy(0,5,"((y))")
         "z": LineElementAnalogy(0,5,"((z))")
         "n": LineElementNumber("4711", 0.01)  # number
 
-The tests compose a 'Line' object as a sequence of line elements. With 
+The tests compose a 'Line' object as a sequence of line elements. With
 these 'Line' objects '.compare()' and '.edit_operations()' is called.
 ______________________________________________________________________________
 """

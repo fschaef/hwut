@@ -25,7 +25,7 @@ import asyncio
 
 
 @typechecked
-async def generate_chunk_pairs(config:        Configuration, 
+async def generate_chunk_pairs(config:        Configuration,
                                subject_pipe:  ChunkPipe,
                                nominal_pipe:  ChunkPipe):
     """YIELDS: [0] subject input chunk
@@ -68,7 +68,7 @@ async def generate_chunk_pairs(config:        Configuration,
         await asyncio.gather(*tasks, return_exceptions=True)
 
 @typechecked
-async def generate_chunk_pairs_type_aligned(config:       Configuration, 
+async def generate_chunk_pairs_type_aligned(config:       Configuration,
                                             subject_pipe: ChunkPipe,
                                             nominal_pipe: ChunkPipe):
     """
@@ -94,7 +94,7 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
 
         # Loop while BOTH are valid (not EOF)
         while not s_prev.is_terminal() and not n_prev.is_terminal():
-            
+
             if s_prev.type() == n_prev.type():
                 # MATCH
                 yield (s_prev, n_prev)
@@ -117,7 +117,7 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
                     n_prev = n_next
 
                 else: # No way to heal a mismatch of subject and nominal by one look-ahead
-                    yield (None, n_prev)     # pair 'None' with prev. nominal 
+                    yield (None, n_prev)     # pair 'None' with prev. nominal
                     yield (s_prev, None)     # pair prev. subject with nominal 'None'
                     s_prev = s_next          # take next into previous
                     n_prev = n_next

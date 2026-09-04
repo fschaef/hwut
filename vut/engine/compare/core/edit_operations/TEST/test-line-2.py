@@ -24,9 +24,9 @@ def test_mseq(a, b):
     # 'prepare' tokenizes strings based on a predefined line_element_db
     subject = tuple(prepare(a))
     nominal = tuple(prepare(b, True))
-    
+
     cost, edit_list, analogy_db = edit_distance_line.do(subject, nominal)
-    
+
     print(f"subject: '{a}'")
     print(f"nominal: '{b}'")
     print(f"=> Cost: {cost:.6f}")
@@ -39,11 +39,11 @@ def test_mseq(a, b):
 
 if "transpose" in sys.argv:
     # 1. Adjacent Swap: Distance 1, Cost 0.5
-    test_mseq("sn", "ns") 
-    
+    test_mseq("sn", "ns")
+
     # 2. Medium Distance Swap: Distance 3, Cost 0.5 * (1 + 0.1 * (3-1)) = 0.6
     test_mseq("sxxn", "nxxs")
-    
+
     # 3. Maximum Distance for 'cheap' Transpose: Distance 10
     # Cost: 0.5 * (1 + 0.1 * 9) = 0.95
     test_mseq("sxxxxxxxxxn", "nxxxxxxxxxs")
@@ -59,11 +59,11 @@ if "visible-nothing" in sys.argv:
     # 1. Basic Matching and Tolerance
     test_mseq("v", "v")
     test_mseq("v", "V")
-    
+
     # 2. Basic Insert/Delete
     test_mseq("sv", "s")
     test_mseq("s", "sv")
-    
+
     # 3. Transpose across a Visible Nothing
     # This checks if distance scaling ignores the 'v' or counts it.
     # 's' and 'n' are separated by 'v' (Index distance 2 -> Cost 0.55)

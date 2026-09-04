@@ -42,17 +42,15 @@ THE RULE IS EXECUTABLE: 'adm/LAYERING.txt' names this module in a
 'DOOR' line. The component's own suites are inside the wall.
 ______________________________________________________________________________
 """
-from .binary        import pack_record, unpack_record
 from .configuration import CoverageConfig, CoverageRefused
-from .gather        import (BUNDLE_FILE, GatherFault, bundle_of,
-                            gathered_index, read_bundle,
-                            snapshot_db_of, stale_tuple, write_bundle)
-from .reader        import (CCoverageFormat, CCoverageFramework,
-                            artifact_directory_of, framework_of,
+from .database.api  import (BUNDLE_FILE, GatherFault, RecordFault,
+                            bundle_of, format_record, gathered_index,
+                            pack_record, parse_record, read_bundle,
+                            seated, snapshot_db_of, stale_tuple,
+                            unpack_record, write_bundle)
+from .readers.api   import (CCoverageFormat, CCoverageFramework,
+                            artifact_directory_of, elect, framework_of,
                             record_of, register, registered_tuple)
-from .record        import (RecordFault, format_record,
-                            parse_record, seated)
-from .registry      import elect
 
 __all__ = ("BUNDLE_FILE", "CCoverageFormat", "CCoverageFramework",
            "CoverageConfig", "CoverageRefused", "GatherFault",

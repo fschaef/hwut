@@ -74,7 +74,7 @@ if "basic" in sys.argv:
     test_mseq("sex", "yse")
 
 if "visible-nothing" in sys.argv:
-    def test_mseqx(a, b): 
+    def test_mseqx(a, b):
         test_mseq("".join(a), "".join(b))
     test_mseq("v",   "v")
     test_mseq("V",   "v")

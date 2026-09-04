@@ -1,0 +1,124 @@
+==============================================================================
+review-r6 -- THE DUMP IS INCOMPLETE, AND ONE EARLIER VERIFICATION FALLS
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: engine/coverage (the gap); adm (the cause)
+PLAN:       adm/WORK/plan/01-work-structure.txt   (fork r-5f, answered here)
+
+Raised while answering r-5f -- 'coverage's text names a layout that no
+longer exists'. It does not. THE LAYOUT EXISTS; THE DUMP DOES NOT
+CARRY IT.
+
+______________________________________________________________________________
+
+1  WHAT IS MISSING
+
+Six modules are IMPORTED by code that is present, and are themselves
+absent from the tree:
+
+    engine/coverage/database/api.py       <- coverage/api.py,
+                                             coverage/affected.py
+    engine/coverage/database/record.py    <- readers/gcov.py,
+                                             readers/ghdl_psl.py,
+                                             readers/go.py, and others
+    engine/coverage/database/binary.py    <- TEST/test-affected.py
+    engine/coverage/database/measure.py   <- readers/ucis.py,
+                                             readers/verilator.py
+    engine/coverage/readers/api.py        <- coverage/api.py,
+                                             coverage/core.py
+    engine/coverage/readers/reader.py     <- coverage/core.py,
+                                             readers/__init__.py,
+                                             readers/cobertura.py
+
+'engine/coverage' therefore CANNOT IMPORT as the dump stands.
+
+THE GAP IS BOUNDED. Every relative and absolute 'vut.*' import in the
+whole tree was resolved against the tree. Exactly these six fail. The
+only other unresolved name is 'vut.artifact', imported by three
+'TEST/config.py' files, which is a test-side helper and a separate
+question.
+
+______________________________________________________________________________
+
+2  THE CAUSE, AND WHY IT IS NOT A DESIGN PROBLEM
+
+'adm/bundle.sh' selects with 'git ls-files' by default -- TRACKED
+FILES ONLY. '--complete'/-a adds 'git ls-files --others', i.e. the
+untracked ones. A file created and not yet committed is therefore
+SILENTLY ABSENT from a default-mode dump: no warning, no manifest
+entry, nothing to notice.
+
+The six modules are exactly what a fresh 'database/readers' split
+would produce: new files, not yet committed. So
+
+    coverage's todo-13, dated 2026-09-04, IS CORRECT AND CURRENT.
+    It names 'coverage/database/TEST/' and 'coverage/readers/TEST/'
+    because those directories EXIST in Frank-Rene's working tree.
+
+r-5f is ANSWERED: coverage's prose is not describing a superseded
+layout. The dump is describing an incomplete one.
+
+______________________________________________________________________________
+
+3  WHAT THIS COSTS THE EARLIER WORK
+
+Every strike of r-5a was re-examined against the gap. Five stand; ONE
+DOES NOT.
+
+  SAFE -- verified against files that ARE present:
+
+    disc-8   verified against D-15, D-17 (coverage/RATIONALE.txt) and
+             orchestrator D-7, D-8. All four entries present.
+    todo-10  verified against D-25 and 'services/cov.py'. Present.
+    todo-11  RETIRED; a self-declaration with no code claim to check.
+    todo-12  verified against 'services/cov.py' VERB_TUPLE. Present.
+    (operations todo-12 likewise: 'compare/configuration.py' and
+     'compare/TEST/test-configuration.py' are both present.)
+
+  WEAKENED -- verified only indirectly:
+
+    todo-1   'the homogeneous record, its merge, and the index'. The
+             record IS the missing 'database/record.py'. The strike
+             rested on the record FORMAT being in use (version 2 in
+             'services/TEST') and on 'services/cov.py' standing, not
+             on reading the module. The conclusion is probably right
+             and the evidence is thinner than stated.
+
+  FALLS -- the verification was against a missing file:
+
+    todo-9   The entry claims "what remains of the old bridge -- the
+             'resolve' seam and '_local_resolver' -- is deleted", and
+             review-r5 recorded them "verified ABSENT from the tree".
+             THAT VERIFICATION IS WORTHLESS: a grep over
+             'engine/coverage' cannot find a symbol that would live in
+             'database/', and 'database/' is not here. The absence
+             measured was the absence of the FILE, not of the symbol.
+
+             The strike may still be correct -- D-18 stands as an
+             entry, and the entry's own claim is dated -- but it was
+             not verified, and this review says so rather than leaving
+             a false 'verified' standing.
+
+______________________________________________________________________________
+
+OPEN -- FOR FRANK-RENE
+
+  r-6a  RE-DUMP. A dump made with '--complete' would carry the six
+        modules and let todo-9 be checked properly. Recommended before
+        any further measurement of coverage: everything concluded
+        about that component so far rests on a tree that cannot
+        import.
+
+  r-6b  Should 'bundle.sh' WARN when a default-mode selection omits
+        untracked files? Today the omission is silent. A one-line
+        count ('N untracked file(s) not selected; --complete includes
+        them') would have made this visible at the moment the dump was
+        made rather than four bundles later. It is the same principle
+        as O-19: a kill names its cap.
+
+  r-6c  'vut.artifact', imported by 'compare/TEST/config.py',
+        'compare/core/edit_operations/TEST/config.py' and
+        'compare/feeder/TEST/config.py', resolves to nothing here
+        either. Untracked too, or genuinely external?

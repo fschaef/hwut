@@ -1,0 +1,74 @@
+VERSION: 1
+COMPONENTS: engine/operations
+
+todo-1  WHEN A SUBJECT MAY BE JUDGED -- and what may abort a run
+        decided, unbuilt
+
+DECIDED (ruled in session)
+
+    '<hwut-end>' ends every test run: without a choice, with a
+    choice, interactive -- every road. (The session-path omission in
+    hwut_runner.__run_into_sinks is FIXED; see the R-70 fix note.)
+
+    STDOUT is an append-only stream. It may be compared WHILE it
+    arrives, line by line, against the nominal. A divergence there
+    MAY ABORT the run early.
+
+    A FILE develops with REVISIONS during the run -- written,
+    rewritten, truncated, seeked. Only its FINAL state is the
+    subject. It is judged only AFTER '<hwut-end>' has been received.
+    A file divergence can NEVER abort a run early.
+
+    THE COMPARATOR SETUP MUST BE CONDITIONED on the subject's kind:
+
+        comparator(stdout)   armed at run start; may stream;
+                             may abort the run
+        comparator(file)     armed at token receipt; judges the
+                             final state, once
+
+WHAT STANDS, WHAT DOES NOT
+
+    single run    files read after the end, judged after -- CONFORMS
+                  (stage_execute._output_files, R-71).
+    session       BUILT (this session): 'read_declared_files' is ONE
+                  implementation in stage_execute.py, called by both
+                  roads; the session calls it after the CHOICE'S
+                  'done' (which the token precedes), read-and-remove
+                  PER CHOICE. Containment speaks before a missing
+                  file. Proven: test-multi-execute.py--files (writer,
+                  forgetter, and an untouched file-less sibling).
+    early abort   NOT built on any road. All comparison happens
+                  after the run today.
+
+RULED -- file naming needs no new law
+    (source-file, choice) is unique by construction; 'test--choice'
+    extended by the output name stays unique AND parseable, provided
+    an output name never starts with '-'. That one refusal stands in
+    the validator (exploration, R-71); nothing else was needed.
+
+OPEN -- raise before building the early abort
+    (1) STREAMABILITY. Live judgement is only SOUND where a
+        divergence in a prefix implies divergence of the whole --
+        the comparison must be PREFIX-MONOTONE. Per-element
+        tolerances (numeric, eq-pattern on a line) are prefix-safe.
+        ANALOGY regions absorb REORDERING: the candidate's early
+        lines may match the nominal's late ones, so no prefix
+        verdict exists. A PYPE is an arbitrary filter: a sorting
+        pype makes the whole stream non-streamable. So the
+        comparator conditioning has a THIRD axis beside channel/file:
+
+            streamable      no pype, no analogy region in T
+                            -> live comparison, MAY abort
+            not streamable  -> judged whole, after the token,
+                            like a file
+
+        The conservative predicate costs nothing: where unsure,
+        judge after the token -- correctness never depends on the
+        abort, only speed does.
+
+    (2) RULED (standing, replayed): when a run is aborted, THE
+        ENTITY THAT TRIGGERS THE ABORT PROVIDES THE VERDICT -- FAIL
+        upon abortion. Any output content is IRRELEVANT: nothing is
+        recorded, nothing is kept, no candidate exists. Consistent
+        with the token law by construction: a stream without its
+        terminal token could never be promoted anyway.

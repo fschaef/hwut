@@ -61,20 +61,20 @@ def run_engine(s_text, n_text, visible_nothing=None):
     pf_config.numeric_tolerance_ratio = 0.1
     if visible_nothing:
         pf_config.visible_nothing_pattern_list = visible_nothing
-    
+
     pf = PatternFinder(pf_config)
-    
+
     # 2. Input Processing
     line_s = Line(1, s_text, pf)
     line_n = Line(1, n_text, pf)
-    
+
     # Strip separators as the engine expects pure content sequences
     seq_s = tuple(x for x in line_s.sequence if x.tolerance_id != E_ToleranceId.SEPERATOR)
     seq_n = tuple(x for x in line_n.sequence if x.tolerance_id != E_ToleranceId.SEPERATOR)
-    
+
     # 3. Print Stimuli
     print_stimuli(s_text, n_text, seq_s, seq_n)
-    
+
     # 4. Calculation
     return calc_edit_ops(seq_s, seq_n)
 
@@ -86,12 +86,12 @@ def test_pruning_transpose():
     print("BUG:       Greedy Transpose(X<->A) reaches index (2,2) cheaply but mangles the tail.")
     print("           Optimal Subst(X->A) reaches (2,2) with higher cost but perfect tail.")
     print("           If state=(si,ni), Optimal is pruned. If state=(si,ni,subj_mod), it survives.")
-    
+
     result = run_engine("X Z A", "A Z A")
     print_response(result)
-    
+
     ops = [op.id.name for op in result.edit_list]
-    
+
     if "TRANSPOSE" in ops:
         print_verdict(False, "Engine selected TRANSPOSE. Pruning logic likely ignored subject modification.")
     elif result.cost > 0.4:
@@ -105,14 +105,14 @@ def test_pruning_analogy():
     print("BUG:       Greedy Delete(_) reaches index (2,2) cheaply with constraint {A:1}.")
     print("           Optimal Insert(1) reaches (2,2) with constraint {A:2}.")
     print("           If state does not include AnalogyDB, Optimal is pruned.")
-    
+
     # '_' is defined as Visible Nothing
     result = run_engine("_ ((A)) ((A))", "1 ((2)) ((2))", visible_nothing=["_"])
     print_response(result)
-    
+
     ops = [op.id.name for op in result.edit_list]
     db_str = str(result.analogy_db)
-    
+
     if '"((A))"="((2))"' in db_str:
         print_verdict(True, "Optimal analogy A=2 was found. State pruning respected constraints.")
     else:
@@ -125,13 +125,13 @@ def test_amnesia():
     print("           Later, ((A)) matches ((2)). This implies A=2.")
     print("BUG:       If A=1 is not recorded during transpose, engine accepts A=2 (No Conflict).")
     print("           This makes the invalid Transpose path look cheap.")
-    
+
     result = run_engine("X ((A)) ((A))", "((1)) Y ((2))")
     print_response(result)
-    
+
     ops = [op.id.name for op in result.edit_list]
     db_str = str(result.analogy_db)
-    
+
     if "TRANSPOSE" in ops:
         # If it picked Transpose, it MUST have recorded A=1.
         if '"((A))"="((1))"' not in db_str:
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         "pruning_analogy": test_pruning_analogy,
         "amnesia":         test_amnesia,
     }
-    
+
     runner = HwutRunner(
         argv=sys.argv,
         title="VUT Edit Operations Debugger",

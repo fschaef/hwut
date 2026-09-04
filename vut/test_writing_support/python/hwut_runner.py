@@ -282,18 +282,18 @@ class HwutRunner:
         status = 0
         try:
             self.__run_choice(choice)
-            #  <hwut-end> -- stream testifies its own completeness. 
+            #  <hwut-end> -- stream testifies its own completeness.
             #
             # RULES:
             #
-            # -- only stdout: 
+            # -- only stdout:
             #    stderr never carries '<hwut-end>', it reports test execution
-            #    problems, not nominal behavior. output files are closed before 
+            #    problems, not nominal behavior. output files are closed before
             #    checked--no need to mark end.
             #
             # -- normal return only:
-            #    aborted, killed, execution failures make the test output 
-            #    irrelevant for comparison. no need for the marker. 
+            #    aborted, killed, execution failures make the test output
+            #    irrelevant for comparison. no need for the marker.
             #
             # -- not for 'pyped' output:
             #

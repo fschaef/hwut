@@ -1214,6 +1214,19 @@ GRAVEYARD Every directory an island (HWUT 1.0: repeats caps and
           every child).
 
 ----------------------------------------------------------------------------
+R-70  THE TOKEN IS THE STREAM'S OWN TESTIMONY OF COMPLETENESS
+----------------------------------------------------------------------------
+          NOT HERE. R-70 stands in 'engine/operations/RATIONALE.txt'.
+          The terminal token '<hwut-end>' is CONTENT of a subject
+          stream and 'operations/consume/terminal.py' holds the word
+          and the reading law, so the entry stands with its owner. The
+          number was allocated in this series and cited from four
+          places before the entry existed; the hole is left standing
+          with this signpost rather than closed by filing the law
+          under a component that does not own it.
+                                                    (ruled 2026-09-04)
+
+----------------------------------------------------------------------------
 R-71  'output' -- SUBJECTS ARE DECLARED, NEVER DISCOVERED
 ----------------------------------------------------------------------------
 PROBLEM   A test may produce more than its stdout: files written during

@@ -8,12 +8,12 @@ def get_all_callees(stats, func_key, visited=None):
     """Recursively collect all functions called by a specific function."""
     if visited is None:
         visited = set()
-    
+
     if func_key in visited:
         return visited
 
     visited.add(func_key)
-    
+
     # stats.all_callees is a dict mapping callers to their children
     callees = stats.all_callees.get(func_key, {})
     for callee in callees:
@@ -22,12 +22,12 @@ def get_all_callees(stats, func_key, visited=None):
 
 def analyze(stats_file):
     print(f"Analyzing {stats_file} for nested calls...\n")
-    
+
     p = pstats.Stats(stats_file)
     p.strip_dirs()
-    
+
     # MANDATORY: This populates the all_callees attribute
-    p.calc_callees() 
+    p.calc_callees()
 
     # Identify the specific entry points
     # We look for functions named 'associate' or 'is_equivalent'

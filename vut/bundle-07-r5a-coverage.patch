@@ -1,0 +1,308 @@
+diff --git a/vut/adm/WORK/plan/01-work-structure.txt b/vut/adm/WORK/plan/01-work-structure.txt
+--- a/vut/adm/WORK/plan/01-work-structure.txt
++++ b/vut/adm/WORK/plan/01-work-structure.txt
+@@ -2,7 +2,7 @@
+ plan/01-work-structure -- THE MIGRATION, IN ORDERED STEPS
+ ==============================================================================
+ 
+-VERSION: 6
++VERSION: 7
+ 
+ COMPONENTS: all.
+ INTEND:     adm/WORK/intend/01-work-structure.txt
+@@ -97,9 +97,19 @@
+              every entry verified built against the tree, and the two
+              rulings of its todo-4 that no RATIONALE carried (R1, R2)
+              are now an AMENDED block on D-7.
+-             Coverage is MIXED (six accomplished, nine discussions and
+-             several todos open); operations is LARGELY OPEN (nothing
+-             accomplished). Both wait on r-5a..r-5d.
++             r-5a DONE: engine/coverage/DISCUSSIONS.txt lost its six
++             accomplished entries (disc-8, todo-1, 9, 10, 11, 12), 98
++             lines, each verified built against the tree. Nothing
++             entered RATIONALE -- D-15, D-17, D-18, D-25 already carry
++             them. todo-6 was NOT struck: its '[BUILT]' marker
++             disagreed with the tree ('services/affected.py' absent),
++             and was corrected in place to '[part]'.
++             engine/operations/DISCUSSIONS.txt is untouched: nothing in
++             it is accomplished. Open: r-5b (split operations, or let
++             it stand), r-5c (todo-19 is a measured DEFECT, not a
++             wish), r-5d (two todo-23s), r-5e (coverage disc-6 is moot
++             -- its subject file is gone), r-5f (coverage's text names
++             a layout that no longer exists).
+ 
+     Sorting into a substrate whose census is a floor rather than a
+     total would carry the gap forward, so nothing moves until r-5 at
+diff --git a/vut/adm/WORK/review-r5.txt b/vut/adm/WORK/review-r5.txt
+--- a/vut/adm/WORK/review-r5.txt
++++ b/vut/adm/WORK/review-r5.txt
+@@ -2,7 +2,7 @@
+ review-r5 -- THE THREE 'DISCUSSIONS.txt' FILES, TRIAGED BY ACCOMPLISHMENT
+ ==============================================================================
+ 
+-VERSION: 1
++VERSION: 2
+ 
+ COMPONENTS: engine/orchestrator, engine/coverage, engine/operations
+ PLAN:       adm/WORK/plan/01-work-structure.txt   (fork r-5)
+@@ -72,18 +72,42 @@
+ 
+ 2  engine/coverage/DISCUSSIONS.txt      563 lines            ** MIXED **
+ 
+-    ACCOMPLISHED -- may go, on your word:
++    STRUCK (2026-09-04, ruling r-5a). Each was measured against the
++    tree, NOT read off its own marker:
+ 
+-      todo-1   the homogeneous record, merge, index    self-marked BUILT
+-      todo-6   'hwut.affected' over the index          self-marked BUILT
+-      todo-9   is the orchestrator's t-9               BUILT, D-18 stands
+-      todo-10  'hwut.cov gather'                       BUILT, D-25 stands
+-      todo-11  the two refusals                        RETIRED
+-      todo-12  'hwut.cov <wish>' runs, gather folds    BUILT
+-
+-      'services/cov.py' stands, and D-18 and D-25 are entries in
+-      'coverage/RATIONALE.txt'. So these six are recorded where they
+-      belong and their entries are residue.
++      disc-8   whose table is the test id   CLOSED by its own head
++                                            (D-15, D-17; orchestrator
++                                            D-7, D-8) -- all four are
++                                            entries that stand. The
++                                            body below the head was
++                                            explicitly 'kept as it was
++                                            ruled', i.e. residue.
++      todo-1   homogeneous record, merge,   record format v2 in use,
++               index                        'services/cov.py' stands
++      todo-9   is the orchestrator's t-9    D-18 stands; 'resolve' and
++                                            '_local_resolver' verified
++                                            ABSENT from the tree
++      todo-10  'hwut.cov gather' / 'stale'  D-25 stands; both verbs in
++                                            'services/cov.py'
++      todo-11  the two refusals             RETIRED
++      todo-12  the 'hwut.cov' verb set      VERB_TUPLE == ('gather',
++                                            'stale', 'convert',
++                                            'formats') verified
++
++    Nothing entered RATIONALE for these: D-15, D-17, D-18 and D-25
++    already carry them. The file lost 98 lines and now holds only what
++    is open.
++
++    CORRECTED WHILE STRIKING -- todo-6 IS NOT ACCOMPLISHED.  Version 1
++    of this review listed it among the six, on the strength of its
++    '[BUILT]' marker. Measuring says otherwise: 'coverage/affected.py'
++    stands and the shared 'E_ExitCode' stands ('services/_exit.py'),
++    but there is NO 'services/affected.py' -- the thin service shim the
++    entry itself calls OWED. The marker was corrected in place to
++    '[part]' and the entry KEPT. This is the second time in this
++    migration that a self-marker disagreed with the tree; the first was
++    orchestrator's disc-1, parked as 'not built yet' over a built
++    explorer.
+ 
+     STILL OPEN -- nine discussions and three part-built todos:
+ 
+@@ -95,6 +119,14 @@
+       disc-4   cross-directory aggregation
+       disc-5   a merge meets hit counts
+       disc-6   'system/helper.py' Interval: unify or leave
++               -- MOOT, and NOT struck without your word. The entry
++               documents four defects in 'vut/system/helper.py'. THAT
++               FILE DOES NOT EXIST, and neither 'Interval' nor
++               'iterable_from_integer_list' occurs anywhere in the
++               tree. Its recommendation (b), 'leave the two apart',
++               is what stands, permanently, by deletion rather than by
++               ruling. Its warning that defect (2) 'is a live bug for
++               whoever calls it today' has no subject left.
+       disc-7   what consumes the index
+       disc-8   whose table is the test id -- SUPERSEDED, per the
+                orchestrator file's t-10, which says 'coverage disc-8
+@@ -154,10 +186,9 @@
+ 
+ OPEN -- FOR FRANK-RENE
+ 
+-  r-5a  COVERAGE: strike the six accomplished entries (todo-1, 6, 9,
+-        10, 11, 12) and disc-8 if its supersession holds, leaving the
+-        file with only what is open? Nothing needs to enter RATIONALE
+-        for these -- D-18 and D-25 already carry them.
++  r-5a  DONE (2026-09-04). Six entries struck -- disc-8, todo-1, 9,
++        10, 11, 12. todo-6 was NOT struck: it is [part], not [BUILT].
++        See section 2.
+ 
+   r-5b  OPERATIONS: nothing is accomplished, so nothing can be struck.
+         Does the file stand as it is until its items are built, or is
+@@ -172,3 +203,17 @@
+ 
+   r-5d  operations has TWO todo-23s. Renumber, or leave until the file
+         is split?
++
++  r-5e  COVERAGE disc-6 is MOOT: the file it discusses no longer
++        exists. Strike it, or keep it as a record that the defects
++        were carried out with the file?
++
++  r-5f  COVERAGE'S TEXT DESCRIBES A LAYOUT THAT IS GONE. todo-1 rests
++        on 'system/helper.py' and 'record.py'; neither exists. todo-13
++        (dated today) names 'coverage/database/TEST/'; there is no
++        'coverage/database'. The component now holds 'core.py',
++        'api.py', 'affected.py', 'configuration.py' and 'readers/'.
++        Either the database/readers split is still in flight and this
++        dump predates half of it, or the entries are describing a
++        layout that was superseded. Which it is decides whether
++        todo-13 is live work or already stale.
+diff --git a/vut/engine/coverage/DISCUSSIONS.txt b/vut/engine/coverage/DISCUSSIONS.txt
+--- a/vut/engine/coverage/DISCUSSIONS.txt
++++ b/vut/engine/coverage/DISCUSSIONS.txt
+@@ -11,6 +11,20 @@
+     disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
+     todo-N   the LABOUR is owed -- the choice is made, the work is not
+ 
++STRUCK 2026-09-04, by the law above, each verified BUILT against the
++tree rather than read off its own marker (adm/WORK/review-r5.txt):
++
++    disc-8   whose table is the test id     CLOSED; D-15, D-17, and
++                                            orchestrator D-7, D-8
++    todo-1   homogeneous record, merge,     record format v2 in use;
++             index                          'services/cov.py' stands
++    todo-9   is the orchestrator's t-9      D-18; 'resolve' seam and
++                                            '_local_resolver' verified
++                                            gone from the tree
++    todo-10  'hwut.cov gather' / 'stale'    D-25; both verbs stand
++    todo-11  the two refusals               RETIRED
++    todo-12  the 'hwut.cov' verb set        VERB_TUPLE verified
++
+ ==============================================================================
+ 
+ 
+@@ -218,76 +232,6 @@
+ 
+ 
+ ------------------------------------------------------------------------------
+-disc-8  WHOSE TABLE IS THE TEST ID -- and what the rename service owes
+-------------------------------------------------------------------------------
+-CLOSED (2026-08-25, RATIONALE D-15; orchestrator D-7, D-8). THE FIRST
+-FORK IS SETTLED: (a) THE BOOKKEEPER OWNS IT, as
+-'bookkeeper/test_id_db.py' over 'GOOD/test_ids.dat'. Ids are born at
+-first accept and issued once, from 0, never re-used (bookkeeper B-2 --
+-the lowest-unused law of the first closure lasted one day); a rename
+-keeps them. The SET interning is the bookkeeper's as well since B-3
+-and D-17; this component keeps only 'Gathered'. What the rename service owes is
+-recorded in the orchestrator's todo-4, not here. The text below is kept
+-as it was ruled.
+-
+-SUPERSEDED IN PART (2026-08-24, RATIONALE D-14): THE SECOND FORK IS
+-SETTLED. Identity is DIRECTORY-LOCAL by construction -- Origin is
+-'(test, choice)', unique per directory by the filesystem's own
+-guarantee, so the scope question dissolves: there is nothing to
+-partition and no ranges to assign ('first_id' stays as a mechanism,
+-no longer as the plan). A gather qualifies ephemerally ('Gathered')
+-and is never stored. THE FIRST FORK -- who OWNS the table, (a)
+-bookkeeper / (b) component / (c) nobody -- stands OPEN below, exactly
+-as written, and (c) remains what runs today.
+-
+-THIS ONE EDITS THE BOOKKEEPER. Nothing is built until the tree is quiet.
+-
+-WHAT IS ALREADY TRUE (D-9). The mechanism stands in 'identity.py': ids
+-are monotone, never reused, retired entries still decode, a rename keeps
+-the id, and both tables serialise. What is NOT decided is who OWNS them.
+-
+-THE FORK -- WHO ALLOCATES.
+-  (a) THE BOOKKEEPER. It already owns the naming of a test directory
+-      ('nominal_path', 'candidate_path', the result base), and the
+-      RENAME SERVICE must pass through it or two truths exist about what
+-      a test is called. The table joins its base.
+-  (b) THE COVERAGE COMPONENT, in its own file beside the records.
+-      Additive, and wrong: a rename would then have to know about
+-      coverage, and a component that renames tests for one consumer will
+-      be asked to do it for the next.
+-  (c) NOBODY -- rebuild the ids per index run, as the code does TODAY
+-      when no table is handed in. Correct and useless for anything
+-      STORED: the ids differ between two builds.
+-
+-RECOMMENDATION. (a). (c) is what stands until (a) is built, and it costs
+-nothing to switch: 'index_of' already TAKES the tables.
+-
+-THE SECOND FORK -- THE SCOPE OF AN ID.
+-  (a) PER DIRECTORY. One bookkeeper owns one directory, so this is the
+-      only scope it can allocate honestly. Cross-directory aggregation
+-      then qualifies by directory, exactly as disc-4 (a) already says.
+-  (b) GLOBAL, from one registry above all directories. Unique
+-      everywhere -- and it breaks the one-directory-one-bookkeeper law,
+-      and needs a lock nobody has.
+-
+-RECOMMENDATION. (a). 'IdTable(first_id=...)' exists so that a caller who
+-later wants disjoint ranges per directory can have them without a change.
+-
+-WHAT THE RENAME SERVICE OWES, whichever way it goes.
+-    -- rename through the table: the id survives, no record is touched
+-    -- delete through RETIRE, never by removing the entry: an old record
+-       must keep decoding, and the id must never be issued again
+-    -- refuse a rename onto a live name, by name
+-    -- never renumber. A table that renumbers has silently reattributed
+-       every record ever written, and nothing reports it.
+-
+-OPEN BESIDE IT. Where the table LIVES in the base -- a section of the
+-result db, or its own file. Its own file argues for itself: it is written
+-by a different act (renaming) than the entries are, and one writer per
+-key space is already the law.
+-
+-
+-------------------------------------------------------------------------------
+ disc-9  HARDWARE DESCRIPTION LANGUAGES -- the record cannot hold what a
+         simulator measures
+ ------------------------------------------------------------------------------
+@@ -402,14 +346,6 @@
+ THE LABOUR
+ ==============================================================================
+ 
+-todo-1  THE HOMOGENEOUS RECORD, ITS MERGE, AND THE INDEX      [BUILT]
+-        The only part that is NOT language-specific, so it is built
+-        FIRST: it gives every later reader a fixed target. Interval
+-        lists, delta coding, the header (format version, 'counts:
+-        no|yes'), and the union merge. 'system/helper.py' already has
+-        'Interval' and 'iterable_from_integer_list()' -- the primitive
+-        that folds adjacent integers into ranges exists.
+-
+ todo-2  THE PER-LANGUAGE READERS                           [11 built]
+         BUILT, each against a REAL artifact of the real tool:
+             coverage   coverage.py json        python
+@@ -522,37 +458,18 @@
+         Plus the UPWARD search: nearest enclosing 'hwut.conf' wins,
+         layered over what stands further out (D-2).
+ 
+-todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [BUILT]
++todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [part]
+         Built as 'coverage/affected.py' with 'main(argv, write)'. The
+-        thin service shim under 'services/' is OWED, and
+-        with it the shared 'E_ExitCode' -- both edit an existing
+-        directory, so both wait for a quiet tree.
++        shared 'E_ExitCode' is BUILT too ('services/_exit.py'). The
++        thin service shim under 'services/' is STILL OWED: there is no
++        'services/affected.py'. The marker read [BUILT] and was
++        corrected to [part] on 2026-09-04, when the entry was measured
++        against the tree rather than read off its own marker.
+ 
+ todo-7  THE MEASUREMENT THAT RULES disc-1
+         Write of one run, read of a cross-directory aggregate, forms (a)
+         and (c). Until it exists, disc-1 stays open and (a) stands.
+ 
+-todo-9  is the orchestrator's t-9 and is BUILT (RATIONALE D-18): the
+-        record names run ids. What remains of the old bridge -- the
+-        'resolve' seam and '_local_resolver' -- is deleted.
+-
+-todo-10 BUILT (2026-08-25, RATIONALE D-25): 'hwut.cov gather' and
+-        'hwut.cov stale'; the bundle carries the gathered table AND the
+-        index, and every snapshot names the generation it was taken at.
+-
+-todo-11 RETIRED (2026-08-25). Both refusals were inherited from the
+-        never-built 'core.py' and do not survive D-19: the harvest is
+-        per choice after that choice's application ends, so 'interactive'
+-        is a question of a framework resetting its counters between
+-        choices, not a door refusal; and timing beside coverage is the
+-        cost of THAT run, a fact and not a contradiction.
+-
+-todo-12 BUILT (2026-08-25): 'hwut.cov <wish>' runs, 'gather' folds,
+-        'stale' checks a bundle, 'convert' and 'formats' show. There is
+-        no 'merge' verb -- merging records is a function, and merging
+-        ACROSS directories is what 'gather' is. There is no 'report'
+-        verb: 'hwut.report' carries coverage by default (D-24).
+-
+ todo-13 THE THREE 'TEST/' DIRECTORIES' BOOKS ARE STALE (session
+         2026-09-04, the database/readers split). 'GOOD/result_db.csv'
+         and 'GOOD/test_ids.dat' under 'coverage/TEST/',

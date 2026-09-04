@@ -3,20 +3,20 @@ PURPOSE:
     scenario(n, c_vs_uc_ratio, k_avg, ac_pp_n, ac_universe_size=100)
 
 DESCRIPTION:
-    This module provides tools to generate deterministic, solvable test cases for the 
-    HWUT pairing algorithm. It creates a 'potential_pair_db' (subject_idx -> list 
+    This module provides tools to generate deterministic, solvable test cases for the
+    HWUT pairing algorithm. It creates a 'potential_pair_db' (subject_idx -> list
     of nominal partners) that contains a guaranteed 1-to-1 matching "backbone."
-    
-    The generator partitions the subject space into a 'constrained' block (using 
+
+    The generator partitions the subject space into a 'constrained' block (using
     AnalogyDb constraints) and an 'unconstrained' block (using None). This allows
-    for testing the backtracking complexity of the engine under varying analogy 
+    for testing the backtracking complexity of the engine under varying analogy
     densities.
 
 PARAMETERS:
     n                Total number of subject indices to generate.
     c_vs_uc_ratio    Ratio (0.0 to 1.0) defining the proportion of subject entries
                      carrying analogy constraints.
-    k_avg            The average number of nominal partners per subject index 
+    k_avg            The average number of nominal partners per subject index
                      (Gaussian distributed).
     ac_pp_n          The number of analogy constraints (mappings) per AnalogyDb.
     ac_universe_size The size of the term pool from which analogies are drawn.
@@ -31,14 +31,14 @@ from vut.engine.compare.region.potpourri.potential_pair_db import PotentialPairD
 
 from typing import Optional, Any
 
-def scenario(n: int, 
-             c_vs_uc_ratio: float, 
-             k_avg: float, 
-             ac_pp_n: int, 
+def scenario(n: int,
+             c_vs_uc_ratio: float,
+             k_avg: float,
+             ac_pp_n: int,
              ac_universe_size: int = 100) -> PotentialPairDb:
     """RETURNS: PotentialPairDb
 
-    Generates a combined database by partitioning 'n' into constrained and 
+    Generates a combined database by partitioning 'n' into constrained and
     unconstrained blocks based on 'c_vs_uc_ratio'.
     """
     n_c  = int(round(n * c_vs_uc_ratio))  # Number of constrained subject pairs
@@ -57,8 +57,8 @@ def scenario(n: int,
 
     return PotentialPairDb(result_db)
 
-def unconstraint_db(n: int, 
-                    k_avg: float, 
+def unconstraint_db(n: int,
+                    k_avg: float,
                     start_index: int = 0) -> dict[int, list[tuple[int, None]]]:
     """
     Generates a solvable database without analogy constraints.
@@ -72,13 +72,13 @@ def unconstraint_db(n: int,
         subject_i_raw + start_index: nominal_i_raw + start_index
         for subject_i_raw, nominal_i_raw in enumerate(stream.sample_indices(n, n))
     }
-    
+
     return derive_from_backbone(stream, primary_partner_db, k_avg, lambda: None, lambda: None)
 
 
-def constraint_db(n: int, 
-                  k_avg: float, 
-                  ac_pp_n: int, 
+def constraint_db(n: int,
+                  k_avg: float,
+                  ac_pp_n: int,
                   ac_universe_size: int = 100) -> dict[int, list[tuple[int, Optional[AnalogyDb]]]]:
     """
     Generates a solvable pairing database with AnalogyDb objects as constraints.
@@ -88,10 +88,10 @@ def constraint_db(n: int,
 
     # 1. SOLUTION SET (The "Truth")
     # Must be Bijective (A unique <-> B unique) to guarantee the backbone is solvable.
-    # If we used random pairs here, we might get A1->B1 and A1->B2, creating a 
+    # If we used random pairs here, we might get A1->B1 and A1->B2, creating a
     # backbone that contradicts itself.
     solution_analogy_set = [
-        ("A%X" % i, "B%X" % i) 
+        ("A%X" % i, "B%X" % i)
         for i in range(ac_universe_size)
     ]
 
@@ -106,11 +106,11 @@ def constraint_db(n: int,
         i: partner_idx for i, partner_idx in enumerate(stream.sample_indices(n, n))
     }
 
-    def good_constraints():  
+    def good_constraints():
         # Sample consistent subset from the bijective solution set
         return AnalogyDb(stream.sample(solution_analogy_set, ac_pp_n))
-    
-    def weird_constraints(): 
+
+    def weird_constraints():
         # Sample chaotic subset to create conflicts/distractors
         result = {}
         for _ in range(ac_pp_n):
@@ -119,36 +119,36 @@ def constraint_db(n: int,
                 result[a] = b
         return AnalogyDb(result.items())
 
-    return derive_from_backbone(stream, primary_partner_db, k_avg, 
-                                good_constraints, 
+    return derive_from_backbone(stream, primary_partner_db, k_avg,
+                                good_constraints,
                                 weird_constraints)
 
 
-def derive_from_backbone(stream: DeterministicStream, 
-                         primary_partner_db: dict[int, int], 
-                         k_avg: float, 
-                         good_constraints: Any, 
+def derive_from_backbone(stream: DeterministicStream,
+                         primary_partner_db: dict[int, int],
+                         k_avg: float,
+                         good_constraints: Any,
                          weird_constraints: Any):
     """
-    Standardizes the expansion of a 1-to-1 backbone into a graph of multiple 
+    Standardizes the expansion of a 1-to-1 backbone into a graph of multiple
     potential partners using Gaussian noise.
     """
     result_db = {}
     n = len(primary_partner_db)
     sigma = k_avg / 2.0
-    
+
     # We sort to ensure subject processing order is deterministic
     for subject_i, primary_nominal_i in sorted(primary_partner_db.items()):
         # Set up the 'solvable' primary partner
         partners = [
             (primary_nominal_i, good_constraints())
         ]
-        
+
         # Calculate partner density for this subject
         target_n = int(round(stream.gauss(k_avg, sigma)))
         target_n = max(1, min(n, target_n)) # Clamp to valid range
         extra_n  = target_n - 1
-        
+
         # Determine base offset to keep noise within the partition
         if n > 0:
             base_offset = min(primary_partner_db.values())
@@ -157,20 +157,20 @@ def derive_from_backbone(stream: DeterministicStream,
 
         # Select noise partners (nominal indices) other than the primary partner
         extra_nominal_index_set = set()
-        
+
         # Safety limit for RNG loop
         attempts = 0
-        max_attempts = extra_n * 20 
+        max_attempts = extra_n * 20
 
         while len(extra_nominal_index_set) < extra_n and attempts < max_attempts:
             attempts += 1
             # Note: stream.next_int is inclusive [0, n-1]
             candidate = stream.next_int(0, n - 1)
             candidate += base_offset
-            
+
             if candidate != primary_nominal_i:
                 extra_nominal_index_set.add(candidate)
-        
+
         # Extend with 'weird' constraints to create distractors/conflicts
         partners.extend(
             (nominal_i, weird_constraints())

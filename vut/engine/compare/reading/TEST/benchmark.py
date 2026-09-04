@@ -10,7 +10,7 @@ from vut.test_writing_support.python.deterministic_random          import Determ
 def string_stream(n=10000, complexity=0.5, seed=0x42):
     """
     Generates a deterministic stream of strings containing various patterns.
-    
+
     Args:
         n (int): Number of strings to generate.
         complexity (float): Probability [0, 1] of inserting a specific pattern.
@@ -58,30 +58,30 @@ def string_stream(n=10000, complexity=0.5, seed=0x42):
                 parts.append(patterns[pat_idx]())
             else:
                 parts.append(get_random_string(10))
-        
+
         yield " ".join(parts)
 
 def verify(results, n, complexity, seed, config):
     """
-    Verifies that the collected results match a fresh run of the 
+    Verifies that the collected results match a fresh run of the
     deterministic generator.
     """
     print(f"Starting verification of {len(results)} lines...")
     verification_finder = PatternFinder(config)
     expected_stream = string_stream(n=n, complexity=complexity, seed=seed)
-    
+
     for i, (actual_elements, expected_line) in enumerate(zip(results, expected_stream)):
         expected_elements = tuple(verification_finder.do(expected_line))
-        
+
         # We compare the length and the string representation of elements
         # to ensure the content and types are identical.
         if len(actual_elements) != len(expected_elements):
             raise ValueError(f"Verification failed at line {i}: Element count mismatch.")
-            
+
         for act, exp in zip(actual_elements, expected_elements):
             if str(act) != str(exp):
                  raise ValueError(f"Verification failed at line {i}: Content mismatch.\nGot: {act}\nExp: {exp}")
-    
+
     print("Verification successful: Results are consistent with expectations.")
 
 def run(n, complexity, seed):
@@ -97,23 +97,23 @@ def run(n, complexity, seed):
     # Initialize the generator
     stream = string_stream(n=n, complexity=complexity, seed=seed)
     finder = PatternFinder(config)
-    
+
     # Aggregator for results
     all_results = []
     total_elements = 0
-    
+
     print(f"Starting benchmark (n={n}, complexity={complexity})...")
     start_time = time.perf_counter()
-    
+
     for line in stream:
         # We aggregate elements into a list of tuples
         elements = tuple(finder.do(line))
         all_results.append(elements)
         total_elements += len(elements)
-        
+
     end_time = time.perf_counter()
     duration = end_time - start_time
-    
+
     print("-" * 30)
     print("Benchmark Results:")
     print(f"  Processed: {len(all_results)} lines")
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     N_LINES = 50000
     COMPLEXITY = 0.7
     SEED = 0x42
-    
+
     run(N_LINES, COMPLEXITY, SEED)

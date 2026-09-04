@@ -27,7 +27,7 @@ def run_test(name, adj):
     start = time.time()
     result = do(adj)
     end = time.time()
-    
+
     # We print the size and a subset of the mapping for large tests to keep logs readable
     print(f"Matching Size: {len(result)}")
     if len(result) < 15:
@@ -38,7 +38,7 @@ def run_test(name, adj):
         keys = sorted(result.keys())
         print(f"  First: [{keys[0]}] -> {result[keys[0]]}")
         print(f"  Last:  [{keys[-1]}] -> {result[keys[-1]]}")
-    
+
     # Asserting deterministic results (sorting in 'do' ensures this)
     # HWUT will catch any performance regressions via time if we had a monitor,
     # but for now, we focus on correctness.

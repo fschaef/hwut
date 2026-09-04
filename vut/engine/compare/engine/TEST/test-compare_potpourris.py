@@ -13,7 +13,7 @@ PURPOSE: Comparison of two potpourris.
 
 CHOICES: judge, info;
 
-'judge': compare two potpourris on equivalence. 
+'judge': compare two potpourris on equivalence.
          Result: 'True' or 'False'.
 
 'info':  provide information about similarity.

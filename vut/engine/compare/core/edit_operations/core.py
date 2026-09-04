@@ -11,19 +11,19 @@ increment of the pointers into the subject list and the nominal lists.
 ALGORITHM:
 
 The algorithm is explained in 'line.py' of this directory. It is basically
-the same for both, lines and line sequences. This module provides the 
+the same for both, lines and line sequences. This module provides the
 base required base classes. Both, 'line.py' and 'line_sequence.py' implement
 derived classes of:
 
 
   WorkItemBase:
-      
+
      Maintains the indices 'si' and 'ni' pointing to positions in the
      subject and the nominal sequence. An 'edit_list' documents the
-     edit operations how this position has been reached. 
+     edit operations how this position has been reached.
 
-  WorkListBase: 
-   
+  WorkListBase:
+
      A container that maintains the list of 'WorkItems'. It takes work items,
      one by one, and derived further work items derived from them. A step
      considers of finding a list of possible operations given the current
@@ -57,7 +57,7 @@ GOOD_DELETE     = E_EditId.GOOD_DELETE
 DELETE          = E_EditId.DELETE
 INSERT          = E_EditId.INSERT
 NONE            = E_EditId.NONE
-SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE      = E_EditId.SUBSTITUTE
 SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 
 
@@ -87,7 +87,7 @@ class WorkItemBase(ABC):
         self.edit_list = edit_sequence
 
     @abstractmethod
-    def subsequent_steps(self, subject, nominal, cache): 
+    def subsequent_steps(self, subject, nominal, cache):
         """YIELDS: WorkItemBase objects
 
         This function yields subsequence positions (si, ni) based on the current
@@ -96,8 +96,8 @@ class WorkItemBase(ABC):
         return
 
     @abstractmethod
-    def min_cost_remaining(self, subject_length, nominal_length): 
-        """RETURNS: Minimal cost that can be achieved starting from the given 
+    def min_cost_remaining(self, subject_length, nominal_length):
+        """RETURNS: Minimal cost that can be achieved starting from the given
                     position.
         """
         return
@@ -136,9 +136,9 @@ class WorkListBase(list):
         self.append(initial_item)
 
         # Determine min and max cost without considering the actual content
-        self.min_cost = self[0].min_cost_remaining(self.subject_length, 
+        self.min_cost = self[0].min_cost_remaining(self.subject_length,
                                                    self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, 
+        self.max_cost = max_cost(self.subject_length,
                                  self.nominal_length,
                                  cost_db[substitute_op_worst],
                                  cost_db[INSERT]) + 1e-6
@@ -148,15 +148,15 @@ class WorkListBase(list):
     def run(self) -> EditSequence:
         while self:
             item = self.pop()
-            if not self.end_of_sequence(item): 
+            if not self.end_of_sequence(item):
                 self.produce_derived(item)
         return self.best
 
     def end_of_sequence(self, item):
         """RETURNS: True, if the item may be used for deriving subsequent steps.
                     False, else.
-            
-        Checks whether it makes further sense to follow the path of 'item'. If the 
+
+        Checks whether it makes further sense to follow the path of 'item'. If the
         cost is already higher than the best cost, the item is ommitted and no derived
         steps are produced. If one index reaches the end of its sequence, the total cost
         is computed and compared with the best. If it is better, the 'best' is adapted.
@@ -182,18 +182,18 @@ class WorkListBase(list):
             # Retrieve 'subject_modified' if it exists (it exists in Line comparisons, but not LineSequence)
             # This ensures we don't prune a path with a different sequence permutation.
             subj_mod = getattr(new_item, 'subject_modified', None)
-            
+
             state_key = (new_item.si, new_item.ni, subj_mod, new_item.edit_list.analogy_db)
 
             if self.best_cost_db[state_key] <= new_item.edit_list.cost:
                 continue
-            
+
             self.best_cost_db[state_key] = new_item.edit_list.cost
             self.append(new_item)
 
     def __record_best(self, item):
         self.best = item.edit_list
-        if self.best.cost == self.min_cost: 
+        if self.best.cost == self.min_cost:
             self.clear() # => termination
             return
         # Remove any entry which is already worse than the best.
@@ -212,7 +212,7 @@ class WorkListBase(list):
         return item.edit_list.cost < self.best.cost
 
 def max_cost(subject_length, nominal_length, cost_substitute_type, cost_insert):
-   """RETURNS: maximum cost to transform 'subject' into 'nominal' without 
+   """RETURNS: maximum cost to transform 'subject' into 'nominal' without
                considering the actual content.
    """
    common_n    = min(subject_length, nominal_length)
