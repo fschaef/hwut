@@ -100,6 +100,20 @@ NO_CHOICE_KEY       = "<none>"
 #  its own name.
 NOMINAL_SUFFIX_DB   = {"stdout": "txt"}
 
+def error_witness_name(test, choice):
+    """RETURN: str, '<test>--<choice>.err' ('<test>.err' without a
+               choice) -- the file name of the error witness.
+
+    The one spelling; 'Bookkeeper.error_witness_path' puts it under
+    'OUT/'. Module-level so that a stage holding a configuration and
+    no Bookkeeper spells it identically."""
+    stem = test if choice is None else "%s--%s" % (test, choice)
+    return "%s.err" % stem
+#  THE WAY BACK: a reader that finds a file must name the SUBJECT it
+#  belongs to, not the suffix it wears. One table, both directions.
+SUBJECT_BY_SUFFIX_DB = {suffix: subject
+                        for subject, suffix in NOMINAL_SUFFIX_DB.items()}
+
 _OPERATION_BY_GOAL  = {"VERDICT": "Run",
                        "DISPLAY": "Display",
                        "NOMINAL": "Accept"}
@@ -412,13 +426,50 @@ class Bookkeeper:
                                                 .get(subject, subject))
 
     def candidate_path(self, test, choice, subject):
-        """RETURN: Path, where the CANDIDATE record of that key lives.
+        """RETURN: Path, where the CANDIDATE record of that key lives:
+                   'OUT/<key>.txt' for stdout, 'OUT/<key>.<subject>'
+                   for every other.
 
-        THE STORE'S OWN GROUND, apart from 'OUT/': 'OUT/' is the
-        TEST'S product space -- execution reads every file there as a
-        subject -- and the store's records must never become the next
-        run's subjects. Under 'TMP/', the framework's transient root
-        (services E-24): visible, and safe to delete whole."""
+        'OUT/' WITNESSES THE LAST RUN. The candidate IS the run's
+        product and belongs beside the rest of it, under the name the
+        nominal carries -- 'OUT/x--c.txt' against 'GOOD/x--c.txt', one
+        spelling, and a reader compares two files whose names agree.
+
+        THE SIDECARS DO NOT FOLLOW IT. '.raw', '.times', '.when' and
+        '.cover' stay on the store's ground: they were the CHANNEL,
+        mattering while the stream was being taken, and they are not
+        the product. They are machine-local observations (E-36) and
+        nothing off this host reads them.
+
+        SUPERSEDES O-8 IN PART. O-8 moved candidates off 'OUT/'
+        because execution DISCOVERED every file there as a subject, so
+        a run ingested the previous run's candidates. R-71 retired
+        discovery -- subjects are DECLARED -- and the reason went with
+        it. What O-8 keeps: the sidecars, and 'OUT/' being the test's
+        space rather than the framework's scratch."""
+        return self.directory / "OUT" \
+                              / self.key(test, choice, NOMINAL_SUFFIX_DB
+                                                       .get(subject, subject))
+
+    def error_witness_path(self, test, choice):
+        """RETURN: Path, 'OUT/<key>.err' -- where the LAST RUN's stderr
+                   stands, if it stood at all.
+
+        NOT A SUBJECT (E-5): never a nominal, never compared, never
+        pype-d, never recorded through the store. The run clears it
+        before it launches and writes it only where stderr spoke, so
+        its PRESENCE is the statement. This is the ONE place its name
+        is spelt; 'error_witness_name' is the same spelling for a
+        caller that has no Bookkeeper in hand."""
+        return self.directory / "OUT" / error_witness_name(test, choice)
+
+    def _store_path(self, test, choice, subject):
+        """RETURN: Path, the STORE'S ground for the sidecars of that
+                   key -- 'TMP/store/<key>.<subject>', the stem the
+                   '.raw', '.times' and '.when' suffixes hang from.
+
+        Not a record and never read as one: it names no file of its
+        own, only the stem its sidecars extend."""
         return self.directory / STORE_DIRECTORY_NAME \
                               / self.key(test, choice, subject)
 
@@ -431,14 +482,23 @@ class Bookkeeper:
                               / self.key(test, choice, "cover")
 
     def raw_path(self, test, choice, subject):
-        """RETURN: Path, where the PRE-canonicalisation stream lives."""
-        path = self.candidate_path(test, choice, subject)
+        """RETURN: Path, where the PRE-canonicalisation stream lives --
+                   on the STORE'S ground, not beside the candidate."""
+        path = self._store_path(test, choice, subject)
         return path.with_suffix(path.suffix + ".raw")
 
     def timing_path(self, test, choice, subject):
-        """RETURN: Path, where the cadence sidecar of that key lives."""
-        path = self.candidate_path(test, choice, subject)
+        """RETURN: Path, where the cadence sidecar of that key lives --
+                   on the STORE'S ground, not beside the candidate."""
+        path = self._store_path(test, choice, subject)
         return path.with_suffix(path.suffix + ".times")
+
+    def freshness_path(self, test, choice, subject):
+        """RETURN: Path, where the freshness sidecar of that key lives
+                   -- the instant and the source digest, on the
+                   STORE'S ground."""
+        path = self._store_path(test, choice, subject)
+        return path.with_suffix(path.suffix + ".when")
 
     def outdated_f(self, test, choice, subject, source_path):
         """

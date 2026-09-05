@@ -99,7 +99,7 @@ cycle)
     echo "first play --save (no nominal yet): status $?"
     echo "residue in the test directory: $(ls tree/suite/TEST | grep -c result.csv)"
     echo "candidates:"
-    ls tree/suite/TEST/TMP/store/ | grep -v when | sed 's/^/    /'
+    ls tree/suite/TEST/OUT/ | sed 's/^/    /'
     $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
     echo "accepted: status $?"
     echo "nominals:"

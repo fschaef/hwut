@@ -1,11 +1,9 @@
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh -- 5 file(s), the book entry, the register id
+      test-app.sh -- 3 file(s), the book entry, the register id
           GOOD/test-app.sh.txt
-          TMP/store/test-app.sh.stderr
-          TMP/store/test-app.sh.stderr.when
-          TMP/store/test-app.sh.stdout
+          OUT/test-app.sh.txt
           TMP/store/test-app.sh.stdout.when
     
     This cannot be undone here. Proceed? [y/N] 
@@ -16,9 +14,6 @@ AFTER a refusal {
     GOOD/test-app.sh.txt
     GOOD/test_ids.dat
     TMP/store/observations.bin
-    TMP/store/test-app.sh.stderr
-    TMP/store/test-app.sh.stderr.when
-    TMP/store/test-app.sh.stdout
     TMP/store/test-app.sh.stdout.when
     book: ['test-app.sh']
 }

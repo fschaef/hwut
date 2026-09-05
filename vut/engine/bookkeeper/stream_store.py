@@ -148,10 +148,15 @@ class Store:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8", newline="") as fh:
             fh.write(text)
+        #  THE FRESHNESS SIDECAR STAYS ON THE STORE'S GROUND, not
+        #  beside the candidate: 'OUT/' carries the run's PRODUCT, and
+        #  a sidecar is not one.
+        when_path = self.bookkeeper.freshness_path(test, choice, subject)
+        when_path.parent.mkdir(parents=True, exist_ok=True)
         freshness = {"instant": instant or _utc_now()}
         if source_digest is not None:
             freshness["source_digest"] = source_digest
-        with open(str(path) + ".when", "w", encoding="utf-8") as fh:
+        with open(when_path, "w", encoding="utf-8") as fh:
             json.dump(freshness, fh, sort_keys=True)
         return path
 
@@ -175,6 +180,15 @@ class Store:
     def timing_path(self, test, choice, subject):
         """RETURN: Path, where the cadence sidecar of that key lives."""
         return self.bookkeeper.timing_path(test, choice, subject)
+
+    def error_witness_path(self, test, choice):
+        """RETURN: Path, 'OUT/<key>.err', the last run's stderr witness."""
+        return self.bookkeeper.error_witness_path(test, choice)
+
+    def freshness_path(self, test, choice, subject):
+        """RETURN: Path, where the freshness sidecar of that key lives
+                   -- the instant and the source digest."""
+        return self.bookkeeper.freshness_path(test, choice, subject)
 
     def write_raw(self, test, choice, subject, text):
         """

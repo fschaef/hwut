@@ -101,6 +101,7 @@ def subject_tuple_of(bookkeeper, test, choice):
             ('.raw', '.times', '.when') left out; empty where the run
             recorded nothing.
     """
+    from vut.engine.bookkeeper.api import SUBJECT_BY_SUFFIX_DB
     probe     = bookkeeper.candidate_path(test, choice, "s")
     base      = probe.parent
     stem      = probe.name[:-1]
@@ -114,7 +115,11 @@ def subject_tuple_of(bookkeeper, test, choice):
         #  section. Packing the bytes would put a blob in a pack meant
         #  to be read.
         if name.endswith((".raw", ".times", ".when", ".cover")): continue
-        name_list.append(name[len(stem):])
+        #  THE FILE WEARS A SUFFIX; THE SUBJECT HAS A NAME. 'x--c.txt'
+        #  is the STDOUT subject, not a 'txt' one -- the bookkeeper
+        #  holds the table, and it is read here in reverse.
+        suffix = name[len(stem):]
+        name_list.append(SUBJECT_BY_SUFFIX_DB.get(suffix, suffix))
     return tuple(sorted(name_list))
 
 
@@ -159,6 +164,15 @@ def find_records(directory, application, choice):
     for subject in ("stdout",):
         take("good %s" % subject,
              bookkeeper.nominal_path(test, choice, subject))
+
+    #  THE ERROR WITNESS. 'OUT/' witnesses the LAST RUN, and where that
+    #  run wrote to stderr it left '<key>.err' there -- cleared before
+    #  every execution, written only on occurrence, so its PRESENCE is
+    #  the statement. Never a subject (E-5): not compared, not a
+    #  nominal, not named in 'output'. Asked for by name, because
+    #  nothing discovers it.
+    take("err", bookkeeper.error_witness_path(os.path.splitext(test)[0],
+                                              choice))
     return found
 
 
@@ -244,7 +258,10 @@ def _subject_db(record_db, prefix):
     """
     RETURN: dict, SUBJECT NAME -> relative path, for every record of
             this kind that is a stream in its own right -- the raw
-            sidecars and the timing sections are not.
+            sidecars and the timing sections are not, AND STDERR IS
+            NOT (E-5: never a nominal, never compared). stderr is
+            SHOWN by 'find_records' and must not reach the verdict or
+            the status line, which speak about SUBJECTS.
 
     The section names read '<kind> <subject>', so the subject is what
     stands after the kind: 'good stdout' -> 'stdout'.
@@ -252,7 +269,8 @@ def _subject_db(record_db, prefix):
     return {key[len(prefix):]: path
             for key, path in record_db.items()
             if key.startswith(prefix)
-            and " raw " not in key and " timing " not in key}
+            and " raw " not in key and " timing " not in key
+            and key != "err"}
 
 
 def _both_text(good_db, out_db):
@@ -419,7 +437,11 @@ def build_pack(directory, application, choice, raw_f,
                           if timing_key in timing_db else []
             if delta_list:
                 text = annotate(text, delta_list)
-        section("%s: %s" % (key.upper(), relative_path), text)
+        #  THE ERROR WITNESS CARRIES NO PATH IN ITS TITLE, as COVERAGE
+        #  does not: the file listing above states every path once, and
+        #  once is where a path belongs.
+        section("ERR" if key == "err"
+                else "%s: %s" % (key.upper(), relative_path), text)
 
     return "\n".join(line_list) + "\n"
 

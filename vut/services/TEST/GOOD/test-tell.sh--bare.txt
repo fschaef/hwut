@@ -10,7 +10,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               files:
                 demo.py                                      29 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
-                TMP/store/demo.py--basic.stdout              11 bytes  (out stdout)
+                OUT/demo.py--basic.txt                       11 bytes  (out stdout)
               coverage: none recorded
               cadence: none recorded
               
@@ -22,7 +22,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               alpha
               beta
               
-              ==[ OUT STDOUT: TMP/store/demo.py--basic.stdout ]===============================
+              ==[ OUT STDOUT: OUT/demo.py--basic.txt ]========================================
               alpha
               BETA
           }

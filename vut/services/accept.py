@@ -161,6 +161,7 @@ def subject_tuple_of(store, test, choice):
             ('.raw', '.times', '.when') left out; empty where the run
             recorded nothing.
     """
+    from vut.engine.bookkeeper.api import SUBJECT_BY_SUFFIX_DB
     probe     = store.bookkeeper.candidate_path(test, choice, "s")
     directory = probe.parent
     stem      = probe.name[:-len("s")]        # 'test--choice.'
@@ -170,7 +171,14 @@ def subject_tuple_of(store, test, choice):
         name = path.name
         if not name.startswith(stem):                       continue
         if name.endswith(SIDECAR_SUFFIX_TUPLE):             continue
-        name_list.append(name[len(stem):])
+        suffix = name[len(stem):]
+        #  THE ERROR WITNESS IS NOT A SUBJECT (E-5): 'OUT/<key>.err'
+        #  stands beside the candidates and is NEVER promoted. Refused
+        #  here by name, so that it can never be read as one.
+        if suffix == "err":                                 continue
+        #  THE FILE WEARS A SUFFIX; THE SUBJECT HAS A NAME: '.txt' is
+        #  the stdout subject. The bookkeeper holds the table.
+        name_list.append(SUBJECT_BY_SUFFIX_DB.get(suffix, suffix))
     return tuple(sorted(name_list))
 
 
@@ -288,8 +296,9 @@ def stderr_spoke_db(store, case_sequence):
     for case in case_sequence:
         test   = case.source_file
         choice = case.choice
-        path   = store.bookkeeper.candidate_path(test, choice,
-                                                 STDERR_SUBJECT)
+        #  THE ERROR WITNESS 'OUT/<key>.err': written only where
+        #  stderr spoke, so its size says it all.
+        path   = store.bookkeeper.error_witness_path(test, choice)
         try:
             size = os.path.getsize(path)
         except OSError:

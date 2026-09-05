@@ -195,11 +195,13 @@ nostore)
     #  the default records the subject beside its freshness sidecar.
     fixture_green
     face --directory=tree --no-store > /dev/null
-    n=$(find tree -name "*.stdout" -not -path "*/GOOD/*" | wc -l)
+    #  A CANDIDATE STANDS IN 'OUT/' AS '<key>.txt' -- the nominal's own
+    #  spelling; only the directory tells them apart.
+    n=$(find tree -path "*/OUT/*.txt" | wc -l)
     echo "candidates after --no-store: $n"
     rm -rf tree; fixture_green
     face --directory=tree > /dev/null
-    n=$(find tree -name "*.stdout" -not -path "*/GOOD/*" | wc -l)
+    n=$(find tree -path "*/OUT/*.txt" | wc -l)
     s=$(find tree -name "*.when" | wc -l)
     echo "candidates after the default: $n   freshness sidecars: $s"
     ;;

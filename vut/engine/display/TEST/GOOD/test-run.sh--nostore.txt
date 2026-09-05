@@ -1,3 +1,3 @@
 candidates after --no-store: 0
-candidates after the default: 1   freshness sidecars: 2
+candidates after the default: 1   freshness sidecars: 1
 <hwut-end>

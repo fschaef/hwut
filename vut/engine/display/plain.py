@@ -240,7 +240,7 @@ class CPlainFlow(CRunReportReceiver):
                                      # run of repeats beneath it
         self.dir_order   = []        # walk order ('tree-begun'), else
                                      # first-seen
-        self.verdict_db  = {}        # (directory, node) -> verdict
+        self.verdict_db  = {}        # directory -> { node -> verdict }
         self.report_db   = {}        # (directory, node) -> report word
         self.cause_db    = {}
         self.detail_db  = {}        # (directory, node) -> the report's numbers (O-19)        # (directory, node) -> cause node
@@ -554,7 +554,7 @@ class CPlainFlow(CRunReportReceiver):
         if began_f:
             self.began_set.discard(key)
             self.parallel_n = max(self.parallel_n - 1, 0)
-        self.verdict_db[key] = verdict
+        self.verdict_db.setdefault(key[0], {})[key[1]] = verdict
         if report is not None: self.report_db[key] = report
         if cause  is not None: self.cause_db[key]  = cause
         if detail is not None: self.detail_db[key] = detail
@@ -693,15 +693,24 @@ class CPlainFlow(CRunReportReceiver):
         else:                          self._marginal(plain, line)
 
     # -- the closing blocks ------------------------------------------------
+    def _verdict_of(self, key):
+        """
+        RETURN: str, the verdict recorded under the (directory, node)
+                'key' -- the tuple form every other database here is
+                keyed by, read out of the nested store.
+
+        KeyError, where no run stands under that key.
+        """
+        return self.verdict_db[key[0]][key[1]]
+
     def _count(self, directory):
         """
         RETURN: [0] int, how many of the directory's runs ended 'ok'.
                 [1] int, how many runs the directory saw at all.
         """
-        verdict_list = [verdict for (d, _n), verdict
-                        in self.verdict_db.items() if d == directory]
-        return (sum(1 for verdict in verdict_list if verdict == "ok"),
-                len(verdict_list))
+        node_db = self.verdict_db.get(directory, {})
+        return (sum(1 for verdict in node_db.values() if verdict == "ok"),
+                len(node_db))
 
     def _failure_key_list(self, directory):
         """
@@ -709,8 +718,10 @@ class CPlainFlow(CRunReportReceiver):
                 not-ok runs, node-sorted -- an unknown verdict reads
                 not-ok.
         """
-        return sorted(key for key, verdict in self.verdict_db.items()
-                      if key[0] == directory and verdict != "ok")
+        return sorted((directory, node)
+                      for node, verdict
+                      in self.verdict_db.get(directory, {}).items()
+                      if verdict != "ok")
 
     def _directory_tree(self):
         """
@@ -870,7 +881,7 @@ class CPlainFlow(CRunReportReceiver):
                 pype script, an interpreter not found, and the like.
         """
         return [key for key in self._failure_key_list(directory)
-                if phrase(self.report_db.get(key, self.verdict_db[key]))
+                if phrase(self.report_db.get(key, self._verdict_of(key)))
                    != "differs from GOOD"]
 
     def tail(self):
@@ -881,9 +892,11 @@ class CPlainFlow(CRunReportReceiver):
         """
         if self.tier is E_Tier.SILENT: return
         write, ink, w = self.write, self.ink, self.width
-        ok_total   = sum(1 for verdict in self.verdict_db.values()
+        ok_total   = sum(1 for node_db in self.verdict_db.values()
+                         for verdict in node_db.values()
                          if verdict == "ok")
-        fail_total = len(self.verdict_db) - ok_total
+        fail_total = sum(len(node_db)
+                         for node_db in self.verdict_db.values()) - ok_total
 
         write("")
         write("=" * w)
@@ -969,7 +982,7 @@ class CPlainFlow(CRunReportReceiver):
                 shown         = ":" if repeat_f else file
                 left          = "%-*s%s" % (choice_column, shown,
                                             choice) if choice else shown
-                token = self.report_db.get(key, self.verdict_db[key])
+                token = self.report_db.get(key, self._verdict_of(key))
                 line  = "    %-*s%s" % (brief_column, left,
                                         ink.fail(phrase(token)))
                 #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the cap,

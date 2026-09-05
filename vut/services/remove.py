@@ -75,9 +75,12 @@ def sidecar_path_tuple(store, test, choice, subject):
     stamp, the raw stream, the cadence. A caller filters for what
     exists; naming a path that does not stand is not an error here.
     """
-    candidate = store.candidate_path(test, choice, subject)
-    yield str(candidate)
-    yield str(candidate) + ".when"
+    #  THE CANDIDATE STANDS IN 'OUT/'; ITS SIDECARS ON THE STORE'S
+    #  GROUND. Each is asked of the bookkeeper, which is the one place
+    #  a path is spelt -- a sidecar is no longer 'the candidate plus a
+    #  suffix'.
+    yield str(store.candidate_path(test, choice, subject))
+    yield str(store.freshness_path(test, choice, subject))
     yield str(store.raw_path(test, choice, subject))
     yield str(store.timing_path(test, choice, subject))
 
@@ -105,7 +108,9 @@ def victim_tuple(store, test, choice, whole_test_f):
 
     found = set()
     for one in choice_list:
-        for subject in ("stdout", "stderr"):
+        witness = str(store.error_witness_path(test, one))
+        if os.path.exists(witness): found.add(witness)
+        for subject in ("stdout",):
             for path in sidecar_path_tuple(store, test, one, subject):
                 if os.path.exists(path): found.add(path)
             nominal = str(store.nominal_path(test, one, subject))

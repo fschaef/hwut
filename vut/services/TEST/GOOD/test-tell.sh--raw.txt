@@ -11,7 +11,7 @@ REACTION  exit code : 0   stderr : 0 bytes
                 demo.py                                      29 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
                 TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
-                TMP/store/demo.py--basic.stdout              11 bytes  (out stdout)
+                OUT/demo.py--basic.txt                       11 bytes  (out stdout)
                 TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
               coverage: none recorded
               cadence: sections verbatim
@@ -28,7 +28,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               raw alpha
               raw BETA
               
-              ==[ OUT STDOUT: TMP/store/demo.py--basic.stdout ]===============================
+              ==[ OUT STDOUT: OUT/demo.py--basic.txt ]========================================
               alpha
               BETA
               

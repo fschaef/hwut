@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "The report service face: one command packs one test whole."
-#     choices    = ["bare", "coverage", "flags", "pack", "raw"]
+#     choices    = ["bare", "coverage", "err", "flags", "pack", "raw"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
@@ -28,7 +28,7 @@
 #
 #     <work>/demo.py                              the source
 #     <work>/GOOD/demo.py--basic.txt              alpha, beta
-#     <work>/TMP/store/demo.py--basic.stdout       alpha, BETA  (differs!)
+#     <work>/OUT/demo.py--basic.txt               alpha, BETA  (differs!)
 #     <work>/TMP/store/...stdout.raw            raw sidecar
 #     <work>/TMP/store/...stdout.times          cadence sidecar
 #
@@ -36,7 +36,8 @@
 # what RECORDING uses. The old fixture spelled 'demo.py--basic', which
 # no real run ever writes; it named a corpus that could not exist, and
 # the face agreed with it because the face spelled the law twice.
-# Candidates live under 'TMP/store/', nominals under 'GOOD/'.
+# Candidates live under 'OUT/' beside the run's other product,
+# nominals under 'GOOD/'; the sidecars stay under 'TMP/store/'.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -45,7 +46,7 @@ TELL="python3 $ROOT/vut/services/tell.py"
 case "$1" in
     --hwut-info)
         echo "The report service face: one command packs one test whole.;"
-        echo "CHOICES: pack, raw, bare, flags, coverage;"
+        echo "CHOICES: pack, raw, bare, flags, coverage, err;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -60,10 +61,13 @@ cd "$WORK"
 printf 'hwut {\n}\n' > hwut-root.conf
 
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
-    mkdir -p GOOD TMP/store
+    #  THE CANDIDATE STANDS IN 'OUT/', spelt as the nominal is spelt:
+    #  'OUT/x--c.txt' against 'GOOD/x--c.txt'. THE SIDECARS STAY on the
+    #  store's ground -- they were the channel, not the product.
+    mkdir -p GOOD OUT TMP/store
     printf 'print("alpha")\nprint("beta")\n' > demo.py
     printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.txt
-    printf 'alpha\nBETA\n'                   > TMP/store/demo.py--basic.stdout
+    printf 'alpha\nBETA\n'                   > OUT/demo.py--basic.txt
     if [ "$1" != "bare" ]; then
         printf 'raw alpha\nraw BETA\n' \
                                 > TMP/store/demo.py--basic.stdout.raw
@@ -113,6 +117,33 @@ bare)
     echo "SUCCESS: what is not there is spoken, not invented."
     ;;
 
+err)
+    #  TWO EXPERIMENTS IN ONE CHOICE: the same pack, without and with a
+    #  stderr candidate beside it. The DIFFERENCE between the two
+    #  reactions is the whole of the claim.
+    build_fixture
+    echo "STIMULUS  hwut.tell demo.py basic          (NO error witness)"
+    run_report demo.py basic
+    echo
+    echo "STIMULUS  the same, after a run wrote to stderr:"
+    mkdir -p OUT
+    printf 'Traceback (most recent call last):\n  ValueError: demo\n' \
+                                > OUT/demo--basic.err
+    echo "          OUT/demo--basic.err written"
+    echo
+    echo "STIMULUS  hwut.tell demo.py basic          (WITH the witness)"
+    run_report demo.py basic
+    echo
+    echo "'OUT/' WITNESSES THE LAST RUN. Where that run wrote to"
+    echo "stderr it left '<key>.err' beside its output -- cleared"
+    echo "before every execution, written only on occurrence, so the"
+    echo "PRESENCE of the file is the statement."
+    echo "NEVER A SUBJECT (E-5): not compared, not a nominal, not"
+    echo "named in output. The VERDICT and the STATUS line speak about"
+    echo "subjects, and neither moves between the two reactions above."
+    echo "SUCCESS: error reporting is shown, and judges nothing."
+    ;;
+
 flags)
     build_fixture
     echo "STIMULUS  the flag spellings, one flag at a time:"
@@ -144,9 +175,8 @@ coverage)
     ROOT="$ROOT" python3 - <<'PYEOF_INNER'
 import json, os, sys
 sys.path.insert(0, os.environ["ROOT"])
-from vut.engine.coverage.record import (CoverageRecord, FileCoverage,
-                                        ranges_of)
-from vut.engine.coverage.binary import pack_record
+from vut.engine.coverage.database.api import (CoverageRecord, FileCoverage,
+                                              ranges_of, pack_record)
 from vut.engine.bookkeeper.test_run_id import TestRunId
 record = CoverageRecord("python", "coverage", "coverage.py-json",
                         run=frozenset([TestRunId(0, 1)]),

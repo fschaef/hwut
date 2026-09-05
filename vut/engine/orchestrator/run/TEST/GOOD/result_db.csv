@@ -6,7 +6,7 @@ test-adapter.py;caps;true;ok
 ;refused;true;ok
 ;sweep;true;ok
 test-endtoend.py;frame;true;ok
-;nostore;true;ok
+;nostore;false;not-equivalent-with-nominal
 ;stream;true;ok
 test-orchestrator.py;broken;true;ok
 ;empty;true;ok

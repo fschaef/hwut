@@ -265,9 +265,12 @@ def test_nostore():
         store_dir = os.path.join(root, "suite", "TEST")
         count = 0
         for base, _dirs, files in os.walk(store_dir):
+            #  A CANDIDATE STANDS IN 'OUT/' AS '<key>.txt' -- the
+            #  nominal's own spelling; only the directory tells them
+            #  apart, so count under 'OUT/' and nowhere else.
             count += sum(1 for name in files
-                         if base != os.path.join(store_dir, "GOOD")
-                         and name.endswith((".stdout",)))
+                         if base == os.path.join(store_dir, "OUT")
+                         and name.endswith((".txt",)))
         return count
 
     banner("record=False: the store stays empty")

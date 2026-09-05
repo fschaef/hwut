@@ -351,6 +351,12 @@ def record(store, configuration, choice_name, provider, wanted=None):
         Path(configuration.test_directory) / configuration.source_file)
     recorded_db = {}
     for name in provided.names():
+        #  STDERR IS NEVER A SUBJECT (E-5): never recorded through the
+        #  store. Its one carrier is the error witness 'OUT/<key>.err',
+        #  which the run writes itself, on occurrence, outside the
+        #  store knob and outside the OK gate -- a crashed run is the
+        #  one whose stderr matters most.
+        if name == "stderr": continue
         with provided[name].open() as reader:
             text = reader.read()
         store.write_candidate(test_name, choice_name, name, text,

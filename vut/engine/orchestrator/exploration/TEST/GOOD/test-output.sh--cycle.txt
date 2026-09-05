@@ -2,8 +2,7 @@ first play --save (no nominal yet): status 0
 residue in the test directory: 0
 candidates:
     test-file.sh.result.csv
-    test-file.sh.stderr
-    test-file.sh.stdout
+    test-file.sh.txt
 accepted: status 0
 nominals:
     test-file.sh.result.csv

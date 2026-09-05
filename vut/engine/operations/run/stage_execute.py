@@ -64,6 +64,9 @@ class StageExecute(I_ExecuteProvider):
                                       "HWUT_NO_TERMINAL": "1"})
         caps = replace(caps, scratch_dir=scratch_dir_of(configuration,
                                                          self.choice_name))
+        #  THE ERROR WITNESS IS CLEARED BEFORE THE RUN, never after:
+        #  what stands in 'OUT/' when this returns is THIS run's.
+        self._clear_error_witness()
         procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         error_link = Link()
@@ -93,6 +96,7 @@ class StageExecute(I_ExecuteProvider):
                           record_list = record_list)
 
         raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
+        self._witness_error(stderr_text)
         missing_report = self._output_files(raw_db)
 
         report    = E_TestRunResult.OK
@@ -113,6 +117,49 @@ class StageExecute(I_ExecuteProvider):
                       report      = report,
                       record_list = record_list,
                       detail      = getattr(self, "detail", None))
+
+    def _error_witness_path(self):
+        """
+        RETURN: Path, 'OUT/<key>--<choice>.err' -- where the last run's
+                stderr stands, if it stood at all.
+        """
+        from ...bookkeeper.api import error_witness_name
+        configuration = self.configuration
+        return configuration.output_directory \
+               / error_witness_name(configuration.key_name, self.choice_name)
+
+    def _clear_error_witness(self):
+        """
+        RETURN: None. Removes the standing '.err' BEFORE the run, so
+                that what is found afterwards is THIS run's and never
+                the one before it.
+
+        Cleared on every execution and written only on occurrence, so
+        the presence of the file IS the statement that this run wrote
+        to stderr. 'OUT/' witnesses the LAST RUN; a '.err' left from an
+        earlier one would witness the wrong one.
+        """
+        try:    self._error_witness_path().unlink()
+        except OSError: pass
+
+    def _witness_error(self, stderr_text):
+        """
+        RETURN: None. Writes 'OUT/<key>.err' where the run wrote to
+                stderr, and nothing where it did not.
+
+        NEVER A SUBJECT (E-5): not compared, not a nominal, not
+        pype-d, and not named in 'output'. It is what a reader of a
+        failed run asks for first, kept where the rest of the run's
+        product is kept.
+        """
+        if not stderr_text: return
+        path = self._error_witness_path()
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(stderr_text, encoding="utf-8")
+        except OSError:
+            pass                        # a witness that cannot be kept
+                                        # is not a verdict about the run
 
     def _output_files(self, raw_db):
         """

@@ -1,4 +1,4 @@
-INSPECT: stored    -> report ok, subjects ['stderr', 'stdout']
+INSPECT: stored    -> report ok, subjects ['stdout']
          stdout    -> 'recorded line\n'
          unstored  -> report recording-missing, subjects []
   OK  : a stored recording is provided

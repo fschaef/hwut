@@ -64,8 +64,9 @@ THE RULE IS EXECUTABLE: 'adm/LAYERING.txt' names this module in a
 ______________________________________________________________________________
 """
 from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
-                            GOOD_OWNED_FILE_TUPLE,
-                            STORE_DIRECTORY_NAME, compare_setup_delta,
+                            GOOD_OWNED_FILE_TUPLE, NOMINAL_SUFFIX_DB,
+                            STORE_DIRECTORY_NAME, SUBJECT_BY_SUFFIX_DB,
+                            compare_setup_delta, error_witness_name,
                             nominal_stands_f)
 from .configuration import (CAPS_FIELD_DB, E_StderrNote, NamingConfig,
                             StoreConfig)
@@ -81,9 +82,11 @@ from .test_run_id   import RunIdFault, TestRunId, run_id_of_text
 
 __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "DirectoryLock", "E_StderrNote", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
-           "NamingConfig", "Observation", "ObservationDb",
-           "ObservationFault", "RunIdFault", "STORE_DIRECTORY_NAME",
+           "NOMINAL_SUFFIX_DB", "NamingConfig", "Observation",
+           "ObservationDb", "ObservationFault", "RunIdFault",
+           "STORE_DIRECTORY_NAME", "SUBJECT_BY_SUFFIX_DB",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",
-           "TestRunId", "compare_setup_delta", "nominal_stands_f",
+           "TestRunId", "compare_setup_delta", "error_witness_name",
+           "nominal_stands_f",
            "observation_of",
            "parse_group_table", "run_id_of_text", "source_digest_of")

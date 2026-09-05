@@ -6,17 +6,13 @@ THE FILE, BEFORE {
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh one -- 5 file(s), the book entry, the register id
+      test-app.sh one -- 3 file(s), the book entry, the register id
           GOOD/test-app.sh--one.txt
-          TMP/store/test-app.sh--one.stderr
-          TMP/store/test-app.sh--one.stderr.when
-          TMP/store/test-app.sh--one.stdout
+          OUT/test-app.sh--one.txt
           TMP/store/test-app.sh--one.stdout.when
     test-app.sh one:
         forgotten: GOOD/test-app.sh--one.txt
-        forgotten: TMP/store/test-app.sh--one.stderr
-        forgotten: TMP/store/test-app.sh--one.stderr.when
-        forgotten: TMP/store/test-app.sh--one.stdout
+        forgotten: OUT/test-app.sh--one.txt
         forgotten: TMP/store/test-app.sh--one.stdout.when
         book entry: removed
         register: choice id retired
@@ -29,17 +25,13 @@ THE FILE {
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh -- 5 file(s), the book entry, the register id
+      test-app.sh -- 3 file(s), the book entry, the register id
           GOOD/test-app.sh--two.txt
-          TMP/store/test-app.sh--two.stderr
-          TMP/store/test-app.sh--two.stderr.when
-          TMP/store/test-app.sh--two.stdout
+          OUT/test-app.sh--two.txt
           TMP/store/test-app.sh--two.stdout.when
     test-app.sh:
         forgotten: GOOD/test-app.sh--two.txt
-        forgotten: TMP/store/test-app.sh--two.stderr
-        forgotten: TMP/store/test-app.sh--two.stderr.when
-        forgotten: TMP/store/test-app.sh--two.stdout
+        forgotten: OUT/test-app.sh--two.txt
         forgotten: TMP/store/test-app.sh--two.stdout.when
         book entry: removed
         register: id retired

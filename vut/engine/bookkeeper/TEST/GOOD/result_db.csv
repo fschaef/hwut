@@ -1,7 +1,7 @@
 test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
 test-bookkeeper.py;damage;true;ok
 ;divergence;true;ok
-;naming;true;ok
+;naming;false;not-equivalent-with-nominal
 ;overwrite;true;ok
 ;protection;true;ok
 ;record;true;ok
@@ -11,7 +11,7 @@ test-group_table.py;faults;true;ok
 ;groups;true;ok
 ;persisted;true;ok
 ;tables;true;ok
-test-stream_store.py;keys;true;ok
+test-stream_store.py;keys;false;not-equivalent-with-nominal
 ;lock_dead;true;ok
 ;lock_live;true;ok
 ;nominal_kinds;true;ok

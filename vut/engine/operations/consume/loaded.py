@@ -25,7 +25,7 @@ DESCRIPTION
        from the load stage the surgery removed.
 ______________________________________________________________________________
 """
-from ..nominal  import RecordNominal
+from ..nominal  import RecordNominal, BytesNominal
 from ..result   import E_TestRunResult
 from ..report   import Provision as ProvisionRecord
 from ..run.core import Subjects
@@ -39,17 +39,27 @@ def loaded(store, test_name, choice_name=None, subject_name_list=None):
             'RECORDING_MISSING': absence is reported, never invented
             as an empty subject.
 
-    'subject_name_list' None means: the standard pair, 'stdout' and
-    'stderr'.
+    'subject_name_list' None means 'stdout' alone: stderr is never a
+    subject (E-5) and is never recorded, so it is never replayed.
     """
     if subject_name_list is None:
-        subject_name_list = ("stdout", "stderr")
+        subject_name_list = ("stdout",)
+    #  STDERR IS NOT A SUBJECT (E-5) and is never recorded through the
+    #  store. A consumer that asks for it is served FROM THE WITNESS,
+    #  'OUT/<key>.err': present, its text; absent, the empty stream --
+    #  the witness is written only where stderr spoke, so absence IS
+    #  silence, and silence is not a missing recording.
+    subject_tuple = tuple(n for n in subject_name_list if n != "stderr")
     path_db = {name: store.candidate_path(test_name, choice_name, name)
-               for name in subject_name_list}
+               for name in subject_tuple}
     if not all(path.exists() for path in path_db.values()):
         return Subjects({}, ProvisionRecord(
                                 report=E_TestRunResult.RECORDING_MISSING))
     reader_db = {name: RecordNominal(path)
                  for name, path in path_db.items()}
+    if "stderr" in subject_name_list:
+        witness = store.error_witness_path(test_name, choice_name)
+        reader_db["stderr"] = RecordNominal(witness) if witness.exists() \
+                              else BytesNominal("", name="stderr")
     return Subjects(reader_db,
                     ProvisionRecord(report=E_TestRunResult.OK))

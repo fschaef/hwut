@@ -137,8 +137,9 @@ def test_naming():
          "the choice is part of the key, so choices never collide"),
         (str(without).endswith("GOOD/parse.txt"),
          "a test without choices carries no choice part"),
-        (str(candidate).endswith("TMP/store/parse--basic.stdout"),
-         "nominals and candidates live in SEPARATE key spaces"),
+        (str(candidate).endswith("OUT/parse--basic.txt"),
+         "nominals and candidates live in SEPARATE key spaces: "
+         "'GOOD/' and 'OUT/', one name, two grounds"),
         (str(raw).endswith(".stdout.raw")
          and str(cadence).endswith(".stdout.times"),
          "the sidecars ride beside the candidate, named after it"),

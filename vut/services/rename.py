@@ -112,15 +112,21 @@ def move_tuple(store, test, choice, fresh_test, fresh_choice,
 
     found = []
     for old_choice, new_choice in pair_list:
-        for subject in ("stdout", "stderr"):
+        #  THE ERROR WITNESS FOLLOWS THE NAME like the rest of the
+        #  run's product; it is asked for by name, not as a subject.
+        a = str(store.error_witness_path(test, old_choice))
+        b = str(store.error_witness_path(fresh_test, new_choice))
+        if os.path.exists(a): found.append((a, b))
+        for subject in ("stdout",):
             candidate = store.candidate_path(test, old_choice, subject)
             fresh     = store.candidate_path(fresh_test, new_choice,
                                              subject)
-            for suffix in ("", ".when"):
-                if os.path.exists(str(candidate) + suffix):
-                    found.append((str(candidate) + suffix,
-                                  str(fresh) + suffix))
-            for verb in ("raw_path", "timing_path"):
+            if os.path.exists(str(candidate)):
+                found.append((str(candidate), str(fresh)))
+            #  THE FRESHNESS SIDECAR IS NOT BESIDE THE CANDIDATE any
+            #  more: it stands on the store's ground and is asked for
+            #  by name, like the other two below.
+            for verb in ("freshness_path", "raw_path", "timing_path"):
                 a = str(getattr(store, verb)(test, old_choice, subject))
                 b = str(getattr(store, verb)(fresh_test, new_choice,
                                              subject))

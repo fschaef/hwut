@@ -14,7 +14,7 @@ test-run.sh;busy;true;ok
 ;jobs-budget;true;ok
 ;labels;true;ok
 ;linear-raw;true;ok
-;nostore;true;ok
+;nostore;false;not-equivalent-with-nominal
 ;refused;true;ok
 ;short-form;true;ok
 ;strategy-refused;true;ok

@@ -1,4 +1,4 @@
-  SAVED: test-new.py.stderr, test-new.py.stdout
+  SAVED: test-new.py.txt
   OK  : status OK
   OK  : the face says what it saved
   OK  : the candidate stands in the store

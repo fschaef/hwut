@@ -1,4 +1,4 @@
-  recorded: ['stderr', 'stdout']
+  recorded: ['stdout']
   OK  : stdout was recorded
   OK  : the candidate stands in the store
   OK  : the candidate holds what the application printed
