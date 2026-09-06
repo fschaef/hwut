@@ -210,6 +210,15 @@ The faces:
                  implicit -- the reading was the consent. Reports as
                  'hwut.accept.apply' does, closing on 'Forgotten n/m'.
 
+    (adm/bundle.sh)
+                 '--app <name>' bundles ONE FACE whole -- its module,
+                 its launchers, its tests and their GOOD files, plus
+                 everything it imports ('--deps', implied). The
+                 documents of every directory touched come BY DEFAULT
+                 ('--no-doc' to leave them): work that changes a
+                 component maintains its documents, and a bundle that
+                 omitted them would invite them to drift.
+
     _target.py   A TEST NAMED BY PATH. 'a/TEST/keep.sh' means the test
                  'keep.sh' in 'a/TEST' on every face that takes bare
                  names ('hwut.remove', 'hwut.remove-choice',

@@ -13,6 +13,8 @@ SELECT_MODE="git"             # git | find | since | list
 SINCE_REF=""
 LIST_FILE=""
 DEPS=0
+DOC=1
+APP_NAME=""
 DIRS=()
 EXTENSIONS=()
 EXTRA_FILES=()
@@ -50,6 +52,16 @@ Selection:
                        symmetry with --use-find)
       --since REF      Select only files changed since REF (implies --git)
       --from-list FILE Bundle exactly the paths listed in FILE (one per line)
+      --app NAME       Bundle one FACE whole: its module, its launcher(s),
+                       its tests and their GOOD files -- and, since a face
+                       that cannot import is no use, its dependencies
+                       (implies --deps). 'bundle.sh --app rename' is
+                       everything a session on 'hwut.rename' needs.
+      --no-doc         Leave out the README, RATIONALE, DISCUSSIONS and
+                       INTERNALS of the directories the bundle touches.
+                       They are included BY DEFAULT: work that changes a
+                       component maintains its documents, and a bundle
+                       that omitted them would invite them to drift.
       --deps           Add every Python module the selection IMPORTS, and
                        what those import, transitively. Bundling one
                        directory otherwise bundles a package that will not
@@ -160,6 +172,10 @@ command_line_parse() {
             -g|--git) SELECT_MODE="git"; shift ;;
             --use-find) SELECT_MODE="find"; shift ;;
             --deps) DEPS=1; shift ;;
+            --no-doc) DOC=0; shift ;;
+            --doc) DOC=1; shift ;;
+            --app) command_line_get_follower APP_NAME "$@"; shift "$SHIFT_COUNT"
+                   SELECT_MODE="app"; DEPS=1 ;;
             --binary) BINARY_MODE="git"; shift ;;
             --chmod-script) CHMOD_SCRIPT=1; shift ;;
             -a|--complete) COMPLETE=1; BINARY_MODE="git"; MAX_FILE_BYTES=0
@@ -317,6 +333,33 @@ select_since() {
     | LC_ALL=C sort -zu
 }
 
+# RETURN: NUL-separated paths that make up one FACE: its module, its
+#         launcher(s), its tests and their GOOD files. A face is named as it
+#         is typed -- 'rename' for 'hwut.rename' -- and its module is looked
+#         for where faces live.
+select_app() {
+    local name="$APP_NAME" found=0 path
+    [[ -n "$name" ]] || die "--app wants a face name, e.g. --app rename"
+    for path in "services/$name.py" services/lib/*/"$name.py"; do
+        [[ -f "$path" ]] || continue
+        printf '%s\0' "$path"; found=1
+    done
+    (( found )) || die "no face '$name': no 'services/$name.py' and no
+       'services/lib/*/$name.py'"
+    # THE LAUNCHERS: 'hwut.rename' and 'hwut.rename-choice' alike, since a
+    # face with two names is one face.
+    for path in bin/hwut."$name" bin/hwut."$name"-* bin/hwut.*."$name"; do
+        [[ -f "$path" ]] && printf '%s\0' "$path"
+    done
+    # THE TESTS AND THEIR NOMINALS: a face without them cannot be proved.
+    for path in $(find . -path ./.git -prune -o \
+                       \( -name "test-$name.*" -o -name "test-$name-*" \
+                          -o -name "test-$name.*--*" \) -print 2>/dev/null \
+                  | sed 's|^\./||'); do
+        printf '%s\0' "$path"
+    done
+}
+
 # RETURN: NUL-separated candidate paths read from LIST_FILE, blank lines and
 #         '#' comment lines dropped.
 select_list() {
@@ -420,6 +463,7 @@ candidates_collect() {
         git)   select_git ;;
         since) select_since ;;
         list)  select_list ;;
+        app)   select_app ;;
       esac
       local file
       for file in ${EXTRA_FILES[@]+"${EXTRA_FILES[@]}"}; do
@@ -445,6 +489,31 @@ candidates_collect() {
             mv "$stream.deps" "$stream"
         fi
         rm -f "$seeds" "$deps"
+    fi
+
+    # The documents of every directory the bundle TOUCHES. Derived, not
+    # global: a tree-wide sweep of text would be mostly irrelevant, where
+    # the directories actually in the bundle are exactly the ones whose
+    # documents the work may have to keep true.
+    if (( DOC )); then
+        local docs where name
+        docs=$(mktemp)
+        tr '\0' '\n' < "$stream" | while read -r path; do
+            where=$(dirname "$path")
+            while [[ "$where" != "." && "$where" != "/" ]]; do
+                for name in README.txt RATIONALE.txt DISCUSSIONS.txt \
+                            INTERNALS.txt; do
+                    [[ -f "$where/$name" ]] && echo "$where/$name"
+                done
+                where=$(dirname "$where")
+            done
+        done | LC_ALL=C sort -u > "$docs"
+        if [[ -s "$docs" ]]; then
+            { cat "$stream"; tr '\n' '\0' < "$docs"; } \
+                | LC_ALL=C sort -zu > "$stream.doc"
+            mv "$stream.doc" "$stream"
+        fi
+        rm -f "$docs"
     fi
     local all_paths=() p
     while IFS= read -r -d '' p; do all_paths+=("$p"); done < "$stream"
