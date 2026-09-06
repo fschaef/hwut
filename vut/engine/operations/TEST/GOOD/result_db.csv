@@ -47,7 +47,7 @@ test-session.py;book;true;ok
 ;where;true;ok
 test-subject_provision.py;bare;true;ok
 ;executes;true;ok
-;loads;true;ok
+;loads;false;not-equivalent-with-nominal
 ;production_false;true;ok
 ;records;true;ok
-;stale;true;ok
+;stale;true;ok;2026-09-06T07:16:12Z

@@ -247,6 +247,8 @@ class CPlainFlow(CRunReportReceiver):
         self.frame_bad_db = {}       # directory -> [role, ...]
         self.fault_list  = []        # (directory, rendered fault line),
         self.refused_db  = {}        # directory -> [(node, reason), ...]
+        self.meta_n      = 0         # cases the standard label hid
+        self.skip_n      = 0         # cases the wish did not want
                                      # (E-41): not run, said at the end
                                      # in arrival order
         self.dir_good_db = {}        # directory -> dir-done's 'good'
@@ -668,11 +670,17 @@ class CPlainFlow(CRunReportReceiver):
                 in sorted(enumerate(self.fault_list),
                           key=lambda p: (rank.get(p[1][0], -1), p[0]))]
 
-    def on_tree_done(self, when, good, fail_n):
+    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
         """RETURN: None. The stream's own closing word, held for the
-        tail; a line in the VERBOSE tier alone."""
+        tail; a line in the VERBOSE tier alone. 'skip_n' is what the
+        wish did not want; 'meta_n' what the standard label hid --
+        both said once, at the end."""
         self.good_f = good
         self.fail_n = fail_n
+        #  An absent optional arrives as None (receiver.py); zero is
+        #  what it means.
+        self.meta_n = meta_n or 0
+        self.skip_n = skip_n or 0
         if self.tier is not E_Tier.VERBOSE: return
         self._line(when, "TREE ", self.ink.bold("TREE "),
                    "done, %d failure(s)" % fail_n,
@@ -926,6 +934,7 @@ class CPlainFlow(CRunReportReceiver):
         if not fail_dir_list:
             self._write_refused(write, w)
             write("=" * w)
+            self._write_final_bar(write, w)
             return
         write("")
         write("=" * w)
@@ -994,6 +1003,111 @@ class CPlainFlow(CRunReportReceiver):
                 write(line)
         self._write_refused(write, w)
         write("=" * w)
+        self._write_final_bar(write, w)
+
+    def _write_final_bar(self, write, w):
+        """
+        RETURN: None. THE LAST TWO LINES OF A RUN: one line of numbers
+                under the prefix 'RESULTS:', then one bordered bar of
+                width 'w' whose green, yellow and red regions are the
+                ok, skipped and failed counts IN PROPORTION -- the
+                shape of the run, read before its numbers are. Nothing
+                where nothing was counted.
+
+            RESULTS: <ok> ok, <fail> fail, [<skip> skip,]
+                     [<refused> refused,] [<meta> meta,] <s.ss> [sec]
+            |    ok    |skip|   fail   |
+
+        SIX NUMBERS, NONE DERIVABLE FROM ANOTHER. 'run' (ok + fail)
+        and 'total' (run + skip) were dropped: a reader recomputes
+        them faster than he reads them, and 'total' did not count the
+        refused, so the word did not mean what it said. Each of skip,
+        refused and meta appears only where it is not zero.
+
+        THE PREFIX IS THE ANCHOR. A test whose subject is the run's
+        FLOW and not its arithmetic tolerates this line with one
+        eq-pattern, 'RESULTS: .*'; a test whose subject IS the line
+        must not.
+
+        Each region opens with '|' and carries its word CENTRED -- or
+        its first letter where the word does not fit, or nothing where
+        only the border fits. A NON-EMPTY REGION IS NEVER NARROWER
+        THAN ITS BORDER: one failure among a thousand passes still
+        shows, which proportion alone would round away.
+
+        SKIPPED is what the wish did not want. REFUSED is what could
+        not run for want of a nominal -- stated, and listed by name in
+        the REFUSED block above. META is what the standard label hid.
+        Neither refused nor meta is drawn: neither was ever selected.
+        """
+        ink = self.ink
+        ok_n   = sum(1 for node_db in self.verdict_db.values()
+                     for verdict in node_db.values() if verdict == "ok")
+        run_n  = sum(len(node_db) for node_db in self.verdict_db.values())
+        fail_n = run_n - ok_n
+        skip_n = self.skip_n
+        refused_n = sum(len(pl) for pl in self.refused_db.values())
+        if run_n == 0 and skip_n == 0 and refused_n == 0: return
+
+        part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
+        if skip_n:      part_list.append("%d skip" % skip_n)
+        if refused_n:   part_list.append("%d refused" % refused_n)
+        if self.meta_n: part_list.append("%d meta" % self.meta_n)
+        part_list.append("%s [sec]" % self._elapsed_seconds())
+        write("")
+        write("RESULTS: %s" % ", ".join(part_list))
+
+        total = run_n + skip_n
+        if total == 0: return
+        span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n}
+        #  A NON-EMPTY REGION IS AT LEAST ITS BORDER. Reserve one
+        #  column each, share the rest by proportion, and give the
+        #  remainder to the largest. ONE COLUMN IS HELD BACK for the
+        #  CLOSING MARKER: the bar is bounded on both sides, so its
+        #  right edge is as plain as its left and a region that runs
+        #  to the end does not look cut off.
+        floor_db = {k: (1 if n else 0) for k, n in span_db.items()}
+        free     = w - 1 - sum(floor_db.values())
+        width_db = {k: floor_db[k] + (n * free) // total
+                    for k, n in span_db.items()}
+        rest     = w - 1 - sum(width_db.values())
+        width_db[max(span_db, key=lambda k: span_db[k])] += rest
+
+        def region(word, width):
+            """RETURN: str, '|' then 'word' centred in what is left;
+            the first letter where the word does not fit; the border
+            alone where nothing else does; nothing where the region is
+            empty."""
+            if width <= 0: return ""
+            room = width - 1
+            text = word if len(word) + 2 <= room \
+                   else word[0] if room >= 1 else ""
+            left = (room - len(text)) // 2
+            return "|" + " " * left + text + " " * (room - left - len(text))
+
+        #  THE CLOSING MARKER wears the ground of the LAST non-empty
+        #  region, so the bar's colour runs to its own edge.
+        last = "fail" if fail_n else "skip" if skip_n else "ok"
+        paint_db = {"ok": ink.ground_ok, "skip": ink.ground_skip,
+                    "fail": ink.ground_fail}
+        write(ink.ground_ok  (region("ok",   width_db["ok"]))
+              + ink.ground_skip(region("skip", width_db["skip"]))
+              + ink.ground_fail(region("fail", width_db["fail"]))
+              + paint_db[last]("|"))
+
+    def _elapsed_seconds(self):
+        """
+        RETURN: str, the whole stream's span in seconds, two decimals
+                ('58.23'); '-' where no event arrived or a 'when' does
+                not parse.
+        """
+        if self.when_last is None: return "-"
+        try:
+            t0 = datetime.fromisoformat(str(self.when_first))
+            t1 = datetime.fromisoformat(str(self.when_last))
+            return "%.2f" % (t1 - t0).total_seconds()
+        except (TypeError, ValueError):
+            return "-"
 
     def _write_refused(self, write, w):
         """

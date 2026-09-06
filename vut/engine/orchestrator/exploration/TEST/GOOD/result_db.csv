@@ -24,9 +24,9 @@ test-interview.py;block;true;ok
 ;precedence;true;ok
 ;procsitter;true;ok
 ;silence;true;ok
-test-output.sh;cycle;false;not-equivalent-with-nominal
+test-output.sh;cycle;true;ok
 ;declare;true;ok
-;forgotten;true;ok
+;forgotten;false;not-equivalent-with-nominal
 ;refuse;true;ok
 test-printer.py;directory;true;ok
 ;faults;true;ok

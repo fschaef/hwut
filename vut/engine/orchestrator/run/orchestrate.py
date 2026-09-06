@@ -258,7 +258,13 @@ class CTreeScheduler:
         good_f = not tree_plan.fault_tuple \
                  and all(done.good_f for done in done_list)
         fail_n = sum(done.fail_n for done in done_list)
-        emit("tree-done", good=good_f, fail_n=fail_n)
+        #  'meta_n' AND 'skip_n' ARE OPTIONAL AND ABSENT WHEN ZERO: a receiver that
+        #  does not know the field never meets it unless the run had
+        #  something to say.
+        extra = {}
+        if tree_plan.meta_hidden_n:  extra["meta_n"] = tree_plan.meta_hidden_n
+        if tree_plan.wish_skipped_n: extra["skip_n"] = tree_plan.wish_skipped_n
+        emit("tree-done", good=good_f, fail_n=fail_n, **extra)
         queue.put_nowait(None)
 
     async def _guarded(self, unit, emit, budget):

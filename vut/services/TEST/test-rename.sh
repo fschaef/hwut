@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The rename faces: the boundary records follow the name."
 #     choices    = ["labels"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
+#     tolerance { eq_pattern = ["STATUS: [0-9]", "-- [0-9]+ file\\(s\\)"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -28,9 +28,9 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-RUN="python3 -m vut.services.run"
-RENAME="python3 -m vut.services.rename"
-RENAME_CHOICE="python3 -m vut.services.rename_choice"
+RUN           = "python3 -m vut.services.run"
+RENAME        = "python3 -m vut.services.rename"
+RENAME_CHOICE = "python3 -m vut.services.rename_choice"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

@@ -21,3 +21,4 @@ test-readers.py;absent;true;ok
 ;witnessed;true;ok
 test-real-input.py;every_artefact;true;ok
 ;every_format;true;ok
+;no_orphan;true;ok

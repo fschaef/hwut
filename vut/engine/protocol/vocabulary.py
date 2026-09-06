@@ -44,7 +44,8 @@ KIND_DB = {
     "refused":    ({"directory": str, "node": str, "text": str}, {}),
     "dir-done":   ({"directory": str, "good": bool,
                     "fail_db": dict}, {}),
-    "tree-done":  ({"good": bool, "fail_n": int}, {}),
+    "tree-done":  ({"good": bool, "fail_n": int}, {"meta_n": int,
+                                                     "skip_n": int}),
 }
 
 _FIELD_TEXT_DB = {
@@ -73,6 +74,12 @@ _FIELD_TEXT_DB = {
     "fail_db":        "node name -> terminal state, the failures "
                       "alone",
     "fail_n":         "how many nodes failed, tree-wide",
+    "skip_n":         "how many cases the wish did not want -- present in "
+                      "the tree, not selected, not run; the SKIPPED of the "
+                      "closing bar",
+    "meta_n":         "how many cases the standard label 'meta' hid from "
+                      "a wish that named no label -- excluded, not run, "
+                      "not refused; stated once in the closing numbers",
 }
 
 

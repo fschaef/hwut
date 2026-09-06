@@ -116,7 +116,8 @@ from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
                                                              GOOD_OWNED_FILE_TUPLE,
-                                                             TestIdDb, TestIdFault)
+                                                             TestIdDb, TestIdFault,
+                                                             key_parts_of)
 from   vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
@@ -377,15 +378,12 @@ def record_key_of(name):
     A FILE IT CANNOT NAME IS SOMEBODY'S -- a note, a fixture, a
     checked-in artefact -- and is never offered for removal.
     """
-    stem = name
-    for suffix in (".when", ".times", ".raw"):
-        if stem.endswith(suffix): stem = stem[:-len(suffix)]
-    remainder, dot, _subject = stem.rpartition(".")
-    if not dot:                          return None   # no subject part
-    if "--" in remainder:
-        test, _, choice = remainder.partition("--")
-    else:
-        test, choice = remainder, None
+    #  THE NAMING IS THE BOOKKEEPER'S: it wrote the key, it reads it
+    #  back. This face adds only the gate it alone knows -- which
+    #  extensions name a source file in this tree.
+    parts = key_parts_of(name)
+    if parts is None:                    return None   # no subject part
+    test, choice, _subject = parts
     _, dot, extension = test.rpartition(".")
     if not dot or extension not in SOURCE_EXTENSION_SET:
         return None
@@ -690,6 +688,7 @@ def main(argv=None, write=None):
 
     finding_list = []
     refusal_list = []
+    app_path_list = []
     for where, result in exploration:
         whole = os.path.join(root, where)
         try:
@@ -702,6 +701,8 @@ def main(argv=None, write=None):
                                                 aspect_set, wanted_f)
         finding_list.extend(found)
         refusal_list.extend(refused)
+        app_path_list.extend(os.path.join(whole, app.source_file)
+                             for app in result.app_set)
 
     #  -- the report ------------------------------------------------------
     write("SANITIZE, in '%s': %s%s"
@@ -739,6 +740,23 @@ def main(argv=None, write=None):
                 #  A 'books' finding is KEPT by design, and said so
                 #  ('removed'); a kept disagreement is no fault of
                 #  the removal.
+                good_f = False
+
+    #  THE RE-RUN TRIGGER (ruled 2026-09-05). A sanitize that ACTS has
+    #  changed what the tree's recordings rest on; every recording is
+    #  then suspect, and the channel's freshness is a comparison of
+    #  modification times. So every test application is TOUCHED:
+    #  younger than every recording, every refreshing face runs it
+    #  next time it is asked, and no recording that predates this
+    #  sanitize is presented as current.
+    if apply_f and app_path_list:
+        write("")
+        write("TOUCHED (the re-run trigger): %d test application(s)"
+              % len(app_path_list))
+        for path in app_path_list:
+            try:                os.utime(path, None)
+            except OSError as error:
+                write("    could not touch %s: %s" % (shown(root, path), error))
                 good_f = False
 
     if target_list:

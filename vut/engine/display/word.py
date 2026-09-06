@@ -205,6 +205,18 @@ class CInk:
         """
         return self.paint(text, 97, 48, 5, 208)
 
+    #  THE FINAL BAR'S THREE GROUNDS: ok on green, skipped on yellow,
+    #  failed on red -- a block of colour whose WIDTH is the count, so
+    #  the shape of a run is read before its numbers are. Each carries
+    #  its word: bright white (97) on green and red, black (30) on
+    #  yellow, where white would not read. THE FAIL GROUND IS THE ONE
+    #  THE '[FAIL]' TAG WEARS -- 'FAIL_TAG_CODE', 256-colour 196 --
+    #  never the base-16 '41', which is palette slot 1 and orange in
+    #  several themes.
+    def ground_ok(self, text):    return self.paint(text, 97, 42)
+    def ground_skip(self, text):  return self.paint(text, 30, 43)
+    def ground_fail(self, text):  return self.paint(text, *FAIL_TAG_CODE)
+
     def directory(self, text):
         """
         RETURN: str, a directory's name in the directory's own colour

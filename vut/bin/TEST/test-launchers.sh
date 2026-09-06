@@ -39,8 +39,9 @@ case "$1" in
         exit 0 ;;
 esac
 
-FACE_LIST="show plan run accept target cov compare merge tell
-           stability wishlist report remove remove-choice
+FACE_LIST="show plan run accept accept.propose accept.apply target cov
+           compare merge tell stability wishlist report
+           remove remove-choice remove.propose remove.apply
            rename rename-choice sanitize pype"
 
 first_line() { grep -m1 -v '^[[:space:]]*$'; }

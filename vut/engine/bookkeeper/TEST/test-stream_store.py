@@ -92,8 +92,9 @@ def test_keys():
         (no_choice.name == "parse.txt",
          "a test without choices carries no choice part"),
         (with_choice.parent.name == "GOOD"
-         and candidate.parent.name == "TMP/store",
-         "nominals and candidates live in SEPARATE key spaces"),
+         and candidate.parent.name == "OUT",
+         "nominals and candidates live in SEPARATE key spaces: "
+         "'GOOD/' and 'OUT/', one name, two grounds"),
     ])
     _verdict(ok, "one key per (test, choice, subject); two spaces.")
 

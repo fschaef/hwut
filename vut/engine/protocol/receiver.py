@@ -126,6 +126,6 @@ class CRunReportReceiver:
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. One directory's run ended."""
 
-    def on_tree_done(self, when, good, fail_n):
+    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
         """RETURN: None. The run ended; 'None' follows on the
         queue."""

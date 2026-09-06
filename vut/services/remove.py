@@ -55,6 +55,7 @@ from   vut.engine.bookkeeper.api import Store
 from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
+from   ._target                           import split_words, TargetError
 
 USAGE = ("usage: hwut.remove <test> [<test>...] [--yes] "
          "[--directory=<path>]\n"
@@ -216,6 +217,14 @@ def main(argv=None, write=None, read_line=None, choice_form_f=False):
         write("REFUSED: '%s' does not take: %s"
               % (name, ", ".join(sorted(unknown))))
         write(USAGE)
+        return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH stands in the directory the path names
+    #  ('services/_target.py'): 'a/TEST/keep.sh' is 'keep.sh' in
+    #  'a/TEST', on this face as on every other.
+    try:
+        directory, word_list = split_words(word_list, directory)
+    except TargetError as error:
+        write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)

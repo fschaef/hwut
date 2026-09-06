@@ -1,4 +1,13 @@
 test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+regression-1.py;amnesia;true;ok
+;pruning_analogy;true;ok
+;pruning_trans;true;ok
+regression-2.py;bool;true;ok
+;csp;true;ok
+;edit-merge;true;ok
+;visible-nothing;true;ok
+regression-3.py;associate;true;ok
+;equivalence;true;ok
 test-associate-race.py;jittery;true;ok
 ;nominal-slow;true;ok
 ;subject-slow;true;ok

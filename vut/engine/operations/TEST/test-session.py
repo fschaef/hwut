@@ -166,8 +166,9 @@ def test_recording_feeds_replay():
     print("         replay recorded nothing: %s"
           % (replayed.recorded_db is None))
     ok = _check([
-        (sorted(executed.recorded_db) == ["stderr", "stdout"],
-         "a Run stores every subject it provided"),
+        (sorted(executed.recorded_db) == ["stdout"],
+         "a Run stores every subject it provided -- stderr excepted "
+         "(E-5): its carrier is the witness, never a record"),
         (stored == executed.recorded_db["stdout"],
          "and stores the SAME execution that was judged"),
         (replayed.recorded_db is None,

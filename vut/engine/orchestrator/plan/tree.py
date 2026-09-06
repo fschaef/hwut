@@ -48,6 +48,8 @@ class CTreePlanEntry:
     on_exit:       str | None
     report_tuple:  tuple
     fault_tuple:   tuple
+    meta_hidden_n: int = 0       # cases 'meta' hid from a label-less wish
+    wish_skipped_n: int = 0      # cases the wish did not want
     refused_tuple: tuple = ()   # (name, reason): not run, and said so
 
 
@@ -63,6 +65,18 @@ class CTreePlan:
         """YIELD: [0] CTreePlanEntry  one directory's entry, walk
                                       order."""
         yield from self.entry_tuple
+
+    @property
+    def meta_hidden_n(self):
+        """RETURN: int, cases the standard label 'meta' hid across the
+                   whole tree -- excluded, and said so at the end."""
+        return sum(entry.meta_hidden_n for entry in self.entry_tuple)
+
+    @property
+    def wish_skipped_n(self):
+        """RETURN: int, cases the wish did not want, tree-wide -- the
+                   SKIPPED of the run's last line."""
+        return sum(entry.wish_skipped_n for entry in self.entry_tuple)
 
 
 def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
@@ -116,6 +130,8 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         entry_list.append(CTreePlanEntry(
             directory    = directory,
             plan         = plan,
+            meta_hidden_n = task_list.meta_hidden_n,
+            wish_skipped_n = task_list.wish_skipped_n,
             app_set      = result.app_set,
             on_entry     = spec.on_entry,
             on_exit      = spec.on_exit,

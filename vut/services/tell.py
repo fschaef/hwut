@@ -308,8 +308,77 @@ def _place(directory):
     return relative.replace(os.sep, "/")
 
 
+def refresh(directory, application, choice):
+    """
+    RETURN: str, one line for the pack's header saying what provision
+            did before the pack was read -- 'ran: (A.1) ...' where the
+            recording was stale and the test was run, 'current: (A.2)
+            ...' where it stood; None where the channel could not be
+            asked (no tree, no such test), and the pack shows what
+            stands, as it always did.
+
+    THROUGH THE ONE CHANNEL (operations disc-2, E-40): a face that
+    OBTAINS A SUBJECT AND DOES SOMETHING WITH IT holds a CURRENT one.
+    'tell' presents; so it REFRESHES -- 'provider_of(refresh=True)':
+    PROVIDE where the recording is older than what it was recorded
+    from, RECORDED where it is not. Where it must run, it runs through
+    the session, held, recorded and booked as 'hwut.run' books it.
+    """
+    from vut.engine.orchestrator.exploration            import selection
+    from vut.engine.orchestrator.exploration.task_list   import SelectionError
+    from vut.engine.orchestrator.plan.wish              import (parse_wish,
+                                                                with_targets,
+                                                                WishError)
+    from vut.engine.operations                          import subject_provision
+    from vut.engine.operations.session                  import run_test, Request
+    from vut.engine.orchestrator.run.adapter            import test_configuration_of
+    from vut.engine.bookkeeper.api                      import Store
+    from vut.auxiliary.directory_mutex                  import DirectoryBusy
+    import asyncio
+    try:
+        wish, _ = parse_wish([])
+        wish    = with_targets(wish, [application] if choice is None
+                                     else [application, choice])
+        found   = selection.of_directory(directory, wish, None, base_f=True)
+    except (SelectionError, WishError, OSError):
+        return None
+    result     = found.result_db.get(".")
+    bookkeeper = found.bookkeeper_db.get(".")
+    if result is None or bookkeeper is None: return None
+    if application not in result.app_set.app_db: return None
+    store          = Store(bookkeeper)
+    language_setup = result.app_set.directory_spec.language_setup
+    configuration  = test_configuration_of(result.app_set.app_db[application],
+                                           directory,
+                                           language_setup=language_setup)
+    said = []
+    for entry in found.case_list:
+        case = entry.case
+        if case.source_file != application: continue
+        if choice is not None and case.choice != choice: continue
+        _, decision = subject_provision.provider_of(configuration, store,
+                                                    case.choice, refresh=True)
+        #  A PACK IS MACHINE-FREE: the decision names the file it
+        #  compared by its anchored path; the pack says it relative
+        #  to the test directory.
+        because = decision.because.replace(
+                      os.path.abspath(directory) + os.sep, "")
+        word = decision.what
+        if word is subject_provision.E_Decision.PROVIDE:
+            try:
+                asyncio.run(run_test(configuration,
+                                     Request(choice=case.choice, record=True),
+                                     bookkeeper=bookkeeper))
+                said.append("ran %s" % because)
+            except DirectoryBusy as error:
+                said.append("could not run -- %s" % error)
+        else:
+            said.append("current %s" % because)
+    return "; ".join(said) if said else None
+
+
 def build_pack(directory, application, choice, raw_f,
-               coverage_f=True):
+               coverage_f=True, provision_line=None):
     """
     RETURN: str, the whole pack: metadata first, then one delimited
             section per file -- source, GOOD, OUT (cadence-prefixed
@@ -375,6 +444,8 @@ def build_pack(directory, application, choice, raw_f,
                  % (choice if choice is not None else "<none>"),
                  "verdict:       %s" % verdict,
                  "status report: %s" % status]
+    if provision_line is not None:
+        line_list.append("provision:     %s" % provision_line)
     line_list.append("files:")
     if os.path.isfile(source_path):
         line_list.append("  %-40s %6i bytes  (source)"
@@ -488,9 +559,11 @@ def _main(argv):
     application = os.path.basename(arguments.application)
     directory   = os.path.dirname(os.path.abspath(
                                   arguments.application))
+    provision_line = refresh(directory, application, arguments.choice)
     sys.stdout.write(build_pack(directory, application,
                                 arguments.choice, arguments.raw,
-                                not arguments.no_coverage))
+                                not arguments.no_coverage,
+                                provision_line=provision_line))
     return E_ExitCode.OK
 
 

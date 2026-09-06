@@ -12,6 +12,7 @@ set -euo pipefail
 SELECT_MODE="git"             # git | find | since | list
 SINCE_REF=""
 LIST_FILE=""
+DEPS=0
 DIRS=()
 EXTENSIONS=()
 EXTRA_FILES=()
@@ -49,6 +50,12 @@ Selection:
                        symmetry with --use-find)
       --since REF      Select only files changed since REF (implies --git)
       --from-list FILE Bundle exactly the paths listed in FILE (one per line)
+      --deps           Add every Python module the selection IMPORTS, and
+                       what those import, transitively. Bundling one
+                       directory otherwise bundles a package that will not
+                       import. The closure is 'adm/dependency.py', which
+                       reads the tree with 'adm/import_graph.py' -- one
+                       analysis, one place.
 
 Exclusion:
   -x NAME1 [NAME2 ...] Directory names to prune, with everything below. Matched
@@ -152,6 +159,7 @@ command_line_parse() {
                          SELECT_MODE="list" ;;
             -g|--git) SELECT_MODE="git"; shift ;;
             --use-find) SELECT_MODE="find"; shift ;;
+            --deps) DEPS=1; shift ;;
             --binary) BINARY_MODE="git"; shift ;;
             --chmod-script) CHMOD_SCRIPT=1; shift ;;
             -a|--complete) COMPLETE=1; BINARY_MODE="git"; MAX_FILE_BYTES=0
@@ -418,6 +426,26 @@ candidates_collect() {
           printf '%s\0' "$file"
       done
     } | LC_ALL=C sort -z > "$stream"
+
+    # --deps: every module the selection imports, transitively. Added to
+    # the candidate stream, so the filters judge them as they judge the
+    # rest -- a dependency is not exempt from --exclude or the size cap.
+    if (( DEPS )); then
+        local seeds deps
+        seeds=$(mktemp); deps=$(mktemp)
+        tr '\0' '\n' < "$stream" | grep -e '\.py$' > "$seeds" || true
+        if [[ -s "$seeds" ]]; then
+            if ! xargs -a "$seeds" python3 "$(dirname "$0")/dependency.py" \
+                 > "$deps"; then
+                echo "Warning: --deps: some modules could not be read;" \
+                     "see the FAULT lines above" >&2
+            fi
+            { cat "$stream"; tr '\n' '\0' < "$deps"; } \
+                | LC_ALL=C sort -zu > "$stream.deps"
+            mv "$stream.deps" "$stream"
+        fi
+        rm -f "$seeds" "$deps"
+    fi
     local all_paths=() p
     while IFS= read -r -d '' p; do all_paths+=("$p"); done < "$stream"
     sizes_prefetch all_paths

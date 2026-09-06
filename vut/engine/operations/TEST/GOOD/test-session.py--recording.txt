@@ -1,7 +1,7 @@
-INSPECT: recorded subjects = ['stderr', 'stdout']
+INSPECT: recorded subjects = ['stdout']
          the judged run and the stored one match: True
          replay recorded nothing: True
-  OK  : a Run stores every subject it provided
+  OK  : a Run stores every subject it provided -- stderr excepted (E-5): its carrier is the witness, never a record
   OK  : and stores the SAME execution that was judged
   OK  : a Replay records nothing -- it would write back what it read
 SUCCESS: what was judged is what is recorded.

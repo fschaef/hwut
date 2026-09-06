@@ -84,5 +84,8 @@ suite/TEST
     test-35.sh   display target unreachable
     test-36.sh   a token nobody taught
 ==============================================================================
+
+RESULTS: 0 ok, 37 fail, 37.00 [sec]
+|                                    fail                                    |
 [fold: good_f=False fail_n=37 verdict_n=37 fault_n=0]
 <hwut-end>

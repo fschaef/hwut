@@ -1,5 +1,5 @@
   younger: provide   (A.1)
-  forced:  provide   (A.1)
+  forced:  provide   (A.1) forced
   OK  : a younger source executes
   OK  : step (A.1) decided
   OK  : the new recording is the new text's

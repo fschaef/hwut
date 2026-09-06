@@ -1586,6 +1586,40 @@ GRAVEYARD A 'production=False' refusal in the channel itself --
           ceremony, and a second run path beside it is the very thing
           this entry removes.
 
+AMENDED (2026-09-05, the criterion). E-40's sweep found "the faces that
+          went around it" by asking who OBTAINS A STREAM AND JUDGES IT --
+          accept, merge, play, stability. 'hwut.tell' obtains and only
+          presents, and was not found. THE CRITERION IS NOT 'OBTAINS
+          AND JUDGES'; IT IS 'OBTAINS AND DOES SOMETHING WITH IT'. A
+          face that shows a stale candidate without saying so tells the
+          same lie a report would, and disc-2 f-4 wrote the remedy for
+          report already: say what the previous text printed.
+
+          Three intents now stand in 'decide()' (ruled 2026-09-05):
+            RUN      'hwut.run'. The request IS to run; a producer
+                     never takes RECORDED. The closure a run could
+                     check names the test's own sources, and the
+                     framework that runs them is not in it and cannot
+                     be -- so 'the recording is current' is a claim a
+                     producer cannot verify, and it was found replaying
+                     a stale OUT/ against a fresh GOOD/.
+            REFRESH  'hwut.tell', 'hwut.accept'. PROVIDE where the
+                     recording is older than what it was recorded
+                     from, RECORDED where it is not; where it runs, it
+                     runs through the session. tell's header says which
+                     happened ('provision: ran (A.1) ...' / 'current
+                     (A.2) ...'); accept prints 'RUN:' per case it ran.
+                     accept's '--force-run' runs every selected case
+                     regardless -- the same word 'hwut.run' has.
+            READ     merge, stability, replay, report. Never execute.
+
+          THE RE-RUN TRIGGER. Freshness is a comparison of modification
+          times, so 'hwut.sanitize --apply' TOUCHES every test
+          application it explored: younger than every recording, so no
+          recording that predates the sanitize is presented as current
+          by any refreshing face. 'hwut.cov' still reads the coverage
+          record directly and is the one face left outside the channel.
+
 E-41  THE GATE IS ON THE NOMINAL                                (2026-09-02)
 
 PROBLEM   A copy of a test source -- 'mytest.py.backup', with the
@@ -1793,3 +1827,203 @@ FOUND     'plan/TEST/test-wish.py' carried a 'BookStub' whose
 
 COST      None. Services answers 132 ok where it answered 126, the
           five being the new choices.
+
+E-44  A PROPOSAL IS A LIST OF REPLACEMENTS, READ BEFORE IT IS MADE
+                                                              (2026-09-05)
+------------------------------------------------------------------------------
+PROBLEM   A run reports thirty-five failures across seven directories.
+          Blessing them one at a time is a day; blessing them in bulk
+          is blind, and a real regression hides in the mass -- which
+          happened, twice, in the session that produced this entry.
+          What was missing is a form in which a reader can SEE what he
+          is about to bless, and veto one line of it.
+
+DECISION  'hwut.accept.propose <n>' -- ITS OWN FACE, over accept's
+          brick. It BLESSES NOTHING and RUNS NOTHING: it reads what
+          stands and writes
+
+              # TEST RUN: <dir>/<test-app> <choice>
+              # -- [4711] OUT:  "<what the run produced>"
+              #    [4712] OUT:  "<and the next, if it differs>"
+              # => [4721] GOOD: "<what stands as the nominal today>"
+              #    [4722] GOOD: "<and the next>"
+              <dir>/<test-app> <choice>
+
+          ACCEPT THIS AND THE 'OUT' LINE BECOMES THE NOMINAL, in place
+          of the quoted line below it. Nothing else in the nominal
+          moves. ADJACENT DIFFERENCES STAND AS ONE BLOCK: several
+          lines replaced by several are one replacement and read as
+          one, not as a column of pairs. Every line carries ITS OWN
+          NUMBER, padded to one width per case so blocks line up.
+          Both sides are QUOTED and START AT ONE COLUMN, and
+          the text is THE FILE'S OWN LINE -- not the engine's compared
+          cell. The cells are what the tolerances made equal and are
+          the right thing to JUDGE by; what is WRITTEN is the
+          candidate's literal line, spaces and all, and a proposal
+          that showed the stripped form would misstate its own act.
+          A case over the bound gets ONE line and no target --
+          '# DIFF(<target>) > <n> lines' -- and 'hwut.tell' shows it
+          whole. A run of those stands UNBROKEN: it is a list, and a
+          blank between its lines would make four findings look like
+          four sections.
+          A line that AGREES does not appear -- a proposal shows only
+          what would change. An empty 'OUT' is a nominal line that
+          GOES; an empty bracket, a line that ARRIVES.
+
+          TWO SINKS, TWO AUDIENCES. '-o <file>' is REQUIRED and takes
+          the proposal; what cannot be proposed -- a difference over
+          the bound, a text that will not read -- goes to STDOUT, one
+          line each. So the FILE holds nothing but what can be
+          blessed, and is handed back unedited save for the targets
+          refused: a proposal one must strip before use is not a
+          proposal.
+
+          THE COMMENT IS THE VETO. The reader deletes a target or puts
+          '#' before it, and hands the file back:
+          'hwut.accept.apply <file>'.
+
+          THREE ACTS, THREE NAMES. 'hwut.accept' blesses what a WISH
+          selects; 'hwut.accept.propose' blesses NOTHING and writes
+          what could be; 'hwut.accept.apply' blesses what a FILE
+          names -- the word the tree already uses for 'act on what was
+          reported' ('hwut.sanitize --apply'). Each is a face over the one brick, and none is a flag
+          on another: a face that blesses should not also be the face
+          that refuses to, and running a script of blessings is not
+          the same act as answering a wish.
+
+          THE APPLY FACE REPORTS A COLUMN. Applying a file touches
+          fifty targets across seven directories, and 'hwut.accept's
+          per-directory banner, rule, count and explanatory paragraph
+          -- right for a wish over one directory -- became a flood in
+          which the one failure that mattered was lost. So: ONE LINE
+          PER TARGET with '[DONE]' or '[ERROR]' in one column, then
+          ONE SENTENCE per failure, and every line of the file
+          answered, a target that matched nothing included.
+
+          THE APPLY FACE ASKS NOTHING, and only it. 'hwut.accept' asks
+          TWICE before overwriting a standing nominal: for '--force',
+          since that changes the thing every later run is judged
+          against, and then PER KEY, since a person at a terminal may
+          not have meant it. Neither question has anything left to ask
+          in the apply face. THE FILE CANNOT EXIST UNLESS SOMEBODY
+          READ THE CHANGE -- propose writes no target it has not
+          shown, line by line -- and the reader DELETED WHAT HE
+          REFUSED. The reading is the consent; the editing is the
+          answer to every per-key question, given in advance and in
+          writing. A face that asked again would ask a reader to
+          confirm what he had already written down. The targets are GLOBS carrying their directory
+          (E-15), so ONE file spans the whole tree.
+
+          THE PLACES ARE THE COMPARE ENGINE'S. Two lines are one place
+          where 'compare.associate' pairs them under that choice's own
+          tolerances; '<n>' bounds the PAIRS. A byte comparison would
+          offer as differences the lines an eq-pattern, a numeric
+          tolerance or an ignored region makes EQUAL -- calling a green
+          test red and inviting a blessing of what was never broken.
+
+          ONLY A DIVERGENCE FROM THE NOMINAL IS PROPOSED. A proposal
+          is an act on the POLE, and it makes sense only where the run
+          COMPLETED and the judgement went against the recording --
+          the four 'not-equivalent-*' tokens. Every other verdict
+          names a run that BROKE: a source not found, an application
+          contained by a cap, a session gone, a stream that never
+          testified, a witness convicted of instability. What such a
+          run left behind is WRECKAGE, and wreckage is not a pole.
+          The BOOK is asked for the reason: whether two texts differ
+          is MEASURED, but WHY they differ is REMEMBERED, and only the
+          run that made the candidate knows whether it made it whole.
+
+          TWO FURTHER CASES ARE PASSED OVER IN SILENCE: no candidate (nothing
+          ran, so nothing to judge) and NO NOMINAL (a first blessing
+          declares the pole, E-41, and is deliberate -- never one line
+          among fifty in a file somebody skimmed). A case with more
+          than '<n>' differing pairs is named as a COMMENT alone,
+          never as a target: a difference nobody read is not one to
+          bless in bulk.
+
+          THE WISH NARROWS, IT DOES NOT DECIDE. The face takes every
+          word 'hwut.accept' takes, and each means the same. '--fail'
+          is superfluous -- what differs is what is proposed -- and
+          MISLEADING, because it selects on the book's last verdict.
+          The book is a MEMORY; the proposal is a MEASUREMENT. Edit a
+          nominal by hand and the book still says the case passed:
+          '--fail' hides it, a bare proposal shows it. A wish that
+          decided what differs would be a second judge beside the
+          compare engine.
+
+          THE READING IS A LINE WALK, AND NOTHING MORE. Line i of the
+          candidate faces line i of the nominal; a difference is
+          recorded as a REPLACEMENT, which is what accepting performs.
+          Past '<n>' the walk stops. The ENGINE judges each position
+          -- so tolerances hold as in the run -- and is asked only
+          where the bytes already disagree, so an agreeing file of a
+          thousand lines costs zero calls.
+
+          NO ALIGNMENT. 'compare.associate' was used first and was
+          WRONG FOR THIS: an A* over edit sequences costing the square
+          of the text, it did not return on a rewritten file, and a
+          wall clock could not stop it -- CPU-bound, it never awaits,
+          so a 5s timeout let a case run 26s. A proposal does not need
+          alignment: a replacement is POSITIONAL. Measured after: every
+          subject in milliseconds, at most 'n+1' engine calls.
+
+          THE COST IS ADMITTED: a line inserted near the top differs at
+          every position after it, so it reads as many replacements and
+          is named in one line rather than shown as the one insertion
+          it is. The safe direction -- told to look, never told there
+          is nothing to look at -- and 'hwut.tell' shows it whole.
+
+COST      A second face, and one more name to know. The line count is
+          a PARAMETER of 'accept.main', not an option of
+          'hwut.accept': proposing and blessing are different acts and
+          wear different names.
+
+GRAVEYARD '--propose' as a flag on 'hwut.accept' -- built, then
+          withdrawn: a face that blesses should not also be the face
+          that refuses to. A byte diff for the count and the display
+          -- it disagreed with the run about what a difference is.
+
+E-45  A TEST IS NAMED BY PATH, AND A REMOVAL IS PROPOSED    (2026-09-06)
+------------------------------------------------------------------------------
+PROBLEM   'hwut.remove a/TEST/keep.sh' forgot a test NAMED
+          'a/TEST/keep.sh' in the current directory -- nothing --
+          where a reader who had just copied that path from a run's
+          report meant 'keep.sh' in 'a/TEST'. The wish faces read a
+          path as the glob's path member (E-15); the bare-name faces
+          did not read it at all. And a tree that has been refactored
+          holds records with no test behind them, found by
+          'hwut.sanitize' one aspect at a time and forgotten by
+          'hwut.remove' one word at a time.
+
+DECISION  ONE RULE, ONE PLACE ('services/_target.py'): a word carrying
+          '/' names a directory and a test; every bare-name face reads
+          it so. The words must name ONE directory and must not
+          disagree with '--directory' -- a face that works in one
+          directory cannot be asked to work in two.
+
+          'hwut.remove.propose -o <file>' and 'hwut.remove.apply
+          <file>', the shape of E-44 for forgetting. Propose walks the
+          tree and names every record that has LOST ITS GROUND -- the
+          application absent, the choice not offered, the nominal gone
+          while the book entry stands -- with the reason in a few
+          words above each. The judgement is SANITIZE'S, through its
+          own functions and never re-implemented: what stands and
+          cannot be explored is unreachable, not orphaned, and is left
+          alone. Apply forgets what is left, per directory, through
+          'hwut.remove' itself, with '--yes' implicit: the reading was
+          the consent.
+
+          A TEST THAT MOVED IS NOT A TEST THAT DIED. 'app absent' is
+          the commonest finding after a refactoring, and it is also
+          what a MOVE looks like from the directory left behind. So
+          the base names of every offered application are mapped to
+          the directories that offer them -- the map
+          'adm/rescue_goods.py' builds of GOOD files, one level up --
+          and where the name stands elsewhere the note says
+          ', possibly moved to <dir>'. Said as a NOTE and never as a
+          refusal: this face proposes, the reader decides, and the
+          right answer there is usually to carry the history across.
+
+COST      A helper every bare-name face must call, and a face that
+          re-reads its words ('hwut.stability's repeat) must be handed
+          the bare form. Two more names to know.

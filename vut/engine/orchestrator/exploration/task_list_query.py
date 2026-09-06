@@ -105,6 +105,8 @@ class CTestTaskListQuery(CTestTaskList):
         self.directory  = directory
         self.root       = root
         self.label_view = label_view
+        self.meta_hidden_n  = 0      # cases the standard label hid
+        self.wish_skipped_n = 0      # cases the wish did not want
         self.label_tree = None
         self.label_settled_f = False
         self.language_db     = {}       # source_file -> language | None
@@ -133,8 +135,28 @@ class CTestTaskListQuery(CTestTaskList):
         """
         RETURN: bool, True where the case answers every question the
                 wish asks.
+
+        COUNTED, NOT FORGOTTEN. A case the wish does not want is
+        SKIPPED -- 'wish_skipped_n' -- and the run's last line draws
+        how many. One exception is named apart: a case the standard
+        label 'meta' hides from a wish that named NO label is EXCLUDED
+        -- 'meta_hidden_n' -- stated in the numbers, drawn nowhere.
+        Silence about the framework's own tests is the wish's; the
+        number is the reader's.
         """
-        if self._label_hidden_f(case):                      return False
+        if self._label_hidden_f(case):
+            if self.label_tree is None: self.meta_hidden_n  += 1
+            else:                       self.wish_skipped_n += 1
+            return False
+        wanted = self._wanted_by_wish_f(case)
+        if not wanted: self.wish_skipped_n += 1
+        return wanted
+
+    def _wanted_by_wish_f(self, case):
+        """
+        RETURN: bool, True where the case answers every question the
+                wish asks, the labels apart.
+        """
         if self._outside_dir_f():                           return False
         if self._outside_language_f(case):                  return False
         if self._excluded_f(case):                          return False

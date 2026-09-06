@@ -422,10 +422,18 @@ def test_unexpected_stderr():
         try:
             store = Store(Bookkeeper(directory))
             store.write_candidate("demo", None, "stdout", "the behaviour\n")
-            store.write_candidate("demo", None, "stderr", stderr_text)
+            #  STDERR IS NOT A SUBJECT (E-5): never recorded through the
+            #  store. Its one carrier is the error witness 'OUT/<key>.err',
+            #  written only where stderr spoke -- so silence writes nothing.
+            if stderr_text:
+                witness = store.error_witness_path("demo", None)
+                witness.parent.mkdir(parents=True, exist_ok=True)
+                witness.write_text(stderr_text, encoding="utf-8")
             return await EquivalenceCheck(EquivalenceCheckConfig(
                 name            = "demo",
-                groundwork      = _Provided(loaded(store, "demo")),
+                groundwork      = _Provided(loaded(store, "demo",
+                                                   subject_name_list=
+                                                   ("stdout", "stderr"))),
                 subjects        = {"stdout":
                                    BytesNominal("the behaviour\n")},
                 stderr_forbidden_f = True)).run()

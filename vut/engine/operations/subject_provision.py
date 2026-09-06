@@ -29,8 +29,10 @@ DESCRIPTION
                None)
          (A.1) its source, or any code it declares it covers, is
                younger than the recorded subject     -> RE-RUN
-         (A.2) otherwise                              -> the RECORDED
-                                                        stream
+         (A.2) otherwise                              -> RE-RUN for a
+                                                        producer; the
+                                                        RECORDED stream
+                                                        for a reader
          (B)   the application is BUILT
          (B.1) build it -- the plan's BUILD node does, and the build
                TOOL decides whether anything is out of date (disc-2
@@ -38,8 +40,29 @@ DESCRIPTION
                'force_build' says: build regardless
          (B.2) the built application is younger than the recorded
                subject                               -> RE-RUN
-               otherwise                             -> the RECORDED
-                                                        stream
+               otherwise                             -> RE-RUN for a
+                                                        producer; the
+                                                        RECORDED stream
+                                                        for a reader
+
+       THREE INTENTS (ruled 2026-09-05):
+         RUN       'hwut.run' -- the request IS to run. Always
+                   PROVIDE. Necessity governs whether a thing is BUILT
+                   -- (B.1), and the build tool's own freshness --
+                   never whether it is run.
+         REFRESH   a face that OBTAINS A SUBJECT AND DOES SOMETHING
+                   WITH IT -- 'hwut.tell' -- and must therefore hold a
+                   CURRENT one: PROVIDE where stale, RECORDED where
+                   current. The criterion is not 'obtains and
+                   judges'; it is 'obtains and does something with
+                   it'. Nothing that reads a subject goes around the
+                   channel.
+         READ      never execute; deliver what stands and say whether
+                   it is stale. The closure a run could
+       check is the test's own sources; the framework that runs them
+       is not in it and cannot be, so 'the recording is current' is a
+       claim a producer can never verify. RECORDED is a READER's
+       answer: what stands, delivered as what stands.
 
        'production=False' (disc-2 f-4) means the caller may never
        cause an execution: a report is a report of what happened. Then
@@ -122,7 +145,7 @@ def _younger_than(path_list, than_path):
 
 def decide(configuration, candidate_path, built_path=None,
            production=True, force_run=False, force_build=False,
-           source_directory=None):
+           source_directory=None, refresh=False):
     """
     RETURN: Decision, what provision does for this (test, choice) --
             see the module header for the steps, which this function
@@ -136,6 +159,12 @@ def decide(configuration, candidate_path, built_path=None,
     'built_path'      the built application, for (B); None where the
                       plan has not built it.
     'production'      False: never PROVIDE; answer STALE/ABSENT instead.
+    'refresh'         True, with production: PROVIDE only where the
+                      recording is STALE -- (0), (A.1), (B.1), (B.2)
+                      younger -- and RECORDED where it is current.
+                      False (the default): a producer ALWAYS runs.
+                      'hwut.run' is the request to run; a face that
+                      merely needs a current subject REFRESHES.
     'force_run'       True: (A.1)/(B.2) are taken as younger.
     'force_build'     True: passed on to whoever builds; recorded here
                       in the reason so the face can say so.
@@ -177,10 +206,20 @@ def decide(configuration, candidate_path, built_path=None,
         younger = "forced" if force_run \
                   else _younger_than(closure, candidate_path)
         if younger is not None:
-            because = "(A.1) '%s' is younger than the recording" % younger
+            because = "(A.1) forced" if force_run else \
+                      "(A.1) '%s' is younger than the recording" % younger
             if not production: return Decision(E_Decision.STALE, because)
             return Decision(E_Decision.PROVIDE, because)
-        #  (A.2)  THE RECORDED STREAM IS CURRENT.
+        #  (A.2)  THE RECORDED STREAM IS CURRENT -- FOR A READER.
+        #  A PRODUCER RUNS. The closure names the test's own sources;
+        #  it cannot name the framework that runs them, and a run
+        #  that trusted a recording over a rerun was found replaying a
+        #  stale OUT/ against a fresh GOOD/ (2026-09-05). Necessity
+        #  governs the BUILD (B.1); the run itself is always necessary.
+        if production and not refresh:
+            return Decision(E_Decision.PROVIDE,
+                            "(A.2) a run runs; the recording is what "
+                            "it will replace")
         return Decision(E_Decision.RECORDED,
                         "(A.2) the recording is current")
 
@@ -197,10 +236,16 @@ def decide(configuration, candidate_path, built_path=None,
     younger = "forced" if force_run \
               else _younger_than([built_path], candidate_path)
     if younger is not None:
-        because = "(B.2) the built application is younger than the " \
+        because = "(B.2) forced%s" % forced if force_run else \
+                  "(B.2) the built application is younger than the " \
                   "recording%s" % forced
         if not production: return Decision(E_Decision.STALE, because)
         return Decision(E_Decision.PROVIDE, because)
+    #  As (A.2): current for a reader; a producer runs.
+    if production and not refresh:
+        return Decision(E_Decision.PROVIDE,
+                        "(B.2) a run runs; the recording is what it "
+                        "will replace")
     return Decision(E_Decision.RECORDED,
                     "(B.2) the recording is current")
 
@@ -252,7 +297,8 @@ class _BareConfiguration:
 
 def provider_of(configuration, store, choice_name=None, production=True,
                 force_run=False, force_build=False, observer=None,
-                keep_raw=None, subject_name_list=None, built_path=None):
+                keep_raw=None, subject_name_list=None, built_path=None,
+                refresh=False):
     """
     RETURN: [0] Provision | Loaded, THE PROVIDER: answers 'provide()'
                 with 'Subjects' and remembers them as 'last_provided'.
@@ -293,7 +339,8 @@ def provider_of(configuration, store, choice_name=None, production=True,
     decision = decide(configuration, candidate, built_path=built_path,
                       production=production, force_run=force_run,
                       force_build=force_build,
-                      source_directory=store.directory)
+                      source_directory=store.directory,
+                      refresh=refresh)
     if decision.what is not E_Decision.PROVIDE:
         return Loaded(store, test_name, choice_name,
                       subject_name_list), decision

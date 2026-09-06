@@ -348,7 +348,11 @@ def test_same_shape():
     for name in ("stdout", "stderr"):
         store.write_candidate("demo", None, name,
                               executed[name].open().read())
-    replayed = loaded(store, "demo")
+    #  ASKED AS THE SESSION ASKS: stderr is never recorded (E-5), so
+    #  a read-back names it explicitly and is served from the witness
+    #  -- the two providers then have the same shape, which is the
+    #  claim.
+    replayed = loaded(store, "demo", subject_name_list=("stdout", "stderr"))
 
     print("INSPECT: Run    -> %s, type %s"
           % (executed.names(), type(executed).__name__))

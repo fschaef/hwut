@@ -1,14 +1,8 @@
 ##VUT-TEST-IDS 5
-G:72
+G:121
 N:9
 A:0 test-record.py
 N:0.6
-C:0.0 election
-C:0.1 encoding
-C:0.2 faults
-C:0.3 intervals
-C:0.4 merge
-C:0.5 roundtrip
 A:1 test-affected.py
 N:1.6
 C:1.0 refused
@@ -19,57 +13,14 @@ C:1.4 empty
 C:1.5 help
 A:2 test-binary.py
 N:2.4
-C:2.0 faults
-C:2.1 large
-C:2.2 measures
-C:2.3 witnessed
 A:3 test-gather.py
 N:3.5
-C:3.0 bundle
-C:3.1 fold
-C:3.2 groups
-C:3.3 refused
-C:3.4 stale
 A:4 test-index.py
 N:4.7
-C:4.0 change
-C:4.1 economy
-C:4.2 honest
-C:4.3 keys
-C:4.4 lossy
-C:4.5 query
-C:4.6 segments
 A:5 test-measure.py
 N:5.7
-C:5.0 branch
-C:5.1 faults
-C:5.2 in_record
-C:5.3 mcdc
-C:5.4 named
-C:5.5 registration
-C:5.6 unmergeable
 A:6 test-readers.py
 N:6.20
-C:6.0 absent
-C:6.1 agreement
-C:6.2 aliases
-C:6.3 calls
-C:6.4 cobertura
-C:6.5 gather
-C:6.6 gcov
-C:6.7 ghdl
-C:6.8 go
-C:6.9 jacoco
-C:6.10 lcov
-C:6.11 luacov
-C:6.12 native
-C:6.13 psl
-C:6.14 python
-C:6.15 resultset
-C:6.16 roles
-C:6.17 ucis
-C:6.18 verilator
-C:6.19 witnessed
 A:7 test-presenter-visitor.py
 N:7.5
 C:7.0 html

@@ -3,6 +3,6 @@ INSPECT: with choice = GOOD/parse--basic.txt
          candidate   = OUT/parse--basic.txt
   OK  : the choice is part of the key, so choices never collide
   OK  : a test without choices carries no choice part
-  FAIL: nominals and candidates live in SEPARATE key spaces
-FAILURE: one key per (test, choice, subject); two spaces.
+  OK  : nominals and candidates live in SEPARATE key spaces: 'GOOD/' and 'OUT/', one name, two grounds
+SUCCESS: one key per (test, choice, subject); two spaces.
 <hwut-end>

@@ -66,7 +66,8 @@ ______________________________________________________________________________
 from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             GOOD_OWNED_FILE_TUPLE, NOMINAL_SUFFIX_DB,
                             STORE_DIRECTORY_NAME, SUBJECT_BY_SUFFIX_DB,
-                            compare_setup_delta, error_witness_name,
+                            SIDECAR_SUFFIX_TUPLE, compare_setup_delta,
+                            error_witness_name, key_parts_of,
                             nominal_stands_f)
 from .configuration import (CAPS_FIELD_DB, E_StderrNote, NamingConfig,
                             StoreConfig)
@@ -86,7 +87,7 @@ __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "ObservationDb", "ObservationFault", "RunIdFault",
            "STORE_DIRECTORY_NAME", "SUBJECT_BY_SUFFIX_DB",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",
-           "TestRunId", "compare_setup_delta", "error_witness_name",
-           "nominal_stands_f",
+           "SIDECAR_SUFFIX_TUPLE", "TestRunId", "compare_setup_delta",
+           "error_witness_name", "key_parts_of", "nominal_stands_f",
            "observation_of",
            "parse_group_table", "run_id_of_text", "source_digest_of")

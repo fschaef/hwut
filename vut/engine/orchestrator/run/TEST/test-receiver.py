@@ -72,7 +72,7 @@ class Shown(CRunReportReceiver):
               % (when, directory, node, good, verdict, cause, report,
                  detail))
 
-    def on_tree_done(self, when, good, fail_n):
+    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
         """RETURN: None."""
         print("    tree-done when=%s good=%s fail_n=%d"
               % (when, good, fail_n))

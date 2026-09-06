@@ -100,6 +100,39 @@ NO_CHOICE_KEY       = "<none>"
 #  its own name.
 NOMINAL_SUFFIX_DB   = {"stdout": "txt"}
 
+#  THE SIDECARS a record may carry, by suffix -- the naming's own, so a
+#  reader that strips them and a writer that adds them agree.
+SIDECAR_SUFFIX_TUPLE = (".raw", ".times", ".when")
+
+
+def key_parts_of(name):
+    """
+    RETURN: (test, choice, subject), read back out of a record's file
+                name -- the inverse of 'Bookkeeper.key'. 'choice' is
+                None for a test without choices. Sidecar suffixes are
+                stripped first, so 'test-x.py--basic.txt.when' and
+                'test-x.py--basic.txt' both answer
+                ('test-x.py', 'basic', 'stdout'); a suffix in
+                'SUBJECT_BY_SUFFIX_DB' is read back as its subject.
+            None, where the name has no subject part at all.
+
+    THE ONE PLACE THE KEY IS READ, as 'key' is the one place it is
+    written. It says nothing about whether the TEST part is a source
+    file -- that gate is the caller's, since only the caller knows
+    which extensions the tree admits.
+    """
+    stem = name
+    for suffix in SIDECAR_SUFFIX_TUPLE:
+        if stem.endswith(suffix): stem = stem[:-len(suffix)]
+    remainder, dot, suffix = stem.rpartition(".")
+    if not dot: return None
+    if "--" in remainder:
+        test, _, choice = remainder.partition("--")
+    else:
+        test, choice = remainder, None
+    return test, choice, SUBJECT_BY_SUFFIX_DB.get(suffix, suffix)
+
+
 def error_witness_name(test, choice):
     """RETURN: str, '<test>--<choice>.err' ('<test>.err' without a
                choice) -- the file name of the error witness.

@@ -128,7 +128,8 @@ def test_records():
     candidate = store.candidate_path("demo.py", None, "stdout")
     print("  recorded: %s" % sorted(recorded_db or {}))
 
-    loaded, _ = subject_provision.provider_of(configuration, store)
+    loaded, _ = subject_provision.provider_of(configuration, store,
+                                              production=False)
     asyncio.run(loaded.provide())
     again = subject_provision.record(store, configuration, None, loaded)
     ok = _check([
@@ -145,24 +146,35 @@ def test_records():
 
 
 def test_loads():
-    """A current recording: the channel hands back a Loaded, and what
-    it provides is what was recorded."""
+    """A current recording: a READER (production=False) gets a Loaded
+    and what it provides is what was recorded; a PRODUCER, over the
+    same current recording, RUNS -- the recording is what it will
+    replace (ruled 2026-09-05)."""
     configuration, store, directory = _place()
     _execute_and_record(configuration, store)
     provider, decision = subject_provision.provider_of(configuration,
-                                                       store)
-    print("  decision: %s   %s" % (decision.what.value, _step(decision)))
+                                                       store,
+                                                       production=False)
+    print("  reader:   %s   %s" % (decision.what.value, _step(decision)))
     subjects = asyncio.run(provider.provide())
     with subjects["stdout"].open() as reader: text = reader.read()
+    runner, run_decision = subject_provision.provider_of(configuration,
+                                                         store)
+    print("  producer: %s   %s" % (run_decision.what.value,
+                                   _step(run_decision)))
     ok = _check([
-        (isinstance(provider, Loaded), "a Loaded provider"),
-        (decision.what is E_Decision.RECORDED, "the word is RECORDED"),
+        (isinstance(provider, Loaded), "a reader gets a Loaded provider"),
+        (decision.what is E_Decision.RECORDED, "and the word is RECORDED"),
         (decision.because.startswith("(A.2)"), "step (A.2) decided"),
         (text.strip() == "one", "the recording is what is provided"),
         (provider.last_provided is subjects, "last_provided remembers"),
+        (not isinstance(runner, Loaded),
+         "a PRODUCER over the same recording does not load"),
+        (run_decision.what is E_Decision.PROVIDE,
+         "it RUNS: the recording is what it will replace"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "a current recording is read back, not re-run.")
+    _verdict(ok, "a current recording is read back by a reader; a run runs.")
 
 
 def test_stale():

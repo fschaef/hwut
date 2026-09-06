@@ -82,6 +82,7 @@ from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
 from   vut.engine.orchestrator.run.strategy          import (STRATEGY_DB,
                                                              DEFAULT_STRATEGY_NAME)
 from   ._core                                        import usage_line
+from   ._target import split_words, TargetError
 from   ._exit                                        import E_ExitCode
 
 REPEAT_DEFAULT  = 3
@@ -445,14 +446,26 @@ def main(argv=None, write=None, write_error=None):
               % ", ".join(sorted(unknown)))
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH stands in the directory the path names
+    #  ('services/_target.py').
+    try:
+        directory, word_list = split_words(word_list, directory)
+    except TargetError as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)
         return E_ExitCode.REFUSED
     root = os.path.abspath(directory)
+    #  THE REPEAT RE-READS THE WORDS, so it must see the BARE names:
+    #  the directory the path named is 'root' now.
+    argv_bare = [os.path.basename(word)
+                 if "/" in word and not word.startswith("-") else word
+                 for word in argv]
 
     try:
-        snapshot_list = _repeat(root, argv, repeat_n, strategy,
+        snapshot_list = _repeat(root, argv_bare, repeat_n, strategy,
                                 subject_tuple, write_error)
     except SelectionError as error:
         write("REFUSED: %s" % error)

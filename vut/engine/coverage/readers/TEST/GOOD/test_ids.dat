@@ -1,5 +1,5 @@
 ##VUT-TEST-IDS 5
-G:24
+G:25
 N:2
 A:0 test-readers.py
 N:0.20
@@ -24,6 +24,7 @@ C:0.17 ucis
 C:0.18 verilator
 C:0.19 witnessed
 A:1 test-real-input.py
-N:1.2
+N:1.3
 C:1.0 every_artefact
 C:1.1 every_format
+C:1.2 no_orphan

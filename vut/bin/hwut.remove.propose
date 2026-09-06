@@ -1,0 +1,8 @@
+#! /bin/sh
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+# The launcher of 'hwut.remove.propose': 'services/lib/remove/propose.py'
+# run as a module, from wherever 'hwut.remove.propose' is called, by
+# PATH or by path.
+HERE=$(dirname "$(readlink -f "$0")")
+PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
+    exec python3 -m vut.services.lib.remove.propose "$@"

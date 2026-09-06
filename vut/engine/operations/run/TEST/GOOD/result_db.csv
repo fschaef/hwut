@@ -14,7 +14,7 @@ test-provision.py;absent_application;true;ok
 ;argv;true;ok
 ;canonicalisation;true;ok
 ;canonicaliser_broken;true;ok
-;containment;false;not-equivalent-with-nominal
+;containment;true;ok
 ;loaded;true;ok
 ;same_shape;true;ok
 ;source_kinds;true;ok

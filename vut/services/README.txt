@@ -76,6 +76,147 @@ The faces:
                  is refused, by name, and the test is named to be
                  re-run. One file is consulted -- the application --
                  not what it reads.
+                 A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run'
+                 does; '--directory=<path>' reads one directory.
+                 It RUNS ON NECESSITY: a case whose recording is
+                 older than its source is run before it is judged;
+                 '--force-run' runs every case regardless.
+                 It does not read a file of targets: that is
+                 'hwut.accept.apply'.
+
+    hwut.accept.propose
+                 (lib/accept/propose.py)
+                 BLESSES NOTHING, RUNS NOTHING. Reads what stands and
+                 writes the differing cases as a file to hand back to
+                 'hwut.accept -f'. Its whole content is a list of
+                 REPLACEMENTS:
+
+                     # TEST RUN: <dir>/<test-app> <choice>
+                     # -- [4711] OUT:  "<what the run produced>"
+                     #    [4712] OUT:  "<and the next, if it differs>"
+                     # => [4721] GOOD: "<what stands today>"
+                     #    [4722] GOOD: "<and the next>"
+                     <dir>/<test-app> <choice>
+
+                 ACCEPT THIS AND THE 'OUT' LINE BECOMES THE NOMINAL,
+                 in place of the line in brackets; nothing else in
+                 the nominal moves. An empty 'OUT' is a nominal line
+                 that GOES; an empty bracket a line that ARRIVES. A
+                 line that agrees does not appear at all.
+
+                     SUBJECT                 NOMINAL
+                       Hans was a nice man.    Hans was a Nazi.
+                       Berta was his bride.    Berta was his bride.
+                       Frederik was a baker.   Frederik was a maker.
+
+                     # TEST RUN: suite/TEST/story.sh
+                     # -- [1] OUT:  "Hans was a nice man."
+                     # => [1] GOOD: "Hans was a Nazi."
+                     # -- [3] OUT:  "Frederik was a baker."
+                     # => [3] GOOD: "Frederik was a maker."
+                     suite/TEST/story.sh
+
+                 Both sides are QUOTED and start at ONE column, so
+                 space at either end is visible; the text shown is
+                 THE FILE'S OWN LINE, not the engine's compared cell
+                 -- what becomes the nominal is what you see. A case
+                 over the bound gets ONE line and no target:
+
+                     DIFF(suite/TEST/big.sh choice) > 5 lines
+
+                 '-o <file>' IS REQUIRED and takes the proposal; what
+                 CANNOT be proposed goes to STDOUT, one line each, so
+                 the file holds nothing but what can be blessed and is
+                 handed back unedited save for the targets refused.
+
+                 THE WISH NARROWS, IT DOES NOT DECIDE. Every word
+                 'hwut.accept' takes is taken here and means the same.
+                 '--fail' is SUPERFLUOUS -- a proposal is by
+                 construction about what differs -- and misleading: it
+                 selects on the BOOK's last verdict, a memory, where
+                 the proposal is a measurement taken now. Edit a
+                 nominal by hand and the book still says the case
+                 passed; '--fail' then hides a real difference.
+
+                 THE PLACES ARE THE COMPARE ENGINE'S. Two lines are
+                 one place where 'compare.associate' pairs them under
+                 that choice's own tolerances; a difference the run
+                 holds EQUIVALENT is never proposed. '<n>' bounds the
+                 PAIRS, not the bytes: a case with more is named as a
+                 comment alone, never as a target -- a difference
+                 nobody read is not one to bless in bulk. ONLY A
+                 DIVERGENCE IS PROPOSED -- the four 'not-equivalent-*'
+                 verdicts; every other names a run that BROKE, and
+                 what it left is wreckage, not a pole. Two further
+                 cases are silent: no candidate (nothing ran, nothing
+                 to judge) and no nominal (a first blessing is
+                 deliberate, E-41).
+
+    hwut.accept.apply
+                 (lib/accept/apply.py)
+                 blesses the targets a file names, one per line,
+                 '<dir>/<test-app> <choice>'. A line's PATH is
+                 separated from its NAME, so a target is matched in
+                 ITS directory and nowhere else; '#' and blank lines
+                 are skipped, which is how a reader vetoes, and which
+                 makes 'hwut.accept.propose's output this face's
+                 input unedited. The word is the tree's own:
+                 'hwut.sanitize' reports and acts on '--apply'.
+                 IT REPORTS TWO SECTIONS, 'EXECUTION:' and 'REPORT:',
+                 in the style a run's report wears, closing on
+                 'Accepted <n>/<m>'. Grouped by directory as a run
+                 groups, a test application written once however many
+                 of its choices stand below it; the verdict
+                 RIGHT-ALIGNED and alone in carrying colour -- green
+                 '[DONE]', red '[ERROR]' -- then one sentence per
+                 failure, in the shape of a run's HINTS. Every
+                 line of the file is answered, a target that matched
+                 nothing included. The refresh is silent here.
+
+                 IT ASKS NOTHING. '--force' and '--yes' are both
+                 implicit: the file cannot exist unless somebody read
+                 the change -- propose writes no target it has not
+                 shown, line by line -- and the reader deleted what he
+                 refused. THE READING IS THE CONSENT, and the EDITING
+                 is the answer to every per-key question, given in
+                 advance and in writing.
+
+    hwut.remove.propose
+                 (lib/remove/propose.py)
+                 REMOVES NOTHING. Walks the tree and writes, as a file
+                 to read, every test run whose record has lost its
+                 ground -- 'app absent', 'choice not offered',
+                 'nominal absent, book entry stands' -- the reason in
+                 a few words above each target; where the absent
+                 application stands ELSEWHERE in the tree the reason
+                 says 'possibly moved to <there>', so a directory
+                 split is not mistaken for a death. The judgement is
+                 'hwut.sanitize's ('orphans'), through its own
+                 functions: an application that stands but cannot be
+                 explored is UNREACHABLE, never proposed. WHERE A TEST
+                 OF THAT NAME STANDS ELSEWHERE the note says
+                 ', possibly moved to <dir>' -- the same base-name map
+                 'adm/rescue_goods.py' uses for stranded nominals,
+                 built here from exploration -- and the answer is
+                 probably to carry the history across rather than
+                 forget it. '-o <file>'
+                 is required; a directory whose exploration faulted is
+                 named on stdout and not judged.
+
+    hwut.remove.apply
+                 (lib/remove/apply.py)
+                 forgets what such a file names, per directory, through
+                 'hwut.remove' and 'hwut.remove-choice'. '--yes' is
+                 implicit -- the reading was the consent. Reports as
+                 'hwut.accept.apply' does, closing on 'Forgotten n/m'.
+
+    _target.py   A TEST NAMED BY PATH. 'a/TEST/keep.sh' means the test
+                 'keep.sh' in 'a/TEST' on every face that takes bare
+                 names ('hwut.remove', 'hwut.remove-choice',
+                 'hwut.stability'); the wish faces already read a path
+                 as the glob's path member (E-15). Two words naming
+                 two directories are refused, as is a path that
+                 disagrees with '--directory'.
 
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language
