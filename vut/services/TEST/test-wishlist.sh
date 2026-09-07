@@ -250,3 +250,5 @@ refused)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+echo "<hwut-end>"

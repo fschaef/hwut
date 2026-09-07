@@ -15,7 +15,7 @@ two-line shell shims, nothing importable. Each resolves its own location
                         hwut.compare  hwut.merge    hwut.tell
                         hwut.stability  hwut.wishlist  hwut.report
                         hwut.remove   hwut.remove-choice
-                        hwut.rename   hwut.rename-choice
+                        hwut.rename   hwut.move
                         hwut.sanitize hwut.pype
 
     hwut            THE DEFAULT FACE: 'hwut' alone is 'hwut.run'. A

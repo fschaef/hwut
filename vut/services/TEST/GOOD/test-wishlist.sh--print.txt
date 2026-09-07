@@ -10,3 +10,4 @@ STDOUT {
     ./storage/TEST/test-a.sh two
     ./storage/TEST/test-b.sh
 }
+<hwut-end>

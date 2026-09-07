@@ -2,41 +2,45 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The rename faces: the boundary records follow the name."
-#     choices    = ["labels"]
+#     title      = "The rename face: the boundary records follow the name."
+#     choices    = ["labels", "across"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]", "-- [0-9]+ file\\(s\\)"] }
 # }
 #
 # ---------------------------------------------------------------------------
 #
-# 'hwut.rename' AND 'hwut.rename-choice', ON THE BOUNDARY RECORDS
-# ('services/_follow.py', disc-8 section 5). The directory-local
-# mechanics -- nominals, candidates, the book, the register -- are
-# exercised under the bookkeeper's own suites; THIS suite watches the
-# records at the tree's boundary follow the new name: a label keyed by
-# a name that has changed loses a member SILENTLY, and the member is
-# not missing, it is UNLABELLED, which looks exactly like never having
-# been labelled.
+# 'hwut.rename' AND 'hwut.move', ON THE BOUNDARY RECORDS
+# ('services/_follow.py', disc-8 section 5) AND ACROSS A DIRECTORY
+# (E-46). The directory-local mechanics -- nominals, candidates, the
+# book, the register -- are exercised under the bookkeeper's own
+# suites; THIS suite watches the records at the tree's boundary follow
+# the new name: a label keyed by a name that has changed loses a
+# member SILENTLY, and the member is not missing, it is UNLABELLED,
+# which looks exactly like never having been labelled.
 #
 # labels     a whole test renamed: every entry re-keys; a choice
-#            renamed: its one entry follows; the file stays sorted
-#            and elided. A fresh name standing in the STORE is the
-#            face's own refusal; one standing only in the FILE -- a
-#            stale entry -- is a FAULT, not a merge, and the file is
-#            left as it stood.
+#            renamed ('<app> <choice> -to <choice'>'): its one entry
+#            follows; the file stays sorted and elided. A fresh name
+#            standing in the STORE is the face's own refusal; one
+#            standing only in the FILE -- a stale entry -- is a FAULT,
+#            not a merge, and the file is left as it stood.
+# across     a test carried into another directory: the entries
+#            re-key to the new path under the same boundary; the
+#            target register issues fresh ids, the source retires;
+#            'hwut.move' says the same in two words.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-RUN           = "python3 -m vut.services.run"
-RENAME        = "python3 -m vut.services.rename"
-RENAME_CHOICE = "python3 -m vut.services.rename_choice"
+RUN="python3 -m vut.services.run"
+RENAME="python3 -m vut.services.rename"
+MOVE="python3 -m vut.services.move"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The rename faces: the boundary records follow the name.;"
-        echo "CHOICES: labels;"
+        echo "The rename face: the boundary records follow the name.;"
+        echo "CHOICES: labels, across;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -95,21 +99,21 @@ labels)
     the_file
     echo "--- the whole test renamed: every entry follows"
     ( cd tree/suite/TEST \
-      && printf 'y\n' | $RENAME test-app.sh test-fresh.sh ) \
+      && printf 'y\n' | $RENAME test-app.sh -to test-fresh.sh ) \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "labels|book entry" out.txt | sed 's/^/    /'
     the_file
     echo "--- one choice renamed: its one entry follows"
     ( cd tree/suite/TEST \
-      && printf 'y\n' | $RENAME_CHOICE test-fresh.sh one first ) \
+      && printf 'y\n' | $RENAME test-fresh.sh one -to first ) \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "labels" out.txt | sed 's/^/    /'
     the_file
     echo "--- a fresh name that stands in the STORE: the face's own door"
     ( cd tree/suite/TEST \
-      && printf 'y\n' | $RENAME_CHOICE test-fresh.sh first two ) \
+      && printf 'y\n' | $RENAME test-fresh.sh first -to two ) \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "labels|REFUSED" out.txt | sed 's/^/    /'
@@ -117,14 +121,45 @@ labels)
     echo "./tree/suite/TEST/test-fresh.sh stale : concern" \
         >> hwut-root.labels
     ( cd tree/suite/TEST \
-      && printf 'y\n' | $RENAME_CHOICE test-fresh.sh first stale ) \
+      && printf 'y\n' | $RENAME test-fresh.sh first -to stale ) \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "labels" out.txt | sed 's/^/    /'
     the_file
     ;;
 
+across)
+    fixture
+    mkdir -p tree/other/TEST
+    cp tree/suite/TEST/hwut.conf tree/other/TEST/
+    python3 -m vut.services.lib.labels.create concern \
+        --glob "test-app.sh" --directory=tree > /dev/null
+    the_file
+    echo "--- carried into another directory: the entries follow the path"
+    ( cd tree && printf 'y\n' \
+      | $RENAME suite/TEST/test-app.sh -to other/TEST/test-moved.sh ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "labels|book entry|register|coverage" out.txt | sed 's/^/    /'
+    the_file
+    echo "--- the source register retired the id; the target issued afresh"
+    sed -n '/^A:/p;/^C:/p' tree/suite/TEST/GOOD/test_ids.dat | sed 's/^/    suite: /'
+    sed -n '/^A:/p;/^C:/p' tree/other/TEST/GOOD/test_ids.dat | sed 's/^/    other: /'
+    echo "--- 'hwut.move' INTO a directory, two words"
+    ( cd tree && printf 'y\n' | $MOVE other/TEST/test-moved.sh suite/TEST/ ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "labels|register" out.txt | sed 's/^/    /'
+    the_file
+    echo "--- a choice never crosses"
+    ( cd tree && $RENAME suite/TEST/test-moved.sh one -to other/TEST/x ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "REFUSED" out.txt | sed 's/^/    /'
+    ;;
+
 *)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+echo "<hwut-end>"

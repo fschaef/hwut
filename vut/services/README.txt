@@ -219,13 +219,47 @@ The faces:
                  component maintains its documents, and a bundle that
                  omitted them would invite them to drift.
 
-    _target.py   A TEST NAMED BY PATH. 'a/TEST/keep.sh' means the test
-                 'keep.sh' in 'a/TEST' on every face that takes bare
-                 names ('hwut.remove', 'hwut.remove-choice',
-                 'hwut.stability'); the wish faces already read a path
-                 as the glob's path member (E-15). Two words naming
-                 two directories are refused, as is a path that
-                 disagrees with '--directory'.
+    hwut.rename  (rename.py)
+                 '<app> -to <app'>' renames a test whole; '<app>
+                 <choice> -to <choice'>' one choice of it; '<app> -to
+                 <path>/<app'>' renames AND carries the test into
+                 '<path>'; a fresh name that is an existing directory
+                 means INTO it, the name unchanged. '-to' is a keyword;
+                 the words before it, one or two, say app or choice. A
+                 choice never crosses a directory. The app word may be
+                 a path ('_target.py'); '--directory' names the
+                 source. What follows: nominals, candidates, sidecars,
+                 the error witness, the coverage record, the book
+                 entry, the register entry, the labels ('_follow.py',
+                 last). WITHIN a directory the register keeps the id.
+                 ACROSS one the source register retires it, the
+                 target issues a fresh one, the book entry is given up
+                 by the source and adopted by the target
+                 ('Bookkeeper.adopt'), and the coverage record is
+                 re-seated under the fresh id through coverage's
+                 'seated'. A fresh name standing in the target's book
+                 OR register is refused before anything moves. Asks
+                 first unless '--yes'. Exit status per E-1.
+
+    hwut.move    (move.py)
+                 '<app> <app'>' is 'hwut.rename <app> -to <app'>',
+                 word for word; two words, no more.
+
+    _target.py   A TEST NAMED BY PATH ENTERS ITS DIRECTORY. A bare
+                 word 'a/TEST/keep.sh' whose directory part is literal
+                 (no '*', '?', '[') means: enter 'a/TEST', perform
+                 'keep.sh' there, one directory explored -- '..' and
+                 absolute paths included -- on every face that takes
+                 test words ('entered()': run, plan, wishlist, report,
+                 accept, play, show, remove, remove-choice, rename,
+                 move, stability; 'cov' by forwarding). A directory
+                 part carrying a glob metacharacter is a wish glob
+                 with a path member (E-15), over the tree below, and
+                 so is every '--glob' argument. A relative path is
+                 read against '--directory' where one was said; an
+                 absolute path stands on its own and must lie within
+                 it. Two words naming two directories are refused, as
+                 is an absolute path outside '--directory'.
 
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language

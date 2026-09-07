@@ -22,3 +22,4 @@ STDOUT {
     usage: hwut.wishlist [<wish>] [<file-glob> [choice-glob]...]
                          [--directory=<path>]
 }
+<hwut-end>

@@ -73,6 +73,13 @@ READ THROUGH THE DOOR: 'tests()', 'choices()', 'result()', 'stain()',
 private; the file's shape may change under a face without it
 noticing (E-37).
 
+HEALED THROUGH THE DOOR: 'rename_test()', 'rename_choice()' re-key an
+entry in place; 'remove_test()', 'remove_choice()' give an entry up
+and return it; 'adopt(test, entry)' takes a whole entry in under a
+name that does not stand -- the entry 'remove_test()' returned in one
+directory is what 'adopt()' writes in another. A name that already
+stands is refused ('KeyError'); nothing is merged.
+
 A BOOK WRITTEN BEFORE B-6/B-7 ('result_db.json', or a '.csv' with an
 'operation' column) is read once, and the first write lays down the
 current table and removes the old file.
@@ -107,9 +114,14 @@ id it ever issued; the file carries that mark. Removal DELETES the
 name and RETIRES the number. The ceiling of every scope is 2**32
 ('ID_LIMIT'); the id at the ceiling is refused by name.
 
-A rename keeps the id -- that is what the register is for. An id may
-be persisted anywhere: it decodes later to the same test, or to 'no
-longer registered', never to another test.
+A rename WITHIN the directory keeps the id -- that is what the
+register is for. An id may be persisted anywhere: it decodes later to
+the same test, or to 'no longer registered', never to another test.
+Ids are the DIRECTORY'S (D-14): a test carried into ANOTHER directory
+is retired here ('remove_app()') and issued afresh there
+('run_id_of(..., allocate_f=True)'); a coverage record that travels
+with it is re-seated under the fresh id by the face that carries it
+(services E-46).
 
 The register knows two things the book cannot: which application files
 are REGISTERED ('roster()'), and which registered application has no

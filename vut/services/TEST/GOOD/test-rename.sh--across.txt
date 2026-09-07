@@ -1,0 +1,31 @@
+THE FILE {
+    ./tree/suite/TEST/test-app.sh one : concern
+    :/: two                           : concern
+}
+--- carried into another directory: the entries follow the path
+STATUS: 0
+      test-app.sh -> other/TEST/test-moved.sh -- 6 file(s), the book entry, the register id, the coverage seats
+        book entry: adopted by 'other/TEST'
+        register: app 0 retired here; issued 0.0, 0.1 there
+        labels: re-keyed (2 entries)
+THE FILE {
+    ./tree/other/TEST/test-moved.sh one : concern
+    :/: two                             : concern
+}
+--- the source register retired the id; the target issued afresh
+    other: A:0 test-moved.sh
+    other: C:0.0 one
+    other: C:0.1 two
+--- 'hwut.move' INTO a directory, two words
+STATUS: 0
+      test-moved.sh -> suite/TEST/test-moved.sh -- 6 file(s), the book entry, the register id, the coverage seats
+        register: app 0 retired here; issued 1.0, 1.1 there
+        labels: re-keyed (2 entries)
+THE FILE {
+    ./tree/suite/TEST/test-moved.sh one : concern
+    :/: two                             : concern
+}
+--- a choice never crosses
+STATUS: 2
+    REFUSED: a choice never crosses a directory -- 'other/TEST/x' carries a path
+<hwut-end>

@@ -74,6 +74,7 @@ from   vut.engine.orchestrator.run.adapter             import \
 from   vut.auxiliary.directory_mutex                   import DirectoryBusy
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
+from   ._target                                        import entered
 
 
 USAGE = usage_line("usage: hwut.accept",
@@ -977,6 +978,10 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
               % ", ".join(sorted(unknown)))
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(word_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, word_list = found
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)

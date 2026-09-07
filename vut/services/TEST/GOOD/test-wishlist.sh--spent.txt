@@ -3,4 +3,5 @@ THE LIST {
     ./messaging/queue/TEST/test-a.sh one
 }
 WHAT RAN:
-STATUS: 1
+STATUS: 3
+<hwut-end>

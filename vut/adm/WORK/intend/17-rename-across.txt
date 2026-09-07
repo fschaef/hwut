@@ -1,0 +1,135 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+==============================================================================
+intend/17-rename-across -- ONE 'hwut.rename', ACROSS DIRECTORIES
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS CONCERNED: services (rename, move, _follow, _target, the
+launchers); engine/bookkeeper (the door gains 'adopt'); engine/coverage
+(the record is re-seated); engine/orchestrator/plan (one docstring).
+
+RULED 2026-09-06 (E-46). Supersedes services/DISCUSSIONS.txt todo-1,
+which is deleted, and closes adm/WORK/TODO.txt D-3, whose measurement
+is section 2 below.
+
+==============================================================================
+1  INTENT
+==============================================================================
+
+A test that the author moves with 'git mv' into another directory
+must be able to take its HISTORY with it: the book entry with every
+recorded run and any stain, the nominals, the candidates and error
+witnesses, the coverage records, the labels membership. Today
+'hwut.rename' re-keys within one directory only, so the move leaves
+the history stranded where the test no longer is, and
+'hwut.remove.propose' finds it there and can only say ', possibly
+moved to <dir>' (E-45). This work makes the carrying-across a face,
+and it makes it THE SAME face, because a rename and a move are one act
+seen from two distances: the name changes, and the name may include a
+directory.
+
+When done:
+
+    hwut.rename <app> -to <app'>             renames the app, whole
+    hwut.rename <app> <choice> -to <choice'> renames one choice of it
+    hwut.rename <app> -to <path>/<app'>      renames AND carries into
+                                             <path>
+    hwut.move   <app> <app'>                 == hwut.rename <app> -to <app'>
+
+    hwut.rename-choice                       gone
+
+'-to' is a KEYWORD, not an option; the count of words before it -- one
+or two -- says app or choice. 'hwut.move' takes exactly two words and
+is nothing 'hwut.rename' is not. A target naming an existing directory
+means INTO it: '-to a/TEST/' is '-to a/TEST/<app>'. The
+'<old> <new> [...]' repetition of E-16 is gone: one rename per call.
+
+A choice never crosses: 'hwut.rename app choice -to x/choice'' is
+refused by name. The app word may be a path, per E-45's rule
+('services/_target.py'), which 'rename.py' adopts; a path that
+disagrees with '--directory' is refused there. '--directory' stays as
+the SOURCE directory.
+
+What E-16 said that still stands is pointed at, not restated: not one
+byte inside a record changes; a rename is not a fresh start; the
+source file is the author's; a collision is refused before anything
+moves. 'hwut.remove-choice' is NOT touched by this ruling.
+
+==============================================================================
+2  THE MEASUREMENT (closes TODO D-3)
+==============================================================================
+
+todo-1 claimed every primitive exists and only the command shape is
+new. Measured against the selection on 2026-09-06:
+
+    artefact              same directory today   across directories
+    -------------------   --------------------   ---------------------------
+    nominals, candidates  os.rename              os.rename            stands
+      sidecars
+    register, source      'rename_app'           'remove_app'         stands
+                                                 (retires, never
+                                                 reissues -- B-2)
+    register, target      --                     'run_id_of(...,      stands
+                                                 allocate_f=True)'
+    book, source          'rename_test'          'remove_test' ->     stands
+                                                 the entry
+    book, target          (same call)            NOTHING: no way to   OWED
+                                                 put an entry into a
+                                                 book but 'record()'
+    '.cover' record       os.rename              MUST BE RE-SEATED    OWED
+                                                 (see below)
+    labels ('_follow')    one dir, one boundary  two dirs, possibly   OWED
+                                                 two boundaries
+    'observations.bin'    not touched (0 uses    not touched          noted,
+                          in rename.py)                               E-20
+    DirectoryLock         one                    two                  OWED
+
+The two-Store shape itself is small: 'move_tuple()' builds destination
+paths at eight sites from the one 'store'; each becomes the TARGET
+store's call.
+
+THE RE-SEAT IS THE ONE HARD STEP AND THE ONE DANGER. A '.cover' record
+carries its run id, and ids are DIRECTORY-LOCAL (bookkeeper D-14).
+Moved unchanged, id 3 of the source decodes in the target to some
+OTHER test, or to nobody. E-16's 'the register keeps that id' was
+true within a directory and is false across one; the target ISSUES a
+fresh id, and the record is re-seated under it through coverage's own
+seam ('record.seated(record, run)'), never rewritten by hand.
+
+==============================================================================
+3  THE SHAPE OF THE WORK
+==============================================================================
+
+    services/rename.py       parses '<words> -to <target>'; owns the
+                             mechanics: two Stores, source retire,
+                             target issue, book adopt, re-seat, labels
+                             across; calls '_target' for the app word
+    services/move.py         a few lines: rewrites 'a b' to 'a -to b'
+                             and calls 'rename.main' (naming law: one
+                             module per launcher)
+    services/rename_choice.py, bin/hwut.rename-choice     DELETED
+    bin/hwut.move                                         ADDED
+    engine/bookkeeper/api.py  'Bookkeeper.adopt(test, entry)': takes a
+                             whole entry, refuses a live name
+    services/_follow.py      'labels_renamed' takes a source and a
+                             target directory; where they lie under
+                             two boundaries the entry leaves one file
+                             and enters the other
+    services/TEST/test-rename.sh   rewritten to the new words; its
+                             GOOD ('...--labels.txt') is RE-RECORDED
+                             on real infrastructure, never edited
+    docstrings               bookkeeper.py 41, 1064; plan/wish.py 516
+
+Two DirectoryLocks, source first by path order, so two concurrent
+moves in opposite directions cannot deadlock.
+
+RETIRES WHEN BUILT: the stale 'result_db.csv' / 'test_ids.dat' under
+'coverage/TEST/', 'coverage/database/TEST/', 'coverage/readers/TEST/'
+(TODO A-2) become its first exercise.
+
+==============================================================================
+OPEN
+==============================================================================
+
+None. Every fork of 2026-09-06 is ruled; see E-46.

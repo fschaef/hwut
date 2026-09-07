@@ -513,7 +513,7 @@ def desugar_positional(word_list):
     the short form can never mean what the long form cannot say.
 
     A face whose bare words already mean something else --
-    'hwut.rename <old> <new>', 'hwut.labels.create <label>' -- does
+    'hwut.rename <app> -to <app>', 'hwut.labels.create <label>' -- does
     not call this: the sugar is a thing a face asks for, never a
     thing 'parse_wish' does behind its back.
     """

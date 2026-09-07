@@ -34,7 +34,8 @@ from   .lib.labels                    import _file
 
 
 def labels_renamed(test_directory, test, choice, fresh_test,
-                   fresh_choice, whole_test_f, write):
+                   fresh_choice, whole_test_f, write,
+                   target_directory=None):
     """
     RETURN: bool, True where the labels file needed nothing or
             followed whole; False where it could not -- announced by
@@ -44,10 +45,21 @@ def labels_renamed(test_directory, test, choice, fresh_test,
     one and every choice's own -- to the fresh file name; otherwise
     the one entry '(test, choice)' moves to '(test, fresh_choice)'.
 
+    'target_directory', where given and different, is where the fresh
+    name STANDS (E-46): the fresh key is made against it. Under the
+    same boundary the entries re-key in one file; under another
+    boundary they leave the source's file and enter the target's --
+    one that stands, or one made for them. A target directory above
+    no boundary is a fault: an entry cannot follow to where no labels
+    can be kept.
+
     A fresh key that ALREADY STANDS is a fault, not a merge: two
     entries collapsing into one would answer one question with two
     lines' worth of labels nobody put together on purpose.
     """
+    if target_directory is None or _same_place(test_directory,
+                                                target_directory):
+        target_directory = test_directory
     found = _ground(test_directory)
     if found is None: return True
     boundary, entry_db = found
@@ -58,34 +70,67 @@ def labels_renamed(test_directory, test, choice, fresh_test,
 
     old_key = _key_of(test_directory, test, boundary)
     if whole_test_f:
-        fresh_key = _key_of(test_directory, fresh_test, boundary)
-        move_list = [(key, (fresh_key, key[1]))
-                     for key in entry_db if key[0] == old_key]
+        move_list = [key for key in entry_db if key[0] == old_key]
     else:
-        source = (old_key, choice)
-        move_list = [(source, (old_key, fresh_choice))] \
-                    if source in entry_db else []
+        move_list = [(old_key, choice)] \
+                    if (old_key, choice) in entry_db else []
     if not move_list:
         write("    labels: none stood")
         return True
 
-    for _, target in move_list:
-        if target in entry_db:
+    #  WHERE THE FRESH KEY IS MADE: against the directory the fresh
+    #  name stands in, under ITS boundary.
+    try:
+        target_boundary = root_conf_directory(target_directory)
+    except RootConfMissing:
+        write("    FAULT: labels -- no boundary stands above '%s'; "
+              "entries of '%s' cannot follow there" % (target_directory,
+                                                       test))
+        return False
+    if _same_place(target_boundary, boundary):
+        target_db = entry_db
+    elif os.path.isfile(_file.file_path(target_boundary)):
+        try:
+            target_db = _file.read_entry_db(target_boundary)
+        except _file.LabelFileError:
+            write("    FAULT: labels -- the target boundary's file "
+                  "cannot be read; entries of '%s' do not follow" % test)
+            return False
+    else:
+        target_db = {}
+    fresh_key = _key_of(target_directory, fresh_test, target_boundary)
+    pair_list = [(key, (fresh_key,
+                        key[1] if whole_test_f else fresh_choice))
+                 for key in move_list]
+
+    for _, target in pair_list:
+        if target in target_db:
             write("    FAULT: labels -- '%s' already stands; the "
                   "old entries keep their name for "
                   "'hwut.sanitize --orphans'"
                   % _file.target_text(target))
             return False
-    for source, target in move_list:
-        entry_db[target] = entry_db.pop(source)
+    for source, target in pair_list:
+        target_db[target] = entry_db.pop(source)
     try:
         _file.write_entry_db(boundary, entry_db)
+        if target_db is not entry_db:
+            _file.write_entry_db(target_boundary, target_db)
     except OSError as error:
         write("    FAULT: labels -- %s" % error)
         return False
-    write("    labels: re-keyed (%d entr%s)"
-          % (len(move_list), "y" if len(move_list) == 1 else "ies"))
+    n = len(pair_list)
+    write("    labels: %s (%d entr%s)"
+          % ("re-keyed" if target_db is entry_db
+             else "carried to the boundary '%s'" % target_boundary,
+             n, "y" if n == 1 else "ies"))
     return True
+
+
+def _same_place(a, b):
+    """RETURN: bool, True where the two paths name one directory."""
+    return os.path.normcase(os.path.abspath(a)) \
+           == os.path.normcase(os.path.abspath(b))
 
 
 def labels_forgotten(test_directory, test, choice, whole_test_f,

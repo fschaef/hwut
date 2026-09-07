@@ -2027,3 +2027,129 @@ DECISION  ONE RULE, ONE PLACE ('services/_target.py'): a word carrying
 COST      A helper every bare-name face must call, and a face that
           re-reads its words ('hwut.stability's repeat) must be handed
           the bare form. Two more names to know.
+
+----------------------------------------------------------------------------
+E-46  ONE 'hwut.rename', ACROSS DIRECTORIES; 'hwut.move' IS ITS SHORTHAND
+                                                            (2026-09-06)
+----------------------------------------------------------------------------
+PROBLEM   A test the author moved with 'git mv' left its history
+          behind: 'hwut.rename' re-keyed within one directory only.
+          'hwut.remove.propose' could find the stranded records and
+          say ', possibly moved to <dir>' (E-45), but no face could
+          carry them across. The coverage split of 2026-09-04 left
+          three directories with books it could not reconcile.
+
+DECISION  ONE FACE, ONE KEYWORD:
+
+              hwut.rename <app> -to <app'>
+              hwut.rename <app> <choice> -to <choice'>
+              hwut.rename <app> -to <path>/<app'>
+              hwut.move   <app> <app'>      == hwut.rename <app> -to <app'>
+
+          '-to' is a keyword; the words before it -- one or two --
+          say app or choice. A target that names an existing
+          directory means INTO it. 'hwut.move' takes two words and is
+          a shorthand, nothing more; it has its own launcher and its
+          own few-line module, by the naming law. 'hwut.rename-choice'
+          IS GONE. One rename per call; the '<old> <new> [...]'
+          repetition of E-16 falls with it. The app word may be a
+          path (E-45); '--directory' names the source; a choice never
+          crosses a directory.
+
+          ACROSS A DIRECTORY THE HISTORY MOVES WHOLE: the book entry
+          with its runs and its stain (E-16 stands: not a fresh
+          start), nominals, candidates, witnesses, coverage records,
+          labels membership. The SOURCE register RETIRES the id --
+          never reissues it (bookkeeper B-2); the TARGET ISSUES a
+          fresh one; the book entry is ADOPTED by the target through
+          the bookkeeper's door, refused onto a live name before
+          anything moves. THE COVERAGE RECORD IS RE-SEATED under the
+          fresh id through coverage's own seam: ids are
+          directory-local (bookkeeper D-14), so E-16's 'the register
+          keeps that id' holds within a directory and is false across
+          one; a record moved unchanged would decode in the target to
+          another test, or to nobody. Not one byte inside a nominal,
+          a candidate or a witness changes (E-16 stands).
+
+          'services/_follow.py' stays the one place the boundary
+          records are reached (E-19), now told a source and a target
+          directory; two boundaries means one entry leaves one labels
+          file and enters the other. 'hwut.remove-choice' is untouched.
+
+          Intent, measurement and shape: adm/WORK/intend/17-rename-across.
+
+COST      A second launcher over the rename module ('hwut.move'), as
+          E-16 already paid for 'rename-choice' and now gets back. One
+          more primitive on the bookkeeper's door ('adopt'). Two
+          directory locks per call. The rename GOOD is re-recorded.
+
+GRAVEYARD 'hwut.book.move' / 'hwut.book.rename' -- rejected: a face
+          named by its object, and the wrong object: 'the book' is
+          'result_db.csv' and a move carries six things that are not
+          it.
+          'hwut.move' as a face of its own with 'mv' semantics beside
+          a same-directory 'hwut.rename' that refuses to cross --
+          rejected: two words for one act, and a refusal that only
+          points at the other word.
+          '--target=<dir>' as an option -- rejected: one target per
+          call, and '<old> <new>' becomes a stutter when only the
+          directory changes.
+          Keeping 'hwut.rename-choice' -- rejected: '<app> <choice>
+          -to <choice'>' says it without a second face.
+
+----------------------------------------------------------------------------
+E-47  A PATH WORD ENTERS ITS DIRECTORY, ON EVERY FACE          (2026-09-06)
+----------------------------------------------------------------------------
+PROBLEM   E-45 stated the path rule for EVERY bare-name face and three
+          of twelve read it. The wish faces read 'a/TEST/x.sh' as a
+          glob with a path member over the tree BELOW the current
+          directory: a path below worked by walking the whole tree; a
+          path above or beside ('../x/TEST/x.sh', an absolute one)
+          matched nothing and said nothing. 'hwut.play' and
+          'hwut.show' did not read a path at all. One spelling, three
+          meanings, by face -- and the ruling that 'hwut path/app'
+          means 'enter path, perform app' had been said and never
+          written.
+
+DECISION  A BARE WORD carrying '/' whose DIRECTORY PART IS LITERAL --
+          no '*', '?', '[' -- ENTERS that directory and performs the
+          base name there, on every face, as if '--directory' had
+          named it: one directory explored, not the tree; '..' and
+          absolute paths included. A directory part carrying a glob
+          metacharacter is NOT a path: it stays a wish glob with a
+          path member (E-15), over the tree below. The base name may
+          glob either way. A RELATIVE path is read against
+          '--directory' where one was said -- '--directory=tree
+          a/TEST/x.sh' enters 'tree/a/TEST' -- and against the current
+          directory otherwise; an ABSOLUTE path stands on its own and,
+          beside a '--directory', must lie within it. The rule is
+          'services/_target.py' and nothing else; every face calls
+          'entered()' between reading its words and checking its
+          directory: run, plan, wishlist, report, accept, play, show,
+          remove, rename, move, stability -- 'cov' inherits by
+          forwarding; 'labels.*' take no test word. Two refusals: two
+          words naming two directories (E-45), and an absolute path
+          outside '--directory'. E-45's 'a path that disagrees with
+          --directory' NARROWS to that absolute case: a relative path
+          beside '--directory' does not disagree, it composes.
+
+          '--glob' IS NOT A BARE WORD. Its argument is the wish's
+          language, path member and all (E-15); entering is a thing
+          the SHORT FORM does with a word, never a thing 'parse_wish'
+          does behind a face's back.
+
+COST      A call in eleven faces where E-45 had put it in three. A
+          bare path below the current directory no longer walks the
+          whole tree to find itself -- which nobody had asked for and
+          which cost the exploration. 'hwut.tell' reads its own path
+          with 'os.path.dirname' since before E-45: a second place for
+          the rule, tolerated until that face is next touched.
+
+GRAVEYARD Entering on the bare-name faces only, the wish faces keeping
+          the glob meaning -- rejected: '..' would still silently match
+          nothing on 'hwut', and one spelling would keep two meanings
+          by face.
+          Refusing a relative path beside '--directory' (E-45 read
+          literally) -- rejected: '--directory=tree a/TEST/x.sh' is
+          the line a report prints and a person copies, and the
+          labels suites already relied on it composing.

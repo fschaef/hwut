@@ -60,7 +60,8 @@ test-remove.sh;asking;false;not-equivalent-with-nominal
 ;unknown;true;ok
 ;untouched;true;ok
 ;whole;false;not-equivalent-with-nominal
-test-rename.sh;labels;false;unexpected-stderr
+test-rename.sh;across;true;ok
+;labels;true;ok
 test-report.sh;json;true;ok
 ;junit;true;ok
 ;never_run;true;ok

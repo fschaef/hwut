@@ -16,3 +16,4 @@ STDOUT {
 --- and a run over an empty list runs nothing
 STATUS: 3
     started: 0
+<hwut-end>

@@ -103,6 +103,7 @@ from   vut.auxiliary.directory_mutex               import (DirectoryBusy,
                                                            MkdirMutex)
 from   ._core                                      import usage_line
 from   ._exit                                      import E_ExitCode
+from   ._target                                    import entered
 from   .compare                                    import reading_view
 
 USAGE = usage_line("usage: hwut.play",
@@ -166,6 +167,10 @@ def main(argv=None, write=None):
         else:
             word_list.append(argument)
 
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(word_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, word_list = found
     if not word_list or len(word_list) > 2:
         write("REFUSED: 'hwut.play' plays ONE test, and one choice of "
               "it: <test-app> [<choice>]")

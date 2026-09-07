@@ -81,6 +81,7 @@ from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
                                                              as WISH_TOKEN_TUPLE
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
+from   ._target                                      import entered
 
 
 USAGE = usage_line("usage: hwut.run",
@@ -316,6 +317,10 @@ def _main(argv, write, write_error, captured_f, demand=None,
               "a coverage run's times are the instrumentation's")
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(word_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, word_list = found
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist"
               % directory)

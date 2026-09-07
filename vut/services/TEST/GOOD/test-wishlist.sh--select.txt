@@ -18,3 +18,4 @@ STATUS: 0
 STDOUT {
     ./messaging/queue/TEST/test-a.sh one
 }
+<hwut-end>

@@ -59,6 +59,7 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              with_targets)
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
+from   ._target                                      import entered
 
 FORMAT_TUPLE   = ("traditional", "junit", "tap", "json")
 WIDTH_DEFAULT  = 80
@@ -545,6 +546,10 @@ def main(argv=None, write=None):
               % ", ".join(sorted(unknown)))
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(word_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, word_list = found
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)

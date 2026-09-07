@@ -38,8 +38,8 @@ DESCRIPTION
        no longer: a test reads DELETED, a choice NON-RESPONSIVE. What
        either verdict means is the caller's -- under 'run all tests' it
        is an error, under 'run this test with that choice' it is not.
-       Healing is a service (rename, rename-choice, remove,
-       remove-choice), never a guess.
+       Healing is a service (rename, remove, remove-choice), never a
+       guess.
 
        A missing or damaged base reads as EMPTY: the base is a record,
        and its loss must never fail a run.
@@ -998,6 +998,27 @@ class Bookkeeper:
         self._write_book(content)
         return choice_db[new_key]
 
+    def adopt(self, test, entry):
+        """
+        RETURN: dict, the entry now standing under 'test' -- the very
+                'entry' given, written into this book whole.
+
+        Raises KeyError where 'test' already stands: a history adopted
+        onto a live name would swallow the one that stood.
+
+        THE OTHER HALF OF 'remove_test' (E-46, services): the entry a
+        source directory's book gave up is taken in by the target's,
+        with its configuration, its choices, their operations, their
+        stderr notes and any STAIN. What the test did under its old
+        roof it did.
+        """
+        content = self.book()
+        if test in content:
+            raise KeyError("'%s' already stands in the book" % test)
+        content[test] = entry
+        self._write_book(content)
+        return content[test]
+
     # -- REMOVAL: the book forgets, that a fresh record may be made ---
     def remove_test(self, test):
         """
@@ -1061,8 +1082,8 @@ class Bookkeeper:
         NON-RESPONSIVE. A declared name never yet recorded raises no
         complaint -- it is simply new.
 
-        Healing is a service (rename, rename-choice, remove,
-        remove-choice); this answer never edits the book.
+        Healing is a service (rename, remove, remove-choice); this
+        answer never edits the book.
         """
         deleted        = []
         non_responsive = {}

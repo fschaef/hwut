@@ -29,15 +29,16 @@ STDOUT {
 --- a LITERAL target overrides the silence
 STATUS: 0
 STDOUT {
-    ./messaging/net/TEST/test-a.sh one
+    ./test-a.sh one
 }
 --- a GLOB does not; wholly swallowed, it warns
 STATUS: 3
 STDOUT {
-    WARNING: the glob 'messaging/net/TEST/test-a.s? one' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    WARNING: the glob 'test-a.s? one' met only runs the standard label silences -- name a label ('--label meta') to reach them
 }
 --- a label that does not stand, refused by name
 STATUS: 2
 STDOUT {
     REFUSED: no label 'cocnern' stands in 'hwut-root.labels'
 }
+<hwut-end>

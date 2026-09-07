@@ -10,3 +10,4 @@ STDOUT {
     ./messaging/queue/TEST/test-a.sh two
     ./messaging/queue/TEST/test-b.sh
 }
+<hwut-end>

@@ -44,6 +44,7 @@ from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE 
                                                                as WISH_TOKEN_TUPLE
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
+from   ._target                                        import entered
 
 
 USAGE = usage_line("usage: hwut.plan",
@@ -132,6 +133,10 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(word_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, word_list = found
     #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
     #  in a test directory owes the same effective configuration as a
     #  walk that reached it from the project root.

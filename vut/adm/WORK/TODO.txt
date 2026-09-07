@@ -2,7 +2,7 @@
 TODO -- ALL OUTSTANDING LABOUR, IN ONE PLACE
 ==============================================================================
 
-VERSION: 9
+VERSION: 11
 
 Goal (1) of three: the TODOs gathered. Rationale logic is goal (2),
 README knowledge goal (3).
@@ -22,15 +22,9 @@ item blocks another, it says so.
 A  BLOCKED -- something else must land first
 ==============================================================================
 
-A-1  hwut.rename / hwut.rename-choice ACROSS A DIRECTORY BOUNDARY
-     services/DISCUSSIONS.txt todo-1
-     Both faces carry a test's book entry, register entry, nominals
-     and candidates from one directory's tree into another's. Every
-     primitive exists ('TestIdDb.register()', hwut.remove's
-     retirement, 'rename.move_tuple()', 'record.seated()'); what is
-     new is the COMMAND SHAPE -- today one Store per call, needed:
-     a source and a target.
-     BLOCKS: A-2. Worth a spike on the two-Store shape first.
+A-1  RULED 2026-09-06 -> B-20                    ** MOVED **
+     The spike (D-3) was made; the ruling is E-46; the labour is
+     B-20. Nothing blocks it but the files named there.
 
 A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE
      coverage/DISCUSSIONS.txt todo-13
@@ -38,7 +32,9 @@ A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE
      'coverage/TEST/', 'coverage/database/TEST/' and
      'coverage/readers/TEST/' still describe the pre-split single
      directory. Hand-editing refused, correctly.
-     WAITS ON: A-1. Becomes its first real exercise.
+     WAITED ON: B-20, landed 2026-09-06. READY: its first real
+     exercise is 'hwut.rename <app> -to <dir>/<app>' per stranded
+     test, from the directory that still holds the entry.
 
 A-3  THE PROCSITTER CALL IN '--hwut-info'
      gathered/0z todo-3
@@ -192,6 +188,15 @@ B-19 __slots__-CLASS DEFECTS ALREADY FIXED -- nothing owed
      (recorded so the next sweep does not re-open it: operations'
      todo-12 is BUILT and struck, C-8.)
 
+B-20 ONE 'hwut.rename' ACROSS DIRECTORIES; 'hwut.move'   ** BUILT -- STRIKE **
+     services/RATIONALE.txt E-46
+     BUILT AND JUDGED 2026-09-06 on the complete tree: 'hwut.run
+     test-rename.sh' -> 2 ok ('labels' re-recorded with the terminal
+     token, 'across' recorded), both nominals blessed through
+     'hwut.accept' on real infrastructure; the services suite's
+     failure set before and after is the same eleven, none of them in
+     a touched file. intend/17 deleted. A-2 IS UNBLOCKED.
+
 ==============================================================================
 C  PARTLY BUILT -- a body exists, a named piece is missing
 ==============================================================================
@@ -262,11 +267,12 @@ D-2  THE OUTER-TEXT BLOCK BOUNDARY
      rather than arguable: split it, run compare's own suite, see
      whether any GOOD moves. If none does, the boundary is free.
 
-D-3  THE TWO-Store SHAPE FOR A CROSS-DIRECTORY RENAME
-     services/DISCUSSIONS.txt todo-1
-     A spike measuring the two-Store shape against 'move_tuple()'
-     before ruling further. (Same item as A-1; listed here because
-     the measurement comes first.)
+D-3  THE TWO-Store SHAPE FOR A CROSS-DIRECTORY RENAME   ** MEASURED **
+     MEASURED 2026-09-06: adm/WORK/intend/17-rename-across, section 2.
+     The two-Store threading is eight call sites; what todo-1 called
+     'every primitive exists' was false in four places, one of them
+     dangerous (the coverage record's directory-local run id). Ruled
+     as E-46; labour is B-20.
 
 ==============================================================================
 E  WAITING ON A RULING -- no labour can start

@@ -1,0 +1,35 @@
+--- a path BELOW: enter it, one directory selected
+STATUS: 0
+STDOUT {
+    ./test-a.sh one
+}
+--- a path with '..': the same
+STATUS: 0
+STDOUT {
+    ./test-a.sh one
+}
+--- an ABSOLUTE path: the same
+STATUS: 0
+STDOUT {
+    ./test-a.sh one
+}
+--- a path RELATIVE TO '--directory': the same
+STATUS: 0
+STDOUT {
+    ./test-a.sh one
+}
+--- 'hwut.run' by a path with '..': only that directory is walked
+STATUS: 3
+       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
+    RESULTS: 0 ok, 0 fail, 2 skip, 1 refused
+--- 'hwut.show' by a path: the test, from its own directory
+STATUS: 0
+    test-b.sh {
+        title = "B"
+--- a glob in the DIRECTORY part is not a path: a wish over the tree below
+STATUS: 0
+STDOUT {
+    ./messaging/net/TEST/test-a.sh two
+    ./messaging/queue/TEST/test-a.sh two
+}
+<hwut-end>

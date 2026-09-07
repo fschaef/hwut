@@ -4,7 +4,7 @@ THE FILE {
 }
 --- the whole test renamed: every entry follows
 STATUS: 0
-      test-app.sh -> test-fresh.sh -- 10 file(s), the book entry, the register name
+      test-app.sh -> test-fresh.sh -- 6 file(s), the book entry, the register name
         book entry: re-keyed
         labels: re-keyed (2 entries)
 THE FILE {
@@ -29,3 +29,4 @@ THE FILE {
     :/: two                               : concern
     ./tree/suite/TEST/test-fresh.sh stale : concern
 }
+<hwut-end>

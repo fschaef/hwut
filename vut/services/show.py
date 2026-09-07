@@ -38,6 +38,7 @@ from   vut.services.lib.labels                            import _file
 from   vut.engine.bookkeeper.api               import (TestIdDb,
                                                               TestIdFault)
 from   ._exit                                         import E_ExitCode
+from   ._target                                       import entered
 
 
 USAGE = "usage: hwut.show [<source file>] [--no-default] " \
@@ -206,6 +207,10 @@ def main(argv=None, write=None):
         write("REFUSED: unknown option(s): %s" % ", ".join(unknown))
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
+    found = entered(name_list, directory, write, USAGE)
+    if found is None: return E_ExitCode.REFUSED
+    directory, name_list = found
     if len(name_list) > 1:
         write("REFUSED: %d source files named; 'hwut.show' reads one, "
               "or the directory" % len(name_list))
