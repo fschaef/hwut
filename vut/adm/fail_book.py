@@ -89,7 +89,9 @@ def main(argv):
     print("cases that came out [OK] under --fail: %d" % len(cases))
     for directory, test, choice in cases:
         good = os.path.join(base, directory, "GOOD")
-        csv_path  = os.path.join(good, "result_db.csv")
+        csv_path  = os.path.join(good, "book.csv")
+        if not os.path.exists(csv_path):
+            csv_path = os.path.join(good, "result_db.csv")
         json_path = os.path.join(good, "result_db.json")
         head, rows = book_rows(csv_path)
         key = choice if choice is not None else ""
@@ -99,7 +101,7 @@ def main(argv):
         print("== %s  %s%s" % (directory, test,
                                "" if choice is None else " " + choice))
         if not os.path.isfile(csv_path):
-            print("   NO result_db.csv in %s" % os.path.relpath(good, base))
+            print("   NO book.csv in %s" % os.path.relpath(good, base))
         else:
             age = time.time() - os.path.getmtime(csv_path)
             print("   book header : %s" % head)

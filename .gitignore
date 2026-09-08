@@ -3,3 +3,6 @@
 **/TEST/OUT
 **/__pycache__
 **/hwut.log
+**/TEST/hwut-traces*
+**/TEST/TMP
+**/TEST/GOOD/book.csv

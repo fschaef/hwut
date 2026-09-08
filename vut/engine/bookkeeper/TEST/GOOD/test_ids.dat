@@ -1,8 +1,8 @@
 ##VUT-TEST-IDS 5
-G:28
-N:4
+G:33
+N:5
 A:0 test-bookkeeper.py
-N:0.8
+N:0.9
 C:0.0 damage
 C:0.1 divergence
 C:0.2 naming
@@ -11,6 +11,7 @@ C:0.4 protection
 C:0.5 record
 C:0.6 reproduce
 C:0.7 setup_delta
+C:0.8 one_act
 A:1 test-stream_store.py
 N:1.5
 C:1.0 keys
@@ -33,3 +34,8 @@ C:3.3 healing
 C:3.4 retire
 C:3.5 tables
 C:3.6 vanished
+A:4 test-traces.py
+N:4.3
+C:4.0 key
+C:4.1 table
+C:4.2 elision

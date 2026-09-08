@@ -162,6 +162,11 @@ def _main(argv):
                              "even in a two-stream comparison")
     parser.add_argument("--plain", action="store_true",
                         help="no colors, even on a tty")
+    parser.add_argument("-y", "--side-by-side", action="store_true",
+                        help="two columns: subject LEFT, nominal RIGHT")
+    parser.add_argument("--width", type=int, default=None,
+                        help="the two-column rendering's width "
+                             "(default: the terminal's)")
     add_setup_arguments(parser)
     arguments = parser.parse_args(argv)
     setup     = setup_from_arguments(arguments)
@@ -174,7 +179,9 @@ def _main(argv):
     adapter   = TuiDisplay(out       = sys.stdout,
                            color_f   = False if arguments.plain else None,
                            merge_f   = False,
-                           reading_f = reading_f)
+                           reading_f = reading_f,
+                           side_by_side_f = arguments.side_by_side,
+                           width     = arguments.width)
 
     if arguments.nominal is None:
         shown_f = asyncio.run(

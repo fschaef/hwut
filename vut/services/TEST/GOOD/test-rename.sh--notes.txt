@@ -1,0 +1,15 @@
+--- the application under the OLD name, a conf section naming it
+STATUS: 0
+    NOTE  application 'test-app.sh' stands under the OLD name -- git mv test-app.sh test-fresh.sh (E-16)
+    NOTE  hwut.conf apps section 'test-app.sh' in hwut.conf -- rename it
+--- the author moved the file; a choice renamed: the block still declares 'one'
+STATUS: 0
+    NOTE  '@hwut' declares 'one', 'two' -- edit the block: 'one' -> 'first'
+--- --no-warning: the same disagreement, unsaid
+STATUS: 0  NOTE lines: 0
+--- --silent: nothing but a refusal
+STATUS: 0  lines: 0
+--- under BOTH names: refused before anything moves
+STATUS: 2
+    REFUSED: application stands under BOTH names: 'test-fresh.sh' and 'test-quiet.sh' -- decide which is the test first
+<hwut-end>

@@ -466,12 +466,3 @@ todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [part]
 todo-7  THE MEASUREMENT THAT RULES disc-1
         Write of one run, read of a cross-directory aggregate, forms (a)
         and (c). Until it exists, disc-1 stays open and (a) stands.
-
-todo-13 THE THREE 'TEST/' DIRECTORIES' BOOKS ARE STALE (session
-        2026-09-04, the database/readers split). 'GOOD/result_db.csv'
-        and 'GOOD/test_ids.dat' under 'coverage/TEST/',
-        'coverage/database/TEST/' and 'coverage/readers/TEST/' still
-        reflect the pre-split single directory; hand-editing them was
-        refused (never fabricated). Waits on 'services' todo-1:
-        'hwut.rename' / 'hwut.rename-choice' carrying a book entry
-        across a directory boundary, not only re-keying it within one.

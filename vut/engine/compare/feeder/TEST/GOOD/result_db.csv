@@ -1,5 +1,0 @@
-test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
-test-html_feeder.py;;true;ok
-test-ui.py;potpourri;true;ok
-;structure;true;ok
-;types;true;ok

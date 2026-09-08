@@ -38,8 +38,7 @@ DESCRIPTION
        no longer: a test reads DELETED, a choice NON-RESPONSIVE. What
        either verdict means is the caller's -- under 'run all tests' it
        is an error, under 'run this test with that choice' it is not.
-       Healing is a service (rename, remove, remove-choice), never a
-       guess.
+       Healing is a service (rename, remove), never a guess.
 
        A missing or damaged base reads as EMPTY: the base is a record,
        and its loss must never fail a run.
@@ -55,8 +54,10 @@ from   dataclasses import fields, is_dataclass
 from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
+from   contextlib  import contextmanager
 from .configuration import E_StderrNote, NamingConfig
 from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
+from .test_id_db import TestIdDb
 
 #  THE STORE'S GROUND, under the transient root 'TMP/' (services E-24).
 #  Re-exported by 'stream_store'.
@@ -64,9 +65,11 @@ STORE_DIRECTORY_NAME = "TMP/store"
 
 #  THE BOOK IS A TABLE (B-6): one row per (test, choice, operation), and
 #  one row per choice with 'operation' empty for the choice's own facts.
-RESULT_DB_FILE_NAME        = "result_db.csv"
+BOOK_FILE_NAME             = "book.csv"
 #  Read once, then replaced: a book written before B-6.
-LEGACY_RESULT_DB_FILE_NAME = "result_db.json"
+#  THE NAMES THE BOOK HAS WORN, newest first: read where the current
+#  one does not stand, and gone at the first write (B-10).
+LEGACY_BOOK_FILE_TUPLE     = ("result_db.csv", "result_db.json")
 #  THE TABLE (B-7, B-8): one row per (test, choice); ';' between cells,
 #  never quoted -- a name carrying ';' is refused at the validator. AN
 #  EMPTY 'test' CELL MEANS "the same as the row above": an empty name
@@ -87,8 +90,8 @@ BOOK_FORBIDDEN_IN_NAME = (BOOK_SEPARATOR,)
 #  operations' hygiene suite) ASKS THIS, and never carries a list: a
 #  file the bookkeeper adds is then skipped everywhere without the
 #  bookkeeper knowing who walks.
-GOOD_OWNED_FILE_TUPLE = (RESULT_DB_FILE_NAME, LEGACY_RESULT_DB_FILE_NAME,
-                         _REGISTER_FILE_NAME)
+GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
+                        + (_REGISTER_FILE_NAME,)
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",
                   "coverage", "stderr", "stain_repeat_n", "stain_when")
 
@@ -175,7 +178,7 @@ def _rows_of_model(content):
     YIELD: [0] dict  one row per (test, choice), in that order -- the
                      file is stable under re-writing and a diff honest.
                      The 'test' cell is EMPTY where it repeats the
-                     row above (B-8).
+                     row above (B-9).
     """
     last_test = None
     for test in sorted(content):
@@ -421,6 +424,119 @@ class Bookkeeper:
         self.directory = Path(directory)
         self.naming    = naming if naming is not None else NamingConfig()
 
+    # -- THE LOCK: the bookkeeper is the locking proxy (B-9) -----------
+    @contextmanager
+    def held(self):
+        """
+        RETURN: context manager yielding the DirectoryLock, HELD for the
+                whole 'with' -- the way a run holds its directory for a
+                session. Inside it every write of this bookkeeper runs
+                without taking the lock again (the mutex is
+                non-recursive: a second take by the holder raises
+                'DirectoryDeadlock').
+
+        Raises DirectoryBusy where ANOTHER LIVE PROCESS holds the
+        directory. Where THIS process already holds it, the block runs
+        inside that holding and 'None' is yielded: the mutex is the one
+        authority on who holds what.
+        """
+        from .stream_store    import DirectoryLock
+        from ...auxiliary.directory_mutex import DirectoryDeadlock
+        try:
+            lock = DirectoryLock(self.directory)
+            lock.__enter__()
+        except DirectoryDeadlock:
+            #  A HOLDER ABOVE ALREADY HAS IT: this 'held()' is inside
+            #  another, and the inner one holds nothing of its own.
+            yield None
+            return
+        try:
+            yield lock
+        finally:
+            lock.__exit__(None, None, None)
+
+    @contextmanager
+    def _act(self):
+        """
+        RETURN: context manager, the critical section of ONE act on the
+                directory's records: the lock is taken for its
+                duration, unless THIS PROCESS ALREADY HOLDS IT -- a
+                holder above ('held()'), a run holding its directory
+                for a session, any of them.
+
+        THE MUTEX IS ASKED, NOT A TABLE. 'DirectoryDeadlock' means
+        exactly 'you already hold this', which is the holder-above
+        case; catching it is how the act learns, and no register of
+        holders can drift out of step with the truth. A lock held by
+        ANOTHER live process is 'DirectoryBusy' and still raises.
+        """
+        from .stream_store    import DirectoryLock
+        from ...auxiliary.directory_mutex import DirectoryDeadlock
+        try:
+            lock = DirectoryLock(self.directory)
+            lock.__enter__()
+        except DirectoryDeadlock:
+            yield                      # held above: the act runs inside it
+            return
+        try:
+            yield
+        finally:
+            lock.__exit__(None, None, None)
+
+    # -- THE REGISTER, read and written through this door only (B-9) --
+    def _register(self):
+        """RETURN: TestIdDb, the register read FRESH from its file."""
+        return TestIdDb(str(self.directory))
+
+    def run_id_of(self, test, choice=None, allocate_f=False):
+        """
+        RETURN: TestRunId, the id of '(test, choice)' -- issued now
+                where 'allocate_f' and none stands.
+                None, where none stands and none is to be issued.
+
+        The register's 'run_id_of', under the directory's lock where
+        it may write.
+        """
+        if not allocate_f:
+            return self._register().run_id_of(test, choice)
+        with self._act():
+            return self._register().run_id_of(test, choice, allocate_f=True)
+
+    def name_of(self, run_id):
+        """RETURN: (test, choice), what the id names; None where it
+        names nothing (no longer registered, or never)."""
+        return self._register().name_of(run_id)
+
+    def roster(self):
+        """RETURN: list[str], every registered application name."""
+        return self._register().roster()
+
+    def app_iterable(self):
+        """RETURN: iterable of (app_id, name, choice tuple), the
+        register's applications."""
+        return self._register().app_iterable()
+
+    def vanished(self):
+        """RETURN: the register's 'vanished': applications registered
+        whose source no longer stands."""
+        return self._register().vanished()
+
+    def register_generation(self):
+        """RETURN: int, the register's generation, bumped per mutation
+        (coverage D-25)."""
+        return self._register().generation
+
+    def register_text(self):
+        """RETURN: str, the register in its own text format -- a
+        snapshot for a gather to carry."""
+        return self._register().format()
+
+    def give_back(self, run_id):
+        """RETURN: None. An id issued for an accept that aborted is handed
+        back (B-4) -- the register's 'give_back', under the lock."""
+        with self._act():
+            self._register().give_back(run_id)
+
     # -- the naming ---------------------------------------------------
     def key(self, test, choice, subject):
         """
@@ -623,14 +739,20 @@ class Bookkeeper:
 
     # -- the base -----------------------------------------------------
     @property
-    def result_db_path(self):
-        """RETURN: Path, the ONE base of this directory."""
-        return self.directory / "GOOD" / RESULT_DB_FILE_NAME
+    def book_path(self):
+        """RETURN: Path, the ONE book of this directory."""
+        return self.directory / "GOOD" / BOOK_FILE_NAME
 
-    @property
-    def legacy_result_db_path(self):
-        """RETURN: Path, where a book written before B-6 stands."""
-        return self.directory / "GOOD" / LEGACY_RESULT_DB_FILE_NAME
+    def legacy_book_path(self):
+        """RETURN: Path, a book under a name the tree has retired, the
+                newest such name first; None where none stands.
+
+        The book is read from it once and written to 'book.csv'; the
+        old file is removed on that write (B-10)."""
+        for name in LEGACY_BOOK_FILE_TUPLE:
+            path = self.directory / "GOOD" / name
+            if path.exists(): return path
+        return None
 
     def book(self):
         """
@@ -649,29 +771,31 @@ class Bookkeeper:
         before B-6 ('result_db.json') is read where no '.csv' stands,
         its configuration dropped on the way in.
         """
-        path = self.result_db_path
-        if path.exists():
+        path = self.book_path
+        if not path.exists():
+            path = self.legacy_book_path()
+            if path is None: return {}
+        if path.suffix == ".json":
             try:
-                with open(path, "r", encoding="utf-8", newline="") as fh:
-                    head = fh.readline()
-                    fh.seek(0)
-                    #  B-6's one-day table was ','-separated with an
-                    #  'operation' column; told apart by its header,
-                    #  read once, rewritten as B-7 on the next write.
-                    delimiter = BOOK_SEPARATOR if BOOK_SEPARATOR in head \
-                                else ","
-                    return _model_of_rows(
-                               csv.DictReader(fh, delimiter=delimiter))
+                with open(path, "r", encoding="utf-8") as fh:
+                    content = json.load(fh)
             except Exception:
                 return {}
+            return _model_of_legacy(content) if isinstance(content, dict) \
+                   else {}
         try:
-            with open(self.legacy_result_db_path, "r",
-                      encoding="utf-8") as fh:
-                content = json.load(fh)
+            with open(path, "r", encoding="utf-8", newline="") as fh:
+                head = fh.readline()
+                fh.seek(0)
+                #  B-6's one-day table was ','-separated with an
+                #  'operation' column; told apart by its header,
+                #  read once, rewritten as B-7 on the next write.
+                delimiter = BOOK_SEPARATOR if BOOK_SEPARATOR in head \
+                            else ","
+                return _model_of_rows(
+                           csv.DictReader(fh, delimiter=delimiter))
         except Exception:
             return {}
-        return _model_of_legacy(content) if isinstance(content, dict) \
-               else {}
 
     def _write_book(self, content):
         """
@@ -682,7 +806,7 @@ class Bookkeeper:
         meets a half-written base, and a careless hand never meets a
         writable one.
         """
-        path = self.result_db_path
+        path = self.book_path
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
             os.chmod(path, stat.S_IRUSR | stat.S_IWUSR
@@ -691,25 +815,36 @@ class Bookkeeper:
         with open(temporary, "w", encoding="utf-8", newline="") as fh:
             fh.write(BOOK_SEPARATOR.join(_COLUMN_TUPLE) + "\n")
             for row in _rows_of_model(content):
-                #  A ROW ENDS WITH ITS LAST FACT (B-8): trailing empty
+                #  A ROW ENDS WITH ITS LAST FACT (B-9): trailing empty
                 #  cells are not written; a middle one keeps its place.
                 cells = [str(row.get(name, "")) for name in _COLUMN_TUPLE]
                 while cells and cells[-1] == "": cells.pop()
                 fh.write(BOOK_SEPARATOR.join(cells) + "\n")
         os.replace(temporary, path)
         os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-        #  ONE BASE, NEVER TWO (B-6): the pre-B-6 book, once read and
-        #  rewritten as the table, is removed.
-        legacy = self.legacy_result_db_path
-        if legacy.exists():
+        #  ONE BOOK, NEVER TWO (B-6, B-10): a book under a retired name
+        #  ('result_db.csv', 'result_db.json'), once read and written
+        #  here, is removed.
+        while True:
+            legacy = self.legacy_book_path()
+            if legacy is None: break
             try:
                 os.chmod(legacy, stat.S_IRUSR | stat.S_IWUSR)
                 legacy.unlink()
             except OSError:
-                pass
+                break
 
     # -- recording ----------------------------------------------------
     def record(self, result, configuration, goal, choice_name=None,
+               coverage=None):
+        """RETURN: what '_record_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            return self._record_unlocked(
+                       result=result, configuration=configuration, goal=goal, choice_name=choice_name, coverage=coverage)
+
+    def _record_unlocked(self, result, configuration, goal, choice_name=None,
                coverage=None):
         """
         RETURN: dict, the entry as written -- DECISIONS ONLY (E-20).
@@ -801,17 +936,26 @@ class Bookkeeper:
         recorded verdict fail.
         """
         from .observation import ObservationDb, observation_of
+        from .traces      import TraceDb
+        observation = observation_of(records[-1] if records else None,
+                                     host=this_host(),
+                                     compare_complete_f=getattr(
+                                         result, "compare_complete_f",
+                                         None))
         try:
             ObservationDb(self.directory).note(
-                result.name, choice_name, operation,
-                observation_of(records[-1] if records else None,
-                               host=this_host(),
-                               compare_complete_f=getattr(
-                                   result, "compare_complete_f", None)))
+                result.name, choice_name, operation, observation)
         except Exception as fault:                          # noqa: BLE001
             #  Said once on stderr, never raised: the verdict stands.
             print("NOTE: local observation not written -- %s" % fault,
                   file=sys.stderr)
+        #  THE TRAVELLING HALF (B-11): what a run COST, per machine
+        #  class, beside the tests. Silent on failure by construction.
+        TraceDb(self.directory).note(
+            result.name, choice_name, operation,
+            duration_ms    = observation.duration_ms,
+            cpu_time_ms    = observation.cpu_time_ms,
+            peak_memory_mb = observation.peak_memory_mb)
 
 
 
@@ -854,6 +998,14 @@ class Bookkeeper:
             return E_StderrNote.FORBIDDEN
 
     def note_stderr(self, test, choice, note):
+        """RETURN: what '_note_stderr_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            return self._note_stderr_unlocked(
+                       test=test, choice=choice, note=note)
+
+    def _note_stderr_unlocked(self, test, choice, note):
         """
         RETURN: E_StderrNote, what now stands in the book for that
                 choice -- written verbatim, replacing any earlier note.
@@ -879,6 +1031,18 @@ class Bookkeeper:
         return note
 
     def note_accept(self, test, choice):
+        """RETURN: what '_note_accept_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._note_accept_unlocked(
+                         test=test, choice=choice)
+            #  AN ID IS BORN AT THE FIRST ACCEPT (README 4): issued
+            #  here, in the acceptance's own act (E-41).
+            self._register().run_id_of(test, choice, allocate_f=True)
+            return result
+
+    def _note_accept_unlocked(self, test, choice):
         """
         RETURN: str, the instant now standing as 'last_accept' for that
                 choice -- written into its row, which is created where
@@ -922,6 +1086,14 @@ class Bookkeeper:
                           .get(key, {}).get("stain")
 
     def note_stain(self, test, choice, repeat_n, verdict_list):
+        """RETURN: what '_note_stain_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            return self._note_stain_unlocked(
+                       test=test, choice=choice, repeat_n=repeat_n, verdict_list=verdict_list)
+
+    def _note_stain_unlocked(self, test, choice, repeat_n, verdict_list):
         """
         RETURN: dict, the stain now standing -- replacing any earlier
                 one, so a fresh conviction states the fresh count.
@@ -941,6 +1113,14 @@ class Bookkeeper:
         return stain
 
     def clear_stain(self, test, choice):
+        """RETURN: what '_clear_stain_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            return self._clear_stain_unlocked(
+                       test=test, choice=choice)
+
+    def _clear_stain_unlocked(self, test, choice):
         """
         RETURN: dict, the stain that is gone.
                 None, none stood.
@@ -959,6 +1139,19 @@ class Bookkeeper:
 
     # -- RENAME: the book re-keys; NO RECORD CONTENT IS TOUCHED -------
     def rename_test(self, test, fresh):
+        """RETURN: what '_rename_test_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._rename_test_unlocked(
+                         test=test, fresh=fresh)
+            #  THE NAME FOLLOWS IN THE REGISTER; the id stands (B-2).
+            register = self._register()
+            run_id   = register.run_id_of(test)
+            if run_id is not None: register.rename_app(run_id.app_id, fresh)
+            return result
+
+    def _rename_test_unlocked(self, test, fresh):
         """
         RETURN: dict, the entry now standing under 'fresh'.
                 None, the test was not in the book.
@@ -979,6 +1172,20 @@ class Bookkeeper:
         return content[fresh]
 
     def rename_choice(self, test, choice, fresh):
+        """RETURN: what '_rename_choice_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._rename_choice_unlocked(
+                         test=test, choice=choice, fresh=fresh)
+            register = self._register()
+            run_id   = register.run_id_of(test, choice)
+            if run_id is not None:
+                register.rename_choice(run_id.app_id, run_id.choice_id,
+                                       fresh)
+            return result
+
+    def _rename_choice_unlocked(self, test, choice, fresh):
         """
         RETURN: dict, the choice entry now standing under 'fresh'.
                 None, the choice was not in the book.
@@ -999,6 +1206,20 @@ class Bookkeeper:
         return choice_db[new_key]
 
     def adopt(self, test, entry):
+        """RETURN: what '_adopt_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._adopt_unlocked(
+                         test=test, entry=entry)
+            #  THE TARGET ISSUES fresh ids for every choice adopted
+            #  (E-46): ids are the directory's.
+            register = self._register()
+            for choice in self.choices(test) or [None]:
+                register.run_id_of(test, choice, allocate_f=True)
+            return result
+
+    def _adopt_unlocked(self, test, entry):
         """
         RETURN: dict, the entry now standing under 'test' -- the very
                 'entry' given, written into this book whole.
@@ -1021,6 +1242,20 @@ class Bookkeeper:
 
     # -- REMOVAL: the book forgets, that a fresh record may be made ---
     def remove_test(self, test):
+        """RETURN: what '_remove_test_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._remove_test_unlocked(
+                         test=test)
+            #  THE REGISTER IN THE SAME ACT (B-9): the id retired,
+            #  never reissued (B-2).
+            register = self._register()
+            run_id   = register.run_id_of(test)
+            if run_id is not None: register.remove_app(run_id.app_id)
+            return result
+
+    def _remove_test_unlocked(self, test):
         """
         RETURN: dict, the test's whole book entry that is gone.
                 None, the test was not in the book.
@@ -1035,6 +1270,19 @@ class Bookkeeper:
         return gone
 
     def remove_choice(self, test, choice):
+        """RETURN: what '_remove_choice_unlocked' returns -- the same act, under
+        the directory's lock (B-9).
+        """
+        with self._act():
+            result = self._remove_choice_unlocked(
+                         test=test, choice=choice)
+            register = self._register()
+            run_id   = register.run_id_of(test, choice)
+            if run_id is not None:
+                register.remove_choice(run_id.app_id, run_id.choice_id)
+            return result
+
+    def _remove_choice_unlocked(self, test, choice):
         """
         RETURN: dict, the choice's book entry that is gone.
                 None, the choice was not in the book.
@@ -1082,8 +1330,8 @@ class Bookkeeper:
         NON-RESPONSIVE. A declared name never yet recorded raises no
         complaint -- it is simply new.
 
-        Healing is a service (rename, remove, remove-choice); this
-        answer never edits the book.
+        Healing is a service (rename, remove); this answer never
+        edits the book.
         """
         deleted        = []
         non_responsive = {}

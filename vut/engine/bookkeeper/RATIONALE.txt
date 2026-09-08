@@ -320,3 +320,183 @@ DECISION  AN EMPTY 'test' CELL IS THE ROW ABOVE'S. No mark; ':' is
           separator itself -- stays refused at the validator. A table
           of B-7's one day with ':' cells is read the same way.
 COST      Three lines in the codec, one tuple in the validator.
+
+
+B-9  THE BOOKKEEPER IS THE LOCKING PROXY: ONE OWNER, ONE ACT     (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   The register ('GOOD/test_ids.dat') was written by eleven
+          hands beside the bookkeeper's: every service face, the run
+          dispatcher and coverage's gather constructed 'TestIdDb(dir)'
+          for themselves and wrote it in an act of their own -- a
+          removal forgot the book entry in one call and retired the id
+          in another; an accept was three calls in a row. No face took
+          the directory's lock while it wrote: only a RUN held it, for
+          a whole session. Two files about one key, many owners, no
+          lock: the drift that A-2 had to clean by hand (eight ids
+          with no entry, no nominal, no file) was built in.
+
+DECISION  THE REGISTER IS THE BOOKKEEPER'S TABLE, and the bookkeeper is
+          the LOCKING PROXY to the directory's records:
+            - the register is read and written through the door only:
+              'run_id_of', 'name_of', 'roster', 'app_iterable',
+              'vanished', 'give_back', 'register_generation',
+              'register_text'; 'TestIdDb' stays exported for the
+              read-only SNAPSHOT a gather parses from text, and for
+              nothing else;
+            - EVERY MUTATION IS ONE ACT UNDER THE DIRECTORY'S LOCK:
+              'note_accept' issues the id; 'remove_test' /
+              'remove_choice' retire it; 'rename_test' /
+              'rename_choice' re-key it; 'adopt' issues the target's;
+              'record', 'note_stderr', 'note_stain', 'clear_stain'
+              write under the same lock. The book and the register
+              are written by one hand, in one order, and a reader
+              never meets the pair mid-change;
+            - A HOLDER ABOVE takes the lock ONCE, through
+              'Bookkeeper.held()' -- the session and the dispatcher do
+              -- and every act inside sees it held and does not take
+              it again. THE MUTEX IS THE ONE AUTHORITY ON WHO HOLDS
+              WHAT: an act takes the lock and, where the take raises
+              'DirectoryDeadlock' -- which means precisely 'this
+              process already holds it' -- runs inside that holding.
+              A lock held by ANOTHER live process is 'DirectoryBusy'
+              and still refuses.
+          Nothing changes on disk: two files, two formats. Whether they
+          become one is a smaller question the two lifetimes (B-3's
+          graveyard) have already answered once.
+
+COST      Every mutation takes a lock where a face took none: one mkdir
+          per act. 'test-endtoend.py' found the first missed site
+          (the per-app bookkeepers) at once, as designed.
+
+GRAVEYARD A TABLE OF HOLDERS -- one per-process dict, directory ->
+          lock, consulted before taking: it is a SECOND SOURCE OF
+          TRUTH about who holds what, and it drifted. A whole-tree run
+          crashed with 'DirectoryDeadlock' in a directory whose lock
+          was held by a path the table had not recorded, and every
+          test of that directory was lost with it. The mutex already
+          knows; asking it cannot drift.
+          Folding the register into 'result_db.csv' as columns --
+          deferred: the next-id mark (B-2) has no row to live in once
+          its rows are removed; a comment grammar or a heterogeneous
+          table would have to carry it, which is what B-3 refused for
+          groups. A recursive mutex -- rejected: a holder that locks
+          twice has lost track of its own critical section
+          (auxiliary/directory_mutex); the held-table says 'held' where
+          recursion would hide it.
+
+
+B-10 THE BOOK IS 'book.csv'                                      (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   The book was 'result_db.csv': a name from the days when it
+          was a database of results, and one the tree also uses for an
+          IN-MEMORY thing ('found.result_db', the exploration's
+          per-directory selection) -- one noun, two concepts, and the
+          file is the one a reader meets first in 'GOOD/'.
+
+DECISION  The book's file is 'book.csv'. The names it has worn --
+          'result_db.csv', 'result_db.json' -- are read where the
+          current one does not stand, newest first, and REMOVED at the
+          first write, as B-6's migration already did for the JSON
+          one. One book, never two. A tree from before this entry
+          needs no migration step: the first write makes it.
+
+COST      Every stored book in the tree changes name on its next
+          write.
+
+GRAVEYARD Renaming the in-memory 'result_db' in the same pass --
+          deferred, not rejected: nine faces read 'found.result_db',
+          and one rename per attributable pass is the rule.
+
+
+B-11 WHAT A RUN COST TRAVELS; WHAT THIS MACHINE SAW DOES NOT     (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   Durations lived only in 'TMP/store/observations.bin':
+          binary, machine-local, never committed. So a fresh checkout
+          knew nothing about what anything costs, the wish's
+          '--faster-than' had nothing to select on until a run had
+          happened, and no one could see that a test had grown slower
+          on a colleague's machine. Putting the numbers in the BOOK
+          was refused: a duration is what THIS MACHINE SAW, and a
+          laptop's slowness has no place in a versioned record two
+          machines must agree on (E-20, E-22).
+
+DECISION  A THIRD FILE, 'TEST/hwut-traces.csv', beside the tests and
+          COMMITTED: ';'-separated, a header, one row per
+          '(system, test, choice, operation)' holding the LAST run's
+          'day', 'duration_ms', 'cpu_time_ms', 'peak_memory_mb'. An
+          entry is REPLACED where its key stands, so the file grows
+          only when a machine CLASS is seen for the first time. THE
+          NAME SAYS WHAT IT IS: traces may be deleted; nothing reads
+          them to decide anything, and a run makes them again.
+
+          THE SYSTEM KEY IS A MACHINE CLASS, not a host:
+          '<os>-<cpu>-<n>c-<arch>'. A hostname would add a row per
+          ephemeral CI container; a class collapses a hundred of them
+          into one. '<n>' is what the process MAY USE
+          ('sched_getaffinity' where the platform has it), so a
+          container's quota is not its host's number. The CPU tag is
+          the vendor string with its noise removed -- the clause from
+          '@' on, the vendor words, the punctuation -- cut at a TOKEN
+          boundary: the model number is what distinguishes two
+          machines of one family and must survive the cut.
+
+          A ROW IS A HINT, NOT A PROMISE: same class, different
+          thermals or load, different milliseconds.
+
+          'observations.bin' STAYS for what does not travel: the
+          telemetry a run may regenerate, and 'compare_complete_f',
+          which tells a reader the stored candidate may be a prefix
+          (E-31) -- not a trace, and not deletable without changing
+          how a record is read.
+
+COST      One more file in a test directory, and it is committed, so
+          it appears in diffs. Writing it costs a read and a write of
+          a small CSV per recorded operation.
+
+GRAVEYARD A whitelist of CPU vendors (Intel Core, Ryzen, Apple) with a
+          truncating fallback -- rejected on measurement: two Xeons
+          that differ by a factor of two both keyed
+          'intel-xeon-platinum', and 'E5-2686 v4' was cut to
+          'v'. Keying on the hostname -- rejected: CI overflows it.
+          Durations in the book -- rejected: the book is what two
+          machines must agree on.
+
+
+B-12 IN THE TRACES, AN EMPTY 'system' OR 'test' IS THE ONE ABOVE (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   'hwut-traces.csv' (B-11) repeated the machine class on every
+          row and the test name on every choice of it. A directory of
+          twenty tests wrote the same forty-character key twenty
+          times over; the eye had to find the one cell that changed,
+          and the file was long where it says little.
+
+DECISION  An EMPTY 'system' or 'test' cell means THE ONE ABOVE:
+
+              system;test;choice;operation;day;duration_ms;...
+              darwin-m1-pro-10c-arm64;test-a.py;one;Run;2026-09-07;98;...
+              linux-i7-13700k-16c-x86_64;test-a.py;one;Run;2026-09-07;142;...
+              ;;two;Run;2026-09-07;141;...
+              ;test-b.py;;Run;2026-09-07;167;...
+
+          A machine class is written once, a test once per class, and
+          the reader carries the last one forward. THE ROWS ARE
+          SORTED -- which the writer already did for tidiness and
+          which is now LOAD-BEARING: 'the one above' means what the
+          eye reads only in sorted order.
+
+          ONLY THOSE TWO ELIDE. An empty 'choice' is a test that HAS
+          no choice; an empty number is one the platform did not
+          measure (B-11: absence is never a zero). A first data row
+          with an empty 'system' or 'test' has nothing above it: the
+          file reads as EMPTY, and a run makes it again -- a trace is
+          never worth a guess.
+
+COST     'grep test-a.py hwut-traces.csv' no longer finds every row of
+          that test: the file is read by group, not by line. It is
+          not a query surface (O-24), so the cost is paid where it
+          was already accepted.
+
+GRAVEYARD Eliding 'operation' too -- not taken: it is 'Run' on nearly
+          every row and would elide almost entirely, which reads as a
+          column that is never there; two elisions are a rule, four
+          are a format.

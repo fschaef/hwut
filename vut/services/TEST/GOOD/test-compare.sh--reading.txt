@@ -14,3 +14,4 @@ REACTION  stdout {
 No second door: the one association serves both questions,
 and a displayed reading is a success by the convention.
 SUCCESS: one argument asks the reading; the answer is 0.
+<hwut-end>

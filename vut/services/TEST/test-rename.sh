@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "The rename face: the boundary records follow the name."
-#     choices    = ["labels", "across"]
+#     choices    = ["labels", "across", "notes"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]", "-- [0-9]+ file\\(s\\)"] }
 # }
 #
@@ -24,6 +24,12 @@
 #            standing in the STORE is the face's own refusal; one
 #            standing only in the FILE -- a stale entry -- is a FAULT,
 #            not a merge, and the file is left as it stood.
+# notes      READ AND SAY, NEVER EDIT (E-48): the application under
+#            the old name, the '@hwut' block still declaring the old
+#            choice, a 'hwut.conf' apps section naming the old name --
+#            each a telegraphic NOTE before 'Proceed?'; '--no-warning'
+#            drops them, '--silent' everything but a refusal; a file
+#            under BOTH names is refused.
 # across     a test carried into another directory: the entries
 #            re-key to the new path under the same boundary; the
 #            target register issues fresh ids, the source retires;
@@ -40,7 +46,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The rename face: the boundary records follow the name.;"
-        echo "CHOICES: labels, across;"
+        echo "CHOICES: labels, across, notes;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -154,6 +160,35 @@ across)
     echo "--- a choice never crosses"
     ( cd tree && $RENAME suite/TEST/test-moved.sh one -to other/TEST/x ) \
         > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "REFUSED" out.txt | sed 's/^/    /'
+    ;;
+
+notes)
+    fixture
+    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n    apps {\n        "test-app.sh" { title = "T"  choices = ["one", "two"] }\n    }\n}\n' \
+        > tree/suite/TEST/hwut.conf
+    echo "--- the application under the OLD name, a conf section naming it"
+    ( cd tree/suite/TEST && $RENAME test-app.sh -to test-fresh.sh --yes ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "^NOTE" out.txt | sed 's/^/    /'
+    echo "--- the author moved the file; a choice renamed: the block still declares 'one'"
+    ( cd tree/suite/TEST && mv test-app.sh test-fresh.sh \
+      && $RENAME test-fresh.sh one -to first --yes ) > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "^NOTE" out.txt | sed 's/^/    /'
+    echo "--- --no-warning: the same disagreement, unsaid"
+    ( cd tree/suite/TEST && $RENAME test-fresh.sh -to test-final.sh --yes --no-warning ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?  NOTE lines: $(grep -c '^NOTE' out.txt)"
+    echo "--- --silent: nothing but a refusal"
+    ( cd tree/suite/TEST && $RENAME test-final.sh -to test-quiet.sh --yes --silent ) \
+        > out.txt 2> err.txt
+    echo "STATUS: $?  lines: $(wc -l < out.txt)"
+    echo "--- under BOTH names: refused before anything moves"
+    ( cd tree/suite/TEST && cp test-fresh.sh test-quiet.sh \
+      && $RENAME test-fresh.sh -to test-quiet.sh --yes ) > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "REFUSED" out.txt | sed 's/^/    /'
     ;;

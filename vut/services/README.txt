@@ -238,8 +238,17 @@ The faces:
                  ('Bookkeeper.adopt'), and the coverage record is
                  re-seated under the fresh id through coverage's
                  'seated'. A fresh name standing in the target's book
-                 OR register is refused before anything moves. Asks
-                 first unless '--yes'. Exit status per E-1.
+                 OR register is refused before anything moves. NOT
+                 TOUCHED, NOT EDITED: the application file, its
+                 '@hwut' block, any 'hwut.conf' apps section -- READ
+                 AND SAID instead, as NOTE lines before 'Proceed?':
+                 the application under the old name (git mv it), a
+                 block or section still declaring the old choice or
+                 name (edit it), a file under neither name; a file
+                 under BOTH names is refused. '--no-warning' drops
+                 the notes, '--silent' everything but a refusal or a
+                 fault. Asks first unless '--yes'. Exit status per
+                 E-1.
 
     hwut.move    (move.py)
                  '<app> <app'>' is 'hwut.rename <app> -to <app'>',

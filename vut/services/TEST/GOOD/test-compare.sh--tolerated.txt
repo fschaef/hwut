@@ -14,3 +14,4 @@ REACTION  stdout {
 What was a difference is now a tolerance, and the marks say
 so; the SETUP changed the verdict, never the machinery.
 SUCCESS: under the widened setup the same streams answer 0.
+<hwut-end>

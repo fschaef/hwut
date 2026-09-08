@@ -1,7 +1,0 @@
-test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
-test-affected.py;answer;true;ok
-;bare;true;ok
-;diff;true;ok
-;empty;true;ok
-;help;true;ok
-;refused;true;ok

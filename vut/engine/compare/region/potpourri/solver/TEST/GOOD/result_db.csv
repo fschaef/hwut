@@ -1,8 +1,0 @@
-test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
-test-csp_backtracking_mrv.py;backtracking;true;ok
-;lane-trap;true;ok
-;massive-pipe;true;ok
-;soduko;true;ok
-test-maximum_bipartite_matching.py;basic;true;ok
-;chain;true;ok
-;stress;true;ok

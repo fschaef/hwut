@@ -1,0 +1,13 @@
+  the file:
+    system;test;choice;operation;day;duration_ms;cpu_time_ms;peak_memory_mb
+    darwin-m1-pro-10c-arm64;test-a.py;one;Run;2026-09-07;98;;
+    linux-i7-13700k-16c-x86_64;test-a.py;one;Run;2026-09-07;142;136;
+    ;;two;Run;2026-09-07;141;;
+    ;test-b.py;;Run;2026-09-07;167;;
+  OK  : a repeated system AND test elide to ';;'
+  OK  : a new test carries its name; its EMPTY CHOICE is not an elision
+  OK  : a new machine class writes both again (sorted, so it leads)
+  OK  : and all four rows read back whole
+  OK  : a first row with nothing above it reads as EMPTY, not a guess
+SUCCESS: the eye reads a group; the reader reads every row.
+<hwut-end>

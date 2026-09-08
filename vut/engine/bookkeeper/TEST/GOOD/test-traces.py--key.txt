@@ -1,0 +1,21 @@
+  Intel(R) Core(TM) i7-13700K CPU @ 3.40GHz      -> i7-13700k
+  AMD Ryzen 7 5800X 8-Core Processor             -> ryzen-7-5800x
+  Apple M1 Pro                                   -> m1-pro
+  Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GH   -> xeon-platinum-8375c
+  Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50G   -> xeon-platinum-8259cl
+  Intel(R) Xeon(R) CPU E5-2686 v4 @ 2.30GHz      -> xeon-e5-2686-v4
+  AMD EPYC 7R32 48-Core Processor                -> epyc-7r32
+  ''                                             -> cpu
+  this machine: linux-xeon-1c-x86-64
+  OK  : 'i7-13700k'
+  OK  : 'ryzen-7-5800x'
+  OK  : 'm1-pro'
+  OK  : 'xeon-platinum-8375c'
+  OK  : 'xeon-platinum-8259cl'
+  OK  : 'xeon-e5-2686-v4'
+  OK  : 'epyc-7r32'
+  OK  : 'cpu'
+  OK  : a long string is cut at a token boundary: 'some-vendor-model-1234567890'
+  OK  : this machine's key is stable within the process
+SUCCESS: the key names a class; the model number survives the cut.
+<hwut-end>

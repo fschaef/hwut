@@ -1,0 +1,10 @@
+INSPECT: issued 0.0, renamed 0.0, re-keyed 0.0, retired -> None, later 1
+         inside held(): sibling wrote True; a second lock: DirectoryDeadlock; after: 2
+  OK  : an accept issues the id in its own act
+  OK  : a rename re-keys the register; the id stands
+  OK  : a removal retires the id in the book's act
+  OK  : a retired id is never reissued (B-2)
+  OK  : under held(), a sibling bookkeeper writes without deadlock
+  OK  : a bare second lock on the held directory is refused by name
+  OK  : a nested held() yields None: it holds nothing of its own
+<hwut-end>

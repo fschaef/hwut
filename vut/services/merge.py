@@ -140,6 +140,11 @@ def _main(argv):
                              "nothing written")
     parser.add_argument("--plain", action="store_true",
                         help="no colors, even on a tty")
+    parser.add_argument("-y", "--side-by-side", action="store_true",
+                        help="two columns: subject LEFT, nominal RIGHT")
+    parser.add_argument("--width", type=int, default=None,
+                        help="the two-column rendering's width "
+                             "(default: the terminal's)")
     parser.add_argument("--editor", default=None,
                         help="editor command (default: $VISUAL, $EDITOR, "
                              "'vi'); the nominal's file path is appended")
@@ -209,7 +214,9 @@ def _main(argv):
                          input_f     = input,
                          editor_argv = editor_argv,
                          color_f     = False if arguments.plain else None,
-                         merge_f     = not arguments.display_only)
+                         merge_f     = not arguments.display_only,
+                         side_by_side_f = arguments.side_by_side,
+                         width       = arguments.width)
 
     text, intent = asyncio.run(merge_text(
         subject_text, nominal_text, adapter,

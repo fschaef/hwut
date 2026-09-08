@@ -31,7 +31,8 @@ while os.path.basename(_cur) != "vut":
     _cur = _parent
 ROOT = _cur
 
-BOOK_TUPLE = ("result_db.csv", "result_db.json", "test_ids.dat")
+BOOK_TUPLE = ("book.csv", "result_db.csv", "result_db.json",
+              "test_ids.dat")
 
 
 def refused_cases(text):

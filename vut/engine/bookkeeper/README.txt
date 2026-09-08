@@ -28,7 +28,7 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
 TWO DATABASES under one directory, sorted by ONE question -- does the
 thing depend on WHEN and WHERE it was made? (E-36, in services/RATIONALE)
 
-    GOOD/result_db.csv          THE BOOK. What was DECIDED about the
+    GOOD/book.csv               THE BOOK. What was DECIDED about the
                                 software. Versioned with the tests.
     TMP/store/observations.bin  THE LOCAL DATABASE. What THIS machine
                                 SAW: when, where, how long, host, pids.
@@ -42,7 +42,7 @@ Beside them, not in them:
     the header, hwut.conf       the CONFIGURATION -- git's, beside the
                                 book; never copied into it (B-6)
 
-THE BOOK IS A TABLE (B-7): 'GOOD/result_db.csv', ONE ROW PER (TEST,
+THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is
 refused at the specification's door.
 
@@ -80,9 +80,30 @@ name that does not stand -- the entry 'remove_test()' returned in one
 directory is what 'adopt()' writes in another. A name that already
 stands is refused ('KeyError'); nothing is merged.
 
-A BOOK WRITTEN BEFORE B-6/B-7 ('result_db.json', or a '.csv' with an
-'operation' column) is read once, and the first write lays down the
-current table and removes the old file.
+THE REGISTER IS WRITTEN IN THE SAME ACT (B-9): 'note_accept()' issues
+the id, the removals retire it, the renames re-key it, 'adopt()'
+issues the target's. It is read through the door too: 'run_id_of()',
+'name_of()', 'roster()', 'app_iterable()', 'vanished()',
+'register_generation()', 'register_text()'.
+
+EVERY ACT RUNS UNDER THE DIRECTORY'S LOCK ('DirectoryLock', taken by
+the bookkeeper for the act's duration). A holder above takes it once,
+'with bookkeeper.held():', for a whole session; an act inside asks the
+mutex, meets 'DirectoryDeadlock' -- which says 'this process already
+holds it' -- and runs inside that holding. A lock held by ANOTHER live
+process is 'DirectoryBusy' and refuses.
+
+THE BOOK IS 'GOOD/book.csv' (B-10). A book under a name the tree has
+retired -- 'result_db.csv', 'result_db.json' -- is read where it does
+not stand, and the first write lays down 'book.csv' and removes the
+old file. One book, never two.
+
+BESIDE THE TESTS, NOT UNDER 'GOOD/': 'hwut-traces.csv' (B-11), what a
+run COST per machine class -- one row per '(system, test, choice,
+operation)', replaced where the key stands, committed, and deletable
+without loss. The rows are SORTED, and an empty 'system' or 'test'
+cell means the one above (B-12); an empty 'choice' means a test that
+has none. 'TMP/store/observations.bin' keeps what does NOT travel.
 
 2  THE ONE SENTENCE
 ------------------------------------------------------------------------------

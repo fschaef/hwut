@@ -46,11 +46,29 @@ DESCRIPTION
 
        Same rows, same notes, same banner -- an author moves between
        'hwut.compare' and 'hwut.merge' without relearning the picture.
+
+       TWO COLUMNS ('--side-by-side', '-y'; E-49). One row per aligned
+       pair: SUBJECT LEFT, NOMINAL RIGHT -- the direction a merge goes,
+       subject into nominal, left into right -- the gutter between them
+       saying the relation:
+
+           ' ' equivalent   '~' tolerated   '|' differing
+           '>' subject line, no nominal partner
+           '<' nominal line, no subject partner
+
+       The marks inside a cell are the stacked view's. A line wider
+       than its column wraps onto continuation rows with blank numbers;
+       a mark is closed at the wrap and reopened after it. The width is
+       '--width', else the terminal's ('COLUMNS', else 80); each column
+       is half of what remains after the numbers and the gutter, never
+       below 20. Colour reaches a Windows console too: virtual-terminal
+       processing is switched on for stdout where the console allows.
 ______________________________________________________________________________
 """
 import io
 import os
 import sys
+import shutil
 import asyncio
 import tempfile
 from   contextlib import suppress
@@ -129,6 +147,26 @@ def strip_annotations(text, annotation_list):
     return "\n".join(line_list) + ("\n" if text.endswith("\n") else "")
 
 
+def _ansi_enabled():
+    """RETURN: True,  the console renders ANSI colour sequences -- on
+                      Windows after enabling virtual-terminal processing
+                      on the standard output handle, which the console
+                      does not do by itself.
+              False, it could not be enabled.
+    """
+    if sys.platform != "win32": return True
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        handle   = kernel32.GetStdHandle(-11)          # STD_OUTPUT_HANDLE
+        mode     = ctypes.c_uint32()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        return bool(kernel32.SetConsoleMode(handle, mode.value | 0x0004))
+    except (AttributeError, OSError):
+        return False
+
+
 class TuiDisplay(DisplayAdapter):
     """THE TERMINAL DRIVER: renders each DOWN generation as text, and
     answers 'resolve' by asking the author -- edit, commit, or cancel.
@@ -143,6 +181,12 @@ class TuiDisplay(DisplayAdapter):
                      the session is one round
         reading_f    True = mark by TOLERANCE KIND (the interpretation
                      view); False = mark by VERDICT (the merge view)
+        side_by_side_f
+                     True = TWO COLUMNS, subject LEFT, nominal RIGHT --
+                     the direction a merge goes, subject into nominal;
+                     False = the stacked S/N rows
+        width        the rendering's width in columns for the two-column
+                     view; None = the terminal's ('COLUMNS', else 80)
 
     In PLAIN rendering (no color) the marks are characters; with color
     they are painted instead. VERDICT view: bad '[..]', tolerated
@@ -165,13 +209,17 @@ class TuiDisplay(DisplayAdapter):
     }
 
     def __init__(self, out=None, input_f=None, editor_argv=None,
-                 color_f=None, merge_f=True, reading_f=False):
+                 color_f=None, merge_f=True, reading_f=False,
+                 side_by_side_f=False, width=None):
         self.out          = out if out is not None else sys.stdout
         self.input_f      = input_f if input_f is not None else input
         self.editor_argv  = editor_argv
         if color_f is None:
             color_f = getattr(self.out, "isatty", lambda: False)()
+        if color_f: color_f = _ansi_enabled()
         self.color_f      = color_f
+        self.side_by_side_f = side_by_side_f
+        self.width        = width
         self.merge_f      = merge_f
         self.reading_f    = reading_f
         self.subject_name = None
@@ -341,6 +389,9 @@ class TuiDisplay(DisplayAdapter):
         s_n = "" if item.line_n_s == -1 else str(item.line_n_s)
         n_n = "" if item.line_n_n == -1 else str(item.line_n_n)
 
+        if self.side_by_side_f:
+            self._render_two_columns(item, s_n, n_n)
+            return
         if self._is_good(item):
             text = self._side_text(item.cells_s, "subject") \
                    if s_n else self._side_text(item.cells_n, "nominal")
@@ -357,6 +408,97 @@ class TuiDisplay(DisplayAdapter):
                                                         "nominal")))
         for note in self._note_list(item):
             self._write("  %4s %4s | ^ %s\n" % ("", "", note))
+
+    def _render_two_columns(self, item, s_n, n_n):
+        """RETURN: None. One aligned pair as ONE row of two columns --
+        subject left, nominal right, the gutter between them saying
+        how they relate: ' ' equivalent, '~' tolerated, '|' differing,
+        '>' a subject line with no nominal partner, '<' a nominal line
+        with no subject partner. A line wider than its column wraps
+        onto continuation rows with blank numbers; a note row rides
+        below, spanning both columns."""
+        good_f = self._is_good(item)
+        if not good_f: self.bad_pair_n += 1
+        if   not n_n: gutter = ">"
+        elif not s_n: gutter = "<"
+        elif good_f:
+            gutter = "~" if any(self._category(c) == "tolerated"
+                                for c in tuple(item.cells_s)
+                                        + tuple(item.cells_n)) else " "
+        else:         gutter = "|"
+        column = self._column_width()
+        left   = self._side_rows(item.cells_s, "subject", column) \
+                 if s_n else [" " * column]
+        right  = self._side_rows(item.cells_n, "nominal", column) \
+                 if n_n else [" " * column]
+        for k in range(max(len(left), len(right))):
+            l = left[k]  if k < len(left)  else " " * column
+            r = right[k] if k < len(right) else " " * column
+            self._write(("%4s %s %s %4s %s"
+                         % (s_n if k == 0 else "", l,
+                            gutter if k == 0 else " ",
+                            n_n if k == 0 else "", r)).rstrip() + "\n")
+        for note in self._note_list(item):
+            self._write("%4s ^ %s\n" % ("", note))
+
+    def _column_width(self):
+        """RETURN: int, one column's width: the rendering width minus
+        the two number fields and the gutter, halved; never below 20."""
+        width = self.width
+        if width is None:
+            width = shutil.get_terminal_size((80, 24)).columns
+        return max(20, (width - 4 - 1 - 1 - 1 - 4 - 1) // 2)
+
+    def _side_rows(self, cell_list, value_name, column):
+        """RETURN: list[str], one side's line as rows of exactly 'column'
+        visible characters -- wrapped where it is wider, padded where
+        it is narrower -- each run of same-category cells marked once,
+        as '_side_text' marks it, but with the mark closed and reopened
+        at a wrap so that no colour or bracket spans a row break. In
+        plain rendering the bracket marks take two columns of their
+        own; the wrap counts them."""
+        span_list = []
+        for cell in cell_list:
+            text     = getattr(cell, value_name) or ""
+            category = self._category(cell)
+            if span_list and span_list[-1][0] == category:
+                span_list[-1][1] += text
+            else:
+                span_list.append([category, text])
+        row_list, row, used = [], [], 0
+        for category, text in span_list:
+            if not text and category != "plain": continue
+            cost = 0 if (self.color_f or category == "plain") else 2
+            while text:
+                room = column - used - cost
+                if room <= 0:
+                    row_list.append(self._joined(row, column, value_name))
+                    row, used = [], 0
+                    room = column - cost
+                piece, text = text[:room], text[room:]
+                row.append((category, piece)); used += len(piece) + cost
+        row_list.append(self._joined(row, column, value_name))
+        return row_list
+
+    def _joined(self, row, column, value_name):
+        """RETURN: str, one row's pieces marked and joined, padded to
+        'column' visible characters."""
+        piece_list, visible = [], 0
+        for category, text in row:
+            visible += len(text)
+            if   category == "plain":
+                piece_list.append(text)
+            elif category == "bad":
+                piece_list.append(self._paint(text, "31" if value_name ==
+                                              "subject" else "34", "[", "]"))
+                visible += 0 if self.color_f else 2
+            else:
+                mark_db = self.READING_MARK_DB if self.reading_f \
+                          else self.VERDICT_MARK_DB
+                color, begin, end = mark_db[category]
+                piece_list.append(self._paint(text, color, begin, end))
+                visible += 0 if self.color_f else 2
+        return "".join(piece_list) + " " * max(0, column - visible)
 
     def _render_EndOfStreamInst(self, item):
         """RETURN: None. The generation's end -- a closing rule."""

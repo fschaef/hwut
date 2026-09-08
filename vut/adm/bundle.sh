@@ -29,6 +29,8 @@ MAX_PART_BYTES=0              # 0 disables splitting
 BINARY_MODE="skip"            # skip | git
 COMPLETE=0
 CHMOD_SCRIPT=0
+SELF=0                        # --self: a self-extracting shell script
+DELETE_PATHS=()               # --delete: paths the receiver removes
 # Pruned even under --complete: a bundled .git would be enormous and could not
 # be re-applied into a repository anyway. Name it in an explicit -x to include.
 HARD_PRUNE=(.git)
@@ -94,6 +96,20 @@ Modes:
                        MODE, so every executable arrives as a plain file and
                        the receiving tree cannot run its own tests until this
                        script is run. Implied by --complete.
+
+      --self           Write a SELF-EXTRACTING shell script: the applier
+                       first, the bundle after it, unchanged. Run at the
+                       receiving root as 'sh <o>' ('--check' reports, touches
+                       nothing). Per member, off the '# sha256' manifest:
+                       NEW is created, IDENTICAL is skipped, CHANGED is
+                       REFUSED unless '--force' -- the receiver's edit is
+                       never overwritten unasked. '# delete' and '# mode'
+                       header lines are honoured. Text members only; one
+                       part. (Default output: dump-<first-dir-name>.sh)
+      --delete PATH1 [PATH2 ...]
+                       Record paths the RECEIVER is to remove ('# delete'
+                       header lines); a plain 'git apply' ignores them, a
+                       '--self' bundle removes them.
 
 Output:
   -o FILE              Output filename, '-' for stdout
@@ -178,6 +194,8 @@ command_line_parse() {
                    SELECT_MODE="app"; DEPS=1 ;;
             --binary) BINARY_MODE="git"; shift ;;
             --chmod-script) CHMOD_SCRIPT=1; shift ;;
+            --self) SELF=1; shift ;;
+            --delete) command_line_get_nominus_followers DELETE_PATHS "$@"; shift "$SHIFT_COUNT" ;;
             -a|--complete) COMPLETE=1; BINARY_MODE="git"; MAX_FILE_BYTES=0
                            EXCLUDE_PATTERNS=(); EXCLUDE_GIVEN=1
                            EXCLUDE_PATH_GLOBS=(); EXTENSIONS=()
@@ -216,7 +234,8 @@ output_file_determine() {
     [[ -n "$OUTPUT_FILE" ]] && return 0
     local dir_name="files"
     [[ ${#DIRS[@]} -gt 0 ]] && dir_name=$(basename "$(realpath -m "${DIRS[0]}")")
-    OUTPUT_FILE="dump-${dir_name}.txt"
+    if [[ $SELF -eq 1 ]]; then OUTPUT_FILE="dump-${dir_name}.sh"
+    else                       OUTPUT_FILE="dump-${dir_name}.txt"; fi
 }
 
 # --- Path Handling ---------------------------------------------------------
@@ -689,8 +708,125 @@ header_write() {
             sha256sum -- "${members[@]}" | while read -r hash path; do
                 printf '# sha256 %s  %s\n' "$hash" "$path"
             done
+            #  A DIFF CARRIES NO MODE: the execute bit travels as a header
+            #  line, read by the --self applier and by --chmod-script.
+            for path in "${members[@]}"; do
+                [[ -x "$path" ]] && printf '# mode a+x  %s\n' "$path"
+            done
         fi
+        for path in ${DELETE_PATHS[@]+"${DELETE_PATHS[@]}"}; do
+            printf '# delete  %s\n' "$(path_normalise "$path")"
+        done
     } >> "$target"
+}
+
+# RETURN: nothing, the self-extracting applier is written to TARGET; the
+#         bundle proper is appended after it by the caller, unchanged.
+#
+# THE APPLIER READS THE BUNDLE'S OWN HEADER: '# sha256' names the members
+# and their content, '# mode' the execute bits, '# delete' the removals.
+# Each member is REBUILT from its '+' lines into a scratch directory and
+# its sha256 checked against the manifest BEFORE the tree is touched; a
+# bundle that does not reconstruct is refused whole. Then, per member:
+# absent here -> NEW; same sha -> IDENTICAL, skipped; different -> CHANGED,
+# refused unless --force. The receiver's tree is never overwritten unasked.
+self_applier_write() {
+    local target="$1"
+    cat > "$target" << 'APPLIER'
+#!/bin/sh
+# SELF-EXTRACTING BUNDLE -- written by adm/bundle.sh --self. Run at the
+# receiving root:   sh <this-file> [--check] [--force]
+#   --check   report what would happen; touch nothing
+#   --force   overwrite CHANGED members (files standing here with other
+#             content); without it they are refused and nothing is applied
+# The bundle itself follows the '__BUNDLE__' line, unchanged: 'git apply'
+# and 'patch -p1' read it as ever, ignoring these lines.
+set -e
+SELF="$0"; CHECK=0; FORCE=0
+for a in "$@"; do case "$a" in
+    --check) CHECK=1 ;; --force) FORCE=1 ;;
+    *) echo "usage: sh $SELF [--check] [--force]"; exit 2 ;;
+esac; done
+S=$(mktemp -d); trap 'rm -rf "$S"' EXIT
+sed -n '/^__BUNDLE__$/,$p' "$SELF" | sed '1d' > "$S/bundle"
+sed -n '/^# sha256 /p' "$S/bundle" | awk '{print $3, $4}' > "$S/manifest"
+sed -n '/^# mode a+x  /p'  "$S/bundle" | sed 's/^# mode a+x  //' > "$S/modes"
+sed -n '/^# delete  /p'    "$S/bundle" | sed 's/^# delete  //'   > "$S/deletes"
+[ -s "$S/manifest" ] || [ -s "$S/deletes" ] || { echo "!! no manifest in this bundle -- REFUSED"; exit 2; }
+
+#  REBUILD every member from its '+' lines, then prove it against the
+#  manifest: what lands in the tree is what the sender hashed.
+mkdir "$S/tree"
+awk -v out="$S/tree" '
+    /^diff --git a\// { p=$0; sub(/^diff --git a\//,"",p); sub(/ b\/.*$/,"",p);
+                         f=out "/" p; n=split(p,a,"/"); d=out;
+                         for(i=1;i<n;i++){d=d "/" a[i]; system("mkdir -p \"" d "\"")}
+                         printf "" > f; body=0; next }
+    /^@@ /            { body=1; next }
+    /^\\ No newline/  { nonl[f]=1; next }
+    body && /^\+/     { printf "%s\n", substr($0,2) >> f; next }
+    END { for (k in nonl) system("truncate -s -1 \"" k "\"") }
+' "$S/bundle"
+BAD=0
+while read -r hash path; do
+    [ -f "$S/tree/$path" ] || { echo "!! $path: in the manifest, not in the bundle"; BAD=1; continue; }
+    got=$(sha256sum "$S/tree/$path" | cut -c1-64)
+    [ "$got" = "$hash" ] || { echo "!! $path: does not rebuild to its sha256"; BAD=1; }
+done < "$S/manifest"
+[ $BAD = 0 ] || { echo "!! the bundle does not reconstruct -- REFUSED, nothing touched"; exit 2; }
+
+#  CLASSIFY against the standing tree.
+NEW=0; SAME=0; CHANGED=0; DEL=0
+: > "$S/plan"
+while read -r hash path; do
+    if [ ! -e "$path" ]; then
+        printf '  NEW        +%-5s      %s\n' "$(awk 'END{print NR}' "$S/tree/$path")" "$path"; NEW=$((NEW+1)); echo "N $path" >> "$S/plan"
+    elif [ "$(sha256sum "$path" | cut -c1-64)" = "$hash" ]; then
+        printf '  IDENTICAL              %s\n' "$path"; SAME=$((SAME+1))
+    else
+        set -- $(diff "$path" "$S/tree/$path" | awk '/^>/{a++} /^</{d++} END{print a+0, d+0}')
+        printf '  CHANGED    +%-5s -%-5s %s\n' "$1" "$2" "$path"; CHANGED=$((CHANGED+1)); echo "C $path" >> "$S/plan"
+    fi
+done < "$S/manifest"
+while read -r path; do
+    [ -n "$path" ] || continue
+    if [ -e "$path" ]; then printf '  DELETE                 %s\n' "$path"; DEL=$((DEL+1)); echo "D $path" >> "$S/plan"
+    else                    printf '  (absent)               %s\n' "$path"; fi
+done < "$S/deletes"
+echo "== $NEW new, $SAME identical, $CHANGED changed, $DEL to delete"
+
+if [ $CHANGED -gt 0 ] && [ $FORCE = 0 ]; then
+    [ $CHECK = 0 ] && W="REFUSED; nothing applied." || W="would be REFUSED."
+    echo "!! $CHANGED file(s) stand here with OTHER content -- $W"
+    echo "   Read the CHANGED lines; 'sh $SELF --force' overwrites them with the bundle's."
+    exit 2
+fi
+if [ $NEW = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ]; then
+    echo "== already applied: nothing to do"; exit 0
+fi
+if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ ! -f hwut-root.conf ] && [ $FORCE = 0 ]; then
+    echo "!! not one listed file stands here and no 'hwut-root.conf' marks a root --"
+    echo "   is this the right directory? 'sh $SELF --force' creates them here anyway."; exit 2
+fi
+[ $CHECK = 0 ] || { echo "== --check: nothing applied"; exit 0; }
+
+echo "== applying"
+while read -r kind path; do
+    case "$kind" in
+        N|C) mkdir -p "$(dirname "$path")"; cp "$S/tree/$path" "$path" ;;
+        D)   rm -f "$path" ;;
+    esac
+done < "$S/plan"
+while read -r path; do [ -n "$path" ] && [ -e "$path" ] && chmod a+x "$path"; done < "$S/modes"
+echo "== verifying"
+BAD=0
+while read -r hash path; do
+    [ "$(sha256sum "$path" | cut -c1-64)" = "$hash" ] || { echo "!! $path: verification FAILED"; BAD=1; }
+done < "$S/manifest"
+[ $BAD = 0 ] && echo "  every member verified: $NEW created, $CHANGED overwritten, $DEL deleted"
+exit $BAD
+__BUNDLE__
+APPLIER
 }
 
 # RETURN: the argument with '.<part>of<total>' inserted before its extension,
@@ -830,6 +966,7 @@ bundle_write() {
         content_bytes=$(stat -c%s "$scratch/body")
         [[ "$p" -eq 1 ]] && { WRITTEN_CRC="$crc"; WRITTEN_BYTES="$content_bytes"; }
         : > "$scratch/out"
+        [[ $SELF -eq 1 ]] && self_applier_write "$scratch/out"
         header_write "$scratch/out" "$p" "$total" "$crc" "$content_bytes" \
                      ${members[@]+"${members[@]}"}
         cat "$scratch/body" >> "$scratch/out"
@@ -1022,7 +1159,16 @@ main() {
     echo "(1) collecting candidates [mode: ${SELECT_MODE}]" >&2
     candidates_collect
     if [[ $DRY_RUN -eq 1 ]]; then dry_run_report; return 0; fi
-    [[ ${#ACCEPTED[@]} -gt 0 ]] || die "no files selected; try -n to see why"
+    [[ ${#ACCEPTED[@]} -gt 0 || ${#DELETE_PATHS[@]} -gt 0 ]] \
+        || die "no files selected; try -n to see why"
+    if [[ $SELF -eq 1 ]]; then
+        [[ "$BINARY_MODE" == "skip" ]] || die "--self carries text members only; drop --binary/--complete"
+        [[ "$MAX_PART_BYTES" -eq 0 ]] || die "--self writes one part; drop --max-bytes"
+        [[ "$OUTPUT_FILE" != "-" ]]   || die "--self writes a file, not stdout"
+        local d; for d in ${DELETE_PATHS[@]+"${DELETE_PATHS[@]}"}; do
+            [[ -e "$d" ]] && die "--delete '$d' still stands in this tree; delete it here first, or it is not a deletion"
+        done
+    fi
     echo "(2) rendering ${#ACCEPTED[@]} members" >&2
     bundle_write
     echo "Success: bundle written to ${WRITTEN_PARTS[*]}" >&2
@@ -1034,9 +1180,14 @@ main() {
     if [[ "${WRITTEN_PARTS[0]}" != "-" ]]; then
         echo "Content:   crc64 ${WRITTEN_CRC} over ${WRITTEN_BYTES} bytes"
     fi
-    echo "To undump: git apply ${WRITTEN_PARTS[0]}   (or: patch -p1 < ${WRITTEN_PARTS[0]})"
-    [[ -n "$CHMOD_FILE" ]] && \
-        echo "Then:      sh ${CHMOD_FILE}   -- a diff carries no execute bit"
+    if [[ $SELF -eq 1 ]]; then
+        chmod a+x "${WRITTEN_PARTS[0]}"
+        echo "To apply:  sh ${WRITTEN_PARTS[0]} --check   then   sh ${WRITTEN_PARTS[0]} [--force]"
+    else
+        echo "To undump: git apply ${WRITTEN_PARTS[0]}   (or: patch -p1 < ${WRITTEN_PARTS[0]})"
+        [[ -n "$CHMOD_FILE" ]] && \
+            echo "Then:      sh ${CHMOD_FILE}   -- a diff carries no execute bit"
+    fi
 }
 
 main "$@"

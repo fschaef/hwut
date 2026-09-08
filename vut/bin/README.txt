@@ -12,9 +12,9 @@ two-line shell shims, nothing importable. Each resolves its own location
 
                         hwut.show     hwut.plan     hwut.run
                         hwut.accept   hwut.target   hwut.cov
-                        hwut.compare  hwut.merge    hwut.tell
+                        hwut.diff     hwut.tell
                         hwut.stability  hwut.wishlist  hwut.report
-                        hwut.remove   hwut.remove-choice
+                        hwut.remove
                         hwut.rename   hwut.move
                         hwut.sanitize hwut.pype
 
@@ -24,9 +24,9 @@ two-line shell shims, nothing importable. Each resolves its own location
                     tree below the current directory.
 
                     A launcher's name is the face's name with '-' where
-                    the module has '_': 'hwut.remove-choice' runs
-                    'services/remove_choice.py'. A dot cannot stand in
-                    a module name, and a module name is what the naming
+                    the module has '_': a face 'hwut.some-name' runs
+                    'services/some_name.py'. A dot cannot stand in a
+                    module name, and a module name is what the naming
                     law binds.
 
     hwut.pype       is one of them: 'services/pype.py', the face over

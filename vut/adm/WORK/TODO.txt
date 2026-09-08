@@ -2,7 +2,7 @@
 TODO -- ALL OUTSTANDING LABOUR, IN ONE PLACE
 ==============================================================================
 
-VERSION: 11
+VERSION: 12
 
 Goal (1) of three: the TODOs gathered. Rationale logic is goal (2),
 README knowledge goal (3).
@@ -26,15 +26,17 @@ A-1  RULED 2026-09-06 -> B-20                    ** MOVED **
      The spike (D-3) was made; the ruling is E-46; the labour is
      B-20. Nothing blocks it but the files named there.
 
-A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE
-     coverage/DISCUSSIONS.txt todo-13
-     'GOOD/result_db.csv' and 'GOOD/test_ids.dat' under
-     'coverage/TEST/', 'coverage/database/TEST/' and
-     'coverage/readers/TEST/' still describe the pre-split single
-     directory. Hand-editing refused, correctly.
-     WAITED ON: B-20, landed 2026-09-06. READY: its first real
-     exercise is 'hwut.rename <app> -to <dir>/<app>' per stranded
-     test, from the directory that still holds the entry.
+A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE            ** DONE -- STRIKE **
+     MEASURED 2026-09-07: 'database/TEST' and 'readers/TEST' were
+     already whole (each test registered and booked where it stands);
+     only 'coverage/TEST/GOOD/test_ids.dat' still held eight register
+     entries with no book entry, no nominal and no file -- the
+     tree's own verdict ('hwut.sanitize --books': "registered, and no
+     nominal stands"). A rename across was REFUSED by construction:
+     every name already stands in its new directory's book. The eight
+     were RETIRED through 'hwut.remove' from 'coverage/TEST'; the
+     suite runs 7 ok; sanitize --books/--orphans is quiet. coverage
+     todo-13 deleted.
 
 A-3  THE PROCSITTER CALL IN '--hwut-info'
      gathered/0z todo-3

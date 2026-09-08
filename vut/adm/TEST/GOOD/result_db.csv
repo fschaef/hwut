@@ -1,9 +1,0 @@
-test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
-test-import_graph.sh;depth;true;ok
-;formats;true;ok
-;layering;true;ok
-;refused;true;ok
-;shared;true;ok
-;unreadable;true;ok
-;vut;false;not-equivalent-with-nominal
-test-static-analysis.sh;;false;not-equivalent-with-nominal

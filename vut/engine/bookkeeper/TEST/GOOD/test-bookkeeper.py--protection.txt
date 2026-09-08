@@ -1,4 +1,4 @@
-INSPECT: result_db.csv
+INSPECT: book.csv
          mode after first write  = 0o444
          mode after second write = 0o444
          temporaries left behind = []

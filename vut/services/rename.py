@@ -10,6 +10,7 @@ PURPOSE: THE 'hwut.rename' COMMAND LINE -- a test, or one choice of it,
     hwut.rename <app> <choice> -to <choice'>   [--yes] [--directory=<path>]
     hwut.rename <app> -to <path>/<app'>        [--yes] [--directory=<path>]
     hwut.move   <app> <app'>                   == hwut.rename <app> -to <app'>
+                                               [--no-warning] [--silent]
 
 '-to' IS A KEYWORD. One word before it names an app; two name an app
 and one of its choices. One word follows it: the fresh name. A fresh
@@ -46,9 +47,19 @@ WHAT MOVES, each step announced:
                  stands; across, retired here and issued there
     THE LABELS   the boundary records, last ('services/_follow.py')
 
-WHAT IS NOT TOUCHED: the test application file itself. Renaming or
-moving the SOURCE is the author's act -- 'git mv' -- and this face
-FOLLOWS it; it does not perform it.
+WHAT IS NOT TOUCHED: the test application file, its '@hwut' block,
+and any 'hwut.conf' 'apps' section naming it. Renaming or moving the
+SOURCE is the author's act -- 'git mv' -- and this face FOLLOWS it;
+it does not perform it, and it edits no declaration (E-48). It READS
+them and SAYS what disagrees, telegraphically, before asking:
+
+    NOTE  application 'test-app.sh' stands under the OLD name -- git mv
+    NOTE  '@hwut' declares 'one', not 'first' -- edit the block
+    NOTE  hwut.conf apps section 'test-app.sh' -- rename it
+
+'--no-warning' drops the notes; '--silent' drops everything but a
+refusal or a fault. An application standing under BOTH names is
+refused: which one is the test is the author's to decide first.
 
 IT REFUSES A COLLISION. A fresh name that already stands in the target
 book would swallow another test's history; it is refused at the door,
@@ -77,11 +88,13 @@ from   vut.engine.coverage.api   import (pack_record, unpack_record,
 from   ._follow                  import labels_renamed
 from   ._target                  import split_words, TargetError
 from   ._exit                    import E_ExitCode
+from   vut.engine.orchestrator.exploration.reader import (read_header,
+                                                          read_conf)
 
 KEYWORD = "-to"
 
 USAGE = ("usage: hwut.rename <app> -to <app'>              [--yes] "
-         "[--directory=<path>]\n"
+         "[--directory=<path>] [--no-warning] [--silent]\n"
          "       hwut.rename <app> <choice> -to <choice'>  [--yes] "
          "[--directory=<path>]\n"
          "       hwut.rename <app> -to <path>/<app'>       [--yes] "
@@ -345,6 +358,86 @@ def _records_reseated(rename, run_db, write):
     return good_f
 
 
+def situation_notes(rename):
+    """
+    RETURN: [0] list[str], telegraphic NOTE lines: the application's
+                whereabouts, the '@hwut' block's choices, any
+                'hwut.conf' apps section -- each only where it
+                DISAGREES with the rename, or where nothing could be
+                read. Empty where everything agrees.
+            [1] str, a refusal where the application stands under BOTH
+                names; None otherwise.
+
+    READ AND SAY, NEVER EDIT (E-48): the source and the declarations
+    are the author's; the face names what he has to touch.
+    """
+    note_list = []
+    src_dir, dst_dir = str(rename.source.directory), str(rename.target.directory)
+    old_path = os.path.join(src_dir, rename.test)
+    new_path = os.path.join(dst_dir, rename.fresh_test)
+    old_f, new_f = os.path.isfile(old_path), os.path.isfile(new_path)
+    if rename.whole_test_f:
+        if old_f and new_f:
+            return note_list, ("application stands under BOTH names: '%s' "
+                               "and '%s' -- decide which is the test first"
+                               % (_shown(rename.source, old_path),
+                                  _shown(rename.source, new_path)))
+        if old_f:
+            note_list.append("NOTE  application '%s' stands under the OLD "
+                             "name -- git mv %s %s (E-16)"
+                             % (rename.test, _shown(rename.source, old_path),
+                                _shown(rename.source, new_path)))
+        elif not new_f:
+            note_list.append("NOTE  application stands under NEITHER name "
+                             "-- nothing to run under '%s'" % rename.fresh_test)
+    else:
+        #  A CHOICE RENAME: the file is the same; its '@hwut' block
+        #  names the choices.
+        path = old_path if old_f else None
+        if path is None:
+            note_list.append("NOTE  application '%s' not found -- the "
+                             "'@hwut' block cannot be read" % rename.test)
+        else:
+            try:
+                spec, _ = read_header(open(path, encoding="utf-8").read(),
+                                      path)
+            except (OSError, UnicodeDecodeError):
+                spec = None
+            if spec is None:
+                note_list.append("NOTE  no '@hwut' block read in '%s'"
+                                 % rename.test)
+            elif rename.fresh_choice not in spec.choice_db:
+                note_list.append("NOTE  '@hwut' declares %s -- edit the "
+                                 "block: '%s' -> '%s'"
+                                 % (", ".join("'%s'" % c for c in
+                                              spec.choice_db if c),
+                                    rename.choice, rename.fresh_choice))
+    #  hwut.conf 'apps' SECTIONS: the source's names the old name, the
+    #  target's may name the new one already.
+    for where, name, verb in ((src_dir, rename.test, "rename it"),):
+        conf = os.path.join(where, "hwut.conf")
+        if not os.path.isfile(conf): continue
+        try:
+            _, app_db, _ = read_conf(open(conf, encoding="utf-8").read(),
+                                     conf)
+        except (OSError, UnicodeDecodeError):
+            continue
+        entry = app_db.get(name)
+        if entry is None: continue
+        if rename.whole_test_f:
+            note_list.append("NOTE  hwut.conf apps section '%s' in %s -- "
+                             "%s%s" % (name, _shown(rename.source, conf),
+                                       verb, " / carry it" if rename.across_f
+                                       else ""))
+        elif rename.choice in entry.choice_db \
+             and rename.fresh_choice not in entry.choice_db:
+            note_list.append("NOTE  hwut.conf apps section '%s' in %s "
+                             "declares '%s' -- edit it"
+                             % (name, _shown(rename.source, conf),
+                                rename.choice))
+    return note_list, None
+
+
 def _read(argv, write):
     """
     RETURN: [0] Rename  what the words ask for
@@ -361,6 +454,7 @@ def _read(argv, write):
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument == "--yes":      yes_f = True
+        elif argument in ("--no-warning", "--silent"): pass
         elif argument == KEYWORD:      word_list.append(argument)
         elif argument.startswith("-"): unknown.append(argument)
         else:                          word_list.append(argument)
@@ -452,9 +546,22 @@ def main(argv=None, write=None, read_line=None):
         write(HELP)
         return E_ExitCode.OK
 
+    warning_f = "--no-warning" not in argv and "--silent" not in argv
+    if "--silent" in argv:
+        loud = write
+        def write(text, _loud=loud):
+            """RETURN: None. Under '--silent' only a refusal or a fault
+            is said."""
+            if text.startswith(("REFUSED", "EMPTY")) or "FAULT" in text:
+                _loud(text)
     rename, yes_f = _read(argv, write)
     if rename is None: return E_ExitCode.REFUSED
     if rename == ():   return E_ExitCode.EMPTY
+
+    note_list, refusal = situation_notes(rename)
+    if refusal is not None:
+        write("REFUSED: %s" % refusal)
+        return E_ExitCode.REFUSED
 
     #  A COLLISION IS REFUSED BEFORE ANYTHING MOVES: half a rename
     #  onto a live name is worse than none.
@@ -489,6 +596,8 @@ def main(argv=None, write=None, read_line=None):
     if not pair_tuple:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")
+    if warning_f:
+        for note in note_list: write(note)
 
     if not yes_f:
         write("")

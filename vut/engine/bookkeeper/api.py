@@ -19,12 +19,16 @@ BELONGS ON ITS DOOR:
 
 WHAT A CALLER ASKS:
 
-    Bookkeeper          the book of one directory: what was decided
+    Bookkeeper          the book AND the register of one directory:
+                        what was decided, and the ids issued once --
+                        written by it alone, each act under the
+                        directory's lock; 'held()' for a session (B-9)
     Store               the records of one directory: what was written
     DirectoryLock, DirectoryBusy
                         the store's access check, and its refusal
     TestIdDb, TestIdFault
-                        the register: ids issued once, never reused
+                        the register's READ-ONLY snapshot type (a
+                        gather parses one from text); the fault
     TestRunId, run_id_of_text
                         the identity of one run
     ObservationDb, Observation, ObservationFault, observation_of

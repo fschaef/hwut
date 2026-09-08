@@ -17,3 +17,4 @@ REACTION  stdout {
 Exit 1 says 'they differ' the way diff says it, and the
 rendering says WHERE -- on stdout, because it is the product.
 SUCCESS: a difference answers 1, spoken on the product channel.
+<hwut-end>

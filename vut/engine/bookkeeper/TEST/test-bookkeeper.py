@@ -3,7 +3,8 @@
 # @hwut {
 #     title      = "The Bookkeeper: the naming, the base, the verdicts"
 #     choices    = ["damage", "divergence", "naming", "overwrite",
-#                   "protection", "record", "reproduce", "setup_delta"]
+#                   "protection", "record", "reproduce", "setup_delta",
+#                   "one_act"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -48,7 +49,7 @@ from   vut.engine.bookkeeper.observation import ObservationDb   # noqa E402
 from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
-                                           RESULT_DB_FILE_NAME)
+                                           BOOK_FILE_NAME)
 from   vut.engine.operations.configuration import (TestConfiguration,  # noqa E402
                                            TestChoiceConfiguration,
                                            E_SourceKind)
@@ -213,7 +214,7 @@ def test_overwrite():
     book.record(failed, configuration, E_Goal.VERDICT)
     second = book.result("demo", None)
 
-    with open(book.result_db_path, encoding="utf-8") as fh:
+    with open(book.book_path, encoding="utf-8") as fh:
         row_n = len(fh.read().splitlines()) - 1
     print("INSPECT: report was '%s', now '%s'" % (first, second["report"]))
     print("         rows for the choice = %d" % row_n)
@@ -241,13 +242,13 @@ def test_protection():
     result        = _ran(configuration)
 
     book.record(result, configuration, E_Goal.VERDICT)
-    mode_first = stat.S_IMODE(os.stat(book.result_db_path).st_mode)
+    mode_first = stat.S_IMODE(os.stat(book.book_path).st_mode)
     book.record(result, configuration, E_Goal.NOMINAL)
-    mode_again = stat.S_IMODE(os.stat(book.result_db_path).st_mode)
-    leftovers  = [name for name in os.listdir(book.result_db_path.parent)
+    mode_again = stat.S_IMODE(os.stat(book.book_path).st_mode)
+    leftovers  = [name for name in os.listdir(book.book_path.parent)
                   if name.endswith(".tmp")]
 
-    print("INSPECT: %s" % RESULT_DB_FILE_NAME)
+    print("INSPECT: %s" % BOOK_FILE_NAME)
     print("         mode after first write  = %s" % oct(mode_first))
     print("         mode after second write = %s" % oct(mode_again))
     print("         temporaries left behind = %s" % leftovers)
@@ -273,8 +274,8 @@ def test_damage():
     result        = _ran(configuration)
 
     book.record(result, configuration, E_Goal.VERDICT)
-    os.chmod(book.result_db_path, 0o644)
-    with open(book.result_db_path, "w") as fh:
+    os.chmod(book.book_path, 0o644)
+    with open(book.book_path, "w") as fh:
         fh.write("{ this is not json")
     damaged = book.book()
     book.record(result, configuration, E_Goal.VERDICT)
@@ -314,7 +315,7 @@ def test_reproduce():
 
     fresh = Bookkeeper(directory)
     read  = fresh.result("demo", "basic")
-    with open(fresh.result_db_path, encoding="utf-8") as fh:
+    with open(fresh.book_path, encoding="utf-8") as fh:
         table = fh.read()
 
     print("INSPECT: entry           = %s" % read)
@@ -469,6 +470,71 @@ def test_setup_delta():
     _verdict(ok, "what somebody CHOSE is what the book keeps.")
 
 
+def test_one_act():
+    """THE BOOKKEEPER IS THE LOCKING PROXY (B-9): the register is written
+    in the book's own act -- an accept issues an id, a removal retires
+    it, a rename re-keys it -- and every act runs under the directory's
+    lock, which a holder above takes once through 'held()' and the
+    acts inside see as held."""
+    from vut.engine.bookkeeper.api import DirectoryLock, DirectoryBusy
+    from vut.auxiliary.directory_mutex import DirectoryDeadlock
+    directory = _place("print('x')\n")
+    book      = Bookkeeper(directory)
+    sibling   = Bookkeeper(directory)          # a run builds one per app
+
+    book.note_accept("app.py", "one")
+    issued   = book.run_id_of("app.py", "one")
+    book.rename_choice("app.py", "one", "first")
+    renamed  = book.run_id_of("app.py", "first")
+    book.rename_test("app.py", "fresh.py")
+    rekeyed  = book.run_id_of("fresh.py", "first")
+    gone     = book.remove_test("fresh.py")
+    retired  = book.run_id_of("fresh.py", "first")
+    book.note_accept("later.py", None)
+    later    = book.run_id_of("later.py")
+
+    #  INSIDE 'held()' every act goes through without a second take --
+    #  through the sibling too, since what is held is the DIRECTORY --
+    #  while a stranger's lock on the directory is refused.
+    inside_ok = stranger = nested_ok = None
+    with book.held():
+        sibling.note_accept("held.py", None)
+        inside_ok = sibling.run_id_of("held.py") is not None
+        #  A HELD() INSIDE A HELD() holds nothing of its own and runs
+        #  inside the one above -- the mutex says so, and the act
+        #  believes it rather than a table of its own.
+        with sibling.held() as inner:
+            nested_ok = inner is None
+        try:
+            with DirectoryLock(directory): stranger = "taken"
+        except (DirectoryBusy, DirectoryDeadlock) as error:
+            stranger = type(error).__name__
+    after = sibling.run_id_of("held.py")
+
+    print("INSPECT: issued %s, renamed %s, re-keyed %s, retired -> %s, "
+          "later %s" % (issued, renamed, rekeyed, retired, later))
+    print("         inside held(): sibling wrote %s; a second lock: %s; "
+          "after: %s" % (inside_ok, stranger, after))
+    ok = _check([
+        (issued is not None and str(issued) == "0.0",
+         "an accept issues the id in its own act"),
+        (renamed == issued and rekeyed == issued,
+         "a rename re-keys the register; the id stands"),
+        (gone is not None and retired is None,
+         "a removal retires the id in the book's act"),
+        (later is not None and str(later) == "1",
+         "a retired id is never reissued (B-2)"),
+        (inside_ok and after is not None,
+         "under held(), a sibling bookkeeper writes without deadlock"),
+        (stranger == "DirectoryDeadlock",
+         "a bare second lock on the held directory is refused by name"),
+        (nested_ok,
+         "a nested held() yields None: it holds nothing of its own"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    return ok
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -482,6 +548,7 @@ if __name__ == "__main__":
             "reproduce":   test_reproduce,
             "divergence":  test_divergence,
             "setup_delta": test_setup_delta,
+            "one_act":     test_one_act,
         },
         happy      = "SUCCESS.*",
     ).run()

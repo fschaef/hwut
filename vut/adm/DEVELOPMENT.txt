@@ -350,7 +350,7 @@ their '--help' through argparse, which chooses its wrap column from
 the environment's reported terminal width; 'unset' only stops a value
 from being INHERITED, and leaves the machine's own fallback (80 here,
 possibly anything on another machine or a real tty) to decide where
-the line breaks. 'hwut.compare' and 'hwut.merge' both carry more
+the line breaks. 'hwut.diff' (then 'hwut.compare') and 'hwut.merge' (since retired) both carried more
 arguments now than a long-stale GOOD recorded, and at width 80 one of
 the two happened to wrap at a point that still matched the old GOOD
 by chance -- masking the staleness until the width was pinned wide

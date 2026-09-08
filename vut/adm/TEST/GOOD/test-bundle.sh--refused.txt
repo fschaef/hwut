@@ -1,0 +1,25 @@
+--- a directory where nothing listed stands, no root marker
+STATUS: 2
+STDOUT {
+      NEW        +1          a/b/edited.txt
+      NEW        +2          a/b/same.txt
+      NEW        +1          a/b/short.txt
+      NEW        +0          a/empty.txt
+      NEW        +2          a/run.sh
+      (absent)               a/gone.txt
+    == 5 new, 0 identical, 0 changed, 0 to delete
+    !! not one listed file stands here and no 'hwut-root.conf' marks a root --
+       is this the right directory? 'sh ../b.sh --force' creates them here anyway.
+}
+--- tampered after signing: a member no longer rebuilds to its sha256
+STATUS: 2
+STDOUT {
+    !! a/b/edited.txt: does not rebuild to its sha256
+    !! the bundle does not reconstruct -- REFUSED, nothing touched
+}
+--- --self beside --binary, --max-bytes
+    (1) collecting candidates [mode: find]
+    Error: --self carries text members only; drop --binary/--complete
+    (1) collecting candidates [mode: find]
+    Error: --self writes one part; drop --max-bytes
+<hwut-end>

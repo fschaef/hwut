@@ -1,0 +1,11 @@
+  after three notes and one machine more:
+    darwin-m1-pro-10c-arm64      test-a.py   one  98
+    linux-i7-13700k-16c-x86_64   test-a.py   one  999
+    linux-i7-13700k-16c-x86_64   test-a.py   two  141
+  OK  : the first note stands
+  OK  : a second note REPLACES it -- the last run's numbers, not a history
+  OK  : and adds no row
+  OK  : another machine CLASS adds a row; that is the only growth
+  OK  : what was not measured is empty, never a zero
+SUCCESS: an entry is replaced; a new machine class adds one.
+<hwut-end>

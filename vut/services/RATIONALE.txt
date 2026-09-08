@@ -2153,3 +2153,74 @@ GRAVEYARD Entering on the bare-name faces only, the wish faces keeping
           literally) -- rejected: '--directory=tree a/TEST/x.sh' is
           the line a report prints and a person copies, and the
           labels suites already relied on it composing.
+
+----------------------------------------------------------------------------
+E-48  RENAME READS AND SAYS; IT NEVER EDITS SOURCE OR DECLARATION (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.rename' followed the name through nominals, candidates,
+          book, register, coverage seats and labels, and was SILENT on
+          the two things it did not follow: the application file, and
+          the declarations naming it -- the '@hwut' block's choices,
+          a 'hwut.conf' apps section. A choice renamed in the book
+          stayed 'one' in the block; the next run answered
+          NON-RESPONSIVE and found a never-recorded 'one'. The README
+          said what moves and not what does not; the requirement that
+          the face "attempt to update configuration sections" had been
+          spoken and never ruled.
+
+DECISION  READ AND SAY, NEVER EDIT. Before 'Proceed?' the face reads
+          what stands and reports, one telegraphic NOTE per
+          disagreement, each naming what the author has to do:
+
+              NOTE  application 'x.sh' stands under the OLD name -- git mv ...
+              NOTE  application stands under NEITHER name -- ...
+              NOTE  '@hwut' declares 'one', 'two' -- edit the block: 'one' -> 'first'
+              NOTE  hwut.conf apps section 'x.sh' in hwut.conf -- rename it / carry it
+
+          Nothing where everything agrees. An application standing
+          under BOTH names is REFUSED before anything moves: which of
+          the two is the test is the author's decision, not a guess.
+          The readers are the exploration's own ('read_header',
+          'read_conf'); the face parses nothing itself. '--no-warning'
+          drops the notes; '--silent' drops everything but a refusal
+          or a fault (E-1's words still reach stdout).
+
+COST      Two reads per rename. A note is a pointer, not a fix: the
+          author edits the block or the section by hand.
+
+GRAVEYARD Moving the application and rewriting the '@hwut' block and
+          the apps section -- rejected: the face would edit SOURCE and
+          CONFIGURATION it did not write, in formats it must
+          round-trip without breaking; E-16 reversed; a half-done
+          rewrite is worse than a named disagreement. Left as a later
+          '--source' behind parsers that can round-trip (not owed).
+
+----------------------------------------------------------------------------
+E-49  TWO COLUMNS: SUBJECT LEFT, NOMINAL RIGHT                  (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   The terminal tier showed a comparison stacked -- an S row, an
+          N row -- which reads for a line and not for a screen; the
+          two-pane diff existed only in the neovim tier, which needs
+          neovim. A viewer that runs wherever Python runs, Windows and
+          Unix alike, was owed.
+
+DECISION  A TWO-COLUMN VIEW in the terminal tier ('services/lib/viewers/
+          tui.py'; 'hwut.compare' and 'hwut.merge' take '-y',
+          '--side-by-side', '--width N'). SUBJECT LEFT, NOMINAL RIGHT,
+          fixed: it is the direction a merge goes -- subject into
+          nominal, left into right -- and the view an author merges in
+          must be the view he read the verdict in. Rows are compare's
+          own aligned pairs, marked as the stacked view marks them; the
+          gutter carries the relation (' ', '~', '|', '>', '<'); wide
+          lines wrap with blank numbers. No dependency: 'shutil' for
+          the width, ANSI for colour, and on Windows the console's
+          virtual-terminal mode switched on for stdout.
+
+COST      A second renderer of the same rows in the tier. Wrapping by
+          character, not by word: a column is a column.
+
+GRAVEYARD 'prompt_toolkit' for a scrolling, keyed view -- deferred, not
+          rejected: the terminal's pager already scrolls; a keyed view
+          is the step after this one, if the merge wants keys.
+          'difflib' side-by-side -- rejected: it would invent an
+          alignment the verdict was not about.

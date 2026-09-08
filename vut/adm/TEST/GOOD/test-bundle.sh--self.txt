@@ -1,0 +1,71 @@
+--- the header carries the mode and the deletion
+    # mode a+x  a/run.sh
+    # delete  a/gone.txt
+--- --check: reported, nothing touched
+STATUS: 2
+STDOUT {
+      CHANGED    +1     -1     a/b/edited.txt
+      IDENTICAL              a/b/same.txt
+      NEW        +1          a/b/short.txt
+      NEW        +0          a/empty.txt
+      NEW        +2          a/run.sh
+      DELETE                 a/gone.txt
+    == 3 new, 1 identical, 1 changed, 1 to delete
+    !! 1 file(s) stand here with OTHER content -- would be REFUSED.
+       Read the CHANGED lines; 'sh ../b.sh --force' overwrites them with the bundle's.
+}
+--- the plain run refuses the edited file
+STATUS: 2
+STDOUT {
+      CHANGED    +1     -1     a/b/edited.txt
+      IDENTICAL              a/b/same.txt
+      NEW        +1          a/b/short.txt
+      NEW        +0          a/empty.txt
+      NEW        +2          a/run.sh
+      DELETE                 a/gone.txt
+    == 3 new, 1 identical, 1 changed, 1 to delete
+    !! 1 file(s) stand here with OTHER content -- REFUSED; nothing applied.
+       Read the CHANGED lines; 'sh ../b.sh --force' overwrites them with the bundle's.
+}
+--- --force lands everything
+STATUS: 0
+STDOUT {
+      CHANGED    +1     -1     a/b/edited.txt
+      IDENTICAL              a/b/same.txt
+      NEW        +1          a/b/short.txt
+      NEW        +0          a/empty.txt
+      NEW        +2          a/run.sh
+      DELETE                 a/gone.txt
+    == 3 new, 1 identical, 1 changed, 1 to delete
+    == applying
+    == verifying
+      every member verified: 3 created, 1 overwritten, 1 deleted
+}
+--- what stands now
+    a/b/edited.txt
+    a/b/same.txt
+    a/b/short.txt
+    a/empty.txt
+    a/run.sh
+    a/run.sh is executable
+    sender line
+    [no final newline]
+--- rerun
+STATUS: 0
+STDOUT {
+      IDENTICAL              a/b/edited.txt
+      IDENTICAL              a/b/same.txt
+      IDENTICAL              a/b/short.txt
+      IDENTICAL              a/empty.txt
+      IDENTICAL              a/run.sh
+      (absent)               a/gone.txt
+    == 0 new, 5 identical, 0 changed, 0 to delete
+    == already applied: nothing to do
+}
+--- 'git apply' reads the same file into an empty directory
+    ./a/b/edited.txt
+    ./a/b/same.txt
+    ./a/b/short.txt
+    ./a/empty.txt
+    ./a/run.sh
+<hwut-end>

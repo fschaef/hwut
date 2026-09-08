@@ -39,10 +39,11 @@ case "$1" in
         exit 0 ;;
 esac
 
-FACE_LIST="show plan run accept accept.propose accept.apply target cov
-           compare merge tell stability wishlist report
-           remove remove-choice remove.propose remove.apply
-           rename rename-choice sanitize pype"
+FACE_LIST="show plan run play accept accept.propose accept.apply
+           accept.interactive target cov diff tell stability wishlist
+           report remove remove.propose remove.apply
+           rename move sanitize pype
+           labels.create labels.add labels.remove labels.list labels.query"
 
 first_line() { grep -m1 -v '^[[:space:]]*$'; }
 
@@ -85,3 +86,5 @@ printf 'hwut {\n}\n' > hwut-root.conf
     printf 'l1 x\nl2\nl3 x\n' | ./filter.pype
     echo "she-bang through PATH: exit $?"
 fi
+
+echo "<hwut-end>"

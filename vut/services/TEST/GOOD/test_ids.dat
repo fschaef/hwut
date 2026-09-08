@@ -1,6 +1,6 @@
 ##VUT-TEST-IDS 5
-G:136
-N:21
+G:141
+N:22
 A:0 test-pype.sh
 N:0.6
 C:0.0 exit
@@ -41,10 +41,11 @@ C:4.4 stderr
 C:4.5 sugar
 C:4.6 token
 A:5 test-compare.sh
-N:5.3
+N:5.4
 C:5.0 differing
 C:5.1 reading
 C:5.2 tolerated
+C:5.3 side-by-side
 A:6 test-cov_run.py
 N:6.2
 C:6.0 door
@@ -90,9 +91,10 @@ C:12.5 unknown
 C:12.6 untouched
 C:12.7 whole
 A:13 test-rename.sh
-N:13.2
+N:13.3
 C:13.0 labels
 C:13.1 across
+C:13.2 notes
 A:14 test-report.sh
 N:14.8
 C:14.0 json
@@ -158,3 +160,7 @@ C:20.1 fail
 C:20.2 never_run
 C:20.3 pass
 C:20.4 until
+A:21 test-enter.sh
+N:21.2
+C:21.0 enter
+C:21.1 refused
