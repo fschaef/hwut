@@ -4,7 +4,7 @@ ______________________________________________________________________________
 PURPOSE: Bootstrap module for DIRECT EXECUTION of the service faces.
 
 The same chicken-and-egg solution as a TEST directory's config.py: run
-as a plain script ('python3 .../services/merge.py', from any working
+as a plain script ('python3 .../services/diff.py', from any working
 directory) a face has no package context, so nothing 'vut.*' -- and no
 relative import -- resolves. This tiny stdlib-only module walks upward
 from its own location until it finds the directory named 'vut', inserts

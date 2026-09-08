@@ -8,7 +8,7 @@ THE COMPANION OF 'hwut.remove.propose'. Propose writes a file of test
 runs that have lost their ground, each headed by why; you read it,
 delete or comment out what you want to KEEP; this face forgets what is
 left -- nominals, candidates, book entry and register id, exactly as
-'hwut.remove' and 'hwut.remove-choice' forget them.
+'hwut.remove' forgets them, one at a time.
 
     hwut.remove.propose -o r.txt
     <read r.txt, delete or '#' out what you want to keep>

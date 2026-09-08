@@ -7,7 +7,7 @@ STDOUT {
         VERDICT differs between repeats: ok, test-failed, ok, test-failed
     
     STAINED: suite/TEST: test-app.sh -- not run again until proven steady over 4 repeat(s).
-             In an urgent case: 'hwut.remove' (or 'hwut.remove-choice') and accept afresh.
+             In an urgent case: 'hwut.remove <test> [<choice>]' and accept afresh.
     
     TALLY: 1 unstable, 0 warned, 0 steady
 }
@@ -15,10 +15,10 @@ STDOUT {
 STATUS: 1
     test-app.sh   UNSTABLE -- not run
 --- 3. hwut.accept refuses to bless it
-FAULT: hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block
-REFUSED to bless: 'test-app.sh' bears a STAIN -- it switched results between repeats.
-    Acceptance declares the POLE of the good cluster; a test that will not hold
-    still has no cluster. Prove it steady with 'hwut.stability --repeat=<n>',
+REFUSED stained: 'test-app.sh' bears a STAIN -- unstable under hwut.stability repetitions
+    Apply 'hwut.stability --repeat=<n>' to proof stability, or
+    'hwut.remove' it and 'hwut.accept' afresh.
+NOTE: nothing to accept -- selection empty
 --- 4. the test is mended; 2 repeats do not answer a 4-repeat charge
 STATUS: 0
 STDOUT {

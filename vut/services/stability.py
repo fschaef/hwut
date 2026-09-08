@@ -363,8 +363,8 @@ def report_line_tuple(finding_list, repeat_n, key_n, verbose_f=False,
         yield ""
         yield "STAINED: %s: %s -- not run again until proven steady " \
               "over %d repeat(s)." % (key[0], key[1], repeat_n)
-        yield "         In an urgent case: 'hwut.remove' (or " \
-              "'hwut.remove-choice') and accept afresh."
+        yield "         In an urgent case: 'hwut.remove <test> " \
+              "[<choice>]' and accept afresh."
     for key in cleared_list:
         yield ""
         yield "CLEARED: %s: %s -- steady over %d repeat(s); the stain " \

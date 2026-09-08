@@ -41,12 +41,12 @@ ALL OF THEM, because a wish that states nothing wants everything.
 
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
                 candidate under 'TMP/store/', an entry in the book
-                ('GOOD/result_db.csv') or a register id whose
+                ('GOOD/book.csv') or a register id whose
                 (test, choice) NO LONGER EXISTS in the directory's
                 configuration.
 
                 WHERE THINGS LIVE, since every flag above names one:
-                    GOOD/result_db.csv    THE BOOK: what the software
+                    GOOD/book.csv    THE BOOK: what the software
                                           IS -- verdicts, reports, the
                                           configuration that held.
                                           Versioned with the tests.
@@ -116,7 +116,7 @@ from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
                                                              GOOD_OWNED_FILE_TUPLE,
-                                                             TestIdDb, TestIdFault,
+                                                             TestIdFault,
                                                              key_parts_of)
 from   vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
@@ -370,7 +370,7 @@ def record_key_of(name):
     THE GATE IS THAT THE TEST PART CARRIES A SOURCE EXTENSION. A record
     is keyed by the source file WHOLE (configuration.key_name), so
     'test-x.py' and 'regression-1.py' both qualify and 'notes.md' and
-    'result_db.csv' do not. A PREFIX WOULD BE THE WRONG GATE: this
+    'book.csv' do not. A PREFIX WOULD BE THE WRONG GATE: this
     tree holds applications named 'regression-1.py' and
     'verify_signature.sh', and a face that judged only 'test-*' would
     pass over their records in silence.
@@ -427,7 +427,7 @@ def books_finding_list(root, directory):
     """
     YIELD: [0] CFinding  one disagreement between the three records of
                          acceptance -- GOOD/ (the nominals), 'test_ids.
-                         dat' (the register) and 'result_db.csv' (the
+                         dat' (the register) and 'book.csv' (the
                          book) -- named, and NEVER offered for removal:
                          a disagreement is mended by a person
                          ('hwut.accept', 'hwut.remove'), not by unlink.
@@ -448,7 +448,7 @@ def books_finding_list(root, directory):
     if not os.path.isdir(good_dir): return
     where    = shown(root, directory)
     try:
-        register = TestIdDb(directory)
+        register = Bookkeeper(directory)
     except TestIdFault as error:
         yield CFinding("books", "%s: register" % where,
                        "cannot be read -- %s" % error, None)

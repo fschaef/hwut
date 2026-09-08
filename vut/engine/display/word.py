@@ -49,7 +49,7 @@ PHRASE_DB = {
     #  THE BOOK DOCUMENTS WHAT TESTS EXIST. Where it records one the
     #  tree no longer declares, the two disagree and only a person can
     #  say which is wrong -- so it is a failing test, never a silence.
-    #  ('hwut.remove' / 'hwut.remove-choice' heal the book where the
+    #  ('hwut.remove' heals the book where the
     #  removal was intended.)
     "test-vanished":               "recorded in the book, but no such test stands",
     "test-choice-vanished":        "recorded in the book, but the test offers no such choice",
@@ -213,6 +213,12 @@ class CInk:
     #  THE '[FAIL]' TAG WEARS -- 'FAIL_TAG_CODE', 256-colour 196 --
     #  never the base-16 '41', which is palette slot 1 and orange in
     #  several themes.
+    #  'ERROR' IS A BLOCK, NOT A WORD (O-24): the same red ground the
+    #  '[FAIL]' tag and the closing bar wear, bright white and bold on
+    #  it -- a fault stands in the flow where START and DONE stand, and
+    #  must be seen at a glance among them.
+    def block_error(self, text):  return self.paint(text, 1, 97, 48, 5, 196)
+
     def ground_ok(self, text):    return self.paint(text, 97, 42)
     def ground_skip(self, text):  return self.paint(text, 30, 43)
     def ground_fail(self, text):  return self.paint(text, *FAIL_TAG_CODE)

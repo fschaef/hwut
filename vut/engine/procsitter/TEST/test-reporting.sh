@@ -168,7 +168,7 @@ case "$1" in
 
 caps)
     tree plain
-    $RUN --directory=tree --plain --no-log > run.txt 2> err.txt
+    $RUN --directory=tree --plain > run.txt 2> err.txt
     echo "STATUS: $?"
     echo "HINTS {"
     hints | sed 's/^/    /'
@@ -193,7 +193,7 @@ caps)
 
 multi)
     tree multi
-    $RUN --directory=tree --plain --no-log > run.txt 2> err.txt
+    $RUN --directory=tree --plain > run.txt 2> err.txt
     echo "STATUS: $?"
     echo "HINTS {"
     hints | sed 's/^/    /'

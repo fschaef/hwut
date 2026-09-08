@@ -1,0 +1,46 @@
+STIMULUS  hwut.diff --directory=tree/suite/TEST --all --plain -y --width 70
+REACTION  stdout {
+              
+              =[ test-app.sh one ]================================ round 1
+              setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+                 1 [changed ]line for one        |    1 line for one
+                 2 <hwut-end>                         2 <hwut-end>
+              ============================================================
+              
+              =[ test-app.sh two ]================================ round 1
+              setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+                 1 [changed ]line for two        |    1 line for two
+                 2 <hwut-end>                         2 <hwut-end>
+              ============================================================
+          }
+          exit code : 1
+
+STIMULUS  the checklist: 'printf 2\n\n' toggles case 2 off and goes
+          exit code : 1
+          stderr (the checklist) {
+              differing cases -- toggle with a number, Enter to go, q to quit
+                [X]  1  test-app.sh one
+                [X]  2  test-app.sh two
+              > 
+              differing cases -- toggle with a number, Enter to go, q to quit
+                [X]  1  test-app.sh one
+                [ ]  2  test-app.sh two
+              > 
+          }
+          shown: =[ test-app.sh one ]================================ round 1
+
+STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.sh one
+          exit code : 1
+              =[ test-app.sh one ]================================ round 1
+              S    1      | [changed ]line for one
+              N         1 | line for one
+
+STIMULUS  nothing differs: test-b.sh
+          exit code : 0   stderr: nothing differs: 1 case(s) judged, every candidate equivalent to its nominal
+
+The store answers the wish; compare's engine says what differs,
+now; the checklist lets the author pick; the view is the same.
+SUCCESS: one selection language on the diff face too.
+<hwut-end>

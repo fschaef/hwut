@@ -35,7 +35,7 @@ from ...operations.run.core         import Provision
 from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
 from ...bookkeeper.api   import Bookkeeper
-from ...bookkeeper.api   import TestIdDb
+
 from ...bookkeeper.api import Store, DirectoryBusy
 from ...procsitter.api       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
@@ -98,22 +98,27 @@ class TestRunDispatcher(I_Dispatcher):
             if not naming.same_nominal_f: continue
             self.store_db[app.source_file] = Store(
                                     Bookkeeper(directory, naming))
-        self.lock       = self.store.lock()
-        if not self.lock.acquire():
+        #  THE DIRECTORY IS HELD THROUGH THE BOOKKEEPER (B-9): it is
+        #  the locking proxy; every write it makes inside the session
+        #  sees the lock held and does not take it again.
+        self.lock       = self.store.bookkeeper.held()
+        try:
+            self.lock.__enter__()
+        except DirectoryBusy:
             raise DirectoryBusy(
                 "the directory '%s' is held by a live process"
                 % directory)
         self.despite_stain_f = despite_stain_f
         self.force_run_f    = force_run_f
         self.coverage   = coverage
-        self.id_db      = None if coverage is None else TestIdDb(directory)
+        self.id_db      = None if coverage is None \
+                          else self.store.bookkeeper
         #  THE REGISTER, for the E-41 attention: a test that runs here
         #  passed the nominal gate, so something was accepted for it;
         #  where the register has no entry, one is made and the run
         #  says so ('notice_list', emitted as NOTE by the orchestrator).
         #  'hwut.sanitize --books' reads the same disagreement.
-        self.register    = self.id_db if self.id_db is not None \
-                           else TestIdDb(directory)
+        self.register    = self.store.bookkeeper
         self.notice_list = []
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
         #  every tool leaves its artefact in the directory's OUT/COVERAGE.
@@ -152,7 +157,7 @@ class TestRunDispatcher(I_Dispatcher):
         for multi in self.session_db.values():
             await multi.close()
         self.session_db = {}
-        self.lock.release()
+        self.lock.__exit__(None, None, None)
 
     def report_of(self, node_name):
         """

@@ -81,7 +81,7 @@ import os
 import sys
 
 from   vut.engine.bookkeeper.api import Bookkeeper, Store
-from   vut.engine.bookkeeper.api import TestIdDb, TestIdFault
+from   vut.engine.bookkeeper.api import TestIdFault
 from   vut.engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from   vut.engine.coverage.api   import (pack_record, unpack_record,
                                          seated, RecordFault)
@@ -300,38 +300,34 @@ def _register_followed(rename, choice_list, write):
             one; empty where the test was never registered.
             None, on a register fault, announced.
 
-    'choice_list' names the choices to issue for, across a directory:
-    the source book's, read before it gave the entry up.
+    THE REGISTER MOVED IN THE BOOK'S OWN ACT (B-9): 'rename_test' and
+    'rename_choice' re-keyed it, 'remove_test' retired the source's
+    id, 'adopt' issued the target's. This step READS and SAYS.
+    'choice_list' names the choices whose fresh ids the re-seat needs,
+    read from the source book before it gave the entry up.
     """
-    source_db = TestIdDb(str(rename.source.directory))
     try:
+        target = rename.target.bookkeeper
         if not rename.whole_test_f:
-            run_id = source_db.run_id_of(rename.test, rename.choice)
+            run_id = target.run_id_of(rename.test, rename.fresh_choice)
             if run_id is None:
                 write("    register: not registered"); return {}
-            source_db.rename_choice(run_id.app_id, run_id.choice_id,
-                                    rename.fresh_choice)
             write("    register: choice name follows; the id stands")
-            return {rename.fresh_choice:
-                    source_db.run_id_of(rename.test, rename.fresh_choice)}
-        run_id = source_db.run_id_of(rename.test)
-        if run_id is None:
-            write("    register: not registered"); return {}
+            return {rename.fresh_choice: run_id}
         if not rename.across_f:
-            source_db.rename_app(run_id.app_id, rename.fresh_test)
+            run_id = target.run_id_of(rename.fresh_test)
+            if run_id is None:
+                write("    register: not registered"); return {}
             write("    register: name follows; the id stands")
             return {}
-        #  ACROSS: the ids are the directory's. The target issues, the
-        #  source retires -- never reissues (bookkeeper B-2).
-        target_db   = TestIdDb(str(rename.target.directory))
-        run_db      = {}
+        run_db = {}
         for choice in choice_list:
-            run_db[choice] = target_db.run_id_of(rename.fresh_test, choice,
-                                                 allocate_f=True)
-        source_db.remove_app(run_id.app_id)
-        write("    register: app %s retired here; issued %s there"
-              % (run_id.app_id,
-                 ", ".join(str(r) for r in sorted(run_db.values()))))
+            run_id = target.run_id_of(rename.fresh_test, choice)
+            if run_id is not None: run_db[choice] = run_id
+        if not run_db:
+            write("    register: not registered"); return {}
+        write("    register: retired here; issued %s there"
+              % ", ".join(str(r) for r in sorted(run_db.values())))
         return run_db
     except TestIdFault as error:
         write("    FAULT: register -- %s" % error)
@@ -571,8 +567,7 @@ def main(argv=None, write=None, read_line=None):
         #  would be issued THAT id -- another test's.
         for where, standing in (
                 ("book",     set(rename.target.bookkeeper.tests())),
-                ("register", set(TestIdDb(str(rename.target.directory))
-                                 .roster()))):
+                ("register", set(rename.target.bookkeeper.roster()))):
             if rename.fresh_test in standing and not (
                     not rename.across_f and rename.fresh_test == rename.test):
                 write("REFUSED: '%s' already stands in the %s of '%s' -- "

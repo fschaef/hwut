@@ -1,0 +1,13 @@
+--- two words: the test and ITS CHOICE
+STATUS: 0
+        book entry: removed
+        register: choice id retired
+--- the nominals that stand
+    test-app.sh--two.txt
+--- three words: refused, and the way out named
+STATUS: 2
+    REFUSED: 'hwut.remove' takes '<test>' or '<test> <choice>' -- 3 words stand. For several tests: 'hwut.remove.propose', then 'hwut.remove.apply'
+    usage: hwut.remove <test> [<choice>] [--yes] [--directory=<path>]
+--- the nominals that stand
+    test-app.sh--two.txt
+<hwut-end>

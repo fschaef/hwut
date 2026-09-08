@@ -104,7 +104,7 @@ from   vut.auxiliary.directory_mutex               import (DirectoryBusy,
 from   ._core                                      import usage_line
 from   ._exit                                      import E_ExitCode
 from   ._target                                    import entered
-from   .compare                                    import reading_view
+from   .diff                                       import reading_view
 
 USAGE = usage_line("usage: hwut.play",
                    ("<test-app>", "[<choice>]", "[--raw]", "[--pyped]",

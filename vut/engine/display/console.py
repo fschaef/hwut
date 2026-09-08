@@ -40,7 +40,7 @@ USAGE_TOKEN_TUPLE = ("[-v|--verbose|--plain|--quiet|--silent]",
                      "[--show-jobs]", "[--show-details]",
                      "[--no-failure-summary]",
                      "[--start-delay=<seconds>]",
-                     "[--log <file>|--no-log]")
+                     "[--log <file>]")
 
 HELP = """RENDERING -- one tier, the flags mutually exclusive
     -v, --verbose       every event as it arrives, the swallowed ones
@@ -67,25 +67,14 @@ COLUMNS AND BLOCKS -- what the flow line carries, and what closes it
                         drop the closing HINTS block; absent, every
                         hint is named there
 
-THE LOG -- where the run's marginalia go
-    --log <file>        the file FAULT and NOTE lines are written to;
-                        default 'hwut.log'. These are the run's
-                        marginalia -- a configuration line that did
-                        not parse, a wish that selected nothing --
-                        true and worth keeping, and not what a reader
-                        watching a run is watching for
-    --no-log            write no log file. The marginalia then go to
-                        STDERR: a fault is never swallowed, and this
-                        flag asks for no file, not for silence
-    --start-delay=<seconds>
-                        how long a test's 'START' line is held back;
-                        a test finishing inside the window never
-                        announces its beginning, so the flow keeps one
-                        line per run and a slow one still shows itself.
-                        '0' announces at once -- WHICH A SUITE THAT
-                        RECORDS THE FLOW STATES, since whether a line
-                        exists must never depend on the speed of the
-                        machine
+THE LOG -- the flow, in a file, where one is asked for
+    --log <file>        ALSO write the flow to that file, plain, one
+                        line per event, OVERWRITTEN at the run's start
+                        (O-24). Without it NO FILE IS WRITTEN. The file
+                        is a rendering for the eye and for a mail
+                        attachment -- not a record to query: what a run
+                        cost is 'TEST/hwut-traces.csv' (B-11), and what
+                        it decided is the book
 
 COLOUR -- decided once, at the door
     --colour            enforcement: on, over every gate, NO_COLOR
@@ -114,7 +103,8 @@ NO_COLOUR_FLAG = "--no-colour"
 
 #  WHERE THE MARGINALIA GO by default. A name, not a path: the log is
 #  written where the face was called, which is where its reader is.
-DEFAULT_LOG_NAME = "hwut.log"
+#  NO DEFAULT LOG (O-24): a file exists because it was asked for.
+DEFAULT_LOG_NAME = None
 
 DEFAULT_WIDTH = 78
 MINIMUM_WIDTH = 40
@@ -127,8 +117,7 @@ class CRenderingWish:
     colour was enforced or refused, which columns the flow line
     carries, and whether the closing FAILURES block stands."""
     tier:      E_Tier = E_Tier.PLAIN
-    log_path:  str    = DEFAULT_LOG_NAME
-    no_log_f:  bool   = False
+    log_path:  str    = None
     force_f:   bool   = False
     veto_f:    bool   = False
     timing_f:  bool   = False
@@ -147,7 +136,7 @@ def parse_rendering(argument_list):
 
     Raises 'RenderingError' where the words cannot want anything: two
     tiers at once, '--plain' beside another tier, '--colour' beside
-    '--no-colour', '--no-log' beside '--log', or a '--log' naming no
+    '--no-colour', or a '--log' naming no
     file.
     """
     tier_flag_list = []
@@ -159,9 +148,7 @@ def parse_rendering(argument_list):
     detail_f       = False
     summary_f      = True
     start_delay    = START_DELAY_SECONDS
-    log_path       = DEFAULT_LOG_NAME
-    no_log_f       = False
-    log_named_f    = False
+    log_path       = None
     rest_list      = []
     argument_i     = -1
     while argument_i + 1 < len(argument_list):
@@ -175,16 +162,11 @@ def parse_rendering(argument_list):
                 raise RenderingError("'--log' wants a file name after it")
             argument_i += 1
             log_path    = argument_list[argument_i]
-            log_named_f = True
             continue
         if argument.startswith("--log="):
             log_path    = argument[len("--log="):]
-            log_named_f = True
             if not log_path:
                 raise RenderingError("'--log=' wants a file name after it")
-            continue
-        if argument == "--no-log":
-            no_log_f = True
             continue
         if   argument in TIER_FLAG_DB:      tier_flag_list.append(argument)
         elif argument == PLAIN_FLAG:        plain_f = True
@@ -218,9 +200,6 @@ def parse_rendering(argument_list):
     if force_f and veto_f:
         raise RenderingError("'--colour' beside '--no-colour' can want "
                              "nothing")
-    if no_log_f and log_named_f:
-        raise RenderingError("'--no-log' beside '--log' can want "
-                             "nothing")
 
     tier = TIER_FLAG_DB[tier_flag_list[0]] if tier_flag_list \
            else E_Tier.PLAIN
@@ -229,7 +208,7 @@ def parse_rendering(argument_list):
                           detail_f=detail_f,
                           failure_summary_f=summary_f,
                           start_delay=start_delay,
-                          log_path=log_path, no_log_f=no_log_f), \
+                          log_path=log_path), \
            rest_list
 
 

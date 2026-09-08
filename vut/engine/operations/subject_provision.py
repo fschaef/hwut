@@ -76,8 +76,7 @@ DESCRIPTION
        execute now.
 
        NO CONFIGURATION IN HAND ('configuration=None'): a face that has
-       only a directory and a file name -- 'hwut.merge', 'hwut.
-       stability' -- gets the (A) closure of THAT FILE ALONE and can
+       only a directory and a file name -- 'hwut.stability' -- gets the (A) closure of THAT FILE ALONE and can
        only READ: the channel refuses to execute what it cannot
        describe. This is the one place that fallback is written.
 
@@ -359,7 +358,7 @@ def bare_provider_of(store, test_name, choice_name=None,
                 of the file alone.
 
     The one road for a face that holds a directory and a name and no
-    configuration ('hwut.merge', 'hwut.stability').
+    configuration ('hwut.stability').
     """
     configuration = _BareConfiguration(store.directory, test_name)
     return provider_of(configuration, store, choice_name,

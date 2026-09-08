@@ -10,4 +10,5 @@ hwut.show     0      1        2      -
 hwut.plan     0      1        2      3
 hwut.run      1      1        2      1
 hwut.pype     0      1        2      -
-hwut.compare  0      1        2      -
+hwut.diff  0      1        2      -
+<hwut-end>

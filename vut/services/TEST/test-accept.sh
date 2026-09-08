@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
 #     choices    = ["ask", "bless", "labels", "merge", "stderr",
-#                   "sugar", "token"]
+#                   "sugar", "token", "interactive"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -34,7 +34,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
-        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token;"
+        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -74,7 +74,7 @@ fixture() {             # one directory, one plain test, one two-choice
     $RUN --directory=tree --silent 2> /dev/null
 }
 
-good() { ls tree/suite/TEST/GOOD/ 2>/dev/null | grep -v result_db; }
+good() { ls tree/suite/TEST/GOOD/ 2>/dev/null | grep -v -e book.csv -e result_db; }
 
 case "$1" in
 
@@ -185,7 +185,34 @@ ask)
     good | sed 's/^/    /'
     ;;
 
+interactive)
+    #  A CHANGE, accepted by hand (E-51): the checklist, one session
+    #  per case, 't' takes the subject whole, 'q' leaves alone; a
+    #  commit is an acceptance through the same three writes; the
+    #  candidate stays as the run left it.
+    fixture
+    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null
+    sed -i 's/echo "choice \$1"/echo "changed choice $1"/' tree/suite/TEST/test-two.sh
+    $RUN --directory=tree --silent 2> /dev/null
+    INTERACTIVE="python3 -m vut.services.lib.accept.interactive"
+    echo "--- a plain accept refuses the change"
+    $ACCEPT --directory=tree/suite/TEST --yes > out.txt 2>&1; echo "STATUS: $?"
+    grep -E 'merge required|first blessing' out.txt | sed 's/^/    /'
+    echo "--- interactive: the checklist (both marked), 't' takes 'a', 'q' leaves 'b'"
+    printf '\nt\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
+        > out.txt 2> ui.txt; echo "STATUS: $?"
+    grep -E '^\s+\[|^=\[|accepted|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
+    echo "--- the nominal of 'a' is what the run printed; 'b' stands"
+    cat tree/suite/TEST/GOOD/test-two.sh--a.txt tree/suite/TEST/GOOD/test-two.sh--b.txt | sed 's/^/    /'
+    echo "--- the candidate stayed: the next run judges anew"
+    $RUN --directory=tree/suite/TEST 2>&1 | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
+    echo "--- the book notes the acceptance of 'a' only"
+    grep -c 'test-two.sh;a;' tree/suite/TEST/GOOD/book.csv | sed 's/^/    a: /'
+    ;;
+
 *)
     echo "unknown choice '$1'"
     exit 1 ;;
 esac
+
+echo "<hwut-end>"

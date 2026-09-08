@@ -11,7 +11,10 @@ DESCRIPTION
        store recorded it. Made for handing a test to another pair of
        eyes, human or AI, without them asking for file after file.
 
-           hwut.tell TEST-APP [CHOICE]        the pack; when a cadence
+           hwut.tell [<wish>] [TEST-APP [CHOICE]]
+                                                the pack of every case
+                                                the wish selects (E-52);
+                                                when a cadence
                                                 sidecar exists, each
                                                 line of its stream is
                                                 prefixed '<delta-t>:'
@@ -63,8 +66,14 @@ DESCRIPTION
        paths, no dates -- so a pack can be compared, stored, or pasted
        without freezing one machine into it.
 
-       Run from the test's directory, like every hwut command. Rendering goes to STDOUT; exit 0 with a
-       pack, 2 on an unusable request.
+       THE WORDS ARE EVERY STORE-READING FACE'S ('services/_cases.py'):
+       a test, a test and a choice, a path that enters its directory
+       (E-47), '--glob', '--label', '--fail', '--directory' for one
+       directory, the tree below the cwd otherwise. Several cases:
+       several packs, one after the other, walk order.
+
+       Rendering goes to STDOUT; exit 0 with a pack, 3 where nothing is
+       selected, 2 on an unusable request.
 ______________________________________________________________________________
 """
 import io
@@ -75,7 +84,7 @@ import argparse
 from pathlib import Path
 
 
-#  THE IMPORT CALL -- see merge.py: __config.py (this directory) does the
+#  THE IMPORT CALL -- see _config.py: it (this directory) does the
 #  walk-up; the face adopts its package (PEP 366). Dead under '-m'.
 if __package__ in (None, ""):
     import _config
@@ -535,36 +544,65 @@ def main(argv=None):
 
 def _main(argv):
     """
-    RETURN: int, the exit code -- 'main' without the pipe guard.
+    RETURN: int, the exit code -- 'main' without the pipe guard: OK
+            with at least one pack, EMPTY where the wish selects no
+            case, REFUSED where the words cannot be read.
+
+    THE WISH (E-52): the words are every store-reading face's --
+    'hwut.tell demo.py basic', 'hwut.tell a/TEST/demo.py' (entered,
+    E-47), '--glob', '--label', '--fail', '--directory' -- and every
+    selected case is packed in turn, walk order, each pack whole.
     """
+    from vut.engine.orchestrator.plan.wish import parse_wish, WishError
+    from ._cases                          import select
+    if argv is None: argv = sys.argv[1:]
+    err = lambda t: sys.stderr.write(t + "\n")
+    try:
+        wish, rest_list = parse_wish(list(argv))
+    except WishError as error:
+        err("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
     parser = argparse.ArgumentParser(
         prog="hwut.tell",
-        description="Pack ONE test whole -- metadata, source, GOOD, OUT "
+        description="Pack a test whole -- metadata, source, GOOD, OUT "
                     "and cadence -- for handing to another pair of "
-                    "eyes, human or AI.")
-    parser.add_argument("application",
-                        help="the test application file, e.g. "
-                             "test-merge.py")
-    parser.add_argument("choice", nargs="?", default=None,
-                        help="the choice; absent for a test without "
-                             "choices")
+                    "eyes, human or AI. Every case the wish selects, "
+                    "one pack each.")
+    parser.add_argument("word", nargs="*",
+                        help="a test application, a test and a choice, "
+                             "any wish word; a path enters its directory")
+    parser.add_argument("--directory", default=None,
+                        help="ONE test directory (default: the tree "
+                             "below the cwd)")
     parser.add_argument("-r", "--raw", action="store_true",
                         help="files verbatim: no cadence prefixes, raw "
                              "sidecars and timing sections included")
     parser.add_argument("--no-coverage", action="store_true",
                         help="leave out the coverage section; it stands "
                              "by default where a record was harvested")
-    arguments = parser.parse_args(argv)
+    arguments = parser.parse_args(rest_list)
 
-    application = os.path.basename(arguments.application)
-    directory   = os.path.dirname(os.path.abspath(
-                                  arguments.application))
-    provision_line = refresh(directory, application, arguments.choice)
-    sys.stdout.write(build_pack(directory, application,
-                                arguments.choice, arguments.raw,
-                                not arguments.no_coverage,
-                                provision_line=provision_line))
+    selected, code = select(wish, arguments.word,
+                            arguments.directory or ".",
+                            arguments.directory is not None, err, USAGE)
+    if selected is None: return code
+    if not selected.where_list:
+        err("EMPTY: the wish selects no case")
+        return E_ExitCode.EMPTY
+    for where in selected.where_list:
+        whole = selected.whole(where)
+        for case in selected.case_db[where]:
+            application = case.source_file
+            provision_line = refresh(whole, application, case.choice)
+            sys.stdout.write(build_pack(whole, application, case.choice,
+                                        arguments.raw,
+                                        not arguments.no_coverage,
+                                        provision_line=provision_line))
     return E_ExitCode.OK
+
+
+USAGE = ("usage: hwut.tell [<wish>] [<test> [<choice>]] [--directory=<path>] "
+         "[-r|--raw] [--no-coverage]")
 
 
 if __name__ == "__main__":

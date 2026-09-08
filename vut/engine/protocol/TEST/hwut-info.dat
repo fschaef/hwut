@@ -1,0 +1,6 @@
+Protocol -- the event vocabulary, the line grammar, the event log
+-------------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

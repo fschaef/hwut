@@ -57,9 +57,10 @@ def _verdict(state, node_kind):
 
 
 def _utc_now():
-    """RETURN: str, the current UTC instant, seconds resolution,
-    ISO-8601."""
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    """RETURN: str, the current UTC instant, millisecond resolution,
+    ISO-8601 -- fine enough for the event line's two decimals
+    (O-23); a consumer that wants seconds truncates."""
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
 
 
 @dataclass(frozen=True, slots=True)

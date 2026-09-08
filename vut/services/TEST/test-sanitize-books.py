@@ -93,8 +93,8 @@ def fixture():
     register.run_id_of("test-reg.py", allocate_f=True)
     register.run_id_of("test-book.py", allocate_f=True)
     #  A RUN books 'test-book.py' with a verdict and no 'last_accept'.
-    run_main(["test-book.py", "--directory=%s" % test, "--silent",
-              "--no-log"], write=lambda _: None, write_error=lambda _: None)
+    run_main(["test-book.py", "--directory=%s" % test, "--silent"],
+             write=lambda _: None, write_error=lambda _: None)
     return root, test
 
 

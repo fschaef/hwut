@@ -941,11 +941,11 @@ connection IS the session has nothing to answer on once it is closed.
            '_core.py':
            '-' is stdin; --numeric/--pattern/--nothing name the setup):
 
-           'hwut.merge' (services/merge.py): any subject stream/file against any
-           nominal -- UI on stderr, the artifact on '-o PATH' or
-           stdout, written ONLY on commit (exit 0; a CANCEL exits 1 and
-           writes nothing). Knows nothing of GOOD/ -- storing stays
-           Accept's (10).
+           'hwut.accept.interactive' (services/lib/accept/interactive.py):
+           the store's differing cases, one merge session each, UI on
+           stderr; a COMMIT is an acceptance through Accept's own
+           writes (10) -- the nominal, the register, the book. A
+           CANCEL writes nothing.
 
            'hwut.compare' (services/compare.py): display only, never writes --
            the rendering IS the product, so it goes to STDOUT; exit is
@@ -1183,8 +1183,8 @@ PART V -- REFERENCE
                                             tier, two marking views (11.5)
                         nvim/               the nvim client (11.5)
                       services/           the service faces (11.5):
-                        merge.py            'hwut.merge'
-                        compare.py          'hwut.compare'
+                        lib/accept/interactive.py  'hwut.accept.interactive'
+                        diff.py             'hwut.diff'
                         report.py           'hwut.report' -- one test
                                             packed whole: metadata,
                                             source, GOOD, OUT, cadence

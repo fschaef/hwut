@@ -53,7 +53,7 @@ import json
 import os
 
 from .index     import index_of, record_iterable
-from ...bookkeeper.api  import TestIdDb, TestIdFault
+from ...bookkeeper.api  import Bookkeeper, TestIdDb, TestIdFault
 from ...bookkeeper.api import (GroupDb, GroupFault,
                                       parse_group_table)
 
@@ -134,16 +134,20 @@ def snapshot_db_of(root, directory_tuple):
     result = {}
     for directory in directory_tuple:
         path = root if directory == "." else os.path.join(root, directory)
+        #  THE REGISTER IS READ THROUGH THE BOOKKEEPER (B-9): text and
+        #  generation, nothing written.
         try:
-            register = TestIdDb(path)
+            keeper   = Bookkeeper(path)
+            register_text       = keeper.register_text()
+            register_generation = keeper.register_generation()
             stored   = GroupDb(path)
             groups   = parse_group_table(stored.format())
         except (TestIdFault, GroupFault):
             continue
         result[directory] = {
-            "register":            register,
+            "register":            register_text,
             "groups":              groups,
-            "register_generation": register.generation,
+            "register_generation": register_generation,
             "groups_generation":   stored.generation}
     return result
 
@@ -172,7 +176,7 @@ def bundle_of(root, index, directory_tuple, snapshot_db):
                   for path in index.path_tuple},
         "snapshot": {
             directory: {
-                "register":            entry["register"].format(),
+                "register":            entry["register"],
                 "register_generation": entry["register_generation"],
                 "groups":              entry["groups"].format(),
                 "groups_generation":   entry["groups_generation"]}
@@ -232,13 +236,13 @@ def stale_tuple(bundle, root):
             yield directory, "both", "gone"
             continue
         try:
-            register = TestIdDb(path)
+            register_generation = Bookkeeper(path).register_generation()
             groups   = GroupDb(path)
         except (TestIdFault, GroupFault):
             yield directory, "both", "unreadable"
             continue
         moved = []
-        if register.generation != entry["register_generation"]:
+        if register_generation != entry["register_generation"]:
             moved.append("register")
         if groups.generation != entry["groups_generation"]:
             moved.append("groups")

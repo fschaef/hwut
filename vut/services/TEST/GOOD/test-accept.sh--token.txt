@@ -11,3 +11,4 @@ STDOUT {
     prints the token itself, as its last line.
 }
 GOOD holds:
+<hwut-end>

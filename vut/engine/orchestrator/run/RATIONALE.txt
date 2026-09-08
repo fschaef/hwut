@@ -696,3 +696,58 @@ GRAVEYARD Leaving the fix narrow (relative bare imports only) --
           'tui.py' entirely, each showing one incoming edge from its
           own dead sibling; only a walk from real roots finds an
           island.
+
+O-24  A FAULT STANDS IN THE FLOW; THE LOG IS THE FLOW, ASKED FOR  (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   FAULT and NOTE were MARGINALIA: written to a log file that
+          stood by default ('hwut.log'), or, with '--no-log', to
+          stderr. Three consequences. A file nobody asked for was
+          written in every directory a run was called from. A fault
+          was read out of sequence -- after the run, or in another
+          stream racing the flow -- so the node it belonged to was
+          already gone from the eye. And an attempt to make the log a
+          RECORD (an event stream, one file per run, rotated) put a
+          second query surface beside the book and the traces, for a
+          question neither of them was asked.
+
+DECISION  A FAULT STANDS IN THE FLOW, at the moment it happens, where
+          START and DONE stand:
+
+              START test-a.sh one
+              DONE  :           one ............................ [OK]
+              ERROR other/TEST: line 4: unknown key 'ttile'
+
+          'ERROR' is a BLOCK, not a word: bright white and bold on the
+          red ground the '[FAIL]' tag and the closing bar wear, so it
+          is seen at a glance among its neighbours. A NOTE
+          (determination's word, e.g. an empty selection) rides the
+          same way, unblocked. NOTHING IS HELD: a message kept for the
+          end is lost to a signal and read out of sequence; one
+          written in place survives a kill and reads beside the node
+          it belongs to. SILENT has no flow, so there it still goes to
+          'write_error'; QUIET keeps its closing FAULTS block as well.
+
+          '--log <file>' WRITES THE FLOW, plain, to that file --
+          START, DONE, ERROR, the run-time markers, in order.
+          WITHOUT IT NO FILE IS WRITTEN: '--no-log' is retired, and
+          'hwut.log' as a default name is gone. ONE log, OVERWRITTEN
+          at the run's start. IT IS NOT A QUERY SURFACE: what a run
+          COST is 'TEST/hwut-traces.csv' (B-11), what it DECIDED is
+          the book (B-10); the log is for the eye and for a mail
+          attachment.
+
+COST      A long run's flow in a file is large where the terminal
+          would have scrolled. The line language of the first cut
+          ('<t>:<kind>:<content>') stays in 'engine/protocol/line.py'
+          with its suite: it costs nothing standing, and a consumer
+          that wants the stream verbatim has it.
+
+GRAVEYARD 'TMP/session/events.log', the whole stream written per run
+          and rotated -- retired the day after it was built: it
+          answered no question the traces and the book do not answer
+          better, and a record that must be parsed is not what a
+          reader of a log wants. Holding faults for a footer, drained
+          on SIGINT/SIGTERM -- rejected: buffers lose what a kill
+          takes, and the machinery to defend them (handlers,
+          restoration, a drain in every exit path) all disappears
+          when the line is simply written where it happens.

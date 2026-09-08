@@ -107,9 +107,11 @@ printf 'hwut.pype     %s      %s        %s      -\n' \
     "$(status python3 -m vut.services.pype ok.pype a.txt)" \
     "$(status python3 -m vut.services.pype broken.pype a.txt)" \
     "$(status python3 -m vut.services.pype)"
-printf 'hwut.compare  %s      %s        %s      -\n' \
-    "$(status python3 -m vut.services.compare \
+printf 'hwut.diff  %s      %s        %s      -\n' \
+    "$(status python3 -m vut.services.diff \
               a.txt a.txt)" \
-    "$(status python3 -m vut.services.compare \
+    "$(status python3 -m vut.services.diff \
               a.txt b.txt)" \
-    "$(status python3 -m vut.services.compare)"
+    "$(status python3 -m vut.services.diff)"
+
+echo "<hwut-end>"

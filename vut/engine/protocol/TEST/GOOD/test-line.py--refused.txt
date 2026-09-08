@@ -1,0 +1,14 @@
+  'fault other/TEST: text'           -> not '<t>:<kind>:<content>': 'fault other/TEST: text'
+  'x:fault:a: text'                  -> '<t>' is not a number: 'x:fault:a: text'
+  '0.10:nosuch:a: b'                 -> unknown kind 'nosuch': '0.10:nosuch:a: b'
+  '0.10:fault:no-colon-text'         -> a STRING content wants '<keys>: <text>': '0.10:fault:no-colon-text'
+  '0.10:run-ended:a,b'               -> 8 cell(s) wanted, 2 found: '0.10:run-ended:a,b'
+  '0.10:dir-done:{not json'          -> not JSON: Expecting property name enclosed in double quotes: line 1 column 2 (char 1): '0.10:dir-done:{not json'
+  OK  : 'fault other/TEST: text' refused
+  OK  : 'x:fault:a: text' refused
+  OK  : '0.10:nosuch:a: b' refused
+  OK  : '0.10:fault:no-colon-text' refused
+  OK  : '0.10:run-ended:a,b' refused
+  OK  : '0.10:dir-done:{not json' refused
+SUCCESS: a line that is not of the grammar is named
+<hwut-end>

@@ -10,7 +10,7 @@ STDOUT {
         merge required test-two.sh b .stdout
     
     A nominal already stands for the keys above. That is a CHANGE, not a
-    first blessing: use 'hwut.merge', or '--force' to overwrite the pole.
+    first blessing: use 'hwut.accept.interactive', or '--force' to overwrite the pole.
     ==============================================================================
 }
 == --force ==
@@ -25,3 +25,4 @@ STDOUT {
         blessed        test-two.sh b .stdout
     ==============================================================================
 }
+<hwut-end>

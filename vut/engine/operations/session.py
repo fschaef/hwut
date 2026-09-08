@@ -183,7 +183,9 @@ async def run_test(configuration, request=None, bookkeeper=None):
         raise ConfigurationError(
             "no Bookkeeper -- it is made above and handed in")
     store = store_of(configuration, bookkeeper)
-    with store.lock():
+    #  HELD THROUGH THE BOOKKEEPER (B-9): its writes inside see the
+    #  lock held.
+    with store.bookkeeper.held():
         return await run_test_held(configuration, request, store=store)
 
 

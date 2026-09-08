@@ -1,5 +1,5 @@
 STIMULUS  the same streams,
-          hwut.compare subject.txt nominal.txt --plain --numeric 0.01
+          hwut.diff subject.txt nominal.txt --plain --numeric 0.01
 REACTION  stdout {
               
               =[ subject.txt ]==================================== round 1

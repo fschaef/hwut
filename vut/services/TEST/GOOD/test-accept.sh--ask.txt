@@ -43,3 +43,4 @@ STATUS: 0
 GOOD holds (first blessed, second left alone):
     test-ok.sh.txt
     test_ids.dat
+<hwut-end>

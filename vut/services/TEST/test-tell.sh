@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "The report service face: one command packs one test whole."
-#     choices    = ["bare", "coverage", "err", "flags", "pack", "raw"]
+#     choices    = ["bare", "coverage", "err", "flags", "pack", "raw", "wish"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
@@ -46,7 +46,7 @@ TELL="python3 $ROOT/vut/services/tell.py"
 case "$1" in
     --hwut-info)
         echo "The report service face: one command packs one test whole.;"
-        echo "CHOICES: pack, raw, bare, flags, coverage, err;"
+        echo "CHOICES: pack, raw, bare, flags, coverage, err, wish;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -59,13 +59,19 @@ cd "$WORK"
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
 printf 'hwut {\n}\n' > hwut-root.conf
+#  THE TEST DIRECTORY: the exploration knows a test by the 'TEST/'
+#  it stands in and the '@hwut' block it carries (E-52: 'hwut.tell'
+#  reads the wish, so its fixture is a tree the wish can walk).
+mkdir TEST && cd TEST
 
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
     #  THE CANDIDATE STANDS IN 'OUT/', spelt as the nominal is spelt:
     #  'OUT/x--c.txt' against 'GOOD/x--c.txt'. THE SIDECARS STAY on the
     #  store's ground -- they were the channel, not the product.
     mkdir -p GOOD OUT TMP/store
-    printf 'print("alpha")\nprint("beta")\n' > demo.py
+    #  A TEST APPLICATION, as the exploration knows one: the '@hwut'
+    #  block declares it and its choice (E-52: the words are the wish's).
+    printf '# @hwut { title = "Demo"  choices = ["basic"] }\nprint("alpha")\nprint("beta")\n' > demo.py
     printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.txt
     printf 'alpha\nBETA\n'                   > OUT/demo.py--basic.txt
     if [ "$1" != "bare" ]; then
@@ -198,7 +204,35 @@ PYEOF_INNER
     echo "SUCCESS: a failure and its coverage travel together."
     ;;
 
+wish)
+    #  THE WORDS ARE THE WISH'S (E-52): no word packs every case;
+    #  '--glob' narrows; a path word enters the directory.
+    build_fixture bare
+    printf '# @hwut { title = "Demo"  choices = ["basic", "extra"] }\nprint("alpha")\nprint("beta")\n' > demo.py
+    printf 'gamma\n' > GOOD/demo.py--extra.txt
+    printf 'gamma\n' > OUT/demo.py--extra.txt
+    echo "STIMULUS  hwut.tell                      (no word: every case, one pack each)"
+    $TELL > pack.txt 2> err.txt
+    echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
+    grep -E '^(test|choice|verdict):' pack.txt | sed 's/^/              /'
+    echo "STIMULUS  hwut.tell --glob 'demo.py extra'"
+    $TELL --glob 'demo.py extra' > pack.txt 2> err.txt
+    echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
+    grep -E '^(choice|verdict):' pack.txt | sed 's/^/              /'
+    echo "STIMULUS  ( cd .. && hwut.tell TEST/demo.py basic )     (a path word enters)"
+    ( cd .. && $TELL TEST/demo.py basic ) > pack.txt 2> err.txt
+    echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
+    grep -E '^(directory|choice):' pack.txt | sed 's/^/              /'
+    echo "STIMULUS  hwut.tell nothere.py"
+    $TELL nothere.py > pack.txt 2> err.txt
+    echo "REACTION  exit code : $?   stderr : $(cat err.txt)"
+    echo
+    echo "SUCCESS: one selection language on the tell face too."
+    ;;
+
 *)
     echo "unknown choice: '$1'" >&2
     exit 1 ;;
 esac
+
+echo "<hwut-end>"

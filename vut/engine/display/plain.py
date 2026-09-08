@@ -387,13 +387,16 @@ class CPlainFlow(CRunReportReceiver):
             self.last_badge = None
         prefix, prefix_ink = self._prefix(when)
         if not right:
-            self.write("%s%s %s%s" % (prefix_ink, badge_ink, body_ink,
+            self._flow("%s%s %s%s" % (prefix, badge, body, tail),
+                       "%s%s %s%s" % (prefix_ink, badge_ink, body_ink,
                                       tail))
             return
         fill = self.width - len(prefix) - len(badge) - 1 - len(body) \
                - len(right) - 2
         dots = "." * max(fill, 1)
-        self.write("%s%s %s %s %s%s"
+        self._flow("%s%s %s %s %s%s"
+                   % (prefix, badge, body, dots, right, tail),
+                   "%s%s %s %s %s%s"
                    % (prefix_ink, badge_ink, body_ink,
                       self.ink.dim(dots), right_ink, tail))
 
@@ -594,46 +597,49 @@ class CPlainFlow(CRunReportReceiver):
             self._line(when, "DONE ", "DONE ", body, body_ink,
                        "[FAIL]", self.ink.tag_fail("[FAIL]"))
 
-    def _marginal(self, plain_line, ink_line):
-        """
-        RETURN: None. One FAULT or NOTE line placed where marginalia
-                belong: THE LOG, where one stands.
-
-        THESE ARE NOT THE RUN REPORT. A configuration line that did
-        not parse and a wish that selected nothing are true and worth
-        keeping, and neither is what a reader watching a run is
-        watching for; three of them bury the verdict they stand
-        beside.
-
-        WITH NO LOG they go to 'write_error' -- never into the flow,
-        and never nowhere: A FAULT IS NEVER SWALLOWED, and '--no-log'
-        asks for no file, not for silence.
-        """
-        if self.write_log is not None: self.write_log(plain_line)
-        else:                          self.write_error(ink_line)
-
     def on_fault(self, when, directory, text):
-        """RETURN: None. A fault is never swallowed: a line in the
-        log (or, with none, on 'write_error'); QUIET additionally
-        holds it for the tail's FAULTS block."""
+        """
+        RETURN: None. A fault stands IN THE FLOW, where START and DONE
+                stand (O-24): 'ERROR' as a block on red, then the
+                directory and the text, at the moment it happens.
+
+        IT IS NOT HELD. A message kept for the end is lost to a
+        signal and read out of sequence; one written in place
+        survives a kill and reads beside the node it belongs to.
+        QUIET keeps it for the tail's FAULTS block as well; SILENT
+        has no flow, so it goes to 'write_error'.
+        """
+        #  THE BAND FIRST, as for every flow line: a line whose
+        #  directory the last band did not name is unattributable
+        #  (see '_band').
+        #  THE BAND FIRST, and NO DIRECTORY COLUMN: the band is the one
+        #  place a directory is ever said (see '_band').
+        self._band(when, directory)
         prefix, prefix_ink = self._prefix(when)
-        line = "%sFAULT %s: %s" % (prefix_ink,
-                                     self._ink_dir(directory), text)
-        plain = "%sFAULT %s: %s" % (prefix, directory, text)
+        plain = "%sERROR %s" % (prefix, text)
+        line  = "%s%s %s" % (prefix_ink, self.ink.block_error("ERROR"), text)
         self.fault_list.append((directory, plain))
         if self.tier is E_Tier.SILENT: self.write_error(line)
-        else:                          self._marginal(plain, line)
+        else:                          self._flow(plain, line)
+
+    def _flow(self, plain_line, ink_line):
+        """RETURN: None. One line into the flow -- inked for the
+        terminal -- and the SAME line, plain, into the log where one
+        stands ('--log <file>', O-24). The log is the flow without
+        the colour: START, DONE, ERROR, the run-time markers, in
+        order, as they happened."""
+        self.write(ink_line)
+        if self.write_log is not None: self.write_log(plain_line)
 
     def on_report(self, when, directory, text):
-        """RETURN: None. Determination's note, e.g. an empty
-        selection -- marginalia, and so the log's (or, with none,
-        'write_error')."""
+        """RETURN: None. Determination's note, e.g. an empty selection
+        -- a NOTE line in the flow, beside the run it concerns
+        (O-24)."""
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
+        self._band(when, directory)
         prefix, prefix_ink = self._prefix(when)
-        self._marginal("%sNOTE  %s: %s" % (prefix, directory, text),
-                       "%sNOTE  %s: %s" % (prefix_ink,
-                                           self._ink_dir(directory),
-                                           text))
+        self._flow("%sNOTE  %s" % (prefix, text),
+                   "%sNOTE  %s" % (prefix_ink, text))
 
     def on_refused(self, when, directory, node, text):
         """RETURN: None. Not run, by name and reason: held for the
@@ -693,12 +699,12 @@ class CPlainFlow(CRunReportReceiver):
         when      = fields.get("when", "")
         prefix, prefix_ink = self._prefix(when)
         text = "event of kind '%s' does not fit the vocabulary" % kind
-        line = "%sFAULT %s: %s" % (prefix_ink,
-                                     self._ink_dir(directory), text)
-        plain = "%sFAULT %s: %s" % (prefix, directory, text)
+        self._band(when, directory)
+        line = "%s%s %s" % (prefix_ink, self.ink.block_error("ERROR"), text)
+        plain = "%sERROR %s" % (prefix, text)
         self.fault_list.append((directory, plain))
         if self.tier is E_Tier.SILENT: self.write_error(line)
-        else:                          self._marginal(plain, line)
+        else:                          self._flow(plain, line)
 
     # -- the closing blocks ------------------------------------------------
     def _verdict_of(self, key):

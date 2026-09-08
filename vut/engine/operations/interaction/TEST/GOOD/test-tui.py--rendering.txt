@@ -13,7 +13,7 @@ N         2 | value [3.1]
 ============================================================
 
 -- round 1: 1 differing pair(s) --
-[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+[t]ake the subject whole   [e]dit the nominal   [c]ommit the nominal as it stands   [q]uit (cancel) ? 
   OK  : committing without an edit commits the nominal AS IS
   OK  : no edit was made, so ONE generation crossed
   OK  : the compare SETUP is shown -- the rules the verdicts obey

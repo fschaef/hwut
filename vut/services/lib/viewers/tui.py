@@ -39,13 +39,14 @@ DESCRIPTION
 
        TWO WAYS TO MARK, one renderer. The VERDICT marking (the merge
        view) marks what DID differ, by relation. The READING marking
-       ('reading_f', the interpretation view -- 'hwut.compare FILE')
+       ('reading_f', the interpretation view -- 'hwut.diff FILE')
        marks what CAN vary, by tolerance kind:
 
            {numeric}   ~analogy~   <pattern>   !binding!   |nothing|
 
        Same rows, same notes, same banner -- an author moves between
-       'hwut.compare' and 'hwut.merge' without relearning the picture.
+       'hwut.diff' and 'hwut.accept.interactive' without relearning
+       the picture.
 
        TWO COLUMNS ('--side-by-side', '-y'; E-49). One row per aligned
        pair: SUBJECT LEFT, NOMINAL RIGHT -- the direction a merge goes,
@@ -233,8 +234,11 @@ class TuiDisplay(DisplayAdapter):
     # -- the DisplayAdapter sequence -------------------------------------
 
     async def open(self, subject_name):
-        """RETURN: None. The session for one subject begins."""
+        """RETURN: None. The session for one subject begins; the round
+        count starts afresh -- one driver may carry several subjects
+        in turn ('hwut.diff', 'hwut.accept.interactive')."""
         self.subject_name = subject_name
+        self.generation_n = 0
 
     async def present(self, item):
         """RETURN: None. Renders one DOWN item.
@@ -249,7 +253,8 @@ class TuiDisplay(DisplayAdapter):
 
     async def resolve(self, subject_name, subject_text, nominal_text):
         """RETURN: Resolution, what the author decided -- REALIGN with an
-                   edited nominal, COMMIT with the working one, or CANCEL.
+                   edited nominal, COMMIT with the working one, COMMIT
+                   with the subject taken whole ('t'), or CANCEL.
                    None, when this driver displays only ('merge_f' False).
 
         The no-change edit never leaves this method: an author who saved
@@ -261,7 +266,8 @@ class TuiDisplay(DisplayAdapter):
         while True:
             self._write("\n-- round %i: %i differing pair(s) --\n"
                         % (self.generation_n, self.bad_pair_n))
-            self._write("[e]dit the nominal   [c]ommit as accepted   "
+            self._write("[t]ake the subject whole   [e]dit the nominal   "
+                        "[c]ommit the nominal as it stands   "
                         "[q]uit (cancel) ? ")
             try:
                 answer = self.input_f("").strip().lower()
@@ -271,6 +277,12 @@ class TuiDisplay(DisplayAdapter):
             if   answer == "c":
                 return Resolution(intent=E_Intent.COMMIT,
                                   nominal_text=working)
+            elif answer == "t":
+                #  THE SUBJECT WHOLE, left into right: what the run
+                #  printed becomes the nominal, unedited -- the
+                #  interactive accept's plain 'yes' (E-51).
+                return Resolution(intent=E_Intent.COMMIT,
+                                  nominal_text=subject_text)
             elif answer == "q":
                 return Resolution(intent=E_Intent.CANCEL)
             elif answer == "e":

@@ -1,6 +1,6 @@
 STIMULUS  subject.txt: alpha, value 3.140
           nominal.txt: alpha, value 3.141
-          hwut.compare subject.txt nominal.txt --plain
+          hwut.diff subject.txt nominal.txt --plain
 REACTION  stdout {
               
               =[ subject.txt ]==================================== round 1

@@ -3,15 +3,16 @@
 #
 # @hwut {
 #     title      = "The removal faces: a test, or one choice, forgotten."
-#     choices    = ["asking", "choice", "labels", "refused", "stain",
+#     choices    = ["asking", "choice", "labels", "refused", "stain", "words",
 #                   "unknown", "untouched", "whole"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
 #
-# THE 'hwut.remove' AND 'hwut.remove-choice' FACES -- a test, or one
-# choice of it, forgotten.
+# THE 'hwut.remove' FACE -- a test, or one choice of it, forgotten.
+# ONE WORD is a test, TWO are a test and a choice, as on every face
+# (E-53); a third is refused rather than read as another test.
 #
 # whole       a test entire: its nominal, its candidate and every
 #             sidecar, its book entry, its register id. What stood
@@ -34,7 +35,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 REMOVE="python3 -m vut.services.remove"
-REMOVE_CHOICE="python3 -m vut.services.remove_choice"
+
 RUN="python3 -m vut.services.run"
 STABILITY="python3 -m vut.services.stability"
 unset NO_COLOR CI COLUMNS
@@ -42,7 +43,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The removal faces: a test, or one choice, forgotten.;"
-        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused;"
+        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused, words;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -123,7 +124,7 @@ labels)
     echo "THE FILE, BEFORE {"; grep -v "^#" hwut-root.labels \
         | sed 's/^/    /'; echo "}"
     echo "--- one choice forgotten: its entry alone drops"
-    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh one --yes
     echo "THE FILE {"; grep -v "^#" hwut-root.labels \
         | sed 's/^/    /'; echo "}"
     echo "--- the whole test forgotten: the label empties, the file goes"
@@ -144,7 +145,7 @@ choice)
     #  One choice gone; the other stands, nominal and all.
     choice_app
     standing "BEFORE"
-    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh one --yes
     standing "AFTER"
     ;;
 
@@ -208,7 +209,37 @@ refused)
     face $REMOVE --directory=tree/suite/TEST --sideways test-app.sh
     face $REMOVE --directory=nowhere test-app.sh
     face $REMOVE --directory=tree/suite/TEST
-    face $REMOVE_CHOICE --directory=tree/suite/TEST test-app.sh one two
+    face $REMOVE --directory=tree/suite/TEST test-app.sh one two
+    ;;
+
+words)
+    #  THE WORD LAW (E-53): one is a test, two are a test and a
+    #  choice, three are refused -- the reading that once forgot a
+    #  whole test where one choice was meant.
+    #
+    #  WHAT IS SHOWN IS THE LAW, NOT THE STORE: the sidecars a run
+    #  leaves differ between machines (a cadence is measured where the
+    #  platform allows it), so this choice reads the BOOK's and the
+    #  REGISTER's words and the nominals that stand, and never a file
+    #  count.
+    fixture '# @hwut { title = "Two"  choices = ["one", "two"] }' \
+            'echo "line $1"' 'echo "<hwut-end>"'
+    echo "--- two words: the test and ITS CHOICE"
+    $REMOVE --directory=tree/suite/TEST test-app.sh one --yes \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "^  *(book entry|register):" out.txt | sed 's/^/    /'
+    echo "--- the nominals that stand"
+    ls tree/suite/TEST/GOOD | grep -v -e book.csv -e test_ids.dat \
+        | sed 's/^/    /'
+    echo "--- three words: refused, and the way out named"
+    $REMOVE --directory=tree/suite/TEST test-app.sh two extra --yes \
+        > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E "REFUSED|usage:" out.txt | sed 's/^/    /'
+    echo "--- the nominals that stand"
+    ls tree/suite/TEST/GOOD | grep -v -e book.csv -e test_ids.dat \
+        | sed 's/^/    /'
     ;;
 
 *)

@@ -64,7 +64,7 @@ The faces:
                  exist, and this face is the only thing that calls
                  it. Selection is the wish; a positional short form
                  desugars into '--glob'. A standing nominal is a
-                 CHANGE and 'hwut.merge's business: detected, named,
+                 CHANGE and 'hwut.accept.interactive's business: detected, named,
                  left alone unless '--force' says otherwise.
                  STDERR IS NEVER SUBJECT TO TESTING: never promoted;
                  where it spoke, refused until '--stderr-tol' notes
@@ -181,6 +181,17 @@ The faces:
                  is the answer to every per-key question, given in
                  advance and in writing.
 
+    hwut.remove  (remove.py)
+                 '<test>' forgets a test whole, '<test> <choice>' one
+                 choice of it -- the words every face reads (E-53); a
+                 path enters its directory ('_target.py'). Nominals,
+                 candidates and every sidecar, the book entry with its
+                 stain, the register id retired. NOT touched: the
+                 application, its 'hwut.conf', 'OUT/'. Asks first
+                 unless '--yes'. A test not in the book is not an
+                 error. SEVERAL AT ONCE is 'hwut.remove.propose' and
+                 'hwut.remove.apply'.
+
     hwut.remove.propose
                  (lib/remove/propose.py)
                  REMOVES NOTHING. Walks the tree and writes, as a file
@@ -206,7 +217,7 @@ The faces:
     hwut.remove.apply
                  (lib/remove/apply.py)
                  forgets what such a file names, per directory, through
-                 'hwut.remove' and 'hwut.remove-choice'. '--yes' is
+                 'hwut.remove', one target at a time. '--yes' is
                  implicit -- the reading was the consent. Reports as
                  'hwut.accept.apply' does, closing on 'Forgotten n/m'.
 
@@ -260,7 +271,7 @@ The faces:
                  'keep.sh' there, one directory explored -- '..' and
                  absolute paths included -- on every face that takes
                  test words ('entered()': run, plan, wishlist, report,
-                 accept, play, show, remove, remove-choice, rename,
+                 accept, play, show, remove, rename,
                  move, stability; 'cov' by forwarding). A directory
                  part carrying a glob metacharacter is a wish glob
                  with a path member (E-15), over the tree below, and
@@ -269,6 +280,60 @@ The faces:
                  absolute path stands on its own and must lie within
                  it. Two words naming two directories are refused, as
                  is an absolute path outside '--directory'.
+
+    hwut.diff    (diff.py)
+                 'SUBJECT NOMINAL': how two files compare (the VERDICT
+                 view). 'FILE' without an '@hwut' block: how compare
+                 READS it. Otherwise THE STORE FORM: the wish, a test,
+                 a test and a choice, a path word entering its
+                 directory ('_target.py'), '--directory' for one
+                 directory, the tree below the cwd else; every
+                 selected case whose stdout candidate is not
+                 equivalent to its nominal -- compare's engine, the
+                 choice's own setup, judged NOW -- is shown, one
+                 banner each; more than one: a CHECKLIST first
+                 ('_cases.py': a number toggles, Enter goes, 'a' all,
+                 'n' none, 'q' quits); '--all' / '--yes' skip it.
+                 '-y' two columns, subject LEFT, nominal RIGHT
+                 ('viewers/tui.py'); '--width N'. Rendering on stdout;
+                 exit 0 equivalent, 1 shown differing, 2 unusable, 3
+                 no case selected. Display only; the merge is
+                 'hwut.accept.interactive's.
+
+    hwut.accept.interactive   (lib/accept/interactive.py)
+                 the cases a wish selects whose stdout candidate is
+                 not equivalent to its nominal (measured now, as
+                 'hwut.diff'), the checklist, then ONE SESSION PER
+                 CASE on stderr: the view ('-y' two columns), then
+                 [t]ake the subject whole, [e]dit the nominal,
+                 [c]ommit the nominal as it stands, [q]uit. COMMIT IS
+                 THE ACCEPTANCE: 'store.accept', the register, the
+                 book's acceptance note -- 'hwut.accept's three
+                 writes. Refused at commit in 'hwut.accept's words: a
+                 stained choice, a text without the closing token,
+                 stderr that spoke ('--stderr-tol'). The candidate
+                 STAYS as the run left it: a partial acceptance is
+                 visible at the next run. A case without a nominal is
+                 not this face's ('hwut.accept' blesses first).
+
+    hwut.tell    (tell.py)
+                 the pack of a test -- metadata head, source, GOOD,
+                 OUT with the cadence inside, coverage where a record
+                 was harvested -- for handing to another pair of
+                 eyes. The words are the wish's ('_cases.py'): every
+                 selected case is packed in turn, one pack each, walk
+                 order; '-r' verbatim; '--no-coverage'. Stdout; exit 3
+                 where nothing is selected.
+
+    _cases.py    THE STORE-READING BLOCK every such face runs between
+                 its words and its work: entered path, the climb, the
+                 wish with its targets, the labels view, the selection
+                 (one directory under '--directory', the tree
+                 otherwise), the cases grouped by directory;
+                 'differing_keys' measures each case's stdout
+                 candidate against its nominal with compare's
+                 'is_equivalent' under the choice's setup; 'choose' is
+                 the checklist.
 
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language
@@ -335,7 +400,7 @@ shares a package, the dot in the launcher naming the directory:
 Every plain '<name>.py' in this directory IS a service; a module that
 is NOT a service is underscore-prefixed ('_core.py', '_config.py' --
 private helpers of the operations faces). 'show.py' and 'plan.py'
-face the orchestrator; 'compare.py', 'merge.py' and 'tell.py' face
+face the orchestrator; 'diff.py' and 'tell.py' face
 the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.

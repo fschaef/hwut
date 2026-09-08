@@ -123,12 +123,12 @@ def _run(root, *extra):
     RETURN: (E_ExitCode, list[str]), the status and the rendering.
 
     The face's own stderr is swallowed: FAULT and NOTE are the log's
-    ('hwut.log'), and this test judges the SELECTION.
+    (the flow), and this test judges the SELECTION.
     """
     line_list = []
     sink      = io.StringIO()
     with contextlib.redirect_stderr(sink):
-        status = run_main(["--directory=%s" % root, "--plain", "--no-log"]
+        status = run_main(["--directory=%s" % root, "--plain"]
                           + list(extra),
                           write=line_list.append,
                           write_error=lambda _line: None)

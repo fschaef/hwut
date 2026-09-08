@@ -35,7 +35,7 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                               root_conf_directory)
 from   vut.engine.orchestrator.plan.label             import STANDARD_LABEL
 from   vut.services.lib.labels                            import _file
-from   vut.engine.bookkeeper.api               import (TestIdDb,
+from   vut.engine.bookkeeper.api               import (Bookkeeper,
                                                               TestIdFault)
 from   ._exit                                         import E_ExitCode
 from   ._target                                       import entered
@@ -97,18 +97,19 @@ def show_register(directory, write):
     healing is a service, never a guess.
     """
     try:
-        id_db = TestIdDb(directory)
+        bookkeeper = Bookkeeper(directory)
+        roster     = bookkeeper.roster()
     except TestIdFault as fault:
         write("FAULT: %s" % fault)
         return E_ExitCode.FAULT
 
     write("==[ TEST REGISTER ]%s" % ("=" * 59))
-    if len(id_db) == 0:
+    if not roster:
         write("(empty -- an id is born at first accept)")
         return E_ExitCode.OK
 
-    vanished_db = dict(id_db.vanished())
-    for app_id, name, choice_tuple in id_db.app_iterable():
+    vanished_db = dict(bookkeeper.vanished())
+    for app_id, name, choice_tuple in bookkeeper.app_iterable():
         mark = "   VANISHED: no such file" \
                if app_id in vanished_db else ""
         write("[%i] %s%s" % (app_id, name, mark))

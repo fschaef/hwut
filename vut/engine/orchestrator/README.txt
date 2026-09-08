@@ -23,7 +23,7 @@ Bounds:  Running ONE test is test_run's business. This component asks
         explorer/
             explorer.py     the Explorer: which directories hold tests
         services/           rename, rename-choice, remove,
-                            remove-choice, report
+                            report
 
     A file names the class it holds.
 
@@ -128,7 +128,7 @@ never edits the book; healing is a service:
     hwut.rename        app.cpp  new-app.cpp
     hwut.rename-choice app.cpp  old  new
     hwut.remove        app.cpp
-    hwut.remove-choice app.cpp  choice
+    hwut.remove app.cpp choice
 
 What a verdict means is the caller's: under 'run all tests' a
 non-responsive choice is an error; under 'run this test with that

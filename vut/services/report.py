@@ -5,7 +5,7 @@ PURPOSE: THE 'hwut.report' COMMAND LINE -- what the RESULT DATABASES
          hold, rendered for somebody else.
 
 IT READS THE BOOKS, NOT A RUN. A report may be asked of a run that
-happened yesterday, and only 'GOOD/result_db.csv' remembers it. So
+happened yesterday, and only 'GOOD/book.csv' remembers it. So
 this face explores the tree for its SHAPE -- which applications, which
 choices, what they are called -- and asks each directory's book for the
 VERDICT. A case the book has never seen is reported as never run,

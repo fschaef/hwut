@@ -5,8 +5,17 @@ PURPOSE: THE 'hwut.remove' COMMAND LINE -- a test, or one choice of it,
          FORGOTTEN: its nominals, its candidates, its book entry and
          its register id.
 
-    hwut.remove          <test> [<test>...] [--yes] [--directory=<path>]
-    hwut.remove-choice   <test> <choice> [...] [--yes] [--directory=<path>]
+    hwut.remove <test>            [--yes] [--directory=<path>]
+    hwut.remove <test> <choice>   [--yes] [--directory=<path>]
+
+THE WORDS ARE EVERY FACE'S (E-53): one word names a test, two name a
+test and one of its choices, and a word carrying a path enters its
+directory (E-47) -- as on 'hwut.rename', 'hwut.diff', 'hwut.tell'.
+'hwut.remove-choice' is gone: it existed only because this face read a
+LIST OF TESTS, so 'hwut.remove a.sh one' meant two tests where every
+other face means a test and a choice. MANY AT ONCE is
+'hwut.remove.propose' and 'hwut.remove.apply', which is what that pair
+is for.
 
 WHAT REMOVAL IS FOR. A test whose subject has genuinely changed has no
 nominal worth keeping -- the old pole is not the centre of the new
@@ -23,7 +32,7 @@ WHAT IS FORGOTTEN, in this order, each step announced:
     CANDIDATES   'TMP/store/<key>' and every sidecar beside it: the
                  freshness stamp, the raw stream, the cadence, the
                  coverage record.
-    THE BOOK     'GOOD/result_db.csv': the recorded runs, the stderr
+    THE BOOK     'GOOD/book.csv': the recorded runs, the stderr
                  note, and THE STAIN with them.
     THE REGISTER the id, retired -- never reissued, so no later test
                  inherits an old test's coverage history.
@@ -52,16 +61,12 @@ import sys
 
 from   vut.engine.bookkeeper.api   import Bookkeeper
 from   vut.engine.bookkeeper.api import Store
-from   vut.engine.bookkeeper.api   import TestIdDb, TestIdFault
 from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
 from   ._target                           import split_words, TargetError
 
-USAGE = ("usage: hwut.remove <test> [<test>...] [--yes] "
-         "[--directory=<path>]\n"
-         "       hwut.remove-choice <test> <choice> [<test> <choice>...] "
-         "[--yes]\n"
-         "                          [--directory=<path>]")
+USAGE = ("usage: hwut.remove <test> [<choice>] [--yes] "
+         "[--directory=<path>]")
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -148,31 +153,18 @@ def forget(store, test, choice, whole_test_f, write):
             write("    FAULT: %s -- %s" % (_shown(store, path), error))
             good_f = False
 
+    #  THE BOOK AND THE REGISTER IN ONE ACT (B-9): the bookkeeper
+    #  forgets the entry and retires the id under one lock; the face
+    #  reads first, so it can say what stood.
+    registered_f = store.bookkeeper.run_id_of(
+                       test, None if whole_test_f else choice) is not None
     if whole_test_f: gone = store.bookkeeper.remove_test(test)
     else:            gone = store.bookkeeper.remove_choice(test, choice)
     write("    book entry: %s" % ("removed" if gone is not None
                                   else "none stood"))
-
-    id_db = TestIdDb(str(store.directory))
-    try:
-        if whole_test_f:
-            run_id = id_db.run_id_of(test)
-            app_id = None if run_id is None else run_id.app_id
-            if app_id is not None:
-                id_db.remove_app(app_id)
-                write("    register: id retired")
-            else:
-                write("    register: not registered")
-        else:
-            run_id = id_db.run_id_of(test, choice)
-            if run_id is not None:
-                id_db.remove_choice(run_id.app_id, run_id.choice_id)
-                write("    register: choice id retired")
-            else:
-                write("    register: not registered")
-    except TestIdFault as error:
-        write("    FAULT: register -- %s" % error)
-        good_f = False
+    write("    register: %s" % (("id retired" if whole_test_f
+                                 else "choice id retired")
+                                if registered_f else "not registered"))
 
     #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'),
     #  symmetric with the book and the register (E-12): a crash above
@@ -184,16 +176,16 @@ def forget(store, test, choice, whole_test_f, write):
     return good_f
 
 
-def main(argv=None, write=None, read_line=None, choice_form_f=False):
+def main(argv=None, write=None, read_line=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where everything
             named was forgotten or had nothing to forget, FAULT where
             a path stood and could not be unlinked, REFUSED where the
             command line cannot be read, EMPTY where it names nothing.
 
-    'choice_form_f' reads the words in PAIRS -- '<test> <choice>' --
-    which is 'hwut.remove-choice'. Two faces, one module: they differ
-    in what a word means and in nothing else.
+    ONE WORD is a test, TWO are a test and one of its choices (E-53);
+    a third is refused, and several tests are 'hwut.remove.propose'
+    and 'hwut.remove.apply'.
     """
     if write is None:     write     = print
     if read_line is None: read_line = sys.stdin.readline
@@ -202,7 +194,7 @@ def main(argv=None, write=None, read_line=None, choice_form_f=False):
         write(HELP)
         return E_ExitCode.OK
 
-    name        = "hwut.remove-choice" if choice_form_f else "hwut.remove"
+    name        = "hwut.remove"
     directory   = "."
     yes_f       = False
     word_list   = []
@@ -233,18 +225,21 @@ def main(argv=None, write=None, read_line=None, choice_form_f=False):
     if not word_list:
         write("EMPTY: '%s' names nothing to remove" % name)
         return E_ExitCode.EMPTY
-    if choice_form_f and len(word_list) % 2 != 0:
-        write("REFUSED: 'hwut.remove-choice' takes PAIRS -- "
-              "<test> <choice> -- and %d word(s) stand"
+    #  ONE WORD IS A TEST, TWO ARE A TEST AND A CHOICE (E-53). A third
+    #  is refused by name rather than read as another test: that
+    #  reading is what 'hwut.remove-choice' existed to work around,
+    #  and what forgot a whole test where one choice was meant.
+    if len(word_list) > 2:
+        write("REFUSED: 'hwut.remove' takes '<test>' or "
+              "'<test> <choice>' -- %d words stand. For several tests: "
+              "'hwut.remove.propose', then 'hwut.remove.apply'"
               % len(word_list))
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    if choice_form_f:
-        target_list = [(word_list[i], word_list[i + 1])
-                       for i in range(0, len(word_list), 2)]
-    else:
-        target_list = [(word, None) for word in word_list]
+    choice_form_f = len(word_list) == 2
+    target_list   = [(word_list[0],
+                      word_list[1] if choice_form_f else None)]
 
     store = Store(Bookkeeper(directory))
 

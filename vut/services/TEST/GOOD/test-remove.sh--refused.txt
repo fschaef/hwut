@@ -1,16 +1,12 @@
 STATUS: 2
 STDOUT {
     REFUSED: 'hwut.remove' does not take: --sideways
-    usage: hwut.remove <test> [<test>...] [--yes] [--directory=<path>]
-           hwut.remove-choice <test> <choice> [<test> <choice>...] [--yes]
-                              [--directory=<path>]
+    usage: hwut.remove <test> [<choice>] [--yes] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: the directory 'nowhere' does not exist
-    usage: hwut.remove <test> [<test>...] [--yes] [--directory=<path>]
-           hwut.remove-choice <test> <choice> [<test> <choice>...] [--yes]
-                              [--directory=<path>]
+    usage: hwut.remove <test> [<choice>] [--yes] [--directory=<path>]
 }
 STATUS: 3
 STDOUT {
@@ -18,9 +14,7 @@ STDOUT {
 }
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.remove-choice' takes PAIRS -- <test> <choice> -- and 3 word(s) stand
-    usage: hwut.remove <test> [<test>...] [--yes] [--directory=<path>]
-           hwut.remove-choice <test> <choice> [<test> <choice>...] [--yes]
-                              [--directory=<path>]
+    REFUSED: 'hwut.remove' takes '<test>' or '<test> <choice>' -- 3 words stand. For several tests: 'hwut.remove.propose', then 'hwut.remove.apply'
+    usage: hwut.remove <test> [<choice>] [--yes] [--directory=<path>]
 }
 <hwut-end>

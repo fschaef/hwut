@@ -1,0 +1,23 @@
+  0.41:dir-begun:sample text,7
+  0.41:dir-done:{"directory": "sample text", "good": true, "fail_db": {"k": "v", "test-b.sh": "FAILED"}}
+  0.41:fault:"sample text": sample text
+  0.41:frame:sample text,sample text,true
+  0.41:refused:"sample text" "sample text": sample text
+  0.41:report:"sample text": sample text
+  0.41:run-begun:sample text,sample text,sample text
+  0.41:run-ended:sample text,sample text,sample text,true,sample text,sample text,sample text,sample text
+  0.00:tree-begun:{"when": "2026-09-07T13:17:02+00:00", "directory_list": ["a", "b c"]}
+  0.41:tree-done:true,7,7,7
+  OK  : dir-begun: the dict comes back whole; t = 0.41
+  OK  : dir-done: the dict comes back whole; t = 0.41
+  OK  : fault: the dict comes back whole; t = 0.41
+  OK  : frame: the dict comes back whole; t = 0.41
+  OK  : refused: the dict comes back whole; t = 0.41
+  OK  : report: the dict comes back whole; t = 0.41
+  OK  : run-begun: the dict comes back whole; t = 0.41
+  OK  : run-ended: the dict comes back whole; t = 0.41
+  OK  : tree-begun: the dict comes back whole; t = 0.0
+  OK  : tree-done: the dict comes back whole; t = 0.41
+  OK  : 'when' is derived from the origin and t
+SUCCESS: one grammar, 10 kinds, round trip
+<hwut-end>

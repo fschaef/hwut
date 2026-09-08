@@ -31,7 +31,7 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
 
 WHAT ACCEPT DOES NOT DO: it never overwrites a standing nominal unless
 '--force' says so out loud. Where a nominal stands, the candidate is
-not a first blessing but a CHANGE, and a change is 'hwut.merge's
+not a first blessing but a CHANGE, and a change is 'hwut.accept.interactive's
 business -- accept names the key and leaves the pole alone.
 
 EXIT STATUS (E-1, services/_exit.py):
@@ -89,7 +89,7 @@ HELP = """hwut.accept -- PROMOTION: a candidate becomes the nominal
     hwut.accept         blesses every candidate the wish selects that
                         has no nominal yet -- the FIRST pole. Where a
                         nominal already stands, the key is named and
-                        left alone: that is 'hwut.merge's business.
+                        left alone: that is 'hwut.accept.interactive's business.
 
 """ + WISH_HELP + """
 
@@ -874,7 +874,7 @@ def classify(key, force_f):
 
             'bless'   no nominal stands: the first pole
             'merge'   a nominal stands and '--force' was not said:
-                      this is a CHANGE, and 'hwut.merge's business
+                      this is a CHANGE, and 'hwut.accept.interactive's business
             'force'   a nominal stands and '--force' was said
     """
     if   not key.nominal_stands_f: return "bless"
@@ -1135,7 +1135,6 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     two doors of 'exploration/selection.py' differ for accept only in
     HOW MANY TIMES this runs.
     """
-    id_db = TestIdDb(directory)
     store = Store(bookkeeper)
 
     #  SUBJECT PROVISION, THROUGH THE ONE CHANNEL (operations disc-2):
@@ -1285,9 +1284,8 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             skipped_list.append(key)
             continue
         store.accept(key.test, key.choice, key.subject, text)
-        #  THE REGISTER: an id is born at first accept (test_id_db).
-        #  Idempotent -- a standing run returns its standing id.
-        id_db.run_id_of(key.test, key.choice, allocate_f=True)
+        #  THE REGISTER: an id is born at first accept -- issued by
+        #  'note_accept' in the acceptance's own act (B-9).
         #  THE BOOK: the acceptance's instant (E-36), so the three
         #  records of acceptance agree (E-41). Before this line the
         #  face itself accepted outside the book.
@@ -1320,7 +1318,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             write("")
             write("A nominal already stands for the keys above. That is a "
                   "CHANGE, not a")
-            write("first blessing: use 'hwut.merge', or '--force' to "
+            write("first blessing: use 'hwut.accept.interactive', or '--force' to "
                   "overwrite the pole.")
         write("=" * 78)
 

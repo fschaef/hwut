@@ -22,7 +22,7 @@ N         9 | only [there]
 ============================================================
 
 -- round 1: 5 differing pair(s) --
-[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+[t]ake the subject whole   [e]dit the nominal   [c]ommit the nominal as it stands   [q]uit (cancel) ? 
   OK  : a numeric WITHIN tolerance is tolerated, and marked so
   FAIL: ... and the MEASUREMENT says by how much, against what
   OK  : a numeric OUT of tolerance is a mismatch, on both sides

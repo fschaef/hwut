@@ -1,4 +1,4 @@
-STIMULUS  hwut.compare subject.txt --plain      (one argument)
+STIMULUS  hwut.diff subject.txt --plain      (one argument)
 REACTION  stdout {
               
               =[ subject.txt ]==================================== round 1

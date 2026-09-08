@@ -108,10 +108,10 @@ def fixture():
 
 def _run(root):
     """RETURN: (E_ExitCode, list[str], list[str]), the status, the
-    rendering and the FAULT/NOTE lines ('--no-log': on write_error)."""
+    rendering and the FAULT/NOTE lines (SILENT tier: on write_error)."""
     line_list  = []
     error_list = []
-    status = run_main(["--directory=%s" % root, "--plain", "--no-log"],
+    status = run_main(["--directory=%s" % root, "--plain"],
                       write=line_list.append, write_error=error_list.append)
     return status, line_list, error_list
 
@@ -177,7 +177,8 @@ def test_registered():
     root, test = fixture()
     before = TestIdDb(test).run_id_of("test-old.py")
     status, line_list, error_list = _run(root)
-    note = [l for l in error_list if "REGISTERED test-old.py" in l]
+    #  A NOTE STANDS IN THE FLOW now (O-24), not on write_error.
+    note = [l for l in line_list if "REGISTERED test-old.py" in l]
     for line in note: print("  " + line.split("REGISTERED", 1)[1].strip()
                              .replace("test-old.py", "REGISTERED test-old.py", 1))
     entry = Bookkeeper(test).result("test-old.py", None)

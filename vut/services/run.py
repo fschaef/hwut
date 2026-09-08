@@ -104,7 +104,7 @@ EXECUTION
     --directory=<path>  the root to run below; the current one else
     --no-store          the store knob: no subject is recorded under
                         'TMP/store/'. The verdict still enters THE
-                        BOOK ('GOOD/result_db.csv'): what the
+                        BOOK ('GOOD/book.csv'): what the
                         software IS is recorded whether or not what
                         it printed is kept
     --timing            keep the run's cadence beside each candidate
@@ -347,22 +347,21 @@ def _main(argv, write, write_error, captured_f, demand=None,
     #  worth. Tier, ink and width are decided there, once.
     tty_f = (not captured_f) and sys.stdout.isatty()
 
-    #  THE LOG IS THE FACE'S FILE, opened here and closed here.
-    #  Display says a log stands and what belongs in it; a renderer
-    #  that opened files would hold a resource it cannot promise to
-    #  release. A log that cannot be opened is a fault about the log,
-    #  not a reason to lose the run: the marginalia fall back to
-    #  stderr, which is where '--no-log' puts them anyway.
+    #  THE LOG IS THE FACE'S FILE, opened here and closed here, and
+    #  only where '--log <file>' named one (O-24). Display says what
+    #  belongs in it; a renderer that opened files would hold a
+    #  resource it cannot promise to release. A log that cannot be
+    #  opened is a fault about the log, not a reason to lose the run:
+    #  the flow goes on without it.
     log_file = None
-    if not rendering_wish.no_log_f:
+    if rendering_wish.log_path:
         try:
             log_file = open(rendering_wish.log_path, "w",
                             encoding="utf-8")
         except OSError as error:
             write_error("FAULT: the log '%s' cannot be written (%s); "
-                        "faults and notes go to stderr"
+                        "the run goes on without it"
                         % (rendering_wish.log_path, error))
-            log_file = None
     write_log = None if log_file is None \
                 else lambda line: print(line, file=log_file)
 

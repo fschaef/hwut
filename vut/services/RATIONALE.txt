@@ -2224,3 +2224,167 @@ GRAVEYARD 'prompt_toolkit' for a scrolling, keyed view -- deferred, not
           is the step after this one, if the merge wants keys.
           'difflib' side-by-side -- rejected: it would invent an
           alignment the verdict was not about.
+
+----------------------------------------------------------------------------
+E-50  'hwut.diff' -- THE FACE RENAMED; THE STORE FORM; THE CHECKLIST (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.compare' wore the component's name on a face whose
+          every word was diff's: exit 0 equivalent, 1 differing, "the
+          diff convention". Neither it nor 'hwut.merge' took the wish
+          every other store-reading face takes: 'hwut.merge' merged ONE
+          case named by '--choice'; 'hwut.compare' compared two files
+          only. The fallout of a run -- seven differing cases in three
+          directories -- had no face that showed them, or let an
+          author say "these three, not that one".
+
+DECISION  THE FACE IS 'hwut.diff' ('services/diff.py', 'bin/hwut.diff';
+          the suite 'test-diff.sh', carried by 'hwut.rename' itself).
+          A face is a spelling; the component keeps its name.
+
+          THE STORE FORM, ON BOTH FACES: the wish, the short form, a
+          path word entering (E-47), '--directory' -- the one
+          selection language, through one block every store-reading
+          face runs ('services/_cases.py': 'select'). WHICH CASES
+          DIFFER IS MEASURED NOW by compare's 'is_equivalent' under the
+          choice's own setup ('differing_keys'), never read off the
+          book: a nominal edited by hand differs though the book says
+          the case passed. A case never run, or never accepted, is not
+          a difference; it is counted and said.
+
+          THE CHECKLIST, where more than one case differs, in the
+          terminal, no dependency ('choose'): every case marked, a
+          number toggles, Enter goes, 'a' all, 'n' none, 'q' none;
+          '--all' and '--yes' skip it. The list is the
+          'hwut.accept.propose' idea -- a list, marks, the reading is
+          the consent -- spoken where "show me" wants it, on the
+          spot.
+
+          WHICH FORM: two words naming existing files are the file
+          form; one word naming an existing file WITHOUT an '@hwut'
+          block is the reading; anything else is the store's. A test
+          application is a file too -- its block is what tells the
+          two apart.
+
+          'hwut.merge' WITH SEVERAL CASES needs '-o DIR': each
+          committed nominal lands there under the store's key
+          ('<test>--<choice>.txt'); GOOD/ is untouched, as it always
+          was -- 'hwut.accept' is the one way a nominal comes to
+          exist. The round count restarts per subject, so each
+          banner reads 'round 1'.
+
+COST      Every RATIONALE entry before this one says 'hwut.compare';
+          they stand as written. One exploration per store-form call.
+          '--choice' survives on 'hwut.merge' as a second spelling of
+          the second bare word.
+
+GRAVEYARD A wish without a checklist, every differing case in order
+          -- rejected: a narrower wish is the only way to say "not
+          that one", and after a long run that is exactly what the
+          author wants to say. The checklist as an editable proposal
+          file -- rejected for this face: a round trip through an
+          editor to look at a diff is the wrong weight for "show me".
+          Merged nominals landing in GOOD/ by 'hwut.merge' -- rejected,
+          as before: one door for a nominal, and it is accept's.
+
+----------------------------------------------------------------------------
+E-51  'hwut.accept.interactive'; 'hwut.merge' RETIRED              (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.merge' produced a merged nominal and had nowhere to put
+          it: '-o' a file, or stdout, and the tree's law that a
+          nominal comes to exist only through 'hwut.accept'. So the
+          merged text sat outside GOOD/ waiting for a hand-copy the
+          law forbids. The morning's store form on 'hwut.merge' (E-50)
+          made that visible: several merged files in a directory, and
+          no face to walk them in.
+
+DECISION  THE MERGE IS AN ACCEPT MADE BY HAND. 'hwut.accept.interactive'
+          ('services/lib/accept/interactive.py', the accept package's
+          third face beside 'propose' and 'apply') takes the wish, the
+          checklist and the per-case session that E-50 built, and a
+          COMMIT is the acceptance: 'store.accept', the register, the
+          book's note -- 'hwut.accept's three writes (E-41). It is
+          refused at commit in 'hwut.accept's own words: a stained
+          choice, a text without the closing token, stderr that
+          spoke. THE CANDIDATE STAYS as the run left it: a partial
+          acceptance -- some lines taken, some not -- is a candidate
+          that still differs, and the next run says so; that is the
+          story of the partial accept told truthfully, not hidden by
+          rewriting the evidence. The session gains 't': take the
+          subject whole, left into right -- the interactive accept's
+          plain 'yes'.
+
+          'hwut.merge' IS RETIRED, whole: the two-file form too. Its
+          suite was forgotten through 'hwut.remove'; 'merge_session'
+          (operations/interaction/port.py) stays, it is the engine's.
+          'hwut.accept' names the interactive face where it used to
+          name the merge.
+
+COST      A face in the accept package that renders on stderr, unlike
+          its two siblings. The candidate can lie against the nominal
+          after an interactive accept until the next run.
+
+GRAVEYARD Rewriting the candidate to the accepted text -- rejected:
+          it hides a partial accept behind a green run. 'hwut.merge'
+          writing the candidate for 'hwut.accept' to bless -- rejected
+          for the same reason, and for the two doors. Keeping
+          'hwut.merge' as a two-file tool -- retired instead: nothing
+          in the tree needed it once the accept took the session.
+
+----------------------------------------------------------------------------
+E-52  'hwut.tell' TAKES THE WISH                                  (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.tell' read one application word with 'os.path.dirname'
+          -- the last face with its own path rule (E-47 COST) and the
+          last store-reading face without the wish: a report of the
+          three cases a run broke took three commands.
+
+DECISION  The words are every store-reading face's ('services/
+          _cases.py'): a test, a test and a choice, a path entering
+          its directory (E-47), '--glob', '--label', '--fail',
+          '--directory'. Every selected case is packed in turn, walk
+          order, each pack whole with its own head; no case is EMPTY.
+          The face resolves nothing by hand: the exploration finds the
+          test, the bookkeeper names its records, as before.
+
+COST      The pack's fixture became a real tree ('TEST/', an '@hwut'
+          block), so the exploration can find it; its nominals moved
+          by 'directory: TEST', the 'provision:' line that now stands,
+          and the block's bytes in the source section.
+
+GRAVEYARD Keeping the bare-application form beside the wish -- rejected:
+          it IS the wish's short form, once the directory is entered.
+
+----------------------------------------------------------------------------
+E-53  'hwut.remove' READS THE WORDS EVERY FACE READS               (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.remove <test> [<test>...]' read a LIST OF TESTS, and
+          'hwut.remove-choice <test> <choice> [...]' read PAIRS. Every
+          other face -- 'hwut.rename', 'hwut.diff', 'hwut.tell',
+          'hwut.accept.interactive' -- reads one word as a test and
+          two as a test and one of its choices (E-46, E-47, E-50).
+          E-46 exempted this pair explicitly, and the exemption bit:
+          'hwut.remove test-line.py log', meant as one choice, forgot
+          THE WHOLE TEST and a test named 'log' that did not exist.
+          Three blessed nominals went with it. The face did what it
+          says; the spelling was the trap.
+
+DECISION  ONE WORD IS A TEST, TWO ARE A TEST AND A CHOICE, on this
+          face as on every other. A THIRD IS REFUSED by name, and the
+          refusal names the way out. 'hwut.remove-choice' is GONE --
+          its module, its launcher, its mentions -- as
+          'hwut.rename-choice' went with E-46: it existed only to
+          work around this face's own reading.
+
+          SEVERAL AT ONCE is 'hwut.remove.propose' and
+          'hwut.remove.apply': a file to read, edit and hand back,
+          which is what that pair is for and what a removal of many
+          things should always have been. 'apply' calls this face one
+          target at a time.
+
+COST      'hwut.remove a.sh b.sh c.sh' stops working: a wish
+          ('--glob') or the propose/apply pair takes its place.
+
+GRAVEYARD Keeping the list form and refusing only where a second word
+          names a standing choice -- rejected: a spelling whose
+          meaning depends on what happens to stand in the book is
+          worse than one that is always read the same way.

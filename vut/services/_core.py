@@ -2,8 +2,8 @@
 ______________________________________________________________________________
 
 PURPOSE
-       WHAT THE SERVICE FACES SHARE -- 'hwut.merge' (merge.py) and
-       'hwut.compare' (compare.py) speak one argument language.
+       WHAT THE SERVICE FACES SHARE -- 'hwut.accept.interactive' (lib/accept/interactive.py) and
+       'hwut.diff' (diff.py) speak one argument language.
 
 DESCRIPTION
        The two mini-apps are HOMOGENEOUS by design: same stream

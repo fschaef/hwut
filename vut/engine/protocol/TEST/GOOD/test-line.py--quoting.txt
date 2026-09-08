@@ -1,0 +1,12 @@
+  0.41:run-ended:a/TEST,x y,TEST,false,test-failed,"say ""no""","tail, with ] inside",
+  0.41:refused:suite/TEST "test-c.sh two": no nominal: stands, really
+  0.41:dir-done:{"directory": "s", "good": true, "fail_db": {}}
+  OK  : 't' first, two decimals, then the kind
+  OK  : a CSV cell with a quote is quoted the csv way
+  OK  : an absent optional is an empty cell, and reads back absent
+  OK  : the cells read back typed
+  OK  : a STRING key with a space is double-quoted
+  OK  : the text runs verbatim to the end, colons and commas and all
+  OK  : a JSON kind carries its dict, empty included
+SUCCESS: three forms, one line shape, lossless
+<hwut-end>

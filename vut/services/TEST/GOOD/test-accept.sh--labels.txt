@@ -38,3 +38,4 @@ STDOUT {
     NOTE: nothing to accept -- the selection holds no recorded candidate
 }
 GOOD holds:
+<hwut-end>
