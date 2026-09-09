@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.show: the configuration the framework read"
+#     title      = "hwut.config.show: the configuration the framework read"
 #     choices    = ["directory", "faults", "file", "help", "labels",
 #                   "refused"]
 #     interactive = true
@@ -10,7 +10,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.show' FACE -- the configuration the framework read.
+PURPOSE: THE 'hwut.config.show' FACE -- the configuration the framework read.
 
 The face is driven through 'main(argv, write)', so what is shown is the
 face itself and no process stands between. The directory is stated with
@@ -34,7 +34,7 @@ refused    an unknown option; two source files: refused at the door,
 
 help       '--help' answers the full documentation and status 0.
 
-labels     'hwut.show' must say why a test did not run (disc-8
+labels     'hwut.config.show' must say why a test did not run (disc-8
            section 6): the '==[ LABELS ]' section names the entries
            that concern what is shown, THE SILENT ONES MARKED; a bare
            directory without a boundary shows no section; a broken
@@ -47,7 +47,7 @@ import sys
 import tempfile
 from config import HwutRunner                                # noqa: F401
 
-from vut.services.show import main
+from vut.services.lib.config.show import main
 
 
 FILE_DB = {
@@ -83,7 +83,7 @@ def call(directory, argument_list):
     RETURN: None. Shows the command line as an author writes it, the
             lines the face writes, and the exit status.
     """
-    print("$ hwut.show %s" % " ".join(argument_list))
+    print("$ hwut.config.show %s" % " ".join(argument_list))
     line_list = []
     status    = main(argument_list + ["--directory=%s" % directory],
                      line_list.append)
@@ -170,7 +170,7 @@ def test_labels():
         #  The fault names the file by its REAL path -- right for a
         #  person, machine-chosen for a GOOD, so it is masked here,
         #  as this suite's own purpose demands.
-        print("$ hwut.show test-b.py --no-default")
+        print("$ hwut.config.show test-b.py --no-default")
         line_list = []
         status = main(["test-b.py", "--no-default",
                        "--directory=%s" % directory],
@@ -196,7 +196,7 @@ def test_help():
 
 if __name__ == "__main__":
     HwutRunner(sys.argv,
-               "hwut.show: the configuration the framework read;", {
+               "hwut.config.show: the configuration the framework read;", {
         "file":      test_file,
         "directory": test_directory,
         "faults":    test_faults,

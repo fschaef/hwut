@@ -1,14 +1,14 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.show' COMMAND LINE -- what the framework READ. It
+PURPOSE: THE 'hwut.config.show' COMMAND LINE -- what the framework READ. It
          checks the syntax, resolves the defaults, and prints the
          complete configuration as a tree (R-29, P-16); what an author
          wrote he can read himself.
 
-    hwut.show                   the whole directory: 'hwut.conf' first,
+    hwut.config.show                   the whole directory: 'hwut.conf' first,
                                 then every test application
-    hwut.show <source file>     one file's specification
+    hwut.config.show <source file>     one file's specification
     --no-default                drop every value nobody stated
     --provenance                name the place of every stated value
     --gnu                       name it as 'file:line:column'
@@ -37,20 +37,20 @@ from   vut.engine.orchestrator.plan.label             import STANDARD_LABEL
 from   vut.services.lib.labels                            import _file
 from   vut.engine.bookkeeper.api               import (Bookkeeper,
                                                               TestIdFault)
-from   ._exit                                         import E_ExitCode
-from   ._target                                       import entered
+from   ..._exit                                       import E_ExitCode
+from   ..._target                                     import entered
 
 
-USAGE = "usage: hwut.show [<source file>] [--no-default] " \
+USAGE = "usage: hwut.config.show [<source file>] [--no-default] " \
         "[--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | " \
-        "hwut.show --root-conf-template"
+        "hwut.config.show --root-conf-template"
 
-HELP = """hwut.show -- the configuration the framework READ
+HELP = """hwut.config.show -- the configuration the framework READ
 
-    hwut.show                   the whole directory: 'hwut.conf' first,
+    hwut.config.show                   the whole directory: 'hwut.conf' first,
                                 then every test application as a tree
-    hwut.show <source file>     one file's specification
-    hwut.show --show-ids        the TEST REGISTER: every registered
+    hwut.config.show <source file>     one file's specification
+    hwut.config.show --show-ids        the TEST REGISTER: every registered
                                 application and choice with its id;
                                 a registered application whose file
                                 is ABSENT is marked VANISHED
@@ -132,7 +132,7 @@ def labels_line_tuple(directory, name):
             [1] str | None, the fault where 'hwut-root.labels' cannot
                 be read; the section is then the fault's alone.
 
-    NO BOUNDARY, NO SECTION: 'hwut.show' works on a bare directory,
+    NO BOUNDARY, NO SECTION: 'hwut.config.show' works on a bare directory,
     and a tree without a root conf can hold no labels file.
     """
     try:
@@ -213,7 +213,7 @@ def main(argv=None, write=None):
     if found is None: return E_ExitCode.REFUSED
     directory, name_list = found
     if len(name_list) > 1:
-        write("REFUSED: %d source files named; 'hwut.show' reads one, "
+        write("REFUSED: %d source files named; 'hwut.config.show' reads one, "
               "or the directory" % len(name_list))
         write(USAGE)
         return E_ExitCode.REFUSED
@@ -250,4 +250,6 @@ def main(argv=None, write=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ..._exit import guarded
+    sys.exit(guarded("hwut.config.show", main, sys.argv[1:]))

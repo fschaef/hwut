@@ -39,8 +39,8 @@ case "$1" in
         exit 0 ;;
 esac
 
-FACE_LIST="show plan run play accept accept.propose accept.apply
-           accept.interactive target cov diff tell stability wishlist
+FACE_LIST="config.show plan run play accept accept.propose accept.apply
+           accept.interactive target cov diff report.details stability wishlist
            report remove remove.propose remove.apply
            rename move sanitize pype
            labels.create labels.add labels.remove labels.list labels.query"
@@ -74,11 +74,11 @@ if [ "$1" == "path" ]; then
 printf 'hwut {\n}\n' > hwut-root.conf
     export PATH="$BIN:$PATH"
 
-    by_path=$("$BIN/hwut.show" --help 2>&1)
-    by_PATH=$(hwut.show --help 2>&1)
+    by_path=$("$BIN/hwut.config.show" --help 2>&1)
+    by_PATH=$(hwut.config.show --help 2>&1)
     [ "$by_path" == "$by_PATH" ] \
-        && echo "hwut.show: PATH form == by-path form: True" \
-        || echo "hwut.show: PATH form == by-path form: FALSE"
+        && echo "hwut.config.show: PATH form == by-path form: True" \
+        || echo "hwut.config.show: PATH form == by-path form: FALSE"
 
     printf '#! /usr/bin/env hwut.pype\non: "x" => flush;\non: <else> => ignore;\n' \
         > filter.pype

@@ -28,7 +28,7 @@ CANNOT be proposed goes to STDOUT, one line each:
 
     DIFF(<dir>/<test-app> <choice>) > <n> lines
 
-Those you open yourself, with 'hwut.tell'. A proposal one must strip
+Those you open yourself, with 'hwut.report.details'. A proposal one must strip
 before use is not a proposal, which is why the two never mix.
 
 -------------------------------------------------------------------
@@ -94,7 +94,7 @@ is not a pole. Fix the run; then judge what it produces.
                      by name.
     A DIFFERENCE     it is a real difference the engine found, but
     OVER <n>         too large to take on trust. Named on stdout for
-                     'hwut.tell'.
+                     'hwut.report.details'.
     NO DIFFERENCE    the compare engine holds the two equivalent under
                      THIS choice's own tolerances -- a numeric inside
                      its ratio, an eq-pattern, an ignored region.
@@ -221,4 +221,6 @@ def main(argv=None, write=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ..._exit import guarded
+    sys.exit(guarded("hwut.accept.propose", main))

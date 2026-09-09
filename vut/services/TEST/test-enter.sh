@@ -18,7 +18,7 @@
 # enter      the same test asked for by a path below, by a path with
 #            '..', by an absolute path, and relative to '--directory'
 #            -- four spellings, one selection,
-#            on 'hwut.wishlist' and 'hwut.run'; 'hwut.show' by path.
+#            on 'hwut.wishlist' and 'hwut.run'; 'hwut.config.show' by path.
 #            A glob in the DIRECTORY part is not a path: it stays a
 #            wish over the tree below.
 # refused    two words naming two directories; an absolute path
@@ -30,7 +30,7 @@ ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 WISHLIST="python3 -m vut.services.wishlist"
 RUN="python3 -m vut.services.run"
-SHOW="python3 -m vut.services.show"
+SHOW="python3 -m vut.services.lib.config.show"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
@@ -87,7 +87,7 @@ enter)
       && $RUN ../messaging/queue/TEST/test-a.sh one > out.txt 2> err.txt;
       echo "STATUS: $?"; grep -E '\[OK\]|\[FAIL\]|RESULTS' out.txt \
         | sed 's/, [0-9.]* \[sec\]//; s/^/    /' )
-    echo "--- 'hwut.show' by a path: the test, from its own directory"
+    echo "--- 'hwut.config.show' by a path: the test, from its own directory"
     ( cd tree && $SHOW messaging/net/TEST/test-b.sh > out.txt 2> err.txt;
       echo "STATUS: $?"; head -2 out.txt | sed 's/^/    /' )
     echo "--- a glob in the DIRECTORY part is not a path: a wish over the tree below"

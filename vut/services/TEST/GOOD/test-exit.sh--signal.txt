@@ -1,0 +1,17 @@
+STIMULUS  a run under way, then SIGTERM
+REACTION  exit code : 143    (the shell's 128 + 15)
+          stderr {
+              hwut.run ended forcefully.
+          }
+          tracebacks in stderr : 0
+
+STIMULUS  the guard itself, on Ctrl-C's own exception
+          exit code : 130
+          stderr {
+              hwut.run ended forcefully.
+          }
+
+One line names the face and the ending; the shell reads the
+signal's own code; nothing of the innards is shown.
+SUCCESS: a signal ends a face, it does not crash it.
+<hwut-end>

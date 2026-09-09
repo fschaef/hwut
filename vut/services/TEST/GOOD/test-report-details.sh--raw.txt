@@ -1,4 +1,4 @@
-STIMULUS  hwut.tell demo.py basic          (fixture WITHOUT sidecars)
+STIMULUS  hwut.report.details demo.py basic --raw    (the files verbatim)
 REACTION  exit code : 0   stderr : 0 bytes
           the pack {
               ==[ HWUT TEST REPORT ]========================================================
@@ -11,9 +11,11 @@ REACTION  exit code : 0   stderr : 0 bytes
               files:
                 demo.py                                      77 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
+                TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
                 OUT/demo.py--basic.txt                       11 bytes  (out stdout)
+                TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
               coverage: none recorded
-              cadence: none recorded
+              cadence: sections verbatim
               
               ==[ SOURCE: demo.py ]===========================================================
               # @hwut { title = "Demo"  choices = ["basic"] }
@@ -24,12 +26,19 @@ REACTION  exit code : 0   stderr : 0 bytes
               alpha
               beta
               
+              ==[ OUT RAW STDOUT: TMP/store/demo.py--basic.stdout.raw ]=======================
+              raw alpha
+              raw BETA
+              
               ==[ OUT STDOUT: OUT/demo.py--basic.txt ]========================================
               alpha
               BETA
+              
+              ==[ TIMING (verbatim): TMP/store/demo.py--basic.stdout.times ]==================
+              {"unit": "second", "delta_list": [0.0121, 1.5034]}
           }
 
-Absence is reported, never guessed: no cadence recorded is
-SAID, and no section pretends otherwise.
-SUCCESS: what is not there is spoken, not invented.
+No prefixes woven in: the raw sidecar is its own section and
+the cadence sidecar rides verbatim, as it was written.
+SUCCESS: --raw shows what is on disk, not an interpretation.
 <hwut-end>

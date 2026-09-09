@@ -281,4 +281,6 @@ def main(argv=None, write=None, write_bytes=None, demand=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ._exit import guarded
+    sys.exit(guarded("hwut.cov", main, sys.argv[1:]))

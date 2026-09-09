@@ -14,7 +14,7 @@
 # another pair of eyes, human or AI, without them asking for file
 # after file:
 #
-#     hwut.tell APPLICATION [CHOICE] [-r|--raw] [--no-coverage]
+#     hwut.report.details APPLICATION [CHOICE] [-r|--raw] [--no-coverage]
 #
 #     default       the pack, cadence written INTO the stream as
 #                   '<delta-t>:<line>' prefixes; raw sidecars stay out;
@@ -41,7 +41,7 @@
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
-TELL="python3 $ROOT/vut/services/tell.py"
+TELL="python3 -m vut.services.lib.report.details"
 
 case "$1" in
     --hwut-info)
@@ -60,7 +60,7 @@ cd "$WORK"
 #  fixture states its own. Empty says only 'the tree ends here'.
 printf 'hwut {\n}\n' > hwut-root.conf
 #  THE TEST DIRECTORY: the exploration knows a test by the 'TEST/'
-#  it stands in and the '@hwut' block it carries (E-52: 'hwut.tell'
+#  it stands in and the '@hwut' block it carries (E-52: 'hwut.report.details'
 #  reads the wish, so its fixture is a tree the wish can walk).
 mkdir TEST && cd TEST
 
@@ -94,7 +94,7 @@ case "$1" in
 
 pack)
     build_fixture
-    echo "STIMULUS  hwut.tell demo.py basic          (the default pack)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (the default pack)"
     run_report demo.py basic
     echo
     echo "The cadence rides INSIDE the stream, per line; the raw"
@@ -105,7 +105,7 @@ pack)
 
 raw)
     build_fixture
-    echo "STIMULUS  hwut.tell demo.py basic --raw    (the files verbatim)"
+    echo "STIMULUS  hwut.report.details demo.py basic --raw    (the files verbatim)"
     run_report demo.py basic --raw
     echo
     echo "No prefixes woven in: the raw sidecar is its own section and"
@@ -115,7 +115,7 @@ raw)
 
 bare)
     build_fixture bare
-    echo "STIMULUS  hwut.tell demo.py basic          (fixture WITHOUT sidecars)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (fixture WITHOUT sidecars)"
     run_report demo.py basic
     echo
     echo "Absence is reported, never guessed: no cadence recorded is"
@@ -128,7 +128,7 @@ err)
     #  stderr candidate beside it. The DIFFERENCE between the two
     #  reactions is the whole of the claim.
     build_fixture
-    echo "STIMULUS  hwut.tell demo.py basic          (NO error witness)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (NO error witness)"
     run_report demo.py basic
     echo
     echo "STIMULUS  the same, after a run wrote to stderr:"
@@ -137,7 +137,7 @@ err)
                                 > OUT/demo--basic.err
     echo "          OUT/demo--basic.err written"
     echo
-    echo "STIMULUS  hwut.tell demo.py basic          (WITH the witness)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (WITH the witness)"
     run_report demo.py basic
     echo
     echo "'OUT/' WITNESSES THE LAST RUN. Where that run wrote to"
@@ -196,7 +196,7 @@ book = {"demo": {"configuration": {}, "choices": {"basic": {
 os.makedirs("GOOD", exist_ok=True)
 json.dump(book, open("GOOD/result_db.json", "w"))
 PYEOF_INNER
-    echo "STIMULUS  hwut.tell demo.py basic          (a HARVESTED run)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (a HARVESTED run)"
     run_report demo.py basic
     echo
     echo "The report says WHAT broke; the coverage says WHICH LINES the"
@@ -211,19 +211,19 @@ wish)
     printf '# @hwut { title = "Demo"  choices = ["basic", "extra"] }\nprint("alpha")\nprint("beta")\n' > demo.py
     printf 'gamma\n' > GOOD/demo.py--extra.txt
     printf 'gamma\n' > OUT/demo.py--extra.txt
-    echo "STIMULUS  hwut.tell                      (no word: every case, one pack each)"
+    echo "STIMULUS  hwut.report.details                      (no word: every case, one pack each)"
     $TELL > pack.txt 2> err.txt
     echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
     grep -E '^(test|choice|verdict):' pack.txt | sed 's/^/              /'
-    echo "STIMULUS  hwut.tell --glob 'demo.py extra'"
+    echo "STIMULUS  hwut.report.details --glob 'demo.py extra'"
     $TELL --glob 'demo.py extra' > pack.txt 2> err.txt
     echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
     grep -E '^(choice|verdict):' pack.txt | sed 's/^/              /'
-    echo "STIMULUS  ( cd .. && hwut.tell TEST/demo.py basic )     (a path word enters)"
+    echo "STIMULUS  ( cd .. && hwut.report.details TEST/demo.py basic )     (a path word enters)"
     ( cd .. && $TELL TEST/demo.py basic ) > pack.txt 2> err.txt
     echo "REACTION  exit code : $?   packs : $(grep -c 'HWUT TEST REPORT' pack.txt)"
     grep -E '^(directory|choice):' pack.txt | sed 's/^/              /'
-    echo "STIMULUS  hwut.tell nothere.py"
+    echo "STIMULUS  hwut.report.details nothere.py"
     $TELL nothere.py > pack.txt 2> err.txt
     echo "REACTION  exit code : $?   stderr : $(cat err.txt)"
     echo

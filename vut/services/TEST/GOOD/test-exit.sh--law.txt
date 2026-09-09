@@ -4,11 +4,13 @@ THE ENUM (services/_exit.py):
     REFUSED  = 2
     EMPTY    = 3
     SIGPIPE  = 141
+    SIGINT   = 130
+    SIGTERM  = 143
 
-FACE         OK  FAULT  REFUSED  EMPTY
-hwut.show     0      1        2      -
-hwut.plan     0      1        2      3
-hwut.run      1      1        2      1
-hwut.pype     0      1        2      -
-hwut.diff  0      1        2      -
+FACE                OK  FAULT  REFUSED  EMPTY
+hwut.config.show    0      1        2      -
+hwut.plan           0      1        2      3
+hwut.run            1      1        2      1
+hwut.pype           0      1        2      -
+hwut.diff           0      1        0      -
 <hwut-end>

@@ -2388,3 +2388,92 @@ GRAVEYARD Keeping the list form and refusing only where a second word
           names a standing choice -- rejected: a spelling whose
           meaning depends on what happens to stand in the book is
           worse than one that is always read the same way.
+
+----------------------------------------------------------------------------
+E-54  'hwut.config.show' AND 'hwut.report.details'                (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   Two faces wore verbs that named no subject. 'hwut.show'
+          showed -- what? 'hwut.tell' told -- what, and to whom? A
+          reader met them in 'hwut --help' with nothing to hold on to,
+          and 'hwut.tell' in particular sat beside 'hwut.report'
+          answering the same question ("what is there to know about
+          this test") in another word.
+
+DECISION  'hwut.show'  ->  'hwut.config.show'   ('services/lib/config/
+                                                  show.py')
+          'hwut.tell'  ->  'hwut.report.details' ('services/lib/report/
+                                                  details.py')
+
+          THE DOTTED CLAUSE (E-19) SAYS WHERE THE MODULE GOES: a face
+          'hwut.<p>.<n>' is 'services/lib/<p>/<n>.py', as the accept
+          package already is; the bare 'hwut.report' stays
+          'services/report.py'. So 'hwut.report' is the PAGE -- what
+          the books hold, per directory, in several formats -- and
+          'hwut.report.details' is ONE test packed whole. E-52 gave
+          the second the wish the first already read, so the shared
+          name is a shared reading and not a coat of paint.
+
+          'hwut.config.show' opens a package with ONE member, and that
+          is admitted: the dot is not idle, since 'show' alone said
+          nothing about WHAT is shown.
+
+          The suites follow the faces: 'test-config-show.py',
+          'test-report-details.sh', their nominals re-keyed.
+
+COST      Two launcher names change; a person's muscle memory and any
+          script that spelt the old ones must follow. The relative
+          imports of a dotted face reach two levels further
+          ('..._exit'), and its '_config' package adoption names the
+          deeper package.
+
+GRAVEYARD 'hwut.report' becoming 'hwut.report.summary' with the bare
+          word defaulting to it -- not taken here: one rename per
+          attributable pass, and the bare word is what people type.
+
+----------------------------------------------------------------------------
+E-55  A TERMINAL SIGNAL ENDS A FACE; IT DOES NOT CRASH IT       (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   Ctrl-C during a run printed a Python traceback -- often
+          several, one per task the loop was carrying -- and then the
+          interpreter's own teardown added 'Exception ignored in:
+          <function BaseSubprocessTransport.__del__>' with a second
+          traceback beneath it. The person had asked the tool to
+          stop. What they got was the tool's innards, and no word
+          about what had happened.
+
+DECISION  ONE LINE ON STDERR, AND NOTHING ELSE:
+
+              hwut.run ended forcefully.
+
+          'guarded(name, main)' in 'services/_exit.py' wraps every
+          face's entry point ('if __name__ == "__main__"'), naming the
+          face. It answers three endings that are not faults:
+            Ctrl-C            -> 130   (128 + SIGINT)
+            SIGTERM           -> 143   (128 + SIGTERM), by a handler
+                                       installed for the face's
+                                       duration and RESTORED after it
+            a reader hung up  -> 141   (SIGPIPE, as before)
+          A signal names its own code: the shell reads 128 + the
+          signal's number, which is what a shell expects and what a
+          CI step reports.
+
+          THE TEARDOWN IS SILENCED TOO. A loop torn down mid-flight
+          leaves objects whose '__del__' raises while the interpreter
+          shuts down, and Python prints those AFTER the face's last
+          line, where nobody can act on them. 'sys.unraisablehook' is
+          set aside for the remainder of a process that is already
+          ending. The suite proves it: three runs of
+          'test-exit.sh signal', byte-identical, no traceback.
+
+COST      A face's 'main' no longer sees KeyboardInterrupt: a face
+          that wants to clean up on Ctrl-C must catch it itself,
+          inside. The unraisable hook is global, and after a forced
+          ending it stays silenced -- which is correct only because
+          the process is ending anyway.
+
+GRAVEYARD 'os._exit(code)' after the line, skipping teardown entirely
+          -- rejected: it never returns, so 'guarded' could not be
+          read by a test, and buffered output would be lost.
+          Holding the faults for a footer drained by a signal handler
+          (the first sketch of O-24) -- rejected there and here: what
+          is written when it happens needs no draining.

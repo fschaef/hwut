@@ -50,7 +50,7 @@ by a single entry -- its 'interpreter' where a launcher takes a source file, and
 'coverage_target = "%.cov.exe"' for the gcc family. A root conf placed
 by hand, or
 before this, carries no table and runs only what a she-bang can run;
-'hwut.show --root-conf-template' prints the template for pasting.
+'hwut.config.show --root-conf-template' prints the template for pasting.
 ______________________________________________________________________________
 """
 import os

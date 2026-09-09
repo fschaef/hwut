@@ -24,7 +24,7 @@ EXIT STATUS, common to every face -- ONE enum, 'E_ExitCode'
 
 The faces:
 
-    hwut.show    (show.py)
+    hwut.config.show   (lib/config/show.py)
                  what the framework READ: the configuration as a tree,
                  syntax checked, defaults resolved. One file's, or the
                  whole directory's. '--no-default' drops what nobody
@@ -316,7 +316,7 @@ The faces:
                  visible at the next run. A case without a nominal is
                  not this face's ('hwut.accept' blesses first).
 
-    hwut.tell    (tell.py)
+    hwut.report.details   (lib/report/details.py)
                  the pack of a test -- metadata head, source, GOOD,
                  OUT with the cadence inside, coverage where a record
                  was harvested -- for handing to another pair of
@@ -324,6 +324,15 @@ The faces:
                  selected case is packed in turn, one pack each, walk
                  order; '-r' verbatim; '--no-coverage'. Stdout; exit 3
                  where nothing is selected.
+
+    _exit.py     THE EXIT STATUS LAW (E-1) and THE GUARD (E-55). One
+                 enum every face relates to: OK, FAULT, REFUSED,
+                 EMPTY, SIGPIPE 141, SIGINT 130, SIGTERM 143.
+                 'guarded(name, main)' wraps every face's entry point:
+                 a terminal signal leaves ONE line on stderr,
+                 '<face> ended forcefully.', the shell's own 128+n
+                 code, and no traceback -- the interpreter's teardown
+                 noise silenced with it.
 
     _cases.py    THE STORE-READING BLOCK every such face runs between
                  its words and its work: entered path, the climb, the
@@ -399,8 +408,9 @@ shares a package, the dot in the launcher naming the directory:
 
 Every plain '<name>.py' in this directory IS a service; a module that
 is NOT a service is underscore-prefixed ('_core.py', '_config.py' --
-private helpers of the operations faces). 'show.py' and 'plan.py'
-face the orchestrator; 'diff.py' and 'tell.py' face
+private helpers of the operations faces). 'lib/config/show.py' and
+'plan.py' face the orchestrator; 'diff.py' and 'lib/report/details.py'
+face
 the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.

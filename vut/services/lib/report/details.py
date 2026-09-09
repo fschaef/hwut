@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 
 PURPOSE
-       THE TELL SERVICE -- 'hwut.tell': ONE test, packed whole.
+       THE TELL SERVICE -- 'hwut.report.details': ONE test, packed whole.
 
 DESCRIPTION
        Everything a conversation about one test needs, in one dump on
@@ -11,19 +11,19 @@ DESCRIPTION
        store recorded it. Made for handing a test to another pair of
        eyes, human or AI, without them asking for file after file.
 
-           hwut.tell [<wish>] [TEST-APP [CHOICE]]
+           hwut.report.details [<wish>] [TEST-APP [CHOICE]]
                                                 the pack of every case
                                                 the wish selects (E-52);
                                                 when a cadence
                                                 sidecar exists, each
                                                 line of its stream is
                                                 prefixed '<delta-t>:'
-           hwut.tell TEST-APP [CHOICE] -r     the files VERBATIM
+           hwut.report.details TEST-APP [CHOICE] -r     the files VERBATIM
                                                 ('--raw'): no cadence
                                                 prefixes, raw sidecars
                                                 and timing sections
                                                 included
-           hwut.tell TEST-APP [CHOICE] --no-coverage
+           hwut.report.details TEST-APP [CHOICE] --no-coverage
                                                 LEAVE OUT the coverage
                                                 section. It stands BY
                                                 DEFAULT where a record
@@ -84,12 +84,14 @@ import argparse
 from pathlib import Path
 
 
-#  THE IMPORT CALL -- see _config.py: it (this directory) does the
-#  walk-up; the face adopts its package (PEP 366). Dead under '-m'.
+#  THE IMPORT CALL -- see 'services/_config.py': it does the walk-up;
+#  the face adopts its package (PEP 366). Dead under '-m', which is
+#  how the launcher runs it. A DOTTED FACE LIVES TWO LEVELS DOWN
+#  ('services/lib/report/'), so the package it adopts says so.
 if __package__ in (None, ""):
     import _config
-    __package__ = _config.PACKAGE
-from ._exit import E_ExitCode  # delayed past _config adoption
+    __package__ = _config.PACKAGE + ".lib.report"
+from ..._exit import E_ExitCode  # delayed past _config adoption
 
 
 def bookkeeper_of(directory):
@@ -531,7 +533,7 @@ def main(argv=None):
     RETURN: int, the exit code -- 0 a pack was written; 141 the reader
             left early; 2 unusable request.
 
-    The pack goes to stdout ('hwut.tell x.py c > pack.txt' or straight
+    The pack goes to stdout ('hwut.report.details x.py c > pack.txt' or straight
     into a clipboard); the pipe is the design, so a reader that leaves
     early is an ordinary ending.
     """
@@ -549,12 +551,12 @@ def _main(argv):
             case, REFUSED where the words cannot be read.
 
     THE WISH (E-52): the words are every store-reading face's --
-    'hwut.tell demo.py basic', 'hwut.tell a/TEST/demo.py' (entered,
+    'hwut.report.details demo.py basic', 'hwut.report.details a/TEST/demo.py' (entered,
     E-47), '--glob', '--label', '--fail', '--directory' -- and every
     selected case is packed in turn, walk order, each pack whole.
     """
     from vut.engine.orchestrator.plan.wish import parse_wish, WishError
-    from ._cases                          import select
+    from ..._cases                        import select
     if argv is None: argv = sys.argv[1:]
     err = lambda t: sys.stderr.write(t + "\n")
     try:
@@ -563,7 +565,7 @@ def _main(argv):
         err("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
     parser = argparse.ArgumentParser(
-        prog="hwut.tell",
+        prog="hwut.report.details",
         description="Pack a test whole -- metadata, source, GOOD, OUT "
                     "and cadence -- for handing to another pair of "
                     "eyes, human or AI. Every case the wish selects, "
@@ -601,9 +603,11 @@ def _main(argv):
     return E_ExitCode.OK
 
 
-USAGE = ("usage: hwut.tell [<wish>] [<test> [<choice>]] [--directory=<path>] "
+USAGE = ("usage: hwut.report.details [<wish>] [<test> [<choice>]] [--directory=<path>] "
          "[-r|--raw] [--no-coverage]")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ..._exit import guarded
+    sys.exit(guarded("hwut.report.details", main))

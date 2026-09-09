@@ -10,9 +10,9 @@ two-line shell shims, nothing importable. Each resolves its own location
                     package root's parent prepended to PYTHONPATH --
                     one shim per service face:
 
-                        hwut.show     hwut.plan     hwut.run
+                        hwut.config.show     hwut.plan     hwut.run
                         hwut.accept   hwut.target   hwut.cov
-                        hwut.diff     hwut.tell
+                        hwut.diff     hwut.report.details
                         hwut.stability  hwut.wishlist  hwut.report
                         hwut.remove
                         hwut.rename   hwut.move

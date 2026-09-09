@@ -1,6 +1,6 @@
 
 --- the directory, --no-default ---
-$ hwut.show --no-default
+$ hwut.config.show --no-default
     hwut.conf
         dependency           test-b.py <- test-a.py one
 

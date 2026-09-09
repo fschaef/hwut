@@ -83,7 +83,7 @@ it: green for the one, the same red '[FAIL]' wears for the other. Not
 the name, not the dots: a green field the width of the line would say
 'this line is good' where what is good is the OUTCOME. So the failures
 are found without reading. REPORT: appears only where something
-failed, one sentence apiece; 'hwut.tell <test-app> <choice>' has the
+failed, one sentence apiece; 'hwut.report.details <test-app> <choice>' has the
 rest.
 
 THE REFRESH IS SILENT HERE. A case whose recording is stale is re-run
@@ -94,7 +94,7 @@ EVERY LINE OF THE FILE IS ANSWERED, including a target that matched
 nothing -- a name misspelt, a test since removed, a directory not
 under this root. A file of fifty targets reads as a column of fifty
 verdicts; a paragraph of explanation after each would bury the one
-that matters, and 'hwut.tell <test-app> <choice>' has the rest.
+that matters, and 'hwut.report.details <test-app> <choice>' has the rest.
 
 -------------------------------------------------------------------
 OPTIONS
@@ -151,4 +151,6 @@ def main(argv=None, write=None, read_line=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ..._exit import guarded
+    sys.exit(guarded("hwut.accept.apply", main))

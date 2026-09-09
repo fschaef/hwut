@@ -1,4 +1,4 @@
-STIMULUS  hwut.tell demo.py basic          (a HARVESTED run)
+STIMULUS  hwut.report.details demo.py basic          (fixture WITHOUT sidecars)
 REACTION  exit code : 0   stderr : 0 bytes
           the pack {
               ==[ HWUT TEST REPORT ]========================================================
@@ -11,28 +11,9 @@ REACTION  exit code : 0   stderr : 0 bytes
               files:
                 demo.py                                      77 bytes  (source)
                 GOOD/demo.py--basic.txt                      11 bytes  (good stdout)
-                TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
                 OUT/demo.py--basic.txt                       11 bytes  (out stdout)
-                TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
-              coverage: ok
-              cadence: as '<delta-t>:<line>' prefixes
-              
-              ==[ COVERAGE ]==================================================================
-              outcome: ok
-              
-              NOT EXECUTED by this run:
-                demo.py                                      3..5
-              
-              the record, in its text spelling ('hwut.cov convert'):
-              ##VUT-COVERAGE 2
-              ##run:      0.1
-              ##language: python
-              ##tool:     coverage
-              ##format:   coverage.py-json
-              ##counts:   no
-              SF:demo.py
-              EX:1+5
-              CV:1+2
+              coverage: none recorded
+              cadence: none recorded
               
               ==[ SOURCE: demo.py ]===========================================================
               # @hwut { title = "Demo"  choices = ["basic"] }
@@ -44,11 +25,11 @@ REACTION  exit code : 0   stderr : 0 bytes
               beta
               
               ==[ OUT STDOUT: OUT/demo.py--basic.txt ]========================================
-              0.012100:alpha
-              1.503400:BETA
+              alpha
+              BETA
           }
 
-The report says WHAT broke; the coverage says WHICH LINES the
-run reached -- and, first, which it did NOT.
-SUCCESS: a failure and its coverage travel together.
+Absence is reported, never guessed: no cadence recorded is
+SAID, and no section pretends otherwise.
+SUCCESS: what is not there is spoken, not invented.
 <hwut-end>

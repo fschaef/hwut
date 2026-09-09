@@ -31,7 +31,7 @@ faults       every unreadable register, refused by name -- versions 1,
              2 and 3 among them, and every mark a register could lack.
 vanished     a registered application whose file is absent is named --
              the test that left without 'hwut.remove'.
-face         'hwut.show --show-ids' prints the register.
+face         'hwut.config.show --show-ids' prints the register.
 """
 import os
 import shutil
@@ -385,7 +385,7 @@ def test_vanished():
 
 
 def test_face():
-    """'hwut.show --show-ids' prints the register."""
+    """'hwut.config.show --show-ids' prints the register."""
     directory = _place("test-parse.py", "test-other.py")
     _filled(directory)
     os.remove(os.path.join(directory, "test-other.py"))

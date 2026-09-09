@@ -119,7 +119,7 @@ RELATION = {
     "build.executable":          (ConfigBuild, "executable"),
 
     #  THE SUPERVISOR'S OWN DOOR ANSWERS FOR WHAT IT ENFORCES (R-78):
-    #  the default 'hwut.show' prints is the default the kill obeys,
+    #  the default 'hwut.config.show' prints is the default the kill obeys,
     #  and the mapping is 'CAPS_FIELD_DB', the tree's one word for it.
     "caps.timeout_sec":          (ProcsitterConfig, CAPS_FIELD_DB["timeout_sec"]),
     "caps.cpu_sec":              (ProcsitterConfig, CAPS_FIELD_DB["cpu_sec"]),
@@ -133,7 +133,7 @@ RELATION = {
     "pype":            (ConfigCanonicalise, "pype"),
 
     #  EVERY LEXICAL TOLERANCE IS ONE SCOPE (E-42): there is no second
-    #  place a tolerance may be written, and 'hwut.show' prints them
+    #  place a tolerance may be written, and 'hwut.config.show' prints them
     #  inside the braces because the printer walks THESE keys.
     "tolerance.numeric_ratio": (ConfigCompare, "numeric_tolerance_ratio"),
     "tolerance.slash":         (ConfigCompare, "backslash_f"),

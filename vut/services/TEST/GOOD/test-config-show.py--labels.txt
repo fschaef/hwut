@@ -1,6 +1,6 @@
 
 --- the directory: entries shown, the silent one marked ---
-$ hwut.show --no-default
+$ hwut.config.show --no-default
     hwut.conf
         dependency           test-b.py <- test-a.py one
 
@@ -34,7 +34,7 @@ $ hwut.show --no-default
     [status 0]
 
 --- one file: its entries alone ---
-$ hwut.show test-b.py --no-default
+$ hwut.config.show test-b.py --no-default
     test-b.py {
         title = "B"
         choices {                                 # app
@@ -47,7 +47,7 @@ $ hwut.show test-b.py --no-default
     [status 0]
 
 --- no boundary above: no section ---
-$ hwut.show test-b.py --no-default
+$ hwut.config.show test-b.py --no-default
     test-b.py {
         title = "B"
         choices {                                 # app
@@ -58,7 +58,7 @@ $ hwut.show test-b.py --no-default
     [status 0]
 
 --- a broken labels file: the fault said aloud ---
-$ hwut.show test-b.py --no-default
+$ hwut.config.show test-b.py --no-default
     test-b.py {
         title = "B"
         choices {                                 # app

@@ -77,7 +77,7 @@ $ hwut.plan --help
     dependencies cannot be met carries '[MISDEP]': it is selected,
     reported as failure, and does not run.
 
-    The configuration the framework READ is the service 'hwut.show'.
+    The configuration the framework READ is the service 'hwut.config.show'.
 
     EXIT STATUS
         0    nothing refused, no fault met

@@ -1,4 +1,4 @@
-STIMULUS  hwut.tell demo.py basic --raw    (the files verbatim)
+STIMULUS  hwut.report.details demo.py basic          (the default pack)
 REACTION  exit code : 0   stderr : 0 bytes
           the pack {
               ==[ HWUT TEST REPORT ]========================================================
@@ -15,7 +15,7 @@ REACTION  exit code : 0   stderr : 0 bytes
                 OUT/demo.py--basic.txt                       11 bytes  (out stdout)
                 TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
               coverage: none recorded
-              cadence: sections verbatim
+              cadence: as '<delta-t>:<line>' prefixes
               
               ==[ SOURCE: demo.py ]===========================================================
               # @hwut { title = "Demo"  choices = ["basic"] }
@@ -26,19 +26,13 @@ REACTION  exit code : 0   stderr : 0 bytes
               alpha
               beta
               
-              ==[ OUT RAW STDOUT: TMP/store/demo.py--basic.stdout.raw ]=======================
-              raw alpha
-              raw BETA
-              
               ==[ OUT STDOUT: OUT/demo.py--basic.txt ]========================================
-              alpha
-              BETA
-              
-              ==[ TIMING (verbatim): TMP/store/demo.py--basic.stdout.times ]==================
-              {"unit": "second", "delta_list": [0.0121, 1.5034]}
+              0.012100:alpha
+              1.503400:BETA
           }
 
-No prefixes woven in: the raw sidecar is its own section and
-the cadence sidecar rides verbatim, as it was written.
-SUCCESS: --raw shows what is on disk, not an interpretation.
+The cadence rides INSIDE the stream, per line; the raw
+sidecars stay out of the default pack; the hint says at once
+whether OUT meets GOOD.
+SUCCESS: one dump answers every 'can you send me...' at once.
 <hwut-end>

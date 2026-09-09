@@ -400,7 +400,7 @@ def difference_pair_list(compare_config, out_path, good_path, line_n):
     square of the text; it was tried here and did not return on a
     rewritten file. A proposal does not need it: a shifted file simply
     shows many replacements, exceeds the bound, and is named in one
-    line for 'hwut.tell' to explain. THE COST IS LINEAR IN THE LINES
+    line for 'hwut.report.details' to explain. THE COST IS LINEAR IN THE LINES
     READ, and bounded by 'line_n' besides.
     """
     from vut.engine.compare.api import is_equivalent, Configuration, \
@@ -763,11 +763,11 @@ def propose(store, case_sequence, directory, line_n, write,
                               "" if choice is None else " " + choice)
             #  TOO BIG, OR UNREADABLE: ONE LINE AND NO TARGET. The
             #  reader is told which case and that it exceeds the
-            #  bound; 'hwut.tell' is the tool for the rest and needs
+            #  bound; 'hwut.report.details' is the tool for the rest and needs
             #  no repeating here.
             #  TOO BIG, OR UNREADABLE: ONE LINE AND NO TARGET, and no
             #  blank after it -- a run of them is a LIST, and a list
-            #  reads better unbroken. 'hwut.tell' shows one whole.
+            #  reads better unbroken. 'hwut.report.details' shows one whole.
             if refusal is not None:
                 write("DIFF(%s) %s" % (label, refusal))
                 continue
@@ -1328,4 +1328,6 @@ def accept_one(directory, result, bookkeeper, case_sequence,
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ._exit import guarded
+    sys.exit(guarded("hwut.accept", main, sys.argv[1:]))

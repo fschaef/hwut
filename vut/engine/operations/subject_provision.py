@@ -51,7 +51,7 @@ DESCRIPTION
                    -- (B.1), and the build tool's own freshness --
                    never whether it is run.
          REFRESH   a face that OBTAINS A SUBJECT AND DOES SOMETHING
-                   WITH IT -- 'hwut.tell' -- and must therefore hold a
+                   WITH IT -- 'hwut.report.details' -- and must therefore hold a
                    CURRENT one: PROVIDE where stale, RECORDED where
                    current. The criterion is not 'obtains and
                    judges'; it is 'obtains and does something with

@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "The exit status law: one enum, every face relates."
-#     choices    = ["law"]
+#     choices    = ["law", "signal"]
 #     tolerance { eq_pattern = ["[0-9]+"] }
 # }
 #
@@ -22,10 +22,14 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The exit status law: one enum, every face relates.;"
-        echo "CHOICES: law;"
+        echo "CHOICES: law, signal;"
         echo "HAPPY: [0-9]+;"
         exit 0 ;;
 esac
+
+case "${1:-law}" in
+
+law)
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -73,15 +77,15 @@ printf '@hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
 status() { "$@" > /dev/null 2>&1; echo -n "$?"; }
 
 echo
-echo "FACE         OK  FAULT  REFUSED  EMPTY"
-printf 'hwut.show     %s      %s        %s      -\n' \
-    "$(status python3 -m vut.services.show \
+echo "FACE                OK  FAULT  REFUSED  EMPTY"
+printf 'hwut.config.show    %s      %s        %s      -\n' \
+    "$(status python3 -m vut.services.lib.config.show \
               --directory=ok_dir)" \
-    "$(status python3 -m vut.services.show \
+    "$(status python3 -m vut.services.lib.config.show \
               --directory=fault_dir)" \
-    "$(status python3 -m vut.services.show \
+    "$(status python3 -m vut.services.lib.config.show \
               --directory=ok_dir --bogus)"
-printf 'hwut.plan     %s      %s        %s      %s\n' \
+printf 'hwut.plan           %s      %s        %s      %s\n' \
     "$(status python3 -m vut.services.plan \
               --directory=ok_dir)" \
     "$(status python3 -m vut.services.plan \
@@ -90,7 +94,7 @@ printf 'hwut.plan     %s      %s        %s      %s\n' \
               --directory=ok_dir --bogus)" \
     "$(status python3 -m vut.services.plan \
               --directory=ok_dir --glob 'nothing-*')"
-printf 'hwut.run      %s      %s        %s      %s\n' \
+printf 'hwut.run            %s      %s        %s      %s\n' \
     "$(status python3 -m vut.services.run \
               --directory=run_ok)" \
     "$(status python3 -m vut.services.run \
@@ -103,15 +107,58 @@ printf 'steady\n'      > a.txt
 printf 'different\n'   > b.txt
 printf 'on: <else> => flush;\n' > ok.pype
 printf 'on: bad\n'              > broken.pype
-printf 'hwut.pype     %s      %s        %s      -\n' \
+printf 'hwut.pype           %s      %s        %s      -\n' \
     "$(status python3 -m vut.services.pype ok.pype a.txt)" \
     "$(status python3 -m vut.services.pype broken.pype a.txt)" \
     "$(status python3 -m vut.services.pype)"
-printf 'hwut.diff  %s      %s        %s      -\n' \
+printf 'hwut.diff           %s      %s        %s      -\n' \
     "$(status python3 -m vut.services.diff \
               a.txt a.txt)" \
     "$(status python3 -m vut.services.diff \
               a.txt b.txt)" \
     "$(status python3 -m vut.services.diff)"
 
+    ;;
+
+signal)
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55): one line on
+    #  stderr, the shell's own code, and NO TRACEBACK -- what the
+    #  interpreter would print is the face's innards, and the person
+    #  asked it to stop, not to read them.
+    mkdir -p tree/suite/TEST/GOOD
+    printf 'hwut {\n}\n' > tree/hwut-root.conf
+    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
+        > tree/suite/TEST/hwut.conf
+    printf '#!/bin/bash\n# @hwut { title = "Slow" }\nsleep 30\necho "<hwut-end>"\n' \
+        > tree/suite/TEST/test-slow.sh
+    chmod +x tree/suite/TEST/test-slow.sh
+    printf 'x\n' > tree/suite/TEST/GOOD/test-slow.sh.txt
+
+    echo "STIMULUS  a run under way, then SIGTERM"
+    python3 -m vut.services.run --directory=tree --plain > out.txt 2> err.txt &
+    victim=$!
+    sleep 3
+    kill -TERM $victim
+    wait $victim
+    echo "REACTION  exit code : $?    (the shell's 128 + 15)"
+    echo "          stderr {"; sed 's/^/              /' err.txt; echo "          }"
+    echo "          tracebacks in stderr : $(grep -c Traceback err.txt)"
+    echo
+    echo "STIMULUS  the guard itself, on Ctrl-C's own exception"
+    python3 -c "
+from vut.services._exit import guarded
+def boom(): raise KeyboardInterrupt
+print('exit code : %d' % int(guarded('hwut.run', boom)))" > out.txt 2> err.txt
+    sed 's/^/          /' out.txt
+    echo "          stderr {"; sed 's/^/              /' err.txt; echo "          }"
+    echo
+    echo "One line names the face and the ending; the shell reads the"
+    echo "signal's own code; nothing of the innards is shown."
+    echo "SUCCESS: a signal ends a face, it does not crash it."
+    ;;
+
+*)
+    echo "no such choice: $1" >&2
+    exit 1 ;;
+esac
 echo "<hwut-end>"

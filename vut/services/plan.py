@@ -83,7 +83,7 @@ enter by implication, marked '<= required by <target>'. A case whose
 dependencies cannot be met carries '[MISDEP]': it is selected,
 reported as failure, and does not run.
 
-The configuration the framework READ is the service 'hwut.show'.
+The configuration the framework READ is the service 'hwut.config.show'.
 
 EXIT STATUS
     0    nothing refused, no fault met
@@ -186,4 +186,6 @@ def main(argv=None, write=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ._exit import guarded
+    sys.exit(guarded("hwut.plan", main, sys.argv[1:]))

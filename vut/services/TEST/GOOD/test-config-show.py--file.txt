@@ -1,6 +1,6 @@
 
 --- resolved ---
-$ hwut.show test-a.py
+$ hwut.config.show test-a.py
     test-a.py {
         title = "A"
         choices {                                 # app
@@ -57,7 +57,7 @@ $ hwut.show test-a.py
     [status 0]
 
 --- --no-default: what somebody chose ---
-$ hwut.show test-a.py --no-default
+$ hwut.config.show test-a.py --no-default
     test-a.py {
         title = "A"
         choices {                                 # app

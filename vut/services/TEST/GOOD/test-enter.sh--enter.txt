@@ -22,7 +22,7 @@ STDOUT {
 STATUS: 3
        . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
     RESULTS: 0 ok, 0 fail, 2 skip, 1 refused
---- 'hwut.show' by a path: the test, from its own directory
+--- 'hwut.config.show' by a path: the test, from its own directory
 STATUS: 0
     test-b.sh {
         title = "B"

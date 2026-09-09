@@ -1,4 +1,4 @@
-STIMULUS  hwut.tell                      (no word: every case, one pack each)
+STIMULUS  hwut.report.details                      (no word: every case, one pack each)
 REACTION  exit code : 0   packs : 2
               test:          demo.py
               choice:        basic
@@ -6,15 +6,15 @@ REACTION  exit code : 0   packs : 2
               test:          demo.py
               choice:        extra
               verdict:       OUT == GOOD (byte-identical): stdout
-STIMULUS  hwut.tell --glob 'demo.py extra'
+STIMULUS  hwut.report.details --glob 'demo.py extra'
 REACTION  exit code : 0   packs : 1
               choice:        extra
               verdict:       OUT == GOOD (byte-identical): stdout
-STIMULUS  ( cd .. && hwut.tell TEST/demo.py basic )     (a path word enters)
+STIMULUS  ( cd .. && hwut.report.details TEST/demo.py basic )     (a path word enters)
 REACTION  exit code : 0   packs : 1
               directory:     TEST
               choice:        basic
-STIMULUS  hwut.tell nothere.py
+STIMULUS  hwut.report.details nothere.py
 REACTION  exit code : 3   stderr : EMPTY: the wish selects no case
 
 SUCCESS: one selection language on the tell face too.

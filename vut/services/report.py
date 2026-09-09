@@ -593,4 +593,6 @@ def main(argv=None, write=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ._exit import guarded
+    sys.exit(guarded("hwut.report", main))

@@ -411,4 +411,6 @@ def _shebang_interpreter(path):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ._exit import guarded
+    sys.exit(guarded("hwut.target", main, sys.argv[1:]))

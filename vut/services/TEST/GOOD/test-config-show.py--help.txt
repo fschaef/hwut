@@ -1,12 +1,12 @@
 
 --- --help ---
-$ hwut.show --help
-    hwut.show -- the configuration the framework READ
+$ hwut.config.show --help
+    hwut.config.show -- the configuration the framework READ
 
-        hwut.show                   the whole directory: 'hwut.conf' first,
+        hwut.config.show                   the whole directory: 'hwut.conf' first,
                                     then every test application as a tree
-        hwut.show <source file>     one file's specification
-        hwut.show --show-ids        the TEST REGISTER: every registered
+        hwut.config.show <source file>     one file's specification
+        hwut.config.show --show-ids        the TEST REGISTER: every registered
                                     application and choice with its id;
                                     a registered application whose file
                                     is ABSENT is marked VANISHED

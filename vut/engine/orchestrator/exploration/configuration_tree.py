@@ -132,7 +132,7 @@ class Tolerance(_Scope):
 
     EVERY LEAF SPELLS ITSELF WITH UNDERSCORES (E-42): one scope, one
     convention, and both walks that read it -- the validator and
-    'hwut.show's printer -- stay generic over the record.
+    'hwut.config.show's printer -- stay generic over the record.
     """
     numeric_ratio: float | None = None
     whitespace:    bool  | None = None

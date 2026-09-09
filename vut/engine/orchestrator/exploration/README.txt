@@ -509,7 +509,7 @@ HOW A FILE'S LANGUAGE IS FOUND, in this order:
 
     1  the header's (or 'apps' entry's) 'language' word
     2  the entry whose 'extensions' claims the file's extension --
-       DERIVED, and said so: 'hwut.show' marks it
+       DERIVED, and said so: 'hwut.config.show' marks it
     3  none: the file is EXECUTABLE, and its she-bang decides
 
 A language with no 'language-setup' entry is called by its own name
@@ -517,7 +517,7 @@ A language with no 'language-setup' entry is called by its own name
 
 'language-setup' STANDS IN 'hwut-root.conf' AND NOWHERE ELSE. The
 framework ships no table: the boundary face writes one when it places
-the root conf (services E-25), and 'hwut.show --root-conf-template'
+the root conf (services E-25), and 'hwut.config.show --root-conf-template'
 prints that text for pasting into a root conf placed by hand.
 
 '--language=<name>' on every face SELECTS the test applications of a
@@ -789,7 +789,7 @@ second place one may be written:
     tolerance { numeric_ratio  whitespace  slash  regions
                 eq_pattern  nothing  analogy  constraints  comment }
 
-Each is a RELATION key 'tolerance.<leaf>', so 'hwut.show' prints it
+Each is a RELATION key 'tolerance.<leaf>', so 'hwut.config.show' prints it
 inside the braces and 'default_of' derives its default from compare's
 own declaration. The five that moved in from the root ('eq-pattern',
 'nothing', 'analogy', 'constraints', 'comment') are REFUSED where they

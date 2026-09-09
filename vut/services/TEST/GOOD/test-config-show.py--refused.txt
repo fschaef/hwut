@@ -1,0 +1,13 @@
+
+--- an unknown option ---
+$ hwut.config.show --frobnicate
+    REFUSED: unknown option(s): --frobnicate
+    usage: hwut.config.show [<source file>] [--no-default] [--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | hwut.config.show --root-conf-template
+    [status 2]
+
+--- two source files ---
+$ hwut.config.show test-a.py test-b.py
+    REFUSED: 2 source files named; 'hwut.config.show' reads one, or the directory
+    usage: hwut.config.show [<source file>] [--no-default] [--provenance] [--gnu] [-v|--verbose] [--directory=<path>] | hwut.config.show --root-conf-template
+    [status 2]
+<hwut-end>

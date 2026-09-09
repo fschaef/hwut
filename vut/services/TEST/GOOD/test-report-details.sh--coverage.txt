@@ -1,4 +1,4 @@
-STIMULUS  hwut.tell demo.py basic          (the default pack)
+STIMULUS  hwut.report.details demo.py basic          (a HARVESTED run)
 REACTION  exit code : 0   stderr : 0 bytes
           the pack {
               ==[ HWUT TEST REPORT ]========================================================
@@ -14,8 +14,25 @@ REACTION  exit code : 0   stderr : 0 bytes
                 TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
                 OUT/demo.py--basic.txt                       11 bytes  (out stdout)
                 TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
-              coverage: none recorded
+              coverage: ok
               cadence: as '<delta-t>:<line>' prefixes
+              
+              ==[ COVERAGE ]==================================================================
+              outcome: ok
+              
+              NOT EXECUTED by this run:
+                demo.py                                      3..5
+              
+              the record, in its text spelling ('hwut.cov convert'):
+              ##VUT-COVERAGE 2
+              ##run:      0.1
+              ##language: python
+              ##tool:     coverage
+              ##format:   coverage.py-json
+              ##counts:   no
+              SF:demo.py
+              EX:1+5
+              CV:1+2
               
               ==[ SOURCE: demo.py ]===========================================================
               # @hwut { title = "Demo"  choices = ["basic"] }
@@ -31,8 +48,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               1.503400:BETA
           }
 
-The cadence rides INSIDE the stream, per line; the raw
-sidecars stay out of the default pack; the hint says at once
-whether OUT meets GOOD.
-SUCCESS: one dump answers every 'can you send me...' at once.
+The report says WHAT broke; the coverage says WHICH LINES the
+run reached -- and, first, which it did NOT.
+SUCCESS: a failure and its coverage travel together.
 <hwut-end>
