@@ -225,7 +225,7 @@ stain)
 
     echo "--- 3. hwut.accept refuses to bless it"
     (cd tree/suite/TEST \
-     && PYTHONPATH="$ROOT" python3 -m vut.services.accept --yes 2>&1 \
+     && PYTHONPATH="$ROOT" python3 -m vut.services.accept --force 2>&1 \
         | head -4)
 
     echo "--- 4. the test is mended; 2 repeats do not answer a 4-repeat charge"

@@ -58,7 +58,7 @@ store_fixture() {       # a suite: two-choice app, run, accepted; then changed a
     printf '#!/bin/bash\n# @hwut { title = "Steady" }\necho "steady"\necho "<hwut-end>"\n' > tree/suite/TEST/test-b.sh
     chmod +x tree/suite/TEST/*.sh
     python3 -m vut.services.run --directory=tree --silent
-    ( cd tree/suite/TEST && python3 -m vut.services.accept --yes > /dev/null 2>&1 )
+    ( cd tree/suite/TEST && python3 -m vut.services.accept --force > /dev/null 2>&1 )
     sed -i 's/echo "line for \$1"/echo "changed line for $1"/' tree/suite/TEST/test-app.sh
     python3 -m vut.services.run --directory=tree --silent
 }

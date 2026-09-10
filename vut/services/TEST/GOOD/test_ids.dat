@@ -1,5 +1,5 @@
 ##VUT-TEST-IDS 5
-G:166
+G:167
 N:24
 A:0 test-pype.sh
 N:0.6
@@ -24,7 +24,7 @@ C:2.3 refused
 C:2.4 short-form
 C:2.5 wish
 A:4 test-accept.sh
-N:4.8
+N:4.9
 C:4.0 ask
 C:4.1 bless
 C:4.2 labels
@@ -33,6 +33,7 @@ C:4.4 stderr
 C:4.5 sugar
 C:4.6 token
 C:4.7 interactive
+C:4.8 unaccepted
 A:5 test-diff.sh
 N:5.5
 C:5.0 differing

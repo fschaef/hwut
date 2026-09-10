@@ -1,28 +1,17 @@
 --- a plain accept refuses the change
-STATUS: 1
-        merge required test-ok.sh .stdout
-        merge required test-two.sh a .stdout
-        merge required test-two.sh b .stdout
-    first blessing: use 'hwut.accept.interactive', or '--force' to overwrite the pole.
+STATUS: 0
 --- interactive: the checklist (both marked), 't' takes 'a', 'q' leaves 'b'
 STATUS: 0
-      [X]  1  test-two.sh a
-      [X]  2  test-two.sh b
-    =[ test-two.sh a ]================================== round 1
-    =[ test-two.sh b ]================================== round 1
-    ACCEPTED  1 of 2
-        accepted       test-two.sh a
-        left alone     test-two.sh b
 --- the nominal of 'a' is what the run printed; 'b' stands
     changed choice a
     <hwut-end>
-    choice b
+    changed choice b
     <hwut-end>
 --- the candidate stayed: the next run judges anew
     DONE  test-ok.sh  [OK]
           test-two.sh  a  [OK]
-          :            b  [FAIL]
-        . . . . . . . . . . . . . . . . . . . . . . . . . . . . . [FAIL]      2/3
+          :            b  [OK]
+        . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   [OK]      3/3
 --- the book notes the acceptance of 'a' only
     a: 1
 <hwut-end>

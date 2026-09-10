@@ -47,3 +47,25 @@ def ends_in_terminal(reader):
         close = getattr(reader, "close", None)
         if close is not None: close()
     return last == TERMINAL_TOKEN
+
+
+#  THE UNACCEPTED REGION (compare C-9): '##! unaccepted' opens a stretch
+#  nobody has judged. The '!' is what makes it a region and not a
+#  comment; the name is read as the scanner reads a shebang -- the
+#  first word after '##!', case as written.
+def carries_unaccepted_f(reader):
+    """
+    RETURN: bool, whether the stream opens an 'unaccepted' region
+            anywhere -- a line '##! unaccepted' (optionally followed by
+            parameters). The reader is consumed and closed.
+    """
+    try:
+        for line in reader:
+            stripped = line.strip()
+            if not stripped.startswith("##!"): continue
+            word_list = stripped[3:].split()
+            if word_list and word_list[0] == "unaccepted": return True
+        return False
+    finally:
+        close = getattr(reader, "close", None)
+        if close is not None: close()

@@ -7,8 +7,8 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | only
-         2    2 | <hwut-end>
+         1 | only
+         2 | <hwut-end>
     ============================================================
 }
 --- several, none named: refused, and they are listed
@@ -25,8 +25,8 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | only
-         2    2 | <hwut-end>
+         1 | only
+         2 | <hwut-end>
     ============================================================
 }
 --- named: played
@@ -38,8 +38,8 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | choice b
-         2    2 | <hwut-end>
+         1 | choice b
+         2 | <hwut-end>
     ============================================================
 }
 <hwut-end>

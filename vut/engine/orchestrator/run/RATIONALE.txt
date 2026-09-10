@@ -751,3 +751,37 @@ GRAVEYARD 'TMP/session/events.log', the whole stream written per run
           takes, and the machinery to defend them (handlers,
           restoration, a drain in every exit path) all disappears
           when the line is simply written where it happens.
+
+O-25  '[ ?! ]': A NOMINAL NOBODY HAS FINISHED ACCEPTING IS NOT A FAILURE (2026-09-09)
+------------------------------------------------------------------------------
+PROBLEM   A nominal carrying an 'unaccepted' region (compare C-9) fails
+          every run until someone decides its lines. Read as '[FAIL]',
+          it looks like a regression, sits in the failure count beside
+          real breakages, and sends the eye after a bug that is not
+          there -- every run, until the partial acceptance is
+          finished.
+
+DECISION  ITS OWN VERDICT WORD, 'unaccepted', in the vocabulary
+          (O-3's add-only promise kept), decided where the other named
+          reasons are: 'equivalence_check' peeks the nominal for the
+          region -- as it peeks for the terminal token (R-70) -- and
+          reports 'unaccepted' BEFORE any line is compared; the
+          reason outranks a plain mismatch in the report's precedence
+          and is turned into the verdict word in 'orchestrate', beside
+          'launch-failed'.
+
+          ITS OWN TAG: '[ ?! ]' -- "cannot be used for comparison" --
+          black on amber, neither the green of a pass nor the red of a
+          regression. ITS OWN COUNT: 'RESULTS: 0 ok, 0 fail,
+          1 unaccepted'; the 'fail' count holds regressions only. The
+          HINTS block names it -- 'the nominal carries lines nobody
+          has accepted' -- and the way forward is 'hwut.accept'.
+
+COST      One more verdict word for every reader of the stream. The
+          nominal is read once more per comparison, to the first
+          '##!' line; a nominal without one costs a full read.
+
+GRAVEYARD Reading '[FAIL]' with the reason only in HINTS -- rejected:
+          the flow is what the eye scans while a run is going, and a
+          tag that lies by omission there is read a hundred times
+          before HINTS is read once.

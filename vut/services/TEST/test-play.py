@@ -18,7 +18,7 @@ ______________________________________________________________________________
                the candidates stand in the store; still no verdict, no
                book entry.
     entrance   A NEW TEST'S WAY IN: 'hwut.play --save', then
-               'hwut.accept --yes' -- and a nominal stands in GOOD/.
+               'hwut.accept --force' -- and a nominal stands in GOOD/.
                Nothing in between asked 'hwut.run'.
     accept_runs  the text changed after the save: 'hwut.accept' does
                not refuse, it RUNS the case through the channel, says
@@ -149,12 +149,12 @@ def test_save():
 
 
 def test_entrance():
-    """play --save, then accept --yes: a nominal, a book entry, a
+    """play --save, then accept --force: a nominal, a book entry, a
     register entry -- without one 'hwut.run'."""
     root, test = fixture()
     _play(test, "--save")
     line_list = []
-    status = accept_main(["test-new.py", "--yes",
+    status = accept_main(["test-new.py", "--force",
                           "--directory=%s" % test],
                          write=line_list.append)
     for line in line_list:
@@ -186,7 +186,7 @@ def test_accept_runs():
         fh.write(SCRIPT.replace("hello from new", "hello, changed"))
     os.utime(path, None)
     line_list = []
-    status = accept_main(["test-new.py", "--yes",
+    status = accept_main(["test-new.py", "--force",
                           "--directory=%s" % test],
                          write=line_list.append)
     run_line = [l for l in line_list if l.startswith("RUN:")]

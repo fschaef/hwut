@@ -219,6 +219,7 @@ def _handler_db():
     from vut.engine.compare.region.potpourri.chunk import InputChunkPotpourri
     from vut.engine.compare.region.verbatim.chunk    import InputChunkVerbatim
     from vut.engine.compare.region.ignore.chunk      import InputChunkIgnore
+    from vut.engine.compare.region.unaccepted.chunk  import InputChunkUnaccepted
     from vut.engine.compare.region.point_cloud.chunk import InputChunkPointCloud
     from vut.engine.compare.region.table.chunk       import (InputChunkTable,
                                                              convert_ignore,
@@ -266,6 +267,11 @@ def _handler_db():
         "ignore": RegionHandler(
             shebang_name = "ignore",
             chunk_class  = InputChunkIgnore),
+        #  THE OPPOSITE OF 'ignore' (E-58): contents nobody has judged;
+        #  a comparison meeting them FAILS, always.
+        "unaccepted": RegionHandler(
+            shebang_name = "unaccepted",
+            chunk_class  = InputChunkUnaccepted),
     }
 
 

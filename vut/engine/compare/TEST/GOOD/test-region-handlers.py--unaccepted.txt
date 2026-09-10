@@ -1,0 +1,11 @@
+## Contents were never judged: EVERY comparison fails (E-58).
+identical contents:                        judge: False lawyer: False [ok]
+different contents:                        judge: False lawyer: False [ok]
+empty vs empty:                            judge: True  lawyer: True  [ok]
+framing missing:                           judge: False lawyer: False [ok]
+## The outer text is judged as ever; the region alone fails:
+outer equal, region:                       judge: False lawyer: False [ok]
+## '##' without '!' is a comment, and a comment PASSES -- the
+## '!' is what makes it a region:
+comment, not region:                       judge: True  lawyer: True  [ok]
+<hwut-end>

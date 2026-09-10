@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "Region Handlers: shebang framing, verbatim, ignore, params, errors"
-#     choices    = ["errors", "ignore", "params", "verbatim"]
+#     choices    = ["errors", "ignore", "params", "verbatim", "unaccepted"]
 # }
 #
 """Region handlers via the shebang framing: 'verbatim', 'ignore', the
@@ -86,6 +86,20 @@ if "ignore" in sys.argv:
     show("empty vs missing",   I(""),             "")
     show("outer after region differs", I("x\n") + "q\n", I("y\n") + "r\n")
 
+if "unaccepted" in sys.argv:
+    U = lambda body: region("unaccepted", body)
+    print("## Contents were never judged: EVERY comparison fails (E-58).")
+    show("identical contents", U("x\ny\n"),        U("x\ny\n"))
+    show("different contents", U("x\ny\n"),        U("totally else\n"))
+    show("empty vs empty",     U(""),               U(""))
+    show("framing missing",    U("x\n"),           "x\n")
+    print("## The outer text is judged as ever; the region alone fails:")
+    show("outer equal, region", "a\n" + U("x\n") + "b\n",
+                                "a\n" + U("x\n") + "b\n")
+    print("## '##' without '!' is a comment, and a comment PASSES -- the")
+    print("## '!' is what makes it a region:")
+    show("comment, not region", "## unaccepted\nx\n", "## unaccepted\nx\n")
+
 if "params" in sys.argv:
     P = lambda p, body: region("potpourri" + p, body)
     print("## max_comparisons: shebang > config section > default.")
@@ -119,3 +133,5 @@ if "errors" in sys.argv:
             print("%-18s -> %s" % (name, e))
     print("## Longer #-runs stay commentary:")
     show("##### is ignored", "#####\na\n", "a\n")
+
+print("<hwut-end>")

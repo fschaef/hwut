@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
 #     choices    = ["ask", "bless", "labels", "merge", "stderr",
-#                   "sugar", "token", "interactive"]
+#                   "sugar", "token", "interactive", "unaccepted"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -29,12 +29,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 RUN="python3 -m vut.services.run"
 ACCEPT="python3 -m vut.services.accept"
+WISHLIST="python3 -m vut.services.wishlist"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
-        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive;"
+        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -82,20 +83,24 @@ bless)
     #  No nominal stands: every stdout candidate becomes the first
     #  pole; stderr is NEVER among them.
     fixture
-    face --directory=tree/suite/TEST --yes
+    face --directory=tree/suite/TEST --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;
 
 merge)
+    #  ONE FLAG (E-57): '--force' is 'do not ask' AND 'overwrite what
+    #  stands' -- the two were one act once accept SHOWS a change
+    #  instead of refusing it. A script that must never overwrite is
+    #  'hwut.accept.new' (owed).
     #  A nominal stands: DETECTED, named, left alone -- status 1.
     #  '--force' overwrites the pole, said out loud -- status 0.
     fixture
-    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null
     echo "== a second accept: the nominals stand =="
-    face --directory=tree/suite/TEST --yes
+    face --directory=tree/suite/TEST --force
     echo "== --force =="
-    face --directory=tree/suite/TEST --yes --force
+    face --directory=tree/suite/TEST --force
     ;;
 
 stderr)
@@ -108,9 +113,9 @@ stderr)
     chmod +x tree/suite/TEST/test-ok.sh
     $RUN --directory=tree --silent 2> /dev/null
     echo "== stderr spoke, no flag =="
-    face --directory=tree/suite/TEST --yes
+    face --directory=tree/suite/TEST --force
     echo "== --stderr-tol =="
-    face --directory=tree/suite/TEST --yes --stderr-tol
+    face --directory=tree/suite/TEST --force --stderr-tol
     echo "== the note governs: the suite re-runs green =="
     $RUN --directory=tree --silent 2> /dev/null
     echo "run status: $?"
@@ -127,18 +132,18 @@ labels)
     python3 -m vut.services.lib.labels.add meta \
         --glob "test-two.sh a" --directory=tree > /dev/null
     echo "== a BARE accept passes the silenced run by =="
-    face --directory=tree/suite/TEST --yes
+    face --directory=tree/suite/TEST --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
     echo "== NAMING it literally blesses it =="
-    face --directory=tree/suite/TEST --yes test-two.sh a
+    face --directory=tree/suite/TEST --force test-two.sh a
     echo "GOOD holds:"
     good | sed 's/^/    /'
     echo "== a GLOB wholly swallowed warns instead =="
     fixture
     python3 -m vut.services.lib.labels.add meta \
         --glob "test-two.sh a" --directory=tree > /dev/null
-    face --directory=tree/suite/TEST --yes "test-two.s?" a
+    face --directory=tree/suite/TEST --force "test-two.s?" a
     echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;
@@ -148,12 +153,12 @@ sugar)
     #  files, every further word a choice. One selection language.
     fixture
     echo "== hwut.accept 'test-two.sh' a =="
-    face --directory=tree/suite/TEST --yes "test-two.sh" a
+    face --directory=tree/suite/TEST --force "test-two.sh" a
     echo "GOOD holds:"
     good | sed 's/^/    /'
     echo "== the same thing, spelled as the wish =="
     fixture
-    face --directory=tree/suite/TEST --yes --glob "test-two.sh a"
+    face --directory=tree/suite/TEST --force --glob "test-two.sh a"
     echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;
@@ -168,7 +173,7 @@ token)
         > tree/suite/TEST/test-cut.sh
     chmod +x tree/suite/TEST/test-cut.sh
     $RUN --directory=tree --silent 2> /dev/null
-    face --directory=tree/suite/TEST --yes --force
+    face --directory=tree/suite/TEST --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;
@@ -191,12 +196,12 @@ interactive)
     #  commit is an acceptance through the same three writes; the
     #  candidate stays as the run left it.
     fixture
-    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null
     sed -i 's/echo "choice \$1"/echo "changed choice $1"/' tree/suite/TEST/test-two.sh
     $RUN --directory=tree --silent 2> /dev/null
     INTERACTIVE="python3 -m vut.services.lib.accept.interactive"
     echo "--- a plain accept refuses the change"
-    $ACCEPT --directory=tree/suite/TEST --yes > out.txt 2>&1; echo "STATUS: $?"
+    $ACCEPT --directory=tree/suite/TEST --force > out.txt 2>&1; echo "STATUS: $?"
     grep -E 'merge required|first blessing' out.txt | sed 's/^/    /'
     echo "--- interactive: the checklist (both marked), 't' takes 'a', 'q' leaves 'b'"
     printf '\nt\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
@@ -208,6 +213,30 @@ interactive)
     $RUN --directory=tree/suite/TEST 2>&1 | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
     echo "--- the book notes the acceptance of 'a' only"
     grep -c 'test-two.sh;a;' tree/suite/TEST/GOOD/book.csv | sed 's/^/    a: /'
+    ;;
+
+unaccepted)
+    #  A NOMINAL WITH AN '##! unaccepted' REGION (C-9, O-25): the run
+    #  reads '[ ?! ]', not '[FAIL]'; it is counted apart; HINTS names
+    #  it; and '--unaccepted' (E-58) selects what has NO nominal at
+    #  all -- the same state at the grain of a whole case.
+    fixture
+    mkdir -p tree/suite/TEST/GOOD
+    printf 'steady line\n##! unaccepted\nnobody looked here\n####\n<hwut-end>\n' \
+        > tree/suite/TEST/GOOD/test-ok.sh.txt
+    echo "--- the run: its own tag, its own count, its own hint"
+    $RUN --directory=tree --plain > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E '\[ \?! \]|\[FAIL\]|\[OK\]|RESULTS|nobody has accepted' out.txt \
+        | sed 's/ \.\+ / /; s/, [0-9.]* \[sec\]//; s/^/    /'
+    echo "--- '--unaccepted' selects the cases with NO nominal: test-two.sh"
+    $WISHLIST --directory=tree/suite/TEST --unaccepted | sed 's/^/    /'
+    echo "--- accepting them, and nothing else, without a question"
+    $ACCEPT --directory=tree/suite/TEST --unaccepted --force > out.txt 2>&1
+    echo "STATUS: $?"
+    grep -E 'blessed|ACCEPTED' out.txt | sed 's/^/    /'
+    echo "--- test-ok.sh stands untouched, still unaccepted"
+    grep -c 'unaccepted' tree/suite/TEST/GOOD/test-ok.sh.txt | sed 's/^/    regions: /'
     ;;
 
 *)

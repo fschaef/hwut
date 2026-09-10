@@ -84,6 +84,9 @@ _PRECEDENCE = (
     #  -- stderr: a stream nobody blessed, and a decision nobody took
     E_TestRunResult.STDERR_UNDECIDED,
     E_TestRunResult.UNEXPECTED_STDERR,
+    #  -- undecided precedes judgement: a nominal with an unaccepted
+    #     region cannot pass and says WHY before any line difference
+    E_TestRunResult.UNACCEPTED,
     # -- the judgement: everything ran, the subject does not match
     E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
     E_TestRunResult.NOT_EQUIVALENT_GREW,

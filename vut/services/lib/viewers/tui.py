@@ -68,6 +68,7 @@ ______________________________________________________________________________
 """
 import io
 import os
+import re
 import sys
 import shutil
 import asyncio
@@ -407,7 +408,14 @@ class TuiDisplay(DisplayAdapter):
         if self._is_good(item):
             text = self._side_text(item.cells_s, "subject") \
                    if s_n else self._side_text(item.cells_n, "nominal")
-            self._write("  %4s %4s | %s\n" % (s_n, n_n, text))
+            #  THE READING HAS ONE STREAM, SO ONE NUMBER (E-56): it is
+            #  the stream fed against ITSELF, so two columns would
+            #  print the same number twice and invite the reader to
+            #  look for a difference between them.
+            if self.reading_f and s_n == n_n:
+                self._write("  %4s | %s\n" % (s_n, text))
+            else:
+                self._write("  %4s %4s | %s\n" % (s_n, n_n, text))
         else:
             self.bad_pair_n += 1
             if s_n:
@@ -419,7 +427,15 @@ class TuiDisplay(DisplayAdapter):
                             % ("", n_n, self._side_text(item.cells_n,
                                                         "nominal")))
         for note in self._note_list(item):
-            self._write("  %4s %4s | ^ %s\n" % ("", "", note))
+            #  ONE STREAM, ONE PLACE (E-56): 'S:2/N:2' is the same
+            #  line said twice where the reading fed a stream against
+            #  itself.
+            note = re.sub(r"S:(\d+)/N:\1", r"line \1", note) \
+                   if self.reading_f else note
+            if self.reading_f and s_n == n_n:
+                self._write("  %4s | ^ %s\n" % ("", note))
+            else:
+                self._write("  %4s %4s | ^ %s\n" % ("", "", note))
 
     def _render_two_columns(self, item, s_n, n_n):
         """RETURN: None. One aligned pair as ONE row of two columns --

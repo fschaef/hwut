@@ -89,7 +89,7 @@ fixture() {             # one app with two choices, run and accepted
     } > tree/suite/TEST/test-app.sh
     chmod +x tree/suite/TEST/test-app.sh
     $RUN --directory=tree --silent > /dev/null 2>&1
-    ( cd tree/suite/TEST && python3 -m vut.services.accept --yes \
+    ( cd tree/suite/TEST && python3 -m vut.services.accept --force \
         > /dev/null 2>&1 )
 }
 

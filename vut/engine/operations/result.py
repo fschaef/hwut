@@ -37,6 +37,9 @@ class E_TestRunResult(Enum):
     #   SHRANK    every line that stands was recorded, in order; lines
     #             the GOOD holds are gone
     #   DIVERGED  neither: a recorded line changed or moved
+    #  THE NOMINAL CARRIES LINES NOBODY DECIDED ('##! unaccepted', compare
+    #  C-9): the comparison cannot pass, and it is not a regression.
+    UNACCEPTED                  = "unaccepted"
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
     NOT_EQUIVALENT_GREW         = "not-equivalent-grew"
     NOT_EQUIVALENT_SHRANK       = "not-equivalent-shrank"

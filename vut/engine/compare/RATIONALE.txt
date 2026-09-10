@@ -293,3 +293,49 @@ GRAVEYARD A validator that walks the struct after construction and
           reports unknown names: it runs LATER than the mistake, needs
           a list of legal names beside the class (a second place to be
           wrong), and catches nothing the language catches for free.
+
+
+C-9   THE 'unaccepted' REGION: CONTENT NOBODY HAS JUDGED           (2026-09-09)
+------------------------------------------------------------------------------
+PROBLEM   A partial acceptance -- some lines of a candidate taken into
+          the nominal, the rest left as found -- had no way to say
+          which lines were left. A nominal is read as a whole; a line
+          nobody decided about passes or fails on its content like any
+          other, and a green run then proves less than it says.
+
+DECISION  A REGION KIND, registered beside the others:
+
+              ##! unaccepted
+              <lines nobody has looked at>
+              ####
+
+          Its rule is the OPPOSITE of 'ignore': equivalence is False
+          wherever either side holds a line, and the association shows
+          every pair as DIFFERING -- a run meeting the region fails
+          until someone decides. An EMPTY region on both sides is
+          equivalent: nothing undecided stands in it, and the lawyer,
+          who sees no pair, must agree with the judge.
+
+          THE '!' IS LOAD-BEARING. '## unaccepted' is an IGNORED
+          commentary line and passes silently; '##!' is REGION_BEGIN,
+          recognised before the ignored-line rule
+          ('reading/line_scanner.py'). No new grammar: a name in the
+          registry, and the framing the language already had.
+
+          WHICH SIDE: a nominal's. A subject carrying the framing is a
+          test application that printed it itself.
+
+OWED, NOT HERE: the verdict WORD. A run failing on an unaccepted
+          region is not a regression and must not read as one; it
+          wants its own word beside FAIL and STAINED, so the census
+          can count it apart and the closing hint can name the way
+          forward ('hwut.accept'). That is the display's and the
+          book's, and comes with the partial acceptance that writes
+          the region (services E-58).
+
+COST      One more handler name in every 'known handlers:' message.
+
+GRAVEYARD A new token ('<undefined>') -- rejected: every reader would
+          learn a word meaning "we did not look"; the region framing
+          already means "read these lines under this rule", and the
+          rule here is "fail".

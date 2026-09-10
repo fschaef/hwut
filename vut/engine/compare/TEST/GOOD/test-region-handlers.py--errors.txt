@@ -1,6 +1,6 @@
 ## Broken framing fails LOUDLY -- never silently reinterpreted.
-unknown handler    -> line 1: unknown region handler 'quacksalber'; known handlers: ignore, point-cloud, potpourri, table, verbatim
-missing name       -> line 1: region shebang '##!' without a handler name; known handlers: ignore, point-cloud, potpourri, table, verbatim
+unknown handler    -> line 1: unknown region handler 'quacksalber'; known handlers: ignore, point-cloud, potpourri, table, unaccepted, verbatim
+missing name       -> line 1: region shebang '##!' without a handler name; known handlers: ignore, point-cloud, potpourri, table, unaccepted, verbatim
 nesting            -> line 2: region shebang inside an open region ('##! ignore' from line 1) -- nesting is forbidden
 stray ####         -> line 2: '####' without an open region
 EOF open region    -> line 3: end of stream inside an open region ('##! verbatim' from line 1) -- '####' missing
@@ -9,3 +9,4 @@ param without =    -> line 1: parameter 'max_comparisons' of region handler 'pot
 unknown param      -> line 1: region handler 'verbatim' knows no parameter 'max_comparisons'; known: (none)
 ## Longer #-runs stay commentary:
 ##### is ignored:                          judge: True  lawyer: True  [ok]
+<hwut-end>

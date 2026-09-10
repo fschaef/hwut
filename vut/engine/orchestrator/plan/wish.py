@@ -225,6 +225,9 @@ class Wish:
     #  Integer MILLISECONDS, and the unit is in the name: the command
     #  line takes human seconds and converts at the boundary (E-23).
     faster_than_ms:    int | None = None
+    #  NO NOMINAL STANDS (E-58): what was never accepted -- the whole
+    #  case, as '##! unaccepted' marks a stretch of one.
+    unaccepted_f:      bool  = False
 
     def states_nothing_f(self):
         """
@@ -239,7 +242,8 @@ class Wish:
         a point where the list explodes into the whole tree, which is
         the opposite of what the file says.
         """
-        return not (self.fail_f or self.pass_f or self.glob_tuple
+        return not (self.fail_f or self.pass_f or self.unaccepted_f
+                    or self.glob_tuple
                     or self.wishlist_f or self.exclude_tuple
                     or self.exclude_dir_tuple or self.dir_tuple) \
                and self.since_spec is None and self.until_spec is None \
@@ -268,7 +272,7 @@ class Wish:
                 observations: --fail, --pass, --since, --until,
                 --faster-than.
         """
-        return self.fail_f or self.pass_f \
+        return self.fail_f or self.pass_f or self.unaccepted_f \
                or self.since_spec is not None \
                or self.until_spec is not None \
                or self.faster_than_ms is not None
@@ -281,6 +285,7 @@ class Wish:
         if self.states_nothing_f(): return "(all)"
         part_list = []
         if self.fail_f:                 part_list.append("--fail")
+        if self.unaccepted_f:           part_list.append("--unaccepted")
         if self.pass_f:                 part_list.append("--pass")
         if self.since_spec is not None:
             part_list.append("--since=%s" % self.since_spec)
@@ -321,6 +326,7 @@ def parse_wish(argv):
     OR'ed, which is what a list of wanted tests means.
     """
     fail_f     = False
+    unaccepted_f = False
     pass_f     = False
     since_spec = None
     until_spec = None
@@ -339,6 +345,7 @@ def parse_wish(argv):
         argument = argv[index]
         index   += 1
         if   argument == "--fail":  fail_f = True
+        elif argument == "--unaccepted": unaccepted_f = True
         elif argument == "--pass":  pass_f = True
         elif argument.startswith("--since="):
             since_spec = _validated(argument[len("--since="):], argument)
@@ -443,7 +450,7 @@ def parse_wish(argv):
                  tuple(glob_list), wishlist_f,
                  tuple(exclude_list), tuple(exclude_dir_list),
                  tuple(dir_list), label_spec, tuple(language_list),
-                 faster_than_ms),
+                 faster_than_ms, unaccepted_f),
             rest_list)
 
 

@@ -7,8 +7,8 @@ STDOUT {
     setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | value {3.14159} done
-         2    2 | <hwut-end>
+         1 | value {3.14159} done
+         2 | <hwut-end>
     ============================================================
 }
 --- the application declares none: it stands plain
@@ -20,8 +20,8 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | value 3.14159 done
-         2    2 | <hwut-end>
+         1 | value 3.14159 done
+         2 | <hwut-end>
     ============================================================
 }
 --- and PLAY RECORDED NOTHING:

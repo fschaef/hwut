@@ -593,6 +593,13 @@ class CPlainFlow(CRunReportReceiver):
         if good:
             self._line(when, "DONE ", "DONE ", body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
+        elif verdict == "unaccepted":
+            #  NOT A REGRESSION (O-25): the nominal carries lines
+            #  nobody accepted, so the run CANNOT be judged. Its own
+            #  tag, so the eye does not chase a breakage that is not
+            #  there; HINTS says what to do.
+            self._line(when, "DONE ", "DONE ", body, body_ink,
+                       "[ ?! ]", self.ink.tag_undecided("[ ?! ]"))
         else:
             self._line(when, "DONE ", "DONE ", body, body_ink,
                        "[FAIL]", self.ink.tag_fail("[FAIL]"))
@@ -1050,12 +1057,20 @@ class CPlainFlow(CRunReportReceiver):
         ok_n   = sum(1 for node_db in self.verdict_db.values()
                      for verdict in node_db.values() if verdict == "ok")
         run_n  = sum(len(node_db) for node_db in self.verdict_db.values())
-        fail_n = run_n - ok_n
+        #  UNACCEPTED IS COUNTED APART (O-25): a nominal with lines
+        #  nobody decided is not a failure of the software, and a
+        #  count that folds it into 'fail' sends the eye after a
+        #  regression that is not there.
+        undecided_n = sum(1 for node_db in self.verdict_db.values()
+                          for verdict in node_db.values()
+                          if verdict == "unaccepted")
+        fail_n = run_n - ok_n - undecided_n
         skip_n = self.skip_n
         refused_n = sum(len(pl) for pl in self.refused_db.values())
         if run_n == 0 and skip_n == 0 and refused_n == 0: return
 
         part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
+        if undecided_n: part_list.append("%d unaccepted" % undecided_n)
         if skip_n:      part_list.append("%d skip" % skip_n)
         if refused_n:   part_list.append("%d refused" % refused_n)
         if self.meta_n: part_list.append("%d meta" % self.meta_n)
@@ -1065,7 +1080,7 @@ class CPlainFlow(CRunReportReceiver):
 
         total = run_n + skip_n
         if total == 0: return
-        span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n}
+        span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n + undecided_n}
         #  A NON-EMPTY REGION IS AT LEAST ITS BORDER. Reserve one
         #  column each, share the rest by proportion, and give the
         #  remainder to the largest. ONE COLUMN IS HELD BACK for the

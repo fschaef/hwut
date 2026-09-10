@@ -8,7 +8,7 @@ PURPOSE
        through accept's own door, books and all (E-51).
 
            hwut.accept.interactive [<wish>] [<test> [<choice>]] ...
-                                   [--directory=<path>] [--all] [--yes]
+                                   [--directory=<path>] [--all] [--force]
                                    [-y] [--width N] [--plain]
                                    [--editor E] [--max-rounds N]
                                    [--stderr-tol]
@@ -74,7 +74,7 @@ from   vut.services.accept                    import (token_terminated_f,
                                                       stderr_decision)
 
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
-         "[--directory=<path>] [--all] [--yes] [-y] [--width N] "
+         "[--directory=<path>] [--all] [--force] [-y] [--width N] "
          "[--plain] [--editor E] [--stderr-tol]")
 
 
@@ -126,7 +126,9 @@ def main(argv=None):
                              "below the cwd)")
     parser.add_argument("--all", action="store_true",
                         help="every differing case, no checklist")
-    parser.add_argument("--yes", action="store_true", help="as '--all'")
+    parser.add_argument("-f", "--force", action="store_true",
+                        help="every differing case, no checklist, the "
+                             "subject taken whole -- for scripts")
     parser.add_argument("--plain", action="store_true",
                         help="no colors, even on a tty")
     parser.add_argument("-y", "--side-by-side", action="store_true",
@@ -159,7 +161,7 @@ def main(argv=None):
             "equivalent to its nominal" % judged_n)
         return E_ExitCode.OK
     chosen = choose(key_list, err, sys.stdin.readline,
-                    all_f=arguments.all, yes_f=arguments.yes)
+                    all_f=arguments.all or arguments.force, yes_f=False)
     if not chosen:
         err("NOTE: nothing accepted")
         return E_ExitCode.OK

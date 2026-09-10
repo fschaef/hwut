@@ -25,7 +25,7 @@ FORMAT = 1
 #  names the node whose breaking failed this one. The verdict words
 #  are OPEN under the add-only promise.
 VERDICT_TUPLE = ("ok", "test-failed", "build-failed", "launch-failed",
-                 "unsupported", "misdep")
+                 "unsupported", "misdep", "unaccepted")
 
 #  kind -> (required {field: type}, optional {field: type}).
 #  'when' is on EVERY event and stated once below the table.

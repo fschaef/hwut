@@ -17,9 +17,9 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | pid <n> started
-         2    2 | value 7
-         3    3 | <hwut-end>
+         1 | pid <n> started
+         2 | value 7
+         3 | <hwut-end>
     ============================================================
 }
 --- and where NO pype stands, the view says so
@@ -34,8 +34,8 @@ STDOUT {
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | nothing filters me
-         2    2 | <hwut-end>
+         1 | nothing filters me
+         2 | <hwut-end>
     ============================================================
 }
 <hwut-end>

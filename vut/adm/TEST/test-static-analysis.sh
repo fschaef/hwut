@@ -129,3 +129,5 @@ else
     echo "$ZERO"
 fi
 echo "}"
+
+echo "<hwut-end>"

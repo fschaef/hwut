@@ -165,6 +165,15 @@ class CTestTaskListQuery(CTestTaskList):
         if not self.wish.asks_base_f():
             return True
 
+        #  '--unaccepted' (E-58): NO NOMINAL STANDS. A fact of the
+        #  store, not of the book -- a nominal can be blessed and the
+        #  book know nothing of it (accepted outside the book, E-41).
+        if self.wish.unaccepted_f:
+            if self._nominal_stands_f(case): return False
+            if not (self.wish.fail_f or self.wish.pass_f
+                    or self.wish.since_spec or self.wish.until_spec
+                    or self.wish.faster_than_ms is not None):
+                return True
         entry = self.bookkeeper.result(case.source_file, case.choice)
         observed = self._observation(case)
         if entry is None:
@@ -198,6 +207,17 @@ class CTestTaskListQuery(CTestTaskList):
             cutoff = cutoff_instant(self.wish.until_spec, self._now())
             if instant is None or instant >= cutoff:        return False
         return True
+
+    def _nominal_stands_f(self, case):
+        """RETURN: bool, True where a stdout nominal stands for the case
+        in the bookkeeper's GOOD/; False where none does, or where no
+        bookkeeper is at hand."""
+        if self.bookkeeper is None: return False
+        try:
+            return self.bookkeeper.nominal_path(case.source_file,
+                                                case.choice, "stdout").exists()
+        except Exception:
+            return False
 
     def _observation(self, case):
         """

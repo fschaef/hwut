@@ -34,6 +34,7 @@ class E_Chunk(Enum):
     POTPOURRI     = auto()
     VERBATIM      = auto()
     IGNORE        = auto()
+    UNACCEPTED    = auto()
     POINT_CLOUD   = auto()
     TABLE         = auto()
     TERMINAL      = auto()

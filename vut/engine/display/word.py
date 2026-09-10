@@ -31,6 +31,7 @@ ______________________________________________________________________________
 PHRASE_DB = {
     "ok":                          "ok",
     "test-failed":                 "the test failed",
+    "unaccepted":                  "the nominal carries lines nobody has accepted",
     "build-failed":                "the build failed",
     "launch-failed":               "the launch failed",
     "unsupported":                 "not supported here",
@@ -191,6 +192,9 @@ class CInk:
     #  the bright foreground, 42 and 41 the grounds.
     def tag_ok(self, text):   return self.paint(text, 97, 42)
     def tag_fail(self, text): return self.paint(text, *FAIL_TAG_CODE)
+    #  '[ ?! ]' (O-25): CANNOT BE USED FOR COMPARISON -- not green, not
+    #  the red of a regression: black on the amber of a warning.
+    def tag_undecided(self, text): return self.paint(text, 30, 43)
     def warn(self, text):    return self.paint(text, 33)
     def start(self, text):   return self.paint(text, 34)
     def dim(self, text):     return self.paint(text, 2)

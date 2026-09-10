@@ -2477,3 +2477,106 @@ GRAVEYARD 'os._exit(code)' after the line, skipping teardown entirely
           Holding the faults for a footer drained by a signal handler
           (the first sketch of O-24) -- rejected there and here: what
           is written when it happens needs no draining.
+
+----------------------------------------------------------------------------
+E-56  THE READING SHOWS ONE STREAM, SO ONE LINE NUMBER            (2026-09-07)
+----------------------------------------------------------------------------
+PROBLEM   The reading view ('hwut.diff FILE', and the reading
+          'hwut.play' renders) printed two line-number columns
+          carrying the SAME number, and its provenance notes said
+          'established at S:2/N:2'. The reading is the stream fed
+          against ITSELF -- one association, no second feeder -- so
+          the two numbers are equal by construction. A reader who
+          sees two columns looks for the difference between them, and
+          there is none to find.
+
+DECISION  Where the view is a READING and a pair's two numbers agree,
+          ONE number column is printed, and a note's two-sided place
+          collapses with it: 'S:2/N:2' reads 'line 2'. The verdict
+          view is untouched: two streams, two columns, and an S row
+          and an N row where they differ.
+
+COST      A renderer that asks 'am I a reading' at the row, where it
+          had asked nothing.
+
+GRAVEYARD Dropping the second column in every view -- rejected: in a
+          verdict the two numbers are the whole point, and they
+          differ exactly where the reader must look.
+
+----------------------------------------------------------------------------
+E-57  ACCEPT ASKS WITH THE READING; '--force' IS THE ONE WORD      (2026-09-09)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.accept' asked a person to bless a NAME and a block of
+          raw text. But a nominal is a promise about how a stream will
+          be READ -- which token compare will take as '{numeric}',
+          which as '~analogy~', which region under which rule -- and
+          none of that was shown at the asking. 'hwut.play' rendered
+          exactly that reading, one door over, and accept did not use
+          it. And two flags both meant 'proceed': '--yes' (do not
+          ask) and '--force' (overwrite a standing nominal, over the
+          'merge required' refusal) -- "yes to what? I already said
+          accept."
+
+DECISION  THE ASKING SHOWS THE READING: the candidate fed against
+          itself through compare's one door, rendered as 'hwut.play'
+          renders it, under the choice's own setup, one line number
+          per line (E-56). Anything but 'y' leaves the pole alone and
+          says where a PARTIAL acceptance lives, so the person who
+          declines learns of the middle path at the moment they need
+          it.
+
+          ONE FLAG: '--force' / '-f' means 'do not ask' -- for scripts
+          -- and, since a standing nominal is no longer refused but
+          shown, 'overwrite what stands' is the same act. '--yes' is
+          gone and REFUSED by name where it is still typed.
+          'hwut.accept.apply' passes '--force' alone.
+
+CONSEQUENCE (named, not hidden): a script saying '--force' overwrites
+          standing nominals without a look. The safe script form --
+          bless what is NEW, never touch what stands -- has no flag
+          now; it is a FILTER, and it wears the name
+          'hwut.accept.new' (owed, not built).
+
+COST      The asking is longer by the reading's header lines.
+          'test-accept.sh' merge/interactive choices re-recorded: the
+          refusal they showed no longer exists.
+
+GRAVEYARD Keeping '--yes' beside '--force' -- rejected: two words,
+          one act, and a person asked twice.
+
+----------------------------------------------------------------------------
+E-58  '--unaccepted': THE WISH SELECTS WHAT WAS NEVER ACCEPTED    (2026-09-09)
+----------------------------------------------------------------------------
+PROBLEM   E-57 made '--force' the one word for 'do not ask', and with
+          it the safe script form -- accept what is NEW, touch nothing
+          that stands -- lost its flag. E-57 named a sibling face for
+          it, 'hwut.accept.new'. That was wrong twice: a second face
+          where one face DETECTS whether a case is new, and a word
+          ('new') that says "recently added" where the fact is "never
+          accepted" -- a test added a year ago that nobody blessed is
+          not new.
+
+DECISION  A WISH WORD, not a face: '--unaccepted' selects every case
+          for which NO NOMINAL STANDS -- a fact of the store, read off
+          'GOOD/', never off the book (a nominal can be blessed and
+          the book know nothing of it, E-41). It rides the wish, so
+          every face has it for free:
+
+              hwut.accept --unaccepted --force    accept what was never
+                                                  accepted; touch nothing
+                                                  that stands; ask nobody
+              hwut.diff   --unaccepted            what has never been
+                                                  accepted
+              hwut.wishlist --unaccepted          the list of it
+
+          ONE WORD AT TWO SCALES: a case never accepted, and a stretch
+          of a nominal marked '##! unaccepted' (compare C-9), are the
+          same state -- nobody has decided -- at the grain of a stream
+          and at the grain of lines. 'hwut.accept.new' is struck from
+          E-57's CONSEQUENCE; nothing by that name will exist.
+
+COST      One flag on the wish; one look at 'GOOD/' per selected case.
+
+GRAVEYARD 'hwut.accept.new' (E-57) -- struck: one face detects.
+          '--new' -- rejected for its word. '--unblessed' -- rejected:
+          it names the ceremony, not the act the face performs.

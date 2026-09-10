@@ -135,7 +135,7 @@ def test_agree():
     """After acceptance the three agree, and the face is silent."""
     root, test = fixture()
     #  MEND BY HAND, as the face says: accept what has a candidate.
-    accept_main(["test-book.py", "--yes", "--force",
+    accept_main(["test-book.py", "--force",
                  "--directory=%s" % test],
                 write=lambda _: None)
     #  'test-reg.py' and 'test-nom.py' are still apart; remove their

@@ -31,7 +31,8 @@ from   ..result                 import E_TestRunResult
 from   ...compare.api           import (Configuration, RegionSyntaxError,
                                         is_equivalent)
 from   ..nominal                import NominalNotAvailable
-from   .terminal                import ends_in_terminal
+from   .terminal                import (ends_in_terminal,
+                                        carries_unaccepted_f)
 from   ..observer               import notify
 from   ..report                 import (Comparison, TestResult)
 
@@ -137,6 +138,20 @@ class EquivalenceCheck:
                 verdict_db[name] = False
                 if report is E_TestRunResult.OK:
                     report = E_TestRunResult.TERMINATED_WITHOUT_END
+                notify(self.observer, "verdict", name, False)
+                close = getattr(nominal_reader, "close", None)
+                if close is not None: close()
+                if self.config.fast_fail: break
+                continue
+
+            #  A NOMINAL WITH AN UNACCEPTED REGION (C-9) fails BY
+            #  NAME: the reason is 'unaccepted', never 'not
+            #  equivalent' -- a partial acceptance is not a regression
+            #  and must not read as one. Peeked on a fresh reader.
+            if carries_unaccepted_f(nominal.open()):
+                verdict_db[name] = False
+                if report is E_TestRunResult.OK:
+                    report = E_TestRunResult.UNACCEPTED
                 notify(self.observer, "verdict", name, False)
                 close = getattr(nominal_reader, "close", None)
                 if close is not None: close()

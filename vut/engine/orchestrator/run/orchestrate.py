@@ -169,6 +169,10 @@ class CDirectoryWork:
                 verdict = _verdict(state, node.kind)
                 if not good_f and report == "test-app-launch-failed":
                     verdict = "launch-failed"
+                #  NOT A REGRESSION (C-9, O-25): the nominal carries
+                #  lines nobody decided; the verdict says so by name.
+                if not good_f and report == "unaccepted":
+                    verdict = "unaccepted"
                 emit("run-ended", directory=directory,
                      node=node.name(), node_kind=node.kind.name,
                      good=good_f, verdict=verdict, **extra)

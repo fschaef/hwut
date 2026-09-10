@@ -1,5 +1,5 @@
 ##VUT-TEST-IDS 5
-G:69
+G:70
 N:13
 A:0 test-associate-race.py
 N:0.3
@@ -65,11 +65,12 @@ N:9.2
 C:9.0 line-sequence
 C:9.1 potpourri
 A:10 test-region-handlers.py
-N:10.4
+N:10.5
 C:10.0 errors
 C:10.1 ignore
 C:10.2 params
 C:10.3 verbatim
+C:10.4 unaccepted
 A:11 test-regions.py
 N:11.5
 C:11.0 caught

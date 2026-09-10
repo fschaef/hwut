@@ -100,10 +100,10 @@ cycle)
     echo "residue in the test directory: $(ls tree/suite/TEST | grep -c result.csv)"
     echo "candidates:"
     ls tree/suite/TEST/OUT/ | sed 's/^/    /'
-    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null 2>&1
     echo "accepted: status $?"
     echo "nominals:"
-    ls tree/suite/TEST/GOOD/ | grep -v result_db | sed 's/^/    /'
+    ls tree/suite/TEST/GOOD/ | grep -v -e book.csv -e result_db | sed 's/^/    /'
     $RUN --directory=tree --silent 2> /dev/null
     echo "STATUS: $?"
     ;;
@@ -114,7 +114,7 @@ forgotten)
     #  the earlier run CANNOT green this one (it was removed).
     fixture
     $PLAY test-file.sh --save --directory=tree/suite/TEST > /dev/null 2>&1
-    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null 2>&1
     printf '#!/bin/bash\n# @hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-file.sh
     chmod +x tree/suite/TEST/test-file.sh

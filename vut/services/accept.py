@@ -337,6 +337,13 @@ def proposal_targets(file_name):
     return found
 
 
+def key_setup_of(key, config_db):
+    """RETURN: compare's Configuration for the key's choice, from a
+    'config_db' as 'propose' and 'accept_one' build it; None where
+    the test carries none."""
+    return compare_setup_of(config_db.get(key.test), key.choice)
+
+
 def compare_setup_of(configuration, choice):
     """
     RETURN: compare's Configuration for this CHOICE -- the tolerances
@@ -882,25 +889,64 @@ def classify(key, force_f):
     else:                          return "merge"
 
 
-def ask(key, text, write, read_line):
+def ask(key, text, write, read_line, setup=None):
     """
     RETURN: bool, True where the user blessed this key.
 
-    The CANDIDATE is shown -- the canonicalised record, which is what
-    the framework compares. Anything but 'y' leaves the pole alone.
+    THE READING IS SHOWN, NOT THE TEXT (E-57): the candidate fed
+    against itself through compare's one door, rendered as
+    'hwut.play' renders it -- every '{numeric}', '~analogy~',
+    '<pattern>', '!binding!' and '|nothing|' marked. A blessing is a
+    promise about how this stream will be READ, and the reading is
+    what that promise says. Anything but 'y' leaves the pole alone --
+    and says how to accept part of it.
     """
+    import asyncio
+    from .lib.viewers.tui import TuiDisplay
+    from .diff             import reading_view
     write("")
     write("=" * 78)
     write("ACCEPT  %s" % key.name)
     write("-" * 78)
-    for line in text.splitlines():
-        write("    %s" % line)
+    out = _Sink(write)
+    adapter = TuiDisplay(out=out, color_f=False, merge_f=False,
+                         reading_f=True)
+    try:
+        shown_f = asyncio.run(reading_view(text, adapter,
+                                           subject_name=key.name,
+                                           compare_options=setup,
+                                           write=lambda l: write("    " + l)))
+    except Exception as error:                              # noqa: BLE001
+        shown_f = False
+        write("    (the reading could not be rendered: %s)" % error)
+    if not shown_f:
+        for line in text.splitlines(): write("    %s" % line)
     write("-" * 78)
     write("    candidate: %s" % key.candidate_path.name)
     write("    nominal:   %s" % key.nominal_path.name)
     write("accept this as the nominal? [y/N] ")
     answer = read_line()
-    return answer.strip().lower() in ("y", "yes")
+    if answer.strip().lower() in ("y", "yes"): return True
+    write("NOTE: left alone. To accept PART of it: "
+          "'hwut.accept.interactive' takes lines from the candidate into "
+          "a nominal, one at a time.")
+    return False
+
+
+class _Sink:
+    """A file-like over 'write': the TUI renderer writes lines, and
+    the face keeps its one channel."""
+    def __init__(self, write): self._write = write; self._rest = ""
+    def write(self, text):
+        """RETURN: None. Whole lines to 'write'; a tail waits for its
+        newline."""
+        text = self._rest + text
+        *line_list, self._rest = text.split("\n")
+        for line in line_list: self._write("    " + line)
+    def flush(self):
+        """RETURN: None. The tail, where one stands."""
+        if self._rest: self._write("    " + self._rest); self._rest = ""
+    def isatty(self): return False
 
 
 def main(argv=None, write=None, read_line=None, propose_n=None,
@@ -954,7 +1000,6 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 
     directory    = "."
     directory_said_f = False
-    yes_f        = False
     force_f      = False
     stderr_tol_f = False
     word_list   = []
@@ -966,8 +1011,11 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
             directory_said_f = True
-        elif argument == "--yes":         yes_f   = True
-        elif argument == "--force":       force_f = True
+        elif argument in ("--force", "-f"): force_f = True
+        elif argument == "--yes":
+            write("REFUSED: '--yes' is gone (E-57) -- '--force' / '-f' "
+                  "is the one word for 'do not ask'")
+            return E_ExitCode.REFUSED
         elif argument == "--force-run":   force_run_f = True
         elif argument in ("--stderr-tol", "--stderr-tolerated"):
             stderr_tol_f = True
@@ -1086,7 +1134,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
             write("")
             write("== %s" % os.path.relpath(whole, os.getcwd()))
         code = accept_one(whole, result, bookkeeper, case_db[where],
-                          force_f, force_run_f, stderr_tol_f, yes_f,
+                          force_f, force_run_f, stderr_tol_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list)
         if code is not E_ExitCode.EMPTY: empty_f = False
@@ -1122,7 +1170,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 
 
 def accept_one(directory, result, bookkeeper, case_sequence,
-               force_f, force_run_f, stderr_tol_f, yes_f, propose_n,
+               force_f, force_run_f, stderr_tol_f, propose_n,
                write, read_line, put=None, brief_list=None):
     """
     RETURN: E_ExitCode for ONE test directory -- OK where every key it
@@ -1262,6 +1310,17 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         write("prints the token itself, as its last line.")
         return E_ExitCode.FAULT
 
+    #  ONE CONFIGURATION PER TEST, so the reading shown at the asking
+    #  is read under the choice's own tolerances (E-57).
+    config_db = {}
+    for name, app in result.app_set.app_db.items():
+        try:
+            config_db[name] = test_configuration_of(
+                                  app, directory,
+                                  language_setup=language_setup)
+        except Exception:
+            config_db[name] = None
+
     blessed_list, merge_list, skipped_list = [], [], []
     for key in key_list:
         if id(key) in conflict_set:
@@ -1277,10 +1336,11 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                   % key.name)
             skipped_list.append(key)
             continue
-        if key.shared_f and not yes_f:
+        if key.shared_f and not force_f:
             write("NOTE: '%s' shares its nominal with every choice of "
                   "the test" % key.name)
-        if not yes_f and not ask(key, text, write, read_line):
+        if not force_f and not ask(key, text, write, read_line,
+                                   setup=key_setup_of(key, config_db)):
             skipped_list.append(key)
             continue
         store.accept(key.test, key.choice, key.subject, text)

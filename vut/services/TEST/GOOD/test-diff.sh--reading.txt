@@ -5,8 +5,8 @@ REACTION  stdout {
               setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
               reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
               --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-                   1    1 | alpha
-                   2    2 | value 3.140
+                   1 | alpha
+                   2 | value 3.140
               ============================================================
           }
           exit code : 0
