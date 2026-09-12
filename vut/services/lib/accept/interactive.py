@@ -55,6 +55,8 @@ ______________________________________________________________________________
 import io
 import sys
 import asyncio
+from . import engine
+from .engine import merge_text, MERGE_ROUND_MAX  # noqa: F401 (E-51's names)
 import argparse
 
 from   vut.services.lib.viewers               import (driver_for,
@@ -76,31 +78,6 @@ from   vut.services.accept                    import (token_terminated_f,
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
          "[--directory=<path>] [--all] [--force] [-y] [--width N] "
          "[--plain] [--editor E] [--stderr-tol]")
-
-
-async def merge_text(subject_text, nominal_text, adapter,
-                     subject_name, compare_options,
-                     max_round_n=MERGE_ROUND_MAX):
-    """
-    RETURN: (str, E_Intent), the merged nominal stream and the intent
-            that ended the session.
-            (None, E_Intent.CANCEL), the session resolved nothing.
-
-    'merge_session' with the alignment from compare's one door under
-    this choice's options.
-    """
-    from vut.engine.compare.api import feeder_ui as compare_feeder
-    from vut.engine.compare.api import Configuration
-    options = compare_options if compare_options is not None \
-              else Configuration()
-    def align(subject, working):
-        """RETURN: AsyncIterable[DisplayInst], the alignment of
-        'subject' against 'working'."""
-        return compare_feeder.feed(options, io.StringIO(subject),
-                                   io.StringIO(working))
-    return await merge_session(align, subject_text, nominal_text,
-                               adapter, subject_name,
-                               max_round_n=max_round_n)
 
 
 def main(argv=None):
@@ -170,63 +147,21 @@ def main(argv=None):
     if arguments.editor is not None:
         import shlex
         editor_argv = shlex.split(arguments.editor)
-    adapter = driver_for(E_DisplayTarget.TUI,
-                         out         = sys.stderr,
-                         input_f     = input,
-                         editor_argv = editor_argv,
-                         color_f     = False if arguments.plain else None,
-                         merge_f     = True,
-                         side_by_side_f = arguments.side_by_side,
-                         width       = arguments.width)
 
-    accepted_list, refused_list, left_list = [], [], []
-    for key in chosen:
-        store = selected.store_of(key.where)
-        options = setup if setup_said_f else key.setup
-        text, intent = asyncio.run(merge_text(
-            key.subject_text, key.nominal_text, adapter, key.label,
-            options, max_round_n=arguments.max_rounds))
-        if intent is not E_Intent.COMMIT or text is None:
-            left_list.append(key); continue
-        reason = _refusal(store, key, text, arguments.stderr_tol, err)
-        if reason is not None:
-            refused_list.append((key, reason)); continue
-        #  THE THREE WRITES OF AN ACCEPTANCE, as 'hwut.accept' makes
-        #  them (E-41): the nominal, the register, the book.
-        store.accept(key.test, key.choice, "stdout", text)
-        store.bookkeeper.note_accept(key.test, key.choice)
-        accepted_list.append(key)
-
-    err("")
-    err("=" * 78)
-    err("ACCEPTED  %d of %d" % (len(accepted_list), len(chosen)))
-    err("-" * 78)
-    for key in accepted_list:         err("    accepted       %s" % key.label)
-    for key, reason in refused_list:  err("    refused        %s -- %s"
-                                          % (key.label, reason))
-    for key in left_list:             err("    left alone     %s" % key.label)
-    err("=" * 78)
-    return E_ExitCode.FAULT if refused_list else E_ExitCode.OK
-
-
-def _refusal(store, key, text, stderr_tol_f, err):
-    """
-    RETURN: str, why this text may NOT become the nominal -- in
-            'hwut.accept's words; None where it may.
-    """
-    if store.bookkeeper.stain(key.test, key.choice) is not None:
-        return "a stained choice has no pole to declare"
-    if not token_terminated_f(text):
-        return "the closing token '<hwut-end>' is not the last line " \
-               "-- a stream that never COMPLETED is not promotable"
-    class _Case:
-        source_file = key.test; choice = key.choice
-    spoke_db = stderr_spoke_db(store, [_Case()])
-    if spoke_db:
-        refused = stderr_decision(store, spoke_db, stderr_tol_f, err)
-        if refused: return "stderr spoke and nothing tolerates it " \
-                           "('--stderr-tol')"
-    return None
+    #  THE ENGINE IS SHARED (E-59): 'hwut.accept' reaches the same loop
+    #  where a nominal stands. Neither door owns it, so a rule about
+    #  promotion cannot hold at one and not the other.
+    adapter = engine.adapter_for(editor_argv=editor_argv,
+                                 plain_f=arguments.plain,
+                                 side_by_side_f=arguments.side_by_side,
+                                 width=arguments.width)
+    accepted_list, refused_list, left_list = engine.run_sessions(
+        chosen, selected.store_of, adapter, err,
+        setup=setup if setup_said_f else None,
+        max_round_n=arguments.max_rounds,
+        stderr_tol_f=arguments.stderr_tol)
+    return engine.report(accepted_list, refused_list, left_list,
+                         len(chosen), err)
 
 
 if __name__ == "__main__":

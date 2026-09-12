@@ -1,0 +1,18 @@
+AFTER TWO TAKES: one subject chunk faces region|plain|region|plain.
+Plain chunks ANCHOR by content; regions take what lies between.
+   LINE_SEQUENCE  ['alpha']                    | UNACCEPTED   ['--?--']
+   LINE_SEQUENCE  ['beta']                     | LINE_SEQUENCE ['beta']
+   LINE_SEQUENCE  ['gamma']                    | UNACCEPTED   ['--?--']
+   LINE_SEQUENCE  ['delta']                    | LINE_SEQUENCE ['delta']
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+
+N != M: 'beta' was taken as three lines; the anchors still hold
+   LINE_SEQUENCE  ['alpha']                    | UNACCEPTED   ['--?--']
+   LINE_SEQUENCE  ['b1', 'b2', 'b3']           | LINE_SEQUENCE ['b1', 'b2', 'b3']
+   LINE_SEQUENCE  ['gamma']                    | UNACCEPTED   ['--?--']
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+
+PLAIN/PLAIN WITH NO REGION IN SIGHT pairs as it always has (P-13)
+   LINE_SEQUENCE  ['one', 'two', 'three']      | LINE_SEQUENCE ['one', 'TWO', 'three']
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+<hwut-end>

@@ -1,0 +1,17 @@
+L-9/L-10: undo restores the whole state; a bulk take is ONE act
+
+-- L-9 a bulk take, then one undo
+     nominal restored: True
+     stale restored  : 0
+
+-- L-9 the latch is restored too, not only the text
+     before take: virgin=False
+     after undo : virgin=False
+
+-- L-10 every take raises the stale count; 'r' zeroes it
+     after one take : 1
+     after realign  : 0
+
+-- undo with nothing done is not an error
+     same state back: True
+<hwut-end>

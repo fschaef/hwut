@@ -2580,3 +2580,232 @@ COST      One flag on the wish; one look at 'GOOD/' per selected case.
 GRAVEYARD 'hwut.accept.new' (E-57) -- struck: one face detects.
           '--new' -- rejected for its word. '--unblessed' -- rejected:
           it names the ceremony, not the act the face performs.
+
+
+E-59  ONE FACE: 'hwut.accept' SWITCHES ON FIRST-OR-ADAPT           (2026-09-10)
+----------------------------------------------------------------------------
+PROBLEM   E-51 gave the change-by-hand its own face, 'hwut.accept.
+          interactive', and E-57 made the plain face refuse a change
+          outright. The author was left choosing a face by a fact the
+          face itself can read off 'GOOD/': whether a nominal stands.
+
+DECISION  ONE FACE, 'hwut.accept', switching on whether this is a FIRST
+          acceptance -- no nominal stands -- or an ADAPTATION of a
+          standing GOOD. The author chooses no tier and no flag.
+
+          TWO SERVICE COMPONENTS BEHIND IT, because the dynamics of the
+          unaccepted regions differ: a first acceptance starts from a
+          full mirror and fragments it ('accept_first.py'); an
+          adaptation starts from whatever regions a standing GOOD
+          carries, or none ('accept_adapt.py'). What both rely on --
+          classification, the closing-token rule, the reading of a
+          candidate -- lives in '_accept_common.py', and it is NOT
+          optional: the atomic refusal of E-6/R-70 spans the whole
+          SELECTION, so neither half may own that question alone.
+
+          The name '_accept_common.py' breaks 'services/'s single-noun
+          convention on purpose: '_accept.py' beside 'accept.py' would
+          read as a near-duplicate.
+
+          THE MERGE ENGINE IS SHARED, not duplicated: the session loop,
+          the three writes of E-41 and every refusal live in
+          'lib/accept/engine.py', and BOTH doors call it. 'hwut.accept'
+          merges a change itself where stdin and stderr are terminals;
+          off a terminal -- a pipe, a script, a suite -- it says 'merge
+          required' as it always did, because a face that cannot ask
+          must not decide. 'hwut.accept.interactive' remains as E-51's
+          name for the same engine; 'merge_text' keeps its old import
+          path so nothing that reached for it breaks.
+
+COST      Two modules where one face reads; a reader must find the
+          branch rather than a filename. One more thing for the face to
+          read -- whether it is on a terminal -- and a suite that wants
+          the merge must arrange one or call the E-51 name.
+
+GRAVEYARD Merging regardless of a terminal -- rejected: 'hwut.accept'
+          in a pipeline would hang on a session nobody can answer.
+          Duplicating the session loop in the plain face -- rejected:
+          the three writes and the refusals would be two
+          implementations, and E-41 would hold at one door only.
+          One flow with a single branch where the nominal is obtained
+          (measured: the ONLY line distinguishing the two cases today is
+          '_cases.py's "if not good_path.exists(): continue") -- rejected
+          once the region dynamics were seen to differ. Two modules under
+          'lib/accept/' -- rejected: the ~95% common part would live in
+          one of them or in a third.
+
+
+E-60  ACCEPT IS PARTIAL BY DEFAULT: THE FIRST NOMINAL IS A MIRROR   (2026-09-10)
+----------------------------------------------------------------------------
+PROBLEM   A first acceptance blessed the candidate whole. Every line of
+          it became law in one keystroke, and the author had judged
+          none of them; 'hwut.accept.interactive' could not help,
+          because it opened only where a nominal already stood.
+
+DECISION  A FIRST ACCEPTANCE WITHOUT '--force' RECORDS THE CANDIDATE'S
+          SHAPE WITH NOTHING DECIDED. The subject is parsed into its
+          chunks by compare's own reader ('lawyer_reading'), and EACH
+          chunk becomes one '##! unaccepted' region holding ONE FILLER
+          LINE PER LINE of that chunk; the closing token stands outside
+          every region as the last line. The next run reads '[ ?! ]'
+          (O-25) -- a decision still owed, not a failure.
+
+          A MIRROR, NOT A WRAPPER. Chunk counts and order correspond 1:1,
+          so the pairing has an unambiguous partner for every chunk, and
+          inside each region it is 1:1 and TOTAL: no subject line is ever
+          left without a partner. Measured, a single region wrapping
+          everything shows the candidate's lines TWICE -- nominal-only
+          inside the region, subject-only below it -- and never side by
+          side.
+
+          FILLERS, NOT THE SUBJECT'S OWN LINES. Copying the subject in
+          would put the answer in the file before anybody looked; and a
+          subject chunk that is itself a region carries '##!' and
+          '####', which inside an unaccepted region is NESTING --
+          forbidden, and measured to close the outer region early where
+          not refused outright. The filler is '--?--': significant
+          content, so that a filler against a subject line is a REAL
+          difference. Anything of the '##'..'##' family reads as
+          VISIBLE_NOTHING and would make the region EQUIVALENT -- a
+          first acceptance that PASSES. Not bare '--': a comment in SQL,
+          Lua, Ada, Haskell, and patch syntax. FIXED, not configured:
+          overwritten the moment anybody takes the line it stands on,
+          and inside a region every line is a filler by construction.
+
+          '--force' is the old blessing: the candidate whole, as it
+          stands ('bless'). The report says 'undecided', never
+          'blessed', for what E-60 writes: the word says what happened.
+
+          'hwut.accept.interactive' OPENS ON THE MIRROR where no nominal
+          stands, and provisions the candidate itself the way
+          'hwut.accept' refreshes (E-40): 'hwut.run' refuses to run what
+          nobody accepted, so there is nothing else to open on.
+
+COST      A first acceptance is two acts where it was one: record the
+          shape, then decide. The filler persists across sessions while
+          regions stand (a partial acceptance commits with them).
+          compare's reader and zip change (see below), and 15 GOODs
+          downstream move -- each by exactly the token section.
+
+GRAVEYARD One region wrapping the candidate whole -- rejected, measured
+          to double the view. Copying the candidate into the region --
+          rejected twice over (the answer in the file; nesting). N-2
+          fillers with the markers on the first and last lines --
+          rejected: two subject lines per region partnerless, and a
+          one-line chunk inexpressible. A configurable filler --
+          rejected: what sense in configuring soon-overwritten content.
+          Preserving a subject region's KIND in the mirror -- struck by
+          the filler ruling; nothing of the chunk's text stands in it.
+
+
+E-61  THE MERGE WANTS KEYS: THE KEYED SESSION                       (2026-09-10)
+----------------------------------------------------------------------------
+PROBLEM   E-49's graveyard deferred a keyed view "if the merge wants
+          keys". E-60 makes a PARTIAL acceptance the ordinary act, and
+          the line-based session cannot express it: its granularity is
+          the whole subject ('t') or a drop to '$EDITOR' ('e'), and
+          neither is a partial take.
+
+DECISION  A NEW VIEWER TIER, 'E_DisplayTarget.KEYS' -> 'lib/viewers/
+          keyed/', reached by 'hwut.accept.interactive' where stderr is
+          a terminal. It IS the edit mode and opens directly. Subject
+          left, nominal right (E-49, not reopened).
+
+          TWO CURSORS, one per pane. Tab is a MODE SWITCH FOR A SUBSET
+          OF THE KEYMAP: the rows marked PANE (the moves, the anchor,
+          the search) act on whichever pane Tab last selected; the rows
+          marked BOTH (the takes, undo, realign, the leaving acts) mean
+          the same in either. The table carries the column.
+
+          THREE TAKES, EACH WITH ITS OWN SCOPE, so no marked range ever
+          crosses a region border: Enter, the marked subject range into
+          the marked nominal range; 'a', this region into its associated
+          region; 'A', the complete subject over the complete nominal.
+          Copying is ALWAYS line-wise, left to right; the keyed view
+          never types characters into the nominal, 'e' remains the one
+          way to alter text.
+
+          THE TARGET RANGE IS REPLACED WHOLE, N != M allowed. A take
+          inside an 'unaccepted' region SPLITS it around what was taken;
+          a region emptied by a take is REMOVED, framing and all -- an
+          empty region asserts nothing (C-9) while it still reads as
+          undecided. NO REGION OF ANY OTHER KIND IS EVER CUT, on either
+          side: a take touching a potpourri or a table must cover its
+          whole content and then takes it ENTIRE, markers included --
+          a subject region arrives in the nominal FRAMED as the test
+          printed it -- or is refused; a take touching two regions is
+          refused. A remainder of a potpourri left trailing after a
+          merge is a nominal nobody wrote and compare cannot read.
+
+          THE VIRGIN TARGET. The target is DERIVED from the alignment
+          and, while virgin, TRACKS the subject range. Virginity is
+          broken by MODIFICATION, not by entry: Tab in, look, Tab out
+          leaves it tracking; the latch flips when the target range's
+          first or last line differs from the derived one. The latch is
+          per selection, visible on screen, and restored by undo.
+
+          RE-ALIGNMENT IS EXPLICIT. A take RE-INDEXES LOCALLY -- shifts
+          what is below by N-M and pairs the taken stretch 1:1, inventing
+          no tolerance and no analogy -- and the banner counts takes
+          since the last 'r'. 'r' returns REALIGN to the hub; the
+          session never calls compare's door (port.py removed that
+          corridor). Commit never forces a round: staleness is a
+          display property, the committed text is real either way.
+
+          THE ARCHITECTURE. 'prompt_toolkit' owns the Windows, the
+          scrolling and the key loop; VUT owns the merge state -- a
+          dataclass, and 'reduce(state, act) -> state', pure -- because
+          the derived target, the latch, the whole-range take and the
+          split are RULINGS and a ruling belongs in a module that can
+          state it. The projection is pushed into its controls ONE WAY;
+          our state never reads a viewport offset back. Key -> act is
+          ONE TABLE and the KeyBindings object is generated from it.
+          Where 'prompt_toolkit' will not import, 'driver_for' hands
+          back the TUI tier and today's line-based session runs: a
+          merge is NEVER hard-failed for lack of an import.
+
+COST      'prompt_toolkit' 3.0.x -- BSD-3-Clause, pure Python, Python
+          >= 3.10, one dependency (wcwidth, MIT); VUT declares no
+          dependencies anywhere and already imports five undeclared.
+          The keyed suite needs it on the test host. compare's suites
+          must census clean against three changes there. The nvim tier
+          goes (see below).
+
+GRAVEYARD A flag on TuiDisplay -- rejected: an event loop owning the
+          terminal beside a stream renderer, in a file with standing
+          GOODs. VUT owning the projection with prompt_toolkit painting
+          one control -- rejected once the fallback was seen to be a
+          different session, not this one without the import. A round
+          per take -- rejected: MERGE_ROUND_MAX would count keystrokes.
+          Automatic realign on idle, or on a 'risky' take -- rejected:
+          timing-dependent GOODs flake; 'least trustworthy' is a
+          heuristic. Nudge keys for the target -- struck by the
+          two-cursor ruling. Pairwise min(N,M) copying -- rejected: a
+          silent drop. A second cursor as the prompt_toolkit Buffer's
+          own -- rejected: the latch has nowhere to live. Rebuilding
+          the view on 'r' instead of asking compare -- rejected: the one
+          key whose job is compare's verdict would ask it nothing.
+
+
+E-62  THE NVIM TIER GOES                                            (2026-09-10)
+----------------------------------------------------------------------------
+PROBLEM   'services/lib/viewers/nvim/' -- 19 files, 987 lines -- was a
+          protocol reference implementation with tests, not a viewer
+          anybody could start: 'lua/vut_merge/init.lua', the glue its
+          own README named, did not exist; no face offered '-t nvim';
+          nothing launched it; its suite needed a neovim binary.
+
+DECISION  Removed entire. The RICH tier and 'RemoteDisplay' STAY: they
+          are exercised by a Python mock client in 'interaction/TEST/
+          test-merge.py' and do not depend on the plugin. E-61's keyed
+          tier lands in the slot.
+
+COST      The only worked example of a non-Python client goes; a future
+          VS Code client starts from prose, not from 'protocol.lua'.
+          Four edits ride along (test-hygiene's skip sets, the viewers
+          docstring, README 11.5, the README index).
+
+GRAVEYARD Removing the RICH tier with it -- rejected: much bigger than
+          the question, and standing GOODs move. Keeping it and writing
+          'init.lua' later -- rejected: an unreachable tier in the
+          census as a suite nobody can run.

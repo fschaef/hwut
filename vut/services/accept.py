@@ -67,6 +67,7 @@ from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP
 from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
                                                                as WISH_TOKEN_TUPLE
 from   vut.engine.operations                           import subject_provision
+from   vut.engine.compare.api                          import Configuration
 from   vut.engine.operations.session                   import (run_test,
                                                                Request)
 from   vut.engine.orchestrator.run.adapter             import \
@@ -864,29 +865,11 @@ def stderr_decision(store, spoke_db, tolerate_f, write):
     return refused_list
 
 
-def token_terminated_f(text):
-    """
-    RETURN: bool, True where the stream's LAST LINE is the closing
-            token '<hwut-end>' (R-70) -- the stream's own testimony
-            that it completed.
-    """
-    if text is None: return False
-    line_list = text.splitlines()
-    return bool(line_list) and line_list[-1] == "<hwut-end>"
-
-
-def classify(key, force_f):
-    """
-    RETURN: str, what accept is to do with the key -- one of:
-
-            'bless'   no nominal stands: the first pole
-            'merge'   a nominal stands and '--force' was not said:
-                      this is a CHANGE, and 'hwut.accept.interactive's business
-            'force'   a nominal stands and '--force' was said
-    """
-    if   not key.nominal_stands_f: return "bless"
-    elif force_f:                  return "force"
-    else:                          return "merge"
+#  'token_terminated_f' and 'classify' live in '_accept_common.py' now:
+#  they are what BOTH kinds of acceptance rely on, and a refusal rule
+#  must not be able to apply to one kind and not the other.
+from vut.services._accept_common import token_terminated_f, classify  # noqa: E402
+from vut.services              import accept_first                   # noqa: E402
 
 
 def ask(key, text, write, read_line, setup=None):
@@ -987,6 +970,13 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     if argv is None: argv = sys.argv[1:]
     if write is None: write = print
     if read_line is None: read_line = sys.stdin.readline
+
+    #  ONE FACE (E-59): a change is MERGED here, where there is a
+    #  terminal to merge in. A pipe, a script or a suite gets what it
+    #  always got -- 'merge required' and the way out. Proposing and
+    #  the brief column ask nothing and never merge.
+    interactive_f = (propose_n is None and not brief_f
+                     and sys.stdin.isatty() and sys.stderr.isatty())
     if "--help" in argv:
         write(HELP)
         return E_ExitCode.OK
@@ -1136,7 +1126,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
         code = accept_one(whole, result, bookkeeper, case_db[where],
                           force_f, force_run_f, stderr_tol_f,
                           propose_n, write, read_line, put=put,
-                          brief_list=brief_list)
+                          brief_list=brief_list,
+                          interactive_f=interactive_f)
         if code is not E_ExitCode.EMPTY: empty_f = False
         if code not in (E_ExitCode.OK, E_ExitCode.EMPTY): worst = code
     if brief_list is not None:
@@ -1171,7 +1162,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 
 def accept_one(directory, result, bookkeeper, case_sequence,
                force_f, force_run_f, stderr_tol_f, propose_n,
-               write, read_line, put=None, brief_list=None):
+               write, read_line, put=None, brief_list=None,
+               interactive_f=False):
     """
     RETURN: E_ExitCode for ONE test directory -- OK where every key it
             holds was blessed or nothing was owed, EMPTY where it held
@@ -1322,12 +1314,20 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             config_db[name] = None
 
     blessed_list, merge_list, skipped_list = [], [], []
+    undecided_list = []                 # first acceptances: the shape only
     for key in key_list:
         if id(key) in conflict_set:
             skipped_list.append(key)
             continue
         verdict = classify(key, force_f)
         if verdict == "merge":
+            #  ONE FACE (E-59). A nominal stands: this is a CHANGE, and
+            #  a change is merged, not blessed. Where there is a session
+            #  to hold it, 'hwut.accept' holds it HERE, through the same
+            #  engine 'hwut.accept.interactive' runs -- the author does
+            #  not choose a face by a fact this face can read.
+            #  Where there is none -- a pipe, a script, a suite -- it
+            #  says so as it always did, and '--force' still overwrites.
             merge_list.append(key)
             continue
         text = read_text(key.candidate_path)
@@ -1336,6 +1336,23 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                   % key.name)
             skipped_list.append(key)
             continue
+        written = text
+        if verdict == "first":
+            #  ACCEPT IS PARTIAL BY DEFAULT (E-60). What gets WRITTEN is
+            #  the candidate's SHAPE with nothing decided -- the mirror
+            #  of '##! unaccepted' regions 'accept_first' builds -- not
+            #  the candidate. What gets SHOWN at the prompt is still the
+            #  candidate (E-57): the reader judges what the test
+            #  printed, not the framing it will be filed under.
+            setup   = compare_setup_of(config_db.get(key.test), key.choice)
+            written = accept_first.opening_nominal(
+                          setup if setup is not None else Configuration(),
+                          text, force_f=False)
+            if written is None:
+                write("REFUSED: the candidate of '%s' does not end in "
+                      "'<hwut-end>' -- it never COMPLETED" % key.name)
+                skipped_list.append(key)
+                continue
         if key.shared_f and not force_f:
             write("NOTE: '%s' shares its nominal with every choice of "
                   "the test" % key.name)
@@ -1343,18 +1360,35 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                                    setup=key_setup_of(key, config_db)):
             skipped_list.append(key)
             continue
-        store.accept(key.test, key.choice, key.subject, text)
+        store.accept(key.test, key.choice, key.subject, written)
         #  THE REGISTER: an id is born at first accept -- issued by
         #  'note_accept' in the acceptance's own act (B-9).
         #  THE BOOK: the acceptance's instant (E-36), so the three
         #  records of acceptance agree (E-41). Before this line the
         #  face itself accepted outside the book.
         store.bookkeeper.note_accept(key.test, key.choice)
-        blessed_list.append(key)
+        (undecided_list if verdict == "first" else blessed_list).append(key)
+
+    #  THE MERGE, THROUGH THE SHARED ENGINE. The keys a nominal stands
+    #  for are handed to the same loop as E-51's face, so the three
+    #  writes and every refusal are one implementation (E-59).
+    if merge_list and interactive_f and not force_f:
+        merged_list, merge_refused_list, merge_left_list = \
+            _merge_through_engine(merge_list, store, write, stderr_tol_f,
+                                  config_db)
+        blessed_list.extend(merged_list)
+        merge_list = merge_left_list
+        for key, reason in merge_refused_list:
+            write("REFUSED: %s -- %s" % (key.name, reason))
+            skipped_list.append(key)
 
     if brief_list is not None:
         for key in blessed_list:
             brief_list.append((_brief_label(directory, key), DONE_TEXT, None))
+        for key in undecided_list:
+            brief_list.append((_brief_label(directory, key), DONE_TEXT,
+                               "recorded undecided: the shape stands, "
+                               "nothing is accepted yet"))
         for key in merge_list:
             brief_list.append((_brief_label(directory, key), ERROR_TEXT,
                                "a nominal stands: this is a change, "
@@ -1366,10 +1400,16 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     else:
         write("")
         write("=" * 78)
-        write("ACCEPTED  %d of %d" % (len(blessed_list), len(key_list)))
+        write("ACCEPTED  %d of %d" % (len(blessed_list) + len(undecided_list),
+                                       len(key_list)))
         write("-" * 78)
         for key in blessed_list:
             write("    blessed        %s" % key.name)
+        for key in undecided_list:
+            #  THE WORD SAYS WHAT HAPPENED. Nothing was blessed: the
+            #  candidate's shape now stands, every line of it undecided,
+            #  and 'hwut.accept.interactive' is where deciding happens.
+            write("    undecided      %s" % key.name)
         for key in merge_list:
             write("    merge required %s" % key.name)
         for key in skipped_list:
@@ -1378,13 +1418,61 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             write("")
             write("A nominal already stands for the keys above. That is a "
                   "CHANGE, not a")
-            write("first blessing: use 'hwut.accept.interactive', or '--force' to "
-                  "overwrite the pole.")
+            write("first blessing. At a TERMINAL this face merges them "
+                  "itself (E-59); here")
+            write("there is none, so: run it on a terminal, or '--force' "
+                  "to overwrite the pole.")
         write("=" * 78)
 
     if result.fault_list or merge_list or conflict_db:
         return E_ExitCode.FAULT
     return E_ExitCode.OK
+
+
+def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
+    """
+    RETURN: (accepted_list, refused_list, left_list) for the keys a
+            nominal already stands for -- run through the SAME engine
+            'hwut.accept.interactive' uses, so the three writes of E-41
+            and every refusal have one implementation.
+
+            Every key left alone, where a session cannot be built at
+            all: a face that cannot ask must not decide.
+    """
+    from vut.services.lib.accept import engine
+
+    class _MergeKey:
+        """The engine's key shape, filled from 'hwut.accept's own."""
+        def __init__(self, key, setup):
+            self.where        = None
+            self.test         = key.test
+            self.choice       = key.choice
+            self.label        = key.name
+            self.setup        = setup
+            self.subject_text = read_text(key.candidate_path)
+            self.nominal_text = read_text(key.nominal_path)
+
+    wanted_list = []
+    for key in key_list:
+        merge_key = _MergeKey(key, compare_setup_of(config_db.get(key.test),
+                                                    key.choice))
+        if merge_key.subject_text is None or merge_key.nominal_text is None:
+            continue
+        wanted_list.append((key, merge_key))
+    if not wanted_list: return ([], [], list(key_list))
+
+    try:
+        adapter = engine.adapter_for()
+    except Exception:                                          # noqa: BLE001
+        return ([], [], list(key_list))
+
+    origin_db = {id(m): k for k, m in wanted_list}
+    accepted, refused, left = engine.run_sessions(
+        [m for _, m in wanted_list], lambda _: store, write,
+        stderr_tol_f=stderr_tol_f)
+    return ([origin_db[id(m)] for m in accepted],
+            [(origin_db[id(m)], reason) for m, reason in refused],
+            [origin_db[id(m)] for m in left])
 
 
 if __name__ == "__main__":

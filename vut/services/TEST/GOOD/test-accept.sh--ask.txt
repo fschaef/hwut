@@ -12,6 +12,7 @@ STATUS: 0
         reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
         --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
              1 | steady line
+        --[ CLOSING-TOKEN ]--
              2 | <hwut-end>
         ============================================================
     ------------------------------------------------------------------------------
@@ -28,6 +29,7 @@ STATUS: 0
         reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
         --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
              1 | choice a
+        --[ CLOSING-TOKEN ]--
              2 | <hwut-end>
         ============================================================
     ------------------------------------------------------------------------------
@@ -45,6 +47,7 @@ STATUS: 0
         reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
         --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
              1 | choice b
+        --[ CLOSING-TOKEN ]--
              2 | <hwut-end>
         ============================================================
     ------------------------------------------------------------------------------
@@ -56,7 +59,7 @@ STATUS: 0
     ==============================================================================
     ACCEPTED  1 of 3
     ------------------------------------------------------------------------------
-        blessed        test-ok.sh .stdout
+        undecided      test-ok.sh .stdout
         left alone     test-two.sh a .stdout
         left alone     test-two.sh b .stdout
     ==============================================================================

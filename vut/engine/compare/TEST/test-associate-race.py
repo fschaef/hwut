@@ -55,6 +55,7 @@ async def test(subject_timeline, nominal_timeline):
         await line_provider.cleanup(dispatcher_handle)
 
     print(f"Finished with {pair_count} chunks.")
+    print("<hwut-end>")
 
 if __name__ == "__main__":
     if "--hwut-info" in sys.argv:

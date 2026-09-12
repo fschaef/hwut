@@ -1,0 +1,10 @@
+THE CLOSING TOKEN is a chunk of its own on EVERY stream,
+and only where it is the LAST line
+   LINE_SEQUENCE  ['a', 'b']                   | LINE_SEQUENCE ['a', 'b']
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+
+   LINE_SEQUENCE  ['a', '<hwut-end>', 'b']     | LINE_SEQUENCE ['a', '<hwut-end>', 'b']
+
+token only:
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+<hwut-end>

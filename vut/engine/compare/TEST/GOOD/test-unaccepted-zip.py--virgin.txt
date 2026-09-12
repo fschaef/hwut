@@ -1,0 +1,7 @@
+THE MIRROR: one region per subject chunk, fillers one per line,
+the token outside -- every chunk finds its partner, nothing doubles
+   LINE_SEQUENCE  ['alpha', 'beta']            | UNACCEPTED   ['--?--', '--?--']
+   TABLE          [' a | b', ' c | d']         | UNACCEPTED   ['--?--', '--?--']
+   LINE_SEQUENCE  ['gamma']                    | UNACCEPTED   ['--?--']
+   LINE_SEQUENCE  ['<hwut-end>']               | LINE_SEQUENCE ['<hwut-end>']
+<hwut-end>

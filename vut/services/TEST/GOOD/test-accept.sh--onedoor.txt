@@ -1,0 +1,12 @@
+--- off a terminal: the refusal, and the way out
+STATUS: 1
+        merge required test-ok.sh .stdout
+        merge required test-two.sh a .stdout
+        merge required test-two.sh b .stdout
+    first blessing. At a TERMINAL this face merges them itself (E-59); here
+--- the engine both doors call
+    merge_text is the engine's: True
+    the face calls run_sessions: True
+    hwut.accept calls it too   : True
+    one refusal implementation : True
+<hwut-end>

@@ -5,6 +5,7 @@ REACTION  stdout {
               setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
               --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
                  1 [changed ]line for one        |    1 line for one
+              --[ CLOSING-TOKEN ]--
                  2 <hwut-end>                         2 <hwut-end>
               ============================================================
               
@@ -12,6 +13,7 @@ REACTION  stdout {
               setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
               --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
                  1 [changed ]line for two        |    1 line for two
+              --[ CLOSING-TOKEN ]--
                  2 <hwut-end>                         2 <hwut-end>
               ============================================================
           }

@@ -1,0 +1,12 @@
+L-12: the local re-index, and what it refuses to invent
+
+-- where each subject line now stands
+     subject 0 'alpha'  -> nominal 1    '--?--'
+     subject 1 'beta'   -> nominal 3    'beta'
+     subject 2 'gamma'  -> nominal 5    '--?--'
+
+     It shifts what is below by N-M and pairs the taken
+     stretch 1:1. A tolerance, a numeric within its limit, an
+     analogy binding -- only compare knows those, and they go
+     STALE. That is what the banner's count is for.
+<hwut-end>

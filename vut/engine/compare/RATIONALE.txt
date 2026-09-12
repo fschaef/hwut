@@ -339,3 +339,55 @@ GRAVEYARD A new token ('<undefined>') -- rejected: every reader would
           learn a word meaning "we did not look"; the region framing
           already means "read these lines under this rule", and the
           rule here is "fail".
+
+
+C-10  THE CLOSING TOKEN IS A CHUNK OF ITS OWN                       (2026-09-10)
+----------------------------------------------------------------------------
+PROBLEM   E-60's mirror puts '<hwut-end>' outside every region, and R-70
+          needs it last. Fused into the block above it on the subject
+          side, it faced a token standing alone on the nominal side --
+          and neither could pair. Measured: both read as one-sided.
+
+DECISION  compare's reader splits a trailing '<hwut-end>' into a chunk
+          of its own, FOR EVERY STREAM. The display names its section
+          'CLOSING-TOKEN' and sets it apart, at the foot: the screen
+          reminds whoever reads it of a characteristic of an hwut test
+          -- a stream ends with its own testimony that it completed.
+          R-70 enforces it; the display teaches it.
+
+          AN 'unaccepted' NOMINAL CHUNK PAIRS WITH ANY SUBJECT CHUNK.
+          Every other handler says HOW a stretch is read, and two
+          readings cannot both claim one line; 'unaccepted' says only
+          WHETHER anybody looked, a statement about the nominal's
+          history. The zip pairs them and 'region/unaccepted/
+          associate.py' -- written for a subject side it never received
+          -- zips the lines as SUBSTITUTE. Without this the two streams
+          DOUBLE on screen.
+
+          THE POST-TAKE SHAPE -- one subject chunk facing 'region |
+          plain | region', which every take leaves behind -- is SPLIT
+          to face the run, anchored by CONTENT: a taken line IS its
+          subject line, byte for byte, so a plain nominal chunk is found
+          in the subject exactly and monotone, and a region receives the
+          subject lines between its neighbours' anchors. The zip keeps
+          ONE CHUNK of nominal look-ahead for it. The cut fires ONLY
+          beside a region: plain facing plain with no region in sight
+          pairs as it always has, so compare's association is never
+          second-guessed where nobody took anything.
+
+COST      compare's own GOODs do not move for the token (measured: no
+          fixture carries it). Fifteen downstream GOODs move, each by
+          the one section line. The look-ahead changes WHEN the nominal
+          is read, so 'test-associate-race.py's three arrival traces
+          move -- their yielded pairs byte-identical -- and that test,
+          older than R-70, now ends in the token it never printed.
+
+GRAVEYARD Peeling the token in the session only -- rejected: the mirror
+          stays off by one chunk. Tolerating a trailing extra nominal
+          chunk in the zip -- rejected: measured to flush as
+          BAD_SUBJECT_HAS. Pairing by line offset after a take --
+          rejected: the first N != M take breaks it for good. Cutting a
+          plain chunk wherever its lines are found -- rejected, measured:
+          it re-associated ordinary plain/plain pairs in four standing
+          suites where no region stood.
+

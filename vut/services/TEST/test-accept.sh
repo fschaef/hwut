@@ -3,8 +3,9 @@
 #
 # @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
-#     choices    = ["ask", "bless", "labels", "merge", "stderr",
-#                   "sugar", "token", "interactive", "unaccepted"]
+#     choices    = ["ask", "bless", "first", "labels", "merge", "onedoor",
+#                   "opening", "stderr", "sugar", "token", "interactive",
+#                   "unaccepted"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -35,7 +36,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
-        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted;"
+        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted, first, opening, onedoor;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -213,6 +214,73 @@ interactive)
     $RUN --directory=tree/suite/TEST 2>&1 | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
     echo "--- the book notes the acceptance of 'a' only"
     grep -c 'test-two.sh;a;' tree/suite/TEST/GOOD/book.csv | sed 's/^/    a: /'
+    ;;
+
+first)
+    #  ACCEPT IS PARTIAL BY DEFAULT (E-60). A first acceptance WITHOUT
+    #  '--force' records the candidate's SHAPE with nothing decided:
+    #  one '##! unaccepted' region per chunk, one filler per line, the
+    #  closing token outside. The next run reads '[ ?! ]' (O-25), not
+    #  '[OK]' -- nobody has judged it yet. '--force' is the old
+    #  blessing, the candidate whole ('bless' above).
+    fixture
+    printf 'y\n' | $ACCEPT --directory=tree/suite/TEST test-ok.sh \
+        > out.txt 2> /dev/null
+    echo "STATUS: $?"
+    grep -E 'blessed|ACCEPTED' out.txt | sed 's/^/    /'
+    echo "--- what stands in GOOD: the shape, undecided"
+    sed 's/^/    | /' tree/suite/TEST/GOOD/test-ok.sh.txt
+    echo "--- the next run: not a failure, a decision still owed"
+    $RUN --directory=tree --plain test-ok.sh > out.txt 2> err.txt
+    echo "STATUS: $?"
+    grep -E '\[ \?! \]|\[FAIL\]|\[OK\]|RESULTS' out.txt \
+        | sed 's/ \.\+ / /; s/, [0-9.]* \[sec\]//; s/^/    /'
+    ;;
+
+onedoor)
+    #  ONE FACE (E-59). A change is MERGED by 'hwut.accept' itself where
+    #  there is a terminal to merge in -- through the SAME engine
+    #  'hwut.accept.interactive' runs, so the three writes and every
+    #  refusal have one implementation. Off a terminal -- a pipe, a
+    #  script, this suite -- it says 'merge required' as it always did.
+    fixture
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null 2>&1
+    sed -i 's/echo "choice \$1"/echo "changed choice $1"/' tree/suite/TEST/test-two.sh
+    $RUN --directory=tree --silent 2> /dev/null
+    echo "--- off a terminal: the refusal, and the way out"
+    $ACCEPT --directory=tree/suite/TEST > out.txt 2>&1; echo "STATUS: $?"
+    grep -E 'merge required|first blessing|hwut.accept.interactive' out.txt \
+        | sed 's/^/    /'
+    echo "--- the engine both doors call"
+    python3 - <<'PYEOF' | sed 's/^/    /'
+from vut.services.lib.accept import engine
+import vut.services.lib.accept.interactive as face
+import vut.services.accept as plain
+print("merge_text is the engine's:", face.merge_text is engine.merge_text)
+print("the face calls run_sessions:", "run_sessions" in open(face.__file__).read())
+print("hwut.accept calls it too   :", "run_sessions" in open(plain.__file__).read())
+print("one refusal implementation :",
+      open(plain.__file__).read().count("def refusal") == 0)
+PYEOF
+    ;;
+
+opening)
+    #  A FIRST ACCEPTANCE BY HAND (E-60). No nominal stands, and the
+    #  session OPENS anyway -- on the candidate's shape, nothing
+    #  decided. 't' takes the subject whole and commits it; 'q' leaves
+    #  the case with NO nominal at all: nothing was written, so nothing
+    #  half-decided lingers.
+    fixture
+    $RUN --directory=tree --silent 2> /dev/null
+    INTERACTIVE="python3 -m vut.services.lib.accept.interactive"
+    echo "--- the checklist offers every case, nominal or not"
+    printf '\nt\nq\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
+        > out.txt 2> ui.txt; echo "STATUS: $?"
+    grep -E '^\s+\[|^=\[|accepted|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
+    echo "--- 't' on test-ok.sh: the nominal is the candidate whole"
+    sed 's/^/    | /' tree/suite/TEST/GOOD/test-ok.sh.txt
+    echo "--- 'q' on test-two.sh: no nominal was written"
+    good | sed 's/^/    /'
     ;;
 
 unaccepted)

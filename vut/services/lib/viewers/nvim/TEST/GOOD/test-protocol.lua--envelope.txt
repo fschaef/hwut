@@ -1,9 +1,0 @@
-INSPECT: commit with text  -> intent commit   nominal "merged text\
-"
-INSPECT: commit with none  -> intent cancel   nominal nil
-INSPECT: cancel            -> intent cancel   nominal nil
-  OK  : a commit carries the plain artifact
-  OK  : a commit with NO artifact is downgraded to CANCEL
-  OK  : a cancel carries nothing, whatever it was handed
-  OK  : every envelope is signed
-SUCCESS: an empty commit is refused, not stored.

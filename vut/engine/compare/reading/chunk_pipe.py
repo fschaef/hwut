@@ -229,4 +229,42 @@ class AssociationChunkPipe(ChunkPipe):
 
         framing.check_eof(line_n)
         if line_list:
-            yield outer_chunk(line_n)
+            #  THE CLOSING TOKEN IS A CHUNK OF ITS OWN (R-70). It is the
+            #  stream's testimony that it COMPLETED, not a line of its
+            #  output, and a merge must be able to hold it apart: it
+            #  stands outside every region, pairs only with itself, and
+            #  no cursor may enter it.
+            #
+            #  Fused into the block above it, a subject's token faces a
+            #  nominal's token that stands alone -- and neither can
+            #  pair. Measured: both then read as one-sided.
+            for chunk in _split_closing_token(outer_chunk, line_list,
+                                              start_line_n, line_n,
+                                              self.configuration):
+                yield chunk
+
+
+CLOSING_TOKEN = "<hwut-end>"
+
+
+def _split_closing_token(outer_chunk_f, line_list, start_line_n, end_line_n,
+                         configuration):
+    """RETURN: list[InputChunk], the final block as TWO chunks -- what
+               stands above the closing token, and the token itself.
+
+               A single-element list holding the block whole, where the
+               last line is not the closing token, or where the token is
+               all there is: there is then nothing to hold apart.
+    """
+    #  The RAW text, not 'str(Line)': a Line renders as its lexed
+    #  elements ("[STRING 'gamma']"), which never equals the token.
+    if line_list[-1]._string.strip() != CLOSING_TOKEN:
+        return [outer_chunk_f(end_line_n)]
+    if len(line_list) == 1:
+        return [outer_chunk_f(end_line_n)]
+
+    token_line_n = start_line_n + len(line_list) - 1
+    return [InputChunk_factory(E_Chunk.LINE_SEQUENCE, start_line_n,
+                               token_line_n, line_list[:-1], configuration),
+            InputChunk_factory(E_Chunk.LINE_SEQUENCE, token_line_n,
+                               end_line_n, line_list[-1:], configuration)]

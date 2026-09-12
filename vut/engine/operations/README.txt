@@ -960,7 +960,8 @@ pattern, but for language/debug, not comparison). So:
     tier   ---- speaks ----> DisplayInst (DOWN) + our UP envelope
            A thin client per IDE, signature-versioned, transport-neutral;
            carries compare's SEMANTICS and the merge loop. Clients live in
-           compare/feeder/ beside html_feeder. First client e.g. nvim.
+           compare/feeder/ beside html_feeder. A client speaks it
+           over a pipe; 'RemoteDisplay' is our side of it.
 
     BASIC  the GIT MERGETOOL / DIFFTOOL convention -- what editors ALREADY
     tier   speak. Any editor
@@ -1181,7 +1182,6 @@ PART V -- REFERENCE
                                             hubs, drivers (11)
                         tui.py              TuiDisplay -- the terminal
                                             tier, two marking views (11.5)
-                        nvim/               the nvim client (11.5)
                       services/           the service faces (11.5):
                         lib/accept/interactive.py  'hwut.accept.interactive'
                         diff.py             'hwut.diff'
@@ -1208,7 +1208,7 @@ PART V -- REFERENCE
   storage           Store (keyed by test name + subject; default backend =
                     the HWUT GOOD filesystem)
   display           DisplayAdapter (required-sequence interface); a Driver
-                    implements it per tool (nvim, html, mergetool)
+                    implements it per tool (html, mergetool)
   directory fields  test_directory, record_directory; OUT/ (output subdir)
   file field        source_file
   args fields       application_arguments, build_arguments

@@ -7,6 +7,7 @@ or 'Potpourri'.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.core.line_pair      import LinePair
+import vut.engine.compare.region.unaccepted.associate as association_unaccepted
 from   vut.engine.compare.contract.enums                      import E_Chunk
 from   vut.engine.compare.contract.analogy_db                 import AnalogyDb
 from   vut.engine.compare.contract.frozen_analogy_db          import FrozenAnalogyDb
@@ -50,12 +51,29 @@ class ChunkPair(list):
             nominal_type    = E_Chunk.NONE
             line_pair_list  = [LinePair(s, None, []) for s in subject.line_list]
             new_analogy_db  = analogy_db
-        else:
-            assert subject.type() == nominal.type()
+        elif subject.type() == nominal.type():
             subject_type    = subject.type()
             nominal_type    = subject_type
             line_pair_list, \
             new_analogy_db  = subject.associate_with_nominal(nominal, analogy_db)
+        else:
+            #  AN 'unaccepted' NOMINAL TAKES WHATEVER STANDS OPPOSITE
+            #  (C-9). Every other handler says HOW a stretch is to be
+            #  read, and two readings cannot both claim one line;
+            #  'unaccepted' says only WHETHER anybody has looked, which
+            #  is a statement about the nominal's history and not about
+            #  how to read the subject.
+            #
+            #  The association is driven from the NOMINAL's side here,
+            #  because the dispatch elsewhere runs off the subject's
+            #  type and the subject is an ordinary chunk. The argument
+            #  order is unchanged: subject first, nominal second.
+            assert nominal.type() == E_Chunk.UNACCEPTED
+            subject_type    = subject.type()
+            nominal_type    = nominal.type()
+            line_pair_list, \
+            new_analogy_db  = association_unaccepted.do(subject, nominal,
+                                                        analogy_db)
 
         return ChunkPair(subject_type, nominal_type, line_pair_list, new_analogy_db)
 

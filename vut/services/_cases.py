@@ -179,11 +179,29 @@ def differing_keys(selected, write):
             test, choice = case.source_file, case.choice
             out_path  = store.bookkeeper.candidate_path(test, choice, "stdout")
             good_path = store.bookkeeper.nominal_path(test, choice, "stdout")
+            if not out_path.exists() and not good_path.exists():
+                #  A FIRST ACCEPTANCE HAS NO CANDIDATE YET: 'hwut.run'
+                #  refuses to run what nobody accepted, so the candidate
+                #  is made HERE, the way 'hwut.accept' refreshes (E-40)
+                #  -- through provision, held, recorded and booked as a
+                #  run books it.
+                configuration = config_db.get(test)
+                if configuration is not None:
+                    from vut.engine.operations         import subject_provision
+                    from vut.engine.operations.session import run_test, Request
+                    try:
+                        _, decision = subject_provision.provider_of(
+                                          configuration, store, choice,
+                                          refresh=True, force_run=False)
+                        if decision.what is subject_provision.E_Decision.PROVIDE:
+                            asyncio.run(run_test(configuration,
+                                                 Request(choice=choice, record=True),
+                                                 bookkeeper=store.bookkeeper))
+                    except Exception:                          # noqa: BLE001
+                        pass
             if not out_path.exists():  no_run_n += 1; continue
-            if not good_path.exists(): no_nom_n += 1; continue
             try:
                 subject_text = io.open(str(out_path),  encoding="utf-8").read()
-                nominal_text = io.open(str(good_path), encoding="utf-8").read()
             except (OSError, UnicodeDecodeError):
                 continue
             configuration = config_db.get(test)
@@ -194,6 +212,20 @@ def differing_keys(selected, write):
                 except (KeyError, AttributeError):
                     setup = None
             if setup is None: setup = Configuration()
+            if good_path.exists():
+                try:
+                    nominal_text = io.open(str(good_path), encoding="utf-8").read()
+                except (OSError, UnicodeDecodeError):
+                    continue
+            else:
+                #  NO NOMINAL STANDS: A FIRST ACCEPTANCE (E-60). The
+                #  session opens on the candidate's SHAPE with nothing
+                #  decided -- the mirror 'accept_first' builds -- and
+                #  every take lifts a decision out of it. Skipping the
+                #  case here was the old 'hwut.accept first' rule.
+                from vut.services.accept_first import opening_nominal
+                nominal_text = opening_nominal(setup, subject_text, force_f=False)
+                if nominal_text is None: no_nom_n += 1; continue
             judged_n += 1
             equivalent_f = asyncio.run(is_equivalent(
                                setup, io.StringIO(subject_text),
@@ -204,8 +236,8 @@ def differing_keys(selected, write):
                                          str(out_path), str(good_path)))
     if no_run_n: write("NOTE: %d selected case(s) never ran -- no "
                        "candidate stands" % no_run_n)
-    if no_nom_n: write("NOTE: %d selected case(s) have no nominal -- "
-                       "'hwut.accept' first" % no_nom_n)
+    if no_nom_n: write("NOTE: %d selected case(s) never COMPLETED -- no "
+                       "'<hwut-end>' -- and cannot be accepted" % no_nom_n)
     return key_list, judged_n
 
 

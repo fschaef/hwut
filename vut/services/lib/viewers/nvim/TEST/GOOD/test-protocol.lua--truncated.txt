@@ -1,6 +1,0 @@
-INSPECT: every message but the last -> complete = false
-         the whole stream           -> complete = true
-  OK  : a stream that stopped is INCOMPLETE
-  OK  : though it carried every row -- stopping is not emptiness
-  OK  : only an explicit end makes a view complete
-SUCCESS: stopping and ending are not the same thing.

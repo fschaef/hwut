@@ -1,0 +1,38 @@
+No region of any other kind is ever CUT by a take
+
+     nominal: ['alpha', '##! potpourri', 'p1', 'p2', 'p3', '####', 'omega']
+     part of the content (p2 only)    -> REFUSED
+     part, leaving p3 behind          -> REFUSED
+     straddling its '####'            -> REFUSED
+
+-- the whole content: the region goes ENTIRE, markers too
+      0  alpha
+      1  X
+      2  Y
+      3  omega
+
+-- two regions at once is refused, whatever their kinds
+     straddle -> REFUSED
+
+-- THE SAME LAW ON THE SUBJECT SIDE: a subject region goes
+   over framed and entire, or not at all
+     one table row              -> REFUSED
+     both rows                  -> taken
+     row 3 straddling 'omega'   -> REFUSED
+      0  ##! unaccepted
+      1  --?--
+      2  ####
+      3  ##! table
+      4   a | b
+      5   c | d
+      6  ####
+      7  ##! unaccepted
+      8  --?--
+      9  ####
+     10  <hwut-end>
+
+     A remainder of a potpourri left trailing after a merge is
+     a nominal nobody wrote and compare cannot read. Only an
+     'unaccepted' region may be split, because splitting it
+     is what deciding part of it MEANS.
+<hwut-end>

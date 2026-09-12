@@ -2,6 +2,7 @@ INSPECT: none     -> NullDisplay
 INSPECT: console  -> CollectingDisplay
 INSPECT: tui      -> TuiDisplay
 INSPECT: rich     -> RemoteDisplay
+INSPECT: keys     -> KeyedDisplay
          RICH without a client -> E_DisplayTarget.RICH needs the client's 'argv'
   OK  : NONE carries nothing
   OK  : TUI is the terminal, interactively

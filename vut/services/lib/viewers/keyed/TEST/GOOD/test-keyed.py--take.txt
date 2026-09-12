@@ -1,0 +1,20 @@
+L-1: the target range is replaced WHOLE, N != M allowed
+
+-- N < M  one line over three
+      ONE
+      <hwut-end>
+
+-- N = M  three over three
+      A
+      B
+      C
+      <hwut-end>
+
+-- N > M  five over three
+      A
+      B
+      C
+      D
+      E
+      <hwut-end>
+<hwut-end>

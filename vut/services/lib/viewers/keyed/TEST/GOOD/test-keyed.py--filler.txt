@@ -1,0 +1,12 @@
+P-2: one filler per subject line, and what the filler is
+     0 subject line(s) -> ()
+     1 subject line(s) -> ('##! unaccepted', '--?--', '####')
+     3 subject line(s) -> ('##! unaccepted', '--?--', '--?--', '--?--', '####')
+
+     filler = '--?--'
+     It is significant CONTENT, so a filler against a subject
+     line is a REAL difference -- which is what 'nobody has
+     judged this' must look like. Anything of the '##'..'##'
+     family would read as VISIBLE_NOTHING and the region would
+     compare EQUIVALENT: a first acceptance that PASSES.
+<hwut-end>

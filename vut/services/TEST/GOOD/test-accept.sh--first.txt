@@ -1,0 +1,13 @@
+STATUS: 0
+    ACCEPTED  1 of 1
+--- what stands in GOOD: the shape, undecided
+    | ##! unaccepted
+    | --?--
+    | ####
+    | <hwut-end>
+--- the next run: not a failure, a decision still owed
+STATUS: 1
+    DONE  test-ok.sh [ ?! ]
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/1
+    RESULTS: 0 ok, 0 fail, 1 unaccepted, 2 skip
+<hwut-end>

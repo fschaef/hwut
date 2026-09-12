@@ -1,0 +1,35 @@
+P-20/P-21/P-22: the table is the keymap
+
+-- the help screen IS the table
+     enter          both  take the marked range
+     a              both  take this region
+     A              both  take the whole subject
+     space          pane  mark a range here
+     tab            both  the other pane
+     j, down        pane  down
+     k, up          pane  up
+     c-d            pane  a screen down
+     c-u            pane  a screen up
+     h, left        pane  scroll left
+     l, right       pane  scroll right
+     /              pane  search down
+     ?              pane  search up
+     r              both  re-align: ask compare again
+     u              both  undo
+     e              both  edit the nominal in $EDITOR
+     c              both  commit the nominal as it stands
+     q              both  cancel
+
+-- no key is bound twice
+     keyed   : none
+     fallback: none
+
+-- the fallback speaks the SAME acts
+     t    -> TAKE_ALL
+     e    -> EDIT
+     c    -> COMMIT
+     q    -> CANCEL
+
+-- an unbound key means nothing, and that is not an error
+     act_of('Z') = None
+<hwut-end>

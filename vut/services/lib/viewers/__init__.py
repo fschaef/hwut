@@ -8,8 +8,8 @@ DESCRIPTION
        DisplayInst stream of compare's door. The port
        ('engine/operations/interaction/port.py') states the contract a
        viewer answers; THIS family holds the viewers themselves -- the
-       TUI, the nvim plugin, and whichever client comes next (a VS Code
-       integration would live here). Down in the engine live only the
+       TUI and whichever client comes next (a VS Code integration would
+       live here). Down in the engine live only the
        contract and the merge dialogue, both compare-blind; up here
        lives everything that renders FOR A PERSON IN A SESSION. What
        renders the run's own testimony ('engine/display') stays down --
@@ -33,6 +33,7 @@ class E_DisplayTarget(Enum):
     CONSOLE  = "console"    # the always-available tier
     TUI      = "tui"        # the terminal, interactively (tui.py)
     RICH     = "rich"       # a client speaking our protocol
+    KEYS     = "keys"       # the keyed session: point, mark, take
 
     def __str__(self):
         """RETURN: str, the target's token."""
@@ -57,6 +58,19 @@ def driver_for(target, **argument_db):
     if target is E_DisplayTarget.TUI:
         from .tui import TuiDisplay
         return TuiDisplay(**argument_db)
+    if target is E_DisplayTarget.KEYS:
+        #  THE KEYED TIER NEEDS 'prompt_toolkit'. Where it will not
+        #  import, the TUI tier stands in and today's line-based session
+        #  runs: a merge is NEVER hard-failed for lack of an import.
+        #  The import is tried HERE, once, so a tree without the module
+        #  still imports this package cleanly.
+        try:
+            import prompt_toolkit  # noqa: F401
+        except ImportError:
+            from .tui import TuiDisplay
+            return TuiDisplay(**argument_db)
+        from .keyed.driver import KeyedDisplay
+        return KeyedDisplay(**argument_db)
     if target is E_DisplayTarget.RICH:
         argv = argument_db.get("argv")
         if not argv:

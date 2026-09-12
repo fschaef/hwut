@@ -10,6 +10,8 @@ NOMINAL timeline: |11111111111111111111|
 [4] SUBJECT: => (3) '##! potpourri'
 [5] NOMINAL: => (6) 'adelbert'
 [6] NOMINAL: => (7) 'berta'
+[6] SUBJECT: => (4) 'albert'
+[7] NOMINAL: => (8) '####'
 YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
@@ -23,8 +25,6 @@ YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
 .   .   .   .cost: 0.2000
 .   .analogy_db: AnalogyDb
 
-[6] SUBJECT: => (4) 'albert'
-[7] NOMINAL: => (8) '####'
 [8] NOMINAL: => (9) 'crisper'
 [8] SUBJECT: => (5) 'berta'
 [9] NOMINAL: => (10) 'friedolin'
@@ -70,3 +70,4 @@ YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 .   .analogy_db: AnalogyDb
 
 Finished with 3 chunks.
+<hwut-end>

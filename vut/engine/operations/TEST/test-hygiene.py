@@ -58,8 +58,7 @@ COMPONENT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 #  The tests live where their units live: every package carries its own
 #  TEST/. Hygiene is the COMPONENT's, so its walks cover them all --
-#  nvim's lua corpus excepted, as everywhere (it is the client's own).
-_WALK_SKIP = {"nvim", "__pycache__", "OUT"}
+_WALK_SKIP = {"__pycache__", "OUT"}
 
 
 def _test_directory_list():
@@ -118,7 +117,7 @@ def _module_list():
     """RETURN: list[str], the component's own source files -- the root
     modules AND the subpackages' (provision/, services/). TEST and the
     display clients are not the component's modules and stay out."""
-    SKIP      = {"TEST", "nvim", "__pycache__"}
+    SKIP      = {"TEST", "__pycache__"}
     path_list = []
     for directory, directory_list, file_list in os.walk(COMPONENT):
         directory_list[:] = [d for d in directory_list if d not in SKIP]

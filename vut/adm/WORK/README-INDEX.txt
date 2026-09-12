@@ -82,7 +82,6 @@ cited by section and nothing can be checked for completeness:
        114  engine/compare/README.txt
         95  engine/display/README.txt
         45  bin/README.txt
-        43  services/lib/viewers/nvim/README.txt
 
 'services/README.txt' (164 lines) is the notable one: services is the
 component with the most faces and the most E- rulings, and its README
@@ -286,6 +285,5 @@ bin/README.txt   [45 lines]
     no numbered sections
 
 ==============================================================================
-services/lib/viewers/nvim/README.txt   [43 lines]
 ==============================================================================
     no numbered sections

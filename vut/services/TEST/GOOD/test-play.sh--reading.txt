@@ -8,6 +8,7 @@ STDOUT {
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
          1 | value {3.14159} done
+    --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
 }
@@ -21,6 +22,7 @@ STDOUT {
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
          1 | value 3.14159 done
+    --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
 }

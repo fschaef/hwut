@@ -1,0 +1,19 @@
+L-5/L-6/L-7: the virgin target, and when it stops tracking
+
+-- L-5 while virgin the target FOLLOWS the subject cursor
+     at rest    derived=(1, 1)
+     after j    derived=(2, 2)
+     after jj   derived=(3, 3)
+
+-- L-6 entry alone does NOT latch: tab, look, tab back
+     virgin=True  (it must still be tracking)
+
+-- L-6 MODIFYING the target latches it
+     virgin=False target=(1, 2) derived=(1, 1)
+
+-- L-6 and the subject then moves WITHOUT dragging it
+     target=(1, 2) derived=(2, 2)
+
+-- L-7 after a take, virginity returns and the anchors clear
+     virgin=True anchor_s=None anchor_n=None
+<hwut-end>

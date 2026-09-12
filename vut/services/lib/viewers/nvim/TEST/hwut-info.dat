@@ -1,4 +1,0 @@
-Testing interactive protocols
------------------------------------
-nvim -l test-protocol.lua 
-nvim -l test-view.lua     

@@ -1,5 +1,0 @@
-INSPECT: a kind never seen before: ProvenanceInst
-         its fields survived: origin=analogy-db confidence=0.91
-  OK  : an unknown kind is KEPT under its own name
-  OK  : with its fields intact, though this version names none of them
-SUCCESS: compare may widen its output; the plugin needs no edit.

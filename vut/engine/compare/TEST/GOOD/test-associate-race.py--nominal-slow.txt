@@ -10,6 +10,15 @@ NOMINAL timeline: |2 2 2 2 2 2 2 2 2 2 |
 [4] NOMINAL: => (3) '##! potpourri'
 [5] SUBJECT: => (6) 'carlos'
 [6] SUBJECT: => (7) 'damian'
+[6] NOMINAL: => (4) 'karlos'
+[7] SUBJECT: => (8) '####'
+[8] SUBJECT: => (9) 'kasper'
+[8] NOMINAL: => (5) 'damian'
+[9] SUBJECT: => (10) 'friedrich'
+[10] SUBJECT: => (11) ''
+[10] NOMINAL: => (6) 'adelbert'
+[12] NOMINAL: => (7) 'berta'
+[14] NOMINAL: => (8) '####'
 YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
@@ -23,15 +32,9 @@ YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
 .   .   .   .cost: 0.2000
 .   .analogy_db: AnalogyDb
 
-[6] NOMINAL: => (4) 'karlos'
-[7] SUBJECT: => (8) '####'
-[8] SUBJECT: => (9) 'kasper'
-[8] NOMINAL: => (5) 'damian'
-[9] SUBJECT: => (10) 'friedrich'
-[10] SUBJECT: => (11) ''
-[10] NOMINAL: => (6) 'adelbert'
-[12] NOMINAL: => (7) 'berta'
-[14] NOMINAL: => (8) '####'
+[16] NOMINAL: => (9) 'crisper'
+[18] NOMINAL: => (10) 'friedolin'
+[20] NOMINAL: => (11) ''
 YIELD 2: POTPOURRI <-> POTPOURRI
 [ChunkPair:POTPOURRI]
 .   .<base>: <list>
@@ -53,9 +56,6 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 .   .   .   .cost: 0.0000
 .   .analogy_db: AnalogyDb
 
-[16] NOMINAL: => (9) 'crisper'
-[18] NOMINAL: => (10) 'friedolin'
-[20] NOMINAL: => (11) ''
 YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
@@ -70,3 +70,4 @@ YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 .   .analogy_db: AnalogyDb
 
 Finished with 3 chunks.
+<hwut-end>

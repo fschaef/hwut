@@ -19,6 +19,7 @@ STDOUT {
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
          1 | pid <n> started
          2 | value 7
+    --[ CLOSING-TOKEN ]--
          3 | <hwut-end>
     ============================================================
 }
@@ -35,6 +36,7 @@ STDOUT {
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
          1 | nothing filters me
+    --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
 }

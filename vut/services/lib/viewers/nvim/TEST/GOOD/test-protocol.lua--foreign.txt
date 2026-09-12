@@ -1,8 +1,0 @@
-INSPECT: a message under 'some-other/9' -> false
-         reason kept: protocol some-other/9 cannot be parsed by vut-feed/1
-         rows taken from it: 0
-  OK  : the message is refused
-  OK  : and nothing of it enters the view
-  OK  : the view keeps WHY, so it can say that rather than show an empty diff
-  OK  : and a refused view is never 'complete'
-SUCCESS: refuse before reading; never mis-read.

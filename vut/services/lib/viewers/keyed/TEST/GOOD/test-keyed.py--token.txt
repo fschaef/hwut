@@ -1,0 +1,6 @@
+L-11: the closing token is out of reach
+     token at 3, last reachable 2
+     after ten 'j': cursor_s=2
+     after Ctrl-D : cursor_s=2
+     a take can never reach it, because no cursor can.
+<hwut-end>

@@ -135,7 +135,7 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
         # 1. Update global provenance with current chunk data
         prov_db.update(chunk)
 
-        yield SectionBeginInst(title      = "/".join(ct.name for ct in chunk.types()),
+        yield SectionBeginInst(title      = _section_title(chunk),
                                chunk_type = type(chunk).__name__)
 
         for line_pair in chunk:
@@ -249,3 +249,46 @@ if __name__ == "__main__":
         with open(repo_root_dir + "/adm/SIGNATURE_UI_PROTOCOL.txt", "w") as fh:
             fh.write(ph)
 # END: DO NOT REMOVE THIS!
+
+
+CLOSING_TOKEN = "<hwut-end>"
+
+
+def _section_title(chunk):
+    """RETURN: str, what this section is called -- the two chunk types
+               joined, as in 'LINE_SEQUENCE/UNACCEPTED'.
+
+               'CLOSING-TOKEN', where the chunk is the stream's closing
+               token and nothing else.
+
+    THE TOKEN IS SHOWN APART ON PURPOSE. It is not a line of output; it
+    is the stream's own testimony that it COMPLETED (R-70). Naming it
+    here reminds whoever reads the display of that characteristic of an
+    hwut test, and it keeps a merge from mistaking the anchor at the
+    foot of both panes for one more line to take.
+    """
+    if _closing_token_chunk_f(chunk):
+        return "CLOSING-TOKEN"
+    return "/".join(ct.name for ct in chunk.types())
+
+
+def _closing_token_chunk_f(chunk):
+    """RETURN: bool, True where this chunk holds the closing token and
+               nothing besides -- on whichever sides are present.
+    """
+    line_pair_list = list(chunk)
+    if len(line_pair_list) != 1: return False
+
+    line_pair = line_pair_list[0]
+    side_list = [each for each in (line_pair.subject_list(),
+                                   line_pair.nominal_list()) if each]
+    if not side_list: return False
+
+    for side in side_list:
+        #  The cell's OWN text, not 'str(cell)': a cell renders as its
+        #  whole dataclass, relations and tolerances and all.
+        text = "".join(getattr(cell, "subject", None)
+                       or getattr(cell, "nominal", None) or ""
+                       for cell in side).strip()
+        if text != CLOSING_TOKEN: return False
+    return True
