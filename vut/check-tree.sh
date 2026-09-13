@@ -16,7 +16,7 @@ find . -type f \
      ! -name "*.pyc"           ! -name "*.log" \
      ! -name "*.rej"           ! -name "*.orig" \
      ! -name "book.csv"        ! -name "result_db.csv" \
-     ! -name "test_ids.dat"    ! -name "hwut-traces.csv" \
+     ! -name "hwut-traces.csv" \
      ! -name "observations.bin" \
      -print0 \
 | xargs -0 sha256sum \

@@ -3,7 +3,7 @@ $ hwut.run --coverage --glob test-py*
     the book {
       test-py.py--a  report ok                       coverage ok
       test-py.py--b  report ok                       coverage no-data-provided
-      test-hang.py--x report -                        coverage <no entry>
+      test-hang.py--x report ok                       coverage <absent>
       test-new.py    report -                        coverage <no entry>
     }
     the records {

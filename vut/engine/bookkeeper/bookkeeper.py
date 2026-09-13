@@ -55,7 +55,7 @@ from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
 from   contextlib  import contextmanager
-from .configuration import E_StderrNote, NamingConfig
+from .configuration import E_StderrNote, E_TestVerdict, NamingConfig
 from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
 from .test_id_db import TestIdDb
 
@@ -192,7 +192,7 @@ def _rows_of_model(content):
             stain = book.get("stain") or {}
             yield {"test":   "" if test == last_test else test,
                    "choice": "" if key == NO_CHOICE_KEY else key,
-                   "verdict":        _bool_text(book.get("verdict")),
+                   "verdict":        _verdict_text(book.get("verdict")),
                    "report":         book.get("report") or "",
                    "last_accept":    book.get("last_accept") or "",
                    "coverage":       book.get("coverage") or "",
@@ -236,7 +236,7 @@ def _model_of_rows(row_iterable):
         if operation is not None and operation not in ("", "Run"):
             continue                       # B-6's Display rows
         if row.get("verdict"):
-            book["verdict"] = _bool_of_text(row["verdict"])
+            book["verdict"] = E_TestVerdict.of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
         for name in ("last_accept", "coverage", "stderr",
                      "test_id", "choice_id"):
@@ -277,13 +277,60 @@ def _model_of_legacy(content):
             if not isinstance(operation_db, dict): continue
             run = operation_db.get("Run")
             if isinstance(run, dict) and "verdict" in run:
-                out["verdict"] = run["verdict"]
+                out["verdict"] = _verdict_of_legacy(run["verdict"])
                 out["report"]  = run.get("report", "")
                 if "coverage" in run: out["coverage"] = run["coverage"]
             accept = operation_db.get("Accept")
             if isinstance(accept, dict) and accept.get("last_accept"):
                 out["last_accept"] = accept["last_accept"]
     return model
+
+
+def _without_register_columns(entry):
+    """
+    RETURN: dict, a copy of 'entry' whose choices bear no 'test_id' and
+            no 'choice_id'; every other field as it stood.
+
+    AN ID IS THE DIRECTORY'S, NEVER THE TEST'S (E-46). An entry handed
+    from one directory's book to another still carries the ids the
+    source issued, and they mean nothing under the new roof.
+    """
+    fresh = dict(entry)
+    if "choices" not in entry: return fresh
+    choice_db = {}
+    for key, book in entry["choices"].items():
+        book = dict(book)
+        book.pop("test_id", None)
+        book.pop("choice_id", None)
+        choice_db[key] = book
+    fresh["choices"] = choice_db
+    return fresh
+
+
+def _verdict_text(verdict):
+    """
+    RETURN: str, the book's token for 'verdict' -- an E_TestVerdict.
+            '' for None: a row that carries no verdict.
+
+    THE ONE PLACE the enum becomes text. A bool never reaches here:
+    '_model_of_rows' and the legacy reader hand every verdict over as
+    the enum, and 'of_bool' is where a run's bool became one.
+    """
+    if verdict is None: return ""
+    assert isinstance(verdict, E_TestVerdict), repr(verdict)
+    return verdict.value
+
+
+def _verdict_of_legacy(value):
+    """
+    RETURN: E_TestVerdict, of what a legacy JSON book held under
+            'verdict' -- a bool, or already a token.
+            None, where it held neither.
+    """
+    if isinstance(value, E_TestVerdict): return value
+    if isinstance(value, bool):          return E_TestVerdict.of_bool(value)
+    if isinstance(value, str):           return E_TestVerdict.of_text(value)
+    return None
 
 
 def _bool_text(value):
@@ -511,7 +558,12 @@ class Bookkeeper:
         register = TestIdDb.register_of_book(header,
                                              _register_row_iterable(content),
                                              str(self.directory))
-        if len(register): return register
+        #  THE HEADER DECIDES, NOT THE COUNT. A book that carries the
+        #  '#' block IS the register, however many rows bear an id --
+        #  none, after the last test was removed, is a legitimate
+        #  state (B-14). Falling back on the count resurrected the
+        #  removed test from the stale sidecar as an aspirant.
+        if header or len(register): return register
         return TestIdDb(str(self.directory))
 
     def _standing_header_line_list(self):
@@ -587,15 +639,20 @@ class Bookkeeper:
                 for column in ("test_id", "choice_id"):
                     book.pop(column, None)
         for (test, choice), (app_id, choice_id) in row_db.items():
-            #  ANNOTATED, NEVER CREATED. A BOOK ENTRY SAYS THERE IS A
-            #  GOOD FILE, BLESSED OR ACCEPTED -- there is no other
-            #  meaning an entry could carry. An id is a handle on such
-            #  an entry, so it is written ONTO a row that stands and
-            #  never conjures one: a row with an id and no decision
-            #  would say a nominal stands where none does.
-            choice_db = content.get(test, {}).get("choices", {})
+            #  CREATED AS AN ASPIRANT WHERE NO ROW STANDS (B-14). A
+            #  row says the choice is KNOWN -- registered, an id
+            #  issued -- and no more; whether a nominal stands is asked
+            #  of GOOD/ by 'nominal_stands_f', per case. So an id with
+            #  no row to sit on makes one, and the row's verdict says
+            #  what is true of it: ASPIRANT, never accepted. B-13's
+            #  "annotated, never created" is overturned by B-14; it
+            #  rested on a row meaning a nominal stands, which it no
+            #  longer does.
+            choice_db = content.setdefault(test, {}).setdefault("choices", {})
             book = choice_db.get(choice or NO_CHOICE_KEY)
-            if book is None: continue
+            if book is None:
+                book = choice_db[choice or NO_CHOICE_KEY] = \
+                       {"verdict": E_TestVerdict.ASPIRANT}
             book["test_id"] = str(app_id)
             book["choice_id"] = "" if choice_id is None else str(choice_id)
         self._write_book(content, register.book_header_line_list())
@@ -974,6 +1031,17 @@ class Bookkeeper:
                 legacy.unlink()
             except OSError:
                 break
+        #  ONE REGISTER, NEVER TWO (B-13, B-14): once the book carries
+        #  the '#' block, the legacy sidecar has been read for the last
+        #  time, and goes -- B-10's rule, applied to the register.
+        if header_line_list:
+            sidecar = self.directory / "GOOD" / _REGISTER_FILE_NAME
+            if sidecar.exists():
+                try:
+                    os.chmod(sidecar, stat.S_IRUSR | stat.S_IWUSR)
+                    sidecar.unlink()
+                except OSError:
+                    pass
 
     # -- recording ----------------------------------------------------
     def record(self, result, configuration, goal, choice_name=None,
@@ -1027,7 +1095,7 @@ class Bookkeeper:
         #  (E-22); what stays is what a later reader cannot reproduce:
         #  the verdict, the report, the acceptance's instant, and the
         #  configuration that says what the entry meant.
-        entry     = {"verdict": bool(result.verdict),
+        entry     = {"verdict": E_TestVerdict.of_bool(result.verdict),
                      "report":  str(result.report)}
         #  NO CONFIGURATION IN THE BOOK (B-6): what held is the same
         #  commit's header and 'hwut.conf', which git versions with
@@ -1204,7 +1272,7 @@ class Bookkeeper:
         choice_db = test_book.setdefault("choices", {})
         key       = NO_CHOICE_KEY if choice is None else choice
         row       = choice_db.setdefault(key, {})
-        row["verdict"]     = True
+        row["verdict"]     = E_TestVerdict.PASS
         row["report"]      = "ok"
         row["last_accept"] = _now()
         self._write_book(content)
@@ -1359,8 +1427,9 @@ class Bookkeeper:
 
     def _adopt_unlocked(self, test, entry):
         """
-        RETURN: dict, the entry now standing under 'test' -- the very
-                'entry' given, written into this book whole.
+        RETURN: dict, the entry now standing under 'test' -- the entry
+                given, minus the ids the source issued, written into
+                this book whole.
 
         Raises KeyError where 'test' already stands: a history adopted
         onto a live name would swallow the one that stood.
@@ -1370,11 +1439,20 @@ class Bookkeeper:
         with its configuration, its choices, their operations, their
         stderr notes and any STAIN. What the test did under its old
         roof it did.
+
+        THE IDS DO NOT COME WITH IT. An id is the DIRECTORY's, never
+        the test's (E-46), and 'adopt' issues fresh ones the moment
+        this returns. Carried in, they would be written onto rows of a
+        book that bears no '# vut-register' block -- the one shape
+        'TestIdDb.register_of_book' refuses, since a book naming ids it
+        cannot bound would issue one twice (B-2). The refusal would
+        land INSIDE the act, after the write, with the artefacts
+        already moved.
         """
         content = self.book()
         if test in content:
             raise KeyError("'%s' already stands in the book" % test)
-        content[test] = entry
+        content[test] = _without_register_columns(entry)
         self._write_book(content)
         return content[test]
 

@@ -1,4 +1,4 @@
---- the file, as stored ---
+--- the register, as the book holds it ---
          | ##VUT-TEST-IDS 5
          | G:5
          | N:2

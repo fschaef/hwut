@@ -49,13 +49,16 @@ DESCRIPTION
        whether the directory has moved since, rather than decoding
        against a table that has changed.
 
-       THE FILE is 'GOOD/test_ids.dat', beside the result base, written
-       the same way: atomically, left write-protected. It is written on
-       every mutation. A MISSING file reads as an empty register (a
-       fresh directory); a DAMAGED one REFUSES BY NAME -- unlike the
-       result base, which reads empty on damage, because exploration
-       restricts itself to this register and an empty reading would
-       silently hide every test.
+       THE REGISTER LIVES IN THE BOOK (B-13): the '# vut-register' block
+       bounds it, the two id columns carry it, and the bookkeeper lays
+       it there in the same act as every mutation. This type never
+       writes; it is a SNAPSHOT with a generation counter, parsed from
+       the book ('register_of_book') or, for a book from before B-13,
+       from the legacy 'GOOD/test_ids.dat' -- read where the book
+       carries no block, and gone at the first write (B-10). A DAMAGED
+       reading REFUSES BY NAME -- unlike the result base, which reads
+       empty on damage, because exploration restricts itself to this
+       register and an empty reading would silently hide every test.
 
 WHO WRITES
        THE SHAPE 'TestRunId' STANDS IN 'test_run_id.py', this
@@ -68,8 +71,6 @@ WHO WRITES
        around it. One writer per key space; this module is the writer.
 ______________________________________________________________________________
 """
-import os
-import stat
 from   pathlib     import Path
 
 from   .test_run_id import TestRunId, ID_LIMIT
@@ -100,19 +101,19 @@ def next_id_of(mark, scope_name):
 
 
 class TestIdDb:
-    """The register of one directory: two tables, and the one door to
-    'GOOD/test_ids.dat'.
+    """The register of one directory: two tables, in memory.
 
-    Made where the Bookkeeper is made; a service that needs one makes
-    it inside the service. Every mutator PERSISTS before it returns.
+    Made by the Bookkeeper, from the book. Every mutator BUMPS THE
+    GENERATION before it returns; the bookkeeper writes the result into
+    the book in the same act (B-13).
     """
 
     def __init__(self, directory):
         """
-        RETURN: TestIdDb over 'directory', loaded from its
-                'GOOD/test_ids.dat'. A missing file reads as an empty
-                register; a damaged one raises TestIdFault naming the
-                first fault.
+        RETURN: TestIdDb over 'directory', loaded from the LEGACY
+                sidecar where one stands -- a book from before B-13.
+                A missing file reads as an empty register; a damaged
+                one raises TestIdFault naming the first fault.
         """
         self.directory   = Path(directory)
         self._app_db     = {}     # app_id -> name
@@ -161,7 +162,7 @@ class TestIdDb:
             self._app_id_db[app]    = app_id
             self._choice_db[app_id] = {}
             self._next_choice_db[app_id] = 0
-            self._save()
+            self._mutated()
         if choice is None:
             return TestRunId(app_id, None)
 
@@ -173,7 +174,7 @@ class TestIdDb:
                                "the choice scope of app %i" % app_id)
         self._next_choice_db[app_id] = choice_id + 1
         choice_db[choice_id] = choice
-        self._save()
+        self._mutated()
         return TestRunId(app_id, choice_id)
 
     def name_of(self, run_id):
@@ -239,7 +240,7 @@ class TestIdDb:
         del self._app_id_db[standing]
         self._app_db[app_id]   = fresh
         self._app_id_db[fresh] = app_id
-        self._save()
+        self._mutated()
         return standing
 
     def rename_choice(self, app_id, choice_id, fresh):
@@ -261,7 +262,7 @@ class TestIdDb:
                        TestRunId(app_id, standing_id)))
         old = choice_db[choice_id]
         choice_db[choice_id] = fresh
-        self._save()
+        self._mutated()
         return old
 
     def give_back(self, run_id):
@@ -292,14 +293,14 @@ class TestIdDb:
             self.remove_app(run_id.app_id)
             if run_id.app_id + 1 != self._next_app: return False
             self._next_app = run_id.app_id
-            self._save()
+            self._mutated()
             return True
 
         self.remove_choice(run_id.app_id, run_id.choice_id)
         mark = self._next_choice_db[run_id.app_id]
         if run_id.choice_id + 1 != mark: return False
         self._next_choice_db[run_id.app_id] = run_id.choice_id
-        self._save()
+        self._mutated()
         return True
 
     def remove_app(self, app_id):
@@ -317,7 +318,7 @@ class TestIdDb:
         del self._app_id_db[standing]
         del self._choice_db[app_id]
         del self._next_choice_db[app_id]
-        self._save()
+        self._mutated()
         return standing
 
     def remove_choice(self, app_id, choice_id):
@@ -332,7 +333,7 @@ class TestIdDb:
             raise TestIdFault("no run id %s is registered"
                               % TestRunId(app_id, choice_id))
         old = choice_db.pop(choice_id)
-        self._save()
+        self._mutated()
         return old
 
     # -- the file ---------------------------------------------------------
@@ -589,24 +590,19 @@ class TestIdDb:
             case _:
                 raise TestIdFault("'%s' spells no mark" % line)
 
-    def _save(self):
+    def _mutated(self):
         """
-        RETURN: None. The whole file, replaced atomically and left
-                write-protected -- the result base's own treatment.
-                The GENERATION is bumped first: every write is a
-                mutation, and a snapshot must be able to tell them
-                apart (coverage D-25).
+        RETURN: None. The GENERATION bumped: every mutation is one, and
+                a snapshot must be able to tell them apart (coverage
+                D-25).
+
+        NOTHING IS WRITTEN HERE. The register lives in the book
+        (B-13), and the bookkeeper lays it there in the same act as the
+        mutation ('_register_write'); 'GOOD/test_ids.dat' is read where
+        a book carries no register block and goes at the first write
+        (B-10, B-14). This type is a snapshot with a counter.
         """
         self.generation += 1
-        path = self.path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
-            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR
-                           | stat.S_IRGRP | stat.S_IROTH)
-        temporary = path.with_suffix(".dat.tmp")
-        temporary.write_text(self.format(), encoding="utf-8")
-        os.replace(temporary, path)
-        os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
 
 def _empty_register(directory):

@@ -39,7 +39,7 @@ from   config import HwutRunner                                  # noqa F401,E40
 
 from   vut.services.play   import main as play_main              # noqa E402
 from   vut.services.accept import main as accept_main            # noqa E402
-from   vut.engine.bookkeeper.api import Bookkeeper, Store, TestIdDb  # noqa E402
+from   vut.engine.bookkeeper.api import Bookkeeper, Store         # noqa E402
 
 ROOT_CONF = """\
 hwut {
@@ -109,7 +109,7 @@ def _state(test):
         "nominal":   store.nominal_path("test-new.py", None,
                                         "stdout").exists(),
         "booked":    "test-new.py" in Bookkeeper(test).tests(),
-        "registered": TestIdDb(test).run_id_of("test-new.py") is not None,
+        "registered": Bookkeeper(test).run_id_of("test-new.py") is not None,
     }
 
 

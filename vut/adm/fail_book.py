@@ -111,7 +111,7 @@ def main(argv):
                 r = hit[0]
                 print("   row         : verdict=%s report=%s"
                       % (r.get("verdict"), r.get("report")))
-                if str(r.get("verdict")).lower() != "true":
+                if str(r.get("verdict")).lower() != "true":   # E_TestVerdict.PASS's token
                     print("   >>> PASSED, BUT THE BOOK STILL SAYS FAIL")
             else:
                 near = sorted({r["test"] for r in rows if test.split(".")[0] in (r["test"] or "")})

@@ -1,0 +1,12 @@
+GROWTH, SIDE BY SIDE -- read the ratio, not the number
+
+    lines 2    nodes 44        -
+    lines 4    nodes 108       x2.5
+    lines 8    nodes 280       x2.6
+    lines 16   nodes 976       x3.5
+
+    A ratio near x4 as the size DOUBLES is quadratic and
+    expected. A ratio that itself grows is exponential, and
+    that is what a face that never returns looks like.
+SUCCESS: the profile is printed
+<hwut-end>

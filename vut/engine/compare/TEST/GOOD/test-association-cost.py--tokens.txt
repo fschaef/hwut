@@ -1,0 +1,9 @@
+ONE LINE, N DIFFERING TOKENS -- the NESTED line-level search
+  This is the dimension the observed hang was in: every step
+  of the line-sequence search runs a search of its own.
+     2 tokens                  nodes 4         pairs 2    budget 1600      ok
+     4 tokens                  nodes 4         pairs 2    budget 6400      ok
+     8 tokens                  nodes 4         pairs 2    budget 25600     ok
+    16 tokens                  nodes 4         pairs 2    budget 102400    ok
+SUCCESS: the token search stayed inside its budget
+<hwut-end>

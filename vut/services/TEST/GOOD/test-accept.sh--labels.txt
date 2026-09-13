@@ -14,7 +14,6 @@ STDOUT {
 GOOD holds:
     test-ok.sh.txt
     test-two.sh--b.txt
-    test_ids.dat
 == NAMING it literally blesses it ==
 STATUS: 0
 STDOUT {
@@ -30,7 +29,6 @@ GOOD holds:
     test-ok.sh.txt
     test-two.sh--a.txt
     test-two.sh--b.txt
-    test_ids.dat
 == a GLOB wholly swallowed warns instead ==
 STATUS: 3
 STDOUT {

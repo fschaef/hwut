@@ -230,7 +230,7 @@ words)
     echo "STATUS: $?"
     grep -E "^  *(book entry|register):" out.txt | sed 's/^/    /'
     echo "--- the nominals that stand"
-    ls tree/suite/TEST/GOOD | grep -v -e book.csv -e test_ids.dat \
+    ls tree/suite/TEST/GOOD | grep -v -e book.csv \
         | sed 's/^/    /'
     echo "--- three words: refused, and the way out named"
     $REMOVE --directory=tree/suite/TEST test-app.sh two extra --yes \
@@ -238,7 +238,7 @@ words)
     echo "STATUS: $?"
     grep -E "REFUSED|usage:" out.txt | sed 's/^/    /'
     echo "--- the nominals that stand"
-    ls tree/suite/TEST/GOOD | grep -v -e book.csv -e test_ids.dat \
+    ls tree/suite/TEST/GOOD | grep -v -e book.csv \
         | sed 's/^/    /'
     ;;
 

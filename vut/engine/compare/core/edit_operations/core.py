@@ -149,7 +149,6 @@ class WorkListBase(list):
         while self:
             item = self.pop()
             if not self.end_of_sequence(item):
-                breakpoint()
                 self.produce_derived(item)
         return self.best
 
@@ -178,7 +177,6 @@ class WorkListBase(list):
 
     def produce_derived(self, item):
         for new_item in item.subsequent_steps(self.subject, self.nominal, self.cache):
-            breakpoint()
             if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
                 continue
             # Retrieve 'subject_modified' if it exists (it exists in Line comparisons, but not LineSequence)

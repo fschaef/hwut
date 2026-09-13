@@ -46,6 +46,27 @@ from   vut.engine.bookkeeper.test_id_db import (    # noqa E402
                                            TestIdFault, FILE_NAME,
                                            ID_LIMIT)
 from   vut.services.lib.config import show   # noqa E402
+from   vut.engine.bookkeeper.bookkeeper import (   # noqa E402
+                                           Bookkeeper, BOOK_FILE_NAME)
+
+
+def _persist(directory, db):
+    """
+    RETURN: None. 'db' laid into the book, as the Bookkeeper does in
+            the same act as every mutation (B-13).
+
+    THE TYPE DOES NOT WRITE (B-14): it is a snapshot with a counter.
+    Persistence is the Bookkeeper's, so a claim about a reload is a
+    claim about the book, and this test -- inside the component --
+    reaches the bookkeeper's own write for it.
+    """
+    Bookkeeper(directory)._register_write(db)
+
+
+def _reload(directory):
+    """RETURN: TestIdDb, what the book gives back -- the register as
+    the next Bookkeeper would see it."""
+    return Bookkeeper(directory)._register()
 
 
 def _check(pair_list):
@@ -89,6 +110,7 @@ def _filled(directory):
     db.run_id_of("test-parse.py", "basic", allocate_f=True)
     db.run_id_of("test-parse.py", "deep",  allocate_f=True)
     db.run_id_of("test-other.py", None,    allocate_f=True)
+    _persist(directory, db)
     return db
 
 
@@ -122,8 +144,10 @@ def test_allocation():
         (db.run_id_of("test-parse.py", "basic", allocate_f=True)
          == TestRunId(0, 0),
          "allocating a standing run returns the standing id"),
-        (os.path.isfile(os.path.join(directory, "GOOD", FILE_NAME)),
-         "the register is on disk the moment the first id is born"),
+        (os.path.isfile(os.path.join(directory, "GOOD", BOOK_FILE_NAME))
+         and any(l.startswith("# vut-register") for l in
+                 open(os.path.join(directory, "GOOD", BOOK_FILE_NAME))),
+         "the register is in the book the moment the first id is born"),
     ])
     shutil.rmtree(directory)
     _verdict(ok, "an id is born at first sight, one above its scope's "
@@ -188,7 +212,8 @@ def test_retire():
     print("--- the next registration, before and after a reload ---")
     fresh = db.run_id_of("test-fresh.py", allocate_f=True)
     print("INSPECT: test-fresh.py -> [%s]" % fresh)
-    reloaded = TestIdDb(directory)
+    _persist(directory, db)
+    reloaded = _reload(directory)
     later    = reloaded.run_id_of("test-later.py", allocate_f=True)
     print("INSPECT: after reload, test-later.py -> [%s]" % later)
 
@@ -252,15 +277,20 @@ def test_retire():
 def test_tables():
     """The file round-trips, healing included."""
     directory = _place("test-parse.py", "test-other.py")
-    db = _filled(directory)
-    db.rename_app(0, "test-parser.py")
+    _filled(directory)
+    #  A RENAME IS THE ROW'S OWN (B-13): the id rides on the book's row,
+    #  so renaming the row renames the register entry. The type's own
+    #  'rename_app' heals a snapshot; the book is renamed through the
+    #  bookkeeper, and the register reads back renamed.
+    Bookkeeper(directory).rename_test("test-parse.py", "test-parser.py")
+    db = _reload(directory)
 
-    print("--- the file, as stored ---")
+    print("--- the register, as the book holds it ---")
     text = db.format()
     for line in text.splitlines():
         print("         | %s" % line)
 
-    back     = TestIdDb(directory)
+    back     = _reload(directory)
     stable_f = back.format() == text
     print("--- read back ---")
     print("INSPECT: byte-identical after a round trip: %s" % stable_f)

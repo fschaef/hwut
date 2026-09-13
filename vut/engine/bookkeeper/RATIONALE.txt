@@ -500,3 +500,68 @@ GRAVEYARD Eliding 'operation' too -- not taken: it is 'Run' on nearly
           every row and would elide almost entirely, which reads as a
           column that is never there; two elisions are a rule, four
           are a format.
+
+
+B-14 A ROW SAYS THE CHOICE IS KNOWN; TWO STEPS TO MEMBERSHIP        (2026-09-13)
+------------------------------------------------------------------------------
+PROBLEM   A book entry meant "a nominal stands, blessed or accepted",
+          and the register's columns were therefore ANNOTATED onto a
+          row and never allowed to create one. A test with an id and
+          no nominal -- registered under 'run_id_of(allocate_f=True)',
+          never accepted -- then had nowhere to live in the book, and
+          survived only in 'GOOD/test_ids.dat'. With B-13 making the
+          book the register, the sidecar became the SOLE store of that
+          state; deleting it lost the entry, and 'sanitize --books'
+          named the state a disagreement to be healed.
+
+          MEASURED: 'Bookkeeper.run_id_of("test-reg.py", allocate_f=
+          True)' issued id 0 and wrote a header 'apps:1' over a book
+          with no row. Read back with the sidecar present: 0. With the
+          sidecar deleted: None, roster empty, generation 0.
+
+DECISION  INITIATION IS TWO STEPS. A test run is accepted AS A TEST
+          RUN and appears in the book -- it is KNOWN, an id is issued.
+          It becomes a MEMBER when a nominal stands. Until then it is
+          an ASPIRANT: played by 'hwut.play', refused by 'hwut.run'
+          (NOT_ACCEPTED_REASON, the gate 'admit_of' already judges per
+          case), neither passed nor failed.
+
+          A ROW SAYS THE CHOICE IS KNOWN, and no more. Whether a
+          nominal stands is asked of 'GOOD/' by 'nominal_stands_f',
+          per case; nothing remembers the answer. So an id with no row
+          to sit on MAKES one, with the verdict ASPIRANT -- "annotated,
+          never created" is overturned, since the meaning it protected
+          is gone.
+
+          ASPIRANT IS A VERDICT, NOT A COLUMN. The 'verdict' column
+          was a bool encoded 'true'/'false'/''. It becomes
+          'E_TestVerdict' -- PASS, FAIL, ASPIRANT -- parsed ONCE where
+          a row is read and rendered ONCE where a row is written;
+          every reader between holds the enum. A verdict of ASPIRANT
+          is a verdict about the choice's STANDING, not about a
+          comparison none has happened.
+
+          '--fail' ITERATES FAIL AND NOTHING ELSE. What never ran
+          cannot have failed. An aspirant answers neither '--pass' nor
+          '--fail'.
+
+          SANITIZE's first finding changes hands: "a registered test
+          with no nominal" is now a legitimate state and is dropped;
+          in its place, "the book says ASPIRANT and a nominal STANDS"
+          -- the record is stale, something accepted outside the
+          book. The other findings stand.
+
+COST      A bare bool never round-trips ASPIRANT: '_bool_text' would
+          have written 'true', and an aspirant would have passed.
+          Hence the enum is mandatory, not a nicety, and the assert in
+          '_verdict_text' refuses a bool. Three of the bookkeeper's
+          own nominals moved by their rendering of 'True' -> 'true';
+          nothing else in the tree changed verdict.
+
+GRAVEYARD A 'standing' column beside 'verdict' -- not taken: two
+          columns that cannot disagree are one column. 'desperado',
+          'candidate', 'unaccepted', 'standby' as the word -- not
+          taken: the first is a bandit, the second and third are
+          already spoken for (the candidate output; C-9's region), the
+          fourth says "waiting to be used" where the truth is "waiting
+          to be accepted".

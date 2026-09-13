@@ -1,0 +1,380 @@
+==============================================================================
+intend/19-matching-separated -- TWO LEVELS, TWO PROBLEMS, NEITHER A HANG
+==============================================================================
+
+COMPONENTS CONCERNED:
+
+    engine/compare/core/edit_operations     core.py, line.py,
+                                            line_sequence.py
+    engine/compare/contract                 semantics.py (the cost tables)
+    engine/compare/region/potpourri/solver  the precedent, not changed here
+    engine/compare/TEST                     test-association-cost.py
+    services/lib/accept                     the merge door, where it showed
+
+
+WHY THIS EXISTS
+===============
+
+'hwut.accept.interactive adm/TEST test-import_graph.sh vut' does not
+return. It is not slow; it does not finish. The same pair through
+'hwut.run' answers in 1.46 seconds, because the judge and the merge
+enter compare through different doors and only the merge asks for the
+full alignment.
+
+MEASURED, on the pair now standing in
+'engine/compare/TEST/FIXTURE/subject.txt' + 'nominal.txt':
+
+    the pair                    23 subject tokens, 17 nominal tokens
+    positions available         23 x 17 = 391
+    expansions                  400,000 and not finished
+    best_cost_db entries        150,270
+    distinct (si, ni)           172
+    of which subject_modified   150,268 -- the key is one entry per PATH
+    of which analogy_db           171   -- costs one entry
+    best found at               125,000 expansions, never improved after
+
+A search over 391 positions had visited 150,270 states and was still
+growing linearly when it was abandoned. The queue never left the
+twenties, so this is not a frontier explosion; it is re-expansion, and
+what re-expands is permutations of the same positions.
+
+Hypotheses killed on the way, so nobody re-runs them:
+
+    best-first order        popping minimum f instead of the last item:
+                            still does not finish in 250 seconds
+    best-first + A* stop    clearing on the first goal popped: the same
+    a transposition window  distance <= 1 makes each pair finite, then
+                            the cost simply moves to the next pair
+    the memo                Cache.get is called twice, and one of the
+                            two calls never returns -- the memo is not
+                            the problem, it is the victim
+
+
+WHAT THE TWO LEVELS ACTUALLY ARE
+================================
+
+They already have separate step generators. What they share is the
+driver, and the driver is the thing that does not belong to both.
+
+            +-----------------------------------------------+
+            |  core.py   WorkListBase, WorkItemBase          |  SHARED
+            |            LIFO, prune, best_cost_db           |  <- here
+            +-----------------------------------------------+
+                   ^                              ^
+                   |                              |
+    +------------------------------+  +------------------------------+
+    | line_sequence.py             |  | line.py                      |
+    | LINES against LINES          |  | ELEMENTS within ONE line      |
+    | GOOD SUBSTITUTE INSERT DELETE|  | + TRANSPOSE, + analogy        |
+    | no TRANSPOSE (stated in its  |  |                              |
+    | own header; line_cost_db has |  |                              |
+    | no TRANSPOSE entry)          |  |                              |
+    +------------------------------+  +------------------------------+
+
+THE LINE LEVEL IS NOT A SEARCH PROBLEM. Its costs are constant and
+position-independent, there is no reordering, and SUBSTITUTE is never
+dearer than DELETE + INSERT:
+
+    GOOD         0
+    SUBSTITUTE   the relative edit distance of the two lines, [0, 1]
+    INSERT       0.5
+    DELETE       0.5
+
+That is weighted sequence alignment -- diff -- and it is a table of
+subject-lines x nominal-lines, filled once. No work list, no
+'best_cost_db', no heuristic, no prune.
+
+It reads as more than that today only because of a bug.
+'WorkItemHistory' documents that runs are cheaper (the k-th DELETE in a
+row costs 0.5/k) and it does not work: 'clone()' passes the counters to
+'__init__', which discards its arguments and zeroes them. MEASURED:
+
+    note DELETE #1 -> 0.5000        parent delete_n = 4
+    note DELETE #2 -> 0.2500        clone  delete_n = 0
+    note DELETE #3 -> 0.1667
+    note DELETE #4 -> 0.1250        clone's next DELETE -> 0.5000
+
+    ten lines deleted in a row, end to end:  cost 5.00000
+    ten times 0.5 flat.  0.5 * H(10) would be 1.46.
+
+A second fault stands in the same place: 'note()' mutates the PARENT's
+history and only then clones it, so generating siblings corrupts the
+item that generated them. It is invisible only because 'clone()' throws
+the mutation away.
+
+The two are load-bearing against each other. 'min_cost_remaining'
+charges a flat 0.5 per remaining line. With the discount inert that is a
+true lower bound. Repair 'clone()' alone and it becomes an OVERestIMATE
+the moment a run reaches two -- at k=8 it claims 4.00 where the truth is
+1.36 -- and an inadmissible bound inside that prune may discard the
+optimum. The bug must not be fixed on its own.
+
+THE ELEMENT LEVEL IS TWO PROBLEMS WEARING ONE COAT.
+
+    grading    a DIFFERENT verdict still carries
+               'edit_distance_relative' as a cost factor. A substitution
+               matrix takes that; it does not disturb a table.
+
+    analogy    a match may COMMIT '((..))' to a binding, and the
+               commitment travels with the path, so the same two
+               elements match on one path and not on another. A cell's
+               value depends on how the cell was reached. This is the
+               only part that is genuinely not a table.
+
+    transpose  '_step_transpose' swaps subject[si] with ANY later
+               element and stores the whole reordered subject as
+               'subject_modified'. This is not inherent; it is a choice,
+               and it is the choice that costs everything (see above:
+               150,268 of 150,270 entries).
+
+Against the literature: Wagner and Fischer (1974) solve substitution,
+insertion and deletion in time proportional to the product of the
+lengths. Lowrance and Wagner (1975) add the interchange of two ADJACENT
+symbols and keep that bound, under a restriction on the costs --
+2T >= I + D, where T, I, D are the costs of transposition, insertion and
+deletion. Wagner (1975) showed the general problem NP-complete; under
+swap and deletion alone it is NP-complete for unbounded alphabets.
+
+MEASURED against 'element_cost_db', where I = D = 1:
+
+    distance   1   T = 0.5000   2T = 1.0000   I+D = 2.0   VIOLATED
+    distance   2   T = 0.6667   2T = 1.3333   I+D = 2.0   VIOLATED
+    distance   3   T = 0.7500   2T = 1.5000   I+D = 2.0   VIOLATED
+    distance  10   T = 0.9091   2T = 1.8182   I+D = 2.0   VIOLATED
+    distance  50   T = 0.9804   2T = 1.9608   I+D = 2.0   VIOLATED
+
+'cost_TRANSPOSE' returns [0.5, 1.0) and never reaches the boundary, not
+even for an adjacent swap. The search is not an implementation that
+turned out slow; it is what is left once the cost table steps outside
+the region where a table exists.
+
+
+THE PRECEDENT: POTPOURRI
+========================
+
+The order-free side of compare met the same shape and settled it.
+'region/potpourri/solver/README.txt' records the benchmarking: the
+unconstrained structure goes to 'maximum_bipartite_matching.py'
+(augmenting paths, polynomial), and only the analogy-constrained part
+goes to 'csp_backtracking_mrv.py' (backtracking with minimum-remaining-
+values, failing fast on the most constricted subject first). Together
+they answer datasets of a thousand and more in fractions of a second;
+every other approach was exponentially slower, and the ones not chosen
+stand ON_HOLD with their benchmark suite rather than deleted.
+
+And it is BOUNDED. 'max_comparisons' defaults to 128, is settable per
+section and per block ('##! potpourri max_comparisons=64'), and is
+declared in the configuration where a reader can find it.
+
+The sequential side has the same two parts and none of the second half.
+
+
+WHAT "DONE" CHANGES
+===================
+
+    1. The line level stops being a search. Lines against lines is
+       ANCHORED first and then filled as a table, and
+       'line_sequence.py' no longer reaches into 'core.py' for a work
+       list.
+
+       Anchoring is the literature's answer to the same shape. Heckel
+       (1978) isolates differences in linear time on two observations:
+       a line occurring once in each file must be the same line, even
+       if moved; and a line adjacent to an unaltered line, identical
+       on both sides, must be the same line too. Patience diff (Cohen,
+       2007) pairs lines unique to each file and keeps the longest
+       such run that stands in order in both. Histogram (jgit, 2010)
+       anchors on the RAREST matching lines rather than the strictly
+       unique ones.
+
+       MEASURED on the fixture pair:
+
+            subject 35 lines, nominal 34 lines
+            lines unique in both                        12
+            longest in-order chain of those             12
+            sections left between them                  13
+            largest such section                         5 lines
+
+       The 35 x 34 field of candidate pairings becomes thirteen
+       sections of at most five lines. It does NOT dissolve the
+       element-level fault: the pair that does not terminate still
+       falls inside one section --
+
+            subject lines 29-33 x nominal lines 29-32, 20 pairings
+
+       -- which is why the two levels are two pieces of work.
+
+       L-1  ANCHORING IS PER CHUNK PAIR, NEVER PER STREAM.
+
+            A region is its own chunk, and the unit of association is
+            a chunk pair ('core/input_chunk_zip.py' yields them in
+            lockstep; 'reading/input_chunk.py' enters the association
+            with one chunk facing one chunk). Lines of different
+            regions are therefore never associated today, and the
+            cheap way to find anchors -- scan the whole stream for
+            lines unique in both -- would break that silently by
+            binding a line inside a potpourri to a line outside it.
+            UNIQUENESS IS UNIQUENESS WITHIN THE CHUNK.
+
+            Note the word is already taken elsewhere: C-10's
+            content-anchored split is a different thing.
+
+       L-2  POSITION 0 ALWAYS ANCHORS, and so does the end.
+
+            Heckel's virtual begin and end lines. Without them a first
+            line that is identical but not unique never anchors, and
+            the first section is the whole chunk.
+
+    2. The element level keeps a search, but only for what needs one.
+       Grading goes into the table. Analogy is what the search is for.
+
+    3. NO INPUT HANGS. Rare is not never: the analogy-constrained case
+       is uncommon in practice and always possible in principle, and
+       when it arrives the face must answer -- with a budget declared
+       where a reader can find it, as potpourri's is.
+
+    4. 'test-association-cost.py fixture' stops reproducing a hang by
+       hanging, and its numbers become the standing record of what the
+       search costs.
+
+Not in scope: fault 2 (the stream drained whole before comparison), plan
+18 steps 4-6, and the moving rulings. They stand where they stand.
+
+
+OPEN
+====
+
+o-1  TRANSPOSITION AT THE ELEMENT LEVEL
+
+     (a) drop it. A reordering costs a substitution like anything else.
+         buys:  the table is reachable with nothing further to rule;
+                'subject_modified' leaves the key and the code
+         costs:  loses the statement that reordering is a milder fault
+                than a wrong word -- which is visible in output today
+
+     (b) adjacent only, with T set so that 2T >= I + D (T = 1 against
+         I = D = 1). Lowrance-Wagner territory, and a swap still costs
+         1 where the two substitutions it replaces cost 2.
+         buys:  the milder-fault statement survives; the bound is one
+                the literature vouches for
+         costs:  sub-unit transposition cost is gone; a distant
+                reordering is no longer recognised as a reordering
+
+     (c) keep arbitrary distance, behind a declared budget as potpourri
+         has.
+         buys:  nothing of today's behaviour is given up
+         costs:  the element level stays a search on every pair, not
+                only on analogy-bearing ones; the budget decides
+                alignments, and a budget that decides is a semantics
+
+     WHICHEVER: nothing in the suite currently pins what
+     'subject_modified' protects. Measured -- the whole compare suite
+     answers 24 ok / 39 fail both with and without it, verdicts
+     byte-identical. A test must be written before this is ruled, or a
+     fix cannot be told from a regression.
+
+o-2  RULED -- 'WorkItemHistory' IS REMOVED.
+
+     It never ran: 'clone()' hands the counters to '__init__', which
+     accepts and discards them, so every derived item starts a fresh
+     history and every INSERT, DELETE and SUBSTITUTE is charged in
+     full. Ten lines deleted in a row cost 5.00000, which is ten times
+     0.5 flat; 0.5 * H(10) would have been 1.46. The second fault in
+     the same place -- 'note()' mutating the PARENT's history before
+     cloning it -- goes out with it.
+
+     CONSEQUENCE NOT YET RULED: with it gone, a run of k missing lines
+     costs k x 0.5, LINEAR. That is the flat end of the gap-penalty
+     dial, and it says a removed block of forty lines is forty faults.
+     The literature's middle position is affine -- a gap costs
+     'open + k x extend', which says a block is ONE fault and a bigger
+     block is still a worse one -- computed by Gotoh (1982) in O(mn)
+     with three tables. The concave position, 0.5 * H(k), is what
+     'WorkItemHistory' intended; Waterman (1984) and Miller and Myers
+     (1988) give algorithms for it.
+
+     Anchoring may make this moot: within a five-line section the
+     difference between linear, affine and concave is small. The
+     position is therefore left OPEN and decided after anchoring is
+     measured, not before.
+
+o-3  WHAT HAPPENS WHEN THE ANALOGY BUDGET IS SPENT
+
+     (a) REFUSE, naming the budget and the pair.
+         buys:  no alignment is ever silently not the best one
+         costs:  a rare input turns a working session into a refusal
+
+     (b) fall back to the analogy-free table and say so in the output.
+         buys:  the face always answers
+         costs:  an alignment that is declared coarse is still an
+                alignment a GOOD may be recorded against
+
+o-4  WHERE THE BUDGET IS DECLARED
+
+     (a) alongside potpourri's, in 'region' scope.
+     (b) a Configuration field of its own, since the sequential path is
+         not a region handler.
+     Cost of each is small; the cost of choosing wrongly is a reader who
+     looks in one place and finds nothing.
+
+o-5  STANDING FROM EARLIER, UNRULED: the knee check inside 'Tally' in
+     'test-association-cost.py', so the 'fixture' choice abandons at
+     KNEE_NODE_N instead of hanging. Measured: 2 seconds against never,
+     and it names lines 31-32 as the knee. No recorded GOOD moves,
+     because 'fixture' has never had one.
+
+o-6  RULED -- THE SECOND PHASE IS BOTH CRITERIA, IN ORDER.
+
+     Phase one is settled by the literature: lines equal and unique
+     within the chunk, longest in-order run kept, position 0 and the
+     end always anchoring (L-1, L-2). Phase two takes what phase one
+     leaves, and the chunks with no unique line at all -- the known
+     weakness of patience, where implementations fall back to an LCS
+     method.
+
+     FIRST, OUTLIERLY CLOSE. A pair anchors where its cost is not
+     merely lowest but lowest BY A MARGIN: s_i closer to n_j than to
+     anything else, n_j closer to s_i than to anything else, and the
+     runner-up clear of it by a declared margin. This is the criterion
+     that says "certainly the same line", and it says nothing where
+     nothing is certain.
+
+     THEN, THE n LOWEST. Where nothing is outlying, rank the section's
+     candidate pairings, anchor the n cheapest, and recurse into what
+     they leave. Bisectioning anchoring: the same act at every level,
+     terminating because each level's sections are strictly smaller.
+
+     WHY BOTH. Outlierliness alone can leave a section with no anchor,
+     and that section is exactly the case that does not terminate
+     today. The n-lowest alone anchors confidently where nothing
+     deserves confidence. Together: certainty where there is
+     certainty, progress where there is not, and NO INPUT FALLS
+     THROUGH TO AN UNBOUNDED SEARCH.
+
+     STILL TO RULE: the margin, the n, and where the boundary between
+     the two criteria stands. Each is a number, and each wants a
+     measurement rather than a guess.
+
+o-7  WHAT AN ANCHOR CANDIDATE IS COSTED WITH
+
+     Both phase-two criteria need a cost per candidate pairing, and the
+     real cost is the element-level comparison -- the very thing that
+     does not terminate. The anchor pass must therefore rank on a CHEAP
+     surrogate.
+
+     The literature does exactly this. LHDiff (Asaduzzaman) uses
+     locality-sensitive hashing plus normalised Levenshtein over
+     content AND context. Reiss compared eighteen line-tracking
+     methods and found the best to be whitespace-insensitive
+     normalised Levenshtein with four lines of context, above 97 per
+     cent. ldiff (Canfora) ranks hunk pairs by cosine similarity
+     first and only then compares lines within the best.
+
+     (a) token-bag overlap of the two lines, O(n+m)
+     (b) normalised Levenshtein over the raw text
+     (c) (a) or (b) PLUS a line or two of context either side
+
+     Any of the three is admissible as a LOWER BOUND on the real cost
+     if chosen to be one, in which case it also prunes the element
+     search and sharpens 'min_cost_remaining'. Ruling it as a bound
+     rather than a score is worth more than the choice between them.

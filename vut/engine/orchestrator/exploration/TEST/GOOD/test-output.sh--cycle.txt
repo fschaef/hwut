@@ -7,5 +7,4 @@ accepted: status 0
 nominals:
     test-file.sh.result.csv
     test-file.sh.txt
-    test_ids.dat
 STATUS: 0

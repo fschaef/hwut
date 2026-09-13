@@ -57,6 +57,64 @@ class E_StderrNote(Enum):
         return self.value
 
 
+class E_TestVerdict(Enum):
+    """WHAT THE BOOK SAYS of a choice's STANDING -- the 'verdict' column.
+
+    A row in the book says the choice is KNOWN; it does not say a
+    nominal stands. Whether one stands is asked of 'GOOD/' by
+    'nominal_stands_f', per case, and nothing remembers the answer
+    (B-14). The column says what the last act found:
+
+    PASS       ran and was equivalent to its nominal -- or was just
+               accepted, which is the same statement (E-15).
+    FAIL       ran and was not.
+    ASPIRANT   in the book, never accepted: registered, an id issued,
+               no nominal to be judged against. Played by 'hwut.play',
+               refused by 'hwut.run' (NOT_ACCEPTED_REASON). Neither a
+               pass nor a failure -- '--fail' iterates FAIL and nothing
+               else, since what never ran cannot have failed.
+
+    PARSED ONCE, AT THE ROW. The book's text becomes this the moment a
+    row is read ('_model_of_rows') and becomes text again only where a
+    row is written ('_rows_of_model'); between the two, every reader
+    holds the enum. A bare bool would round-trip 'ASPIRANT' to 'true'
+    on the next write, and an aspirant would quietly pass.
+    """
+    PASS     = "true"
+    FAIL     = "false"
+    ASPIRANT = "aspirant"
+
+    def __str__(self):
+        """RETURN: str, the verdict's token, as the book holds it."""
+        return self.value
+
+    @classmethod
+    def of_bool(cls, flag):
+        """RETURN: E_TestVerdict, PASS for a true flag, FAIL else."""
+        return cls.PASS if flag else cls.FAIL
+
+    @classmethod
+    def of_text(cls, text):
+        """
+        RETURN: E_TestVerdict, of the book's token.
+                None, of '' or any token the book never wrote --
+                a legacy row with no verdict recorded.
+        """
+        for member in cls:
+            if member.value == text: return member
+        return None
+
+    @property
+    def passed_f(self):
+        """RETURN: bool, True where this is PASS."""
+        return self is E_TestVerdict.PASS
+
+    @property
+    def failed_f(self):
+        """RETURN: bool, True where this is FAIL -- and only then."""
+        return self is E_TestVerdict.FAIL
+
+
 @dataclass
 class StoreConfig:
     """WHERE and HOW MUCH is kept. Held verbatim by the test's

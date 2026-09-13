@@ -11,6 +11,6 @@ INSPECT: [1] test-other.py
   OK  : the choice-less run spells the app id alone
   OK  : an unknown run answers None where allocation was not asked
   OK  : allocating a standing run returns the standing id
-  OK  : the register is on disk the moment the first id is born
+  OK  : the register is in the book the moment the first id is born
 SUCCESS: an id is born at first sight, one above its scope's mark, from 0.
 <hwut-end>

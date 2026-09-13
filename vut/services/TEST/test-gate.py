@@ -42,7 +42,7 @@ from   config import HwutRunner                                  # noqa F401,E40
 
 from   vut.services.run  import main as run_main                 # noqa E402
 from   vut.services.plan import main as plan_main                # noqa E402
-from   vut.engine.bookkeeper.api import Bookkeeper, TestIdDb     # noqa E402
+from   vut.engine.bookkeeper.api import Bookkeeper, E_TestVerdict  # noqa E402
 
 ROOT_CONF = """\
 hwut {
@@ -175,7 +175,7 @@ def test_registered():
     """The accepted test runs; the register gets its entry on the
     nominal's word; the run says so; no 'last_accept'."""
     root, test = fixture()
-    before = TestIdDb(test).run_id_of("test-old.py")
+    before = Bookkeeper(test).run_id_of("test-old.py")
     status, line_list, error_list = _run(root)
     #  A NOTE STANDS IN THE FLOW now (O-24), not on write_error.
     note = [l for l in line_list if "REGISTERED test-old.py" in l]
@@ -184,10 +184,10 @@ def test_registered():
     entry = Bookkeeper(test).result("test-old.py", None)
     ok = _check([
         (before is None, "before: no register entry"),
-        (TestIdDb(test).run_id_of("test-old.py") is not None,
+        (Bookkeeper(test).run_id_of("test-old.py") is not None,
          "after: the register has the test"),
         (len(note) == 1, "the run said so, once (NOTE)"),
-        (entry is not None and entry.get("verdict") is True,
+        (entry is not None and entry.get("verdict") is E_TestVerdict.PASS,
          "the book has the run's verdict"),
         (entry is not None and not entry.get("last_accept"),
          "and no 'last_accept': the mark for sanitize"),

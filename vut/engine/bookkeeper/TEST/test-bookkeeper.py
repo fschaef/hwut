@@ -46,6 +46,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__),
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.bookkeeper.observation import ObservationDb   # noqa E402
+from   vut.engine.bookkeeper.configuration import E_TestVerdict   # noqa E402
 from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
@@ -177,7 +178,7 @@ def test_record_derives():
         (sorted(entry) == ["report", "verdict"],
          "THE BASE HOLDS DECISIONS: the verdict and the report -- "
          "nothing a run can make again, and NO CONFIGURATION (B-6)"),
-        (read["verdict"] is True and read["report"] == "ok",
+        (read["verdict"] is E_TestVerdict.PASS and read["report"] == "ok",
          "the verdict and the report come from the result"),
         ("canonicaliser" not in read and "compare" not in read,
          "the canonicaliser and the compare setup are the header's "
@@ -287,7 +288,7 @@ def test_damage():
     ok = _check([
         (damaged == {},
          "a damaged base reads as empty, it does not raise"),
-        (after is not None and after["verdict"] is True,
+        (after is not None and after["verdict"] is E_TestVerdict.PASS,
          "writing recovers the base"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
@@ -362,8 +363,8 @@ def test_divergence():
     agreeing = book.divergence({"demo": ["basic", "old"]})
     renamed  = book.divergence({"demo": ["basic", "fancy"]})
     dropped  = book.divergence({"other": [None]})
-    before   = json.dumps(book.book(), sort_keys=True)
-    after    = json.dumps(Bookkeeper(directory).book(), sort_keys=True)
+    before   = json.dumps(book.book(), sort_keys=True, default=str)
+    after    = json.dumps(Bookkeeper(directory).book(), sort_keys=True, default=str)
 
     print("INSPECT: declared as recorded    -> %s" % agreeing)
     print("         'old' renamed to 'fancy'-> %s" % renamed)

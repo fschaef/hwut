@@ -57,6 +57,13 @@ cd "$WORK"
 
 printf 'hwut {\n}\n' > hwut-root.conf
 
+register_of() {         # <TEST dir> -- the register, through the
+                        # bookkeeper's door: the book IS the register
+                        # (B-13), and nothing here reads a file of its own
+    python3 -c "from vut.engine.bookkeeper.api import Bookkeeper
+print(Bookkeeper('$1').register_text(), end='')"
+}
+
 face() {                # <command> <args...> -- status and stdout
     local command="$1"; shift
     $command "$@" > out.txt 2> err.txt
@@ -149,8 +156,8 @@ across)
     grep -E "labels|book entry|register|coverage" out.txt | sed 's/^/    /'
     the_file
     echo "--- the source register retired the id; the target issued afresh"
-    sed -n '/^A:/p;/^C:/p' tree/suite/TEST/GOOD/test_ids.dat | sed 's/^/    suite: /'
-    sed -n '/^A:/p;/^C:/p' tree/other/TEST/GOOD/test_ids.dat | sed 's/^/    other: /'
+    register_of tree/suite/TEST | sed -n '/^A:/p;/^C:/p' | sed 's/^/    suite: /'
+    register_of tree/other/TEST | sed -n '/^A:/p;/^C:/p' | sed 's/^/    other: /'
     echo "--- 'hwut.move' INTO a directory, two words"
     ( cd tree && printf 'y\n' | $MOVE other/TEST/test-moved.sh suite/TEST/ ) \
         > out.txt 2> err.txt

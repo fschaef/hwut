@@ -53,7 +53,6 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
 from   vut.engine.display.word                  import CInk
 from   vut.engine.display.console               import colour_decision
 from   vut.engine.operations.result             import E_TestRunResult
-from   vut.engine.bookkeeper.api                import TestIdDb
 from   vut.engine.bookkeeper.api             import E_StderrNote
 from   vut.engine.bookkeeper.api              import Store
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
@@ -490,7 +489,8 @@ def divergence_f(bookkeeper, test, choice):
     """
     entry = bookkeeper.result(test, choice)
     if entry is None:            return False
-    if entry.get("verdict"):     return False        # it passed
+    verdict = entry.get("verdict")
+    if verdict is not None and verdict.passed_f: return False   # it passed
     return entry.get("report") in DIVERGENCE_TOKEN_SET
 
 

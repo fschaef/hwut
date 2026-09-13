@@ -1,5 +1,5 @@
 INSPECT: damaged base reads as {}
-         a later write recovers: verdict = True
+         a later write recovers: verdict = true
   OK  : a damaged base reads as empty, it does not raise
   OK  : writing recovers the base
 SUCCESS: a lost base never fails a run.

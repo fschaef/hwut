@@ -15,8 +15,8 @@ DESCRIPTION
        and choices, across the whole tree, executed this range" as ONE
        number.
 
-           D1: test_ids.dat  group_ids.dat  records
-           D2: test_ids.dat  group_ids.dat  records
+           D1: book.csv (register)  group_ids.dat  records
+           D2: book.csv (register)  group_ids.dat  records
                        |
                  hwut.cov gather (one root)
                        v

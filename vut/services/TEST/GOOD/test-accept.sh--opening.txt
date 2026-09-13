@@ -18,5 +18,4 @@ STATUS: 0
     | <hwut-end>
 --- 'q' on test-two.sh: no nominal was written
     test-ok.sh.txt
-    test_ids.dat
 <hwut-end>

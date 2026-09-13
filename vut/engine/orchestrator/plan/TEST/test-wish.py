@@ -43,6 +43,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from config import HwutRunner                                # noqa: F401
 
+from vut.engine.bookkeeper.api                           import E_TestVerdict
 from vut.engine.orchestrator.exploration.explorer        import explore
 from vut.engine.orchestrator.exploration.task_list_query import \
                                                          CTestTaskListQuery
@@ -90,7 +91,9 @@ class BookStub:
         entry = self.entry_db.get((test, choice))
         if entry is None: return None
         verdict, _age_sec = entry
-        return {"verdict": verdict}
+        #  THE VALUE IS THE REAL BOOK'S TOO (B-14): an E_TestVerdict,
+        #  never a bare bool, since '--fail' asks 'failed_f' of it.
+        return {"verdict": E_TestVerdict.of_bool(verdict)}
 
 
 def banner(label):

@@ -1,0 +1,7 @@
+TWO LINES, GROWING IN LENGTH -- the line count never changes
+     20 chars of tokens        nodes 48        pairs 3    budget 20000     ok
+     40 chars of tokens        nodes 398       pairs 3    budget 20000     ok
+     80 chars of tokens        nodes 60001     pairs None budget 20000     BUDGET EXCEEDED
+    120 chars of tokens        nodes 60001     pairs None budget 20000     BUDGET EXCEEDED
+FAILURE: the nested search exploded
+<hwut-end>

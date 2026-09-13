@@ -195,15 +195,45 @@ def _procsitter_runner(path, caps):
         return b"".join(chunk_list).decode("utf-8", "replace")
 
     #  THE COROUTINE IS BUILT BEFORE THE TRY and CLOSED where the run
-    #  never happens. 'asyncio.run' can refuse before it starts -- a
-    #  loop is already running, say -- and a coroutine dropped
-    #  unawaited warns on stderr, which would put a machine-chosen
-    #  path into whatever is capturing this.
+    #  never happens. The driving can refuse before it starts, and a
+    #  coroutine dropped unawaited warns on stderr, which would put a
+    #  machine-chosen path into whatever is capturing this.
     task = _ask()
     try:
-        return asyncio.run(task)
+        return _answer_of(task)
     except Exception:
         #  A file that cannot even be launched is not a test
         #  application. Silence is not a fault.
         task.close()
         return None
+
+
+def _answer_of(coroutine):
+    """
+    RETURN: str, what the interview coroutine answered, run to
+            completion in an event loop of its own.
+            None, where it answered none.
+
+    A LOOP MAY ALREADY BE RUNNING, and 'asyncio.run' refuses where one
+    is. Exploration is reached from both sides: 'hwut.plan' determines
+    synchronously, 'hwut.run' determines inside the orchestrator's own
+    loop. Refused there, the interview answered 'None' and every
+    application of the THIRD CARRIER (R-44) -- the hwut 1.0 ones, which
+    answer '--hwut-info' rather than carry a header -- vanished from
+    the run with no fault and no REFUSED line.
+
+    A REFUSAL TO ASK IS NOT AN ANSWER. Where a loop runs, the coroutine
+    is given a thread holding a loop of its own, and the question is put
+    exactly as it is put anywhere else; where none runs, 'asyncio.run'
+    serves as before.
+    """
+    import asyncio
+    import concurrent.futures
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coroutine).result()

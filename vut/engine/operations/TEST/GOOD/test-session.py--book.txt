@@ -1,5 +1,5 @@
 INSPECT: operations booked = {'demo.py': {'<none>': ['last_accept', 'report', 'verdict']}}
-         Run entry  = {'verdict': True, 'report': 'ok'}
+         Run entry  = {'verdict': <E_TestVerdict.PASS: 'true'>, 'report': 'ok'}
   OK  : one row per choice (B-7): the run's verdict and the acceptance's instant on it
   OK  : the canonicaliser is NOT recorded (B-6): what a choice was configured to do is the header's, versioned beside the book
   OK  : the instant, the host and the attribution are NOT in the book: a run makes them again, so they are observations, and stand in the local database (E-20, E-22)

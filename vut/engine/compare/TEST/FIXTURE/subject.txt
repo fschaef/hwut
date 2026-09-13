@@ -1,0 +1,35 @@
+STATUS: 0
+THE OUTER PICTURE {
+    adm {
+        9 module(s): cythonizer.py, dependency.py, fail_book.py, good_audit.py, import_graph.py, python_tracer.py, ... (3 more)
+        imports nothing of this tree
+    }
+    auxiliary {
+        4 module(s): async_helper.py, binary_codec.py, directory_mutex.py, parent_child_list.py
+        imports nothing of this tree
+    }
+    engine {
+        181 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (175 more)
+        --> adm
+        --> auxiliary
+        --> test_writing_support
+    }
+    services {
+        58 module(s): _accept_common.py, _boundary.py, _cases.py, _config.py, _core.py, _exit.py, ... (52 more)
+        --> auxiliary
+        --> engine
+        --> test_writing_support
+    }
+    test_writing_support {
+        8 module(s): hwut_pype.py, __init__.py, deterministic_random.py, deterministic_timeline.py, hwut_hocon.py, hwut_runner.py, ... (2 more)
+        imports nothing of this tree
+    }
+}
+STATUS: 1
+THE LAYERING {
+    DOOR PASSED -- 3 import(s) reach into a component past its door:
+        services/lib/accept/virgin.py -> engine/compare/reading/reading.py (past the door 'engine/compare/api')
+        services/lib/viewers/keyed/project.py -> engine/compare/reading/line_scanner.py (past the door 'engine/compare/api')
+        services/lib/viewers/keyed/region.py -> engine/compare/reading/line_scanner.py (past the door 'engine/compare/api')
+}
+<hwut-end>

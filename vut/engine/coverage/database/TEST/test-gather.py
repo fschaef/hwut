@@ -65,7 +65,7 @@ from   vut.engine.coverage.database.record  import (CoverageRecord,       # noqa
                                            FileCoverage, ranges_of,
                                            seated)
 from   vut.engine.coverage.database.binary  import pack_record            # noqa E402
-from   vut.engine.bookkeeper.api import TestIdDb          # noqa E402
+from   vut.engine.bookkeeper.api import Bookkeeper        # noqa E402
 
 FIXTURE = (
     ("parser/TEST", (("test-parse", "basic", (1, 2, 3, 4, 5)),
@@ -104,7 +104,7 @@ def fixture():
     for directory, app_tuple in FIXTURE:
         full = os.path.join(root, directory)
         os.makedirs(full)
-        register = TestIdDb(full)
+        register = Bookkeeper(full)
         for app, choice, line_tuple in app_tuple:
             run_id = register.run_id_of(app, choice, allocate_f=True)
             record = seated(CoverageRecord(
@@ -271,7 +271,7 @@ def test_stale():
                            or "nothing moved"))
 
     banner("after an accept in one directory")
-    TestIdDb(os.path.join(root, "parser/TEST")).run_id_of(
+    Bookkeeper(os.path.join(root, "parser/TEST")).run_id_of(
         "test-new", None, allocate_f=True)
     after = list(stale_tuple(read_bundle(path), root))
     for directory, what, how in after:

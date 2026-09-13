@@ -10,10 +10,11 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-THE THREE RECORDS OF ACCEPTANCE MUST AGREE (services E-41): the
-nominals in GOOD/, the register 'test_ids.dat', the book's
+THE TWO RECORDS OF ACCEPTANCE MUST AGREE (services E-41): the nominals
+in GOOD/, and the book -- which is also the register (B-13) and carries
 'last_accept'. 'hwut.sanitize --books' names every disagreement and
-'--apply' never touches one.
+'--apply' never touches one. A test the book calls ASPIRANT with no
+nominal is not a disagreement (B-14).
 
     disagree     one fixture holds all three disagreements:
                    test-reg.py     registered, no nominal
@@ -37,7 +38,7 @@ from   config import HwutRunner                                  # noqa F401,E40
 from   vut.services.sanitize import main as sanitize_main        # noqa E402
 from   vut.services.run      import main as run_main             # noqa E402
 from   vut.services.accept   import main as accept_main          # noqa E402
-from   vut.engine.bookkeeper.api import Bookkeeper, TestIdDb     # noqa E402
+from   vut.engine.bookkeeper.api import Bookkeeper               # noqa E402
 
 ROOT_CONF = """\
 hwut {
@@ -72,7 +73,8 @@ def _verdict(ok, sentence):
 
 def fixture():
     """RETURN: (str, str), the tree root and a TEST directory whose
-    three records disagree in the three ways."""
+    two records disagree in the three ways (B-14) -- and hold one
+    ASPIRANT, which is no disagreement at all."""
     root = tempfile.mkdtemp(prefix="vut_books_")
     tree_boundary(root, ROOT_CONF)
     test = os.path.join(root, "suite", "TEST")
@@ -85,13 +87,20 @@ def fixture():
         if executable_f: os.chmod(path, 0o755)
 
     put(test, "hwut.conf", "hwut { }\n")
-    for stem in ("reg", "nom", "book"):
+    for stem in ("reg", "nom", "book", "asp"):
         put(test, "test-%s.py" % stem, SCRIPT % (stem, stem), True)
     put(good, "test-nom.py.txt",  "nom\n<hwut-end>\n")
     put(good, "test-book.py.txt", "book\n<hwut-end>\n")
-    register = TestIdDb(test)
-    register.run_id_of("test-reg.py", allocate_f=True)
-    register.run_id_of("test-book.py", allocate_f=True)
+    #  THE BOOK IS THE REGISTER (B-13), and an id issued with no
+    #  nominal makes an ASPIRANT row (B-14). 'test-asp.py' stays one.
+    #  'test-reg.py' gets a nominal AFTER the book called it aspirant:
+    #  accepted outside the book, the finding that replaced
+    #  "registered, no nominal".
+    keeper = Bookkeeper(test)
+    keeper.run_id_of("test-reg.py",  allocate_f=True)
+    keeper.run_id_of("test-asp.py",  allocate_f=True)
+    keeper.run_id_of("test-book.py", allocate_f=True)
+    put(good, "test-reg.py.txt",  "reg\n<hwut-end>\n")
     #  A RUN books 'test-book.py' with a verdict and no 'last_accept'.
     run_main(["test-book.py", "--directory=%s" % test, "--silent"],
              write=lambda _: None, write_error=lambda _: None)
@@ -119,10 +128,13 @@ def test_disagree():
     for line in finding_list: print("  " + line)
     ok = _check([
         (len(finding_list) == 3, "three findings"),
-        (any(l.startswith(".: register test-reg.py") for l in finding_list),
-         "the register ahead: registered, no nominal"),
+        (any(l.startswith(".: book test-reg.py") and "aspirant" in l
+             for l in finding_list),
+         "the book stale: it says aspirant, and a nominal stands"),
         (any(l.startswith(".: GOOD/ test-nom.py") for l in finding_list),
-         "the register behind: a nominal, not registered"),
+         "the book behind: a nominal, and the book lacks it"),
+        (not any("test-asp.py" in l for l in finding_list),
+         "an aspirant is no disagreement (B-14)"),
         (any(l.startswith(".: book test-book.py") and "last_accept" in l
              for l in finding_list),
          "the book: a nominal, and 'last_accept' empty"),
@@ -138,11 +150,13 @@ def test_agree():
     accept_main(["test-book.py", "--force",
                  "--directory=%s" % test],
                 write=lambda _: None)
-    #  'test-reg.py' and 'test-nom.py' are still apart; remove their
-    #  disagreement the same way -- a nominal for one, none for the
-    #  other -- so only agreement remains.
+    #  'test-reg.py' and 'test-nom.py' are still apart; mend them the
+    #  same way -- accept the one the book calls aspirant, remove the
+    #  nominal the book never knew -- so only agreement remains.
+    #  'test-asp.py' stays an aspirant, which is agreement.
     os.remove(os.path.join(test, "GOOD", "test-nom.py.txt"))
-    TestIdDb(test).remove_app(TestIdDb(test).run_id_of("test-reg.py").app_id)
+    accept_main(["test-reg.py", "--force", "--directory=%s" % test],
+                write=lambda _: None)
     finding_list = _finding_list(_sanitize(test))
     for line in finding_list: print("  " + line)
     entry = Bookkeeper(test).result("test-book.py", None)
@@ -165,7 +179,7 @@ def test_apply_keeps():
         (len(kept) == 3, "three kept, none removed"),
         (os.path.isfile(os.path.join(test, "GOOD", "test-nom.py.txt")),
          "the nominal stands"),
-        (TestIdDb(test).run_id_of("test-reg.py") is not None,
+        (Bookkeeper(test).run_id_of("test-reg.py") is not None,
          "the register entry stands"),
         (Bookkeeper(test).result("test-book.py", None) is not None,
          "the book entry stands"),
@@ -177,7 +191,7 @@ def test_apply_keeps():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "hwut.sanitize --books: the three records of acceptance",
+        title      = "hwut.sanitize --books: the two records of acceptance",
         choice_map = {
             "agree":       test_agree,
             "apply_keeps": test_apply_keeps,

@@ -1,4 +1,4 @@
-INSPECT: entry           = {'verdict': True, 'report': 'ok'}
+INSPECT: entry           = {'verdict': <E_TestVerdict.PASS: 'true'>, 'report': 'ok'}
          table header    = test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when;test_id;choice_id
          rows            = 1
          any 'caps' word = False

@@ -1,0 +1,6 @@
+TWO STREAMS WITH NOTHING IN COMMON -- no prefix prunes
+     4 unrelated lines         nodes 128       pairs 5    budget 6400      ok
+     8 unrelated lines         nodes 470       pairs 9    budget 25600     ok
+    12 unrelated lines         nodes 974       pairs 13   budget 57600     ok
+SUCCESS: the worst case stayed inside its budget
+<hwut-end>

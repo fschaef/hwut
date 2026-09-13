@@ -47,6 +47,7 @@ import shutil
 import sys
 import xml.sax.saxutils as saxutils
 
+from   vut.engine.bookkeeper.api                     import E_TestVerdict
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration          import selection
 from   vut.services.lib.labels                           import view_at
@@ -78,7 +79,7 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
 class CRow:
     """ONE CASE, as the databases remember it.
 
-    'verdict' is True, False, or None where the book never saw it.
+    'verdict' is an E_TestVerdict, or None where the book never saw it.
     'report'  is the E_TestRunResult word, '' where none stands --
               refined to a SHAPE ('grew', 'shrank', 'diverged') where
               this face could read both whole files (E-31).
@@ -108,7 +109,7 @@ class CRow:
     @property
     def good_f(self):
         """RETURN: bool, True where the book says it stood."""
-        return self.verdict is True
+        return self.verdict is not None and self.verdict.passed_f
 
     @property
     def word(self):
@@ -116,7 +117,21 @@ class CRow:
         then the recorded report, then the plain absence."""
         if self.stain is not None:   return "unstable"
         if self.verdict is None:     return "never run"
+        if self.verdict is E_TestVerdict.ASPIRANT: return "aspirant"
         return self.report or "failed"
+
+
+def _json_verdict(verdict):
+    """
+    RETURN: bool, True for PASS and False for FAIL -- what the JSON
+                  format has always carried.
+            str, "aspirant" for a choice the book knows and nobody
+                 has accepted (B-14).
+            None, where the book never saw the case.
+    """
+    if verdict is None:                     return None
+    if verdict is E_TestVerdict.ASPIRANT:   return str(verdict)
+    return verdict.passed_f
 
 
 def width_of(stated):
@@ -465,7 +480,11 @@ def json_text_of(entry_list):
             "case_list": [{"name":    row.name,
                            "file":    row.source_file,
                            "choice":  row.choice,
-                           "verdict": row.verdict,
+                           #  JSON KEEPS ITS BOOLEANS for pass and
+                           #  fail -- consumers exist -- and says
+                           #  "aspirant" only where neither is true
+                           #  (B-14).
+                           "verdict": _json_verdict(row.verdict),
                            "reason":  None if row.good_f else row.word,
                            "stained": row.stain is not None,
                            "when":    row.when or None}

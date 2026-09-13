@@ -184,8 +184,13 @@ class CTestTaskListQuery(CTestTaskList):
                    and not self.wish.fail_f and not self.wish.pass_f \
                    and self.wish.since_spec is None
 
-        if self.wish.fail_f and entry.get("verdict"):       return False
-        if self.wish.pass_f and not entry.get("verdict"):   return False
+        #  AN ASPIRANT IS NEITHER (B-14): what never ran cannot have
+        #  failed, and '--fail' iterates FAIL and nothing else.
+        verdict = entry.get("verdict")
+        if self.wish.fail_f and not (verdict is not None and verdict.failed_f):
+            return False
+        if self.wish.pass_f and not (verdict is not None and verdict.passed_f):
+            return False
 
         #  THE INSTANT AND THE DURATION ARE OBSERVATIONS, and live in
         #  THIS MACHINE'S local database, never in the book (E-22).

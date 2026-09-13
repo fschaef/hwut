@@ -13,6 +13,8 @@ BELONGS ON ITS DOOR:
     NamingConfig        how a record is named from test and choice
     E_StderrNote        the note a choice's stderr carries: nominal,
                         ignored, forbidden
+    E_TestVerdict       what the book says of a choice's standing:
+                        pass, fail, aspirant (B-14)
     CAPS_FIELD_DB       the author's caps vocabulary against the
                         procsitter's field names -- one list, read by
                         the adapter and by the book
@@ -73,8 +75,8 @@ from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             SIDECAR_SUFFIX_TUPLE, compare_setup_delta,
                             error_witness_name, key_parts_of,
                             nominal_stands_f)
-from .configuration import (CAPS_FIELD_DB, E_StderrNote, NamingConfig,
-                            StoreConfig)
+from .configuration import (CAPS_FIELD_DB, E_StderrNote, E_TestVerdict,
+                            NamingConfig, StoreConfig)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
                             GroupTable, parse_group_table)
 from .observation   import (Observation, ObservationDb, ObservationFault,
@@ -86,7 +88,7 @@ from .test_id_db    import TestIdDb, TestIdFault
 from .test_run_id   import RunIdFault, TestRunId, run_id_of_text
 
 __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
-           "DirectoryLock", "E_StderrNote", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
+           "DirectoryLock", "E_StderrNote", "E_TestVerdict", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
            "NOMINAL_SUFFIX_DB", "NamingConfig", "Observation",
            "ObservationDb", "ObservationFault", "RunIdFault",
            "STORE_DIRECTORY_NAME", "SUBJECT_BY_SUFFIX_DB",

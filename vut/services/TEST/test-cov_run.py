@@ -28,7 +28,7 @@ PURPOSE: 'hwut.cov' END TO END -- the demand through the real door, the
                                finish its statement.)
             test-new.py        no choices -- never accepted: NO
                                register entry, so no id
-            GOOD/              nominals, and 'test_ids.dat' seeding
+            GOOD/              nominals, and the book's register seeding
                                ids for test-py and test-hang
 
     The tool is the WITNESS reader, registered here and NAMED IN THE
@@ -65,7 +65,7 @@ from   config import HwutRunner                                  # noqa F401,E40
 from   vut.services.cov import main as cov_main   # noqa E402
 from   vut.services.run import main as run_main   # noqa E402
 from   vut.engine.bookkeeper.api     import Bookkeeper          # noqa E402
-from   vut.engine.bookkeeper.api     import TestIdDb            # noqa E402
+from   vut.engine.bookkeeper.api     import Bookkeeper          # noqa E402
 from   vut.engine.coverage.api           import (CCoverageFramework,
                                                   CCoverageFormat, register, # noqa E402
                                                   record_of,
@@ -187,11 +187,15 @@ def fixture():
         'witness([7,8])\nprint("new")\nprint("<hwut-end>")\n', "new.py"))
     put(good, "test-new.py.txt", "new\n<hwut-end>\n")
 
-    #  The register: ids are born at accept; these were accepted.
-    db = TestIdDb(test)
+    #  The register: ids are born at accept; these WERE ACCEPTED, so
+    #  say so the way the face does -- 'note_accept' issues the id in
+    #  the acceptance's own act (E-41). Issuing an id alone would leave
+    #  an ASPIRANT row beside a standing nominal (B-14), which is the
+    #  stale state sanitize reports, not the state this fixture means.
+    db = Bookkeeper(test)
     for app, choice in (("test-py.py", "a"), ("test-py.py", "b"),
                         ("test-hang.py", "x")):
-        db.run_id_of(app, choice, allocate_f=True)
+        db.note_accept(app, choice)
     return root
 
 
@@ -294,8 +298,11 @@ def test_door():
     shutil.rmtree(root)
 
     ok = check([
+        #  'test-hang' was ACCEPTED, so the book knows it (a row,
+        #  B-14); the wish left it unrun, so no coverage stands on
+        #  it -- '<absent>', not '<no entry>'.
         (token_db["test-py.py--a"] == "ok"
-         and token_db["test-hang.py--x"] == "<no entry>",
+         and token_db["test-hang.py--x"] == "<absent>",
          "'hwut.run --coverage' with a wish is the same demand, "
          "the wish honoured"),
         (empty == 3,

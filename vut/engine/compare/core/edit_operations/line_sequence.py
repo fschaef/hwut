@@ -310,7 +310,6 @@ class Cache(dict):
         if result is None:
             subject   = subject_list[subject_i]
             nominal   = nominal_list[nominal_i]
-            breakpoint()
             result    = subject.edit_operations(nominal, None)
             self[key] = result
         return result

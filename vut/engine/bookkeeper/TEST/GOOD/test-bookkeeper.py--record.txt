@@ -1,5 +1,5 @@
 INSPECT: entry keys = ['report', 'verdict']
-         verdict True, report ok
+         verdict true, report ok
          observed: host True, duration True
   OK  : THE BASE HOLDS DECISIONS: the verdict and the report -- nothing a run can make again, and NO CONFIGURATION (B-6)
   OK  : the verdict and the report come from the result

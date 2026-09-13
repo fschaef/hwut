@@ -31,8 +31,10 @@ while os.path.basename(_cur) != "vut":
     _cur = _parent
 ROOT = _cur
 
-BOOK_TUPLE = ("book.csv", "result_db.csv", "result_db.json",
-              "test_ids.dat")
+#  THE BOOKKEEPER'S OWN FILES under GOOD/ -- asked of it, never listed
+#  here: a walker of GOOD/ for oracles skips these (B-10, B-13).
+sys.path.insert(0, os.path.dirname(ROOT))
+from vut.engine.bookkeeper.api import GOOD_OWNED_FILE_TUPLE as BOOK_TUPLE  # noqa E402
 
 
 def refused_cases(text):

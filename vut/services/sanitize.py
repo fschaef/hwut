@@ -31,13 +31,14 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 read as subjects only DURING that run. Between runs it
                 is scratch.
 
-    --books     THE THREE RECORDS OF ACCEPTANCE DISAGREE (E-41): a
-                registered test with no nominal in 'GOOD/'; a nominal
-                whose test the register ('GOOD/test_ids.dat') lacks; a
+    --books     THE TWO RECORDS OF ACCEPTANCE DISAGREE (E-41): a
+                nominal whose test the book lacks; a book entry the
+                book calls ASPIRANT while a nominal stands (B-14); a
                 book entry with a nominal and no 'last_accept'. Named,
                 and NEVER removed by '--apply': only a person can say
-                which of the three is wrong ('hwut.accept',
-                'hwut.remove').
+                which of the two is wrong ('hwut.accept',
+                'hwut.remove'). A test in the book with no nominal is
+                an ASPIRANT, not a disagreement.
 
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
                 candidate under 'TMP/store/', an entry in the book
@@ -116,8 +117,10 @@ from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from   vut.engine.bookkeeper.api              import (Bookkeeper, STORE_DIRECTORY_NAME,
                                                              GOOD_OWNED_FILE_TUPLE,
+                                                             E_TestVerdict,
                                                              TestIdFault,
-                                                             key_parts_of)
+                                                             key_parts_of,
+                                                             nominal_stands_f)
 from   vut.engine.operations.run.multi_execute import SESSION_DIRECTORY_NAME
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
@@ -425,23 +428,27 @@ class DirectoryLive(Exception):
 
 def books_finding_list(root, directory):
     """
-    YIELD: [0] CFinding  one disagreement between the three records of
-                         acceptance -- GOOD/ (the nominals), 'test_ids.
-                         dat' (the register) and 'book.csv' (the
-                         book) -- named, and NEVER offered for removal:
-                         a disagreement is mended by a person
-                         ('hwut.accept', 'hwut.remove'), not by unlink.
+    YIELD: [0] CFinding  one disagreement between the two records of
+                         acceptance -- GOOD/ (the nominals) and
+                         'book.csv' (the book, which is also the
+                         register, B-13) -- named, and NEVER offered
+                         for removal: a disagreement is mended by a
+                         person ('hwut.accept', 'hwut.remove'), not by
+                         unlink.
 
-    THE THREE MUST AGREE (E-41). A nominal in GOOD/ is THE evidence of
-    acceptance; the register is written at accept; the book's
-    'last_accept' is written at accept. So:
+    THE TWO MUST AGREE (E-41). A nominal in GOOD/ is THE evidence of
+    acceptance; the book's 'last_accept' is written at accept. A test
+    in the book with NO nominal is not a disagreement: it is an
+    ASPIRANT (B-14), known and not yet accepted, and it says so in its
+    verdict. So:
 
-        a registered test with no nominal          -- register ahead
-        a nominal whose test the register lacks    -- register behind
+        a nominal whose test the book lacks        -- book behind
+        the book says ASPIRANT and a nominal       -- accepted outside
+        stands                                        the book: stale
         a book entry with a nominal and no          -- accepted outside
         'last_accept'                                  the book
 
-    A directory with none of the three is not judged: nothing was ever
+    A directory with none of them is not judged: nothing was ever
     accepted there, and there is nothing to disagree about.
     """
     good_dir = os.path.join(directory, "GOOD")
@@ -459,23 +466,27 @@ def books_finding_list(root, directory):
         key = record_key_of(name)
         if key is not None: nominal_test_set.add(key[0])
     registered_set = set(register.roster())
-    for test in sorted(registered_set - nominal_test_set):
-        yield CFinding("books", "%s: register %s" % (where, test),
-                       "registered, and no nominal stands", None)
     for test in sorted(nominal_test_set - registered_set):
         yield CFinding("books", "%s: GOOD/ %s" % (where, test),
-                       "a nominal stands, and the register lacks it",
+                       "a nominal stands, and the book lacks it",
                        None)
     bookkeeper = Bookkeeper(directory)
     for test in bookkeeper.tests():
-        if test not in nominal_test_set: continue
         for choice in bookkeeper.choices(test):
             entry = bookkeeper.result(test, choice)
-            if entry is None or entry.get("last_accept"): continue
-            yield CFinding("books",
-                           "%s: book %s%s"
-                           % (where, test,
-                              "" if choice is None else " " + choice),
+            if entry is None: continue
+            label = "%s: book %s%s" % (where, test,
+                                       "" if choice is None else " " + choice)
+            stands_f = nominal_stands_f(directory, test, choice)
+            if entry.get("verdict") is E_TestVerdict.ASPIRANT:
+                if stands_f:
+                    yield CFinding("books", label,
+                                   "the book says aspirant, and a nominal "
+                                   "stands -- accepted outside the book",
+                                   None)
+                continue
+            if not stands_f or entry.get("last_accept"): continue
+            yield CFinding("books", label,
                            "a nominal stands, and 'last_accept' is empty "
                            "-- accepted outside the book", None)
 
