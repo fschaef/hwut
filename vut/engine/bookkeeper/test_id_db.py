@@ -360,6 +360,105 @@ class TestIdDb:
                           for choice_id, choice in choice_tuple]
         return "\n".join(line_list) + "\n"
 
+    #  ------------------------------------------------- the book's shape
+
+    def book_header_line_list(self):
+        """
+        RETURN: list[str], the '#' block a 'book.csv' carries -- the
+                register's scope-wide facts, one per line:
+
+                    '# vut-register <version> generation:<n> apps:<n>'
+
+                'marks' carries EVERY application's own high-water mark,
+                because there are N+1 marks and not one: the application
+                scope's, and one per application.
+
+                MEASURED, AND THE REASON THEY ARE HERE: on the
+                application's own ROW they do not survive. Removing the
+                choice whose row carried the mark takes the mark with
+                it, and the scope then issues an id it has issued before
+                -- which B-2 forbids above every other rule of this
+                file. A mark is a fact about a SCOPE, not about any row
+                that may be deleted.
+
+                The COLUMNS are the book's own business and are written
+                beside this by the book's codec.
+
+        LOAD-BEARING, NOT A COMMENT. A gnuplot '#' line may be skipped;
+        this one may not. A book whose block is missing where ids stand
+        in its rows is REFUSED BY NAME -- see 'register_of_book'.
+        """
+        mark_text = ",".join("%i=%i" % (app_id, mark) for app_id, mark
+                             in sorted(self._next_choice_db.items()))
+        return ["# vut-register %s generation:%i apps:%i marks:%s"
+                % (FORMAT_VERSION, self.generation, self._next_app,
+                   mark_text or "-")]
+
+    def book_row_db(self):
+        """
+        RETURN: dict, (application, choice) -> (app_id, choice_id) for
+                every registered choice, and (application, None) ->
+                (app_id, None) for an application with no choice
+                registered.
+
+        A ROW CARRIES ONLY WHAT IT IS. The ids name this row; the marks
+        bound their scopes and live in the '#' block, where no removal
+        can reach them.
+        """
+        result = {}
+        for app_id, name, choice_tuple in self.app_iterable():
+            if not choice_tuple:
+                result[(name, None)] = (app_id, None)
+                continue
+            for choice_id, choice in choice_tuple:
+                result[(name, choice)] = (app_id, choice_id)
+        return result
+
+    @staticmethod
+    def register_of_book(header_line_list, row_iterable, directory):
+        """
+        RETURN: TestIdDb, the register the book carries -- built from
+                its '#' block and its id columns.
+
+                An EMPTY register, where the book carries no '#' block
+                and no row bears an id: that is what every book written
+                before this entry looks like, and it is not a fault.
+
+        RAISES: TestIdFault, where ids stand in the rows and the block
+                does not, or says a version this code does not know. A
+                book that names ids it cannot bound would issue one
+                twice, and B-2 forbids that above all.
+        """
+        row_list = [each for each in row_iterable]
+        header   = _book_header_of(header_line_list)
+        bearing  = [r for r in row_list if r.get("test_id") not in (None, "")]
+
+        if header is None:
+            if bearing:
+                raise TestIdFault("the book bears test ids and no "
+                                  "'# vut-register' block to bound them")
+            return _empty_register(directory)
+
+        version, generation, next_app, mark_db = header
+        if version != FORMAT_VERSION:
+            raise TestIdFault("the book's register says format '%s'; "
+                              "this is '%s'" % (version, FORMAT_VERSION))
+
+        register = _empty_register(directory)
+        register.generation = generation
+        register._next_app  = next_app
+        for row in bearing:
+            app_id = int(row["test_id"])
+            name   = row["test"]
+            register._app_db.setdefault(app_id, name)
+            register._app_id_db.setdefault(name, app_id)
+            register._next_choice_db[app_id] = mark_db.get(app_id, 0)
+            register._choice_db.setdefault(app_id, {})
+            if row.get("choice_id") in (None, ""): continue
+            register._choice_db.setdefault(app_id, {})[int(row["choice_id"])] \
+                = row["choice"]
+        return register
+
     def _parse(self, text):
         """
         RETURN: None; the tables filled from 'text'.
@@ -508,3 +607,53 @@ class TestIdDb:
         temporary.write_text(self.format(), encoding="utf-8")
         os.replace(temporary, path)
         os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+
+def _empty_register(directory):
+    """
+    RETURN: TestIdDb bound to 'directory' but holding NOTHING -- the
+            file that may stand there is not read.
+
+    The constructor loads 'GOOD/test_ids.dat' where it finds one, which
+    is right for a register that IS that file and wrong for one built
+    from a book: the book is then the whole of the truth, and a stale
+    file beside it must not leak in.
+    """
+    register = TestIdDb.__new__(TestIdDb)
+    register.directory       = Path(directory)
+    register._app_db         = {}
+    register._app_id_db      = {}
+    register._choice_db      = {}
+    register._next_app       = 0
+    register._next_choice_db = {}
+    register.generation      = 0
+    return register
+
+
+def _book_header_of(line_list):
+    """
+    RETURN: (str, int, int, dict), the version, the generation, the
+            application scope's mark, and every application's own mark
+            by application id, as the block states them.
+
+            None, where no such line stands: a book written before the
+            register moved in carries none, and that is not a fault.
+    """
+    for line in line_list or []:
+        text = line.strip()
+        if not text.startswith("# vut-register"): continue
+        field_list = text.split()
+        if len(field_list) < 5: return None
+        db = dict(each.split(":", 1) for each in field_list[3:]
+                  if ":" in each)
+        try:
+            mark_db = {}
+            if db.get("marks", "-") != "-":
+                for each in db["marks"].split(","):
+                    app_text, mark_text = each.split("=")
+                    mark_db[int(app_text)] = int(mark_text)
+            return (field_list[2], int(db["generation"]), int(db["apps"]),
+                    mark_db)
+        except (KeyError, ValueError):
+            return None
+    return None

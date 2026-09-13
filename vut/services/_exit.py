@@ -46,6 +46,32 @@ class E_ExitCode(IntEnum):
     SIGTERM = 143
 
 
+DEBUG_KEYWORD = "--debug-exception"
+
+
+def _debug_wanted_f(argument_tuple):
+    """
+    RETURN: bool, True where the guard is to stand aside -- the keyword
+            stood in the command line, or 'VUT_DEBUG_EXCEPTION' says so.
+
+            The keyword is CONSUMED where it stood: it is the GUARD'S
+            word, not any face's, so no face declares it and none sees
+            it. That is why it works everywhere at once, and why a face
+            that knows nothing of it cannot refuse it.
+    """
+    import os
+    import sys
+
+    found_f = False
+    for word_list in (sys.argv,) + tuple(each for each in argument_tuple
+                                         if isinstance(each, list)):
+        while DEBUG_KEYWORD in word_list:
+            word_list.remove(DEBUG_KEYWORD)
+            found_f = True
+    if found_f: return True
+    return os.environ.get("VUT_DEBUG_EXCEPTION") not in (None, "", "0")
+
+
 def guarded(name, main_f, *argument_tuple, **argument_db):
     """
     RETURN: int, what 'main_f' returns -- or the ending's own code
@@ -61,6 +87,20 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
     import os
     import signal
     import sys
+
+    #  '--debug-exception' (or VUT_DEBUG_EXCEPTION=1) STANDS THE GUARD
+    #  ASIDE. E-55 turns a terminal signal into one quiet line, which is
+    #  right for a person ending a face on purpose and WRONG for anybody
+    #  trying to find out where a face is stuck: the KeyboardInterrupt
+    #  is swallowed here, so 'PYTHONFAULTHANDLER' never fires and a hang
+    #  cannot be inspected at all. With this said, the signal and its
+    #  traceback go through untouched.
+    debug_f = _debug_wanted_f(argument_tuple)
+    if debug_f:
+        #  ARMED FOR A FATAL SIGNAL TOO, so that a face wedged in C code
+        #  -- a terminal read, a lock -- names its line as well.
+        __import__("faulthandler").enable()
+        return main_f(*argument_tuple, **argument_db)
 
     ending = {"code": E_ExitCode.SIGINT}
 

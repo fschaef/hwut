@@ -92,8 +92,12 @@ BOOK_FORBIDDEN_IN_NAME = (BOOK_SEPARATOR,)
 #  bookkeeper knowing who walks.
 GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
                         + (_REGISTER_FILE_NAME,)
+#  THE REGISTER'S TWO COLUMNS COME LAST, so that every column standing
+#  before this entry keeps its place and an older book reads unchanged
+#  (a row ends with its last fact, B-9).
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",
-                  "coverage", "stderr", "stain_repeat_n", "stain_when")
+                  "coverage", "stderr", "stain_repeat_n", "stain_when",
+                  "test_id", "choice_id")
 
 NO_CHOICE_KEY       = "<none>"
 
@@ -195,7 +199,13 @@ def _rows_of_model(content):
                    "stderr":         book.get("stderr") or "",
                    "stain_repeat_n": str(stain["repeat_n"])
                                      if "repeat_n" in stain else "",
-                   "stain_when":     stain.get("when") or ""}
+                   "stain_when":     stain.get("when") or "",
+                   #  THE REGISTER'S COLUMNS (B-13): the id of the
+                   #  application and the id of the choice. The MARKS
+                   #  are not here -- they bound a SCOPE, and a row can
+                   #  be removed (B-2).
+                   "test_id":        book.get("test_id") or "",
+                   "choice_id":      book.get("choice_id") or ""}
             last_test = test
 
 
@@ -228,7 +238,8 @@ def _model_of_rows(row_iterable):
         if row.get("verdict"):
             book["verdict"] = _bool_of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
-        for name in ("last_accept", "coverage", "stderr"):
+        for name in ("last_accept", "coverage", "stderr",
+                     "test_id", "choice_id"):
             if row.get(name): book[name] = row[name]
         if row.get("stain_repeat_n"):
             book["stain"] = {"repeat_n": int(row["stain_repeat_n"]),
@@ -485,8 +496,109 @@ class Bookkeeper:
 
     # -- THE REGISTER, read and written through this door only (B-9) --
     def _register(self):
-        """RETURN: TestIdDb, the register read FRESH from its file."""
+        """
+        RETURN: TestIdDb, the register read FRESH -- from the BOOK where
+                the book carries the '# vut-register' block, and from
+                'GOOD/test_ids.dat' where it does not.
+
+        B-10's MIGRATION, exactly: the old file is read where the
+        current place carries nothing, and it goes at the first write. A
+        tree from before B-13 needs no migration step; the first write
+        makes it.
+        """
+        content = self.book()
+        header  = getattr(self, "_book_header_line_list", [])
+        register = TestIdDb.register_of_book(header,
+                                             _register_row_iterable(content),
+                                             str(self.directory))
+        if len(register): return register
         return TestIdDb(str(self.directory))
+
+    def _standing_header_line_list(self):
+        """
+        RETURN: list[str], the '#' block the book on disk carries.
+
+                An empty list, where it carries none -- a book from
+                before B-13, which grows one at its first register write.
+        """
+        try:
+            with open(self.book_path, "r", encoding="utf-8") as fh:
+                return [each.rstrip("\n") for each in fh
+                        if each.startswith("#")]
+        except Exception:                                      # noqa: BLE001
+            return []
+
+    def _with_register_columns(self, content):
+        """
+        RETURN: dict, 'content' with every row's 'test_id' and
+                'choice_id' restored from what stands on disk, where the
+                row carries none of its own.
+
+                'content' unchanged, where the book on disk carries no
+                register at all.
+        """
+        try:
+            standing = self.book()
+        except Exception:                                      # noqa: BLE001
+            return content
+        for test, test_book in content.items():
+            was = standing.get(test, {}).get("choices", {})
+            for key, book in test_book.get("choices", {}).items():
+                for column in ("test_id", "choice_id"):
+                    if book.get(column): continue
+                    if was.get(key, {}).get(column):
+                        book[column] = was[key][column]
+        return content
+
+    def _register_bump(self):
+        """
+        RETURN: None. The register's generation raised by one, and the
+                '#' block written.
+
+        A RENAME OR A REMOVAL IS NOW THE ROW'S OWN. The id rides on the
+        row, so renaming the book's row renames the register entry and
+        removing it retires the id -- there is nothing left for the
+        register to do but SAY that it moved. Coverage reads that
+        generation to know whether a snapshot still stands (D-25), and
+        no mutation may pass without it.
+        """
+        register = self._register()
+        register.generation += 1
+        self._register_write(register)
+
+    def _register_write(self, register):
+        """
+        RETURN: None. The register laid into the book -- the '#' block
+                and the two id columns -- and the book written.
+
+        ONE FILE, ONE WRITE (B-9). What was two writes inside one act is
+        now one, and the 'two lifetimes' question B-9 left open is
+        answered by there being one file.
+        """
+        content = self.book()
+        row_db  = register.book_row_db()
+        #  CLEARED FIRST, THEN LAID IN. An id given back (B-4) or a
+        #  choice removed is no longer the register's, and its columns
+        #  must go with it -- otherwise the book would name an id the
+        #  register does not hold, which is a book that cannot be
+        #  trusted to bound the next one (B-2).
+        for test_book in content.values():
+            for book in test_book.get("choices", {}).values():
+                for column in ("test_id", "choice_id"):
+                    book.pop(column, None)
+        for (test, choice), (app_id, choice_id) in row_db.items():
+            #  ANNOTATED, NEVER CREATED. A BOOK ENTRY SAYS THERE IS A
+            #  GOOD FILE, BLESSED OR ACCEPTED -- there is no other
+            #  meaning an entry could carry. An id is a handle on such
+            #  an entry, so it is written ONTO a row that stands and
+            #  never conjures one: a row with an id and no decision
+            #  would say a nominal stands where none does.
+            choice_db = content.get(test, {}).get("choices", {})
+            book = choice_db.get(choice or NO_CHOICE_KEY)
+            if book is None: continue
+            book["test_id"] = str(app_id)
+            book["choice_id"] = "" if choice_id is None else str(choice_id)
+        self._write_book(content, register.book_header_line_list())
 
     def run_id_of(self, test, choice=None, allocate_f=False):
         """
@@ -500,7 +612,10 @@ class Bookkeeper:
         if not allocate_f:
             return self._register().run_id_of(test, choice)
         with self._act():
-            return self._register().run_id_of(test, choice, allocate_f=True)
+            register = self._register()
+            run_id   = register.run_id_of(test, choice, allocate_f=True)
+            self._register_write(register)
+            return run_id
 
     def name_of(self, run_id):
         """RETURN: (test, choice), what the id names; None where it
@@ -535,7 +650,9 @@ class Bookkeeper:
         """RETURN: None. An id issued for an accept that aborted is handed
         back (B-4) -- the register's 'give_back', under the lock."""
         with self._act():
-            self._register().give_back(run_id)
+            register = self._register()
+            register.give_back(run_id)
+            self._register_write(register)
 
     # -- the naming ---------------------------------------------------
     def key(self, test, choice, subject):
@@ -785,19 +902,29 @@ class Bookkeeper:
                    else {}
         try:
             with open(path, "r", encoding="utf-8", newline="") as fh:
-                head = fh.readline()
-                fh.seek(0)
-                #  B-6's one-day table was ','-separated with an
-                #  'operation' column; told apart by its header,
-                #  read once, rewritten as B-7 on the next write.
-                delimiter = BOOK_SEPARATOR if BOOK_SEPARATOR in head \
-                            else ","
-                return _model_of_rows(
-                           csv.DictReader(fh, delimiter=delimiter))
+                line_list = fh.read().splitlines()
+        except Exception:
+            return {}
+        try:
+            #  THE '#' BLOCK IS NOT A COMMENT. A gnuplot '#' line may be
+            #  skipped; this one carries the register's scope-wide facts
+            #  and is held aside for 'register_of_book' to read. It is
+            #  kept OUT of the csv reader, which would otherwise take it
+            #  for a row.
+            self._book_header_line_list = [each for each in line_list
+                                           if each.startswith("#")]
+            body = [each for each in line_list if not each.startswith("#")]
+            if not body: return {}
+            #  B-6's one-day table was ','-separated with an
+            #  'operation' column; told apart by its header,
+            #  read once, rewritten as B-7 on the next write.
+            delimiter = BOOK_SEPARATOR if BOOK_SEPARATOR in body[0] \
+                        else ","
+            return _model_of_rows(csv.DictReader(body, delimiter=delimiter))
         except Exception:
             return {}
 
-    def _write_book(self, content):
+    def _write_book(self, content, header_line_list=None):
         """
         RETURN: None. The whole base, replaced atomically and left
                 write-protected.
@@ -806,6 +933,18 @@ class Bookkeeper:
         meets a half-written base, and a careless hand never meets a
         writable one.
         """
+        #  THE REGISTER'S COLUMNS ARE CARRIED OVER (B-13). One file
+        #  means a caller may have read the book, caused an id to be
+        #  issued, and then written back the copy it read -- which knows
+        #  nothing of that id. A row that carries no id here, and did on
+        #  disk, KEEPS the one on disk: this write is about the caller's
+        #  facts, never about forgetting the register's.
+        content = self._with_register_columns(content)
+        #  THE '#' BLOCK IS CARRIED OVER TOO, for the same reason: a
+        #  caller writing its own facts must not drop the register's.
+        #  Only a register write states one of its own.
+        if header_line_list is None:
+            header_line_list = self._standing_header_line_list()
         path = self.book_path
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
@@ -813,6 +952,8 @@ class Bookkeeper:
                            | stat.S_IRGRP | stat.S_IROTH)
         temporary = path.with_suffix(".csv.tmp")
         with open(temporary, "w", encoding="utf-8", newline="") as fh:
+            for line in header_line_list:
+                fh.write(line + "\n")
             fh.write(BOOK_SEPARATOR.join(_COLUMN_TUPLE) + "\n")
             for row in _rows_of_model(content):
                 #  A ROW ENDS WITH ITS LAST FACT (B-9): trailing empty
@@ -1039,7 +1180,9 @@ class Bookkeeper:
                          test=test, choice=choice)
             #  AN ID IS BORN AT THE FIRST ACCEPT (README 4): issued
             #  here, in the acceptance's own act (E-41).
-            self._register().run_id_of(test, choice, allocate_f=True)
+            register = self._register()
+            register.run_id_of(test, choice, allocate_f=True)
+            self._register_write(register)
             return result
 
     def _note_accept_unlocked(self, test, choice):
@@ -1146,9 +1289,7 @@ class Bookkeeper:
             result = self._rename_test_unlocked(
                          test=test, fresh=fresh)
             #  THE NAME FOLLOWS IN THE REGISTER; the id stands (B-2).
-            register = self._register()
-            run_id   = register.run_id_of(test)
-            if run_id is not None: register.rename_app(run_id.app_id, fresh)
+            self._register_bump()
             return result
 
     def _rename_test_unlocked(self, test, fresh):
@@ -1178,11 +1319,7 @@ class Bookkeeper:
         with self._act():
             result = self._rename_choice_unlocked(
                          test=test, choice=choice, fresh=fresh)
-            register = self._register()
-            run_id   = register.run_id_of(test, choice)
-            if run_id is not None:
-                register.rename_choice(run_id.app_id, run_id.choice_id,
-                                       fresh)
+            self._register_bump()
             return result
 
     def _rename_choice_unlocked(self, test, choice, fresh):
@@ -1217,6 +1354,7 @@ class Bookkeeper:
             register = self._register()
             for choice in self.choices(test) or [None]:
                 register.run_id_of(test, choice, allocate_f=True)
+            self._register_write(register)
             return result
 
     def _adopt_unlocked(self, test, entry):
@@ -1250,9 +1388,7 @@ class Bookkeeper:
                          test=test)
             #  THE REGISTER IN THE SAME ACT (B-9): the id retired,
             #  never reissued (B-2).
-            register = self._register()
-            run_id   = register.run_id_of(test)
-            if run_id is not None: register.remove_app(run_id.app_id)
+            self._register_bump()
             return result
 
     def _remove_test_unlocked(self, test):
@@ -1276,10 +1412,7 @@ class Bookkeeper:
         with self._act():
             result = self._remove_choice_unlocked(
                          test=test, choice=choice)
-            register = self._register()
-            run_id   = register.run_id_of(test, choice)
-            if run_id is not None:
-                register.remove_choice(run_id.app_id, run_id.choice_id)
+            self._register_bump()
             return result
 
     def _remove_choice_unlocked(self, test, choice):
@@ -1349,3 +1482,23 @@ class Bookkeeper:
                      for key in missing]
         return {E_DIVERGENCE_DELETED:        deleted,
                 E_DIVERGENCE_NON_RESPONSIVE: non_responsive}
+
+
+def _register_row_iterable(content):
+    """
+    RETURN: iterable of dict, one row per (test, choice) of the book's
+            model, carrying the register's columns -- what
+            'TestIdDb.register_of_book' reads.
+
+    The model is nested; the register reads rows. This flattens it in
+    the table's own order, which is what the marks-on-the-first-row rule
+    depends on (B-8).
+    """
+    for test in sorted(content):
+        for choice in sorted(content[test].get("choices", {})):
+            book = content[test]["choices"][choice]
+            yield {"test":        test,
+                   "choice":      "" if choice == NO_CHOICE_KEY else choice,
+                   "test_id":     book.get("test_id", ""),
+                   "choice_id":   book.get("choice_id", ""),
+                   }

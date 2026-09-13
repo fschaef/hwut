@@ -57,7 +57,35 @@ The faces:
                  rendering. '--no-store' suppresses recording; '--jobs'
                  bounds parallel work per directory.
 
-    hwut.accept  (accept.py)
+    hwut.accept  (accept.py, accept_first.py, accept_adapt.py,
+                  _accept_common.py)
+                 ONE FACE (E-59), switching on whether this is a FIRST
+                 acceptance -- no nominal stands -- or an ADAPTATION of
+                 a standing GOOD. The author chooses no face and no
+                 flag. 'accept_first' builds what a first acceptance
+                 records; 'accept_adapt' reads what stands;
+                 '_accept_common' holds what BOTH rely on --
+                 classification, the closing-token rule, the reading of
+                 a candidate -- because the atomic refusal spans the
+                 whole SELECTION and neither half may own it.
+
+                 ACCEPT IS PARTIAL BY DEFAULT (E-60). Without
+                 '--force', a first acceptance records the candidate's
+                 SHAPE with nothing decided: one '##! unaccepted'
+                 region per subject chunk, one filler line per line of
+                 it, the closing token outside every region. The report
+                 says 'undecided', never 'blessed'. The next run reads
+                 '[ ?! ]' (O-25) -- a decision still owed, not a
+                 failure. '--force' is the old blessing: the candidate
+                 whole.
+
+                 A CHANGE IS MERGED HERE where stdin and stderr are
+                 terminals, through the same engine
+                 'hwut.accept.interactive' runs ('lib/accept/
+                 engine.py'). Off a terminal -- a pipe, a script, a
+                 suite -- it says so and '--force' still overwrites: a
+                 face that cannot ask must not decide.
+
                  PROMOTION: a recorded candidate becomes the NOMINAL,
                  the pole every later run is judged against --
                  'Store.accept()' is the only way a nominal comes to
@@ -300,6 +328,51 @@ The faces:
                  no case selected. Display only; the merge is
                  'hwut.accept.interactive's.
 
+    the merge engine   (lib/accept/engine.py)
+                 THE SESSION LOOP, the three writes of an acceptance
+                 (E-41) and every refusal, in ONE implementation. Both
+                 doors call it, so a rule about promotion cannot hold
+                 at one and not the other. 'adapter_for' picks the
+                 tier; 'run_sessions' holds one session per key;
+                 'refusal' asks 'hwut.accept's own questions; 'report'
+                 prints the block both doors print.
+
+    the keyed session   (lib/viewers/keyed/)
+                 THE MERGE WITH KEYS (E-61), a viewer tier reached
+                 where stderr is a terminal. Subject left, nominal
+                 right; TWO CURSORS, and Tab decides which pane the
+                 movement keys drive -- a MODE SWITCH FOR A SUBSET of
+                 the keymap, since the takes, undo, realign and the
+                 leaving acts mean the same in either pane.
+
+                 THREE TAKES, each with its own scope, so no marked
+                 range ever crosses a region border: Enter, the marked
+                 subject range into the marked nominal range; 'a', this
+                 region into its associated region; 'A', the complete
+                 subject over the complete nominal. Copying is always
+                 line-wise, left to right; 'e' remains the one way to
+                 alter text. A take inside an 'unaccepted' region
+                 SPLITS it and an emptied region is REMOVED, framing
+                 and all; no region of any other kind is ever CUT, on
+                 either side.
+
+                 THE TARGET is derived from the alignment and TRACKS
+                 the subject range while VIRGIN; entry never latches it,
+                 modification does. 'r' asks compare again and the
+                 banner counts takes since it did.
+
+                 THE SEAM: 'prompt_toolkit' owns the Windows, the
+                 scrolling and the search; VUT owns the merge state --
+                 'state.py' and 'reduce(state, act) -> state', pure, no
+                 terminal -- because the derived target, the latch, the
+                 whole-range take and the split are RULINGS, and a
+                 ruling belongs in a module that can state it. Key ->
+                 act is ONE TABLE ('keymap.py') and the bindings are
+                 generated from it. Where the import fails, 'driver_for'
+                 hands back the TUI tier and the line-based session
+                 runs: a merge is NEVER hard-failed for a missing
+                 import.
+
     hwut.accept.interactive   (lib/accept/interactive.py)
                  the cases a wish selects whose stdout candidate is
                  not equivalent to its nominal (measured now, as
@@ -313,8 +386,11 @@ The faces:
                  stained choice, a text without the closing token,
                  stderr that spoke ('--stderr-tol'). The candidate
                  STAYS as the run left it: a partial acceptance is
-                 visible at the next run. A case without a nominal is
-                 not this face's ('hwut.accept' blesses first).
+                 visible at the next run. E-51's NAME for the engine
+                 above; 'hwut.accept' reaches the same loop. A case
+                 with NO nominal is now this face's too (E-60): it
+                 provisions the candidate itself, the way 'hwut.accept'
+                 refreshes (E-40), and opens on the mirror.
 
     hwut.report.details   (lib/report/details.py)
                  the pack of a test -- metadata head, source, GOOD,

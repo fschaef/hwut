@@ -95,14 +95,30 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
     #  is split to face them, and where a region ends is told by the
     #  first line of the plain chunk AFTER it.
     n_peek = []
+    n_done = []          # the terminal, once seen: it is never re-fetched
 
     async def _get_nominal():
         if n_peek: return n_peek.pop(0)
-        return await _get_checked(q_n)
+        if n_done: return n_done[0]
+        chunk = await _get_checked(q_n)
+        if chunk.is_terminal(): n_done.append(chunk)
+        return chunk
 
     async def _peek_nominal():
-        if not n_peek: n_peek.append(await _get_checked(q_n))
-        return n_peek[0]
+        """RETURN: InputChunk, the chunk after the current one, WITHOUT
+                   consuming it -- the terminal, where the stream has
+                   ended.
+
+        THE TERMINAL IS REMEMBERED, NEVER RE-FETCHED. A queue yields its
+        terminal ONCE; peeking past it waits on an item that will never
+        come, and the whole comparison hangs with no sign of why.
+        """
+        if n_peek: return n_peek[0]
+        if n_done: return n_done[0]
+        chunk = await _get_checked(q_n)
+        if chunk.is_terminal(): n_done.append(chunk)
+        else:                   n_peek.append(chunk)
+        return chunk
 
     try:
         # Initial Fetch

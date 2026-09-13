@@ -1,8 +1,8 @@
 #
 # @hwut {
 #     title      = "The test register: ids that survive renames"
-#     choices    = ["allocation", "face", "faults", "healing", "retire",
-#                   "tables", "vanished"]
+#     choices    = ["allocation", "book_format", "face", "faults",
+#                   "healing", "retire", "tables", "vanished"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -45,7 +45,7 @@ from   vut.engine.bookkeeper.test_id_db import (    # noqa E402
                                            TestIdDb, TestRunId,
                                            TestIdFault, FILE_NAME,
                                            ID_LIMIT)
-from   vut.services  import show             # noqa E402
+from   vut.services.lib.config import show   # noqa E402
 
 
 def _check(pair_list):
@@ -418,12 +418,61 @@ def test_face():
     _verdict(ok, "the register has a face, and it names what left.")
 
 
+def test_book_format():
+    """RETURN: None. The register through the book's shape and back."""
+    print("THE REGISTER IN THE BOOK: a '#' block and two columns")
+    directory = tempfile.mkdtemp()
+    register  = TestIdDb(directory)
+    for app, choice_list in (("test-a.sh", ["x", "y", "z"]),
+                             ("test-b.py", [None]),
+                             ("test-c.sh", ["q"])):
+        for choice in choice_list:
+            register.run_id_of(app, choice, allocate_f=True)
+
+    print("\n-- the '#' block: the scope-wide facts, and nothing else")
+    for line in register.book_header_line_list(): print("     %s" % line)
+
+    print("\n-- the rows: an id each, and nothing else")
+    row_list = []
+    for (app, choice), (app_id, choice_id) \
+            in sorted(register.book_row_db().items()):
+        print("     %-11s %-5s test_id=%s choice_id=%s"
+              % (app, choice, app_id, choice_id))
+        row_list.append({"test": app, "choice": choice or "",
+                         "test_id": str(app_id),
+                         "choice_id": "" if choice_id is None else str(choice_id)})
+
+    print("\n-- N+1 MARKS, ALL IN THE BLOCK: the application scope's, and")
+    print("   one per application. MEASURED, and the reason they are not")
+    print("   on the application's own row: removing the choice whose row")
+    print("   carried the mark takes the MARK with it, and the scope then")
+    print("   issues an id it has issued before -- which B-2 forbids above")
+    print("   every other rule. A mark bounds a SCOPE; a row can be gone.")
+
+    back = TestIdDb.register_of_book(register.book_header_line_list(),
+                                     row_list, directory)
+    print("\n-- round trip, byte for byte:", back.format() == register.format())
+
+    print("\n-- a book from BEFORE the register moved in reads as empty,")
+    print("   and that is not a fault")
+    print("     applications:", len(TestIdDb.register_of_book([], [], directory)))
+
+    print("\n-- ids in the rows with no block REFUSES BY NAME: a book that")
+    print("   names ids it cannot bound would issue one twice (B-2)")
+    try:
+        TestIdDb.register_of_book([], row_list, directory)
+        print("     NOT REFUSED -- wrong")
+    except TestIdFault as fault:
+        print("     %s" % fault)
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
         title      = "The test register: ids that survive renames",
         choice_map = {
-            "allocation": test_allocation,
+            "allocation":  test_allocation,
+            "book_format": test_book_format,
             "healing":    test_healing,
             "retire":     test_retire,
             "tables":     test_tables,
@@ -433,3 +482,4 @@ if __name__ == "__main__":
         },
         happy      = "SUCCESS.*",
     ).run()
+

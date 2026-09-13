@@ -1,0 +1,267 @@
+==============================================================================
+DISCUSSION RESULTS -- the register, the book, and moving
+==============================================================================
+
+SESSIONS: 2026-09-11 / 2026-09-12
+BEARS ON: engine/bookkeeper, engine/coverage, services (rename, move,
+          sanitize, accept), adm/WORK/plan/18-register-in-the-book.txt
+
+This file records WHAT WAS RULED and WHAT WAS MEASURED. Rulings marked
+BUILT are in the tree; those marked OPEN are not. The measurements are
+here because several of them overturned an argument -- mine or the
+tree's -- and a later reader should meet the evidence, not the
+conclusion alone.
+
+______________________________________________________________________________
+
+1  WHAT TEST IDS ARE FOR
+
+TRACED, and the chain terminates in one place:
+
+    test id -> seated into a coverage RECORD (session.py, D-18)
+            -> group table: which runs executed this stretch
+            -> gather: a fold across directories
+            -> 'hwut.affected': which tests a change calls for
+
+Everything else on the path is MAINTENANCE of that, not a second
+purpose. 'rename.py' keeps the register consistent across a rename;
+'sanitize' heals it; 'dispatcher.py' allocates ONLY where coverage is
+asked ('if self.id_db is not None'). 'session.py' states the contract:
+"'run_id' -- the register's id of this run, WHERE COVERAGE IS ASKED".
+
+B-2 SAYS SO HISTORICALLY: "Re-use was safe only as long as nothing
+persisted carried an id -- WHICH IS EXACTLY WHAT THE COVERAGE RECORD
+WAS ABOUT TO DO." The once-and-never-again law was written FOR coverage
+records.
+
+    MEASURED AGAINST B-3's THREE FORWARD-LOOKING CONSUMERS, which were
+    cited to justify keeping identity out of coverage:
+        a report               -- nothing in the tree keys one by run id
+        a flaky-test hunt      -- 'hwut.stability' EXISTS and needs no
+                                  identity: it repeats within one
+                                  invocation and stores nothing
+        tolerance grouping     -- not substantiated anywhere
+    None had materialised. B-3's DECISION stands on its own reason
+    (B-1 had put the table in coverage, and moving it out dissolved
+    'coverage/identity.py'), but its forward-looking justification did
+    not come true.
+
+RULED: THE REGISTER STAYS IN THE BOOKKEEPER -- not because other
+consumers are coming, but because coverage sits ABOVE the bookkeeper in
+the layering, and an identity that 'rename' and 'sanitize' must
+maintain cannot live above the services that maintain it.
+
+STRUCK: an earlier agreement in this discussion that the register
+should move INTO coverage. Recorded here so it does not stand in the
+record as a conclusion.
+
+______________________________________________________________________________
+
+2  HISTORY
+
+RULED: there is nothing to key. MEASURED -- the tree holds no history
+at all, only current state:
+
+    book.csv           the LAST verdict, last accept, stain
+    hwut-traces.csv    the LAST run's duration, cpu, memory
+    test_ids.dat       name <-> id
+
+B-11 is explicit: "an entry is REPLACED where its key stands", and
+"traces may be deleted; nothing reads them to decide anything". Durations
+in the book were refused outright: "a duration is what THIS MACHINE SAW,
+and a laptop's slowness has no place in a versioned record".
+
+So "history across renames" is a case for a file that does not exist and
+whose nearest relative was deliberately made replace-on-write. It is not
+an argument for anything.
+
+______________________________________________________________________________
+
+3  THE REGISTER FOLDS INTO 'book.csv'                              (BUILT)
+
+RULED: 'GOOD/test_ids.dat' becomes part of 'GOOD/book.csv' under a '#'
+header. Plan 18 steps 0-3 are built and measured; 4-6 are not.
+
+3.1  THE '#' BLOCK IS LOAD-BEARING, NOT A COMMENT.
+     In gnuplot a '#' line is IGNORED. This one carries the register's
+     scope-wide facts and is held out of the csv reader. A book that
+     bears ids with no block is REFUSED BY NAME: a book that names ids
+     it cannot bound would issue one twice, which B-2 forbids above all.
+
+         # vut-register 5 generation:6 apps:2 marks:0=2,1=0
+         test;choice;verdict;...;test_id;choice_id
+
+3.2  THERE ARE N+1 MARKS, AND THEY ALL LIVE IN THE BLOCK.
+     'N:24' is the application scope; every application then carries its
+     own ('N:4.12'). A directory of twenty applications has twenty-one
+     marks.
+
+     MEASURED, AND IT OVERTURNED THE RECOMMENDATION: put an
+     application's mark on its FIRST ROW (B-8's "empty means as above")
+     and removing the choice whose row carried it TAKES THE MARK WITH
+     IT -- measured, the mark went from 2 back to 0, and the scope would
+     then reissue an id it had issued. A mark bounds a SCOPE; a row can
+     be deleted. So the marks are in the block and the rows carry only
+     'test_id' and 'choice_id'.
+
+3.3  THE FILES MERGE; THE COUNTERS DO NOT.
+     'G:' counts REGISTER mutations, and coverage reads it to know
+     whether a snapshot still stands (D-25). The BOOK changes on every
+     run. One counter would mean every run bumped it and EVERY coverage
+     snapshot read stale, for ever, with no symptom but a gather that
+     always says "these directories have moved". MEASURED: an allocation
+     takes the generation to 2; a 'note_accept' writes 'last_accept' into
+     the same file and it STAYS 2.
+
+3.4  A STALE WRITE MUST NOT WIPE THE REGISTER.
+     One file means a caller may read the book, cause an id to be
+     issued, and write back the copy it read -- which knows nothing of
+     that id. MEASURED on 'note_accept'. '_write_book' now carries over
+     both the id columns and the '#' block from disk unless a register
+     write states its own.
+
+3.5  A RENAME IS NOW THE ROW'S OWN ACT.
+     The id rides ON the book row, so renaming the row renames the
+     register entry and removing it retires the id. The explicit
+     'register.rename_choice' never fired. What remained was to SAY it
+     moved: '_register_bump'.
+
+3.6  THE PRIZE IS B-9's. One owner, one act -- and now one WRITE. The
+     "two lifetimes" question B-9 left open is answered by there being
+     one file.
+
+______________________________________________________________________________
+
+4  WHAT A BOOK ENTRY MEANS                                          (BUILT)
+
+RULED: A BOOK ENTRY SAYS THERE IS A GOOD FILE WHICH HAS BEEN BLESSED OR
+ACCEPTED. There is no other meaning an entry could carry.
+
+    CONSEQUENCE, BUILT: '_register_write' ANNOTATES rows that stand and
+    never creates one. A row with an id and no decision would say a
+    nominal stands where none does.
+
+    CONSEQUENCE, RULED: DO NOT COVERAGE-RUN A TEST THAT IS NOT ACCEPTED.
+    A coverage run is a run without necessarily a verdict on the
+    outcome, and a test nobody has accepted has no nominal to be right
+    or wrong against -- nothing for a record to attribute, and no id to
+    attribute it with. ACCEPTANCE IS THE ENTRY CEREMONY.
+
+    The 'dispatcher.py' change implementing this is IN THE TREE AND
+    UNVERIFIED: it produced a byte-identical diff, so the symptom
+    attributed to it has another cause. Treat it as provisional.
+
+______________________________________________________________________________
+
+5  SANITIZE'S RE-RUN TRIGGER                                       (RULED)
+
+RULED: A BOOK OR REGISTER CHANGE IS NOT GROUNDS FOR THE RE-RUN TRIGGER.
+
+    Because a rename MOVES THE OUT FILES with the name. VERIFIED:
+    'rename.py' moves 'candidate_path', 'freshness_path', 'raw_path',
+    'timing_path' and 'nominal_path' together, and '_moved_f' asserts
+    that every artefact moved. If it did not, we would re-run anyway;
+    and if the application changes, OUT is reproduced equally. So the
+    book is no dependency for a re-run.
+
+    MEASURED AND WORTH KNOWING: the trigger was never the culprit in the
+    failures that raised the question. 'app_path_list' is built from
+    'result.app_set' -- EVERY application of the directory, not from the
+    findings -- so the line fires whenever '--apply' runs and an
+    application stands.
+
+______________________________________________________________________________
+
+6  MOVING AND RENAMING                                              (OPEN)
+
+6.1  THERE IS ONE IMPLEMENTATION ALREADY. 'hwut.move <app> <app'>' is,
+     word for word, 'hwut.rename <app> -to <app'>' (E-46). The doubt
+     about which face does the work is settled: they are one.
+
+6.2  RULED: HWUT MOVES ITS OWN ARTEFACTS WHERE IT KNOWS THE UNDERLYING
+     CONFIGURATION MANAGEMENT SYSTEM.
+
+         detect the VCS
+         move with plain filesystem calls
+         STAGE the touched paths
+         then ASK about committing -- or act, where '--commit' is given
+
+     WHY STAGE, AND WHY NOT LET THE VCS MOVE. MEASURED: there is NO VCS
+     detection anywhere in the tree today; 'git' appears only in prose
+     and one NOTE string. And 'git mv' is 'mv' plus an index update --
+     git has no rename tracking, renames are found at DIFF time by
+     content similarity -- so invoking it buys no history. What it buys
+     is the INDEX, and that is the real footgun: a plain move leaves the
+     artefacts deleted-plus-untracked, and 'git commit -am' adds no
+     untracked file. The author would commit believing the move was in.
+
+6.3  RULED: WHERE THE SYSTEM IS NOT KNOWN, HWUT COPIES.
+     It does not move and it destroys nothing. It provides a REMOVE
+     SCRIPT for the author to review, and leaves a NOTE in 'book.csv''s
+     '#' header about the move away.
+
+     The VCS is not the mover: it is the UNDO. Where hwut can see that a
+     mistake is recoverable it acts; where it cannot, it refuses to
+     destroy and hands over something reviewable.
+
+6.4  E-48 STANDS UNTOUCHED. The test application file, its '@hwut'
+     block and any 'hwut.conf' apps section are the AUTHOR'S. This face
+     FOLLOWS a 'git mv' of the source; it does not perform one, and it
+     edits no declaration. What is ruled above concerns hwut's OWN
+     artefacts only.
+
+6.5  OPEN, AND TO BE RULED AS TWO ACTS, NOT ONE:
+
+     MOVING ONE APPLICATION INTO AN EXISTING DIRECTORY -- two registers
+     must meet: the source retires the id, the target issues a fresh
+     one, the coverage record is re-seated through coverage's own seam.
+
+     MOVING A WHOLE DIRECTORY -- with 'GOOD/' intact NOTHING
+     RECONCILES: the register travels with the book, the ids stay, the
+     coverage records stay seated, and hwut's only job is to notice it
+     happened. This is the case where hwut genuinely should not move
+     anything.
+
+     Consequences of 6.3 that want an answer with it:
+       - the copy path leaves the tree DOUBLED on purpose; 'sanitize'
+         hunts orphan nominals and must not heal what a pending remove
+         script is about to take
+       - the script must survive being ignored: idempotent, and the
+         source's leftovers inert -- which they are, since the book no
+         longer names them
+       - "knows the system" is a PER-DIRECTORY question: a move can
+         cross out of a repository, and the safe reading is that hwut
+         moves only where BOTH ends are known
+
+______________________________________________________________________________
+
+7  WHERE THE TREE STANDS
+
+    census            742 ok, 44 fail   (corrected baseline: 42)
+    plan 18           steps 0-3 built and measured; 4-6 not started
+    still failing,    services/TEST test-cov_run.py --run
+    and NEW           services/TEST test-rename.sh --across
+    provisional       the 'dispatcher.py' coverage-follows-acceptance
+                      edit -- in the tree, unverified
+
+    'test-rename.sh --across' exits 1 with "REFUSED: a choice never
+    crosses a directory". That is a refusal INSIDE the move and is
+    probably not the register's doing: the adoption ordering I suspected
+    is already correct -- '_adopt_unlocked' writes the entry BEFORE the
+    ids are issued.
+
+    STEP 0 OF PLAN 18 IS WORTH REPEATING HERE because it removed seven
+    failures from the baseline for one line: 'test-test_id_db.py:48'
+    imported 'vut.services.show', which had moved to
+    'vut.services.lib.config.show'. It was never a sandbox limit.
+
+______________________________________________________________________________
+
+NEXT
+
+    1  isolate 'test-rename.sh --across's STATUS 1
+    2  verify or revert the 'dispatcher.py' edit
+    3  the intend for 6.2/6.3, with 6.5 ruled as two acts
+    4  plan 18 steps 4-6
+
+==============================================================================

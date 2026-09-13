@@ -266,10 +266,17 @@ class TestRunDispatcher(I_Dispatcher):
                                                        node.choice))
         run_id = None
         if self.id_db is not None:
-            from ...operations.coverage_action import prepare
-            prepare(configuration)
             run_id = self.id_db.run_id_of(configuration.key_name,
                                           node.choice)
+            #  ACCEPTANCE IS THE ENTRY CEREMONY (B-13). A coverage run
+            #  is a run without necessarily a verdict on the outcome,
+            #  and a test nobody has accepted has no nominal to be
+            #  right or wrong against -- so there is nothing for a
+            #  record to attribute, and no id to attribute it with. We
+            #  do not coverage-run what was never accepted.
+            if run_id is not None:
+                from ...operations.coverage_action import prepare
+                prepare(configuration)
         outcome = await run_test_held(
             configuration,
             Request(choice=node.choice, record=self.record,

@@ -1,0 +1,29 @@
+THE REGISTER IN THE BOOK: a '#' block and two columns
+
+-- the '#' block: the scope-wide facts, and nothing else
+     # vut-register 5 generation:7 apps:3 marks:0=3,1=0,2=1
+
+-- the rows: an id each, and nothing else
+     test-a.sh   x     test_id=0 choice_id=0
+     test-a.sh   y     test_id=0 choice_id=1
+     test-a.sh   z     test_id=0 choice_id=2
+     test-b.py   None  test_id=1 choice_id=None
+     test-c.sh   q     test_id=2 choice_id=0
+
+-- N+1 MARKS, ALL IN THE BLOCK: the application scope's, and
+   one per application. MEASURED, and the reason they are not
+   on the application's own row: removing the choice whose row
+   carried the mark takes the MARK with it, and the scope then
+   issues an id it has issued before -- which B-2 forbids above
+   every other rule. A mark bounds a SCOPE; a row can be gone.
+
+-- round trip, byte for byte: True
+
+-- a book from BEFORE the register moved in reads as empty,
+   and that is not a fault
+     applications: 0
+
+-- ids in the rows with no block REFUSES BY NAME: a book that
+   names ids it cannot bound would issue one twice (B-2)
+     the book bears test ids and no '# vut-register' block to bound them
+<hwut-end>

@@ -1,0 +1,210 @@
+==============================================================================
+plan/18-register-in-the-book -- HOW THE REGISTER FOLDS INTO 'book.csv'
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: engine/bookkeeper (owner), engine/coverage (reader),
+            services (rename, sanitize, accept), adm (rescue_goods)
+STATE:      DRAFT. o-1 and o-2 stand open; the ordering does not depend
+            on either.
+
+WHAT THIS PLAN IS FOR. 'GOOD/test_ids.dat' becomes part of 'GOOD/
+book.csv', under a '#' header that carries the columns and the
+application scope's mark. The register STAYS IN THE BOOKKEEPER -- the
+layer where 'rename', 'sanitize' and 'accept' can rely on it without
+importing coverage (B-3's decision, kept; B-3's cited consumers are a
+separate matter, o-2).
+
+______________________________________________________________________________
+
+0  WHAT STANDS, MEASURED
+
+    engine/bookkeeper/test_id_db.py      510 lines, the writer
+    engine/bookkeeper/bookkeeper.py     1351 lines, the proxy
+    GOOD/test_ids.dat                   format 5: '##VUT-TEST-IDS 5',
+                                        'G:' generation, 'N:' marks,
+                                        'A:<id> <name>', 'C:<a>.<c> <name>'
+    GOOD/book.csv                       header row of column names, one
+                                        row per (test, choice), empty
+                                        test cell = the row above (B-8)
+
+    CALLERS, all of them:
+        bookkeeper.py:489        TestIdDb(directory)      -- the proxy
+        dispatcher.py:271        id_db.run_id_of(...)     -- coverage asked
+        gather.py:292            TestIdDb(devnull)        -- a snapshot
+        services/rename.py       through the proxy
+        services/sanitize.py     through the proxy
+        adm/rescue_goods.py      through the proxy
+
+    THE SUITE: 'engine/bookkeeper/TEST/test-test_id_db.py', 7 choices
+    (allocation, face, faults, healing, retire, tables, vanished). ALL
+    SEVEN ARE IN THE BASELINE'S 49 FAILURES in this sandbox -- the first
+    is 'killed by the supervisor', the other six 'not run: the process
+    had already died'. They must be made to pass BEFORE this work, or
+    the census cannot tell this work's breakage from that.
+
+______________________________________________________________________________
+
+1  THREE FINDINGS THAT SHAPE THE PLAN
+
+1.1  THERE ARE N+1 MARKS, NOT ONE.
+     'N:24' is the application scope. Every application then carries its
+     own: 'N:4.12' for 'test-accept.sh', 'N:16.11' for
+     'test-sanitize.sh'. A directory of twenty applications has
+     twenty-one marks. The '#' header can hold the application mark; the
+     per-application choice marks cannot live there without becoming a
+     list that must be kept in step with rows in the same file (o-1).
+
+1.2  THE GENERATION MUST NOT BECOME THE BOOK'S.
+     'G:170' counts REGISTER mutations, and coverage reads it:
+     'gather.py:142' puts 'register_generation' into every delivery, and
+     'stale_tuple' asks whether a directory has moved since the snapshot
+     was copied. The BOOK changes on every run -- a verdict, a
+     'last_accept', a stain. If the merged file carried one counter,
+     every run would bump it and EVERY coverage snapshot would read
+     stale immediately.
+
+     SO THE FILES MERGE AND THE COUNTERS DO NOT. The '#' header carries
+     a generation that is bumped ONLY by a register mutation:
+     allocation, rename, removal, give-back. A verdict write leaves it
+     untouched.
+
+1.3  ONE LOCK, ONE WRITE -- the real prize.
+     B-9 made the bookkeeper the locking proxy: one owner, one act. Two
+     files means two writes inside one act. After the fold an accept
+     writes the nominal and ONE bookkeeper file, and the 'two lifetimes'
+     question B-9 left open is answered by the merge itself.
+
+______________________________________________________________________________
+
+2  THE ORDER
+
+Each step ends in a tree that censuses. Nothing in a later step is
+needed to measure an earlier one.
+
+STEP 0   GREEN THE REGISTER'S OWN SUITE
+    'test-test_id_db.py' 7 choices pass, or the reason they cannot is
+    recorded. Without this the fold has no baseline.
+    MEASURE: 'engine/bookkeeper/TEST' censuses clean but for what the
+    tree's own 49 already carry.
+    MOVES: none expected; this is the baseline, not a change.
+
+STEP 1   THE CODEC, BOTH WAYS, BEHIND THE SAME DOOR
+    'test_id_db.py' gains 'format_into_book(rows)' and
+    'parse_from_book(text)' beside its existing 'format()'/'_parse()'.
+    NOTHING ELSE CHANGES: the file on disk is still 'test_ids.dat', and
+    the new pair is exercised only by its own suite.
+    MEASURE: a new choice 'book_format' in 'test-test_id_db.py' --
+    round-trip a register of several applications through the book
+    shape and back, byte-identical; a damaged '#' header REFUSES BY
+    NAME.
+    MOVES: none. One new choice, one new GOOD.
+
+STEP 2   THE BOOK CODEC LEARNS THE HEADER AND THE COLUMNS
+    'bookkeeper.py's book codec writes the '#' block and the id
+    columns, and reads them. A book WITHOUT them reads as today, with
+    an empty register -- that is what every existing tree looks like.
+    MEASURE: 'test-bookkeeper' / 'test-book' choices; a book written
+    and read back is byte-identical; an old book reads.
+    MOVES: every GOOD that PRINTS a book. Measured before the step:
+    'grep -rl "test;choice;verdict" --include=GOOD/*' names them.
+
+STEP 3   THE PROXY WRITES ONE FILE
+    'Bookkeeper._register()' reads from the book; every register
+    mutation writes the book. 'test_ids.dat' is still WRITTEN, byte for
+    byte as before, and is now a SECOND copy of what the book holds.
+    Nothing reads it.
+    MEASURE: after any accept, 'test_ids.dat' and the book's register
+    columns say the same thing -- a new choice asserts it.
+    MOVES: GOODs that list 'GOOD/' contents do not move (the file is
+    still there). This step is reversible by deleting one call.
+
+STEP 4   THE READERS MOVE
+    'gather.py's snapshot ('register_text' / '_register_of_text') takes
+    the book shape. 'rename.py', 'sanitize.py', 'rescue_goods.py' go
+    through the proxy already and need no change -- CONFIRM by
+    measurement, not by reading.
+    MEASURE: 'engine/coverage/TEST' censuses; a gather over two
+    directories decodes to names; 'stale_tuple' still detects a moved
+    directory.
+    MOVES: coverage GOODs that print a snapshot.
+
+STEP 5   'test_ids.dat' STOPS BEING WRITTEN, AND IS READ ONCE
+    B-10's migration pattern, exactly: the old file is READ where the
+    book carries no register, and REMOVED at the first write. A tree
+    from before this entry needs no migration step -- the first write
+    makes it.
+    MEASURE: a fixture tree with an old 'test_ids.dat' and an old book;
+    one accept; the ids are unchanged, the old file is gone, the book
+    carries them.
+    MOVES: every GOOD that lists 'GOOD/' contents -- 'test-accept.sh'
+    (several choices), 'test-sanitize.sh', 'test-remove.sh'. Measured
+    before the step: 'grep -rl "test_ids.dat" services/*/GOOD adm/*/GOOD'.
+
+STEP 6   THE RULINGS
+    B-13 in 'engine/bookkeeper/RATIONALE.txt': the register is in the
+    book; the '#' header; N+1 marks and where they live; the generation
+    that a verdict does not bump; the migration. B-9's graveyard line
+    ("folding the register into 'result_db.csv' ... deferred") is
+    AMENDED, not deleted -- it records why it waited and what answered
+    it.
+    MEASURE: 'hwut.sanitize --books' and the doc-discipline suites.
+
+______________________________________________________________________________
+
+3  WHAT MUST NOT CHANGE
+
+    B-2      an id is issued once and never again; removal retires the
+             number; the mark cannot go backwards. The fold moves the
+             mark's HOME, never its law.
+    D-14     ids are directory-local. The book is per directory, so
+             this is unchanged by construction.
+    D-25     a snapshot names the generation it copied. Preserved by
+             1.2 -- the counter stays the register's.
+    B-9      the bookkeeper is the locking proxy. Strengthened: one
+             file, one write.
+    E-41     the three writes of an acceptance. The register write is
+             still a write; it lands in the same file as the book's,
+             which is a matter for the ruling to state plainly, since a
+             reader counting writes will now count two.
+
+______________________________________________________________________________
+
+4  RISK, NAMED
+
+    THE GENERATION IS THE ONE THAT CAN GO WRONG QUIETLY. Get 1.2 wrong
+    and nothing fails: coverage simply reports every snapshot stale, for
+    ever, and the only symptom is a gather that always says "these
+    directories have moved". STEP 4 must measure a snapshot taken,
+    several runs made, and the snapshot still reading CURRENT.
+
+    THE SEVEN FAILING CHOICES. If STEP 0 cannot green them in this
+    sandbox, this work proceeds with seven choices it cannot measure --
+    in the very suite that owns the thing being changed. That is a
+    reason to do STEP 0 on the real machine, not here.
+
+______________________________________________________________________________
+
+OPEN
+
+o-1  WHERE THE PER-APPLICATION CHOICE MARKS LIVE.
+     (a) a 'choice_mark' column, filled on the application's first row
+         only (B-8 already says a value on a group's first row is the
+         group's); 'choice_id' on every row.
+     (b) all marks in the '#' block, one token per application.
+     (c) a trailing block after the table.
+     Recommended: (a). Each mark sits on the row that owns it, and the
+     '#' block stays one line of columns plus one line of scope-wide
+     facts.
+
+o-2  GROUPS TO LABELS -- 'group_ids.dat' and B-3.
+     Ruled in principle ("groups can be handled by labels"), and it is
+     a bigger change than this one: a third id scope, a third file, and
+     B-3's whole decision. B-3's cited consumers -- a report, a flaky
+     hunt, the compare engine's tolerance grouping -- are to be omitted
+     or rewritten; MEASURED, none of the three exists ('hwut.stability'
+     exists but needs no identity, and nothing in the tree groups runs
+     by tolerance). Its own plan, after this one.
+
+==============================================================================

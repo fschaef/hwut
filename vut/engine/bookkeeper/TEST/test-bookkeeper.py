@@ -327,9 +327,12 @@ def test_reproduce():
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
          == "test;choice;verdict;report;last_accept;coverage;"
-            "stderr;stain_repeat_n;stain_when",
+            "stderr;stain_repeat_n;stain_when;test_id;choice_id",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
-         "every column a decision"),
+         "every column a decision -- and since B-13 the REGISTER'S two "
+         "id columns, last so that every older column keeps its place. "
+         "The MARKS are not columns: a row can be removed, and a mark "
+         "that went with it would let the scope reissue an id (B-2)"),
         ("caps" not in table and "canonicaliser" not in table
          and "numeric" not in table,
          "no configuration word reaches the oracle directory"),
