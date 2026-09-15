@@ -6,7 +6,7 @@ STDOUT {
 --- no such choice
 STATUS: 2
 STDOUT {
-    REFUSED: nothing here answers 'test-here.sh nochoice'; this directory offers: test-here.sh
+    REFUSED: choice 'nochoice' not supported; 'test-here.sh' reports 0 choice(s): none
 }
 --- an option the face does not take
 STATUS: 2

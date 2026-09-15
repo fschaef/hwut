@@ -31,9 +31,9 @@ DESCRIPTION
                                           choice's own setup, not by the
                                           book's memory. More than one:
                                           a CHECKLIST first, in the
-                                          terminal; '--all' or '--yes'
-                                          skips it. One: straight to
-                                          the view. None: EMPTY.
+                                          terminal; '--all' skips it.
+                                          One: straight to the view.
+                                          None: EMPTY.
 
        WHICH FORM. Two words that both name existing files are the
        file form. One word naming an existing file WITHOUT an '@hwut'
@@ -82,7 +82,8 @@ from   vut.engine.compare.api                 import feeder_ui as compare_feeder
 from   ._core              import (read_source,
                                   add_setup_arguments,
                                   setup_from_arguments)
-from   ._cases             import select, differing_keys, choose
+from   ._cases             import select, differing_keys
+from   .lib.checklist      import Checklist
 from   vut.engine.orchestrator.plan.wish import parse_wish, WishError
 
 
@@ -203,9 +204,13 @@ def _main(argv):
     parser.add_argument("--all", action="store_true",
                         help="store form: every differing case, no "
                              "checklist")
-    parser.add_argument("--yes", action="store_true",
-                        help="store form: as '--all' (for scripts)")
     add_setup_arguments(parser)
+    if "--yes" in rest_list:
+        #  E-57: one word for 'do not ask'. Refused BY NAME so a script
+        #  that still says it is told, not silently given the default.
+        sys.stderr.write("REFUSED: '--yes' is gone (E-57) -- '--all' is "
+                         "the one word for 'no checklist'\n")
+        return E_ExitCode.REFUSED
     arguments = parser.parse_args(rest_list)
     setup     = setup_from_arguments(arguments)
     word_list = arguments.word
@@ -250,16 +255,24 @@ def _main(argv):
         err("nothing differs: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)
         return E_ExitCode.OK
-    chosen = choose(key_list, err, sys.stdin.readline,
-                    all_f=arguments.all, yes_f=arguments.yes)
-    if not chosen:
-        err("NOTE: nothing shown")
-        return E_ExitCode.OK
-    for key in chosen:
+    #  THE SAME MENU AND THE SAME LOOP as 'hwut.accept.interactive'
+    #  (E-67). Here 'handled' means VIEWED: the face that shows a case
+    #  has done with it what this face does.
+    checklist = Checklist(key_list, err, sys.stdin.readline,
+                          label_of=lambda key: key.label,
+                          all_f=arguments.all)
+    shown_n = 0
+    while True:
+        key = checklist.pick()
+        if key is None: break
+        shown_n += 1
         options = key.setup if not _setup_said_f(arguments) else setup
         asyncio.run(compare_view(key.subject_text, key.nominal_text,
                                  adapter, subject_name=key.label,
                                  compare_options=options))
+    if not shown_n:
+        err("NOTE: nothing shown")
+        return E_ExitCode.OK
     return E_ExitCode.FAULT
 
 

@@ -84,6 +84,7 @@ from   vut.engine.orchestrator.run.strategy          import (STRATEGY_DB,
 from   ._core                                        import usage_line
 from   ._target import split_words, TargetError
 from   ._exit                                        import E_ExitCode
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 REPEAT_DEFAULT  = 3
 #  THE TWO BARS a cadence finding must clear (disc-7). High enough that
@@ -433,8 +434,10 @@ def main(argv=None, write=None, write_error=None):
         elif argument.startswith("--strategy="):
             name = argument[len("--strategy="):]
             if name not in STRATEGY_DB:
-                write("REFUSED: '--strategy' takes one of %s, not '%s'"
-                      % (", ".join(sorted(STRATEGY_DB)), name))
+                write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
+                      % (", ".join(sorted(STRATEGY_DB)), name,
+                         did_you_mean(name, sorted(STRATEGY_DB),
+                                      among_listed_f=True)))
                 write(USAGE)
                 return E_ExitCode.REFUSED
             strategy = name
@@ -443,7 +446,8 @@ def main(argv=None, write=None, write_error=None):
             else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.stability' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     #  A TEST NAMED BY PATH stands in the directory the path names

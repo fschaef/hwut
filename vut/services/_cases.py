@@ -117,18 +117,25 @@ def select(wish, word_list, directory, directory_said_f, write, usage):
 class DifferingKey:
     """One (test, choice) whose stdout candidate is NOT equivalent to
     its nominal -- with both texts, the compare setup that judged them,
-    and where they stand."""
+    and where they stand.
+
+    'aspirant_f' is B-14's standing, MEASURED off 'GOOD/' and not
+    remembered: True where no nominal stood, so the nominal text is the
+    opening mirror and a commit is a FIRST BLESSING (E-51/E-59), never
+    a merge.
+    """
     __slots__ = ("where", "test", "choice", "subject_text",
                  "nominal_text", "setup", "candidate_path",
-                 "nominal_path")
+                 "nominal_path", "aspirant_f")
 
     def __init__(self, where, test, choice, subject_text, nominal_text,
-                 setup, candidate_path, nominal_path):
+                 setup, candidate_path, nominal_path, aspirant_f=False):
         self.where = where;               self.test = test
         self.choice = choice;             self.subject_text = subject_text
         self.nominal_text = nominal_text; self.setup = setup
         self.candidate_path = candidate_path
         self.nominal_path   = nominal_path
+        self.aspirant_f     = aspirant_f
 
     @property
     def name(self):
@@ -152,6 +159,8 @@ def differing_keys(selected, write):
                 choice's setup; walk order.
             [1] int, how many selected cases had BOTH streams and were
                 judged -- so a caller can say 'n of m differ'.
+
+    ASPIRANTS STAND FIRST in [0] (B-14), walk order within the group.
 
     A case without a candidate (never run) or without a nominal
     (never accepted) is not a difference to show; it is skipped, and
@@ -212,6 +221,7 @@ def differing_keys(selected, write):
                 except (KeyError, AttributeError):
                     setup = None
             if setup is None: setup = Configuration()
+            aspirant_f = not good_path.exists()
             if good_path.exists():
                 try:
                     nominal_text = io.open(str(good_path), encoding="utf-8").read()
@@ -233,7 +243,15 @@ def differing_keys(selected, write):
             if equivalent_f: continue
             key_list.append(DifferingKey(where, test, choice, subject_text,
                                          nominal_text, setup,
-                                         str(out_path), str(good_path)))
+                                         str(out_path), str(good_path),
+                                         aspirant_f=aspirant_f))
+    #  ASPIRANTS FIRST (B-14). A test the book knows and nobody has
+    #  accepted is playable, not runnable; its accept is the act that
+    #  makes it a member, and a person working a list wants the
+    #  first blessings before the changes. Walk order is kept WITHIN
+    #  each group, so nothing else is reordered.
+    key_list = [k for k in key_list if k.aspirant_f] \
+             + [k for k in key_list if not k.aspirant_f]
     if no_run_n: write("NOTE: %d selected case(s) never ran -- no "
                        "candidate stands" % no_run_n)
     if no_nom_n: write("NOTE: %d selected case(s) never COMPLETED -- no "
@@ -241,41 +259,5 @@ def differing_keys(selected, write):
     return key_list, judged_n
 
 
-def choose(key_list, write, read_line, all_f=False, yes_f=False):
-    """
-    RETURN: list[DifferingKey], the keys the author marked -- every key
-            where there is one, or '--all'/'--yes' was said; an empty
-            list where the author took none ('q', EOF).
-
-    THE MENU, in the terminal, no dependency: every key starts marked;
-    a number toggles it; Enter takes the marked set; 'a' marks all,
-    'n' none, 'q' takes none.
-
-        differing cases -- toggle with a number, Enter to go, q to quit
-          [X]  1  test-a.sh one
-          [X]  2  test-a.sh two
-          [ ]  3  test-b.sh
-        >
-    """
-    if len(key_list) <= 1 or all_f or yes_f: return list(key_list)
-    marked = [True] * len(key_list)
-    while True:
-        write("differing cases -- toggle with a number, Enter to go, "
-              "q to quit")
-        for n, (key, mark_f) in enumerate(zip(key_list, marked), start=1):
-            write("  [%s] %2d  %s" % ("X" if mark_f else " ", n, key.label))
-        write("> ")
-        try:
-            answer = (read_line() or "").strip().lower()
-        except EOFError:
-            answer = "q"
-        if answer == "":  break
-        if answer == "q": return []
-        if answer == "a": marked = [True]  * len(key_list); continue
-        if answer == "n": marked = [False] * len(key_list); continue
-        for word in answer.replace(",", " ").split():
-            if word.isdigit() and 1 <= int(word) <= len(key_list):
-                marked[int(word) - 1] = not marked[int(word) - 1]
-            else:
-                write("  (not a number in 1..%d: '%s')" % (len(key_list), word))
-    return [key for key, mark_f in zip(key_list, marked) if mark_f]
+#  'choose' moved to 'services/lib/checklist.py' (E-67): one menu,
+#  one behaviour, shared by every face that offers a list.

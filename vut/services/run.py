@@ -82,6 +82,7 @@ from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 
 USAGE = usage_line("usage: hwut.run",
@@ -283,8 +284,10 @@ def _main(argv, write, write_error, captured_f, demand=None,
         elif argument.startswith("--strategy="):
             name = argument[len("--strategy="):]
             if name not in STRATEGY_DB:
-                write("REFUSED: '--strategy' takes one of %s, not '%s'"
-                      % (", ".join(sorted(STRATEGY_DB)), name))
+                write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
+                      % (", ".join(sorted(STRATEGY_DB)), name,
+                         did_you_mean(name, sorted(STRATEGY_DB),
+                                      among_listed_f=True)))
                 write(USAGE)
                 return E_ExitCode.REFUSED
             strategy = strategy_of(name)
@@ -305,7 +308,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
             word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.run' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     #  ONE MEASUREMENT AT A TIME (coverage D-3): a coverage run's times

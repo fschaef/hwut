@@ -21,11 +21,13 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
                                 the first word names files, every
                                 further word a choice; both carry
                                 fnmatch's '*', '?' and '[ ]'
-    --yes                       unattended: do not ask
+    --dont-ask                  do not ask; the reading has been read
     --force-run                 run every selected case before blessing,
                                 current recording or not
     --force                     overwrite a STANDING nominal, where a
-                                merge would otherwise be required
+                                merge would otherwise be required, and
+                                record a FIRST acceptance whole rather
+                                than as a shape nobody has judged
     --directory=<path>          ONE directory; the whole tree else
     --help                      this text
 
@@ -75,12 +77,13 @@ from   vut.auxiliary.directory_mutex                   import DirectoryBusy
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 
 USAGE = usage_line("usage: hwut.accept",
                     WISH_TOKEN_TUPLE
                     + ("[<file-glob> [choice-glob]...]",
-                         "[--yes]", "[--force]", "[--force-run]",
+                         "[--dont-ask]", "[--force]", "[--force-run]",
                          "[--stderr-tol[erated]]",
                          "[--directory=<path>]"))
 
@@ -106,8 +109,12 @@ THE SHORT FORM -- sugar over '--glob', not a second selection language
                         a file word alone means EVERY choice of it
 
 PROMOTION
-    --yes               unattended: do not ask, bless what needs
-                        blessing. It asserts 'I have already looked'
+    --dont-ask          do not ask. It asserts 'I have already read
+                        the reading'. It says nothing about WHAT is
+                        done -- only that nobody need be consulted
+                        (E-70). '--force' implies it; the reverse does
+                        not hold, which is the whole point of two
+                        words.
     --force             overwrite a STANDING nominal, skipping the
                         merge. It asserts 'overwrite the thing I judge
                         against' -- the one operation here that
@@ -991,6 +998,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     directory    = "."
     directory_said_f = False
     force_f      = False
+    dont_ask_f   = False
     stderr_tol_f = False
     word_list   = []
     unknown     = []
@@ -1002,18 +1010,35 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
             directory = argument[len("--directory="):]
             directory_said_f = True
         elif argument in ("--force", "-f"): force_f = True
+        elif argument == "--dont-ask":      dont_ask_f = True
         elif argument == "--yes":
-            write("REFUSED: '--yes' is gone (E-57) -- '--force' / '-f' "
-                  "is the one word for 'do not ask'")
+            #  E-68: the word names an ANSWER, and on the command line
+            #  there is no question yet for it to answer.
+            write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
+                  "the one word for 'do not ask'")
             return E_ExitCode.REFUSED
         elif argument == "--force-run":   force_run_f = True
         elif argument in ("--stderr-tol", "--stderr-tolerated"):
             stderr_tol_f = True
         elif argument.startswith("-"):    unknown.append(argument)
         else:                             word_list.append(argument)
+    #  '--force' IMPLIES '--dont-ask' (E-70). The two words say
+    #  DIFFERENT things -- one what to do with a standing nominal, the
+    #  other whether anybody need be consulted -- but 'overwrite the
+    #  thing I judge against' is the strictly stronger assertion, and a
+    #  person who has made it has plainly already decided.
+    #
+    #  MEASURED, and this is why it is not merely tidy: with the two
+    #  fully separate, every script and every test in the tree that
+    #  says '--force' alone reached the prompt, and the prompt reads
+    #  'read_line()' on an inherited stdin that never closes. The suite
+    #  did not fail -- it HUNG. A flag split that turns old callers
+    #  into deadlocks is not a split anybody wants.
+    if force_f: dont_ask_f = True
     if unknown:
         write("REFUSED: 'hwut.accept' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
@@ -1127,7 +1152,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
                           force_f, force_run_f, stderr_tol_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list,
-                          interactive_f=interactive_f)
+                          interactive_f=interactive_f,
+                          dont_ask_f=dont_ask_f)
         if code is not E_ExitCode.EMPTY: empty_f = False
         if code not in (E_ExitCode.OK, E_ExitCode.EMPTY): worst = code
     if brief_list is not None:
@@ -1163,7 +1189,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 def accept_one(directory, result, bookkeeper, case_sequence,
                force_f, force_run_f, stderr_tol_f, propose_n,
                write, read_line, put=None, brief_list=None,
-               interactive_f=False):
+               interactive_f=False, dont_ask_f=False):
     """
     RETURN: E_ExitCode for ONE test directory -- OK where every key it
             holds was blessed or nothing was owed, EMPTY where it held
@@ -1353,11 +1379,11 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                       "'<hwut-end>' -- it never COMPLETED" % key.name)
                 skipped_list.append(key)
                 continue
-        if key.shared_f and not force_f:
+        if key.shared_f and not dont_ask_f:
             write("NOTE: '%s' shares its nominal with every choice of "
                   "the test" % key.name)
-        if not force_f and not ask(key, text, write, read_line,
-                                   setup=key_setup_of(key, config_db)):
+        if not dont_ask_f and not ask(key, text, write, read_line,
+                                      setup=key_setup_of(key, config_db)):
             skipped_list.append(key)
             continue
         store.accept(key.test, key.choice, key.subject, written)

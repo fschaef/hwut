@@ -176,26 +176,26 @@ notes)
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n    apps {\n        "test-app.sh" { title = "T"  choices = ["one", "two"] }\n    }\n}\n' \
         > tree/suite/TEST/hwut.conf
     echo "--- the application under the OLD name, a conf section naming it"
-    ( cd tree/suite/TEST && $RENAME test-app.sh -to test-fresh.sh --yes ) \
+    ( cd tree/suite/TEST && $RENAME test-app.sh -to test-fresh.sh --dont-ask ) \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "^NOTE" out.txt | sed 's/^/    /'
     echo "--- the author moved the file; a choice renamed: the block still declares 'one'"
     ( cd tree/suite/TEST && mv test-app.sh test-fresh.sh \
-      && $RENAME test-fresh.sh one -to first --yes ) > out.txt 2> err.txt
+      && $RENAME test-fresh.sh one -to first --dont-ask ) > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "^NOTE" out.txt | sed 's/^/    /'
     echo "--- --no-warning: the same disagreement, unsaid"
-    ( cd tree/suite/TEST && $RENAME test-fresh.sh -to test-final.sh --yes --no-warning ) \
+    ( cd tree/suite/TEST && $RENAME test-fresh.sh -to test-final.sh --dont-ask --no-warning ) \
         > out.txt 2> err.txt
     echo "STATUS: $?  NOTE lines: $(grep -c '^NOTE' out.txt)"
     echo "--- --silent: nothing but a refusal"
-    ( cd tree/suite/TEST && $RENAME test-final.sh -to test-quiet.sh --yes --silent ) \
+    ( cd tree/suite/TEST && $RENAME test-final.sh -to test-quiet.sh --dont-ask --silent ) \
         > out.txt 2> err.txt
     echo "STATUS: $?  lines: $(wc -l < out.txt)"
     echo "--- under BOTH names: refused before anything moves"
     ( cd tree/suite/TEST && cp test-fresh.sh test-quiet.sh \
-      && $RENAME test-fresh.sh -to test-quiet.sh --yes ) > out.txt 2> err.txt
+      && $RENAME test-fresh.sh -to test-quiet.sh --dont-ask ) > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "REFUSED" out.txt | sed 's/^/    /'
     ;;

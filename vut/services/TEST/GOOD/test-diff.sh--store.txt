@@ -19,19 +19,19 @@ REACTION  stdout {
           }
           exit code : 1
 
-STIMULUS  the checklist: 'printf 2\n\n' toggles case 2 off and goes
+STIMULUS  the checklist: 'printf 2\n' picks case 2 and goes
           exit code : 1
           stderr (the checklist) {
-              differing cases -- toggle with a number, Enter to go, q to quit
-                [X]  1  test-app.sh one
-                [X]  2  test-app.sh two
+              differing cases -- a number to work it, <enter> for the marked one, q to quit
+                [ ]  1 <enter> test-app.sh one
+                [ ]  2         test-app.sh two
               > 
-              differing cases -- toggle with a number, Enter to go, q to quit
-                [X]  1  test-app.sh one
-                [ ]  2  test-app.sh two
+              differing cases -- a number to work it, <enter> for the marked one, q to quit
+                [ ]  1 <enter> test-app.sh one
+                [X]  2         test-app.sh two
               > 
           }
-          shown: =[ test-app.sh one ]================================ round 1
+          shown: =[ test-app.sh two ]================================ round 1
 
 STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.sh one
           exit code : 1

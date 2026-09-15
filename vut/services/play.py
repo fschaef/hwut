@@ -105,6 +105,10 @@ from   ._core                                      import usage_line
 from   ._exit                                      import E_ExitCode
 from   ._target                                    import entered
 from   .diff                                       import reading_view
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.engine.orchestrator.exploration import printer
+from   vut.services.report import (painted, color_wanted_f,
+                                   ANSI_TITLE)
 
 USAGE = usage_line("usage: hwut.play",
                    ("<test-app>", "[<choice>]", "[--raw]", "[--pyped]",
@@ -116,13 +120,22 @@ USAGE = usage_line("usage: hwut.play",
 BANNER_WIDTH = 62
 
 
-def banner(name):
+def banner(name, color_f=False):
     """
     RETURN: str, the region's own line: '===== <name> =====...', padded
-            to one width so the regions of one rendering line up.
+            to one width so the regions of one rendering line up --
+            and, where 'color_f', the whole line on ORANGE, the band
+            the HWUT page has always used for a heading (E-69, whose
+            colours these are).
+
+    THE WHOLE WIDTH IS PAINTED, rules included: a band that stopped at
+    the word would be a coloured word, not a band, and the point of the
+    band is that an eye scrolling back finds the section without
+    reading anything.
     """
     head = "===== %s " % name
-    return head + "=" * max(BANNER_WIDTH - len(head), 5)
+    line = head + "=" * max(BANNER_WIDTH - len(head), 5)
+    return painted(line, ANSI_TITLE, color_f)
 
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n" + USAGE
@@ -161,7 +174,8 @@ def main(argv=None, write=None):
         elif argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument.startswith("-"):
-            write("REFUSED: 'hwut.play' does not take: %s" % argument)
+            write("REFUSED: 'hwut.play' does not take: %s%s"
+                  % (argument, did_you_mean(argument, option_tuple(USAGE))))
             write(USAGE)
             return E_ExitCode.REFUSED
         else:
@@ -209,7 +223,9 @@ def main(argv=None, write=None):
         return asyncio.run(_play(configuration, choice_name,
                                  found.bookkeeper_db["."],
                                  plain_f, stderr_f, raw_f, pyped_f,
-                                 save_f, write))
+                                 save_f, write,
+                                 case=case,
+                                 app=result.app_set.app_db[case.source_file]))
     except DirectoryBusy as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -235,6 +251,12 @@ def _settled_case(app_set, source_file, choice_name, directory,
     REFUSE RATHER THAN GUESS where several stand: playing 'the first'
     RUNS THE AUTHOR'S PROGRAM under a choice nobody asked for, and
     renders an answer to a question nobody put.
+
+    A REFUSAL ABOUT ONE APPLICATION IS ANSWERED IN ITS CHOICES. Naming
+    an application that offers several, and naming a choice it does not
+    offer, are both questions ABOUT THAT APPLICATION; both are answered
+    with the choices it reports. The directory's roster of files is the
+    answer only where the application itself is not there.
     """
     word_list = [source_file] if choice_name is None \
                 else [source_file, choice_name]
@@ -248,15 +270,53 @@ def _settled_case(app_set, source_file, choice_name, directory,
         return _REFUSED
     if len(case_tuple) == 1: return case_tuple[0]
 
+    #  THE APPLICATION IS ANSWERED IN ITS OWN CHOICES. Where the words
+    #  name ONE application that exists, the question is about THAT
+    #  application, and the answer that helps is the list of choices it
+    #  reports -- not a list of runs with the file name repeated on
+    #  every one, and not the directory's whole roster of files.
+    app = app_set.app_db.get(source_file)
+    if app is not None:
+        choice_list = _choice_list(app)
+        if choice_name is None and case_tuple:
+            write("REFUSED: no choice specified; '%s' reports %d "
+                  "choice(s): %s"
+                  % (source_file, len(choice_list),
+                     ", ".join(choice_list)))
+            return _REFUSED
+        if choice_name is not None and not case_tuple:
+            write("REFUSED: choice '%s' not supported; '%s' reports %d "
+                  "choice(s): %s%s"
+                  % (choice_name, source_file, len(choice_list),
+                     ", ".join(choice_list) or "none",
+                     did_you_mean(choice_name, choice_list,
+                                  among_listed_f=True)))
+            return _REFUSED
+
     if not case_tuple:
         offered = ", ".join(sorted(app_set.app_db)) or "nothing"
         write("REFUSED: nothing here answers '%s'; this directory "
-              "offers: %s" % (" ".join(word_list), offered))
+              "offers: %s%s"
+              % (" ".join(word_list), offered,
+                 did_you_mean(source_file, sorted(app_set.app_db),
+                              among_listed_f=True)))
         return _REFUSED
     write("REFUSED: '%s' names %d runs, and this face plays ONE: %s"
           % (" ".join(word_list), len(case_tuple),
              ", ".join(_case_name(case) for case in case_tuple)))
     return _REFUSED
+
+
+def _choice_list(app):
+    """
+    RETURN: list[str], the choices an application reports, in the order
+            its header states them -- 'choice_db' keeps that order, and
+            the order an author wrote is the order he will look for.
+
+            [], where the application has no choices at all: its one
+            run is nameless, and 'None' is not a word anybody types.
+    """
+    return [name for name in app.choice_db if name is not None]
 
 
 def _case_name(case):
@@ -269,7 +329,8 @@ def _case_name(case):
 
 
 async def _play(configuration, choice_name, bookkeeper, plain_f,
-                stderr_f, raw_f, pyped_f, save_f, write):
+                stderr_f, raw_f, pyped_f, save_f, write,
+                case=None, app=None):
     """
     RETURN: E_ExitCode, the exit status.
 
@@ -328,27 +389,45 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         write("EMPTY: the choice produced no output to read")
         return E_ExitCode.EMPTY
 
+    banner_color_f = color_wanted_f(plain_f, None, sys.stdout)
     if raw_f:
-        write(banner("RAW -- what the application produced"))
+        write(banner("RAW", banner_color_f))
         _write_indented(raw_db.get(STDOUT, "") or "(nothing)", write)
         write("")
 
     if pyped_f:
         pyped = raw_db.get(STDOUT)
         if pyped is None or pyped == text:
-            write(banner("PYPED -- no pype stands for this stream"))
-            write("    the subject IS the raw stream")
+            write(banner("PYPED", banner_color_f))
+            write("    no pype stands for this stream -- the subject "
+                  "IS the raw stream")
         else:
-            write(banner("PYPED -- what the pype produced"))
+            write(banner("PYPED", banner_color_f))
             _write_indented(text, write)
         write("")
 
-    #  THE SUBJECT, under the READING. The test's own setup governs:
+    #  THE CONFIGURATION, IN THE SPECIFICATION LANGUAGE. Not a
+    #  paraphrase and not a table: the very shape an author writes in
+    #  'hwut.conf' or an '@hwut' block, printed by the one printer that
+    #  knows it ('exploration/printer.case_text'), so what he is shown
+    #  he can paste back. RESOLVED -- the application's defaults and
+    #  the directory's folded in -- because the question a player asks
+    #  is 'under what rules did THIS run', not 'what did I type'.
+    if case is not None:
+        write(banner("CONFIGURATION", banner_color_f))
+        _write_indented(
+            printer.case_text(case,
+                              origin_db=getattr(app, "origin_db", None),
+                              provenance_f=True),
+            write)
+        write("")
+
+    #  THE OUTPUT, under the READING. The test's own setup governs:
     #  the choice's declared tolerances, resolved exactly as a run
     #  resolves them ('adapter._compare_of'). Where the author
     #  declared none, the plain default stands, and the reading shows
     #  that in its 'setup' line.
-    write(banner("SUBJECT -- what enters the comparator"))
+    write(banner("OUTPUT", banner_color_f))
     options = _compare_options(configuration, choice_name)
     adapter = TuiDisplay(out=sys.stdout,
                          color_f=False if plain_f else None,
@@ -362,7 +441,7 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         error_text = subject_db.get(STDERR, "") \
                      or raw_db.get(STDERR, "")
         write("")
-        write(banner("STDERR -- shown, never tested (E-5)"))
+        write(banner("STDERR", banner_color_f))
         #  E-5: stderr is never subject to testing, and play does not
         #  test it. SEEING IS NOT JUDGING -- a face whose purpose is
         #  to show an author what their program produced may show it,

@@ -2,7 +2,7 @@
   --pass                 status 0
   --since=1h             status 1
   --until=1h             status 0
-  --faster-than=100000   status 0
+  --faster-than=100000   status 1
   OK  : every base question answers, none raises
 SUCCESS: the base questions are asked, and answered.
 <hwut-end>

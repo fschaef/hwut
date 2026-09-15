@@ -1,2 +1,3 @@
 test-file.sh   output = ('<stdout>', 'result.csv')
 STATUS: 0
+<hwut-end>

@@ -6,3 +6,4 @@ STDOUT {
           suite/TEST/TMP/session                               a session that did not finish; 2 sink file(s), read by nobody
     
 }
+<hwut-end>

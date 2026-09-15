@@ -7,7 +7,7 @@ STATUS: 0
 --- three words: refused, and the way out named
 STATUS: 2
     REFUSED: 'hwut.remove' takes '<test>' or '<test> <choice>' -- 3 words stand. For several tests: 'hwut.remove.propose', then 'hwut.remove.apply'
-    usage: hwut.remove <test> [<choice>] [--yes] [--directory=<path>]
+    usage: hwut.remove <test> [<choice>] [--dont-ask] [--directory=<path>]
 --- the nominals that stand
     test-app.sh--two.txt
 <hwut-end>

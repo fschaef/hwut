@@ -8,3 +8,4 @@ nominals:
     test-file.sh.result.csv
     test-file.sh.txt
 STATUS: 0
+<hwut-end>

@@ -30,6 +30,10 @@ DESCRIPTION
        L-11 no act reaches the closing-token line
        L-12 the local re-index shifts what is below by N-M and pairs the
             taken stretch 1:1 -- it invents no tolerance and no analogy
+       L-13 A COPIED SUBJECT SECTION IS SPENT. No cursor stands on one,
+            no range intersects one, no take covers one again. It is
+            unreachable the way the closing token is (L-11) -- a place,
+            not a refusal shouted at a keystroke.
 ______________________________________________________________________________
 """
 from vut.services.lib.viewers.keyed.act    import E_Act, E_Pane
@@ -68,10 +72,14 @@ def _moved(state, delta_n):
     Moving the SUBJECT cursor while the target is virgin is what makes
     the target follow (L-5): the target is derived, so it needs no
     updating -- it is computed from the cursor that just moved.
+
+    A COPIED LINE IS STEPPED OVER (L-13), in the direction of travel;
+    where every line that way is spent, nothing moves.
     """
     if state.pane is E_Pane.SUBJECT:
         wanted = _clamped(state.cursor_s + delta_n, state.last_reachable_s())
-        if wanted == state.cursor_s: return state
+        wanted = state.reachable_s(wanted, +1 if delta_n >= 0 else -1)
+        if wanted is None or wanted == state.cursor_s: return state
         return state.with_(cursor_s=wanted)
 
     wanted = _clamped(state.cursor_n + delta_n, state.last_reachable_n())
@@ -141,7 +149,9 @@ def _search(state, term, downward_f):
     for i in step_list:
         if term not in line_list[i]:
             continue
-        if state.pane is E_Pane.SUBJECT: return state.with_(cursor_s=i)
+        if state.pane is E_Pane.SUBJECT:
+            if state.copied_f(i): continue      # spent -- L-13
+            return state.with_(cursor_s=i)
         return _latched_if_moved(state.with_(cursor_n=i), state)
     return state
 
@@ -197,7 +207,9 @@ def _take_region(state, _):
 def _take_all(state, _):
     """RETURN: MergeState, the state after the complete subject was taken
                over the complete nominal -- leaving no region standing,
-               and the closing token where it was.
+               the closing token where it was, and EVERY subject line
+               spent (L-13): after TAKE_ALL nothing is selectable, which
+               is the law and not a jam.
     """
     token_i_s = state.token_i_s()
     last_s    = state.last_reachable_s()
@@ -205,6 +217,7 @@ def _take_all(state, _):
 
     token = (state.subject_line_list[token_i_s],) if token_i_s is not None else ()
     fresh = state.pushed().with_(nominal_line_list=tuple(taken) + token,
+                                 copied_s=frozenset(range(last_s+1)),
                                  anchor_s=None, anchor_n=None,
                                  virgin_f=True,
                                  take_n_since_realign=state.take_n_since_realign+1)
@@ -215,7 +228,9 @@ def _applied(state, first_n, last_n, taken, first_s, last_s):
     """RETURN: MergeState, the state with 'taken' put in place of the
                nominal lines 'first_n'..'last_n' -- the region split, the
                stale count raised, the latch reset, the pairing
-               re-indexed by the local rule (L-12).
+               re-indexed by the local rule (L-12), the taken subject
+               lines recorded as SPENT and the cursor carried off them
+               (L-13).
     """
     nominal_line_list = region_take(state.nominal_line_list,
                                     first_n, last_n, taken)
@@ -230,11 +245,31 @@ def _applied(state, first_n, last_n, taken, first_s, last_s):
                                first_n, last_n, delta_n,
                                nominal_line_list, taken)
 
-    return state.pushed().with_(nominal_line_list=nominal_line_list,
-                                pairing=pairing,
-                                anchor_s=None, anchor_n=None,
-                                virgin_f=True,
-                                take_n_since_realign=state.take_n_since_realign+1)
+    spent = state.copied_s | frozenset(range(first_s, last_s+1))
+    fresh = state.pushed().with_(nominal_line_list=nominal_line_list,
+                                 pairing=pairing,
+                                 copied_s=spent,
+                                 anchor_s=None, anchor_n=None,
+                                 virgin_f=True,
+                                 take_n_since_realign=state.take_n_since_realign+1)
+    return _cursor_off_spent(fresh)
+
+
+def _cursor_off_spent(state):
+    """
+    RETURN: MergeState, 'state' with the subject cursor moved to the
+            first line below it that is not spent -- or, where every
+            line below is spent, to the first above.
+
+            'state' unchanged, where the cursor already stands on a line
+            a cursor may stand on, and where NO line is left at all: a
+            fully spent subject leaves the cursor where it was, and no
+            act it can reach does anything.
+    """
+    wanted = state.reachable_s(state.cursor_s, +1)
+    if wanted is None: wanted = state.reachable_s(state.cursor_s, -1)
+    if wanted is None or wanted == state.cursor_s: return state
+    return state.with_(cursor_s=wanted)
 
 
 def _pairing_shifted(pairing, first_s, last_s, first_n, last_n, delta_n,
@@ -280,9 +315,10 @@ def _subject_range_whole(state, first_s, last_s):
                the nominal receives the region framed as the test
                printed it.
 
-               None, where the range would CUT a subject region -- cover
-               part of a table's rows, or straddle its closing rule --
-               or touch two regions at once. Such a take is refused:
+               None, where the range INTERSECTS a section already copied
+               (L-13), or would CUT a subject region -- cover part of a
+               table's rows, or straddle its closing rule -- or touch
+               two regions at once. Such a take is refused:
                raw rows copied without their framing are a nominal
                nobody wrote and compare cannot read.
 
@@ -290,6 +326,8 @@ def _subject_range_whole(state, first_s, last_s):
     by the same scanner; no chunk list has to be threaded in from the
     face, because the text is already here.
     """
+    if any(state.copied_f(i) for i in range(first_s, last_s+1)): return None
+
     touched_list = [r for r in region_list_of(state.subject_line_list)
                     if r.touches_f(first_s, last_s)]
     if len(touched_list) > 1: return None

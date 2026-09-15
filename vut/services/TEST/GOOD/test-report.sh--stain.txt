@@ -8,7 +8,7 @@ STDOUT {
     
      * The flip:
     
-            test-app.sh ............................................[FAIL]
+            test-app.sh ..........................................[FAIL]
     
     ======================================================================
     
@@ -17,12 +17,6 @@ STDOUT {
         Fails: N: Verdict:          Directory:
     
              1 1    [FAIL]   suite/TEST
-    
-    ----------------------------------------------------------------------
-    
-    FAILURES:
-    
-        suite/TEST: test-app.sh -- unstable
     
     ----------------------------------------------------------------------
                                                                   (1 test)
@@ -52,3 +46,4 @@ STDOUT {
       message: the choice bears a STAIN: it switched results over 4 repeat(s) and is not run until proven steady
       ...
 }
+<hwut-end>

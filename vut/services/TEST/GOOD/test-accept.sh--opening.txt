@@ -1,21 +1,24 @@
 --- the checklist offers every case, nominal or not
 STATUS: 0
-      [X]  1  test-ok.sh
-      [X]  2  test-two.sh a
-      [X]  3  test-two.sh b
+      [ ]  1 <enter> test-ok.sh
+      [ ]  2         test-two.sh a
+      [ ]  3         test-two.sh b
     =[ test-ok.sh ]===================================== round 1
     --[ LINE_SEQUENCE/UNACCEPTED ]--
+      [X]  1         test-ok.sh
+      [ ]  2 <enter> test-two.sh a
+      [ ]  3         test-two.sh b
     =[ test-two.sh a ]================================== round 1
     --[ LINE_SEQUENCE/UNACCEPTED ]--
-    =[ test-two.sh b ]================================== round 1
-    --[ LINE_SEQUENCE/UNACCEPTED ]--
-    ACCEPTED  1 of 3
-        accepted       test-ok.sh
+      [X]  1         test-ok.sh
+      [X]  2         test-two.sh a
+      [ ]  3 <enter> test-two.sh b
+    ACCEPTED  1 of 2
+        blessed        test-ok.sh
         left alone     test-two.sh a
-        left alone     test-two.sh b
 --- 't' on test-ok.sh: the nominal is the candidate whole
     | steady line
     | <hwut-end>
---- 'q' on test-two.sh: no nominal was written
+--- 'q' on test-two.sh a: no nominal was written
     test-ok.sh.txt
 <hwut-end>

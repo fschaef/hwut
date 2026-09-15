@@ -10,7 +10,7 @@ L-2/L-3/L-4: what a take does to the framing around it
       5  --?--
       6  ####
       7  <hwut-end>
-     subject_range=(1, 1) target=(3, 3) derived=(3, 3) virgin=True stale=1
+     subject_range=(2, 2) target=(5, 5) derived=(5, 5) virgin=True stale=1
 
 -- L-3 a take of the WHOLE region leaves no framing
   took everything
@@ -28,7 +28,7 @@ L-2/L-3/L-4: what a take does to the framing around it
       3  --?--
       4  ####
       5  <hwut-end>
-     subject_range=(0, 0) target=(0, 0) derived=(0, 0) virgin=True stale=1
+     subject_range=(1, 1) target=(2, 2) derived=(2, 2) virgin=True stale=1
 
 -- P-24 a take at the region's last line yields ONE region
   took 'gamma'
@@ -38,7 +38,7 @@ L-2/L-3/L-4: what a take does to the framing around it
       3  ####
       4  gamma
       5  <hwut-end>
-     subject_range=(2, 2) target=(4, 4) derived=(4, 4) virgin=True stale=1
+     subject_range=(1, 1) target=(2, 2) derived=(2, 2) virgin=True stale=1
 
 -- L-4 a take OUTSIDE every region replaces, and creates none
       alpha

@@ -23,7 +23,7 @@
 #             author's and are never touched.
 # unknown     a test the book never knew: nothing to forget is not an
 #             error, and the face says so.
-# asking      without '--yes' the whole list is shown and confirmed;
+# asking      without '--dont-ask' the whole list is shown and confirmed;
 #             answering anything but yes removes nothing.
 # stain       THE URGENT WAY OUT: a stained test removed, and running
 #             again afterwards -- the stain went with the book entry.
@@ -124,11 +124,11 @@ labels)
     echo "THE FILE, BEFORE {"; grep -v "^#" hwut-root.labels \
         | sed 's/^/    /'; echo "}"
     echo "--- one choice forgotten: its entry alone drops"
-    face $REMOVE --directory=tree/suite/TEST test-app.sh one --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh one --dont-ask
     echo "THE FILE {"; grep -v "^#" hwut-root.labels \
         | sed 's/^/    /'; echo "}"
     echo "--- the whole test forgotten: the label empties, the file goes"
-    face $REMOVE --directory=tree/suite/TEST test-app.sh --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask
     if [ -f hwut-root.labels ]; then echo "THE FILE: still stands"
     else echo "THE FILE: absent -- no label exists"; fi
     ;;
@@ -137,7 +137,7 @@ whole)
     #  Everything the framework recorded, gone.
     plain_app
     standing "BEFORE"
-    face $REMOVE --directory=tree/suite/TEST test-app.sh --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask
     standing "AFTER"
     ;;
 
@@ -145,14 +145,14 @@ choice)
     #  One choice gone; the other stands, nominal and all.
     choice_app
     standing "BEFORE"
-    face $REMOVE --directory=tree/suite/TEST test-app.sh one --yes
+    face $REMOVE --directory=tree/suite/TEST test-app.sh one --dont-ask
     standing "AFTER"
     ;;
 
 untouched)
     #  The author's own files are the author's.
     plain_app
-    $REMOVE --directory=tree/suite/TEST test-app.sh --yes > /dev/null
+    $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask > /dev/null
     echo "the application stands:  $([ -f tree/suite/TEST/test-app.sh ] \
         && echo True || echo False)"
     echo "the hwut.conf stands:    $([ -f tree/suite/TEST/hwut.conf ] \
@@ -164,11 +164,11 @@ untouched)
 unknown)
     #  Nothing to forget is not an error.
     plain_app
-    face $REMOVE --directory=tree/suite/TEST test-nobody.sh --yes
+    face $REMOVE --directory=tree/suite/TEST test-nobody.sh --dont-ask
     ;;
 
 asking)
-    #  Without '--yes' it asks, and 'n' removes nothing.
+    #  Without '--dont-ask' it asks, and 'n' removes nothing.
     plain_app
     echo "n" | $REMOVE --directory=tree/suite/TEST test-app.sh > out.txt 2>&1
     echo "STATUS: $?"
@@ -191,7 +191,7 @@ stain)
     echo "STATUS: $?"
     grep -E "UNSTABLE" run.txt | mask | sed 's/^/    /'
     echo "removed:"
-    $REMOVE --directory=tree/suite/TEST test-app.sh --yes > /dev/null 2>&1
+    $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask > /dev/null 2>&1
     echo "    the stain went with the book: $(python3 -c "
 from vut.engine.bookkeeper.api import Bookkeeper
 print(Bookkeeper('tree/suite/TEST').tests() == [])")"
@@ -225,7 +225,7 @@ words)
     fixture '# @hwut { title = "Two"  choices = ["one", "two"] }' \
             'echo "line $1"' 'echo "<hwut-end>"'
     echo "--- two words: the test and ITS CHOICE"
-    $REMOVE --directory=tree/suite/TEST test-app.sh one --yes \
+    $REMOVE --directory=tree/suite/TEST test-app.sh one --dont-ask \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "^  *(book entry|register):" out.txt | sed 's/^/    /'
@@ -233,7 +233,7 @@ words)
     ls tree/suite/TEST/GOOD | grep -v -e book.csv \
         | sed 's/^/    /'
     echo "--- three words: refused, and the way out named"
-    $REMOVE --directory=tree/suite/TEST test-app.sh two extra --yes \
+    $REMOVE --directory=tree/suite/TEST test-app.sh two extra --dont-ask \
         > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E "REFUSED|usage:" out.txt | sed 's/^/    /'

@@ -27,3 +27,4 @@ STDOUT {
           suite/TEST/TMP/lock                                  the holder (pid ?) is gone
     
 }
+<hwut-end>

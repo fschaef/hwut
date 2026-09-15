@@ -36,6 +36,14 @@ class MergeState:
     stands against, or to None where the nominal has no partner for it.
     It comes from compare on entry and from the local re-index after
     every take.
+
+    'copied_s' holds every subject line already COPIED into the nominal.
+    A copied line is SPENT: no cursor reaches it and no range may
+    intersect one. It is NOT derivable from 'pairing' -- a REALIGN
+    re-pairs from scratch and an identical line pairs the same whether
+    it was copied or always matched -- so it is recorded, and it
+    survives a REALIGN because the subject text never changes within a
+    session.
     """
     subject_line_list: tuple = ()
     nominal_line_list: tuple = ()
@@ -47,6 +55,9 @@ class MergeState:
     anchor_s:  object = None      # None -- no range marked in the subject
     anchor_n:  object = None      # None -- no range marked in the nominal
     virgin_f:  bool   = True      # the target still tracks the subject
+
+    copied_s:  frozenset = frozenset()   # subject lines already COPIED
+    aspirant_f: bool  = False     # no nominal stood when the session opened
 
     take_n_since_realign: int   = 0
     undo_stack:           tuple = ()
@@ -165,6 +176,32 @@ class MergeState:
         token_i = self.token_i_s()
         if token_i is None: return max(len(self.subject_line_list)-1, 0)
         return max(token_i - 1, 0)
+
+    def copied_f(self, i_s):
+        """
+        RETURN: bool, True where subject line 'i_s' has already been
+                copied into the nominal and is therefore spent -- no
+                cursor may stand on it and no range may cover it.
+
+                False for a line still to be decided.
+        """
+        return i_s in self.copied_s
+
+    def reachable_s(self, i_s, direction_n=+1):
+        """
+        RETURN: int, the first subject line from 'i_s' onward in
+                'direction_n' that a cursor may stand on -- not copied,
+                not the closing token.
+
+                None, where the search walks off the end without
+                finding one: every line that way is spent.
+        """
+        last_i = self.last_reachable_s()
+        i      = i_s
+        while 0 <= i <= last_i:
+            if not self.copied_f(i): return i
+            i += direction_n
+        return None
 
     def last_reachable_n(self):
         """RETURN: int, the highest nominal line a cursor may stand on."""

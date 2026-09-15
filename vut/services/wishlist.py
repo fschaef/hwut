@@ -55,6 +55,7 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 USAGE = usage_line("usage: hwut.wishlist",
                    ("[<wish>]", "[<file-glob> [choice-glob]...]",
@@ -134,7 +135,8 @@ def main(argv=None, write=None):
             else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.wishlist' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).

@@ -136,6 +136,17 @@ class DisplayAdapter:
     Every method is optional in a driver; the session calls what exists.
     """
 
+    def note_standing(self, aspirant_f):
+        """RETURN: None. The choice's STANDING (B-14), as the face
+                   measured it: True where NO nominal stood when the
+                   session opened, so a commit is a FIRST BLESSING and
+                   not a change.
+
+        Synchronous and optional, like every method here: a driver that
+        shows no standing needs none, and a face may call it on any
+        tier without asking which one it got.
+        """
+
     async def open(self, subject_name):
         """RETURN: None. The session for one subject begins."""
 

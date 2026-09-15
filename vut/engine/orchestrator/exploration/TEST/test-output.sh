@@ -46,7 +46,12 @@ cd "$WORK"
 #  fixture states its own. Empty says only 'the tree ends here'.
 printf 'hwut {\n}\n' > hwut-root.conf
 
-mask() { sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
+#  THE MACHINE'S OWN FACTS ARE MASKED: the wall clock, and the
+#  elapsed seconds a run reports. A recorded duration is a fact about
+#  the machine that recorded it, and a nominal holding one fails on
+#  every other machine.
+mask() { sed -E -e 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g' \
+                -e 's/[0-9]+\.[0-9]+ \[sec\]/s.ss [sec]/g'; }
 
 fixture() {             # the app writes stdout AND result.csv
     rm -rf tree
@@ -127,3 +132,5 @@ forgotten)
     echo "unknown choice '$1'"
     exit 1 ;;
 esac
+
+echo "<hwut-end>"

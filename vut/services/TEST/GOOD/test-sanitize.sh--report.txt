@@ -26,3 +26,4 @@ STANDING {
     suite/TEST/hwut.conf
     suite/TEST/test-app.sh
 }
+<hwut-end>

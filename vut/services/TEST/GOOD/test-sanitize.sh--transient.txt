@@ -27,8 +27,8 @@ STDOUT {
           suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
     
       books -- 2 found:
-          other/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+          other/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
     
       6 item(s), <size> kB
 }
@@ -48,6 +48,8 @@ STDOUT {
     REMOVING:
         gone: suite/TEST/OUT
         gone: suite/TEST/TMP
+    
+    TOUCHED (the re-run trigger): 2 test application(s)
 }
 STDERR {
     REFUSED: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
@@ -71,3 +73,4 @@ STANDING {
     suite/TEST/hwut.conf
     suite/TEST/test-app.sh
 }
+<hwut-end>

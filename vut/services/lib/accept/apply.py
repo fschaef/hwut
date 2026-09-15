@@ -45,7 +45,10 @@ back having deleted what you refused. THE READING IS THE CONSENT --
 and the editing is the answer to every per-key question, given in
 advance and in writing.
 
-So '--force' and '--yes' are both implicit, and neither is offered.
+So '--force' and '--dont-ask' are both implicit, and neither is
+offered. They are SEPARATE words now (E-70) and both are passed: one
+says what to do with a standing nominal, the other says that the
+reading has already been read.
 A face that asked again would be asking a reader to confirm what he
 had already written down.
 
@@ -119,7 +122,7 @@ def main(argv=None, write=None, read_line=None):
 
     THE FACE IS A SPELLING, NOT A SECOND ENGINE: the file name is read
     off the command line and handed to 'accept.main' as its
-    'script_name', with '--force' and '--yes' added -- the reader
+    'script_name', with '--force' and '--dont-ask' added -- the reader
     answered both questions when he edited the file. Every other word
     travels untouched, so '--directory' and the wish mean here exactly
     what they mean there.
@@ -144,8 +147,9 @@ def main(argv=None, write=None, read_line=None):
 
     #  NOTHING IS ASKED: the reader saw every change the file proposes
     #  and deleted what he refused, so the standing nominal may be
-    #  overwritten ('--force') and no key needs confirming ('--yes').
-    return accept.main(rest_list + ["--force"], write=write,
+    #  overwritten ('--force') and no key needs confirming
+    #  ('--dont-ask').
+    return accept.main(rest_list + ["--force", "--dont-ask"], write=write,
                        read_line=read_line, script_name=file_name,
                        brief_f=True)
 

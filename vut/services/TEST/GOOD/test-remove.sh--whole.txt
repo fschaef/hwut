@@ -1,28 +1,29 @@
 BEFORE {
-    GOOD/result_db.csv
+    GOOD/book.csv
     GOOD/test-app.sh.txt
-    GOOD/test_ids.dat
     TMP/store/observations.bin
+    TMP/store/test-app.sh.stdout.times
     TMP/store/test-app.sh.stdout.when
     book: ['test-app.sh']
 }
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh -- 3 file(s), the book entry, the register id
+      test-app.sh -- 4 file(s), the book entry, the register id
           GOOD/test-app.sh.txt
           OUT/test-app.sh.txt
+          TMP/store/test-app.sh.stdout.times
           TMP/store/test-app.sh.stdout.when
     test-app.sh:
         forgotten: GOOD/test-app.sh.txt
         forgotten: OUT/test-app.sh.txt
+        forgotten: TMP/store/test-app.sh.stdout.times
         forgotten: TMP/store/test-app.sh.stdout.when
         book entry: removed
         register: id retired
 }
 AFTER {
-    GOOD/result_db.csv
-    GOOD/test_ids.dat
+    GOOD/book.csv
     TMP/store/observations.bin
     book: []
 }

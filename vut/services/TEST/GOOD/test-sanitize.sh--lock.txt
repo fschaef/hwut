@@ -14,5 +14,8 @@ STDOUT {
     SANITIZE, in 'tree': lock
     
       nothing to sanitize
+    
+    TOUCHED (the re-run trigger): 1 test application(s)
 }
 the lock still stands: yes
+<hwut-end>

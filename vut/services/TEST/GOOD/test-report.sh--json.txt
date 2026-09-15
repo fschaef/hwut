@@ -31,3 +31,4 @@ STDOUT {
       "test_n": 2
     }
 }
+<hwut-end>

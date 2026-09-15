@@ -1,7 +1,33 @@
 --- one choice: played unasked
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-one.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-one.sh ]==================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -15,12 +41,38 @@ STDOUT {
 --- several, none named: refused, and they are listed
 STATUS: 2
 STDOUT {
-    REFUSED: 'test-many.sh' names 2 runs, and this face plays ONE: test-many.sh a, test-many.sh b
+    REFUSED: no choice specified; 'test-many.sh' reports 2 choice(s): a, b
 }
 --- the selection is the WISH'S, so a glob works too
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-one.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-one.sh ]==================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -34,7 +86,33 @@ STDOUT {
 --- named: played
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-many.sh b {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-many.sh b ]================================= round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'

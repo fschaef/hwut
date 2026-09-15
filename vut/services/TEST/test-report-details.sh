@@ -26,11 +26,11 @@
 #
 # THE FIXTURE, built here: a packed corpus in miniature --
 #
-#     <work>/demo.py                              the source
-#     <work>/GOOD/demo.py--basic.txt              alpha, beta
-#     <work>/OUT/demo.py--basic.txt               alpha, BETA  (differs!)
-#     <work>/TMP/store/...stdout.raw            raw sidecar
-#     <work>/TMP/store/...stdout.times          cadence sidecar
+#     <work>/demo.py                     the source
+#     <work>/GOOD/demo.py--basic.txt     alpha, beta
+#     <work>/OUT/demo.py--basic.txt      alpha, BETA  (differs!)
+#     <work>/TMP/store/...stdout.raw     raw sidecar
+#     <work>/TMP/store/...stdout.times   cadence sidecar
 #
 # THE KEY IS THE BOOKKEEPER'S: 'demo--basic', the source file's STEM --
 # what RECORDING uses. The old fixture spelled 'demo.py--basic', which

@@ -201,7 +201,7 @@ The faces:
                  line of the file is answered, a target that matched
                  nothing included. The refresh is silent here.
 
-                 IT ASKS NOTHING. '--force' and '--yes' are both
+                 IT ASKS NOTHING. '--force' and '--dont-ask' are both
                  implicit: the file cannot exist unless somebody read
                  the change -- propose writes no target it has not
                  shown, line by line -- and the reader deleted what he
@@ -216,7 +216,7 @@ The faces:
                  candidates and every sidecar, the book entry with its
                  stain, the register id retired. NOT touched: the
                  application, its 'hwut.conf', 'OUT/'. Asks first
-                 unless '--yes'. A test not in the book is not an
+                 unless '--dont-ask'. A test not in the book is not an
                  error. SEVERAL AT ONCE is 'hwut.remove.propose' and
                  'hwut.remove.apply'.
 
@@ -245,7 +245,7 @@ The faces:
     hwut.remove.apply
                  (lib/remove/apply.py)
                  forgets what such a file names, per directory, through
-                 'hwut.remove', one target at a time. '--yes' is
+                 'hwut.remove', one target at a time. '--dont-ask' is
                  implicit -- the reading was the consent. Reports as
                  'hwut.accept.apply' does, closing on 'Forgotten n/m'.
 
@@ -286,7 +286,7 @@ The faces:
                  name (edit it), a file under neither name; a file
                  under BOTH names is refused. '--no-warning' drops
                  the notes, '--silent' everything but a refusal or a
-                 fault. Asks first unless '--yes'. Exit status per
+                 fault. Asks first unless '--dont-ask'. Exit status per
                  E-1.
 
     hwut.move    (move.py)
@@ -320,8 +320,11 @@ The faces:
                  equivalent to its nominal -- compare's engine, the
                  choice's own setup, judged NOW -- is shown, one
                  banner each; more than one: a CHECKLIST first
-                 ('_cases.py': a number toggles, Enter goes, 'a' all,
-                 'n' none, 'q' quits); '--all' / '--yes' skip it.
+                 ('lib/checklist.py': a number works that case,
+                 '<enter>' the first unhandled -- printed beside its
+                 number -- 'n' the next page, 'q' quits; '[X]' says
+                 HANDLED, and the menu is re-entered until nothing is
+                 left); '--all' skips it.
                  '-y' two columns, subject LEFT, nominal RIGHT
                  ('viewers/tui.py'); '--width N'. Rendering on stdout;
                  exit 0 equivalent, 1 shown differing, 2 unusable, 3
@@ -417,8 +420,10 @@ The faces:
                  otherwise), the cases grouped by directory;
                  'differing_keys' measures each case's stdout
                  candidate against its nominal with compare's
-                 'is_equivalent' under the choice's setup; 'choose' is
-                 the checklist.
+                 'is_equivalent' under the choice's setup. THE
+                 CHECKLIST IS NOT HERE: 'lib/checklist.py' owns the
+                 menu and the marks, shared by every face that offers
+                 a list.
 
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language

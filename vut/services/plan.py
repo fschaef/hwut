@@ -45,6 +45,7 @@ from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE 
 from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 
 USAGE = usage_line("usage: hwut.plan",
@@ -129,7 +130,8 @@ def main(argv=None, write=None):
             else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.plan' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
 

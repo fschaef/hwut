@@ -4,11 +4,11 @@ ______________________________________________________________________________
 PURPOSE: THE 'hwut.move' COMMAND LINE -- the shorthand of
          'hwut.rename' for the uninitiated (E-46).
 
-    hwut.move <app> <app'> [--yes] [--directory=<path>]
+    hwut.move <app> <app'> [--dont-ask] [--directory=<path>]
 
 is, word for word,
 
-    hwut.rename <app> -to <app'> [--yes] [--directory=<path>]
+    hwut.rename <app> -to <app'> [--dont-ask] [--directory=<path>]
 
 and nothing more: two words, the second the fresh name -- a name, a
 '<path>/<name>', or an existing directory to move INTO. Everything --

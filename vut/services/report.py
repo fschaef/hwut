@@ -16,7 +16,8 @@ FORMATS ('--format'):
     traditional  THE HWUT PAGE, and the default: a block per
                  directory, dot leaders to a right-aligned verdict,
                  then a summary whose directory column is
-                 prefix-elided, then the failures listed once more.
+                 prefix-elided. A failure is said ONCE, where it
+                 happened (E-70).
     junit        the XML every CI ingests.
     tap          Test Anything Protocol, version 13.
     json         for whoever builds their own.
@@ -26,7 +27,17 @@ otherwise the terminal's own, otherwise 80. Nothing here assumes a
 constant: the page fills what it is given.
 
 '[OK]' AND '[FAIL]' ARE RIGHT-ALIGNED TO ONE COLUMN, so the dot leader
-runs two shorter for a failure and the verdicts stand in a line.
+runs two shorter for a failure and the verdicts stand in a line. That
+column stops VERDICT_MARGIN short of the rule: a label butted against
+the border reads as if it had been cut off.
+
+IT COLOURS, on a terminal: the title block on orange, '[OK]' on green,
+'[FAIL]' on red -- the HWUT page as it always looked. ONLY the
+traditional format, and only to a tty: '--plain' says no, '--color'
+says yes outright, '--out' implies no, and a machine format never
+carries an escape. The escapes
+are laid on AFTER the layout is measured, so a coloured page and a
+plain one break their lines in exactly the same columns.
 
 THE STAIN HAS NO JUnit WORD. JUnit knows failure, error and skipped; a
 stained choice is none of them -- it was not run, and it did not fail.
@@ -43,6 +54,7 @@ ______________________________________________________________________________
 """
 import json
 import os
+import itertools
 import shutil
 import sys
 import xml.sax.saxutils as saxutils
@@ -61,6 +73,7 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
 from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 FORMAT_TUPLE   = ("traditional", "junit", "tap", "json")
 WIDTH_DEFAULT  = 80
@@ -69,7 +82,8 @@ WIDTH_MINIMUM  = 40
 USAGE = usage_line("usage: hwut.report",
                    ("[<wish>]", "[<file-glob> [choice-glob]...]",
                     "[--format=<name>]", "[--out=<file>]",
-                    "[--width=<n>]", "[--directory=<path>]"))
+                    "[--width=<n>]", "[--plain|--color]",
+                    "[--directory=<path>]"))
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -134,6 +148,21 @@ def _json_verdict(verdict):
     return verdict.passed_f
 
 
+#  THE PAGE'S COLOURS, as the HWUT page wore them. Backgrounds, not
+#  foregrounds: a verdict is a BADGE, and a badge is read at a glance
+#  across a screenful of dots.
+ANSI_RESET   = "\033[0m"
+ANSI_TITLE   = "\033[30;48;5;208m"      # black on orange
+ANSI_OK      = "\033[30;48;5;40m"       # black on green
+ANSI_FAIL    = "\033[97;48;5;160m"      # white on red
+
+#  How far short of the rule the verdict column stops.
+VERDICT_MARGIN = 2
+
+HEIGHT_DEFAULT = 24
+HEIGHT_MINIMUM = 8
+
+
 def width_of(stated):
     """
     RETURN: int, the page width: what was stated, else COLUMNS, else
@@ -147,6 +176,78 @@ def width_of(stated):
     try:    got = shutil.get_terminal_size((WIDTH_DEFAULT, 24)).columns
     except Exception: got = WIDTH_DEFAULT
     return max(got or WIDTH_DEFAULT, WIDTH_MINIMUM)
+
+
+def painted(text, code, color_f):
+    """
+    RETURN: str, 'text' wrapped in the ANSI sequence 'code' and closed
+            again, where 'color_f'; 'text' untouched otherwise.
+
+            NEVER called before a line's width has been measured: the
+            escapes are invisible to a terminal and four characters
+            wide to 'len', so a layout computed over them would break
+            in the wrong column.
+    """
+    if not color_f: return text
+    return "%s%s%s" % (code, text, ANSI_RESET)
+
+
+def color_wanted_f(plain_f, out_name, stream, color_said_f=False):
+    """
+    RETURN: bool, True where the page should carry ANSI colour: not
+            '--plain', not going to a file ('--out'), the stream is a
+            terminal, and the console will render the escapes.
+            '--color' says it outright, for a pipe that will be looked
+            at anyway -- and for the suite, which drives every face
+            through a pipe and could otherwise never see this page.
+
+            False otherwise -- a report read by a machine, redirected
+            into a file, or piped, is plain.
+    """
+    if plain_f:        return False
+    if color_said_f:   return True
+    if out_name is not None: return False
+    if not getattr(stream, "isatty", lambda: False)(): return False
+    return _ansi_enabled()
+
+
+def _ansi_enabled():
+    """
+    RETURN: True,  the console renders ANSI escapes -- on Windows only
+                   after virtual-terminal processing is switched on for
+                   the standard output handle, which the console does
+                   not do by itself.
+            False, it could not be switched on.
+    """
+    if sys.platform != "win32": return True
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        handle   = kernel32.GetStdHandle(-11)          # STD_OUTPUT_HANDLE
+        mode     = ctypes.c_uint32()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        return bool(kernel32.SetConsoleMode(handle, mode.value | 0x0004))
+    except Exception:
+        return False
+
+
+def height_of(stated=None):
+    """
+    RETURN: int, the page height in LINES: what was stated, else LINES,
+            else the terminal's own, else 24 -- and never below 8, at
+            which point a paged list has no room left for its content.
+
+            Asked exactly as 'width_of' asks, so a face never reads the
+            terminal two different ways.
+    """
+    if stated is not None: return max(stated, HEIGHT_MINIMUM)
+    text = os.environ.get("LINES", "")
+    if text.isdigit() and int(text) > 0:
+        return max(int(text), HEIGHT_MINIMUM)
+    try:    got = shutil.get_terminal_size((WIDTH_DEFAULT, HEIGHT_DEFAULT)).lines
+    except Exception: got = HEIGHT_DEFAULT
+    return max(got or HEIGHT_DEFAULT, HEIGHT_MINIMUM)
 
 
 def directory_title(directory):
@@ -198,25 +299,54 @@ def row_list_of(root, wish):
             order: its relative path, its title, and one CRow per case
             the wish selected.
 
-    A directory the wish empties is kept with an EMPTY row list: a
+    THE SNAPSHOT FORM of 'entry_stream_of', for the machine formats,
+    which count and total before they can write their first line.
+    """
+    return list(entry_stream_of(root, wish))
+
+
+def _tallied(entry_stream, fail_box):
+    """
+    YIELD: [0..2] one entry of 'entry_stream', unchanged.
+
+    'fail_box[0]' rises by the failing rows of every entry that passes,
+    so the caller has the count once the stream is spent. A streamed
+    page is read once; walking it again to count would mean holding it
+    all, which is the thing streaming exists to avoid.
+    """
+    for entry in entry_stream:
+        fail_box[0] += sum(1 for row in entry[2] if not row.good_f)
+        yield entry
+
+
+def entry_stream_of(root, wish):
+    """
+    YIELD: [0] str            one directory, relative to 'root', walk
+                              order.
+           [1] str            its title.
+           [2] list[CRow]     one row per case the wish selected there.
+
+    ONE DIRECTORY AT A TIME, the moment it is known. Exploring a
+    directory interviews its applications -- subprocesses -- so on a
+    large tree the eager form leaves the screen empty for minutes and
+    then fills it at once; this one puts each block up as it is
+    finished.
+
+    A directory the wish empties is yielded with an EMPTY row list: a
     report on a tree half of which was never asked for should still
     say which halves those are.
     """
-    entry_list = []
     #  ONE ACTION, ONE PLACE ('exploration/selection.py'). The
     #  Bookkeeper this face reads the book from is the one THE
     #  SELECTION MADE -- two over one directory would be two answers
     #  to one question.
-    found  = selection.of_tree(root, wish, view_at(root), base_f=True)
-    by_dir = {}
-    for entry in found.case_list:
-        by_dir.setdefault(entry.directory, []).append(entry.case)
-    for directory, result in found.result_db.items():
+    for directory, result, bookkeeper, selected_list in \
+            selection.of_tree_stream(root, wish, view_at(root),
+                                     base_f=True):
         whole      = os.path.join(root, directory)
-        bookkeeper = found.bookkeeper_db[directory]
         app_db     = {app.source_file: app for app in result.app_set}
         row_list   = []
-        for case in by_dir.get(directory, ()):
+        for case in (entry.case for entry in selected_list):
             test   = case.source_file
             #  THROUGH THE DOOR, SHAPE-BLIND: 'result()' and 'stain()'
             #  answer the two questions a row asks; how the book files
@@ -241,8 +371,7 @@ def row_list_of(root, wish):
                 stain       = bookkeeper.stain(test, case.choice),
                 title       = getattr(app_db.get(case.source_file),
                                       "title", "") or ""))
-        entry_list.append((directory, directory_title(whole), row_list))
-    return entry_list
+        yield (directory, directory_title(whole), row_list)
 
 
 #  ---------------------------------------------------------------------
@@ -269,34 +398,69 @@ def elided(previous, current):
     return "." * len(prefix) + current[len(prefix):]
 
 
-def leader_line(left, verdict_text, width, indent):
+def leader_line(left, verdict_text, width, indent=4, shown=None):
     """
-    RETURN: str, 'left', dots, and 'verdict_text' ENDING AT 'width'.
+    RETURN: str, 'left', dots, and 'verdict_text' ending VERDICT_MARGIN
+            columns short of 'width'.
 
     The verdict is right-aligned to one column, so '[FAIL]' takes two
-    dots more than '[OK]' and the verdicts stand in a line. Where the
-    left side would leave no room, one blank separates them and the
-    line simply runs long: truncating a test's name to keep a rule is
-    the wrong trade.
+    dots more than '[OK]' and the verdicts stand in a line. That column
+    stops short of the rule: a label butted against the border reads as
+    if it had been cut off. Where the left side would leave no room,
+    one blank separates them and the line simply runs long: truncating
+    a test's name to keep a rule is the wrong trade.
+
+    'shown' is what is PRINTED where the verdict stands -- the same
+    text wearing its colour. The layout is measured on 'verdict_text',
+    never on 'shown', because escapes have width to 'len' and none on
+    a screen.
     """
     head = " " * indent + left
-    room = width - len(head) - len(verdict_text)
-    if room < 1: return "%s %s" % (head, verdict_text)
-    return "%s%s%s" % (head, "." * room, verdict_text)
+    room = width - len(head) - len(verdict_text) - VERDICT_MARGIN
+    if shown is None: shown = verdict_text
+    if room < 1: return "%s %s" % (head, shown)
+    return "%s%s%s" % (head, "." * room, shown)
 
 
-def traditional_line_tuple(entry_list, width):
+def traditional_line_tuple(entry_list, width, color_f=False):
     """
     YIELD: [0] str  one line of the HWUT page: a block per directory,
-                    then the summary, then the failures once more.
+                    then the summary. A failure is said ONCE, in its
+                    own block (E-70).
+
+    IT STREAMS. 'entry_list' may be a GENERATOR, and a directory's
+    block is yielded before the next directory has been explored, so a
+    face writing as it reads puts each block on the screen the moment
+    it is known. Only the SUMMARY needs the whole tree, and the
+    summary is at the foot where it always was; each entry is kept, as
+    it passes, for that one purpose.
+
+    'color_f' lays the page's colours on -- the title block on orange,
+    '[OK]' on green, '[FAIL]' on red. The three title lines are padded
+    to the full width first, or the background would stop where the
+    text does and the block would read as a ragged stripe.
     """
+    def verdict_of(good_f):
+        """RETURN: (str, str), the verdict's PLAIN text (what the
+                   layout measures) and what is printed for it.
+        """
+        text = "[OK]" if good_f else "[FAIL]"
+        return text, painted(text, ANSI_OK if good_f else ANSI_FAIL,
+                             color_f)
+
     rule_equals = "=" * width
     rule_dashes = "-" * width
-    for directory, title, row_list in entry_list:
+    seen_list   = []
+    for entry in entry_list:
+        seen_list.append(entry)
+        directory, title, row_list = entry
         yield rule_equals
-        yield ""
         if title:
-            yield title.center(width).rstrip()
+            #  EMPTY, TITLE, EMPTY -- three lines of one stripe.
+            yield painted(" " * width, ANSI_TITLE, color_f)
+            yield painted(title.center(width), ANSI_TITLE, color_f)
+            yield painted(" " * width, ANSI_TITLE, color_f)
+        else:
             yield ""
         stamp = _stamp_of(row_list)
         yield "%s%s%s" % (directory,
@@ -319,9 +483,8 @@ def traditional_line_tuple(entry_list, width):
             #  name, whether a choice stands or not.
             left = (shown if row.choice is None
                     else "%s %s" % (shown, row.choice)) + " "
-            yield leader_line(left,
-                              "[OK]" if row.good_f else "[FAIL]",
-                              width, 8)
+            text, shown = verdict_of(row.good_f)
+            yield leader_line(left, text, width, 8, shown=shown)
         if not row_list:
             yield "    (no case selected here)"
         yield ""
@@ -333,28 +496,28 @@ def traditional_line_tuple(entry_list, width):
     yield "    Fails: N: Verdict:          Directory:"
     yield ""
     previous = ""
-    for directory, _, row_list in entry_list:
+    for directory, _, row_list in seen_list:
         fail_n = sum(1 for row in row_list if not row.good_f)
-        yield "    %6s %-4d %-8s %s" \
+        text, shown = verdict_of(not fail_n)
+        #  PADDED BY HAND, not by '%-8s': the width belongs to the
+        #  plain text, and 'shown' may carry escapes that '%-8s' would
+        #  count as columns.
+        yield "    %6s %-4d %s%s %s" \
               % (fail_n if fail_n else "", len(row_list),
-                 "[OK]" if not fail_n else "[FAIL]",
+                 shown, " " * (8 - len(text)),
                  elided(previous, directory))
         previous = directory
     yield ""
 
-    failure_list = [row for _, _, row_list in entry_list
-                    for row in row_list if not row.good_f]
-    if failure_list:
-        yield rule_dashes
-        yield ""
-        yield "FAILURES:"
-        yield ""
-        for row in failure_list:
-            yield "    %s: %s -- %s" % (row.directory, row.name,
-                                        row.word)
-        yield ""
+    #  NO CLOSING 'FAILURES:' LIST (E-70). Every failure already stands
+    #  in its own block, badged red, beside the test that produced it,
+    #  and the summary counts them per directory. Saying them a third
+    #  time at the foot made the page longer without making it say
+    #  anything the reader had not already been shown -- and on a long
+    #  run it pushed the summary off the screen, which is the one part
+    #  a person scrolls back for.
     yield rule_dashes
-    total_n = sum(len(row_list) for _, _, row_list in entry_list)
+    total_n = sum(len(row_list) for _, _, row_list in seen_list)
     tail    = "(%d test%s)" % (total_n, "" if total_n == 1 else "s")
     yield tail.rjust(width)
     yield ""
@@ -495,12 +658,23 @@ def json_text_of(entry_list):
     return json.dumps(document, indent=2, sort_keys=True)
 
 
-def line_tuple_of(entry_list, format_name, width):
+def line_tuple_of(entry_list, format_name, width, color_f=False):
     """
     YIELD: [0] str  one line of the report in the named format.
+
+    'color_f' reaches the TRADITIONAL page only. A machine format never
+    carries an escape: JUnit, TAP and JSON are parsed, not looked at.
+
+    'entry_list' may be a GENERATOR. The traditional page streams it;
+    every machine format counts or totals before its first line, so
+    those take the list -- which is not a loss, because nobody WATCHES
+    JUnit.
     """
     if   format_name == "traditional":
-        yield from traditional_line_tuple(entry_list, width)
+        yield from traditional_line_tuple(entry_list, width, color_f)
+    elif not isinstance(entry_list, (list, tuple)):
+        yield from line_tuple_of(list(entry_list), format_name, width,
+                                 color_f)
     elif format_name == "junit": yield from junit_line_tuple(entry_list)
     elif format_name == "tap":   yield from tap_line_tuple(entry_list)
     else:                        yield from json_text_of(
@@ -535,6 +709,8 @@ def main(argv=None, write=None):
     format_name = "traditional"
     out_name    = None
     width       = None
+    plain_f     = False
+    color_said_f = False
     unknown     = []
     word_list = []
     for argument in rest_list:
@@ -545,10 +721,14 @@ def main(argv=None, write=None):
         elif argument.startswith("--format="):
             format_name = argument[len("--format="):]
             if format_name not in FORMAT_TUPLE:
-                write("REFUSED: '--format' takes one of %s, not '%s'"
-                      % (", ".join(FORMAT_TUPLE), format_name))
+                write("REFUSED: '--format' takes one of %s, not '%s'%s"
+                      % (", ".join(FORMAT_TUPLE), format_name,
+                         did_you_mean(format_name, FORMAT_TUPLE,
+                                      among_listed_f=True)))
                 write(USAGE)
                 return E_ExitCode.REFUSED
+        elif argument == "--plain":   plain_f = True
+        elif argument == "--color":   color_said_f = True
         elif argument.startswith("--width="):
             text = argument[len("--width="):]
             if not text.isdigit() or int(text) < 1:
@@ -562,7 +742,8 @@ def main(argv=None, write=None):
             else:                        word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.report' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
@@ -575,8 +756,27 @@ def main(argv=None, write=None):
         return E_ExitCode.REFUSED
 
     wish = with_targets(wish, word_list)
+    #  HELD ONLY UNTIL THE FIRST CASE. 'EMPTY' is a fact about the
+    #  WHOLE selection, and a stream cannot know it before the end --
+    #  but it CAN know the moment the answer stops being 'empty'. So
+    #  the walk is held just long enough to see one selected case, and
+    #  from there the page is written directory by directory as the
+    #  tree is explored.
     try:
-        entry_list = row_list_of(os.path.abspath(directory), wish)
+        entry_stream = entry_stream_of(os.path.abspath(directory), wish)
+        held_list    = []
+        for entry in entry_stream:
+            held_list.append(entry)
+            if entry[2]: break
+        else:
+            write("EMPTY: the wish selects no case in '%s'" % directory)
+            return E_ExitCode.EMPTY
+        #  TALLIED AS IT PASSES: the exit code needs the failure count
+        #  and the stream is consumed once, so it is counted on the way
+        #  through rather than walked a second time.
+        fail_box = [0]
+        entry_list = _tallied(itertools.chain(held_list, entry_stream),
+                              fail_box)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -587,15 +787,17 @@ def main(argv=None, write=None):
         write("FAULT: %s" % error)
         return E_ExitCode.FAULT
 
-    if not any(row_list for _, _, row_list in entry_list):
-        write("EMPTY: the wish selects no case in '%s'" % directory)
-        return E_ExitCode.EMPTY
-
-    line_list = list(line_tuple_of(entry_list, format_name,
-                                   width_of(width)))
+    color_f   = color_wanted_f(plain_f, out_name, sys.stdout, color_said_f)
+    line_tuple = line_tuple_of(entry_list, format_name,
+                               width_of(width), color_f)
     if out_name is None:
-        for line in line_list: write(line)
+        #  WRITTEN AS IT COMES. The page is not built and then shown;
+        #  a directory's block reaches the screen while the next
+        #  directory is still being interviewed.
+        for line in line_tuple: write(line)
+        line_list = ()
     else:
+        line_list = list(line_tuple)
         try:
             with open(out_name, "w", encoding="utf-8") as file_handle:
                 file_handle.write("\n".join(line_list) + "\n")
@@ -606,9 +808,7 @@ def main(argv=None, write=None):
         write("written: %s (%s, %d line(s))"
               % (out_name, format_name, len(line_list)))
 
-    fail_n = sum(1 for _, _, row_list in entry_list
-                 for row in row_list if not row.good_f)
-    return E_ExitCode.FAULT if fail_n else E_ExitCode.OK
+    return E_ExitCode.FAULT if fail_box[0] else E_ExitCode.OK
 
 
 if __name__ == "__main__":

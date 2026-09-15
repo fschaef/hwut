@@ -1,17 +1,44 @@
 --- all three views of a pyped test
 STATUS: 0
 STDOUT {
-    ===== RAW -- what the application produced ===================
+    ===== RAW ====================================================
         pid 41288 started
         value 7
         <hwut-end>
     
-    ===== PYPED -- what the pype produced ========================
+    ===== PYPED ==================================================
         pid <n> started
         value 7
         <hwut-end>
     
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-pyped.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            pype = "./tidy.pype"
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-pyped.sh ]================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -26,10 +53,36 @@ STDOUT {
 --- and where NO pype stands, the view says so
 STATUS: 0
 STDOUT {
-    ===== PYPED -- no pype stands for this stream ================
-        the subject IS the raw stream
+    ===== PYPED ==================================================
+        no pype stands for this stream -- the subject IS the raw stream
     
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-plainly.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-plainly.sh ]================================ round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'

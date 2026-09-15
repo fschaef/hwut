@@ -207,7 +207,7 @@ interactive)
     echo "--- interactive: the checklist (both marked), 't' takes 'a', 'q' leaves 'b'"
     printf '\nt\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
         > out.txt 2> ui.txt; echo "STATUS: $?"
-    grep -E '^\s+\[|^=\[|accepted|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
+    grep -E '^\s+\[|^=\[|accepted|blessed|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
     echo "--- the nominal of 'a' is what the run printed; 'b' stands"
     cat tree/suite/TEST/GOOD/test-two.sh--a.txt tree/suite/TEST/GOOD/test-two.sh--b.txt | sed 's/^/    /'
     echo "--- the candidate stayed: the next run judges anew"
@@ -267,19 +267,24 @@ PYEOF
 opening)
     #  A FIRST ACCEPTANCE BY HAND (E-60). No nominal stands, and the
     #  session OPENS anyway -- on the candidate's shape, nothing
-    #  decided. 't' takes the subject whole and commits it; 'q' leaves
+    #  decided. It is an ASPIRANT (B-14), so what the report says of
+    #  it is BLESSED, not accepted: there was no pole to reconcile
+    #  with. The checklist hands over ONE case per ask and marks what
+    #  it handed over (E-65/E-67): '<enter>' takes the first, then the
+    #  menu stands again with it marked. 't' takes the subject whole
+    #  and commits it; 'q' leaves
     #  the case with NO nominal at all: nothing was written, so nothing
     #  half-decided lingers.
     fixture
     $RUN --directory=tree --silent 2> /dev/null
     INTERACTIVE="python3 -m vut.services.lib.accept.interactive"
     echo "--- the checklist offers every case, nominal or not"
-    printf '\nt\nq\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
+    printf '\nt\n2\nq\nq\n' | $INTERACTIVE --directory=tree/suite/TEST --plain \
         > out.txt 2> ui.txt; echo "STATUS: $?"
-    grep -E '^\s+\[|^=\[|accepted|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
+    grep -E '^\s+\[|^=\[|accepted|blessed|left alone|ACCEPTED' ui.txt | sed 's/^/    /'
     echo "--- 't' on test-ok.sh: the nominal is the candidate whole"
     sed 's/^/    | /' tree/suite/TEST/GOOD/test-ok.sh.txt
-    echo "--- 'q' on test-two.sh: no nominal was written"
+    echo "--- 'q' on test-two.sh a: no nominal was written"
     good | sed 's/^/    /'
     ;;
 

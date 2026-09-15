@@ -9,3 +9,4 @@ STDOUT {
       message: the run reported a difference from GOOD; the stored candidate and the nominal, read whole, are 'not-equivalent-diverged'
       ...
 }
+<hwut-end>

@@ -14,6 +14,12 @@ DESCRIPTION
        THE THREE WRITES ARE E-41's, unchanged: the nominal, the
        register, the book, in that order and only on COMMIT.
 
+       AN ASPIRANT REACHES THE SAME LOOP. A choice the book knows with
+       no nominal standing (B-14) opens on the mirror 'accept_first'
+       builds, and its commit is a FIRST BLESSING -- the same three
+       writes, a different word in the report, and the banner says
+       'aspirant' so nobody mistakes a blessing for a merge.
+
        THE REFUSALS ARE 'hwut.accept's OWN, asked through
        '_accept_common' -- the stain, the closing token (R-70), stderr.
        A session that ends in anything but COMMIT writes nothing at
@@ -89,6 +95,9 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
             became nominals, the (key, reason) pairs refused after a
             commit, and the keys the author left alone.
 
+            An ASPIRANT that commits is reported as BLESSED, not
+            accepted: it had no pole to reconcile with (B-14).
+
             Nothing is written for a key that is refused or left: a
             merge that did not end in COMMIT leaves the pole as it
             stood.
@@ -101,6 +110,9 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
     for key in key_list:
         store   = store_of(key.where)
         options = setup if setup is not None else key.setup
+        #  THE STANDING REACHES THE SCREEN (B-14). Optional on the
+        #  contract, so this call is the same on every tier.
+        adapter.note_standing(getattr(key, "aspirant_f", False))
         text, intent = asyncio.run(merge_text(
             key.subject_text, key.nominal_text, adapter, key.label,
             options, max_round_n=max_round_n))
@@ -157,7 +169,12 @@ def report(accepted_list, refused_list, left_list, key_n, err):
     err("=" * 78)
     err("ACCEPTED  %d of %d" % (len(accepted_list), key_n))
     err("-" * 78)
-    for key in accepted_list:        err("    accepted       %s" % key.label)
+    for key in accepted_list:
+        #  A FIRST BLESSING IS NOT A MERGE (B-14, E-51/E-59): an
+        #  aspirant had no pole to reconcile with, so the word for what
+        #  happened to it is 'hwut.accept's own.
+        err("    %-14s %s" % ("blessed" if getattr(key, "aspirant_f", False)
+                              else "accepted", key.label))
     for key, reason in refused_list: err("    refused        %s -- %s"
                                          % (key.label, reason))
     for key in left_list:            err("    left alone     %s" % key.label)

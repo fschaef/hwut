@@ -32,13 +32,29 @@ DESCRIPTION
        WHAT IS SELECTED is measured, not remembered ('services/
        _cases.py'): compare's engine judges each candidate against
        its nominal under the choice's own setup, now. More than one
-       differing case: the CHECKLIST first; '--all'/'--yes' skip it.
-       A case with no nominal yet is not this face's: a first blessing
-       is 'hwut.accept's.
+       differing case: the CHECKLIST first; '--all'/'--force' skip it.
+       THE CHECKLIST IS RE-ENTERED after every round and its '[X]'
+       says HANDLED -- what this session has already worked, and will
+       not offer again -- not 'selected'.
+
+       ASPIRANTS STAND FIRST (B-14). A test the book knows with no
+       nominal is an ASPIRANT -- playable, not runnable -- and this
+       door is where it becomes a member. It opens on the mirror
+       'accept_first' builds, the banner says 'aspirant', and what the
+       report says of it is BLESSED, never accepted: there was no pole
+       to reconcile with (E-51/E-59).
 
        PER CASE, ONE SESSION: the view ('-y' two columns, subject
        LEFT, nominal RIGHT), then [e]dit / [c]ommit / [q]uit. Quit
        leaves the case exactly as it stood and goes on to the next.
+
+       ON A TERMINAL the keyed tier runs and F1 prints the keymap --
+       the table itself, so it cannot go stale. Both panes hold ONE
+       viewport, so they stay level however far down the author goes;
+       'h'/'l' move the view sideways; '/' and '?' open a search line
+       that the keymap yields to while it is open. A subject section
+       already taken is SPENT: it is greyed, no cursor reaches it and
+       no range intersects it (E-63). '--plain' reaches this tier too.
 
        REFUSED AT COMMIT, with 'hwut.accept's own words: a stained
        choice (a test that switches results has no pole), a text
@@ -66,8 +82,8 @@ from   vut.engine.operations.interaction.port import (merge_session,
                                                       MERGE_ROUND_MAX)
 from   vut.engine.orchestrator.plan.wish      import parse_wish, WishError
 from   vut.services._cases                    import (select,
-                                                      differing_keys,
-                                                      choose)
+                                                      differing_keys)
+from   vut.services.lib.checklist             import Checklist
 from   vut.services._core                     import (add_setup_arguments,
                                                       setup_from_arguments)
 from   vut.services._exit                     import E_ExitCode
@@ -137,12 +153,6 @@ def main(argv=None):
         err("nothing to accept: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)
         return E_ExitCode.OK
-    chosen = choose(key_list, err, sys.stdin.readline,
-                    all_f=arguments.all or arguments.force, yes_f=False)
-    if not chosen:
-        err("NOTE: nothing accepted")
-        return E_ExitCode.OK
-
     editor_argv = None
     if arguments.editor is not None:
         import shlex
@@ -155,13 +165,30 @@ def main(argv=None):
                                  plain_f=arguments.plain,
                                  side_by_side_f=arguments.side_by_side,
                                  width=arguments.width)
-    accepted_list, refused_list, left_list = engine.run_sessions(
-        chosen, selected.store_of, adapter, err,
-        setup=setup if setup_said_f else None,
-        max_round_n=arguments.max_rounds,
-        stderr_tol_f=arguments.stderr_tol)
+    #  ONE CASE PER ASK, and the checklist remembers what was handed
+    #  over. The loop ends on None and on nothing else.
+    checklist = Checklist(key_list, err, sys.stdin.readline,
+                          label_of=lambda key: key.label,
+                          all_f=arguments.all or arguments.force)
+    chosen_n = 0
+    accepted_list, refused_list, left_list = [], [], []
+    while True:
+        key = checklist.pick()
+        if key is None: break
+        chosen_n += 1
+        accepted, refused, left = engine.run_sessions(
+            [key], selected.store_of, adapter, err,
+            setup=setup if setup_said_f else None,
+            max_round_n=arguments.max_rounds,
+            stderr_tol_f=arguments.stderr_tol)
+        accepted_list += accepted
+        refused_list  += refused
+        left_list     += left
+    if not chosen_n:
+        err("NOTE: nothing accepted")
+        return E_ExitCode.OK
     return engine.report(accepted_list, refused_list, left_list,
-                         len(chosen), err)
+                         chosen_n, err)
 
 
 if __name__ == "__main__":

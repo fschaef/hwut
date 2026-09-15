@@ -3,8 +3,8 @@
 #
 # @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
-#     choices    = ["json", "junit", "never_run", "refused", "stain",
-#                   "tap", "traditional", "width"]
+#     choices    = ["color", "json", "junit", "never_run", "refused",
+#                   "stain", "tap", "traditional", "width"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -44,7 +44,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.report face: the databases, rendered.;"
-        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused;"
+        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused, color;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -178,7 +178,24 @@ refused)
     face --directory=nowhere
     ;;
 
+color)
+    #  THE PAGE'S COLOURS (E-69): the title block on orange, '[OK]' on
+    #  green, '[FAIL]' on red. The suite drives every face through a
+    #  PIPE, where the page is plain by design, so '--color' is what
+    #  lets a recorded GOOD see the escapes at all. They are spelled
+    #  'ESC' here: a raw escape byte in a nominal is unreadable in a
+    #  diff and a hazard to whatever prints it.
+    mixed
+    printf 'A fixture title\n' > tree/suite/TEST/hwut-info.dat
+    $FACE --directory=tree --width=70 --color \
+        | sed -e 's/\x1b/ESC/g' | mask | sed 's/^/    /'
+    echo "--- and the same page, piped, is plain"
+    $FACE --directory=tree --width=70 | grep -c ESC | sed 's/^/    ESC count: /'
+    ;;
+
 *)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+echo "<hwut-end>"

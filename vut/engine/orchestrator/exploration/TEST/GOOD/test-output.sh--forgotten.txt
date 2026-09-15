@@ -11,3 +11,7 @@ STATUS: 1
     suite/TEST
         test-file.sh   output file missing
     ==============================================================================
+    
+    RESULTS: 0 ok, 1 fail, s.ss [sec]
+    |                                    fail                                    |
+<hwut-end>

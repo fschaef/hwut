@@ -6,13 +6,15 @@ THE FILE, BEFORE {
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh one -- 3 file(s), the book entry, the register id
+      test-app.sh one -- 4 file(s), the book entry, the register id
           GOOD/test-app.sh--one.txt
           OUT/test-app.sh--one.txt
+          TMP/store/test-app.sh--one.stdout.times
           TMP/store/test-app.sh--one.stdout.when
     test-app.sh one:
         forgotten: GOOD/test-app.sh--one.txt
         forgotten: OUT/test-app.sh--one.txt
+        forgotten: TMP/store/test-app.sh--one.stdout.times
         forgotten: TMP/store/test-app.sh--one.stdout.when
         book entry: removed
         register: choice id retired
@@ -25,13 +27,15 @@ THE FILE {
 STATUS: 0
 STDOUT {
     TO BE FORGOTTEN, in 'tree/suite/TEST':
-      test-app.sh -- 3 file(s), the book entry, the register id
+      test-app.sh -- 4 file(s), the book entry, the register id
           GOOD/test-app.sh--two.txt
           OUT/test-app.sh--two.txt
+          TMP/store/test-app.sh--two.stdout.times
           TMP/store/test-app.sh--two.stdout.when
     test-app.sh:
         forgotten: GOOD/test-app.sh--two.txt
         forgotten: OUT/test-app.sh--two.txt
+        forgotten: TMP/store/test-app.sh--two.stdout.times
         forgotten: TMP/store/test-app.sh--two.stdout.when
         book entry: removed
         register: id retired

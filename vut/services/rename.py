@@ -6,9 +6,9 @@ PURPOSE: THE 'hwut.rename' COMMAND LINE -- a test, or one choice of it,
          nominals, candidates, book entry, register entry, coverage
          records and labels follow the new name.
 
-    hwut.rename <app> -to <app'>               [--yes] [--directory=<path>]
-    hwut.rename <app> <choice> -to <choice'>   [--yes] [--directory=<path>]
-    hwut.rename <app> -to <path>/<app'>        [--yes] [--directory=<path>]
+    hwut.rename <app> -to <app'>               [--dont-ask] [--directory=<path>]
+    hwut.rename <app> <choice> -to <choice'>   [--dont-ask] [--directory=<path>]
+    hwut.rename <app> -to <path>/<app'>        [--dont-ask] [--directory=<path>]
     hwut.move   <app> <app'>                   == hwut.rename <app> -to <app'>
                                                [--no-warning] [--silent]
 
@@ -65,7 +65,7 @@ IT REFUSES A COLLISION. A fresh name that already stands in the target
 book would swallow another test's history; it is refused at the door,
 by name, and nothing is moved.
 
-IT ASKS FIRST, showing every move, unless '--yes'.
+IT ASKS FIRST, showing every move, unless '--dont-ask'.
 
 A TEST THAT IS NOT IN THE BOOK is not an error: there is nothing to
 follow, and the face says so.
@@ -90,14 +90,15 @@ from   ._target                  import split_words, TargetError
 from   ._exit                    import E_ExitCode
 from   vut.engine.orchestrator.exploration.reader import (read_header,
                                                           read_conf)
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 KEYWORD = "-to"
 
-USAGE = ("usage: hwut.rename <app> -to <app'>              [--yes] "
+USAGE = ("usage: hwut.rename <app> -to <app'>              [--dont-ask] "
          "[--directory=<path>] [--no-warning] [--silent]\n"
-         "       hwut.rename <app> <choice> -to <choice'>  [--yes] "
+         "       hwut.rename <app> <choice> -to <choice'>  [--dont-ask] "
          "[--directory=<path>]\n"
-         "       hwut.rename <app> -to <path>/<app'>       [--yes] "
+         "       hwut.rename <app> -to <path>/<app'>       [--dont-ask] "
          "[--directory=<path>]\n"
          "       hwut.move   <app> <app'>          == hwut.rename "
          "<app> -to <app'>")
@@ -440,7 +441,7 @@ def _read(argv, write):
                 None    they cannot be read -- refused aloud, with the
                         usage
                 ()      they name nothing
-            [1] bool    '--yes' was said
+            [1] bool    '--dont-ask' was said
     """
     directory = "."
     yes_f     = False
@@ -449,14 +450,22 @@ def _read(argv, write):
     for argument in argv:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
-        elif argument == "--yes":      yes_f = True
+        elif argument == "--dont-ask":      yes_f = True
+        elif argument == "--yes":
+            #  E-68: "yes to what?" -- on the command line, before the
+            #  question exists, the word names an answer to nothing.
+            #  Refused BY NAME so a script that still says it is told.
+            write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
+                  "the one word for 'do not ask'")
+            return None, yes_f
         elif argument in ("--no-warning", "--silent"): pass
         elif argument == KEYWORD:      word_list.append(argument)
         elif argument.startswith("-"): unknown.append(argument)
         else:                          word_list.append(argument)
     if unknown:
         write("REFUSED: 'hwut.rename' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return None, yes_f
     if not os.path.isdir(directory):

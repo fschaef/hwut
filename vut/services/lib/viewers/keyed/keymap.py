@@ -28,6 +28,11 @@ from vut.services.lib.viewers.keyed.act import E_Act
 #  Tab governs it, and what to tell a person who asks. 'prompt_toolkit'
 #  key names are used verbatim ('c-d' is Ctrl-D, 'escape' is Esc).
 #
+#  HELP IS 'f1', NOT '?'. '?' is SEARCH_UP and has been since the table
+#  was written; the banner said '?=help' and was measured to be a lie --
+#  '?' opened the search line. The banner now names the key the table
+#  binds, which is the only way the two cannot drift.
+#
 #  TAB IS A MODE SWITCH FOR A SUBSET OF THIS TABLE. The rows marked PANE
 #  act on whichever pane Tab last selected -- the cursor moves, the
 #  anchor, the search. The rows marked BOTH mean the same thing in
@@ -49,6 +54,7 @@ KEYMAP = (
     (("l", "right"),    E_Act.SCROLL_RIGHT, PANE, "scroll right"),
     (("/",),            E_Act.SEARCH_DOWN,  PANE, "search down"),
     (("?",),            E_Act.SEARCH_UP,    PANE, "search up"),
+    (("f1",),           E_Act.HELP,         BOTH, "this table"),
     (("r",),            E_Act.REALIGN,      BOTH, "re-align: ask compare again"),
     (("u",),            E_Act.UNDO,         BOTH, "undo"),
     (("e",),            E_Act.EDIT,         BOTH, "edit the nominal in $EDITOR"),

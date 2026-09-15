@@ -37,6 +37,8 @@ class E_Act(Enum):
     SEARCH_DOWN  = auto()   # carries its term as the argument
     SEARCH_UP    = auto()
 
+    HELP         = auto()   # show the keymap -- the table, not prose
+
     REALIGN      = auto()   # ask compare again; clears the stale count
     UNDO         = auto()
     EDIT         = auto()   # drop to '$EDITOR'

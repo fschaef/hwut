@@ -8,3 +8,4 @@ STDOUT {
     
       2 item(s), <size> kB
 }
+<hwut-end>

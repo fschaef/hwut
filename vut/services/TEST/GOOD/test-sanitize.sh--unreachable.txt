@@ -3,5 +3,8 @@ STDOUT {
     SANITIZE, in 'tree': orphans
     
       nothing to sanitize
+    
+    TOUCHED (the re-run trigger): 1 test application(s)
 }
 the nominal still stands: yes
+<hwut-end>

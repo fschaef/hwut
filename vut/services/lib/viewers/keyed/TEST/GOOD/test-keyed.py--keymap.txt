@@ -14,6 +14,7 @@ P-20/P-21/P-22: the table is the keymap
      l, right       pane  scroll right
      /              pane  search down
      ?              pane  search up
+     f1             both  this table
      r              both  re-align: ask compare again
      u              both  undo
      e              both  edit the nominal in $EDITOR

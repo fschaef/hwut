@@ -5,10 +5,10 @@ hwut.play          exit 0: PURPOSE: THE 'hwut.play' COMMAND LINE -- run one test
 hwut.accept        exit 0: hwut.accept -- PROMOTION: a candidate becomes the nominal
 hwut.accept.propose exit 0: hwut.accept.propose -- the differences, as a file to read and hand back.
 hwut.accept.apply  exit 0: hwut.accept.apply -- bless what a file names, and nothing else.
-hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [--yes] [--plain] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--stderr-tol] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
+hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [-f] [--plain] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--stderr-tol] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.target        exit 0: hwut.target -- run one user-defined target over the tree
 hwut.cov           exit 0: PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with
-hwut.diff          exit 0: usage: hwut.diff [-h] [--reading] [--plain] [-y] [--width WIDTH] [--directory DIRECTORY] [--all] [--yes] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
+hwut.diff          exit 0: usage: hwut.diff [-h] [--reading] [--plain] [-y] [--width WIDTH] [--directory DIRECTORY] [--all] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.report.details exit 0: usage: hwut.report.details [-h] [--directory DIRECTORY] [-r] [--no-coverage] [word ...]
 hwut.stability     exit 0: PURPOSE: THE 'hwut.stability' COMMAND LINE -- run the same wish SEVERAL
 hwut.wishlist      exit 0: PURPOSE: THE 'hwut.wishlist' COMMAND LINE -- print, one per line, every

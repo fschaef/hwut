@@ -42,7 +42,8 @@ import os
 from   dataclasses import dataclass
 
 from   .explorer         import explore
-from   .tree_explorer    import explore_tree, ascended_spec
+from   .tree_explorer    import (explore_tree, explore_tree_stream,
+                                 ascended_spec)
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery
 from   ..plan.label      import swallowed_warning_tuple
@@ -181,6 +182,40 @@ def of_tree(root, wish, label_view=None, base_f=None):
         bookkeeper_db = bookkeeper_db,
         query_db      = query_db,
         met_set       = frozenset(met_set))
+
+
+def of_tree_stream(root, wish, label_view=None, base_f=None,
+                   fault_list=None):
+    """
+    YIELD: [0] str            one directory, RELATIVE to 'root', walk
+                              order.
+           [1] ExplorationResult   what it offers.
+           [2] Bookkeeper | None   its book, where the wish asks for one.
+           [3] list[CSelectedCase] the cases the wish selected there.
+
+    ONE DIRECTORY AT A TIME, so a face can show a directory the moment
+    it is known instead of after the whole tree has been walked
+    ('explore_tree_stream'). The per-directory work is identical to
+    'of_tree's loop body -- this is that loop, opened up.
+
+    WHAT CANNOT STREAM IS NOT HERE. The swallowed-label warnings are a
+    fact about the WHOLE selection (a label met in one directory can be
+    invisible because of another), and so are the walk's faults; a face
+    that needs either asks 'of_tree'. 'fault_list' is the caller's
+    accumulator and is complete only when this generator is exhausted.
+    """
+    want_f = wish.asks_base_f() if base_f is None else base_f
+    for directory, result in explore_tree_stream(root,
+                                                 fault_list=fault_list):
+        bookkeeper = Bookkeeper(os.path.join(root, directory)) \
+                     if want_f else None
+        query = CTestTaskListQuery(wish, bookkeeper,
+                                   directory=directory, root=root,
+                                   label_view=label_view)
+        if wish.glob_tuple: query.glob_reach(result.app_set)
+        case_list = [CSelectedCase(directory, case)
+                     for case in query.get_test_cases(result.app_set)]
+        yield directory, result, bookkeeper, case_list
 
 
 def directory_tuple(root, wish):

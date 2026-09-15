@@ -139,6 +139,39 @@ class CTreeExploration:
         yield from self.result_tuple
 
 
+def explore_tree_stream(root, interview_runner=None, fault_list=None):
+    """
+    YIELD: [0] str                one test directory, RELATIVE to
+                                  'root', in walk order.
+           [1] ExplorationResult  what it offers.
+
+    THE SAME WALK AS 'explore_tree', ONE DIRECTORY AT A TIME. A
+    directory is yielded the moment its exploration finishes, so a
+    face can SHOW it while the rest of the tree is still being asked.
+    Exploring one directory means interviewing its applications --
+    subprocesses -- so on a large tree the eager form spends minutes
+    with nothing on the screen.
+
+    'fault_list' is the caller's accumulator, appended to as the walk
+    goes. It is COMPLETE ONLY WHEN THE GENERATOR IS EXHAUSTED: a fault
+    below a directory cannot be known before the walk reaches it. A
+    face that must report faults reads the list after the loop; a face
+    that streams and shows no trailing block need not read it at all.
+
+    WALK ORDER IS PRESERVED. The recursion is the same, sorted the
+    same; only the accumulator became a yield.
+    """
+    if fault_list is None: fault_list = []
+    inherited, ascent_fault_list = ascended_spec(root)
+    fault_list.extend(ascent_fault_list)
+    if os.path.basename(os.path.normpath(root)) == FALLBACK_TEST_DIRECTORY:
+        yield (".", explore(root, interview_runner=interview_runner,
+                            inherited=inherited))
+    else:
+        yield from _walk_stream(root, ".", inherited, interview_runner,
+                                fault_list)
+
+
 def explore_tree(root, interview_runner=None):
     """
     RETURN: CTreeExploration -- every test directory below 'root',
@@ -147,31 +180,45 @@ def explore_tree(root, interview_runner=None):
     A tree-level 'hwut.conf' that cannot be read, or that states a
     LOCAL key, contributes a fault; its inheritable keys still flow
     where they were read.
+
+    THE SNAPSHOT FORM of 'explore_tree_stream': the same walk, run to
+    the end, so 'fault_tuple' is whole. A face that wants to show a
+    directory as it is found asks the generator instead.
     """
     fault_list  = []
-    result_list = []
-    inherited, ascent_fault_list = ascended_spec(root)
-    fault_list.extend(ascent_fault_list)
-    #  THE ROOT IS ITSELF A CANDIDATE. Standing IN a test directory and
-    #  asking is the ordinary case -- it is where an author works --
-    #  and a walk that only ever enters CHILDREN named 'TEST' looks
-    #  everywhere except where it already stands.
-    #
-    #  The name it must match is the FALLBACK: 'test_directory' is
-    #  stated by a PARENT's 'hwut.conf', and at the root there is no
-    #  parent to state it. The root's own conf cannot be folded here
-    #  either -- a test directory's conf holds LOCAL keys, and folding
-    #  it as if inherited would fault on every one of them.
-    if os.path.basename(os.path.normpath(root)) == FALLBACK_TEST_DIRECTORY:
-        result_list.append(
-            (".", explore(root, interview_runner=interview_runner,
-                          inherited=inherited)))
-    else:
-        _walk(root, ".", inherited, interview_runner, result_list,
-              fault_list)
+    result_list = list(explore_tree_stream(root, interview_runner,
+                                           fault_list))
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list))
+
+
+def _walk_stream(root, relative, effective, interview_runner, fault_list):
+    """
+    YIELD: [0] str                one test directory, relative to root.
+           [1] ExplorationResult  what it offers.
+
+    '_walk' with the accumulator replaced by a yield: fold this
+    directory's 'hwut.conf' onto 'effective', then descend into the
+    sub-directories in sorted order, exploring those whose name is the
+    effective test directory name.
+    """
+    directory = os.path.normpath(os.path.join(root, relative))
+    effective = _folded(directory, relative, effective, fault_list)
+    marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
+
+    for name in sorted(os.listdir(directory)):
+        if name.startswith("."):                          continue
+        path = os.path.join(directory, name)
+        if not os.path.isdir(path):                       continue
+        child_relative = _joined(relative, name)
+        if name == marker:
+            yield (child_relative,
+                   explore(path, interview_runner=interview_runner,
+                           inherited=effective))
+        else:
+            yield from _walk_stream(root, child_relative, effective,
+                                    interview_runner, fault_list)
 
 
 def inherited_spec(parent, child):

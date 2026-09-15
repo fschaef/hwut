@@ -133,6 +133,7 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              parse_wish)
 from   ._core import usage_line
 from   ._exit import E_ExitCode
+from   vut.services.lib.cmdline import did_you_mean, option_tuple
 
 #  A record's TEST PART ends in one of these: it is the source file
 #  whole. The set is the languages a test application is written in;
@@ -672,7 +673,8 @@ def main(argv=None, write=None):
             unknown.append(argument)
     if unknown:
         write("REFUSED: 'hwut.sanitize' does not take: %s"
-              % ", ".join(sorted(unknown)))
+              % ", ".join(sorted(unknown))
+              + did_you_mean(unknown[0], option_tuple(USAGE)))
         write(USAGE)
         return E_ExitCode.REFUSED
     if not os.path.isdir(directory):

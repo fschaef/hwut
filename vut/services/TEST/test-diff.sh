@@ -148,8 +148,8 @@ store)
     show out.txt
     echo "          exit code : $code"
     echo
-    echo "STIMULUS  the checklist: 'printf 2\\n\\n' toggles case 2 off and goes"
-    printf '2\n\n' | $DIFF --directory=tree/suite/TEST --plain > out.txt 2> err.txt
+    echo "STIMULUS  the checklist: 'printf 2\\n' picks case 2 and goes"
+    printf '2\n' | $DIFF --directory=tree/suite/TEST --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     echo "          stderr (the checklist) {"; sed 's/^/              /' err.txt; echo "          }"
     grep -E '^=\[' out.txt | sed 's/^/          shown: /'

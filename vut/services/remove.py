@@ -5,8 +5,8 @@ PURPOSE: THE 'hwut.remove' COMMAND LINE -- a test, or one choice of it,
          FORGOTTEN: its nominals, its candidates, its book entry and
          its register id.
 
-    hwut.remove <test>            [--yes] [--directory=<path>]
-    hwut.remove <test> <choice>   [--yes] [--directory=<path>]
+    hwut.remove <test>            [--dont-ask] [--directory=<path>]
+    hwut.remove <test> <choice>   [--dont-ask] [--directory=<path>]
 
 THE WORDS ARE EVERY FACE'S (E-53): one word names a test, two name a
 test and one of its choices, and a word carrying a path enters its
@@ -43,7 +43,7 @@ author's own files are the author's.
 
 IT ASKS FIRST. What is removed cannot be recovered from here -- a
 nominal is a blessed artefact and its loss is a real loss -- so the
-whole list is shown and confirmed, unless '--yes' stands.
+whole list is shown and confirmed, unless '--dont-ask' stands.
 
 A TEST THAT IS NOT IN THE BOOK is not an error: there was nothing to
 forget, and the face says so and moves on. Refusing would make removal
@@ -65,7 +65,7 @@ from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
 from   ._target                           import split_words, TargetError
 
-USAGE = ("usage: hwut.remove <test> [<choice>] [--yes] "
+USAGE = ("usage: hwut.remove <test> [<choice>] [--dont-ask] "
          "[--directory=<path>]")
 
 #  The licence line and the rule are the FILE's, not the face's.
@@ -202,7 +202,14 @@ def main(argv=None, write=None, read_line=None):
     for argument in argv:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
-        elif argument == "--yes":      yes_f = True
+        elif argument == "--dont-ask":      yes_f = True
+        elif argument == "--yes":
+            #  E-68: "yes to what?" -- on the command line, before the
+            #  question exists, the word names an answer to nothing.
+            #  Refused BY NAME so a script that still says it is told.
+            write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
+                  "the one word for 'do not ask'")
+            return E_ExitCode.REFUSED
         elif argument.startswith("-"): unknown.append(argument)
         else:                          word_list.append(argument)
     if unknown:

@@ -12,3 +12,4 @@ STDOUT {
 }
 --- and it parses:
     testsuites tests=2 failures=1
+<hwut-end>

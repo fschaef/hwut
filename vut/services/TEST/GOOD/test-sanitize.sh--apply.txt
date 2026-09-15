@@ -12,6 +12,8 @@ STDOUT {
     REMOVING:
         gone: suite/TEST/TMP/session
         gone: suite/TEST/OUT
+    
+    TOUCHED (the re-run trigger): 1 test application(s)
 }
 STANDING {
     hwut-root.conf
@@ -23,3 +25,4 @@ STANDING {
     suite/TEST/hwut.conf
     suite/TEST/test-app.sh
 }
+<hwut-end>

@@ -1,7 +1,33 @@
 --- the application declares a tolerance: the number is marked
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-loose.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.01
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-loose.sh ]================================== round 1
     setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -15,7 +41,33 @@ STDOUT {
 --- the application declares none: it stands plain
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-exact.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-exact.sh ]================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'

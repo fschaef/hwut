@@ -4,11 +4,13 @@ STDOUT {
     SANITIZE, in 'tree': books, lock, orphans, out, session
     
       books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
     
     
     REMOVING:
         kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
+    
+    TOUCHED (the re-run trigger): 1 test application(s)
     
     TARGETS:
       target 'clean':
@@ -21,11 +23,13 @@ STDOUT {
     SANITIZE, in 'tree': books, lock, orphans, out, session
     
       books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
     
     
     REMOVING:
         kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
+    
+    TOUCHED (the re-run trigger): 1 test application(s)
     
     TARGETS:
       target 'clean':
@@ -39,9 +43,10 @@ STDOUT {
     SANITIZE, in 'tree': books, lock, orphans, out, session  (reporting only; '--apply' acts)
     
       books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the register lacks it
+          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
     
     
     TARGETS:
       target 'clean': would run in every directory that binds it ('--apply' runs it)
 }
+<hwut-end>

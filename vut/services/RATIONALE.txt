@@ -2809,3 +2809,536 @@ GRAVEYARD Removing the RICH tier with it -- rejected: much bigger than
           the question, and standing GOODs move. Keeping it and writing
           'init.lua' later -- rejected: an unreachable tier in the
           census as a suite nobody can run.
+
+
+E-63  A COPIED SUBJECT SECTION IS SPENT                            (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'MergeState' recorded nothing about what had already been
+          taken. MEASURED: the fields were subject/nominal lines,
+          pairing, pane, two cursors, two anchors, virgin, stale count
+          and the undo stack -- no notion of a copied line. A range
+          could therefore cover a stretch already in the nominal and
+          take it a second time, and the screen said nothing about
+          which lines were still to be decided.
+
+DECISION  'copied_s' -- the subject indices already COPIED. A copied
+          line is SPENT: no cursor stands on it, no range intersects
+          one, no take covers one again (L-13). It is unreachable the
+          way the closing token is (L-11) -- a PLACE, not a refusal
+          shouted at a keystroke -- so a range cannot be spanned across
+          one either. After a take the cursor is carried to the first
+          survivor below it.
+
+          IT IS RECORDED, NOT DERIVED. A REALIGN re-pairs from scratch
+          and an identical line pairs the same whether it was copied or
+          always matched, so 'pairing' cannot answer this. The subject
+          text never changes within a session, so the set survives a
+          REALIGN unchanged; only UNDO restores it, which it does for
+          free (L-9 pushes whole states).
+
+COST      Three of the keyed suite's own recorded ranges moved: they
+          had the cursor sitting on a line the ruling makes
+          unselectable. The nominal texts in those GOODs did not move
+          at all. TAKE_ALL spends everything, so after it nothing is
+          selectable -- the law, not a jam, and stated as such.
+
+GRAVEYARD Deriving 'spent' from the pairing -- rejected above. Refusing
+          an intersecting take with a message -- rejected: every other
+          inapplicable act in 'reduce' is silent, and one loud refusal
+          among them reads as a bug in the key.
+
+
+E-64  THE LABEL STANDS BESIDE THE FIRST SURVIVOR                   (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   '##! unaccepted' took a row of its own with the subject side
+          blank, so the first not-copied subject line stood one row
+          BELOW the label that frames it. MEASURED on a first blessing:
+          the whole subject column was empty for 22 rows, because every
+          nominal line of the opening region is unpartnered, the label
+          included, and the subject was laid out after all of them.
+
+DECISION  The label DISPLACES the region's first content filler. The
+          fillers pair 1:1 with the subject lines they stand for, so
+          the label and the first filler want the same row; the label
+          takes it and that filler is not drawn. Four fillers become
+          the label and three rows. The shared row wears the FILLER's
+          flags -- cursor, mark, target -- because that is the line it
+          now stands for; only the text is the label's.
+
+          PROJECTION ONLY. 'region_take' is untouched and the nominal
+          text is unchanged, so compare never sees the displacement.
+
+          '####' KEEPS ITS OWN ROW. Giving it the LAST survivor by the
+          same rule was weighed and dropped: a region with ONE content
+          line would need both markers on one row, and the shape has no
+          answer for its own edge case.
+
+COST      One projection GOOD moved. A nominal cursor moved onto the
+          displaced filler stands on the label's row, so it appears not
+          to move for one keystroke.
+
+GRAVEYARD The label row BORROWING the survivor without suppressing the
+          filler -- rejected: a filler beside nothing is a nominal line
+          no subject line accounts for, which is what the region exists
+          to deny.
+
+
+E-65  THE CHECKLIST MARK SAYS HANDLED                             (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'choose' opened with EVERY case marked '[X]' and the mark
+          meant SELECTED: a number toggled it, Enter took what stood
+          marked. So the default was 'accept all of it', the glyph
+          carried the most dangerous state, and the menu was shown
+          ONCE -- after which a person working ten cases had no list to
+          come back to and no record of where he was.
+
+DECISION  '[X]' MEANS HANDLED -- what this session has already worked.
+          Nothing is marked when the menu first appears, because
+          nothing has been handled yet. A handled case is not
+          choosable again, by number or by Enter.
+
+          THE MENU IS RE-ENTERED after every round, so the marks
+          accumulate and the list is the author's place in the work. A
+          number works ONE case and returns to the menu; Enter works
+          all that are unhandled; 'q' ends it. The loop stops when he
+          quits or nothing unhandled is left.
+
+          ONE GLYPH, ONE MEANING. 'selected' needs no glyph once a
+          number acts at once, so no second column appeared.
+
+COST      'a' (mark all) and 'n' (mark none) are gone -- they were
+          operations on a selection that no longer exists; Enter is
+          what 'a' was. 'hwut.diff' shares the menu and does not loop,
+          so its column of marks is always blank: diff VIEWS, it does
+          not handle. Two recorded GOODs moved ('test-accept.sh
+          opening', 'test-diff.sh store'), and test-diff.sh's own
+          narration said 'toggles case 2 off', which is no longer what
+          typing '2' does.
+
+GRAVEYARD '[X]' = handled AND the door refusing to re-accept a member
+          -- rejected before building: the merge door exists to
+          re-accept members, and the reading that excluded them would
+          have left only aspirants, which is 'hwut.accept's door.
+
+
+E-66  '--yes' GOES FROM 'hwut.diff' AND FROM THE USAGE TEXT       (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   E-57 struck '--yes' from 'hwut.accept', but MEASURED: it was
+          still a live option on 'hwut.diff' ('as --all, for scripts'
+          -- two words, one act, the exact defect E-57 named), still
+          printed in two of 'hwut.accept's own usage blocks while the
+          parser refused it, and still standing in the launchers' GOOD
+          for both faces.
+
+DECISION  Gone from 'hwut.diff', REFUSED BY NAME there as accept
+          refuses it, so a script that still says it is told rather
+          than silently given the default. The two stale usage lines
+          in 'accept.py' deleted. 'choose' loses its vestigial
+          'yes_f'.
+
+COST      'bin/TEST' was standing at 1 of 2 on this alone; it is 2 of 2
+          now. 'hwut.move' keeps its own '--yes': it confirms a rename
+          and is not paired with a '--force', so E-57's "yes to what?"
+          does not arise there.
+
+
+E-67  ONE CHECKLIST, SHARED; ONE CASE PER ASK                     (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.accept.interactive' and 'hwut.diff' both offer a list
+          and both work its cases one after another, and each held its
+          own copy of that loop. MEASURED: the copies had already
+          drifted -- accept re-entered the menu and marked what it had
+          worked, diff showed the menu once and never came back, so
+          its column of marks could never be anything but blank. The
+          same glyph meant two things at two doors.
+
+DECISION  'services/lib/checklist.py' -- 'Checklist', the menu and the
+          marks, used by both faces. The marks are the class's own
+          state; the face's loop ends on None and on nothing else.
+
+          ONE CASE PER ASK. 'pick' returns ONE item. A number names
+          it; '<enter>' takes the FIRST unhandled one and is PRINTED
+          beside that case's own number, so the key and its effect are
+          not two facts a person must join up. Walking a list is
+          Enter, Enter, Enter.
+
+          IT MARKS WHAT IT HANDED OVER. What 'handled' means is the
+          face's business -- accepted at one door, VIEWED at the other
+          -- and the menu cannot know; handing over is the only fact
+          it has.
+
+          '--all' HANDS EVERY ITEM OVER IN TURN with no menu drawn, so
+          the face's loop is the same shape in both modes.
+
+          IT PAGES. The page is the terminal's height less the menu's
+          own lines, asked through 'report.height_of', which asks
+          exactly as 'width_of' asks. A partial page ends in an OPTION
+          like any other -- 'n' and the count still outside the page
+          -- and 'n' WRAPS, so every case is reachable with one key
+          and no second key was invented for going back. Numbers are
+          ABSOLUTE: a number picks from any page. Where '<enter>'
+          would take a case this page does not show, that case is
+          printed under the list rather than left as an invisible
+          mark.
+
+          NO TTY, NO PAGING: every suite drives these faces through a
+          pipe, and a paged menu there would record page prompts
+          instead of a list.
+
+COST      'choose' leaves '_cases.py'. 'Enter takes the rest' (E-65)
+          is gone -- Enter takes ONE, which is what makes the two
+          faces the same face. Three GOODs moved and one test's own
+          narration with them: 'test-accept.sh opening' said "'q' on
+          test-two.sh" where 'q' now quits the MENU, so its input was
+          made to measure what it claims.
+
+GRAVEYARD The module owning the LOOP as well -- rejected: the face's
+          accumulation (accepted / refused / left) would have to come
+          back through a callback, and the loop is four lines.
+
+
+E-68  '--dont-ask' IS THE WORD                                    (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   '--yes' names an ANSWER, and on the command line -- before
+          the question exists -- there is nothing for it to answer.
+          'hwut.rename' happens to prompt "Proceed? [y/N]", so the
+          word lined up there by luck of phrasing, not by reason.
+
+          TRADITION IS DIVIDED: '-y'/'--yes' (apt, yum, dnf),
+          '--noconfirm' (pacman), '--non-interactive' (svn, zypper),
+          '--batch' (gpg, ssh). '-q' and '-s' are QUIET and SILENT
+          everywhere -- output volume, never consent -- so neither may
+          be borrowed for it. And MEASURED: '-y' is already bound in
+          this tree, to '--side-by-side', on two faces; a person
+          carrying apt's habit who types 'hwut.diff -y' gets two
+          columns and no warning.
+
+DECISION  '--dont-ask' on every face that asks: 'hwut.rename',
+          'hwut.remove', 'hwut.move'. It names the ACT SUPPRESSED, not
+          an answer to an unasked question, and it is remembered once
+          the doc has been seen. '--yes' is REFUSED BY NAME, so a
+          script that still says it is told rather than silently given
+          the default.
+
+COST      Sixteen invocations inside the suites moved with the flag;
+          two recorded GOODs of 'hwut.remove' carried the usage line
+          and moved with it. 'hwut.accept' still spells this act
+          '--force', because E-57 gave that one word two jobs --
+          suppress the asking AND overwrite a standing nominal. That
+          divergence stands and is NOT ruled here.
+
+GRAVEYARD '--noconfirm' -- one project's word, not five projects'.
+          '--grant' -- reads well, nobody's convention, unguessable.
+
+
+E-69  THE TRADITIONAL PAGE COLOURS AGAIN, AND THE VERDICT STANDS OFF
+      THE RULE                                                    (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.report --format=traditional' emitted not one escape --
+          MEASURED with 'cat -A': the HWUT page a person recognised by
+          its orange title band and its green and red badges came out
+          as grey text. And '[OK]'/'[FAIL]' ended exactly ON the rule's
+          last column, which reads as a label that has been cut off.
+
+DECISION  COLOUR, and BACKGROUNDS rather than foregrounds: a verdict is
+          a BADGE, read at a glance across a screenful of dots. The
+          title's three lines -- empty, title, empty -- are one orange
+          stripe, each PADDED TO THE FULL WIDTH first, or the
+          background would stop where the text does. '[OK]' on green,
+          '[FAIL]' on red, in the block and in the summary alike.
+
+          THE ESCAPES GO ON AFTER THE LAYOUT IS MEASURED. 'leader_line'
+          computes over the PLAIN verdict and prints the painted one;
+          the summary line is padded by hand rather than by '%-8s',
+          which would count escapes as columns. A coloured page and a
+          plain one therefore break their lines in the same columns.
+
+          VERDICT_MARGIN = 2: the verdict column stops two short of the
+          rule.
+
+          ONLY THE TRADITIONAL PAGE, and only where it will be looked
+          at: '--plain' says no, '--color' says yes outright, '--out'
+          implies no, a pipe implies no, and JUnit, TAP and JSON never
+          carry an escape -- they are parsed, not read.
+
+COST      Every recorded page of 'test-report.sh' moved by two dots,
+          and its usage line twice. '--color' exists largely because
+          the suite drives every face through a PIPE and could
+          otherwise never see this page at all; the new 'color' choice
+          spells the escapes 'ESC', since a raw escape byte in a
+          nominal is unreadable in a diff.
+
+          AND: 'test-report.sh' printed no '<hwut-end>', so accept
+          refused every GOOD of it -- the same defect named for
+          'test-sanitize.sh' and 'test-output.sh'. Fixed in the test,
+          not in accept; all nine of its GOODs carry the token now.
+
+GRAVEYARD Foreground colours -- rejected: a coloured word among dotted
+          leaders is not a badge, and the page's whole point is that a
+          failure is seen without being looked for.
+
+
+E-70  '--dont-ask' AND '--force' PART COMPANY AT 'hwut.accept'; THE PAGE
+      SAYS A FAILURE ONCE                                       (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   (1) E-57 fused four jobs into '--force': skip the asking,
+          skip the shared-nominal NOTE, overwrite a STANDING nominal
+          without a merge, and record a FIRST acceptance WHOLE rather
+          than as the shape nobody has judged. E-68 then gave the tree
+          '--dont-ask' for the first of those at three other faces, so
+          the same act was spelled two ways.
+
+          (2) The traditional report said every failure THREE times:
+          in its own block badged red, counted in the summary, and
+          listed again at the foot. On a long run the closing list
+          pushed the summary off the screen -- the one part a person
+          scrolls back for.
+
+DECISION  (1) '--dont-ask' at 'hwut.accept' too. It governs the ASKING
+          and nothing else; '--force' governs what is DONE -- the
+          overwrite and the whole-candidate first acceptance.
+          'hwut.accept.apply' passes both, since neither is offered
+          there.
+
+          '--force' IMPLIES '--dont-ask'; the reverse does not hold.
+          Not tidiness: MEASURED with the two fully separate, every
+          caller in the tree saying '--force' alone reached the prompt,
+          and the prompt is 'read_line()' on an inherited stdin that
+          never closes -- the suite did not fail, it HUNG. A split that
+          turns old callers into deadlocks is not a split anybody
+          wants. 'overwrite the thing I judge against' is the strictly
+          stronger assertion; a person who has made it has decided.
+
+          (2) The closing 'FAILURES:' list is gone.
+
+COST      '--force' still carries two meanings to a reader of the
+          command line, and only the doc says which is stronger. The
+          alternative -- full separation plus a refusal where stdin
+          cannot answer -- was rejected: the suite legitimately drives
+          the asking through a PIPE ('test-accept.sh ask'), so
+          "no tty, no question" would silence a behaviour under test.
+
+          Five recorded pages of 'test-report.sh' lost six lines each.
+
+GRAVEYARD Leaving '--force' alone at this face -- rejected: E-68 had
+          already made '--dont-ask' the tree's word, and one face
+          spelling it differently is the defect E-68 named.
+
+
+E-71  THE TRADITIONAL PAGE IS WRITTEN AS THE TREE IS WALKED      (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.report' collected the WHOLE tree and then printed it.
+          Exploring a directory INTERVIEWS its applications --
+          subprocesses -- so the cost is real: MEASURED on this tree,
+          the first line appeared after 12.57 s and the whole page
+          0.03 s later. A person watching a large tree saw nothing at
+          all, then everything at once, and could not tell a slow walk
+          from a hung one.
+
+DECISION  THE WALK STREAMS, at three layers, each a generator beside
+          the eager form rather than in place of it:
+
+            'explore_tree_stream'  yields (directory, result) as the
+                                   walk reaches them; 'explore_tree' is
+                                   now that generator run to the end,
+                                   so 'CTreeExploration' is unchanged
+                                   and every caller of it is untouched.
+            'of_tree_stream'       'of_tree's loop body, opened up:
+                                   directory, result, bookkeeper, the
+                                   cases the wish selected there.
+            'entry_stream_of'      one report entry per directory;
+                                   'row_list_of' is 'list()' of it.
+
+          THE SUMMARY IS AT THE FOOT, where it always was, and is the
+          ONLY part that needs the whole tree: 'traditional_line_tuple'
+          keeps each entry as it passes, for that one purpose, and
+          yields the block before the next directory is explored.
+          'main' writes line by line instead of building a list.
+
+          MEASURED AFTER: first line 0.15 s, whole page 12.21 s.
+
+          'EMPTY' IS HELD FOR, NOT WAITED FOR. It is a fact about the
+          whole selection, which a stream cannot know before the end --
+          but it CAN know the moment the answer stops being 'empty', so
+          the walk is held just far enough to see one selected case and
+          streams from there.
+
+          THE MACHINE FORMATS TAKE THE LIST. JUnit totals 'tests' and
+          'failures' in its opening tag, TAP its plan line, JSON its
+          object: none can write a first line without the last
+          directory. No loss -- nobody WATCHES JUnit.
+
+          THE EXIT CODE IS TALLIED ON THE WAY THROUGH. A streamed page
+          is read once; walking it again to count failures would mean
+          holding it all, which is what streaming exists to avoid.
+
+COST      A selection error raised after the first yield would now
+          reach the reader below a partial page. In practice the walk's
+          refusals -- 'RootConfMissing', 'SelectionError',
+          'LabelFileError' -- all arise before the first directory, and
+          the held prefix covers them.
+
+          'CTreeExploration.fault_tuple' is complete only when the
+          generator is exhausted, which is why a streaming face shows
+          no trailing block; the snapshot form is unchanged for faces
+          that need one.
+
+GRAVEYARD Making 'explore_tree' itself a generator -- rejected:
+          'CTreeExploration' is frozen, 'selection', 'sanitize' and the
+          run all read 'fault_tuple' off it, and a walk that cannot
+          answer for its own faults would have broken all three.
+
+
+E-72  A REFUSAL ABOUT ONE APPLICATION IS ANSWERED IN ITS CHOICES (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.play test-report-details.sh' answered with a list of
+          RUNS -- "names 7 runs, and this face plays ONE:
+          test-report-details.sh bare, test-report-details.sh coverage,
+          ..." -- the file name repeated on every entry, and the word
+          'runs' where the author thinks 'choices'.
+
+          Worse, a WRONG CHOICE on a RIGHT application fell into the
+          nothing-matched branch and answered with the directory's
+          whole roster: MEASURED, 'hwut.play test-report-details.sh
+          nosuch' listed twenty-one files and never once said what
+          choices that file offers. The one thing the person needed
+          was the one thing missing.
+
+DECISION  Where the words name ONE application THAT EXISTS, the
+          question is about that application, and the answer is the
+          choices it reports:
+
+            no choice given    "no choice specified; '<app>' reports
+                                N choice(s): a, b, c"
+            choice not there   "choice '<x>' not supported; '<app>'
+                                reports N choice(s): a, b, c"
+
+          IN HEADER ORDER: 'choice_db' keeps the order the author
+          wrote, and that is the order he will look in.
+
+          THE DIRECTORY'S ROSTER IS STILL THE ANSWER where the
+          APPLICATION is not there -- a misspelt file name is a
+          question about the directory. And a glob naming several
+          applications still gets the run list, because there the file
+          name on every entry is the information.
+
+COST      Two recorded pages of 'test-play.sh' moved. An application
+          with no choices at all now says "reports 0 choice(s): none",
+          which is accurate and slightly odd to read; the alternative,
+          a special sentence for it, seemed worse than an honest zero.
+
+
+E-73  'DID YOU MEAN' -- ONE SUGGESTER FOR EVERY FACE              (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   Every face that refused a word knew the words it WOULD have
+          taken -- its options, its formats, its strategies, an
+          application's choices, a directory's files -- and every one
+          of them threw that list away and said only 'no'. MEASURED:
+          'hwut.report --plian' answered "does not take: --plian" and
+          left the reader to find the difference between 'plian' and
+          'plain' by eye.
+
+DECISION  'services/lib/cmdline.py' -- the command line's SECOND
+          sentence, in one place. 'did_you_mean(word, candidates)'
+          returns a suffix to concatenate, or "".
+
+          THE DISTANCE IS COMPARE'S OWN ('engine/compare/core/
+          edit_operations/string.do'). A second Levenshtein in this
+          tree would be a second answer to one question.
+
+          THE THRESHOLD SCALES WITH THE WORD -- 1 edit up to four
+          characters, 2 up to eight, 3 beyond -- because a one-letter
+          slip in a short word is a different event from one in a long
+          word. A PREFIX matches at any distance: somebody who typed
+          '--dont' was not guessing, he stopped early. DASHES AND CASE
+          are ignored for the comparison and kept for the answer, so
+          '--Force' is told its capital letter is the whole problem.
+
+          THE CANDIDATE LIST IS THE FACE'S OWN USAGE LINE
+          ('option_tuple'). Each face already spells its options once,
+          in the sentence it prints when it refuses; asking THAT
+          sentence means the suggester cannot drift from what the face
+          takes, which a second hand-kept list would do within a
+          release.
+
+          A SUGGESTION MUST EARN ITS PLACE. Where the refusal already
+          prints the whole list ('among_listed_f') and the list holds
+          ONE name, nothing is said: "offers: test-here.sh -- did you
+          mean 'test-here.sh'?" is noise with a question mark on it.
+          And where nothing is near, the suffix is EMPTY -- a wrong
+          guess sends a person to check a spelling that was never the
+          problem.
+
+          WIRED: the 'does not take' refusal of accept, plan, rename,
+          report, run, sanitize, stability, wishlist and play; the
+          '--format' and '--strategy' value refusals; and play's two
+          choice refusals and its directory roster (E-72).
+
+COST      A face is only as helpful as its usage line is complete.
+          MEASURED: 'hwut.wishlist --labl' suggests nothing, because
+          that face's usage names only '--directory' -- the wish
+          vocabulary it also accepts is documented elsewhere. The gap
+          is in the usage line, which is where it should be fixed, and
+          the suggester is right to stay silent rather than invent.
+
+          '<test-glob>' in a usage line contributed a phantom option
+          '-glob' until the extraction required a dash to BEGIN a
+          word. A phantom is exactly what a suggester must not offer.
+
+GRAVEYARD A hand-kept option list per face -- rejected: two lists, one
+          of which is never updated.
+
+
+E-74  'hwut.play' SAYS CONFIGURATION, THEN OUTPUT                 (2026-09-13)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.play' opened straight into "SUBJECT -- what enters the
+          comparator". Two faults in one banner: the word SUBJECT is
+          the comparator's vocabulary, not the author's -- he ran his
+          program and wants its OUTPUT -- and the rules that run stood
+          under were nowhere, beyond a one-line 'setup |' legend
+          inside the reading.
+
+DECISION  Two sections, named for what a person came to see:
+
+            CONFIGURATION   the resolved configuration, IN THE
+                            SPECIFICATION LANGUAGE
+            OUTPUT          what the choice printed, as it is read
+
+          THE CONFIGURATION IS PRINTED BY THE ONE PRINTER THAT KNOWS
+          IT ('exploration/printer.case_text'), not paraphrased and not
+          tabulated. What is shown can be PASTED BACK into an
+          'hwut.conf' or an '@hwut' block: the shape an author writes
+          is the shape he is shown, which is that module's whole
+          purpose, and a second renderer here would be a second answer
+          to one question.
+
+          RESOLVED, WITH PROVENANCE. The application's defaults and the
+          directory's are folded in, and 'provenance_f' puts the place
+          each value came from in a comment, because the question a
+          player asks is 'under what rules did THIS run' -- not 'what
+          did I type'.
+
+          The 'setup |' and 'reading |' lines stay where they are,
+          inside the reading: they are the LEGEND for the marks in the
+          listing, not the configuration.
+
+          A BANNER IS A LABEL, NOT A SENTENCE. 'RAW -- what the
+          application produced' explained a word that needed no
+          explaining and made the rule after it too short to read as a
+          rule. Every banner in this face is now one word:
+          CONFIGURATION, OUTPUT, RAW, PYPED, STDERR. Where the label
+          carried the only information it had -- 'PYPED -- no pype
+          stands for this stream' -- that sentence moved below the
+          banner, where prose belongs.
+
+          THE BANNERS WEAR THE ORANGE BAND, on a terminal: the same
+          heading colour the HWUT page has used since E-69, and the
+          WHOLE WIDTH is painted, rules included -- a band that stopped
+          at the word would be a coloured word, not a band, and the
+          point of a band is that an eye scrolling back finds the
+          section without reading anything. Gated exactly as the
+          report's page is gated ('report.color_wanted_f'): '--plain'
+          says no, a PIPE says no, so no recorded page carries an
+          escape.
+
+COST      Four recorded pages of 'test-play.sh' gained the section.

@@ -1,30 +1,84 @@
 --- by default the error stream is not shown
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-noisy.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-noisy.sh ]================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | out
-         2    2 | <hwut-end>
+         1 | out
+    --[ CLOSING-TOKEN ]--
+         2 | <hwut-end>
     ============================================================
 }
 --- '--stderr' shows it, marked as never tested
 STATUS: 0
 STDOUT {
-    ===== SUBJECT -- what enters the comparator ==================
+    ===== CONFIGURATION ==========================================
+        test-noisy.sh - {
+            caps {
+                timeout_sec = 300.0
+                cpu_sec = 300
+                memory_mb = 512
+                file_size_mb = 10
+                child_process_max_n = 32
+                network = true
+            }
+            tolerance {
+                numeric_ratio = 0.0
+                slash = true
+                whitespace = true
+                eq_pattern = []
+                nothing = []
+                analogy = ["((", "))"]
+                constraints = []
+                comment = ["##", "##"]
+                regions = true
+            }
+            same = false
+            interactive = false
+            output = ["<stdout>"]
+        }
+    
+    ===== OUTPUT =================================================
     
     =[ test-noisy.sh ]================================== round 1
     setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
     reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
     --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-         1    1 | out
-         2    2 | <hwut-end>
+         1 | out
+    --[ CLOSING-TOKEN ]--
+         2 | <hwut-end>
     ============================================================
     
-    ===== STDERR -- shown, never tested (E-5) ====================
+    ===== STDERR =================================================
         a warning
 }
 <hwut-end>
