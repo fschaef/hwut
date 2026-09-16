@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "The keyed merge: the laws of taking, and the keymap."
-#     choices    = ["cut", "filler", "keymap", "latch", "reindex",
-#                   "split", "take", "token", "undo"]
+#     choices    = ["crossing", "cut", "filler", "keymap", "latch",
+#                   "reindex", "split", "take", "token", "undo", "view"]
 #     tolerance { regions = false }
 # }
 #
@@ -25,6 +25,7 @@ from vut.services.lib.viewers.keyed.reduce import reduce
 from vut.services.lib.viewers.keyed.region import (region_list_of, region_of,
                                                    take, filler_region,
                                                    FILLER_LINE)
+from vut.services.lib.viewers.keyed.project import project
 import vut.services.lib.viewers.keyed.keymap as keymap
 
 
@@ -203,15 +204,56 @@ def test_reindex():
 
 
 def test_token():
-    print("L-11: the closing token is out of reach")
+    print("L-11: the closing token is takeable, and it ENDS the nominal")
     state = fresh()
     print("     token at %i, last reachable %i"
           % (state.token_i_s(), state.last_reachable_s()))
     walked = play(state, [E_Act.MOVE_DOWN] * 10)
     print("     after ten 'j': cursor_s=%i" % walked.cursor_s)
-    paged = play(state, [E_Act.PAGE_DOWN])
-    print("     after Ctrl-D : cursor_s=%i" % paged.cursor_s)
-    print("     a take can never reach it, because no cursor can.")
+
+    def taken(tag, subject, nominal, pairing, act_list):
+        """RETURN: None. One take, and the nominal it leaves."""
+        state = play(MergeState(subject_line_list=subject,
+                                nominal_line_list=nominal,
+                                pairing=pairing), act_list)
+        print("\n-- %s" % tag)
+        for i, line in enumerate(state.nominal_line_list):
+            print("     %2i  %s" % (i, line))
+        print("     spent %s" % sorted(state.copied_s))
+
+    taken("the token alone, DERIVED target: it lands on its partner, the\n"
+          "   nominal's token, so nothing follows and nothing is cut",
+          ("alpha", "<hwut-end>"),
+          ("alpha", "stale 1", "stale 2", "<hwut-end>"),
+          {0: 0, 1: 3},
+          [E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
+    taken("the token alone, AIMED at 'stale 1': everything from there goes",
+          ("alpha", "<hwut-end>"),
+          ("alpha", "stale 1", "stale 2", "<hwut-end>"),
+          {0: 0, 1: 3},
+          [E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.ANCHOR, E_Act.SWAP_PANE,
+           E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
+    taken("a range ENDING in the token, AIMED at 'old'",
+          ("alpha", "beta", "<hwut-end>"),
+          ("alpha", "old", "tail", "<hwut-end>"),
+          {0: 0, 1: None, 2: 3},
+          [E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.ANCHOR, E_Act.SWAP_PANE,
+           E_Act.MOVE_DOWN, E_Act.ANCHOR, E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
+    taken("'gamma' and the token, the target AIMED inside the region:\n"
+          "   the region's rest goes, what stands above it stays framed",
+          SUBJECT, NOMINAL, {**PAIRING, 3: 5},
+          [E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_DOWN, E_Act.ANCHOR,
+           E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_DOWN, E_Act.ANCHOR,
+           E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
+    taken("TAKE_ALL: one token, and it is spent too",
+          SUBJECT, NOMINAL, {**PAIRING, 3: 5}, [E_Act.TAKE_ALL])
+    taken("an AIMED take onto the nominal's own token stops above it",
+          ("f", "<hwut-end>"), ("<hwut-end>",), {0: None, 1: 0},
+          [E_Act.SWAP_PANE, E_Act.ANCHOR, E_Act.SWAP_PANE, E_Act.TAKE_RANGE])
+    taken("an AIMED take onto a region's label stays out of the markers",
+          ("a", "<hwut-end>"),
+          ("##! unaccepted", "--?--", "####", "<hwut-end>"), {0: 1, 1: 3},
+          [E_Act.SWAP_PANE, E_Act.ANCHOR, E_Act.SWAP_PANE, E_Act.TAKE_RANGE])
 
 
 def test_filler():
@@ -241,7 +283,90 @@ def test_keymap():
     print("     act_of('Z') = %s" % keymap.act_of("Z"))
 
 
+def test_crossing():
+    print("A subject line is drawn ONCE, and a take is paired where it stands")
+
+    def rows_of(state):
+        """RETURN: None. The two panes as the screen lays them out, and
+                   the check that no subject line appears twice."""
+        index_list = []
+        for row in project(state):
+            s, n = row.subject, row.nominal
+            if s.index >= 0: index_list.append(s.index)
+            print("     %2s %-12s | %2s %s"
+                  % (s.index if s.index >= 0 else "", s.text,
+                     n.index if n.index >= 0 else "", n.text))
+        print("     subject rows %s -- each once: %s"
+              % (index_list, index_list == sorted(set(index_list))))
+
+    print("\n-- an unpaired line taken beside an EARLIER identical line")
+    print("   'c' is inserted at the seam below 'b'; the 'c' above it is")
+    print("   the nominal's own and must not be mistaken for the take")
+    state = MergeState(
+        subject_line_list=("f", "b", "d", "c", "<hwut-end>"),
+        nominal_line_list=("d", "d", "b", "f", "c", "b", "<hwut-end>"),
+        pairing={0: 3, 1: 5, 2: None, 3: None, 4: 6})
+    state = play(state, [E_Act.MOVE_DOWN] * 3 + [E_Act.TAKE_RANGE])
+    print("     pairing %s" % dict(sorted(state.pairing.items())))
+    rows_of(state)
+
+    print("\n-- an AIMED take above the partner of an earlier line")
+    print("   'beta' goes to nominal 0; 'alpha' is still paired below it.")
+    print("   The crossing pair cannot stand side by side: its nominal")
+    print("   line stands alone until 'r'")
+    state = MergeState(
+        subject_line_list=("alpha", "beta", "<hwut-end>"),
+        nominal_line_list=("zeta", "alpha", "<hwut-end>"),
+        pairing={0: 1, 1: None, 2: 2})
+    state = play(state, [E_Act.MOVE_DOWN, E_Act.SWAP_PANE, E_Act.ANCHOR,
+                         E_Act.SWAP_PANE, E_Act.TAKE_RANGE])
+    print("     pairing %s" % dict(sorted(state.pairing.items())))
+    rows_of(state)
+
+
+def test_view():
+    print("E-79: the screen for LOOKING -- 'hwut.diff'")
+    import asyncio
+    from types import SimpleNamespace
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+
+    print("\n-- the viewing table: nothing that changes the nominal")
+    for line in keymap.help_line_list(keymap.VIEW_KEYMAP):
+        print("     %s" % line)
+
+    print("\n-- a take, an undo, a commit: ignored; 'q' ends the view")
+    display = KeyedDisplay(view_only_f=True,
+                           act_script=[E_Act.TAKE_ALL, E_Act.MOVE_DOWN,
+                                       E_Act.UNDO, E_Act.COMMIT,
+                                       E_Act.CANCEL, E_Act.MOVE_DOWN])
+    relation = lambda name: SimpleNamespace(name=name)
+    pair = SimpleNamespace(line_n_s=1, line_n_n=1,
+                           cells_s=(SimpleNamespace(relation_id=relation("SUBSTITUTE"),
+                                                    tolerance_id=relation("STRING"),
+                                                    subject="alpha"),),
+                           cells_n=(SimpleNamespace(relation_id=relation("SUBSTITUTE"),
+                                                    tolerance_id=relation("STRING"),
+                                                    nominal="omega"),))
+
+    async def session():
+        """RETURN: None. One delivery, then the view."""
+        await display.open("x")
+        await display.present(pair)
+        await display.close()
+        await display.view("x", "alpha\nbeta\n", "omega\nbeta\n")
+    asyncio.run(session())
+    print("     nominal        %s" % (display.state.nominal_line_list,))
+    print("     spent          %s" % sorted(display.state.copied_s))
+    print("     cursor_s       %i  (one move before 'q', none after)"
+          % display.state.cursor_s)
+    print("     left by        %s" % display.leaving_act.name)
+    print("     differing      %i" % display.bad_pair_n)
+    print("     banner         %s" % display._banner())
+
+
 CHOICE_DB = {
+    "view":     test_view,
+    "crossing": test_crossing,
     "split":   test_split,
     "take":    test_take,
     "cut":     test_cut,

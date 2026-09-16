@@ -1,0 +1,24 @@
+
+--- the options, off the parser ---
+    --help --plain -f --force --width --directory --format --editor
+
+--- a slip in an option ---
+    --plian        -> -- did you mean '--plain'?
+    --forc         -> -- did you mean '-f' or '--force'?
+    -F             -> -- did you mean '-f', '--force' or '--format'?
+    --widht=3      -> -- did you mean '--width'?
+
+--- a slip in a WORD the option takes ---
+    --format=junti -> -- did you mean 'junit'?
+    --format=x     -> (nothing)
+    --editor=vim   -> -- did you mean '--editor'?
+
+--- parse_or_refuse: refused on 'err', never an exit ---
+    a --plian              -> refused
+    --forc                 -> refused
+    --width x              -> refused
+    --plain a b            -> ok: plain=True word=['a', 'b']
+       REFUSED: 'hwut.x' does not take: --plian -- did you mean '--plain'?
+       REFUSED: 'hwut.x' does not take: --forc -- did you mean '-f' or '--force'?
+       REFUSED: argument --width: invalid int value: 'x'
+<hwut-end>

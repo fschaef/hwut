@@ -28,7 +28,9 @@ ______________________________________________________________________________
 """
 from vut.services._accept_common          import token_terminated_f
 from vut.services._exit                   import E_ExitCode
-from vut.services.lib.viewers             import driver_for, E_DisplayTarget
+from vut.services.lib.viewers             import (driver_for, E_DisplayTarget,
+                                                  keyed_absent_reason,
+                                                  fallback_note)
 from vut.engine.operations.interaction.port import (E_Intent, merge_session,
                                                     MERGE_ROUND_MAX)
 
@@ -63,21 +65,28 @@ async def merge_text(subject_text, nominal_text, adapter,
 
 
 def adapter_for(editor_argv=None, plain_f=False, side_by_side_f=False,
-                width=None, out=None, input_f=None):
+                width=None, out=None, input_f=None, console_f=False,
+                err=None):
     """
     RETURN: DisplayAdapter, the session to run the merges in -- the
-            KEYED tier where there is a terminal to key on, the
-            line-based one where there is not: a scripted run, a pipe,
-            a suite answering through 'input'.
+            KEYED screen where a person sits at a terminal; the
+            line-based one under 'console_f', or where the screen cannot
+            run: a scripted run, a pipe, a suite answering through
+            'input', a machine without 'prompt_toolkit'.
 
-    'driver_for' falls back to the TUI tier by itself where
-    'prompt_toolkit' will not import, so a merge is never hard-failed
-    for lack of it.
+    THE FALLBACK IS NEVER SILENT (services E-79): where the screen was
+    wanted and cannot run, ONE note on 'err' says why. 'console_f' asked
+    for the line-based session outright and hears nothing.
     """
     if out is None:     out = sys.stderr
     if input_f is None: input_f = input
+    if err is None:     err = lambda text: sys.stderr.write(text + "\n")
 
-    target = E_DisplayTarget.KEYS if out.isatty() else E_DisplayTarget.TUI
+    target = E_DisplayTarget.TUI
+    if not console_f:
+        reason = keyed_absent_reason((out,))
+        if reason is None: target = E_DisplayTarget.KEYS
+        else:              err(fallback_note(reason))
     return driver_for(target,
                       out            = out,
                       input_f        = input_f,

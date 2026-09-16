@@ -1,0 +1,25 @@
+
+--- an unknown role ---
+    NOTE: ~/.hwut.conf:1: colour 'element.numerc' ignored -- no such role
+    verdict.subject    'red'
+
+--- an unknown colour word ---
+    NOTE: ~/.hwut.conf:1: colour 'verdict.subject' ignored -- unknown word 'purple'
+    verdict.subject    'red'
+
+--- a colour that is not a string ---
+    NOTE: ~/.hwut.conf:1: colour 'verdict.subject' ignored -- a colour is a quoted string
+    verdict.subject    'red'
+
+--- an operational key ---
+    NOTE: ~/.hwut.conf:1: 'tolerance' ignored -- not a preference ('colors' is)
+    verdict.subject    'red'
+
+--- a block that is not 'hwut' ---
+    NOTE: ~/.hwut.conf:1: 'colors' ignored -- a preference file holds one 'hwut' block
+    verdict.subject    'red'
+
+--- a file that does not parse ---
+    NOTE: ~/.hwut.conf:2: preferences ignored -- unterminated object: '}' missing
+    verdict.subject    'red'
+<hwut-end>

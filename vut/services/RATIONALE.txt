@@ -3342,3 +3342,334 @@ DECISION  Two sections, named for what a person came to see:
           escape.
 
 COST      Four recorded pages of 'test-play.sh' gained the section.
+
+
+E-75  A TAKE IS PAIRED WHERE IT STANDS; A SUBJECT LINE IS DRAWN ONCE
+                                                                  (2026-09-15)
+----------------------------------------------------------------------------
+PROBLEM   Reported: nominal text appeared copied back into the subject.
+          MEASURED by a fuzz of 'reduce' and 'project': the subject pane
+          drew the same lines TWICE ([0,1,2,3,1,2,3,4]), beside the
+          nominal's copies. Two causes:
+
+          (1) After a take, '_where_taken' found each taken line by its
+              TEXT, from two lines above the seam, and found an EARLIER
+              identical nominal line. The pairing crossed.
+          (2) An AIMED take can put a subject line above the partner of
+              an earlier one -- a crossing by the author's own hand --
+              and 'project' drew the earlier subject line again.
+
+          The same fuzz found two older defects: an aimed target on a
+          '##! unaccepted' label replaced the label and left a '####'
+          closing nothing; and where the nominal's token was its only
+          line, the nominal cursor stood on it and an aimed take
+          replaced it.
+
+DECISION  'region.take_placed' returns the nominal AND the index where
+          the taken lines begin; the pairing is built from that index.
+          Nothing is searched for.
+
+          A CROSSING PAIR STANDS APART: 'project' draws every subject
+          line once, and a nominal line whose partner is already on the
+          screen stands alone until 'r'.
+
+          A take touching an 'unaccepted' region's MARKERS is drawn into
+          its content, or takes the region whole where it covers all of
+          it; an insertion at the closing rule goes after it. An
+          ordinary take never replaces the nominal's own token.
+
+COST      Twenty thousand fuzz runs clean, with every subject and
+          nominal line drawn once, one token last, no region left open.
+          The fuzz never pairs a filler, so E-64's displacement is
+          covered by the keyed suite only. 'test-keyed.py crossing'
+          pins (1) and (2); it fails on the tree before this entry.
+
+GRAVEYARD Dropping crossing pairs from the pairing -- rejected: the
+          pairing is compare's word until 'r', and a projection that
+          rewrites it hides what compare said.
+
+
+E-76  A SPENT LINE STANDS ON A BAND                               (2026-09-15)
+----------------------------------------------------------------------------
+PROBLEM   E-63's spent lines were dim grey text: read as 'disabled',
+          and hard to read at all.
+
+DECISION  A grey-green background with light text, italic kept.
+          '--plain' unchanged (italic only).
+
+COST      None recorded: no page records the keyed screen's colours.
+
+
+E-77  '<hwut-end>' IS TAKEABLE, AND IT ENDS THE NOMINAL           (2026-09-15)
+----------------------------------------------------------------------------
+PROBLEM   L-11 kept the closing token out of every cursor's reach, so an
+          author could not say 'the nominal ends HERE' -- a stale tail
+          below the last real line had to be removed in '$EDITOR'.
+          E-63 still names L-11 as its model of 'unreachable'; that
+          comparison is superseded by this entry.
+
+DECISION  THE SUBJECT CURSOR REACHES THE TOKEN. A take whose range holds
+          it is the ordinary take, followed by a CUT right after the
+          taken lines: whatever followed, the old token included, is
+          gone. So the cut bites where the author AIMS the target; with
+          a derived target the token lands on its partner, the nominal's
+          token, and nothing follows it anyway.
+
+          A seam on a region's '####' moves past it; a seam inside a
+          region replaces that region's rest and frames what stood above
+          it. TAKE_ALL spends the token too, and no longer appends a
+          second one.
+
+COST      'test-keyed.py token' is rewritten to the new law and 'split'
+          moved one line: after taking the last line before the token,
+          the cursor now steps down onto the token instead of back up.
+
+
+E-78  PREFERENCES ARE THE PERSON'S, NOT THE PROJECT'S               (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   Colours were hard-coded in four readers -- the text TUI, the
+          keyed screen, the report page, the run's own ink -- and no
+          config key named one. A project's 'hwut.conf' was the wrong
+          home: it reigns over what is run and compared, and a colour is
+          nobody's operational parameter.
+
+DECISION  TWO FILES, ONE LANGUAGE (our HOCON dialect), KEY BY KEY:
+          '~/.hwut.conf' -- the person's, DOMINATES -- over
+          '<root>/bin/.hwut.conf', the installation's default beside the
+          'hwut.*' apps, which states EVERY key and whose comments list
+          the colour vocabulary. Roles: 'element.*' (what compare read),
+          'verdict.*', 'keyed.*', 'report.*', 'run.*'. A colour is a
+          quoted string of words: the eight names, 'bright-', 'bg-',
+          'c256:N', '#rrggbb', the attributes, 'none'.
+
+          A FAULTY PREFERENCE NEVER STOPS A RUN: the default stands for
+          the key, one NOTE names the file and line. The file is read
+          only where a colour is DRAWN, so a pipe never reads it and a
+          broken '~/.hwut.conf' cannot reach a recorded page. A project
+          file that says 'colors' is refused by name, pointing home.
+
+          EVERY LINE ELEMENT WEARS ITS COLOUR, in the text TUI and in
+          both panes of the keyed screen ('string' and 'separator'
+          default to 'none'). The keyed screen looks elements up by
+          line TEXT, so a taken line is coloured before any 'r'.
+
+COST      Every escape MEASURED byte-identical to the codes it replaces
+          ('test-preferences.py defaults' checks each reader). No
+          recorded page carries an escape, so none moved. The reader
+          lives in 'engine/display/preferences.py' because the run's
+          own ink is a reader; 'bin/' holds one file that is not a
+          launcher, and its README says so.
+
+GRAVEYARD A 'display { colors }' block in 'hwut-root.conf' -- rejected
+          by ruling: a team's repository does not choose a person's
+          terminal colours. A Python table -- rejected: not a config
+          file.
+
+
+E-79  THE SCREEN BY DEFAULT; THE FALLBACK SAYS ITS NAME              (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.diff' always drew the text display, and
+          'hwut.accept.interactive' fell back to it SILENTLY without a
+          terminal or without 'prompt_toolkit' -- the person could not
+          tell which display they had asked for.
+
+DECISION  Where a person sits at a terminal, both faces open the keyed
+          SCREEN -- 'hwut.diff' in a VIEW mode: the same panes and
+          element colours, moving, searching, help, 'q'; no act that
+          changes the nominal. '--console' asks for the text display
+          outright ('--force' implies it). Without '--console', where the
+          screen cannot run, the text display runs and ONE NOTE on
+          stderr says why -- 'no terminal', or the missing module.
+
+COST      'test-diff.sh' writes into a pipe and WANTS the text
+          rendering, so it says '--console': five pages moved by the
+          stimulus word; 'store' keeps one bare call, whose NOTE is the
+          measured fallback. The two launcher usage lines gained the
+          word. 'test-keyed.py view' pins the viewing table.
+
+GRAVEYARD Refusing outright without a terminal -- rejected: every suite
+          call through a pipe would break. Staying silent -- rejected:
+          that silence was the confusion reported.
+
+
+E-80  THE CLOCK IS STATED, NEVER WAITED FOR                       (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   'test-base-questions.py until' flipped between runs. MEASURED:
+          every question in it is 'hwut.run', which RECORDS what it
+          selects, and the recording read 'time.time()' while the
+          question read 'datetime.now()' -- two clocks, and whether the
+          fixture's run and the question fell in one second decided the
+          page. A test about behaviour beyond seconds cannot depend on
+          where a second falls, and must not wait an hour to show an
+          hour.
+
+DECISION  ONE CLOCK: 'auxiliary/clock.py'. 'now()' and 'epoch_second()'
+          are the wall clock -- until a test says 'state(instant)', after
+          which every reader sees that instant. The observation's 'when'
+          and the query's default 'now' read it; production never states
+          it. The choice records at T and asks at T, T+1, T+2, T+1 for
+          an hour's point, T+3601 -- each of a FRESH fixture, since a
+          question is a run -- and pins where '--until' bites: a run
+          ON the point is not before it.
+
+COST      One recorded page, rewritten. The page now names the instant.
+
+
+E-81  THE VOCABULARY IS THE PARSER'S                             (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   E-73 read a face's options off its USAGE line, which under-
+          documents ('hwut.wishlist' names one option). And the two faces
+          that parse with 'argparse' ('hwut.diff', 'hwut.accept.interactive')
+          suggested nothing at all: argparse's own error exited the
+          process. MEASURED WORSE: argparse's abbreviation made
+          '--forc' RUN as '--force'.
+
+DECISION  Where a face has a parser, the parser IS the vocabulary:
+          'option_tuple_of_parser' reads every spelling off it. The face
+          adds ONE thing the parser cannot know, 'ARG_DB' -- True where a
+          path follows, a tuple of words where an enumeration does --
+          and a slip in such a word is suggested against those words.
+          'parse_or_refuse' refuses in the hand-parsing faces' own words
+          and never exits. 'allow_abbrev=False'. The hidden
+          '--intern-cmd-get-completion-info' prints one TAB-separated row
+          per option -- spelling, kind (flag|file|enum|value), words --
+          for a shell's completion function.
+
+          THE NINE HAND-PARSING FACES STAY ON THEIR USAGE LINES until
+          each is given a parser: a migration of nine refusal pages is
+          its own session, and the usage-line gap is theirs to close
+          then.
+
+COST      'test-cmdline.py' gained 'parser' and 'completion'; 'faces'
+          now also prints the two parsers' tables. No other page moved.
+
+
+E-82  THE PREFERENCE READER IS A SERVICE; THE ENGINE IS HANDED THE WORD
+                                                                  (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   E-78 put the reader in 'engine/display' so the run's ink could
+          read it. But '~/.hwut.conf' will carry more than colours, and a
+          preference file is the person's -- a services matter. An
+          engine that reads it would own a face's concern.
+
+DECISION  'services/lib/preferences.py' is THE ONE READER of the file.
+          The VOCABULARY -- a colour word into an escape or a
+          'prompt_toolkit' style -- is the engine's, 'engine/display/
+          colour.py', since the engine's own ink must paint. The ink takes
+          'color_of' (role -> word): a face hands in the person's
+          preferences, the engine alone paints 'ROLE_DEFAULT_DB', the
+          words it always painted. No engine module imports services.
+
+COST      None recorded: escapes byte-identical, measured by the same
+          test, now 'services/TEST/test-preferences.py'.
+
+
+E-83  THE RAW STREAM FLOWS AS IT IS PRODUCED                      (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.play' showed nothing until the program had finished:
+          'stage_execute' drained stdout to EOF in blocks.
+
+DECISION  A TAP, 'on_raw_line', at the ONE seam where the raw stream is
+          read ('run/core.read_all', 'read_all_timed'), threaded through
+          'Run' and 'provider_of' like the observer. 'hwut.play' feeds it a
+          writer where a person watches (a terminal, not '--plain' into
+          a pipe), under a LIVE banner. What is live is the RAW line:
+          the reading follows once the pype has seen the whole stream,
+          which is E-71's shape one layer deeper -- a pyped line cannot
+          be read before the pype has run.
+
+COST      MEASURED ('test-provider.py live'): the second line reaches
+          the tap 0.25s after the first, as the program slept, every
+          tap precedes the delivery, the product is byte-identical
+          with and without the tap. No recorded page moved: every
+          suite plays through a pipe.
+
+
+E-84  ONE COMMAND-LINE READER: THE WISH, THEN ARGPARSE             (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   Nine faces parsed their own words by hand and refused off a
+          usage line written by hand; two used 'argparse' (E-81). Two
+          readers, two vocabularies, and a usage line that could lie.
+
+DECISION  ARGPARSE IS THE STANDARD -- it is the standard library's, it
+          is already here, and it generates the usage line; nothing
+          outside the standard library ('click', 'typer') buys enough
+          to be a dependency. 'cmdline.face_parser' builds it: no
+          abbreviation, no exit, the face's own '--help'. THE WISH WORDS
+          COME FIRST, through 'parse_wish', as they always did -- they
+          are shared and no face restates them -- and a slip in one is
+          suggested by the parser's refusal, since the wish passes it
+          on. 'usage_of' GENERATES the usage block in the house style:
+          the wish tokens, one token per option, the positional --
+          so the line cannot under-document the parser.
+
+          'hwut.wishlist' is the model, migrated: its usage line now
+          names every word it takes (the gap E-73 measured), and
+          '--labl' finds '--label'. THE OTHER EIGHT FOLLOW, one bundle
+          each or together: 'accept', 'plan', 'play', 'rename',
+          'report', 'run', 'sanitize', 'stability' -- each moves its
+          refusal pages by the generated usage.
+
+COST      Two 'test-wishlist.sh' pages: the usage block, from
+          '[<wish>]' to the tokens spelt out, as 'hwut.run' already
+          spells them. 'test-cmdline.py faces' shows the row grow; 'test-enter.sh refused'
+          quotes the same usage.
+
+
+E-85  EVERY FACE ON THE STANDARD READER                            (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   E-84 migrated one face; eight still read their words by hand
+          and refused off hand-written usage lines.
+
+DECISION  All nine now read through 'cmdline.face_parser' and
+          'parse_or_refuse', and eight print a GENERATED usage. The
+          generator grew exactly what their usage lines already said,
+          so their pages kept their shape:
+
+          - THE HOUSE ORDER: the wish, the positional ('word_metavar':
+            '[<file-glob> [choice-glob]...]', '<test-app> [<choice>]'),
+            then the face's options.
+          - A SECOND SHARED LAYER ('shared_token_tuple'): the rendering
+            words of 'hwut.run', printed before '--directory', suggested
+            and completed like the parser's own.
+          - REPEATABLE options in the wish's form, '[--target <name>]...'.
+          - A PREFIX SPELLING shown bracketed, '--stderr-tol[erated]'.
+          - TAKEN, NOT SHOWN: 'help=argparse.SUPPRESS' keeps what a usage
+            line never named ('hwut.run --force-run', '--coverage',
+            '--variant', '--dbd') out of usage, suggestion, completion.
+          - THE HOUSE REFUSAL, which every hand face already spoke:
+            "'hwut.X' does not take: a, b -- did you mean ...".
+
+          A VALUE CHECK WITH ITS OWN WORDS STAYS THE FACE'S: '--format',
+          '--width', '--jobs', '--repeat', '--strategy' are collected by
+          the parser and judged by the face, since those refusals name
+          the rule ('an integer of 2 or more -- one run cannot disagree
+          with itself'). '--yes' is refused by name before the parser.
+
+          'hwut.rename' IS THE ONE EXCEPTION: its synopsis is a GRAMMAR
+          ('<app> -to <app'>', three forms), so it stays written; the
+          parser serves its vocabulary, with '-to' held out like the
+          wish words.
+
+          The completion table carries the shared layers too: a wish
+          face completes '--fail', '--wishlist <file>', ... first.
+
+COST      MEASURED byte-identical usage for 'plan', 'play', 'run',
+          'stability', 'accept'. Moved, by ruling (a) -- the wish spelt
+          out: 'test-report.sh refused', 'test-sanitize.sh refused'; by
+          the metavar: 'test-wishlist.sh elided/refused', 'test-enter.sh
+          refused'; by the house refusal: one line of 'test-wishlist.sh
+          refused', two of 'test-cmdline.py parser'; 'test-cmdline.py
+          faces' now reads every face's parser.
+
+          THE CENSUS CAUGHT A CRASH of this migration: 'hwut.play' lost
+          'did_you_mean' from its imports while '_settled_case' still
+          used it -- 'test-play.sh refused' printed a traceback. Fixed,
+          and every migrated face swept with pyflakes for undefined
+          names and for the imports the migration left dead.
+
+          A TREE THAT RAN BUNDLE 14 remembers 'test-preferences.py' in
+          'engine/display/TEST''s book -- the move was made by hand, not
+          through 'hwut.move' -- and reports it as a test that no longer
+          stands. MEASURED cure, once, in that directory:
+              hwut.remove test-preferences.py --dont-ask

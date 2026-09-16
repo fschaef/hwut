@@ -35,6 +35,7 @@ import sys
 
 from vut.services                 import remove, accept
 from vut.services._exit           import E_ExitCode
+from vut.services.lib             import preferences
 from vut.engine.display.word      import CInk
 from vut.engine.display.console   import colour_decision
 
@@ -108,7 +109,8 @@ def main(argv=None, write=None):
 
     brief_list.sort()
     accept.write_brief(brief_list, write,
-                       CInk(colour_decision(os.environ, sys.stdout.isatty())),
+                       CInk(colour_decision(os.environ, sys.stdout.isatty()),
+                            color_of=preferences.load().color),
                        verb="Forgotten")
     return worst
 

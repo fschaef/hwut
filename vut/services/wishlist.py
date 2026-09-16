@@ -52,14 +52,24 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
                                                              with_targets)
-from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse)
 
-USAGE = usage_line("usage: hwut.wishlist",
-                   ("[<wish>]", "[<file-glob> [choice-glob]...]",
-                    "[--directory=<path>]"))
+#  THE STANDARD READER (E-84): the parser IS the vocabulary and the
+#  usage line is generated from it.
+PARSER = face_parser("hwut.wishlist",
+                     "Print every case the wish selects as a wishlist "
+                     "line, fit to redirect into a file.",
+                     word_help="a test, a test and a choice, a file glob "
+                               "and a choice glob",
+                     word_metavar="[<file-glob> [choice-glob]...]")
+PARSER.add_argument("--directory", default=None,
+                    help="ONE test directory (default: the tree below "
+                         "the cwd)")
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -124,21 +134,14 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    directory = "."
-    unknown   = []
-    word_list = []
-    for argument in rest_list:
-        if argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        else:
-            if argument.startswith("-"): unknown.append(argument)
-            else:                        word_list.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.wishlist' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    arguments, completion_f = parse_or_refuse(
+        PARSER, rest_list, lambda text: write(text), ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
         write(USAGE)
         return E_ExitCode.REFUSED
+    directory = arguments.directory or "."
+    word_list = arguments.word
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED

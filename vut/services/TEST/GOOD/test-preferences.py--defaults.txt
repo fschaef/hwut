@@ -1,0 +1,70 @@
+    notes: none
+    element.analogy          'yellow'                     sgr '33'                   pt 'ansiyellow'
+    element.binding          'magenta'                    sgr '35'                   pt 'ansimagenta'
+    element.nothing          'dim'                        sgr '2'                    pt '#888888'
+    element.numeric          'cyan'                       sgr '36'                   pt 'ansicyan'
+    element.pattern          'green'                      sgr '32'                   pt 'ansigreen'
+    element.separator        'none'                       sgr ''                     pt ''
+    element.string           'none'                       sgr ''                     pt ''
+    keyed.banner             'reverse'                    sgr '7'                    pt 'reverse'
+    keyed.cursor-active      'reverse bold'               sgr '7;1'                  pt 'reverse bold'
+    keyed.cursor-other       'underline'                  sgr '4'                    pt 'underline'
+    keyed.filler             '#666666'                    sgr '38;2;102;102;102'     pt '#666666'
+    keyed.help               'bg#222222 #dddddd'          sgr '48;2;34;34;34;38;2;221;221;221' pt 'bg:#222222 #dddddd'
+    keyed.marked             'bg#444466'                  sgr '48;2;68;68;102'       pt 'bg:#444466'
+    keyed.marker             '#ffaa00 bold'               sgr '38;2;255;170;0;1'     pt '#ffaa00 bold'
+    keyed.search             'bg#333333 #ffffff'          sgr '48;2;51;51;51;38;2;255;255;255' pt 'bg:#333333 #ffffff'
+    keyed.spent              'bg#2e3b32 #a9b8ad italic'   sgr '48;2;46;59;50;38;2;169;184;173;3' pt 'bg:#2e3b32 #a9b8ad italic'
+    keyed.target-latched     'bg#553333 bold'             sgr '48;2;85;51;51;1'      pt 'bg:#553333 bold'
+    keyed.target-virgin      'bg#333355'                  sgr '48;2;51;51;85'        pt 'bg:#333355'
+    keyed.token              '#00aa00 bold'               sgr '38;2;0;170;0;1'       pt '#00aa00 bold'
+    report.fail              'bright-white bg256:160'     sgr '97;48;5;160'          pt 'ansibrightwhite bg:#d70000'
+    report.ok                'black bg256:40'             sgr '30;48;5;40'           pt 'ansiblack bg:#00d700'
+    report.title             'black bg256:208'            sgr '30;48;5;208'          pt 'ansiblack bg:#ff8700'
+    run.block-error          'bold bright-white bg256:196' sgr '1;97;48;5;196'        pt 'bold ansibrightwhite bg:#ff0000'
+    run.bold                 'bold'                       sgr '1'                    pt 'bold'
+    run.dim                  'dim'                        sgr '2'                    pt '#888888'
+    run.dir-band             'bright-white bg256:208'     sgr '97;48;5;208'          pt 'ansibrightwhite bg:#ff8700'
+    run.directory            'c256:208'                   sgr '38;5;208'             pt '#ff8700'
+    run.fail                 'c256:196'                   sgr '38;5;196'             pt '#ff0000'
+    run.ground-fail          'bright-white bg256:196'     sgr '97;48;5;196'          pt 'ansibrightwhite bg:#ff0000'
+    run.ground-ok            'bright-white bg-green'      sgr '97;42'                pt 'ansibrightwhite bg:ansigreen'
+    run.ground-skip          'black bg-yellow'            sgr '30;43'                pt 'ansiblack bg:ansiyellow'
+    run.ok                   'green'                      sgr '32'                   pt 'ansigreen'
+    run.start                'blue'                       sgr '34'                   pt 'ansiblue'
+    run.tag-fail             'bright-white bg256:196'     sgr '97;48;5;196'          pt 'ansibrightwhite bg:#ff0000'
+    run.tag-ok               'bright-white bg-green'      sgr '97;42'                pt 'ansibrightwhite bg:ansigreen'
+    run.tag-undecided        'black bg-yellow'            sgr '30;43'                pt 'ansiblack bg:ansiyellow'
+    run.warn                 'yellow'                     sgr '33'                   pt 'ansiyellow'
+    verdict.nominal          'blue'                       sgr '34'                   pt 'ansiblue'
+    verdict.subject          'red'                        sgr '31'                   pt 'ansired'
+    verdict.tolerated        'yellow'                     sgr '33'                   pt 'ansiyellow'
+
+--- the escapes the readers drew before the table ---
+    run    ok             True 
+    run    fail           True 
+    run    tag_ok         True 
+    run    tag_fail       True 
+    run    tag_undecided  True 
+    run    warn           True 
+    run    start          True 
+    run    dim            True 
+    run    bold           True 
+    run    dir_band       True 
+    run    block_error    True 
+    run    ground_ok      True 
+    run    ground_skip    True 
+    run    ground_fail    True 
+    run    directory      True 
+    report title          True 
+    report ok             True 
+    report fail           True 
+    tui    element.numeric    True
+    tui    element.analogy    True
+    tui    element.pattern    True
+    tui    element.binding    True
+    tui    element.nothing    True
+    tui    verdict.subject    True
+    tui    verdict.nominal    True
+    tui    verdict.tolerated  True
+<hwut-end>

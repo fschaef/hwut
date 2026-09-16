@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "The provider seam: one interface per role, refused at the door"
-#     choices    = ["cadence", "door", "foreign", "roles", "scheme"]
+#     choices    = ["cadence", "door", "foreign", "live", "roles", "scheme"]
 #     interactive = true
 # }
 #
@@ -226,6 +226,59 @@ def test_cadence():
                  "provider's person.")
 
 
+def test_live():
+    """THE LIVE TAP (services E-83): a raw line reaches the tap BEFORE
+    the program has finished -- measured against the program's own
+    pauses, not against the wall clock's mood: the program prints,
+    sleeps a quarter second, prints; the tap's second arrival is at
+    least that far after its first, and both precede the delivery.
+    The product is byte-identical with and without the tap."""
+    import time
+    directory = tempfile.mkdtemp(prefix="vut_live_")
+    with open(os.path.join(directory, "app.py"), "w") as fh:
+        fh.write("import sys, time\n"
+                 "print('first'); sys.stdout.flush()\n"
+                 "time.sleep(0.25)\n"
+                 "print('second'); sys.stdout.flush()\n"
+                 "print('<hwut-end>')\n")
+    import dataclasses
+    configuration = dataclasses.replace(_interpreted(),
+                                        test_directory=directory)
+    arrival_list = []
+    def tap(line):
+        """RETURN: None. Notes the line and when it arrived."""
+        arrival_list.append((time.monotonic(), line.rstrip("\n")))
+
+    async def one(provision):
+        """RETURN: (Subjects, float), the delivery and when it came."""
+        subjects = await provision.provide()
+        return subjects, time.monotonic()
+
+    tapped, done_at   = asyncio.run(one(Run(configuration, on_raw_line=tap)))
+    untapped, _       = asyncio.run(one(Run(configuration)))
+    text_of = lambda subjects: subjects.reader_db["stdout"].open().read()
+    gap = arrival_list[1][0] - arrival_list[0][0] if len(arrival_list) > 1 else 0
+    print("INSPECT: lines tapped, in order : %s"
+          % [line for _, line in arrival_list])
+    print("         gap first->second       : %s  (the program slept 0.25)"
+          % ("%.2fs" % gap if gap >= 0.2 else "< 0.2s"))
+    print("         every tap before delivery: %s"
+          % all(when < done_at for when, _ in arrival_list))
+    print("         product same as untapped : %s"
+          % (text_of(tapped) == text_of(untapped)))
+    ok = _check([
+        ([l for _, l in arrival_list] == ["first", "second", "<hwut-end>"],
+         "every raw line reaches the tap, in order"),
+        (gap >= 0.2, "the second line arrives after the program's sleep, "
+                     "not with the first: lines flow as produced"),
+        (all(when < done_at for when, _ in arrival_list),
+         "each line is tapped before the delivery completes"),
+        (text_of(tapped) == text_of(untapped),
+         "the tap changes nothing in the product"),
+    ])
+    _verdict(ok, "the raw stream flows as it is produced.")
+
+
 def test_scheme():
     """The general scheme: one root, proxies handed out by a multi, one
     queue for both shapes."""
@@ -277,6 +330,7 @@ HwutRunner(
         "door":    test_door,
         "foreign": test_foreign,
         "cadence": test_cadence,
+        "live":    test_live,
         "scheme":  test_scheme,
     },
 ).run()

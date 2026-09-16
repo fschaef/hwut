@@ -3,7 +3,7 @@ size: 6;
 None -> STRING
 \(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
-(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
+(?<!\w)(?>-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
 otto -> EQUIVALENCE_PATTERN
 fritz -> EQUIVALENCE_PATTERN
 
@@ -14,3 +14,4 @@ Map:
   [3] NUMERIC
   [4] EQUIVALENCE_PATTERN 0
   [5] EQUIVALENCE_PATTERN 1
+<hwut-end>

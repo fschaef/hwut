@@ -5,7 +5,7 @@ Packet: SECTION 'LINE_SEQUENCE/LINE_SEQUENCE' Type: ChunkPair
 Packet: ROW S:01 | N:01 (Cost: 0.00)
     (STR) 'Match' [GOOD]                                              | (STR) 'Match' [GOOD]
     (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
-    (STR) '1' [GOOD]                                                  | (STR) '1' [GOOD]
+    (NUM) '1' [GOOD]                                                  | (NUM) '1' [GOOD]
 
 Packet: ROW S:02 | N:02 (Cost: 0.33)
     (STR) 'Extra' [GOOD]                                              | (STR) 'Extra' [GOOD]
@@ -17,7 +17,7 @@ Packet: ROW S:02 | N:02 (Cost: 0.33)
 Packet: ROW S:03 | N:03 (Cost: 0.00)
     (STR) 'Match' [GOOD]                                              | (STR) 'Match' [GOOD]
     (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
-    (STR) '2' [GOOD]                                                  | (STR) '2' [GOOD]
+    (NUM) '2' [GOOD]                                                  | (NUM) '2' [GOOD]
 
 Packet: EOS
 ----

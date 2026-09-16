@@ -1,6 +1,52 @@
-L-11: the closing token is out of reach
-     token at 3, last reachable 2
-     after ten 'j': cursor_s=2
-     after Ctrl-D : cursor_s=2
-     a take can never reach it, because no cursor can.
+L-11: the closing token is takeable, and it ENDS the nominal
+     token at 3, last reachable 3
+     after ten 'j': cursor_s=3
+
+-- the token alone, DERIVED target: it lands on its partner, the
+   nominal's token, so nothing follows and nothing is cut
+      0  alpha
+      1  stale 1
+      2  stale 2
+      3  <hwut-end>
+     spent [1]
+
+-- the token alone, AIMED at 'stale 1': everything from there goes
+      0  alpha
+      1  <hwut-end>
+     spent [1]
+
+-- a range ENDING in the token, AIMED at 'old'
+      0  alpha
+      1  beta
+      2  <hwut-end>
+     spent [1, 2]
+
+-- 'gamma' and the token, the target AIMED inside the region:
+   the region's rest goes, what stands above it stays framed
+      0  ##! unaccepted
+      1  --?--
+      2  ####
+      3  gamma
+      4  <hwut-end>
+     spent [2, 3]
+
+-- TAKE_ALL: one token, and it is spent too
+      0  alpha
+      1  beta
+      2  gamma
+      3  <hwut-end>
+     spent [0, 1, 2, 3]
+
+-- an AIMED take onto the nominal's own token stops above it
+      0  f
+      1  <hwut-end>
+     spent [0]
+
+-- an AIMED take onto a region's label stays out of the markers
+      0  a
+      1  ##! unaccepted
+      2  --?--
+      3  ####
+      4  <hwut-end>
+     spent [0]
 <hwut-end>

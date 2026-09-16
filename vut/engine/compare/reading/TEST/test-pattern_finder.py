@@ -169,3 +169,6 @@ if "aggressive" in sys.argv:
 
     # Case 6: Numeric next to literal
     test_agg("value: 100.5 units")
+
+#  THE STREAM COMPLETED (R-70).
+print("<hwut-end>")

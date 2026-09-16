@@ -170,12 +170,10 @@ class MergeState:
 
     def last_reachable_s(self):
         """RETURN: int, the highest subject line a cursor may stand on --
-                   one above the closing token, which is an anchor and
-                   not content (spec L-11).
+                   the last one, the closing token included: taking it
+                   ENDS the nominal (L-11, services E-77).
         """
-        token_i = self.token_i_s()
-        if token_i is None: return max(len(self.subject_line_list)-1, 0)
-        return max(token_i - 1, 0)
+        return max(len(self.subject_line_list)-1, 0)
 
     def copied_f(self, i_s):
         """
@@ -190,8 +188,7 @@ class MergeState:
     def reachable_s(self, i_s, direction_n=+1):
         """
         RETURN: int, the first subject line from 'i_s' onward in
-                'direction_n' that a cursor may stand on -- not copied,
-                not the closing token.
+                'direction_n' that a cursor may stand on -- not copied.
 
                 None, where the search walks off the end without
                 finding one: every line that way is spent.

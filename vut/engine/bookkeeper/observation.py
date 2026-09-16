@@ -51,7 +51,7 @@ the field is absent and says so.
 ______________________________________________________________________________
 """
 import os
-import time
+from vut.auxiliary import clock
 
 from ...auxiliary.binary_codec import Writer, Reader, CodecFault
 
@@ -84,7 +84,7 @@ class Observation:
                  cpu_time_ms=None, peak_memory_mb=None, peak_pids=None,
                  peak_disk_mb=None, created_tuple=(),
                  compare_complete_f=None):
-        self.when               = when if when is not None else int(time.time())
+        self.when               = when if when is not None else clock.epoch_second()
         self.duration_ms        = duration_ms
         self.host               = host
         self.cpu_time_ms        = cpu_time_ms

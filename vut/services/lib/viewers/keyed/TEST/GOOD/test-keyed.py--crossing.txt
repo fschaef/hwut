@@ -1,0 +1,28 @@
+A subject line is drawn ONCE, and a take is paired where it stands
+
+-- an unpaired line taken beside an EARLIER identical line
+   'c' is inserted at the seam below 'b'; the 'c' above it is
+   the nominal's own and must not be mistaken for the take
+     pairing {0: 3, 1: 5, 2: None, 3: 6, 4: 7}
+                     |  0 d
+                     |  1 d
+                     |  2 b
+      0 f            |  3 f
+                     |  4 c
+      1 b            |  5 b
+      2 d            |    
+      3 c            |  6 c
+      4 <hwut-end>   |  7 <hwut-end>
+     subject rows [0, 1, 2, 3, 4] -- each once: True
+
+-- an AIMED take above the partner of an earlier line
+   'beta' goes to nominal 0; 'alpha' is still paired below it.
+   The crossing pair cannot stand side by side: its nominal
+   line stands alone until 'r'
+     pairing {0: 1, 1: 0, 2: 2}
+      0 alpha        |    
+      1 beta         |  0 beta
+                     |  1 alpha
+      2 <hwut-end>   |  2 <hwut-end>
+     subject rows [0, 1, 2] -- each once: True
+<hwut-end>

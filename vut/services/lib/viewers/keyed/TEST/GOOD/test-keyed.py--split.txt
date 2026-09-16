@@ -38,7 +38,7 @@ L-2/L-3/L-4: what a take does to the framing around it
       3  ####
       4  gamma
       5  <hwut-end>
-     subject_range=(1, 1) target=(2, 2) derived=(2, 2) virgin=True stale=1
+     subject_range=(3, 3) target=None derived=None virgin=True stale=1
 
 -- L-4 a take OUTSIDE every region replaces, and creates none
       alpha

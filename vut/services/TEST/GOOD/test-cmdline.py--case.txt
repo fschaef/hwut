@@ -1,0 +1,16 @@
+
+--- case: the capital letter is the whole problem ---
+    --Force          -> -- did you mean '--force'?
+    --PLAIN          -> -- did you mean '--plain'?
+
+--- dashes: one, two, none ---
+    -plain           -> -- did you mean '--plain'?
+    plian            -> -- did you mean '--plain'?
+
+--- '=value' is not part of the word ---
+    --WIDTH=70       -> -- did you mean '--width'?
+    --widht=70       -> -- did you mean '--width'?
+
+--- the exact word is never suggested back ---
+    --force          -> (nothing)
+<hwut-end>

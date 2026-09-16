@@ -40,6 +40,31 @@ class E_DisplayTarget(Enum):
         return self.value
 
 
+def keyed_absent_reason(stream_tuple):
+    """
+    RETURN: str, why the keyed screen cannot run -- no terminal on one of
+            'stream_tuple', or 'prompt_toolkit' not importable -- worded
+            for a NOTE line.
+            None, where it can run.
+    """
+    for stream in stream_tuple:
+        if not getattr(stream, "isatty", lambda: False)():
+            return "no terminal"
+    try:
+        import prompt_toolkit  # noqa: F401
+    except ImportError:
+        return "'prompt_toolkit' is not installed"
+    return None
+
+
+def fallback_note(reason):
+    """RETURN: str, the ONE line a face writes where the keyed screen was
+               wanted and the text display is used instead (services
+               E-79) -- the fallback is never silent."""
+    return ("NOTE: %s -- the text display is used "
+            "('--console' asks for it outright)" % reason)
+
+
 def driver_for(target, **argument_db):
     """
     RETURN: DisplayAdapter, the driver that carries a session to 'target'.

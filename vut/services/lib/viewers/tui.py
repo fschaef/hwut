@@ -70,6 +70,9 @@ import io
 import os
 import re
 import sys
+
+from vut.services.lib import preferences
+from vut.engine.display.colour      import ELEMENT_ROLE_DB
 import shutil
 import asyncio
 import tempfile
@@ -198,17 +201,23 @@ class TuiDisplay(DisplayAdapter):
 
     #  THE VERDICT MARKS -- what DID differ, by relation category.
     #  (bad is colored per side: subject red, nominal blue.)
+    #  Each entry: (colour ROLE, plain mark begin, plain mark end). The
+    #  colour itself is the person's preference ('bin/.hwut.conf',
+    #  '~/.hwut.conf'; services E-78).
     VERDICT_MARK_DB = {
-        "tolerated":           ("33", "~", "~"),
+        "tolerated":           ("verdict.tolerated", "~", "~"),
     }
     #  THE READING MARKS -- what CAN vary, by tolerance kind.
     READING_MARK_DB = {
-        "NUMERIC":             ("36", "{", "}"),
-        "ANALOGY":             ("33", "~", "~"),
-        "EQUIVALENCE_PATTERN": ("32", "<", ">"),
-        "CONSTRAINT_BINDING":  ("35", "!", "!"),
-        "VISIBLE_NOTHING":     ("2",  "|", "|"),
+        "NUMERIC":             ("element.numeric", "{", "}"),
+        "ANALOGY":             ("element.analogy", "~", "~"),
+        "EQUIVALENCE_PATTERN": ("element.pattern", "<", ">"),
+        "CONSTRAINT_BINDING":  ("element.binding", "!", "!"),
+        "VISIBLE_NOTHING":     ("element.nothing", "|", "|"),
     }
+    #  EVERY OTHER CELL wears its ELEMENT's colour on a terminal -- the
+    #  category 'el:<KIND>' -- and no mark at all in plain rendering,
+    #  where it is 'plain'.
 
     def __init__(self, out=None, input_f=None, editor_argv=None,
                  color_f=None, merge_f=True, reading_f=False,
@@ -517,9 +526,12 @@ class TuiDisplay(DisplayAdapter):
             if   category == "plain":
                 piece_list.append(text)
             elif category == "bad":
-                piece_list.append(self._paint(text, "31" if value_name ==
-                                              "subject" else "34", "[", "]"))
+                piece_list.append(self._paint(text, "verdict." + value_name,
+                                              "[", "]"))
                 visible += 0 if self.color_f else 2
+            elif category.startswith("el:"):
+                piece_list.append(self._paint(text, ELEMENT_ROLE_DB.get(
+                                              category[3:], ""), "", ""))
             else:
                 mark_db = self.READING_MARK_DB if self.reading_f \
                           else self.VERDICT_MARK_DB
@@ -554,13 +566,22 @@ class TuiDisplay(DisplayAdapter):
         one, not as plain equality."""
         if self.reading_f:
             name = cell.tolerance_id.name
-            return name if name in self.READING_MARK_DB else "plain"
+            if name in self.READING_MARK_DB: return name
+            return self._element_category(cell)
         name = cell.relation_id.name
         if not name.startswith("OK_"):
             return "bad"
         if name == "OK_TOLERATED" or "VISIBLE_NOTHING" in name:
             return "tolerated"
-        return "plain"
+        return self._element_category(cell)
+
+    def _element_category(self, cell):
+        """RETURN: str, 'el:<KIND>' -- the cell's element kind, whose
+                   colour it wears -- where colours are drawn.
+                   'plain', where they are not: a plain rendering marks
+                   no element."""
+        if not self.color_f: return "plain"
+        return "el:" + cell.tolerance_id.name
 
     def _side_text(self, cell_list, value_name):
         """RETURN: str, one side's line rebuilt from its cells, each RUN
@@ -589,8 +610,11 @@ class TuiDisplay(DisplayAdapter):
             if   category == "plain":
                 piece_list.append(text)
             elif category == "bad":
-                piece_list.append(self._paint(text, "31" if value_name ==
-                                              "subject" else "34", "[", "]"))
+                piece_list.append(self._paint(text, "verdict." + value_name,
+                                              "[", "]"))
+            elif category.startswith("el:"):
+                piece_list.append(self._paint(text, ELEMENT_ROLE_DB.get(
+                                              category[3:], ""), "", ""))
             else:
                 mark_db = self.READING_MARK_DB if self.reading_f \
                           else self.VERDICT_MARK_DB
@@ -598,12 +622,14 @@ class TuiDisplay(DisplayAdapter):
                 piece_list.append(self._paint(text, color, begin, end))
         return "".join(piece_list)
 
-    def _paint(self, text, color, mark_begin, mark_end):
-        """RETURN: str, 'text' colored when colors are on, wrapped in the
-                   plain marks otherwise -- so a piped rendering carries
-                   the verdicts too."""
+    def _paint(self, text, role, mark_begin, mark_end):
+        """RETURN: str, 'text' in the colour the preferences give 'role'
+                   when colours are on, wrapped in the plain marks
+                   otherwise -- so a piped rendering carries the verdicts
+                   too. The preferences are read only here, where a
+                   colour is drawn: a pipe never reads them."""
         if self.color_f:
-            return "\x1b[%sm%s\x1b[0m" % (color, text)
+            return preferences.paint(text, preferences.load().color(role))
         return "%s%s%s" % (mark_begin, text, mark_end)
 
     @staticmethod

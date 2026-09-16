@@ -1,4 +1,4 @@
-STIMULUS  hwut.diff --directory=tree/suite/TEST --all --plain -y --width 70
+STIMULUS  hwut.diff --console --directory=tree/suite/TEST --all --plain -y --width 70
 REACTION  stdout {
               
               =[ test-app.sh one ]================================ round 1

@@ -34,10 +34,12 @@ class StageExecute(I_ExecuteProvider):
     Reads the source, place and caps keys of the configuration.
     """
 
-    def __init__(self, configuration, choice_name=None, keep_timing=False):
+    def __init__(self, configuration, choice_name=None, keep_timing=False,
+                 on_raw_line=None):
         self.configuration = configuration
         self.choice_name   = choice_name
         self.keep_timing   = keep_timing
+        self.on_raw_line   = on_raw_line   # the live tap (E-83), or None
 
     async def supply(self, stop_event=None):
         """
@@ -79,10 +81,11 @@ class StageExecute(I_ExecuteProvider):
         timing_db = {} if self.keep_timing else None
         try:
             if self.keep_timing:
-                stdout_text, delta_tuple = await read_all_timed(c.tail.reader)
+                stdout_text, delta_tuple = await read_all_timed(
+                    c.tail.reader, self.on_raw_line)
                 timing_db[STDOUT] = delta_tuple
             else:
-                stdout_text = await read_all(c.tail.reader)
+                stdout_text = await read_all(c.tail.reader, self.on_raw_line)
             record = (await asyncio.gather(*c.task_tuple))[0]
         finally:
             error_link.close()                 # not an edge: ours to close

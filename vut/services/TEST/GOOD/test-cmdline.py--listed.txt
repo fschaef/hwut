@@ -1,0 +1,15 @@
+
+--- the refusal prints the list: one name ---
+    test-hare.sh     -> (nothing)
+
+--- the refusal prints the list: two names ---
+    test-hare.sh     -> -- did you mean 'test-here.sh' or 'test-there.sh'?
+
+--- the list is NOT printed: one name is worth naming ---
+    test-hare.sh     -> -- did you mean 'test-here.sh'?
+
+--- nothing near: nothing said ---
+    --quux           -> (nothing)
+                     -> (nothing)
+    --               -> (nothing)
+<hwut-end>

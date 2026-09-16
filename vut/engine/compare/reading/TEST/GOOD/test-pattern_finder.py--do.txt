@@ -4,7 +4,7 @@ None -> STRING
 nothing -> VISIBLE_NOTHING
 \(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
-(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
+(?<!\w)(?>-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
 \s+ -> SEPERATOR
 hallo -> EQUIVALENCE_PATTERN
 string: 'hallo welt 4711'
@@ -29,3 +29,4 @@ string: 'bonjour ((4711)) le monde'
    STRING 'le'
    SEPERATOR ' '
    STRING 'monde'
+<hwut-end>

@@ -159,16 +159,30 @@ def application_argv(configuration, choice_name):
     return wrapped_argv(configuration, argv)
 
 
-async def read_all(reader):
-    """RETURN: str, everything the reader yields, to EOF."""
-    chunk_list = []
+async def read_all(reader, on_line=None):
+    """RETURN: str, everything the reader yields, to EOF.
+
+    'on_line' is a TAP (services E-83): where given, every RAW line is
+    handed to it AS IT ARRIVES, decoded, newline kept -- the live pane
+    of 'hwut.play'. Without it the reader is drained in blocks, as it
+    always was; the product is byte-identical either way.
+    """
+    if on_line is None:
+        chunk_list = []
+        while not reader.at_eof():
+            data = await reader.read(4096)
+            if data: chunk_list.append(data)
+        return b"".join(chunk_list).decode("utf-8", errors="replace")
+    line_list = []
     while not reader.at_eof():
-        data = await reader.read(4096)
-        if data: chunk_list.append(data)
-    return b"".join(chunk_list).decode("utf-8", errors="replace")
+        raw = await reader.readline()
+        if not raw: break
+        line_list.append(raw)
+        on_line(raw.decode("utf-8", errors="replace"))
+    return b"".join(line_list).decode("utf-8", errors="replace")
 
 
-async def read_all_timed(reader):
+async def read_all_timed(reader, on_line=None):
     """
     RETURN: (str, tuple), everything the reader yields, and the DELTA
             time before each line, in seconds.
@@ -188,6 +202,7 @@ async def read_all_timed(reader):
         delta_list.append(round(now - mark, 6))
         mark = now
         line_list.append(raw)
+        if on_line is not None: on_line(raw.decode("utf-8", errors="replace"))
     return (b"".join(line_list).decode("utf-8", errors="replace"),
             tuple(delta_list))
 
@@ -340,7 +355,7 @@ class Provision:
 
 
 def Run(configuration, choice_name=None, observer=None,
-        keep_raw=False, keep_timing=False):
+        keep_raw=False, keep_timing=False, on_raw_line=None):
     """
     RETURN: Provision, wired for EXECUTION: execute, then canonicalise.
             Reads the source, place, caps, canonicaliser and store keys
@@ -360,7 +375,8 @@ def Run(configuration, choice_name=None, observer=None,
                                                           StageCanonicalise
     return Provision(
         stage_execute      = StageExecute(configuration, choice_name,
-                                          keep_timing=keep_timing),
+                                          keep_timing=keep_timing,
+                                          on_raw_line=on_raw_line),
         stage_canonicalise = StageCanonicalise(configuration, choice_name),
         keep_raw           = keep_raw,
         observer           = observer,
@@ -370,7 +386,8 @@ def Run(configuration, choice_name=None, observer=None,
 Run.kind = "Run"
 
 
-def provision_of(configuration, choice_name=None, observer=None):
+def provision_of(configuration, choice_name=None, observer=None,
+                 on_raw_line=None):
     """
     RETURN: Provision, wired for execution, with the recording appetite
             (raw, cadence) read from the configuration's store keys.
@@ -385,4 +402,5 @@ def provision_of(configuration, choice_name=None, observer=None):
     return Run(configuration, choice_name, observer=observer,
                keep_raw    = bool(store_config and store_config.record_raw),
                keep_timing = bool(store_config
-                                  and store_config.record_timing))
+                                  and store_config.record_timing),
+               on_raw_line = on_raw_line)

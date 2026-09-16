@@ -264,8 +264,8 @@ def _section_title(chunk):
     THE TOKEN IS SHOWN APART ON PURPOSE. It is not a line of output; it
     is the stream's own testimony that it COMPLETED (R-70). Naming it
     here reminds whoever reads the display of that characteristic of an
-    hwut test, and it keeps a merge from mistaking the anchor at the
-    foot of both panes for one more line to take.
+    hwut test. A merge may take it, and taking it ENDS the nominal
+    (services E-77).
     """
     if _closing_token_chunk_f(chunk):
         return "CLOSING-TOKEN"

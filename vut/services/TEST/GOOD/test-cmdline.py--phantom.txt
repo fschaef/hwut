@@ -1,0 +1,7 @@
+    'usage: hwut.x <test-glob> [--dry-run]'              ['--dry-run']
+    'usage: hwut.x [-v|--verbose] (--a,--b)'             ['-v', '--verbose', '--a', '--b']
+    'usage: hwut.x --width=<n> --out <file> non-option'  ['--width', '--out']
+    'usage: hwut.x --force ... --force again'            ['--force']
+    'usage: hwut.x -- -1 --9lives'                       []
+    ''                                                   []
+<hwut-end>

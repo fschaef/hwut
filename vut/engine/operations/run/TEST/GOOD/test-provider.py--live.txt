@@ -1,0 +1,10 @@
+INSPECT: lines tapped, in order : ['first', 'second', '<hwut-end>']
+         gap first->second       : 0.25s  (the program slept 0.25)
+         every tap before delivery: True
+         product same as untapped : True
+  OK  : every raw line reaches the tap, in order
+  OK  : the second line arrives after the program's sleep, not with the first: lines flow as produced
+  OK  : each line is tapped before the delivery completes
+  OK  : the tap changes nothing in the product
+SUCCESS: the raw stream flows as it is produced.
+<hwut-end>

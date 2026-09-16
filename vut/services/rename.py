@@ -90,9 +90,26 @@ from   ._target                  import split_words, TargetError
 from   ._exit                    import E_ExitCode
 from   vut.engine.orchestrator.exploration.reader import (read_header,
                                                           read_conf)
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import face_parser, parse_or_refuse
 
 KEYWORD = "-to"
+
+#  THE STANDARD READER (E-84), FOR THE VOCABULARY ONLY. 'hwut.rename'
+#  has a GRAMMAR -- '<words> -to <fresh>', in three forms -- which no
+#  generated usage can state, so its synopsis below stays written; the
+#  parser answers what is refused, what is suggested, what completes.
+#  '-to' is a grammar word, not an option: taken out before the parser.
+PARSER = face_parser("hwut.rename", "Rename a test application or a "
+                     "choice, and everything that names it.",
+                     wish_f=False, word_help="<app> [<choice>]")
+PARSER.add_argument("--dont-ask", action="store_true")
+PARSER.add_argument("--directory", default=None)
+PARSER.add_argument("--no-warning", action="store_true")
+PARSER.add_argument("--silent", action="store_true")
+ARG_DB = {"--directory": True}
+#  What '_read' answers where the line asked only for the completion
+#  table: printed, nothing else to do.
+COMPLETED = object()
 
 USAGE = ("usage: hwut.rename <app> -to <app'>              [--dont-ask] "
          "[--directory=<path>] [--no-warning] [--silent]\n"
@@ -441,33 +458,29 @@ def _read(argv, write):
                 None    they cannot be read -- refused aloud, with the
                         usage
                 ()      they name nothing
+                COMPLETED  they asked for the completion table, which
+                        was printed
             [1] bool    '--dont-ask' was said
     """
-    directory = "."
-    yes_f     = False
-    word_list = []
-    unknown   = []
-    for argument in argv:
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument == "--dont-ask":      yes_f = True
-        elif argument == "--yes":
-            #  E-68: "yes to what?" -- on the command line, before the
-            #  question exists, the word names an answer to nothing.
-            #  Refused BY NAME so a script that still says it is told.
-            write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
-                  "the one word for 'do not ask'")
-            return None, yes_f
-        elif argument in ("--no-warning", "--silent"): pass
-        elif argument == KEYWORD:      word_list.append(argument)
-        elif argument.startswith("-"): unknown.append(argument)
-        else:                          word_list.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.rename' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    if "--yes" in argv:
+        #  E-68: "yes to what?" -- on the command line, before the
+        #  question exists, the word names an answer to nothing.
+        #  Refused BY NAME so a script that still says it is told.
+        write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
+              "the one word for 'do not ask'")
+        return None, False
+    #  THE GRAMMAR WORD IS HELD OUT, its place remembered by a stand-in
+    #  the parser takes as a word.
+    stand_in = "\x00to"
+    arguments, completion_f = parse_or_refuse(
+        PARSER, [stand_in if a == KEYWORD else a for a in argv], write, ARG_DB)
+    if completion_f: return COMPLETED, False
+    if arguments is None:
         write(USAGE)
-        return None, yes_f
+        return None, False
+    directory = arguments.directory or "."
+    yes_f     = arguments.dont_ask
+    word_list = [KEYWORD if w == stand_in else w for w in arguments.word]
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)
@@ -560,6 +573,7 @@ def main(argv=None, write=None, read_line=None):
             if text.startswith(("REFUSED", "EMPTY")) or "FAULT" in text:
                 _loud(text)
     rename, yes_f = _read(argv, write)
+    if rename is COMPLETED: return E_ExitCode.OK
     if rename is None: return E_ExitCode.REFUSED
     if rename == ():   return E_ExitCode.EMPTY
 

@@ -1,0 +1,15 @@
+
+--- explore_tree_stream against explore_tree ---
+    first yield              alpha/TEST
+    faults known by then     0
+    stream                   alpha/TEST, alpha/beta/TEST, mid/TEST, zeta/TEST
+    snapshot                 alpha/TEST, alpha/beta/TEST, mid/TEST, zeta/TEST
+    same order               True
+    faults stream/snapshot   1/1, same: True
+
+--- of_tree_stream against of_tree ---
+    stream                   alpha/TEST, alpha/beta/TEST, mid/TEST, zeta/TEST
+    snapshot                 alpha/TEST, alpha/beta/TEST, mid/TEST, zeta/TEST
+    same order               True
+    cases stream/snapshot    5/5, same order: True
+<hwut-end>

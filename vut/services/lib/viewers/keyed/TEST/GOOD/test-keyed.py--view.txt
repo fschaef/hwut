@@ -1,0 +1,23 @@
+E-79: the screen for LOOKING -- 'hwut.diff'
+
+-- the viewing table: nothing that changes the nominal
+     tab            both  the other pane
+     j, down        pane  down
+     k, up          pane  up
+     c-d            pane  a screen down
+     c-u            pane  a screen up
+     h, left        pane  scroll left
+     l, right       pane  scroll right
+     /              pane  search down
+     ?              pane  search up
+     f1             both  this table
+     q              both  quit
+
+-- a take, an undo, a commit: ignored; 'q' ends the view
+     nominal        ('omega', 'beta')
+     spent          []
+     cursor_s       1  (one move before 'q', none after)
+     left by        CANCEL
+     differing      1
+     banner         x   [SUBJECT]   view   q=quit   F1=help
+<hwut-end>

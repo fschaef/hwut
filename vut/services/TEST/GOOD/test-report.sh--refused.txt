@@ -1,29 +1,49 @@
 STATUS: 2
 STDOUT {
     REFUSED: '--format' takes one of traditional, junit, tap, json, not 'yaml'
-    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                       [--out=<file>] [--width=<n>] [--plain|--color]
-                       [--directory=<path>]
+    usage: hwut.report [--fail] [--pass] [--since=<point>] [--until=<point>]
+                       [--glob <target>]... [--exclude <target>]...
+                       [--dir <glob>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--language=<name>]... [--faster-than=<sec>]
+                       [<file-glob> [choice-glob]...]
+                       [--format=traditional|junit|tap|json] [--out=<path>]
+                       [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: '--width' takes a positive integer, not '0'
-    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                       [--out=<file>] [--width=<n>] [--plain|--color]
-                       [--directory=<path>]
+    usage: hwut.report [--fail] [--pass] [--since=<point>] [--until=<point>]
+                       [--glob <target>]... [--exclude <target>]...
+                       [--dir <glob>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--language=<name>]... [--faster-than=<sec>]
+                       [<file-glob> [choice-glob]...]
+                       [--format=traditional|junit|tap|json] [--out=<path>]
+                       [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: 'hwut.report' does not take: --sideways
-    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                       [--out=<file>] [--width=<n>] [--plain|--color]
-                       [--directory=<path>]
+    usage: hwut.report [--fail] [--pass] [--since=<point>] [--until=<point>]
+                       [--glob <target>]... [--exclude <target>]...
+                       [--dir <glob>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--language=<name>]... [--faster-than=<sec>]
+                       [<file-glob> [choice-glob]...]
+                       [--format=traditional|junit|tap|json] [--out=<path>]
+                       [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
     REFUSED: the directory 'nowhere' does not exist
-    usage: hwut.report [<wish>] [<file-glob> [choice-glob]...] [--format=<name>]
-                       [--out=<file>] [--width=<n>] [--plain|--color]
-                       [--directory=<path>]
+    usage: hwut.report [--fail] [--pass] [--since=<point>] [--until=<point>]
+                       [--glob <target>]... [--exclude <target>]...
+                       [--dir <glob>]... [--exclude-dir <glob>]...
+                       [--wishlist <file>]... [--label <expr>]
+                       [--language=<name>]... [--faster-than=<sec>]
+                       [<file-glob> [choice-glob]...]
+                       [--format=traditional|junit|tap|json] [--out=<path>]
+                       [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
 <hwut-end>

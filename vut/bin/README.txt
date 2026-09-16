@@ -2,9 +2,16 @@
 bin -- THE LAUNCHER ROOF
 ==============================================================================
 
-Every launcher of the tool stands here, and only launchers stand here:
-two-line shell shims, nothing importable. Each resolves its own location
-('readlink -f'), so it answers by PATH and by path alike.
+Every launcher of the tool stands here, and beside them ONE file that is
+not a launcher: '.hwut.conf', the installation's default PREFERENCES
+(services E-78). The launchers are two-line shell shims, nothing
+importable; each resolves its own location ('readlink -f'), so it answers
+by PATH and by path alike.
+
+    .hwut.conf      how hwut SHOWS things -- colours today. A person's
+                    '~/.hwut.conf' is read over it, key by key; its
+                    comments list the words a colour may be written
+                    with. A project never holds a preference.
 
     hwut.<name>     runs 'python3 -m vut.services.<name>' with the
                     package root's parent prepended to PYTHONPATH --

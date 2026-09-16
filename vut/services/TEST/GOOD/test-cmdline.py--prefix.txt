@@ -1,0 +1,14 @@
+
+--- a prefix, far away by distance ---
+    --dont           -> -- did you mean '--dont-ask'?
+
+--- the typed word runs PAST a candidate ---
+    --forcefully     -> -- did you mean '--force'?
+
+--- several prefixes: at most three, in the caller's order ---
+    --f              -> -- did you mean '--force', '--faster-than' or '--format'?
+    (limit 10)       -> --force, --faster-than, --format, --fail
+
+--- nearest first: a prefix (0) before a slip (1) ---
+    --fai            -> -- did you mean '--failure' or '--fax'?
+<hwut-end>

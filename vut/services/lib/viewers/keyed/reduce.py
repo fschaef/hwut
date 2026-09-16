@@ -9,9 +9,9 @@ DESCRIPTION
        line, a take with nothing marked -- the same state comes back and
        nothing is said. It is a keystroke that changed nothing, which is
        what an author expects of an editor. Anything that must be
-       refused LOUDLY is therefore a law of shape, not a complaint: the
-       closing token is unreachable because no act can move a cursor
-       onto it, not because a take is told off for aiming there.
+       refused LOUDLY is therefore a law of shape, not a complaint: a
+       spent line is unreachable because no act can move a cursor onto
+       it, not because a take is told off for aiming there.
 
        THE LAWS, each pinned by its own choice in TEST:
 
@@ -27,19 +27,23 @@ DESCRIPTION
        L-9  UNDO restores the whole state, latch included; a bulk take
             is ONE entry
        L-10 every take raises the stale count; REALIGN zeroes it
-       L-11 no act reaches the closing-token line
+       L-11 THE CLOSING TOKEN IS TAKEABLE, AND IT ENDS THE NOMINAL
+            (services E-77, retracting 'no act reaches it'): a take
+            whose range holds the subject's token cuts the nominal right
+            after the taken lines -- whatever followed is gone
        L-12 the local re-index shifts what is below by N-M and pairs the
             taken stretch 1:1 -- it invents no tolerance and no analogy
        L-13 A COPIED SUBJECT SECTION IS SPENT. No cursor stands on one,
             no range intersects one, no take covers one again. It is
-            unreachable the way the closing token is (L-11) -- a place,
-            not a refusal shouted at a keystroke.
+            unreachable -- a place, not a refusal shouted at a
+            keystroke.
 ______________________________________________________________________________
 """
 from vut.services.lib.viewers.keyed.act    import E_Act, E_Pane
 from vut.services.lib.viewers.keyed.state  import MergeState
-from vut.services.lib.viewers.keyed.region import (take as region_take,
-                                                   region_list_of)
+from vut.services.lib.viewers.keyed.region import (take_placed as region_take_placed,
+                                                   region_list_of, region_of)
+from vut.engine.compare.reading.line_scanner import REGION_END_LINE
 
 PAGE_LINE_N = 20
 
@@ -180,7 +184,18 @@ def _take_range(state, _):
         first_n, last_n = seam_i, seam_i - 1      # replaces nothing
     else:
         first_n, last_n = target
+        #  THE NOMINAL'S OWN TOKEN IS NEVER REPLACED by an ordinary take:
+        #  a target reaching it stops above it, and one holding nothing
+        #  else becomes an insertion there. Measured: with the token the
+        #  nominal's only line, the nominal cursor stands on it, and an
+        #  aimed take replaced it -- a nominal that never COMPLETED.
+        token_i_n = state.token_i_n()
+        if token_i_n is not None and last_n >= token_i_n:
+            last_n = token_i_n - 1
+            if first_n > token_i_n: first_n = token_i_n
 
+    if state.token_i_s() is not None and first_s <= state.token_i_s() <= last_s:
+        return _applied_to_end(state, first_n, taken, first_s, last_s)
     return _applied(state, first_n, last_n, taken, first_s, last_s)
 
 
@@ -208,15 +223,13 @@ def _take_all(state, _):
     """RETURN: MergeState, the state after the complete subject was taken
                over the complete nominal -- leaving no region standing,
                the closing token where it was, and EVERY subject line
-               spent (L-13): after TAKE_ALL nothing is selectable, which
-               is the law and not a jam.
+               spent (L-13), the token among them: after TAKE_ALL
+               nothing is selectable, which is the law and not a jam.
     """
-    token_i_s = state.token_i_s()
-    last_s    = state.last_reachable_s()
-    taken     = state.subject_line_list[:last_s+1]
+    last_s = state.last_reachable_s()
+    taken  = state.subject_line_list[:last_s+1]
 
-    token = (state.subject_line_list[token_i_s],) if token_i_s is not None else ()
-    fresh = state.pushed().with_(nominal_line_list=tuple(taken) + token,
+    fresh = state.pushed().with_(nominal_line_list=tuple(taken),
                                  copied_s=frozenset(range(last_s+1)),
                                  anchor_s=None, anchor_n=None,
                                  virgin_f=True,
@@ -232,19 +245,57 @@ def _applied(state, first_n, last_n, taken, first_s, last_s):
                lines recorded as SPENT and the cursor carried off them
                (L-13).
     """
-    nominal_line_list = region_take(state.nominal_line_list,
-                                    first_n, last_n, taken)
-    if nominal_line_list is None:
+    placed = region_take_placed(state.nominal_line_list,
+                                first_n, last_n, taken)
+    if placed is None:
         #  The take would CUT a region of another kind. Refused: the
         #  same state comes back, and nothing is said -- a keystroke
         #  that changed nothing, as every inapplicable act is.
         return state
+    nominal_line_list, begin_n = placed
 
     delta_n = len(nominal_line_list) - len(state.nominal_line_list)
     pairing = _pairing_shifted(state.pairing, first_s, last_s,
-                               first_n, last_n, delta_n,
-                               nominal_line_list, taken)
+                               first_n, last_n, delta_n, begin_n)
 
+    spent = state.copied_s | frozenset(range(first_s, last_s+1))
+    fresh = state.pushed().with_(nominal_line_list=nominal_line_list,
+                                 pairing=pairing,
+                                 copied_s=spent,
+                                 anchor_s=None, anchor_n=None,
+                                 virgin_f=True,
+                                 take_n_since_realign=state.take_n_since_realign+1)
+    return _cursor_off_spent(fresh)
+
+
+def _applied_to_end(state, first_n, taken, first_s, last_s):
+    """RETURN: MergeState, the state after 'taken' -- which ends in the
+               closing token -- was put in at 'first_n' and the nominal
+               CUT right after it (L-11): whatever followed, the old
+               token included, is gone.
+
+               'state', where the take is refused as '_applied' refuses.
+
+    THE TAKE ITSELF IS THE ORDINARY ONE; only the cut is new. A seam
+    that falls ON a region's closing rule moves past it, so the region
+    keeps its rule. A seam INSIDE a region replaces that region's rest,
+    so the lines above it are framed as any split frames them. Then
+    everything after the taken lines is dropped, and nothing can be
+    left open: what followed the seam is exactly what is removed.
+    """
+    line_list = state.nominal_line_list
+    if first_n < len(line_list) and line_list[first_n].strip() == REGION_END_LINE:
+        first_n += 1
+    region = region_of(region_list_of(line_list), first_n)
+    last_n = region.content_range()[1] if region is not None else first_n - 1
+
+    placed = region_take_placed(line_list, first_n, last_n, taken)
+    if placed is None: return state
+    whole_list, begin_n = placed
+    nominal_line_list   = whole_list[:begin_n + len(taken)]
+
+    pairing = _pairing_shifted(state.pairing, first_s, last_s,
+                               first_n, len(line_list) - 1, 0, begin_n)
     spent = state.copied_s | frozenset(range(first_s, last_s+1))
     fresh = state.pushed().with_(nominal_line_list=nominal_line_list,
                                  pairing=pairing,
@@ -273,10 +324,11 @@ def _cursor_off_spent(state):
 
 
 def _pairing_shifted(pairing, first_s, last_s, first_n, last_n, delta_n,
-                     nominal_line_list, taken):
+                     begin_n):
     """RETURN: dict, the pairing after a take -- every partner below the
                taken stretch shifted by 'delta_n', and the taken subject
-               lines paired 1:1 with where they now stand.
+               lines paired 1:1 with where they now stand: 'begin_n' and
+               the lines after it.
 
     IT INVENTS NOTHING. A tolerance, a numeric within its limit, an
     analogy binding -- only compare knows those, and they go STALE here.
@@ -291,22 +343,8 @@ def _pairing_shifted(pairing, first_s, last_s, first_n, last_n, delta_n,
         else:                                   result[i_s] = None
 
     for offset, i_s in enumerate(range(first_s, last_s+1)):
-        result[i_s] = _where_taken(nominal_line_list, first_n, taken, offset)
+        result[i_s] = begin_n + offset
     return result
-
-
-def _where_taken(nominal_line_list, first_n, taken, offset):
-    """RETURN: int, the nominal index at which the taken line 'offset'
-               now stands -- found by counting from the take's seam past
-               whatever framing the split left behind.
-
-               None, where it cannot be located, which the next REALIGN
-               resolves.
-    """
-    wanted = taken[offset]
-    for i in range(max(first_n-2, 0), len(nominal_line_list)):
-        if nominal_line_list[i] == wanted: return i
-    return None
 
 
 def _subject_range_whole(state, first_s, last_s):

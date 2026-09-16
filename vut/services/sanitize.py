@@ -131,9 +131,9 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
-from   ._core import usage_line
 from   ._exit import E_ExitCode
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse)
 
 #  A record's TEST PART ends in one of these: it is the source file
 #  whole. The set is the languages a test application is written in;
@@ -152,11 +152,18 @@ ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books")
 #  Asked for by name only; a bare call never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
-USAGE = usage_line("usage: hwut.sanitize",
-                   ("[<wish>]", "[--apply]", "[--target <name>]...",
-                    "[--session]", "[--lock]", "[--out]", "[--orphans]",
-                    "[--books]",
-                    "[--transient]", "[--directory=<path>]"))
+#  THE STANDARD READER (E-84). No positional: a bare word is refused as a
+#  word this face does not take.
+PARSER = face_parser("hwut.sanitize",
+                     "Report -- and with '--apply' remove -- what a tree "
+                     "leaves behind.")
+PARSER.add_argument("--apply", action="store_true")
+PARSER.add_argument("--target", action="append", default=[], metavar="name")
+for _aspect in ASPECT_TUPLE + EXPLICIT_ASPECT_TUPLE:
+    PARSER.add_argument("--" + _aspect, action="store_true")
+PARSER.add_argument("--directory", default=None)
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -646,37 +653,23 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    directory    = "."
-    apply_f      = False
-    aspect_set   = set()
-    target_list  = []
-    unknown      = []
-    index        = 0
-    while index < len(rest_list):
-        argument = rest_list[index]
-        index   += 1
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument == "--apply":  apply_f = True
-        elif argument == "--target":
-            if index >= len(rest_list):
-                write("REFUSED: '--target' stands without a name")
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            target_list.append(rest_list[index]); index += 1
-        elif argument.startswith("--target="):
-            target_list.append(argument[len("--target="):])
-        elif argument.startswith("--") \
-             and argument[2:] in ASPECT_TUPLE + EXPLICIT_ASPECT_TUPLE:
-            aspect_set.add(argument[2:])
-        else:
-            unknown.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.sanitize' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    #  '--target' WITHOUT A NAME is refused in this face's words, before
+    #  the parser would say it in its own.
+    if rest_list and rest_list[-1] == "--target":
+        write("REFUSED: '--target' stands without a name")
         write(USAGE)
         return E_ExitCode.REFUSED
+    arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
+                                              ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
+        write(USAGE)
+        return E_ExitCode.REFUSED
+    directory   = arguments.directory or "."
+    apply_f     = arguments.apply
+    target_list = list(arguments.target)
+    aspect_set  = {aspect for aspect in ASPECT_TUPLE + EXPLICIT_ASPECT_TUPLE
+                   if getattr(arguments, aspect)}
     if not os.path.isdir(directory):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)

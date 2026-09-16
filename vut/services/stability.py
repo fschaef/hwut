@@ -77,14 +77,12 @@ from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
-from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
-                                                             as WISH_TOKEN_TUPLE
 from   vut.engine.orchestrator.run.strategy          import (STRATEGY_DB,
                                                              DEFAULT_STRATEGY_NAME)
-from   ._core                                        import usage_line
 from   ._target import split_words, TargetError
 from   ._exit                                        import E_ExitCode
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse, did_you_mean)
 
 REPEAT_DEFAULT  = 3
 #  THE TWO BARS a cadence finding must clear (disc-7). High enough that
@@ -93,12 +91,21 @@ REPEAT_DEFAULT  = 3
 ABSOLUTE_MIN = 5.0     # seconds of spread, far past any resolution
 FACTOR_MIN   = 50.0    # times the usual delta -- not 2, not 5
 
-USAGE = usage_line("usage: hwut.stability",
-                   WISH_TOKEN_TUPLE
-                   + ("[<file-glob> [choice-glob]...]",
-                      "[--repeat=<n>]",
-                      "[--cadence]", "[--strategy=<name>]",
-                      "[--verbose]", "[--directory=<path>]"))
+#  THE STANDARD READER (E-84). The VALUES of '--repeat' and '--strategy'
+#  are checked below, in this face's own words.
+PARSER = face_parser("hwut.stability",
+                     "Run the selection repeatedly and report what "
+                     "disagrees with itself.",
+                     word_help="a test, a test and a choice, a file glob "
+                               "and a choice glob",
+                     word_metavar="[<file-glob> [choice-glob]...]")
+PARSER.add_argument("--repeat", default=None, metavar="n")
+PARSER.add_argument("--cadence", action="store_true")
+PARSER.add_argument("--strategy", default=None, metavar="name")
+PARSER.add_argument("--verbose", action="store_true")
+PARSER.add_argument("--directory", default=None)
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -411,45 +418,37 @@ def main(argv=None, write=None, write_error=None):
     verbose_f  = False
     cadence_f  = False
     subject_tuple = ("stdout",)
-    unknown    = []
-    #  BARE WORDS ARE TARGETS (the 1.0 short form): this face does not
-    #  desugar them itself -- they travel in 'argv' to 'hwut.run',
-    #  which does. Collected here only so the door does not refuse
-    #  them as unknown options.
-    word_list = []
-    for argument in rest_list:
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument == "--verbose": verbose_f = True
-        elif argument == "--cadence": cadence_f = True
-        elif argument.startswith("--repeat="):
-            text = argument[len("--repeat="):]
-            if not text.isdigit() or int(text) < 2:
-                write("REFUSED: '--repeat' takes an integer of 2 or more, "
-                      "not '%s' -- one run cannot disagree with itself"
-                      % text)
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            repeat_n = int(text)
-        elif argument.startswith("--strategy="):
-            name = argument[len("--strategy="):]
-            if name not in STRATEGY_DB:
-                write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
-                      % (", ".join(sorted(STRATEGY_DB)), name,
-                         did_you_mean(name, sorted(STRATEGY_DB),
-                                      among_listed_f=True)))
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            strategy = name
-        else:
-            if argument.startswith("-"): unknown.append(argument)
-            else:                        word_list.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.stability' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
+                                              ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  BARE WORDS ARE TARGETS (the 1.0 short form): this face does not
+    #  desugar them itself -- they travel in 'argv' to 'hwut.run',
+    #  which does.
+    word_list = arguments.word
+    directory = arguments.directory or "."
+    verbose_f = arguments.verbose
+    cadence_f = arguments.cadence
+    if arguments.repeat is not None:
+        text = arguments.repeat
+        if not text.isdigit() or int(text) < 2:
+            write("REFUSED: '--repeat' takes an integer of 2 or more, "
+                  "not '%s' -- one run cannot disagree with itself" % text)
+            write(USAGE)
+            return E_ExitCode.REFUSED
+        repeat_n = int(text)
+    if arguments.strategy is not None:
+        name = arguments.strategy
+        if name not in STRATEGY_DB:
+            write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
+                  % (", ".join(sorted(STRATEGY_DB)), name,
+                     did_you_mean(name, sorted(STRATEGY_DB),
+                                  among_listed_f=True)))
+            write(USAGE)
+            return E_ExitCode.REFUSED
+        strategy = name
     #  A TEST NAMED BY PATH stands in the directory the path names
     #  ('services/_target.py').
     try:

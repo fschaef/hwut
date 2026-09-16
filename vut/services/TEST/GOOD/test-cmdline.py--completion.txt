@@ -1,0 +1,12 @@
+    --help  |  flag  |  
+    --plain  |  flag  |  
+    -f  |  flag  |  
+    --force  |  flag  |  
+    --width  |  value  |  
+    --directory  |  file  |  
+    --format  |  enum  |  traditional|junit
+    --editor  |  file  |  
+
+--- asked on the line: printed, parsed nothing ---
+    arguments=None completion_f=True lines=8
+<hwut-end>

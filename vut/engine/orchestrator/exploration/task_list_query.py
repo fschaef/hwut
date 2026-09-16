@@ -26,6 +26,7 @@ ______________________________________________________________________________
 """
 import fnmatch
 import os
+from vut.auxiliary import clock
 from datetime import datetime, timezone
 
 from ..plan.wish    import cutoff_instant
@@ -338,7 +339,7 @@ class CTestTaskListQuery(CTestTaskList):
         RETURN: datetime, the stated clock, or the current UTC instant
                 where none was stated.
         """
-        now = self.now or datetime.now(timezone.utc)
+        now = self.now or clock.now()
         if now.tzinfo is None: now = now.replace(tzinfo=timezone.utc)
         return now
 

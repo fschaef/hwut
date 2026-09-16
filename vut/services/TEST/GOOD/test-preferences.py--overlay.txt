@@ -1,0 +1,10 @@
+    notes: none
+    element.numeric    'bold bright-cyan'
+    element.string     'white'
+    element.analogy    'yellow'
+    keyed.spent        'none'
+    keyed.marker       '#ffaa00 bold'
+
+--- no person's file: the default, whole ---
+    element.numeric    'cyan'   notes: none
+<hwut-end>

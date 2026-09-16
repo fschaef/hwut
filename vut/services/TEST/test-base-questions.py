@@ -23,7 +23,7 @@ Bookkeeper's base or this machine's observations (E-1's 'asks_base_f'):
     fail       '--fail' runs what the book last recorded as failing,
                and nothing else.
     pass       '--pass' is its complement.
-    until      '--until' alone among them wants the test the book has
+    until      the clock is STATED (E-80); '--until' alone among them wants the test the book has
                never seen: never run is older than every point.
     never_run  '--fail' and '--pass' do NOT want it: a case with no
                verdict has no verdict to match.
@@ -210,17 +210,60 @@ def test_never_run():
 
 
 def test_until():
-    """'--until' alone wants the case the book has never seen."""
-    root, _ = fixture()
-    _, line_list = _run(root, "--until=1s")
-    selected = _selected(line_list)
-    print("  selected: %s" % (", ".join(sorted(selected)) or "(none)"))
-    ok = _check([
-        ("test-fresh.py" in selected,
-         "never run is older than every point: --until wants it"),
-    ])
-    shutil.rmtree(root, ignore_errors=True)
-    _verdict(ok, "--until reaches back past the book's first sight.")
+    """'--until' alone wants the case the book has never seen -- and
+    the recorded cases exactly where the clock puts them.
+
+    THE CLOCK IS STATED (auxiliary/clock, E-80): the fixture's run is
+    recorded at T, and each question is asked at an instant this test
+    chooses. Nothing here waits, and nothing here flips at a second's
+    or an hour's boundary -- the recorded page was measured to do so
+    when the run and the question read the wall clock separately.
+    """
+    from datetime import datetime, timedelta, timezone
+    from vut.auxiliary import clock
+    T = datetime(2026, 9, 16, 11, 59, 59, tzinfo=timezone.utc)
+    print("  the run is recorded at            %s" % T.isoformat())
+    #  EVERY QUESTION IS ALSO A RUN ('hwut.run' records what it selects),
+    #  so each is asked of a FRESH fixture recorded at T -- which is the
+    #  mechanism of the flip: a page that asked twice depended on where
+    #  the first answer's second fell.
+    outcome = []
+    try:
+        for label, later, spec in (
+            ("asked in the same second", 0,    "--until=1s"),
+            ("asked one second later",   1,    "--until=1s"),
+            ("asked two seconds later",  2,    "--until=1s"),
+            ("across the hour",          1,    "--until=1h"),
+            ("an hour and a second on",  3601, "--until=1h"),
+        ):
+            clock.state(T)
+            root, _ = fixture()
+            clock.state(T + timedelta(seconds=later))
+            _, line_list = _run(root, spec)
+            selected = _selected(line_list)
+            shutil.rmtree(root, ignore_errors=True)
+            print("  %-26s %-11s selected: %s"
+                  % (label, spec, ", ".join(sorted(selected)) or "(none)"))
+            outcome.append((label, selected))
+        ok = _check([
+            ("test-fresh.py" in outcome[0][1],
+             "never run is older than every point: --until wants it"),
+            (not {"test-good.py", "test-bad.py"} & outcome[0][1],
+             "a run in this very second does not lie BEFORE now-1s"),
+            (not {"test-good.py", "test-bad.py"} & outcome[1][1],
+             "at now-1s the run lies ON the point, not before it"),
+            ({"test-good.py", "test-bad.py"} <= outcome[2][1],
+             "two seconds on, the run lies before now-1s"),
+            (not {"test-good.py", "test-bad.py"} & outcome[3][1],
+             "an hour's point is not crossed by a second"),
+            ({"test-good.py", "test-bad.py"} <= outcome[4][1],
+             "an hour and a second on, it is"),
+            (all("test-fresh.py" in each for _, each in outcome),
+             "the never-run case is wanted whatever the clock says"),
+        ])
+    finally:
+        clock.release()
+    _verdict(ok, "--until is answered by the clock, and the clock is stated.")
 
 
 if __name__ == "__main__":

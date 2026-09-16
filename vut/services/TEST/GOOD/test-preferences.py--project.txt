@@ -1,0 +1,3 @@
+    hwut.conf:2:5: VOCABULARY: 'colors' is a person's preference, not a project's: it belongs in '~/.hwut.conf'
+    test-x.py:3:7: VOCABULARY: 'colors' is a person's preference, not a project's: it belongs in '~/.hwut.conf'
+<hwut-end>

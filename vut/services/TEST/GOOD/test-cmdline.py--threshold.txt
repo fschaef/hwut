@@ -1,0 +1,18 @@
+
+--- up to 4 characters: 1 edit ---
+    --abxd           -> -- did you mean '--abcd'?
+    --axyd           -> (nothing)
+
+--- up to 8 characters: 2 edits ---
+    --abcdxy         -> -- did you mean '--abcdef'?
+    --abcxyz         -> (nothing)
+    --abcdefxy       -> -- did you mean '--abcdefgh'?
+
+--- longer: 3 edits ---
+    --abcdefxyz      -> -- did you mean '--abcdefghi'?
+    --abcdewxyz      -> (nothing)
+
+--- the band is the TYPED word's, not the candidate's ---
+    --ayz            -> (nothing)
+    --abcyz          -> -- did you mean '--ayz'?
+<hwut-end>

@@ -50,9 +50,11 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+import argparse
 import asyncio
 import os
 import sys
+from vut.services.lib import preferences
 from   datetime import datetime, timezone
 
 from   vut.engine.display.console                    import (HELP as RENDERING_HELP,
@@ -77,21 +79,33 @@ from   vut.engine.orchestrator.run.strategy          import (DEFAULT_STRATEGY_NA
                                                              STRATEGY_DB,
                                                              strategy_of)
 from   vut.engine.protocol.summary           import fold
-from   vut.engine.orchestrator.plan.wish             import USAGE_TOKEN_TUPLE \
-                                                             as WISH_TOKEN_TUPLE
-from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse, did_you_mean)
 
 
-USAGE = usage_line("usage: hwut.run",
-                    WISH_TOKEN_TUPLE
-                    + ("[<file-glob> [choice-glob]...]",
-                       "[--no-store]", "[--timing]", "[--jobs=<n>]",
-                       "[--strategy=<name>]")
-                        + RENDERING_TOKEN_TUPLE
-                        + ("[--directory=<path>]",))
+#  THE STANDARD READER (E-84): the wish, then the rendering words, then
+#  this parser. The VALUES of '--jobs' and '--strategy' are checked
+#  below, in this face's own words.
+PARSER = face_parser("hwut.run", "The tree run, rendered live.",
+                     word_help="a test, a test and a choice, a file glob "
+                               "and a choice glob",
+                     word_metavar="[<file-glob> [choice-glob]...]",
+                     shared_token_tuple=RENDERING_TOKEN_TUPLE)
+PARSER.add_argument("--no-store", action="store_true")
+PARSER.add_argument("--timing", action="store_true")
+PARSER.add_argument("--jobs", default=None, metavar="n")
+PARSER.add_argument("--strategy", default=None, metavar="name")
+PARSER.add_argument("--directory", default=None)
+#  TAKEN, NOT ADVERTISED: what the usage line never named.
+PARSER.add_argument("--force-run", action="store_true", help=argparse.SUPPRESS)
+PARSER.add_argument("--coverage", action="store_true", help=argparse.SUPPRESS)
+PARSER.add_argument("--variant", default="", help=argparse.SUPPRESS)
+PARSER.add_argument("--dbd", "--directory-by-directory", action="store_true",
+                    help=argparse.SUPPRESS)
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 HELP = """hwut.run -- the tree run, rendered live
 
@@ -266,52 +280,43 @@ def _main(argv, write, write_error, captured_f, demand=None,
     #  bound at all'.
     worker_max_n = os.cpu_count() or 1
     strategy     = strategy_of(DEFAULT_STRATEGY_NAME)
-    unknown      = []
-    word_list    = []
-    for argument in rest_list:
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument == "--no-store":  record   = False
-        elif argument == "--timing":    timing_f = True
-        elif argument == "--force-run": force_run_f = True
-        elif argument == "--coverage":
-            from vut.engine.coverage.api import CoverageConfig
-            coverage = demand if demand is not None else CoverageConfig()
-        elif argument.startswith("--variant="):
-            variant_text = argument[len("--variant="):]
-        elif argument in ("--dbd", "--directory-by-directory"):
-            strategy = strategy_of("linear")
-        elif argument.startswith("--strategy="):
-            name = argument[len("--strategy="):]
-            if name not in STRATEGY_DB:
-                write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
-                      % (", ".join(sorted(STRATEGY_DB)), name,
-                         did_you_mean(name, sorted(STRATEGY_DB),
-                                      among_listed_f=True)))
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            strategy = strategy_of(name)
-        elif argument.startswith("--jobs="):
-            text = argument[len("--jobs="):]
-            if not text.isdigit() or int(text) < 1:
-                write("REFUSED: '--jobs' takes a positive integer, "
-                      "not '%s'" % text)
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            worker_max_n = int(text)
-        elif argument.startswith("-"):
-            unknown.append(argument)
-        else:
-            #  THE SHORT FORM OF HWUT 1.0: 'hwut.run test-app.sh one'
-            #  -- sugar for a wish glob, globbing allowed in both
-            #  members ('wish.desugar_positional').
-            word_list.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.run' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
+                                              ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
         write(USAGE)
         return E_ExitCode.REFUSED
+    directory    = arguments.directory or "."
+    if arguments.no_store: record   = False
+    timing_f     = arguments.timing
+    if arguments.force_run: force_run_f = True
+    if arguments.coverage:
+        from vut.engine.coverage.api import CoverageConfig
+        coverage = demand if demand is not None else CoverageConfig()
+    variant_text = arguments.variant
+    if arguments.dbd: strategy = strategy_of("linear")
+    if arguments.strategy is not None:
+        name = arguments.strategy
+        if name not in STRATEGY_DB:
+            write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
+                  % (", ".join(sorted(STRATEGY_DB)), name,
+                     did_you_mean(name, sorted(STRATEGY_DB),
+                                  among_listed_f=True)))
+            write(USAGE)
+            return E_ExitCode.REFUSED
+        strategy = strategy_of(name)
+    if arguments.jobs is not None:
+        text = arguments.jobs
+        if not text.isdigit() or int(text) < 1:
+            write("REFUSED: '--jobs' takes a positive integer, "
+                  "not '%s'" % text)
+            write(USAGE)
+            return E_ExitCode.REFUSED
+        worker_max_n = int(text)
+    #  THE SHORT FORM OF HWUT 1.0: 'hwut.run test-app.sh one' -- sugar
+    #  for a wish glob, globbing allowed in both members
+    #  ('wish.desugar_positional').
+    word_list    = arguments.word
     #  ONE MEASUREMENT AT A TIME (coverage D-3): a coverage run's times
     #  are the instrumentation's, not the test's, and a cadence read
     #  from it would be a lie. Refused at the door, never silently
@@ -371,7 +376,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
 
     try:
         flow = console_view(rendering_wish, write, write_error,
-                            os.environ, tty_f, write_log=write_log)
+                            os.environ, tty_f, write_log=write_log,
+                            color_of=preferences.load().color)
         try:
             event_list = asyncio.run(
                 _drive(directory, wish, record, worker_max_n, strategy,

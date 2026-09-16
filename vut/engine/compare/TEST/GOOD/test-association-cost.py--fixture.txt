@@ -5,21 +5,21 @@ A REAL PAIR, where one was captured
     the growth over the first n lines of each, STOPPING at
     the knee -- a test that reproduces a hang by hanging is
     no use to anybody:
-      first  4 lines   nodes 710        -
-      first  6 lines   nodes 939        x1.3
-      first  8 lines   nodes 949        x1.0
-      first 10 lines   nodes 957        x1.0
-      first 12 lines   nodes 1059       x1.1
-      first 14 lines   nodes 1065       x1.0
-      first 16 lines   nodes 1070       x1.0
-      first 18 lines   nodes 2752       x2.6
-      first 20 lines   nodes 2758       x1.0
-      first 22 lines   nodes 2763       x1.0
-      first 24 lines   nodes 2778       x1.0
-      first 26 lines   nodes 2786       x1.0
-      first 28 lines   nodes 2790       x1.0
-      first 30 lines   nodes 3934       x1.4
-      first 32 lines   nodes 60001      x15.3  ABANDONED at the knee
+      first  4 lines   nodes 952        -
+      first  6 lines   nodes 1193       x1.3
+      first  8 lines   nodes 1203       x1.0
+      first 10 lines   nodes 1211       x1.0
+      first 12 lines   nodes 1327       x1.1
+      first 14 lines   nodes 1333       x1.0
+      first 16 lines   nodes 1338       x1.0
+      first 18 lines   nodes 2586       x1.9
+      first 20 lines   nodes 2592       x1.0
+      first 22 lines   nodes 2597       x1.0
+      first 24 lines   nodes 2613       x1.0
+      first 26 lines   nodes 2621       x1.0
+      first 28 lines   nodes 2625       x1.0
+      first 30 lines   nodes 4188       x1.6
+      first 32 lines   nodes 60001      x14.3  ABANDONED at the knee
 
     STOPPED at 32 lines, over 60000 nodes. What enters between
     line 30 and line 32 is where the heuristic stops

@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "Tree walk: markers found, configuration folded down"
 #     choices    = ["inherit", "locals", "marker", "root",
-#                   "walk"]
+#                   "stream", "walk"]
 #     interactive = true
 # }
 #
@@ -13,7 +13,7 @@ ______________________________________________________________________________
 PURPOSE: THE TREE WALK (R-69) -- finding test directories, folding the
          configuration down.
 
-CHOICES: walk, inherit, marker, locals, root;
+CHOICES: walk, inherit, marker, locals, root, stream;
 
 DESCRIPTION:
 
@@ -29,6 +29,11 @@ marker   'test_directory' renames the marker for everything BELOW the
 
 locals   a LOCAL key at a tree level ('on_entry', 'collision', ...):
          a fault, and it flows nowhere.
+
+stream   the generators and the snapshots walk the SAME directories in
+         the SAME order (E-71): 'explore_tree_stream' against
+         'explore_tree', 'of_tree_stream' against 'of_tree' -- and the
+         stream's fault accumulator is whole once it is exhausted.
 ______________________________________________________________________________
 """
 import os
@@ -38,6 +43,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.exploration.tree_explorer import (explore_tree,
+                                                               explore_tree_stream,
                                                                RootConfMissing)
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 
@@ -195,6 +201,61 @@ def test_root():
     shutil.rmtree(naked, ignore_errors=True)
 
 
+def test_stream():
+    """RETURN: None. Generator and snapshot, side by side (E-71).
+
+    A tree of four test directories at three depths, one with a
+    faulted tree-level 'hwut.conf', so order and faults both have
+    something to disagree about. After the FIRST yield no fault is
+    known yet -- the faulted level lies later in the walk -- which is
+    what shows the stream hands a directory over before walking on.
+    """
+    from vut.engine.orchestrator.exploration.selection import (of_tree,
+                                                               of_tree_stream)
+    from vut.engine.orchestrator.plan.wish             import Wish
+    tree, root = tree_of({
+        "zeta/TEST/test-z.py":         '# @hwut { title = "Z" }\n',
+        "alpha/TEST/test-a.py":        '# @hwut { title = "A" choices = ["x","y"] }\n',
+        "alpha/beta/TEST/test-b.py":   '# @hwut { title = "B" }\n',
+        "mid/hwut.conf":               'hwut { on_entry = "prepare.sh" }\n',
+        "mid/TEST/test-m.py":          '# @hwut { title = "M" }\n',
+    })
+    try:
+        banner("explore_tree_stream against explore_tree")
+        fault_list  = []
+        stream      = explore_tree_stream(root, fault_list=fault_list)
+        first, _    = next(stream)
+        print("    first yield              %s" % first)
+        print("    faults known by then     %d" % len(fault_list))
+        stream_list = [first] + [directory for directory, _ in stream]
+        snap_list   = [directory for directory, _ in tree]
+        print("    stream                   %s" % ", ".join(stream_list))
+        print("    snapshot                 %s" % ", ".join(snap_list))
+        print("    same order               %s" % (stream_list == snap_list))
+        print("    faults stream/snapshot   %d/%d, same: %s"
+              % (len(fault_list), len(tree.fault_tuple),
+                 [str(f) for f in fault_list]
+                 == [str(f) for f in tree.fault_tuple]))
+
+        banner("of_tree_stream against of_tree")
+        wish     = Wish()
+        snapshot = of_tree(root, wish)
+        row_list = list(of_tree_stream(root, wish))
+        s_dir    = [directory for directory, _, _, _ in row_list]
+        s_case   = [(c.directory, str(c.case))
+                    for _, _, _, case_list in row_list for c in case_list]
+        n_case   = [(c.directory, str(c.case)) for c in snapshot.case_list]
+        print("    stream                   %s" % ", ".join(s_dir))
+        print("    snapshot                 %s"
+              % ", ".join(snapshot.result_db))
+        print("    same order               %s"
+              % (s_dir == list(snapshot.result_db)))
+        print("    cases stream/snapshot    %d/%d, same order: %s"
+              % (len(s_case), len(n_case), s_case == n_case))
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Tree walk: markers found, configuration folded down;", {
@@ -203,4 +264,5 @@ if __name__ == "__main__":
         "root":       test_root,
         "marker":  test_marker,
         "locals":  test_locals,
+        "stream":  test_stream,
     }).run()

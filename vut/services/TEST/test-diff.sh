@@ -27,7 +27,9 @@
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
-DIFF="python3 -m vut.services.diff"
+#  --console (E-79): the suite writes into a pipe and wants the TEXT rendering,
+#  and says so, instead of being told so by a NOTE on every page.
+DIFF="python3 -m vut.services.diff --console"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
@@ -75,7 +77,7 @@ differing)
     #  3.140 against 3.141, no tolerance granted: a differing pair.
     echo "STIMULUS  subject.txt: alpha, value 3.140"
     echo "          nominal.txt: alpha, value 3.141"
-    echo "          hwut.diff subject.txt nominal.txt --plain"
+    echo "          hwut.diff --console subject.txt nominal.txt --plain"
     $DIFF subject.txt nominal.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -91,7 +93,7 @@ tolerated)
     #  The SAME streams, one flag wider: '--numeric 0.01'. The verdict
     #  flips; the machinery does not.
     echo "STIMULUS  the same streams,"
-    echo "          hwut.diff subject.txt nominal.txt --plain --numeric 0.01"
+    echo "          hwut.diff --console subject.txt nominal.txt --plain --numeric 0.01"
     $DIFF subject.txt nominal.txt --plain --numeric 0.01 \
              > out.txt 2> err.txt
     code=$?
@@ -106,7 +108,7 @@ tolerated)
 reading)
     #  ONE argument asks the other question: how does compare READ this
     #  stream? Fed against itself, so only interpretation shows.
-    echo "STIMULUS  hwut.diff subject.txt --plain      (one argument)"
+    echo "STIMULUS  hwut.diff --console subject.txt --plain      (one argument)"
     $DIFF subject.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -122,7 +124,7 @@ side-by-side)
     #  merge goes. The gutter says the relation; a wide line wraps.
     printf 'alpha\nvalue 3.140\nonly in subject\nsame ((token)) here\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > s.txt
     printf 'alpha\nvalue 3.141\nsame ((other)) here\ninserted in nominal\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > n.txt
-    echo "STIMULUS  hwut.diff s.txt n.txt --plain --side-by-side --width 80"
+    echo "STIMULUS  hwut.diff --console s.txt n.txt --plain --side-by-side --width 80"
     $DIFF s.txt n.txt --plain --side-by-side --width 80 > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -142,7 +144,7 @@ store)
     #  THE STORE FORM (E-50): the wish, the verdict measured now, the
     #  checklist, the view per case.
     store_fixture
-    echo "STIMULUS  hwut.diff --directory=tree/suite/TEST --all --plain -y --width 70"
+    echo "STIMULUS  hwut.diff --console --directory=tree/suite/TEST --all --plain -y --width 70"
     $DIFF --directory=tree/suite/TEST --all --plain -y --width 70 > out.txt 2> err.txt
     code=$?
     show out.txt

@@ -70,20 +70,31 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
                                                              with_targets)
-from   ._core                                        import usage_line
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse, did_you_mean)
 
 FORMAT_TUPLE   = ("traditional", "junit", "tap", "json")
 WIDTH_DEFAULT  = 80
 WIDTH_MINIMUM  = 40
 
-USAGE = usage_line("usage: hwut.report",
-                   ("[<wish>]", "[<file-glob> [choice-glob]...]",
-                    "[--format=<name>]", "[--out=<file>]",
-                    "[--width=<n>]", "[--plain|--color]",
-                    "[--directory=<path>]"))
+#  THE STANDARD READER (E-84). The VALUES of '--format' and '--width' are
+#  checked below, in this face's own words; the parser collects them.
+PARSER = face_parser("hwut.report", "Print the page of the last results.",
+                     word_help="a test, a test and a choice, a file glob "
+                               "and a choice glob",
+                     word_metavar="[<file-glob> [choice-glob]...]")
+PARSER.add_argument("--format", default="traditional", metavar="name")
+PARSER.add_argument("--out", default=None)
+PARSER.add_argument("--width", default=None, metavar="n")
+PARSER.add_argument("--plain", action="store_true")
+PARSER.add_argument("--color", action="store_true")
+PARSER.add_argument("--directory", default=None)
+#  '--format' is an ENUMERATION: the completion table and the usage name
+#  its words.
+ARG_DB = {"--directory": True, "--out": True, "--format": FORMAT_TUPLE}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
@@ -151,10 +162,12 @@ def _json_verdict(verdict):
 #  THE PAGE'S COLOURS, as the HWUT page wore them. Backgrounds, not
 #  foregrounds: a verdict is a BADGE, and a badge is read at a glance
 #  across a screenful of dots.
-ANSI_RESET   = "\033[0m"
-ANSI_TITLE   = "\033[30;48;5;208m"      # black on orange
-ANSI_OK      = "\033[30;48;5;40m"       # black on green
-ANSI_FAIL    = "\033[97;48;5;160m"      # white on red
+#  The colours themselves are the person's preferences (services E-78):
+#  'report.title' black on orange, 'report.ok' black on green,
+#  'report.fail' white on red, by default.
+ANSI_TITLE   = "report.title"
+ANSI_OK      = "report.ok"
+ANSI_FAIL    = "report.fail"
 
 #  How far short of the rule the verdict column stops.
 VERDICT_MARGIN = 2
@@ -178,10 +191,10 @@ def width_of(stated):
     return max(got or WIDTH_DEFAULT, WIDTH_MINIMUM)
 
 
-def painted(text, code, color_f):
+def painted(text, role, color_f):
     """
-    RETURN: str, 'text' wrapped in the ANSI sequence 'code' and closed
-            again, where 'color_f'; 'text' untouched otherwise.
+    RETURN: str, 'text' in the colour the preferences give 'role',
+            closed again, where 'color_f'; 'text' untouched otherwise.
 
             NEVER called before a line's width has been measured: the
             escapes are invisible to a terminal and four characters
@@ -189,7 +202,8 @@ def painted(text, code, color_f):
             in the wrong column.
     """
     if not color_f: return text
-    return "%s%s%s" % (code, text, ANSI_RESET)
+    from vut.services.lib import preferences
+    return preferences.paint(text, preferences.load().color(role))
 
 
 def color_wanted_f(plain_f, out_name, stream, color_said_f=False):
@@ -705,47 +719,34 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    directory   = "."
-    format_name = "traditional"
-    out_name    = None
-    width       = None
-    plain_f     = False
-    color_said_f = False
-    unknown     = []
-    word_list = []
-    for argument in rest_list:
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument.startswith("--out="):
-            out_name = argument[len("--out="):]
-        elif argument.startswith("--format="):
-            format_name = argument[len("--format="):]
-            if format_name not in FORMAT_TUPLE:
-                write("REFUSED: '--format' takes one of %s, not '%s'%s"
-                      % (", ".join(FORMAT_TUPLE), format_name,
-                         did_you_mean(format_name, FORMAT_TUPLE,
-                                      among_listed_f=True)))
-                write(USAGE)
-                return E_ExitCode.REFUSED
-        elif argument == "--plain":   plain_f = True
-        elif argument == "--color":   color_said_f = True
-        elif argument.startswith("--width="):
-            text = argument[len("--width="):]
-            if not text.isdigit() or int(text) < 1:
-                write("REFUSED: '--width' takes a positive integer, "
-                      "not '%s'" % text)
-                write(USAGE)
-                return E_ExitCode.REFUSED
-            width = int(text)
-        else:
-            if argument.startswith("-"): unknown.append(argument)
-            else:                        word_list.append(argument)
-    if unknown:
-        write("REFUSED: 'hwut.report' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
+    arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
+                                              ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
         write(USAGE)
         return E_ExitCode.REFUSED
+    directory    = arguments.directory or "."
+    format_name  = arguments.format
+    out_name     = arguments.out
+    plain_f      = arguments.plain
+    color_said_f = arguments.color
+    word_list    = arguments.word
+    width        = None
+    if format_name not in FORMAT_TUPLE:
+        write("REFUSED: '--format' takes one of %s, not '%s'%s"
+              % (", ".join(FORMAT_TUPLE), format_name,
+                 did_you_mean(format_name, FORMAT_TUPLE,
+                              among_listed_f=True)))
+        write(USAGE)
+        return E_ExitCode.REFUSED
+    if arguments.width is not None:
+        text = arguments.width
+        if not text.isdigit() or int(text) < 1:
+            write("REFUSED: '--width' takes a positive integer, "
+                  "not '%s'" % text)
+            write(USAGE)
+            return E_ExitCode.REFUSED
+        width = int(text)
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED

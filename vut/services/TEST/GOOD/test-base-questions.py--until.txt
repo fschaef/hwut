@@ -1,4 +1,15 @@
-  selected: test-fresh.py
+  the run is recorded at            2026-09-16T11:59:59+00:00
+  asked in the same second   --until=1s  selected: test-fresh.py
+  asked one second later     --until=1s  selected: test-fresh.py
+  asked two seconds later    --until=1s  selected: test-bad.py, test-fresh.py, test-good.py
+  across the hour            --until=1h  selected: test-fresh.py
+  an hour and a second on    --until=1h  selected: test-bad.py, test-fresh.py, test-good.py
   OK  : never run is older than every point: --until wants it
-SUCCESS: --until reaches back past the book's first sight.
+  OK  : a run in this very second does not lie BEFORE now-1s
+  OK  : at now-1s the run lies ON the point, not before it
+  OK  : two seconds on, the run lies before now-1s
+  OK  : an hour's point is not crossed by a second
+  OK  : an hour and a second on, it is
+  OK  : the never-run case is wanted whatever the clock says
+SUCCESS: --until is answered by the clock, and the clock is stated.
 <hwut-end>

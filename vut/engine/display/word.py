@@ -144,21 +144,40 @@ def colour_decision(environ, tty_f, force_f=False, veto_f=False):
     return True
 
 
+#  THE ENGINE'S OWN DEFAULTS, role by role, in the preferences'
+#  vocabulary: what is painted where no face hands in a preference
+#  file. 'bin/.hwut.conf' states the same words. Two rulings live here:
+#
 #  ORANGE IS THE DIRECTORY'S COLOUR, wherever a directory is named:
 #  the DIR band's ground, and the name at the head of a HINTS block.
-#  ONE NOUN, ONE COLOUR -- a reader who has learnt what orange means
-#  in the band reads the same thing in the hints. 256-colour 208;
-#  there is no orange in the base 16, and red and green stay reserved
-#  for [FAIL] and [OK].
-DIRECTORY_CODE_TUPLE = (38, 5, 208)
-
+#  ONE NOUN, ONE COLOUR. 256-colour 208; there is no orange in the base
+#  16, and red and green stay reserved for [FAIL] and [OK].
+#
 #  RED IS PINNED, NOT ASKED FOR BY NAME. The base-16 codes 31/41 name
 #  PALETTE SLOT 1, and a theme is free to render that slot as it
 #  likes -- several popular ones make it orange, which put a failure
-#  in the same hue as a directory and made the two unreadable side by
-#  side. 256-colour 196 is red wherever it is drawn.
-FAIL_CODE      = (38, 5, 196)
-FAIL_TAG_CODE  = (97, 48, 5, 196)
+#  in the same hue as a directory. 256-colour 196 is red wherever it
+#  is drawn -- which is why 'run.fail' is 'c256:196', not 'red'.
+ROLE_DEFAULT_DB = {
+    "run.ok":            "green",
+    "run.fail":          "c256:196",
+    "run.tag-ok":        "bright-white bg-green",
+    "run.tag-fail":      "bright-white bg256:196",
+    "run.tag-undecided": "black bg-yellow",
+    "run.warn":          "yellow",
+    "run.start":         "blue",
+    "run.dim":           "dim",
+    "run.bold":          "bold",
+    "run.directory":     "c256:208",
+    "run.dir-band":      "bright-white bg256:208",
+    "run.block-error":   "bold bright-white bg256:196",
+    "run.ground-ok":     "bright-white bg-green",
+    "run.ground-skip":   "black bg-yellow",
+    "run.ground-fail":   "bright-white bg256:196",
+}
+
+
+from vut.engine.display.colour import paint
 
 
 class CInk:
@@ -166,11 +185,18 @@ class CInk:
     OFF returns every text unchanged, so a captured face writes plain
     ASCII by construction."""
 
-    def __init__(self, on_f):
+    def __init__(self, on_f, color_of=None):
         """
         RETURN: CInk, painting where 'on_f', transparent else.
+
+        'color_of' answers a ROLE ('run.fail') with a colour, in the
+        preferences' vocabulary. A face hands in the person's
+        preferences ('services/lib/preferences.py'); the engine, which
+        never reads a preference file, paints 'ROLE_DEFAULT_DB' -- the
+        codes it always painted (services E-82).
         """
-        self.on_f = bool(on_f)
+        self.on_f     = bool(on_f)
+        self.color_of = color_of or ROLE_DEFAULT_DB.get
 
     def paint(self, text, *code_tuple):
         """
@@ -181,8 +207,18 @@ class CInk:
         return "\x1b[%sm%s\x1b[0m" \
                % (";".join(str(code) for code in code_tuple), text)
 
-    def ok(self, text):      return self.paint(text, 32)
-    def fail(self, text):    return self.paint(text, *FAIL_CODE)
+    def role(self, text, role):
+        """
+        RETURN: str, 'text' in the colour the person's preferences give
+                'role' (services E-78) where the ink is on; 'text'
+                unchanged else. The preferences are read only when the
+                ink is on -- a captured face never reads them.
+        """
+        if not self.on_f: return text
+        return paint(text, self.color_of(role) or "")
+
+    def ok(self, text):      return self.role(text, "run.ok")
+    def fail(self, text):    return self.role(text, "run.fail")
 
     #  THE VERDICT TAG CARRIES A GROUND, the phrase beside it does
     #  not: the tag is what an eye scans a long report for, and a
@@ -190,15 +226,15 @@ class CInk:
     #  read for. A phrase on a ground would be a second block
     #  competing with the first. White on green, white on red -- 97
     #  the bright foreground, 42 and 41 the grounds.
-    def tag_ok(self, text):   return self.paint(text, 97, 42)
-    def tag_fail(self, text): return self.paint(text, *FAIL_TAG_CODE)
+    def tag_ok(self, text):   return self.role(text, "run.tag-ok")
+    def tag_fail(self, text): return self.role(text, "run.tag-fail")
     #  '[ ?! ]' (O-25): CANNOT BE USED FOR COMPARISON -- not green, not
     #  the red of a regression: black on the amber of a warning.
-    def tag_undecided(self, text): return self.paint(text, 30, 43)
-    def warn(self, text):    return self.paint(text, 33)
-    def start(self, text):   return self.paint(text, 34)
-    def dim(self, text):     return self.paint(text, 2)
-    def bold(self, text):    return self.paint(text, 1)
+    def tag_undecided(self, text): return self.role(text, "run.tag-undecided")
+    def warn(self, text):    return self.role(text, "run.warn")
+    def start(self, text):   return self.role(text, "run.start")
+    def dim(self, text):     return self.role(text, "run.dim")
+    def bold(self, text):    return self.role(text, "run.bold")
 
     def dir_band(self, text):
         """
@@ -207,25 +243,25 @@ class CInk:
                 width it wants the ground to span; this paints, it
                 does not measure.
         """
-        return self.paint(text, 97, 48, 5, 208)
+        return self.role(text, "run.dir-band")
 
     #  THE FINAL BAR'S THREE GROUNDS: ok on green, skipped on yellow,
     #  failed on red -- a block of colour whose WIDTH is the count, so
     #  the shape of a run is read before its numbers are. Each carries
     #  its word: bright white (97) on green and red, black (30) on
     #  yellow, where white would not read. THE FAIL GROUND IS THE ONE
-    #  THE '[FAIL]' TAG WEARS -- 'FAIL_TAG_CODE', 256-colour 196 --
+    #  THE '[FAIL]' TAG WEARS -- 'run.tag-fail', 256-colour 196 --
     #  never the base-16 '41', which is palette slot 1 and orange in
     #  several themes.
     #  'ERROR' IS A BLOCK, NOT A WORD (O-24): the same red ground the
     #  '[FAIL]' tag and the closing bar wear, bright white and bold on
     #  it -- a fault stands in the flow where START and DONE stand, and
     #  must be seen at a glance among them.
-    def block_error(self, text):  return self.paint(text, 1, 97, 48, 5, 196)
+    def block_error(self, text):  return self.role(text, "run.block-error")
 
-    def ground_ok(self, text):    return self.paint(text, 97, 42)
-    def ground_skip(self, text):  return self.paint(text, 30, 43)
-    def ground_fail(self, text):  return self.paint(text, *FAIL_TAG_CODE)
+    def ground_ok(self, text):    return self.role(text, "run.ground-ok")
+    def ground_skip(self, text):  return self.role(text, "run.ground-skip")
+    def ground_fail(self, text):  return self.role(text, "run.ground-fail")
 
     def directory(self, text):
         """
@@ -233,4 +269,4 @@ class CInk:
                 -- orange, the same hue the DIR band carries as its
                 ground.
         """
-        return self.paint(text, *DIRECTORY_CODE_TUPLE)
+        return self.role(text, "run.directory")

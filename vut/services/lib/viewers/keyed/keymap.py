@@ -62,6 +62,17 @@ KEYMAP = (
     (("q",),            E_Act.CANCEL,       BOTH, "cancel"),
 )
 
+#  THE VIEWING TABLE ('hwut.diff'): the same keys, and only the acts
+#  that change nothing -- a view has no nominal to change.
+VIEW_ACT_SET = {E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_UP,
+                E_Act.PAGE_DOWN, E_Act.PAGE_UP, E_Act.SCROLL_LEFT,
+                E_Act.SCROLL_RIGHT, E_Act.SEARCH_DOWN, E_Act.SEARCH_UP,
+                E_Act.HELP, E_Act.CANCEL}
+VIEW_KEYMAP = tuple((key_tuple, act, scope,
+                     "quit" if act is E_Act.CANCEL else text)
+                    for key_tuple, act, scope, text in KEYMAP
+                    if act in VIEW_ACT_SET)
+
 #  THE LINE-BASED FALLBACK'S TABLE. The same acts, reached by answering a
 #  prompt instead of pressing a key.
 FALLBACK_KEYMAP = (

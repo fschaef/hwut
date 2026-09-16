@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "Line Comparison"
 #     choices    = ["associate", "associate-2", "associate-3", "compare",
-#                   "compare-2", "compare-3"]
+#                   "compare-2", "compare-3", "numbers"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -11,7 +11,7 @@ _______________________________________________________________________________
 
 PURPOSE: API of compare module
 
-CHOICES: compare, line_associations;
+CHOICES: compare, line_associations, numbers;
 
 DESCRIPTION:
 
@@ -23,6 +23,11 @@ The main API provides two functions:
                        is to be used for diff-display.
 
 The first function provides a verdict, the second provides line associations.
+
+'numbers': A NUMBER IS ALWAYS A NUMBER (C-11). Under a ratio of 0
+the verdict is 'equal VALUES' -- '1.0' is '1', '0.000' is '0.0' -- and a
+number glued to a word ('4.5s', 'x86') is no number. A ratio above 0
+widens the band and changes nothing else.
 In this test each function is tested by a specific 'CHOICE'.
 
 This is the outer shell of the compare module. The tests are trivial as the
@@ -44,7 +49,7 @@ import asyncio
 
 if "--hwut-info" in sys.argv:
     print("Line Comparison;")
-    print("CHOICES: compare, compare-2, associate, associate-2, compare-3, associate-3;")
+    print("CHOICES: compare, compare-2, associate, associate-2, compare-3, associate-3, numbers;")
     sys.exit()
 
 config = Configuration()
@@ -133,6 +138,38 @@ if sys.argv[1].endswith("-3"):
     asyncio.run(test(c1 + c2, c0 + c2,        both_f=True))
     asyncio.run(test(c4 + c4, "",             both_f=True))
 
+elif sys.argv[1] == "numbers":
+    async def verdict_of(ratio, subject_txt, nominal_txt):
+        """RETURN: None. One line: the ratio, both texts, the verdict."""
+        config.pattern_finder.numeric_tolerance_ratio = ratio
+        verdict = await main.is_equivalent(config, StringIO(subject_txt),
+                                           StringIO(nominal_txt))
+        print("    ratio %-5g %-16r %-16r => %s"
+              % (ratio, subject_txt, nominal_txt, verdict))
+
+    for ratio, subject_txt, nominal_txt in (
+        #  equal values, however written
+        (0,    "value 1.0",    "value 1"),
+        (0,    "value 0.000",  "value 0.0"),
+        (0,    "value -0",     "value 0"),
+        (0,    "value 1e3",    "value 1000"),
+        (0,    "value 007",    "value 7"),
+        (0,    "t=.5 s",       "t=0.50 s"),
+        #  different values
+        (0,    "value 1",      "value 2"),
+        (0,    "value 3.140",  "value 3.141"),
+        #  a number against a word
+        (0,    "value 1",      "value one"),
+        #  glued to a word: text, compared as text
+        (0,    "took 4.5s",    "took 4.50s"),
+        (0,    "cpu x86",      "cpu x86.0"),
+        #  the band, and only the band, is what the ratio adds
+        (0.01, "value 3.140",  "value 3.141"),
+        (0.01, "value 100",    "value 102"),
+    ):
+        asyncio.run(verdict_of(ratio, subject_txt, nominal_txt))
+    config.pattern_finder.numeric_tolerance_ratio = 0
+
 elif sys.argv[1].endswith("-2"):
     if "compare-2" in sys.argv:   test = test_compare
     if "associate-2" in sys.argv: test = test_line_associations
@@ -176,3 +213,6 @@ else:
     asyncio.run(test("Hallo\nWelt",                 "##! potpourri\nHello\nWorld\n####"))
     asyncio.run(test("##! potpourri\nHello\nLe Monde\n####", "##! potpourri\nHello\nWorld\n####"))
 
+
+#  THE STREAM COMPLETED (R-70).
+print("<hwut-end>")

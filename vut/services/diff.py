@@ -51,9 +51,13 @@ DESCRIPTION
        association serves both questions.
 
        DISPLAY ONLY. This service never merges and never writes an
-       artifact -- the rendering IS the product, so it goes to STDOUT
-       (the interactive accept renders on stderr). Editing and
-       accepting belong to 'hwut.accept.interactive'.
+       artifact. WHERE A PERSON SITS AT A TERMINAL it opens the keyed
+       SCREEN of 'hwut.accept.interactive' for looking only: the same
+       panes and element colours, moving and searching, 'q' to go on
+       (services E-79). '--console' -- and a pipe, or a machine without
+       'prompt_toolkit', where one NOTE says so -- gives the TEXT
+       display on STDOUT instead, where the rendering IS the product.
+       Editing and accepting belong to 'hwut.accept.interactive'.
 
        EXIT CODES (the diff convention):
                     0 equivalent -- no differing pair (or: a reading
@@ -78,6 +82,11 @@ from ._exit import E_ExitCode  # delayed past _config adoption
 
 from   vut.engine.operations.interaction.port import deliver
 from   vut.services.lib.viewers.tui           import TuiDisplay
+from   vut.services.lib.cmdline               import parse_or_refuse
+from   vut.services.lib.viewers               import (driver_for,
+                                                      E_DisplayTarget,
+                                                      keyed_absent_reason,
+                                                      fallback_note)
 from   vut.engine.compare.api                 import feeder_ui as compare_feeder
 from   ._core              import (read_source,
                                   add_setup_arguments,
@@ -103,7 +112,16 @@ async def compare_view(subject_text, nominal_text, adapter,
                                       io.StringIO(subject_text),
                                       io.StringIO(nominal_text)),
                   adapter, subject_name)
+    await _viewed(adapter, subject_name, subject_text, nominal_text)
     return adapter.bad_pair_n
+
+
+async def _viewed(adapter, subject_name, subject_text, nominal_text):
+    """RETURN: None. Where the adapter is a SCREEN (the keyed view), it
+               is opened now on what was delivered; a text display has
+               already written everything."""
+    view = getattr(adapter, "view", None)
+    if view is not None: await view(subject_name, subject_text, nominal_text)
 
 
 async def reading_view(text, adapter, subject_name="reading",
@@ -142,6 +160,7 @@ async def reading_view(text, adapter, subject_name="reading",
         write("text. A text that CONTAINS such lines as content cannot")
         write("be shown under the reading until it can be switched off.")
         return False
+    await _viewed(adapter, subject_name, text, text)
     return True
 
 
@@ -180,6 +199,9 @@ def _main(argv):
 
     parser = argparse.ArgumentParser(
         prog="hwut.diff",
+        #  NO ABBREVIATION (E-81): '--forc' was measured to RUN as
+        #  '--force'; a word not in the table is refused, and suggested.
+        allow_abbrev=False,
         description="Display how two streams compare, how the store's "
                     "candidates compare to their nominals, or -- with "
                     "one file -- how compare READS a stream. Rendering "
@@ -193,6 +215,9 @@ def _main(argv):
                              "even in a two-stream comparison")
     parser.add_argument("--plain", action="store_true",
                         help="no colors, even on a tty")
+    parser.add_argument("--console", action="store_true",
+                        help="the text display on stdout, not the "
+                             "screen")
     parser.add_argument("-y", "--side-by-side", action="store_true",
                         help="two columns: subject LEFT, nominal RIGHT")
     parser.add_argument("--width", type=int, default=None,
@@ -211,16 +236,18 @@ def _main(argv):
         sys.stderr.write("REFUSED: '--yes' is gone (E-57) -- '--all' is "
                          "the one word for 'no checklist'\n")
         return E_ExitCode.REFUSED
-    arguments = parser.parse_args(rest_list)
+    #  THE VOCABULARY IS THE PARSER'S (E-81): the refusal's suggestion
+    #  and the completion table are read off it; 'ARG_DB' says what a
+    #  value is.
+    arguments, completion_f = parse_or_refuse(
+        parser, rest_list, lambda t: sys.stderr.write(t + "\n"), ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None: return E_ExitCode.REFUSED
     setup     = setup_from_arguments(arguments)
     word_list = arguments.word
 
-    adapter = TuiDisplay(out       = sys.stdout,
-                         color_f   = False if arguments.plain else None,
-                         merge_f   = False,
-                         reading_f = arguments.reading,
-                         side_by_side_f = arguments.side_by_side,
-                         width     = arguments.width)
+    adapter = display_for(arguments,
+                          lambda text: sys.stderr.write(text + "\n"))
 
     if _file_form_f(word_list, wish_said_f, arguments.directory):
         if word_list.count("-") > 1:
@@ -277,8 +304,35 @@ def _main(argv):
 
 
 USAGE = ("usage: hwut.diff SUBJECT NOMINAL | FILE | [<wish>] "
-         "[<test> [<choice>]] [--directory D] [--all] [-y] [--width N] "
-         "[--plain]")
+         "[<test> [<choice>]] [--directory D] [--all] [--console] [-y] "
+         "[--width N] [--plain]")
+
+
+#  What a value IS (E-81): True, a path follows; a tuple, the words.
+ARG_DB = {"--directory": True}
+
+
+def display_for(arguments, err):
+    """
+    RETURN: DisplayAdapter, where the comparison is shown -- the keyed
+            SCREEN, for looking only, where a person sits at a terminal;
+            the TEXT display on stdout under '--console', or where the
+            screen cannot run, which ONE note on 'err' then says
+            (services E-79).
+    """
+    color_f = False if arguments.plain else None
+    if not arguments.console:
+        reason = keyed_absent_reason((sys.stdin, sys.stdout))
+        if reason is None:
+            return driver_for(E_DisplayTarget.KEYS, color_f=color_f,
+                              view_only_f=True)
+        err(fallback_note(reason))
+    return TuiDisplay(out            = sys.stdout,
+                      color_f        = color_f,
+                      merge_f        = False,
+                      reading_f      = arguments.reading,
+                      side_by_side_f = arguments.side_by_side,
+                      width          = arguments.width)
 
 
 def _file_form_f(word_list, wish_said_f, directory):

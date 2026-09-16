@@ -1,0 +1,14 @@
+    ratio 0     'value 1.0'      'value 1'        => True
+    ratio 0     'value 0.000'    'value 0.0'      => True
+    ratio 0     'value -0'       'value 0'        => True
+    ratio 0     'value 1e3'      'value 1000'     => True
+    ratio 0     'value 007'      'value 7'        => True
+    ratio 0     't=.5 s'         't=0.50 s'       => True
+    ratio 0     'value 1'        'value 2'        => False
+    ratio 0     'value 3.140'    'value 3.141'    => False
+    ratio 0     'value 1'        'value one'      => False
+    ratio 0     'took 4.5s'      'took 4.50s'     => False
+    ratio 0     'cpu x86'        'cpu x86.0'      => False
+    ratio 0.01  'value 3.140'    'value 3.141'    => True
+    ratio 0.01  'value 100'      'value 102'      => False
+<hwut-end>

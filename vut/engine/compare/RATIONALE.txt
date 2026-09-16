@@ -391,3 +391,42 @@ GRAVEYARD Peeling the token in the session only -- rejected: the mirror
           it re-associated ordinary plain/plain pairs in four standing
           suites where no region stood.
 
+C-11  A NUMBER IS ALWAYS A NUMBER                                  (2026-09-15)
+----------------------------------------------------------------------------
+PROBLEM   The NUMERIC pattern was registered only where
+          'numeric_tolerance_ratio' was non-zero. MEASURED: at the
+          default 0, '23' was a STRING element, so '1.0' differed from
+          '1' and '0.000' from '0.0' -- the ratio decided WHETHER a
+          number was one, not how far two may differ. The reading could
+          not mark a number either: the element kind the display wears
+          IS the lexed kind, and there was none to wear.
+
+          AND: '4.5s' lexed as NUMERIC '4' + STRING '.5s' -- the
+          trailing '(?!\w)' made the pattern backtrack into half a
+          number.
+
+DECISION  NUMBERS ARE ALWAYS LEXED. The ratio is the band and nothing
+          else: 0 means 'equal VALUES' -- '1.0' is '1', '1e3' is '1000',
+          '007' is '7' -- and a number against a word is a type
+          difference.
+
+          THE NUMBER IS ATOMIC: taken whole or not at all. Glued to a
+          word it is text, as 'x86' always was.
+
+          The default ratio stays 0. Whether it should be 0.01 is a
+          separate question, not ruled here.
+
+COST      MEASURED on the whole tree: sixteen recorded pages moved --
+          three readings gained '{...}', 'test-ui structure' reads
+          '(NUM)' for '(STR)', 'test-association-cost' counts other
+          search nodes (the knee stays between lines 30 and 32), three
+          'test-pattern_finder' pages print the pattern, and six
+          'test-main' pages gained the '<hwut-end>' that suite never
+          printed (R-70), as 'test-pattern_finder' did. 'test-main
+          numbers' pins the verdicts.
+
+GRAVEYARD 'None' for 'not a number', 0 for 'exact' -- rejected: there is
+          no case where a number should be read as text. A reading-only
+          re-lex for colour -- rejected: the colour would say 'number'
+          where compare reads text.
+

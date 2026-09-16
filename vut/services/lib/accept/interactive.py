@@ -9,7 +9,7 @@ PURPOSE
 
            hwut.accept.interactive [<wish>] [<test> [<choice>]] ...
                                    [--directory=<path>] [--all] [--force]
-                                   [-y] [--width N] [--plain]
+                                   [--console] [-y] [--width N] [--plain]
                                    [--editor E] [--max-rounds N]
                                    [--stderr-tol]
 
@@ -48,13 +48,18 @@ DESCRIPTION
        LEFT, nominal RIGHT), then [e]dit / [c]ommit / [q]uit. Quit
        leaves the case exactly as it stood and goes on to the next.
 
+       '--console' asks for the line-based session; without it, where
+       the screen cannot run -- no terminal, no 'prompt_toolkit' -- the
+       line-based session runs and ONE note says why (E-79).
+
        ON A TERMINAL the keyed tier runs and F1 prints the keymap --
        the table itself, so it cannot go stale. Both panes hold ONE
        viewport, so they stay level however far down the author goes;
        'h'/'l' move the view sideways; '/' and '?' open a search line
        that the keymap yields to while it is open. A subject section
-       already taken is SPENT: it is greyed, no cursor reaches it and
-       no range intersects it (E-63). '--plain' reaches this tier too.
+       already taken is SPENT: it stands on a grey-green band, no cursor
+       reaches it and no range intersects it (E-63). '--plain' reaches
+       this tier too.
 
        REFUSED AT COMMIT, with 'hwut.accept's own words: a stained
        choice (a test that switches results has no pole), a text
@@ -72,6 +77,7 @@ import io
 import sys
 import asyncio
 from . import engine
+from vut.services.lib.cmdline import parse_or_refuse
 from .engine import merge_text, MERGE_ROUND_MAX  # noqa: F401 (E-51's names)
 import argparse
 
@@ -92,8 +98,12 @@ from   vut.services.accept                    import (token_terminated_f,
                                                       stderr_decision)
 
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
-         "[--directory=<path>] [--all] [--force] [-y] [--width N] "
-         "[--plain] [--editor E] [--stderr-tol]")
+         "[--directory=<path>] [--all] [--force] [--console] [-y] "
+         "[--width N] [--plain] [--editor E] [--stderr-tol]")
+
+
+#  What a value IS (E-81): True, a path follows; a tuple, the words.
+ARG_DB = {"--directory": True, "--editor": True}
 
 
 def main(argv=None):
@@ -110,6 +120,9 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         prog="hwut.accept.interactive",
+        #  NO ABBREVIATION (E-81): '--forc' was measured to RUN as
+        #  '--force'; a word not in the table is refused, and suggested.
+        allow_abbrev=False,
         description="Show each differing case, edit, and ACCEPT on "
                     "commit -- through hwut.accept's own door.")
     parser.add_argument("word", nargs="*",
@@ -124,6 +137,8 @@ def main(argv=None):
                              "subject taken whole -- for scripts")
     parser.add_argument("--plain", action="store_true",
                         help="no colors, even on a tty")
+    parser.add_argument("--console", action="store_true",
+                        help="the line-based session, not the screen")
     parser.add_argument("-y", "--side-by-side", action="store_true",
                         help="two columns: subject LEFT, nominal RIGHT")
     parser.add_argument("--width", type=int, default=None)
@@ -135,7 +150,9 @@ def main(argv=None):
                         dest="stderr_tol", action="store_true",
                         help="accept although stderr spoke")
     add_setup_arguments(parser)
-    arguments = parser.parse_args(rest_list)
+    arguments, completion_f = parse_or_refuse(parser, rest_list, err, ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None: return E_ExitCode.REFUSED
     setup_said_f = any(getattr(arguments, n, None) is not None
                        for n in ("numeric", "pattern", "nothing"))
     setup = setup_from_arguments(arguments)
@@ -164,7 +181,10 @@ def main(argv=None):
     adapter = engine.adapter_for(editor_argv=editor_argv,
                                  plain_f=arguments.plain,
                                  side_by_side_f=arguments.side_by_side,
-                                 width=arguments.width)
+                                 width=arguments.width,
+                                 console_f=arguments.console
+                                           or arguments.force,
+                                 err=err)
     #  ONE CASE PER ASK, and the checklist remembers what was handed
     #  over. The loop ends on None and on nothing else.
     checklist = Checklist(key_list, err, sys.stdin.readline,

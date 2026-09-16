@@ -61,10 +61,31 @@ from vut.services.lib.viewers.keyed.project import (project, banner,
                                                     row_of_cursor, E_Kind)
 from vut.services.lib.viewers.keyed         import keymap
 
+from vut.services.lib                      import preferences
+from vut.engine.display.colour             import ELEMENT_ROLE_DB
+
 import asyncio
 import io
 import os
 import tempfile
+
+#  prompt_toolkit's style class -> the colour role of the preferences
+#  (services E-78). The plain table below is not a preference: without
+#  colour, attributes alone must keep the screen readable.
+STYLE_ROLE_DB = {
+    "banner":         "keyed.banner",
+    "help":           "keyed.help",
+    "search":         "keyed.search",
+    "cursor.active":  "keyed.cursor-active",
+    "cursor.other":   "keyed.cursor-other",
+    "marked":         "keyed.marked",
+    "target.virgin":  "keyed.target-virgin",
+    "target.latched": "keyed.target-latched",
+    "marker":         "keyed.marker",
+    "filler":         "keyed.filler",
+    "token":          "keyed.token",
+    "copied":         "keyed.spent",
+}
 
 COLUMN_STEP_N = 8       # how far one 'h' or 'l' moves the view sideways
 
@@ -73,7 +94,7 @@ class KeyedDisplay(DisplayAdapter):
     """The keyed merge session, as the hub's DisplayAdapter."""
 
     def __init__(self, out=None, editor_argv=None, act_script=None,
-                 width=None, color_f=None, **_ignored):
+                 width=None, color_f=None, view_only_f=False, **_ignored):
         """RETURN: None.
 
         'out' and the rest of '**_ignored' are accepted so that
@@ -86,10 +107,16 @@ class KeyedDisplay(DisplayAdapter):
         self.act_script  = list(act_script) if act_script is not None else None
         self.width       = width
         self.plain_f     = (color_f is False)
+        #  VIEW ONLY ('hwut.diff'): the same screen, the viewing keymap,
+        #  and no act that changes the nominal.
+        self.view_only_f = view_only_f
+        self.keymap      = keymap.VIEW_KEYMAP if view_only_f else keymap.KEYMAP
+        self.bad_pair_n  = 0
 
         self.subject_name = None
         self.aspirant_f   = False
         self.pair_list    = []          # (line_n_s, line_n_n), 1-based, -1 absent
+        self.element_db   = {}          # line text -> [(element kind, text)]
         self.state        = MergeState()
         self.leaving_act  = None
         self.search_term  = None
@@ -117,6 +144,7 @@ class KeyedDisplay(DisplayAdapter):
         """
         self.subject_name = subject_name
         self.pair_list    = []
+        self.bad_pair_n   = 0
         self.column_i     = 0
         self.help_f       = False
         if self.act_script is None:
@@ -131,6 +159,26 @@ class KeyedDisplay(DisplayAdapter):
         line_n_n = getattr(item, "line_n_n", None)
         if line_n_s is None or line_n_n is None: return
         self.pair_list.append((line_n_s, line_n_n))
+        cell_list = tuple(getattr(item, "cells_s", ())) \
+                    + tuple(getattr(item, "cells_n", ()))
+        if not all(c.relation_id.name.startswith("OK_") for c in cell_list):
+            self.bad_pair_n += 1
+        self._elements_of(getattr(item, "cells_s", ()), "subject")
+        self._elements_of(getattr(item, "cells_n", ()), "nominal")
+
+    def _elements_of(self, cell_list, value_name):
+        """RETURN: None. One side's line entered into 'element_db' by its
+                   TEXT, as the element kinds compare read in it.
+
+        BY TEXT, NOT BY INDEX: a take copies a subject line into the
+        nominal and re-indexes the pairing, but the copy reads as its
+        original does -- so a taken line wears its elements at once,
+        before any REALIGN.
+        """
+        piece_list = [(cell.tolerance_id.name, getattr(cell, value_name) or "")
+                      for cell in cell_list]
+        text = "".join(text for _, text in piece_list)
+        if text: self.element_db[text] = piece_list
 
     async def resolve(self, subject_name, subject_text, nominal_text):
         """RETURN: Resolution, what the author decided -- COMMIT with the
@@ -154,9 +202,35 @@ class KeyedDisplay(DisplayAdapter):
         return await self._resolution_of(self.leaving_act)
 
     async def close(self):
-        """RETURN: None. The session ends; the Application goes with it."""
+        """RETURN: None. The session ends; the Application goes with it.
+
+        A VIEW keeps what it was shown: the delivery closes before
+        'view' opens the screen on it.
+        """
+        if self.view_only_f: return
         self.application  = None
         self.pair_list    = []
+
+    async def view(self, subject_name, subject_text, nominal_text):
+        """RETURN: None. The screen, opened on the pairs delivered since
+                   'open', for looking only; it ends on 'q'.
+
+        'act_script' stands in for the keys here as in 'resolve'.
+        """
+        self.subject_name = subject_name
+        self.state        = self._opening_state(subject_text, nominal_text)
+        self.leaving_act  = None
+        if self.act_script is not None:
+            while self.act_script and self.leaving_act is None:
+                each = self.act_script.pop(0)
+                act, argument = each if isinstance(each, tuple) else (each, None)
+                self._apply(act, argument)
+        else:
+            if self.application is None:
+                self.application = self._build_application()
+            await self.application.run_async()
+        self.application = None
+        self.element_db  = {}
 
     #  ---------------------------------------------------------- the state
 
@@ -194,6 +268,8 @@ class KeyedDisplay(DisplayAdapter):
         if act in (E_Act.SCROLL_LEFT, E_Act.SCROLL_RIGHT):
             step_n = -COLUMN_STEP_N if act is E_Act.SCROLL_LEFT else COLUMN_STEP_N
             self.column_i = max(0, self.column_i + step_n)
+            return
+        if self.view_only_f and act not in keymap.VIEW_ACT_SET:
             return
         if act.leaves_session_f():
             self.leaving_act = act
@@ -286,7 +362,7 @@ class KeyedDisplay(DisplayAdapter):
                        Window(nominal_ctl, wrap_lines=False)])
         root = HSplit([
             Window(FormattedTextControl(
-                       text=lambda: banner(self.state, self.subject_name or "")),
+                       text=lambda: self._banner()),
                    height=1, style="class:banner"),
             #  HELP REPLACES THE PANES, it does not share the screen
             #  with them: the table is twenty lines and was measured
@@ -305,7 +381,8 @@ class KeyedDisplay(DisplayAdapter):
         #  THE TABLE YIELDS WHILE THE SEARCH LINE IS OPEN, or every
         #  bound letter is eaten before the buffer sees it.
         table_bindings = ConditionalKeyBindings(
-                             keymap.key_bindings(self._on_act), ~searching)
+                             keymap.key_bindings(self._on_act, self.keymap),
+                             ~searching)
         search_bindings = KeyBindings()
 
         @search_bindings.add("escape", filter=searching)
@@ -347,27 +424,29 @@ class KeyedDisplay(DisplayAdapter):
                 "copied":         "italic",
                 "absent":         "",
             })
-        return Style.from_dict({
-            "banner":         "reverse",
-            "help":           "bg:#222222 #dddddd",
-            "search":         "bg:#333333 #ffffff",
-            "cursor.active":  "reverse bold",
-            "cursor.other":   "underline",
-            "marked":         "bg:#444466",
-            "target.virgin":  "bg:#333355",
-            "target.latched": "bg:#553333 bold",
-            "marker":         "#ffaa00 bold",
-            "filler":         "#666666",
-            "token":          "#00aa00 bold",
-            "copied":         "#555555 italic",
-            "absent":         "",
-        })
+        prefs    = preferences.load()
+        style_db = {name: preferences.toolkit_style(prefs.color(role))
+                    for name, role in STYLE_ROLE_DB.items()}
+        style_db["absent"] = ""
+        for kind, role in ELEMENT_ROLE_DB.items():
+            style_db["el." + kind.lower()] = preferences.toolkit_style(prefs.color(role))
+        return Style.from_dict(style_db)
+
+    def _banner(self):
+        """RETURN: str, the line above the panes -- the merge's banner, or
+                   for a view the name, the pane and 'view'."""
+        if not self.view_only_f:
+            return banner(self.state, self.subject_name or "")
+        pane = "SUBJECT" if self.state.pane is E_Pane.SUBJECT else "NOMINAL"
+        return "%s   [%s]   view   q=quit   F1=help" % (self.subject_name or "",
+                                                         pane)
 
     def _help_text(self):
         """RETURN: str, the keymap TABLE, which is what help is here --
                    a loop over 'KEYMAP', never prose that goes stale.
         """
-        return "\n".join(("  " + line) for line in keymap.help_line_list()) \
+        return "\n".join(("  " + line)
+                         for line in keymap.help_line_list(self.keymap)) \
                + "\n  (F1 closes this)"
 
     def _on_act(self, act):
@@ -398,19 +477,44 @@ class KeyedDisplay(DisplayAdapter):
         result = []
         for row in project(self.state):
             cell = row.subject if pane is E_Pane.SUBJECT else row.nominal
-            result.append((self._style_of(cell, pane), self._cut(cell.text)))
+            result.extend(self._cut(self._pieces_of(cell, pane)))
             result.append(("", "\n"))
         return result
 
-    def _cut(self, text):
-        """RETURN: str, the line as the sideways view shows it -- from
-                   the column offset on, with a '<' in the first column
-                   where something was scrolled off, so that a cut line
-                   never reads as a short one.
+    def _pieces_of(self, cell, pane):
+        """RETURN: list[(style, text)], one cell as fragments -- a PLAIN
+                   line split into the elements compare read in it, each
+                   wearing its element's colour over the cell's own style;
+                   every other line, and every line under '--plain', one
+                   fragment in the cell's style.
+
+        A spent, marker, filler or token line keeps its kind's colour
+        whole: that colour is the thing to see there.
         """
-        if not self.column_i:            return text
-        if len(text) <= self.column_i:   return "<"
-        return "<" + text[self.column_i:]
+        style   = self._style_of(cell, pane)
+        element = self.element_db.get(cell.text)
+        if self.plain_f or cell.kind is not E_Kind.PLAIN or element is None:
+            return [(style, cell.text)]
+        return [((style + " " if style else "") + "class:el." + kind.lower(), text)
+                for kind, text in element if text]
+
+    def _cut(self, piece_list):
+        """RETURN: list[(style, text)], the line as the sideways view
+                   shows it -- from the column offset on, with a '<' in
+                   the first column where something was scrolled off, so
+                   that a cut line never reads as a short one.
+        """
+        if not self.column_i: return piece_list
+        style      = piece_list[0][0] if piece_list else ""
+        skip_n     = self.column_i
+        result     = [(style, "<")]
+        for piece_style, text in piece_list:
+            if skip_n >= len(text):
+                skip_n -= len(text)
+                continue
+            result.append((piece_style, text[skip_n:]))
+            skip_n = 0
+        return result
 
     def _style_of(self, cell, pane):
         """RETURN: str, the style class for this cell -- the flags in

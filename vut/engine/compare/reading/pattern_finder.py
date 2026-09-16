@@ -12,8 +12,9 @@ tolerant comparison.
 
                         Those may also defined by the user.
 
- * NUMERIC PATTERN: may only require a certain numeric precission for
-                    equivalence.
+ * NUMERIC PATTERN: a number is always lexed as one and compared by
+                    VALUE; the ratio only widens how far two may differ
+                    (0: exactly equal values, '1.0' == '1').
 
  * ANALOGY: pattern allows for different strings to appear, as long as it is
             always the same strings and their counterpart.
@@ -33,7 +34,7 @@ tolerant comparison.
     cuts the whitespace at the begin/end of each line.
 
  * .numeric_tolerance_ratio:
-    defines the precision for NUMERIC.
+    defines the precision for NUMERIC; it never switches numbers off.
 
  * .regions_f: False -- '##!' and '####' are ordinary content.
  * .ignored_line_begin_marker, .ignored_line_end_marker:
@@ -116,10 +117,18 @@ class PatternFinder:
             b, e = re.escape(config.analogy_begin_marker), re.escape(config.analogy_end_marker)
             _register(E_ToleranceId.ANALOGY, f"{b}(?:.|\\n)+?{e}")
 
-        if config.numeric_tolerance_ratio:
-            # (?<!\w) -- at front: look behind: no 'word character directly before'
-            #            at back:  look ahead: no 'word character directly after'
-            _register(E_ToleranceId.NUMERIC, r"(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w)")
+        # A NUMBER IS ALWAYS A NUMBER (C-11). The ratio sets how
+        # far two numbers may differ -- 0 is 'by value, exactly', so
+        # '1.0' is '1' -- and it never decides WHETHER a number is one.
+        #
+        # (?<!\w) -- at front: look behind: no 'word character directly before'
+        # (?>...)  -- ATOMIC: the number is taken whole or not at all. Without
+        #             it, '4.5s' backtracked to NUMERIC '4' + STRING '.5s' --
+        #             half a number. Glued to a word, it is no number, as
+        #             'x86' is none.
+        # (?!\w)   -- at back:  look ahead: no 'word character directly after'
+        _register(E_ToleranceId.NUMERIC,
+                  r"(?<!\w)(?>-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w)")
 
         if config.whitespace_f:
             _register(E_ToleranceId.SEPERATOR, r"\s+")

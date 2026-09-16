@@ -148,6 +148,25 @@ def take(line_list, first_i, last_i, taken_line_list):
     The counts need not agree: N taken lines may replace M nominal
     lines, and the nominal grows or shrinks accordingly (spec L-1).
     """
+    placed = take_placed(line_list, first_i, last_i, taken_line_list)
+    return None if placed is None else placed[0]
+
+
+def take_placed(line_list, first_i, last_i, taken_line_list):
+    """RETURN: [0] tuple[str], the nominal after the take, exactly as
+                   'take' returns it.
+               [1] int, the index at which the FIRST taken line now
+                   stands -- the taken lines follow it, contiguous.
+
+               None, where 'take' refuses.
+
+    THE PLACE IS COMPUTED, NOT SEARCHED FOR. Locating a taken line by
+    its text was MEASURED to find an EARLIER identical line in the
+    nominal, pair the subject line with it, and cross the pairing -- the
+    subject pane then drew the same subject lines twice, beside the
+    nominal's copies, which reads as nominal text copied back into the
+    subject.
+    """
     region_list = region_list_of(line_list)
 
     #  A TAKE TOUCHES AT MOST ONE REGION. A range straddling two -- an
@@ -170,21 +189,42 @@ def take(line_list, first_i, last_i, taken_line_list):
         first_i = min(first_i, region.begin_i)
         last_i  = max(last_i,  region.end_i)
 
+    #  AN 'unaccepted' REGION'S MARKERS ARE NOT CONTENT. A range that
+    #  reaches its '##! unaccepted' or its '####' without covering the
+    #  whole content is drawn INTO the content; one covering it all
+    #  takes the region whole, markers included (L-3). An insertion AT
+    #  the closing rule belongs after it. Splicing over a marker was
+    #  MEASURED to replace the label and leave a '####' closing nothing.
+    for region in region_list:
+        if not region.unaccepted_f():             continue
+        if not region.touches_f(first_i, last_i): continue
+        if region.holds(first_i) and region.holds(last_i): continue
+        content_first_i, content_last_i = region.content_range()
+        if last_i < first_i:                          # an insertion
+            if first_i == region.end_i: first_i, last_i = first_i + 1, first_i
+            continue
+        if first_i <= content_first_i and last_i >= content_last_i:
+            first_i = min(first_i, region.begin_i)
+            last_i  = max(last_i,  region.end_i)
+        else:
+            first_i = max(first_i, content_first_i)
+            last_i  = min(last_i,  content_last_i)
+
     region = region_of(region_list, first_i)
     if region is None or not region.unaccepted_f():
-        return tuple(line_list[:first_i]) \
-               + tuple(taken_line_list) \
-               + tuple(line_list[last_i+1:])
+        return (tuple(line_list[:first_i])
+                + tuple(taken_line_list)
+                + tuple(line_list[last_i+1:]), first_i)
 
     content_first_i, content_last_i = region.content_range()
-    above = line_list[content_first_i:first_i]
+    head = tuple(line_list[:region.begin_i]) \
+           + _framed(line_list[content_first_i:first_i])
     below = line_list[last_i+1:content_last_i+1]
 
-    return tuple(line_list[:region.begin_i]) \
-           + _framed(above) \
-           + tuple(taken_line_list) \
-           + _framed(below) \
-           + tuple(line_list[region.end_i+1:])
+    return (head
+            + tuple(taken_line_list)
+            + _framed(below)
+            + tuple(line_list[region.end_i+1:]), len(head))
 
 
 def frame(line_list):

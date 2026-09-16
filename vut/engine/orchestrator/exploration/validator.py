@@ -105,7 +105,7 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
-                "unknown key '%s'" % entry.key))
+                _unknown_key_text(entry.key)))
 
     if title is None:
         fault_list.append(Fault(
@@ -176,7 +176,7 @@ def validate_conf(hwut_node, file):
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
-                "unknown key '%s'" % entry.key))
+                _unknown_key_text(entry.key)))
 
     field_db.setdefault("dependency", {})
     spec = DirectorySpec(language_setup = language_setup,
@@ -400,6 +400,19 @@ def _build(entry, file, fault_list):
 
 
 #  THE SCOPE'S VOCABULARY, in one string, for both messages that name it.
+PREFERENCE_KEY_SET = {"colors"}
+
+
+def _unknown_key_text(key):
+    """RETURN: str, the fault text for an unknown key -- naming where a
+               PREFERENCE belongs, since a project never holds one
+               (services E-78)."""
+    if key in PREFERENCE_KEY_SET:
+        return ("'%s' is a person's preference, not a project's: it "
+                "belongs in '~/.hwut.conf'" % key)
+    return "unknown key '%s'" % key
+
+
 TOLERANCE_KEYS = ("numeric_ratio, whitespace, slash, regions, "
                   "eq_pattern, nothing, analogy, constraints, comment")
 

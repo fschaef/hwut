@@ -231,7 +231,7 @@ def console_width(environ, tty_f):
 
 
 def console_view(rendering_wish, write, write_error, environ, tty_f,
-                 write_log=None):
+                 write_log=None, color_of=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
@@ -247,7 +247,8 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
     """
     ink = CInk(colour_decision(environ, tty_f,
                                force_f=rendering_wish.force_f,
-                               veto_f=rendering_wish.veto_f))
+                               veto_f=rendering_wish.veto_f),
+               color_of=color_of)
     return CPlainFlow(write, write_error,
                       width=console_width(environ, tty_f),
                       ink=ink, tier=rendering_wish.tier,

@@ -297,7 +297,7 @@ class _BareConfiguration:
 def provider_of(configuration, store, choice_name=None, production=True,
                 force_run=False, force_build=False, observer=None,
                 keep_raw=None, subject_name_list=None, built_path=None,
-                refresh=False):
+                refresh=False, on_raw_line=None):
     """
     RETURN: [0] Provision | Loaded, THE PROVIDER: answers 'provide()'
                 with 'Subjects' and remembers them as 'last_provided'.
@@ -315,6 +315,9 @@ def provider_of(configuration, store, choice_name=None, production=True,
     'production'         False: never execute; STALE/ABSENT still hand
                          back a Loaded, and the decision says so.
     'force_run'          True: execute regardless of the clocks.
+    'on_raw_line'        a TAP fed every raw stdout line as it arrives
+                         (E-83) -- 'hwut.play' draws them live; None
+                         where nobody watches.
     'keep_raw'           None: as the store's 'record_raw' says; True
                          asks for the raw streams whatever it says
                          ('hwut.play' shows them).
@@ -344,7 +347,8 @@ def provider_of(configuration, store, choice_name=None, production=True,
         return Loaded(store, test_name, choice_name,
                       subject_name_list), decision
     from .run.core import provision_of
-    provision = provision_of(configuration, choice_name, observer=observer)
+    provision = provision_of(configuration, choice_name, observer=observer,
+                             on_raw_line=on_raw_line)
     if keep_raw is not None: provision.keep_raw = keep_raw
     return provision, decision
 

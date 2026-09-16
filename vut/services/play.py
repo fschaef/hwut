@@ -101,19 +101,25 @@ from   vut.engine.orchestrator.plan.wish           import (Wish,
                                                            with_targets)
 from   vut.auxiliary.directory_mutex               import (DirectoryBusy,
                                                            MkdirMutex)
-from   ._core                                      import usage_line
 from   ._exit                                      import E_ExitCode
 from   ._target                                    import entered
 from   .diff                                       import reading_view
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse, did_you_mean)
 from   vut.engine.orchestrator.exploration import printer
 from   vut.services.report import (painted, color_wanted_f,
                                    ANSI_TITLE)
 
-USAGE = usage_line("usage: hwut.play",
-                   ("<test-app>", "[<choice>]", "[--raw]", "[--pyped]",
-                    "[--stderr]", "[--plain]", "[--save]",
-                    "[--directory=<path>]"))
+#  THE STANDARD READER (E-84). Play takes no wish: ONE test, one choice.
+PARSER = face_parser("hwut.play", "Run one choice now and show it.",
+                     wish_f=False,
+                     word_help="the test application, and a choice",
+                     word_metavar="<test-app> [<choice>]")
+for _name in ("--raw", "--pyped", "--stderr", "--plain", "--save"):
+    PARSER.add_argument(_name, action="store_true")
+PARSER.add_argument("--directory", default=None)
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 #  THE REGION BANNER. One shape wherever a stream is named, so a
 #  reader never has to work out which picture they are looking at.
@@ -158,28 +164,18 @@ def main(argv=None, write=None):
         write(HELP)
         return E_ExitCode.OK
 
-    directory = "."
-    plain_f   = False
-    stderr_f  = False
-    raw_f     = False
-    pyped_f   = False
-    save_f    = False
-    word_list = []
-    for argument in argv:
-        if   argument == "--plain":  plain_f  = True
-        elif argument == "--stderr": stderr_f = True
-        elif argument == "--raw":    raw_f    = True
-        elif argument == "--pyped":  pyped_f  = True
-        elif argument == "--save":   save_f   = True
-        elif argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-        elif argument.startswith("-"):
-            write("REFUSED: 'hwut.play' does not take: %s%s"
-                  % (argument, did_you_mean(argument, option_tuple(USAGE))))
-            write(USAGE)
-            return E_ExitCode.REFUSED
-        else:
-            word_list.append(argument)
+    arguments, completion_f = parse_or_refuse(PARSER, argv, write, ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
+        write(USAGE)
+        return E_ExitCode.REFUSED
+    directory = arguments.directory or "."
+    plain_f   = arguments.plain
+    stderr_f  = arguments.stderr
+    raw_f     = arguments.raw
+    pyped_f   = arguments.pyped
+    save_f    = arguments.save
+    word_list = arguments.word
 
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
@@ -353,10 +349,24 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     store = store_of(configuration, bookkeeper)
     #  ASK FOR THE RAW STREAMS TOO: the raw stream is the material for
     #  '--raw' and for telling whether a pype touched anything.
+    #  THE LIVE PANE (E-83): every raw line reaches the screen as the
+    #  program writes it, under a LIVE banner, where a person is
+    #  watching -- a terminal, not '--plain' into a pipe. The reading
+    #  follows once the pype has seen the whole stream; a pyped line
+    #  cannot be read before that.
+    live_f = color_wanted_f(plain_f, None, sys.stdout) and not plain_f
+    banner_color_f = live_f
+    def live_line(line):
+        """RETURN: None. One raw line, on the screen now."""
+        sys.stdout.write("    " + line)
+        sys.stdout.flush()
+    tap = live_line if live_f else None
+    if live_f: write(banner("LIVE", banner_color_f))
     provision, _ = subject_provision.provider_of(configuration, store,
                                                  choice_name,
                                                  force_run=True,
-                                                 keep_raw=True)
+                                                 keep_raw=True,
+                                                 on_raw_line=tap)
 
     with MkdirMutex(str(configuration.test_directory)):
         subjects = await provision.provide()
@@ -389,7 +399,7 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         write("EMPTY: the choice produced no output to read")
         return E_ExitCode.EMPTY
 
-    banner_color_f = color_wanted_f(plain_f, None, sys.stdout)
+    if live_f: write("")
     if raw_f:
         write(banner("RAW", banner_color_f))
         _write_indented(raw_db.get(STDOUT, "") or "(nothing)", write)

@@ -92,8 +92,19 @@ def project(state):
     for i_n in range(nominal_n):
         if i_n in displaced_set: continue     # its row belongs to the label
         i_s = label_db.get(i_n, rev.get(i_n))
+        if i_s is not None and i_s < s_next:
+            #  A CROSSING PAIR: its subject line is already on the screen.
+            #  An aimed take can put a subject line above the partner of
+            #  an earlier one; two columns cannot draw that side by side,
+            #  and drawing the subject line AGAIN was measured to read as
+            #  nominal text copied into the subject. The nominal line
+            #  stands alone until 'r' asks compare again; a label that
+            #  loses its partner gives its filler back its own row.
+            if i_n in label_db: displaced_set.discard(label_flag_db.pop(i_n))
+            i_s = None
         if i_s is None:
-            rows.append(Row(ABSENT, _nominal_cell(state, i_n)))
+            rows.append(Row(ABSENT, _nominal_cell(state, i_n,
+                                                  flag_i=label_flag_db.get(i_n))))
             continue
         while s_next < i_s:
             rows.append(Row(_subject_cell(state, s_next), ABSENT))

@@ -45,6 +45,7 @@ ______________________________________________________________________________
 """
 import asyncio
 import time
+from vut.services.lib import preferences
 from dataclasses import replace
 import os
 import sys
@@ -65,8 +66,6 @@ from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP
                                                                WishError,
                                                                parse_wish,
                                                                with_targets)
-from   vut.engine.orchestrator.plan.wish               import USAGE_TOKEN_TUPLE \
-                                                               as WISH_TOKEN_TUPLE
 from   vut.engine.operations                           import subject_provision
 from   vut.engine.compare.api                          import Configuration
 from   vut.engine.operations.session                   import (run_test,
@@ -74,18 +73,26 @@ from   vut.engine.operations.session                   import (run_test,
 from   vut.engine.orchestrator.run.adapter             import \
                                                        test_configuration_of
 from   vut.auxiliary.directory_mutex                   import DirectoryBusy
-from   ._core                                          import usage_line
 from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
-from   vut.services.lib.cmdline import did_you_mean, option_tuple
+from   vut.services.lib.cmdline import (face_parser, usage_of,
+                                        parse_or_refuse)
 
 
-USAGE = usage_line("usage: hwut.accept",
-                    WISH_TOKEN_TUPLE
-                    + ("[<file-glob> [choice-glob]...]",
-                         "[--dont-ask]", "[--force]", "[--force-run]",
-                         "[--stderr-tol[erated]]",
-                         "[--directory=<path>]"))
+#  THE STANDARD READER (E-84).
+PARSER = face_parser("hwut.accept",
+                     "PROMOTION: a candidate becomes the nominal.",
+                     word_help="a test, a test and a choice, a file glob "
+                               "and a choice glob",
+                     word_metavar="[<file-glob> [choice-glob]...]")
+PARSER.add_argument("--dont-ask", action="store_true")
+PARSER.add_argument("-f", "--force", action="store_true")
+PARSER.add_argument("--force-run", action="store_true")
+PARSER.add_argument("--stderr-tol", "--stderr-tolerated", dest="stderr_tol",
+                    action="store_true")
+PARSER.add_argument("--directory", default=None)
+ARG_DB = {"--directory": True}
+USAGE  = usage_of(PARSER, ARG_DB)
 
 HELP = """hwut.accept -- PROMOTION: a candidate becomes the nominal
 
@@ -995,33 +1002,25 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    directory    = "."
-    directory_said_f = False
-    force_f      = False
-    dont_ask_f   = False
-    stderr_tol_f = False
-    word_list   = []
-    unknown     = []
-    force_run_f = False
-    skip_next_f = False
-    for index, argument in enumerate(rest_list):
-        if skip_next_f: skip_next_f = False; continue
-        if   argument.startswith("--directory="):
-            directory = argument[len("--directory="):]
-            directory_said_f = True
-        elif argument in ("--force", "-f"): force_f = True
-        elif argument == "--dont-ask":      dont_ask_f = True
-        elif argument == "--yes":
-            #  E-68: the word names an ANSWER, and on the command line
-            #  there is no question yet for it to answer.
-            write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
-                  "the one word for 'do not ask'")
-            return E_ExitCode.REFUSED
-        elif argument == "--force-run":   force_run_f = True
-        elif argument in ("--stderr-tol", "--stderr-tolerated"):
-            stderr_tol_f = True
-        elif argument.startswith("-"):    unknown.append(argument)
-        else:                             word_list.append(argument)
+    if "--yes" in rest_list:
+        #  E-68: the word names an ANSWER, and on the command line there
+        #  is no question yet for it to answer.
+        write("REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is "
+              "the one word for 'do not ask'")
+        return E_ExitCode.REFUSED
+    arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
+                                              ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None:
+        write(USAGE)
+        return E_ExitCode.REFUSED
+    directory_said_f = arguments.directory is not None
+    directory    = arguments.directory or "."
+    force_f      = arguments.force
+    dont_ask_f   = arguments.dont_ask
+    stderr_tol_f = arguments.stderr_tol
+    force_run_f  = arguments.force_run
+    word_list    = arguments.word
     #  '--force' IMPLIES '--dont-ask' (E-70). The two words say
     #  DIFFERENT things -- one what to do with a standing nominal, the
     #  other whether anybody need be consulted -- but 'overwrite the
@@ -1035,12 +1034,6 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     #  did not fail -- it HUNG. A flag split that turns old callers
     #  into deadlocks is not a split anybody wants.
     if force_f: dont_ask_f = True
-    if unknown:
-        write("REFUSED: 'hwut.accept' does not take: %s"
-              % ", ".join(sorted(unknown))
-              + did_you_mean(unknown[0], option_tuple(USAGE)))
-        write(USAGE)
-        return E_ExitCode.REFUSED
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
@@ -1174,7 +1167,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
         #  COLOUR AS EVERY OTHER FACE DECIDES IT: the environment and
         #  the terminal, through the one gate ('display/console.py').
         write_brief(brief_list, write,
-                    CInk(colour_decision(os.environ, sys.stdout.isatty())))
+                    CInk(colour_decision(os.environ, sys.stdout.isatty()),
+                         color_of=preferences.load().color))
         return worst
     if empty_f and worst is E_ExitCode.OK:
         (put if propose_n is not None else write)(
@@ -1488,7 +1482,7 @@ def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
     if not wanted_list: return ([], [], list(key_list))
 
     try:
-        adapter = engine.adapter_for()
+        adapter = engine.adapter_for(err=write)
     except Exception:                                          # noqa: BLE001
         return ([], [], list(key_list))
 
