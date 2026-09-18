@@ -1392,12 +1392,19 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     #  THE MERGE, THROUGH THE SHARED ENGINE. The keys a nominal stands
     #  for are handed to the same loop as E-51's face, so the three
     #  writes and every refusal are one implementation (E-59).
+    uncommitted_list = []
     if merge_list and interactive_f and not force_f:
-        merged_list, merge_refused_list, merge_left_list = \
+        merged_list, merge_refused_list, merge_left_list, sat_f = \
             _merge_through_engine(merge_list, store, write, stderr_tol_f,
                                   config_db)
         blessed_list.extend(merged_list)
-        merge_list = merge_left_list
+        #  LEFT AT A TERMINAL IS NOT 'MERGE REQUIRED' (E-88): the screen
+        #  was there, and the author left it with Ctrl-C (E-89). The
+        #  report says so -- MEASURED: it said 'there is none' instead.
+        if sat_f:
+            merge_list, uncommitted_list = [], list(merge_left_list)
+        else:
+            merge_list = merge_left_list
         for key, reason in merge_refused_list:
             write("REFUSED: %s -- %s" % (key.name, reason))
             skipped_list.append(key)
@@ -1432,6 +1439,8 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             write("    undecided      %s" % key.name)
         for key in merge_list:
             write("    merge required %s" % key.name)
+        for key in uncommitted_list:
+            write("    cancelled      %s" % key.name)
         for key in skipped_list:
             write("    left alone     %s" % key.name)
         if merge_list:
@@ -1442,9 +1451,14 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                   "itself (E-59); here")
             write("there is none, so: run it on a terminal, or '--force' "
                   "to overwrite the pole.")
+        if uncommitted_list:
+            write("")
+            write("The screen was left with Ctrl-C: nothing was written. "
+                  "'q' is done, and")
+            write("writes GOOD as it stands.")
         write("=" * 78)
 
-    if result.fault_list or merge_list or conflict_db:
+    if result.fault_list or merge_list or uncommitted_list or conflict_db:
         return E_ExitCode.FAULT
     return E_ExitCode.OK
 
@@ -1456,8 +1470,10 @@ def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
             'hwut.accept.interactive' uses, so the three writes of E-41
             and every refusal have one implementation.
 
-            Every key left alone, where a session cannot be built at
-            all: a face that cannot ask must not decide.
+            [3] bool, True where a screen RAN: a key it left was left
+            by the author, with Ctrl-C. False where no session could
+            be built at all -- every key then left alone: a face that
+            cannot ask must not decide.
     """
     from vut.services.lib.accept import engine
 
@@ -1479,20 +1495,24 @@ def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
         if merge_key.subject_text is None or merge_key.nominal_text is None:
             continue
         wanted_list.append((key, merge_key))
-    if not wanted_list: return ([], [], list(key_list))
+    if not wanted_list: return ([], [], list(key_list), False)
 
     try:
         adapter = engine.adapter_for(err=write)
     except Exception:                                          # noqa: BLE001
-        return ([], [], list(key_list))
+        return ([], [], list(key_list), False)
 
     origin_db = {id(m): k for k, m in wanted_list}
+    #  THE ADAPTER IS HANDED OVER. MEASURED: the call passed 'write' in
+    #  the adapter's place and no 'err' -- every merge through this door
+    #  died in a TypeError, and no suite reached the door (E-88).
     accepted, refused, left = engine.run_sessions(
-        [m for _, m in wanted_list], lambda _: store, write,
+        [m for _, m in wanted_list], lambda _: store, adapter, write,
         stderr_tol_f=stderr_tol_f)
     return ([origin_db[id(m)] for m in accepted],
             [(origin_db[id(m)], reason) for m, reason in refused],
-            [origin_db[id(m)] for m in left])
+            [origin_db[id(m)] for m in left],
+            True)
 
 
 if __name__ == "__main__":

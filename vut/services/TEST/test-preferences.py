@@ -70,6 +70,21 @@ def test_defaults():
               % (role, repr(color), repr(preferences.sgr(color)),
                  repr(preferences.toolkit_style(color))))
 
+    banner("every 'prompt_toolkit' form is one it accepts")
+    #  MEASURED (E-87): 'bright-white' was converted to 'ansibrightwhite',
+    #  which 'prompt_toolkit' refuses -- and this page had recorded it.
+    from prompt_toolkit.styles import Style
+    refused = []
+    for role in sorted(prefs.color_db):
+        try:    Style.from_dict({"x": preferences.toolkit_style(prefs.color(role))})
+        except ValueError as error: refused.append("%s: %s" % (role, error))
+    for word in ("black", "red", "green", "yellow", "blue", "magenta", "cyan",
+                 "white"):
+        for form in (word, "bright-" + word, "bg-" + word, "bg-bright-" + word):
+            try:    Style.from_dict({"x": preferences.toolkit_style(form)})
+            except ValueError as error: refused.append("%s: %s" % (form, error))
+    print("    refused: %s" % (refused or "none"))
+
     banner("the escapes the readers drew before the table")
     from vut.engine.display.word import CInk
     ink = CInk(True)

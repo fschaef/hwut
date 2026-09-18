@@ -1,0 +1,20 @@
+E-90: no header line; the keys at the foot, the name in OUTPUT's title
+
+-- the bottom bar: <F1>=help at the left, whole hints right-aligned
+     None |<F1>=help   <space>=range  <enter>=accept range  A=accept all  d=remove  u=undo  r=redo  <tab>=pane  q=done|
+     100  |<F1>=help   <space>=range  <enter>=accept range  A=accept all  d=remove  u=undo  r=redo  <tab>=pane|
+     86   |<F1>=help         <space>=range  <enter>=accept range  A=accept all  d=remove  u=undo|
+     80   |<F1>=help   <space>=range  <enter>=accept range  A=accept all  d=remove  u=undo|
+     70   |<F1>=help           <space>=range  <enter>=accept range  A=accept all|
+     50   |<F1>=help     <space>=range  <enter>=accept range|
+     30   |<F1>=help       <space>=range|
+     15   |<F1>=help     |
+
+-- the keys come from the table
+     merge: <space>=range  <enter>=accept range  A=accept all  d=remove  u=undo  r=redo  <tab>=pane  q=done
+     view : <tab>=pane  /=search  q=quit
+
+-- the titles: 'OUTPUT of <test> <choice>' and 'GOOD', the driven one marked
+     driving SUBJECT  |> OUTPUT of: test-app.sh one|  GOOD|
+     driving NOMINAL  |  OUTPUT of: test-app.sh one|> GOOD|
+<hwut-end>

@@ -76,8 +76,13 @@ def toolkit_style(color):
             continue
         if   kind == "hex":    name = value
         elif kind == "c256":   name = _hex_of_256(value)
-        elif kind == "bright": name = "ansibright" + value
-        else:                  name = "ansi" + value
+        elif kind == "bright":
+            #  'prompt_toolkit' spells the bright white 'ansiwhite' and
+            #  the plain one 'ansigray' -- MEASURED: 'ansibrightwhite'
+            #  is refused as no colour at all.
+            name = "ansiwhite" if value == "white" else "ansibright" + value
+        else:
+            name = "ansigray" if value == "white" else "ansi" + value
         piece_list.append(("bg:" + name) if bg_f else name)
     return " ".join(piece_list)
 

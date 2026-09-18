@@ -361,7 +361,7 @@ The faces:
 
                  THE TARGET is derived from the alignment and TRACKS
                  the subject range while VIRGIN; entry never latches it,
-                 modification does. 'r' asks compare again and the
+                 modification does. 'g' asks compare again and the
                  banner counts takes since it did.
 
                  THE SEAM: 'prompt_toolkit' owns the Windows, the

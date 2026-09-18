@@ -8,10 +8,25 @@ L-9/L-10: undo restores the whole state; a bulk take is ONE act
      before take: virgin=False
      after undo : virgin=False
 
--- L-10 every take raises the stale count; 'r' zeroes it
+-- L-10 every take raises the stale count; 'g' zeroes it
      after one take : 1
      after realign  : 0
 
 -- undo with nothing done is not an error
      same state back: True
+
+-- E-89 redo: what undo took back, 'r' does again
+     three states differ   : True
+     undo                  -> one  : True
+     undo redo             -> two  : True
+     undo undo redo redo   -> two  : True
+     redo with nothing undone: same state: True
+
+-- E-89 a new act after undo forks history: no redo past it
+     redo after a new act: same state: True
+
+-- E-89 'R' resets to the opening state, and nothing is redoable
+     reset -> opening      : True
+     redo after reset      : same state: True
+     undo after reset      : same state: True
 <hwut-end>

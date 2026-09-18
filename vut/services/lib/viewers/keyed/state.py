@@ -61,6 +61,7 @@ class MergeState:
 
     take_n_since_realign: int   = 0
     undo_stack:           tuple = ()
+    redo_stack:           tuple = ()   # states undone, newest last (E-89)
 
     #  ---------------------------------------------------------------- ranges
 
@@ -221,7 +222,10 @@ class MergeState:
                    stack -- called once per act that changes anything, so
                    that a bulk take is ONE entry and not N (spec L-9).
         """
-        return replace(self, undo_stack=self.undo_stack + (self,))
+        #  A NEW ACT FORKS HISTORY: what was undone can no longer be
+        #  redone (E-89).
+        return replace(self, undo_stack=self.undo_stack + (self,),
+                       redo_stack=())
 
 
 def _token_i(line_list):

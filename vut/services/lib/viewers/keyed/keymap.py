@@ -41,25 +41,34 @@ from vut.services.lib.viewers.keyed.act import E_Act
 PANE, BOTH = "pane", "both"
 
 KEYMAP = (
-    (("enter",),        E_Act.TAKE_RANGE,   BOTH, "take the marked range"),
-    (("a",),            E_Act.TAKE_REGION,  BOTH, "take this region"),
-    (("A",),            E_Act.TAKE_ALL,     BOTH, "take the whole subject"),
+    #  PANE -- the acts that work on the pane the keys drive.
     ((" ",),            E_Act.ANCHOR,       PANE, "mark a range here"),
-    (("tab",),          E_Act.SWAP_PANE,    BOTH, "the other pane"),
+    (("enter",),        E_Act.TAKE_RANGE,   PANE, "copy marked range to GOOD"),
+    (("a",),            E_Act.TAKE_REGION,  PANE, "copy this region to GOOD"),
+    (("A",),            E_Act.TAKE_ALL,     PANE, "copy the whole OUTPUT to GOOD"),
+    (("d",),            E_Act.REMOVE,       PANE, "remove from GOOD: the marked lines, or the region here"),
     (("j", "down"),     E_Act.MOVE_DOWN,    PANE, "down"),
     (("k", "up"),       E_Act.MOVE_UP,      PANE, "up"),
     (("c-d",),          E_Act.PAGE_DOWN,    PANE, "a screen down"),
     (("c-u",),          E_Act.PAGE_UP,      PANE, "a screen up"),
     (("h", "left"),     E_Act.SCROLL_LEFT,  PANE, "scroll left"),
     (("l", "right"),    E_Act.SCROLL_RIGHT, PANE, "scroll right"),
+    (("w",),            E_Act.ELEMENT_NEXT, PANE, "next element that can vary or differs; the foot says what it is"),
+    (("b",),            E_Act.ELEMENT_PREV, PANE, "previous such element"),
     (("/",),            E_Act.SEARCH_DOWN,  PANE, "search down"),
     (("?",),            E_Act.SEARCH_UP,    PANE, "search up"),
-    (("f1",),           E_Act.HELP,         BOTH, "this table"),
-    (("r",),            E_Act.REALIGN,      BOTH, "re-align: ask compare again"),
+    (("<number>g",),    E_Act.GOTO,         PANE, "go to that OUTPUT line"),
+    #  GLOBAL -- the acts that work on the whole session.
+    (("tab",),          E_Act.SWAP_PANE,    BOTH, "switch pane"),
     (("u",),            E_Act.UNDO,         BOTH, "undo"),
-    (("e",),            E_Act.EDIT,         BOTH, "edit the nominal in $EDITOR"),
-    (("c",),            E_Act.COMMIT,       BOTH, "commit the nominal as it stands"),
-    (("q",),            E_Act.CANCEL,       BOTH, "cancel"),
+    (("r",),            E_Act.REDO,         BOTH, "redo"),
+    (("R",),            E_Act.RESET,        BOTH, "reset: GOOD as it stood when the screen opened"),
+    (("z",),            E_Act.REALIGN,      BOTH, "re-align: ask compare again"),
+    (("t",),            E_Act.REPORT,       BOTH, "the tolerance report: analogies, patterns, constraints"),
+    (("e",),            E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
+    (("f1",),           E_Act.HELP,         BOTH, "this table"),
+    (("q",),            E_Act.DONE,         BOTH, "done: GOOD as it stands is written"),
+    (("c-c",),          E_Act.CANCEL,       BOTH, "cancel: nothing is written"),
 )
 
 #  THE VIEWING TABLE ('hwut.diff'): the same keys, and only the acts
@@ -67,9 +76,10 @@ KEYMAP = (
 VIEW_ACT_SET = {E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_UP,
                 E_Act.PAGE_DOWN, E_Act.PAGE_UP, E_Act.SCROLL_LEFT,
                 E_Act.SCROLL_RIGHT, E_Act.SEARCH_DOWN, E_Act.SEARCH_UP,
-                E_Act.HELP, E_Act.CANCEL}
+                E_Act.HELP, E_Act.CANCEL, E_Act.DONE, E_Act.REPORT,
+                E_Act.ELEMENT_NEXT, E_Act.ELEMENT_PREV}
 VIEW_KEYMAP = tuple((key_tuple, act, scope,
-                     "quit" if act is E_Act.CANCEL else text)
+                     "quit" if act in (E_Act.CANCEL, E_Act.DONE) else text)
                     for key_tuple, act, scope, text in KEYMAP
                     if act in VIEW_ACT_SET)
 
@@ -78,7 +88,7 @@ VIEW_KEYMAP = tuple((key_tuple, act, scope,
 FALLBACK_KEYMAP = (
     (("t",),            E_Act.TAKE_ALL,     BOTH, "take the subject whole"),
     (("e",),            E_Act.EDIT,         BOTH, "edit the nominal in $EDITOR"),
-    (("c",),            E_Act.COMMIT,       BOTH, "commit the nominal as it stands"),
+    (("c",),            E_Act.DONE,         BOTH, "done: the nominal as it stands is written"),
     (("q",),            E_Act.CANCEL,       BOTH, "cancel"),
 )
 
@@ -105,19 +115,55 @@ def key_list_of(act, keymap=KEYMAP):
 
 
 def help_line_list(keymap=KEYMAP):
-    """RETURN: tuple[str], one line per row -- the keys, then what they
-               do. A help screen is this, not prose that goes stale.
-    """
-    return tuple("%-14s %-5s %s" % (", ".join(_named(k) for k in key_tuple),
-                                     scope, description)
-                 for key_tuple, _, scope, description in keymap)
+    """RETURN: tuple[str], the help window: two sections, PANE (the side
+               the keys drive) then GLOBAL (the whole session), each row
+               its keys and what they do. A help screen is the table,
+               not prose that goes stale."""
+    def rows(scope_wanted):
+        return tuple("  %-12s  %s"
+                     % (", ".join(_named(k) for k in key_tuple), description)
+                     for key_tuple, _, scope, description in keymap
+                     if scope == scope_wanted)
+    return ("PANE",) + rows(PANE) + ("", "GLOBAL") + rows(BOTH)
+
+
+#  THE HEADER'S KEYS (E-86): the few a person needs before F1, named by
+#  the table itself, so the header cannot state a key the table does
+#  not bind. (act, the word the header says)
+#  'c' STANDS BESIDE '<enter>' (E-88): what '<enter>' copies stays on the
+#  screen until 'c' writes it -- MEASURED: without the hint, a person
+#  copied, pressed 'q', and GOOD was untouched.
+BASIC_TUPLE = ((E_Act.ANCHOR,     "range"),
+               (E_Act.TAKE_RANGE, "accept range"),
+               (E_Act.TAKE_ALL,   "accept all"),
+               (E_Act.REMOVE,     "remove"),
+               (E_Act.UNDO,       "undo"),
+               (E_Act.REDO,       "redo"),
+               (E_Act.SWAP_PANE,  "pane"),
+               (E_Act.DONE,       "done"))
+VIEW_BASIC_TUPLE = ((E_Act.SWAP_PANE,   "pane"),
+                    (E_Act.SEARCH_DOWN, "search"),
+                    (E_Act.DONE,        "quit"))
+
+
+def basic_text(basic_tuple=BASIC_TUPLE, keymap=KEYMAP):
+    """RETURN: str, the header's key hints -- 'space=range enter=copy->GOOD
+               ...' -- each act under its FIRST key in 'keymap'; an act
+               the table does not bind is left out."""
+    return "  ".join("%s=%s" % (_named(key_list_of(act, keymap)[0]), word)
+                     for act, word in basic_tuple if key_list_of(act, keymap))
 
 
 def _named(key):
-    """RETURN: str, the key as a person would write it -- 'space' for
-               the one key whose own text is invisible.
+    """RETURN: str, the key as a person would write it (E-87): a
+               single character as itself, every NAMED key in angle
+               brackets -- '<space>', '<enter>', '<tab>', '<F1>'.
     """
-    return "space" if key == " " else key
+    if key == " ":  return "<space>"
+    if key == "c-m": return "<enter>"
+    if key[:1] == "f" and key[1:].isdigit(): return "<F%s>" % key[1:]
+    if key.startswith("<"): return key         # already written, e.g. '<number>g'
+    return "<%s>" % key if len(key) > 1 else key
 
 
 def pane_governed_f(act, keymap=KEYMAP):
@@ -166,6 +212,7 @@ def key_bindings(act_f, keymap=KEYMAP):
         #  ONE 'add' PER KEY. 'add("j", "down")' would bind the CHORD
         #  'j' then 'down', not either key -- measured: nothing moved.
         for key in key_tuple:
+            if key.startswith("<"): continue   # synthetic, e.g. '<number>g'
             result.add(key)(_handler(act_f, act))
     return result
 

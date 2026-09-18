@@ -1,0 +1,36 @@
+E-87: the line elements on the screen, and the status bar
+
+-- compare drops the leading blanks; the pieces are PLACED
+     key  'indented\t3.14 ((x))'
+     SEPERATOR  '  '     differs=False partner=None
+     STRING     'indented' differs=False partner='indented'
+     SEPERATOR  '\t'     differs=False partner='\t'
+     NUMERIC    '3.14'   differs=True  partner='3.15'
+     SEPERATOR  ' '      differs=False partner=' '
+     ANALOGY    '((x))'  differs=False partner='((y))'
+     a piece out of order: None
+
+-- where the element cursor stops
+     [(3, '3.14'), (5, '((x))')]
+
+-- the status bar, on the line and on each stop
+     line      : 1 analogy, 1 numeric, 1 differing -- <w>/<b> step to them
+     plain line: ''
+     S r=0   : numeric 3.14: compared by value, exactly (ratio 0) -- DIFFERS from GOOD (3.15)
+     S r=0   : analogy ((x)): may differ, the same way every time
+     N r=0   : numeric 3.15: compared by value, exactly (ratio 0) -- DIFFERS from OUTPUT (3.14)
+     S r=0.01: numeric 3.14: tolerated within [3.1185, 3.1815] (ratio 1%) -- DIFFERS from GOOD (3.15)
+     S r=0.01: analogy ((x)): may differ, the same way every time
+     N r=0.01: numeric 3.15: tolerated within [3.1185, 3.1815] (ratio 1%) -- DIFFERS from OUTPUT (3.14)
+     EQUIVALENCE_PATTERN: pattern 0x1f: equal to what the same pattern matches
+     CONSTRAINT_BINDING : binding <id>: bound by a constraint
+     VISIBLE_NOTHING    : visible nothing: may be absent
+     no partner    : numeric 7: compared by value within 5% of GOOD's
+
+-- a tab is drawn as blanks, from where the piece starts
+     column 0 '\t'      -> '        '
+     column 2 '\t'      -> '      '
+     column 7 '\tx'     -> ' x'
+     column 8 '\t'      -> '        '
+     column 3 'no tab'  -> 'no tab'
+<hwut-end>

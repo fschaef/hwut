@@ -122,13 +122,19 @@ class PatternFinder:
         # '1.0' is '1' -- and it never decides WHETHER a number is one.
         #
         # (?<!\w) -- at front: look behind: no 'word character directly before'
+        # (?<=\d)[-+] | (?<!\w)[-+]?
+        #          -- THE SIGN IS THE NUMBER'S (C-12), either sign, also
+        #             right after a digit: output prints VALUES, not
+        #             arithmetic -- '1+2' is 1 and +2, '2026-09-15' is
+        #             2026, -09, -15. After a LETTER it is not a sign
+        #             ('a-1', 'x86-64' keeps 'x86-' as text).
         # (?>...)  -- ATOMIC: the number is taken whole or not at all. Without
         #             it, '4.5s' backtracked to NUMERIC '4' + STRING '.5s' --
         #             half a number. Glued to a word, it is no number, as
         #             'x86' is none.
         # (?!\w)   -- at back:  look ahead: no 'word character directly after'
         _register(E_ToleranceId.NUMERIC,
-                  r"(?<!\w)(?>-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w)")
+                  r"(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w)")
 
         if config.whitespace_f:
             _register(E_ToleranceId.SEPERATOR, r"\s+")

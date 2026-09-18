@@ -33,6 +33,13 @@ class E_Act(Enum):
     TAKE_RANGE   = auto()   # the marked subject range -> the target
     TAKE_REGION  = auto()   # this region -> its associated region
     TAKE_ALL     = auto()   # the whole subject -> the whole nominal
+    REMOVE       = auto()   # nominal lines, or a whole region, go (E-86)
+    REDO         = auto()   # the act undone last, done again (E-89)
+    RESET        = auto()   # the session as it opened (E-89)
+    REPORT       = auto()   # the tolerance report window (E-91)
+    GOTO         = auto()   # '<number>g': the cursor to that line (E-91)
+    ELEMENT_NEXT = auto()   # the element cursor, to the next element
+    ELEMENT_PREV = auto()   #   with meta information (E-87)
 
     SEARCH_DOWN  = auto()   # carries its term as the argument
     SEARCH_UP    = auto()
@@ -42,7 +49,7 @@ class E_Act(Enum):
     REALIGN      = auto()   # ask compare again; clears the stale count
     UNDO         = auto()
     EDIT         = auto()   # drop to '$EDITOR'
-    COMMIT       = auto()
+    DONE         = auto()   # 'q': what stands is written (E-89)
     CANCEL       = auto()
 
     def takes_f(self):
@@ -56,7 +63,7 @@ class E_Act(Enum):
                    the hub takes over -- realign, edit, commit, cancel.
         """
         return self in (E_Act.REALIGN, E_Act.EDIT,
-                        E_Act.COMMIT, E_Act.CANCEL)
+                        E_Act.DONE, E_Act.CANCEL)
 
 
 class E_Pane(Enum):

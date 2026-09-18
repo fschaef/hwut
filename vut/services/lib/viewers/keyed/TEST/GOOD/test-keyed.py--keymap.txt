@@ -1,25 +1,35 @@
 P-20/P-21/P-22: the table is the keymap
 
 -- the help screen IS the table
-     enter          both  take the marked range
-     a              both  take this region
-     A              both  take the whole subject
-     space          pane  mark a range here
-     tab            both  the other pane
-     j, down        pane  down
-     k, up          pane  up
-     c-d            pane  a screen down
-     c-u            pane  a screen up
-     h, left        pane  scroll left
-     l, right       pane  scroll right
-     /              pane  search down
-     ?              pane  search up
-     f1             both  this table
-     r              both  re-align: ask compare again
-     u              both  undo
-     e              both  edit the nominal in $EDITOR
-     c              both  commit the nominal as it stands
-     q              both  cancel
+     PANE
+       <space>       mark a range here
+       <enter>       copy marked range to GOOD
+       a             copy this region to GOOD
+       A             copy the whole OUTPUT to GOOD
+       d             remove from GOOD: the marked lines, or the region here
+       j, <down>     down
+       k, <up>       up
+       <c-d>         a screen down
+       <c-u>         a screen up
+       h, <left>     scroll left
+       l, <right>    scroll right
+       w             next element that can vary or differs; the foot says what it is
+       b             previous such element
+       /             search down
+       ?             search up
+       <number>g     go to that OUTPUT line
+     
+     GLOBAL
+       <tab>         switch pane
+       u             undo
+       r             redo
+       R             reset: GOOD as it stood when the screen opened
+       z             re-align: ask compare again
+       t             the tolerance report: analogies, patterns, constraints
+       e             edit the GOOD in $EDITOR
+       <F1>          this table
+       q             done: GOOD as it stands is written
+       <c-c>         cancel: nothing is written
 
 -- no key is bound twice
      keyed   : none
@@ -28,7 +38,7 @@ P-20/P-21/P-22: the table is the keymap
 -- the fallback speaks the SAME acts
      t    -> TAKE_ALL
      e    -> EDIT
-     c    -> COMMIT
+     c    -> DONE
      q    -> CANCEL
 
 -- an unbound key means nothing, and that is not an error

@@ -2,8 +2,9 @@
 #
 # @hwut {
 #     title      = "The keyed merge: the laws of taking, and the keymap."
-#     choices    = ["crossing", "cut", "filler", "keymap", "latch",
-#                   "reindex", "split", "take", "token", "undo", "view"]
+#     choices    = ["crossing", "cut", "element", "filler", "header",
+#                   "keymap", "latch", "merge-colour", "reindex", "remove",
+#                   "report", "split", "take", "token", "undo", "view"]
 #     tolerance { regions = false }
 # }
 #
@@ -177,7 +178,7 @@ def test_undo():
     print("     after undo : virgin=%s"
           % reduce(reduce(state, E_Act.TAKE_RANGE), E_Act.UNDO).virgin_f)
 
-    print("\n-- L-10 every take raises the stale count; 'r' zeroes it")
+    print("\n-- L-10 every take raises the stale count; 'g' zeroes it")
     state = play(fresh(), [E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
     print("     after one take : %i" % state.take_n_since_realign)
     print("     after realign  : %i"
@@ -186,6 +187,36 @@ def test_undo():
     print("\n-- undo with nothing done is not an error")
     print("     same state back: %s" % (reduce(fresh(), E_Act.UNDO)
                                         == fresh()))
+
+    print("\n-- E-89 redo: what undo took back, 'r' does again")
+    one = play(fresh(), [E_Act.TAKE_RANGE])
+    two = play(one, [E_Act.MOVE_DOWN, E_Act.TAKE_RANGE])
+    step = lambda st, *act_list: play(st, list(act_list)).nominal_line_list
+    print("     three states differ   : %s"
+          % (len({fresh().nominal_line_list, one.nominal_line_list,
+                  two.nominal_line_list}) == 3))
+    print("     undo                  -> one  : %s"
+          % (step(two, E_Act.UNDO) == one.nominal_line_list))
+    print("     undo redo             -> two  : %s"
+          % (step(two, E_Act.UNDO, E_Act.REDO) == two.nominal_line_list))
+    print("     undo undo redo redo   -> two  : %s"
+          % (step(two, E_Act.UNDO, E_Act.UNDO, E_Act.REDO, E_Act.REDO)
+             == two.nominal_line_list))
+    print("     redo with nothing undone: same state: %s"
+          % (reduce(two, E_Act.REDO) == two))
+    print("\n-- E-89 a new act after undo forks history: no redo past it")
+    forked = play(two, [E_Act.UNDO, E_Act.MOVE_DOWN, E_Act.TAKE_ALL])
+    print("     redo after a new act: same state: %s"
+          % (reduce(forked, E_Act.REDO) == forked))
+    print("\n-- E-89 'R' resets to the opening state, and nothing is redoable")
+    print("     reset -> opening      : %s"
+          % (step(two, E_Act.RESET) == fresh().nominal_line_list))
+    print("     redo after reset      : same state: %s"
+          % (reduce(reduce(two, E_Act.RESET), E_Act.REDO)
+             == reduce(two, E_Act.RESET)))
+    print("     undo after reset      : same state: %s"
+          % (reduce(reduce(two, E_Act.RESET), E_Act.UNDO)
+             == reduce(two, E_Act.RESET)))
 
 
 def test_reindex():
@@ -313,7 +344,7 @@ def test_crossing():
     print("\n-- an AIMED take above the partner of an earlier line")
     print("   'beta' goes to nominal 0; 'alpha' is still paired below it.")
     print("   The crossing pair cannot stand side by side: its nominal")
-    print("   line stands alone until 'r'")
+    print("   line stands alone until 'g'")
     state = MergeState(
         subject_line_list=("alpha", "beta", "<hwut-end>"),
         nominal_line_list=("zeta", "alpha", "<hwut-end>"),
@@ -322,6 +353,248 @@ def test_crossing():
                          E_Act.SWAP_PANE, E_Act.TAKE_RANGE])
     print("     pairing %s" % dict(sorted(state.pairing.items())))
     rows_of(state)
+
+
+def test_remove():
+    print("E-86: 'd' removes from GOOD -- lines, or a whole region")
+
+    def removed(tag, nominal, act_list, pairing=None, copied_s=frozenset()):
+        """RETURN: None. One removal, and what GOOD is left holding."""
+        state = MergeState(subject_line_list=("alpha", "beta", "<hwut-end>"),
+                           nominal_line_list=nominal,
+                           pairing=pairing or {},
+                           copied_s=copied_s)
+        after = play(state, act_list)
+        print("\n-- %s" % tag)
+        for i, line in enumerate(after.nominal_line_list):
+            print("     %2i  %s" % (i, line))
+        print("     cursor_n=%i spent=%s stale=%i undo->%s"
+              % (after.cursor_n, sorted(after.copied_s),
+                 after.take_n_since_realign,
+                 play(after, [E_Act.UNDO]).nominal_line_list == nominal))
+
+    region = ("x", "##! unaccepted", "--?--", "--?--", "####", "y",
+              "<hwut-end>")
+    to_nominal = [E_Act.SWAP_PANE]
+    removed("the cursor INSIDE an unaccepted region: the region, whole",
+            region, to_nominal + [E_Act.MOVE_DOWN, E_Act.MOVE_DOWN,
+                                  E_Act.REMOVE])
+    removed("the cursor ON its '##! unaccepted' line: the same",
+            region, to_nominal + [E_Act.MOVE_DOWN, E_Act.REMOVE])
+    removed("the cursor ON its '####': the same",
+            region, to_nominal + [E_Act.MOVE_DOWN] * 4 + [E_Act.REMOVE])
+    removed("a plain line: that line",
+            region, to_nominal + [E_Act.REMOVE])
+    removed("a marked line INSIDE the region: the region shrinks",
+            ("##! unaccepted", "--?--", "--?--", "--?--", "####",
+             "<hwut-end>"),
+            to_nominal + [E_Act.MOVE_DOWN, E_Act.MOVE_DOWN, E_Act.ANCHOR,
+                          E_Act.REMOVE])
+    removed("a marked range across a plain line and the region's start:\n"
+            "   'x' and the filler go, the region keeps its other filler",
+            region, to_nominal + [E_Act.ANCHOR, E_Act.MOVE_DOWN,
+                                  E_Act.MOVE_DOWN, E_Act.REMOVE])
+    removed("a marked range across ALL of the region's content: the\n"
+            "   region goes, markers included",
+            region, to_nominal + [E_Act.MOVE_DOWN, E_Act.MOVE_DOWN,
+                                  E_Act.ANCHOR, E_Act.MOVE_DOWN,
+                                  E_Act.REMOVE])
+    removed("a potpourri is removed whole or not at all: part refused",
+            ("##! potpourri", "p", "q", "####", "<hwut-end>"),
+            to_nominal + [E_Act.MOVE_DOWN, E_Act.ANCHOR, E_Act.REMOVE])
+    removed("GOOD holding only its token: nothing goes",
+            ("<hwut-end>",), to_nominal + [E_Act.REMOVE])
+    removed("the subject pane: 'd' does nothing there",
+            region, [E_Act.REMOVE])
+    removed("a COPY removed: its subject line is takeable again",
+            ("alpha", "beta", "<hwut-end>"),
+            to_nominal + [E_Act.REMOVE],
+            pairing={0: 0, 1: 1, 2: 2}, copied_s=frozenset({0}))
+
+
+def test_header():
+    print("E-90: no header line; the keys at the foot, the name in OUTPUT's title")
+    from vut.services.lib.viewers.keyed.project import banner, pane_title
+    state = MergeState(subject_line_list=("a", "<hwut-end>"),
+                       nominal_line_list=("b", "<hwut-end>"))
+    print("\n-- the bottom bar: <F1>=help at the left, whole hints right-aligned")
+    for width in (None, 100, 86, 80, 70, 50, 30, 15):
+        print("     %-4s |%s|" % (width, banner(state, "", width=width)))
+    print("\n-- the keys come from the table")
+    print("     merge: %s" % keymap.basic_text())
+    print("     view : %s" % keymap.basic_text(keymap.VIEW_BASIC_TUPLE,
+                                               keymap.VIEW_KEYMAP))
+    print("\n-- the titles: 'OUTPUT of <test> <choice>' and 'GOOD', the driven one marked")
+    for pane in (E_Pane.SUBJECT, E_Pane.NOMINAL):
+        print("     driving %-8s |%s|%s|" % (pane.name,
+              pane_title(state.with_(pane=pane), E_Pane.SUBJECT, "test-app.sh one"),
+              pane_title(state.with_(pane=pane), E_Pane.NOMINAL, "test-app.sh one")))
+
+
+def test_merge_colour():
+    """RETURN: None. E-94: both panes, and the cursor line, are split
+               into element fragments under real colour -- the cursor's
+               reverse and an element's pen stand together."""
+    import asyncio
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.viewers.keyed.project import project
+    from vut.services.lib.accept import engine
+    from vut.engine.compare.api import Configuration
+    display = KeyedDisplay(act_script=[E_Act.CANCEL], color_f=None)
+    display.plain_f = False
+    asyncio.run(engine.merge_text("value 3.14 ((a))\n<hwut-end>\n",
+                                  "value 3.15 ((b))\n<hwut-end>\n",
+                                  display, "t.sh one", Configuration()))
+    display.state = display.state.with_(cursor_s=0)
+    for pane in (E_Pane.SUBJECT, E_Pane.NOMINAL):
+        for row in project(display.state):
+            cell = row.subject if pane is E_Pane.SUBJECT else row.nominal
+            if cell.index != 0: continue
+            frag = display._pieces_of(cell, pane)
+            kinds = [s.split("el.")[-1].split()[0] for s, _ in frag if "el." in s]
+            cursor = all("cursor.active" in s for s, _ in frag) \
+                     if pane is E_Pane.SUBJECT else True
+            print("     %-8s elements: %s%s" % (pane.name, kinds,
+                  "  (all under the cursor)" if pane is E_Pane.SUBJECT
+                  and cursor else ""))
+
+
+def test_element():
+    print("E-87: the line elements on the screen, and the status bar")
+    from types import SimpleNamespace as N
+    from vut.services.lib.viewers.keyed import element
+    from vut.services.lib.viewers.keyed.driver import _expanded
+    kind = lambda name: N(name=name)
+
+    def cell(side, tolerance, text, relation="OK_GOOD", ref=None):
+        """RETURN: a cell as compare bakes one."""
+        return N(tolerance_id=kind(tolerance), relation_id=kind(relation),
+                 subject_ref_i=ref, **{side: text})
+
+    subject = [cell("subject", "STRING", "indented"),
+               cell("subject", "SEPERATOR", "\t"),
+               cell("subject", "NUMERIC", "3.14", "BAD_NOMINAL_DIFFERS"),
+               cell("subject", "SEPERATOR", " "),
+               cell("subject", "ANALOGY", "((x))")]
+    nominal = [cell("nominal", "STRING", "indented", ref=0),
+               cell("nominal", "SEPERATOR", "\t", ref=1),
+               cell("nominal", "NUMERIC", "3.15", "BAD_NOMINAL_DIFFERS", ref=2),
+               cell("nominal", "SEPERATOR", " ", ref=3),
+               cell("nominal", "ANALOGY", "((y))", ref=4)]
+    s_piece = element.pieces_of_cells(subject, "subject", nominal)
+    n_piece = element.pieces_of_cells(nominal, "nominal", subject)
+
+    print("\n-- compare drops the leading blanks; the pieces are PLACED")
+    line = "  indented\t3.14 ((x))"
+    print("     key  %r" % element.key_of(line))
+    for piece in element.placed(line, s_piece):
+        print("     %-10s %-8r differs=%-5s partner=%r"
+              % (piece.kind, piece.text, piece.differs_f, piece.partner))
+    print("     a piece out of order: %s"
+          % element.placed("3.14 indented", s_piece))
+
+    print("\n-- where the element cursor stops")
+    placed = element.placed(line, s_piece)
+    print("     %s" % [(i, placed[i].text)
+                       for i in element.meta_index_list(placed)])
+
+    print("\n-- the status bar, on the line and on each stop")
+    print("     line      : %s" % element.line_status(placed))
+    print("     plain line: %r" % element.line_status(
+        element.placed("plain", [element.Piece("STRING", "plain",
+                                                False, None)])))
+    for ratio in (0, 0.01):
+        for i in element.meta_index_list(placed):
+            print("     S r=%-4g: %s" % (ratio, element.status_of(
+                placed[i], "subject", ratio)))
+        n_placed = element.placed("indented\t3.15 ((y))", n_piece)
+        print("     N r=%-4g: %s" % (ratio, element.status_of(
+            n_placed[2], "nominal", ratio)))
+    for kind_name, text in (("EQUIVALENCE_PATTERN", "0x1f"),
+                            ("CONSTRAINT_BINDING", "<id>"),
+                            ("VISIBLE_NOTHING", "")):
+        print("     %-19s: %s" % (kind_name, element.status_of(
+            element.Piece(kind_name, text, False, None), "subject", 0)))
+    print("     no partner    : %s" % element.status_of(
+        element.Piece("NUMERIC", "7", False, None), "subject", 0.05))
+
+    print("\n-- a tab is drawn as blanks, from where the piece starts")
+    for column, text in ((0, "\t"), (2, "\t"), (7, "\tx"), (8, "\t"),
+                         (3, "no tab")):
+        print("     column %i %-9r -> %r" % (column, text,
+                                              _expanded(text, column)))
+
+
+def test_report():
+    print("E-91: the tolerance report, line numbers, <number>g, counts")
+    from types import SimpleNamespace as N
+    from vut.services.lib.viewers.keyed import report
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.viewers.keyed.project import pane_title
+    kind = lambda name: N(name=name)
+    origin = N(line_n_in_subject=2, line_n_in_nominal=2)
+    def cs(t, kind_name, rel="OK_GOOD"):
+        return N(tolerance_id=kind(kind_name), relation_id=kind(rel), subject=t)
+    def cn(t, kind_name, ref, rel="OK_GOOD", org=None):
+        return N(tolerance_id=kind(kind_name), relation_id=kind(rel), nominal=t,
+                 subject_ref_i=ref, analogy_origin_line_number_pair=org)
+    pair_list = [
+        report.Pair(2, 2, [cs("((a))", "ANALOGY")],
+                    [cn("((x))", "ANALOGY", 0, org=origin)]),
+        report.Pair(5, 4, [cs("((a))", "ANALOGY", "BAD_NOMINAL_DIFFERS")],
+                    [cn("((y))", "ANALOGY", 0, "BAD_NOMINAL_DIFFERS", origin)]),
+        report.Pair(7, 6, [cs("0x1f", "EQUIVALENCE_PATTERN")],
+                    [cn("0X1F", "EQUIVALENCE_PATTERN", 0)]),
+        report.Pair(8, 7, [cs("same", "EQUIVALENCE_PATTERN")],
+                    [cn("same", "EQUIVALENCE_PATTERN", 0)]),
+        report.Pair(9, 8, [cs("<id>", "CONSTRAINT_BINDING", "BAD_NOMINAL_DIFFERS")],
+                    [cn("<other>", "CONSTRAINT_BINDING", 0, "BAD_NOMINAL_DIFFERS")]),
+    ]
+    print("\n-- the report, three sections")
+    for line in report.lines_of(pair_list): print("     %s" % line)
+    print("   (a pattern matching identical text is not listed)")
+    print("\n-- the scroll cursor rests on element rows, never headings")
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.viewers.keyed.act import E_Act as _A
+    disp = KeyedDisplay(act_script=[], color_f=False)
+    disp.pair_db = pair_list
+    disp._apply(_A.REPORT)
+    seen = [disp.report_row]
+    for _ in range(6):
+        disp._apply(_A.MOVE_DOWN); seen.append(disp.report_row)
+    lines = report.lines_of(pair_list)
+    print("     rows visited: %s" % seen)
+    print("     all name a line pair: %s"
+          % all(report.line_pair_at(lines, r) is not None for r in seen))
+
+    print("\n-- <enter> on a report row names its line pair; headings name none")
+    line_list = report.lines_of(pair_list)
+    for row in range(len(line_list)):
+        pair = report.line_pair_at(line_list, row)
+        if pair is not None: print("     row %2i -> %s" % (row, pair))
+    print("\n-- with nothing to report")
+    for line in report.lines_of([]): print("     %s" % line)
+
+    print("\n-- <number>g: the cursor to that line; a spent line sends it on")
+    display = KeyedDisplay(act_script=[], color_f=False)
+    display.state = MergeState(subject_line_list=SUBJECT, nominal_line_list=NOMINAL,
+                               pairing=PAIRING, copied_s=frozenset({1}))
+    for line_n in ("1", "2", "99", "x"):
+        display._apply(E_Act.GOTO, line_n)
+        print("     %-3s -> cursor_s=%i" % (line_n, display.state.cursor_s))
+    display.state = display.state.with_(pane=E_Pane.NOMINAL)
+    display._apply(E_Act.GOTO, "4")
+    print("     GOOD 4 -> cursor_n=%i" % display.state.cursor_n)
+
+    print("\n-- the count in GOOD's title: unpaired and differing OUTPUT lines,")
+    print("   spent ones not counted")
+    display.state = MergeState(subject_line_list=("a", "b", "c", "<hwut-end>"),
+                               nominal_line_list=("a", "c", "<hwut-end>"),
+                               pairing={0: 0, 1: None, 2: 1, 3: 2})
+    print("     %s" % pane_title(display.state, E_Pane.NOMINAL, "", display._differ_n()))
+    display.state = display.state.with_(copied_s=frozenset({1}))
+    print("     %s" % pane_title(display.state, E_Pane.NOMINAL, "", display._differ_n()))
+    print("     %s" % pane_title(display.state, E_Pane.SUBJECT, "t.sh one", 0))
 
 
 def test_view():
@@ -337,7 +610,7 @@ def test_view():
     print("\n-- a take, an undo, a commit: ignored; 'q' ends the view")
     display = KeyedDisplay(view_only_f=True,
                            act_script=[E_Act.TAKE_ALL, E_Act.MOVE_DOWN,
-                                       E_Act.UNDO, E_Act.COMMIT,
+                                       E_Act.UNDO, E_Act.DONE,
                                        E_Act.CANCEL, E_Act.MOVE_DOWN])
     relation = lambda name: SimpleNamespace(name=name)
     pair = SimpleNamespace(line_n_s=1, line_n_n=1,
@@ -361,10 +634,15 @@ def test_view():
           % display.state.cursor_s)
     print("     left by        %s" % display.leaving_act.name)
     print("     differing      %i" % display.bad_pair_n)
-    print("     banner         %s" % display._banner())
+    print("     hints          %s" % display._hints())
 
 
 CHOICE_DB = {
+    "report":   test_report,
+    "element":  test_element,
+    "merge-colour":  test_merge_colour,
+    "remove":   test_remove,
+    "header":   test_header,
     "view":     test_view,
     "crossing": test_crossing,
     "split":   test_split,

@@ -9,6 +9,20 @@
     ratio 0     'value 1'        'value one'      => False
     ratio 0     'took 4.5s'      'took 4.50s'     => False
     ratio 0     'cpu x86'        'cpu x86.0'      => False
+    ratio 0     'value +3'       'value 3'        => True
+    ratio 0     'value -3'       'value +3'       => False
+    ratio 0     't=+0.0'         't=-0'           => True
+    ratio 0     'x +1e-3'        'x 0.001'        => True
+    ratio 0     '1+2'            '1 +2'           => False
     ratio 0.01  'value 3.140'    'value 3.141'    => True
     ratio 0.01  'value 100'      'value 102'      => False
+
+    THE LEXED NUMBERS, the sign included where it is one:
+    'x -3.5 +3.5'  STR:x NUM:-3.5 NUM:+3.5
+    '=+7 =-7'      STR:= NUM:+7 STR:= NUM:-7
+    '(+2) ++2 --2' STR:( NUM:+2 STR:) STR:+ NUM:+2 STR:- NUM:-2
+    '+1e-3'        NUM:+1e-3
+    '1+2 1-2'      NUM:1 NUM:+2 NUM:1 NUM:-2
+    '2026-09-15'   NUM:2026 NUM:-09 NUM:-15
+    'a+1 a-1'      STR:a+ NUM:1 STR:a- NUM:1
 <hwut-end>

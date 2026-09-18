@@ -122,9 +122,20 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         #  THE STANDING REACHES THE SCREEN (B-14). Optional on the
         #  contract, so this call is the same on every tier.
         adapter.note_standing(getattr(key, "aspirant_f", False))
+        #  STDERR SPOKE (E-91): told BEFORE the session, so the screen can
+        #  warn before the author merges what 'q' will refuse.
+        from vut.services.accept import stderr_spoke_db
+        class _Case:
+            source_file = key.test
+            choice      = key.choice
+        note = getattr(adapter, "note_stderr", None)
+        if note is not None: note(bool(stderr_spoke_db(store, [_Case()])))
+        #  None MEANS THE DEFAULT, not 'no bound': 'hwut.accept' states
+        #  none, and the second round -- after 'e' or 'g' -- was MEASURED
+        #  to die comparing round_n against None (E-90).
         text, intent = asyncio.run(merge_text(
             key.subject_text, key.nominal_text, adapter, key.label,
-            options, max_round_n=max_round_n))
+            options, max_round_n=max_round_n or MERGE_ROUND_MAX))
         if intent is not E_Intent.COMMIT or text is None:
             left_list.append(key)
             continue

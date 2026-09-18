@@ -1,23 +1,30 @@
 E-79: the screen for LOOKING -- 'hwut.diff'
 
 -- the viewing table: nothing that changes the nominal
-     tab            both  the other pane
-     j, down        pane  down
-     k, up          pane  up
-     c-d            pane  a screen down
-     c-u            pane  a screen up
-     h, left        pane  scroll left
-     l, right       pane  scroll right
-     /              pane  search down
-     ?              pane  search up
-     f1             both  this table
-     q              both  quit
+     PANE
+       j, <down>     down
+       k, <up>       up
+       <c-d>         a screen down
+       <c-u>         a screen up
+       h, <left>     scroll left
+       l, <right>    scroll right
+       w             next element that can vary or differs; the foot says what it is
+       b             previous such element
+       /             search down
+       ?             search up
+     
+     GLOBAL
+       <tab>         switch pane
+       t             the tolerance report: analogies, patterns, constraints
+       <F1>          this table
+       q             quit
+       <c-c>         quit
 
 -- a take, an undo, a commit: ignored; 'q' ends the view
      nominal        ('omega', 'beta')
      spent          []
      cursor_s       1  (one move before 'q', none after)
-     left by        CANCEL
+     left by        DONE
      differing      1
-     banner         x   [SUBJECT]   view   q=quit   F1=help
+     hints          <F1>=help   <tab>=pane  /=search  q=quit
 <hwut-end>

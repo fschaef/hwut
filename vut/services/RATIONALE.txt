@@ -3673,3 +3673,363 @@ COST      MEASURED byte-identical usage for 'plan', 'play', 'run',
           through 'hwut.move' -- and reports it as a test that no longer
           stands. MEASURED cure, once, in that directory:
               hwut.remove test-preferences.py --dont-ask
+
+
+E-86  THE SCREEN SAYS WHAT IT IS; GOOD CAN LOSE LINES              (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   The keyed screen's banner named the subject, the pane and the
+          state, and left every key to F1. Nothing said which pane was
+          the program's output and which the nominal. And GOOD could
+          only GAIN lines: an '##! unaccepted' region nobody wanted --
+          a stale tail, a filler for lines the author will not keep --
+          could be removed only in '$EDITOR'.
+
+DECISION  THE TOP HEADER: '<test-app> <choice>', the basic keys, the
+          state, 'F1=help' at the right edge. The keys are read off the
+          keymap ('keymap.BASIC_TUPLE': space=range, enter=copy->GOOD,
+          d=remove, tab=pane; a view shows tab, '/', q), so the header
+          cannot name a key the table does not bind. WITHIN THE WIDTH
+          'F1=help' always shows: the state goes first, the keys after
+          it, the name last -- MEASURED: at 80 columns the full line was
+          108 wide and 'F1=help' fell off; and a line as wide as the
+          screen wrapped its last character, so one column stays spare.
+
+          THE SECOND HEADER: 'OUTPUT' over the subject, 'GOOD' over the
+          nominal, the driven pane marked '>' and drawn in the banner's
+          style ('keyed.title' otherwise, a new preference role).
+
+          'd' (E_Act.REMOVE, nominal pane only) REMOVES: the marked
+          lines; with none marked, the whole region the cursor stands
+          in or on, markers included; else the cursor's line. Never the
+          closing token. Undoable as one act; raises the stale count; a
+          spent subject line whose copy is removed is takeable again.
+          A REMOVAL SPLITS NOTHING (L-14) -- the take's framing law was
+          MEASURED wrong for it: it split a region around a removed
+          filler, and its clamp silently kept a plain line the range
+          had covered. So: an unaccepted region shrinks and loses its
+          markers only with the last of its content; a region of
+          another kind goes whole or not at all.
+
+COST      'test-keyed.py' gained 'remove' and 'header'; 'keymap' one row;
+          'view' its banner; 'test-preferences.py defaults' the 'title'
+          role. Twenty thousand fuzz runs with REMOVE among the acts
+          clean: every line drawn once, one token last, no region open.
+          The whole screen was rendered through a pipe terminal at 80
+          and 100 columns to see the two headers over the panes.
+
+
+E-87  THE SCREEN SHOWS WHAT COMPARE READ, AND SAYS WHAT IT IS      (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   Reported on E-86's screen: state jargon in the header
+          ('aspirant', 'target virgin', 'aligned'); keys not written as
+          keys; the 'OUTPUT'/'GOOD' row not split like the panes; lines
+          not coloured; no way to learn what an element may do.
+
+          MEASURED, each:
+          - The title row split by its own text's width, the panes by
+            theirs: two VSplits of unweighted windows.
+          - Compare's cells carry NO LEADING BLANK. E-78's lookup by
+            exact line text missed every indented line, which then wore
+            no colour at all; and the cells' verdicts were never drawn.
+          - A raw tab reached the screen as 'prompt_toolkit''s blue '^I'.
+          - E-78's converter wrote bright white as 'ansibrightwhite',
+            which 'prompt_toolkit' refuses -- and 'test-preferences.py
+            defaults' had RECORDED it, printing the form unchecked.
+
+DECISION  THE HEADER is the test and its choice, the keys, '<F1>=help'
+          -- no state. Named keys are written '<space>', '<enter>',
+          '<tab>', '<F1>' everywhere, the help table included. Within
+          the width the keys go one at a time from the right.
+
+          EACH PANE IS A COLUMN, title over lines, the two of EQUAL
+          weight; the driven title is the bright orange band.
+
+          THE HWUT PALETTE, as preferences: the header brown
+          ('keyed.banner'), the titles orange ('keyed.title',
+          'keyed.title-active'), the separator orange, a quiet status bar.
+
+          ELEMENTS ARE PLACED, NOT MATCHED ('keyed/element.py', pure):
+          a line is looked up by its stripped text and compare's pieces
+          are laid onto the real text in order, the gaps separators.
+          A piece compare found differing wears the verdict's colour
+          (subject red, nominal blue, as the text display draws them);
+          every other piece its element's. A taken line borrows the
+          other side's reading, its verdicts dropped. Tabs are drawn as
+          blanks to the next stop of eight, per piece.
+
+          THE ELEMENT CURSOR AND THE STATUS BAR: 'w'/'b' step through
+          the cursor line's elements that can vary or differ; the one
+          stepped on is underlined and the status bar says what it is
+          -- for a number the interval compare tolerates, computed by
+          compare's rule, |s - n| <= |n|*ratio, so from the NOMINAL's
+          value; the ratio comes from compare's own ConfigInst. With
+          nothing stepped on, the bar summarises the line. Moving to
+          another line leaves the elements.
+
+          THE CONVERTER is fixed (bright white 'ansiwhite', white
+          'ansigray'), and the defaults page now ASSERTS that every
+          colour it prints is one 'prompt_toolkit' accepts -- MEASURED to
+          fail on the old converter.
+
+COST      'test-keyed.py' gained 'element'; 'header', 'keymap', 'view'
+          moved by the ruled wording; 'test-preferences.py defaults' by
+          the new roles, the palette and the corrected conversion.
+          The screen was rendered through a pipe terminal and replayed
+          in an emulator: header, titles over their columns at 50/50,
+          cyan numbers, red/blue verdicts, the underlined element, the
+          status bar reading 'numeric 3.14: tolerated within [3.1185,
+          3.1815] (ratio 1%)' against a nominal 3.15.
+
+
+E-88  THE MERGE DOOR OF 'hwut.accept' WORKS, AND SAYS WHAT IT DID  (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   Reported: 'hwut.accept test-report-details.sh err' died in
+          'run_sessions() missing 1 required positional argument: err';
+          and earlier an acceptance at the screen wrote nothing to GOOD.
+
+          MEASURED, both on a pseudo-terminal:
+          - The call in '_merge_through_engine' passed 'write' where the
+            adapter belongs; the adapter built three lines above was
+            never handed over. PRE-EXISTING (the dump has it): every
+            merge through this door died. No suite reached the door.
+          - A session left with 'q' after '<enter>' wrote nothing -- as
+            ruled, only 'c' commits -- but the header never named 'c',
+            and the report said 'At a TERMINAL this face merges them
+            itself; here there is none', which was false: the terminal
+            was there.
+
+DECISION  The adapter is handed over. '_merge_through_engine' says
+          whether a screen RAN: a key left by a screen that ran is
+          reported 'not committed', with the sentence that nothing was
+          written and that '<enter>' copies only onto the screen until
+          'c'; a key for which no screen could be built stays 'merge
+          required'. The header names 'c=commit' beside the copy, and
+          'q=quit' (E-87's width rule drops them from the right).
+
+COST      New 'services/TEST/test-accept-door.py' -- the real face on a
+          real tree, the terminal stood in by a scripted keyed display:
+          'commit' writes GOOD and reports 'blessed'; 'quit' writes
+          nothing and says so; 'unbuilt' keeps 'merge required'. It
+          reproduces the reported TypeError on the dump's 'accept.py'.
+          'test-keyed.py header' moved by the two keys.
+
+
+E-89  NO COMMIT: WHAT IS COPIED STANDS; 'q' IS DONE                (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   A recorded session ('script --log-in'): moves, ranges, copies,
+          'q' -- and nothing written, because 'c' was never pressed. A
+          separate commit is a second decision about a decision already
+          made on the screen.
+
+DECISION  THE COMMIT STEP IS GONE. 'q' is DONE and writes GOOD as it
+          stands (the engine's COMMIT intent); Ctrl-C leaves and writes
+          nothing. 'u' undoes, 'r' redoes, 'R' resets to how GOOD stood
+          when the screen opened; REALIGN moves to 'g'.
+
+          THE UNDO STACK IS THE COMMAND PATTERN'S MEMENTO FORM: every
+          state is immutable and one act is one entry, so redo is a
+          second stack the undo pushes onto and any new act clears
+          (history forks), and reset is the bottom of the undo stack.
+          No command objects: a snapshot is cheaper to keep honest than
+          an inverse of every act.
+
+          The line-based fallback keeps its prompt ('[c]ommit' / '[q]uit'):
+          it has no undo, and one answer per round IS its decision.
+
+COST      'test-keyed.py': 'undo' gained the redo/fork/reset laws (L-9),
+          'keymap' and 'header' the new words, 'view' and 'crossing' a
+          line each. 'test-accept-door.py' choices are now 'done',
+          'cancel', 'unbuilt'. Driven on a pseudo-terminal: the
+          recorded key pattern (space, enter, q) now writes GOOD;
+          take-all, undo, q writes the nominal unchanged; Ctrl-C writes
+          nothing. Twenty thousand fuzz runs with REDO and RESET among
+          the acts clean.
+
+
+E-90  THE SCREEN'S FINAL SHAPE; THE SECOND ROUND                   (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Ruled: GOOD's title green, OUTPUT's blue; OUTPUT's mismatches
+          on a red ground; no header line -- the keys at the foot, the
+          test's name after 'OUTPUT of'.
+
+          And a crash, reported with '$EDITOR': 'run_sessions' passes
+          'max_round_n=None' through to 'merge_text', overriding that
+          function's own default; 'hwut.accept' states none, so the
+          SECOND round of a session -- after 'e' or 'g' -- compared the
+          round against None. Pre-existing; unreachable before E-88
+          opened the door.
+
+DECISION  Titles 'OUTPUT of <test> <choice>' (blue, 'keyed.title-output')
+          and 'GOOD' (green, 'keyed.title-good'), the driven one
+          brighter; no header row. THE FOOT is the key bar (E-87's
+          width rule), and speaks of an element only while 'w'/'b' has
+          one stepped on. A differing piece of OUTPUT keeps its
+          element's pen on a red ground ('keyed.mismatch'); GOOD's
+          differing piece keeps the verdict's blue pen, since GOOD is
+          what is judged against, not what is judged.
+
+          'run_sessions' reads None as the default bound. A 'realign'
+          choice drives the second round through the real face.
+
+COST      'test-keyed.py header/view', 'test-preferences.py defaults'
+          moved by the ruled words and roles; 'test-accept-door.py'
+          gained 'realign'. Rendered and replayed: the titles on their
+          colours over 50/50 columns, '3.14' cyan on red against a
+          nominal '3.15' at ratio 0 and cyan alone at 1%, an unpaired
+          OUTPUT line red whole.
+
+
+E-91  LINE NUMBERS, THE COUNT, THE STDERR WARNING, THE TOLERANCE REPORT
+                                                                  (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Asked, after E-90's discussion: how many lines still differ,
+          whether stderr spoke, and where the tolerances bound what --
+          none of it visible until 'q' or by scrolling. And no line
+          numbers, so nothing to say 'go to line 40'.
+
+DECISION  A GUTTER OF LINE NUMBERS ON OUTPUT'S SIDE ONLY: the panes are
+          aligned, so one gutter tells where both stand. '<number>g'
+          goes to that line (the digits are collected, 'g' takes them;
+          a bare 'g' stays REALIGN); a spent line sends the cursor on.
+
+          GOOD'S TITLE COUNTS: 'GOOD   3 differ' -- OUTPUT lines
+          unpaired or paired to a differing line, spent ones not
+          counted; it reaches 'GOOD' alone as the merge completes.
+
+          STDERR SPOKE is told to the screen by the engine BEFORE the
+          session ('note_stderr', optional on the contract as
+          'note_standing' is), and the foot says 'q' will be refused
+          without '--stderr-tol' before the author invests in a merge.
+
+          'T' OPENS THE TOLERANCE REPORT ('keyed/report.py', pure),
+          replacing the panes as help does: ANALOGIES line pair by line
+          pair, OUTPUT's beside GOOD's with where the binding
+          ORIGINATES (compare's own origin pair), a mismatch marked '!';
+          PATTERNS that matched, OUTPUT's beside GOOD's; CONSTRAINTS
+          that failed. Compare marks a broken analogy on every line it
+          touches; the report marks it where it is seen.
+
+COST      'test-keyed.py' gained 'report'; 'keymap', 'view',
+          'test-preferences.py defaults' moved by the new words and the
+          'keyed.lineno' role. Rendered: the gutter, 'GOOD   3 differ',
+          the report over a real analogy chain.
+
+
+E-92  THE MERGE SCREEN, CORRECTED IN THE SMALL                    (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Reported on the live screen:
+          - Every OUTPUT line stood on red, even one that FITS its
+            nominal. MEASURED: where compare pairs two lines but the
+            content differs, it emits ONE line-spanning cell; the red
+            ground then floods the whole line, and on a line that fits
+            an unaccepted filler it lies outright.
+          - A whole-line difference and a wrong TOKEN among right ones
+            looked the same.
+          - Help said 'nominal', not GOOD; 're-align' held 'g', which
+            '<number>g' wanted; no PANE/GLOBAL split; 'take the marked
+            range' where 'copy ... to GOOD' was meant.
+          - The report crowded three schemes; patterns that matched
+            identical text were listed; the window did not scroll.
+          - The title carried '.stdout'.
+
+DECISION  A RED GROUND MARKS A WRONG TOKEN AMONG RIGHT ONES only. A
+          WHOLE-LINE difference -- every texted piece differing -- is a
+          light blue PEN, no ground ('keyed.line-diff'); a line that
+          fits keeps its normal colours. (A subject line against an
+          unaccepted filler is a whole-line difference, so blue.)
+
+          Help: 'GOOD' not 'nominal'; 're-align' is 'z', 'g' is
+          '<number>g' alone; two sections, PANE then GLOBAL; 'copy
+          marked range to GOOD', 'copy the whole OUTPUT to GOOD', 'switch
+          pane'. The foot reads 'accept range' / 'accept all'.
+
+          The report: one scheme, 'subject:nominal   information';
+          equivalence patterns listed only where they matched AND the
+          lexemes differ; the window scrolls (j/k, Ctrl-D/U). The OUTPUT
+          title names the channel, not the extension -- '.stderr' shown
+          as 'stderr', '.stdout' dropped.
+
+COST      'test-keyed.py header/keymap/report/view' and
+          'test-preferences.py defaults' moved by the ruled words and
+          the 'keyed.line-diff' role. Rendered and read in an emulator:
+          a fitting line plain, a partial diff red on its token alone,
+          an unpaired line blue whole.
+
+
+E-93  FILLERS ARE NOT DIFFERENCES; THE FOOT SAYS WHAT APPLIES      (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Reported: every OUTPUT line blue, even lines conform to GOOD.
+          MEASURED: on a FIRST accept compare pairs every OUTPUT line
+          with a '--?--' filler and calls it 'differs' -- E-92's
+          whole-line rule then painted the whole subject blue, though
+          there was nothing yet to differ from. Also: the foot dropped
+          hints from the left, cut them, and offered accept keys while
+          the help or the report window was up; the report printed its
+          format as headings; help explained its sections.
+
+DECISION  A line whose partner is a FILLER, or that has no partner,
+          wears its normal colours: blue is for a line that differs from
+          a REAL GOOD line. The foot: '<F1>=help' at the LEFT, hints
+          right-aligned, as many WHOLE hints as fit, never a cut one.
+          A WINDOW OVER THE PANES TAKES THE KEYS: with help up only F1
+          acts and the foot says '<F1>=close'; with the report up the
+          movement keys scroll it, '<enter>' jumps to the OUTPUT line
+          the row names ('subject:nominal' is the row's key), t and
+          Ctrl-C close it, and the foot says so -- no accept, remove,
+          undo or edit fires beneath. The report's headings are the
+          three words; the help's are 'PANE' and 'GLOBAL'.
+
+COST      'test-keyed.py header/keymap/report/view' moved by the ruled
+          words; 'report' pins the row-to-line-pair reading. Rendered:
+          a first accept with every line plain; scripted: accept keys
+          under the report and under help change nothing, '<enter>' on
+          '3:3' lands on OUTPUT line 3.
+
+
+E-94  THE WINDOWS, TIGHTENED; BOTH PANES COLOURED                 (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Reported: help printed '(F1 closes this)' though the foot
+          already said it; the report's foot showed '<F1>=help' where
+          't=close' was wanted; the foot did not refresh when a window
+          opened or closed; the report's scroll cursor sat on section
+          headings; and the merge panes were said to lose their element
+          colouring. (The last was a colour-off test artifact: under
+          real colour both panes, cursor line included, are split into
+          element fragments -- pinned now so it stays so.)
+
+DECISION  Help drops its footer line; the foot carries the close. The
+          report's foot reads 't=close   <enter>=go there', help's
+          '<F1>=close'. Every window toggle invalidates the screen, so
+          the foot is redrawn at once. The report's scroll cursor moves
+          over ELEMENT rows only, never a heading, a blank or '(none)',
+          and opens on the first element row.
+
+COST      'test-keyed.py report' gained the scroll-cursor section;
+          'merge-colour' is new -- both panes and the cursor line, under
+          real colour, wear their elements' colours. No other page moved.
+
+
+E-95  THE REPORT WITHOUT A CURSOR; 'OUTPUT of:'; WHERE REGRESSIONS LIVE
+                                                                  (2026-09-17)
+----------------------------------------------------------------------------
+DECISION  A report with nothing to rest on shows no cursor line. The
+          OUTPUT title reads 'OUTPUT of: <test> <choice>'. The detector
+          fix is exploration's (its RATIONALE, X-HEAD).
+
+          A REGRESSION TEST LIVES WITH ITS COMPONENT, as a choice of that
+          component's suite, named for what it pins -- where its author
+          finds it and a change to the component runs it. The COLLECTION
+          of regressions is a SELECTION, not a directory: the standing
+          label 'regression' ('hwut.labels.create'), so
+          'hwut.run --label regression' is the regression run. A
+          '<root>/regression/TEST/' was considered and rejected: it
+          takes a test away from what it tests, and the label buys the
+          same list without moving anything.
+
+COST      'test-keyed.py header/report' moved by the colon.
+
+MEASURED, LEFT OPEN: from the ROOT, 'hwut.plan --label regression'
+          selects nothing, and so does '--glob "test-detector_unwrapper.py
+          head"' -- from the test's directory, or with '--directory=',
+          both select the one case. A root walk with a case-level wish
+          is not this entry's matter; it is noted here to be ruled.

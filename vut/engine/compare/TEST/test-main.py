@@ -163,12 +163,28 @@ elif sys.argv[1] == "numbers":
         #  glued to a word: text, compared as text
         (0,    "took 4.5s",    "took 4.50s"),
         (0,    "cpu x86",      "cpu x86.0"),
+        #  THE SIGN IS THE NUMBER'S (C-12), either sign
+        (0,    "value +3",     "value 3"),
+        (0,    "value -3",     "value +3"),
+        (0,    "t=+0.0",       "t=-0"),
+        (0,    "x +1e-3",      "x 0.001"),
+        #  after a digit the sign is the number's; the blank still differs
+        (0,    "1+2",          "1 +2"),
         #  the band, and only the band, is what the ratio adds
         (0.01, "value 3.140",  "value 3.141"),
         (0.01, "value 100",    "value 102"),
     ):
         asyncio.run(verdict_of(ratio, subject_txt, nominal_txt))
     config.pattern_finder.numeric_tolerance_ratio = 0
+
+    print("\n    THE LEXED NUMBERS, the sign included where it is one:")
+    from vut.engine.compare.reading.pattern_finder import PatternFinder
+    finder = PatternFinder(config.pattern_finder)
+    for text in ("x -3.5 +3.5", "=+7 =-7", "(+2) ++2 --2", "+1e-3",
+                 "1+2 1-2", "2026-09-15", "a+1 a-1"):
+        print("    %-14r %s" % (text, " ".join(
+            "%s:%s" % (e.tolerance_id.name[:3], e._string)
+            for e in finder.do(text) if e.tolerance_id.name != "SEPERATOR")))
 
 elif sys.argv[1].endswith("-2"):
     if "compare-2" in sys.argv:   test = test_compare

@@ -430,3 +430,27 @@ GRAVEYARD 'None' for 'not a number', 0 for 'exact' -- rejected: there is
           re-lex for colour -- rejected: the colour would say 'number'
           where compare reads text.
 
+C-12  THE SIGN IS THE NUMBER'S                                     (2026-09-16)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED: '-3.5' lexed as one number, '+3.5' as STRING '+' and
+          NUMERIC '3.5' -- so '+3' against '3' compared a '+' as text,
+          and the display coloured the digits without their sign. And a
+          sign right after a digit ('1+2') was never a sign at all.
+
+DECISION  Either sign belongs to the number: where it stands free, and
+          RIGHT AFTER A DIGIT -- '(?<=\d)[-+] | (?<!\w)[-+]?'. Output
+          prints values, not arithmetic: '1+2' reads 1, +2; '2026-09-15'
+          reads 2026, -09, -15; 'pages 1-20' reads 1, -20. After a
+          LETTER a sign is text ('a-1'), and digits never start after a
+          word character ('x86' stays text).
+
+COST      MEASURED on the whole tree: no verdict moved anywhere. At ratio
+          0 equal text stays equal, and -20 against -21 differs as 20
+          against 21 did; what changes is the colouring and the status
+          bar's wording on ranges and dates. 'test-main numbers' gained
+          five verdicts and the lexed edge cases; three
+          'test-pattern_finder' pages print the pattern.
+
+GRAVEYARD A sign only where it stands free (bundle 19) -- replaced by
+          ruling: it left the '+' of '1+2' as uncoloured text.
+

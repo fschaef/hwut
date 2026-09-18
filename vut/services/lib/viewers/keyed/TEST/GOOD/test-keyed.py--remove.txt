@@ -1,0 +1,80 @@
+E-86: 'd' removes from GOOD -- lines, or a whole region
+
+-- the cursor INSIDE an unaccepted region: the region, whole
+      0  x
+      1  y
+      2  <hwut-end>
+     cursor_n=1 spent=[] stale=1 undo->True
+
+-- the cursor ON its '##! unaccepted' line: the same
+      0  x
+      1  y
+      2  <hwut-end>
+     cursor_n=1 spent=[] stale=1 undo->True
+
+-- the cursor ON its '####': the same
+      0  x
+      1  y
+      2  <hwut-end>
+     cursor_n=1 spent=[] stale=1 undo->True
+
+-- a plain line: that line
+      0  ##! unaccepted
+      1  --?--
+      2  --?--
+      3  ####
+      4  y
+      5  <hwut-end>
+     cursor_n=0 spent=[] stale=1 undo->True
+
+-- a marked line INSIDE the region: the region shrinks
+      0  ##! unaccepted
+      1  --?--
+      2  --?--
+      3  ####
+      4  <hwut-end>
+     cursor_n=2 spent=[] stale=1 undo->True
+
+-- a marked range across a plain line and the region's start:
+   'x' and the filler go, the region keeps its other filler
+      0  ##! unaccepted
+      1  --?--
+      2  ####
+      3  y
+      4  <hwut-end>
+     cursor_n=0 spent=[] stale=1 undo->True
+
+-- a marked range across ALL of the region's content: the
+   region goes, markers included
+      0  x
+      1  y
+      2  <hwut-end>
+     cursor_n=1 spent=[] stale=1 undo->True
+
+-- a potpourri is removed whole or not at all: part refused
+      0  ##! potpourri
+      1  p
+      2  q
+      3  ####
+      4  <hwut-end>
+     cursor_n=1 spent=[] stale=0 undo->True
+
+-- GOOD holding only its token: nothing goes
+      0  <hwut-end>
+     cursor_n=0 spent=[] stale=0 undo->True
+
+-- the subject pane: 'd' does nothing there
+      0  x
+      1  ##! unaccepted
+      2  --?--
+      3  --?--
+      4  ####
+      5  y
+      6  <hwut-end>
+     cursor_n=0 spent=[] stale=0 undo->True
+
+-- a COPY removed: its subject line is takeable again
+      0  beta
+      1  <hwut-end>
+     cursor_n=0 spent=[] stale=1 undo->True
+<hwut-end>

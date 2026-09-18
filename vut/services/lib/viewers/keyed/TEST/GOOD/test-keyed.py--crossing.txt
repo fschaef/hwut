@@ -18,7 +18,7 @@ A subject line is drawn ONCE, and a take is paired where it stands
 -- an AIMED take above the partner of an earlier line
    'beta' goes to nominal 0; 'alpha' is still paired below it.
    The crossing pair cannot stand side by side: its nominal
-   line stands alone until 'r'
+   line stands alone until 'g'
      pairing {0: 1, 1: 0, 2: 2}
       0 alpha        |    
       1 beta         |  0 beta

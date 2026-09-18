@@ -24,7 +24,9 @@ DESCRIPTION
             line differs from the derived one -- entry alone never
        L-7  after a take, virginity returns and both anchors clear
        L-8  TAKE_REGION reaches one region; TAKE_ALL reaches everything
-       L-9  UNDO restores the whole state, latch included; a bulk take
+       L-9  UNDO restores the whole state, latch included; REDO does the
+            undone act again, a new act forks history, RESET is every
+            undo at once (E-89); a bulk take
             is ONE entry
        L-10 every take raises the stale count; REALIGN zeroes it
        L-11 THE CLOSING TOKEN IS TAKEABLE, AND IT ENDS THE NOMINAL
@@ -33,6 +35,11 @@ DESCRIPTION
             after the taken lines -- whatever followed is gone
        L-12 the local re-index shifts what is below by N-M and pairs the
             taken stretch 1:1 -- it invents no tolerance and no analogy
+       L-14 'd' REMOVES FROM THE NOMINAL (E-86) and splits nothing: an
+            unaccepted region shrinks and loses its markers only with
+            the last of its content; a region of another kind goes
+            whole or not at all; a spent line whose copy goes is
+            takeable again
        L-13 A COPIED SUBJECT SECTION IS SPENT. No cursor stands on one,
             no range intersects one, no take covers one again. It is
             unreachable -- a place, not a refusal shouted at a
@@ -237,6 +244,83 @@ def _take_all(state, _):
     return _reindexed(fresh, identity_f=True)
 
 
+def _remove(state, _):
+    """RETURN: MergeState, the state after nominal lines were REMOVED
+               (E-86) -- the marked nominal range; where none is marked,
+               the whole region the cursor stands in or on, markers
+               included; else the cursor's line.
+
+               'state', where the NOMINAL pane is not the active one,
+               where nothing but the closing token would go, or where a
+               region of another kind would be cut.
+
+    A REMOVAL INSERTS NOTHING, so it SPLITS nothing: lines inside an
+    'unaccepted' region go and the region shrinks; the region's markers
+    go only with the last of its content. A region of another kind goes
+    whole, markers included, or not at all. Measured: a take's framing
+    law, borrowed here, split a region around a removed filler, and its
+    clamp silently kept a plain line the range had covered.
+
+    A SPENT SUBJECT LINE WHOSE COPY IS REMOVED IS SPENT NO MORE: its
+    copy is gone, and taking it again is the obvious next act.
+    """
+    if state.pane is not E_Pane.NOMINAL: return state
+    line_list = state.nominal_line_list
+    marked    = state.marked_nominal_range()
+    if marked is not None:
+        first_n, last_n = marked
+    else:
+        region = _region_at_or_on(state.region_list(), state.cursor_n)
+        if region is not None: first_n, last_n = region.begin_i, region.end_i
+        else:                  first_n = last_n = state.cursor_n
+    token_i_n = state.token_i_n()
+    if token_i_n is not None and last_n >= token_i_n: last_n = token_i_n - 1
+    if last_n < first_n or first_n >= len(line_list): return state
+
+    gone = set(range(first_n, last_n + 1))
+    for region in state.region_list():
+        if not region.touches_f(first_n, last_n): continue
+        whole  = set(range(region.begin_i, region.end_i + 1))
+        c0, c1 = region.content_range()
+        content = set(range(c0, c1 + 1))
+        if region.unaccepted_f():
+            if content <= gone: gone |= whole
+            else:               gone -= {region.begin_i, region.end_i}
+        elif whole <= gone or content <= gone:
+            gone |= whole
+        else:
+            return state
+    if not gone: return state
+
+    new_of, kept = {}, []
+    for i, line in enumerate(line_list):
+        if i in gone: continue
+        new_of[i] = len(kept)
+        kept.append(line)
+    freed   = {i_s for i_s, i_n in state.pairing.items()
+               if i_n is not None and i_n in gone}
+    pairing = {i_s: (None if i_n is None else new_of.get(i_n))
+               for i_s, i_n in state.pairing.items()}
+    after   = [new_of[i] for i in sorted(new_of) if i >= first_n]
+    cursor  = after[0] if after else max(0, len(kept) - 1)
+    return state.pushed().with_(
+        nominal_line_list    = tuple(kept),
+        pairing              = pairing,
+        copied_s             = state.copied_s - freed,
+        anchor_s=None, anchor_n=None, virgin_f=True,
+        cursor_n             = cursor,
+        take_n_since_realign = state.take_n_since_realign + 1)
+
+
+def _region_at_or_on(region_list, i):
+    """RETURN: Region, the region whose content holds line 'i' or whose
+               '##!' or '####' line 'i' is.
+               None, where 'i' stands outside every region."""
+    for region in region_list:
+        if region.begin_i <= i <= region.end_i: return region
+    return None
+
+
 def _applied(state, first_n, last_n, taken, first_s, last_s):
     """RETURN: MergeState, the state with 'taken' put in place of the
                nominal lines 'first_n'..'last_n' -- the region split, the
@@ -332,7 +416,7 @@ def _pairing_shifted(pairing, first_s, last_s, first_n, last_n, delta_n,
 
     IT INVENTS NOTHING. A tolerance, a numeric within its limit, an
     analogy binding -- only compare knows those, and they go STALE here.
-    The banner says how stale, and 'r' asks compare again.
+    The banner says how stale, and 'g' asks compare again.
     """
     result = {}
     for i_s, i_n in pairing.items():
@@ -408,7 +492,23 @@ def _undo(state, _):
                'state', where nothing has been done yet.
     """
     if not state.undo_stack: return state
-    return state.undo_stack[-1]
+    before = state.undo_stack[-1]
+    return before.with_(redo_stack=state.redo_stack + (state,))
+
+
+def _redo(state, _):
+    """RETURN: MergeState, the state undone last, done again (E-89).
+               'state', where nothing was undone since the last act."""
+    if not state.redo_stack: return state
+    return state.redo_stack[-1].with_(redo_stack=state.redo_stack[:-1])
+
+
+def _reset(state, _):
+    """RETURN: MergeState, the session as it opened -- every act
+               undone at once, and none of them redoable (E-89).
+               'state', where nothing has been done yet."""
+    if not state.undo_stack: return state
+    return state.undo_stack[0].with_(redo_stack=())
 
 
 def _realign(state, _):
@@ -431,6 +531,9 @@ _HANDLER_DB = {
     E_Act.TAKE_RANGE:   _take_range,
     E_Act.TAKE_REGION:  _take_region,
     E_Act.TAKE_ALL:     _take_all,
+    E_Act.REMOVE:       _remove,
+    E_Act.REDO:         _redo,
+    E_Act.RESET:        _reset,
     E_Act.SEARCH_DOWN:  lambda s, a: _search(s, a, True),
     E_Act.SEARCH_UP:    lambda s, a: _search(s, a, False),
     E_Act.REALIGN:      _realign,

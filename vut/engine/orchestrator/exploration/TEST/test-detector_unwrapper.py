@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "Detector and unwrapper: no comment syntax known"
-#     choices    = ["blank", "dash", "detect", "hash", "offsets",
+#     choices    = ["blank", "dash", "detect", "hash", "head", "offsets",
 #                   "single", "star"]
 #     interactive = true
 # }
@@ -14,7 +14,7 @@ PURPOSE: The detector and the unwrapper -- finding the region without
          knowing any language's comment syntax, and stripping the
          discovered leader while carrying the offsets.
 
-CHOICES: detect, star, hash, dash, single, blank, offsets;
+CHOICES: detect, star, hash, dash, single, blank, offsets, head;
 
 DESCRIPTION:
 
@@ -84,6 +84,30 @@ def test_detect():
     show('# the config block reads  hwut { title = "T" }\ncode\n')
     banner("a brace inside a string does not close the region")
     show('# @hwut {\n#     title = "closer } inside"\n# }\n')
+
+
+def test_head():
+    """RETURN: None. E-95, a REGRESSION: the marker is a declaration and
+               stands in the file's HEAD, first word of its line after a
+               comment lead. Reported: a 'script' log ('typescript') in
+               a TEST directory, recording a screen that showed a test's
+               header, became the test 'typescript' in 'hwut.report'."""
+    banner("the reported file: a 'script' log quoting a header deep in")
+    show("Script started on 2026-09-16 22:39:54+02:00 [COMMAND=\"hwut.accept\"]\n"
+         + "\x1b[?1049h screen noise\n" * 6
+         + "    #! /bin/bash\n    # @hwut { title = \"basic\" }\n    echo hi\n"
+         + "Script done on 2026-09-16 22:40:49+02:00\n")
+    banner("a header in the first lines, but INSIDE prose: not a marker")
+    show("see the header:  @hwut { title = \"q\" }\n")
+    banner("a header in a string: not a marker")
+    show('print("@hwut { title = 1 }")\n')
+    banner("every lead the tree uses, in the head: a marker")
+    for lead in ("#", "//", "--", ";", "*", "/*"):
+        show("%s @hwut { title = \"T\" }\n" % lead)
+    banner("the marker after a shebang and a blank comment line")
+    show("#! /usr/bin/env python3\n#\n# @hwut {\n#     title = \"T\"\n# }\n")
+    banner("the marker on line 9: past the head, not a marker")
+    show("# a\n" * 8 + "# @hwut { title = \"late\" }\n")
 
 
 def test_star():
@@ -158,4 +182,5 @@ if __name__ == "__main__":
         "single":  test_single,
         "blank":   test_blank,
         "offsets": test_offsets,
+        "head":    test_head,
     }).run()

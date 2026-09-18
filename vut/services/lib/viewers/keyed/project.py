@@ -38,6 +38,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 from vut.services.lib.viewers.keyed.act    import E_Pane
+from vut.services.lib.viewers.keyed        import keymap
 from vut.services.lib.viewers.keyed.region import (UNACCEPTED_BEGIN_LINE,
                                                    FILLER_LINE)
 from vut.services.lib.viewers.keyed.state  import CLOSING_TOKEN
@@ -98,7 +99,7 @@ def project(state):
             #  an earlier one; two columns cannot draw that side by side,
             #  and drawing the subject line AGAIN was measured to read as
             #  nominal text copied into the subject. The nominal line
-            #  stands alone until 'r' asks compare again; a label that
+            #  stands alone until 'g' asks compare again; a label that
             #  loses its partner gives its filler back its own row.
             if i_n in label_db: displaced_set.discard(label_flag_db.pop(i_n))
             i_s = None
@@ -150,19 +151,68 @@ def _label_partner_db(state, rev):
     return label_db, displaced_set, label_flag_db
 
 
-def banner(state, subject_name):
-    """RETURN: str, the one line above the panes -- the subject's name,
-               the choice's STANDING (B-14: 'aspirant' where no nominal
-               stood when the session opened, 'member' where one did),
-               which pane the keys drive, and how stale the marks are.
-    """
-    pane  = "SUBJECT" if state.pane is E_Pane.SUBJECT else "NOMINAL"
-    stale = ("takes since realign: %i" % state.take_n_since_realign
-             if state.take_n_since_realign else "aligned")
-    latch = "virgin" if state.virgin_f else "AIMED"
-    stand = "aspirant" if state.aspirant_f else "member"
-    return "%s   [%s]   %s   target %s   %s   F1=help" % (subject_name, pane,
-                                                          stand, latch, stale)
+def foot(hint_list, width, head="<F1>=help"):
+    """RETURN: str, the bottom bar (E-93): 'head' at the LEFT, the key
+               hints RIGHT-ALIGNED -- as many whole hints as the width
+               allows, dropped one at a time from the right; a hint is
+               never cut. Without 'width', everything."""
+    hint_list = list(hint_list)
+    if width is None:
+        return "%s   %s" % (head, "  ".join(hint_list))
+    room = width - 1
+    while hint_list and len(head) + 3 + len("  ".join(hint_list)) > room:
+        hint_list.pop()
+    right = "  ".join(hint_list)
+    pad   = max(1, room - len(head) - len(right))
+    return head + " " * pad + right
+
+
+def banner(state, subject_name, basic=None, width=None):
+    """RETURN: str, kept for the tests: the foot without a name."""
+    if basic is None: basic = keymap.basic_text()
+    hint_list = basic.split("  ")
+    hint_list = [h for h in hint_list if not h.startswith("<F1>")]
+    return foot(hint_list, width)
+
+
+def fitted(piece_tuple, drop_order, width, tail="F1=help"):
+    """RETURN: str, the pieces joined by three spaces and 'tail' set at
+               the right edge of 'width' -- pieces dropped in
+               'drop_order' (their indices) until the line fits; the
+               line cut only where even the first piece alone does not.
+               Without 'width', every piece and 'tail', unpadded."""
+    piece_list = list(piece_tuple)
+    def line_of():
+        return "   ".join(p for p in piece_list if p)
+    if width is None: return "%s   %s" % (line_of(), tail)
+    #  ONE COLUMN SPARE: a line as wide as the screen was measured to
+    #  wrap its last character onto the next row.
+    width -= 1
+    for i in drop_order:
+        if len(line_of()) + 3 + len(tail) <= width: break
+        piece_list[i] = ""
+    left = line_of()
+    room = width - len(tail) - 1
+    if len(left) > room: left = left[:max(room, 0)]
+    return left + " " * (width - len(left) - len(tail)) + tail
+
+
+#  THE SECOND HEADER (E-86): what each pane IS. The subject is what the
+#  program printed; the nominal is what it is judged against.
+PANE_TITLE_DB = {E_Pane.SUBJECT: "OUTPUT", E_Pane.NOMINAL: "GOOD"}
+
+
+def pane_title(state, pane, subject_name="", differ_n=0):
+    """RETURN: str, the pane's heading (E-90) -- 'OUTPUT of <test>
+               <choice>' or 'GOOD' -- marked '>' where the keys drive
+               that pane."""
+    mark = ">" if state.pane is pane else " "
+    name = PANE_TITLE_DB[pane]
+    if pane is E_Pane.SUBJECT and subject_name:
+        name = "%s of: %s" % (name, subject_name)
+    if pane is E_Pane.NOMINAL and differ_n:
+        name = "%s   %i differ" % (name, differ_n)
+    return "%s %s" % (mark, name)
 
 
 def row_of_cursor(rows, pane):

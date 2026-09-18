@@ -1578,3 +1578,24 @@ CHECKED   Every differing line was attributed to one of TWO ruled
 
 COST      None. Exploration answers 66 ok, 0 fail, where it answered
           60 ok, 6 fail before and had done since R-78.
+
+X-HEAD  THE MARKER STANDS IN THE HEAD                             (2026-09-17)
+----------------------------------------------------------------------------
+PROBLEM   Reported: a 'script' log ('typescript') in 'services/TEST'
+          entered 'hwut.report' as the test 'typescript basic'. It never
+          ran and stood in no book; the walk admitted it. MEASURED: the
+          detector searched '@hwut {' ANYWHERE in the text, and the log
+          had recorded a screen showing a real test's header. Every
+          quotation of a header -- a log, a README, a mail -- became a
+          test named for the file.
+
+DECISION  The marker is a DECLARATION and stands at the top: within the
+          first eight lines, the first word of its line after blanks and
+          a comment lead (#, //, --, ;, *, /*). MEASURED across the
+          tree: every test application's marker sits within its first
+          four lines, so nothing real is lost; a marker inside prose or
+          a string, or past the head, is not one.
+
+COST      'test-detector_unwrapper.py head' pins it, on the reported
+          file's shape; it fails on the tree before this entry. No other
+          page moved. The choice carries the standing label 'regression'.

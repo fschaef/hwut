@@ -27,6 +27,17 @@ from dataclasses import dataclass
 
 _MARKER_RE = re.compile(r"@hwut\s*\{")
 
+#  THE HEAD OF A FILE (E-95): the marker is a source file's DECLARATION,
+#  and a declaration stands at the top. MEASURED across the tree: every
+#  test application's marker sits within its first four lines, as the
+#  first word of a comment. So the marker is looked for in the first
+#  HEAD_LINE_N lines only, and it must be the first word of its line
+#  after blanks and a comment lead (#, //, --, ;, *, /*). A file that
+#  QUOTES a header deeper in -- a 'script' log of a screen, a README, a
+#  mail -- was measured to become a test called by the file's name.
+HEAD_LINE_N = 8
+_LEAD_RE    = re.compile(r"^[ \t]*(?:#+|//|--|;+|\*+|/\*)?[ \t]*@hwut\s*\{", re.M)
+
 
 @dataclass(frozen=True, slots=True)
 class Region:
@@ -44,8 +55,10 @@ def detect(text):
                     its brace has a match.
             None,   else -- the file is not a test application.
     """
-    match = _MARKER_RE.search(text)
+    head  = "".join(text.splitlines(True)[:HEAD_LINE_N])
+    match = _LEAD_RE.search(head)
     if match is None: return None
+    match = _MARKER_RE.search(text, match.start())
 
     i_marker = match.start()
     i_open   = match.end() - 1

@@ -52,6 +52,29 @@ DESCRIPTION
        the screen cannot run -- no terminal, no 'prompt_toolkit' -- the
        line-based session runs and ONE note says why (E-79).
 
+       THE SCREEN (E-86..E-90): two columns, 'OUTPUT of <test> <choice>'
+       on blue over what the program printed, 'GOOD' on green over the
+       nominal; the driven title brighter. Every line wears its
+       elements' colours; what OUTPUT gets wrong stands on RED, what
+       GOOD holds against it in the verdict's blue pen. At the foot the
+       keys: '<space>' starts a range, '<enter>' copies it to GOOD, 'd'
+       removes from GOOD (the marked lines, or the whole region the
+       cursor stands in -- '##! unaccepted' and its '####' with it), 'u'
+       undoes, 'r' redoes, 'R' resets to how GOOD stood when the screen
+       opened, '<tab>' changes pane, 'q' is DONE and writes GOOD as it
+       stands; Ctrl-C writes nothing; 'g' asks compare to re-align;
+       '<F1>' the whole table; '<number>g' goes to that OUTPUT line
+       (the gutter numbers them; GOOD is aligned, so one gutter tells
+       where both stand); 't' opens the TOLERANCE REPORT -- the
+       analogies line pair by line pair with where each binding
+       originates, the equivalence patterns that matched, the
+       constraints that failed. GOOD's title counts the OUTPUT lines
+       still standing against it; the foot warns where stderr spoke,
+       before the merge is begun. 'w'/'b' step through the line's elements
+       that can vary or differ, and the foot then says what the one
+       stepped on is -- a number's tolerated interval, computed as
+       compare computes it.
+
        ON A TERMINAL the keyed tier runs and F1 prints the keymap --
        the table itself, so it cannot go stale. Both panes hold ONE
        viewport, so they stay level however far down the author goes;
@@ -61,7 +84,7 @@ DESCRIPTION
        reaches it and no range intersects it (E-63). '--plain' reaches
        this tier too.
 
-       REFUSED AT COMMIT, with 'hwut.accept's own words: a stained
+       REFUSED AT 'q', with 'hwut.accept's own words: a stained
        choice (a test that switches results has no pole), a text
        without the closing token (never COMPLETED, R-70), a choice
        whose stderr spoke and nothing tolerates it ('--stderr-tol').
