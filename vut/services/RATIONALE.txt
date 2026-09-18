@@ -4033,3 +4033,30 @@ MEASURED, LEFT OPEN: from the ROOT, 'hwut.plan --label regression'
           head"' -- from the test's directory, or with '--directory=',
           both select the one case. A root walk with a case-level wish
           is not this entry's matter; it is noted here to be ruled.
+
+
+E-96  A HAND COMMENT IN 'hwut-root.labels' SURVIVES WHERE IT IS GLUED
+                                                                  (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   The header said 'a hand comment does not survive the next
+          write'. Ruled otherwise: a comment glued to an entry belongs
+          to it. And the header named neither the ditto rule nor the
+          no-glob rule; the person had to open the module.
+
+DECISION  The reader keeps, per entry, the comment lines glued to it:
+          those directly above (no blank between), and -- for the last
+          entry of a block -- those directly below, up to a blank or
+          the end. A comment between two entries INTRODUCES the one
+          below. A comment with a blank line on both sides is glued to
+          nothing and may be dropped. The writer puts each entry's
+          comments back beside it; an entry removed takes its comments.
+          The header, telegraphic: the line syntax, 'literal targets,
+          no globs', the ditto marks ':/' and ':/:', and the comment
+          rule.
+
+COST      Six label pages moved by the header; 'test-remove.sh
+          comments' pins the glue on a hand-edited file through two
+          removals. The five label suites never printed '<hwut-end>'
+          (R-70; their pages predate it), so every re-recording was
+          refused: the token added, every page gained that line. The tree's own 'hwut-root.labels' rewritten by a
+          no-op write so its header is the new one.

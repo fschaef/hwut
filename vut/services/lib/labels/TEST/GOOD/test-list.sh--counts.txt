@@ -4,3 +4,4 @@ STDOUT {
     meta       2
     slow       2
 }
+<hwut-end>

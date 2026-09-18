@@ -36,3 +36,4 @@ STDOUT {
     ./tree/storage/TEST/test-a.sh one
     ./tree/storage/TEST/test-a.sh two
 }
+<hwut-end>

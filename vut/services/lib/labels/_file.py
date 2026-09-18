@@ -27,8 +27,15 @@ expand at write time, and a glob found here is refused by name.
 SORTED on '(directory, file, choice)', the choice-less entry of an
 application first; the writer rewrites the file WHOLE, sorted and
 elided, so the ditto chain is always canonical and a hand edit that
-broke it is repaired by the next write. A hand comment does not
-survive a rewrite; the header says whose file this is.
+broke it is repaired by the next write.
+
+A HAND COMMENT SURVIVES WHERE IT IS GLUED (E-96): comment lines that
+stand directly above an entry (no blank between) travel with that
+entry -- rewritten beside it, removed with it; lines after the LAST
+entry of a block (before a blank or the end) travel below it. A
+comment between two entries introduces the one below. A comment with
+a blank line on both sides is glued to nothing; the rewrite may drop
+it without notice. The header is the framework's.
 
 ONE LINE PER RUN. A run named twice is a fault, named by line: two
 answers to one question is not a merge, it is a mistake.
@@ -52,8 +59,15 @@ LABELS_FILE_NAME = "hwut-root.labels"
 GLOB_MARK_TUPLE  = ("*", "?", "[")
 
 HEADER = ("#  %s -- the sets of this tree (disc-8)." % LABELS_FILE_NAME,
-          "#  Written whole, sorted, by 'hwut.labels.*'; a hand edit",
-          "#  holds, a hand comment does not survive the next write.")
+          "#  <target> : <label> [<label>...]; literal targets, no globs.",
+          "#  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.",
+          "#  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.",
+          "#  Comments glued to an entry (line above/below, no blank) travel",
+          "#  with it, go with it; comments blank-separated may be dropped.")
+
+#  THE GLUED COMMENTS, by entry key, from the last read (E-96): what
+#  the next write puts back beside each entry. One file per process.
+_GLUED_DB = {}
 
 
 class LabelFileError(Exception):
@@ -99,9 +113,25 @@ def read_entry_db(boundary):
 
     entry_db = {}
     previous = None                        # last EXPANDED target text
+    _GLUED_DB.clear()
+    above, last_key, header_f = [], None, True
     for number, line in enumerate(line_list, start=1):
         text = line.strip()
-        if not text or text.startswith("#"): continue
+        if not text:
+            if above and last_key is not None:   # ended by a blank: below
+                _GLUED_DB[last_key][1].extend(above)
+            above, last_key = [], None      # a blank breaks the glue
+            header_f = False                # ... and ends the header
+            continue
+        if text.startswith("#"):
+            if header_f: continue           # the framework's own header:
+                                            # the comment block from line 1
+            #  A COMMENT INTRODUCES WHAT FOLLOWS: between two entries it
+            #  is glued ABOVE the next; it is glued BELOW the last only
+            #  where no entry follows before a blank or the end.
+            above.append(line)
+            continue
+        header_f = False
         target_part, label_part = _split(path, number, text)
         if target_part.startswith(":"):
             try:
@@ -118,6 +148,10 @@ def read_entry_db(boundary):
                 % (path, number, target_text(key)))
         entry_db[key] = frozenset(_label_tuple(path, number,
                                                label_part))
+        _GLUED_DB[key] = (above, [])
+        above, last_key = [], key
+    if above and last_key is not None:      # trailing: below the last
+        _GLUED_DB[last_key][1].extend(above)
     return entry_db
 
 
@@ -139,10 +173,14 @@ def write_entry_db(boundary, entry_db):
          as file_handle:
         for line in HEADER:
             file_handle.write(line + "\n")
-        for target, label_tuple in line_list:
+        for key, (target, label_tuple) in zip(sorted(entry_db, key=sort_key),
+                                              line_list, strict=True):
+            above, below = _GLUED_DB.get(key, ([], []))
+            for line in above: file_handle.write(line.rstrip() + "\n")
             file_handle.write("%-*s : %s\n"
                               % (width, target,
                                  " ".join(label_tuple)))
+            for line in below: file_handle.write(line.rstrip() + "\n")
 
 
 def defined_label_set(entry_db):

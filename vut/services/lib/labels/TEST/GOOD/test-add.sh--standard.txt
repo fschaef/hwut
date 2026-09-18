@@ -8,8 +8,12 @@ STDOUT {
 --- labels accumulate: the choice's own entry adds to it
 THE FILE {
     #  hwut-root.labels -- the sets of this tree (disc-8).
-    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
-    #  holds, a hand comment does not survive the next write.
+    #  <target> : <label> [<label>...]; literal targets, no globs.
+    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
+    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
+    #  Comments glued to an entry (line above/below, no blank) travel
+    #  with it, go with it; comments blank-separated may be dropped.
     ./tree/storage/TEST/test-a.sh one : concern meta
     :/: two                           : meta
 }
+<hwut-end>

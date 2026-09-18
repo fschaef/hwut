@@ -5,3 +5,4 @@ STDOUT {
     EMPTY: the wish selected nothing; no label is created -- an empty set is not a set anybody wanted
 }
 THE FILE: absent -- no label exists
+<hwut-end>

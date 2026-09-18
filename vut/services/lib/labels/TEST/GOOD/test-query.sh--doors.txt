@@ -21,3 +21,4 @@ STDOUT {
     REFUSED: 'hwut.labels.query' does not take: --sideways
     hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
 }
+<hwut-end>

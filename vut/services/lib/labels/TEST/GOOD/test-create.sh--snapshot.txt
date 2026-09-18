@@ -8,8 +8,11 @@ STDOUT {
 }
 THE FILE {
     #  hwut-root.labels -- the sets of this tree (disc-8).
-    #  Written whole, sorted, by 'hwut.labels.*'; a hand edit
-    #  holds, a hand comment does not survive the next write.
+    #  <target> : <label> [<label>...]; literal targets, no globs.
+    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
+    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
+    #  Comments glued to an entry (line above/below, no blank) travel
+    #  with it, go with it; comments blank-separated may be dropped.
     ./tree/messaging/net/TEST/test-b.sh   : concern
     ./tree/messaging/queue/TEST/test-b.sh : concern
     ./tree/storage/TEST/test-b.sh         : concern
@@ -19,3 +22,4 @@ STATUS: 2
 STDOUT {
     REFUSED: the label 'concern' already stands -- 'hwut.labels.add' grows a standing set; this face only creates, so a typo cannot silently grow the wrong one
 }
+<hwut-end>

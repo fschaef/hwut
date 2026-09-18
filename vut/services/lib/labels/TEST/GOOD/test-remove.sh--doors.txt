@@ -14,3 +14,4 @@ STDOUT {
                        [--label <expr>] [--language=<name>]...
                        [--faster-than=<sec>] [--directory=<path>]
 }
+<hwut-end>

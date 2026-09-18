@@ -91,3 +91,6 @@ refused)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+#  THE STREAM COMPLETED (R-70).
+echo "<hwut-end>"

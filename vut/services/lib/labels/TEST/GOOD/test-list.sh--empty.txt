@@ -1,3 +1,4 @@
 STATUS: 3
 STDOUT {
 }
+<hwut-end>

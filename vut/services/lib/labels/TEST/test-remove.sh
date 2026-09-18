@@ -3,7 +3,7 @@
 #
 # @hwut {
 #     title      = "hwut.labels.remove: take a label off what a wish selects."
-#     choices    = ["delete", "doors", "take"]
+#     choices    = ["comments", "delete", "doors", "take"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -97,6 +97,39 @@ delete)
     the_file
     ;;
 
+comments)
+    #  E-96: a hand comment glued to an entry (the line above or below,
+    #  no blank between) travels with it and goes with it; a comment
+    #  with a blank on both sides is glued to nothing and may be
+    #  dropped. The header is rewritten whole.
+    fixture
+    $CREATE concern --glob "tree/messaging/*/TEST/test-b.sh" > /dev/null
+    $ADD    meta    --glob "tree/storage/TEST/test-a.sh one" > /dev/null
+    python3 - <<'PY'
+import re
+text = open("hwut-root.labels").read().splitlines()
+out, seen = [], 0
+for line in text:
+    if line.startswith("#"): out.append(line); continue
+    seen += 1
+    if seen == 1:
+        out += ["", "# loose: blank on both sides", "", "# above the first entry", line, "# below the first entry"]
+    elif seen == 2:
+        out += ["# above the second entry", line]
+    else:
+        out.append(line)
+open("hwut-root.labels", "w").write("\n".join(out) + "\n")
+PY
+    echo "--- as edited by hand"
+    the_file
+    echo "--- a label taken off an entry that is NOT the commented ones"
+    face "$REMOVE" meta --label meta
+    the_file
+    echo "--- the first commented entry goes; its comments go with it"
+    face "$REMOVE" concern --glob "tree/messaging/net/TEST/test-b.sh"
+    the_file
+    ;;
+
 doors)
     fixture
     $CREATE concern --glob "test-b.sh" > /dev/null
@@ -110,3 +143,6 @@ doors)
     echo "no such choice: $1"
     exit 1 ;;
 esac
+
+#  THE STREAM COMPLETED (R-70).
+echo "<hwut-end>"

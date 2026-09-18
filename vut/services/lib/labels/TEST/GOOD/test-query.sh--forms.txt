@@ -16,3 +16,4 @@ STDOUT {
     ./tree/messaging/queue/TEST/test-b.sh     : concern
     ./tree/storage/TEST/test-b.sh             : concern
 }
+<hwut-end>
