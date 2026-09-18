@@ -1,0 +1,6 @@
+  GOOD before : value old
+  exit        : FAULT
+  GOOD after  : value old
+  |     cancelled      test-v.sh .stdout
+  | The screen was left with Ctrl-C: nothing was written. 'q' is done, and
+<hwut-end>

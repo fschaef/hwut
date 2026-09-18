@@ -1,0 +1,5 @@
+  GOOD before : value old
+  exit        : OK
+  GOOD after  : value new
+  |     blessed        test-v.sh .stdout
+<hwut-end>

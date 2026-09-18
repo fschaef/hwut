@@ -1,0 +1,3 @@
+     SUBJECT  elements: ['string', 'seperator', 'bad.subject', 'seperator', 'analogy']  (all under the cursor)
+     NOMINAL  elements: ['string', 'seperator', 'bad.nominal', 'seperator', 'analogy']
+<hwut-end>

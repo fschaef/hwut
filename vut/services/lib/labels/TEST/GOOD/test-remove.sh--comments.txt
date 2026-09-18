@@ -1,0 +1,56 @@
+--- as edited by hand
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  <target> : <label> [<label>...]; literal targets, no globs.
+    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
+    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
+    #  Comments glued to an entry (line above/below, no blank) travel
+    #  with it, go with it; comments blank-separated may be dropped.
+    
+    # loose: blank on both sides
+    
+    # above the first entry
+    ./tree/messaging/net/TEST/test-b.sh   : concern
+    # below the first entry
+    # above the second entry
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+    ./tree/storage/TEST/test-a.sh one     : meta
+}
+--- a label taken off an entry that is NOT the commented ones
+STATUS: 0
+STDOUT {
+    meta: 1 removed, 0 untouched
+        - ./tree/storage/TEST/test-a.sh one
+    meta: no member left -- the label is deleted
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  <target> : <label> [<label>...]; literal targets, no globs.
+    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
+    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
+    #  Comments glued to an entry (line above/below, no blank) travel
+    #  with it, go with it; comments blank-separated may be dropped.
+    # above the first entry
+    ./tree/messaging/net/TEST/test-b.sh   : concern
+    # below the first entry
+    # above the second entry
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+}
+--- the first commented entry goes; its comments go with it
+STATUS: 0
+STDOUT {
+    concern: 1 removed, 0 untouched
+        - ./tree/messaging/net/TEST/test-b.sh
+}
+THE FILE {
+    #  hwut-root.labels -- the sets of this tree (disc-8).
+    #  <target> : <label> [<label>...]; literal targets, no globs.
+    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
+    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
+    #  Comments glued to an entry (line above/below, no blank) travel
+    #  with it, go with it; comments blank-separated may be dropped.
+    # below the first entry
+    # above the second entry
+    ./tree/messaging/queue/TEST/test-b.sh : concern
+}
+<hwut-end>

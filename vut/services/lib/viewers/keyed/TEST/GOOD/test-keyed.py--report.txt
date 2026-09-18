@@ -1,0 +1,47 @@
+E-91: the tolerance report, line numbers, <number>g, counts
+
+-- the report, three sections
+     ANALOGIES
+       2:2       '((a))' ~ '((x))' (bound at 2/2)
+     ! 5:4       '((a))' ~ '((y))' (bound at 2/2)
+     
+     EQUIVALENCE PATTERNS
+       7:6       '0x1f' matches '0X1F'
+     
+     CONSTRAINTS
+     ! 9:8       '<id>' failed against '<other>'
+   (a pattern matching identical text is not listed)
+
+-- the scroll cursor rests on element rows, never headings
+     rows visited: [1, 2, 5, 8, 8, 8, 8]
+     all name a line pair: True
+
+-- <enter> on a report row names its line pair; headings name none
+     row  1 -> (2, 2)
+     row  2 -> (5, 4)
+     row  5 -> (7, 6)
+     row  8 -> (9, 8)
+
+-- with nothing to report
+     ANALOGIES
+       (none)
+     
+     EQUIVALENCE PATTERNS
+       (none)
+     
+     CONSTRAINTS
+       (none)
+
+-- <number>g: the cursor to that line; a spent line sends it on
+     1   -> cursor_s=0
+     2   -> cursor_s=2
+     99  -> cursor_s=3
+     x   -> cursor_s=3
+     GOOD 4 -> cursor_n=3
+
+-- the count in GOOD's title: unpaired and differing OUTPUT lines,
+   spent ones not counted
+       GOOD   1 differ
+       GOOD
+     > OUTPUT of: t.sh one
+<hwut-end>
