@@ -3,3 +3,6 @@
 -- results: on hwut --labels fail showed 5 ok, but there is no evidence for that
    applied 'hwut.labels.create fail --fail' before
 -- only those directories should be display in SUMMARY which are subject to the wish.
+-- hwut.play shall display the STDERR output (empty if none)
+-- hwut.report.details shall print the same lines once and where ranges differ, the 
+   diff-like output ("[OUTPUT]" preceeding each output line, "[GOOD]" preceeding each good line)
