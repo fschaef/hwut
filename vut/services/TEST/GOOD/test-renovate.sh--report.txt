@@ -1,0 +1,12 @@
+suite/TEST
+    unknown in hwut-info.dat, left to you: 'coverage run --omit x'
+    hwut.conf: title = 'The Old Suite'  (from hwut-info.dat)
+    hwut.conf: ignore = ["helper*.py", "*.bak"]  (from hwut-info.dat '--not')
+    hwut.conf: slash_eqv = false -> default_app { tolerance { slash = false } }
+    test-a.sh: numeric = 0.01, whitespace_eqv = yes -> tolerance { numeric_ratio = 0.01, whitespace = yes }
+
+4 change(s) reported, none written: '--apply' writes them.
+STATUS: 0
+--- hwut.conf untouched:
+1
+<hwut-end>

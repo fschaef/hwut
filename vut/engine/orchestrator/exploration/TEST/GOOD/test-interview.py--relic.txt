@@ -1,0 +1,9 @@
+  a relic alone:
+    title: ''
+  'title' in 'hwut.conf' -- what renovate writes:
+    title: 'The Comparison Engine'
+  a conf without a title:
+    title: ''
+  the key is validated like any other:
+    hwut.conf:2:13: TYPE: 'title' must be a string
+<hwut-end>

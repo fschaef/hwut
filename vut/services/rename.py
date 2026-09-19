@@ -85,11 +85,11 @@ from   vut.engine.bookkeeper.api import TestIdFault
 from   vut.engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from   vut.engine.coverage.api   import (pack_record, unpack_record,
                                          seated, RecordFault)
-from   ._follow                  import labels_renamed
-from   ._target                  import split_words, TargetError
-from   ._exit                    import E_ExitCode
 from   vut.engine.orchestrator.exploration.reader import (read_header,
                                                           read_conf)
+from   ._follow                 import labels_renamed
+from   ._target                 import split_words, TargetError
+from   ._exit                   import E_ExitCode
 from   vut.services.lib.cmdline import face_parser, parse_or_refuse
 
 KEYWORD = "-to"
@@ -156,9 +156,9 @@ class Rename:
 
     def __init__(self, test, choice, fresh_test, fresh_choice,
                  source, target, whole_test_f):
-        self.test = test;             self.choice       = choice
-        self.fresh_test = fresh_test; self.fresh_choice = fresh_choice
-        self.source = source;         self.target       = target
+        self.test         = test;         self.choice       = choice
+        self.fresh_test   = fresh_test;   self.fresh_choice = fresh_choice
+        self.source       = source;       self.target       = target
         self.whole_test_f = whole_test_f
 
     @property
@@ -285,7 +285,8 @@ def _book_followed(rename, write):
     book = rename.source.bookkeeper
     try:
         if not rename.whole_test_f:
-            moved = book.rename_choice(rename.test, rename.choice,
+            moved = book.rename_choice(rename.test, 
+                                       rename.choice,
                                        rename.fresh_choice)
         elif not rename.across_f:
             moved = book.rename_test(rename.test, rename.fresh_test)
@@ -294,8 +295,8 @@ def _book_followed(rename, write):
             moved = None
             if entry is not None:
                 try:
-                    moved = rename.target.bookkeeper.adopt(
-                                rename.fresh_test, entry)
+                    moved = rename.target.bookkeeper.adopt(rename.fresh_test, 
+                                                           entry)
                 except KeyError:
                     #  THE SOURCE TAKES ITS OWN ENTRY BACK: half a
                     #  move of a history is worse than none.

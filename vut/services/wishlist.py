@@ -56,6 +56,9 @@ from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse)
+from   vut.services.lib.face    import Refused, Fault, answered
+from   vut.engine.orchestrator.plan.wish import Wish
+from   dataclasses import dataclass, replace
 
 #  THE STANDARD READER (E-84): the parser IS the vocabulary and the
 #  usage line is generated from it.
@@ -110,6 +113,128 @@ def line_tuple_of(root, wish, warning_list=None):
                           entry.case.choice)
 
 
+@dataclass(frozen=True)
+class Request:
+    """WHAT WAS ASKED of 'hwut.wishlist' (E-101): the wish, already read
+    into its keywords, and where to look."""
+    directory:     str = "."
+    #  THE WISH AS PLAIN FIELDS -- 'Wish' itself is the engine's.
+    fail_f:        bool = False
+    pass_f:        bool = False
+    since_spec:    str | None = None
+    until_spec:    str | None = None
+    #  THE GLOBS AS THE WISH HOLDS THEM: strings, already desugared --
+    #  the short form's two words are one glob 'test-a.sh one'.
+    #  MEASURED: desugaring a second time in 'wish_of' selected nothing.
+    glob_tuple:    tuple = ()
+    exclude_tuple: tuple = ()
+    dir_tuple:     tuple = ()
+    exclude_dir_tuple: tuple = ()
+    wishlist_f:    bool = False
+    label_spec:    str | None = None
+    language_tuple:tuple = ()
+    faster_than_ms:int | None = None
+    unaccepted_f:  bool = False
+    target_tuple:  tuple = ()        # the 1.0 short form's words
+
+
+@dataclass(frozen=True)
+class Result:
+    """WHAT HAPPENED: the wishlist lines in walk order, and whatever the
+    selection warned about."""
+    line_tuple:    tuple = ()
+    warning_tuple: tuple = ()
+
+
+def request_of(wish, directory, word_list):
+    """RETURN: Request, the record of a Wish, a directory and the short
+               form's words -- the one place the engine's Wish becomes
+               plain fields."""
+    #  THE SHORT FORM IS DESUGARED ONCE, where the line is read; the
+    #  record then carries globs only.
+    wish = with_targets(wish, list(word_list))
+    return Request(
+        directory     = directory,
+        fail_f        = bool(wish.fail_f),
+        pass_f        = bool(wish.pass_f),
+        since_spec    = wish.since_spec,
+        until_spec    = wish.until_spec,
+        #  Every glob the wish holds: the short form's words, the
+        #  '--glob's, and whatever a '--wishlist' file expanded to.
+        glob_tuple    = tuple(wish.glob_tuple),
+        exclude_tuple = tuple(wish.exclude_tuple),
+        dir_tuple     = tuple(wish.dir_tuple),
+        exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
+        wishlist_f    = bool(wish.wishlist_f),
+        label_spec    = wish.label_spec,
+        language_tuple= tuple(wish.language_tuple),
+        faster_than_ms= wish.faster_than_ms,
+        unaccepted_f  = bool(wish.unaccepted_f),
+        target_tuple  = ())
+
+
+def wish_of(request):
+    """RETURN: Wish, the engine's, as 'request' states it."""
+    wish = Wish(fail_f=request.fail_f, pass_f=request.pass_f,
+                since_spec=request.since_spec, until_spec=request.until_spec,
+                dir_tuple=request.dir_tuple,
+                exclude_dir_tuple=request.exclude_dir_tuple,
+                wishlist_f=request.wishlist_f,
+                label_spec=request.label_spec,
+                language_tuple=request.language_tuple,
+                faster_than_ms=request.faster_than_ms,
+                unaccepted_f=request.unaccepted_f)
+    #  THE TARGETS ARE STRINGS in the record and Targets in the Wish;
+    #  'with_targets' desugars both the short form's words and a glob,
+    #  and a '--wishlist' file is already EXPANDED into globs when the
+    #  request is made -- the record carries what was selected, not the
+    #  file it was read from.
+    return replace(wish, glob_tuple=tuple(request.glob_tuple),
+                   exclude_tuple=tuple(request.exclude_tuple))
+
+
+def do(request):
+    """
+    RETURN: Result, the wishlist lines the request selects, in walk
+            order, and the selection's warnings.
+
+            An EMPTY selection is a Result with no line and whatever
+            the selection warned: the caller decides what that means.
+
+    RAISES: Refused, where the directory does not stand, no root conf
+            is above it, or the wish names what the tree does not hold;
+            Fault, where a label file cannot be read.
+
+    IT NEVER PRINTS (E-101).
+    """
+    directory = request.directory or "."
+    if not os.path.isdir(directory):
+        raise Refused("REFUSED: the directory '%s' does not exist" % directory)
+    warning_list = []
+    try:
+        line_list = list(line_tuple_of(os.path.abspath(directory),
+                                       wish_of(request), warning_list))
+    except (RootConfMissing, SelectionError) as error:
+        raise Refused("REFUSED: %s" % error) from error
+    except LabelFileError as error:
+        raise Fault("FAULT: %s" % error) from error
+    #  AN EMPTY SELECTION STILL WARNED: the warning says WHY nothing
+    #  stands ('the glob met only runs the standard label silences'),
+    #  so it is the answer, not a casualty of it. MEASURED: raising
+    #  Empty before it was written lost that line from the page.
+    return Result(line_tuple=tuple(line_list),
+                  warning_tuple=tuple(warning_list))
+
+
+def printed(result, write):
+    """RETURN: E_ExitCode, OK where a line stands, EMPTY else. The
+               warnings, then the lines -- the page 'hwut.wishlist' has
+               always written."""
+    for text in result.warning_tuple: write(text)
+    for line in result.line_tuple:    write(line)
+    return E_ExitCode.OK if result.line_tuple else E_ExitCode.EMPTY
+
+
 def main(argv=None, write=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where at least one
@@ -151,24 +276,8 @@ def main(argv=None, write=None):
         write(USAGE)
         return E_ExitCode.REFUSED
 
-    try:
-        wish = with_targets(wish, word_list)
-        warning_list = []
-        line_list = list(line_tuple_of(os.path.abspath(directory), wish,
-                                       warning_list))
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except SelectionError as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
-
-    for text in warning_list: write(text)
-    for line in line_list: write(line)
-    return E_ExitCode.OK if line_list else E_ExitCode.EMPTY
+    return answered(do, request_of(wish, directory, word_list), write,
+                    printed)
 
 
 if __name__ == "__main__":

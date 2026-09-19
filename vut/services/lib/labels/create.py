@@ -40,6 +40,7 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
+from   .                                     import _faces
 from   .                                    import _editing
 from   ._faces                               import Refused, opened
 
@@ -110,13 +111,24 @@ def main(argv=None, write=None):
     if not _editing.written(open_labels, write):
         return open_labels.status
 
+    #  WHAT WAS DONE, AS DATA (E-106); the page is made from it.
+    result = _faces.Result(
+        label=label, member_n=len(key_tuple),
+        added_tuple=tuple(_file.target_text(key)
+                          for key in sorted(set(key_tuple),
+                                            key=_file.sort_key)))
+    printed(result, write)
+    return E_ExitCode.OK
+
+
+def printed(result, write):
+    """RETURN: None. The page 'hwut.labels.create' has always written."""
     write("%s: created, %d member%s -- a snapshot of what the wish "
           "selected"
-          % (label, len(key_tuple),
-             "" if len(key_tuple) == 1 else "s"))
-    for key in sorted(set(key_tuple), key=_file.sort_key):
-        write("    + %s" % _file.target_text(key))
-    return E_ExitCode.OK
+          % (result.label, result.member_n,
+             "" if result.member_n == 1 else "s"))
+    for text in result.added_tuple:
+        write("    + %s" % text)
 
 
 if __name__ == "__main__":

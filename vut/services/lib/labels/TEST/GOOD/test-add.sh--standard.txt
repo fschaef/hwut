@@ -7,12 +7,28 @@ STDOUT {
 }
 --- labels accumulate: the choice's own entry adds to it
 THE FILE {
-    #  hwut-root.labels -- the sets of this tree (disc-8).
-    #  <target> : <label> [<label>...]; literal targets, no globs.
-    #  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.
-    #  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.
-    #  Comments glued to an entry (line above/below, no blank) travel
-    #  with it, go with it; comments blank-separated may be dropped.
+    # TEST RUN LABEL DEFINITIONS:
+    # 
+    # This files defines labels to be referred to for test runs (using '--label').
+    # The format is the following:
+    #
+    #        <target> : <label> [<label>...]
+    #
+    # Globs like '*' and '?' expressions may not be used. However, following 
+    # shorthands exits:
+    #
+    #   Leading ':/'   means: directory same as in previous entry
+    #           ':/:' means: same directory and application as previous entry.
+    #
+    # This files is modified and read by the 'hwut.labels.*' applications. 
+    #
+    # NOTE: Hand written comments
+    #
+    #   Comments glued to an entry (line above/below, no blank) travel with it, go 
+    #   with it; comments blank-separated may be dropped.
+    #
+    #   Any comment above the first '#__...' line is also maintained
+    #______________________________________________________________________________
     ./tree/storage/TEST/test-a.sh one : concern meta
     :/: two                           : meta
 }

@@ -1,0 +1,31 @@
+suite/TEST
+    unknown in hwut-info.dat, left to you: 'coverage run --omit x'
+    hwut.conf: title = 'The Old Suite'  (from hwut-info.dat)
+        applied
+    hwut.conf: ignore = ["helper*.py", "*.bak"]  (from hwut-info.dat '--not')
+        applied
+    hwut.conf: slash_eqv = false -> default_app { tolerance { slash = false } }
+        applied
+    test-a.sh: numeric = 0.01, whitespace_eqv = yes -> tolerance { numeric_ratio = 0.01, whitespace = yes }
+        applied
+STATUS: 0
+--- suite/TEST/hwut.conf
+    hwut {
+        ignore = ["helper*.py", "*.bak"]
+        title = "The Old Suite"
+        on_entry = "true"
+        default_app { tolerance { slash = false } }
+    }
+--- test-a.sh, line 2
+# @hwut { title = "A"  tolerance { numeric_ratio = 0.01  whitespace = yes } }
+--- the relic stays until the person deletes it:
+suite/TEST/hwut-info.dat
+--- a second run:
+suite/TEST
+    kept: 'title' already stands in hwut.conf; the relic's is ignored
+    kept: 'ignore' already stands in hwut.conf; the relic's '--not' lines are ignored
+    unknown in hwut-info.dat, left to you: 'coverage run --omit x'
+nothing to renovate below '.'
+--- the directory is now VUT's:
+RESULTS: 1 ok, 0 fail, N [sec]
+<hwut-end>

@@ -74,6 +74,9 @@ from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
+from   vut.services.lib.face    import Refused, Fault, FaceError
+from   vut.engine.orchestrator.plan.wish import Wish
+from   dataclasses import dataclass
 
 FORMAT_TUPLE   = ("traditional", "junit", "tap", "json")
 WIDTH_DEFAULT  = 80
@@ -110,8 +113,13 @@ class CRow:
               this face could read both whole files (E-31).
     'stain'   is the stain dict, None where the choice is clean.
     """
+    #  PLAIN MIRRORS (E-101): 'verdict' is an enum and 'stain' a dict,
+    #  neither of which may cross a face's boundary. What the PAGE asks
+    #  of them is three plain things, and a row carries those beside
+    #  the originals, so a record built for a caller holds no engine.
     __slots__ = ("directory", "source_file", "choice", "verdict",
-                 "report", "when", "stain", "title")
+                 "report", "when", "stain", "title",
+                 "verdict_name", "passed_f", "stain_repeat_n")
 
     def __init__(self, directory, source_file, choice, verdict, report,
                  when, stain, title=""):
@@ -120,6 +128,11 @@ class CRow:
         self.source_file = source_file
         self.choice      = choice
         self.verdict     = verdict
+        self.verdict_name = None if verdict is None else str(verdict)
+        self.passed_f     = None if verdict is None \
+                            else getattr(verdict, "passed_f", None)
+        self.stain_repeat_n = None if stain is None \
+                              else stain.get("repeat_n", 0)
         self.report      = report
         self.when        = when
         self.stain       = stain
@@ -264,23 +277,28 @@ def height_of(stated=None):
     return max(got or HEIGHT_DEFAULT, HEIGHT_MINIMUM)
 
 
-def directory_title(directory):
+def directory_title(directory, spec=None):
     """
-    RETURN: str, the directory's own title -- the FIRST line of its
-            'hwut-info.dat'.
-            '', where the file is absent or says nothing.
+    RETURN: str, the directory's own title -- 'title' in its
+            'hwut.conf'.
+            '', where the directory states none.
 
-    The file's second line underlines the first; everything below is
-    the directory's own business and is not a title.
+    'hwut-info.dat' IS NOT READ (X-INFO-DAT). Its first line was this
+    title in hwut 1.0; the file is a relic, and 'hwut.renovate'
+    (todo-1) carries what it says into 'hwut.conf'. Where a tree still
+    holds one, the title is simply absent until it is renovated.
     """
+    if spec is not None: return getattr(spec, "title", "") or ""
+    from vut.engine.orchestrator.exploration import reader, finder
+    path = os.path.join(directory, finder.CONF_NAME)
     try:
-        with open(os.path.join(directory, "hwut-info.dat"), "r",
-                  encoding="utf-8") as file_handle:
-            for line in file_handle:
-                if line.strip(): return line.strip()
+        with open(path, "r", encoding="utf-8") as file_handle:
+            text = file_handle.read()
     except OSError:
-        pass
-    return ""
+        return ""
+    directory_spec, _, fault_list = reader.read_conf(text, path)
+    if fault_list or directory_spec is None: return ""
+    return getattr(directory_spec, "title", "") or ""
 
 
 def _observed_instant(bookkeeper, case):
@@ -695,6 +713,214 @@ def line_tuple_of(entry_list, format_name, width, color_f=False):
                                              entry_list).splitlines()
 
 
+@dataclass(frozen=True)
+class Row:
+    """ONE CASE as a caller reads it (E-101): plain fields only."""
+    directory:     str
+    source_file:   str
+    choice:        str | None
+    verdict_name:  str | None
+    passed_f:      bool | None
+    report:        str
+    when:          int | None
+    stain_repeat_n:int | None
+    title:         str = ""
+
+
+@dataclass(frozen=True)
+class Block:
+    """ONE DIRECTORY's block of the page: its title and its rows."""
+    directory:  str
+    title:      str
+    row_tuple:  tuple = ()          # of Row
+
+
+@dataclass(frozen=True)
+class Request:
+    """WHAT WAS ASKED of 'hwut.report'."""
+    directory:     str = "."
+    fail_f:        bool = False
+    pass_f:        bool = False
+    since_spec:    str | None = None
+    until_spec:    str | None = None
+    glob_tuple:    tuple = ()
+    exclude_tuple: tuple = ()
+    dir_tuple:     tuple = ()
+    exclude_dir_tuple: tuple = ()
+    wishlist_f:    bool = False
+    label_spec:    str | None = None
+    language_tuple:tuple = ()
+    faster_than_ms:int | None = None
+    unaccepted_f:  bool = False
+
+
+@dataclass(frozen=True)
+class Tally:
+    """WHAT THE STREAM CAME TO (E-102)."""
+    block_n:  int = 0
+    row_n:    int = 0
+    fail_n:   int = 0
+    empty_f:  bool = False
+
+
+def _row_of(crow):
+    """RETURN: Row, a CRow as plain fields."""
+    return Row(directory=crow.directory, source_file=crow.source_file,
+               choice=crow.choice, verdict_name=crow.verdict_name,
+               passed_f=crow.passed_f, report=crow.report or "",
+               when=crow.when, stain_repeat_n=crow.stain_repeat_n,
+               title=crow.title or "")
+
+
+def wish_of(request):
+    """RETURN: Wish, the engine's, as 'request' states it."""
+    return Wish(fail_f=request.fail_f, pass_f=request.pass_f,
+                since_spec=request.since_spec, until_spec=request.until_spec,
+                glob_tuple=tuple(request.glob_tuple),
+                exclude_tuple=tuple(request.exclude_tuple),
+                dir_tuple=request.dir_tuple,
+                exclude_dir_tuple=request.exclude_dir_tuple,
+                wishlist_f=request.wishlist_f,
+                label_spec=request.label_spec,
+                language_tuple=request.language_tuple,
+                faster_than_ms=request.faster_than_ms,
+                unaccepted_f=request.unaccepted_f)
+
+
+def request_of(wish, directory):
+    """RETURN: Request, a Wish and a directory as plain fields."""
+    return Request(
+        directory     = directory,
+        fail_f        = bool(wish.fail_f),      pass_f = bool(wish.pass_f),
+        since_spec    = wish.since_spec,        until_spec = wish.until_spec,
+        glob_tuple    = tuple(wish.glob_tuple),
+        exclude_tuple = tuple(wish.exclude_tuple),
+        dir_tuple     = tuple(wish.dir_tuple),
+        exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
+        wishlist_f    = bool(wish.wishlist_f),  label_spec = wish.label_spec,
+        language_tuple= tuple(wish.language_tuple),
+        faster_than_ms= wish.faster_than_ms,
+        unaccepted_f  = bool(wish.unaccepted_f))
+
+
+def _crow_of(row):
+    """RETURN: CRow, the row a formatter reads, from the plain Row --
+               the two engine-shaped fields rebuilt from their plain
+               mirrors, which is all a formatter asks of them."""
+    verdict = None
+    if row.verdict_name is not None:
+        verdict = _Verdict(row.verdict_name, row.passed_f)
+    stain = None if row.stain_repeat_n is None \
+            else {"repeat_n": row.stain_repeat_n}
+    return CRow(directory=row.directory, source_file=row.source_file,
+                choice=row.choice, verdict=verdict, report=row.report,
+                when=row.when, stain=stain, title=row.title)
+
+
+class _Verdict:
+    """What a formatter asks of an E_TestVerdict: its word and whether
+    it passed. A Row carries those two; this stands in for the enum."""
+
+    def __init__(self, name, passed_f):
+        self.name, self.passed_f = name, passed_f
+
+    def __str__(self):  return self.name
+
+    def __eq__(self, other):
+        return str(other) == self.name
+
+    def __hash__(self): return hash(self.name)
+
+
+def _block_writer(format_name, width, color_f, write):
+    """
+    RETURN: callable, a sink that WRITES each entry's lines as it comes
+            and, called with None, the page's tail -- the traditional
+            page, streamed, which is what this face has always done.
+    """
+    entry_list = _Feed()
+    line_iter  = line_tuple_of(entry_list, format_name, width, color_f)
+    def writer(entry):
+        """RETURN: None. One entry pushed; whatever it made, written."""
+        entry_list.push(entry)
+        for line in line_iter:
+            write(line)
+            if entry_list.hungry_f: break
+    return writer
+
+
+class _Feed:
+    """A one-entry-at-a-time iterable: the formatter pulls, the sink
+    pushes, and 'hungry_f' says the formatter has asked for more."""
+
+    def __init__(self):
+        self.item, self.hungry_f, self.done_f = None, True, False
+
+    def push(self, entry):
+        """RETURN: None. The next entry, or None for the end."""
+        if entry is None: self.done_f = True
+        self.item, self.hungry_f = entry, False
+
+    def __iter__(self): return self
+
+    def __next__(self):
+        if self.item is None:
+            if self.done_f: raise StopIteration
+            self.hungry_f = True
+            raise StopIteration
+        item, self.item = self.item, None
+        self.hungry_f = True
+        return item
+
+
+def do(request, sink):
+    """
+    RETURN: Tally, what the stream came to: how many blocks and rows
+            passed, how many cases did not stand, and whether the wish
+            selected nothing at all.
+
+    Each Block reaches 'sink' AS IT IS KNOWN (E-102) -- a directory's
+    rows while the next directory is still being interviewed, which is
+    what this face has always done with the screen.
+
+    RAISES: Refused, where the directory does not stand, no root conf
+            is above it, or the wish names what the tree does not hold;
+            Fault, where a label file cannot be read.
+
+    IT NEVER PRINTS.
+    """
+    directory = request.directory or "."
+    if not os.path.isdir(directory):
+        raise Refused("REFUSED: the directory '%s' does not exist" % directory)
+    try:
+        stream    = entry_stream_of(os.path.abspath(directory),
+                                    wish_of(request))
+        #  HELD ONLY UNTIL THE FIRST CASE: 'empty' is a fact about the
+        #  WHOLE selection, and a stream cannot know it before the end
+        #  -- but it CAN know the moment it stops being true.
+        held_list = []
+        for entry in stream:
+            held_list.append(entry)
+            if entry[2]: break
+        else:
+            return Tally(empty_f=True)
+        block_n = row_n = fail_n = 0
+        for where, title, row_list in itertools.chain(held_list, stream):
+            block = Block(where, title,
+                          tuple(_row_of(row) for row in row_list))
+            block_n += 1
+            row_n   += len(block.row_tuple)
+            fail_n  += sum(1 for row in row_list if not row.good_f)
+            sink(block)
+        return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n)
+    except RootConfMissing as error:
+        raise Refused("REFUSED: %s" % error) from error
+    except SelectionError as error:
+        raise Refused("REFUSED: %s" % error) from error
+    except LabelFileError as error:
+        raise Fault("FAULT: %s" % error) from error
+
+
 def main(argv=None, write=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where every selected
@@ -763,53 +989,48 @@ def main(argv=None, write=None):
     #  the walk is held just long enough to see one selected case, and
     #  from there the page is written directory by directory as the
     #  tree is explored.
+    #  THE FACE'S OWN SINK (E-102): the traditional page is written
+    #  block by block as 'do' hands them over, so a directory reaches
+    #  the screen while the next is still interviewed. A machine format
+    #  counts before its first line, so its sink collects instead.
+    color_f    = color_wanted_f(plain_f, out_name, sys.stdout, color_said_f)
+    request    = request_of(wish, directory)
+    entry_list = []
+    stream_f   = (out_name is None and format_name == "traditional")
+    writer     = _block_writer(format_name, width_of(width), color_f, write) \
+                 if stream_f else None
+    def sink(block):
+        """RETURN: None. One directory's block: written now, or kept."""
+        entry = (block.directory, block.title,
+                 [_crow_of(row) for row in block.row_tuple])
+        if writer is not None: writer(entry)
+        else:                  entry_list.append(entry)
     try:
-        entry_stream = entry_stream_of(os.path.abspath(directory), wish)
-        held_list    = []
-        for entry in entry_stream:
-            held_list.append(entry)
-            if entry[2]: break
-        else:
-            write("EMPTY: the wish selects no case in '%s'" % directory)
-            return E_ExitCode.EMPTY
-        #  TALLIED AS IT PASSES: the exit code needs the failure count
-        #  and the stream is consumed once, so it is counted on the way
-        #  through rather than walked a second time.
-        fail_box = [0]
-        entry_list = _tallied(itertools.chain(held_list, entry_stream),
-                              fail_box)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except SelectionError as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
-
-    color_f   = color_wanted_f(plain_f, out_name, sys.stdout, color_said_f)
-    line_tuple = line_tuple_of(entry_list, format_name,
-                               width_of(width), color_f)
-    if out_name is None:
-        #  WRITTEN AS IT COMES. The page is not built and then shown;
-        #  a directory's block reaches the screen while the next
-        #  directory is still being interviewed.
-        for line in line_tuple: write(line)
-        line_list = ()
+        tally = do(request, sink)
+    except FaceError as error:
+        write(error.said)
+        return error.code
+    if tally.empty_f:
+        write("EMPTY: the wish selects no case in '%s'" % directory)
+        return E_ExitCode.EMPTY
+    if writer is not None:
+        writer(None)                     # the page's tail
     else:
-        line_list = list(line_tuple)
-        try:
-            with open(out_name, "w", encoding="utf-8") as file_handle:
-                file_handle.write("\n".join(line_list) + "\n")
-        except OSError as error:
-            write("FAULT: '%s' cannot be written -- %s"
-                  % (out_name, error))
-            return E_ExitCode.FAULT
-        write("written: %s (%s, %d line(s))"
-              % (out_name, format_name, len(line_list)))
-
-    return E_ExitCode.FAULT if fail_box[0] else E_ExitCode.OK
+        line_tuple = line_tuple_of(entry_list, format_name,
+                                   width_of(width), color_f)
+        if out_name is None:
+            for line in line_tuple: write(line)
+        else:
+            line_list = list(line_tuple)
+            try:
+                with open(out_name, "w", encoding="utf-8") as file_handle:
+                    file_handle.write("\n".join(line_list) + "\n")
+            except OSError as error:
+                write("FAULT: '%s' cannot be written -- %s" % (out_name, error))
+                return E_ExitCode.FAULT
+            write("written: %s (%s, %d line(s))"
+                  % (out_name, format_name, len(line_list)))
+    return E_ExitCode.FAULT if tally.fail_n else E_ExitCode.OK
 
 
 if __name__ == "__main__":

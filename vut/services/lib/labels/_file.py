@@ -37,11 +37,16 @@ comment between two entries introduces the one below. A comment with
 a blank line on both sides is glued to nothing; the rewrite may drop
 it without notice. The header is the framework's.
 
+THE HEADER IS A PREAMBLE THE PERSON OWNS (E-98): from line 1 down to
+the first '#___' rule, kept verbatim by every rewrite. A file without
+the rule receives the framework's header, which ends in that rule.
+
 ONE LINE PER RUN. A run named twice is a fault, named by line: two
 answers to one question is not a merge, it is a mistake.
 ______________________________________________________________________________
 """
 import io
+import re
 import os
 
 from   vut.engine.orchestrator.plan.label import (KEYWORD_TUPLE,
@@ -58,16 +63,40 @@ LABELS_FILE_NAME = "hwut-root.labels"
 
 GLOB_MARK_TUPLE  = ("*", "?", "[")
 
-HEADER = ("#  %s -- the sets of this tree (disc-8)." % LABELS_FILE_NAME,
-          "#  <target> : <label> [<label>...]; literal targets, no globs.",
-          "#  Leading ':' = ditto: ':/' previous dir, ':/:' previous dir+file.",
-          "#  Written whole, sorted, by 'hwut.labels.*'. Hand edits hold.",
-          "#  Comments glued to an entry (line above/below, no blank) travel",
-          "#  with it, go with it; comments blank-separated may be dropped.")
+HEADER = (
+    "# TEST RUN LABEL DEFINITIONS:",
+    "# ",
+    "# This files defines labels to be referred to for test runs (using '--label').",
+    "# The format is the following:",
+    "#",
+    "#        <target> : <label> [<label>...]",
+    "#",
+    "# Globs like '*' and '?' expressions may not be used. However, following ",
+    "# shorthands exits:",
+    "#",
+    "#   Leading ':/'   means: directory same as in previous entry",
+    "#           ':/:' means: same directory and application as previous entry.",
+    "#",
+    "# This files is modified and read by the 'hwut.labels.*' applications. ",
+    "#",
+    "# NOTE: Hand written comments",
+    "#",
+    "#   Comments glued to an entry (line above/below, no blank) travel with it, go ",
+    "#   with it; comments blank-separated may be dropped.",
+    "#",
+    "#   Any comment above the first '#__...' line is also maintained",
+    "#" + "_" * 78,
+)
+#  THE HEADER'S CLOSING RULE (E-98): everything from line 1 down to the
+#  first line of this shape is the PREAMBLE, kept verbatim by every
+#  rewrite -- a person may edit it or note things there. A file without
+#  the rule gets HEADER written.
+_RULE_RE = re.compile(r"^#_{3,}\s*$")
 
 #  THE GLUED COMMENTS, by entry key, from the last read (E-96): what
 #  the next write puts back beside each entry. One file per process.
 _GLUED_DB = {}
+_PREAMBLE = []                             # the kept header, from the last read
 
 
 class LabelFileError(Exception):
@@ -114,18 +143,29 @@ def read_entry_db(boundary):
     entry_db = {}
     previous = None                        # last EXPANDED target text
     _GLUED_DB.clear()
-    above, last_key, header_f = [], None, True
-    for number, line in enumerate(line_list, start=1):
+    _PREAMBLE[:] = []
+    #  THE PREAMBLE: up to and including the first '#___' rule (E-98).
+    #  Without a rule, a leading comment block from line 1 is the old
+    #  header and is replaced.
+    rule_i = next((i for i, l in enumerate(line_list) if _RULE_RE.match(l)),
+                  None)
+    if rule_i is not None:
+        _PREAMBLE[:] = line_list[:rule_i + 1]
+        line_list    = line_list[rule_i + 1:]
+        number_base  = rule_i + 1
+    else:
+        number_base  = 0
+    above, last_key, header_f = [], None, rule_i is None
+    for number, line in enumerate(line_list, start=1 + number_base):
         text = line.strip()
         if not text:
             if above and last_key is not None:   # ended by a blank: below
                 _GLUED_DB[last_key][1].extend(above)
             above, last_key = [], None      # a blank breaks the glue
-            header_f = False                # ... and ends the header
+            header_f = False                # ... and ends an old header
             continue
         if text.startswith("#"):
-            if header_f: continue           # the framework's own header:
-                                            # the comment block from line 1
+            if header_f: continue           # an old header without a rule
             #  A COMMENT INTRODUCES WHAT FOLLOWS: between two entries it
             #  is glued ABOVE the next; it is glued BELOW the last only
             #  where no entry follows before a blank or the end.
@@ -171,8 +211,8 @@ def write_entry_db(boundary, entry_db):
     width     = max(len(target) for target, _ in line_list)
     with io.open(path, "w", encoding="utf-8", newline="\n") \
          as file_handle:
-        for line in HEADER:
-            file_handle.write(line + "\n")
+        for line in (_PREAMBLE or HEADER):
+            file_handle.write(line.rstrip("\n") + "\n")
         for key, (target, label_tuple) in zip(sorted(entry_db, key=sort_key),
                                               line_list, strict=True):
             above, below = _GLUED_DB.get(key, ([], []))

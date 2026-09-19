@@ -161,6 +161,14 @@ def _tag_and_count(tag, counts, good, ink):
 #  (--pype), and the run suite takes both roads.
 START_DELAY_SECONDS = 2.0
 
+#  THE COUNT BADGE (E-97): a START line -- a run that is slow -- ends
+#  in 'running |n|', the runs standing at that instant, this one included,
+#  whenever n is two or more. One run alone says nothing; the badge
+#  appears exactly where parallelism does. The DONE line carries the
+#  tag and nothing more. Lanes drawn at the right edge were built and
+#  replaced by this: a person saw none, since they needed a wide,
+#  inked console and overlapping slow runs at once.
+
 #  THE BADGES OF THE FLOW, which come in runs and therefore elide, and
 #  the mark that stands under a repeat: PLAIN WHITESPACE, as wide as a
 #  badge, so the body column does not move and a repeated badge says
@@ -365,7 +373,7 @@ class CPlainFlow(CRunReportReceiver):
         return body, body
 
     def _line(self, when, badge, badge_ink, body, body_ink,
-              right="", right_ink="", tail=""):
+              right="", right_ink="", tail="", parallel_n=None):
         """
         RETURN: None. One flow line written: prefix, badge, body,
                 then -- where a right part stands -- a dotted fill
@@ -386,10 +394,22 @@ class CPlainFlow(CRunReportReceiver):
         else:
             self.last_badge = None
         prefix, prefix_ink = self._prefix(when)
+        #  THE PARALLELISM RIDES ALONG (E-97): after the verdict column,
+        #  outside the width math, on every flow line.
+        if badge in FLOW_BADGE_TUPLE or badge == BADGE_REPEAT:
+            tail += self._count_tail(parallel_n)
         if not right:
-            self._flow("%s%s %s%s" % (prefix, badge, body, tail),
-                       "%s%s %s%s" % (prefix_ink, badge_ink, body_ink,
-                                      tail))
+            #  THE COUNT STANDS IN ONE COLUMN (E-97): a line with a
+            #  verdict ends at 'width', so a line without one is padded
+            #  to it before the count -- otherwise a START's '||n' sat
+            #  where its name happened to end.
+            head, head_ink = "%s%s %s" % (prefix, badge, body), \
+                             "%s%s %s" % (prefix_ink, badge_ink, body_ink)
+            if tail:
+                pad   = " " * max(self.width - len(head), 0)
+                head += pad
+                head_ink += pad
+            self._flow(head + tail, head_ink + tail)
             return
         fill = self.width - len(prefix) - len(badge) - 1 - len(body) \
                - len(right) - 2
@@ -504,11 +524,30 @@ class CPlainFlow(CRunReportReceiver):
             #  HELD, not dropped: the body is computed when the line
             #  is finally written, so the elision reads against the
             #  line that truly precedes it.
-            self.held_db[(directory, node)] = when
+            self.held_db[(directory, node)] = (when, self.parallel_n)
             return
         body, body_ink = self._run_body(directory, node)
-        self._line(when, "START", self.ink.start("START"),
-                   body, body_ink)
+        self._line(when, "START", self.ink.start("START"), body, body_ink,
+                   parallel_n=self.parallel_n)
+
+    def _count_tail(self, parallel_n=None):
+        """
+        RETURN: str, the parallelism AT THE LINE'S OWN EVENT, after the
+                verdict column and beyond the width math: '||3'. ''
+                where one run stood alone or none did.
+
+        THE COUNT BELONGS TO THE EVENT, NOT TO THE PRINTING (E-97,
+        corrected twice). A START is HELD until the run proves slow, so
+        its line is written seconds after it began; reading the count
+        at print time said what was standing THEN -- MEASURED: six
+        STARTs released at once all read '||8', and a DONE read the
+        count of a successor that had already begun. Each line now
+        carries the count its own event saw: a START the runs standing
+        when it began, a DONE the runs standing once it left.
+        """
+        count = self.parallel_n if parallel_n is None else parallel_n
+        if count < 2: return ""
+        return "  ||%d" % count
 
     def on_tick(self, when):
         """
@@ -524,15 +563,16 @@ class CPlainFlow(CRunReportReceiver):
         now = _instant(when)
         if now is None: return
         for key in sorted(self.held_db,
-                          key=lambda k: str(self.held_db[k])):
-            begun = _instant(self.held_db[key])
+                          key=lambda k: str(self.held_db[k][0])):
+            begun = _instant(self.held_db[key][0])
             if begun is None or now - begun < self.start_delay:
                 continue
             directory, node = key
-            began_when     = self.held_db.pop(key)
+            began_when, began_n = self.held_db.pop(key)
             body, body_ink = self._run_body(directory, node)
             self._line(began_when, "START",
-                       self.ink.start("START"), body, body_ink)
+                       self.ink.start("START"), body, body_ink,
+                       parallel_n=began_n)
 
     def _release_held(self, key):
         """

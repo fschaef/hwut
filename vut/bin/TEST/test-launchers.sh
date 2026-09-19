@@ -39,7 +39,7 @@ case "$1" in
         exit 0 ;;
 esac
 
-FACE_LIST="config.show plan run play accept accept.propose accept.apply
+FACE_LIST="config.show plan run play accept accept.propose accept.apply renovate
            accept.interactive target cov diff report.details stability wishlist
            report remove remove.propose remove.apply
            rename move sanitize pype

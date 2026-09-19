@@ -4060,3 +4060,320 @@ COST      Six label pages moved by the header; 'test-remove.sh
           (R-70; their pages predate it), so every re-recording was
           refused: the token added, every page gained that line. The tree's own 'hwut-root.labels' rewritten by a
           no-op write so its header is the new one.
+
+
+E-97  THE COUNT BADGE: PARALLELISM SAID WHERE IT STANDS            (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   A START line says a run is slow; nothing said how many slow
+          runs stand at once. Lanes drawn at the right edge (bundle 29)
+          were built first: a person saw none, since they needed a
+          console of a hundred columns, ink on, and slow runs
+          overlapping -- three conditions for one drawing.
+
+DECISION  A COUNT, ON EVERY FLOW LINE, after the verdict column and
+          outside the width math: '  ||3', the runs standing at that
+          instant, where two or more do. A run alone says nothing, so
+          the count appears exactly where parallelism does, at any
+          width, on a pipe as on a terminal. The lanes are withdrawn.
+
+          CORRECTED TWICE (2026-09-18). THE COUNT BELONGS TO THE EVENT,
+          NOT TO THE PRINTING: a START is HELD until its run proves
+          slow, so its line is written seconds after it began, and the
+          count read at print time said what stood THEN -- MEASURED on
+          a real tree: six STARTs released together all read '||8',
+          while the runs they name had begun one at a time. Each line
+          now carries the count ITS OWN EVENT saw (a START what stood
+          when it began, a DONE what stands once it left), and the
+          count stands in ONE COLUMN: a line without a verdict is
+          padded to where the verdict column ends.
+
+          Drawn on the START line alone it
+          could only RISE -- MEASURED: a tree of eight workers showed
+          '|8|' for the rest of the run, since no DONE line carried it.
+          Now a DONE line carries the count AFTER its own run left,
+          which is what a person reads the number for, and the spelling
+          is '||n' -- two bars and the number, which reads as
+          parallelism rather than as a boxed field.
+
+COST      'test-plain.py badge' replaces 'lanes' (its GOOD removed from
+          the book); no other display page moved.
+
+
+E-99  'hwut.renovate', THE INITIAL VERSION                        (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   B-7 ruled the face and left it unbuilt; X-INFO-DAT and the
+          tolerance entry both name it as where an old word is
+          translated, once.
+
+DECISION  'services/renovate.py', 'hwut.renovate [--directory=X]
+          [--apply]'. It walks every TEST directory, and REPORTS what
+          it would do; only '--apply' writes. Translated today:
+            - 'hwut-info.dat' line 1        -> 'title' in hwut.conf
+            - 'hwut-info.dat' '--not <glob>' -> 'ignore' in hwut.conf
+            - 'numeric', 'whitespace_eqv', 'slash_eqv' in a header
+              -> 'tolerance { ... }', ONE block per line however many
+              keys the line stated; in the conf's root
+              -> 'default_app { tolerance { ... } }', since the root
+              carries directory keys only (MEASURED: a root 'tolerance'
+              is refused).
+          A key the conf already states is never overwritten: the
+          newer word stands, the relic's is reported 'kept'. What the
+          relic says beyond that (1.0's coverage directives) is
+          reported 'unknown' and left to the author. The relic file is
+          not deleted; the person deletes it once the report is clean.
+
+          NOT YET (still B-7): entering the books as 'hwut.accept'
+          does; the stderr survey (C-6); the proof against quex.
+
+COST      'services/TEST/test-renovate.sh': report, apply (the files
+          after, then the directory plays, accepts and runs green), kept,
+          clean. The launcher page gained the row.
+
+
+E-101  A FACE IS A RECORD, A do(), AND A PRINTER                   (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   A face was a procedure over text: 'main(argv, write)' parsed
+          strings, computed an answer, spent it on printing, and let
+          three bits of it survive as an exit code. Nobody else could
+          have that answer -- not a Python caller, not a test, not a
+          server. Asked: how far is a REST API? That far.
+
+DECISION  THREE PARTS PER FACE, in this order of dependency:
+
+              Request   what was asked, a frozen record -- no argv
+              do()      Request -> Result; raises Refused/Empty/Fault;
+                        it NEVER prints, reads stdin, or exits
+              Result    what happened, a frozen record -- no formatting
+
+          'main' stays what it was: it reads the line into a Request
+          (argparse, E-84), calls 'do', and hands the Result to the
+          face's printer, which keeps its sentences. THE RECORDED PAGES
+          DO NOT MOVE -- that is the proof of every cut.
+
+          PLAIN FIELDS ONLY: str, int, float, bool, None, tuples of
+          those, other records. No Path, no enum, no Wish, no Case --
+          what a caller needs is copied out. 'face.record_check' names
+          every offender, and the suite asks it of every record.
+
+          REFUSAL IS AN OUTCOME: 'Refused', 'Empty' and 'Fault' carry
+          the sentence the face has always written and the exit code it
+          has always returned; 'face.answered' is the ONE place an
+          outcome becomes a page.
+
+          'services/lib/face.py' plus three faces cut to it:
+          'hwut.wishlist', 'hwut.plan', 'hwut.renovate' -- the last
+          showing that a WRITING face fits the shape too, '--apply'
+          being a field of the Request and not a decision of the
+          caller's.
+
+          THE REST NEED MORE THAN A CUT, and are named here so the
+          shape is not mistaken for finished:
+            'hwut.report'   WRITES AS IT WALKS (a directory's block
+                            reaches the screen while the next is still
+                            interviewed) -- a streaming face: 'do' takes
+                            a sink, as 'hwut.run' will
+            'hwut.sanitize' prints from inside its removal loop; the
+                            acting must be split from the saying first
+            'hwut.run'      the product IS a sequence: the event stream
+                            (engine/protocol) is already the Result
+            'hwut.accept'   a conversation, not a request: 'do' answers
+                            which keys need a merge, and the screen is
+                            a client that resolves them
+
+COST      No page moved: ten 'test-wishlist.sh' choices, both
+          'test-enter.sh', six 'test-plan.py', four 'test-renovate.sh'. New
+          'services/TEST/test-face-records.py' (reuse, plain, refuse).
+
+          THE CUT CAUGHT THREE MISTAKES, each MEASURED on a page:
+          'with_targets' applied twice (in 'request_of' AND 'wish_of')
+          made the short form select nothing; raising Empty before the
+          warnings were written lost 'the glob met only runs the
+          standard label silences' from the page -- an empty selection
+          is a Result with its warnings, not a refusal; and a diagnosis
+          of mine, that 'str(Target)' is lossy, was wrong: the wish
+          holds plain strings, and the pair-records built around that
+          guess were reverted.
+
+WHAT IT BUYS  'Request'/'Result' ARE the interface: a REST route and
+          its RESPONSE MODEL can be generated from them (which the
+          command-line completion table cannot give -- it knows no
+          answers), as can a schema, as can the command line itself.
+          One definition, three readers.
+
+
+E-102  A STREAMING FACE TAKES A SINK                               (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   E-101's shape fits a face whose answer is one record. Three
+          faces answer a SEQUENCE: 'hwut.run' (the event stream, O-4),
+          'hwut.report' (a directory's block, written while the next is
+          interviewed), 'hwut.stability' (run after run). A Result
+          holding the whole would break what those faces are: the first
+          line must reach the screen before the last is known.
+
+DECISION  'do(request, sink)': each item goes to the sink AS IT HAPPENS;
+          what 'do' RETURNS is the TALLY -- a record like any other.
+          The command line's sink is the display, a server's is a
+          socket, a caller that wants the whole hands in a list's
+          'append'. 'face.collected(do, request)' is that batch reading,
+          named once so no caller writes it again.
+
+          THE SINK TAKES ITEMS, NEVER LINES. 'hwut.run' already emits
+          plain dicts ('engine/protocol', MEASURED: six of them for one
+          case, JSON-able as they stand) beside its rendering -- that
+          seam IS the contract, and the display is one consumer of it.
+          A face that writes LINES into a sink has been moved, not cut.
+
+          'hwut.report' IS CUT TO IT: 'do(request, sink)' hands over one
+          Block per directory -- its title and its plain Rows -- as the
+          walk knows it, and returns the Tally (blocks, rows, failures,
+          and whether the wish selected nothing). The face's own sink
+          WRITES the traditional page block by block, so a directory
+          still reaches the screen while the next is interviewed; a
+          machine format's sink collects, since JUnit, TAP and JSON
+          count before their first line.
+
+          TWO ENGINE-SHAPED FIELDS had to cross: a verdict (an enum) and
+          a stain (a dict). What the PAGE asks of them is three plain
+          things -- the verdict's word, whether it passed, the stain's
+          repeat count -- so the Row carries those, and the printer
+          rebuilds what a formatter reads. No enum, no dict, crosses.
+
+COST      'test-face-records.py stream' pins the shape on a face small
+          enough to stand in the test. Fifteen 'hwut.report' pages
+          unmoved (nine of 'test-report.sh', six of
+          'test-report-details.sh').
+
+          'hwut.run' IS NOT CUT YET: its '_main' builds the display,
+          the log, the coverage demand and the strategy around that
+          seam. Wrapping it by building an argv would be moving, not
+          cutting, and is refused here.
+
+
+E-103  THE ACTING IS SPLIT FROM THE SAYING                         (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.sanitize' removed and PRINTED in one loop: 'removed'
+          took a 'write' and said 'kept:', 'FAULT:' from inside the
+          action, answering the caller with a bare bool. A face that
+          prints from inside its action cannot be called by anything
+          but a command line -- and cannot be asked what it DID.
+
+DECISION  'removal_of(finding, root)' removes and ANSWERS: a 'Removal'
+          record -- the path, 'gone_f', 'kept_f' where the thing is
+          kept BY DESIGN (a 'books' disagreement, mended by hand), and
+          the fault where one was met. The page is made from that
+          answer; the sentences are unchanged.
+
+COST      Eleven 'test-sanitize.sh' pages and three
+          'test-sanitize-books.py' pages unmoved.
+          'test-face-records.py split' pins the three outcomes -- kept,
+          gone, fault -- and that the record is plain.
+
+          'hwut.sanitize' IS NOT YET A 'do()': its walk gathers
+          findings, targets and the re-run trigger in one pass and
+          decides the exit from four flags. The split above is the step
+          that was in the way; the cut itself is the next.
+
+
+E-104  'hwut.run' IS A do() WITH A RENDERER HANDED IN               (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   E-102 named the streaming shape and left 'hwut.run' uncut:
+          its '_main' built the display, the log, the coverage demand
+          and the strategy around the event seam, and a caller that was
+          not a command line could reach none of it.
+
+DECISION  'do(request, sink=None, flow=None, demand=None, write=None)'.
+          The Request holds the wish and the EXECUTION words (record,
+          jobs, strategy, variant, timing, coverage, stain, force);
+          RENDERING is not in it, being the page's business and not the
+          run's. Every event reaches 'sink' as it happens -- plain
+          dicts, as 'engine/protocol' writes them, JSON as they stand.
+          'flow' is a RENDERER the face hands in; without one the run
+          is SILENT ('_NoFlow'), which is what a library caller wants.
+          'do' answers a Tally (cases, failures, faults, good_f,
+          empty_f), and 'exit_code_of(tally)' is the ONE place E-1's
+          rule stands.
+
+          THE FACE KEEPS WHAT IS ITS OWN: reading the line, the log
+          file it opens and closes, the console view it builds -- and
+          it hands that view in as the flow. The display is a consumer
+          of the run, not a part of it.
+
+COST      No page moved (818 ok, the 28 pre-existing failures
+          unchanged). 'test-face-records.py run' pins the library call:
+          ten events for three cases, the kinds they carry, a Tally
+          that is plain, an event that is JSON as it stands, a narrowed
+          wish, an empty selection, and a refusal as an outcome.
+
+
+E-105  WHAT 'hwut.accept' DECIDED, AS DATA                         (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   'accept_one' ended in five lists and two pages written from
+          them by hand -- the report block and the brief column. What
+          the face DECIDED per key existed only as those lines, so the
+          screen that resolves a merge, a server, or a test could not
+          ask 'which keys need a merge?' without reading a page.
+
+DECISION  'Outcome(name, label, kind)' -- one per key, 'kind' one of
+          'blessed', 'undecided', 'needs-merge', 'cancelled',
+          'left-alone'. 'outcome_tuple_of' builds them in the order a
+          page says them; 'report_written' and 'brief_row_of' MAKE the
+          two pages from them, with the sentences unchanged. The word
+          each kind wears and the brief column's note stand in one
+          table, so the two pages cannot drift apart.
+
+          ACCEPT IS NOT YET A 'do()', and should not be pretended into
+          one: it is a CONVERSATION -- it refreshes, may run a test,
+          may open a screen, and asks. The Outcome is the half that is
+          an ANSWER, and the half a caller that is not a command line
+          needs: which keys stood, which need a person.
+
+COST      No page moved: every 'test-accept.sh' choice, the door suite,
+          the propose and apply suites. 'test-face-records.py accept'
+          pins the outcomes and the two pages made from them.
+
+
+E-106  THE LABEL FAMILY'S RECORDS                                  (2026-09-18)
+----------------------------------------------------------------------------
+DECISION  Five label faces already share one door ('_faces.opened') and
+          one editing layer ('_editing'), so ONE Request and ONE Result
+          serve them all ('_faces'): the label, the wish as plain
+          fields, the directory; and what was done -- what entered,
+          what left, how many were untouched, whether the label stands
+          afterwards. 'create', 'add' and 'remove' answer that Result
+          and their 'printed' makes the page; 'list' answers a
+          'Standing' (label, member count, one row per label) and
+          'query' an 'Answer' (the targets with their labels, the
+          elided form, the faults) -- two records of their own in
+          '_faces', since a reader's answer is not an editor's.
+          ALL FIVE ARE CUT. (This entry first said 'create' alone: the
+          pass that cut the other four had landed without being
+          measured or recorded, and was found by reading them. Every
+          record is plain, MEASURED with 'record_check'.)
+
+COST      No page moved: every choice of the five label suites.
+
+          A STRAY EDIT WAS FOUND AND REVERTED: '_editing.py' in the
+          working tree held a 'selection_of' citing this very entry,
+          which stands in neither the dump nor bundle 43 -- a fragment
+          of an edit that never completed. The file was restored from
+          the proved state before the pages were measured.
+
+
+E-107  'hwut.remove': THE PROPOSAL AND THE FORGETTING AS RECORDS   (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   'forget' unlinked and PRINTED in one pass ('forgotten: ...',
+          'FAULT: ...', 'book entry: ...') and answered a bool. Like
+          'accept', this face is a conversation -- it shows what will
+          be lost, asks, then forgets -- so it is not a 'do()'; but
+          its two halves that ANSWER were printing instead.
+
+DECISION  'proposal_of' answers a Proposal (the target and its
+          artefacts as the page names them); 'forgotten' unlinks and
+          answers a Forgotten (what went, what could not, the book,
+          the register, the boundary records). 'forget' is now the
+          PRINTER of a Forgotten, sentences unchanged, and the asking
+          stays in 'main' where a person is. 'hwut.remove.apply' and
+          'hwut.move' inherit: apply forgets through the same door.
+
+COST      No page moved: nine 'test-remove.sh' choices. Both records
+          plain (record_check).

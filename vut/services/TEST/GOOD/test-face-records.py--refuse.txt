@@ -1,0 +1,16 @@
+
+--- a directory that does not stand ---
+    Refused  REFUSED  REFUSED: the directory '<ROOT>/nope' does not exist
+
+--- no root conf above ---
+    Refused  REFUSED  REFUSED: no 'hwut-root.conf' stands above '/tmp' -- a tree states its own boundary, and the global configuration that applies to it, in that file
+
+--- 'answered' is the one place an outcome becomes a page ---
+    exit REFUSED
+    | REFUSED: the directory '<ROOT>/nope' does not exist
+    | usage: ...
+
+--- an EMPTY selection is a Result, not a refusal: the warning stands ---
+    lines 0, warnings 0
+    printed -> exit EMPTY
+<hwut-end>

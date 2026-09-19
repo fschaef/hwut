@@ -1,0 +1,14 @@
+
+--- a books finding is kept BY DESIGN, and says why ---
+    suite/TEST gone=False kept=True  fault=None
+    said : a disagreement is mended by hand
+
+--- a file that stands: gone ---
+    gone=True  exists now: False
+
+--- a path that cannot go: the fault is ANSWERED, not printed ---
+    gone=False fault=True
+
+--- the record is plain ---
+    yes
+<hwut-end>

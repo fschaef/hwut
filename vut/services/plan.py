@@ -44,6 +44,10 @@ from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse)
+from   vut.services.lib.face    import Refused, Fault, answered
+from   vut.engine.orchestrator.plan.wish import Wish
+from   vut.engine.orchestrator.plan.form import E_LinkKind, E_Provenance
+from   dataclasses import dataclass
 
 
 #  THE STANDARD READER (E-84).
@@ -99,6 +103,178 @@ EXIT STATUS
          selects no test case"""
 
 
+@dataclass(frozen=True)
+class Node:
+    """One node of the plan, as a page shows it (E-101)."""
+    name:        str
+    kind:        str
+    misdep_f:    bool = False
+    implied_by:  str | None = None
+
+
+@dataclass(frozen=True)
+class Link:
+    """One link: its two ends and the arrow between them."""
+    source: str
+    arrow:  str
+    target: str
+
+
+@dataclass(frozen=True)
+class Request:
+    """WHAT WAS ASKED of 'hwut.plan': the wish, and where."""
+    directory:     str = "."
+    fail_f:        bool = False
+    pass_f:        bool = False
+    since_spec:    str | None = None
+    until_spec:    str | None = None
+    glob_tuple:    tuple = ()
+    exclude_tuple: tuple = ()
+    dir_tuple:     tuple = ()
+    exclude_dir_tuple: tuple = ()
+    wishlist_f:    bool = False
+    label_spec:    str | None = None
+    language_tuple:tuple = ()
+    faster_than_ms:int | None = None
+    unaccepted_f:  bool = False
+
+
+@dataclass(frozen=True)
+class Result:
+    """WHAT HAPPENED: the wish as it reads, what was reported, what was
+    refused, and the plan -- nodes, links, exclusion sets."""
+    wish_text:      str = ""
+    report_tuple:   tuple = ()
+    refused_tuple:  tuple = ()      # (name, reason)
+    fault_tuple:    tuple = ()      # the faults, as text
+    node_tuple:     tuple = ()      # of Node
+    link_tuple:     tuple = ()      # of Link
+    exclusion_tuple:tuple = ()      # of tuple[str]
+    fault_f:        bool = False
+
+
+def request_of(wish, directory):
+    """RETURN: Request, a Wish and a directory as plain fields."""
+    return Request(
+        directory     = directory,
+        fail_f        = bool(wish.fail_f),
+        pass_f        = bool(wish.pass_f),
+        since_spec    = wish.since_spec,
+        until_spec    = wish.until_spec,
+        glob_tuple    = tuple(wish.glob_tuple),
+        exclude_tuple = tuple(wish.exclude_tuple),
+        dir_tuple     = tuple(wish.dir_tuple),
+        exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
+        wishlist_f    = bool(wish.wishlist_f),
+        label_spec    = wish.label_spec,
+        language_tuple= tuple(wish.language_tuple),
+        faster_than_ms= wish.faster_than_ms,
+        unaccepted_f  = bool(wish.unaccepted_f))
+
+
+def wish_of(request):
+    """RETURN: Wish, the engine's, as 'request' states it."""
+    return Wish(fail_f=request.fail_f, pass_f=request.pass_f,
+                since_spec=request.since_spec, until_spec=request.until_spec,
+                glob_tuple=tuple(request.glob_tuple),
+                exclude_tuple=tuple(request.exclude_tuple),
+                dir_tuple=request.dir_tuple,
+                exclude_dir_tuple=request.exclude_dir_tuple,
+                wishlist_f=request.wishlist_f,
+                label_spec=request.label_spec,
+                language_tuple=request.language_tuple,
+                faster_than_ms=request.faster_than_ms,
+                unaccepted_f=request.unaccepted_f)
+
+
+def do(request):
+    """
+    RETURN: Result, the plan the request determines -- its nodes, links
+            and exclusion sets, the wish as it reads, what was reported
+            and what was refused.
+
+    RAISES: Refused, where no root conf stands above the directory or
+            the wish names what the tree does not hold; Fault, where a
+            label file cannot be read.
+
+    IT NEVER PRINTS (E-101).
+    """
+    directory = request.directory or "."
+    wish      = wish_of(request)
+    try:
+        inherited, ascent_fault_list = ascended_spec(directory)
+    except RootConfMissing as error:
+        raise Refused("REFUSED: %s" % error) from error
+    try:
+        label_view = view_at(directory)
+    except LabelFileError as error:
+        raise Fault("FAULT: %s" % error) from error
+    found  = selection.of_directory(directory, wish, label_view,
+                                    inherited=inherited)
+    result = found.result_db["."]
+    try:
+        plan, report_list, refused_list = determine(
+            result.app_set, found.query_db["."], admit=admit_of(directory))
+    except (RootConfMissing, SelectionError) as error:
+        raise Refused("REFUSED: %s" % error) from error
+    fault_tuple = tuple(str(f) for f in ascent_fault_list) \
+                  + tuple(str(f) for f in found.fault_tuple)
+    return Result(
+        wish_text      = str(wish),
+        report_tuple   = tuple(str(r) for r in report_list),
+        refused_tuple  = tuple((str(n), str(r)) for n, r in
+                               tuple(result.refused_tuple) + tuple(refused_list)),
+        fault_tuple    = fault_tuple,
+        node_tuple     = tuple(Node(node.name(), node.kind.name,
+                                    bool(node.misdep_f),
+                                    node.implied_by
+                                    if node.provenance is E_Provenance.IMPLIED
+                                    else None)
+                               for node in plan.node_tuple),
+        link_tuple     = tuple(Link(str(l.source),
+                                    "->" if l.kind is E_LinkKind.ORDERING else "==>",
+                                    str(l.target)) for l in plan.link_tuple),
+        exclusion_tuple= tuple(tuple(e.member_tuple) for e in plan.exclusion_tuple),
+        fault_f        = bool(result.fault_list))
+
+
+def printed(result, write):
+    """RETURN: E_ExitCode. The page 'hwut.plan' has always written, out
+               of the record: the faults, the wish, the reports, the
+               refusals, then the plan."""
+    for text in result.fault_tuple:  write(text)
+    write("WISH: %s" % result.wish_text)
+    for report in result.report_tuple: write("REPORT: %s" % report)
+    for name, reason in result.refused_tuple:
+        write("REFUSED: %s -- %s" % (name, reason))
+    write("TEST PLAN: %d node(s), %d link(s), %d exclusion set(s)"
+          % (len(result.node_tuple), len(result.link_tuple),
+             len(result.exclusion_tuple)))
+    write("NODES")
+    if not result.node_tuple: write("    (none)")
+    else:
+        width = max(len(node.name) for node in result.node_tuple)
+        for node in result.node_tuple:
+            text = "%-*s  %-7s" % (width, node.name, node.kind)
+            if node.misdep_f:             text += "  [MISDEP]"
+            if node.implied_by is not None:
+                text += "  <= required by %s" % node.implied_by
+            write("    %s" % text.rstrip())
+    write("LINKS")
+    if not result.link_tuple: write("    (none)")
+    else:
+        for link in result.link_tuple:
+            write("    %s %s %s" % (link.source, link.arrow, link.target))
+    write("EXCLUSIONS")
+    if not result.exclusion_tuple: write("    (none)")
+    else:
+        for member_tuple in result.exclusion_tuple:
+            write("    { %s }" % ", ".join(member_tuple))
+    if result.fault_f:        return E_ExitCode.FAULT
+    if not result.node_tuple: return E_ExitCode.EMPTY
+    return E_ExitCode.OK
+
+
 def main(argv=None, write=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
@@ -136,52 +312,8 @@ def main(argv=None, write=None):
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
     directory, word_list = found
-    #  THE CLIMB APPLIES HERE TOO: a single-directory face standing
-    #  in a test directory owes the same effective configuration as a
-    #  walk that reached it from the project root.
-    try:
-        inherited, ascent_fault_list = ascended_spec(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for fault in ascent_fault_list:
-        write(str(fault))
-
-    wish = with_targets(wish, word_list)
-    try:
-        label_view = view_at(directory)
-    except LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
-    #  ONE ACTION, ONE PLACE ('exploration/selection.py'): the
-    #  explore, the Bookkeeper and the query. THIS FACE NEEDS THE
-    #  QUERY ITSELF, because 'determine' takes a task list rather than
-    #  a list of cases.
-    found  = selection.of_directory(directory, wish, label_view,
-                                    inherited=inherited)
-    result = found.result_db["."]
-    for fault in found.fault_tuple:
-        write(str(fault))
-    task_list = found.query_db["."]
-    try:
-        plan, report_list, refused_list = determine(
-            result.app_set, task_list, admit=admit_of(directory))
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except SelectionError as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-
-    write("WISH: %s" % wish)
-    for report in report_list:
-        write("REPORT: %s" % report)
-    for name, reason in tuple(result.refused_tuple) + tuple(refused_list):
-        write("REFUSED: %s -- %s" % (name, reason))
-    print_plan(plan, write)
-    if result.fault_list:   return E_ExitCode.FAULT
-    if not plan.node_tuple: return E_ExitCode.EMPTY
-    return E_ExitCode.OK
+    return answered(do, request_of(with_targets(wish, word_list), directory),
+                    write, printed)
 
 
 if __name__ == "__main__":

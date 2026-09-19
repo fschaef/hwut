@@ -180,9 +180,8 @@ def test_list_form():
     header("choices as a list of names",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    choices = [\"one\", \"two\", \"three\"]\n'
+           '    choices = ["one", "two", "three"]\n'
            '}\n')
-
 
 def test_choiceless():
     """RETURN: None. No 'choices': the single 'None' entry."""

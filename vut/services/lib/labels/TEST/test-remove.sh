@@ -120,6 +120,9 @@ for line in text:
         out.append(line)
 open("hwut-root.labels", "w").write("\n".join(out) + "\n")
 PY
+    #  E-98: the PREAMBLE -- everything down to the first '#___' rule --
+    #  is the person's, kept verbatim; a note added there survives.
+    sed -i '1s/^/# my own note, above the rule\n/' hwut-root.labels
     echo "--- as edited by hand"
     the_file
     echo "--- a label taken off an entry that is NOT the commented ones"

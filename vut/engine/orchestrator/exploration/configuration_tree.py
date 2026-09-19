@@ -275,6 +275,7 @@ class DirectorySpec:
     of every group, so '--variant=gcov' needs no qualification and two
     groups may not share an alternative name. Two alternatives of ONE
     group named together are refused: they configure one subspace."""
+    title:           str | None = None   # the directory's own (X-INFO-DAT)
     on_entry:        str | None = None
     on_exit:         str | None = None
     test_directory:  str | None = None

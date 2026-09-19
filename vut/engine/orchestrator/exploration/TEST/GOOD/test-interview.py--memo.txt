@@ -1,0 +1,7 @@
+  walk 1: asked ['old-app.py', 'script.sh']
+  walk 2: asked []
+  memo file stands under TMP/: True
+  ... and not beside the tests: True
+  after a change to old-app.py: asked ['old-app.py']
+  TMP/ is never walked into: True
+<hwut-end>

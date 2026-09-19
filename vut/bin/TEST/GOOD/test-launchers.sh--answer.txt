@@ -5,6 +5,7 @@ hwut.play          exit 0: PURPOSE: THE 'hwut.play' COMMAND LINE -- run one test
 hwut.accept        exit 0: hwut.accept -- PROMOTION: a candidate becomes the nominal
 hwut.accept.propose exit 0: hwut.accept.propose -- the differences, as a file to read and hand back.
 hwut.accept.apply  exit 0: hwut.accept.apply -- bless what a file names, and nothing else.
+hwut.renovate      exit 0: usage: hwut.renovate [--directory=<path>] [--apply]
 hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [-f] [--plain] [--console] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--stderr-tol] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.target        exit 0: hwut.target -- run one user-defined target over the tree
 hwut.cov           exit 0: PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with

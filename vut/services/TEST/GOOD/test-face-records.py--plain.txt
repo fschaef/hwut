@@ -1,0 +1,13 @@
+    wishlist.Request   plain: yes
+    wishlist.Result    plain: yes
+    plan.Request       plain: yes
+    plan.Result        plain: yes
+
+--- what the rule refuses: an engine object in a record ---
+    Bad.where: PosixPath
+    Bad.pair[0][1]: PosixPath
+
+--- a Wish is the engine's; the record states its keywords ---
+    request -> wish: fail_f=True since='2h'
+    wish -> request: 2h
+<hwut-end>

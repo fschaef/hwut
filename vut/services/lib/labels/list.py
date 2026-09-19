@@ -33,6 +33,7 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
+from   .                                     import _faces
 from   ._faces                               import split_directory
 
 USAGE = usage_line("hwut.labels.list", ("[--directory=<path>]",))
@@ -69,17 +70,20 @@ def main(argv=None, write=None):
         write("FAULT: %s" % error)
         return E_ExitCode.FAULT
 
-    count_db = {}
-    for label_set in entry_db.values():
-        for label in label_set:
-            count_db[label] = count_db.get(label, 0) + 1
-    if not count_db:
+    standing = _faces.standing_of(entry_db)
+    if not standing.row_tuple:
         return E_ExitCode.EMPTY
-
-    width = max(len(label) for label in count_db)
-    for label in sorted(count_db):
-        write("%-*s %4d" % (width, label, count_db[label]))
+    printed(standing, write)
     return E_ExitCode.OK
+
+
+def printed(standing, write):
+    """RETURN: None. The page 'hwut.labels.list' has always written:
+               one label per line, its members counted, the names
+               padded to the longest."""
+    width = max(len(label) for label, _ in standing.row_tuple)
+    for label, member_n in standing.row_tuple:
+        write("%-*s %4d" % (width, label, member_n))
 
 
 if __name__ == "__main__":

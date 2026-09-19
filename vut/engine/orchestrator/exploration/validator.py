@@ -144,6 +144,13 @@ def validate_conf(hwut_node, file):
         if entry.key in ("on_entry", "on_exit", "test_directory"):
             value = _string(entry, file, fault_list)
             if value is not None: field_db[entry.key] = value
+        elif entry.key == "title":
+            #  THE DIRECTORY'S OWN TITLE (X-INFO-DAT): what 'hwut.report'
+            #  writes above its rows. It stood in the first line of an
+            #  'hwut-info.dat', hwut 1.0's; here it is a key like any
+            #  other.
+            value = _string(entry, file, fault_list)
+            if value is not None: field_db["title"] = value
         elif entry.key == "ignore":
             value = _string_list(entry, file, fault_list)
             if value is not None: field_db["ignore"] = value
@@ -210,6 +217,17 @@ def _choices(entry, file, fault_list, choice_position_db=None):
             the list form; empty on a fault.
     """
     if isinstance(entry.node, ListNode):
+        #  AN EMPTY 'choices' STATES NOTHING RUNNABLE (X-EMPTY-CHOICES).
+        #  MEASURED: it reached the run as an application with neither a
+        #  root nor a choice, and the adapter took '[0]' of nothing --
+        #  'ERROR IndexError: list index out of range' where a refusal
+        #  belongs. An application states choices, or states none.
+        if not entry.node.item_list:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, entry.key_position,
+                "'choices' is empty: state the choices, or leave "
+                "'choices' out and the application has one run"))
+            return {}
         result = {}
         for item in entry.node.item_list:
             if not isinstance(item, ScalarNode) \

@@ -112,6 +112,7 @@ ______________________________________________________________________________
 import os
 import shutil
 import sys
+from   dataclasses import dataclass
 
 from   vut.auxiliary.directory_mutex                 import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
@@ -556,9 +557,27 @@ def directory_finding_list(root, directory, result, aspect_set, wanted_f):
     return finding_list, refusal_list
 
 
-def removed(finding, root, write):
+@dataclass(frozen=True)
+class Removal:
+    """WHAT BECAME OF ONE FINDING (E-103): gone, kept by design, or a
+    fault -- as data, so a caller that is not a page can read it."""
+    path:   str
+    gone_f: bool = False
+    kept_f: bool = False
+    said:   str  = ""
+    fault:  str | None = None
+
+
+def removal_of(finding, root):
     """
-    RETURN: bool, True where the thing named is gone.
+    RETURN: Removal, what became of the thing named: 'gone_f' where it
+            is gone, 'kept_f' where it is kept BY DESIGN, and the fault
+            where one was met (E-103).
+
+    THE ACTING IS SPLIT FROM THE SAYING: this removes and reports as
+    data; 'printed' turns it into the lines this face has always
+    written. A face that prints from inside its action cannot be
+    called by anything but a command line.
 
     A BOOK ENTRY IS NOT A FILE: a finding whose path names one is
     forgotten through the bookkeeper, which keeps the base well-formed
@@ -569,28 +588,25 @@ def removed(finding, root, write):
     which of them is wrong.
     """
     if finding.kind == "books":
-        write("    kept: %s -- a disagreement is mended by hand"
-              % finding.path)
-        return False
+        return Removal(finding.path, kept_f=True,
+                       said="a disagreement is mended by hand")
     if ": book " in finding.path:
         where, _, rest = finding.path.partition(": book ")
         test, _, choice = rest.partition(" ")
         try:
             Bookkeeper(os.path.join(root, where)).remove_choice(
                 test, choice or None)
-            return True
-        except Exception as error:
-            write("    FAULT: %s -- %s" % (finding.path, error))
-            return False
+            return Removal(finding.path, gone_f=True)
+        except Exception as error:                         # noqa: BLE001
+            return Removal(finding.path, fault=str(error))
 
     path = os.path.join(root, finding.path)
     try:
         if os.path.isdir(path): shutil.rmtree(path)
         else:                   os.unlink(path)
-        return True
+        return Removal(finding.path, gone_f=True)
     except OSError as error:
-        write("    FAULT: %s -- %s" % (finding.path, error))
-        return False
+        return Removal(finding.path, fault=str(error))
 
 
 def target_line_tuple(root, target_tuple, apply_f, write):
@@ -740,7 +756,12 @@ def main(argv=None, write=None):
         write("")
         write("REMOVING:")
         for finding in finding_list:
-            if removed(finding, root, write):
+            removal = removal_of(finding, root)
+            if removal.kept_f:
+                write("    kept: %s -- %s" % (removal.path, removal.said))
+            elif removal.fault is not None:
+                write("    FAULT: %s -- %s" % (removal.path, removal.fault))
+            if removal.gone_f:
                 write("    gone: %s" % finding.path)
             elif finding.kind != "books":
                 #  A 'books' finding is KEPT by design, and said so

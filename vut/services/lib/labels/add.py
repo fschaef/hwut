@@ -38,6 +38,7 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
+from   .                                     import _faces
 from   .                                    import _editing
 from   ._faces                               import Refused, opened
 
@@ -110,11 +111,24 @@ def main(argv=None, write=None):
     if added_list and not _editing.written(open_labels, write):
         return open_labels.status
 
-    write("%s: %d added, %d already carrying"
-          % (label, len(added_list), len(already_list)))
-    for key in added_list:   write("    + %s" % _file.target_text(key))
-    for key in already_list: write("    = %s" % _file.target_text(key))
+    #  WHAT WAS DONE, AS DATA (E-106); the page is made from it.
+    result = _faces.Result(
+        label=label,
+        added_tuple=tuple(_file.target_text(key) for key in added_list),
+        untouched_n=len(already_list),
+        member_n=len(added_list) + len(already_list))
+    printed(result,
+            tuple(_file.target_text(key) for key in already_list), write)
     return E_ExitCode.OK
+
+
+def printed(result, already_tuple, write):
+    """RETURN: None. The page 'hwut.labels.add' has always written: what
+               entered, then what already carried the label."""
+    write("%s: %d added, %d already carrying"
+          % (result.label, len(result.added_tuple), result.untouched_n))
+    for text in result.added_tuple: write("    + %s" % text)
+    for text in already_tuple:      write("    = %s" % text)
 
 
 if __name__ == "__main__":

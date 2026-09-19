@@ -1,0 +1,4 @@
+-- hwut.run does not print the parallelism for the last two test runs ending in a directory
+-- use 'rich' for drawing trees and colors.
+-- results: on hwut --labels fail showed 5 ok, but there is no evidence for that
+   applied 'hwut.labels.create fail --fail' before

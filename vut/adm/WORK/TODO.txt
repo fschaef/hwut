@@ -114,7 +114,11 @@ B-6  'hwut.affected' -- THE SERVICE SHIM
 
 B-7  'hwut.renovate'
      gathered/0r todo-1
-     Ruled, unbuilt. 'services/renovate.py' per the naming law;
+     INITIAL VERSION BUILT (services E-99): title and '--not' from
+     'hwut-info.dat', the three old tolerance keys in headers and
+     conf; report by default, '--apply' writes. STILL OWED: the
+     books, the stderr survey (C-6), the proof against quex.
+     Ruled. 'services/renovate.py' per the naming law;
      '--directory=X [--apply]'; must enter the books as 'hwut.accept'
      does; must be developed against the real quex project; reads
      'hwut-info.dat' to know candidacy.
@@ -517,3 +521,14 @@ BAND E MEASURED -- see 'adm/WORK/review-r9.txt'
                  indistinguishable from the inner one. FOUR FAILING
                  TESTS are attached to it. It is the only DESIGN
                  QUESTION left in band E -- the rest are deferrals.
+
+
+TO BE DONE  THE FACE CUT, what remains (services E-101..E-106)
+     The five label faces are cut (E-106). Then 'rename', 'move',
+     'remove'
+     (batch), 'stability' and 'cov' (both fold 'hwut.run', so they
+     inherit 'run.do'), and 'diff' last -- its product is a screen,
+     so only its store form has an answer to give.
+     'hwut.sanitize' is split (E-103) but not yet a 'do()'.
+     'hwut.accept' keeps its conversation; its Outcomes are data
+     (E-105), the asking half is not.

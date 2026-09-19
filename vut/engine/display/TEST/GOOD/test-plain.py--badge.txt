@@ -1,0 +1,22 @@
+DIR  suite/TEST                                                               
+START test-a.sh
+      test-b.sh                                                                 ||2
+      test-c.sh                                                                 ||3
+      test-d.sh                                                                 ||4
+DONE  test-b.sh ......................................................... [OK]  ||3
+      test-a.sh ....................................................... [FAIL]  ||2
+      test-c.sh ......................................................... [OK]
+      test-d.sh ......................................................... [OK]
+START test-e.sh
+DONE  : ................................................................. [OK]
+
+--- held STARTs, released together: each says what IT saw ---
+DIR  suite/TEST                                                               
+START test-a.sh
+      test-b.sh                                                                 ||2
+      test-c.sh                                                                 ||3
+      test-d.sh                                                                 ||4
+      test-e.sh                                                                 ||5
+DONE  test-a.sh ......................................................... [OK]  ||4
+      test-b.sh ......................................................... [OK]  ||3
+<hwut-end>

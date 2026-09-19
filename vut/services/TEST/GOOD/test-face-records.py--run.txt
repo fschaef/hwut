@@ -1,0 +1,18 @@
+
+--- the whole tree, silent: every event to the sink ---
+    events : 10
+    kinds  : ['dir-begun', 'dir-done', 'run-begun', 'run-ended', 'tree-begun', 'tree-done']
+    tally  : 3 case(s), 0 failure(s), good_f=True, empty=False
+    exit   : OK
+    plain  : yes
+
+--- an event is a plain dict -- JSON as it stands ---
+    {"format": 1, "kind": "tree-begun"}
+
+--- narrowed by the wish, and nothing selected ---
+    one case : 1 case(s), exit OK
+    none     : empty=True, exit EMPTY
+
+--- a refusal is an outcome here too ---
+    REFUSED: the directory '<ROOT>/nope' does not exist
+<hwut-end>

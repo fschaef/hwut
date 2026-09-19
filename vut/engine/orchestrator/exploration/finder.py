@@ -35,8 +35,12 @@ from fnmatch import fnmatch
 CONF_NAME          = "hwut.conf"
 ROOT_CONF_NAME     = "hwut-root.conf"
 
-#  THE FRAMEWORK'S OWN FILES: never source file candidates.
-OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME)
+#  THE FRAMEWORK'S OWN FILES: never source file candidates. The book
+#  and the traces stand in every TEST directory (X-INTERVIEW): they were
+#  MEASURED interviewed on every walk, two programs run per directory
+#  to answer nothing.
+OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
+                      "hwut-traces.csv", "hwut-root.labels")
 #  A PYPE IS A CANONICALISER, NOT A TEST. It stands beside the test
 #  that names it ('pype = "strip.pype"') and filters that test's
 #  output; it is never a candidate and the nominal gate (E-41) never

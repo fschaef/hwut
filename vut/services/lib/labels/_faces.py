@@ -15,6 +15,7 @@ merely convenient.
 ______________________________________________________________________________
 """
 import os
+from dataclasses import dataclass
 import sys
 
 from   vut.engine.orchestrator.exploration          import selection
@@ -151,3 +152,114 @@ def _boundary_relative(prefix, where, source_file):
     """
     joined = os.path.normpath(os.path.join(prefix, where, source_file))
     return joined.replace(os.sep, "/")
+
+
+#  ------------------------------------------------------------------
+#  THE FAMILY'S RECORDS (services E-106). Five faces, one door
+#  ('opened') and one editing layer ('_editing'): so one Request and
+#  one Result serve them all, and what each face DID is data before it
+#  is a page.
+@dataclass(frozen=True)
+class Request:
+    """WHAT WAS ASKED of a label face: the label, the wish that names
+    the members, and where the tree stands. Plain fields only."""
+    label:         str = ""
+    directory:     str = "."
+    #  the wish
+    fail_f:        bool = False
+    pass_f:        bool = False
+    since_spec:    str | None = None
+    until_spec:    str | None = None
+    glob_tuple:    tuple = ()
+    exclude_tuple: tuple = ()
+    dir_tuple:     tuple = ()
+    exclude_dir_tuple: tuple = ()
+    wishlist_f:    bool = False
+    label_spec:    str | None = None
+    language_tuple:tuple = ()
+    faster_than_ms:int | None = None
+    unaccepted_f:  bool = False
+
+
+@dataclass(frozen=True)
+class Result:
+    """WHAT THE FACE DID: the label it touched, the members that
+    entered or left, and whether the label itself stands afterwards."""
+    label:         str = ""
+    added_tuple:   tuple = ()      # target texts
+    removed_tuple: tuple = ()      # target texts
+    untouched_n:   int = 0
+    stands_f:      bool = True
+    member_n:      int = 0
+
+
+def request_of(label, wish, directory):
+    """RETURN: Request, a label, a Wish and a directory as plain
+               fields."""
+    return Request(
+        label=label, directory=directory,
+        fail_f=bool(wish.fail_f), pass_f=bool(wish.pass_f),
+        since_spec=wish.since_spec, until_spec=wish.until_spec,
+        glob_tuple=tuple(wish.glob_tuple),
+        exclude_tuple=tuple(wish.exclude_tuple),
+        dir_tuple=tuple(wish.dir_tuple),
+        exclude_dir_tuple=tuple(wish.exclude_dir_tuple),
+        wishlist_f=bool(wish.wishlist_f), label_spec=wish.label_spec,
+        language_tuple=tuple(wish.language_tuple),
+        faster_than_ms=wish.faster_than_ms,
+        unaccepted_f=bool(wish.unaccepted_f))
+
+
+def wish_of(request):
+    """RETURN: Wish, the engine's, as 'request' states it."""
+    from vut.engine.orchestrator.plan.wish import Wish
+    return Wish(fail_f=request.fail_f, pass_f=request.pass_f,
+                since_spec=request.since_spec, until_spec=request.until_spec,
+                glob_tuple=tuple(request.glob_tuple),
+                exclude_tuple=tuple(request.exclude_tuple),
+                dir_tuple=request.dir_tuple,
+                exclude_dir_tuple=request.exclude_dir_tuple,
+                wishlist_f=request.wishlist_f, label_spec=request.label_spec,
+                language_tuple=request.language_tuple,
+                faster_than_ms=request.faster_than_ms,
+                unaccepted_f=request.unaccepted_f)
+
+
+@dataclass(frozen=True)
+class Standing:
+    """WHAT STANDS in the tree's labels file (E-106): one row per
+    label, its members counted -- what 'hwut.labels.list' answers."""
+    row_tuple: tuple = ()          # of (label, member_n)
+
+    @property
+    def label_tuple(self):
+        """RETURN: tuple[str], the labels, sorted as the page says
+                   them."""
+        return tuple(label for label, _ in self.row_tuple)
+
+
+def standing_of(entry_db):
+    """RETURN: Standing, the labels of 'entry_db' with their member
+               counts, sorted by name."""
+    count_db = {}
+    for label_set in entry_db.values():
+        for label in label_set:
+            count_db[label] = count_db.get(label, 0) + 1
+    return Standing(tuple((label, count_db[label])
+                          for label in sorted(count_db)))
+
+
+@dataclass(frozen=True)
+class Answer:
+    """WHAT A QUESTION ABOUT LABELS ANSWERS (E-106): the targets the
+    expression names, each with the labels it carries, and whatever
+    reading the tree faulted on -- plain fields, three ways of saying
+    them (the elided page, the expanded one, the labelled one)."""
+    target_tuple:  tuple = ()      # of (target text, labels text)
+    elided_tuple:  tuple = ()      # the same targets, elided
+    fault_tuple:   tuple = ()
+
+    @property
+    def empty_f(self):
+        """RETURN: bool, True where the expression named nothing."""
+        return not self.target_tuple

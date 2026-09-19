@@ -54,6 +54,7 @@ from   vut.engine.orchestrator.plan.label    import (STANDARD_LABEL,
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
+from   .                                     import _faces
 
 USAGE = usage_line("hwut.labels.query",
                    ("[<expr>]", "[--expand]", "[--labels]",
@@ -156,26 +157,36 @@ def main(argv=None, write=None):
     key_tuple, fault_tuple = named_key_tuple(directory, view, tree)
     for fault in fault_tuple: write("FAULT: %s" % fault)
 
+    #  WHAT WAS ASKED, ANSWERED (E-106): the targets and their labels,
+    #  said three ways; the page picks one.
+    answer = _faces.Answer(
+        target_tuple = tuple(
+            (_file.target_text(key),
+             " ".join(sorted(view.label_set_of(
+                 os.path.join(view.boundary, key[0]), key[1]))) or "-")
+            for key in key_tuple),
+        elided_tuple = tuple(_file.elided_target_tuple(key_tuple)),
+        fault_tuple  = tuple(str(f) for f in fault_tuple))
+    printed(answer, labels_f, expand_f, write)
+
+    if answer.fault_tuple: return E_ExitCode.FAULT
+    if answer.empty_f:     return E_ExitCode.EMPTY
+    return E_ExitCode.OK
+
+
+def printed(answer, labels_f, expand_f, write):
+    """RETURN: None. The page 'hwut.labels.query' has always written:
+               the targets with their labels under '--labels', one
+               target per line under '--expand', the elided form else."""
     if labels_f:
-        line_list = [(_file.target_text(key),
-                      " ".join(sorted(view.label_set_of(
-                          os.path.join(view.boundary, key[0]),
-                          key[1]))) or "-")
-                     for key in key_tuple]
-        width = max((len(target) for target, _ in line_list),
+        width = max((len(target) for target, _ in answer.target_tuple),
                     default=0)
-        for target, label_text in line_list:
+        for target, label_text in answer.target_tuple:
             write("%-*s : %s" % (width, target, label_text))
     elif expand_f:
-        for key in key_tuple:
-            write(_file.target_text(key))
+        for target, _ in answer.target_tuple: write(target)
     else:
-        for target in _file.elided_target_tuple(key_tuple):
-            write(target)
-
-    if fault_tuple:      return E_ExitCode.FAULT
-    if not key_tuple:    return E_ExitCode.EMPTY
-    return E_ExitCode.OK
+        for target in answer.elided_tuple:    write(target)
 
 
 if __name__ == "__main__":

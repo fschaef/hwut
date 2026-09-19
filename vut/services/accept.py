@@ -46,7 +46,7 @@ ______________________________________________________________________________
 import asyncio
 import time
 from vut.services.lib import preferences
-from dataclasses import replace
+from dataclasses import replace, dataclass
 import os
 import sys
 
@@ -1409,58 +1409,99 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             write("REFUSED: %s -- %s" % (key.name, reason))
             skipped_list.append(key)
 
+    #  WHAT BECAME OF EACH KEY, as data (E-105): the five lists are one
+    #  outcome per key, and the page -- brief column or report block --
+    #  is made FROM it. A caller that is not a page (a server, a test,
+    #  the screen that resolves a merge) reads the same record.
+    outcome_tuple = outcome_tuple_of(directory, blessed_list, undecided_list,
+                                     merge_list, uncommitted_list,
+                                     skipped_list)
     if brief_list is not None:
-        for key in blessed_list:
-            brief_list.append((_brief_label(directory, key), DONE_TEXT, None))
-        for key in undecided_list:
-            brief_list.append((_brief_label(directory, key), DONE_TEXT,
-                               "recorded undecided: the shape stands, "
-                               "nothing is accepted yet"))
-        for key in merge_list:
-            brief_list.append((_brief_label(directory, key), ERROR_TEXT,
-                               "a nominal stands: this is a change, "
-                               "not a first blessing"))
-        for key in skipped_list:
-            brief_list.append((_brief_label(directory, key), ERROR_TEXT,
-                               "left alone -- refused above, or not "
-                               "confirmed"))
+        brief_list.extend(brief_row_of(outcome) for outcome in outcome_tuple)
     else:
-        write("")
-        write("=" * 78)
-        write("ACCEPTED  %d of %d" % (len(blessed_list) + len(undecided_list),
-                                       len(key_list)))
-        write("-" * 78)
-        for key in blessed_list:
-            write("    blessed        %s" % key.name)
-        for key in undecided_list:
-            #  THE WORD SAYS WHAT HAPPENED. Nothing was blessed: the
-            #  candidate's shape now stands, every line of it undecided,
-            #  and 'hwut.accept.interactive' is where deciding happens.
-            write("    undecided      %s" % key.name)
-        for key in merge_list:
-            write("    merge required %s" % key.name)
-        for key in uncommitted_list:
-            write("    cancelled      %s" % key.name)
-        for key in skipped_list:
-            write("    left alone     %s" % key.name)
-        if merge_list:
-            write("")
-            write("A nominal already stands for the keys above. That is a "
-                  "CHANGE, not a")
-            write("first blessing. At a TERMINAL this face merges them "
-                  "itself (E-59); here")
-            write("there is none, so: run it on a terminal, or '--force' "
-                  "to overwrite the pole.")
-        if uncommitted_list:
-            write("")
-            write("The screen was left with Ctrl-C: nothing was written. "
-                  "'q' is done, and")
-            write("writes GOOD as it stands.")
-        write("=" * 78)
+        report_written(outcome_tuple, len(key_list), write)
 
     if result.fault_list or merge_list or uncommitted_list or conflict_db:
         return E_ExitCode.FAULT
     return E_ExitCode.OK
+
+
+@dataclass(frozen=True)
+class Outcome:
+    """WHAT BECAME OF ONE KEY (E-105): plain fields, so a caller that is
+    not a page can read what accept decided.
+
+    'kind' is one of 'blessed', 'undecided', 'needs-merge', 'cancelled',
+    'left-alone'; 'name' is the key as a page names it, 'label' the
+    same with its directory where the selection spans more than one."""
+    name:   str
+    label:  str
+    kind:   str
+
+
+#  THE WORD EACH OUTCOME WEARS, and the brief column's verdict beside it.
+_OUTCOME_DB = {
+    "blessed":     ("blessed       ", None),
+    "undecided":   ("undecided     ", "recorded undecided: the shape stands, "
+                                      "nothing is accepted yet"),
+    "needs-merge": ("merge required", "a nominal stands: this is a change, "
+                                      "not a first blessing"),
+    "cancelled":   ("cancelled     ", "left alone -- the screen was cancelled"),
+    "left-alone":  ("left alone    ", "left alone -- refused above, or not "
+                                      "confirmed"),
+}
+
+
+def outcome_tuple_of(directory, blessed_list, undecided_list, merge_list,
+                     uncommitted_list, skipped_list):
+    """RETURN: tuple[Outcome], one per key, in the order a page says
+               them."""
+    return tuple(
+        Outcome(key.name, _brief_label(directory, key), kind)
+        for kind, key_list in (("blessed", blessed_list),
+                               ("undecided", undecided_list),
+                               ("needs-merge", merge_list),
+                               ("cancelled", uncommitted_list),
+                               ("left-alone", skipped_list))
+        for key in key_list)
+
+
+def brief_row_of(outcome):
+    """RETURN: (label, verdict, note), one row of the brief column."""
+    _, note = _OUTCOME_DB[outcome.kind]
+    good_f  = outcome.kind in ("blessed", "undecided")
+    return (outcome.label, DONE_TEXT if good_f else ERROR_TEXT,
+            note if outcome.kind != "blessed" else None)
+
+
+def report_written(outcome_tuple, key_n, write):
+    """RETURN: None. The report block 'hwut.accept' has always written,
+               made from the outcomes."""
+    stood_n = sum(1 for o in outcome_tuple
+                  if o.kind in ("blessed", "undecided"))
+    write("")
+    write("=" * 78)
+    write("ACCEPTED  %d of %d" % (stood_n, key_n))
+    write("-" * 78)
+    for kind in ("blessed", "undecided", "needs-merge", "cancelled",
+                 "left-alone"):
+        for outcome in outcome_tuple:
+            if outcome.kind == kind:
+                write("    %s %s" % (_OUTCOME_DB[kind][0], outcome.name))
+    if any(o.kind == "needs-merge" for o in outcome_tuple):
+        write("")
+        write("A nominal already stands for the keys above. That is a "
+              "CHANGE, not a")
+        write("first blessing. At a TERMINAL this face merges them "
+              "itself (E-59); here")
+        write("there is none, so: run it on a terminal, or '--force' "
+              "to overwrite the pole.")
+    if any(o.kind == "cancelled" for o in outcome_tuple):
+        write("")
+        write("The screen was left with Ctrl-C: nothing was written. "
+              "'q' is done, and")
+        write("writes GOOD as it stands.")
+    write("=" * 78)
 
 
 def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):

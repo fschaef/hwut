@@ -1,0 +1,38 @@
+
+--- one outcome per key ---
+    blessed      test-a.sh one .stdout
+    undecided    test-b.sh .stdout
+    needs-merge  test-c.sh .stdout
+    cancelled    test-d.sh .stdout
+    left-alone   test-e.sh .stdout
+    plain: yes
+
+--- the report block, made from them ---
+    
+    ==============================================================================
+    ACCEPTED  2 of 5
+    ------------------------------------------------------------------------------
+        blessed        test-a.sh one .stdout
+        undecided      test-b.sh .stdout
+        merge required test-c.sh .stdout
+        cancelled      test-d.sh .stdout
+        left alone     test-e.sh .stdout
+    
+    A nominal already stands for the keys above. That is a CHANGE, not a
+    first blessing. At a TERMINAL this face merges them itself (E-59); here
+    there is none, so: run it on a terminal, or '--force' to overwrite the pole.
+    
+    The screen was left with Ctrl-C: nothing was written. 'q' is done, and
+    writes GOOD as it stands.
+    ==============================================================================
+
+--- the brief column, made from the same ---
+    ('.', 'test-a.sh', 'one') [DONE] 
+    ('.', 'test-b.sh', '')   [DONE] recorded undecided: the shape stands, nothing is accepted yet
+    ('.', 'test-c.sh', '')   [ERROR] a nominal stands: this is a change, not a first blessing
+    ('.', 'test-d.sh', '')   [ERROR] left alone -- the screen was cancelled
+    ('.', 'test-e.sh', '')   [ERROR] left alone -- refused above, or not confirmed
+
+--- what a caller asks: which keys need a merge ---
+    ['test-c.sh .stdout']
+<hwut-end>

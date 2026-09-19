@@ -1,0 +1,16 @@
+
+--- the sink sees each item while the run is still going ---
+    ... a ok (1 so far)
+    ... b-bad FAIL (2 so far)
+    ... c ok (3 so far)
+    tally: 3 item(s), 1 failure(s)
+
+--- 'collected': the same face read in one go ---
+    items  : ['a', 'b-bad', 'c']
+    tally  : 3 item(s), 1 failure(s)
+    plain  : yes
+
+--- what a sink is NOT: a printer ---
+    an item is a record or a plain dict -- never a line;
+    a face that writes lines into a sink has been moved, not cut
+<hwut-end>

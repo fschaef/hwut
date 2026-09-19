@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "The interview: hwut 1.0 answers, and is read"
-#     choices    = ["block", "directory", "precedence", "procsitter",
-#                   "silence"]
+#     choices    = ["block", "directory", "memo", "precedence",
+#                   "procsitter", "relic", "silence"]
 #     interactive = true
 # }
 #
@@ -243,10 +243,95 @@ def test_procsitter():
         shutil.rmtree(directory, ignore_errors=True)
 
 
+def test_memo():
+    """RETURN: None. X-INTERVIEW: an interview is a program run and its
+    answer is MEMOISED beside the tests by the file's mtime and size --
+    the second walk asks nothing; a changed file is asked again; a
+    file that is NOT executable is never asked (a helper, a log, a
+    table cannot answer). Measured before this: 107 interviews per walk
+    of the tree, none answered, eleven seconds of silence."""
+    import stat, time
+    from vut.engine.orchestrator.exploration import explorer, finder
+    from vut.engine.orchestrator.exploration import hwut_info_interview
+    directory = tempfile.mkdtemp()
+    try:
+        def put(name, text, executable_f=True):
+            path = os.path.join(directory, name)
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(text)
+            if executable_f:
+                os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
+            return path
+        app = put("old-app.py", "#! /usr/bin/env python3\nimport sys\n"
+                  "if '--hwut-info' in sys.argv:\n"
+                  "    print('An hwut 1.0 application;'); print('CHOICES: a, b;')\n")
+        put("helper.py", "print('a helper, not a test')\n", executable_f=False)
+        put("notes.log", "just a log\n", executable_f=False)
+        put("script.sh", "#! /bin/sh\necho nothing\n")
+        asked = []
+        real = hwut_info_interview._procsitter_runner
+        def counting(path, caps):
+            asked.append(os.path.basename(path)); return real(path, caps)
+        hwut_info_interview._procsitter_runner = counting
+        try:
+            for round_n in (1, 2):
+                asked.clear()
+                explorer.explore(directory)
+                print("  walk %i: asked %s" % (round_n, sorted(asked)))
+            print("  memo file stands under TMP/: %s"
+                  % os.path.isfile(hwut_info_interview.memo_path(directory)))
+            print("  ... and not beside the tests: %s"
+                  % (not os.path.exists(os.path.join(
+                         directory, hwut_info_interview.MEMO_FILE_NAME))))
+            time.sleep(1.1)
+            with open(app, "a") as handle: handle.write("# changed\n")
+            asked.clear(); explorer.explore(directory)
+            print("  after a change to old-app.py: asked %s" % sorted(asked))
+            print("  TMP/ is never walked into: %s"
+                  % ("TMP" in getattr(finder, "REFUSED_NAME_GLOB_TUPLE", ())
+                     or not any(n.startswith("TMP") for n in
+                                finder.candidate_list(directory)[0])))
+        finally:
+            hwut_info_interview._procsitter_runner = real
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
+def test_relic():
+    """RETURN: None. X-INFO-DAT: 'hwut-info.dat' is hwut 1.0's and is
+    NOT READ. The directory's title is 'title' in its 'hwut.conf';
+    'hwut.renovate' (todo-1) carries a relic's first line there. A
+    directory holding only the relic states no title."""
+    from vut.services.report import directory_title
+    from vut.engine.orchestrator.exploration import reader
+    directory = tempfile.mkdtemp()
+    try:
+        def put(name, text):
+            with open(os.path.join(directory, name), "w",
+                      encoding="utf-8") as handle: handle.write(text)
+        print("  a relic alone:")
+        put("hwut-info.dat", "The Old Title\n-------------\nand notes\n")
+        print("    title: %r" % directory_title(directory))
+        print("  'title' in 'hwut.conf' -- what renovate writes:")
+        put("hwut.conf", 'hwut {\n    title = "The Comparison Engine"\n}\n')
+        print("    title: %r" % directory_title(directory))
+        print("  a conf without a title:")
+        put("hwut.conf", 'hwut {\n}\n')
+        print("    title: %r" % directory_title(directory))
+        print("  the key is validated like any other:")
+        spec, _, fault_list = reader.read_conf(
+            'hwut {\n    title = 17\n}\n', "hwut.conf")
+        for fault in fault_list: print("    %s" % fault)
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "The interview: hwut 1.0 answers, and is read;", {
         "block":      test_block,
+        "memo":       test_memo,
+        "relic":      test_relic,
         "silence":    test_silence,
         "directory":  test_directory,
         "precedence": test_precedence,

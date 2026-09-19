@@ -81,6 +81,9 @@ from   vut.engine.orchestrator.run.strategy          import (DEFAULT_STRATEGY_NA
 from   vut.engine.protocol.summary           import fold
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
+from   vut.services.lib.face    import Refused, Fault, FaceError
+from   vut.engine.orchestrator.plan.wish import Wish
+from   dataclasses import dataclass
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 
@@ -156,8 +159,11 @@ TICK_SECONDS = 0.25
 
 
 async def _drive(root, wish, record, worker_max_n, strategy, flow,
-                 coverage=None, variant_tuple=(), timing_f=False,
-                 event_sink=None, despite_stain_f=False,
+                 coverage=None, 
+                 variant_tuple=(), 
+                 timing_f=False,
+                 event_sink=None, 
+                 despite_stain_f=False,
                  force_run_f=False,
                  label_view=None, warn=None):
     """
@@ -170,13 +176,13 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow,
     """
     queue = orchestrator(root, wish,
                          test_run_dispatcher_factory(
-                             record=record, coverage=coverage,
-                             variant_tuple=variant_tuple,
-                             timing_f=timing_f,
-                             despite_stain_f=despite_stain_f,
-                             force_run_f=force_run_f),
-                         worker_max_n=worker_max_n, strategy=strategy,
-                         label_view=label_view, warn=warn)
+                             record          = record, coverage=coverage,
+                             variant_tuple   = variant_tuple,
+                             timing_f        = timing_f,
+                             despite_stain_f = despite_stain_f,
+                             force_run_f     = force_run_f),
+                         worker_max_n = worker_max_n, strategy=strategy,
+                         label_view   = label_view, warn=warn)
     event_list = []
     #  THE WAKE: a run that merely takes long emits no event, so a
     #  flow holding its START line back would never release it. The
@@ -198,6 +204,153 @@ async def _drive(root, wish, record, worker_max_n, strategy, flow,
         event_list.append(item)
         if event_sink is not None: event_sink(item)
         flow.dispatch(item)
+
+
+@dataclass(frozen=True)
+class Request:
+    """WHAT WAS ASKED of 'hwut.run' (E-101): the wish, where to walk,
+    and how to execute -- no argv, no rendering (which is the page's,
+    not the run's)."""
+    directory:     str         = "."
+    #  the wish
+    fail_f:        bool        = False
+    pass_f:        bool        = False
+    since_spec:    str | None  = None
+    until_spec:    str | None  = None
+    glob_tuple:    tuple       = ()
+    exclude_tuple: tuple       = ()
+    dir_tuple:     tuple       = ()
+    exclude_dir_tuple: tuple   = ()
+    wishlist_f:    bool        = False
+    label_spec:    str | None  = None
+    language_tuple:tuple       = ()
+    faster_than_ms:int | None  = None
+    unaccepted_f:  bool        = False
+    #  the execution
+    record:        bool | None = None
+    worker_max_n:  int | None  = None
+    strategy_name: str         = DEFAULT_STRATEGY_NAME
+    variant_text:  str         = ""
+    timing_f:      bool        = False
+    coverage_f:    bool        = False
+    despite_stain_f: bool      = False
+    force_run_f:   bool        = False
+
+
+@dataclass(frozen=True)
+class Tally:
+    """WHAT THE RUN CAME TO (E-102): the fold of its own event stream."""
+    case_n:      int = 0
+    fail_n:      int = 0
+    fault_tuple: tuple = ()
+    good_f:      bool | None = None
+    empty_f:     bool = False
+
+
+class _NoFlow:
+    """The renderer of a run nobody watches: every event accepted, none
+    drawn. 'do' runs with this unless a face hands in its display."""
+
+    def dispatch(self, item): pass
+    def tail(self):           pass
+
+
+def request_of(wish, directory, **field_db):
+    """RETURN: Request, a Wish, a directory and the execution words as
+               plain fields."""
+    return Request(directory         = directory,
+                   fail_f            = bool(wish.fail_f),      pass_f = bool(wish.pass_f),
+                   since_spec        = wish.since_spec,        until_spec = wish.until_spec,
+                   glob_tuple        = tuple(wish.glob_tuple),
+                   exclude_tuple     = tuple(wish.exclude_tuple),
+                   dir_tuple         = tuple(wish.dir_tuple),
+                   exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
+                   wishlist_f        = bool(wish.wishlist_f),  label_spec = wish.label_spec,
+                   language_tuple    = tuple(wish.language_tuple),
+                   faster_than_ms    = wish.faster_than_ms,
+                   unaccepted_f      = bool(wish.unaccepted_f),
+                   **field_db)
+
+
+def wish_of(request):
+    """RETURN: Wish, the engine's, as 'request' states it."""
+    return Wish(fail_f            = request.fail_f,
+                pass_f            = request.pass_f,
+                since_spec        = request.since_spec, until_spec=request.until_spec,
+                glob_tuple        = tuple(request.glob_tuple),
+                exclude_tuple     = tuple(request.exclude_tuple),
+                dir_tuple         = request.dir_tuple,
+                exclude_dir_tuple = request.exclude_dir_tuple,
+                wishlist_f        = request.wishlist_f,
+                label_spec        = request.label_spec,
+                language_tuple    = request.language_tuple,
+                faster_than_ms    = request.faster_than_ms,
+                unaccepted_f      = request.unaccepted_f)
+
+
+def do(request, sink=None, flow=None, demand=None, write=None):
+    """
+    RETURN: Tally, the fold of the run's own event stream (O-4).
+
+    EVERY EVENT REACHES 'sink' AS IT HAPPENS (E-102) -- plain dicts, as
+    'engine/protocol' writes them. 'flow' is a RENDERER a face hands in
+    ('hwut.run' its console view); without one the run is silent, which
+    is what a library caller wants.
+
+    RAISES: Refused, where no root conf stands above the directory or
+            the wish names what the tree does not hold; Fault, where a
+            label file cannot be read.
+
+    IT NEVER PRINTS. 'write' reaches the machinery that must say a word
+    of its own (a build's own output); 'print' is never called here.
+    """
+    directory = request.directory or "."
+    if not os.path.isdir(directory):
+        raise Refused("REFUSED: the directory '%s' does not exist" % directory)
+    directory = os.path.abspath(directory)
+    coverage  = None
+    if request.coverage_f:
+        from vut.engine.coverage.api import CoverageConfig
+        coverage = demand if demand is not None else CoverageConfig()
+    try:
+        label_view = view_at(directory)
+    except RootConfMissing as error:
+        raise Refused("REFUSED: %s" % error) from error
+    except LabelFileError as error:
+        raise Fault("FAULT: %s" % error) from error
+    try:
+        event_list = asyncio.run(
+            _drive(directory, 
+                   wish_of(request), 
+                   request.record,
+                   request.worker_max_n or (os.cpu_count() or 1),
+                   strategy_of(request.strategy_name),
+                   flow if flow is not None else _NoFlow(),
+                   coverage, name_tuple_of(request.variant_text),
+                   request.timing_f, sink, request.despite_stain_f,
+                   request.force_run_f, label_view,
+                   write if write is not None else (lambda line: None)))
+    except RootConfMissing as error:
+        raise Refused("REFUSED: %s" % error) from error
+    except SelectionError as error:
+        raise Refused("REFUSED: %s" % error) from error
+    summary = fold(event_list)
+    fail_n  = summary.fail_n if summary.fail_n is not None else 0
+    return Tally(case_n      = len(summary.verdict_db),
+                 fail_n      = fail_n,
+                 fault_tuple = tuple(str(f) for f in summary.fault_tuple),
+                 good_f      = summary.good_f,
+                 empty_f     = not summary.verdict_db)
+
+
+def exit_code_of(tally):
+    """RETURN: E_ExitCode, what a run that came to 'tally' exits with
+               (E-1) -- the one place the rule stands."""
+    if tally.fault_tuple or tally.good_f is False or tally.fail_n > 0 \
+       or (tally.case_n and tally.good_f is None):
+        return E_ExitCode.FAULT
+    if tally.empty_f: return E_ExitCode.EMPTY
+    return E_ExitCode.OK
 
 
 def main(argv=None, write=None, write_error=None, demand=None,
@@ -335,22 +488,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
               % directory)
         write(USAGE)
         return E_ExitCode.REFUSED
-    #  The machinery walks and launches below an ABSOLUTE root; the
-    #  wire's paths stay relative to it either way.
-    directory = os.path.abspath(directory)
-
     wish = with_targets(wish, word_list)
-
-    #  THE LABEL VIEW, built at the tree's boundary before anything
-    #  runs: the silence must be determined, or refused, at the door.
-    try:
-        label_view = view_at(directory)
-    except RootConfMissing as error:
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    except LabelFileError as error:
-        write("FAULT: %s" % error)
-        return E_ExitCode.FAULT
 
     #  The face knows its own sink; display knows what a terminal is
     #  worth. Tier, ink and width are decided there, once.
@@ -374,34 +512,32 @@ def _main(argv, write, write_error, captured_f, demand=None,
     write_log = None if log_file is None \
                 else lambda line: print(line, file=log_file)
 
+    request = request_of(wish, directory,
+                         record          = record, 
+                         worker_max_n    = worker_max_n,
+                         strategy_name   = strategy.name,
+                         variant_text    = variant_text, timing_f=timing_f,
+                         coverage_f      = coverage is not None,
+                         despite_stain_f = despite_stain_f,
+                         force_run_f     = force_run_f)
     try:
         flow = console_view(rendering_wish, write, write_error,
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color)
+        #  THE DISPLAY IS A CONSUMER (E-102): 'do' runs and hands every
+        #  event to whoever listens; this face hands in its console
+        #  view as the renderer and 'event_sink' as the sink beside it.
         try:
-            event_list = asyncio.run(
-                _drive(directory, wish, record, worker_max_n, strategy,
-                       flow, coverage, name_tuple_of(variant_text),
-                       timing_f, event_sink, despite_stain_f, force_run_f,
-                       label_view, write))
-        except RootConfMissing as error:
-            write("REFUSED: %s" % error)
-            return E_ExitCode.REFUSED
-        except SelectionError as error:
-            write("REFUSED: %s" % error)
-            return E_ExitCode.REFUSED
+            tally = do(request, sink=event_sink, flow=flow, demand=demand,
+                       write=write)
+        except FaceError as error:
+            write(error.said)
+            return error.code
         flow.tail()
     finally:
         if log_file is not None: log_file.close()
 
-    summary = fold(event_list)
-    fail_n  = summary.fail_n if summary.fail_n is not None else 0
-    if summary.fault_tuple or summary.good_f is False or fail_n > 0 \
-       or (event_list and summary.good_f is None):
-        return E_ExitCode.FAULT
-    if not summary.verdict_db:
-        return E_ExitCode.EMPTY
-    return E_ExitCode.OK
+    return exit_code_of(tally)
 
 
 if __name__ == "__main__":

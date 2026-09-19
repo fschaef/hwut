@@ -35,6 +35,7 @@ from   vut.engine.orchestrator.plan.wish     import (HELP as WISH_HELP,
 from   ..._core                               import usage_line
 from   ..._exit                               import E_ExitCode
 from   .                                     import _file
+from   .                                     import _faces
 from   .                                    import _editing
 from   ._faces                               import Refused, opened
 
@@ -103,16 +104,29 @@ def main(argv=None, write=None):
     if removed_list and not _editing.written(open_labels, write):
         return open_labels.status
 
-    write("%s: %d removed, %d untouched"
-          % (label, len(removed_list), len(untouched_list)))
-    for key in removed_list:
-        write("    - %s" % _file.target_text(key))
-    for key in untouched_list:
-        write("    = %s" % _file.target_text(key))
-    if removed_list \
-       and not _editing.stands_f(open_labels, label):
-        write("%s: no member left -- the label is deleted" % label)
+    #  WHAT WAS DONE, AS DATA (E-106): what left, what was untouched,
+    #  and whether the label itself still stands -- which is the thing
+    #  a caller asks after a removal.
+    result = _faces.Result(
+        label=label,
+        removed_tuple=tuple(_file.target_text(key) for key in removed_list),
+        untouched_n=len(untouched_list),
+        stands_f=(not removed_list
+                  or _editing.stands_f(open_labels, label)),
+        member_n=len(removed_list) + len(untouched_list))
+    printed(result,
+            tuple(_file.target_text(key) for key in untouched_list), write)
     return E_ExitCode.OK
+
+
+def printed(result, untouched_tuple, write):
+    """RETURN: None. The page 'hwut.labels.remove' has always written."""
+    write("%s: %d removed, %d untouched"
+          % (result.label, len(result.removed_tuple), result.untouched_n))
+    for text in result.removed_tuple: write("    - %s" % text)
+    for text in untouched_tuple:      write("    = %s" % text)
+    if not result.stands_f:
+        write("%s: no member left -- the label is deleted" % result.label)
 
 
 if __name__ == "__main__":

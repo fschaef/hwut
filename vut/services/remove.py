@@ -57,6 +57,7 @@ EXIT STATUS (E-1, services/_exit.py):
 ______________________________________________________________________________
 """
 import os
+from dataclasses import dataclass
 import sys
 
 from   vut.engine.bookkeeper.api   import Bookkeeper
@@ -134,46 +135,83 @@ def _shown(store, path):
     except ValueError: return path
 
 
+@dataclass(frozen=True)
+class Proposal:
+    """WHAT WILL BE LOST (E-107): one target, its artefacts as the page
+    shows them -- so the question can be asked from a record."""
+    test:       str
+    choice:     str | None
+    path_tuple: tuple = ()
+
+
+@dataclass(frozen=True)
+class Forgotten:
+    """WHAT BECAME OF ONE TARGET: the artefacts that went and those that
+    could not, the book and the register, the boundary records."""
+    test:          str
+    choice:        str | None
+    gone_tuple:    tuple = ()      # (shown path)
+    fault_tuple:   tuple = ()      # (shown path, error)
+    book_f:        bool = False    # an entry stood and was removed
+    registered_f:  bool = False    # an id stood and was retired
+    labels_ok_f:   bool = True
+
+
+def proposal_of(store, test, choice, whole_test_f):
+    """RETURN: Proposal, what forgetting the target would lose -- the
+               artefacts named as the page names them."""
+    return Proposal(test, choice,
+                    tuple(_shown(store, path) for path in
+                          victim_tuple(store, test, choice, whole_test_f)))
+
+
+def forgotten(store, test, choice, whole_test_f):
+    """
+    RETURN: Forgotten, what became of the target -- artefacts first,
+            then the book and the register in one act (B-9), then the
+            boundary records (E-12). IT NEVER PRINTS (E-107): the page
+            is made from the record, so a caller that is not a command
+            line can forget and be told what was forgotten.
+    """
+    gone_list, fault_list = [], []
+    for path in victim_tuple(store, test, choice, whole_test_f):
+        try:
+            os.unlink(path)
+            gone_list.append(_shown(store, path))
+        except OSError as error:
+            fault_list.append((_shown(store, path), str(error)))
+    registered_f = store.bookkeeper.run_id_of(
+                       test, None if whole_test_f else choice) is not None
+    if whole_test_f: gone = store.bookkeeper.remove_test(test)
+    else:            gone = store.bookkeeper.remove_choice(test, choice)
+    note_list = []
+    labels_ok_f = labels_forgotten(str(store.directory), test, choice,
+                                   whole_test_f, note_list.append)
+    return Forgotten(test, choice, tuple(gone_list), tuple(fault_list),
+                     book_f=gone is not None, registered_f=registered_f,
+                     labels_ok_f=labels_ok_f), tuple(note_list)
+
+
 def forget(store, test, choice, whole_test_f, write):
     """
     RETURN: bool, True where everything named was forgotten; False
             where a path stood and could not be unlinked -- announced
             by name, and the rest still attempted.
 
-    THE ORDER IS THE DOCSTRING'S: artefacts first, then the book, then
-    the register. A crash between steps leaves LESS history than
-    before, never a book pointing at files that are gone.
+    THE PAGE, MADE FROM 'forgotten' (E-107): the sentences unchanged.
     """
-    good_f = True
-    for path in victim_tuple(store, test, choice, whole_test_f):
-        try:
-            os.unlink(path)
-            write("    forgotten: %s" % _shown(store, path))
-        except OSError as error:
-            write("    FAULT: %s -- %s" % (_shown(store, path), error))
-            good_f = False
-
-    #  THE BOOK AND THE REGISTER IN ONE ACT (B-9): the bookkeeper
-    #  forgets the entry and retires the id under one lock; the face
-    #  reads first, so it can say what stood.
-    registered_f = store.bookkeeper.run_id_of(
-                       test, None if whole_test_f else choice) is not None
-    if whole_test_f: gone = store.bookkeeper.remove_test(test)
-    else:            gone = store.bookkeeper.remove_choice(test, choice)
-    write("    book entry: %s" % ("removed" if gone is not None
+    record, note_tuple = forgotten(store, test, choice, whole_test_f)
+    for shown in record.gone_tuple:
+        write("    forgotten: %s" % shown)
+    for shown, error in record.fault_tuple:
+        write("    FAULT: %s -- %s" % (shown, error))
+    write("    book entry: %s" % ("removed" if record.book_f
                                   else "none stood"))
     write("    register: %s" % (("id retired" if whole_test_f
                                  else "choice id retired")
-                                if registered_f else "not registered"))
-
-    #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'),
-    #  symmetric with the book and the register (E-12): a crash above
-    #  leaves an entry 'hwut.sanitize --orphans' can find -- never a
-    #  record silently pointing at nothing.
-    if not labels_forgotten(str(store.directory), test, choice,
-                            whole_test_f, write):
-        good_f = False
-    return good_f
+                                if record.registered_f else "not registered"))
+    for line in note_tuple: write(line)
+    return not record.fault_tuple and record.labels_ok_f
 
 
 def main(argv=None, write=None, read_line=None):
@@ -255,13 +293,13 @@ def main(argv=None, write=None, read_line=None):
     write("TO BE FORGOTTEN, in '%s':" % directory)
     total_n = 0
     for test, choice in target_list:
-        path_tuple = victim_tuple(store, test, choice, not choice_form_f)
-        total_n   += len(path_tuple)
+        proposal = proposal_of(store, test, choice, not choice_form_f)
+        total_n += len(proposal.path_tuple)
         write("  %s%s -- %d file(s), the book entry, the register id"
               % (test, "" if choice is None else " " + choice,
-                 len(path_tuple)))
-        for path in path_tuple:
-            write("      %s" % _shown(store, path))
+                 len(proposal.path_tuple)))
+        for shown in proposal.path_tuple:
+            write("      %s" % shown)
     if total_n == 0:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")

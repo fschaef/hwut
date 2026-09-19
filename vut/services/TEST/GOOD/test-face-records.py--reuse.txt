@@ -1,0 +1,21 @@
+
+--- hwut.wishlist, called as a library ---
+    ./test-a.sh one
+    ./test-a.sh two
+    ./test-b.sh
+    warnings: none
+
+--- the same, narrowed by the wish -- no argv anywhere ---
+    ./test-a.sh one
+
+--- hwut.plan, called as a library -- nothing is accepted yet, so ---
+   the plan is empty; what matters is that it is a RECORD
+    wish        : (all)
+    nodes       : []
+    kinds       : []
+    links       : []
+    exclusions  : []
+    fault_f     : False
+
+--- nothing was printed by 'do': the page above is this test's ---
+<hwut-end>

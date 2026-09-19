@@ -13,10 +13,10 @@
 # THE 'hwut.report' FACE -- what the result databases hold, rendered
 # for somebody else.
 #
-# NOTE: no 'hwut-info.dat' stands in these fixtures, so the directory
-# TITLE is absent and the page omits it -- which is itself pinned. A
-# directory that HAS one triggers the '--hwut-info' interview, and that
-# path wants 'procsitter/chain.py', which this tree does not hold.
+# NOTE: these fixtures state no 'title' in their 'hwut.conf', so the
+# directory TITLE is absent and the page omits it -- itself pinned.
+# The 'color' choice states one (X-INFO-DAT: the title is a conf
+# key; 'hwut-info.dat' is a relic and unread).
 #
 # traditional  the HWUT page at a stated width: the per-directory
 #              blocks, the summary with its prefix-elided directory
@@ -186,7 +186,10 @@ color)
     #  'ESC' here: a raw escape byte in a nominal is unreadable in a
     #  diff and a hazard to whatever prints it.
     mixed
-    printf 'A fixture title\n' > tree/suite/TEST/hwut-info.dat
+    #  X-INFO-DAT: the title is a key of 'hwut.conf'; the relic is no
+    #  longer read, and the fixture states it where the page looks.
+    printf 'hwut {\n    title = "A fixture title"\n}\n' \
+        > tree/suite/TEST/hwut.conf
     $FACE --directory=tree --width=70 --color \
         | sed -e 's/\x1b/ESC/g' | mask | sed 's/^/    /'
     echo "--- and the same page, piped, is plain"

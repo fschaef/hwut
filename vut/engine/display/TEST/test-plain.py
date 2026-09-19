@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "Tier 1, the plain console report, over scripted streams"
-#     choices    = ["allgreen", "empty", "fault", "mixed", "tiers",
-#                   "unknown", "words"]
+#     choices    = ["allgreen", "badge", "empty", "fault", "mixed",
+#                   "tiers", "unknown", "words"]
 #     interactive = true
 # }
 #
@@ -329,6 +329,43 @@ def test_tiers():
     show(list(stream), tier=E_Tier.SILENT)
 
 
+def test_badge():
+    """RETURN: None. E-97 corrected: the parallelism rides on EVERY flow
+               line, after the verdict column, as '||n' -- so it FALLS
+               as runs end. MEASURED before: drawn on the START line
+               only, it showed '|8|' for the rest of the run and never
+               came down."""
+    from vut.engine.display.plain import CPlainFlow
+    from vut.engine.display.word import CInk
+    out = []
+    f = CPlainFlow(write=out.append, width=WIDTH, ink=CInk(False), start_delay=0)
+    f.on_tree_begun(when(0), ["suite/TEST"])
+    for i, name in enumerate("abc"):
+        f.on_run_begun(when(1 + i), "suite/TEST", "test-%s.sh" % name, "RUN")
+    f.on_run_begun(when(4), "suite/TEST", "test-d.sh", "RUN")
+    for name, good_f in (("b", True), ("a", False), ("c", True), ("d", True)):
+        f.on_run_ended(when(6), "suite/TEST", "test-%s.sh" % name, "RUN",
+                       good_f, "ok" if good_f else "fail")
+    f.on_run_begun(when(10), "suite/TEST", "test-e.sh", "RUN")
+    f.on_run_ended(when(11), "suite/TEST", "test-e.sh", "RUN", True, "ok")
+    for line in out: print(line)
+
+    #  THE COUNT BELONGS TO THE EVENT, NOT TO THE PRINTING. A START is
+    #  HELD until its run proves slow; read at print time, six STARTs
+    #  released together all said '||8' (MEASURED on a real tree).
+    banner("held STARTs, released together: each says what IT saw")
+    out = []
+    f = CPlainFlow(write=out.append, width=WIDTH, ink=CInk(False),
+                   start_delay=2.0)
+    f.on_tree_begun(when(0), ["suite/TEST"])
+    for i, name in enumerate("abcde"):
+        f.on_run_begun(when(1 + i), "suite/TEST", "test-%s.sh" % name, "RUN")
+    f.on_tick(when(8))
+    f.on_run_ended(when(9),  "suite/TEST", "test-a.sh", "RUN", True, "ok")
+    f.on_run_ended(when(10), "suite/TEST", "test-b.sh", "RUN", True, "ok")
+    for line in out: print(line)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Tier 1, the plain console report, over scripted "
@@ -340,4 +377,5 @@ if __name__ == "__main__":
         "empty":    test_empty,
         "unknown":  test_unknown,
         "tiers":    test_tiers,
+        "badge":    test_badge,
     }).run()

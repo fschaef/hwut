@@ -39,6 +39,17 @@ INTERVIEW_CAPS = Caps(timeout_sec         = 10.0,
                       child_process_max_n = 1)
 
 
+#  THE MEMO (X-INTERVIEW): an interview is a program run, MEASURED at
+#  half a second each for helpers that answer nothing -- eight seconds
+#  of silence before the first line of every 'hwut.run'. Its answer is
+#  remembered beside the tests, keyed by the file's mtime and size; the
+#  file is asked again only once it changed. DELETABLE, so it lands
+#  under 'TMP/' with every other transient (ruled: 'any deletable lands
+#  in TMP'); the traces stay beside the tests because they TRAVEL.
+MEMO_FILE_NAME = "hwut-interview.dat"
+MEMO_DIRECTORY = "TMP"
+
+
 def interview(directory, name, runner=None):
     """
     RETURN: TestAppSpec, the configuration the test application states
@@ -48,12 +59,71 @@ def interview(directory, name, runner=None):
 
     'runner' calls the application and returns its answer; the default
     runs it under procsitter. It is a parameter so that the reading of a
-    block can be exercised without a process.
+    block can be exercised without a process. The default runner's
+    answer is MEMOISED per file (mtime, size); a custom runner is asked
+    every time.
     """
-    if runner is None: runner = _procsitter_runner
-    text = runner(os.path.join(directory, name), INTERVIEW_CAPS)
+    path = os.path.join(directory, name)
+    if runner is None:
+        stamp = _stamp(path)
+        memo  = _memo_read(directory)
+        if name in memo and memo[name][0] == stamp:
+            text = memo[name][1]
+        else:
+            text = _procsitter_runner(path, INTERVIEW_CAPS)
+            memo[name] = (stamp, text)
+            _memo_write(directory, memo)
+    else:
+        text = runner(path, INTERVIEW_CAPS)
     if text is None: return None
     return specification_of(text, name)
+
+
+def memo_path(directory):
+    """RETURN: str, where the memo of 'directory' stands: 'TMP/hwut-
+               interview.dat' below it."""
+    return os.path.join(directory, MEMO_DIRECTORY, MEMO_FILE_NAME)
+
+
+def _stamp(path):
+    """RETURN: str, 'mtime:size' of the file; '' where it is gone."""
+    try:    st = os.stat(path)
+    except OSError: return ""
+    return "%d:%d" % (int(st.st_mtime), st.st_size)
+
+
+def _memo_read(directory):
+    """RETURN: dict, name -> (stamp, answer text or None), from the
+               memo file; empty where none stands or it cannot be read."""
+    path = memo_path(directory)
+    result = {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("#") or not line.strip(): continue
+                name, stamp, answer = line.rstrip("\n").split("\t", 2)
+                result[name] = (stamp, None if answer == "-"
+                                       else answer.replace("\\n", "\n"))
+    except (OSError, ValueError):
+        return {}
+    return result
+
+
+def _memo_write(directory, memo):
+    """RETURN: None. The memo written whole; a failure to write is no
+               fault -- the next walk asks again."""
+    path = memo_path(directory)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("#  hwut-interview.dat -- '--hwut-info' answers, by file\n")
+            fh.write("#  mtime:size; '-' = not a test application. Deletable.\n")
+            for name in sorted(memo):
+                stamp, answer = memo[name]
+                fh.write("%s\t%s\t%s\n" % (name, stamp, "-" if answer is None
+                                              else answer.replace("\n", "\\n")))
+    except OSError:
+        pass
 
 
 def specification_of(text, name):

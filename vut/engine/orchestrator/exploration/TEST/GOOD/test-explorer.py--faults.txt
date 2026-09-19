@@ -4,4 +4,10 @@ directory keys: on_entry None ignore ()
 app 'test-good.py'  title 'good'  origin HEADER
     choice -     (nothing stated)
 FAULT test-bad.py:3:7: VOCABULARY: unknown key 'numerc'
+
+--- an empty 'choices' beside a healthy application ---
+directory keys: on_entry None ignore ()
+app 'test-good.py'  title 'good'  origin HEADER
+    choice -     (nothing stated)
+FAULT test-empty.py:3:7: VOCABULARY: 'choices' is empty: state the choices, or leave 'choices' out and the application has one run
 <hwut-end>

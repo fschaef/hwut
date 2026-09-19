@@ -183,6 +183,20 @@ def test_faults():
     try:     show(explore(directory))
     finally: shutil.rmtree(directory, ignore_errors=True)
 
+    #  X-EMPTY-CHOICES: an EMPTY 'choices' states nothing runnable.
+    #  MEASURED before this refusal: such an application reached the run
+    #  with neither a root nor a choice, and the adapter took '[0]' of
+    #  nothing -- 'ERROR IndexError: list index out of range' where a
+    #  refusal belongs.
+    banner("an empty 'choices' beside a healthy application")
+    directory = build_directory({
+        "test-empty.py": '# @hwut {\n#     title = "empty"\n'
+                         '#     choices = []\n# }\n',
+        "test-good.py":  '# @hwut { title = "good" }\n',
+    })
+    try:     show(explore(directory))
+    finally: shutil.rmtree(directory, ignore_errors=True)
+
 
 def test_defaults():
     """RETURN: None. Effective values; the record keeps its Nones."""

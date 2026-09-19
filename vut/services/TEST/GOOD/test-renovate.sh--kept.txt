@@ -1,0 +1,9 @@
+suite/TEST
+    kept: 'title' already stands in hwut.conf; the relic's is ignored
+    kept: 'ignore' already stands in hwut.conf; the relic's '--not' lines are ignored
+    unknown in hwut-info.dat, left to you: 'coverage run --omit x'
+    test-a.sh: numeric = 0.01, whitespace_eqv = yes -> tolerance { numeric_ratio = 0.01, whitespace = yes }
+
+1 change(s) reported, none written: '--apply' writes them.
+STATUS: 0
+<hwut-end>

@@ -1599,3 +1599,74 @@ DECISION  The marker is a DECLARATION and stands at the top: within the
 COST      'test-detector_unwrapper.py head' pins it, on the reported
           file's shape; it fails on the tree before this entry. No other
           page moved. The choice carries the standing label 'regression'.
+
+X-INTERVIEW  THE INTERVIEW IS ASKED OF A PROGRAM, ONCE               (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   Reported: 'hwut.run' starts slowly. MEASURED: eleven seconds
+          before the first line, and not the walk (0.3s) -- the '--hwut-
+          info' INTERVIEW (R-44). Every headerless file in every TEST
+          directory was RUN to ask whether it is an hwut 1.0 application:
+          107 per walk of this tree, none answered; 'hwut-info.dat' and
+          'hwut-traces.csv' twice per directory; helpers like
+          'benchmark.py' that, asked '--hwut-info', START A BENCHMARK.
+
+DECISION  Three rules. The framework's own files -- the book, the
+          traces, the labels, the memo below -- are never candidates.
+          Only an EXECUTABLE file is interviewed: a helper, a log, a
+          table cannot answer. And the answer is MEMOISED beside the
+          tests in 'TMP/hwut-interview.dat', keyed by the file's mtime
+          and size: the second walk asks nothing, a changed file is
+          asked again. DELETABLE, so under 'TMP/' with every transient
+          (ruled); the traces stay beside the tests because they travel. R-44's migration
+          path stands; it costs one walk.
+
+COST      First line at 0.32s on the second walk, MEASURED, from 11.2s.
+          'test-interview.py memo' pins the three rules; no other page
+          moved. 'TMP/hwut-interview.dat' appears in every TEST
+          directory after one walk.
+
+X-INFO-DAT  'hwut-info.dat' IS A RELIC AND IS NOT READ               (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   'hwut-info.dat' is hwut 1.0's (or older). One thing in VUT
+          still read it: 'hwut.report' took the directory's TITLE from
+          its first line. Two spellings for one thing, and the older
+          one a file nothing else understands.
+
+DECISION  THE DIRECTORY'S TITLE IS 'title' IN ITS 'hwut.conf', a key
+          like any other, validated like any other. 'hwut-info.dat' is
+          no longer read anywhere; it stays a candidate-refusing own
+          file so that no walk mistakes it for an application.
+
+          'hwut.renovate' (todo-1) MUST TRANSLATE IT: the first line
+          becomes 'title' in 'hwut.conf'; whatever else the file says
+          (hwut 1.0's coverage directives among it) is the author's to
+          carry over or drop. Until renovated, a directory holding only
+          the relic states no title -- nothing is lost that was not
+          already only a heading.
+
+COST      This tree renovated by hand: 27 directories had a title in
+          their relic; each now states it in 'hwut.conf'. MEASURED: no
+          recorded page moved by that -- only 'test-report.sh color',
+          whose fixture wrote a relic to get a heading and now writes
+          the key. 'test-interview.py relic' pins that the relic is
+          unread and the key is read.
+
+X-EMPTY-CHOICES  AN EMPTY 'choices' IS REFUSED AT THE DOOR          (2026-09-18)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED (found while cutting the faces, noted in services
+          E-100): an application whose header states 'choices = []'
+          reached the run with neither a root choice nor any other, and
+          'run/adapter._root_of' took '[0]' of an empty list. The page
+          said 'ERROR IndexError: list index out of range' -- a Python
+          accident where a refusal belongs, and the tree went on to
+          call the directory failed without saying why.
+
+DECISION  The header is refused where 'choices' is an empty list, by
+          name and at its position: "'choices' is empty: state the
+          choices, or leave 'choices' out and the application has one
+          run". An application states its choices, or states none --
+          and stating none is 'choiceless', which is data (the single
+          'None' entry), not an empty list.
+
+COST      'test-explorer.py faults' gained the case, beside the healthy
+          application that still explores. No other page moved.
