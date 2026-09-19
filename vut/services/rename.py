@@ -77,8 +77,9 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and names nothing
 ______________________________________________________________________________
 """
-import os
+from pathlib import Path
 import sys
+from typing import Callable, Optional, Union
 
 from   vut.engine.bookkeeper.api import Bookkeeper, Store
 from   vut.engine.bookkeeper.api import TestIdFault
@@ -87,10 +88,10 @@ from   vut.engine.coverage.api   import (pack_record, unpack_record,
                                          seated, RecordFault)
 from   vut.engine.orchestrator.exploration.reader import (read_header,
                                                           read_conf)
-from   ._follow                 import labels_renamed
-from   ._target                 import split_words, TargetError
-from   ._exit                   import E_ExitCode
-from   vut.services.lib.cmdline import face_parser, parse_or_refuse
+from   ._follow                  import labels_renamed
+from   ._target                  import split_words, TargetError
+from   ._exit                    import E_ExitCode
+from   vut.services.lib.cmdline  import face_parser, parse_or_refuse
 
 KEYWORD = "-to"
 
@@ -117,7 +118,7 @@ USAGE = ("usage: hwut.rename <app> -to <app'>              [--dont-ask] "
          "[--directory=<path>]\n"
          "       hwut.rename <app> -to <path>/<app'>       [--dont-ask] "
          "[--directory=<path>]\n"
-         "       hwut.move   <app> <app'>          == hwut.rename "
+         "       hwut.move   <app> <app'>                  == hwut.rename "
          "<app> -to <app'>")
 
 #  The licence line and the rule are the FILE's, not the face's.
@@ -125,19 +126,18 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n\n" + USAGE
 
 
-def _shown(store, path):
+def _shown(store: Store, path: Union[str, Path]) -> str:
     """RETURN: str, the path as it reads from the SOURCE test directory
     -- 'GOOD/x.stdout' and 'TMP/store/x.stdout' are DIFFERENT files and
     a basename alone would print them alike; a target in another
     directory reads with that directory in front."""
-    try:               return os.path.relpath(path, str(store.directory))
-    except ValueError: return path
+    try:               return str(Path(path).relative_to(store.directory))
+    except ValueError: return str(path)
 
 
-def _same_place(a, b):
+def _same_place(a: Union[str, Path], b: Union[str, Path]) -> bool:
     """RETURN: bool, True where the two paths name one directory."""
-    return os.path.normcase(os.path.abspath(a)) \
-           == os.path.normcase(os.path.abspath(b))
+    return Path(a).resolve() == Path(b).resolve()
 
 
 class Rename:
@@ -150,310 +150,300 @@ class Rename:
         source, target     the two Stores; the SAME object within one
                            directory
         whole_test_f       True for the app form
+        write              callable for logging progress and faults
     """
     __slots__ = ("test", "choice", "fresh_test", "fresh_choice",
-                 "source", "target", "whole_test_f")
+                 "source", "target", "whole_test_f", "write")
 
-    def __init__(self, test, choice, fresh_test, fresh_choice,
-                 source, target, whole_test_f):
-        self.test         = test;         self.choice       = choice
-        self.fresh_test   = fresh_test;   self.fresh_choice = fresh_choice
-        self.source       = source;       self.target       = target
+    def __init__(self, test: str, choice: Optional[str], fresh_test: str,
+                 fresh_choice: Optional[str], source: Store, target: Store,
+                 whole_test_f: bool, write: Callable[[str], None]):
+        self.test = test
+        self.choice = choice
+        self.fresh_test = fresh_test
+        self.fresh_choice = fresh_choice
+        self.source = source
+        self.target = target
         self.whole_test_f = whole_test_f
+        self.write = write
 
     @property
-    def across_f(self):
+    def across_f(self) -> bool:
         """RETURN: bool, True where source and target are two
         directories."""
         return self.source is not self.target
 
-    def text(self):
+    def text(self) -> str:
         """RETURN: str, 'app [choice] -> [dir/]app' [choice]', as
         announced."""
         head = self.test if self.choice is None \
-               else "%s %s" % (self.test, self.choice)
+               else f"{self.test} {self.choice}"
         if self.whole_test_f:
             tail = self.fresh_test if not self.across_f \
-                   else os.path.join(str(self.target.directory),
-                                     self.fresh_test)
+                   else str(Path(self.target.directory) / self.fresh_test)
         else:
-            tail = "%s %s" % (self.test, self.fresh_choice)
-        return "%s -> %s" % (head, tail)
+            tail = f"{self.test} {self.fresh_choice}"
+        return f"{head} -> {tail}"
 
+    def move_tuple(self) -> tuple[tuple[str, str], ...]:
+        """
+        RETURN: tuple[(str, str)], (from, to) for every recorded artefact
+                of that key that STANDS -- nominals, candidates, sidecars,
+                the error witness and the coverage record; 'to' on the
+                TARGET store's ground. Sorted by source, so the
+                announcement is stable.
 
-def move_tuple(rename):
-    """
-    RETURN: tuple[(str, str)], (from, to) for every recorded artefact
-            of that key that STANDS -- nominals, candidates, sidecars,
-            the error witness and the coverage record; 'to' on the
-            TARGET store's ground. Sorted by source, so the
-            announcement is stable.
+        The app form follows EVERY choice the book knows of the test.
 
-    The app form follows EVERY choice the book knows of the test.
+        The subjects are read from what LIES THERE, not from what a
+        configuration says: a rename must reach a subject whose
+        declaration has since been edited away, or it leaves an orphan
+        under the old name.
+        """
+        source, target = self.source, self.target
+        found = []
+        for old_choice, new_choice in self._choice_pair_list():
+            #  THE ERROR WITNESS FOLLOWS THE NAME like the rest of the
+            #  run's product; it is asked for by name, not as a subject.
+            a = str(source.error_witness_path(self.test, old_choice))
+            b = str(target.error_witness_path(self.fresh_test, new_choice))
+            if Path(a).exists(): found.append((a, b))
+            for subject in ("stdout",):
+                for verb in ("candidate_path", "freshness_path", "raw_path",
+                             "timing_path", "nominal_path"):
+                    a = str(getattr(source, verb)(self.test, old_choice,
+                                                  subject))
+                    b = str(getattr(target, verb)(self.fresh_test,
+                                                  new_choice, subject))
+                    if Path(a).exists(): found.append((a, b))
+            a = str(source.bookkeeper.coverage_path(self.test, old_choice))
+            if Path(a).exists():
+                found.append((a, str(target.bookkeeper.coverage_path(
+                                         self.fresh_test, new_choice))))
+        return tuple(sorted(set(found)))
 
-    The subjects are read from what LIES THERE, not from what a
-    configuration says: a rename must reach a subject whose
-    declaration has since been edited away, or it leaves an orphan
-    under the old name.
-    """
-    source, target = rename.source, rename.target
-    found = []
-    for old_choice, new_choice in _choice_pair_list(rename):
-        #  THE ERROR WITNESS FOLLOWS THE NAME like the rest of the
-        #  run's product; it is asked for by name, not as a subject.
-        a = str(source.error_witness_path(rename.test, old_choice))
-        b = str(target.error_witness_path(rename.fresh_test, new_choice))
-        if os.path.exists(a): found.append((a, b))
-        for subject in ("stdout",):
-            for verb in ("candidate_path", "freshness_path", "raw_path",
-                         "timing_path", "nominal_path"):
-                a = str(getattr(source, verb)(rename.test, old_choice,
-                                              subject))
-                b = str(getattr(target, verb)(rename.fresh_test,
-                                              new_choice, subject))
-                if os.path.exists(a): found.append((a, b))
-        a = str(source.bookkeeper.coverage_path(rename.test, old_choice))
-        if os.path.exists(a):
-            found.append((a, str(target.bookkeeper.coverage_path(
-                                     rename.fresh_test, new_choice))))
-    return tuple(sorted(set(found)))
+    def _choice_pair_list(self) -> list[tuple[str, str]]:
+        """RETURN: list[(choice, fresh choice)], every choice the rename
+        touches: all of the test's for the app form (its choiceless key
+        where the book knows none), the one for the choice form."""
+        if self.whole_test_f:
+            pair_list = [(c, c) for c in
+                         self.source.bookkeeper.choices(self.test)]
+            return pair_list or [(self.choice, self.choice)]
+        return [(self.choice, self.fresh_choice)]
 
+    def follow(self) -> bool:
+        """
+        RETURN: bool, True where every step succeeded; False where one
+                failed -- announced by name, and the rest still attempted.
 
-def _choice_pair_list(rename):
-    """RETURN: list[(choice, fresh choice)], every choice the rename
-    touches: all of the test's for the app form (its choiceless key
-    where the book knows none), the one for the choice form."""
-    if rename.whole_test_f:
-        pair_list = [(c, c) for c in
-                     rename.source.bookkeeper.choices(rename.test)]
-        return pair_list or [(rename.choice, rename.choice)]
-    return [(rename.choice, rename.fresh_choice)]
-
-
-def follow(rename, write):
-    """
-    RETURN: bool, True where every step succeeded; False where one
-            failed -- announced by name, and the rest still attempted.
-
-    THE ORDER: artefacts first, then the book, then the register, then
-    the coverage records' seats, then the labels. A crash between
-    steps leaves files under the new name and a book that still says
-    the old one, which the next run reports as a missing GOOD -- loud,
-    and mendable by re-running the rename.
-    """
-    #  THE CHOICES ARE READ BEFORE THE BOOK GIVES THE ENTRY UP: after
-    #  that step the source book knows none of them.
-    choice_list = [c for _, c in _choice_pair_list(rename)]
-    good_f = _files_followed(rename, write)
-    if not _book_followed(rename, write): return False
-    run_db = _register_followed(rename, choice_list, write)
-    if run_db is None: good_f = False
-    elif rename.across_f and not _records_reseated(rename, run_db,
-                                                   write):
-        good_f = False
-    #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'): a
-    #  crash above leaves an entry naming the old name -- loud, and
-    #  findable -- never a record silently pointing at nothing.
-    if not labels_renamed(str(rename.source.directory), rename.test,
-                          rename.choice, rename.fresh_test,
-                          rename.fresh_choice, rename.whole_test_f,
-                          write,
-                          target_directory=str(rename.target.directory)):
-        good_f = False
-    return good_f
-
-
-def _files_followed(rename, write):
-    """RETURN: bool, True where every artefact moved."""
-    good_f = True
-    for source, target in move_tuple(rename):
-        try:
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            os.rename(source, target)
-            write("    %s -> %s" % (_shown(rename.source, source),
-                                    _shown(rename.source, target)))
-        except OSError as error:
-            write("    FAULT: %s -- %s" % (_shown(rename.source, source),
-                                           error))
+        THE ORDER: artefacts first, then the book, then the register, then
+        the coverage records' seats, then the labels. A crash between
+        steps leaves files under the new name and a book that still says
+        the old one, which the next run reports as a missing GOOD -- loud,
+        and mendable by re-running the rename.
+        """
+        write = self.write
+        #  THE CHOICES ARE READ BEFORE THE BOOK GIVES THE ENTRY UP: after
+        #  that step the source book knows none of them.
+        choice_list = [c for _, c in self._choice_pair_list()]
+        good_f = self._files_followed()
+        if not self._book_followed(): return False
+        run_db = self._register_followed(choice_list)
+        if run_db is None: good_f = False
+        elif self.across_f and not self._records_reseated(run_db):
             good_f = False
-    return good_f
-
-
-def _book_followed(rename, write):
-    """RETURN: bool, True where the book entry re-keyed, moved, or
-    never stood; False on a fault, announced."""
-    book = rename.source.bookkeeper
-    try:
-        if not rename.whole_test_f:
-            moved = book.rename_choice(rename.test, 
-                                       rename.choice,
-                                       rename.fresh_choice)
-        elif not rename.across_f:
-            moved = book.rename_test(rename.test, rename.fresh_test)
-        else:
-            entry = book.remove_test(rename.test)
-            moved = None
-            if entry is not None:
-                try:
-                    moved = rename.target.bookkeeper.adopt(rename.fresh_test, 
-                                                           entry)
-                except KeyError:
-                    #  THE SOURCE TAKES ITS OWN ENTRY BACK: half a
-                    #  move of a history is worse than none.
-                    book.adopt(rename.test, entry)
-                    raise
-        write("    book entry: %s"
-              % ("none stood" if moved is None
-                 else "adopted by '%s'" % rename.target.directory
-                 if rename.across_f else "re-keyed"))
-        return True
-    except KeyError as error:
-        write("    FAULT: book -- %s" % error)
-        return False
-
-
-def _register_followed(rename, choice_list, write):
-    """
-    RETURN: dict, choice name -> TestRunId the moved run bears NOW --
-            the standing id within a directory, the fresh id across
-            one; empty where the test was never registered.
-            None, on a register fault, announced.
-
-    THE REGISTER MOVED IN THE BOOK'S OWN ACT (B-9): 'rename_test' and
-    'rename_choice' re-keyed it, 'remove_test' retired the source's
-    id, 'adopt' issued the target's. This step READS and SAYS.
-    'choice_list' names the choices whose fresh ids the re-seat needs,
-    read from the source book before it gave the entry up.
-    """
-    try:
-        target = rename.target.bookkeeper
-        if not rename.whole_test_f:
-            run_id = target.run_id_of(rename.test, rename.fresh_choice)
-            if run_id is None:
-                write("    register: not registered"); return {}
-            write("    register: choice name follows; the id stands")
-            return {rename.fresh_choice: run_id}
-        if not rename.across_f:
-            run_id = target.run_id_of(rename.fresh_test)
-            if run_id is None:
-                write("    register: not registered"); return {}
-            write("    register: name follows; the id stands")
-            return {}
-        run_db = {}
-        for choice in choice_list:
-            run_id = target.run_id_of(rename.fresh_test, choice)
-            if run_id is not None: run_db[choice] = run_id
-        if not run_db:
-            write("    register: not registered"); return {}
-        write("    register: retired here; issued %s there"
-              % ", ".join(str(r) for r in sorted(run_db.values())))
-        return run_db
-    except TestIdFault as error:
-        write("    FAULT: register -- %s" % error)
-        return None
-
-
-def _records_reseated(rename, run_db, write):
-    """RETURN: bool, True where every coverage record that travelled
-    now names its fresh run id; False on a fault, announced."""
-    good_f = True
-    for choice, run_id in run_db.items():
-        path = str(rename.target.bookkeeper.coverage_path(
-                       rename.fresh_test, choice))
-        if not os.path.exists(path): continue
-        try:
-            with open(path, "rb") as fh: record = unpack_record(fh.read())
-            data = pack_record(seated(record, run_id))
-            with open(path, "wb") as fh: fh.write(data)
-            write("    coverage record: re-seated under %s" % run_id)
-        except (OSError, RecordFault) as error:
-            write("    FAULT: coverage record %s -- %s"
-                  % (_shown(rename.source, path), error))
+        #  THE BOUNDARY RECORDS FOLLOW LAST ('services/_follow.py'): a
+        #  crash above leaves an entry naming the old name -- loud, and
+        #  findable -- never a record silently pointing at nothing.
+        if not labels_renamed(str(self.source.directory), self.test,
+                              self.choice, self.fresh_test,
+                              self.fresh_choice, self.whole_test_f,
+                              write,
+                              target_directory=str(self.target.directory)):
             good_f = False
-    return good_f
+        return good_f
 
-
-def situation_notes(rename):
-    """
-    RETURN: [0] list[str], telegraphic NOTE lines: the application's
-                whereabouts, the '@hwut' block's choices, any
-                'hwut.conf' apps section -- each only where it
-                DISAGREES with the rename, or where nothing could be
-                read. Empty where everything agrees.
-            [1] str, a refusal where the application stands under BOTH
-                names; None otherwise.
-
-    READ AND SAY, NEVER EDIT (E-48): the source and the declarations
-    are the author's; the face names what he has to touch.
-    """
-    note_list = []
-    src_dir, dst_dir = str(rename.source.directory), str(rename.target.directory)
-    old_path = os.path.join(src_dir, rename.test)
-    new_path = os.path.join(dst_dir, rename.fresh_test)
-    old_f, new_f = os.path.isfile(old_path), os.path.isfile(new_path)
-    if rename.whole_test_f:
-        if old_f and new_f:
-            return note_list, ("application stands under BOTH names: '%s' "
-                               "and '%s' -- decide which is the test first"
-                               % (_shown(rename.source, old_path),
-                                  _shown(rename.source, new_path)))
-        if old_f:
-            note_list.append("NOTE  application '%s' stands under the OLD "
-                             "name -- git mv %s %s (E-16)"
-                             % (rename.test, _shown(rename.source, old_path),
-                                _shown(rename.source, new_path)))
-        elif not new_f:
-            note_list.append("NOTE  application stands under NEITHER name "
-                             "-- nothing to run under '%s'" % rename.fresh_test)
-    else:
-        #  A CHOICE RENAME: the file is the same; its '@hwut' block
-        #  names the choices.
-        path = old_path if old_f else None
-        if path is None:
-            note_list.append("NOTE  application '%s' not found -- the "
-                             "'@hwut' block cannot be read" % rename.test)
-        else:
+    def _files_followed(self) -> bool:
+        """RETURN: bool, True where every artefact moved."""
+        good_f = True
+        write = self.write
+        for source_path, target_path in self.move_tuple():
             try:
-                spec, _ = read_header(open(path, encoding="utf-8").read(),
-                                      path)
-            except (OSError, UnicodeDecodeError):
-                spec = None
-            if spec is None:
-                note_list.append("NOTE  no '@hwut' block read in '%s'"
-                                 % rename.test)
-            elif rename.fresh_choice not in spec.choice_db:
-                note_list.append("NOTE  '@hwut' declares %s -- edit the "
-                                 "block: '%s' -> '%s'"
-                                 % (", ".join("'%s'" % c for c in
-                                              spec.choice_db if c),
-                                    rename.choice, rename.fresh_choice))
-    #  hwut.conf 'apps' SECTIONS: the source's names the old name, the
-    #  target's may name the new one already.
-    for where, name, verb in ((src_dir, rename.test, "rename it"),):
-        conf = os.path.join(where, "hwut.conf")
-        if not os.path.isfile(conf): continue
+                Path(target_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(source_path).rename(target_path)
+                write(f"    {_shown(self.source, source_path)} -> {_shown(self.source, target_path)}")
+            except OSError as error:
+                write(f"    FAULT: {_shown(self.source, source_path)} -- {error}")
+                good_f = False
+        return good_f
+
+    def _book_followed(self) -> bool:
+        """RETURN: bool, True where the book entry re-keyed, moved, or
+        never stood; False on a fault, announced."""
+        book = self.source.bookkeeper
+        write = self.write
         try:
-            _, app_db, _ = read_conf(open(conf, encoding="utf-8").read(),
-                                     conf)
-        except (OSError, UnicodeDecodeError):
-            continue
-        entry = app_db.get(name)
-        if entry is None: continue
-        if rename.whole_test_f:
-            note_list.append("NOTE  hwut.conf apps section '%s' in %s -- "
-                             "%s%s" % (name, _shown(rename.source, conf),
-                                       verb, " / carry it" if rename.across_f
-                                       else ""))
-        elif rename.choice in entry.choice_db \
-             and rename.fresh_choice not in entry.choice_db:
-            note_list.append("NOTE  hwut.conf apps section '%s' in %s "
-                             "declares '%s' -- edit it"
-                             % (name, _shown(rename.source, conf),
-                                rename.choice))
-    return note_list, None
+            if not self.whole_test_f:
+                moved = book.rename_choice(self.test, self.choice,
+                                           self.fresh_choice)
+            elif not self.across_f:
+                moved = book.rename_test(self.test, self.fresh_test)
+            else:
+                entry = book.remove_test(self.test)
+                moved = None
+                if entry is not None:
+                    try:
+                        moved = self.target.bookkeeper.adopt(
+                                    self.fresh_test, entry)
+                    except KeyError:
+                        #  THE SOURCE TAKES ITS OWN ENTRY BACK: half a
+                        #  move of a history is worse than none.
+                        book.adopt(self.test, entry)
+                        raise
+            status_msg = (
+                "none stood" if moved is None
+                else f"adopted by '{self.target.directory}'" if self.across_f
+                else "re-keyed"
+            )
+            write(f"    book entry: {status_msg}")
+            return True
+        except KeyError as error:
+            write(f"    FAULT: book -- {error}")
+            return False
+
+    def _register_followed(self, choice_list: list[str]) -> Optional[dict[str, int]]:
+        """
+        RETURN: dict, choice name -> TestRunId the moved run bears NOW --
+                the standing id within a directory, the fresh id across
+                one; empty where the test was never registered.
+                None, on a register fault, announced.
+
+        THE REGISTER MOVED IN THE BOOK'S OWN ACT (B-9): 'rename_test' and
+        'rename_choice' re-keyed it, 'remove_test' retired the source's
+        id, 'adopt' issued the target's. This step READS and SAYS.
+        'choice_list' names the choices whose fresh ids the re-seat needs,
+        read from the source book before it gave the entry up.
+        """
+        write = self.write
+        try:
+            target = self.target.bookkeeper
+            if not self.whole_test_f:
+                run_id = target.run_id_of(self.test, self.fresh_choice)
+                if run_id is None:
+                    write("    register: not registered"); return {}
+                write("    register: choice name follows; the id stands")
+                return {self.fresh_choice: run_id}
+            if not self.across_f:
+                run_id = target.run_id_of(self.fresh_test)
+                if run_id is None:
+                    write("    register: not registered"); return {}
+                write("    register: name follows; the id stands")
+                return {}
+            run_db = {}
+            for choice in choice_list:
+                run_id = target.run_id_of(self.fresh_test, choice)
+                if run_id is not None: run_db[choice] = run_id
+            if not run_db:
+                write("    register: not registered"); return {}
+            ids_str = ", ".join(str(r) for r in sorted(run_db.values()))
+            write(f"    register: retired here; issued {ids_str} there")
+            return run_db
+        except TestIdFault as error:
+            write(f"    FAULT: register -- {error}")
+            return None
+
+    def _records_reseated(self, run_db: dict[str, int]) -> bool:
+        """RETURN: bool, True where every coverage record that travelled
+        now names its fresh run id; False on a fault, announced."""
+        good_f = True
+        write = self.write
+        for choice, run_id in run_db.items():
+            path = Path(self.target.bookkeeper.coverage_path(
+                            self.fresh_test, choice))
+            if not path.exists(): continue
+            try:
+                record = unpack_record(path.read_bytes())
+                data = pack_record(seated(record, run_id))
+                path.write_bytes(data)
+                write(f"    coverage record: re-seated under {run_id}")
+            except (OSError, RecordFault) as error:
+                write(f"    FAULT: coverage record {_shown(self.source, path)} -- {error}")
+                good_f = False
+        return good_f
+
+    def situation_notes(self) -> tuple[list[str], Optional[str]]:
+        """
+        RETURN: [0] list[str], telegraphic NOTE lines: the application's
+                    whereabouts, the '@hwut' block's choices, any
+                    'hwut.conf' apps section -- each only where it
+                    DISAGREES with the rename, or where nothing could be
+                    read. Empty where everything agrees.
+                [1] str, a refusal where the application stands under BOTH
+                    names; None otherwise.
+
+        READ AND SAY, NEVER EDIT (E-48): the source and the declarations
+        are the author's; the face names what he has to touch.
+        """
+        note_list = []
+        src_dir, dst_dir = Path(self.source.directory), Path(self.target.directory)
+        old_path = src_dir / self.test
+        new_path = dst_dir / self.fresh_test
+        old_f, new_f = old_path.is_file(), new_path.is_file()
+        if self.whole_test_f:
+            if old_f and new_f:
+                return note_list, (f"application stands under BOTH names: '{_shown(self.source, old_path)}' "
+                                   f"and '{_shown(self.source, new_path)}' -- decide which is the test first")
+            if old_f:
+                note_list.append(f"NOTE  application '{self.test}' stands under the OLD "
+                                 f"name -- git mv {_shown(self.source, old_path)} "
+                                 f"{_shown(self.source, new_path)} (E-16)")
+            elif not new_f:
+                note_list.append(f"NOTE  application stands under NEITHER name "
+                                 f"-- nothing to run under '{self.fresh_test}'")
+        else:
+            #  A CHOICE RENAME: the file is the same; its '@hwut' block
+            #  names the choices.
+            path = old_path if old_f else None
+            if path is None:
+                note_list.append(f"NOTE  application '{self.test}' not found -- the "
+                                  "'@hwut' block cannot be read")
+            else:
+                try:
+                    spec, _ = read_header(path.read_text(encoding="utf-8"),
+                                          str(path))
+                except (OSError, UnicodeDecodeError):
+                    spec = None
+                if spec is None:
+                    note_list.append(f"NOTE  no '@hwut' block read in '{self.test}'")
+                elif self.fresh_choice not in spec.choice_db:
+                    choices_str = ", ".join(f"'{c}'" for c in spec.choice_db if c)
+                    note_list.append(f"NOTE  '@hwut' declares {choices_str} -- edit the "
+                                     f"block: '{self.choice}' -> '{self.fresh_choice}'")
+        #  hwut.conf 'apps' SECTIONS: the source's names the old name, the
+        #  target's may name the new one already.
+        for where, name, verb in ((src_dir, self.test, "rename it"),):
+            conf = where / "hwut.conf"
+            if not conf.is_file(): continue
+            try:
+                _, app_db, _ = read_conf(conf.read_text(encoding="utf-8"),
+                                         str(conf))
+            except (OSError, UnicodeDecodeError):
+                continue
+            entry = app_db.get(name)
+            if entry is None: continue
+            if self.whole_test_f:
+                carry_msg = " / carry it" if self.across_f else ""
+                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {_shown(self.source, conf)} -- "
+                                 f"{verb}{carry_msg}")
+            elif self.choice in entry.choice_db \
+                 and self.fresh_choice not in entry.choice_db:
+                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {_shown(self.source, conf)} "
+                                 f"declares '{self.choice}' -- edit it")
+        return note_list, None
 
 
-def _read(argv, write):
+def _read(argv: list[str], write: Callable[[str], None]):
     """
     RETURN: [0] Rename  what the words ask for
                 None    they cannot be read -- refused aloud, with the
@@ -482,31 +472,31 @@ def _read(argv, write):
     directory = arguments.directory or "."
     yes_f     = arguments.dont_ask
     word_list = [KEYWORD if w == stand_in else w for w in arguments.word]
-    if not os.path.isdir(directory):
-        write("REFUSED: the directory '%s' does not exist" % directory)
+    if not Path(directory).is_dir():
+        write(f"REFUSED: the directory '{directory}' does not exist")
         write(USAGE)
         return None, yes_f
     if not word_list:
         write("EMPTY: 'hwut.rename' names nothing to rename")
         return (), yes_f
     if word_list.count(KEYWORD) != 1:
-        write("REFUSED: 'hwut.rename' takes '<words> %s <fresh>' -- "
-              "'%s' must stand once" % (KEYWORD, KEYWORD))
+        write(f"REFUSED: 'hwut.rename' takes '<words> {KEYWORD} <fresh>' -- "
+              f"'{KEYWORD}' must stand once")
         write(USAGE)
         return None, yes_f
     at     = word_list.index(KEYWORD)
     before = word_list[:at]
     after  = word_list[at + 1:]
     if len(before) not in (1, 2) or len(after) != 1:
-        write("REFUSED: 'hwut.rename' takes '<app> %s <app'>' or "
-              "'<app> <choice> %s <choice'>' -- %d word(s) before, "
-              "%d after" % (KEYWORD, KEYWORD, len(before), len(after)))
+        write(f"REFUSED: 'hwut.rename' takes '<app> {KEYWORD} <app'>' or "
+              f"'<app> <choice> {KEYWORD} <choice'>' -- {len(before)} word(s) before, "
+              f"{len(after)} after")
         write(USAGE)
         return None, yes_f
     try:
         source_dir, before = split_words(before, directory)
     except TargetError as error:
-        write("REFUSED: %s" % error)
+        write(f"REFUSED: {error}")
         write(USAGE)
         return None, yes_f
     test   = before[0]
@@ -515,28 +505,30 @@ def _read(argv, write):
     whole_test_f = choice is None
 
     if whole_test_f:
-        if os.path.isdir(fresh) or fresh.endswith(os.sep):
-            target_dir, fresh_test = fresh.rstrip(os.sep) or os.sep, test
-        elif os.sep in fresh:
-            target_dir, fresh_test = os.path.split(fresh)
-            target_dir = target_dir or "."
+        fresh_path = Path(fresh)
+        if fresh_path.is_dir() or fresh.endswith(('/', '\\')):
+            target_dir = str(fresh_path).rstrip('/\\') or '.'
+            fresh_test = test
+        elif '/' in fresh or '\\' in fresh:
+            p = Path(fresh)
+            target_dir = str(p.parent) if str(p.parent) != '' else '.'
+            fresh_test = p.name
         else:
             target_dir, fresh_test = source_dir, fresh
         fresh_choice = None
-        if not os.path.isdir(target_dir):
-            write("REFUSED: the target directory '%s' does not exist"
-                  % target_dir)
+        if not Path(target_dir).is_dir():
+            write(f"REFUSED: the target directory '{target_dir}' does not exist")
             return None, yes_f
     else:
-        if os.sep in fresh:
-            write("REFUSED: a choice never crosses a directory -- "
-                  "'%s' carries a path" % fresh)
+        if '/' in fresh or '\\' in fresh:
+            write(f"REFUSED: a choice never crosses a directory -- "
+                  f"'{fresh}' carries a path")
             write(USAGE)
             return None, yes_f
         target_dir, fresh_test, fresh_choice = source_dir, test, fresh
     for forbidden in BOOK_FORBIDDEN_IN_NAME:
         if forbidden in (fresh_test if whole_test_f else fresh_choice):
-            write("REFUSED: '%s' cannot stand in a name" % forbidden)
+            write(f"REFUSED: '{forbidden}' cannot stand in a name")
             return None, yes_f
 
     source = Store(Bookkeeper(source_dir))
@@ -544,11 +536,11 @@ def _read(argv, write):
              else Store(Bookkeeper(target_dir))
     if target is source and fresh_test == test \
        and (whole_test_f or fresh_choice == choice):
-        write("REFUSED: '%s' is the name it already bears"
-              % (fresh_test if whole_test_f else fresh_choice))
+        target_name = fresh_test if whole_test_f else fresh_choice
+        write(f"REFUSED: '{target_name}' is the name it already bears")
         return None, yes_f
     return Rename(test, choice, fresh_test, fresh_choice, source, target,
-                  whole_test_f), yes_f
+                  whole_test_f, write), yes_f
 
 
 def main(argv=None, write=None, read_line=None):
@@ -578,9 +570,9 @@ def main(argv=None, write=None, read_line=None):
     if rename is None: return E_ExitCode.REFUSED
     if rename == ():   return E_ExitCode.EMPTY
 
-    note_list, refusal = situation_notes(rename)
+    note_list, refusal = rename.situation_notes()
     if refusal is not None:
-        write("REFUSED: %s" % refusal)
+        write(f"REFUSED: {refusal}")
         return E_ExitCode.REFUSED
 
     #  A COLLISION IS REFUSED BEFORE ANYTHING MOVES: half a rename
@@ -594,24 +586,20 @@ def main(argv=None, write=None, read_line=None):
                 ("register", set(rename.target.bookkeeper.roster()))):
             if rename.fresh_test in standing and not (
                     not rename.across_f and rename.fresh_test == rename.test):
-                write("REFUSED: '%s' already stands in the %s of '%s' -- "
-                      "a rename onto it would swallow its history"
-                      % (rename.fresh_test, where, rename.target.directory))
+                write(f"REFUSED: '{rename.fresh_test}' already stands in the {where} of '{rename.target.directory}' -- "
+                      "a rename onto it would swallow its history")
                 return E_ExitCode.REFUSED
     elif rename.fresh_choice in rename.source.bookkeeper.choices(
                                     rename.test):
-        write("REFUSED: '%s' already stands among the choices of '%s'"
-              % (rename.fresh_choice, rename.test))
+        write(f"REFUSED: '{rename.fresh_choice}' already stands among the choices of '{rename.test}'")
         return E_ExitCode.REFUSED
 
-    write("TO FOLLOW THE NEW NAME, in '%s':" % rename.source.directory)
-    pair_tuple = move_tuple(rename)
-    write("  %s -- %d file(s), the book entry, the register %s"
-          % (rename.text(), len(pair_tuple),
-             "id, the coverage seats" if rename.across_f else "name"))
-    for source, target in pair_tuple:
-        write("      %s -> %s" % (_shown(rename.source, source),
-                                  _shown(rename.source, target)))
+    write(f"TO FOLLOW THE NEW NAME, in '{rename.source.directory}':")
+    pair_tuple = rename.move_tuple()
+    register_desc = "id, the coverage seats" if rename.across_f else "name"
+    write(f"  {rename.text()} -- {len(pair_tuple)} file(s), the book entry, the register {register_desc}")
+    for source_path, target_path in pair_tuple:
+        write(f"      {_shown(rename.source, source_path)} -> {_shown(rename.source, target_path)}")
     if not pair_tuple:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")
@@ -626,8 +614,8 @@ def main(argv=None, write=None, read_line=None):
             write("NOTE: nothing was renamed")
             return E_ExitCode.OK
 
-    write("%s:" % rename.text())
-    return E_ExitCode.OK if follow(rename, write) else E_ExitCode.FAULT
+    write(f"{rename.text()}:")
+    return E_ExitCode.OK if rename.follow() else E_ExitCode.FAULT
 
 
 if __name__ == "__main__":

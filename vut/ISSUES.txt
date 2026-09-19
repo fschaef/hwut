@@ -2,3 +2,4 @@
 -- use 'rich' for drawing trees and colors.
 -- results: on hwut --labels fail showed 5 ok, but there is no evidence for that
    applied 'hwut.labels.create fail --fail' before
+-- only those directories should be display in SUMMARY which are subject to the wish.
