@@ -47,9 +47,17 @@ on: <bof> => {
     last_app  = None
     last_badge = ""         # the badge a blank one repeats
 
-    BADGE_TUPLE = ("START", "DONE", "SKIP", "DIR", "FRAME", "ROLL",
-                   "TREE", "FAULT", "NOTE")
-    RUN_BADGE_TUPLE = ("START", "DONE", "SKIP")
+    #  'END  ' JOINED THE FLOW BADGES and this filter did not hear of
+    #  it. MEASURED: every 'END' line fell through 'not in
+    #  BADGE_TUPLE' and was printed RAW, above the digest, unsorted --
+    #  and nothing decremented 'standing', so 'peak standing at once'
+    #  read 9 where two runs stood, and two strategies' digests
+    #  disagreed. A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY
+    #  BADGE THE DISPLAY CAN WRITE; an unknown one is not ignored, it
+    #  is mis-parsed.
+    BADGE_TUPLE = ("START", "END", "DONE", "SKIP", "DIR", "FRAME",
+                   "ROLL", "TREE", "FAULT", "NOTE")
+    RUN_BADGE_TUPLE = ("START", "END", "DONE", "SKIP")
 
     def masked(text):
         text = re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
@@ -83,8 +91,17 @@ on: <bof> => {
         global standing, peak, last_app
         field = text.split()
         if field and field[0] == badge: field = field[1:]
+        #  THE PEAK IS COUNTED UPON PRINT, the same law the display's
+        #  '||n' follows: how many announcements stand OPEN ON THE
+        #  SCREEN, this line's own included. 'START' opens one, 'END'
+        #  closes the one it opened, and 'DONE' -- which opened none --
+        #  stands for the length of its own line and no longer.
+        #  'SKIP' never ran and is no working job; it counts nothing.
+        #  SO THIS NUMBER IS THE PARALLELISM THE TRACE SHOWS, not the
+        #  budget that bounded it and not the process table.
         if   badge == "START": standing += 1; peak = max(peak, standing)
-        elif badge == "DONE":  standing -= 1
+        elif badge == "END":   standing  = max(standing - 1, 0)
+        elif badge == "DONE":  peak      = max(peak, standing + 1)
         mark = field[0] if field else ""
         if mark == ":": app, rest = last_app, field[1:]
         else:           app, rest = mark,     field[1:]

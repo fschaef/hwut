@@ -248,7 +248,13 @@ class CPlainFlow(CRunReportReceiver):
         self.t0          = None      # first parseable 'when'
         self.when_first  = None      # first 'when', raw
         self.when_last   = None      # last 'when', raw
-        self.parallel_n  = 0
+        self.parallel_n  = 0         # PROCESSES alive: ++ at birth,
+                                     # -- at death. The '|n|' column's
+                                     # number, and nothing else's.
+        self.screen_n    = 0         # ANNOUNCEMENTS OPEN ON THIS
+                                     # SCREEN: ++ when a START is
+                                     # written, -- when its END closes
+                                     # it. The '||n' tail's number.
         self.began_set   = set()     # (directory, node) with run-begun
 
         self.last_dir_shown = None   # the directory the last DIR band
@@ -382,7 +388,7 @@ class CPlainFlow(CRunReportReceiver):
         return body, body
 
     def _line(self, when, badge, badge_ink, body, body_ink,
-              right="", right_ink="", tail="", parallel_n=None):
+              right="", right_ink="", tail=""):
         """
         RETURN: None. One flow line written: prefix, badge, body,
                 then -- where a right part stands -- a dotted fill
@@ -406,7 +412,7 @@ class CPlainFlow(CRunReportReceiver):
         #  THE PARALLELISM RIDES ALONG (E-97): after the verdict column,
         #  outside the width math, on every flow line.
         if badge in FLOW_BADGE_TUPLE or badge == BADGE_REPEAT:
-            tail += self._count_tail(parallel_n)
+            tail += self._count_tail()
         if not right:
             #  THE COUNT STANDS IN ONE COLUMN (E-97): a line with a
             #  verdict ends at 'width', so a line without one is padded
@@ -536,27 +542,39 @@ class CPlainFlow(CRunReportReceiver):
             self.held_db[(directory, node)] = (when, self.parallel_n)
             return
         body, body_ink = self._run_body(directory, node)
-        self._line(when, "START", self.ink.start("START"), body, body_ink,
-                   parallel_n=self.parallel_n)
+        #  THE SCREEN GAINS AN ANNOUNCEMENT, and the line that opens it
+        #  counts itself.
+        self.screen_n += 1
+        self._line(when, "START", self.ink.start("START"), body, body_ink)
 
-    def _count_tail(self, parallel_n=None):
+    def _count_tail(self):
         """
-        RETURN: str, the parallelism AT THE LINE'S OWN EVENT, after the
-                verdict column and beyond the width math: '||3'. ''
-                where one run stood alone or none did.
+        RETURN: str, '  ||3' -- HOW MANY ANNOUNCEMENTS STAND OPEN ON
+                THIS SCREEN at the moment this line is written, THIS
+                LINE'S OWN INCLUDED, after the verdict column and
+                beyond the width math.
+                '', only where the line announces no run at all -- a
+                band, a fault, a frame; those never reach here.
 
-        THE COUNT BELONGS TO THE EVENT, NOT TO THE PRINTING (E-97,
-        corrected twice). A START is HELD until the run proves slow, so
-        its line is written seconds after it began; reading the count
-        at print time said what was standing THEN -- MEASURED: six
-        STARTs released at once all read '||8', and a DONE read the
-        count of a successor that had already begun. Each line now
-        carries the count its own event saw: a START the runs standing
-        when it began, a DONE the runs standing once it left.
+        THE COUNT IS TAKEN UPON PRINT (E-97, superseded). It used to
+        be taken at the EVENT, from 'parallel_n', which counts
+        PROCESSES: a run living less than START_DELAY_SECONDS is born,
+        counted and dies having never appeared as a START, so 'peak 9'
+        stood against a screen showing two open STARTs. The number
+        described 'ps'; the reader is looking at a screen.
+
+        SO: ++ when a START is actually WRITTEN, -- when its END closes
+        it, and a DONE -- which opens and closes on its own line --
+        counts itself for the length of that line and no longer. The
+        tail is therefore DERIVABLE FROM THE PRINTED TRACE ALONE: the
+        reader can count the open STARTs above and get this number.
+        '||1' is meaningful, '||0' impossible, and START, END and '||n'
+        stand on ONE clock.
+
+        NOTHING IS SUPPRESSED. The old '< 2 -> ""' is why the last two
+        lines of every directory printed no tail at all.
         """
-        count = self.parallel_n if parallel_n is None else parallel_n
-        if count < 2: return ""
-        return "  ||%d" % count
+        return "  ||%d" % self.screen_n
 
     def on_tick(self, when):
         """
@@ -577,11 +595,13 @@ class CPlainFlow(CRunReportReceiver):
             if begun is None or now - begun < self.start_delay:
                 continue
             directory, node = key
-            began_when, began_n = self.held_db.pop(key)
+            began_when, _ = self.held_db.pop(key)
             body, body_ink = self._run_body(directory, node)
+            #  A HELD START COUNTS WHEN IT IS RELEASED, not when the run
+            #  began: the announcement opens on the screen here.
+            self.screen_n += 1
             self._line(began_when, "START",
-                       self.ink.start("START"), body, body_ink,
-                       parallel_n=began_n)
+                       self.ink.start("START"), body, body_ink)
 
     def _release_held(self, key):
         """
@@ -647,6 +667,12 @@ class CPlainFlow(CRunReportReceiver):
         #  START was never released is 'DONE ' -- it finished before
         #  it was worth announcing.
         badge = "END  " if start_written_f else "DONE "
+        #  '||n' UPON PRINT. An 'END  ' closes an announcement that is
+        #  still open while its own line is written, so it prints the
+        #  count and falls afterwards. A 'DONE ' opened none, so it
+        #  opens one for the length of its line and closes it again.
+        #  Both leave by the same '-=' below; only the entry differs.
+        if not start_written_f: self.screen_n += 1
         if good:
             self._line(when, badge, badge, body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
@@ -660,6 +686,7 @@ class CPlainFlow(CRunReportReceiver):
         else:
             self._line(when, badge, badge, body, body_ink,
                        "[FAIL]", self.ink.tag_fail("[FAIL]"))
+        self.screen_n = max(self.screen_n - 1, 0)
 
     def on_fault(self, when, directory, text):
         """

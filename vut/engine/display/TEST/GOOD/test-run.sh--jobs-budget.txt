@@ -4,19 +4,19 @@ STDOUT {
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         DIR   beta/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         DIR   gamma/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         peak standing at once: 2
     }
@@ -24,9 +24,9 @@ STDOUT {
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
     RESULTS: 6 ok, 0 fail, s.ss [sec]
@@ -40,19 +40,19 @@ STDOUT {
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         DIR   beta/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         DIR   gamma/TEST
-        DONE  test-one.sh .. [OK]
+        END   test-one.sh .. [OK]
         START test-one.sh
-        DONE  test-two.sh .. [OK]
+        END   test-two.sh .. [OK]
         START test-two.sh
         peak standing at once: 1
     }
@@ -60,9 +60,9 @@ STDOUT {
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
     RESULTS: 6 ok, 0 fail, s.ss [sec]

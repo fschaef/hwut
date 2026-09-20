@@ -461,3 +461,97 @@ COST      'test-run.sh labels' STAYS RED, deliberately. Its diff is
           shifts every count and every fixture name in that page by
           one; the whole page moves for one word, and that is what
           a table read end to end costs.
+
+D-14  '||n' IS COUNTED UPON PRINT, AND THE FILTER MUST KNOW EVERY
+      BADGE                                                    (2026-09-20)
+----------------------------------------------------------------------------
+PROBLEM   TWO FAULTS, one ruling, and they were confused for each
+          other for a whole session.
+
+          THE NUMBER DESCRIBED THE WRONG THING. 'parallel_n' counts
+          PROCESSES -- '++' at birth in 'on_run_begun', '--' at death
+          in 'on_run_ended' -- while the trace shows ANNOUNCEMENTS. A
+          run living less than START_DELAY_SECONDS is born, counted,
+          and dies having never appeared as a 'START'. MEASURED:
+          'peak standing at once: 9' against a screen holding two
+          open 'START's. The number described 'ps'; the reader is
+          looking at a screen. Beside it, '_count_tail' returned ''
+          below 2, so the last two lines of EVERY directory printed
+          no tail at all.
+
+          THE DIGEST FILTER HAD GONE BLIND TO A BADGE. 'peak standing
+          at once' is not read off '||n' -- 'test-run.pype' computes
+          it from badges and MASKS the tail. Its vocabulary was
+          ("START", "DONE", "SKIP", ...). When 'END  ' joined the flow
+          badges nobody told the filter, so every 'END' line fell
+          through 'badge not in BADGE_TUPLE' and was printed RAW,
+          ABOVE the digest, unsorted -- and nothing decremented
+          'standing'. Hence peak 9, and hence 'digest identical to
+          linear: FALSE' in four choices: raw lines landed in one
+          strategy's output and not in another's.
+
+          O-15's homogeneity invariant was never broken. The oracle's
+          filter was.
+
+DECISION  RULED (Frank-Rene): '||n' IS THE NUMBER OF ANNOUNCEMENTS
+          OPEN ON THIS SCREEN, COUNTED UPON PRINT, THIS LINE'S OWN
+          INCLUDED.
+
+              START   opens one; print after the rise
+              END     closes the one it opened; print, THEN the fall
+              DONE    opened none, so it opens one for the length of
+                      its own line and closes it again: rise, print,
+                      fall
+              SKIP    never ran and is no working job; counts nothing
+
+          Every line therefore prints at least 1. '||0' is impossible,
+          '||1' is meaningful, and nothing is suppressed -- the old
+          '< 2 -> ""' is why the last two lines of a directory were
+          bare. THE TAIL IS DERIVABLE FROM THE PRINTED TRACE ALONE:
+          the reader counts the open 'START's above and gets the
+          number. 'START', 'END' and '||n' stand on ONE clock.
+
+          THE TWO NUMBERS ARE KEPT APART, not merged. 'parallel_n'
+          survives untouched and feeds the '|n|' column of
+          '--show-jobs', which asks how hard the MACHINE worked;
+          'screen_n' feeds the '||n' tail, which asks what the SCREEN
+          shows. Both are legitimate questions and neither answers the
+          other. The defect was one name serving two.
+
+          'peak standing at once' ANSWERS THE SCREEN'S QUESTION, by
+          the same law, in 'test-run.pype'. RULED: the budget is not
+          what the page reports -- the observed parallelism is. That
+          the two coincide at 2 and 1 is because the budget binds,
+          and the GOOD's numbers stand byte-exact through the cut,
+          which is the proof that the cure restored the old meaning
+          rather than inventing a new one.
+
+          A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY BADGE
+          THE DISPLAY CAN WRITE. An unknown badge is not ignored; it
+          is mis-parsed, silently, into the wrong half of the page.
+          This is D-10's law meeting its first real failure.
+
+COST      'plain.py': 'screen_n' beside 'parallel_n', the '||n' rise
+          and fall at the three write sites, '_count_tail' without
+          its parameter and without its cutoff -- the 'parallel_n='
+          plumbing through '_line' is gone, since a count taken at
+          print needs nothing carried to it. 'test-run.pype': two
+          badges added, the counting rewritten.
+
+          EIGHTEEN PAGES RE-RECORDED. Classified mechanically first,
+          every differing line against a stated rule (bin section 4's
+          corollary): 92 '||n' tails, 74 tag column, 16 'DONE ' ->
+          'END  ', 7 RESULTS seconds already tolerated by the suite's
+          own 'eq_pattern'. NOTHING MATCHED NOTHING -- the six lines
+          that matched nothing last session are the defect above, and
+          they are gone. 'test-run.sh labels' stays red, blocked on
+          E-95, and was not recorded.
+
+          Census 823 ok / 30 fail -> 841 ok / 12 fail, the twelve
+          being the thirty less the eighteen, every one pre-existing.
+
+          LEFT STANDING, NOT RULED: a serial run now prints '||1' on
+          every flow line, where before it printed no tail at all.
+          That is what 'nothing is suppressed' costs, and whether a
+          one-job run should carry the tail at all is a question
+          nobody has been asked.

@@ -180,8 +180,49 @@ BIN DISCIPLINE
     - COST TO NAME: the screen's peak is LOWER than true parallelism.
       Fine if the number is DECLARED to be about the trace. Not fine
       if anyone reads it as 'how hard the machine worked'
-    - OPEN: 'jobs-budget' tests a BUDGET. Which of the two numbers
-      does a budget want? Decision, not detail
+    - RULED AND BUILT (D-14). The line prints the count INCLUDING
+      ITSELF: START rises then prints; END prints then falls; DONE
+      opened none, so it rises, prints, falls; SKIP never ran and
+      counts nothing. Every line prints at least 1
+    - 'jobs-budget' CLOSED: the page reports the OBSERVED parallelism,
+      not the budget. The two coincide at 2 and 1 because the budget
+      binds -- and the GOOD's numbers stood BYTE-EXACT through the
+      cut, which is how one knows the cure restored the old meaning
+      instead of inventing a new one
+    - THE TWO NUMBERS ARE KEPT APART: 'parallel_n' still feeds the
+      '|n|' column of '--show-jobs' (how hard the MACHINE worked);
+      'screen_n' feeds '||n' (what the SCREEN shows). The defect was
+      one name serving two questions
+    - STILL OPEN: a serial run now prints '||1' on every line, where
+      it printed no tail at all. Nobody has been asked whether a
+      one-job run should carry the tail
+
+==============================================================================
+5b. A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY BADGE
+==============================================================================
+
+    - case: 'display test-run.sh jobs-budget', and it cost a session
+    - 'peak standing at once' is NOT read off '||n'. 'test-run.pype'
+      computes it from badges and MASKS the tail. Two counters, two
+      files, one name -- and the hypothesis chased the wrong one
+    - the filter's vocabulary was ("START", "DONE", "SKIP", ...).
+      'END  ' joined the flow badges; nobody told the filter
+    - AN UNKNOWN BADGE IS NOT IGNORED. It fell through
+      'badge not in BADGE_TUPLE' and was printed RAW, ABOVE the
+      digest, unsorted; and nothing decremented 'standing'
+    - two symptoms, one cause: 'peak 9' where two runs stood, AND
+      'digest identical to linear: FALSE' -- raw lines landed in one
+      strategy's output and not in another's
+    - O-15's homogeneity invariant was NEVER BROKEN. The filter was.
+      The session before had written the invariant down as the
+      suspect and built nothing; reading the OUT file settled it in
+      one minute
+    - GENERAL: when a page and a filter both count, FIND OUT WHICH
+      ONE THE PAGE PRINTS before theorising about either
+    - GENERAL: adding a badge, a kind or a verdict is a change to
+      EVERY reader of that vocabulary, filters included. Grep the
+      tuple, not just the emitter
+    - ruled: display D-14
 
 ==============================================================================
 6.  FIXTURES -- MAKE THEM THE WAY A USER MAKES THINGS
