@@ -8,8 +8,8 @@ $ hwut.cov --sideways
                     [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
-                    [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>] [--directory=<path>]
+                    [--no-failure-summary] [--brief] [--log <file>]
+                    [--directory=<path>]
     [status 2]
 $ hwut.cov convert --to yaml <dir>/a
     REFUSED: '--to' takes one of binary, text

@@ -116,6 +116,33 @@ def _run(root):
     return status, line_list, error_list
 
 
+def _expanded(line_list):
+    """
+    RETURN: list[str], the same lines with every ':' ELISION RESOLVED
+            to the application it repeats -- so a reader may scan a
+            verdict line for the file that produced it.
+
+    A READER OF AN ELIDED FLOW MUST EXPAND BEFORE IT COMPARES, which
+    is the rule 'test-run.pype' has always kept ('EXPANSION COMES
+    FIRST'). Since D-15 every run writes a 'START' and an 'END', and
+    the END repeats the START's application, so a verdict line
+    carrying a choice reads ':' -- correctly, and unreadably to a
+    filter looking for the name.
+    """
+    result = []
+    last   = None
+    for line in line_list:
+        field = line.split()
+        if len(field) > 1 and field[1] == ":" and last is not None:
+            result.append(line.replace(":", last, 1))
+        else:
+            if len(field) > 1 and field[0] in ("START", "END", "DONE",
+                                               "SKIP"):
+                last = field[1]
+            result.append(line)
+    return result
+
+
 def _refused_block(line_list):
     """RETURN: list[str], the lines of the REFUSED block, stripped;
     empty where none stands."""
@@ -224,7 +251,8 @@ def test_new_choice():
     root, test = fixture()
     _, line_list, _ = _run(root)
     hit  = [l for l in _refused_block(line_list) if l.startswith("test-two.py")]
-    flow = [l for l in line_list if "test-two.py" in l and "[" in l]
+    flow = [l for l in _expanded(line_list)
+            if "test-two.py" in l and "[" in l]
     for line in hit: print("  " + line.split("  ")[0].strip())
     ok = _check([
         (len(hit) == 1 and hit[0].startswith("test-two.py b"),

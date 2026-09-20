@@ -29,11 +29,23 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --jobs=<n>                  the host-global bound on work standing
                                 at once, across every directory;
                                 unbounded else
-    --strategy=<name>           when a directory starts: linear (one
+    --strategy=<words>          a comma list answering two questions;
+                                either order, each word long or short.
+                                WHEN A DIRECTORY STARTS: linear|l (one
                                 after another, in walk order; the
-                                default), successor (the next starts
-                                while the current runs), parallel (all
-                                at once)
+                                default), successor|s (the next starts
+                                while the current runs), parallel|p
+                                (all at once).
+                                WHICH ADMISSIBLE NODE STARTS:
+                                longest-first|lf (the longest this
+                                machine last measured; the default),
+                                plan-order|po, shortest-first|sf.
+                                    --strategy=parallel,longest-first
+                                    --strategy=p,lf
+                                    --strategy=p
+                                    --strategy=sf
+                                An unnamed question keeps its default;
+                                two words of one question are refused
     --dbd --directory-by-directory
                                 '--strategy=linear'
     -v --verbose                every event as it arrives
@@ -78,9 +90,10 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
 from   vut.engine.orchestrator.run.dispatcher        import test_run_dispatcher_factory
 from   vut.engine.orchestrator.exploration.variant   import name_tuple_of
 from   vut.engine.orchestrator.run.orchestrate       import orchestrator
-from   vut.engine.orchestrator.run.strategy          import (DEFAULT_STRATEGY_NAME,
-                                                             STRATEGY_DB,
-                                                             strategy_of)
+from   vut.engine.orchestrator.run.strategy          import (
+           DEFAULT_STRATEGY, DEFAULT_SELECTION_ORDER,
+           E_SchedulerTestRun_Strategy, E_SchedulerTestRun_SelectionOrder,
+           strategy_of, words_of)
 from   vut.engine.protocol.summary                   import fold
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
@@ -130,12 +143,34 @@ EXECUTION
     --jobs=<n>          the host-global bound on work standing at
                         once, across every directory; unbounded where
                         absent
-    --strategy=<name>   when a directory's run starts:
-                            linear     one after another, in walk
-                                       order (the default)
-                            successor  the next directory starts while
-                                       the current one still runs
-                            parallel   all at once
+    --strategy=<words>  a comma list answering TWO questions. The
+                        words may stand in either order and each has a
+                        short spelling; an unnamed question keeps its
+                        default, and two words of one question are
+                        refused rather than silently settled.
+
+                        WHEN A DIRECTORY'S RUN STARTS
+                            linear     l   one after another, in walk
+                                           order (the default)
+                            successor  s   the next directory starts
+                                           while the current one runs
+                            parallel   p   all at once
+
+                        WHICH ADMISSIBLE NODE STARTS, where more than
+                        one may
+                            longest-first   lf  the longest duration
+                                                this machine last
+                                                measured (the default);
+                                                a node never measured
+                                                goes first
+                            plan-order      po  the plan's own order
+                            shortest-first  sf  the shortest first
+
+                            --strategy=parallel,longest-first
+                            --strategy=p,lf          the same thing
+                            --strategy=longest-first,p   and so is this
+                            --strategy=p             parallel, longest
+                            --strategy=sf            linear, shortest
     --dbd               '--strategy=linear'
     --directory-by-directory
 
@@ -165,7 +200,9 @@ class Execution:
     variants, timing, coverage, and stability bypasses."""
     record:          bool | None = None
     worker_max_n:    int | None  = None
-    strategy_name:   str         = DEFAULT_STRATEGY_NAME
+    strategy:        E_SchedulerTestRun_Strategy = DEFAULT_STRATEGY
+    selection_order: E_SchedulerTestRun_SelectionOrder \
+                                 = DEFAULT_SELECTION_ORDER
     variant_text:    str         = ""
     timing_f:        bool        = False
     coverage_f:      bool        = False
@@ -255,8 +292,9 @@ async def _drive(root, request: Request, flow, demand=None,
                              despite_stain_f = exec_conf.despite_stain_f,
                              force_run_f     = exec_conf.force_run_f),
                          worker_max_n = exec_conf.worker_max_n,
-                         strategy     = strategy_of(exec_conf.strategy_name),
-                         label_view   = label_view)
+                         strategy        = strategy_of(exec_conf.strategy),
+                         selection_order = exec_conf.selection_order,
+                         label_view      = label_view)
     event_list = []
     #  THE WAKE: a run that merely takes long emits no event, so a
     #  flow holding its START line back would never release it. The
@@ -409,13 +447,17 @@ def _main(argv, write, write_error, captured_f, demand=None,
         return E_ExitCode.REFUSED
 
     # Execution bounds and constraints
-    strategy_name = "linear" if arguments.dbd else DEFAULT_STRATEGY_NAME
+    #  '--strategy' CARRIES BOTH QUESTIONS AS A COMMA LIST (O-27):
+    #  'parallel,longest-first', or 'p,lf'. The words may stand in
+    #  either order; 'words_of' refuses an unknown one and a
+    #  contradiction, and defaults whichever enum went unnamed.
+    strategy        = E_SchedulerTestRun_Strategy.LINEAR if arguments.dbd \
+                      else DEFAULT_STRATEGY
+    selection_order = DEFAULT_SELECTION_ORDER
     if arguments.strategy is not None:
-        if arguments.strategy not in STRATEGY_DB:
-            return _abort(write, "'--strategy' takes one of %s, not '%s'%s"
-                          % (", ".join(sorted(STRATEGY_DB)), arguments.strategy,
-                             did_you_mean(arguments.strategy, sorted(STRATEGY_DB), among_listed_f=True)))
-        strategy_name = arguments.strategy
+        strategy, selection_order, refusal = words_of(arguments.strategy)
+        if refusal is not None: return _abort(write, refusal)
+        if arguments.dbd: strategy = E_SchedulerTestRun_Strategy.LINEAR
 
     worker_max_n = os.cpu_count() or 1
     if arguments.jobs is not None:
@@ -446,7 +488,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
         execution = Execution(
             record          = False if arguments.no_store else None,
             worker_max_n    = worker_max_n,
-            strategy_name   = strategy_name,
+            strategy        = strategy,
+            selection_order = selection_order,
             variant_text    = arguments.variant,
             timing_f        = arguments.timing,
             coverage_f      = bool(arguments.coverage),

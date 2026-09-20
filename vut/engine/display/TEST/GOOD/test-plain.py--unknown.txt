@@ -1,7 +1,8 @@
 
 --- unknown kind ignored; unknown verdict reads not-ok; a misfit is a fault ---
 DIR  suite/TEST                                                               
-DONE  test-q.sh ....................................................... [FAIL]  ||1
+START test-q.sh                                                                 ||1
+END   test-q.sh ....................................................... [FAIL]  ||1
 ERROR event of kind 'run-ended' does not fit the vocabulary
 
 ==============================================================================

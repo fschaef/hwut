@@ -1,7 +1,19 @@
 a bare CStrategy: NotImplementedError -- 'may_start' is owed
 an empty unit list: []
-strategy_of('linear').name = 'linear'
-strategy_of('successor').name = 'successor'
-strategy_of('parallel').name = 'parallel'
-strategy_of('bogus'): KeyError 'bogus'
+strategy_of(LINEAR).name = 'linear'
+strategy_of(SUCCESSOR).name = 'successor'
+strategy_of(PARALLEL).name = 'parallel'
+strategy_of(a selection order): KeyError -- the two enums are not interchangeable
+
+'p,lf'                   PARALLEL + LONGEST_FIRST
+'longest-first,parallel' PARALLEL + LONGEST_FIRST
+'l'                      LINEAR + LONGEST_FIRST
+'sf'                     PARALLEL + SHORTEST_FIRST
+'po,s'                   SUCCESSOR + PLAN_ORDER
+'p , lf'                 PARALLEL + LONGEST_FIRST
+'linear,parallel'        REFUSED: '--strategy=linear,parallel': 'linear' and 'parallel' cannot both stand
+'lf,shortest-first'      REFUSED: '--strategy=lf,shortest-first': 'longest-first' and 'shortest-first' cannot both stand
+'bogus'                  REFUSED: '--strategy=bogus': 'bogus' names neither a strategy nor a selection order -- one of linear, successor, parallel, longest-first, plan-order, shortest-first (short: l, lf, p, po, s, sf)
+'p,,l'                   REFUSED: '--strategy=p,,l': an empty word stands between the commas
+''                       REFUSED: '--strategy=': an empty word stands between the commas
 <hwut-end>

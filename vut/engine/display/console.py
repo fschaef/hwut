@@ -26,7 +26,7 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass
 
-from .plain import CPlainFlow, E_Tier, START_DELAY_SECONDS
+from .plain import CPlainFlow, E_Tier
 from .word  import CInk, colour_decision
 
 
@@ -39,7 +39,7 @@ USAGE_TOKEN_TUPLE = ("[-v|--verbose|--plain|--quiet|--silent]",
                      "[--colour|--no-colour]", "[--show-timing]",
                      "[--show-jobs]", "[--show-details]",
                      "[--no-failure-summary]",
-                     "[--start-delay=<seconds>]",
+                     "[--brief]",
                      "[--log <file>]")
 
 HELP = """RENDERING -- one tier, the flags mutually exclusive
@@ -124,7 +124,7 @@ class CRenderingWish:
     jobs_f:    bool   = False
     detail_f:  bool   = False
     failure_summary_f: bool = True
-    start_delay: float = START_DELAY_SECONDS
+    brief_f: bool = False
 
 
 def parse_rendering(argument_list):
@@ -147,7 +147,7 @@ def parse_rendering(argument_list):
     jobs_f         = False
     detail_f       = False
     summary_f      = True
-    start_delay    = START_DELAY_SECONDS
+    brief_f        = False
     log_path       = None
     rest_list      = []
     argument_i     = -1
@@ -175,20 +175,9 @@ def parse_rendering(argument_list):
         elif argument == "--show-timing":   timing_f  = True
         elif argument == "--show-jobs":     jobs_f    = True
         elif argument == "--show-details":  detail_f  = True
+        elif argument == "--brief":         brief_f   = True
         elif argument == "--no-failure-summary":
                                             summary_f = False
-        elif argument.startswith("--start-delay="):
-            text = argument[len("--start-delay="):]
-            try:
-                start_delay = float(text)
-            except ValueError:
-                raise RenderingError(
-                    "'--start-delay=%s': a number of seconds, '0' to "
-                    "announce at once" % text) from None
-            if start_delay < 0:
-                raise RenderingError(
-                    "'--start-delay=%s': a delay does not run "
-                    "backwards" % text)
         else:                               rest_list.append(argument)
 
     if len(set(TIER_FLAG_DB[flag] for flag in tier_flag_list)) > 1:
@@ -207,7 +196,7 @@ def parse_rendering(argument_list):
                           timing_f=timing_f, jobs_f=jobs_f,
                           detail_f=detail_f,
                           failure_summary_f=summary_f,
-                          start_delay=start_delay,
+                          brief_f=brief_f,
                           log_path=log_path), \
            rest_list
 
@@ -257,5 +246,5 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
                       detail_f=rendering_wish.detail_f,
                       failure_summary_f
                           =rendering_wish.failure_summary_f,
-                      start_delay=rendering_wish.start_delay,
+                      brief_f=rendering_wish.brief_f,
                       write_log=write_log)

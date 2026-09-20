@@ -232,3 +232,29 @@ class TraceDb:
             os.replace(temporary, self.path)
         except OSError:
             pass
+
+
+def duration_db_of(directory):
+    """
+    RETURN: dict, node name -> float milliseconds, the LAST MEASURED
+            duration of every 'Run' this machine has recorded in this
+            directory. The key is spelt as the plan spells a node --
+            'test-x.py choice', or 'test-x.py' where the test carries
+            none.
+            {} where no traces stand: a fresh tree, a machine that has
+            never run this suite, or an unreadable file. Absence is
+            data, and the caller reads it as 'not measured'.
+
+    THIS MACHINE'S ROWS ONLY. The file may hold several systems (B-12)
+    and another machine's milliseconds say nothing about this one's.
+    """
+    system   = system_key()
+    result   = {}
+    for (row_system, test, choice, operation), row in \
+            TraceDb(directory).read().items():
+        if row_system != system or operation != "Run": continue
+        try:    duration = float(row.get("duration_ms") or "")
+        except  ValueError: continue
+        if duration <= 0: continue
+        result["%s %s" % (test, choice) if choice else test] = duration
+    return result

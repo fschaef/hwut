@@ -4,12 +4,16 @@ STDOUT {
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST
-        DONE  test-one.sh .. [OK]
-        DONE  test-two.sh .. [OK]
+        END   test-one.sh .. [OK]
+        START test-one.sh
+        END   test-two.sh .. [OK]
+        START test-two.sh
         DIR   beta/TEST
         DIR   gamma/TEST
-        DONE  test-one.sh .. [OK]
-        DONE  test-two.sh .. [OK]
+        END   test-one.sh .. [OK]
+        START test-one.sh
+        END   test-two.sh .. [OK]
+        START test-two.sh
     }
     
     ==============================================================================

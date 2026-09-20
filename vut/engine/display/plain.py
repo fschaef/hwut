@@ -152,18 +152,20 @@ def _tag_and_count(tag, counts, good, ink):
             "%s%s%s" % (" " * (TAG_WIDTH - len(tag)), tag_ink,
                         count_field))
 
-#  HOW LONG A START IS HELD BACK. A test that finishes inside the
-#  window never announces its beginning: the pair says nothing the
-#  end line does not, and two lines per run buries the one that
-#  carries a verdict. A test that outlives the window announces
-#  itself, so a slow or hanging one is visible while it stands.
+#  TWO MODES, AND THE BADGE SAYS WHICH ONE YOU ARE IN (D-15).
 #
-#  ZERO MEANS ANNOUNCE AT ONCE, and a suite that records the flow
-#  states it: whether a line EXISTS would otherwise depend on the
-#  speed of the machine, which is the one thing a GOOD file may
-#  never hold. A digest that drops START lines is the other way
-#  (--pype), and the run suite takes both roads.
-START_DELAY_SECONDS = 2.0
+#      NORMAL   every launch writes 'START', every termination writes
+#               'END  '. Two lines per run, and the pair brackets the
+#               time the run stood.
+#      --brief  no launch is announced. One line per run, at its
+#               termination, 'DONE '.
+#
+#  A HELD START IS GONE. The delay decided BY TIMING whether a run got
+#  a pair or a single line, so whether a LINE EXISTED depended on the
+#  speed of the machine -- the one thing a GOOD file may never hold,
+#  and every suite that recorded a flow had to pin the delay to 0 to
+#  escape it. The MODE decides it now, which is a thing the caller
+#  states rather than a thing the morning decides.
 
 #  THE COUNT BADGE (E-97): a START line -- a run that is slow -- ends
 #  in 'running |n|', the runs standing at that instant, this one included,
@@ -197,7 +199,7 @@ class CPlainFlow(CRunReportReceiver):
     def __init__(self, write, write_error=None, width=78, ink=None,
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
-                 start_delay=START_DELAY_SECONDS, write_log=None):
+                 brief_f=False, write_log=None):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -224,6 +226,12 @@ class CPlainFlow(CRunReportReceiver):
         beside it. 'detail_f' shows the SESSION and BUILD nodes,
         which are otherwise silent unless they FAIL. 'failure_summary_f'
         keeps the closing HINTS block, which stands by default.
+
+        'brief_f' IS NOT A TIER. A tier says HOW MUCH is shown --
+        details, provision nodes, faults. 'brief_f' says HOW A RUN IS
+        ANNOUNCED: one line at its end instead of a pair bracketing
+        it. The two are orthogonal and a VERBOSE brief run is a
+        meaningful thing to ask for.
         """
         self.write       = write
         self.write_error = write_error if write_error is not None \
@@ -236,9 +244,7 @@ class CPlainFlow(CRunReportReceiver):
         self.jobs_f      = jobs_f
         self.detail_f    = detail_f
         self.failure_summary_f = failure_summary_f
-        self.start_delay = start_delay
-        self.held_db     = {}        # (directory, node) -> what its
-                                     # START line would have said
+        self.brief_f     = brief_f
         self.last_key    = None      # (directory, file) of the last
                                      # flow line that named a run
         self.choice_column = 0       # where the CURRENT application's
@@ -254,8 +260,14 @@ class CPlainFlow(CRunReportReceiver):
         self.screen_n    = 0         # ANNOUNCEMENTS OPEN ON THIS
                                      # SCREEN: ++ when a START is
                                      # written, -- when its END closes
-                                     # it. The '||n' tail's number.
+                                     # it. The '||n' tail's number in
+                                     # NORMAL mode.
         self.began_set   = set()     # (directory, node) with run-begun
+        self.announced_set = set()   # (directory, node) whose START
+                                     # was actually WRITTEN, and which
+                                     # therefore has an 'END  ' owed
+                                     # to it. Empty for ever under
+                                     # '--brief'.
 
         self.last_dir_shown = None   # the directory the last DIR band
                                      # named; a repeat prints nothing
@@ -371,6 +383,18 @@ class CPlainFlow(CRunReportReceiver):
         once, in full, when the run entered it; a line here says only
         what ran. ':' compares '(directory, file)', so two directories
         sharing an application's name are never confused for a repeat.
+
+        ':' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE. A
+        CHOICELESS run elided to ':' names NOTHING AT ALL -- the mark
+        says 'the same application', and with no choice beside it
+        nothing tells one line from the next. The digest filter
+        'test-run.pype' has stated this law since it was written; the
+        display did not, and D-15 made the gap universal: every END
+        follows its own START, so in a suite of choiceless runs EVERY
+        verdict line read ':'. MEASURED, it broke a reader --
+        'services test-base-questions.py' collects what a wish
+        selected by looking for a name beside a verdict, and found
+        none.
         """
         name          = _display_name(node)
         file, _, rest = name.partition(" ")
@@ -382,7 +406,7 @@ class CPlainFlow(CRunReportReceiver):
             #  held for every ':' beneath it.
             self.choice_column = len(file) + CHOICE_GAP
         self.last_key = key
-        shown         = ":" if repeat_f else file
+        shown         = ":" if (repeat_f and choice) else file
         if not choice: return shown, shown
         body = "%-*s%s" % (self.choice_column, shown, choice)
         return body, body
@@ -527,24 +551,32 @@ class CPlainFlow(CRunReportReceiver):
         return node_kind in ("SESSION", "BUILD")
 
     def on_run_begun(self, when, directory, node, node_kind):
-        """RETURN: None. The parallel count rises; a 'START' line --
-        where the tier speaks at all, and where the node is not a
-        silent provision one."""
+        """
+        RETURN: None. A 'START' line, written AT THE LAUNCH -- in
+                NORMAL mode, where the tier speaks at all, and where
+                the node is not a silent provision one.
+                None and NO LINE under '--brief', which announces no
+                launch at all; and none where the tier is QUIET or
+                SILENT, which have no flow.
+
+        THE LAUNCHER'S COUNT RISES EITHER WAY. 'parallel_n' is the
+        process table's number and is kept whether or not anything is
+        printed, because '--brief' has no screen count to fall back
+        on and reports this one.
+        """
         self.parallel_n += 1
         self.began_set.add((directory, node))
+        if self.brief_f:                               return
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
         self._band(when, directory)
         if self._provision_hidden_f(node_kind):        return
-        if self.start_delay > 0:
-            #  HELD, not dropped: the body is computed when the line
-            #  is finally written, so the elision reads against the
-            #  line that truly precedes it.
-            self.held_db[(directory, node)] = (when, self.parallel_n)
-            return
         body, body_ink = self._run_body(directory, node)
         #  THE SCREEN GAINS AN ANNOUNCEMENT, and the line that opens it
-        #  counts itself.
+        #  counts itself. AN 'END  ' IS NOW OWED to this run, and
+        #  'announced_set' is the record of that debt -- the badge of
+        #  its closing line is decided by nothing else.
         self.screen_n += 1
+        self.announced_set.add((directory, node))
         self._line(when, "START", self.ink.start("START"), body, body_ink)
 
     def _count_tail(self):
@@ -573,61 +605,77 @@ class CPlainFlow(CRunReportReceiver):
 
         NOTHING IS SUPPRESSED. The old '< 2 -> ""' is why the last two
         lines of every directory printed no tail at all.
+
+        UNDER '--brief' THE NUMBER COMES FROM THE LAUNCHER, because
+        there is no screen count to take: nothing is announced, so
+        counting announcements would say '1' on every line. The
+        process table is then the only witness, and it stands in the
+        same column at the end of the same line (D-15).
         """
-        return "  ||%d" % self.screen_n
+        count = self.parallel_n if self.brief_f else self.screen_n
+        return "  ||%d" % count
 
     def on_tick(self, when):
         """
-        RETURN: None. Releases every held START whose run has now
-                outlived the delay -- oldest first, so the flow keeps
-                the order the runs began in.
+        RETURN: None, and NOTHING WRITTEN. Nothing is held any more,
+                so a tick has nothing to release (D-15).
 
-        Called by the consumer when no event arrived: a run that
-        merely takes long emits nothing, and a START nobody released
-        would never be seen.
+        THE METHOD STAYS because it is the receiver protocol's, and a
+        consumer calls it when no event arrived. It was the release
+        of held STARTs; holding is gone with the delay that measured
+        it, and a launch is announced at the launch.
         """
-        if not self.held_db: return
-        now = _instant(when)
-        if now is None: return
-        for key in sorted(self.held_db,
-                          key=lambda k: str(self.held_db[k][0])):
-            begun = _instant(self.held_db[key][0])
-            if begun is None or now - begun < self.start_delay:
-                continue
-            directory, node = key
-            began_when, _ = self.held_db.pop(key)
-            body, body_ink = self._run_body(directory, node)
-            #  A HELD START COUNTS WHEN IT IS RELEASED, not when the run
-            #  began: the announcement opens on the screen here.
-            self.screen_n += 1
-            self._line(began_when, "START",
-                       self.ink.start("START"), body, body_ink)
-
-    def _release_held(self, key):
-        """
-        RETURN: bool, True where a START was still held for this run
-                -- and is now forgotten, unwritten: the run ended
-                inside the window, and its end line says everything
-                its beginning would have.
-        """
-        return self.held_db.pop(key, None) is not None
+        return
 
     def on_run_ended(self, when, directory, node, node_kind, good,
                      verdict, cause=None, report=None, detail=None):
-        """RETURN: None. 'DONE ' where the node had begun, 'SKIP '
-        else; the count falls only for what had risen.
+        """
+        RETURN: None. ONE LINE, and its badge is decided by ONE
+                QUESTION -- is a 'START' owed a closing?
+
+                    'END  '  an announced run: its START stands above
+                    'DONE '  a run that was never announced, which
+                             under '--brief' is every run, and under
+                             NORMAL only a provision node that failed
+                             where its kind is otherwise silent
+                    'SKIP '  a node that never ran at all
 
         THE FLOW SAYS [OK] OR [FAIL] AND NO MORE. A reason belongs to
         the reader who has stopped to ask why, and that reader is
         reading HINTS; carrying it here spends the width of every
         failing line on a phrase the eye is not scanning for while a
         run is still going.
+
+        THE LAUNCHER'S COUNT FALLS LAST, after the line is written,
+        so that a '--brief' 'DONE ' counts its own run -- the run was
+        still working when its line was made. NORMAL's screen count
+        falls by the same rule and in the same place.
         """
         key      = (directory, node)
         began_f  = key in self.began_set
-        if began_f:
-            self.began_set.discard(key)
-            self.parallel_n = max(self.parallel_n - 1, 0)
+        try:
+            self._run_ended_line(when, directory, node, node_kind,
+                                 good, verdict, cause, report, detail,
+                                 began_f, key)
+        finally:
+            if began_f:
+                self.began_set.discard(key)
+                self.parallel_n = max(self.parallel_n - 1, 0)
+            if key in self.announced_set:
+                self.announced_set.discard(key)
+                self.screen_n = max(self.screen_n - 1, 0)
+
+    def _run_ended_line(self, when, directory, node, node_kind, good,
+                        verdict, cause, report, detail, began_f, key):
+        """
+        RETURN: None. The one line 'on_run_ended' owes, written -- or
+                nothing, where the tier has no flow or the node is a
+                silent provision one that did not fail.
+
+        SPLIT OUT SO THE COUNTS FALL EXACTLY ONCE. Every early return
+        here is a path on which no line is written, and the caller's
+        'finally' still lowers what the launch raised.
+        """
         self.verdict_db.setdefault(key[0], {})[key[1]] = verdict
         if report is not None: self.report_db[key] = report
         if cause  is not None: self.cause_db[key]  = cause
@@ -640,11 +688,10 @@ class CPlainFlow(CRunReportReceiver):
         #  A FAILING provision node speaks even where its kind is
         #  otherwise silent: a failed precondition is a test result.
         if good and self._provision_hidden_f(node_kind):  return
-        #  '_release_held' ANSWERS WHETHER THE START WAS STILL HELD --
-        #  that is, never written. A run that ended inside the window
-        #  has no START to close, so its line says 'DONE '; one whose
-        #  START stands says 'END  '.
-        start_written_f = not self._release_held((directory, node))
+        #  'announced_set' ANSWERS WHETHER A START STANDS ABOVE. It is
+        #  the only question the badge asks, and under '--brief' the
+        #  answer is always no.
+        announced_f = key in self.announced_set
         body, body_ink = self._run_body(directory, node)
 
         if not began_f:
@@ -666,13 +713,16 @@ class CPlainFlow(CRunReportReceiver):
         #  'END  ' CLOSES THE 'START' THIS NODE OPENED; a node whose
         #  START was never released is 'DONE ' -- it finished before
         #  it was worth announcing.
-        badge = "END  " if start_written_f else "DONE "
+        badge = "END  " if announced_f else "DONE "
         #  '||n' UPON PRINT. An 'END  ' closes an announcement that is
         #  still open while its own line is written, so it prints the
-        #  count and falls afterwards. A 'DONE ' opened none, so it
-        #  opens one for the length of its line and closes it again.
-        #  Both leave by the same '-=' below; only the entry differs.
-        if not start_written_f: self.screen_n += 1
+        #  count and falls afterwards (the caller's 'finally'). A
+        #  'DONE ' opened none, so it opens one for the length of its
+        #  own line -- except under '--brief', where the tail reads
+        #  the launcher's count and the screen count is never used.
+        if not announced_f and not self.brief_f:
+            self.screen_n += 1
+            self.announced_set.add(key)
         if good:
             self._line(when, badge, badge, body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
@@ -686,7 +736,6 @@ class CPlainFlow(CRunReportReceiver):
         else:
             self._line(when, badge, badge, body, body_ink,
                        "[FAIL]", self.ink.tag_fail("[FAIL]"))
-        self.screen_n = max(self.screen_n - 1, 0)
 
     def on_fault(self, when, directory, text):
         """

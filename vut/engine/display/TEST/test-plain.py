@@ -330,40 +330,44 @@ def test_tiers():
 
 
 def test_badge():
-    """RETURN: None. E-97 corrected: the parallelism rides on EVERY flow
-               line, after the verdict column, as '||n' -- so it FALLS
-               as runs end. MEASURED before: drawn on the START line
-               only, it showed '|8|' for the rest of the run and never
-               came down."""
+    """RETURN: None. The parallelism rides on EVERY flow line, after
+               the verdict column, as '||n' -- and the badge says which
+               MODE the reader is in (D-15).
+
+               NORMAL: 'START' at every launch, 'END  ' at every
+               termination, '||n' counted UPON PRINT, this line's own
+               run included. The ladder rises and falls, and a reader
+               can count the open STARTs above and get the number.
+
+               --brief: no launch announced, one 'DONE ' per run, and
+               '||n' from the LAUNCHER -- there is no screen count to
+               take when nothing is announced."""
     from vut.engine.display.plain import CPlainFlow
     from vut.engine.display.word import CInk
-    out = []
-    f = CPlainFlow(write=out.append, width=WIDTH, ink=CInk(False), start_delay=0)
-    f.on_tree_begun(when(0), ["suite/TEST"])
-    for i, name in enumerate("abc"):
-        f.on_run_begun(when(1 + i), "suite/TEST", "test-%s.sh" % name, "RUN")
-    f.on_run_begun(when(4), "suite/TEST", "test-d.sh", "RUN")
-    for name, good_f in (("b", True), ("a", False), ("c", True), ("d", True)):
-        f.on_run_ended(when(6), "suite/TEST", "test-%s.sh" % name, "RUN",
-                       good_f, "ok" if good_f else "fail")
-    f.on_run_begun(when(10), "suite/TEST", "test-e.sh", "RUN")
-    f.on_run_ended(when(11), "suite/TEST", "test-e.sh", "RUN", True, "ok")
-    for line in out: print(line)
 
-    #  THE COUNT BELONGS TO THE EVENT, NOT TO THE PRINTING. A START is
-    #  HELD until its run proves slow; read at print time, six STARTs
-    #  released together all said '||8' (MEASURED on a real tree).
-    banner("held STARTs, released together: each says what IT saw")
-    out = []
-    f = CPlainFlow(write=out.append, width=WIDTH, ink=CInk(False),
-                   start_delay=2.0)
-    f.on_tree_begun(when(0), ["suite/TEST"])
-    for i, name in enumerate("abcde"):
-        f.on_run_begun(when(1 + i), "suite/TEST", "test-%s.sh" % name, "RUN")
-    f.on_tick(when(8))
-    f.on_run_ended(when(9),  "suite/TEST", "test-a.sh", "RUN", True, "ok")
-    f.on_run_ended(when(10), "suite/TEST", "test-b.sh", "RUN", True, "ok")
-    for line in out: print(line)
+    def flow(brief_f):
+        out = []
+        f = CPlainFlow(write=out.append, width=WIDTH, ink=CInk(False),
+                       brief_f=brief_f)
+        f.on_tree_begun(when(0), ["suite/TEST"])
+        for i, name in enumerate("abcd"):
+            f.on_run_begun(when(1 + i), "suite/TEST",
+                           "test-%s.sh" % name, "RUN")
+        for name, good_f in (("b", True), ("a", False), ("c", True),
+                             ("d", True)):
+            f.on_run_ended(when(6), "suite/TEST", "test-%s.sh" % name,
+                           "RUN", good_f, "ok" if good_f else "fail")
+        #  A RUN ALONE, so that '||1' is seen to be meaningful and
+        #  '||0' is seen to be impossible.
+        f.on_run_begun(when(10), "suite/TEST", "test-e.sh", "RUN")
+        f.on_run_ended(when(11), "suite/TEST", "test-e.sh", "RUN",
+                       True, "ok")
+        for line in out: print(line)
+
+    banner("NORMAL: every launch a START, every end an END")
+    flow(False)
+    banner("--brief: one DONE per run, the launcher's count")
+    flow(True)
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ a slot like any work.
 ______________________________________________________________________________
 """
 import asyncio
+from   vut.engine.orchestrator.run.strategy import sort_key_of
 from abc         import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -110,7 +111,8 @@ class Scheduler:
     run; 'run()' is a coroutine and may be driven by 'asyncio.run'."""
 
     def __init__(self, dispatcher, on_entry=None, on_exit=None,
-                 worker_max_n=None, notify=None):
+                 worker_max_n=None, notify=None,
+                 selection_order=None, duration_db=None):
         """
         RETURN: Scheduler, ready to run a plan.
 
@@ -151,6 +153,8 @@ class Scheduler:
         self.on_exit      = on_exit
         self.budget       = budget_of(worker_max_n)
         self.notify       = notify or (lambda kind, **fields: None)
+        self.selection_order = selection_order
+        self.duration_db     = duration_db or {}
 
     async def run(self, plan):
         """
@@ -193,6 +197,34 @@ class Scheduler:
         self.notify("frame", role=role, good_f=good_f)
         return good_f
 
+    def _selected(self, ready_tuple):
+        """
+        RETURN: str, the name of the node that starts now, chosen from
+                the admissible ones by 'selection_order' -- the minimum
+                of the lexicographic key that order's CRITERIA RECORD
+                builds ('strategy.sort_key_of', O-28).
+                The first of them, which is plan order, where no order
+                stands or a budget of one makes the choice idle.
+
+        THE POLICY IS NOT WRITTEN HERE. One vocabulary of criteria
+        serves nodes and directories alike, so 'longest first' says
+        the same sentence about a test as about the directory holding
+        it, and a new criterion is a member of 'E_Criterion' rather
+        than an edit to this method.
+
+        A BUDGET OF ONE IS NOT ORDERED AT ALL. Where nothing may stand
+        beside the node that starts there is no tail to shorten and no
+        makespan to win -- MEASURED, zero gain below two workers, and
+        none is possible. A serial run keeps WALK ORDER, which is what
+        its reader expects and what its raw nominals hold.
+        """
+        if len(ready_tuple) == 1: return ready_tuple[0]
+        if self.selection_order is None: return ready_tuple[0]
+        if self.budget.limit is not None and self.budget.limit < 2:
+            return ready_tuple[0]
+        key_of = sort_key_of(self.selection_order, self.duration_db.get)
+        return min(enumerate(ready_tuple), key=key_of)[1]
+
     async def _dispatch_all(self, plan, state, dispatched):
         """
         RETURN: None. Starts what may start, awaits the first ending,
@@ -208,7 +240,7 @@ class Scheduler:
             while self.budget.free_f():
                 ready_tuple = state.ready()
                 if not ready_tuple: break
-                name = ready_tuple[0]
+                name = self._selected(ready_tuple)
                 self.budget.take_f()
                 state.started(name)
                 dispatched.append(name)

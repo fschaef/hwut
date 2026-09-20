@@ -353,15 +353,17 @@ jobs-budget)
     #  the same peak under every strategy.
     fixture_tree
     echo "== --jobs=2 =="
-    #  '--start-delay=0': this choice counts the most work standing at
-    #  once by pairing START against END, so every START must exist.
-    #  Held back, whether a line STANDS AT ALL would depend on the
-    #  speed of the machine -- the one thing a GOOD may never hold.
+    #  NOTHING IS PINNED ANY MORE. This choice counts the most work
+    #  standing at once by pairing START against END, so every START
+    #  must exist -- which NORMAL mode now guarantees by construction
+    #  (D-15). Under the old delay a START was held, so whether a line
+    #  STOOD AT ALL depended on the speed of the machine, and this
+    #  fixture had to say '--start-delay=0' to escape it.
     PYPE=test-run--jobs-budget.pype every_strategy --directory=tree \
-        --jobs=2 --start-delay=0
+        --jobs=2
     echo "== --jobs=1 =="
     PYPE=test-run--jobs-budget.pype every_strategy --directory=tree \
-        --jobs=1 --start-delay=0
+        --jobs=1
     ;;
 
 linear-raw)

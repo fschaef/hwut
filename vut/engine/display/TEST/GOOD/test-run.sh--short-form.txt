@@ -2,11 +2,14 @@
 STATUS: 0
 STDOUT {
     DIR  alpha/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
     DIR  beta/TEST                                                                
-    DONE  test-one.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
     DIR  gamma/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 0 fail, hh:mm:ss
@@ -16,21 +19,27 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.07 [sec]
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.08 [sec]
     |                  ok                  |                skip                 |
 }
 --- a globbed app
 STATUS: 0
 STDOUT {
     DIR  alpha/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]  ||1
-          test-two.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
+    START test-two.sh                                                               ||1
+    END   test-two.sh ....................................................... [OK]  ||1
     DIR  beta/TEST                                                                
-    DONE  test-one.sh ....................................................... [OK]  ||1
-          test-two.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
+    START test-two.sh                                                               ||1
+    END   test-two.sh ....................................................... [OK]  ||1
     DIR  gamma/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]  ||1
-          test-two.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                               ||1
+    END   test-one.sh ....................................................... [OK]  ||1
+    START test-two.sh                                                               ||1
+    END   test-two.sh ....................................................... [OK]  ||1
     
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
@@ -76,7 +85,7 @@ STDOUT {
                     [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
-                    [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>] [--directory=<path>]
+                    [--no-failure-summary] [--brief] [--log <file>]
+                    [--directory=<path>]
 }
 <hwut-end>

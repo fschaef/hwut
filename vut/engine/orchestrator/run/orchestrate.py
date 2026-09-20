@@ -36,6 +36,8 @@ from ..scheduler.budget            import CBudget
 from ..scheduler.scheduler         import Scheduler
 from ..scheduler.state             import E_NodeState
 from .strategy                     import CLinear
+from vut.engine.bookkeeper.traces  import duration_db_of
+from .strategy                     import sort_key_of
 from ...protocol.vocabulary        import event
 
 
@@ -79,13 +81,19 @@ class CDirectoryWork:
     'emit'; the outcome is a CDirDone. A placement backend (stage 2)
     answers a different 'run' for the same unit."""
 
-    def __init__(self, root, entry, dispatcher_factory):
+    def __init__(self, root, entry, dispatcher_factory,
+                 selection_order=None):
         """
         RETURN: CDirectoryWork for 'entry' below the absolute 'root'.
+
+        'selection_order' says which of the ADMISSIBLE nodes starts
+        where more than one may (O-27); 'None' is plan order. It
+        travels to the node-level Scheduler this unit drives.
         """
         self.root               = root
         self.entry              = entry
         self.dispatcher_factory = dispatcher_factory
+        self.selection_order    = selection_order
 
     @property
     def directory(self):
@@ -185,11 +193,20 @@ class CDirectoryWork:
                              lambda name: None)
         detail_of  = getattr(dispatcher, "detail_of",
                              lambda name: None)
+        #  WHAT THE MACHINE LAST MEASURED, read per directory because
+        #  'hwut-traces.csv' is per directory. A directory nobody has
+        #  run yields {}, and the selection falls back to plan order
+        #  of its own accord (O-27).
+        directory_path = os.path.normpath(os.path.join(self.root,
+                                                       directory))
         scheduler  = Scheduler(dispatcher,
-                               on_entry     = entry.on_entry,
-                               on_exit      = entry.on_exit,
-                               worker_max_n = budget,
-                               notify       = notify)
+                               on_entry        = entry.on_entry,
+                               on_exit         = entry.on_exit,
+                               worker_max_n    = budget,
+                               notify          = notify,
+                               selection_order = self.selection_order,
+                               duration_db     = duration_db_of(
+                                                     directory_path))
         report = await scheduler.run(entry.plan)
         close  = getattr(dispatcher, "close", None)
         if close is not None: await close()
@@ -212,7 +229,7 @@ class CTreeScheduler:
     queue."""
 
     def __init__(self, dispatcher_factory, worker_max_n=None,
-                 clock=None, strategy=None):
+                 clock=None, strategy=None, selection_order=None):
         """
         RETURN: CTreeScheduler, ready to run a tree plan.
 
@@ -235,6 +252,7 @@ class CTreeScheduler:
         self.worker_max_n       = worker_max_n
         self.clock              = clock or _utc_now
         self.strategy           = strategy or CLinear()
+        self.selection_order    = selection_order
 
     async def run(self, tree_plan, queue):
         """
@@ -258,8 +276,10 @@ class CTreeScheduler:
 
         budget    = CBudget(self.worker_max_n)
         unit_list = [CDirectoryWork(tree_plan.root, entry,
-                                    self.dispatcher_factory)
+                                    self.dispatcher_factory,
+                                    self.selection_order)
                      for entry in tree_plan]
+        unit_list = self._ordered(unit_list, tree_plan.root)
         done_list = await self.strategy.run(
                         [(lambda unit=unit:
                               self._guarded(unit, emit, budget))
@@ -276,6 +296,40 @@ class CTreeScheduler:
         if tree_plan.wish_skipped_n: extra["skip_n"] = tree_plan.wish_skipped_n
         emit("tree-done", good=good_f, fail_n=fail_n, **extra)
         queue.put_nowait(None)
+
+    def _ordered(self, unit_list, root):
+        """
+        RETURN: list[CDirectoryWork], the units in the order the
+                selection order asks for -- THE SAME CRITERIA RECORD
+                the node level uses, over a directory's WEIGHT: the sum
+                of every case this machine has measured in it
+                ('duration_db_of'), or None where it has measured
+                none (O-28).
+
+        ONE VOCABULARY, BOTH LEVELS. 'longest first' says the same
+        sentence about a directory as about a test, and a directory
+        nobody has measured goes FIRST for the same reason a test
+        does -- it is as likely to be heavy as light, and started late
+        a heavy one becomes the tail everybody waits for.
+
+        THE ORDER IS IDLE UNDER 'linear' AND SAYS SO. MEASURED: walk
+        order and heaviest-first give the SAME total there, to the
+        millisecond, because serial directories sum alike in any
+        order. It is left applied all the same -- under linear it
+        decides which directory a reader SEES first, which is not
+        nothing, and it costs a sort of nineteen items.
+        """
+        if self.selection_order is None: return unit_list
+        weight_db = {}
+        for unit in unit_list:
+            db = duration_db_of(os.path.normpath(
+                     os.path.join(root, unit.directory)))
+            weight_db[unit.directory] = sum(db.values()) if db else None
+        key_of = sort_key_of(self.selection_order, weight_db.get)
+        return [unit for _, unit
+                in sorted(enumerate(unit_list),
+                          key=lambda pair: key_of((pair[0],
+                                                   pair[1].directory)))]
 
     async def _guarded(self, unit, emit, budget):
         """
@@ -383,7 +437,8 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
-                 clock=None, strategy=None, label_view=None):
+                 clock=None, strategy=None, label_view=None,
+                 selection_order=None):
     """
     RETURN: asyncio.Queue, the report stream of the run -- the events
             of 'vocabulary.py', then one 'None'. The run stands as an
@@ -403,5 +458,6 @@ def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
     queue     = asyncio.Queue()
     asyncio.ensure_future(
         CTreeScheduler(dispatcher_factory, worker_max_n,
-                       clock, strategy).run(tree_plan, queue))
+                       clock, strategy,
+                       selection_order).run(tree_plan, queue))
     return queue

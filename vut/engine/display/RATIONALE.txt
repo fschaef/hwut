@@ -555,3 +555,94 @@ COST      'plain.py': 'screen_n' beside 'parallel_n', the '||n' rise
           That is what 'nothing is suppressed' costs, and whether a
           one-job run should carry the tail at all is a question
           nobody has been asked.
+
+D-15  TWO MODES, AND THE BADGE SAYS WHICH ONE YOU ARE IN    (2026-09-20)
+----------------------------------------------------------------------------
+PROBLEM   Whether a run got a pair of lines or a single one was
+          decided BY TIMING. A START was held for
+          START_DELAY_SECONDS; a run that died inside the window
+          never announced itself and closed with 'DONE ', one that
+          outlived it closed with 'END  '. So the badge was an
+          artefact of the machine's speed, a reader could not say why
+          one line read 'DONE ' and the next 'END  ', and WHETHER A
+          LINE EXISTED AT ALL depended on the morning -- the one
+          thing a GOOD file may never hold. Every fixture that
+          recorded a flow had to say '--start-delay=0' to escape it.
+
+DECISION  RULED (Frank-Rene): TWO MODES, and the caller states which.
+
+              NORMAL   every launch writes 'START', every termination
+                       writes 'END  '. No 'DONE '. '||n' counted UPON
+                       PRINT (D-14), this line's own run included.
+              --brief  no launch announced. One 'DONE ' per run, at
+                       its termination. '||n' from the LAUNCHER,
+                       because nothing is announced and counting
+                       announcements would say '1' on every line.
+
+          IN BOTH, '||n' STANDS AT THE END OF THE LINE, where it
+          always stood. Nothing was added to the closing blocks.
+
+          '--brief' IS NOT A TIER. A tier says HOW MUCH is shown --
+          details, provision nodes, faults. '--brief' says HOW A RUN
+          IS ANNOUNCED. The two are orthogonal and a VERBOSE brief
+          run is a meaningful thing to ask for, which a fifth tier
+          could not spell.
+
+          THE HOLD MACHINERY IS GONE: START_DELAY_SECONDS, 'held_db',
+          'on_tick's release loop, '_release_held' and the
+          '--start-delay=<seconds>' option. 'on_tick' stays, a no-op,
+          because it is the receiver protocol's.
+
+          THE BADGE ASKS ONE QUESTION: does a 'START' stand above?
+          'announced_set' answers it, 'END  ' where yes, 'DONE '
+          where no, 'SKIP ' where the node never ran. Under '--brief'
+          the answer is always no, so the mode needs no branch of its
+          own in the closing path -- it is simply 'never announce'.
+          GRAVEYARD: E-97's 'a START is held until the run proves
+          slow', and with it the reasoning that a count must be taken
+          at the event because a held line is written late.
+
+          ':' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE. This
+          law was stated in 'test-run.pype' from the day it was
+          written and had never been given to the display. D-15 made
+          the gap universal: every END repeats its own START's
+          application, so in a suite of CHOICELESS runs every verdict
+          line read ':' and named nothing. MEASURED, it broke a
+          reader -- 'services test-base-questions.py' collects what a
+          wish selected by finding a name beside a verdict, and found
+          none, so '--fail selects what last failed' failed. One law,
+          one place: the display keeps it now.
+
+          A READER OF AN ELIDED FLOW MUST EXPAND BEFORE IT COMPARES.
+          Where a CHOICE does stand, ':' is correct and the verdict
+          line rightly does not repeat the file. 'services
+          test-gate.py' scanned verdict lines for a file name and
+          went red; the display was right and the reader was never
+          expanding, which is the rule 'test-run.pype' keeps
+          ('EXPANSION COMES FIRST'). The reader was taught to expand
+          and ITS GOOD STOOD BYTE-EXACT -- the proof of which half
+          was broken.
+
+COST      'plain.py': 'brief_f' for 'start_delay', 'announced_set',
+          'on_run_ended' split so the counts fall exactly once in a
+          'finally' whatever path the line took. 'console.py':
+          '--brief' for '--start-delay=<seconds>'.
+          'test-plain.py badge' rewritten to show both modes;
+          'test-run.sh jobs-budget' no longer pins a delay, because
+          NORMAL guarantees by construction what the pin was for.
+          'test-gate.py' expands elisions.
+
+          TWENTY-ONE PAGES RE-RECORDED, classified mechanically
+          first: 257 lines the START/END pair and its '||n', 43 the
+          retired option and the usage line rewrapping round its
+          absence, 2 the rewritten fixture's banners. NOTHING MATCHED
+          NOTHING.
+
+          Census 841 ok / 12 fail -> 841 ok / 12 fail, THE SAME
+          TWELVE. A behaviour cut of this size that moves no
+          pre-existing failure is the strongest evidence available
+          that it moved only what it meant to.
+
+          A NORMAL SUITE'S FLOW IS NOW TWICE AS LONG, and that lands
+          on the default path. '--brief' is the old compactness, and
+          it is opt-in.

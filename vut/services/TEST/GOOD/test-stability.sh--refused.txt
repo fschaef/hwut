@@ -48,7 +48,7 @@ STDOUT {
 }
 STATUS: 2
 STDOUT {
-    REFUSED: '--strategy' takes one of linear, parallel, successor, not 'hopeful'
+    REFUSED: '--strategy=hopeful': 'hopeful' names neither a strategy nor a selection order -- one of linear, successor, parallel, longest-first, plan-order, shortest-first (short: l, lf, p, po, s, sf)
     usage: hwut.stability [--fail] [--pass] [--since=<point>] [--until=<point>]
                           [--glob <target>]... [--exclude <target>]...
                           [--dir <glob>]... [--exclude-dir <glob>]...

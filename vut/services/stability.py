@@ -77,8 +77,7 @@ from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
-from   vut.engine.orchestrator.run.strategy          import (STRATEGY_DB,
-                                                             DEFAULT_STRATEGY_NAME)
+from   vut.engine.orchestrator.run.strategy          import words_of
 from   ._target import split_words, TargetError
 from   ._exit                                        import E_ExitCode
 from   vut.services.lib.cmdline import (face_parser, usage_of,
@@ -414,7 +413,7 @@ def main(argv=None, write=None, write_error=None):
 
     directory  = "."
     repeat_n   = REPEAT_DEFAULT
-    strategy   = DEFAULT_STRATEGY_NAME
+    strategy   = None      # the '--strategy=' spec, verbatim; O-27
     verbose_f  = False
     cadence_f  = False
     subject_tuple = ("stdout",)
@@ -440,15 +439,15 @@ def main(argv=None, write=None, write_error=None):
             return E_ExitCode.REFUSED
         repeat_n = int(text)
     if arguments.strategy is not None:
-        name = arguments.strategy
-        if name not in STRATEGY_DB:
-            write("REFUSED: '--strategy' takes one of %s, not '%s'%s"
-                  % (", ".join(sorted(STRATEGY_DB)), name,
-                     did_you_mean(name, sorted(STRATEGY_DB),
-                                  among_listed_f=True)))
+        #  READ ONLY TO REFUSE EARLY (O-27). Stability hands the spec
+        #  back to 'hwut.run' verbatim; it parses here so that a bad
+        #  word is named at the door rather than once per repetition.
+        _, _, refusal = words_of(arguments.strategy)
+        if refusal is not None:
+            write("REFUSED: %s" % refusal)
             write(USAGE)
             return E_ExitCode.REFUSED
-        strategy = name
+        strategy = arguments.strategy
     #  A TEST NAMED BY PATH stands in the directory the path names
     #  ('services/_target.py').
     try:
@@ -558,8 +557,13 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     snapshot_list = []
     for _ in range(repeat_n):
         event_list = []
-        run_service.main(wish_argv + ["--timing",
-                                      "--strategy=%s" % strategy,
+        #  ABSENT MEANS ABSENT (O-27): where the person named no
+        #  strategy, none is passed on, and 'hwut.run' applies its own
+        #  defaults. Spelling one here would pin a default in a second
+        #  place.
+        strategy_argv = [] if strategy is None \
+                        else ["--strategy=%s" % strategy]
+        run_service.main(wish_argv + strategy_argv + ["--timing",
                                       "--directory=%s" % root,
                                       "--silent"],
                          write=lambda line: None,

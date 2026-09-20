@@ -822,3 +822,198 @@ COST      One kind, so every walker of the vocabulary moves:
           'test-line.py roundtrip' reads 11 kinds where it read 10.
           'test-receiver.py format' was ALREADY red before this
           (verdict words, meta_n/skip_n) and stays red -- not ours.
+
+O-27  TWO QUESTIONS, TWO ENUMS, ONE OPTION                       (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   'state.ready()' has always said ADMISSION, never choice --
+          it documents that which of the admissible nodes starts "is
+          the scheduler's own decision". The decision slot held
+          'ready_tuple[0]': plan order, chosen by nobody.
+
+          MEASURED on this tree's own 'hwut-traces.csv' (321 cases,
+          204 s of wall time), simulating list scheduling in both
+          orders:
+
+              LINEAR strategy        plan order   longest 1st   gain
+                   2 jobs               108.5s       106.5s     1.9%
+                   4 jobs                63.9s        61.4s     3.9%
+                   8 jobs                44.6s        39.6s    11.3%
+                  16 jobs                36.6s        31.9s    12.9%
+              PARALLEL strategy
+                   2 jobs               102.2s       102.2s     0.0%
+                   4 jobs                51.1s        51.1s     0.0%
+                   8 jobs                28.2s        25.6s     9.4%
+                  16 jobs                17.1s        12.8s    25.2%
+
+          At 16 jobs parallel, longest-first reaches 12.8s against a
+          perfect-balance bound of 12.8s -- the OPTIMAL makespan --
+          where plan order leaves 17.1s, a third above it. The
+          mechanism is the spread: 'services/TEST' holds a case 7.7
+          times its own mean, and admitted last it is the tail
+          everybody waits for. This is Graham's 1969 result: any list
+          order is within 2 - 1/m of optimal and fails exactly when
+          the last job to finish is long; sorting by non-increasing
+          duration (LPT) gets 4/3 - 1/3m.
+
+DECISION  RULED (Frank-Rene): LONGEST-FIRST IS THE DEFAULT, the others
+          are offered, and ONE option carries both questions --
+          "having two arguments would confuse the user".
+
+              E_SchedulerTestRun_Strategy        when a directory starts
+                  LINEAR  SUCCESSOR  PARALLEL
+              E_SchedulerTestRun_SelectionOrder  which admissible node
+                  LONGEST_FIRST  PLAN_ORDER  SHORTEST_FIRST
+
+              --strategy=parallel,longest-first
+              --strategy=p,lf                 the same thing
+              --strategy=longest-first,p      and so is this
+              --strategy=p                    parallel, longest-first
+              --strategy=sf                   linear, shortest-first
+
+          TWO ENUMS AND NOT ONE, because the axes are orthogonal and
+          the measured win lives in 'parallel' AND 'longest-first'
+          TOGETHER -- a single enum could not spell that, and making
+          longest-first its default would displace 'linear' and leave
+          the directory policy undefined. GRAVEYARD: a second option,
+          '--order='; the user should not have to hold a distinction
+          the tool can resolve from the word itself.
+
+          THE SHORTHANDS SHARE ONE NAMESPACE. The option's value is a
+          SET and no token announces which enum it belongs to, so
+          'plan-order' is 'po' and never 'p' -- 'p' is 'parallel', and
+          a token that could mean either means nothing.
+
+          AN ENUM NAMED TWICE IS REFUSED, not last-wins:
+          '--strategy=linear,parallel' is a contradiction the user can
+          only have written by mistake, and a silent winner hides it.
+          'words_of()' is the ONE parser; 'stability' calls it only to
+          refuse at the door and hands the spec to 'hwut.run' verbatim,
+          so no default is spelt in two places.
+
+          A NODE NOBODY HAS MEASURED GOES FIRST under either duration
+          order. It is as likely long as short, and starting an unknown
+          early is the cheaper mistake: started late, a long one
+          becomes the very tail LONGEST_FIRST exists to prevent. A
+          fresh tree has no measurements at all, and is then plain plan
+          order, which is what it should be. Durations come from THIS
+          MACHINE's 'Run' rows only ('duration_db_of'); another
+          machine's milliseconds say nothing about this one's.
+
+          PLAN ORDER BREAKS EVERY TIE, so the choice is deterministic.
+
+          A BUDGET OF ONE IS NOT ORDERED AT ALL. Where nothing may
+          stand beside the node that starts there is no tail to shorten
+          and no makespan to win -- measured, zero gain below two
+          workers, and none is possible. A serial run keeps WALK ORDER,
+          which is what its reader expects and what its raw nominals
+          hold: 'test-run.sh linear-raw' and 'short-form' are blessed
+          RAW and stand BYTE-EXACT through this cut, which is the proof
+          of the guard.
+
+COST      'strategy.py' gains the two enums, the shared shorthand
+          table and 'words_of'; 'STRATEGY_DB' is keyed by enum and
+          'DEFAULT_STRATEGY_NAME' is gone. 'scheduler.py' gains
+          '_selected' in the slot that held 'ready_tuple[0]', plus
+          'selection_order' and 'duration_db'. 'traces.py' gains
+          'duration_db_of'. 'orchestrate.py' carries the order down to
+          the node-level Scheduler through CDirectoryWork.
+          'run.py' and 'stability.py' move to the one parser.
+
+          THREE PAGES RE-RECORDED, each the subject of its own page:
+          'test-run.sh strategy-refused' and 'test-stability.sh
+          refused' hold the refusal message, and 'test-strategy.py
+          contract' asserted the old string API and was REWRITTEN --
+          not blessed -- against the enums, and now states the whole
+          option vocabulary as a table.
+
+          Census 841 ok / 12 fail -> 841 ok / 12 fail, the same twelve.
+
+          NOT RULED, and it stands: longest-first delays the moment a
+          watched suite first says [FAIL], because the quick tests go
+          last. Frank-Rene ruled the default with that measurement in
+          front of him. Left open beside it: 'failed last time first,
+          then longest', which would want both and has 'book.csv'
+          already holding the verdicts.
+
+O-28  ONE CRITERIA VOCABULARY, BOTH LEVELS; DIRECTORIES CONSIDERED
+      TOGETHER BY DEFAULT                                    (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   O-27 wired 'longest first' to NODES only. MEASURED
+          afterwards: 'orchestrate.py' built 'unit_list' straight from
+          tree_plan iteration -- nothing sorted units -- and
+          'selection_order' was merely CARRIED THROUGH CDirectoryWork
+          to the node-level Scheduler. So the default never chose the
+          slowest directory first, and could not: DEFAULT_STRATEGY was
+          LINEAR, one directory after another in walk order. That was
+          an under-reading of the ruling, found by Frank-Rene reading
+          the running tree.
+
+          MEASURED, from this tree's own hwut-traces.csv (19
+          directories, 321 cases, 204 s of wall time):
+
+              jobs linear/walk linear/big bundled/big flat  ideal
+                 2      95.4s      95.4s       91.7s 91.7s  91.7s
+                 4      55.3s      55.3s       45.8s 45.8s  45.8s
+                 8      35.6s      35.6s       23.0s 22.9s  22.9s
+                16      29.2s      29.2s       11.5s 11.5s  11.5s
+                32      29.2s      29.2s        6.4s  6.4s   5.7s
+
+          TWO THINGS THAT TABLE SETTLES. Ordering directories under
+          LINEAR buys EXACTLY ZERO -- walk and heaviest-first are
+          identical to the millisecond at every job count, because
+          serial directories sum alike in any order. And POOLING buys
+          almost nothing over keeping directories bundled: 23.0 s
+          against 22.9 s at 8 jobs, identical elsewhere. The whole
+          gain -- 35% at 8 jobs, 61% at 16 against the old default --
+          is the word TOGETHER.
+
+DECISION  RULED (Frank-Rene): the default is DIRECTORY BUNDLING KEPT,
+          DIRECTORIES CONSIDERED TOGETHER, LONGEST DIRECTORY FIRST,
+          LONGEST APPLICATION FIRST. DEFAULT_STRATEGY is PARALLEL.
+
+          CRITERIA RECORDS. A selection order IS an ordered tuple of
+          'E_Criterion', applied lexicographically by 'sort_key_of';
+          every criterion states itself as 'less is earlier', so the
+          caller always takes the minimum.
+
+              LONGEST_FIRST  = (UNMEASURED_FIRST, DURATION_DESC,
+                                PLAN_ORDER)
+              SHORTEST_FIRST = (UNMEASURED_FIRST, DURATION_ASC,
+                                PLAN_ORDER)
+              PLAN_ORDER     = (PLAN_ORDER,)
+
+          PLAN_ORDER ENDS EVERY TUPLE, so the choice is deterministic.
+          A new criterion is a member of the enum plus one line in
+          '_component_of' -- 'FAILED_FIRST' needs no scheduler edit.
+
+          ONE VOCABULARY, BOTH LEVELS. The same record orders NODES in
+          'scheduler._selected' and DIRECTORIES in
+          'orchestrate._ordered'. A node weighs its own run; a
+          DIRECTORY WEIGHS THE SUM of every case this machine has
+          measured in it. 'longest first' therefore says the same
+          sentence about a directory as about a test, and an unmeasured
+          directory goes first for the same reason an unmeasured test
+          does.
+
+          THE ORDER IS LEFT APPLIED UNDER 'linear' though it wins no
+          time there: it decides which directory a READER SEES first,
+          and that is not nothing.
+
+COST      'strategy.py' gains 'E_Criterion', 'CRITERIA_DB',
+          '_component_of' and 'sort_key_of'; DEFAULT_STRATEGY moves to
+          PARALLEL. 'scheduler._selected' is now four guards and a
+          'min' over 'sort_key_of' -- the policy left the method.
+          'orchestrate.py' gains '_ordered'.
+
+          'test-strategy.py contract' re-recorded: it prints the
+          defaults, and PARALLEL is now one of them.
+
+          STOPPED AND NOT RECORDED, per the rule that a suite moving in
+          a way the ruling did not foresee is a fork and not a bless:
+          'test-run.sh linear-raw' and 'short-form' are blessed RAW and
+          PIN DIRECTORY ORDER. '_ordered' applies under linear too, so
+          gamma now precedes alpha in both. 'linear-raw' exists to be
+          'the serial run of old'; recording a heaviest-first order
+          into it would change what the page MEANS, and that is
+          Frank-Rene's to rule, not a diff to bless. They stand red:
+          census 839 ok / 14 fail, the twelve plus these two.

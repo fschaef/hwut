@@ -36,9 +36,10 @@ import sys
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.run.orchestrate import CDirDone
-from vut.engine.orchestrator.run.strategy    import (CLinear, CParallel,
-                                                     CStrategy, CSuccessor,
-                                                     strategy_of)
+from vut.engine.orchestrator.run.strategy    import (
+         CLinear, CParallel, CStrategy, CSuccessor, strategy_of, words_of,
+         E_SchedulerTestRun_Strategy      as E_Strategy,
+         E_SchedulerTestRun_SelectionOrder as E_Order)
 
 
 def units_of(trace, tick_list):
@@ -83,12 +84,26 @@ def test_contract():
     except NotImplementedError:
         print("a bare CStrategy: NotImplementedError -- 'may_start' is owed")
     print("an empty unit list: %s" % asyncio.run(CParallel().run([])))
-    for name in ("linear", "successor", "parallel"):
-        print("strategy_of(%r).name = %r" % (name, strategy_of(name).name))
+    for member in E_Strategy:
+        print("strategy_of(%s).name = %r"
+              % (member.name, strategy_of(member).name))
     try:
-        strategy_of("bogus")
-    except KeyError as error:
-        print("strategy_of('bogus'): KeyError %s" % error)
+        strategy_of(E_Order.LONGEST_FIRST)
+    except KeyError:
+        print("strategy_of(a selection order): KeyError -- "
+              "the two enums are not interchangeable")
+
+    #  ONE OPTION, TWO ENUMS (O-27). The words may stand in either
+    #  order, long or short; an unnamed question keeps its default; two
+    #  words of one question are refused rather than silently settled.
+    print()
+    for spec in ("p,lf", "longest-first,parallel", "l", "sf", "po,s",
+                 "p , lf", "linear,parallel", "lf,shortest-first",
+                 "bogus", "p,,l", ""):
+        strategy, order, refusal = words_of(spec)
+        if refusal is not None: print("%-24r REFUSED: %s" % (spec, refusal))
+        else:                   print("%-24r %s + %s"
+                                      % (spec, strategy.name, order.name))
 
 
 if __name__ == "__main__":

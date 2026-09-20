@@ -193,9 +193,14 @@ BIN DISCIPLINE
       '|n|' column of '--show-jobs' (how hard the MACHINE worked);
       'screen_n' feeds '||n' (what the SCREEN shows). The defect was
       one name serving two questions
-    - STILL OPEN: a serial run now prints '||1' on every line, where
-      it printed no tail at all. Nobody has been asked whether a
-      one-job run should carry the tail
+    - CLOSED by D-15: a serial run prints '||1' on every line and
+      that is right -- in NORMAL mode a START stands for every launch,
+      so the screen count and the process count are THE SAME NUMBER by
+      construction. The divergence that caused all of this cannot
+      recur while every launch is announced
+    - '--brief' announces no launch, so it has no screen count and
+      reports the LAUNCHER's -- in the same column, at the end of the
+      same line
 
 ==============================================================================
 5b. A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY BADGE
@@ -223,6 +228,59 @@ BIN DISCIPLINE
       EVERY reader of that vocabulary, filters included. Grep the
       tuple, not just the emitter
     - ruled: display D-14
+
+==============================================================================
+5c. WHEN A READER SCANS A FLOW, IT MUST EXPAND THE ELISION FIRST
+==============================================================================
+
+    - ':' means 'the same application as the line above'. Since D-15
+      every run writes a START and an END, and the END repeats its own
+      START -- so a verdict line carrying a choice reads ':'
+    - case: 'services test-gate.py new_choice' filtered verdict lines
+      for 'test-two.py' and found none. THE DISPLAY WAS RIGHT
+    - the reader was taught to expand; ITS GOOD STOOD BYTE-EXACT.
+      That is how you learn which half was broken -- fix the half you
+      suspect and see whether the page moves
+    - 'test-run.pype' has kept this rule from the day it was written:
+      'EXPANSION COMES FIRST'. Any new reader of a flow inherits it
+    - THE OTHER HALF, and it WAS a defect: a CHOICELESS run elided to
+      ':' names NOTHING. The pype stated that law; the display never
+      did, and D-15 made the gap universal
+    - case: 'services test-base-questions.py --fail' reported
+      'selected: ' -- empty. A ruled formatting change silently
+      emptied a measurement
+    - GENERAL: a change to HOW A LINE IS SPELT is a change to every
+      READER of that line, tests included. Grep for the readers, not
+      just the writers
+    - ruled: display D-15
+
+==============================================================================
+5d. A TACTIC IS MEASURED ON THE TREE, NOT ARGUED
+==============================================================================
+
+    - case: 'big task first' for the scheduler. The theory is Graham
+      1969 -- any list order is within 2 - 1/m of optimal makespan and
+      fails exactly when the LAST job to finish is long; sorting by
+      non-increasing duration gets 4/3 - 1/3m
+    - the tree ALREADY HELD the data to settle it: 'hwut-traces.csv'
+      carries 'duration_ms' per case, per machine. 321 cases, 204 s
+    - simulated both orders: 25% at 16 jobs parallel (and it reaches
+      the perfect-balance bound EXACTLY), 13% at 16 linear, and ZERO
+      at 2 and 4 jobs
+    - THE ZERO IS THE USEFUL HALF. The default budget is the core
+      count, so on a four-core laptop the tactic is worth nothing
+      measurable. A gain quoted without the job count it needs is a
+      gain quoted for somebody else's machine
+    - the bigger lever was not the tactic: linear-at-16 is 31.9s,
+      parallel-at-16 is 12.8s. THE STRATEGY IS WORTH 2.5x THE
+      ORDERING, and the strategy's default was the thing nobody had
+      questioned
+    - COUNTER-OBJECTIVE, worth stating whenever makespan is optimised:
+      LPT minimises WHEN THE SUITE FINISHES; SPT minimises WHEN YOU
+      LEARN SOMETHING. A developer at a terminal wants the second. The
+      default was ruled with that in front of the ruler, and the
+      RATIONALE says so rather than pretending nobody noticed
+    - ruled: orchestrator/run O-27
 
 ==============================================================================
 6.  FIXTURES -- MAKE THEM THE WAY A USER MAKES THINGS

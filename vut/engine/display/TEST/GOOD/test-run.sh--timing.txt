@@ -12,7 +12,7 @@ STDOUT {
                     [--jobs=<n>] [--strategy=<name>]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
-                    [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>] [--directory=<path>]
+                    [--no-failure-summary] [--brief] [--log <file>]
+                    [--directory=<path>]
 }
 <hwut-end>

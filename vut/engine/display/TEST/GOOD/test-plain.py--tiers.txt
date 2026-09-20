@@ -4,8 +4,10 @@ TREE  1 directory(ies)
 DIR  suite/TEST                                                               
 ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 FRAME suite/TEST:on_entry ............................................... [OK]
-DONE  test-a.sh ......................................................... [OK]  ||1
-      test-b.sh ....................................................... [FAIL]  ||1
+START test-a.sh                                                                 ||1
+END   test-a.sh ......................................................... [OK]  ||1
+START test-b.sh                                                                 ||1
+END   test-b.sh ....................................................... [FAIL]  ||1
 FRAME suite/TEST:on_exit ............................ the frame failed  [FAIL]
 ROLL  suite/TEST ........................................... 1 of 2 ok  [FAIL]
 TREE  done, 2 failure(s)
