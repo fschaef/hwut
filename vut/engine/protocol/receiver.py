@@ -119,6 +119,11 @@ class CRunReportReceiver:
         """RETURN: None. A report of determination -- e.g. an empty
         selection."""
 
+    def on_warning(self, when, text):
+        """RETURN: None. A finding of determination about the wish
+        that decides nothing -- a glob that met only silenced runs;
+        tree-level, before any run."""
+
     def on_refused(self, when, directory, node, text):
         """RETURN: None. A file or test NOT RUN, by name and reason
         (E-41): a backup-shaped candidate, a test with no nominal."""

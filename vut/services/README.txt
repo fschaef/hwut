@@ -79,6 +79,36 @@ The faces:
                  failure. '--force' is the old blessing: the candidate
                  whole.
 
+                 '--whole', '--as-is' and '--force' ARE ONE ACT
+                 (E-109): the candidate becomes the nominal as it
+                 stands -- on a first acceptance instead of the
+                 undecided shape, on a standing nominal instead of
+                 the merge. What an overwrite replaces is an earlier
+                 acceptance: a GOOD file cannot exist without this
+                 face. It provisions the candidate itself, so nothing
+                 need run first. It implies '--dont-ask'. The two
+                 readings of a first acceptance:
+
+                     hwut.play <app> --save     look, again, until
+                     hwut.accept <app>          it is right, then
+                                                decide the lines
+
+                     hwut.accept <app> --as-is  it is right already
+
+                 The first is the author's path; the second is a
+                 fixture's, a script's, and an author's who has read
+                 the output and wants it recorded whole.
+
+                 WHAT ACCEPTANCE MEANS, exactly: a row in 'book.csv'
+                 with 'last_accept' written, AND a file in 'GOOD/' --
+                 at least '##! unaccepted', its fillers, '####' and
+                 the closing token. Never one without the other. That
+                 the two agree is 'hwut.sanitize --books' business
+                 (E-41), not any face's: a nominal the book lacks, a
+                 book that says ASPIRANT beside a standing nominal, a
+                 nominal whose 'last_accept' is empty -- each named,
+                 none removable by unlink.
+
                  A CHANGE IS MERGED HERE where stdin and stderr are
                  terminals, through the same engine
                  'hwut.accept.interactive' runs ('lib/accept/

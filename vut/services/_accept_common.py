@@ -39,16 +39,19 @@ def token_terminated_f(text):
     return bool(line_list) and line_list[-1] == CLOSING_TOKEN
 
 
+
 def classify(key, force_f):
     """
     RETURN: str, which kind of acceptance the key calls for:
 
-            'first'   no nominal stands, and '--force' was not said:
-                      the FIRST acceptance -- the candidate is recorded
-                      as one nobody has judged yet (E-60), and the
+            'first'   no nominal stands, and the whole-take was not
+                      asked ('--whole' / '--as-is' / '--force'): the
+                      FIRST acceptance -- the candidate is recorded as
+                      one nobody has judged yet (E-60), and the
                       session, where there is one, opens on that
-            'bless'   no nominal stands and '--force' was said: the
-                      candidate becomes the nominal WHOLE, as it stands
+            'bless'   no nominal stands and the whole-take was asked:
+                      the candidate becomes the nominal WHOLE, as it
+                      stands (E-109)
             'merge'   a nominal stands and '--force' was not said: this
                       is a CHANGE, and 'hwut.accept.interactive's
                       business
@@ -70,3 +73,4 @@ def read_text(path):
             return file_handle.read()
     except (OSError, UnicodeDecodeError):
         return None
+

@@ -4377,3 +4377,146 @@ DECISION  'proposal_of' answers a Proposal (the target and its
 
 COST      No page moved: nine 'test-remove.sh' choices. Both records
           plain (record_check).
+
+
+E-108  A WISH IS A THING A REQUEST *HOLDS*, NOT A THING IT *IS*  (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   Five Requests -- 'wishlist', 'plan', 'report', 'run' and the
+          labels family -- each re-declared the thirteen keywords of
+          'Wish' as their own flat fields: 65 declarations for one
+          Wish of 13. Each carried a 'wish_of' and a 'request_of' that
+          copied those thirteen out and back; five copies of the one,
+          four of the other. MEASURED: 'Wish' is already a frozen
+          dataclass whose every field is plain, so both maps are the
+          IDENTITY, and 'record_check' walks into a nested Wish and
+          finds it plain. The flattening bought nothing it cost.
+
+          'run.Request' had grown the worst shape of all: the thirteen
+          flat fields AND an optional 'wish' AND an optional
+          'execution' AND two resolvers -- two spellings of one thing,
+          while its own 'main' had already stopped using the flat one.
+
+DECISION  A Request holds the wish as ONE NESTED RECORD, 'wish: Wish',
+          and holds it ONLY where the face takes a wish. Rejected: a
+          shared base record that every Request inherits -- 'rename'
+          declares 'wish_f=False' and 'renovate' likewise; neither has
+          a wish, so a wish is not part of what a Request IS.
+          'wish_of' is 'request.wish'; 'request_of' is the
+          construction. 'run' keeps 'execution: Execution' beside it
+          by the same rule -- one nested record per concern the face
+          actually has, nothing spelled twice.
+
+          Nesting does not break E-101's plain law: the law admits
+          "other records", and 'Wish' is one. The law's prose said
+          "no Wish"; that clause predates the measurement that 'Wish'
+          holds nothing but plain fields, and it is struck.
+
+          'hwut.renovate' is UNTOUCHED: 'Request(directory, apply_f)',
+          no wish to nest.
+
+COST      No page moved anywhere. 'test-face-records.py' moved to the
+          new spelling -- 'Request(directory=X, wish=Wish(...))' in
+          five places -- and every one of its seven GOODs stands
+          byte-exact; that is the proof of the cut. Census 821 ok /
+          28 fail, the FAIL set identical to the pristine baseline.
+
+          Left standing: the banner of the 'plain' choice still reads
+          'the record states its keywords', which the cut has made
+          untrue. The GOOD was kept byte-exact rather than moved for
+          a sentence; it is a wording ruling, not a code one.
+
+
+E-109  '--whole' / '--as-is': THE IMMEDIATE ACCEPT                (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   E-60 made accept PARTIAL BY DEFAULT and gave the whole-take
+          to '--force'. But '--force' means 'overwrite the thing I
+          judge against' -- the one act here that destroys evidence.
+          On a FIRST candidate there is nothing to overwrite and no
+          evidence to destroy, so the word warned about a danger that
+          was not present, and every fixture and script that wanted
+          'record this as it stands' had to say it.
+
+DECISION  ONE ACT, THREE SPELLINGS: '--whole', '--as-is' and
+          '--force' all record the candidate WHOLE, as it stands --
+          on a first acceptance instead of E-60's undecided shape,
+          on a standing nominal instead of the merge. They are one
+          option; 'classify' is unchanged.
+
+          RULED (Frank-Rene): ACCEPT MEANS A BOOK ENTRY AND A GOOD
+          FILE -- at least the unaccepted mark and the closing token
+          -- and the consistency of the two is SANITIZE's to check.
+          So a GOOD file cannot exist without this face, and what an
+          overwrite replaces is an EARLIER ACCEPT, never the author's
+          own evidence. The warning '--force' carried was about a
+          danger that is not there, and the first/standing
+          distinction an earlier draft of this entry drew had
+          nothing under it. GRAVEYARD: '--whole' as a
+          first-acceptance-only word, which left a standing nominal
+          alone and said so -- it made the seventeen re-recordings
+          of D-13 reach for '--force' anyway, and a word that does
+          not do what its name says is worse than no word.
+
+          IT PROVISIONS. Accept runs a case on necessity already;
+          the whole-take inherits that, so nothing need run first.
+          MEASURED on a virgin directory with no OUT: the test runs,
+          GOOD/ and book.csv are both written, 'sanitize --books'
+          reports nothing.
+
+          IT NEEDS NO 'play --save'. Accept provisions the candidate
+          on necessity already; '--whole' inherits that. The two
+          readings of a first acceptance now stand side by side in
+          'services/README.txt': play-and-look then decide, or record
+          it whole.
+
+COST      One argparse line. 'test-cmdline.py faces' moves:
+          accept's completion table 19 -> 21 options.
+
+
+E-110  '--stderr-tol' RETIRES: A NOISY TEST SAYS SO IN ITS OWN BLOCK
+                                                              (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   '--stderr-tol' reads as a switch for one invocation. It is
+          not. MEASURED: it writes a DURABLE PER-CASE note into the
+          book -- 'E_StderrNote.IGNORED', 'whatever happens on
+          stderr, do not worry' (accept.py:881) -- for EVERY case the
+          wish selected.
+
+          So 'accept --glob "*" --stderr-tol' marks cases whose
+          stderr the author never looked at and which merely happened
+          to fall in the wish, and nothing on the page says which
+          rows acquired the note. A per-case, durable property set by
+          a wish-wide switch: the collision is silent and permanent.
+
+DECISION  RULED (Frank-Rene): the declaration belongs in the TEST'S
+          OWN '@hwut { }' BLOCK --
+
+              tolerance { stderr = ignored }
+
+          'This test writes to stderr on purpose' is a fact ABOUT THE
+          TEST. Beside the test it describes, travelling with it,
+          visible to its reader, under review like any other line of
+          the file. '--stderr-tol' is REMOVED from 'hwut.accept' and
+          from the keyed viewer's command line.
+
+          NO TWO-WITNESS PROBLEM, and this is the part worth keeping:
+          the '@hwut { }' block HAS THE AUTHORITY OF THE GOOD FILE.
+          Changing the test application is as significant as changing
+          the nominal it is judged against -- both are the author's
+          statement of what the case is. 'stderr = ignored'
+          determines the verdict, but the application determines it
+          anyway. So the block is not a second witness beside the
+          book; it is of the same standing as the GOOD, and the
+          book's note becomes a RECORD of what was declared, not a
+          rival claim.
+
+          GRAVEYARD: the plan to have sanitize arbitrate between the
+          block and the book note as two witnesses. There is nothing
+          to arbitrate.
+
+COST      The config vocabulary, the accept path, the book note's
+          writer, the keyed viewer's usage line, and the sentences
+          that name the flag ('cmdline.py', 'interactive.py',
+          'driver.py'). A BEHAVIOUR CHANGE: it lands alone and
+          matures to all green before anything rides on it (the
+          sequencing rule, 'doc/HOWTO-HWUT-BRAINSTORM.txt' section 4).
+          NOT BUILT in the session that ruled it.

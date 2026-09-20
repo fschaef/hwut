@@ -41,24 +41,25 @@ ______________________________________________________________________________
 """
 import os
 import sys
+from   dataclasses import dataclass, field
 
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration          import selection
 from   vut.services.lib.labels                           import view_at
 from   vut.services.lib.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import (RootConfMissing)
+                                                     import RootConfMissing
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
-                                                             with_targets)
+                                                             with_targets,
+                                                             Wish)
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
-from   vut.services.lib.cmdline import (face_parser, usage_of,
-                                        parse_or_refuse)
-from   vut.services.lib.face    import Refused, Fault, answered
-from   vut.engine.orchestrator.plan.wish import Wish
-from   dataclasses import dataclass, replace
+from   vut.services.lib.cmdline                      import (face_parser, usage_of,
+                                                             parse_or_refuse)
+from   vut.services.lib.face                         import Refused, Fault, answered
+
 
 #  THE STANDARD READER (E-84): the parser IS the vocabulary and the
 #  usage line is generated from it.
@@ -74,7 +75,7 @@ PARSER.add_argument("--directory", default=None,
 ARG_DB = {"--directory": True}
 USAGE  = usage_of(PARSER, ARG_DB)
 
-#  The licence line and the rule are the FILE's, not the face's.
+#  The licence line and the rule are the FILE'S, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n\n" + WISH_HELP + "\n" + USAGE
 
@@ -115,27 +116,9 @@ def line_tuple_of(root, wish, warning_list=None):
 
 @dataclass(frozen=True)
 class Request:
-    """WHAT WAS ASKED of 'hwut.wishlist' (E-101): the wish, already read
-    into its keywords, and where to look."""
-    directory:     str = "."
-    #  THE WISH AS PLAIN FIELDS -- 'Wish' itself is the engine's.
-    fail_f:        bool = False
-    pass_f:        bool = False
-    since_spec:    str | None = None
-    until_spec:    str | None = None
-    #  THE GLOBS AS THE WISH HOLDS THEM: strings, already desugared --
-    #  the short form's two words are one glob 'test-a.sh one'.
-    #  MEASURED: desugaring a second time in 'wish_of' selected nothing.
-    glob_tuple:    tuple = ()
-    exclude_tuple: tuple = ()
-    dir_tuple:     tuple = ()
-    exclude_dir_tuple: tuple = ()
-    wishlist_f:    bool = False
-    label_spec:    str | None = None
-    language_tuple:tuple = ()
-    faster_than_ms:int | None = None
-    unaccepted_f:  bool = False
-    target_tuple:  tuple = ()        # the 1.0 short form's words
+    """WHAT WAS ASKED of 'hwut.wishlist' (E-101): the directory and the wish."""
+    directory: str  = "."
+    wish:      Wish = field(default_factory=Wish)
 
 
 @dataclass(frozen=True)
@@ -147,50 +130,16 @@ class Result:
 
 
 def request_of(wish, directory, word_list):
-    """RETURN: Request, the record of a Wish, a directory and the short
-               form's words -- the one place the engine's Wish becomes
-               plain fields."""
-    #  THE SHORT FORM IS DESUGARED ONCE, where the line is read; the
-    #  record then carries globs only.
-    wish = with_targets(wish, list(word_list))
+    """RETURN: Request, the record of a Wish and a directory."""
     return Request(
-        directory     = directory,
-        fail_f        = bool(wish.fail_f),
-        pass_f        = bool(wish.pass_f),
-        since_spec    = wish.since_spec,
-        until_spec    = wish.until_spec,
-        #  Every glob the wish holds: the short form's words, the
-        #  '--glob's, and whatever a '--wishlist' file expanded to.
-        glob_tuple    = tuple(wish.glob_tuple),
-        exclude_tuple = tuple(wish.exclude_tuple),
-        dir_tuple     = tuple(wish.dir_tuple),
-        exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
-        wishlist_f    = bool(wish.wishlist_f),
-        label_spec    = wish.label_spec,
-        language_tuple= tuple(wish.language_tuple),
-        faster_than_ms= wish.faster_than_ms,
-        unaccepted_f  = bool(wish.unaccepted_f),
-        target_tuple  = ())
+        directory = directory,
+        wish      = with_targets(wish, list(word_list))
+    )
 
 
 def wish_of(request):
     """RETURN: Wish, the engine's, as 'request' states it."""
-    wish = Wish(fail_f=request.fail_f, pass_f=request.pass_f,
-                since_spec=request.since_spec, until_spec=request.until_spec,
-                dir_tuple=request.dir_tuple,
-                exclude_dir_tuple=request.exclude_dir_tuple,
-                wishlist_f=request.wishlist_f,
-                label_spec=request.label_spec,
-                language_tuple=request.language_tuple,
-                faster_than_ms=request.faster_than_ms,
-                unaccepted_f=request.unaccepted_f)
-    #  THE TARGETS ARE STRINGS in the record and Targets in the Wish;
-    #  'with_targets' desugars both the short form's words and a glob,
-    #  and a '--wishlist' file is already EXPANDED into globs when the
-    #  request is made -- the record carries what was selected, not the
-    #  file it was read from.
-    return replace(wish, glob_tuple=tuple(request.glob_tuple),
-                   exclude_tuple=tuple(request.exclude_tuple))
+    return request.wish
 
 
 def do(request):
@@ -284,3 +233,4 @@ if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
     from ._exit import guarded
     sys.exit(guarded("hwut.wishlist", main))
+

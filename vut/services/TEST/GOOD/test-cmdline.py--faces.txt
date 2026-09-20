@@ -1,4 +1,4 @@
-    vut.services.accept                    exit 0  19  --fail --pass --since=<value> --until=<value> --glob=<value> --exclude=<value> --dir=<value> --exclude-dir=<value> --wishlist=<file> --label=<value> --language=<value> --faster-than=<value> --dont-ask -f --force --force-run --stderr-tol --stderr-tolerated --directory=<file>
+    vut.services.accept                    exit 0  21  --fail --pass --since=<value> --until=<value> --glob=<value> --exclude=<value> --dir=<value> --exclude-dir=<value> --wishlist=<file> --label=<value> --language=<value> --faster-than=<value> --dont-ask -f --force --whole --as-is --force-run --stderr-tol --stderr-tolerated --directory=<file>
     vut.services.plan                      exit 0  13  --fail --pass --since=<value> --until=<value> --glob=<value> --exclude=<value> --dir=<value> --exclude-dir=<value> --wishlist=<file> --label=<value> --language=<value> --faster-than=<value> --directory=<file>
     vut.services.play                      exit 0   6  --raw --pyped --stderr --plain --save --directory=<file>
     vut.services.rename                    exit 0   4  --dont-ask --directory=<file> --no-warning --silent

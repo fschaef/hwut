@@ -1,14 +1,18 @@
 
 --- faults, never swallowed ---
+DIR  .                                                                        
+ERROR the task file names 'gone/', which is not there
 DIR  suite/TEST                                                               
 DONE  test-ok.sh ........................................................ [OK]
+ERROR OSError: the directory vanished mid-walk
 
 ==============================================================================
 DIRECTORIES                                             1 ok, 0 fail, 00:00:02
 ------------------------------------------------------------------------------
    suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      1/1
 ==============================================================================
-stderr> FAULT .: the task file names 'gone/', which is not there
-stderr> FAULT suite/TEST: OSError: the directory vanished mid-walk
+
+RESULTS: 1 ok, 0 fail, 2.00 [sec]
+|                                     ok                                     |
 [fold: good_f=False fail_n=0 verdict_n=1 fault_n=2]
 <hwut-end>

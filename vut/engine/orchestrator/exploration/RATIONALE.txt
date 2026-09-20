@@ -1670,3 +1670,58 @@ DECISION  The header is refused where 'choices' is an empty list, by
 
 COST      'test-explorer.py faults' gained the case, beside the healthy
           application that still explores. No other page moved.
+
+
+X-FOREIGN-FACT  A PAGE REPORTS ON ITS UNIT, AND ON NOTHING ELSE
+                                                              (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   Three nominals in this tree were found holding facts their
+          unit does not decide, and each had gone red for a reason
+          that had nothing to do with the unit:
+
+            'display test-run.sh' held a WALL CLOCK -- 'RESULTS: 1
+            ok, 0 fail, 0.00 [sec]' -- so every machine slower than
+            the recording one failed it, forever.
+
+            'bookkeeper test-traces.py elision' holds a CALENDAR
+            DATE, '2026-09-07'. It fails today and would fail again
+            the day after any blessing.
+
+            'compare/reading test-chunk_pipe.py special' printed the
+            REGISTRY OF REGION HANDLERS beside the error under test.
+            The keyed merge registered 'unaccepted' elsewhere, and
+            this page went red for a module it does not test.
+
+          The last is the instructive one: it is perfectly
+          deterministic. It never varies between runs. The
+          determinism guidance every test author knows does not
+          catch it.
+
+DECISION  RULED (Frank-Rene): A TEST'S OUTPUT MUST BE DETERMINED BY
+          THE BEHAVIOUR OF THE UNIT UNDER TEST -- BY NOTHING ELSE. A
+          foreign fact is DROPPED or TOLERATED by a pattern. It is
+          never blessed.
+
+          THE TEST IS NOT VARIANCE, IT IS OWNERSHIP: could this line
+          move without the unit under test changing? A registry, a
+          census, a table of words another module fills -- all yes,
+          all foreign, however steady.
+
+          WHERE THE ASSERTION SHARES THE LINE, TOLERATE RATHER THAN
+          DROP. MEASURED on chunk_pipe: 'known handlers: [a-z, \-]+'
+          leaves 'unknown region handler 'quacksalber'' pinned --
+          renaming the handler or rewording the clause still fails --
+          while the census moves freely. Dropping the line would have
+          discarded the assertion with the census. GOOD byte-
+          identical to before; the page never moved.
+
+          The law stands in 'exploration/README.txt' beside the
+          tolerance scope (E-42), because that scope is its
+          instrument and a reader meets the two together.
+
+          THE COMPANION RULE: a page that moved because THE UNIT
+          moved is re-recorded, not tolerated. Which case a page is,
+          is settled by DATING -- the ruling that changed the
+          behaviour against the nominal's own age (D-13). Where no
+          ruling stands, the page is a defect's evidence and is not
+          blessed.

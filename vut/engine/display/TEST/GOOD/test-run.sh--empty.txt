@@ -1,6 +1,7 @@
 STATUS: 3
 STDOUT {
     DIR  suite/TEST                                                               
+    NOTE  the selection is empty: no test case answers the wish
     
     ==============================================================================
     DIRECTORIES                                             0 ok, 0 fail, hh:mm:ss
@@ -8,7 +9,7 @@ STDOUT {
        suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 1 skip, 0.00 [sec]
+    RESULTS: 0 ok, 0 fail, 1 skip, 0.01 [sec]
     |                                    skip                                    |
 }
 <hwut-end>

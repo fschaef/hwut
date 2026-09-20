@@ -2,6 +2,7 @@
 --- VERBOSE ---
 TREE  1 directory(ies)
 DIR  suite/TEST                                                               
+ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 FRAME suite/TEST:on_entry ............................................... [OK]
 DONE  test-a.sh ......................................................... [OK]
       test-b.sh ....................................................... [FAIL]
@@ -21,10 +22,13 @@ suite/TEST
     frame on_exit   the frame failed
     test-b.sh       stalled, no output
 ==============================================================================
-stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+
+RESULTS: 1 ok, 1 fail, 3.00 [sec]
+|                  ok                  |                fail                 |
 [fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
 
 --- QUIET ---
+ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 
 ==============================================================================
 DIRECTORIES                                             1 ok, 1 fail, 00:00:03
@@ -34,7 +38,7 @@ DIRECTORIES                                             1 ok, 1 fail, 00:00:03
 ==============================================================================
 FAULTS
 ------------------------------------------------------------------------------
-FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 
 ==============================================================================
 HINTS
@@ -43,10 +47,12 @@ suite/TEST
     frame on_exit   the frame failed
     test-b.sh       stalled, no output
 ==============================================================================
-stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+
+RESULTS: 1 ok, 1 fail, 3.00 [sec]
+|                  ok                  |                fail                 |
 [fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
 
 --- SILENT ---
-stderr> FAULT suite/TEST: hwut.conf:2:3: DIRECTORY: a broken statement
+stderr> ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 [fold: good_f=False fail_n=2 verdict_n=2 fault_n=1]
 <hwut-end>

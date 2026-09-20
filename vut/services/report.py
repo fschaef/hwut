@@ -76,7 +76,7 @@ from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 from   vut.services.lib.face    import Refused, Fault, FaceError
 from   vut.engine.orchestrator.plan.wish import Wish
-from   dataclasses import dataclass
+from   dataclasses import dataclass, field
 
 FORMAT_TUPLE   = ("traditional", "junit", "tap", "json")
 WIDTH_DEFAULT  = 80
@@ -737,21 +737,12 @@ class Block:
 
 @dataclass(frozen=True)
 class Request:
-    """WHAT WAS ASKED of 'hwut.report'."""
-    directory:     str = "."
-    fail_f:        bool = False
-    pass_f:        bool = False
-    since_spec:    str | None = None
-    until_spec:    str | None = None
-    glob_tuple:    tuple = ()
-    exclude_tuple: tuple = ()
-    dir_tuple:     tuple = ()
-    exclude_dir_tuple: tuple = ()
-    wishlist_f:    bool = False
-    label_spec:    str | None = None
-    language_tuple:tuple = ()
-    faster_than_ms:int | None = None
-    unaccepted_f:  bool = False
+    """WHAT WAS ASKED of 'hwut.report' (E-101): where to look, and the
+    wish that narrows it -- ONE nested record, not its keywords spelled
+    out again. 'Wish' is frozen and holds nothing but plain fields, so a
+    record made of it stays plain ('record_check' walks into it)."""
+    directory: str  = "."
+    wish:      Wish = field(default_factory=Wish)
 
 
 @dataclass(frozen=True)
@@ -773,34 +764,13 @@ def _row_of(crow):
 
 
 def wish_of(request):
-    """RETURN: Wish, the engine's, as 'request' states it."""
-    return Wish(fail_f=request.fail_f, pass_f=request.pass_f,
-                since_spec=request.since_spec, until_spec=request.until_spec,
-                glob_tuple=tuple(request.glob_tuple),
-                exclude_tuple=tuple(request.exclude_tuple),
-                dir_tuple=request.dir_tuple,
-                exclude_dir_tuple=request.exclude_dir_tuple,
-                wishlist_f=request.wishlist_f,
-                label_spec=request.label_spec,
-                language_tuple=request.language_tuple,
-                faster_than_ms=request.faster_than_ms,
-                unaccepted_f=request.unaccepted_f)
+    """RETURN: Wish, the one the request carries."""
+    return request.wish
 
 
 def request_of(wish, directory):
-    """RETURN: Request, a Wish and a directory as plain fields."""
-    return Request(
-        directory     = directory,
-        fail_f        = bool(wish.fail_f),      pass_f = bool(wish.pass_f),
-        since_spec    = wish.since_spec,        until_spec = wish.until_spec,
-        glob_tuple    = tuple(wish.glob_tuple),
-        exclude_tuple = tuple(wish.exclude_tuple),
-        dir_tuple     = tuple(wish.dir_tuple),
-        exclude_dir_tuple = tuple(wish.exclude_dir_tuple),
-        wishlist_f    = bool(wish.wishlist_f),  label_spec = wish.label_spec,
-        language_tuple= tuple(wish.language_tuple),
-        faster_than_ms= wish.faster_than_ms,
-        unaccepted_f  = bool(wish.unaccepted_f))
+    """RETURN: Request, a Wish and a directory, as asked."""
+    return Request(directory=directory, wish=wish)
 
 
 def _crow_of(row):

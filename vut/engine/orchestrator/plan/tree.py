@@ -13,27 +13,51 @@ ______________________________________________________________________________
 from ..exploration.task_list_query import CTestTaskListQuery
 from .determine                    import determine
 from ...bookkeeper.api             import nominal_stands_f
+from ...bookkeeper.test_run_info   import of_case, E_MemberState
 from .label     import swallowed_warning_tuple
 from .printer   import print_plan
 
 import os
 from  dataclasses import dataclass
 
+#  AN ASPIRANT'S REFUSAL SAYS WHAT IS TRUE OF IT (B-15): an acceptance
+#  stands and is incomplete. It is not 'never accepted', and the two
+#  must not read as one.
+UNACCEPTED_REASON   = ("the nominal carries lines nobody has accepted: "
+                       "an aspirant, finish it with 'hwut.accept'")
 NOT_ACCEPTED_REASON = ("no nominal stands in GOOD/: not accepted, not "
                        "run ('hwut.play --save', then 'hwut.accept')")
 
 
 def admit_of(directory):
     """
-    RETURN: callable, 'admit(test, choice)' for 'determine()': None
-            where a nominal of that case stands in 'directory/GOOD',
-            the E-41 refusal reason else. THE GATE, in one place, for
-            the plan face and the run alike, judged per CASE: a test
-            with one accepted choice and one new one runs the first.
+    RETURN: callable, 'admit(test, choice)': None where the case may be
+            RUN, a refusal reason else. THE GATE, in one place, for the
+            plan face and the run alike, judged per CASE: a test with
+            one accepted choice and one new one runs the first.
+
+    TWO REFUSALS, AND THEY ARE DIFFERENT THINGS (B-15):
+
+        NOT_ACCEPTED    nothing was ever accepted -- UNKNOWN. A
+                        verdict needs something to compare against
+                        (E-41).
+        UNACCEPTED      an acceptance stands but is INCOMPLETE -- the
+                        nominal carries '##! unaccepted'. ASPIRANT.
+                        There is something to compare against and
+                        nobody has judged it, which is not the same
+                        news and must not read as one.
+
+    THE ASPIRANT IS REFUSED HERE, at the door. It used to be selected,
+    run, and refused inside the comparison, which spent a process on a
+    case no verdict could be formed about and then booked it FAIL.
     """
-    return lambda test, choice: (None if nominal_stands_f(directory,
-                                                         test, choice)
-                                 else NOT_ACCEPTED_REASON)
+    def admit(test, choice):
+        info = of_case(directory, test, choice)
+        if info.is_runnable():                    return None
+        if info.member_state.state is E_MemberState.ASPIRANT:
+            return UNACCEPTED_REASON
+        return NOT_ACCEPTED_REASON
+    return admit
 
 
 @dataclass(frozen=True, slots=True)

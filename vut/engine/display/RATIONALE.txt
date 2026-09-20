@@ -383,3 +383,81 @@ COST      Eight GOODs re-recorded for the one blank ('tree-green',
           'tree-fail', 'busy', 'jobs-budget', 'labels', 'linear-raw',
           'short-form'; 'test-plain mixed'); the width was their only
           difference. display 24 ok / 0 fail -> 25 / 0.
+
+
+D-13  THE SUITE IS RE-RECORDED TO O-24, AND ITS FIXTURE GOES
+      THROUGH HWUT'S OWN FACE                                   (2026-09-19)
+----------------------------------------------------------------------------
+PROBLEM   display stood at 6 ok / 20 fail. Every GOOD of it was last
+          recorded 2026-09-02 (D-11, D-12: '20 ok / 4 fail -> 24 ok
+          / 0 fail'). O-24 landed 2026-09-07 and MOVED faults and
+          notes out of the margin into the flow; nobody re-recorded
+          here. The oracle was stale, the code right -- the opposite
+          of what a red suite first suggests, and it was settled by
+          DATING the rulings against the blessing, not by reading
+          the code.
+
+          Three further things stood in the way, none of them O-24:
+
+          THE FIXTURE WROTE ITS NOMINALS BY HAND ('printf >
+          GOOD/x.txt'), so the register had no entry for them and,
+          since the register moved into the book (B-14), every run
+          said 'REGISTERED ... accepted outside the book (E-41)' --
+          79 lines. Worse, it says so on the FIRST run only, so the
+          homogeneity law's own check ('digest identical to linear',
+          O-15) read FALSE in four choices. Blessing that would have
+          recorded a broken invariant as the oracle.
+
+          THE DIGEST FILTER, which IS part of the oracle, masked the
+          old job column '|n|' but not E-97's count tail '  ||n', and
+          masked 'hh:mm:ss' but not the RESULTS footer's seconds.
+
+          A GOOD HELD A WALL CLOCK: 'RESULTS: 1 ok, 0 fail, 0.00
+          [sec]' -- a machine-chosen value in an oracle, which fails
+          on every machine slower than the one that recorded it.
+
+DECISION  RULED (Frank-Rene): the wall clock is a case for an
+          equivalence pattern. 'test-run.sh' states
+          'eq_pattern = [..., ", [0-9]+\.[0-9]+ \[sec\]"]'; the
+          leading comma is not decoration -- without it the NUMERIC
+          tolerance claims the digits first and the pattern never
+          fires (measured). The digest filter masks the same footer
+          to 's.ss [sec]' and swallows the count tail.
+
+          THE FIXTURE RECORDS THROUGH 'hwut.accept --whole' (E-109),
+          one helper 'app <dir> <name> <title> <prints> [<nominal>]'.
+          A FAILING fixture is made the way failures are made:
+          accepted once saying one thing, the application rewritten
+          afterwards to say another. Three things this required, each
+          measured: the fixture applications must print '<hwut-end>'
+          or accept refuses them (R-70); the candidate accept
+          provisioned must be removed after, or a rewrite within the
+          same second reads as current by mtime and the run REPLAYS
+          the recording instead of running ('beta/test-two' came up
+          [OK] where the GOOD says [FAIL], and '--no-store' counted
+          accept's candidate as its own); and 'fixture_tree_fail'
+          must accept beta's second test ONCE, saying the nominal.
+
+          SEVENTEEN GOODS RE-RECORDED, every differing line named
+          before blessing and attributed to O-24, O-25, O-26, E-109
+          or the RESULTS footer display grew after 2 September.
+
+          'plain.py's prose is corrected: the constructor still
+          described 'write_log' as where marginalia went, and
+          'on_fault' still claimed to print the directory (the band
+          says it). A doubled BAND comment -- two edits landing on
+          one line -- is one comment now.
+
+COST      'test-run.sh labels' STAYS RED, deliberately. Its diff is
+          not O-24: a path-bearing word now ENTERS its directory
+          (E-47), so the three-directory tree reads as one leaf and
+          the glob warns under its entered spelling. That is the same
+          unruled question as services E-95 -- a root walk with a
+          case-level wish -- and blessing it would pin E-95's
+          present behaviour as the oracle before it is ruled.
+
+          'test-plain.py words' grew by one report phrase (O-25,
+          'the nominal carries lines nobody has accepted'), which
+          shifts every count and every fixture name in that page by
+          one; the whole page moves for one word, and that is what
+          a table read end to end costs.

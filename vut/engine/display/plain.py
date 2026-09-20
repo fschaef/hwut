@@ -114,7 +114,11 @@ BRIEF_GAP = 3
 #  reads as a figure rather than as more lines of report; the tag
 #  right-aligned in its own width, the count beyond it in its own.
 TREE_INDENT = "   "
-TAG_WIDTH   = 6
+#  WIDE ENOUGH FOR THE WIDEST TAG, so every '[...]' ends in ONE
+#  column: '[OK]', '[FAIL]', '[NO GOOD]', '[REFUSED]'. The flow's
+#  tags right-align by construction (the dotted fill is measured to
+#  'width'); this is the closing block's padding, which is not.
+TAG_WIDTH   = 9
 COUNT_WIDTH = 9
 
 
@@ -173,7 +177,12 @@ START_DELAY_SECONDS = 2.0
 #  the mark that stands under a repeat: PLAIN WHITESPACE, as wide as a
 #  badge, so the body column does not move and a repeated badge says
 #  nothing the position does not already say.
-FLOW_BADGE_TUPLE = ("START", "DONE ", "SKIP ")
+#  END CLOSES A START; DONE STANDS ALONE. A run fast enough that its
+#  START was never released is reported 'DONE '; one slow enough to
+#  have been announced is closed with 'END  ', so the eye can pair
+#  the two and a reader never hunts for a START that was never
+#  written.
+FLOW_BADGE_TUPLE = ("START", "DONE ", "END  ", "SKIP ")
 BADGE_REPEAT     = "     "
 
 #  'DONE ' is now the per-RUN completion badge (was 'END  '). The
@@ -199,14 +208,14 @@ class CPlainFlow(CRunReportReceiver):
                  so a suite pins it.
         'ink'    the CInk of word.py; a transparent one where None.
         'write_log'
-                 where a FAULT or a NOTE goes. These are the run's
-                 MARGINALIA -- a configuration line that did not
-                 parse, a wish that selected nothing -- true, worth
-                 keeping, and not what a reader watching a run is
-                 watching for. None means no log stands, and then
-                 they go to 'write_error' rather than into the flow:
-                 A FAULT IS NEVER SWALLOWED, and the absence of a log
-                 is not permission to lose one.
+                 where the flow goes A SECOND TIME, plain ('--log
+                 <file>', O-24): START, DONE, ERROR, NOTE, the
+                 run-time markers, in order, without ink. None means
+                 no log stands, and nothing is written anywhere but
+                 the flow. A FAULT and a NOTE stand IN THE FLOW at
+                 the moment they happen (O-24); they are not
+                 marginalia and go to 'write_error' only under
+                 SILENT, which has no flow.
 
         THE COLUMNS ARE ASKED FOR, never assumed. 'timing_f' puts a
         seconds column before the line, 'jobs_f' a '|<n>|' one; absent
@@ -611,7 +620,11 @@ class CPlainFlow(CRunReportReceiver):
         #  A FAILING provision node speaks even where its kind is
         #  otherwise silent: a failed precondition is a test result.
         if good and self._provision_hidden_f(node_kind):  return
-        self._release_held((directory, node))
+        #  '_release_held' ANSWERS WHETHER THE START WAS STILL HELD --
+        #  that is, never written. A run that ended inside the window
+        #  has no START to close, so its line says 'DONE '; one whose
+        #  START stands says 'END  '.
+        start_written_f = not self._release_held((directory, node))
         body, body_ink = self._run_body(directory, node)
 
         if not began_f:
@@ -630,25 +643,30 @@ class CPlainFlow(CRunReportReceiver):
                            body, body_ink,
                            "[FAIL]", self.ink.tag_fail("[FAIL]"))
             return
+        #  'END  ' CLOSES THE 'START' THIS NODE OPENED; a node whose
+        #  START was never released is 'DONE ' -- it finished before
+        #  it was worth announcing.
+        badge = "END  " if start_written_f else "DONE "
         if good:
-            self._line(when, "DONE ", "DONE ", body, body_ink,
+            self._line(when, badge, badge, body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
         elif verdict == "unaccepted":
-            #  NOT A REGRESSION (O-25): the nominal carries lines
-            #  nobody accepted, so the run CANNOT be judged. Its own
-            #  tag, so the eye does not chase a breakage that is not
-            #  there; HINTS says what to do.
-            self._line(when, "DONE ", "DONE ", body, body_ink,
-                       "[ ?! ]", self.ink.tag_undecided("[ ?! ]"))
+            #  NOT A RUN AT ALL (O-25, amended): the nominal carries
+            #  lines nobody accepted, so nothing could be judged. The
+            #  tag says WHAT IS WRONG WITH THE GOOD, not what the run
+            #  found -- there was no run. HINTS says what to do.
+            self._line(when, badge, badge, body, body_ink,
+                       "[NO GOOD]", self.ink.tag_undecided("[NO GOOD]"))
         else:
-            self._line(when, "DONE ", "DONE ", body, body_ink,
+            self._line(when, badge, badge, body, body_ink,
                        "[FAIL]", self.ink.tag_fail("[FAIL]"))
 
     def on_fault(self, when, directory, text):
         """
         RETURN: None. A fault stands IN THE FLOW, where START and DONE
-                stand (O-24): 'ERROR' as a block on red, then the
-                directory and the text, at the moment it happens.
+                stand (O-24): 'ERROR' as a block on red, then the text,
+                at the moment it happens. The directory is the band's
+                to say, not the line's (see '_band').
 
         IT IS NOT HELD. A message kept for the end is lost to a
         signal and read out of sequence; one written in place
@@ -656,11 +674,9 @@ class CPlainFlow(CRunReportReceiver):
         QUIET keeps it for the tail's FAULTS block as well; SILENT
         has no flow, so it goes to 'write_error'.
         """
-        #  THE BAND FIRST, as for every flow line: a line whose
-        #  directory the last band did not name is unattributable
-        #  (see '_band').
-        #  THE BAND FIRST, and NO DIRECTORY COLUMN: the band is the one
-        #  place a directory is ever said (see '_band').
+        #  THE BAND FIRST, and NO DIRECTORY COLUMN: a line whose
+        #  directory the last band did not name is unattributable, and
+        #  the band is the one place a directory is ever said ('_band').
         self._band(when, directory)
         prefix, prefix_ink = self._prefix(when)
         plain = "%sERROR %s" % (prefix, text)
@@ -687,6 +703,16 @@ class CPlainFlow(CRunReportReceiver):
         prefix, prefix_ink = self._prefix(when)
         self._flow("%sNOTE  %s" % (prefix, text),
                    "%sNOTE  %s" % (prefix_ink, text))
+
+    def on_warning(self, when, text):
+        """RETURN: None. A finding about the WISH that decides nothing
+        -- a glob that met only silenced runs -- verbatim, in every
+        tier but SILENT, before any run: it stands where it always
+        stood on the page, ahead of the flow (O-26). The text carries
+        its own 'WARNING:' -- determination's word, the same line
+        'hwut.wishlist' prints -- and this renderer adds nothing."""
+        if self.tier is E_Tier.SILENT: return
+        self._flow(text, text)
 
     def on_refused(self, when, directory, node, text):
         """RETURN: None. Not run, by name and reason: held for the

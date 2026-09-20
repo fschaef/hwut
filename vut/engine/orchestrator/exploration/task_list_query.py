@@ -26,6 +26,7 @@ ______________________________________________________________________________
 """
 import fnmatch
 import os
+from vut.engine.bookkeeper.test_run_info import of_case, E_MemberState
 from vut.auxiliary import clock
 from datetime import datetime, timezone
 
@@ -214,16 +215,32 @@ class CTestTaskListQuery(CTestTaskList):
             if instant is None or instant >= cutoff:        return False
         return True
 
-    def _nominal_stands_f(self, case):
-        """RETURN: bool, True where a stdout nominal stands for the case
-        in the bookkeeper's GOOD/; False where none does, or where no
-        bookkeeper is at hand."""
-        if self.bookkeeper is None: return False
+    def _test_run_info(self, case):
+        """
+        RETURN: CTestRunInfo, the case's live entry -- its MEMBER STATE
+                read from the files, its other fields from the book
+                (B-15). None where no bookkeeper is at hand, or where
+                the store cannot be read.
+
+        THE ONE DOOR. This query no longer asks whether a nominal
+        stands and decides for itself what that means: it asks the
+        entry, and the entry answers 'is_runnable()'.
+        """
+        if self.bookkeeper is None: return None
         try:
-            return self.bookkeeper.nominal_path(case.source_file,
-                                                case.choice, "stdout").exists()
+            return of_case(self.bookkeeper.directory, case.source_file,
+                           case.choice, self.bookkeeper)
         except Exception:
-            return False
+            return None
+
+    def _nominal_stands_f(self, case):
+        """RETURN: bool, True where something was accepted for the case
+        -- the entry is not UNKNOWN. False where nothing was, or where
+        no bookkeeper is at hand."""
+        info = self._test_run_info(case)
+        if info is None: return False
+        return info.member_state.state is not E_MemberState.UNKNOWN
+
 
     def _observation(self, case):
         """

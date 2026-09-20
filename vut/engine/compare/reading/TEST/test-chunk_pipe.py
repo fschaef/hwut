@@ -3,7 +3,15 @@
 # @hwut {
 #     title      = "ChunkPipe"
 #     choices    = ["comment", "normal", "special"]
-#     tolerance { regions = false }
+#     tolerance { regions = false
+#                 #  THE REGISTRY IS NOT THIS UNIT'S BEHAVIOUR. The
+#                 #  error names the offending handler and calls it
+#                 #  unknown -- that is what is under test. WHICH
+#                 #  handlers happen to be registered is a fact about
+#                 #  another module, and it moved once already (the
+#                 #  keyed merge added 'unaccepted'). Tolerated, so
+#                 #  that the name and the clause stay pinned exactly.
+#                 eq_pattern = ["known handlers: [a-z, \\-]+"] }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

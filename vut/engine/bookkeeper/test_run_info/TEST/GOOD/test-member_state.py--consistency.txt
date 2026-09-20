@@ -1,0 +1,9 @@
+  no nominal, no row                   (agree)
+  no nominal, row says member          t: the book says 'member', and no nominal stands
+  marked nominal, no row               t: a nominal stands, and the book lacks it
+  marked nominal, row says member      t: the book says 'member', and the nominal carries an unaccepted region
+  marked nominal, row says aspirant    (agree)
+  clean nominal, no row                t: a nominal stands, and the book lacks it
+  clean nominal, row says aspirant     t: the book says 'aspirant', and the nominal is accepted whole
+  clean nominal, row says member       (agree)
+<hwut-end>

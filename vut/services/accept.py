@@ -24,10 +24,11 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
     --dont-ask                  do not ask; the reading has been read
     --force-run                 run every selected case before blessing,
                                 current recording or not
-    --force                     overwrite a STANDING nominal, where a
-                                merge would otherwise be required, and
-                                record a FIRST acceptance whole rather
-                                than as a shape nobody has judged
+    --whole, --as-is, --force   record the candidate WHOLE, as it
+                                stands: a first acceptance without the
+                                undecided shape (E-60), a standing
+                                nominal overwritten without the merge.
+                                One act, three spellings (E-109)
     --directory=<path>          ONE directory; the whole tree else
     --help                      this text
 
@@ -87,6 +88,7 @@ PARSER = face_parser("hwut.accept",
                      word_metavar="[<file-glob> [choice-glob]...]")
 PARSER.add_argument("--dont-ask", action="store_true")
 PARSER.add_argument("-f", "--force", action="store_true")
+PARSER.add_argument("--whole", "--as-is", dest="force", action="store_true")
 PARSER.add_argument("--force-run", action="store_true")
 PARSER.add_argument("--stderr-tol", "--stderr-tolerated", dest="stderr_tol",
                     action="store_true")
@@ -122,10 +124,17 @@ PROMOTION
                         (E-70). '--force' implies it; the reverse does
                         not hold, which is the whole point of two
                         words.
-    --force             overwrite a STANDING nominal, skipping the
-                        merge. It asserts 'overwrite the thing I judge
-                        against' -- the one operation here that
-                        destroys evidence, so it is never implied
+    --whole, --as-is, --force
+                        record the candidate WHOLE, as it stands. On a
+                        first acceptance that is the blessing rather
+                        than E-60's undecided shape; on a standing
+                        nominal it is the overwrite, skipping the
+                        merge. ONE ACT: what it replaces is an earlier
+                        accept, never the author's evidence -- a GOOD
+                        file cannot exist without this face (E-109).
+                        It implies '--dont-ask' and is never implied
+                        itself. It provisions the candidate, so
+                        nothing need run first
     A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run' does -- the
     failures a run reports do not sit in one directory.
     '--directory=<path>' names one directory and reads that alone.
@@ -1033,6 +1042,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     #  'read_line()' on an inherited stdin that never closes. The suite
     #  did not fail -- it HUNG. A flag split that turns old callers
     #  into deadlocks is not a split anybody wants.
+    #  TAKING A CANDIDATE WHOLE IS A DECISION ALREADY MADE, so
+    #  nobody is asked (E-109).
     if force_f: dont_ask_f = True
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
@@ -1386,6 +1397,10 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         #  THE BOOK: the acceptance's instant (E-36), so the three
         #  records of acceptance agree (E-41). Before this line the
         #  face itself accepted outside the book.
+        #  THE STATE IS WHAT WAS WRITTEN, NOT WHAT WAS SHOWN. 'written'
+        #  is the nominal that now stands -- the mirror on a first
+        #  acceptance -- and its '##! unaccepted' regions are what make
+        #  candidate the reader judged and is never filed.
         store.bookkeeper.note_accept(key.test, key.choice)
         (undecided_list if verdict == "first" else blessed_list).append(key)
 

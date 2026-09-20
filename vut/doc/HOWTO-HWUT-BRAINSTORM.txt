@@ -1,0 +1,278 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+==============================================================================
+HOWTO HWUT -- BRAINSTORMING BIN
+==============================================================================
+
+NOT A MANUAL YET. Raw experience, telegraphic, one item per thing
+learned, each with the case that taught it. TO BE DISTILLED LATER.
+Add here first, always; polish never happens in the bin.
+
+BIN DISCIPLINE
+    - every session that learns something about WRITING or MAINTAINING
+      tests drops it here, same turn, before the lesson goes cold
+    - keep the measured case with the item; a rule without its case is
+      unteachable and undefendable
+    - contradictions stay side by side until someone rules; do not
+      quietly resolve
+    - when an item hardens into a law, it moves to a RATIONALE entry
+      and leaves a pointer here
+
+==============================================================================
+1.  THE ONE LAW
+==============================================================================
+
+    A TEST'S OUTPUT MUST BE DETERMINED BY THE BEHAVIOUR OF THE UNIT
+    UNDER TEST -- BY NOTHING ELSE.
+
+    - everything below is consequence
+    - the test of foreignness is NOT 'does it vary between runs'
+    - it is: COULD THIS LINE MOVE WITHOUT THE UNIT CHANGING?
+    - a registry is perfectly steady until the day it is not
+    - a foreign fact has two lawful remedies: DROP IT, or TOLERATE it
+      with an equivalence pattern. BLESSING IS NOT ONE OF THEM
+    - ruled: exploration X-FOREIGN-FACT
+
+==============================================================================
+2.  FOREIGN FACTS -- THE THREE SPECIES, EACH WITH ITS CASE
+==============================================================================
+
+2.1 THE CENSUS OWNED BY A STRANGER    <- the instructive one
+    - case: 'compare/reading test-chunk_pipe.py special'
+    - the page printed the error under test AND the registry of known
+      region handlers:
+          unknown region handler 'quacksalber'; known handlers:
+          ignore, point-cloud, potpourri, table, verbatim
+    - the keyed merge registered 'unaccepted' in ANOTHER module
+    - page went red for a module it does not test
+    - PERFECTLY DETERMINISTIC. Never varies between runs. Determinism
+      guidance does not catch it. THIS is why the ownership test
+      replaces the variance test
+    - cure: eq_pattern over the census alone
+          eq_pattern = ["known handlers: [a-z, \-]+"]
+    - result: 'quacksalber' still pinned (rename it -> fails; reword
+      the clause -> fails); the list moves freely; GOOD BYTE-IDENTICAL,
+      the page never moved
+    - GENERAL: where the assertion SHARES THE LINE with the census,
+      TOLERATE rather than drop -- dropping the line throws out the
+      assertion with the census
+
+2.2 THE WALL CLOCK
+    - case: 'display test-run.sh', every choice
+    - GOOD held 'RESULTS: 1 ok, 0 fail, 0.00 [sec]'
+    - a machine-chosen value in an oracle: fails forever on any
+      machine slower than the recording one
+    - cure: eq_pattern
+          eq_pattern = [", [0-9]+\.[0-9]+ \[sec\]"]
+    - TRAP, MEASURED: the LEADING COMMA is load-bearing. Without it
+      the NUMERIC tolerance claims the digits first and the pattern
+      never fires. Start such a pattern on a WORD or a punctuation
+      mark, never on a digit class
+    - second cure, where a digest/pype stands between: mask there too
+      ('s.ss [sec]'). The digest IS part of the oracle
+
+2.3 THE CALENDAR DATE
+    - case: 'bookkeeper test-traces.py elision' -- GOOD holds
+      '2026-09-07'
+    - WORSE THAN A BLESS CANDIDATE: blessing only moves the bomb to
+      today's date
+    - cures: pattern, or mock the clock (precedent: services E-80,
+      'test-base-questions.py until')
+    - RULE: a date in a GOOD is never fixed by re-recording
+
+2.4 OTHERS SEEN, NOT YET WRITTEN UP
+    - paths, temp directories, pids
+    - counts of things the unit does not count
+    - the parallelism tail '||n' -- see 5 below, it is subtler
+
+==============================================================================
+3.  STALE PAGE vs FOREIGN FACT -- TELLING THEM APART
+==============================================================================
+
+    - a page that moved because THE UNIT moved is RE-RECORDED
+    - a page that moved because a STRANGER moved is TOLERATED or
+      DROPPED
+    - the two look identical in a diff. They are settled by DATING:
+      find the ruling that changed the behaviour, check the nominal
+      PREDATES it
+    - WHERE NO RULING STANDS, THE PAGE IS A DEFECT'S EVIDENCE AND IS
+      NOT BLESSED. This is the whole value of the check
+    - case: display stood 6 ok / 20 fail. First hypothesis: a code
+      regression, faults had moved from stderr into the flow. DATING
+      KILLED IT -- D-11/D-12 blessed display 2026-09-02, O-24 moved
+      faults into the flow 2026-09-07, nobody re-recorded. The code
+      was right; the oracle was stale
+    - lesson: a red suite suggests a code regression. It is as often
+      a ruling nobody propagated. DATE FIRST, READ CODE SECOND
+
+==============================================================================
+4.  ISOLATION -- THE SEQUENCE THAT MAKES BLIND BLESSING SAFE
+==============================================================================
+
+    RULED (Frank-Rene): behaviour change and formatting change are
+    SEPARATE CUTS, and the ORDER is what makes the second safe.
+
+    1.  BEHAVIOUR FIRST, under the OLD formatting
+    2.  mature it to ALL GREEN -- every page either passes or is
+        re-recorded with its diff read and dated
+    3.  ONLY THEN the formatting change, alone, on top
+    4.  now nothing but formatting can be in the diff. WRONGNESS
+        CANNOT ENTER. Bless blindly
+    5.  the one remaining duty: BE SURE THE FORMATTING ITSELF IS
+        FUNCTIONAL -- read a handful of rendered pages with the eye.
+        The census cannot tell you this; every affected page is red
+        either way
+
+    WHY THE ORDER MATTERS
+    - in a golden-master framework a pure formatting change turns
+      EVERY affected page red. There is no green left to read
+    - so 'green' cannot be the signal DURING the formatting step. It
+      is the signal BEFORE it, and that is what step 2 buys
+    - if the two changes land together, red pages have two possible
+      causes and no cheap way to tell which
+
+    WHAT WENT WRONG WHEN WE DID NOT SEQUENCE IT (worked example)
+    - one session landed: a behaviour change (aspirants refused at the
+      door) AND a formatting change (tag column 6 -> 9, 'END' closes
+      'START', '[ ?! ]' -> '[NO GOOD]')
+    - 27 pages moved, 190 differing lines
+    - classification:
+          157  tag column widened          formatting
+           17  'END' closes a 'START'      formatting
+            2  '[ ?! ]' -> '[NO GOOD]'     formatting
+            8  STATUS 1 -> 3               BEHAVIOUR, and unruled
+            6  'peak standing at once'
+               2 -> 9; 'digest identical
+               to linear: FALSE'           A DEFECT
+    - the six matched no stated rule. Blind blessing WITHOUT the
+      sequence would have recorded a broken homogeneity invariant
+      (O-15) as the oracle
+    - with the sequence, those six would have shown up in step 2, as
+      a red page in the behaviour cut, where they belong
+
+    COROLLARY -- WHEN YOU DID NOT SEQUENCE AND IT IS TOO LATE
+    - classify mechanically: every differing line must match a STATED
+      rule
+    - what matches, bless. WHAT MATCHES NOTHING IS A DEFECT
+    - this is a rescue, not a method. The sequence is the method
+
+==============================================================================
+5.  THE PARALLELISM TAIL -- A CASE STILL OPEN
+==============================================================================
+
+    - '||n' after the verdict column says how many runs stood
+    - MEASURED: last two lines of EVERY directory print no tail.
+      '_count_tail' returns '' below 2, and a DONE reads the count
+      'once it left' -- so the final departures see 1 and 0
+    - deeper: 'parallel_n' counts PROCESSES (++ at birth, -- at
+      death), while the trace shows ANNOUNCEMENTS. A run living under
+      START_DELAY_SECONDS = 2.0 is born, counted, and dies having
+      never appeared as a START
+    - so 'peak standing at once: 9' against a screen showing two open
+      STARTs. The number describes 'ps'; the reader is looking at a
+      screen
+    - RULED (Frank-Rene): COUNT UPON PRINT. '||n' = how many
+      announcements are OPEN ON THIS SCREEN -- ++ when a START is
+      actually written, -- when its END closes it
+    - buys: derivable from the printed trace alone; reader can verify
+      by counting lines; digest and screen cannot disagree; '||1'
+      becomes meaningful, '||0' impossible
+    - buys: 'END'/'START'/'||n' become ONE idea on ONE clock
+    - COST TO NAME: the screen's peak is LOWER than true parallelism.
+      Fine if the number is DECLARED to be about the trace. Not fine
+      if anyone reads it as 'how hard the machine worked'
+    - OPEN: 'jobs-budget' tests a BUDGET. Which of the two numbers
+      does a budget want? Decision, not detail
+
+==============================================================================
+6.  FIXTURES -- MAKE THEM THE WAY A USER MAKES THINGS
+==============================================================================
+
+    - case: 'display test-run.sh' wrote its fixture nominals by hand,
+      'printf > GOOD/x.txt'
+    - so the register had no entry; since the register moved into the
+      book (B-14) every run said 'REGISTERED ... accepted outside the
+      book (E-41)' -- 79 lines across 9 choices
+    - WORSE: it says so on the FIRST run only, so 'digest identical to
+      linear' (O-15) read FALSE in four choices. Blessing would have
+      recorded a broken invariant
+    - cure: the fixture records through HWUT'S OWN FACE
+          $ACCEPT --whole --directory="$dir" "$name"
+    - a FAILING fixture is made the way failures are made: accepted
+      once saying one thing, the application rewritten afterwards to
+      say another
+    - THREE TRAPS MET ON THE WAY, all measured:
+        a) fixture applications must print '<hwut-end>' or accept
+           refuses them (R-70)
+        b) the candidate accept provisioned MUST BE REMOVED after
+           ('rm -rf TMP OUT'). A rewrite within the same second reads
+           as CURRENT by mtime, and the run REPLAYS the recording
+           instead of running -- a [FAIL] fixture came up [OK]. Also
+           '--no-store' counted accept's candidate as its own
+        c) accept the failing case ONCE, saying the nominal; a second
+           '--whole' is a different act
+    - GENERAL: a fixture built by hand tests a state the product
+      cannot produce
+
+==============================================================================
+7.  WHAT 'ACCEPT' MEANS -- SO A TEST AUTHOR KNOWS WHAT IS GUARANTEED
+==============================================================================
+
+    - acceptance = A BOOK ENTRY *AND* A GOOD FILE. Never one without
+      the other
+    - the GOOD holds at least '##! unaccepted', its fillers, '####',
+      and the closing token
+    - the consistency of the two is SANITIZE's to check, not any
+      face's
+    - a run that produced NO OUTPUT, or none ending in '<hwut-end>',
+      CANNOT BE ACCEPTED AT ALL -- not even as an aspirant
+    - accept PROVISIONS: nothing need run first
+    - three spellings, ONE act: '--whole', '--as-is', '--force'. What
+      an overwrite replaces is an EARLIER ACCEPT, never the author's
+      evidence
+    - GRAVEYARD: '--whole' as a first-acceptance-only word that left
+      standing nominals alone. It made every re-recording reach for
+      '--force' anyway. A word that does not do what its name says is
+      worse than no word
+
+==============================================================================
+8.  THE THREE STANDINGS -- WHAT A TEST CAN BE
+==============================================================================
+
+    - UNKNOWN   nothing accepted
+    - ASPIRANT  accepted INCOMPLETELY; GOOD carries '##! unaccepted';
+                stays aspirant exactly as long as the mark stands;
+                playable, NEVER runnable
+    - MEMBER    accepted whole; the only state a run may judge
+    - a member that FAILED is still a member. 'aspirant' is not a
+      verdict; it is the reason there can be none
+    - PASS means: does not negate the total verdict, is not an error.
+      An aspirant is NEITHER -- not considered, and unmeasurable
+    - home: 'bookkeeper/test_run_info' (B-15), one instance, events
+      only, nothing by assignment
+
+==============================================================================
+9.  SMALL THINGS NOT YET PLACED
+==============================================================================
+
+    - the digest/pype filter IS part of the oracle. A mask missing
+      there is an oracle defect, not a cosmetic one
+    - '--no-log' retired by O-24; usage lines in GOODs still showed it
+      long after
+    - THE '@hwut { }' BLOCK HAS THE AUTHORITY OF THE GOOD FILE.
+      Changing the test application is as significant as changing the
+      nominal. Both are the author's statement of what the case IS.
+      Consequence: a declaration in the block is never a 'second
+      witness' to be arbitrated against the book -- the book RECORDS
+      what was declared. (Case: E-110, 'tolerance { stderr = ignored }'
+      replacing '--stderr-tol')
+    - A DURABLE PER-CASE PROPERTY MUST NOT BE SET BY A WISH-WIDE
+      SWITCH. '--stderr-tol' looked like a one-shot flag and wrote a
+      permanent book note for every case the wish selected -- silently.
+      SMELL TO LOOK FOR: a command-line flag whose effect outlives the
+      command
+    - stderr: a run whose stderr SPOKE is refused unless tolerated;
+      but the stderr text is then recorded NOWHERE. OPEN: if accept
+      accepts all output generated, where does tolerated stderr go?
+    - a page that asserts in PROSE what the code no longer does is as
+      stale as the nominal under it. 'test-accept.sh first' still
+      says the next run reads '[ ?! ]' -- it no longer runs at all

@@ -1,6 +1,7 @@
 
 --- the mixed tree ---
 DIR  time-stamping-pio-tests/TEST                                             
+ERROR hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
 SKIP  test-m.sh ....................................................... [FAIL]
 DONE  build[make  test-built.c] ....................................... [FAIL]
 SKIP  test-built.c .................................................... [FAIL]
@@ -29,6 +30,8 @@ time-stamping-pio-tests/TEST
     test-dead.sh  x             killed by the supervisor
     test-m.sh                   missing dependency
 ==============================================================================
-stderr> FAULT time-stamping-pio-tests/TEST: hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
+
+RESULTS: 4 ok, 6 fail, 12.00 [sec]
+|              ok              |                    fail                     |
 [fold: good_f=False fail_n=6 verdict_n=10 fault_n=1]
 <hwut-end>

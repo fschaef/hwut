@@ -55,13 +55,20 @@ on: <bof> => {
         text = re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
         text = re.sub(r"^\s*\d+\.\d+s\s+", "", text)
         text = re.sub(r"^\|\d+\|\s+", "", text)
+        #  THE COUNT TAIL, '  ||n' (services E-97): how many runs stood
+        #  when this one's event happened is the scheduler's morning,
+        #  not the subject's.
+        text = re.sub(r"\s+\|\|\d+$", "", text)
         #  THE DOTTED FILL IS NO FACT ABOUT THE SUBJECT: its length
         #  is the width less the body, and the body carries the LIVE
         #  elision mark, which arrival order decides. Two runs of one
         #  suite would differ in nothing but a count of dots.
         text = re.sub(r"\.{2,}", "..", text)
         #  THE WALL CLOCK of the closing blocks: how long the suite
-        #  took is a fact about the machine and the morning.
+        #  took is a fact about the machine and the morning -- the
+        #  DIRECTORIES bar's 'hh:mm:ss' and the RESULTS line's
+        #  seconds alike.
+        text = re.sub(r"\d+\.\d+ \[sec\]", "s.ss [sec]", text)
         return re.sub(r"\d{2}:\d{2}:\d{2}", "hh:mm:ss", text)
 
     def consume_run(text, badge):

@@ -175,66 +175,17 @@ class Execution:
 
 @dataclass(frozen=True)
 class Request:
-    """WHAT WAS ASKED of 'hwut.run' (E-101): the wish, where to walk,
-    and how to execute -- supports both flat fields and pre-built Wish/Execution objects."""
-    directory:         str              = "."
-    fail_f:            bool             = False
-    pass_f:            bool             = False
-    since_spec:        str | None       = None
-    until_spec:        str | None       = None
-    glob_tuple:        tuple            = ()
-    exclude_tuple:     tuple            = ()
-    dir_tuple:         tuple            = ()
-    exclude_dir_tuple: tuple            = ()
-    wishlist_f:        bool             = False
-    label_spec:        str | None       = None
-    language_tuple:    tuple            = ()
-    faster_than_ms:    int | None       = None
-    unaccepted_f:      bool             = False
-    wish:              Wish | None      = None
-    #  the execution
-    record:            bool | None      = None
-    worker_max_n:      int | None       = None
-    strategy_name:     str              = DEFAULT_STRATEGY_NAME
-    variant_text:      str              = ""
-    timing_f:          bool             = False
-    coverage_f:        bool             = False
-    despite_stain_f:   bool             = False
-    force_run_f:       bool             = False
-    execution:         Execution | None = None
+    """WHAT WAS ASKED of 'hwut.run' (E-101): where to walk, the wish
+    that narrows it, and the Execution that governs it -- TWO nested
+    records, each the one definition of what it names. Both are frozen
+    and hold nothing but plain fields, so the Request stays plain
+    ('record_check' walks into them).
 
-    def resolved_wish(self) -> Wish:
-        if self.wish is not None:
-            return self.wish
-        return Wish(
-            fail_f            = self.fail_f,
-            pass_f            = self.pass_f,
-            since_spec        = self.since_spec,
-            until_spec        = self.until_spec,
-            glob_tuple        = tuple(self.glob_tuple),
-            exclude_tuple     = tuple(self.exclude_tuple),
-            dir_tuple         = tuple(self.dir_tuple),
-            exclude_dir_tuple = tuple(self.exclude_dir_tuple),
-            wishlist_f        = self.wishlist_f,
-            label_spec        = self.label_spec,
-            language_tuple    = tuple(self.language_tuple),
-            faster_than_ms    = self.faster_than_ms,
-            unaccepted_f      = self.unaccepted_f
-        )
-
-    def resolved_execution(self) -> Execution:
-        if self.execution is not None:
-            return self.execution
-        return Execution(
-            record          = self.record,
-            worker_max_n    = self.worker_max_n,
-            strategy_name   = self.strategy_name,
-            variant_text    = self.variant_text,
-            timing_f        = self.timing_f,
-            coverage_f      = self.coverage_f,
-            despite_stain_f = self.despite_stain_f,
-            force_run_f     = self.force_run_f
-        )
+    A wish is a thing a Request MAY hold, not a thing every Request IS:
+    'hwut.rename' and 'hwut.renovate' have none, and say so."""
+    directory: str       = "."
+    wish:      Wish      = field(default_factory=Wish)
+    execution: Execution = field(default_factory=Execution)
 
 
 @dataclass(frozen=True)
@@ -280,7 +231,7 @@ def optional_log_writer(log_path: str, write_error):
 
 
 async def _drive(root, request: Request, flow, demand=None,
-                 event_sink=None, label_view=None, warn=None, write=None):
+                 event_sink=None, label_view=None, write=None):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
             'flow' as each event arrived; the closing 'None' consumed,
@@ -289,13 +240,13 @@ async def _drive(root, request: Request, flow, demand=None,
     Raises what determination raises -- 'orchestrator()' refuses
     BEFORE the first event.
     """
-    exec_conf = request.resolved_execution()
+    exec_conf = request.execution
     coverage = None
     if exec_conf.coverage_f:
         from vut.engine.coverage.api import CoverageConfig
         coverage = demand if demand is not None else CoverageConfig()
 
-    queue = orchestrator(root, request.resolved_wish(),
+    queue = orchestrator(root, request.wish,
                          test_run_dispatcher_factory(
                              record          = exec_conf.record,
                              coverage        = coverage,
@@ -305,7 +256,7 @@ async def _drive(root, request: Request, flow, demand=None,
                              force_run_f     = exec_conf.force_run_f),
                          worker_max_n = exec_conf.worker_max_n,
                          strategy     = strategy_of(exec_conf.strategy_name),
-                         label_view   = label_view, warn=warn)
+                         label_view   = label_view)
     event_list = []
     #  THE WAKE: a run that merely takes long emits no event, so a
     #  flow holding its START line back would never release it. The

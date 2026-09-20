@@ -1,0 +1,94 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+==============================================================================
+RATIONALE -- test_run_info
+==============================================================================
+
+B-15  THE STATE HAD NO HOME, SO ASPIRANT WAS UNREACHABLE      (2026-09-19)
+------------------------------------------------------------------------------
+PROBLEM   One question -- what standing does this case have? -- was
+          answered in three places and joined in none:
+
+            a nominal stands        'bookkeeper.nominal_stands_f',
+                                    asked by EIGHT callers
+            it carries the mark     'operations/consume.carries_-
+                                    unaccepted_f', asked by ONE, and
+                                    that one INSIDE the run's
+                                    comparison
+            the book's verdict      the row, read by sanitize, report,
+                                    task_list_query
+
+          Nobody read all three, so E_TestVerdict.ASPIRANT -- a value
+          the enum had carried since B-14 -- was unreachable by the
+          path that should create it.
+
+          MEASURED, end to end. 'accept <app>' left undecided writes
+          'GOOD/x.txt' holding '##! unaccepted / --?-- / #### /
+          <hwut-end>' and books verdict 'true' -- PASS. 'hwut.run'
+          then SELECTS the case (nothing upstream knows better), runs
+          it, spends a process on it, refuses it at compare time in
+          'equivalence_check' as UNACCEPTED, and rewrites the row to
+          'false;unaccepted' -- FAIL. After which 'hwut.wishlist
+          --fail' SELECTS it (exit 0) and '--unaccepted' selects
+          nothing (exit 3). Both ways round.
+
+          The refusal itself was correct and well worded. It simply
+          stood ten steps too late, in a component that cannot
+          influence selection.
+
+DECISION  RULED (Frank-Rene): the state belongs in ONE observable
+          instance, moved only by EVENTS, with its consistency checks
+          beside it and the state machine pattern to hold it. Named
+          'test_run_info', not 'membership' -- what it models is A
+          BOOK ENTRY BEING ALIVE, of which the member state is one
+          field among the register's ids, the last verdict, the
+          report, the acceptance time, coverage, stderr and the
+          stain. Homed in the bookkeeper, which owns both witnesses.
+
+          THE MEMBER STATE IS THE STATE AND NOTHING ELSE. The book's
+          'verdict' column compresses a run's outcome and a case's
+          standing into one field; the compression is the FILE'S,
+          and the attributes are factually separate. 'member_state'
+          says whether a case may be run; 'last_verdict' says what
+          happened when it was, and is None where nothing has judged
+          it.
+
+          NOTHING BY ASSIGNMENT. Both classes raise on '__setattr__'
+          and '__delattr__', naming the events in the refusal. A
+          caller states what HAPPENED; the object decides what that
+          means. This is the whole point: what it replaces was every
+          caller free to form its own opinion and write it down.
+
+          THE BASE STATE REFUSES. A state answers only the events
+          that move it; the rest inherit 'this does not move me'. A
+          transition nobody wrote cannot occur by accident.
+
+          'on_run_verdict' RAISES where the state is not runnable.
+          Today's silent defect becomes loud: the aspirant that is
+          currently selected, run and booked 'false' would stop at
+          the moment of judgement, naming the gate that let it past.
+
+          THE FILES DECIDE THE STATE. 'of_evidence' reads GOOD/, not
+          the book: a file is testimony, a row is a record of it.
+          'consistency_fault_tuple' names the disagreements and mends
+          none -- repair is a person's, through accept or remove
+          (E-41).
+
+COST      A new component in the bookkeeper, four nominals. Nothing
+          calls it yet; the wiring -- the eight askers, accept's
+          write, the gate leaving 'equivalence_check' -- changes what
+          'hwut.run' SELECTS and is its own cut, measured against the
+          census.
+
+ALSO      A LAPSE, recorded because the discipline is worth more than
+          the appearance. Two edits were found in
+          'bookkeeper/bookkeeper.py' that no entry announced and no
+          message reported: an import of a package that did not yet
+          exist, and a 'membership=None' parameter on 'note_accept' /
+          '_note_accept_unlocked' whose body booked ASPIRANT. The
+          method is live -- accept.py and lib/accept/engine.py call
+          it -- but NEITHER passes the argument, so the addition was
+          dead while the method ran. It surfaced only because the
+          import broke on a rename. Both were reverted; the file is
+          byte-identical to the tree as delivered, and the wiring was
+          done deliberately afterwards. Read what is in the tree
+          before believing what an entry says about it.

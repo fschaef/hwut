@@ -250,6 +250,11 @@ class CTreeScheduler:
              directory_list=[entry.directory for entry in tree_plan])
         for fault in tree_plan.fault_tuple:
             emit("fault", directory=".", text=str(fault))
+        #  A FINDING THAT DECIDES NOTHING still belongs before the
+        #  thing it is about: on the same road as a fault, one event
+        #  each, before the first run.
+        for text in tree_plan.warning_tuple:
+            emit("warning", text=text)
 
         budget    = CBudget(self.worker_max_n)
         unit_list = [CDirectoryWork(tree_plan.root, entry,
@@ -378,8 +383,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
-                 clock=None, strategy=None, label_view=None,
-                 warn=None):
+                 clock=None, strategy=None, label_view=None):
     """
     RETURN: asyncio.Queue, the report stream of the run -- the events
             of 'vocabulary.py', then one 'None'. The run stands as an
@@ -389,13 +393,13 @@ def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
     first event is emitted, so a refused wish raises HERE, at the
     call, not inside the task.
 
-    'warn' takes one finding at a time and is called BEFORE the first
-    event: a finding that decides nothing still belongs before the
-    thing it is about.
+    A finding of determination that decides nothing -- a glob that
+    met only silenced runs -- is a 'warning' EVENT of the stream, on
+    the same road as a fault, before the first run. There is no side
+    road for it: a callback that a caller forgot to hand in once lost
+    every warning 'hwut.run' had (O-26).
     """
     tree_plan = orchestrate(root, wish, label_view=label_view)
-    if warn is not None:
-        for text in tree_plan.warning_tuple: warn(text)
     queue     = asyncio.Queue()
     asyncio.ensure_future(
         CTreeScheduler(dispatcher_factory, worker_max_n,

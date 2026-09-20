@@ -28,6 +28,9 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
     ==============================================================================
+    
+    RESULTS: 6 ok, 0 fail, s.ss [sec]
+    |                                     ok                                     |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True
@@ -61,6 +64,9 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
     ==============================================================================
+    
+    RESULTS: 6 ok, 0 fail, s.ss [sec]
+    |                                     ok                                     |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True

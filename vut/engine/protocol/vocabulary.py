@@ -40,6 +40,7 @@ KIND_DB = {
                                                     "report": str,
                                                     "detail": str}),
     "fault":      ({"directory": str, "text": str}, {}),
+    "warning":    ({"text": str}, {}),
     "report":     ({"directory": str, "text": str}, {}),
     "refused":    ({"directory": str, "node": str, "text": str}, {}),
     "dir-done":   ({"directory": str, "good": bool,
@@ -70,7 +71,8 @@ _FIELD_TEXT_DB = {
                       "absent where nothing finer than the verdict "
                       "is known",
     "text":           "one line, verbatim; on 'refused': WHY the node "
-                      "named was not run (E-41)",
+                      "named was not run (E-41); on 'warning': a "
+                      "finding about the wish that decides nothing",
     "fail_db":        "node name -> terminal state, the failures "
                       "alone",
     "fail_n":         "how many nodes failed, tree-wide",

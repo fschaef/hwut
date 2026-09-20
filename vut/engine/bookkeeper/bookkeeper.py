@@ -447,14 +447,26 @@ def nominal_stands_f(directory, test, choice=None):
     book: the book records runs, GOOD/ records acceptance, and only
     the latter is the evidence asked for here.
     """
+    return bool(nominal_path_list(directory, test, choice))
+
+
+def nominal_path_list(directory, test, choice=None):
+    """
+    RETURN: list[str], every nominal file standing for that (test,
+            choice) in the directory's GOOD/, by the same naming
+            'nominal_stands_f' asks by. Empty where nothing stands.
+
+    The same look, answering WHICH files rather than WHETHER any:
+    'test_run_info' must open them to see whether one carries an
+    unaccepted region (B-15).
+    """
     good = Path(directory) / "GOOD"
-    if not good.is_dir(): return False
+    if not good.is_dir(): return []
     prefix_tuple = (test + ".",) if choice is None \
                    else (test + ".", "%s--%s." % (test, choice))
-    for name in os.listdir(str(good)):
-        if name in GOOD_OWNED_FILE_TUPLE: continue
-        if name.startswith(prefix_tuple): return True
-    return False
+    return [str(good / name) for name in sorted(os.listdir(str(good)))
+            if name not in GOOD_OWNED_FILE_TUPLE
+            and name.startswith(prefix_tuple)]
 
 
 class Bookkeeper:

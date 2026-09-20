@@ -1,0 +1,5 @@
+  nominal=False mark=False -> unknown
+  nominal=False mark=True  -> unknown
+  nominal=True  mark=False -> member
+  nominal=True  mark=True  -> aspirant
+<hwut-end>

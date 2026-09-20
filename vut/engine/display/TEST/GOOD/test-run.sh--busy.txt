@@ -1,10 +1,12 @@
 STATUS: 1
 STDOUT {
+    ERROR DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST
         DONE  test-one.sh .. [OK]
         DONE  test-two.sh .. [OK]
+        DIR   beta/TEST
         DIR   gamma/TEST
         DONE  test-one.sh .. [OK]
         DONE  test-two.sh .. [OK]
@@ -17,12 +19,16 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/0
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
     ==============================================================================
+    
+    RESULTS: 4 ok, 0 fail, s.ss [sec]
+    |                                     ok                                     |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True
 == --quiet: the fault in the closing FAULTS block ==
 STATUS: 1
 STDOUT {
+    ERROR DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
     }
@@ -37,8 +43,11 @@ STDOUT {
     ==============================================================================
     FAULTS
     ------------------------------------------------------------------------------
-    FAULT beta/TEST: DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
+    ERROR DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
     ==============================================================================
+    
+    RESULTS: 4 ok, 0 fail, s.ss [sec]
+    |                                     ok                                     |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True

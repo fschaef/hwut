@@ -38,11 +38,12 @@ DONE  test-00.sh ...................................................... [FAIL]
       test-34.sh ...................................................... [FAIL]
       test-35.sh ...................................................... [FAIL]
       test-36.sh ...................................................... [FAIL]
+      test-37.sh ...................................................... [FAIL]
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 37 fail, 00:00:37
+DIRECTORIES                                            0 ok, 38 fail, 00:00:38
 ------------------------------------------------------------------------------
-   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]     0/37
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]     0/38
 
 ==============================================================================
 HINTS
@@ -50,42 +51,43 @@ HINTS
 suite/TEST
     test-00.sh   source file missing
     test-01.sh   interpreter missing
-    test-03.sh   extra lines; GOOD intact
-    test-04.sh   lines missing; rest intact
-    test-06.sh   UNSTABLE -- not run
-    test-07.sh   the application would not launch
-    test-08.sh   killed by the supervisor
-    test-09.sh   not run: the process had already died
-    test-10.sh   killed: over the wall-clock cap
-    test-11.sh   killed: over the cpu-time cap
-    test-12.sh   killed: over the memory cap
-    test-13.sh   killed: over the file-size cap
-    test-14.sh   killed: over the process cap
-    test-15.sh   killed: over the disk cap
-    test-16.sh   produced no output
-    test-17.sh   stalled, no output
-    test-18.sh   no recording to replay
-    test-19.sh   output file missing
-    test-20.sh   GOOD missing
-    test-21.sh   output cut short (no <hwut-end>)
-    test-22.sh   unexpected stderr
-    test-23.sh   region framing is broken
-    test-24.sh   stderr undecided
-    test-25.sh   pype interpreter missing
-    test-26.sh   pype script missing
-    test-27.sh   pype script has a syntax error
-    test-28.sh   pype killed by the supervisor
-    test-29.sh   pype failed
-    test-30.sh   build tool missing
-    test-31.sh   build killed by the supervisor
-    test-32.sh   the build failed
-    test-33.sh   target not built
-    test-34.sh   a dependency would not be acquired
-    test-35.sh   display target unreachable
-    test-36.sh   a token nobody taught
+    test-02.sh   the nominal carries lines nobody has accepted
+    test-04.sh   extra lines; GOOD intact
+    test-05.sh   lines missing; rest intact
+    test-07.sh   UNSTABLE -- not run
+    test-08.sh   the application would not launch
+    test-09.sh   killed by the supervisor
+    test-10.sh   not run: the process had already died
+    test-11.sh   killed: over the wall-clock cap
+    test-12.sh   killed: over the cpu-time cap
+    test-13.sh   killed: over the memory cap
+    test-14.sh   killed: over the file-size cap
+    test-15.sh   killed: over the process cap
+    test-16.sh   killed: over the disk cap
+    test-17.sh   produced no output
+    test-18.sh   stalled, no output
+    test-19.sh   no recording to replay
+    test-20.sh   output file missing
+    test-21.sh   GOOD missing
+    test-22.sh   output cut short (no <hwut-end>)
+    test-23.sh   unexpected stderr
+    test-24.sh   region framing is broken
+    test-25.sh   stderr undecided
+    test-26.sh   pype interpreter missing
+    test-27.sh   pype script missing
+    test-28.sh   pype script has a syntax error
+    test-29.sh   pype killed by the supervisor
+    test-30.sh   pype failed
+    test-31.sh   build tool missing
+    test-32.sh   build killed by the supervisor
+    test-33.sh   the build failed
+    test-34.sh   target not built
+    test-35.sh   a dependency would not be acquired
+    test-36.sh   display target unreachable
+    test-37.sh   a token nobody taught
 ==============================================================================
 
-RESULTS: 0 ok, 37 fail, 37.00 [sec]
+RESULTS: 0 ok, 38 fail, 38.00 [sec]
 |                                    fail                                    |
-[fold: good_f=False fail_n=37 verdict_n=37 fault_n=0]
+[fold: good_f=False fail_n=38 verdict_n=38 fault_n=0]
 <hwut-end>

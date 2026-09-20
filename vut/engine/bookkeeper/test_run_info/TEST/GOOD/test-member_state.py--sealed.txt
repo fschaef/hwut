@@ -1,0 +1,10 @@
+  assignment refused: state
+  assignment refused: _state
+  assignment refused: whatever
+  deletion refused
+  state after all of it: unknown
+A RUN MAY JUDGE A MEMBER AND NOTHING ELSE
+  unknown   refused: a case in state 'unknown' was judged by a run -- every gate must refuse it before it is selected
+  aspirant  refused: a case in state 'aspirant' was judged by a run -- every gate must refuse it before it is selected
+  member    judged, state stays member
+<hwut-end>

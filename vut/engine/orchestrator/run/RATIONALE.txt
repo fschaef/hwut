@@ -785,3 +785,40 @@ GRAVEYARD Reading '[FAIL]' with the reason only in HINTS -- rejected:
           the flow is what the eye scans while a run is going, and a
           tag that lies by omission there is read a hundred times
           before HINTS is read once.
+
+
+O-26  A FINDING THAT DECIDES NOTHING IS AN EVENT                  (2026-09-19)
+------------------------------------------------------------------------------
+PROBLEM   Determination's warnings -- 'the glob met only runs the
+          standard label silences' -- travelled a SIDE ROAD:
+          'orchestrator(..., warn=<callable>)', a parameter the
+          caller had to remember. MEASURED: 'services/run.py's 'do'
+          called '_drive' without it, so 'hwut.run' printed no
+          warning at all, on any wish, while 'hwut.wishlist' on the
+          same tree and the same glob printed it and exited 3. The
+          loss was invisible because display's own suite was already
+          red for O-24. A callback nobody is obliged to pass is a
+          page that goes missing and nothing notices.
+
+DECISION  'warning' is a KIND of the vocabulary -- {"text": str},
+          tree-level, no directory, because the finding is about the
+          WISH and not about any one place. The scheduler emits one
+          per finding on the same road as a fault, BEFORE the first
+          run: a finding that decides nothing still belongs before
+          the thing it is about. 'CRunReportReceiver.on_warning'
+          carries it; every other receiver inherits the no-op.
+
+          The 'warn=' parameter is REMOVED. One road, and a consumer
+          that is not a terminal -- a server, a test, 'run.do's sink
+          -- sees the finding for the first time.
+
+          THE TEXT IS VERBATIM. Determination's line already opens
+          'WARNING:' and is the same line 'hwut.wishlist' prints;
+          the renderer adds no word of its own (D-8: display owns
+          the rendering words, and here the word is determination's).
+          SILENT drops it, as it drops the flow.
+
+COST      One kind, so every walker of the vocabulary moves:
+          'test-line.py roundtrip' reads 11 kinds where it read 10.
+          'test-receiver.py format' was ALREADY red before this
+          (verdict words, meta_n/skip_n) and stays red -- not ours.

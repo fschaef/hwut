@@ -46,6 +46,7 @@ from   vut.services import wishlist, plan                        # noqa: E402
 from   vut.services.lib.face import (record_check, Refused, Fault,  # noqa: E402
                                      Empty, answered)
 from   vut.services._exit import E_ExitCode                      # noqa: E402
+from   vut.engine.orchestrator.plan.wish import Wish              # noqa: E402
 
 ROOT = tempfile.mkdtemp(prefix="hwut-face-")
 TEST = os.path.join(ROOT, "suite", "TEST")
@@ -85,7 +86,7 @@ def test_reuse():
 
     banner("the same, narrowed by the wish -- no argv anywhere")
     result = wishlist.do(wishlist.Request(directory=TEST,
-                                          glob_tuple=("test-a.sh one",)))
+                                          wish=Wish(glob_tuple=("test-a.sh one",))))
     for line in result.line_tuple: print("    %s" % line)
 
     banner("hwut.plan, called as a library -- nothing is accepted yet, so")
@@ -123,12 +124,13 @@ def test_plain():
     for line in record_check(Bad()): print("    %s" % line)
 
     banner("a Wish is the engine's; the record states its keywords")
-    request = wishlist.Request(directory=TEST, fail_f=True, since_spec="2h")
+    request = wishlist.Request(directory=TEST,
+                               wish=Wish(fail_f=True, since_spec="2h"))
     wish = wishlist.wish_of(request)
     print("    request -> wish: fail_f=%s since=%r"
           % (wish.fail_f, wish.since_spec))
     print("    wish -> request: %s"
-          % (wishlist.request_of(wish, TEST, []).since_spec,))
+          % (wishlist.request_of(wish, TEST, []).wish.since_spec,))
 
 
 def test_refuse():
@@ -157,7 +159,7 @@ def test_refuse():
 
     banner("an EMPTY selection is a Result, not a refusal: the warning stands")
     result = wishlist.do(wishlist.Request(directory=TEST,
-                                          glob_tuple=("no-such-test.sh",)))
+                                          wish=Wish(glob_tuple=("no-such-test.sh",))))
     print("    lines %d, warnings %d" % (len(result.line_tuple),
                                          len(result.warning_tuple)))
     line_list = []
@@ -267,11 +269,13 @@ def test_run():
                                  if k in ("format", "kind")}))
 
     banner("narrowed by the wish, and nothing selected")
-    tally = run.do(run.Request(directory=TEST, glob_tuple=("test-a.sh one",)),
+    tally = run.do(run.Request(directory=TEST,
+                               wish=Wish(glob_tuple=("test-a.sh one",))),
                    sink=lambda item: None)
     print("    one case : %d case(s), exit %s"
           % (tally.case_n, run.exit_code_of(tally).name))
-    tally = run.do(run.Request(directory=TEST, glob_tuple=("no-such.sh",)),
+    tally = run.do(run.Request(directory=TEST,
+                               wish=Wish(glob_tuple=("no-such.sh",))),
                    sink=lambda item: None)
     print("    none     : empty=%s, exit %s"
           % (tally.empty_f, run.exit_code_of(tally).name))

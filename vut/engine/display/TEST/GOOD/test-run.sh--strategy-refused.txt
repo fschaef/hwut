@@ -10,6 +10,6 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 <hwut-end>

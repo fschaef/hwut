@@ -11,7 +11,7 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 == an option nobody knows ==
 STATUS: 2
@@ -26,7 +26,7 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 == tiers beside one another ==
 STATUS: 2
@@ -41,7 +41,7 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 == colour beside no-colour ==
 STATUS: 2
@@ -56,7 +56,7 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 == jobs without a number ==
 STATUS: 2
@@ -71,6 +71,6 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 <hwut-end>

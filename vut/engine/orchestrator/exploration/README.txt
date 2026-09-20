@@ -795,3 +795,47 @@ own declaration. The five that moved in from the root ('eq-pattern',
 'nothing', 'analogy', 'constraints', 'comment') are REFUSED where they
 stood, by a message naming the new place; 'eq-pattern' is spelled
 'eq_pattern' inside the scope, which has one convention.
+
+WHAT A TOLERANCE IS FOR, AND THE LAW ABOVE IT.
+
+    A TEST'S OUTPUT MUST BE DETERMINED BY THE BEHAVIOUR OF THE UNIT
+    UNDER TEST -- BY NOTHING ELSE.
+
+That is the law, and every tolerance in the scope above serves it.
+A page that carries a FOREIGN FACT -- one the unit does not decide --
+has exactly two lawful remedies, and blessing is neither:
+
+    DROP IT       do not print it. The shortest answer, and the right
+                  one wherever the fact was never the test's to keep.
+
+    TOLERATE IT   name it with an 'eq_pattern' (or the scope's other
+                  keys) so the comparison passes over it while the
+                  behaviour around it stays pinned exactly.
+
+A foreign fact is anything another module, machine, or morning
+decides: a wall clock or a calendar date; a path, a temporary
+directory, a process id; a count of something the unit does not
+count; and -- the one most often missed -- A LIST OR CENSUS THAT
+ANOTHER MODULE OWNS. A registry of handlers, a table of verdict
+words, a set of known options: the unit under test neither fills nor
+maintains these, so they move when a stranger moves, and a page that
+prints them reports on the stranger.
+
+THE TEST OF FOREIGNNESS is not 'does it vary between runs' -- a
+registry is perfectly steady until the day it is not. It is: COULD
+THIS LINE MOVE WITHOUT THE UNIT UNDER TEST CHANGING? If yes, the
+fact is foreign, whatever its constancy today.
+
+PREFER TOLERATING TO DROPPING WHERE THE ASSERTION LIVES IN THE SAME
+LINE. An error that echoes an offending name and then lists the
+known ones is one line carrying both: the echo is the behaviour, the
+list is the census. A pattern over the list alone keeps the echo
+pinned and lets the census move ('known handlers: [a-z, \-]+'), where
+dropping the line would have thrown the assertion out with it.
+
+A PAGE THAT MOVED BECAUSE THE UNIT MOVED IS A DIFFERENT THING
+ENTIRELY, and is re-recorded, not tolerated. Which of the two a
+given page is, is settled by DATING: find the ruling that changed
+the behaviour and check that the nominal predates it. Where no such
+ruling stands, the page is evidence of a defect and must not be
+blessed.

@@ -1,6 +1,6 @@
 cadence sidecars by default: 0
 cadence sidecars with --timing: 1
-unit: second   deltas: 1   every delta a number: True
+unit: second   deltas: 2   every delta a number: True
 STATUS: 2
 STDOUT {
     REFUSED: '--timing' and '--coverage' cannot both stand: a coverage run's times are the instrumentation's
@@ -13,6 +13,6 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 <hwut-end>

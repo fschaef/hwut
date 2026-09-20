@@ -15,6 +15,9 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
     ==============================================================================
+    
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.06 [sec]
+    |                  ok                  |                skip                 |
 }
 --- a globbed app
 STATUS: 0
@@ -36,13 +39,19 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
     ==============================================================================
+    
+    RESULTS: 6 ok, 0 fail, 0.09 [sec]
+    |                                     ok                                     |
 }
 --- a bare word that names nothing selects nothing
 STATUS: 3
 STDOUT {
     DIR  alpha/TEST                                                               
+    NOTE  the selection is empty: no test case answers the wish
     DIR  beta/TEST                                                                
+    NOTE  the selection is empty: no test case answers the wish
     DIR  gamma/TEST                                                               
+    NOTE  the selection is empty: no test case answers the wish
     
     ==============================================================================
     DIRECTORIES                                             0 ok, 0 fail, hh:mm:ss
@@ -51,6 +60,9 @@ STDOUT {
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
     ==============================================================================
+    
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.03 [sec]
+    |                                    skip                                    |
 }
 --- an unknown OPTION is still refused by name
 STATUS: 2
@@ -65,6 +77,6 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--start-delay=<seconds>]
-                    [--log <file>|--no-log] [--directory=<path>]
+                    [--log <file>] [--directory=<path>]
 }
 <hwut-end>

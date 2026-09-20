@@ -1,8 +1,11 @@
-  decision: recorded   (A.2) the recording is current
-  OK  : a Loaded provider
-  OK  : the word is RECORDED
+  reader:   recorded   (A.2) the recording is current
+  producer: provide   (A.2) a run runs; the recording is what it will replace
+  OK  : a reader gets a Loaded provider
+  OK  : and the word is RECORDED
   OK  : step (A.2) decided
   OK  : the recording is what is provided
   OK  : last_provided remembers
-SUCCESS: a current recording is read back, not re-run.
+  OK  : a PRODUCER over the same recording does not load
+  OK  : it RUNS: the recording is what it will replace
+SUCCESS: a current recording is read back by a reader; a run runs.
 <hwut-end>

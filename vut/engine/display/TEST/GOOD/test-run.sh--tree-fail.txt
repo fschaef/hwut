@@ -25,6 +25,9 @@ STDOUT {
     gamma/TEST
         frame on_entry   the frame failed
     ==============================================================================
+    
+    RESULTS: 3 ok, 1 fail, s.ss [sec]
+    |                           ok                            |       fail       |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True

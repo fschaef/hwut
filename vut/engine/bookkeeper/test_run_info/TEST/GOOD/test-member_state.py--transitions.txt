@@ -1,0 +1,18 @@
+FROM UNKNOWN
+  start                              unknown   runnable=False playable=False
+  on_accept_left_unaccepted          aspirant  runnable=False playable=True
+  on_accept_clean_good               member    runnable=True  playable=True
+  on_no_output                       unknown   runnable=False playable=False
+  on_no_terminal                     unknown   runnable=False playable=False
+FROM ASPIRANT
+  on_accept_clean_good               member    runnable=True  playable=True
+  on_accept_left_unaccepted          aspirant  runnable=False playable=True
+  on_no_output                       aspirant  runnable=False playable=True
+  on_no_terminal                     aspirant  runnable=False playable=True
+  on_nominal_removed                 unknown   runnable=False playable=False
+FROM MEMBER
+  on_detected_unaccepted_in_good     aspirant  runnable=False playable=True
+  on_accept_clean_good               member    runnable=True  playable=True
+  on_no_output                       member    runnable=True  playable=True
+  on_nominal_removed                 unknown   runnable=False playable=False
+<hwut-end>

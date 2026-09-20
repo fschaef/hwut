@@ -8,7 +8,7 @@
 #                   "jobs-budget", "labels", "linear-raw", "nostore",
 #                   "refused", "short-form", "strategy-refused",
 #                   "tiers", "timing", "tree-fail", "tree-green"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
+#     tolerance { eq_pattern = ["STATUS: [0-9]", ", [0-9]+\\.[0-9]+ \\[sec\\]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -50,6 +50,7 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../.." && pwd)
 RUN="python3 -m vut.services.run"
+ACCEPT="python3 -m vut.services.accept"
 export PYTHONPATH="$ROOT"
 export PATH="$ROOT/vut/bin:$PATH"    # '#! /usr/bin/env hwut.pype' filters
 unset NO_COLOR CI COLUMNS
@@ -97,6 +98,33 @@ put() {                 # <path> <content...>
     printf '%s\n' "$2" > "$1"
 }
 
+app() {                 # <dir> <name> <title> <prints> [<nominal>]
+                        # A test application whose nominal is RECORDED
+                        # THROUGH hwut's own face -- 'accept --whole'
+                        # provisions the candidate and takes it as it
+                        # stands (E-109) -- so the book and the register
+                        # hold it as a user's would (E-41). With a fifth
+                        # word, the nominal is that and the application
+                        # then prints the fourth: the failing fixture,
+                        # made the way a failure is made -- accepted
+                        # once, changed since. '\n' in a text is a line
+                        # break, so a text may carry '<hwut-end>'.
+    local dir=$1 name=$2 title=$3 prints=$4 nominal=${5:-$4}
+    printf '#!/bin/bash\n# @hwut { title = "%s" }\nprintf "%%b\\n" "%s"\n' \
+        "$title" "$nominal" > "$dir/$name"
+    chmod +x "$dir/$name"
+    $ACCEPT --whole --directory="$dir" "$name" > /dev/null 2>&1 \
+        || { echo "FAULT: the fixture's nominal of '$name' was not recorded"; exit 1; }
+    [ "$nominal" = "$prints" ] \
+        || printf '#!/bin/bash\n# @hwut { title = "%s" }\nprintf "%%b\\n" "%s"\n' \
+               "$title" "$prints" > "$dir/$name"
+    #  THE CANDIDATE accept provisioned is NOT the fixture's: the run
+    #  under test must RUN, not replay a recording -- a rewrite within
+    #  the same second reads as current by mtime -- and a '--no-store'
+    #  run must find no candidate it did not make. The book stays.
+    rm -rf "$dir/TMP" "$dir/OUT"
+}
+
 digest() {              # <args...>  -- status, digested stdout, stderr
     #  '$?' after a pipe is the pipe's: the face's status is taken from
     #  PIPESTATUS. The digest filter sits beside this suite and is
@@ -127,26 +155,28 @@ every_strategy() {      # <args...> -- the linear digest shown, every
     done
 }
 
-fixture_tree() {        # three directories, two passing tests each
+fixture_tree() {        # [<beta-two-nominal>] -- three directories,
+                        # two passing tests each; with the word, beta's
+                        # second test was accepted saying THAT, and
+                        # differs now
     local d t
     for d in alpha beta gamma; do
         mkdir -p tree/$d/TEST/GOOD
         printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
             > tree/$d/TEST/hwut.conf
         for t in one two; do
-            printf '#!/bin/bash\n# @hwut { title = "%s" }\necho "steady %s"\necho "<hwut-end>"\n' \
-                $t $t > tree/$d/TEST/test-$t.sh
-            chmod +x tree/$d/TEST/test-$t.sh
-            printf 'steady %s\n<hwut-end>\n' $t \
-                > tree/$d/TEST/GOOD/test-$t.sh.txt
+            if [ "$d/$t" = "beta/two" ] && [ -n "$1" ]; then
+                app tree/$d/TEST test-$t.sh $t "steady $t\n<hwut-end>" "$1"
+            else
+                app tree/$d/TEST test-$t.sh $t "steady $t\n<hwut-end>"
+            fi
         done
     done
 }
 
 fixture_tree_fail() {   # the tree; one test of beta differs, gamma's
                         # entry fails and its tests never run
-    fixture_tree
-    put tree/beta/TEST/GOOD/test-two.sh.txt "what the GOOD expects"
+    fixture_tree "what the GOOD expects\n<hwut-end>"
     printf 'hwut {\n    on_entry = "false"\n    on_exit  = "true"\n}\n' \
         > tree/gamma/TEST/hwut.conf
 }
@@ -155,18 +185,13 @@ fixture_green() {       # one directory, one passing test
     mkdir -p tree/suite/TEST/GOOD
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\n' \
-        > tree/suite/TEST/test-ok.sh
-    chmod +x tree/suite/TEST/test-ok.sh
-    put tree/suite/TEST/GOOD/test-ok.sh.txt "steady line"
+    app tree/suite/TEST test-ok.sh Ok "steady line\n<hwut-end>"
 }
 
 fixture_fail() {        # the green one, one differing test beside it
     fixture_green
-    printf '#!/bin/bash\n# @hwut { title = "Diff" }\necho "what the run says"\n' \
-        > tree/suite/TEST/test-diff.sh
-    chmod +x tree/suite/TEST/test-diff.sh
-    put tree/suite/TEST/GOOD/test-diff.sh.txt "what the GOOD expects"
+    app tree/suite/TEST test-diff.sh Diff "what the run says\n<hwut-end>" \
+                                          "what the GOOD expects\n<hwut-end>"
 }
 
 fixture_fault() {       # a dependency the directory does not offer
@@ -278,10 +303,7 @@ tree-ink)
     for d in inner other; do
         mkdir -p tree/deep/$d/TEST/GOOD
         printf 'hwut {\n}\n' > tree/deep/$d/TEST/hwut.conf
-        printf '#!/bin/bash\n# @hwut { title = "d" }\necho "d"\necho "<hwut-end>"\n' \
-            > tree/deep/$d/TEST/test-d.sh
-        chmod +x tree/deep/$d/TEST/test-d.sh
-        printf 'd\n<hwut-end>\n' > tree/deep/$d/TEST/GOOD/test-d.sh.txt
+        app tree/deep/$d/TEST test-d.sh d "d\n<hwut-end>"
     done
     $RUN --directory=tree --colour 2> /dev/null \
         | sed -n '/^DIRECTORIES/,/^====/p' \
