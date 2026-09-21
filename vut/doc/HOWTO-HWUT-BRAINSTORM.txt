@@ -84,6 +84,24 @@ BIN DISCIPLINE
     - counts of things the unit does not count
     - the parallelism tail '||n' -- see 5 below, it is subtler
 
+
+    - THE LAW, ruled 2026-09-21: CONTENT IN GOOD MUST BE DETERMINISTIC
+      AND DEPEND SOLELY ON THE BEHAVIOUR UNDER INVESTIGATION. Anything
+      that differs beyond control -- time, machine, history -- is
+      caught by an equivalence pattern or a '.pype', or it does not
+      go in the nominal
+    - case: O-28 ordered the flow by hwut-traces.csv, and two raw
+      pages went red on the recording machine itself. The tool's own
+      output had stopped being a usable oracle. Found by the ruler
+      reading the running tree
+    - TWO ROADS. '--deterministic' (linear, name-sorted, reads no
+      trace) where the RAW flow is the subject; a '.pype' that sorts
+      and expands where the test should run hwut the way a user does.
+      The pype road is the more realistic one; prefer it where
+      convenient (O-30)
+    - the test of a fix: 'linear-raw' switched to '--deterministic'
+      and its flow stood BYTE-IDENTICAL. When a page moves only in its
+      banner, the behaviour under it did not move
 ==============================================================================
 3.  STALE PAGE vs FOREIGN FACT -- TELLING THEM APART
 ==============================================================================

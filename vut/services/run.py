@@ -46,6 +46,10 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
                                     --strategy=sf
                                 An unnamed question keeps its default;
                                 two words of one question are refused
+    --deterministic             '--strategy=linear,name-sorted': the
+                                order depends on the tree alone, never
+                                on a trace. FOR TESTS THAT RECORD
+                                HWUT'S OWN OUTPUT
     --dbd --directory-by-directory
                                 '--strategy=linear'
     -v --verbose                every event as it arrives
@@ -93,7 +97,7 @@ from   vut.engine.orchestrator.run.orchestrate       import orchestrator
 from   vut.engine.orchestrator.run.strategy          import (
            DEFAULT_STRATEGY, DEFAULT_SELECTION_ORDER,
            E_SchedulerTestRun_Strategy, E_SchedulerTestRun_SelectionOrder,
-           strategy_of, words_of)
+           strategy_of, words_of, DETERMINISTIC_SPEC)
 from   vut.engine.protocol.summary                   import fold
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
@@ -114,6 +118,7 @@ PARSER.add_argument("--no-store", action="store_true")
 PARSER.add_argument("--timing", action="store_true")
 PARSER.add_argument("--jobs", default=None, metavar="n")
 PARSER.add_argument("--strategy", default=None, metavar="name")
+PARSER.add_argument("--deterministic", action="store_true")
 PARSER.add_argument("--directory", default=None)
 #  TAKEN, NOT ADVERTISED: what the usage line never named.
 PARSER.add_argument("--force-run", action="store_true", help=argparse.SUPPRESS)
@@ -165,14 +170,27 @@ EXECUTION
                                                 goes first
                             plan-order      po  the plan's own order
                             shortest-first  sf  the shortest first
+                            name-sorted     ns  by name, ascending;
+                                                reads no trace
 
                             --strategy=parallel,longest-first
                             --strategy=p,lf          the same thing
                             --strategy=longest-first,p   and so is this
                             --strategy=p             parallel, longest
                             --strategy=sf            linear, shortest
-    --dbd               '--strategy=linear'
+
+    --deterministic     exactly '--strategy=linear,name-sorted'. THE
+                        ORDER THEN DEPENDS ON THE TREE ALONE -- not on
+                        'hwut-traces.csv', not on the machine, not on
+                        the day. Any test whose GOOD holds hwut's own
+                        flow says this, or pipes the flow through a
+                        '.pype' that sorts it; otherwise the nominal
+                        records last week's timings (O-30).
+    --dbd               '--strategy=linear': one directory after
     --directory-by-directory
+                        another. The order INSIDE is still the
+                        default's; for the serial run of old, walk
+                        order and all, say '--deterministic'.
 
 """ + RENDERING_HELP + """
 
@@ -454,6 +472,14 @@ def _main(argv, write, write_error, captured_f, demand=None,
     strategy        = E_SchedulerTestRun_Strategy.LINEAR if arguments.dbd \
                       else DEFAULT_STRATEGY
     selection_order = DEFAULT_SELECTION_ORDER
+    #  '--deterministic' IS SUGAR for '--strategy=linear,name-sorted'
+    #  (O-30). Both given is refused: the one says 'I choose', the
+    #  other 'choose nothing that the tree does not state'.
+    if arguments.deterministic and arguments.strategy is not None:
+        return _abort(write, "'--deterministic' and '--strategy=' cannot "
+                      "both stand: the first IS '--strategy=%s'"
+                      % DETERMINISTIC_SPEC)
+    if arguments.deterministic: arguments.strategy = DETERMINISTIC_SPEC
     if arguments.strategy is not None:
         strategy, selection_order, refusal = words_of(arguments.strategy)
         if refusal is not None: return _abort(write, refusal)

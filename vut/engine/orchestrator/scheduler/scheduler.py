@@ -212,16 +212,15 @@ class Scheduler:
         it, and a new criterion is a member of 'E_Criterion' rather
         than an edit to this method.
 
-        A BUDGET OF ONE IS NOT ORDERED AT ALL. Where nothing may stand
-        beside the node that starts there is no tail to shorten and no
-        makespan to win -- MEASURED, zero gain below two workers, and
-        none is possible. A serial run keeps WALK ORDER, which is what
-        its reader expects and what its raw nominals hold.
+        THE ORDER APPLIES AT A BUDGET OF ONE TOO (ruled, O-30). It
+        wins no time there -- measured, zero -- but the VIEWER reads
+        the same priority whatever the budget, and a page that wants
+        walk order says '--deterministic' or '--strategy=po'. A guard
+        that silently switched the order off below two workers made
+        the flow mean two different things by a number nobody printed.
         """
         if len(ready_tuple) == 1: return ready_tuple[0]
         if self.selection_order is None: return ready_tuple[0]
-        if self.budget.limit is not None and self.budget.limit < 2:
-            return ready_tuple[0]
         key_of = sort_key_of(self.selection_order, self.duration_db.get)
         return min(enumerate(ready_tuple), key=key_of)[1]
 

@@ -29,7 +29,7 @@ STDOUT {
                     [--exclude-dir <glob>]... [--wishlist <file>]...
                     [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
                     [<file-glob> [choice-glob]...] [--no-store] [--timing]
-                    [--jobs=<n>] [--strategy=<name>]
+                    [--jobs=<n>] [--strategy=<name>] [--deterministic]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--brief] [--log <file>]

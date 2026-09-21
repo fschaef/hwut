@@ -116,6 +116,7 @@ class E_SchedulerTestRun_SelectionOrder(Enum):
     LONGEST_FIRST  = "longest-first"
     PLAN_ORDER     = "plan-order"
     SHORTEST_FIRST = "shortest-first"
+    NAME_SORTED    = "name-sorted"
 
 
 STRATEGY_DB = {E_SchedulerTestRun_Strategy.LINEAR:    CLinear,
@@ -127,9 +128,10 @@ class E_Criterion(Enum):
     an ordered tuple of these, and adding a criterion is adding a
     member here plus one line in '_component_of' -- not editing the
     scheduler."""
-    UNMEASURED_FIRST = "unmeasured-first"
+    UNMEASURED_LAST  = "unmeasured-last"
     DURATION_DESC    = "duration-desc"
     DURATION_ASC     = "duration-asc"
+    NAME_ASC         = "name-asc"
     PLAN_ORDER       = "plan-order"
 
 
@@ -137,18 +139,31 @@ class E_Criterion(Enum):
 #  PLAN_ORDER ENDS EVERY ONE OF THEM, so the choice is DETERMINISTIC:
 #  two candidates of equal weight go in the order the plan states them,
 #  and a run is never at the mercy of a dict.
+#  UNMEASURED LAST (ruled, O-30). A node nobody has measured goes
+#  AFTER every measured one under either duration order. The reason is
+#  the VIEWER: the flow must visibly honour its priority from the first
+#  line, so the reader sees the slowest known test first and is never
+#  left asking why an unknown jumped the queue. That a late unknown may
+#  become the tail is a cost paid once, on the first run, and never
+#  again -- after it, the node is measured.
+#
+#  NAME_SORTED READS NO TRACE. Its key is the name and the plan, both
+#  of which the tree states; so its order holds on every machine and
+#  on every day, which is what '--deterministic' promises.
 CRITERIA_DB = {
     E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST:
-        (E_Criterion.UNMEASURED_FIRST, E_Criterion.DURATION_DESC,
+        (E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_DESC,
          E_Criterion.PLAN_ORDER),
     E_SchedulerTestRun_SelectionOrder.SHORTEST_FIRST:
-        (E_Criterion.UNMEASURED_FIRST, E_Criterion.DURATION_ASC,
+        (E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_ASC,
          E_Criterion.PLAN_ORDER),
+    E_SchedulerTestRun_SelectionOrder.NAME_SORTED:
+        (E_Criterion.NAME_ASC, E_Criterion.PLAN_ORDER),
     E_SchedulerTestRun_SelectionOrder.PLAN_ORDER:
         (E_Criterion.PLAN_ORDER,)}
 
 
-def _component_of(criterion, index, weight):
+def _component_of(criterion, index, name, weight):
     """
     RETURN: a comparable, THIS CRITERION'S contribution to the sort
             key of a candidate standing at 'index' in plan order and
@@ -160,7 +175,8 @@ def _component_of(criterion, index, weight):
     has to remember which way round a particular one runs.
     """
     if criterion is E_Criterion.PLAN_ORDER:       return index
-    if criterion is E_Criterion.UNMEASURED_FIRST: return weight is not None
+    if criterion is E_Criterion.NAME_ASC:         return name
+    if criterion is E_Criterion.UNMEASURED_LAST:  return weight is None
     if weight is None:                            return 0
     if criterion is E_Criterion.DURATION_DESC:    return -weight
     return weight
@@ -186,17 +202,23 @@ def sort_key_of(selection_order, weight_of):
     def key_of(pair):
         index, name = pair
         weight      = weight_of(name)
-        return tuple(_component_of(criterion, index, weight)
+        return tuple(_component_of(criterion, index, name, weight)
                      for criterion in criteria)
     return key_of
 
 
-#  DIRECTORIES ARE CONSIDERED TOGETHER BY DEFAULT (O-28). MEASURED on
-#  this tree: one directory at a time costs 29.2 s at 16 jobs where
-#  11.5 s stood available, and ordering directories under LINEAR buys
-#  EXACTLY NOTHING -- serial directories sum the same in any order. The
-#  gain is the word 'together'; the sort only pays once they are.
-DEFAULT_STRATEGY = E_SchedulerTestRun_Strategy.PARALLEL
+#  DIRECTORIES ARE BUNDLED, AND CONSIDERED TOGETHER (O-28, O-29).
+#  RULED: 'we bundle directories; slow directories first; in each
+#  directory, slow test runs first'. PARALLEL was the wrong reading of
+#  'together' -- it opens every directory at once, and the flow stops
+#  reading as bundled. The RIGHT member is BUNDLED: open a further
+#  directory only when the open ones cannot fill the budget -- a rule,
+#  not a number. It is not built: 'CStrategy.run' wakes only when a
+#  DIRECTORY ends, and BUNDLED must also wake when a SLOT frees.
+#  Until it is, SUCCESSOR is the default: at most two directories open,
+#  which is 'bundled' in the strongest existing sense and 'together' in
+#  the weakest. MEASURED: 16.2 s at 16 jobs against 13.0 s ideal.
+DEFAULT_STRATEGY = E_SchedulerTestRun_Strategy.SUCCESSOR
 DEFAULT_SELECTION_ORDER = E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST
 
 #  THE SHORTHANDS SHARE ONE NAMESPACE, because the option's values are a
@@ -208,7 +230,16 @@ SHORTHAND_DB = {"l":  E_SchedulerTestRun_Strategy.LINEAR,
                 "p":  E_SchedulerTestRun_Strategy.PARALLEL,
                 "lf": E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST,
                 "po": E_SchedulerTestRun_SelectionOrder.PLAN_ORDER,
-                "sf": E_SchedulerTestRun_SelectionOrder.SHORTEST_FIRST}
+                "sf": E_SchedulerTestRun_SelectionOrder.SHORTEST_FIRST,
+                "ns": E_SchedulerTestRun_SelectionOrder.NAME_SORTED}
+
+#  '--deterministic' IS A SPEC, NOT A THIRD ENUM (O-30): it expands to
+#  'linear,name-sorted' before 'words_of' ever sees it. RULED: content
+#  in GOOD must be deterministic and depend SOLELY on the behaviour
+#  under investigation; a test that records hwut's own flow says
+#  '--deterministic' and the order it records is then a fact about the
+#  tree and nothing else.
+DETERMINISTIC_SPEC = "linear,name-sorted"
 
 WORD_DB = dict(SHORTHAND_DB)
 WORD_DB.update({member.value: member

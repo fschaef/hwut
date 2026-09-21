@@ -19,7 +19,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.08 [sec]
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.07 [sec]
     |                  ok                  |                skip                 |
 }
 --- a globbed app
@@ -70,7 +70,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec]
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.03 [sec]
     |                                    skip                                    |
 }
 --- an unknown OPTION is still refused by name
@@ -82,7 +82,7 @@ STDOUT {
                     [--exclude-dir <glob>]... [--wishlist <file>]...
                     [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
                     [<file-glob> [choice-glob]...] [--no-store] [--timing]
-                    [--jobs=<n>] [--strategy=<name>]
+                    [--jobs=<n>] [--strategy=<name>] [--deterministic]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--brief] [--log <file>]

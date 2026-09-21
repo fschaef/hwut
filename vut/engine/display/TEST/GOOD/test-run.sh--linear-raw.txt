@@ -1,4 +1,4 @@
-== --strategy=linear --jobs=1 ==
+== --deterministic --jobs=1 ==
 STATUS: 1
 STDOUT {
     DIR  alpha/TEST                                                               
@@ -70,7 +70,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.08 [sec]
+    RESULTS: 3 ok, 1 fail, 0.09 [sec]
     |                           ok                            |       fail       |
 }
 <hwut-end>

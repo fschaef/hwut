@@ -1017,3 +1017,135 @@ COST      'strategy.py' gains 'E_Criterion', 'CRITERIA_DB',
           into it would change what the page MEANS, and that is
           Frank-Rene's to rule, not a diff to bless. They stand red:
           census 839 ok / 14 fail, the twelve plus these two.
+
+O-29  BUNDLED IS A RULE, NOT A NUMBER; INTERIM DEFAULT SUCCESSOR
+                                                             (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   O-28 read 'directories considered together' as PARALLEL --
+          every directory at once. Frank-Rene, reading the running
+          tree: "I thought the default scheduler would bundle
+          directories." It did not; nineteen DIR bands interleaved.
+
+          MEASURED, how many directories must stand open at once:
+
+              jobs    1 dir  2 dirs  3 dirs  4 dirs  all 19  ideal
+                 4    52.1s   52.1s   52.1s   52.1s   52.1s  52.1s
+                 8    27.4s   27.4s   26.0s   26.1s   26.0s  26.0s
+                16    16.3s   16.2s   14.9s   13.1s   13.0s  13.0s
+                32    10.4s   10.7s   10.0s    8.8s    6.6s   6.5s
+
+          (Approximate: a worker freed early takes the next
+          directory's work, so '1 dir' is nearer successor than
+          linear. The shape is what stands.) At 16 jobs FOUR
+          directories give 13.1 s against 13.0 s for all nineteen.
+          Opening them all bought a tenth of a second and cost the
+          readable flow.
+
+DECISION  RULED (Frank-Rene), FORMALLY, in the enums that exist:
+          WE BUNDLE DIRECTORIES. SLOW DIRECTORIES FIRST. IN EACH
+          DIRECTORY, SLOW TEST RUNS FIRST.
+
+          BUNDLED IS THE MISSING STRATEGY MEMBER:
+
+              may_start = the open directories cannot fill the budget
+
+          A RULE, NOT A NUMBER. No 'k' to justify: the budget states
+          how many directories stand open, by forcing exactly as many
+          as it takes to keep no worker idle. A directory is drained
+          before the next is touched, so the flow reads as bundled.
+
+          NOT BUILT, and why: 'CStrategy.run' wakes only on
+          FIRST_COMPLETED of a DIRECTORY. BUNDLED must also wake when
+          a SLOT frees ('budget.changed()') and ask each open unit
+          whether it has admissible work -- plumbing across strategy,
+          CDirectoryWork and the Scheduler. It lands as its own cut.
+
+          INTERIM DEFAULT: SUCCESSOR. At most two directories open --
+          'bundled' in the strongest existing sense and 'together' in
+          the weakest. 16.2 s at 16 jobs against 13.0 s ideal; the
+          whole gain at 8 jobs and below. It contradicts no word of
+          the ruling, where PARALLEL contradicted 'bundle'.
+
+          BUNDLING RECURSES, AND THE DISPLAY DEPENDS ON IT. Frank-Rene:
+          "consider the interactive runs, where we run choices in
+          parallel." Read as: an application's CHOICES belong
+          together. Longest-first across a whole directory scatters
+          them -- and 'plain._run_body' elides to ':' only where
+          (directory, file) repeats THE LINE ABOVE, and sets the choice
+          column from the name that opens a group. Ordered by duration,
+          consecutive lines rarely share an application: the elision
+          stops firing, every line restates its file, the choice
+          column resets. So the node-level order must be BUNDLE
+          APPLICATIONS, slowest application first (its weight the sum
+          of its choices), and an application's choices together.
+          Expressible with 'sort_key_of' over an application-level
+          weight_of. Not built.
+
+COST      One line: DEFAULT_STRATEGY. 'test-strategy.py contract'
+          re-recorded; it prints the default. Census 839 ok / 14 fail,
+          unchanged: the standing twelve plus 'linear-raw' and
+          'short-form', which the determinism ruling closes.
+
+O-30  THE DETERMINISM LAW; '--deterministic'; UNMEASURED LAST;
+      THE ORDER APPLIES AT ONE WORKER                        (2026-09-21)
+------------------------------------------------------------------------------
+PROBLEM   O-28 ordered directories and nodes by 'hwut-traces.csv'.
+          That file is MACHINE-LOCAL AND HISTORY-DEPENDENT, so the flow
+          order of a default run became a fact about this machine's
+          past -- different on a colleague's box, on a fresh checkout,
+          and here tomorrow. Two pages blessed RAW ('linear-raw',
+          'short-form') went red for exactly that reason, and every
+          page that ever records hwut's own flow was one trace away
+          from doing the same.
+
+DECISION  RULED (Frank-Rene), and it is basic HWUT testing: CONTENT IN
+          GOOD MUST BE DETERMINISTIC AND DEPEND SOLELY ON THE BEHAVIOUR
+          UNDER INVESTIGATION. Behaviour that differs beyond control is
+          caught by equivalence patterns or by a 'hwut.pype' script.
+
+          '--deterministic' IS A MUST, and it is sugar:
+          '--strategy=linear,name-sorted'. NAME_SORTED reads no trace
+          -- its key is the name and the plan, both of which the tree
+          states -- so the order holds on every machine and every day.
+          Given beside '--strategy=' it is refused: the one says 'I
+          choose', the other 'choose nothing the tree does not state'.
+          '--dbd' keeps its own meaning (linear, default order); the
+          serial run of old is now spelt '--deterministic', and
+          'linear-raw' PROVED IT: switched over, its flow stood
+          BYTE-IDENTICAL -- only the banner line moved.
+
+          PYPES ARE THE OTHER ROAD, AND THE MORE REALISTIC ONE: a test
+          piped through a '.pype' that sorts and expands runs hwut as
+          the user runs it and still records a deterministic nominal.
+          'test-run.pype' has done this since D-10. Prefer it where
+          convenient; say '--deterministic' where the RAW flow is the
+          subject.
+
+          UNMEASURED LAST, reversing O-27. A node nobody has measured
+          goes AFTER every measured one. The reason is the VIEWER: the
+          flow must visibly honour its priority from the first line --
+          the slowest known test first -- and never leave the reader
+          asking why an unknown jumped the queue. The cost is paid once,
+          on the first run; after it the node is measured.
+
+          THE ORDER APPLIES AT A BUDGET OF ONE. The guard of O-27 made
+          the flow mean two different things by a number nobody
+          printed. A page that wants walk order now says so.
+
+COST      'strategy.py': NAME_SORTED / NAME_ASC, UNMEASURED_LAST,
+          DETERMINISTIC_SPEC. 'run.py': the option, the refusal, the
+          usage. 'scheduler.py': the guard is gone. 'test-run.sh':
+          three invocations say '--deterministic' -- including the
+          empty-selection case, whose DIR bands were still ordered by
+          a trace. Five usage/vocabulary pages re-recorded; the two
+          raw pages recorded on their new spelling.
+
+          Census 839 ok / 14 fail -> 841 ok / 12 fail, the twelve of
+          old, with 'linear-raw' and 'short-form' green for the first
+          time since O-28.
+
+          A LAPSE, so that it is on record: 'short-form' was accepted
+          before its third invocation had been re-run. 'accept' re-runs
+          the case before recording, so the nominal is right -- but
+          the order of operations was not, and it is the exact lapse
+          the bin's section 8 already names.

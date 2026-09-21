@@ -367,12 +367,14 @@ jobs-budget)
     ;;
 
 linear-raw)
-    #  The linear strategy with one slot is the serial run of old:
-    #  directories in walk order, one piece of work at a time -- the
-    #  flow blessed RAW; '--dbd' and its long spelling say the same.
+    #  THE SERIAL RUN OF OLD, and the flow blessed RAW -- so it says
+    #  '--deterministic' (O-30): linear, name-sorted, no trace read.
+    #  Blessed raw under the default, this page would record last
+    #  week's timings. '--dbd' keeps its own meaning (linear, default
+    #  order) and is shown quiet, where order does not print.
     fixture_tree_fail
-    echo "== --strategy=linear --jobs=1 =="
-    face --directory=tree --strategy=linear --jobs=1
+    echo "== --deterministic --jobs=1 =="
+    face --directory=tree --deterministic --jobs=1
     echo "== --dbd --jobs=1 =="
     face --directory=tree --dbd --jobs=1 --quiet
     echo "== --directory-by-directory, the long spelling =="
@@ -409,13 +411,16 @@ short-form)
     #  What HWUT 1.0 spelled, spelled again.
     fixture_tree
     echo "--- one app, every choice of it"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+    face --plain --deterministic --jobs=1 --no-store --directory=tree \
          test-one.sh
     echo "--- a globbed app"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+    face --plain --deterministic --jobs=1 --no-store --directory=tree \
          "test-*.sh"
     echo "--- a bare word that names nothing selects nothing"
-    face --plain --no-store --directory=tree test-nowhere.sh
+    #  '--deterministic' here too: the empty selection still walks the
+    #  directories, and the DIR bands it prints must not be ordered by
+    #  a trace (O-30).
+    face --plain --deterministic --no-store --directory=tree test-nowhere.sh
     echo "--- an unknown OPTION is still refused by name"
     face --plain --no-store --directory=tree --sideways
     ;;
@@ -428,15 +433,15 @@ labels)
     echo "--- bare: the standard label is silent (no test-two runs)"
     face --plain --strategy=linear --jobs=1 --no-store --directory=tree
     echo "--- '--label meta' lifts the silence (only test-two runs)"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+    face --plain --deterministic --jobs=1 --no-store --directory=tree \
          --label meta
     echo "--- '--label all' is the universe"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+    face --plain --deterministic --jobs=1 --no-store --directory=tree \
          --label all
     echo "--- a label that does not stand, refused by name"
     face --plain --no-store --directory=tree --label cocnern
     echo "--- a LITERAL target overrides the silence"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree \
+    face --plain --deterministic --jobs=1 --no-store --directory=tree \
          alpha/TEST/test-two.sh
     echo "--- a GLOB does not; wholly swallowed, it warns"
     face --plain --no-store --directory=tree "alpha/TEST/test-tw*.sh"
