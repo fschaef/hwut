@@ -5,8 +5,9 @@ PURPOSE: Find what a TEST directory offers: 'hwut.conf', if present, and
          the source file candidates -- the directory's files minus what is
          ignored.
 
-Ignored by default: '*.txt', '*.xml', '*.json', and THE FRAMEWORK'S OWN
-FILES -- 'hwut.conf' and 'hwut-root.conf'. The directory's own 'ignore'
+Ignored by default: '*.txt', '*.xml', '*.json', '*.pype', and THE
+FRAMEWORK'S OWN FILES -- 'hwut.conf', 'hwut-root.conf', 'hwut-info.dat',
+'hwut-traces.csv', 'hwut-root.labels' (README section 0). The directory's own 'ignore'
 globs add to these. The walk is one directory deep: a TEST directory
 stands alone, and so does its file list.
 

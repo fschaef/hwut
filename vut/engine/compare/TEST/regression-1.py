@@ -1,4 +1,8 @@
 #! /usr/bin/env python3
+#  @hwut {
+#    title   = "VUT Edit Operations Debugger"
+#    choices = ["amnesia", "pruning_analogy", "pruning_trans"]
+#  }
 """
 Regression Test Suite: A* Search Bugs in VUT Edit Operations.
 

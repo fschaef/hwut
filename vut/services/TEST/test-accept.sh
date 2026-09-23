@@ -211,7 +211,9 @@ interactive)
     echo "--- the nominal of 'a' is what the run printed; 'b' stands"
     cat tree/suite/TEST/GOOD/test-two.sh--a.txt tree/suite/TEST/GOOD/test-two.sh--b.txt | sed 's/^/    /'
     echo "--- the candidate stayed: the next run judges anew"
-    $RUN --directory=tree/suite/TEST 2>&1 | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
+    #  A raw flow of three runs: '--deterministic --jobs=1' (display D-16).
+    $RUN --directory=tree/suite/TEST --deterministic --jobs=1 2>&1 \
+        | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
     echo "--- the book notes the acceptance of 'a' only"
     grep -c 'test-two.sh;a;' tree/suite/TEST/GOOD/book.csv | sed 's/^/    a: /'
     ;;

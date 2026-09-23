@@ -44,8 +44,10 @@
 # through verbatim. THE DIGEST IS STRATEGY-FREE: it records WHAT ran,
 # not when. Every tree choice runs the LINEAR strategy and shows its
 # digest, then runs every other strategy and shows that its digest is
-# byte-identical -- the homogeneity law (O-15). '--strategy=linear
-# --jobs=1' is blessed raw: the serial run of old.
+# byte-identical -- the homogeneity law (O-15). A flow of two or more
+# runs blessed RAW says '--deterministic --jobs=1': the first fixes the
+# ORDER, the second the SHAPE -- the default budget is the recording
+# machine's core count (O-30, display D-16).
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../.." && pwd)
@@ -92,6 +94,13 @@ face() {                # <args...>  -- status, masked stdout, stderr
         mask < err.txt | sed 's/^/    /'
         echo "}"
     fi
+}
+
+refusal() {             # <args...>  -- as 'face', the usage block after
+                        # the REFUSED line dropped. The block is the
+                        # subject of 'refused' and is stated there, once
+                        # (display D-17); elsewhere only the refusal is.
+    face "$@" | sed '/^    usage: /,/^}$/{/^}$/!d}'
 }
 
 put() {                 # <path> <content...>
@@ -210,9 +219,9 @@ green)
 
 fail)
     #  One test differs: its phrase inline, the FAILURES block,
-    #  status 1.
+    #  status 1. Two runs, blessed raw: '--deterministic --jobs=1'.
     fixture_fail
-    face --directory=tree
+    face --directory=tree --deterministic --jobs=1
     ;;
 
 nostore)
@@ -251,7 +260,7 @@ print('unit: %s   deltas: %d   every delta a number: %s'
       % (d['unit'], len(d['delta_list']),
          all(isinstance(x, float) for x in d['delta_list'])))"
     #  ONE MEASUREMENT AT A TIME: refused beside '--coverage'.
-    face --directory=tree --timing --coverage
+    refusal --directory=tree --timing --coverage
     ;;
 
 empty)
@@ -261,18 +270,19 @@ empty)
     ;;
 
 refused)
-    #  Refused at the door, by name, with the usage line: status 2.
+    #  Refused at the door, by name: status 2. The usage block is
+    #  stated with the first refusal; the rest show the refusal alone.
     fixture_green
     echo "== a directory that does not exist =="
     face --directory=nowhere-such-dir
     echo "== an option nobody knows =="
-    face --directory=tree --frobnicate
+    refusal --directory=tree --frobnicate
     echo "== tiers beside one another =="
-    face --directory=tree --silent --verbose
+    refusal --directory=tree --silent --verbose
     echo "== colour beside no-colour =="
-    face --directory=tree --colour --no-colour
+    refusal --directory=tree --colour --no-colour
     echo "== jobs without a number =="
-    face --directory=tree --jobs=many
+    refusal --directory=tree --jobs=many
     ;;
 
 tiers)
@@ -384,7 +394,7 @@ linear-raw)
 strategy-refused)
     #  A strategy nobody knows is refused at the door, the known ones
     #  named; status REFUSED.
-    face --directory=tree --strategy=bogus
+    refusal --directory=tree --strategy=bogus
     ;;
 
 busy)
@@ -421,6 +431,11 @@ short-form)
     #  directories, and the DIR bands it prints must not be ordered by
     #  a trace (O-30).
     face --plain --deterministic --no-store --directory=tree test-nowhere.sh
+    echo "--- a bare word that names a standing LABEL: the run stays"
+    echo "--- empty and the NOTE says how to ask for the label (E-112)"
+    ( cd tree && "$ROOT/vut/bin/hwut.labels.create" steady --pass \
+        > /dev/null 2>&1 )
+    face --plain --deterministic --no-store --directory=tree steady
     echo "--- an unknown OPTION is still refused by name"
     face --plain --no-store --directory=tree --sideways
     ;;
@@ -431,7 +446,7 @@ labels)
     python3 -m vut.services.lib.labels.add meta \
         --glob "tree/*/TEST/test-two.sh" > /dev/null
     echo "--- bare: the standard label is silent (no test-two runs)"
-    face --plain --strategy=linear --jobs=1 --no-store --directory=tree
+    face --plain --deterministic --jobs=1 --no-store --directory=tree
     echo "--- '--label meta' lifts the silence (only test-two runs)"
     face --plain --deterministic --jobs=1 --no-store --directory=tree \
          --label meta

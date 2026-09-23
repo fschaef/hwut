@@ -2,7 +2,8 @@
 #
 # @hwut {
 #     title      = "Strategy: when a directory's unit starts"
-#     choices    = ["contract", "linear", "parallel", "successor"]
+#     choices    = ["bundled", "contract", "linear", "parallel", "successor",
+#                   "together"]
 #     interactive = true
 # }
 #
@@ -16,7 +17,7 @@ A unit here is ticks of work: it yields to the loop 'n' times, then
 answers a CDirDone. No clock, no process: the trace is the strategy's
 decisions and nothing else.
 
-CHOICES: linear, successor, parallel, contract;
+CHOICES: linear, successor, parallel, bundled, contract, together;
 
 DESCRIPTION:
 
@@ -37,7 +38,8 @@ from config import HwutRunner                                # noqa: F401
 
 from vut.engine.orchestrator.run.orchestrate import CDirDone
 from vut.engine.orchestrator.run.strategy    import (
-         CLinear, CParallel, CStrategy, CSuccessor, strategy_of, words_of,
+         CBundled, CLinear, CParallel, CStrategy, CSuccessor,
+         applications_of, sort_key_of, strategy_of, words_of,
          E_SchedulerTestRun_Strategy      as E_Strategy,
          E_SchedulerTestRun_SelectionOrder as E_Order)
 
@@ -77,6 +79,91 @@ def test_successor(): drive(CSuccessor(), TICK_LIST)
 def test_parallel():  drive(CParallel(),  TICK_LIST)
 
 
+class CModelUnit:
+    """A directory's unit, scripted: PHASES of (ready_n, hold_n, ticks)
+    -- what it would answer to 'ready_n', how many slots it holds, and
+    for how long. 'None' before it starts, as CDirectoryWork answers
+    before its Scheduler stands (intend 20)."""
+
+    def __init__(self, name, phase_list, budget, trace):
+        self.name = name; self.phase_list = phase_list
+        self.budget = budget; self.trace = trace; self.phase = None
+
+    def ready_n(self):
+        """RETURN: int, the running phase's ready count; None before."""
+        return None if self.phase is None else self.phase[0]
+
+    async def run(self):
+        """RETURN: CDirDone, after every phase held its slots."""
+        self.trace.append("start %s" % self.name)
+        for phase in self.phase_list:
+            self.phase = phase
+            for _ in range(phase[1]): await self.budget.take()
+            for _ in range(phase[2]): await asyncio.sleep(0)
+            for _ in range(phase[1]): self.budget.give()
+        self.trace.append("end   %s" % self.name)
+        return CDirDone(True, 0)
+
+
+def test_bundled():
+    """RETURN: None. BUNDLED opens the next directory only where the
+    open ones cannot fill the budget: with 4 slots, A holding 3 and
+    able to start 3 more keeps B shut; A's tail (one node, nothing
+    else ready) opens B. C opens at the NEXT SLOT GIVEN BACK: a take
+    wakes nothing, so a unit revealing a small ready count is read
+    when a slot returns -- an underfill of one node's duration at
+    most, never an over-open."""
+    from vut.engine.orchestrator.scheduler.budget import CBudget
+    async def scenario():
+        budget = CBudget(4); trace = []
+        unit_list = [CModelUnit("A", [(3, 3, 4), (0, 1, 3)], budget, trace),
+                     CModelUnit("B", [(1, 1, 2)],            budget, trace),
+                     CModelUnit("C", [(2, 2, 2)],            budget, trace)]
+        strategy = CBundled()
+        strategy.bind(budget, unit_list)
+        await strategy.run([unit.run for unit in unit_list])
+        return trace, budget.peak
+    trace, peak = asyncio.run(scenario())
+    print("--- bundled: budget 4, A holds 3 then 1, B 1, C 2 ---")
+    for line in trace: print("    %s" % line)
+    print("    peak slots held: %d" % peak)
+    print("    wakes on budget: %s" % CBundled.wakes_on_budget_f)
+
+
+class CNameOnly:
+    """A plan node that answers its name and nothing else."""
+    def __init__(self, name): self._name = name
+    def name(self): return self._name
+
+
+def test_together():
+    """RETURN: None. AN APPLICATION'S CHOICES GO TOGETHER (O-32): the
+    slowest application first, weighed as the sum of its choices,
+    then its own slowest choice. Shown against the node-only key, which
+    scatters 'a.py' round 'b.py' and defeats the display's ':'
+    elision."""
+    plan = [CNameOnly(n) for n in ("a.py one", "a.py two", "a.py three",
+                                   "b.py one", "b.py two",
+                                   "c.py only", "d.py fresh")]
+    duration_db = {"a.py one": 50, "a.py two": 900, "a.py three": 40,
+                   "b.py one": 800, "b.py two": 700,
+                   "c.py only": 1500}                # d.py: never measured
+    app_db = applications_of(plan, duration_db)
+    for label, app_of in (("node key alone", None),
+                          ("application first", lambda p: app_db[p[1]])):
+        key_of = sort_key_of(E_Order.LONGEST_FIRST, duration_db.get, app_of)
+        order  = sorted(enumerate(n.name() for n in plan), key=key_of)
+        print("--- longest-first, %s ---" % label)
+        for _, name in order:
+            print("    %-10s %s" % (name, duration_db.get(name, "-")))
+    print("--- application weights ---")
+    for name in sorted(set(app_db), key=lambda n: app_db[n][1]):
+        app = name.split(" ")[0]
+        if name == [n for n in app_db if n.startswith(app + " ")][0]:
+            print("    %-5s weight %s, first at plan index %d"
+                  % (app, app_db[name][0], app_db[name][1]))
+
+
 def test_contract():
     """RETURN: None. The template's own laws."""
     try:
@@ -112,5 +199,7 @@ if __name__ == "__main__":
         "linear":    test_linear,
         "successor": test_successor,
         "parallel":  test_parallel,
+        "bundled":   test_bundled,
+        "together":  test_together,
         "contract":  test_contract,
     }).run()

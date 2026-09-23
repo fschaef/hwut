@@ -1,4 +1,4 @@
---- 1. hwut.stability convicts over 4 repeats
+--- 1. hwut.run.stability convicts over 4 repeats
 STATUS: 1
 STDOUT {
     REPEATS: 4   KEYS: 1
@@ -15,8 +15,8 @@ STDOUT {
 STATUS: 1
     test-app.sh   UNSTABLE -- not run
 --- 3. hwut.accept refuses to bless it
-REFUSED stained: 'test-app.sh' bears a STAIN -- unstable under hwut.stability repetitions
-    Apply 'hwut.stability --repeat=<n>' to proof stability, or
+REFUSED stained: 'test-app.sh' bears a STAIN -- unstable under hwut.run.stability repetitions
+    Apply 'hwut.run.stability --repeat=<n>' to proof stability, or
     'hwut.remove' it and 'hwut.accept' afresh.
 NOTE: nothing to accept -- selection empty
 --- 4. the test is mended; 2 repeats do not answer a 4-repeat charge

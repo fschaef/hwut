@@ -1281,9 +1281,9 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     for test, choice in stained_list:
         choice_str = "" if choice is None else " " + choice
         write("REFUSED stained: '%s%s' bears a STAIN -- unstable under "
-              "hwut.stability repetitions" % (test, choice_str))
+              "hwut.run.stability repetitions" % (test, choice_str))
     if stained_list:
-        write("    Apply 'hwut.stability --repeat=<n>' to proof stability, or")
+        write("    Apply 'hwut.run.stability --repeat=<n>' to proof stability, or")
         write("    'hwut.remove' it and 'hwut.accept' afresh.")
 
     key_list = key_list_of(store, case_sequence)

@@ -1301,7 +1301,7 @@ class Bookkeeper:
         out 'ok' in one repeat and not in another has borne FALSE
         WITNESS about the unit beneath it, and bears it until it is
         proven steady over at least as many repeats as convicted it
-        ('hwut.stability'). Until then the choice is not run at all:
+        ('hwut.run.stability'). Until then the choice is not run at all:
         there is nothing to learn from asking a liar again.
         """
         key = NO_CHOICE_KEY if choice is None else choice
@@ -1348,7 +1348,7 @@ class Bookkeeper:
         RETURN: dict, the stain that is gone.
                 None, none stood.
 
-        THE ONLY WAY OUT BESIDE REMOVAL. 'hwut.stability' clears it
+        THE ONLY WAY OUT BESIDE REMOVAL. 'hwut.run.stability' clears it
         having repeated at least as often as the conviction and found
         every verdict alike; nothing else does -- not a run, not an
         acceptance, not the passage of time.

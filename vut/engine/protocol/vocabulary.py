@@ -43,6 +43,9 @@ KIND_DB = {
     "warning":    ({"text": str}, {}),
     "report":     ({"directory": str, "text": str}, {}),
     "refused":    ({"directory": str, "node": str, "text": str}, {}),
+    #  X-SILENT: a candidate no carrier speaks for. No text -- there is
+    #  one reason and the note says it once, at the end.
+    "silent":     ({"directory": str, "node": str}, {}),
     "dir-done":   ({"directory": str, "good": bool,
                     "fail_db": dict}, {}),
     "tree-done":  ({"good": bool, "fail_n": int}, {"meta_n": int,

@@ -47,6 +47,9 @@ CONTENT_DB = {
     "fault":      ("string", ("directory",)),
     "report":     ("string", ("directory",)),
     "refused":    ("string", ("directory", "node")),
+    #  NO FREE TEXT: there is one reason a file is silent and the
+    #  closing NOTE says it once, so the line carries names alone.
+    "silent":     ("csv",    None),
     "dir-done":   ("json",   None),
     "tree-done":  ("csv",    None),
 }

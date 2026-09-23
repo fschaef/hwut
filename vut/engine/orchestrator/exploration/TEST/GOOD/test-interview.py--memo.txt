@@ -1,7 +1,9 @@
-  walk 1: asked ['old-app.py', 'script.sh']
-  walk 2: asked []
-  memo file stands under TMP/: True
+  a plain walk: asked []
+  ... and the files are SILENT: ['helper.py', 'notes.log', 'old-app.py', 'script.sh']
+  walk 1 with a runner: asked ['helper.py', 'notes.log', 'old-app.py', 'script.sh']
+  walk 2 with a runner: asked ['helper.py', 'notes.log', 'old-app.py', 'script.sh']
+  memo file stands under TMP/: False
   ... and not beside the tests: True
-  after a change to old-app.py: asked ['old-app.py']
+  after a change to old-app.py: asked ['helper.py', 'notes.log', 'old-app.py', 'script.sh']
   TMP/ is never walked into: True
 <hwut-end>

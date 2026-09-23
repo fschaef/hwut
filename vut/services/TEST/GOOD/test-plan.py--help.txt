@@ -39,7 +39,7 @@ $ hwut.plan --help
                                 --glob "test-*.py quick-[0-2]"
                             may stand several times; the globs are OR'ed
                             among themselves
-        --label <expr>      the runs the label expression names ('AND',
+        -l, --label <expr>  the runs the label expression names ('AND',
                             'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
                             universe); a union among its labels, narrowing
                             against the rest; absent, 'meta' is silent --

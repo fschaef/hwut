@@ -1,15 +1,5 @@
 STATUS: 2
 STDOUT {
-    REFUSED: '--strategy=bogus': 'bogus' names neither a strategy nor a selection order -- one of linear, successor, parallel, longest-first, plan-order, shortest-first, name-sorted (short: l, lf, ns, p, po, s, sf)
-    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
-                    [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
-                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
-                    [--jobs=<n>] [--strategy=<name>] [--deterministic]
-                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
-                    [--show-timing] [--show-jobs] [--show-details]
-                    [--no-failure-summary] [--brief] [--log <file>]
-                    [--directory=<path>]
+    REFUSED: '--strategy=bogus': 'bogus' names neither a strategy nor a selection order -- one of linear, successor, parallel, bundled, longest-first, plan-order, shortest-first, name-sorted (short: b, l, lf, ns, p, po, s, sf)
 }
 <hwut-end>

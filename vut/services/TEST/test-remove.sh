@@ -37,7 +37,7 @@ export PYTHONPATH="$ROOT"
 REMOVE="python3 -m vut.services.remove"
 
 RUN="python3 -m vut.services.run"
-STABILITY="python3 -m vut.services.stability"
+STABILITY="python3 -m vut.services.lib.run.stability"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

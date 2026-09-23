@@ -74,12 +74,12 @@ class TestRunDispatcher(I_Dispatcher):
                    nominal's word (E-41), and a case the register did
                    not name is registered before it runs, said so.
         'despite_stain_f' runs a STAINED choice anyway. THE PROVER'S
-                   SEAM ALONE: 'hwut.stability' must be able to run
+                   SEAM ALONE: 'hwut.run.stability' must be able to run
                    what it disqualified, or a stain could never be
                    answered. No command line reaches it.
         'timing_f' asks every configuration for the run's CADENCE
                    ('--timing'): per-line delta times kept beside the
-                   candidate, for an analyst and for 'hwut.stability'.
+                   candidate, for an analyst and for 'hwut.run.stability'.
 
         Raises DirectoryBusy where another live process holds the
         directory -- refused at the door, never queued.

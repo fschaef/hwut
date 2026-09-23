@@ -1,11 +1,11 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.stability' COMMAND LINE -- run the same wish SEVERAL
+PURPOSE: THE 'hwut.run.stability' COMMAND LINE -- run the same wish SEVERAL
          TIMES and report what did not stay the same.
 
-    hwut.stability <wish> [--repeat=<n>] [--cadence]
-                          [--directory=<path>] [--strategy=<name>]
+    hwut.run.stability <wish> [--repeat=<n>] [--cadence]
+                              [--directory=<path>] [--strategy=<name>]
 
 A suite that passes once has said one thing: it passed once. Whether it
 passes RELIABLY is a different question, and nothing answers it by being
@@ -18,9 +18,13 @@ FOUR FINDINGS, one fault and three warnings:
                 only finding that moves the exit status.
 
     BYTES       every repeat agreed on the verdict, and the recorded
-                subjects DIFFER. The tolerance absorbed it -- which is
-                what tolerance is for -- but the test is one tightening
-                away from flaky and nobody would know. A warning.
+                subjects DIFFER BYTE FOR BYTE. Said ONLY under
+                '--byte-pedantic' (E-113). CORRECT MEANS EQUIVALENT,
+                NOT IDENTICAL, and the tolerances -- patterns,
+                constraints, numerics -- are what equivalence means
+                here: a run they admit is correct, and nothing is owed
+                about it. A reader who wants the bytes anyway asks in
+                those words. A warning where asked.
 
     LENGTH      the cadences differ in LINE COUNT. Nothing can be
                 aligned line by line after that, so it is said first
@@ -78,8 +82,8 @@ from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish)
 from   vut.engine.orchestrator.run.strategy          import words_of
-from   ._target import split_words, TargetError
-from   ._exit                                        import E_ExitCode
+from   vut.services._target import split_words, TargetError
+from   vut.services._exit                            import E_ExitCode
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 
@@ -92,7 +96,7 @@ FACTOR_MIN   = 50.0    # times the usual delta -- not 2, not 5
 
 #  THE STANDARD READER (E-84). The VALUES of '--repeat' and '--strategy'
 #  are checked below, in this face's own words.
-PARSER = face_parser("hwut.stability",
+PARSER = face_parser("hwut.run.stability",
                      "Run the selection repeatedly and report what "
                      "disagrees with itself.",
                      word_help="a test, a test and a choice, a file glob "
@@ -100,6 +104,7 @@ PARSER = face_parser("hwut.stability",
                      word_metavar="[<file-glob> [choice-glob]...]")
 PARSER.add_argument("--repeat", default=None, metavar="n")
 PARSER.add_argument("--cadence", action="store_true")
+PARSER.add_argument("--byte-pedantic", action="store_true")
 PARSER.add_argument("--strategy", default=None, metavar="name")
 PARSER.add_argument("--verbose", action="store_true")
 PARSER.add_argument("--directory", default=None)
@@ -267,7 +272,7 @@ def snapshot_of(root, verdict_db, subject_tuple):
     return result
 
 
-def finding_list_of(snapshot_list, cadence_f):
+def finding_list_of(snapshot_list, cadence_f, byte_pedantic_f=False):
     """
     RETURN: list[CFinding], one per key that any repeat saw, sorted by
             key; a key seen by some repeats and not others is itself a
@@ -276,7 +281,9 @@ def finding_list_of(snapshot_list, cadence_f):
 
     The four findings of this face's PURPOSE, in that order: VERDICT
     first because it is the fault, LENGTH before CADENCE because an
-    unalignable pair cannot be timed.
+    unalignable pair cannot be timed. BYTES stands only where
+    'byte_pedantic_f' asks for it: the tolerances have already said
+    the repeats are equivalent (E-113).
     """
     key_set = set()
     for snapshot in snapshot_list: key_set.update(snapshot)
@@ -297,14 +304,16 @@ def finding_list_of(snapshot_list, cadence_f):
         seen_list = [snapshot[key] for snapshot in snapshot_list
                      if key in snapshot]
         subject_set = set()
-        for _, text_db, _ in seen_list: subject_set.update(text_db)
+        if byte_pedantic_f:
+            for _, text_db, _ in seen_list: subject_set.update(text_db)
         for subject in sorted(subject_set):
             text_tuple = tuple(text_db.get(subject)
                                for _, text_db, _ in seen_list)
             if len(set(text_tuple)) > 1:
                 finding.note_list.append(
-                    "BYTES differ, verdict did not: subject '%s' -- the "
-                    "tolerance absorbed it" % subject)
+                    "BYTES differ where the tolerances say EQUIVALENT: "
+                    "subject '%s' -- asked for by '--byte-pedantic'"
+                    % subject)
 
         #  TIMING IS NOT CHECKED UNLESS ASKED (disc-7). The framework
         #  cannot measure the machine's load, so it does not pretend
@@ -416,6 +425,7 @@ def main(argv=None, write=None, write_error=None):
     strategy   = None      # the '--strategy=' spec, verbatim; O-27
     verbose_f  = False
     cadence_f  = False
+    byte_pedantic_f = False
     subject_tuple = ("stdout",)
     arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
                                               ARG_DB)
@@ -430,6 +440,7 @@ def main(argv=None, write=None, write_error=None):
     directory = arguments.directory or "."
     verbose_f = arguments.verbose
     cadence_f = arguments.cadence
+    byte_pedantic_f = arguments.byte_pedantic
     if arguments.repeat is not None:
         text = arguments.repeat
         if not text.isdigit() or int(text) < 2:
@@ -478,7 +489,8 @@ def main(argv=None, write=None, write_error=None):
 
     key_set = set()
     for snapshot in snapshot_list: key_set.update(snapshot)
-    finding_list = finding_list_of(snapshot_list, cadence_f)
+    finding_list = finding_list_of(snapshot_list, cadence_f,
+                                   byte_pedantic_f)
     stained_list, cleared_list = _judge(root, key_set, finding_list,
                                         repeat_n)
     for line in report_line_tuple(finding_list, repeat_n, len(key_set),
@@ -543,7 +555,7 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     measured is what they would get. The run's own output is swallowed;
     this face reports on the runs, not for them.
     """
-    from . import run as run_service
+    from vut.services import run as run_service
     from vut.engine.protocol.summary import fold
 
     #  THE FACE'S OWN OPTIONS DO NOT TRAVEL to 'hwut.run', which does
@@ -553,7 +565,8 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
     wish_argv = [a for a in argv
                  if not a.startswith(("--repeat=", "--strategy=",
                                       "--directory="))
-                 and a not in ("--verbose", "--cadence")]
+                 and a not in ("--verbose", "--cadence",
+                               "--byte-pedantic")]
     snapshot_list = []
     for _ in range(repeat_n):
         event_list = []
@@ -583,5 +596,5 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
 
 if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
-    from ._exit import guarded
-    sys.exit(guarded("hwut.stability", main))
+    from vut.services._exit import guarded
+    sys.exit(guarded("hwut.run.stability", main))

@@ -61,7 +61,7 @@ one' -- the first naming files, every further one a choice, globbing
 allowed in both. It is sugar for '--glob' and nothing else, so the
 short form can never mean what the long form cannot say.
 
-    --label <expr>      the runs the label expression names, out of
+    -l, --label <expr>  the runs the label expression names, out of
                         'hwut-root.labels' (disc-8): 'AND', 'OR',
                         'NOT', brackets, 'all' the universe, ',' sugar
                         for 'OR'. A UNION among the labels it names
@@ -147,7 +147,7 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--exclude <target>]...",
                      "[--dir <glob>]...",
                      "[--exclude-dir <glob>]...",
-                     "[--wishlist <file>]...", "[--label <expr>]",
+                     "[--wishlist <file>]...", "[-l|--label <expr>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
@@ -181,7 +181,7 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                             --glob "test-*.py quick-[0-2]"
                         may stand several times; the globs are OR'ed
                         among themselves
-    --label <expr>      the runs the label expression names ('AND',
+    -l, --label <expr>  the runs the label expression names ('AND',
                         'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
                         universe); a union among its labels, narrowing
                         against the rest; absent, 'meta' is silent --
@@ -388,13 +388,20 @@ def parse_wish(argv):
             glob_list.extend(
                 wishlist_target_tuple(argument[len("--wishlist="):]))
             wishlist_f = True
-        elif argument == "--label" or argument.startswith("--label="):
-            if argument == "--label":
+        elif argument in ("--label", "-l") \
+                or argument.startswith("--label=") \
+                or argument.startswith("-l="):
+            #  '-l' IS '--label' AND NOTHING ELSE (E-112): a label is
+            #  asked for by name, never resolved out of a bare word --
+            #  a wish says what it means, whatever the tree holds.
+            if argument in ("--label", "-l"):
                 if index >= len(argv):
-                    raise WishError("'--label' stands without an "
-                                    "expression")
+                    raise WishError("'%s' stands without an "
+                                    "expression" % argument)
                 text   = argv[index]
                 index += 1
+            elif argument.startswith("-l="):
+                text = argument[len("-l="):]
             else:
                 text = argument[len("--label="):]
             if label_spec is not None:

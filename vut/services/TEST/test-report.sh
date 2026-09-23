@@ -38,7 +38,7 @@ ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 FACE="python3 -m vut.services.report"
 RUN="python3 -m vut.services.run"
-STABILITY="python3 -m vut.services.stability"
+STABILITY="python3 -m vut.services.lib.run.stability"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

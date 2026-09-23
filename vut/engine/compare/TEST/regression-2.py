@@ -1,4 +1,9 @@
 #! /usr/bin/env python3
+#  @hwut {
+#    title   = "VUT Potpourri Regression Suite"
+#    choices = ["bool", "csp", "edit-merge", "visible-nothing"]
+#    tolerance { eq_pattern = ["VERDICT: PASS"] }
+#  }
 """
 Regression Test Suite 2: Potpourri Engine Bugs.
 

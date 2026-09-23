@@ -37,7 +37,8 @@ a slot like any work.
 ______________________________________________________________________________
 """
 import asyncio
-from   vut.engine.orchestrator.run.strategy import sort_key_of
+from   vut.engine.orchestrator.run.strategy import (sort_key_of,
+                                                    applications_of)
 from abc         import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -155,6 +156,9 @@ class Scheduler:
         self.notify       = notify or (lambda kind, **fields: None)
         self.selection_order = selection_order
         self.duration_db     = duration_db or {}
+        #  THE RUNNING PLAN'S STATE, for 'ready_n' to ask; None where
+        #  no plan is running (intend 20).
+        self._state          = None
 
     async def run(self, plan):
         """
@@ -168,21 +172,46 @@ class Scheduler:
         """
         state      = CPlanState(plan)
         dispatched = []
+        self._state = state
+        self._app_db = applications_of(plan, self.duration_db)
 
-        entry_f = None
-        if self.on_entry is not None:
-            entry_f = await self._frame("on_entry", self.on_entry)
-        if entry_f is not False:
-            await self._dispatch_all(plan, state, dispatched)
+        try:
+            entry_f = None
+            if self.on_entry is not None:
+                entry_f = await self._frame("on_entry", self.on_entry)
+            if entry_f is not False:
+                await self._dispatch_all(plan, state, dispatched)
 
-        exit_f = None
-        if self.on_exit is not None:
-            exit_f = await self._frame("on_exit", self.on_exit)
+            exit_f = None
+            if self.on_exit is not None:
+                exit_f = await self._frame("on_exit", self.on_exit)
+        finally:
+            self._state = None
 
         return CRunReport(entry_f    = entry_f,
                           exit_f     = exit_f,
                           state_db   = dict(state.state_db),
                           dispatched = tuple(dispatched))
+
+    def ready_n(self):
+        """
+        RETURN: int, how many nodes of the running plan could start
+                NOW -- 0 where no plan runs, where the frame still
+                stands, or where every remaining node waits on one
+                that has not ended.
+
+        An UPPER BOUND: starting one member of an exclusion set
+        withdraws admission from the others, so the count can only
+        overstate what will actually start. A strategy that opens a
+        further directory where this is too small (intend 20) errs
+        towards FEWER open directories, never more.
+
+        Asked anew each time, never cached: admission changes with
+        every start and every ending.
+        """
+        if self._state is None: return 0
+        return len(self._state.ready())
+
 
     async def _frame(self, role, command):
         """
@@ -221,7 +250,8 @@ class Scheduler:
         """
         if len(ready_tuple) == 1: return ready_tuple[0]
         if self.selection_order is None: return ready_tuple[0]
-        key_of = sort_key_of(self.selection_order, self.duration_db.get)
+        key_of = sort_key_of(self.selection_order, self.duration_db.get,
+                             lambda pair: self._app_db[pair[1]])
         return min(enumerate(ready_tuple), key=key_of)[1]
 
     async def _dispatch_all(self, plan, state, dispatched):

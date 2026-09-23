@@ -3,8 +3,8 @@
 DIR  .                                                                        
 ERROR the task file names 'gone/', which is not there
 DIR  suite/TEST                                                               
-START test-ok.sh                                                                ||1
-END   test-ok.sh ........................................................ [OK]  ||1
+START test-ok.sh                                                           ||1
+END   test-ok.sh ................................................... [OK]  ||0
 ERROR OSError: the directory vanished mid-walk
 
 ==============================================================================

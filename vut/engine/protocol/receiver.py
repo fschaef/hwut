@@ -128,6 +128,13 @@ class CRunReportReceiver:
         """RETURN: None. A file or test NOT RUN, by name and reason
         (E-41): a backup-shaped candidate, a test with no nominal."""
 
+
+    def on_silent(self, when, directory, node):
+        """RETURN: None. A candidate carrying no 'hwut { }' and named
+        under no 'apps' (X-SILENT): no application, no fault, no
+        refusal. A receiver that does not care ignores it."""
+        pass
+
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. One directory's run ended."""
 

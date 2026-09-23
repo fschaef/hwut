@@ -41,6 +41,20 @@ class CStrategy:
     """The template; a strategy overrides 'may_start'."""
 
     name = "strategy"
+    #  A strategy whose answer can CHANGE when a slot comes free inside
+    #  an open directory says so, and 'run' then wakes on the budget as
+    #  well as on a unit's ending (intend 20). The others' answers
+    #  depend on the set of open units alone.
+    wakes_on_budget_f = False
+
+    def bind(self, budget, unit_list):
+        """
+        RETURN: None. Hands the strategy the run's budget and its units
+                in start order, once, before 'run'. A strategy that
+                needs neither ignores the call.
+        """
+        self.budget    = budget
+        self.unit_list = unit_list
 
     def may_start(self, index, running):
         """
@@ -67,9 +81,21 @@ class CStrategy:
                                      guarded_list[index]())
                 index += 1
             if not running: continue
+            #  THE WAIT ENDS ON A UNIT'S ENDING -- or, where the
+            #  strategy asks, on a slot given back to the budget: a
+            #  BUNDLED answer moves when a directory's own work runs
+            #  dry, and no unit ends then.
+            wait_list = list(running.values())
+            changed   = None
+            if self.wakes_on_budget_f:
+                changed = self.budget.changed()
+                wait_list.append(changed)
             ended_set, _ = await asyncio.wait(
-                               running.values(),
+                               wait_list,
                                return_when=asyncio.FIRST_COMPLETED)
+            if changed is not None:
+                changed.cancel()
+                ended_set.discard(changed)
             for i in sorted(i for i, task in running.items()
                             if task in ended_set):
                 done_list[i] = running.pop(i).result()
@@ -104,11 +130,44 @@ class CParallel(CStrategy):
         return True
 
 
+class CBundled(CStrategy):
+    """Open a further directory ONLY where the open ones cannot fill
+    the budget (intend 20): with 'b' free slots and 'r' nodes the open
+    units could start now, the next unit starts exactly when r < b.
+    A rule, not a number: how many directories stand open is what the
+    tree needs at that instant, and nothing else."""
+    name = "bundled"
+    wakes_on_budget_f = True
+
+    def may_start(self, index, running):
+        """
+        RETURN: bool, True where nothing runs, where the budget is
+                unbounded, or where the open units together could
+                start fewer nodes than there are free slots.
+
+        A unit whose Scheduler does not stand yet answers None to
+        'ready_n' and is taken to fill the budget on its own: opening
+        beside a unit that has not spoken would open the whole tree
+        in one pass.
+        """
+        if not running: return True
+        limit = self.budget.limit
+        if limit is None: return True
+        free_n  = limit - self.budget.held_n
+        ready_n = 0
+        for i in running:
+            n = self.unit_list[i].ready_n()
+            if n is None: return False
+            ready_n += n
+        return ready_n < free_n
+
+
 class E_SchedulerTestRun_Strategy(Enum):
     """WHEN a directory's unit of work starts."""
     LINEAR    = "linear"
     SUCCESSOR = "successor"
     PARALLEL  = "parallel"
+    BUNDLED   = "bundled"
 
 
 class E_SchedulerTestRun_SelectionOrder(Enum):
@@ -121,7 +180,8 @@ class E_SchedulerTestRun_SelectionOrder(Enum):
 
 STRATEGY_DB = {E_SchedulerTestRun_Strategy.LINEAR:    CLinear,
                E_SchedulerTestRun_Strategy.SUCCESSOR: CSuccessor,
-               E_SchedulerTestRun_Strategy.PARALLEL:  CParallel}
+               E_SchedulerTestRun_Strategy.PARALLEL:  CParallel,
+               E_SchedulerTestRun_Strategy.BUNDLED:   CBundled}
 
 class E_Criterion(Enum):
     """ONE COMPONENT of a lexicographic sort key. A selection order IS
@@ -133,6 +193,14 @@ class E_Criterion(Enum):
     DURATION_ASC     = "duration-asc"
     NAME_ASC         = "name-asc"
     PLAN_ORDER       = "plan-order"
+    #  THE APPLICATION LEVEL (O-32): an application weighs the sum of
+    #  its choices and its choices go TOGETHER. These three stand in
+    #  front of the node criteria, so the slowest application comes
+    #  first and, inside it, its slowest choice.
+    APP_UNMEASURED_LAST = "app-unmeasured-last"
+    APP_DURATION_DESC   = "app-duration-desc"
+    APP_DURATION_ASC    = "app-duration-asc"
+    APP_TOGETHER        = "app-together"
 
 
 #  A SELECTION ORDER IS A TUPLE OF CRITERIA, applied lexicographically.
@@ -152,10 +220,14 @@ class E_Criterion(Enum):
 #  on every day, which is what '--deterministic' promises.
 CRITERIA_DB = {
     E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST:
-        (E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_DESC,
+        (E_Criterion.APP_UNMEASURED_LAST, E_Criterion.APP_DURATION_DESC,
+         E_Criterion.APP_TOGETHER,
+         E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_DESC,
          E_Criterion.PLAN_ORDER),
     E_SchedulerTestRun_SelectionOrder.SHORTEST_FIRST:
-        (E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_ASC,
+        (E_Criterion.APP_UNMEASURED_LAST, E_Criterion.APP_DURATION_ASC,
+         E_Criterion.APP_TOGETHER,
+         E_Criterion.UNMEASURED_LAST, E_Criterion.DURATION_ASC,
          E_Criterion.PLAN_ORDER),
     E_SchedulerTestRun_SelectionOrder.NAME_SORTED:
         (E_Criterion.NAME_ASC, E_Criterion.PLAN_ORDER),
@@ -163,12 +235,15 @@ CRITERIA_DB = {
         (E_Criterion.PLAN_ORDER,)}
 
 
-def _component_of(criterion, index, name, weight):
+def _component_of(criterion, index, name, weight, app):
     """
     RETURN: a comparable, THIS CRITERION'S contribution to the sort
             key of a candidate standing at 'index' in plan order and
             weighing 'weight' milliseconds -- None where nothing has
-            measured it.
+            measured it. 'app' is the candidate's APPLICATION as
+            (weight, first index): the sum of its choices, or None
+            where none is measured, and where the application first
+            stands in the plan.
 
     SMALLER WINS, always: the selection takes the minimum key, so
     every criterion states itself as 'less is earlier' and no caller
@@ -177,12 +252,44 @@ def _component_of(criterion, index, name, weight):
     if criterion is E_Criterion.PLAN_ORDER:       return index
     if criterion is E_Criterion.NAME_ASC:         return name
     if criterion is E_Criterion.UNMEASURED_LAST:  return weight is None
+    if criterion is E_Criterion.APP_TOGETHER:     return app[1]
+    if criterion is E_Criterion.APP_UNMEASURED_LAST:
+        return app[0] is None
+    if criterion is E_Criterion.APP_DURATION_DESC:
+        return 0 if app[0] is None else -app[0]
+    if criterion is E_Criterion.APP_DURATION_ASC:
+        return 0 if app[0] is None else app[0]
     if weight is None:                            return 0
     if criterion is E_Criterion.DURATION_DESC:    return -weight
     return weight
 
 
-def sort_key_of(selection_order, weight_of):
+def applications_of(plan, duration_db):
+    """
+    RETURN: dict, node name -> (weight, first index) of the node's
+            APPLICATION (O-32): the sum of the measured durations of
+            every node spelt 'app choice' with the same 'app', None
+            where none is measured, and the plan index where the
+            application first stands. A node whose name bears no
+            choice is its own application.
+
+    'plan' yields nodes answering 'name()'; 'duration_db' is name ->
+    milliseconds, as 'traces.duration_db_of' spells it.
+    """
+    first_db, sum_db = {}, {}
+    name_list = [node.name() for node in plan]
+    for index, name in enumerate(name_list):
+        app = name.split(" ", 1)[0]
+        first_db.setdefault(app, index)
+        weight = duration_db.get(name)
+        if weight is not None:
+            sum_db[app] = sum_db.get(app, 0) + weight
+    return {name: (sum_db.get(name.split(" ", 1)[0]),
+                   first_db[name.split(" ", 1)[0]])
+            for name in name_list}
+
+
+def sort_key_of(selection_order, weight_of, app_of=None):
     """
     RETURN: callable, (index, name) -> tuple, the lexicographic sort
             key of one candidate under this selection order. The
@@ -194,6 +301,12 @@ def sort_key_of(selection_order, weight_of):
                  DIRECTORY weighs the sum of its cases. ONE VOCABULARY,
                  BOTH LEVELS (O-28) -- 'longest first' means the same
                  sentence about a directory as about a test.
+    'app_of'     (index, name) -> (weight, first index) of the
+                 candidate's APPLICATION (O-32): the sum of its
+                 measured choices, or None where none is, and where it
+                 first stands in the plan. None where a candidate is
+                 its own application -- a directory -- and the level
+                 collapses onto the candidate itself.
     """
     criteria = CRITERIA_DB.get(
                    selection_order,
@@ -202,7 +315,8 @@ def sort_key_of(selection_order, weight_of):
     def key_of(pair):
         index, name = pair
         weight      = weight_of(name)
-        return tuple(_component_of(criterion, index, name, weight)
+        app         = (weight, index) if app_of is None else app_of(pair)
+        return tuple(_component_of(criterion, index, name, weight, app)
                      for criterion in criteria)
     return key_of
 
@@ -213,11 +327,13 @@ def sort_key_of(selection_order, weight_of):
 #  'together' -- it opens every directory at once, and the flow stops
 #  reading as bundled. The RIGHT member is BUNDLED: open a further
 #  directory only when the open ones cannot fill the budget -- a rule,
-#  not a number. It is not built: 'CStrategy.run' wakes only when a
-#  DIRECTORY ends, and BUNDLED must also wake when a SLOT frees.
-#  Until it is, SUCCESSOR is the default: at most two directories open,
-#  which is 'bundled' in the strongest existing sense and 'together' in
-#  the weakest. MEASURED: 16.2 s at 16 jobs against 13.0 s ideal.
+#  not a number. BUILT (intend 20): 'CBundled' asks the open units
+#  what they could start and wakes on the budget as well as on a unit's
+#  ending. NOT YET THE DEFAULT: moving the default moves every
+#  flow-subject nominal, and the move is a ruling of its own. Until
+#  then SUCCESSOR stands: at most two directories open, which is
+#  'bundled' in the strongest earlier sense. MEASURED (O-29): 16.2 s
+#  at 16 jobs against 13.0 s ideal.
 DEFAULT_STRATEGY = E_SchedulerTestRun_Strategy.SUCCESSOR
 DEFAULT_SELECTION_ORDER = E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST
 
@@ -228,6 +344,7 @@ DEFAULT_SELECTION_ORDER = E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST
 SHORTHAND_DB = {"l":  E_SchedulerTestRun_Strategy.LINEAR,
                 "s":  E_SchedulerTestRun_Strategy.SUCCESSOR,
                 "p":  E_SchedulerTestRun_Strategy.PARALLEL,
+                "b":  E_SchedulerTestRun_Strategy.BUNDLED,
                 "lf": E_SchedulerTestRun_SelectionOrder.LONGEST_FIRST,
                 "po": E_SchedulerTestRun_SelectionOrder.PLAN_ORDER,
                 "sf": E_SchedulerTestRun_SelectionOrder.SHORTEST_FIRST,

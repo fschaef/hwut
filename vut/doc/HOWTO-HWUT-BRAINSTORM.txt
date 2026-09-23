@@ -102,6 +102,125 @@ BIN DISCIPLINE
     - the test of a fix: 'linear-raw' switched to '--deterministic'
       and its flow stood BYTE-IDENTICAL. When a page moves only in its
       banner, the behaviour under it did not move
+2.5 THE TRACE ACCEPT LEFT BEHIND        <- the flake nobody had named
+    - case: 'display test-run.sh fail'. Census 841/12, and about once
+      in three 840/13 with this page the thirteenth
+    - NOT PARALLELISM, though it showed first at '--jobs=4'. MEASURED
+      serial, the script alone: 4 of 20 red
+    - mechanism: the fixture records its nominals THROUGH HWUT'S OWN
+      FACE (section 6) -- and 'accept --whole' PROVISIONS, i.e. runs
+      each case once. That run writes 'hwut-traces.csv' in the fixture
+      BEFORE the face under test starts. MEASURED: test-diff.sh 6 ms,
+      test-ok.sh 6 ms, standing there before the face ran
+    - the face runs under the DEFAULT order, longest-first (O-27), so
+      the flow order is two millisecond durations from accept's runs.
+      Tie or diff-slower: plan order, green. Ok-slower: the two lines
+      swap, red
+    - a mktemp fixture is NOT a clean slate for the scheduler: the
+      fixture's own construction is history
+    - GENERAL: a page that accepts its fixture and then runs a flow of
+      two or more applications RAW, without '--deterministic', is
+      ordered by a wall clock. Exactly O-30's species, hidden one
+      step upstream
+    - '--deterministic' ALONE IS NOT THE CURE, though it measured 0 of
+      20 red: it was measured on ONE CORE, the machine that hides the
+      next species (2.6). At '--jobs=2' the same call is steady -- and
+      steadily a different page
+    - OPEN: eleven further pages accept then run with no ordering
+      word; whether each prints a multi-app flow is not measured
+
+2.6 THE RECORDER'S CORE COUNT              <- a species a sandbox cannot see
+    - case: the same page. 'hwut.run' defaults its budget to
+      'os.cpu_count()' ('services/run.py'); the page's inner face says
+      no '--jobs'; every GOOD and every census on record came from a
+      ONE-CORE sandbox
+    - MEASURED, 8 cores emulated on the default path: red 3 of 3. The
+      two runs INTERLEAVE -- START, START, END, END, '||2' -- where
+      the GOOD holds the serial shape with '||1' throughout
+    - so the nominal is a fact about the RECORDING MACHINE. It is green
+      on the machine that blessed it and red on the author's own
+    - and it hides a third: under concurrency the END order is which
+      process finishes first. A race, not yet seen to flip
+    - GENERAL: a page that records a RAW FLOW of two or more runs in
+      one directory must pin '--jobs=1' (as 'linear-raw' does) or go
+      through a pype that sorts and masks the tail. '--deterministic'
+      fixes the ORDER; only '--jobs=1' fixes the SHAPE
+    - HOW TO SEE IT ON ONE CORE: a 'usercustomize.py' in the user site
+      that sets 'os.cpu_count' ONLY WHERE AN ENVIRONMENT VARIABLE ASKS
+      ('HWUT_EMU_CORES=8'). It reaches EVERY python a page spawns --
+      the face, accept, the inner run -- where a patched launch line
+      reaches one. TRAP, MEASURED: a 'sitecustomize.py' on PYTHONPATH
+      does NOTHING -- the system's own is imported first. Check the
+      instrument took, then run a POSITIVE CONTROL (a page known to
+      move) before reading a negative
+
+2.7 A RED PAGE HIDES ITS FLAKES
+    - case: 'display test-run.sh labels', red for E-95 for sessions
+    - its bare call says '--strategy=linear --jobs=1'. That pins the
+      SHAPE, not the ORDER: 'linear' keeps the default selection,
+      longest-first, and DIRECTORIES are ordered by the sums of the
+      traces accept's provisioning left (2.5)
+    - MEASURED, 12 runs: three directory orders; the GOOD's in 2 of 12
+    - 'hwut.run.stability' cannot see it: it judges a CHANGE of verdict,
+      and a page red for another reason has a constant verdict
+    - the day E-95 is fixed this page turns from red to FLAKY, and the
+      fix will be blamed
+    - SECOND CASE, same sweep: 'services test-accept.sh interactive',
+      red for test_run_info. Its last step greps the verdict lines of
+      a RAW run of three cases: steady at one core, THREE DIFFERENT
+      OUTPUTS IN THREE RUNS at eight ('||3', and 'a'/'b' swapping at
+      END). Found only by hashing the red page's output across runs
+      and core counts; cured by D-16's rule, one-core output unchanged
+    - GENERAL: a standing red page is not audited by the census or by
+      stability. Audit it by the section, directly, before and after
+      the fix that turns it green
+    - SMALL, SAME SWEEP: all five BYTES warnings on this page were the
+      RESULTS seconds, which the page's own 'eq_pattern' tolerates by
+      name. Lawful -- the warning cannot tell a named tolerance from a
+      near miss
+
+2.8 THE CENSUS DOES NOT RUN THE META PAGES
+    - MEASURED, 2026-09-22: adding '-l' to 'parse_wish' moved 14
+      nominals. TWO FULL CENSUSES SAW NONE OF THEM -- both stood at
+      841 ok, 12 fail, the usual twelve
+    - the pages that record a face's USAGE and HELP carry the standard
+      label 'meta', which is SILENT where a wish names no label. The
+      census names none, so it never runs them -- and the usage block
+      is exactly what an option change moves
+    - '-l meta' does NOT reach them either: the silence comes from the
+      test's own declaration, not from an entry in 'hwut-root.labels'.
+      A GLOB LIFTS IT: 'hwut.run --glob "test-*"' from the root ran
+      850 cases and showed all 26
+    - so the census is the gate for BEHAVIOUR and no gate at all for
+      the command-line surface. After any change to an option, a
+      spelling in a usage line, or a help text: run the glob pass too,
+      and classify what it moves
+    - the 14 were the '-l' spelling alone; the completion table also
+      gained '-l=<value>', which the branch did not accept until it
+      was made to -- A TABLE THAT ADVERTISES A FORM THE PARSER REFUSES
+      is the defect the page caught
+
+2.9 OPEN: THE ROOT CENSUS DOES NOT SEE A NEW CHOICE
+    - MEASURED, 2026-09-22/23, twice: a choice added to a page's
+      '@hwut' header and recorded ('bundled', then 'together') runs
+      from its own directory and in the glob pass (830 -> 831 ok),
+      and the plain census from the root stays at 841 -- it does not
+      list the choice at all. A FRESH CLONE's census sees it (842)
+    - CHASED, and the guess above was wrong: the cause is the
+      DIRECTORY LOCK. A second run over a directory another run holds
+      reports 'ERROR DirectoryBusy' for that directory and SKIPS every
+      case in it -- and A SKIPPED CASE KEEPS ITS BOOK VERDICT, so the
+      census reports the last run's answer as if it had just measured
+      it. Both readings came from gates I had started while an earlier
+      pass still ran
+    - MEASURED: with the lock free, the same glob pass read 821 ok, 23
+      fail -- the twelve and the eleven pages a width change had moved,
+      none of which the overlapping run had seen
+    - SO: NEVER RUN TWO PASSES AT ONCE over one tree, and read the
+      RESULTS line's 'skip' count and the DirectoryBusy line before
+      believing any number. A fresh clone cannot collide and is the
+      safest proof
+
 ==============================================================================
 3.  STALE PAGE vs FOREIGN FACT -- TELLING THEM APART
 ==============================================================================
@@ -271,6 +390,15 @@ BIN DISCIPLINE
       READER of that line, tests included. Grep for the readers, not
       just the writers
     - ruled: display D-15
+
+    - case, 2026-09-22, the rename to 'hwut.run.stability': a grep for
+      'hwut\.stability' found every reader but one.
+      'bin/TEST/test-launchers.sh' lists its faces WITHOUT the prefix
+      -- 'report.details stability wishlist' -- and prefixes 'hwut.'
+      itself. The page said so at once: exit 127 where it read 0
+    - GENERAL: a name has more spellings than its full one. Grep the
+      BARE WORD too, and read what it finds -- here the rest was prose
+      ('the stability promise'), one hit was a reader
 
 ==============================================================================
 5d. A TACTIC IS MEASURED ON THE TREE, NOT ARGUED

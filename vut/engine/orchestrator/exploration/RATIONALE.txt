@@ -1725,3 +1725,84 @@ DECISION  RULED (Frank-Rene): A TEST'S OUTPUT MUST BE DETERMINED BY
           behaviour against the nominal's own age (D-13). Where no
           ruling stands, the page is a defect's evidence and is not
           blessed.
+
+X-TITLE  A LACKING TITLE STANDS IN; IT DOES NOT REFUSE           (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   'title' was required, and a header without one drew a
+          VOCABULARY fault and the whole specification was dropped.
+          The file had already SAID it is a test application by
+          carrying the trigger; a title one has not written yet is a
+          thing to write, not a reason to lose the application, and a
+          half-written header took its directory's run with it.
+
+DECISION  RULED (Frank-Rene): the title stands in as '<source file>
+          <title unspecified>' -- it names the file and says plainly
+          what is owed, so a report reads as a reminder. Nothing else
+          about the header changes; every other required shape is
+          still refused as before. In the INTERVIEW a missing title
+          still means 'not a test application': there the title line
+          is the only thing that says a specification is there at all.
+
+X-CONSIDERED  WHAT IS CONSIDERED, IN ONE PLACE                   (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   The rules deciding whether a file is a test application at
+          all stood in four places and one of them nowhere: candidacy
+          in a late section (E-41), the carriers in section 3, the
+          EXECUTABLE requirement of the interview (X-INTERVIEW) in no
+          section at all, the title in section 1. A reader asking the
+          first question a reader asks -- "why is my file not run?" --
+          had to assemble the answer.
+
+DECISION  RULED (Frank-Rene): the consideration rule is held in a
+          PROMINENT place. README section 0, before the specification
+          language, states the four gates in order and points here for
+          the why of each. Corrected on the way: section 3 said "two
+          carriers" under a heading naming three; section 5 listed the
+          default ignore globs without '*.pype'; the framework's own
+          file names were nowhere; the memoisation of the interview's
+          answer was nowhere.
+
+X-SILENT  NO TRIGGER, NO TEST APPLICATION -- AND ONE NOTE       (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   A candidate that neither carrier spoke for was ASKED
+          ('--hwut-info', R-44), so whether a file was a test
+          application depended on what running it printed. A helper
+          that answered was adopted; a 1.0 test that had stopped
+          answering vanished without a word.
+
+DECISION  RULED (Frank-Rene): A FILE WITHOUT AN 'hwut { }' SECTION IS
+          NEVER CONSIDERED, unless its directory's 'hwut.conf' names it
+          under 'apps'. Nothing is guessed and nothing is asked. An
+          'apps' entry does not pass through candidacy, so ANY file may
+          be named one -- an '.xml' as well as a '.sh'.
+          The run says so ONCE, at its end: one NOTE, every silent file
+          by its path RELATIVE TO THE CALL DIRECTORY, and the two ways
+          to settle it -- 'hwut.config.ignore <paths>' for a helper, an
+          'apps' entry for a test. Not a fault and not a refusal: a
+          helper, a log and a table are ordinary.
+          MEASURED on this tree: 51 files in 25 directories, 24 of them
+          'config.py'. One 'ignore' line in 'hwut-root.conf' answers
+          those 24, which is why the bootstrap is named there.
+
+COST      The interview survives as 'hwut.renovate's reader -- an
+          injected runner still asks -- but it is no longer a carrier.
+          A new face, 'hwut.config.ignore', writes the 'ignore' key and
+          NOTHING else in the author's file (E-48), asking unless
+          '--dont-ask' stands.
+          OPEN, AND NOT DECIDED HERE: a directory's own 'ignore'
+          REPLACES the inherited one rather than adding to it, so a
+          directory that states any 'ignore' states the root's again.
+          For every other inheritable key replacement is right; for a
+          list of things to overlook it is arguably not.
+
+          SUPERSEDES R-44 (the interview as migration carrier) and the
+          carrier half of X-INTERVIEW; X-INTERVIEW's measurement and its
+          memo stand as the reader's, and THE MEMO IS DORMANT until
+          'hwut.renovate' drives it -- measured: an injected runner asks
+          on every walk and writes no memo.
+          THE THREE FILES THAT RELIED ON THE INTERVIEW were migrated
+          FIRST, as ruled: 'engine/compare/TEST/regression-1.py', '-2',
+          '-3' -- asked, and each given the header its own answer
+          stated, 'HAPPY:' as 'tolerance { eq_pattern }'. Measured
+          after: 9 ok, 0 fail, the same nominals. Nothing else in the
+          tree answered an interview.

@@ -1,9 +1,19 @@
+--- the default: the tolerance settles it, nothing is said
+STATUS: 0
+STDOUT {
+    REPEATS: 3   KEYS: 1
+    
+    STEADY: every repeat agreed, on every key.
+    
+    TALLY: 0 unstable, 0 warned, 1 steady
+}
+--- asked for by name
 STATUS: 0
 STDOUT {
     REPEATS: 3   KEYS: 1
     
     suite/TEST: test-app.sh
-        BYTES differ, verdict did not: subject 'stdout' -- the tolerance absorbed it
+        BYTES differ where the tolerances say EQUIVALENT: subject 'stdout' -- asked for by '--byte-pedantic'
     
     TALLY: 0 unstable, 1 warned, 0 steady
 }

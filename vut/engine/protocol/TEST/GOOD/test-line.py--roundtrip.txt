@@ -6,6 +6,7 @@
   0.41:report:"sample text": sample text
   0.41:run-begun:sample text,sample text,sample text
   0.41:run-ended:sample text,sample text,sample text,true,sample text,sample text,sample text,sample text
+  0.41:silent:sample text,sample text
   0.00:tree-begun:{"when": "2026-09-07T13:17:02+00:00", "directory_list": ["a", "b c"]}
   0.41:tree-done:true,7,7,7
   0.41:warning:{"text": "sample text"}
@@ -17,9 +18,10 @@
   OK  : report: the dict comes back whole; t = 0.41
   OK  : run-begun: the dict comes back whole; t = 0.41
   OK  : run-ended: the dict comes back whole; t = 0.41
+  OK  : silent: the dict comes back whole; t = 0.41
   OK  : tree-begun: the dict comes back whole; t = 0.0
   OK  : tree-done: the dict comes back whole; t = 0.41
   OK  : warning: the dict comes back whole; t = 0.41
   OK  : 'when' is derived from the origin and t
-SUCCESS: one grammar, 11 kinds, round trip
+SUCCESS: one grammar, 12 kinds, round trip
 <hwut-end>

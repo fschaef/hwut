@@ -32,13 +32,54 @@ carries the user's wish. ACT receives elements that require no further
 resolution.
 
 
+0  WHAT IS CONSIDERED A TEST APPLICATION
+______________________________________________________________________________
+
+Four gates, in order. A file passes all four or it is no test application.
+(Why each stands: RATIONALE E-41, X-INTERVIEW, X-INFO-DAT, X-TITLE.)
+
+  1  IT IS A CANDIDATE.  A regular file in the TEST directory, the walk one
+     directory deep. NOT a candidate:
+       - the default ignore globs '*.txt', '*.xml', '*.json', '*.pype', and
+         the directory's own 'ignore' globs -- silent;
+       - THE FRAMEWORK'S OWN FILES, by name, never by glob: 'hwut.conf',
+         'hwut-root.conf', 'hwut-info.dat', 'hwut-traces.csv',
+         'hwut-root.labels';
+       - a BACKUP-SHAPED name -- '*~', '#*#', '*.bak', '*.backup', '*.orig',
+         '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp' -- which is
+         REPORTED with its reason, not passed over.
+
+  2  A SPECIFICATION SPEAKS FOR IT, on exactly one carrier: its own HEADER,
+     or an entry under 'apps' in 'hwut.conf'. Both is a directory error.
+
+  3  THERE IS NO THIRD CARRIER. A file neither speaks for is SILENT:
+     no application, no fault, nothing asked -- whatever it would have
+     answered. The run NAMES the silent files once, at its end, each by
+     its path relative to the call directory, with the two ways to settle
+     them: 'hwut.config.ignore <paths>' for a helper, an 'apps' entry for
+     a test. The INTERVIEW ('app --hwut-info') survives as the reader
+     'hwut.renovate' drives, not as a carrier.
+
+  4  IT HAS A TITLE -- or gets one. A specification lacking 'title' is NOT
+     refused: the title stands in as '<source file> <title unspecified>',
+     which names the file and says what is owed. In the interview the title
+     is the first line ending in a semicolon; a file offering none never was
+     a test application.
+
+WHERE THE CHOICES COME FROM follows the carrier: a HEADER states
+'choices'; an 'apps' entry states 'choices'; the INTERVIEW's 'CHOICES:'
+line is read ONLY where the interview is the carrier. A header that names
+no choice describes one choice-less call -- adding a choice to a page that
+carries a header means adding it to the header.
+
+
 1  THE SPECIFICATION LANGUAGE
 ______________________________________________________________________________
 
 Specifications are written in HOCON. All keys are lowercase. 'hwut' is the
 marker: a region opened by it and closed by its matching brace is a
-specification. 'title' is the only required key; its presence makes a file a
-test application.
+specification. THE MARKER makes a file a test application; 'title' names it,
+and stands in where it is absent (section 0).
 
     @hwut {
         title    = "..."
@@ -238,7 +279,9 @@ the choice's own value overwrites -- one level down and every level down:
 3  THE THREE CARRIERS
 ______________________________________________________________________________
 
-A specification reaches the exploration component on one of two carriers.
+A specification reaches the exploration component on one of TWO carriers.
+The interview below is no longer one of them (X-SILENT): it is the reader
+'hwut.renovate' drives over a 1.0 tree.
 
     HEADER      the specification stands in the source file's own header,
                 inside a comment.
@@ -266,9 +309,8 @@ The interview is the MIGRATION path: an hwut 1.0 test application carries no
 specification.
 
 Only what hwut 1.0 defines is read -- the title, 'CHOICES:' and 'HAPPY:' --
-and a line beyond that is passed over in silence. A file that does not
-answer, answers unreadably, or exits non-zero is not a test application; it
-is not a fault.
+and a line beyond that is passed over in silence. ONLY AN EXECUTABLE FILE IS
+ASKED, and its answer is memoised (section 0).
 
 Exploration therefore EXECUTES, but only here: a file carrying a header and
 a file named under 'apps' are never run in order to be read.
@@ -332,8 +374,8 @@ ______________________________________________________________________________
     }
 
 'on_entry' and 'on_exit' name scripts run on entering and leaving the
-directory. 'ignore' adds glob expressions to those omitted by default:
-'*.txt', '*.xml', '*.json'.
+directory. 'ignore' adds glob expressions to those omitted by default
+(section 0).
 
 'collision' and 'dependency' state how test applications stand to one
 another; both are written in TARGETS (section 5.1).

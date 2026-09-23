@@ -1,4 +1,8 @@
 #! /usr/bin/env python3
+#  @hwut {
+#    title   = "Registry Sandbox Regression"
+#    choices = ["associate", "equivalence"]
+#  }
 """
 Regression Test Suite 3: Global Registry Isolation and Performance check.
 

@@ -203,6 +203,12 @@ B-20 ONE 'hwut.rename' ACROSS DIRECTORIES; 'hwut.move'   ** BUILT -- STRIKE **
      failure set before and after is the same eleven, none of them in
      a touched file. intend/17 deleted. A-2 IS UNBLOCKED.
 
+B-21 '-l' IS '--label'                             ** BUILT -- STRIKE **
+     services/RATIONALE.txt E-112
+     '-l' in 'parse_wish', so every wish-taking face has it. A bare
+     word is never resolved into a label; where a run selects nothing
+     and the word names a standing label, a NOTE says '-l <word>'.
+
 ==============================================================================
 C  PARTLY BUILT -- a body exists, a named piece is missing
 ==============================================================================
@@ -502,7 +508,7 @@ BAND E MEASURED -- see 'adm/WORK/review-r9.txt'
 ==============================================================================
 
     NOT WAITING, though listed as waiting:
-        0o   the face is BUILT ('bin/hwut.stability') and E-11 rules
+        0o   the face is BUILT ('bin/hwut.run.stability') and E-11 rules
              the meaning; only the THEORY is owed
         02   its ask is substantially DELIVERED by TODO.txt,
              RATIONALE-INDEX, RATIONALE-LOGIC and README-INDEX
@@ -532,3 +538,14 @@ TO BE DONE  THE FACE CUT, what remains (services E-101..E-106)
      'hwut.sanitize' is split (E-103) but not yet a 'do()'.
      'hwut.accept' keeps its conversation; its Outcomes are data
      (E-105), the asking half is not.
+
+
+==============================================================================
+F  IF NOTHING ELSE MATTERS -- owed, harmless while it waits
+==============================================================================
+
+F-1  'bin/README.txt' SAYS EVERY LAUNCHER RUNS 'vut.services.<n>'
+     Untrue for every second face: 'hwut.config.show' runs
+     'vut.services.lib.config.show', 'hwut.accept.apply' and
+     'hwut.run.stability' likewise under 'lib/'. The sentence and the
+     irregular launcher grid beneath it want one pass together.

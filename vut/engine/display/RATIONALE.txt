@@ -646,3 +646,119 @@ COST      'plain.py': 'brief_f' for 'start_delay', 'announced_set',
           A NORMAL SUITE'S FLOW IS NOW TWICE AS LONG, and that lands
           on the default path. '--brief' is the old compactness, and
           it is opt-in.
+
+D-16  A RAW FLOW OF TWO RUNS PINS ORDER AND SHAPE           (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   'test-run.sh fail' blessed a raw flow of two runs with no
+          ordering word, and three facts foreign to 'hwut.run' decided
+          it. THE ORDER: the fixture is accepted through hwut's own face
+          (bin 6), 'accept' PROVISIONS, and its runs leave
+          'hwut-traces.csv' behind -- so the default longest-first order
+          was two millisecond durations; measured 4 of 20 red on one
+          core. THE SHAPE: the default budget is 'os.cpu_count()' of the
+          recording machine; every GOOD and census on record came from
+          a one-core sandbox; at eight cores the runs interleave with
+          '||2', measured 3 of 3 red. THE END ORDER of overlapping runs,
+          a race. 'labels' carried the first of these in its bare call:
+          '--strategy=linear' keeps longest-first, so DIRECTORIES were
+          ordered by accept's traces -- three orders in 12 runs, hidden
+          because the page is red for E-95.
+
+DECISION  RULED (Frank-Rene): a page that blesses a RAW flow of two or
+          more runs says '--deterministic --jobs=1'. '--deterministic'
+          fixes the ORDER; only '--jobs=1' fixes the SHAPE. Neither
+          alone is the cure: '--deterministic' alone read 0 of 20 red
+          on one core and was still a different page at two.
+          GRAVEYARD: the digest pype for 'fail' -- it would hide the
+          inline FAIL phrase the choice exists to show; deleting the
+          fixture's traces after accept -- it cures the order only.
+
+COST      Two face calls and the header's sentence in 'test-run.sh'. No
+          GOOD moved: 'fail' stands byte-exact, 0 of 10 red at one core
+          and at eight; 'labels' bare section now steady, the page still
+          red for E-95 and its GOOD stale (D-14/D-15), not recorded.
+          The same rule, applied beyond this page: 'services
+          test-accept.sh interactive' greps verdicts from a raw run of
+          three cases -- three outputs in three runs at eight cores,
+          steady after; the page stays red for test_run_info.
+
+D-17  THE USAGE BLOCK STANDS WHERE IT IS THE SUBJECT, ONCE     (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   A refusal prints 'hwut.run's usage block after the REFUSED
+          line, and 'test-run.sh' recorded it seven times: five in
+          'refused', once each in 'timing' and 'strategy-refused'. One
+          fact the tree states, seven copies, and every new option
+          moved three pages -- two of which test something else.
+
+DECISION  RULED (Frank-Rene): the block is recorded where it is the
+          subject -- 'refused', with its FIRST refusal. Every other
+          refusal on the page records the REFUSED line alone, through
+          'refusal()', which is 'face()' with the block cut. GRAVEYARD:
+          an eq_pattern over the block -- a pattern over what the tree
+          fully decides, and it would hide the one copy that matters.
+          A pype would serve as well; the cut is a single 'sed' and
+          needs none.
+
+COST      'refusal()' and five call sites in 'test-run.sh'. Three pages
+          re-recorded, classified first: 60 lines removed, none added,
+          every one a usage line.
+
+D-18  A CLOSING LINE DOES NOT COUNT ITSELF                      (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   D-14 counted '||n' UPON PRINT with the line's own run
+          included, so an 'END' said how many stood open INCLUDING the
+          one it was closing. The last line of a serial run read
+          '||1' while nothing stood open any more, and '||0' was
+          called impossible.
+
+DECISION  RULED (Frank-Rene): 'END' and 'DONE' show n-1, never below
+          zero. A closing line says WHAT OUTLIVES IT; 'START' still
+          counts itself, having just opened. So a serial run now falls
+          to '||0' on its last line, and the reader counting open
+          STARTs above a closing line gets exactly its number.
+          The decision is taken on the line's OWN badge, before the
+          elision to a repeat, so a closing line that lost its badge
+          to the line above is still counted as the closing line it is.
+
+COST      One tuple ('CLOSING_BADGE_TUPLE') and one subtraction. Eleven
+          nominals moved, classified first: every differing line is a
+          closing line whose count fell by exactly one. D-14's "'||0'
+          impossible" is superseded.
+
+D-19  THE TERMINAL IS ASKED FOR ITS WIDTH                       (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   'console_width' read 'COLUMNS' alone. Most shells do not
+          EXPORT it, so a report on a 200-column screen drew 78.
+
+DECISION  RULED (Frank-Rene): ask the terminal. 'COLUMNS' still wins
+          where it stands and reads as a number -- a stated width is
+          meant -- and otherwise 'shutil.get_terminal_size' asks the
+          device. Held between 40 and 120 as before: the cap is the
+          eye's, not the screen's. A DEVICE ANSWERING ZERO, or none to
+          ask, falls back to the deterministic 78.
+
+COST      A 'size_of' seam so the policy is testable without a
+          terminal ('test-plain.py width', eight cases). NOT A TTY IS
+          UNTOUCHED AT 78: every nominal is captured, so no GOOD moves
+          and the determinism law is unaffected (O-30).
+
+D-20  THE LINE IS AS WIDE AS THE TERMINAL SAYS                  (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   E-97 put the '||n' badge after the verdict column and
+          OUTSIDE the width math, so every flow line was drawn five
+          columns wider than the width the terminal was asked for.
+          MEASURED through a pty: 60 columns drew 65, 100 drew 105,
+          200 drew 125 (the 120 cap plus the badge). On a terminal of
+          exactly that width the tail wrapped.
+
+DECISION  RULED (Frank-Rene): the console width IS the width printed.
+          The badge is counted in the fill and in the padding of a
+          line without a verdict. MEASURED after: 60 -> 60, 100 ->
+          100, 200 -> 120.
+
+COST      Eleven pages re-recorded, classified first: the dotted fill
+          and the padding are five columns shorter, and nothing else
+          on any line changed. D-18 ('a closing line does not count
+          itself', '||0' on the last serial line) and D-19 (the
+          terminal is asked, 'COLUMNS' wins where it stands, held
+          between 40 and 120) were already built and stand untouched.

@@ -2,24 +2,24 @@
 --- the mixed tree ---
 DIR  time-stamping-pio-tests/TEST                                             
 ERROR hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
-SKIP  test-m.sh ....................................................... [FAIL]  ||0
-DONE  build[make  test-built.c] ....................................... [FAIL]  ||1
-SKIP  test-built.c .................................................... [FAIL]  ||0
-START test-app.sh  a                                                            ||1
-      :            b                                                            ||2
-END   :            a .................................................... [OK]  ||2
-START test-cut.sh                                                               ||2
-END   test-app.sh  b .................................................... [OK]  ||2
-      test-cut.sh ..................................................... [FAIL]  ||1
-START test-dead.sh  x                                                           ||1
-END   :             x ................................................. [FAIL]  ||1
-START test-diff.sh                                                              ||1
-END   test-diff.sh .................................................... [FAIL]  ||1
-START test-ok.sh                                                                ||1
-END   test-ok.sh ........................................................ [OK]  ||1
+SKIP  test-m.sh .................................................. [FAIL]  ||0
+DONE  build[make  test-built.c] .................................. [FAIL]  ||0
+SKIP  test-built.c ............................................... [FAIL]  ||0
+START test-app.sh  a                                                       ||1
+      :            b                                                       ||2
+END   :            a ............................................... [OK]  ||1
+START test-cut.sh                                                          ||2
+END   test-app.sh  b ............................................... [OK]  ||1
+      test-cut.sh ................................................ [FAIL]  ||0
+START test-dead.sh  x                                                      ||1
+END   :             x ............................................ [FAIL]  ||0
+START test-diff.sh                                                         ||1
+END   test-diff.sh ............................................... [FAIL]  ||0
+START test-ok.sh                                                           ||1
+END   test-ok.sh ................................................... [OK]  ||0
 DIR  compare/TEST                                                             
-START test-region.py  nested                                                    ||1
-END   :               nested ............................................ [OK]  ||1
+START test-region.py  nested                                               ||1
+END   :               nested ....................................... [OK]  ||0
 
 ==============================================================================
 DIRECTORIES                                             4 ok, 6 fail, 00:00:12

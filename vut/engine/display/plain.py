@@ -40,6 +40,8 @@ receiver and summary; NOTHING imports display back. The queue is the
 only door.
 ______________________________________________________________________________
 """
+import os
+
 from datetime import datetime
 from enum     import Enum
 
@@ -185,6 +187,9 @@ def _tag_and_count(tag, counts, good, ink):
 #  the two and a reader never hunts for a START that was never
 #  written.
 FLOW_BADGE_TUPLE = ("START", "DONE ", "END  ", "SKIP ")
+#  THE BADGES THAT CLOSE A RUN: their '||n' excludes the line's own
+#  run, so it says what stands open after it (D-18).
+CLOSING_BADGE_TUPLE = ("DONE ", "END  ")
 BADGE_REPEAT     = "     "
 
 #  'DONE ' is now the per-RUN completion badge (was 'END  '). The
@@ -282,6 +287,7 @@ class CPlainFlow(CRunReportReceiver):
         self.frame_bad_db = {}       # directory -> [role, ...]
         self.fault_list  = []        # (directory, rendered fault line),
         self.refused_db  = {}        # directory -> [(node, reason), ...]
+        self.silent_db   = {}        # directory -> [node, ...]
         self.meta_n      = 0         # cases the standard label hid
         self.skip_n      = 0         # cases the wish did not want
                                      # (E-41): not run, said at the end
@@ -416,8 +422,9 @@ class CPlainFlow(CRunReportReceiver):
         """
         RETURN: None. One flow line written: prefix, badge, body,
                 then -- where a right part stands -- a dotted fill
-                aiming at 'width', the right part, and 'tail' beyond
-                the width math.
+                aiming at 'width', the right part, and 'tail' WITHIN
+                that width (D-20): the line the terminal is asked for
+                is the line that is drawn.
 
         A BADGE THAT REPEATS BECOMES AN ARROW (E-33). The first of a
         run of 'START's says 'START'; those under it say '---->', so
@@ -425,6 +432,7 @@ class CPlainFlow(CRunReportReceiver):
         begins. Only the flow badges elide -- 'DIR', 'TREE' and the
         rest announce something and are never a run.
         """
+        own_badge = badge
         if badge in FLOW_BADGE_TUPLE:
             if badge == self.last_badge:
                 badge, badge_ink = BADGE_REPEAT, self.ink.dim(BADGE_REPEAT)
@@ -433,10 +441,11 @@ class CPlainFlow(CRunReportReceiver):
         else:
             self.last_badge = None
         prefix, prefix_ink = self._prefix(when)
-        #  THE PARALLELISM RIDES ALONG (E-97): after the verdict column,
-        #  outside the width math, on every flow line.
+        #  THE PARALLELISM RIDES ALONG (E-97): after the verdict column
+        #  on every flow line -- and INSIDE the width (D-20), so a line
+        #  drawn on an 80-column terminal is 80 columns, not 85.
         if badge in FLOW_BADGE_TUPLE or badge == BADGE_REPEAT:
-            tail += self._count_tail()
+            tail += self._count_tail(own_badge)
         if not right:
             #  THE COUNT STANDS IN ONE COLUMN (E-97): a line with a
             #  verdict ends at 'width', so a line without one is padded
@@ -445,13 +454,13 @@ class CPlainFlow(CRunReportReceiver):
             head, head_ink = "%s%s %s" % (prefix, badge, body), \
                              "%s%s %s" % (prefix_ink, badge_ink, body_ink)
             if tail:
-                pad   = " " * max(self.width - len(head), 0)
+                pad   = " " * max(self.width - len(head) - len(tail), 0)
                 head += pad
                 head_ink += pad
             self._flow(head + tail, head_ink + tail)
             return
         fill = self.width - len(prefix) - len(badge) - 1 - len(body) \
-               - len(right) - 2
+               - len(right) - 2 - len(tail)
         dots = "." * max(fill, 1)
         self._flow("%s%s %s %s %s%s"
                    % (prefix, badge, body, dots, right, tail),
@@ -579,7 +588,7 @@ class CPlainFlow(CRunReportReceiver):
         self.announced_set.add((directory, node))
         self._line(when, "START", self.ink.start("START"), body, body_ink)
 
-    def _count_tail(self):
+    def _count_tail(self, badge="START"):
         """
         RETURN: str, '  ||3' -- HOW MANY ANNOUNCEMENTS STAND OPEN ON
                 THIS SCREEN at the moment this line is written, THIS
@@ -611,8 +620,18 @@ class CPlainFlow(CRunReportReceiver):
         counting announcements would say '1' on every line. The
         process table is then the only witness, and it stands in the
         same column at the end of the same line (D-15).
+
+        A CLOSING LINE DOES NOT COUNT ITSELF (ruled, D-18). 'END' and
+        'DONE' say what stands open AFTER this run closed, so the
+        number the reader sees beside a closing line is the work that
+        outlives it: '||0' on the last line of a serial run, and never
+        below zero. START still counts itself -- it has just opened.
+        The elision to ':' is decided after this, so a closed line
+        that lost its badge to the line above is still counted as the
+        closing line it is.
         """
         count = self.parallel_n if self.brief_f else self.screen_n
+        if badge in CLOSING_BADGE_TUPLE: count = max(count - 1, 0)
         return "  ||%d" % count
 
     def on_tick(self, when):
@@ -795,6 +814,12 @@ class CPlainFlow(CRunReportReceiver):
         closing REFUSED block, which stands in every tier but SILENT
         -- a refusal is never marginalia."""
         self.refused_db.setdefault(directory, []).append((node, text))
+
+    def on_silent(self, when, directory, node):
+        """RETURN: None. A candidate no carrier speaks for: held for the
+        closing SILENT note (X-SILENT). Not a refusal, not a fault --
+        one note, at the end, in every tier but SILENT."""
+        self.silent_db.setdefault(directory, []).append(node)
 
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. Accounted for the roll-call; a line in the
@@ -1088,6 +1113,7 @@ class CPlainFlow(CRunReportReceiver):
         if not self.failure_summary_f: fail_dir_list = []
         if not fail_dir_list:
             self._write_refused(write, w)
+            self._write_silent(write, w)
             write("=" * w)
             self._write_final_bar(write, w)
             return
@@ -1157,6 +1183,7 @@ class CPlainFlow(CRunReportReceiver):
                 if cause is not None: line += "  <- %s" % cause
                 write(line)
         self._write_refused(write, w)
+        self._write_silent(write, w)
         write("=" * w)
         self._write_final_bar(write, w)
 
@@ -1271,6 +1298,29 @@ class CPlainFlow(CRunReportReceiver):
             return "%.2f" % (t1 - t0).total_seconds()
         except (TypeError, ValueError):
             return "-"
+
+    def _write_silent(self, write, w):
+        """
+        RETURN: None. ONE NOTE at the end naming every file no carrier
+                speaks for, each by its path RELATIVE TO THE DIRECTORY
+                THE RUN WAS CALLED IN, and the two lines that settle
+                them: ignore them, or name one under 'apps'. Nothing
+                where nothing was silent.
+        """
+        if not self.silent_db: return
+        path_list = sorted(
+            os.path.relpath(os.path.join(directory, node))
+            for directory, node_list in self.silent_db.items()
+            for node in node_list)
+        write("")
+        write("NOTE  %d file(s) carry no 'hwut { }' and stand under no "
+              "'apps':" % len(path_list))
+        for path in path_list:
+            write("          %s" % path)
+        write("      helpers?  hwut.config.ignore %s"
+              % " ".join(path_list))
+        write("      a test?   name it under 'apps' in its "
+              "directory's hwut.conf")
 
     def _write_refused(self, write, w):
         """

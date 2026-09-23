@@ -1,10 +1,10 @@
 STATUS: 1
 STDOUT {
     DIR  suite/TEST                                                               
-    START test-diff.sh                                                              ||1
-    END   test-diff.sh .................................................... [FAIL]  ||1
-    START test-ok.sh                                                                ||1
-    END   test-ok.sh ........................................................ [OK]  ||1
+    START test-diff.sh                                                         ||1
+    END   test-diff.sh ............................................... [FAIL]  ||0
+    START test-ok.sh                                                           ||1
+    END   test-ok.sh ................................................... [OK]  ||0
     
     ==============================================================================
     DIRECTORIES                                             1 ok, 1 fail, hh:mm:ss

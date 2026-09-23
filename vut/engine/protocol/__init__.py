@@ -18,7 +18,7 @@ so: "any consumer may use it: our exit-status logic, a TUI, a customer
 application".
 
 WHY IT MOVED. Measured ('adm/import_graph.py --shared'), 'fold' is
-read by 'engine/display', 'services/run' and 'services/stability' --
+read by 'engine/display', 'services/run' and 'services/lib/run/stability' --
 the lowest common ancestor of its readers is THE TREE ROOT. Held
 inside 'orchestrator/run', it made the one SIDEWAYS arrow in the whole
 tree: 'engine/display -> engine/orchestrator', a consumer reaching

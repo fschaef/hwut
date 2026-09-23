@@ -15,7 +15,7 @@ STDOUT {
     hwut.labels.add <label> [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
                     [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [--label <expr>] [--language=<name>]... [--faster-than=<sec>]
-                    [--directory=<path>]
+                    [-l|--label <expr>] [--language=<name>]...
+                    [--faster-than=<sec>] [--directory=<path>]
 }
 <hwut-end>

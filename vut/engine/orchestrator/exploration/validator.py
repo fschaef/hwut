@@ -108,10 +108,12 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
                 _unknown_key_text(entry.key)))
 
     if title is None:
-        fault_list.append(Fault(
-            E_FaultKind.VOCABULARY, file, hwut_node.position,
-            "'title' is required and absent"))
-        return None, fault_list
+        #  A LACKING TITLE IS NOT A REFUSAL (ruled, X-TITLE). The file
+        #  said it is a test application by carrying the trigger; a
+        #  missing title is a thing to WRITE, not a reason to drop the
+        #  application. The stand-in names the source and says plainly
+        #  what is unspecified, so a report reads as a reminder.
+        title = "%s <title unspecified>" % (source_file or file)
 
     root = TestParameters(**parameters)
     if not choices_f:

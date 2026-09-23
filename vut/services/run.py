@@ -15,7 +15,7 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --timing                    keep the RUN'S CADENCE beside each
                                 candidate: the delta time per line, in
                                 seconds. An analyst aid, and what
-                                'hwut.stability' reads. Refused beside
+                                'hwut.run.stability' reads. Refused beside
                                 '--coverage': one measurement at a time
     --coverage                  the DEMAND (coverage D-19): every test
                                 is built and run for coverage, every
@@ -32,10 +32,12 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --strategy=<words>          a comma list answering two questions;
                                 either order, each word long or short.
                                 WHEN A DIRECTORY STARTS: linear|l (one
-                                after another, in walk order; the
-                                default), successor|s (the next starts
-                                while the current runs), parallel|p
-                                (all at once).
+                                after another, in walk order),
+                                successor|s (the next starts while the
+                                current runs; the default), parallel|p
+                                (all at once), bundled|b (a further one
+                                only where the open ones cannot fill
+                                the budget).
                                 WHICH ADMISSIBLE NODE STARTS:
                                 longest-first|lf (the longest this
                                 machine last measured; the default),
@@ -156,10 +158,14 @@ EXECUTION
 
                         WHEN A DIRECTORY'S RUN STARTS
                             linear     l   one after another, in walk
-                                           order (the default)
+                                           order
                             successor  s   the next directory starts
                                            while the current one runs
+                                           (the default, O-29)
                             parallel   p   all at once
+                            bundled    b   a further directory only
+                                           where the open ones cannot
+                                           fill the budget (O-31)
 
                         WHICH ADMISSIBLE NODE STARTS, where more than
                         one may
@@ -259,6 +265,32 @@ class _NoFlow:
 
     def dispatch(self, item): pass
     def tail(self):           pass
+
+
+def _label_hint(directory, wish, word_list):
+    """
+    RETURN: str,  the line to say where a run selected NOTHING and its
+                  first bare word names a LABEL that stands -- what
+                  the person probably meant, and how to say it.
+            None, otherwise.
+
+    A LABEL IS ASKED FOR BY NAME, never resolved out of a bare word
+    (E-112): the hint SAYS so, it does not act. It costs the label
+    file alone -- no walk, and nothing is re-run.
+    """
+    if not word_list or wish.label_spec is not None:
+        return None
+    word = word_list[0]
+    if "/" in word or any(c in word for c in ("*", "?", "[")):
+        return None
+    try:
+        view = view_at(directory)
+    except (RootConfMissing, LabelFileError):
+        return None
+    if word not in view.defined:
+        return None
+    return ("NOTE: no test application answers '%s', but a LABEL of "
+            "that name stands -- 'hwut.run -l %s'" % (word, word))
 
 
 def _abort(write, message: str) -> E_ExitCode:
@@ -409,14 +441,14 @@ def main(argv=None, write=None, write_error=None, demand=None,
     enforces. 'write_error' likewise, for the SILENT tier's faults;
     stderr where none is given.
 
-    'despite_stain_f' runs a STAINED choice anyway -- 'hwut.stability'
+    'despite_stain_f' runs a STAINED choice anyway -- 'hwut.run.stability'
     proving what it disqualified. No command line reaches it: a stain
     is answered by proof or by removal, never by asking again.
 
     'event_sink' takes each report event as it arrives, beside the
     rendering. THE STREAM IS THE RUN'S TRUTH (O-4) and whoever wants
     the whole folds it; this is the seam a FACE ABOVE THIS ONE folds
-    at -- 'hwut.stability' does. None: nobody is listening.
+    at -- 'hwut.run.stability' does. None: nobody is listening.
     """
     captured_f = write is not None
     if write is None:
@@ -538,6 +570,10 @@ def _main(argv, write, write_error, captured_f, demand=None,
             write(error.said)
             return error.code
         flow.tail()
+
+    if tally.empty_f:
+        hint = _label_hint(directory, wish, word_list)
+        if hint is not None: write(hint)
 
     return exit_code_of(tally)
 

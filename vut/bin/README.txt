@@ -20,7 +20,7 @@ by PATH and by path alike.
                         hwut.config.show     hwut.plan     hwut.run
                         hwut.accept   hwut.target   hwut.cov
                         hwut.diff     hwut.report.details
-                        hwut.stability  hwut.wishlist  hwut.report
+                        hwut.run.stability  hwut.wishlist  hwut.report
                         hwut.remove
                         hwut.rename   hwut.move
                         hwut.sanitize hwut.pype

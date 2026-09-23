@@ -4,7 +4,7 @@ STDOUT {
     usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
                          [--glob <target>]... [--exclude <target>]...
                          [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [--label <expr>]
+                         [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
                          [--orphans] [--books] [--transient] [--directory=<path>]
@@ -15,7 +15,7 @@ STDOUT {
     usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
                          [--glob <target>]... [--exclude <target>]...
                          [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [--label <expr>]
+                         [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
                          [--orphans] [--books] [--transient] [--directory=<path>]
@@ -26,7 +26,7 @@ STDOUT {
     usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
                          [--glob <target>]... [--exclude <target>]...
                          [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [--label <expr>]
+                         [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
                          [--orphans] [--books] [--transient] [--directory=<path>]

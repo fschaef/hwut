@@ -244,12 +244,13 @@ def test_procsitter():
 
 
 def test_memo():
-    """RETURN: None. X-INTERVIEW: an interview is a program run and its
-    answer is MEMOISED beside the tests by the file's mtime and size --
-    the second walk asks nothing; a changed file is asked again; a
-    file that is NOT executable is never asked (a helper, a log, a
-    table cannot answer). Measured before this: 107 interviews per walk
-    of the tree, none answered, eleven seconds of silence."""
+    """RETURN: None. THE INTERVIEW IS NO CARRIER (X-SILENT): a plain
+    walk asks NOTHING, whatever a file would have answered, and a file
+    no carrier speaks for is SILENT -- named once by the run, no
+    application and no fault. The interview lives on as the reader an
+    injected runner drives ('hwut.renovate'), and there X-INTERVIEW's
+    memo still holds: the second walk asks nothing, a changed file is
+    asked again."""
     import stat, time
     from vut.engine.orchestrator.exploration import explorer, finder
     from vut.engine.orchestrator.exploration import hwut_info_interview
@@ -274,10 +275,16 @@ def test_memo():
             asked.append(os.path.basename(path)); return real(path, caps)
         hwut_info_interview._procsitter_runner = counting
         try:
+            asked.clear()
+            result = explorer.explore(directory)
+            print("  a plain walk: asked %s" % sorted(asked))
+            print("  ... and the files are SILENT: %s"
+                  % list(result.app_set.silent_tuple))
             for round_n in (1, 2):
                 asked.clear()
-                explorer.explore(directory)
-                print("  walk %i: asked %s" % (round_n, sorted(asked)))
+                explorer.explore(directory, interview_runner=counting)
+                print("  walk %i with a runner: asked %s"
+                      % (round_n, sorted(asked)))
             print("  memo file stands under TMP/: %s"
                   % os.path.isfile(hwut_info_interview.memo_path(directory)))
             print("  ... and not beside the tests: %s"
@@ -285,7 +292,8 @@ def test_memo():
                          directory, hwut_info_interview.MEMO_FILE_NAME))))
             time.sleep(1.1)
             with open(app, "a") as handle: handle.write("# changed\n")
-            asked.clear(); explorer.explore(directory)
+            asked.clear()
+            explorer.explore(directory, interview_runner=counting)
             print("  after a change to old-app.py: asked %s" % sorted(asked))
             print("  TMP/ is never walked into: %s"
                   % ("TMP" in getattr(finder, "REFUSED_NAME_GLOB_TUPLE", ())

@@ -24,6 +24,8 @@ knows its own sink ('write' given, or 'print'); this module knows what
 a terminal is worth.
 ______________________________________________________________________________
 """
+import shutil
+
 from dataclasses import dataclass
 
 from .plain import CPlainFlow, E_Tier
@@ -201,22 +203,42 @@ def parse_rendering(argument_list):
            rest_list
 
 
-def console_width(environ, tty_f):
+def console_width(environ, tty_f, size_of=None):
     """
-    RETURN: int, the width the dotted fill aims at: the terminal's
-            COLUMNS where one listens and states it, held between
-            MINIMUM_WIDTH and MAXIMUM_WIDTH; DEFAULT_WIDTH otherwise
-            -- a piped or captured report is 78 wide,
-            deterministically.
+    RETURN: int, the width the dotted fill aims at: THE TERMINAL'S OWN
+            WIDTH where one listens, held between MINIMUM_WIDTH and
+            MAXIMUM_WIDTH; DEFAULT_WIDTH otherwise -- a piped or
+            captured report is 78 wide, deterministically (O-30).
+
+    THE TERMINAL IS ASKED, NOT ONLY THE ENVIRONMENT (ruled, D-19).
+    'COLUMNS' is a shell variable and most shells do not export it, so
+    a report that trusted it alone drew 78 columns on a 200-column
+    screen. 'COLUMNS' still wins where it stands and reads as a
+    number: the user who states a width means it. Otherwise the
+    terminal answers through 'size_of' -- 'shutil.get_terminal_size'
+    by default, which asks the device.
 
     THE CAP IS NOT COSMETIC: a line drawn to the full width of a very
     wide terminal is a line the eye must travel, and the dots between
     the name and the verdict stop joining the two.
     """
-    if tty_f and environ.get("COLUMNS", "").isdigit():
-        return min(max(int(environ["COLUMNS"]), MINIMUM_WIDTH),
-                   MAXIMUM_WIDTH)
-    return DEFAULT_WIDTH
+    if not tty_f: return DEFAULT_WIDTH
+    if environ.get("COLUMNS", "").isdigit():
+        return _held(int(environ["COLUMNS"]))
+    try:
+        column_n = (size_of or shutil.get_terminal_size)().columns
+    except (OSError, ValueError):
+        return DEFAULT_WIDTH
+    #  A DEVICE THAT ANSWERS NOTHING answers zero; the fallback is the
+    #  deterministic width, not a line of 40 dots.
+    if column_n < 1: return DEFAULT_WIDTH
+    return _held(column_n)
+
+
+def _held(column_n):
+    """RETURN: int, 'column_n' held between MINIMUM_WIDTH and
+    MAXIMUM_WIDTH."""
+    return min(max(column_n, MINIMUM_WIDTH), MAXIMUM_WIDTH)
 
 
 def console_view(rendering_wish, write, write_error, environ, tty_f,

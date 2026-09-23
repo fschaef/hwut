@@ -102,6 +102,7 @@ def explore(directory, interview_runner=None, inherited=None):
 
     #  THE WALK, then the headers.
     app_db = {}
+    silent_list = []
     candidate_list, refused_list = finder.candidate_list(
                                        directory, directory_spec.ignore)
     for name in candidate_list:
@@ -112,19 +113,22 @@ def explore(directory, interview_runner=None, inherited=None):
         fault_list.extend(file_fault_list)
         if file_fault_list:              continue      # refused, not guessed
         if spec is None:
-            #  NEITHER CARRIER SPEAKS. The file may be an hwut 1.0 test
-            #  application, which predates the trigger: ask it (R-44) --
-            #  but ONLY A PROGRAM CAN ANSWER (X-INTERVIEW): a file that is
-            #  not executable is a helper, a log, a table, and running it
-            #  was MEASURED to cost eleven seconds of silence per walk of
-            #  this tree, 107 interviews, none answered.
+            #  NEITHER CARRIER SPEAKS, so this is NO TEST APPLICATION
+            #  (X-SILENT). A file says it is one by carrying 'hwut { }',
+            #  or its directory says so under 'apps'; nothing is guessed
+            #  and nothing is asked. It is not a fault -- a helper, a log
+            #  and a table are all ordinary -- but the run NAMES the
+            #  silent files once at its end, so a test that stopped being
+            #  seen does not vanish without a word.
             if name in conf_app_db:      continue
-            if interview_runner is None \
-               and not os.access(os.path.join(directory, name), os.X_OK):
-                continue                 # an injected runner asks anything
-            spec = hwut_info_interview.interview(directory, name,
-                                                 runner=interview_runner)
-            if spec is None:             continue
+            if interview_runner is not None:
+                #  An injected runner still asks: the interview lives on
+                #  as 'hwut.renovate's reader, not as a carrier.
+                spec = hwut_info_interview.interview(directory, name,
+                                                     runner=interview_runner)
+            if spec is None:
+                silent_list.append(name)
+                continue
         app = _resolve(spec, directory_spec)
         pair_fault_list = _execute_interactive_refused(app)
         if pair_fault_list:
@@ -167,7 +171,8 @@ def explore(directory, interview_runner=None, inherited=None):
         app_set    = CTestAppSet(directory      = directory,
                                  app_db         = app_db,
                                  directory_spec = directory_spec,
-                                 misdep_set     = misdep_set),
+                                 misdep_set     = misdep_set,
+                                 silent_tuple   = tuple(sorted(silent_list))),
         fault_list    = tuple(fault_list),
         refused_tuple = tuple(refused_list))
 

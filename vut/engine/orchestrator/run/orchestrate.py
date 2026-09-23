@@ -94,6 +94,20 @@ class CDirectoryWork:
         self.entry              = entry
         self.dispatcher_factory = dispatcher_factory
         self.selection_order    = selection_order
+        self._scheduler         = None      # stands while 'run' runs
+
+    def ready_n(self):
+        """
+        RETURN: int,  how many nodes this unit could start NOW (the
+                      Scheduler's 'ready_n', intend 20).
+                None, where the Scheduler does not stand -- before the
+                      unit built it, or after the unit ended. A caller
+                      deciding whether the open units can fill the
+                      budget treats None as 'unknown, assume it can':
+                      a unit started a moment ago has said nothing yet.
+        """
+        if self._scheduler is None: return None
+        return self._scheduler.ready_n()
 
     @property
     def directory(self):
@@ -129,6 +143,13 @@ class CDirectoryWork:
         #  and none is counted.
         for name, reason in entry.refused_tuple:
             emit("refused", directory=directory, node=name, text=reason)
+        #  SILENT, NOT REFUSED (X-SILENT): a candidate carrying no
+        #  'hwut { }' and named under no 'apps'. Ordinary -- a helper,
+        #  a log -- so it is no fault and no refusal; the display says
+        #  so ONCE at the end, lest a test that stopped being seen
+        #  vanish without a word.
+        for name in entry.app_set.silent_tuple:
+            emit("silent", directory=directory, node=name)
         broken_tuple  = _broken_app_tuple(entry)
         vanished_tuple = _vanished_tuple(self.root, entry)
         emit("dir-begun", directory=directory,
@@ -207,7 +228,11 @@ class CDirectoryWork:
                                selection_order = self.selection_order,
                                duration_db     = duration_db_of(
                                                      directory_path))
-        report = await scheduler.run(entry.plan)
+        self._scheduler = scheduler
+        try:
+            report = await scheduler.run(entry.plan)
+        finally:
+            self._scheduler = None
         close  = getattr(dispatcher, "close", None)
         if close is not None: await close()
         #  BROUGHT TO ATTENTION (E-41): a test that ran on a nominal's
@@ -280,6 +305,7 @@ class CTreeScheduler:
                                     self.selection_order)
                      for entry in tree_plan]
         unit_list = self._ordered(unit_list, tree_plan.root)
+        self.strategy.bind(budget, unit_list)
         done_list = await self.strategy.run(
                         [(lambda unit=unit:
                               self._guarded(unit, emit, budget))

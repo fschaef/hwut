@@ -329,6 +329,10 @@ class CTestAppSet:
     app_db:         dict                  # source_file -> CTestApp
     directory_spec: DirectorySpec
     misdep_set:     frozenset = frozenset()   # of (source_file, choice)
+    #  THE SILENT ONES (X-SILENT): candidates that carry no 'hwut { }'
+    #  and stand under no 'apps' -- no fault, no application, and not
+    #  ignored either, so the run says so ONCE at its end.
+    silent_tuple:   tuple     = ()            # of source_file, sorted
 
     def __iter__(self):
         """YIELD: [0] CTestApp  one application, files in sorted order."""

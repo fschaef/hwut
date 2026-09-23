@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "Tier 1, the plain console report, over scripted streams"
 #     choices    = ["allgreen", "badge", "empty", "fault", "mixed",
-#                   "tiers", "unknown", "words"]
+#                   "tiers", "unknown", "width", "words"]
 #     interactive = true
 # }
 #
@@ -15,7 +15,7 @@ PURPOSE: THE TIER-1 RENDERER over SCRIPTED event streams -- lists of
          'when' instants are SCRIPTED ISO instants, so the clock
          column is byte-exact and no wall clock enters a GOOD.
 
-CHOICES: allgreen, mixed, words, fault, empty, unknown, tiers;
+CHOICES: allgreen, mixed, words, fault, empty, unknown, tiers, width;
 
 DESCRIPTION:
 
@@ -329,15 +329,43 @@ def test_tiers():
     show(list(stream), tier=E_Tier.SILENT)
 
 
+def test_width():
+    """RETURN: None. THE WIDTH THE FILL AIMS AT (D-19). A captured or
+               piped report is 78 wide whatever the screen says, which
+               is what a nominal needs (O-30). Where a terminal
+               listens, its OWN width is asked -- 'COLUMNS' first,
+               where the user states one, then the device -- held
+               between 40 and 120: a line drawn across 200 columns
+               stops joining the name to the verdict.
+    """
+    import os
+    from vut.engine.display.console import console_width
+    size_of = lambda n: (lambda: os.terminal_size((n, 50)))
+    case_list = [("piped, screen says 200",  {"COLUMNS": "200"}, False, size_of(200)),
+                 ("terminal, COLUMNS 100",   {"COLUMNS": "100"}, True,  size_of(200)),
+                 ("terminal, COLUMNS 9999",  {"COLUMNS": "9999"}, True, size_of(80)),
+                 ("terminal, COLUMNS 10",    {"COLUMNS": "10"},  True,  size_of(80)),
+                 ("terminal asked, 90",      {},                 True,  size_of(90)),
+                 ("terminal asked, 200",     {},                 True,  size_of(200)),
+                 ("terminal answers 0",      {},                 True,  size_of(0)),
+                 ("no device to ask",        {},                 True,
+                  lambda: (_ for _ in ()).throw(OSError()))]
+    for label, environ, tty_f, size in case_list:
+        print("    %-24s %3d" % (label, console_width(environ, tty_f, size)))
+
+
 def test_badge():
     """RETURN: None. The parallelism rides on EVERY flow line, after
                the verdict column, as '||n' -- and the badge says which
                MODE the reader is in (D-15).
 
                NORMAL: 'START' at every launch, 'END  ' at every
-               termination, '||n' counted UPON PRINT, this line's own
-               run included. The ladder rises and falls, and a reader
-               can count the open STARTs above and get the number.
+               termination, '||n' counted UPON PRINT. A START counts
+               ITSELF -- it has just opened; a closing line does NOT
+               (D-18), so 'END' says what stands open after this run
+               closed, down to '||0' on the last line. The ladder
+               rises and falls, and a reader can count the open
+               STARTs above and get the number.
 
                --brief: no launch announced, one 'DONE ' per run, and
                '||n' from the LAUNCHER -- there is no screen count to
@@ -382,4 +410,5 @@ if __name__ == "__main__":
         "unknown":  test_unknown,
         "tiers":    test_tiers,
         "badge":    test_badge,
+        "width":    test_width,
     }).run()

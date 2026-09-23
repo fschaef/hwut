@@ -141,7 +141,7 @@ The margin condition is CHECKABLE and nothing checks it:
 
     radius( d(GOOD) )  <=  t  <  distance( pole, d(BAD) )
 
-'hwut.stability --repeat' already measures the spread of good runs,
+'hwut.run.stability --repeat' already measures the spread of good runs,
 which is radius. A suite choice comparing that spread against the
 standing tolerance would be the check 1.1 says is missing -- and it
 would catch the real failure, which is a nominal accepted near the

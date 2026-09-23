@@ -2,15 +2,15 @@
 STATUS: 1
 STDOUT {
     DIR  alpha/TEST                                                               
-    START test-one.sh                                                               ||1
-    END   test-one.sh ....................................................... [OK]  ||1
-    START test-two.sh                                                               ||1
-    END   test-two.sh ....................................................... [OK]  ||1
+    START test-one.sh                                                          ||1
+    END   test-one.sh .................................................. [OK]  ||0
+    START test-two.sh                                                          ||1
+    END   test-two.sh .................................................. [OK]  ||0
     DIR  beta/TEST                                                                
-    START test-one.sh                                                               ||1
-    END   test-one.sh ....................................................... [OK]  ||1
-    START test-two.sh                                                               ||1
-    END   test-two.sh ..................................................... [FAIL]  ||1
+    START test-one.sh                                                          ||1
+    END   test-one.sh .................................................. [OK]  ||0
+    START test-two.sh                                                          ||1
+    END   test-two.sh ................................................ [FAIL]  ||0
     DIR  gamma/TEST                                                               
     FRAME gamma/TEST:on_entry ........................... the frame failed  [FAIL]
     
@@ -49,7 +49,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.08 [sec]
+    RESULTS: 3 ok, 1 fail, 0.09 [sec]
     |                           ok                            |       fail       |
 }
 == --directory-by-directory, the long spelling ==
@@ -70,7 +70,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.09 [sec]
+    RESULTS: 3 ok, 1 fail, 0.10 [sec]
     |                           ok                            |       fail       |
 }
 <hwut-end>

@@ -203,7 +203,7 @@ o-2  GROUPS TO LABELS -- 'group_ids.dat' and B-3.
      a bigger change than this one: a third id scope, a third file, and
      B-3's whole decision. B-3's cited consumers -- a report, a flaky
      hunt, the compare engine's tolerance grouping -- are to be omitted
-     or rewritten; MEASURED, none of the three exists ('hwut.stability'
+     or rewritten; MEASURED, none of the three exists ('hwut.run.stability'
      exists but needs no identity, and nothing in the tree groups runs
      by tolerance). Its own plan, after this one.
 

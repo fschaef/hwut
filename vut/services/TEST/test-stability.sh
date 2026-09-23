@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The hwut.stability face: what did not stay the same."
+#     title      = "The hwut.run.stability face: what did not stay the same."
 #     choices    = ["bytes", "cadence", "length", "refused", "stain",
 #                   "steady", "verbose", "verdict"]
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
@@ -10,7 +10,7 @@
 #
 # ---------------------------------------------------------------------------
 #
-# THE 'hwut.stability' FACE -- the same wish run several times, and what
+# THE 'hwut.run.stability' FACE -- the same wish run several times, and what
 # did not stay the same.
 #
 # THE FIXTURES ARE DELIBERATELY UNSTEADY, which is the difficulty: a
@@ -40,12 +40,12 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-FACE="python3 -m vut.services.stability"
+FACE="python3 -m vut.services.lib.run.stability"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.stability face: what did not stay the same.;"
+        echo "The hwut.run.stability face: what did not stay the same.;"
         echo "CHOICES: steady, verdict, bytes, length, cadence, verbose, stain, refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
@@ -141,9 +141,12 @@ verdict)
 bytes)
     #  TRAILING WHITESPACE, a differing amount each run. Whitespace is
     #  tolerant by default, so the verdict holds while the recorded
-    #  bytes do not -- the tolerance absorbing it is the point. The
-    #  amount follows a counter, so the SEQUENCE is the same on every
-    #  host and only the finding is blessed.
+    #  bytes do not. THE DEFAULT SAYS NOTHING ABOUT IT (E-113): the
+    #  tolerances have declared the repeats equivalent, and equivalent
+    #  is what correct means. '--byte-pedantic' is how a reader asks
+    #  for the bytes anyway; both are shown here. The amount follows a
+    #  counter, so the SEQUENCE is the same on every host and only the
+    #  finding is blessed.
     conf
     app "Drift" \
         'n=0' \
@@ -151,7 +154,10 @@ bytes)
         'echo $((n + 1)) > count.txt' \
         'printf "steady line%*s\\n" $n ""'
     good "steady line"
+    echo "--- the default: the tolerance settles it, nothing is said"
     face --directory=tree --repeat=3
+    echo "--- asked for by name"
+    face --directory=tree --repeat=3 --byte-pedantic
     ;;
 
 length)
@@ -165,7 +171,7 @@ length)
         'echo "steady line"' \
         'for i in $(seq 0 $n); do echo "noise $i"; done'
     good "steady line"
-    face --directory=tree --repeat=3 --cadence
+    face --directory=tree --repeat=3 --cadence --byte-pedantic
     ;;
 
 cadence)
@@ -215,7 +221,7 @@ stain)
         'else echo "other line"; fi'
     good "steady line"
 
-    echo "--- 1. hwut.stability convicts over 4 repeats"
+    echo "--- 1. hwut.run.stability convicts over 4 repeats"
     face --directory=tree --repeat=4
 
     echo "--- 2. hwut.run does not run it: unstable, the directory fails"

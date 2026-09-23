@@ -1149,3 +1149,66 @@ COST      'strategy.py': NAME_SORTED / NAME_ASC, UNMEASURED_LAST,
           the case before recording, so the nominal is right -- but
           the order of operations was not, and it is the exact lapse
           the bin's section 8 already names.
+
+O-31  'BUNDLED' IS BUILT; THE DEFAULT HAS NOT MOVED             (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   O-28 ruled 'we bundle directories'; O-29 measured that no
+          NUMBER of open directories serves every budget (two at 8
+          jobs, three at 16, four for the last second) and left
+          SUCCESSOR as interim. The member that reads the rule off the
+          tree did not exist.
+
+DECISION  RULED (Frank-Rene): BUNDLED opens a further directory ONLY
+          WHERE THE OPEN ONES CANNOT FILL THE BUDGET -- with 'b' free
+          slots and 'r' nodes the open units could start now, exactly
+          when r < b. Built (intend 20) as four seams: 'Scheduler.
+          ready_n' asks the plan state, never cached, an UPPER BOUND
+          (an exclusion set withdraws admission on a start) so the
+          rule errs towards FEWER open directories; 'CDirectoryWork.
+          ready_n' answers it, or None where its Scheduler does not
+          stand; 'CStrategy.bind' hands a strategy the budget and the
+          units; 'CStrategy.run' waits on 'budget.changed()' beside
+          the unit tasks where a strategy says so. None IS READ AS
+          'ASSUME IT FILLS': a unit started a moment ago has said
+          nothing, and reading its silence as zero would open the
+          whole tree in one pass. '--strategy=bundled', short 'b'.
+          THE DEFAULT STAYS SUCCESSOR: moving it moves every
+          flow-subject nominal and is a ruling of its own.
+
+COST      A take wakes nothing, so a unit that reveals a SMALL ready
+          count is read at the next slot given back -- an underfill of
+          one node's duration at most, never an over-open (measured on
+          the strategy page: C opens when B's slot returns). On a
+          one-core sandbox the budget is one and BUNDLED is LINEAR;
+          its worth is measurable only where cores are. Three pages
+          moved by the member's name; 'bundled' recorded anew. The
+          help had called LINEAR the default since O-29 moved it --
+          corrected in the same pass.
+
+O-32  AN APPLICATION'S CHOICES GO TOGETHER                      (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   Longest-first weighed NODES alone, so an application's
+          choices were scattered round other applications' -- 'a.py
+          two' between 'c.py' and 'b.py', 'a.py one' far below. The
+          display's ':' elision fires only where directory and file
+          repeat the line above, and its choice column stopped meaning
+          anything.
+
+DECISION  RULED (Frank-Rene): SLOWEST APPLICATION FIRST, weighed as
+          the SUM of its choices, and its choices TOGETHER; inside it,
+          the slowest choice first. Built as three criteria in front
+          of the node ones (APP_UNMEASURED_LAST, APP_DURATION_DESC or
+          _ASC, APP_TOGETHER), so 'E_Criterion' and '_component_of'
+          grew and the scheduler did not. 'applications_of' beside
+          'sort_key_of' answers each node's application as (weight,
+          first plan index); an application none of whose choices is
+          measured goes LAST, as an unmeasured node does (O-30). At the
+          directory level a candidate is its own application and the
+          level collapses onto it -- one vocabulary, both levels.
+
+COST      One dict per plan, built once per run. Measured on the
+          strategy page ('together'): 'b.py' (1500 ms as two choices)
+          before 'c.py' (1500 ms as one) by plan index, 'a.py' (990)
+          whole, 'd.py' (unmeasured) last. No flow nominal moved in
+          the tree: every raw flow of two or more runs is pinned by
+          D-16, and this is what the pin was for.

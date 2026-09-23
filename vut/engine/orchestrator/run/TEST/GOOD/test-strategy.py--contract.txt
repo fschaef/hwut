@@ -3,6 +3,7 @@ an empty unit list: []
 strategy_of(LINEAR).name = 'linear'
 strategy_of(SUCCESSOR).name = 'successor'
 strategy_of(PARALLEL).name = 'parallel'
+strategy_of(BUNDLED).name = 'bundled'
 strategy_of(a selection order): KeyError -- the two enums are not interchangeable
 
 'p,lf'                   PARALLEL + LONGEST_FIRST
@@ -13,7 +14,7 @@ strategy_of(a selection order): KeyError -- the two enums are not interchangeabl
 'p , lf'                 PARALLEL + LONGEST_FIRST
 'linear,parallel'        REFUSED: '--strategy=linear,parallel': 'linear' and 'parallel' cannot both stand
 'lf,shortest-first'      REFUSED: '--strategy=lf,shortest-first': 'longest-first' and 'shortest-first' cannot both stand
-'bogus'                  REFUSED: '--strategy=bogus': 'bogus' names neither a strategy nor a selection order -- one of linear, successor, parallel, longest-first, plan-order, shortest-first, name-sorted (short: l, lf, ns, p, po, s, sf)
+'bogus'                  REFUSED: '--strategy=bogus': 'bogus' names neither a strategy nor a selection order -- one of linear, successor, parallel, bundled, longest-first, plan-order, shortest-first, name-sorted (short: b, l, lf, ns, p, po, s, sf)
 'p,,l'                   REFUSED: '--strategy=p,,l': an empty word stands between the commas
 ''                       REFUSED: '--strategy=': an empty word stands between the commas
 <hwut-end>

@@ -4520,3 +4520,89 @@ COST      The config vocabulary, the accept path, the book note's
           matures to all green before anything rides on it (the
           sequencing rule, 'doc/HOWTO-HWUT-BRAINSTORM.txt' section 4).
           NOT BUILT in the session that ruled it.
+
+E-111  'hwut.stability' IS 'hwut.run.stability'                  (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   The face repeats a RUN and judges what did not stay the same,
+          yet its name stood beside 'hwut.accept' and 'hwut.cov' as a
+          face of its own kind. A user looking for 'how do I run this
+          reliably' looks under 'hwut.run'.
+
+DECISION  RULED (Frank-Rene): the face is 'hwut.run.stability', for
+          user visibility. It follows the tree's precedent for a second
+          face: 'bin/hwut.run.stability' runs
+          'vut.services.lib.run.stability', as 'hwut.accept.apply' runs
+          'vut.services.lib.accept.apply'. The old name is GONE, not
+          aliased. Supersedes the name in E-10, E-11 and every entry
+          before this one; those entries are not rewritten.
+
+COST      A rename and nothing else: the module and the launcher move,
+          four relative imports become absolute, every reader of the
+          spelling moves. Four pages re-recorded, classified
+          mechanically first: every differing line is the new name, the
+          padding of a fixed-width column round it, or the usage block
+          rewrapping round a name four characters longer. Ignoring
+          whitespace, all four identical to their GOODs under the
+          rename. Nothing matched nothing.
+
+E-112  A LABEL IS ASKED FOR BY NAME: '-l'                        (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   Running a label wants '--label <expr>', and the short form,
+          which exists to be typed, had no shorter way to say it.
+
+DECISION  RULED (Frank-Rene): '-l' IS '--label', read in 'parse_wish'
+          -- so every face that takes a wish has it, from one line.
+          A bare word is NEVER resolved into a label: a wish says what
+          it means, whatever the tree holds.
+          GRAVEYARD: git's ref-then-path resolution of a bare word
+          ('hwut curr_ok'). It was built and measured, and reverted
+          here: the meaning of a command would depend on tree state --
+          'hwut curr_ok' runs the label today and an application the
+          day one of that name appears, silently, since the file wins.
+          Git needs '--' and an ambiguity warning for exactly this;
+          hwut would have needed its own. What the reverted reading
+          did well is KEPT AS A HINT: where a run selects nothing and
+          the first bare word names a label that stands, 'hwut.run'
+          says so and names '-l <word>'. It SAYS, it does not act, and
+          it costs the label file alone -- no walk.
+
+COST      One branch and three help lines in 'wish.py'; '_label_hint'
+          in 'services/run.py'. '-l' is the second short option in the
+          face surface ('hwut.accept.propose -o <file>' is the first).
+          '-l <expr>' and '-l=<expr>' both stand, so the completion
+          table's '-l=<value>' is honest. 'test-run.sh short-form'
+          gains a case for the hint. The usage line now reads
+          '[-l|--label <expr>]': 14 nominals moved, every one of them
+          META-labelled and therefore INVISIBLE TO THE CENSUS (bin
+          2.8) -- found by 'hwut.run --glob "test-*"' from the root,
+          classified as the spelling alone, and blessed.
+
+E-113  CORRECT MEANS EQUIVALENT: BYTES IS ASKED FOR BY NAME   (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.run.stability' warned, by default, wherever repeats
+          agreed on the verdict and the recorded bytes differed: "the
+          tolerance absorbed it -- but the test is one tightening away
+          from flaky". It told the reader to distrust a run the tree
+          had declared CORRECT.
+
+DECISION  RULED (Frank-Rene): CORRECT MEANS THE SUBJECT AND THE
+          NOMINAL ARE EQUIVALENT, NOT IDENTICAL, and the tolerances --
+          equivalence patterns, constraints, numerics -- are what
+          equivalence means. A run they admit is correct; a run they
+          do not is misbehaving. There is no third verdict, and where
+          one looks unrealistic the fault is in the test output, the
+          test, or the tolerance definitions, and is fixed THERE.
+          A byte report by default would disable the tolerance engine's
+          whole power in the reader's mind. It survives as
+          '--byte-pedantic' -- hard to type and hard to read, which is
+          the stiffness of the request said out loud.
+
+COST      One flag, one branch in 'finding_list_of', and the flag
+          stripped in '_repeat' before the argv travels to 'hwut.run'
+          (it is this face's, not the run's -- measured: without the
+          strip the selection came back EMPTY). VERDICT, LENGTH and
+          CADENCE are untouched. Four pages re-recorded: the usage,
+          the completion row, 'bytes' (now showing both halves) and
+          'length'. Default output on 'display test-run.sh': 0 warned,
+          17 steady, where five pages were warned before -- every one
+          of them the '[sec]' figure the page's own eq_pattern names.
