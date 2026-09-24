@@ -40,7 +40,7 @@ case "$1" in
 esac
 
 FACE_LIST="config.show plan run play accept accept.propose accept.apply renovate
-           accept.interactive target cov diff report.details run.stability wishlist
+           accept.interactive target run.cov diff report.details run.stability wishlist
            report remove remove.propose remove.apply
            rename move sanitize pype
            labels.create labels.add labels.remove labels.list labels.query"

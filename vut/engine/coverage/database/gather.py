@@ -18,7 +18,7 @@ DESCRIPTION
            D1: book.csv (register)  group_ids.dat  records
            D2: book.csv (register)  group_ids.dat  records
                        |
-                 hwut.cov gather (one root)
+                 hwut.run.cov gather (one root)
                        v
            g' <-> { (D1, g3), (D2, g7) }     the gather's own table
            segment -> g'                      the gather's own index

@@ -80,7 +80,7 @@ from ...bookkeeper.api import (GroupTable,       # noqa: F401
                                       EMPTY_GROUP, GroupFault)
 
 
-RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.cov convert' shows it
+RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.run.cov convert' shows it
 
 
 @dataclass(frozen=True, order=True)

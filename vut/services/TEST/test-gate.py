@@ -165,8 +165,12 @@ def test_backup_shaped():
     ok = _check([
         (len(hit) == 1, "the copy stands once in the REFUSED block"),
         (hit and "backup-shaped" in hit[0], "the reason is the name"),
-        (not any("test-old.py.backup" in l and "[" in l
-                 for l in line_list), "it never appears in the flow"),
+        #  B-17: it DOES appear in the flow -- once, tagged '[REFUSED]'.
+        #  A file passed over in silence read as though nobody had
+        #  looked at it.
+        (len([l for l in line_list
+              if "test-old.py.backup" in l and "[REFUSED]" in l]) == 1,
+         "it appears in the flow, tagged [REFUSED]"),
         ("test-old.py.backup" not in Bookkeeper(test).tests(),
          "the book has no entry for it"),
     ])
@@ -257,8 +261,12 @@ def test_new_choice():
     ok = _check([
         (len(hit) == 1 and hit[0].startswith("test-two.py b"),
          "'b' is refused, by name"),
-        (len(flow) == 1 and " a " in flow[0] and "[OK]" in flow[0],
+        (len([l for l in flow if " a " in l and "[OK]" in l]) == 1,
          "'a' ran and passed"),
+        #  B-17: a refusal is SEEN where it happened. 'b' carries the
+        #  '[REFUSED]' tag in the flow and its reason in the block.
+        (len([l for l in flow if " b " in l and "[REFUSED]" in l]) == 1,
+         "'b' is refused IN THE FLOW too"),
         (Bookkeeper(test).choices("test-two.py") == ["a"],
          "the book knows 'a' and not 'b'"),
     ])

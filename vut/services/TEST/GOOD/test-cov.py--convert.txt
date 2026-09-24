@@ -1,7 +1,7 @@
-$ hwut.cov convert <dir>/r.cover.txt
+$ hwut.run.cov convert <dir>/r.cover.txt
     [92 bytes written to stdout]
     [status 0]
-$ hwut.cov convert <dir>/r.cover
+$ hwut.run.cov convert <dir>/r.cover
     [180 bytes written to stdout]
     [status 0]
     the text that came back {
@@ -19,13 +19,13 @@ $ hwut.cov convert <dir>/r.cover
       EX:
       CV:
     }
-$ hwut.cov convert --from text --to text <dir>/r.cover.txt
+$ hwut.run.cov convert --from text --to text <dir>/r.cover.txt
     [180 bytes written to stdout]
     [status 0]
-$ hwut.cov convert <dir>/x
+$ hwut.run.cov convert <dir>/x
     FAULT: '<dir>/x' begins as neither spelling; say --from
     [status 1]
-$ hwut.cov convert <dir>/missing
+$ hwut.run.cov convert <dir>/missing
     FAULT: [Errno 2] No such file or directory: '<dir>/missing'
     [status 1]
   OK  : the binary form is a zlib stream

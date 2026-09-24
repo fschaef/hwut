@@ -1,4 +1,4 @@
-$ hwut.cov
+$ hwut.run.cov
     [status 1]
     the book {
       test-py.py--a  report ok                       coverage ok

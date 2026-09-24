@@ -541,7 +541,7 @@ everything HWUT does with the file follows from that entry:
                      nobody vouches for a tool (coverage D-2)
     coverage_target  the coverage-capable build target of a COMPILED
                      test, built and run in place of 'build.executable'
-                     under 'hwut.cov'; '%' the source file's stem (4.1)
+                     under 'hwut.run.cov'; '%' the source file's stem (4.1)
     profiler         declared, not yet consumed
 
 The entry's NAME is the language, and the name is free: 'dep4711_c' is

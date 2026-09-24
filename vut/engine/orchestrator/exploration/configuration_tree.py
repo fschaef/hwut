@@ -210,7 +210,7 @@ class LanguageSetup:
     'coverage'         the candidate coverage tools, PREFERENCE ORDER;
                        the empty tuple is an answer (coverage D-2)
     'coverage_target'  the COVERAGE-CAPABLE build target, '%' the source
-                       file's stem (R-74); under 'hwut.cov' it is built
+                       file's stem (R-74); under 'hwut.run.cov' it is built
                        and run in place of 'build.executable'. Unstated
                        for a COMPILED test: noted 'NO_COVERAGE_TARGET'
                        on the book entry, the run continues with the

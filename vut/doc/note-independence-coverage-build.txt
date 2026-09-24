@@ -61,7 +61,7 @@ binary format is what makes them possible:
     - 30x faster to read than cobertura
 
 Binary is the only on-disk form. Text is presentation, via
-hwut.cov convert.
+hwut.run.cov convert.
 
 3. THE BUILD IS PART OF THE TEST RESULT
 ---------------------------------------

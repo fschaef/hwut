@@ -23,7 +23,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               NOT EXECUTED by this run:
                 demo.py                                      3..5
               
-              the record, in its text spelling ('hwut.cov convert'):
+              the record, in its text spelling ('hwut.run.cov convert'):
               ##VUT-COVERAGE 2
               ##run:      0.1
               ##language: python

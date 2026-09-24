@@ -1251,13 +1251,17 @@ class Bookkeeper:
         if path.exists(): path.unlink()
         return note
 
-    def note_accept(self, test, choice):
+    def note_accept(self, test, choice, aspirant_f=False):
         """RETURN: what '_note_accept_unlocked' returns -- the same act, under
         the directory's lock (B-9).
+
+        'aspirant_f' says the nominal just written carries at least one
+        '##! unaccepted' region: the acceptance STANDS AND IS
+        INCOMPLETE, and the row must say so rather than 'true' (B-16).
         """
         with self._act():
             result = self._note_accept_unlocked(
-                         test=test, choice=choice)
+                         test=test, choice=choice, aspirant_f=aspirant_f)
             #  AN ID IS BORN AT THE FIRST ACCEPT (README 4): issued
             #  here, in the acceptance's own act (E-41).
             register = self._register()
@@ -1265,7 +1269,7 @@ class Bookkeeper:
             self._register_write(register)
             return result
 
-    def _note_accept_unlocked(self, test, choice):
+    def _note_accept_unlocked(self, test, choice, aspirant_f=False):
         """
         RETURN: str, the instant now standing as 'last_accept' for that
                 choice -- written into its row, which is created where
@@ -1277,15 +1281,20 @@ class Bookkeeper:
         E-41). 'hwut.accept' calls this beside 'Store.accept()'; the
         engine's NOMINAL goal reaches the same row through 'record()'.
         A fresh acceptance means the candidate IS the nominal, so the
-        row's verdict reads true and its report 'ok'.
+        row's verdict reads true and its report 'ok' -- UNLESS the
+        nominal carries '##! unaccepted' ('aspirant_f'), and then the
+        row says ASPIRANT and 'unaccepted' (B-16): an acceptance that
+        stands and is incomplete is not a pass, and the two must not
+        read as one.
         """
         content   = self.book()
         test_book = content.setdefault(test, {})
         choice_db = test_book.setdefault("choices", {})
         key       = NO_CHOICE_KEY if choice is None else choice
         row       = choice_db.setdefault(key, {})
-        row["verdict"]     = E_TestVerdict.PASS
-        row["report"]      = "ok"
+        row["verdict"]     = (E_TestVerdict.ASPIRANT if aspirant_f
+                              else E_TestVerdict.PASS)
+        row["report"]      = "unaccepted" if aspirant_f else "ok"
         row["last_accept"] = _now()
         self._write_book(content)
         return row["last_accept"]

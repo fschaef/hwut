@@ -8,7 +8,7 @@ eleven formats, one record. The record is the unifier -- everything
 below dies at harvest.
 
 THE COUNTS ABOVE ARE THE ONLY NUMBERS THIS FILE STATES. The table of
-which tool speaks which format is printed by 'hwut.cov formats' from
+which tool speaks which format is printed by 'hwut.run.cov formats' from
 the registry itself, and is not copied here (RATIONALE D-13). What
 follows is the SHAPE of the roads and the HISTORY of how each was
 witnessed -- which is what this file is for and what the registry
@@ -175,7 +175,7 @@ second issue):
        'verilator_coverage --write-info' where a 'coverage.dat' stands
        -- which is also the first alias that must OVERRIDE rather than
        forward, since two tools sharing a format do not share a drive.
-    3. 'hwut.cov', the unifying EXECUTABLE. Its verbs and the reader
+    3. 'hwut.run.cov', the unifying EXECUTABLE. Its verbs and the reader
        role's calls are ONE LIST, or one of them is lying:
 
            elect       (registry)

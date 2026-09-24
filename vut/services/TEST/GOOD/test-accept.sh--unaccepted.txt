@@ -1,9 +1,9 @@
 --- the run: its own tag, its own count, its own hint
-STATUS: 1
-    DONE  test-ok.sh [ ?! ]
-       suite/TEST . . . . . . . . . . . . . . . . . . . . . . .  [FAIL]      0/1
-        test-ok.sh   the nominal carries lines nobody has accepted
-    RESULTS: 0 ok, 0 fail, 1 unaccepted, 2 refused
+STATUS: 2
+    DONE  test-ok.sh [ ?! ]  ||0
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . .      [OK]      0/0
+        test-ok.sh      the nominal carries lines nobody has accepted: an aspirant, finish it with 'hwut.accept'
+    RESULTS: 0 ok, 0 fail, 3 refused
 --- '--unaccepted' selects the cases with NO nominal: test-two.sh
     ./test-two.sh a
     ./test-two.sh b

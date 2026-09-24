@@ -203,6 +203,16 @@ B-20 ONE 'hwut.rename' ACROSS DIRECTORIES; 'hwut.move'   ** BUILT -- STRIKE **
      failure set before and after is the same eleven, none of them in
      a touched file. intend/17 deleted. A-2 IS UNBLOCKED.
 
+B-23 'hwut.run.cov'                                ** BUILT -- STRIKE **
+     services/RATIONALE.txt E-115
+     Second face of 'hwut.run', as stability. 'rename', 'move', 'diff'
+     stay as they are -- ruled, no cut owed.
+
+B-22 'hwut.report.timings'                          ** BUILT -- STRIKE **
+     services/RATIONALE.txt E-114
+     traditional (default), '--table', '-o <file>', '--directory=',
+     '-r'. Page writes its own traces fixture; five nominals.
+
 B-21 '-l' IS '--label'                             ** BUILT -- STRIKE **
      services/RATIONALE.txt E-112
      '-l' in 'parse_wish', so every wish-taking face has it. A bare
@@ -361,7 +371,7 @@ BAND B -- WHAT IS ACTUALLY OWED
           'CTreeScheduler', exercised by 'run/TEST/test-endtoend.py'.
           Ruling O-7 stands.
     B-8   'hwut.convert_to_lcov'
-          BUILT UNDER ANOTHER NAME: 'hwut.cov convert
+          BUILT UNDER ANOTHER NAME: 'hwut.run.cov convert
           [--from <form>] [--to <form>] FILE'. The entry names a face
           that was never going to exist as its own launcher; the verb
           set (todo-12, already struck) absorbed it.
@@ -495,7 +505,7 @@ the discussion is residue and the sorting rule says DELETE.
     gathered/0m  'hwut.wishlist'      E-13     (was band E)
     gathered/11  the directory keys   R-31..36
     gathered/12  the parser move      R-27,R-34
-    coverage     todo-3               built as 'hwut.cov convert'
+    coverage     todo-3               built as 'hwut.run.cov convert'
                                                (was B-8)
 
     gathered/ : 40 -> 34 files.

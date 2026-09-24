@@ -12,7 +12,7 @@ $ hwut.run --coverage --glob test-py*
       test-hang.py--x <none>
       test-new.py    <none>
     }
-$ hwut.cov --glob nothing-matches*
+$ hwut.run.cov --glob nothing-matches*
     [status 3]
   OK  : 'hwut.run --coverage' with a wish is the same demand, the wish honoured
   OK  : a wish that asks for nothing is EMPTY, as hwut.run says

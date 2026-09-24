@@ -260,7 +260,7 @@ def coverage_section_text(directory, application, choice):
         line_list.append("  (nothing: every executable line was reached)")
     line_list.append("")
     line_list.append("the record, in its text spelling "
-                     "('hwut.cov convert'):")
+                     "('hwut.run.cov convert'):")
     line_list.append(format_record(record).rstrip("\n"))
     return "\n".join(line_list)
 

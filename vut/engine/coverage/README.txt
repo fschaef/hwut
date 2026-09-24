@@ -7,7 +7,7 @@ Status:  The record and its algebra, the election, the index, the
          artifact formats, and the MEASURE registration (branch, mc/dc,
          toggle, cover) are BUILT and green. For the current table of
          tools, formats and what this build reads, ask the registry --
-         'hwut.cov formats' (RATIONALE D-13); it is not copied here.
+         'hwut.run.cov formats' (RATIONALE D-13); it is not copied here.
          'julia' is owed, and DISCUSSIONS.txt names what is not built.
 Layer:   BESIDE procsitter and compare -- a component the operations
          layer holds VERBATIM and translates for.
@@ -231,7 +231,7 @@ place that changes.
 5  WHAT A COVERAGE RUN IS
 ------------------------------------------------------------------------------
 
-THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov <wishlist>' or
+THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.run.cov <wishlist>' or
 'hwut.run --coverage' generates the chain; nothing is discovered:
 
     build    'build { coverage_target = "cov-parse.exe" }' is built IN
@@ -247,7 +247,7 @@ THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov <wishlist>' or
     harvest  the run's closing act: the reader reads 'OUT/COVERAGE',
              the record is seated with the run id and written to
              'TMP/store/<test>--<choice>.cover' in its BINARY
-             spelling (D-20; 'hwut.cov convert' shows it). Raw
+             spelling (D-20; 'hwut.run.cov convert' shows it). Raw
              artefacts are run debris under 'OUT/'.
 
 ONE TOKEN PER RUN on the book entry, 'coverage':
@@ -326,7 +326,7 @@ through the procsitter, so the execute stage makes what the reader names.
 THE TABLE OF TOOLS, FORMATS AND ALIASES IS NOT WRITTEN HERE. It has one
 author -- the registry -- and is printed by
 
-    hwut.cov formats
+    hwut.run.cov formats
 
 whose GOOD file stands in 'TEST/GOOD/'. It was copied into five
 documents once, and three of the five were false within two days
@@ -447,7 +447,7 @@ see DISCUSSIONS disc-9 and its amendment.
 ------------------------------------------------------------------------------
 
     (1) an entry in 'registry.EXTENSION_DB' if the extension is new
-        (it serves 'hwut.cov convert' and the record's header)
+        (it serves 'hwut.run.cov convert' and the record's header)
     (2) the language's 'coverage' list in the SHIPPED ROOT CONF
         ('services/_boundary.ROOT_CONF_TEXT', D-26): the candidate
         tools, in PREFERENCE order. A tree already placed carries its

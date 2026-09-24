@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.cov: convert, formats, and the door"
+#     title      = "hwut.run.cov: convert, formats, and the door"
 #     choices    = ["convert", "formats", "help", "refused"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -10,7 +10,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.cov' FACE -- convert, formats, and the door.
+PURPOSE: THE 'hwut.run.cov' FACE -- convert, formats, and the door.
 
 CHOICES: convert, formats, refused, help;
 
@@ -37,7 +37,7 @@ import config                                                    # noqa F401
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.services.cov import main          # noqa E402
+from   vut.services.lib.run.cov import main          # noqa E402
 
 RECORD_TEXT = ("##VUT-COVERAGE 2\n##run:      0.1,3\n##language: c\n"
                "##tool:     gcov\n##format:   gcov-annotated\n"
@@ -52,7 +52,7 @@ def call(argument_list, directory):
             path under the temporary directory is shown as '<dir>'.
     """
     shown = [a.replace(directory, "<dir>") for a in argument_list]
-    print("$ hwut.cov %s" % " ".join(shown))
+    print("$ hwut.run.cov %s" % " ".join(shown))
     line_list, chunk_list = [], []
     status = main(argument_list, line_list.append, chunk_list.append)
     for line in line_list:
@@ -124,7 +124,7 @@ def test_refused():
     with open(p, "w") as fh: fh.write(RECORD_TEXT)
     #  A BARE WORD IS A TARGET now (the 1.0 short form), so an
     #  unrecognised word is no longer a refusal: it is a wish, and
-    #  'hwut.cov <app> <choice>' is how one measures one test. An
+    #  'hwut.run.cov <app> <choice>' is how one measures one test. An
     #  unknown OPTION is still refused by name.
     for argument_list in (["--sideways"],
                           ["convert", "--to", "yaml", p],
@@ -162,7 +162,7 @@ def test_help():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "hwut.cov: convert, formats, and the door",
+        title      = "hwut.run.cov: convert, formats, and the door",
         choice_map = {
             "convert": test_convert,
             "formats": test_formats,

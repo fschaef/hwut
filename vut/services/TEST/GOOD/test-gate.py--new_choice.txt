@@ -1,6 +1,7 @@
   test-two.py b
   OK  : 'b' is refused, by name
   OK  : 'a' ran and passed
+  OK  : 'b' is refused IN THE FLOW too
   OK  : the book knows 'a' and not 'b'
 SUCCESS: the gate is per case.
 <hwut-end>

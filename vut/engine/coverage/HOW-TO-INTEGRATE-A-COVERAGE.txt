@@ -228,7 +228,7 @@ Make the tool electable:
                        TABLE IS NOT IN THIS COMPONENT (D-26): an author's
                        tree carries its own copy in 'hwut-root.conf'.
     EXTENSION_DB       only where the source extension is new; it
-                       serves 'hwut.cov convert' and the record header
+                       serves 'hwut.run.cov convert' and the record header
 
 A candidate with no reader is still listed: the machine then refuses
 BY NAME instead of reporting no coverage. An empty candidate list is
@@ -247,7 +247,7 @@ recorded GOOD file is the specification. No assertions.
     cd TEST && python3 test-readers.py foo > GOOD/test-readers.py--foo.txt
     # audit the file line by line, THEN bless it
 
-Re-record 'GOOD/hwut.cov--formats.txt': the generated tool/format table
+Re-record 'GOOD/hwut.run.cov--formats.txt': the generated tool/format table
 gained a row, and a reader admitted without it turns the suite red
 (RATIONALE D-13).
 
@@ -262,4 +262,4 @@ witness:
     OVERVIEW-coverage-roads.txt      the road walked, the finding
 
 Do not copy the tool/format table anywhere; it has one author, the
-registry, and 'hwut.cov formats' prints it (RATIONALE D-13).
+registry, and 'hwut.run.cov formats' prints it (RATIONALE D-13).

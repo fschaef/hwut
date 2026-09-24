@@ -20,7 +20,7 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --coverage                  the DEMAND (coverage D-19): every test
                                 is built and run for coverage, every
                                 completed run harvested; what
-                                'hwut.cov <wish>' says
+                                'hwut.run.cov <wish>' says
     --variant=<a>[,<b>...]      the VARIANT selection (E-9): one
                                 alternative per variant group, merged
                                 over the base configuration. Two
@@ -257,6 +257,11 @@ class Tally:
     fault_tuple: tuple = ()
     good_f:      bool | None = None
     empty_f:     bool = False
+    #  REFUSED, NOT RUN (B-17): how many cases the run was asked for
+    #  and said no to. A run that refused and ran nothing is REFUSED,
+    #  never EMPTY -- 'nothing answered the wish' and 'what answered it
+    #  may not run' are different news.
+    refused_n:   int = 0
 
 
 class _NoFlow:
@@ -413,7 +418,8 @@ def do(request: Request, sink=None, flow=None, demand=None, write=None):
                  fail_n      = fail_n,
                  fault_tuple = tuple(str(f) for f in summary.fault_tuple),
                  good_f      = summary.good_f,
-                 empty_f     = not summary.verdict_db)
+                 empty_f     = not summary.verdict_db,
+                 refused_n   = len(summary.refused_db))
 
 
 def exit_code_of(tally):
@@ -422,6 +428,10 @@ def exit_code_of(tally):
     if tally.fault_tuple or tally.good_f is False or tally.fail_n > 0 \
        or (tally.case_n and tally.good_f is None):
         return E_ExitCode.FAULT
+    #  REFUSED BEFORE EMPTY (B-17, E-1): a run that ran nothing because
+    #  every case it selected may not run was ASKED for something and
+    #  said no. 'EMPTY' is for a wish nothing answered at all.
+    if tally.empty_f and tally.refused_n: return E_ExitCode.REFUSED
     if tally.empty_f: return E_ExitCode.EMPTY
     return E_ExitCode.OK
 
@@ -470,7 +480,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
     RETURN: E_ExitCode -- 'main' without the pipe guard.
 
     'demand' is a CoverageConfig a FACE hands in for '--coverage' --
-    the seam through which 'hwut.cov' and its tests state the tool
+    the seam through which 'hwut.run.cov' and its tests state the tool
     until '--variant' selects it from the configuration (todo-13).
     """
     if argv is None:

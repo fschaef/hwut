@@ -92,3 +92,46 @@ ALSO      A LAPSE, recorded because the discipline is worth more than
           byte-identical to the tree as delivered, and the wiring was
           done deliberately afterwards. Read what is in the tree
           before believing what an entry says about it.
+
+B-16  AN INCOMPLETE ACCEPTANCE IS BOOKED AS ONE                 (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   'note_accept' wrote 'verdict = PASS, report = ok' for every
+          acceptance, including one that closed with a '##! unaccepted'
+          region. The state machine had the door -- 'on_accept_left_
+          unaccepted' -- and nobody walked through it, so ASPIRANT was
+          reachable only by a later reading of the GOOD.
+
+DECISION  BUILT: 'note_accept(test, choice, aspirant_f)'. 'hwut.accept'
+          asks the nominal IT JUST WROTE whether a region stands
+          unjudged and says so; the row then reads ASPIRANT /
+          'unaccepted'. An acceptance that stands and is incomplete is
+          not a pass, and the book must not spell the two alike.
+
+B-17  A REFUSAL IS SEEN, AND IT IS NOT 'EMPTY'                  (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   B-15 moved the aspirant's refusal to the door, where it
+          belongs -- and then nothing said so IN THE FLOW: a case the
+          wish selected was passed over in silence, and the run exited
+          EMPTY (3), as though the wish had answered nothing at all.
+          'test-accept.sh first' and 'unaccepted' stood red on it.
+
+DECISION  BUILT, two halves.
+          THE FLOW SHOWS EVERY REFUSAL, where it happened, with the tag
+          that says WHICH: '[ ?! ]' for an ASPIRANT -- an acceptance
+          stands and is incomplete -- and '[REFUSED]' for a case
+          nothing was ever accepted for. The closing REFUSED block
+          keeps the reason; the flow keeps the place.
+          THE EXIT STATUS: a run that ran nothing AND refused something
+          exits REFUSED (2), not EMPTY (3). E-1's four codes stand
+          unchanged; this assigns the case that had none. 'Nothing
+          answered the wish' and 'what answered it may not run' are
+          different news, and a script that branches on the status must
+          be able to tell them apart. The fold now carries
+          'refused_db', and the Tally 'refused_n', for that one rule.
+
+COST      A refusal is NOT counted as a case and does NOT fail its
+          directory: nothing ran, and a directory that failed would say
+          a verdict was formed where none was. The three pages of
+          'test-accept.sh' that encoded the pre-B-15 shape ('1
+          unaccepted', a failed directory, status 1) were re-recorded;
+          'interactive' was stale from D-14/D-15 besides.

@@ -28,6 +28,10 @@ class CRunSummary:
     detail_db:       dict  = field(default_factory=dict)   # O-19
     frame_db:        dict  = field(default_factory=dict)
     fault_tuple:     tuple = ()
+    #  THE REFUSALS, by (directory, node) -> reason (B-17). Not cases:
+    #  none ran. A run that refused and ran nothing is not EMPTY -- it
+    #  was asked for something and it said no.
+    refused_db:      dict  = field(default_factory=dict)
     report_tuple:    tuple = ()
     dir_good_db:     dict  = field(default_factory=dict)
     good_f:          bool | None = None
@@ -55,6 +59,7 @@ def fold(event_iterable):
     cause_db       = {}
     detail_db      = {}
     frame_db       = {}
+    refused_db     = {}
     fault_list     = []
     report_list    = []
     dir_good_db    = {}
@@ -82,6 +87,10 @@ def fold(event_iterable):
         elif kind == "frame":
             if not fits("directory", "role", "good"): continue
             frame_db[(item["directory"], item["role"])] = item["good"]
+        elif kind == "refused":
+            if not fits("directory", "node"): continue
+            refused_db[(item["directory"], item["node"])] = \
+                item.get("text", "")
         elif kind == "fault":
             if not fits("directory", "text"): continue
             fault_list.append((item["directory"], item["text"]))
@@ -102,6 +111,7 @@ def fold(event_iterable):
                        detail_db       = detail_db,
                        frame_db        = frame_db,
                        fault_tuple     = tuple(fault_list),
+                       refused_db      = refused_db,
                        report_tuple    = tuple(report_list),
                        dir_good_db     = dir_good_db,
                        good_f          = good_f,

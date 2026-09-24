@@ -1,4 +1,4 @@
-$ hwut.cov <dir>f<dir>o<dir>r<dir>m<dir>a<dir>t<dir>s<dir>
+$ hwut.run.cov <dir>f<dir>o<dir>r<dir>m<dir>a<dir>t<dir>s<dir>
     TOOLS READ BY THIS BUILD
       tool               format                   reads through
       c8                 lcov-tracefile           lcov

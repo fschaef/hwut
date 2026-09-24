@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 PURPOSE: THE BINARY SPELLING of the coverage record -- the ONE form on
          disk (RATIONALE D-20). The text spelling ('record.py') is the
-         presentation, made on demand by 'hwut.cov convert'.
+         presentation, made on demand by 'hwut.run.cov convert'.
 
 DESCRIPTION
        ONE RECORD, TWO CODECS. 'pack_record' and 'unpack_record' here,

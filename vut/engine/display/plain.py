@@ -810,10 +810,24 @@ class CPlainFlow(CRunReportReceiver):
         self._flow(text, text)
 
     def on_refused(self, when, directory, node, text):
-        """RETURN: None. Not run, by name and reason: held for the
-        closing REFUSED block, which stands in every tier but SILENT
-        -- a refusal is never marginalia."""
+        """RETURN: None. Not run, by name and reason: a line IN THE FLOW
+        where it happened, and the closing REFUSED block which names
+        the reason. Both stand in every tier but SILENT -- a refusal is
+        never marginalia, and a flow that showed nothing where a case
+        was passed over read as though the case had never been asked
+        for (B-17).
+
+        The tag says WHICH refusal: an ASPIRANT carries '[ ?! ]' -- an
+        acceptance stands and is incomplete -- where a case nothing was
+        ever accepted for carries '[REFUSED]'."""
         self.refused_db.setdefault(directory, []).append((node, text))
+        if self.tier is E_Tier.SILENT: return
+        aspirant_f = "nobody has accepted" in text
+        tag        = "[ ?! ]" if aspirant_f else "[REFUSED]"
+        ink_tag    = (self.ink.tag_undecided(tag) if aspirant_f
+                      else self.ink.tag_fail(tag))
+        body, body_ink = self._run_body(directory, node)
+        self._line(when, "DONE ", "DONE ", body, body_ink, tag, ink_tag)
 
     def on_silent(self, when, directory, node):
         """RETURN: None. A candidate no carrier speaks for: held for the

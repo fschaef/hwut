@@ -266,7 +266,7 @@ STATE
     file was WRONG IN BOTH DIRECTIONS:
       BUILT, listed as owed   B-1 (the dispatcher, wired end to end),
                               B-8 ('hwut.convert_to_lcov', built as
-                              'hwut.cov convert'), gathered/0j (the
+                              'hwut.run.cov convert'), gathered/0j (the
                               TARGET SERVICE -- E-7 rules its two
                               hardest forks and 'services/target.py'
                               is 414 lines), gathered/0m (the
@@ -324,7 +324,7 @@ STATE
                                               "Nothing waits on this"
 
     AND coverage's todo-3 struck: 'hwut.convert_to_lcov' is BUILT as
-    'hwut.cov convert'.
+    'hwut.run.cov convert'.
 
     NOT DELETED, though they looked deletable -- each carries live
     labour a marker did not show:

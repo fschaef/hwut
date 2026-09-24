@@ -1,4 +1,4 @@
-$ hwut.cov --sideways
+$ hwut.run.cov --sideways
     REFUSED: 'hwut.run' does not take: --sideways
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
@@ -11,25 +11,25 @@ $ hwut.cov --sideways
                     [--show-details] [--no-failure-summary] [--brief]
                     [--log <file>] [--directory=<path>]
     [status 2]
-$ hwut.cov convert --to yaml <dir>/a
+$ hwut.run.cov convert --to yaml <dir>/a
     REFUSED: '--to' takes one of binary, text
-    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
     [status 2]
-$ hwut.cov convert --bogus <dir>/a
+$ hwut.run.cov convert --bogus <dir>/a
     REFUSED: unknown option '--bogus'
-    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
     [status 2]
-$ hwut.cov convert <dir>/a <dir>/a
+$ hwut.run.cov convert <dir>/a <dir>/a
     REFUSED: 'convert' takes exactly one FILE
-    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
     [status 2]
-$ hwut.cov convert
+$ hwut.run.cov convert
     REFUSED: 'convert' takes exactly one FILE
-    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
     [status 2]
-$ hwut.cov formats extra
+$ hwut.run.cov formats extra
     REFUSED: 'formats' takes no argument
-    usage: hwut.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
     [status 2]
 SUCCESS: the door refuses by name, with the usage line.
 <hwut-end>

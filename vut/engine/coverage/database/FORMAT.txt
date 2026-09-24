@@ -7,7 +7,7 @@ measures, D-12 named points). What is OPEN stands in DISCUSSIONS.
 
 A record has TWO SPELLINGS of one content: the TEXT spelling, sections
 1 to 7, and the BINARY spelling, section 8. The file on disk,
-'.cover', is BINARY. The text is the presentation: 'hwut.cov convert'
+'.cover', is BINARY. The text is the presentation: 'hwut.run.cov convert'
 renders either into the other, and the tests print it.
 
 In the text spelling a record is UTF-8, LF terminated. Every line is
@@ -151,7 +151,7 @@ it was before any measure existed.
 
 Measures are written in registered-NAME order, after 'EX' and 'CV'.
 A tag no measure claims is a refusal; the refusal names every tag this
-build knows. 'hwut.cov formats' prints the table this section
+build knows. 'hwut.run.cov formats' prints the table this section
 describes, generated from the registry (RATIONALE D-13) -- when the two
 disagree, the generated one is right.
 

@@ -8,10 +8,10 @@ STATUS: 0
     changed choice b
     <hwut-end>
 --- the candidate stayed: the next run judges anew
-    DONE  test-ok.sh  [OK]
-          test-two.sh  a  [OK]
-          :            b  [OK]
-        . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   [OK]      3/3
+    END   test-ok.sh  [OK]  ||0
+    END   :            a  [OK]  ||0
+    END   :            b  [OK]  ||0
+        . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      3/3
 --- the book notes the acceptance of 'a' only
     a: 1
 <hwut-end>

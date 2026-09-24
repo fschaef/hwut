@@ -17,13 +17,13 @@ tree rather than read off its own marker (adm/WORK/review-r5.txt):
     disc-8   whose table is the test id     CLOSED; D-15, D-17, and
                                             orchestrator D-7, D-8
     todo-1   homogeneous record, merge,     record format v2 in use;
-             index                          'services/cov.py' stands
+             index                          'services/lib/run/cov.py' stands
     todo-9   is the orchestrator's t-9      D-18; 'resolve' seam and
                                             '_local_resolver' verified
                                             gone from the tree
-    todo-10  'hwut.cov gather' / 'stale'    D-25; both verbs stand
+    todo-10  'hwut.run.cov gather' / 'stale'    D-25; both verbs stand
     todo-11  the two refusals               RETIRED
-    todo-12  the 'hwut.cov' verb set        VERB_TUPLE verified
+    todo-12  the 'hwut.run.cov' verb set        VERB_TUPLE verified
 
 ==============================================================================
 
@@ -369,7 +369,7 @@ todo-2  THE PER-LANGUAGE READERS                           [11 built]
             ghdl       ghdl psl-report json    vhdl 'cover' directives
             simplecov  simplecov resultset     ruby's own record
             ucis       ucis xml (Accellera)    line, branch, toggle
-        THE TABLE ABOVE IS NOT THE AUTHORITY. 'hwut.cov formats' prints
+        THE TABLE ABOVE IS NOT THE AUTHORITY. 'hwut.run.cov formats' prints
         it from the registry itself (RATIONALE D-13); this ledger names
         what was BUILT and when, which is a different fact and does not
         rot.

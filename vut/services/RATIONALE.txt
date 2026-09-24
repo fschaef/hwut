@@ -4606,3 +4606,47 @@ COST      One flag, one branch in 'finding_list_of', and the flag
           'length'. Default output on 'display test-run.sh': 0 warned,
           17 steady, where five pages were warned before -- every one
           of them the '[sec]' figure the page's own eq_pattern names.
+
+E-114  'hwut.report.timings' -- THE TRACES READ BACK              (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   Every run writes 'hwut-traces.csv' and nothing read it back.
+          The durations steered the scheduler (O-27) and no face said
+          what this machine had measured.
+
+DECISION  BUILT: 'hwut.report.timings'. TRADITIONAL by default -- one
+          line per case, the run's milliseconds, the build's in
+          brackets where one stands; '--table' gives the CSV on stdout,
+          '-o <file>' writes it there, '--directory=<path>' chooses the
+          directory and '-r' walks the tree below it. The tail counts
+          the cases and sums THE RUN TIMES ONLY: a build is shared by
+          every choice of its application and summing it would count
+          one build once per choice. This machine's rows alone (B-11).
+          A case the traces do not hold is not named -- absence is
+          data, and the face invents no row to call it unmeasured. No
+          trace at all is EMPTY (status 3), said and not faulted.
+
+COST      The GOOD would have held wall-clock numbers, so the page
+          WRITES THE TRACES IT READS: 'services/TEST/
+          test-report-timings.py' lays down five rows by hand, a
+          foreign machine's row among them, and measures the reading
+          alone (O-30) -- no eq_pattern, no mocked source (E-80 not
+          needed here). Five nominals, recorded.
+
+E-115  'hwut.cov' IS 'hwut.run.cov'                             (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   Coverage is a way of RUNNING -- the same wish, the same
+          cases, a record harvested beside them -- and its face stood
+          beside 'hwut.accept' as a kind of its own.
+
+DECISION  RULED (Frank-Rene): 'hwut.run.cov', as 'hwut.run.stability'
+          before it (E-111), by the tree's precedent for a second face:
+          'bin/hwut.run.cov' runs 'vut.services.lib.run.cov'. The old
+          name is GONE, not aliased. 'rename', 'move' and 'diff' keep
+          their names: none of them is a way of running.
+
+COST      A rename and nothing else: the module and the launcher move,
+          three relative imports become absolute, 23 files carry the
+          new spelling. Eight pages re-recorded, classified first:
+          ignoring whitespace, every one is identical under the
+          rename. The bare word had to be swept too -- 'test-launchers.
+          sh' lists faces without the 'hwut.' prefix (bin 5c).

@@ -1,9 +1,9 @@
-$ hwut.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
+$ hwut.run.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
 
-    PURPOSE: THE 'hwut.cov' COMMAND LINE -- coverage, as one executable with
+    PURPOSE: THE 'hwut.run.cov' COMMAND LINE -- coverage, as one executable with
              verbs (coverage RATIONALE D-13, D-20).
 
-        hwut.cov [<wish>] [--variant=<a>,<b>] [<hwut.run options>]
+        hwut.run.cov [<wish>] [--variant=<a>,<b>] [<hwut.run options>]
                                     THE RUN, for coverage: 'hwut.run
                                     --coverage' with the same wish and
                                     options; every test is built and run
@@ -12,7 +12,7 @@ $ hwut.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
                                     tool is the configuration's, selected
                                     by '--variant' (E-9); elected for the
                                     language else
-        hwut.cov gather [--directory=<path>] [--out=<file>]
+        hwut.run.cov gather [--directory=<path>] [--out=<file>]
                                     FOLD every record below the root into
                                     ONE index whose keys are (directory,
                                     run id), and write the DELIVERY BUNDLE
@@ -21,22 +21,22 @@ $ hwut.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
                                     each directory's register and group
                                     table (coverage D-25). Writes into no
                                     directory's 'GOOD/'.
-        hwut.cov stale BUNDLE [--directory=<path>]
+        hwut.run.cov stale BUNDLE [--directory=<path>]
                                     which directories of that bundle have
                                     MOVED since it was taken
-        hwut.cov convert [--from <form>] [--to <form>] FILE
+        hwut.run.cov convert [--from <form>] [--to <form>] FILE
                                     the record in another spelling, on
                                     stdout. Forms: 'binary' (what the store
                                     holds, '.cover'), 'text' (the
                                     presentation, FORMAT.txt). '--from'
                                     defaults by the file's first bytes,
                                     '--to' to the other form.
-        hwut.cov formats            the table of tools, formats and
+        hwut.run.cov formats            the table of tools, formats and
                                     aliases this build READS, GENERATED
                                     from the registry -- the one author of
                                     that table. Which tool serves a language
                                     is the root conf's word (D-26)
-        hwut.cov --help             this text
+        hwut.run.cov --help             this text
 
     A first word that is a VERB ('gather', 'stale', 'convert', 'formats')
     is that verb; anything else is the wish of a run. Faults set the exit
@@ -44,7 +44,7 @@ $ hwut.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
     nothing is written.
     ____________________________________________________________________
     [status 0]
-$ hwut.cov 
+$ hwut.run.cov 
 
     ==============================================================================
     DIRECTORIES                                             0 ok, 0 fail, 00:00:00

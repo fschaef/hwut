@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.cov end to end"
+#     title      = "hwut.run.cov end to end"
 #     choices    = ["door", "run"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -10,7 +10,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut.cov' END TO END -- the demand through the real door, the
+PURPOSE: 'hwut.run.cov' END TO END -- the demand through the real door, the
          real orchestrator, the real dispatcher, the real bookkeeper
          (coverage RATIONALE D-19, D-21).
 
@@ -40,7 +40,7 @@ PURPOSE: 'hwut.cov' END TO END -- the demand through the real door, the
 
 CHOICES: run, door;
 
-run     'hwut.cov' over the directory: every registered choice is
+run     'hwut.run.cov' over the directory: every registered choice is
         harvested or noted; the one the register lacked is REGISTERED
         on its nominal's word (E-41) and harvested like the rest; the
         book says which; the records carry the register's ids.
@@ -62,7 +62,7 @@ import config                                                    # noqa F401
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.services.cov import main as cov_main   # noqa E402
+from   vut.services.lib.run.cov import main as cov_main   # noqa E402
 from   vut.services.run import main as run_main   # noqa E402
 from   vut.engine.bookkeeper.api     import Bookkeeper          # noqa E402
 from   vut.engine.bookkeeper.api     import Bookkeeper          # noqa E402
@@ -208,7 +208,7 @@ def call(face, argument_list, root):
     shown = " ".join(argument_list)
     print("$ %s %s" % (face, shown) if shown else "$ %s" % face)
     sink   = []
-    status = (cov_main if face == "hwut.cov" else run_main)(
+    status = (cov_main if face == "hwut.run.cov" else run_main)(
         argument_list + ["--directory=%s" % root, "--silent"],
         sink.append, demand=DEMAND)
     print("    [status %d]" % status)
@@ -262,7 +262,7 @@ def verdict(ok, sentence):
 def test_run():
     """The demand over the whole directory."""
     root = fixture()
-    status   = call("hwut.cov", [], root)
+    status   = call("hwut.run.cov", [], root)
     token_db = show_book(root)
     test = os.path.join(root, "suite", "TEST")
     a_path = Bookkeeper(test).coverage_path("test-py.py", "a")
@@ -294,7 +294,7 @@ def test_door():
     root = fixture()
     call("hwut.run", ["--coverage", "--glob", "test-py*"], root)
     token_db = show_book(root)
-    empty   = call("hwut.cov", ["--glob", "nothing-matches*"], root)
+    empty   = call("hwut.run.cov", ["--glob", "nothing-matches*"], root)
     shutil.rmtree(root)
 
     ok = check([
@@ -314,7 +314,7 @@ def test_door():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "hwut.cov end to end",
+        title      = "hwut.run.cov end to end",
         choice_map = {
             "run":  test_run,
             "door": test_door,

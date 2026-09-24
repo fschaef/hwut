@@ -6,7 +6,7 @@ PURPOSE
        what it reaches.
 
 DESCRIPTION
-       THE CHAIN (coverage RATIONALE D-19). 'hwut.cov' -- or 'hwut.run
+       THE CHAIN (coverage RATIONALE D-19). 'hwut.run.cov' -- or 'hwut.run
        --coverage' -- is the DEMAND, and the demand shapes the run:
 
            build  cov-target      the author's build rules instrument
