@@ -1,0 +1,22 @@
+--- longest-first, node key alone ---
+    c.py only  1500
+    a.py two   900
+    b.py one   800
+    b.py two   700
+    a.py one   50
+    a.py three 40
+    d.py fresh -
+--- longest-first, application first ---
+    b.py one   800
+    b.py two   700
+    c.py only  1500
+    a.py two   900
+    a.py one   50
+    a.py three 40
+    d.py fresh -
+--- application weights ---
+    a.py  weight 990, first at plan index 0
+    b.py  weight 1500, first at plan index 3
+    c.py  weight 1500, first at plan index 5
+    d.py  weight None, first at plan index 6
+<hwut-end>

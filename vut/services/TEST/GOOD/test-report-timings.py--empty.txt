@@ -1,0 +1,9 @@
+
+--- no traces at all ---
+    EMPTY: no timing of this machine stands in '.'
+    status: EMPTY
+
+--- traces of ANOTHER machine only (B-11) ---
+    EMPTY: no timing of this machine stands in '.'
+    status: EMPTY
+<hwut-end>

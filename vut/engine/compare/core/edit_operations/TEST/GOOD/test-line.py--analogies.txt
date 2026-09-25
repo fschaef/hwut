@@ -20,11 +20,12 @@ AnalogyDb:
 subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((z)), ANALOGY:((x))
 =>
-Cost: 0.166667
+Cost: 0.666667
 [0] GOOD_TOLERATED
-[1] TRANSPOSE (2)
+[1] DELETE
 [2] GOOD_TOLERATED
+[3] INSERT
 AnalogyDb:
   "((x))"="((z))"
-  "((y))"="((x))"
 
+<hwut-end>

@@ -1,0 +1,10 @@
+--- bundled: budget 4, A holds 3 then 1, B 1, C 2 ---
+    start A
+    start B
+    end   A
+    end   B
+    start C
+    end   C
+    peak slots held: 3
+    wakes on budget: True
+<hwut-end>

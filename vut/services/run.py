@@ -104,6 +104,7 @@ from   vut.engine.protocol.summary                   import fold
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
 from   vut.services.lib.face                         import Refused, Fault, FaceError
+from   vut.services.lib.wallflowers                  import wallflowers_writer
 from   vut.services.lib.cmdline                      import (face_parser, usage_of,
                                                              parse_or_refuse, did_you_mean)
 
@@ -573,7 +574,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
     with optional_log_writer(rendering_wish.log_path, write_error) as write_log:
         flow = console_view(rendering_wish, write, write_error,
                             os.environ, tty_f, write_log=write_log,
-                            color_of=preferences.load().color)
+                            color_of=preferences.load().color,
+                            write_wallflowers=wallflowers_writer(write_error))
         try:
             tally = do(request, sink=event_sink, flow=flow, demand=demand, write=write)
         except FaceError as error:

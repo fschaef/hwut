@@ -7,7 +7,10 @@ PURPOSE: Determining the edit operations to transform a subject 'Line'
 The transformation is expressed as a sequence of 'edit operations' on line
 elements, namely:
 
-    GOOD, SUBSTITUTE_TYPE, SUBSTITUTE, TRANSPOSE, DELETE, and INSERT.
+    GOOD, SUBSTITUTE_TYPE, SUBSTITUTE, DELETE, and INSERT.
+
+NOTHING IS REORDERED INSIDE A LINE: swapped elements read as DELETE plus
+INSERT (compare RATIONALE, 'no transposition inside a line').
 
 A line element, i.e. a 'LineElement' object is an identified pattern such as
 a number or an analogy. It is the result of the lexical analysis process
@@ -40,8 +43,6 @@ proceed.
                SUBSTITUTE       'b != h'. step to next two chars
                GOOD             step to next two chars
                                 (assume 'b' and 'h' are equivalent)
-               TRANSPOSE        switch 'h' and 'b' in nominal, then step
-                                to next two chars
  (si++, ni)    DELETE           do as if 'h' was not there.
                                 next compare 'b' with 'b'.
  (si,   ni++)  INSERT           do as if 'b' is inserted into subject.
@@ -67,17 +68,15 @@ from   vut.engine.compare.reading.pattern_finder                 import E_Tolera
 from   vut.engine.compare.reading.line_element                   import LineElement
 from   vut.engine.compare.contract.enums                         import E_Verdict
 from   vut.engine.compare.contract.frozen_analogy_db import FrozenAnalogyDb
-# The cost table and transposition cost are part of the shared comparison
+# The cost table is part of the shared comparison
 # semantics -- see 'contract/semantics.py' (single source for Judge and Lawyer).
 import vut.engine.compare.contract.semantics as     semantics
 from   vut.engine.compare.contract.semantics import element_cost_db as cost_db
-from   vut.engine.compare.contract.semantics import cost_TRANSPOSE
 
 from  functools   import lru_cache
 from  typeguard   import typechecked
 
 # Shortcuts:
-TRANSPOSE       = E_EditId.TRANSPOSE
 GOOD            = E_EditId.GOOD
 GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
 GOOD_INSERT     = E_EditId.GOOD_INSERT
@@ -193,23 +192,18 @@ class WorkItem(WorkListBase):
 
         * list of previous edit operations.
 
-        * subject as it might have changed due to transposition.
-
         * analogy required to hold for all past edit operations.
 
     The function '.subsequent_steps()' determines possible steps from the
     position denoted by 'self'. It does so by yielding 'WorkItem' objects
     for subsequence positions.
     """
-    def __init__(self, si, ni, editions, subject_modified=None):
+    def __init__(self, si, ni, editions):
         WorkItemBase.__init__(self, si, ni, editions)
-        self.subject_modified = subject_modified # in case of 'transpose' edits.
 
     def subsequent_steps(self, subject, nominal, cache):
         """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
         """
-        if self.subject_modified: subject = self.subject_modified
-
         verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal)
 
         subject_le = subject[self.si]
@@ -234,17 +228,6 @@ class WorkItem(WorkListBase):
             # SUBSTITUTE_TYPE (from MISFIT) or SUBSTITUTE (analogy inconsistency)
             yield self._step_standard(edit_id)
 
-        if good_id is None:
-            for candidate_ai in range(self.si + 1, len(subject)):
-                candidate_le = subject[candidate_ai]
-                # 1. Get the specific analogy required for this candidate to match the nominal
-                verdict_id, analogy = candidate_le.compare(nominal_le)
-                if not semantics.is_plainly_equivalent_verdict(verdict_id): continue
-                # 2. Check consistency with CURRENT DB
-                elif not self.edit_list.analogy_db.is_consistent(analogy): continue
-                # 3. Pass the NEW analogy to the step function
-                yield self._step_transpose(candidate_ai, subject, new_analogy=analogy)
-
         yield self._step_standard(INSERT)
         yield self._step_standard(DELETE)
 
@@ -261,27 +244,7 @@ class WorkItem(WorkListBase):
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + cost_db[edit_id] * cost_factor,
                                                   self.edit_list.edit_list + [ Edit(edit_id, None) ],
-                                                  self.edit_list.analogy_db),
-                        subject_modified = self.subject_modified)
-
-    def _step_transpose(self, transpose_ai, subject, new_analogy=None):
-        """Transition specifically for TRANSPOSE operations with distance scaling."""
-        actual_cost = cost_TRANSPOSE(self.si, transpose_ai)
-        new_subject = list(subject) # shallow copy
-        new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
-
-        if new_analogy:
-            new_analogy_db = self.edit_list.analogy_db.clone_and_add(new_analogy)
-        else:
-            new_analogy_db = self.edit_list.analogy_db
-
-        increment_ai, increment_bi = position_increment_db[TRANSPOSE]
-        return WorkItem(si         = self.si + increment_ai,
-                        ni         = self.ni + increment_bi,
-                        editions   = EditSequence(self.edit_list.cost + actual_cost,
-                                                  self.edit_list.edit_list + [ Edit(TRANSPOSE, transpose_ai) ],
-                                                  new_analogy_db),
-                        subject_modified = tuple(new_subject))
+                                                  self.edit_list.analogy_db))
 
     def _step_analogy(self, edit_id, new_analogy):
         """Transition specifically for operations that update the Analogy Database."""
@@ -292,8 +255,7 @@ class WorkItem(WorkListBase):
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + cost_db[edit_id],
                                                   self.edit_list.edit_list + [ Edit(edit_id, None) ],
-                                                  new_analogy_db),
-                        subject_modified = self.subject_modified)
+                                                  new_analogy_db))
 
     def min_cost_remaining(self, subject_length, nominal_length):
         """RETURNS: The lowest possible total cost of the remaining comparisons.
@@ -329,8 +291,7 @@ class Cache(dict):
         subject = subject_list[subject_i]
         nominal = nominal_list[nominal_i]
 
-        # Use 'id' of LineElements, rather than their index. Notably the 'transpose'
-        # edit operation may switch elements to a different position.
+        # Keyed by the 'id' of the LineElements, not their index.
         key    = (id(subject), id(nominal))
         result = dict.get(self, key)
         if result is None:

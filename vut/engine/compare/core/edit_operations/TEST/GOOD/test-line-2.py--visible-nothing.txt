@@ -22,10 +22,10 @@ nominal: 'sv'
 
 subject: 'svn'
 nominal: 'nvs'
-=> Cost: 0.222222
-[0] TRANSPOSE (2)
+=> Cost: 0.666667
+[0] SUBSTITUTE_TYPE
 [1] GOOD
-[2] GOOD
+[2] SUBSTITUTE_TYPE
 
 subject: 'vvsvv'
 nominal: 's'
@@ -38,10 +38,11 @@ nominal: 's'
 
 subject: 'snv'
 nominal: 'ns'
-=> Cost: 0.166667
-[0] TRANSPOSE (1)
+=> Cost: 0.666667
+[0] DELETE
 [1] GOOD
-[2] GOOD_DELETE
+[2] INSERT
+[3] GOOD_DELETE
 
 subject: 'vsv'
 nominal: 'vnv'
@@ -50,3 +51,4 @@ nominal: 'vnv'
 [1] SUBSTITUTE_TYPE
 [2] GOOD
 
+<hwut-end>

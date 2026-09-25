@@ -1,0 +1,17 @@
+
+--- a directory that does not stand ---
+    REFUSED: the directory '/no/such/directory' does not exist
+    status: REFUSED
+
+--- a word the face does not know ---
+REFUSED: '--sideways' is no word of 'hwut.report.timings'
+usage: hwut.report.timings [--table] [-o <file>]
+                           [--directory=<path>] [-r] [--help]
+    status: REFUSED
+
+--- '-o' without a file ---
+REFUSED: '-o' stands without a file
+usage: hwut.report.timings [--table] [-o <file>]
+                           [--directory=<path>] [-r] [--help]
+    status: REFUSED
+<hwut-end>

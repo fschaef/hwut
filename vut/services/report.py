@@ -75,6 +75,8 @@ from   ._target                                      import entered
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 from   vut.services.lib.face    import Refused, Fault, FaceError
+from   vut.services.lib.wallflowers import wallflowers_writer
+from   vut.engine.display.plain import wallflower_note_list
 from   vut.engine.orchestrator.plan.wish import Wish
 from   dataclasses import dataclass, field
 
@@ -351,12 +353,16 @@ def _tallied(entry_stream, fail_box):
         yield entry
 
 
-def entry_stream_of(root, wish):
+def entry_stream_of(root, wish, silent_list=None):
     """
     YIELD: [0] str            one directory, relative to 'root', walk
                               order.
            [1] str            its title.
            [2] list[CRow]     one row per case the wish selected there.
+
+    'silent_list', where given, receives every file no carrier speaks
+    for (X-SILENT), by its path relative to the CALL directory, as each
+    directory is explored.
 
     ONE DIRECTORY AT A TIME, the moment it is known. Exploring a
     directory interviews its applications -- subprocesses -- so on a
@@ -377,6 +383,9 @@ def entry_stream_of(root, wish):
                                      base_f=True):
         whole      = os.path.join(root, directory)
         app_db     = {app.source_file: app for app in result.app_set}
+        if silent_list is not None:
+            silent_list.extend(os.path.relpath(os.path.join(whole, name))
+                               for name in result.app_set.silent_tuple)
         row_list   = []
         for case in (entry.case for entry in selected_list):
             test   = case.source_file
@@ -752,6 +761,8 @@ class Tally:
     row_n:    int = 0
     fail_n:   int = 0
     empty_f:  bool = False
+    silent_tuple: tuple = ()     # X-SILENT: paths, sorted, relative to
+                                 # the call directory
 
 
 def _row_of(crow):
@@ -863,8 +874,9 @@ def do(request, sink):
     if not os.path.isdir(directory):
         raise Refused("REFUSED: the directory '%s' does not exist" % directory)
     try:
+        silent_list = []
         stream    = entry_stream_of(os.path.abspath(directory),
-                                    wish_of(request))
+                                    wish_of(request), silent_list)
         #  HELD ONLY UNTIL THE FIRST CASE: 'empty' is a fact about the
         #  WHOLE selection, and a stream cannot know it before the end
         #  -- but it CAN know the moment it stops being true.
@@ -873,7 +885,8 @@ def do(request, sink):
             held_list.append(entry)
             if entry[2]: break
         else:
-            return Tally(empty_f=True)
+            return Tally(empty_f=True,
+                         silent_tuple=tuple(sorted(silent_list)))
         block_n = row_n = fail_n = 0
         for where, title, row_list in itertools.chain(held_list, stream):
             block = Block(where, title,
@@ -882,7 +895,8 @@ def do(request, sink):
             row_n   += len(block.row_tuple)
             fail_n  += sum(1 for row in row_list if not row.good_f)
             sink(block)
-        return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n)
+        return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n,
+                     silent_tuple=tuple(sorted(silent_list)))
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     except SelectionError as error:
@@ -980,11 +994,27 @@ def main(argv=None, write=None):
     except FaceError as error:
         write(error.said)
         return error.code
+    #  THE WALLFLOWERS (X-SILENT): listed in the call directory, and
+    #  REMINDED OF wherever a person reads this face -- never inside a
+    #  machine format on stdout, whose reader parses every line.
+    list_name = wallflowers_writer(write)(list(tally.silent_tuple)) \
+                if tally.silent_tuple else None
+    remind_f  = bool(tally.silent_tuple) \
+                and (format_name == "traditional" or out_name is not None)
+    def remind():
+        """RETURN: None. The wallflower note, where one is owed."""
+        if not remind_f: return
+        write("")
+        for line in wallflower_note_list(list(tally.silent_tuple),
+                                         list_name):
+            write(line)
     if tally.empty_f:
         write("EMPTY: the wish selects no case in '%s'" % directory)
+        remind()
         return E_ExitCode.EMPTY
     if writer is not None:
         writer(None)                     # the page's tail
+        remind()
     else:
         line_tuple = line_tuple_of(entry_list, format_name,
                                    width_of(width), color_f)
@@ -1000,6 +1030,7 @@ def main(argv=None, write=None):
                 return E_ExitCode.FAULT
             write("written: %s (%s, %d line(s))"
                   % (out_name, format_name, len(line_list)))
+            remind()
     return E_ExitCode.FAULT if tally.fail_n else E_ExitCode.OK
 
 

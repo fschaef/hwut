@@ -242,7 +242,7 @@ def _held(column_n):
 
 
 def console_view(rendering_wish, write, write_error, environ, tty_f,
-                 write_log=None, color_of=None):
+                 write_log=None, color_of=None, write_wallflowers=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
@@ -254,7 +254,8 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
     are: THE FACE OWNS ITS SINKS. This module says a log stands and
     what goes in it; opening a file, and closing it, is the caller's
     -- a renderer that opened files would own a resource it cannot
-    promise to release.
+    promise to release. 'write_wallflowers' is the face's on the same
+    terms.
     """
     ink = CInk(colour_decision(environ, tty_f,
                                force_f=rendering_wish.force_f,
@@ -269,4 +270,5 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
                       failure_summary_f
                           =rendering_wish.failure_summary_f,
                       brief_f=rendering_wish.brief_f,
-                      write_log=write_log)
+                      write_log=write_log,
+                      write_wallflowers=write_wallflowers)

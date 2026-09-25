@@ -1,7 +1,7 @@
 N AGAINST N DIFFERING LINES -- the line-sequence search
-     2 lines                   nodes 44        pairs 3    budget 800       ok
-     4 lines                   nodes 108       pairs 5    budget 3200      ok
-     8 lines                   nodes 278       pairs 9    budget 12800     ok
-    16 lines                   nodes 958       pairs 17   budget 51200     ok
+     2 lines                   nodes 36        pairs 3    budget 800       ok
+     4 lines                   nodes 88        pairs 5    budget 3200      ok
+     8 lines                   nodes 226       pairs 9    budget 12800     ok
+    16 lines                   nodes 778       pairs 17   budget 51200     ok
 SUCCESS: the line search stayed inside its budget
 <hwut-end>

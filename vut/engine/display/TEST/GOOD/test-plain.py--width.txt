@@ -1,0 +1,9 @@
+    piped, screen says 200    78
+    terminal, COLUMNS 100    100
+    terminal, COLUMNS 9999   120
+    terminal, COLUMNS 10      40
+    terminal asked, 90        90
+    terminal asked, 200      120
+    terminal answers 0        78
+    no device to ask          78
+<hwut-end>

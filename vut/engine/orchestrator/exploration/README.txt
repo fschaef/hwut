@@ -54,10 +54,12 @@ Four gates, in order. A file passes all four or it is no test application.
 
   3  THERE IS NO THIRD CARRIER. A file neither speaks for is SILENT:
      no application, no fault, nothing asked -- whatever it would have
-     answered. The run NAMES the silent files once, at its end, each by
-     its path relative to the call directory, with the two ways to settle
-     them: 'hwut.config.ignore <paths>' for a helper, an 'apps' entry for
-     a test. The INTERVIEW ('app --hwut-info') survives as the reader
+     answered. The run NAMES the silent files once, at its end: their
+     count, and 'hwut-wallflowers.txt' in the call directory holding each
+     by its path relative to that directory, one per line; then the two
+     ways to settle them: 'hwut.config.ignore $(cat hwut-wallflowers.txt)'
+     for helpers, an 'apps' entry for a test. A run with none leaves
+     no such file. The INTERVIEW ('app --hwut-info') survives as the reader
      'hwut.renovate' drives, not as a carrier.
 
   4  IT HAS A TITLE -- or gets one. A specification lacking 'title' is NOT

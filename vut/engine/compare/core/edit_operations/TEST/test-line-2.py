@@ -79,3 +79,5 @@ if "visible-nothing" in sys.argv:
     # 6. Significant change hidden among visible nothings
     # 's' -> 'n' (1.0) with surrounding 'v's
     test_mseq("vsv", "vnv")
+
+print("<hwut-end>")

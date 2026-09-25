@@ -1,0 +1,15 @@
+
+--- the traditional report ---
+test-engine.py first         412 [1203]
+test-engine.py follow        390
+test-lexer.py                 17
+test-nothing.py silent         -
+
+4 case(s), 0.82 s
+
+--- status ---
+    OK
+
+--- the build is NOT summed ---
+    412 + 390 + 17 = 819 ms, and the tail says 0.82 s
+<hwut-end>

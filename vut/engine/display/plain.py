@@ -204,7 +204,7 @@ class CPlainFlow(CRunReportReceiver):
     def __init__(self, write, write_error=None, width=78, ink=None,
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
-                 brief_f=False, write_log=None):
+                 brief_f=False, write_log=None, write_wallflowers=None):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -237,11 +237,20 @@ class CPlainFlow(CRunReportReceiver):
         ANNOUNCED: one line at its end instead of a pair bracketing
         it. The two are orthogonal and a VERBOSE brief run is a
         meaningful thing to ask for.
+
+        'write_wallflowers'
+                 where the SILENT files' paths go (X-SILENT): called
+                 once, with the sorted list, and RETURNS the name the
+                 list now stands under -- or None where it could not
+                 be written. The note then names that file instead of
+                 every path. None means no such sink stands, and the
+                 note lists the paths itself.
         """
         self.write       = write
         self.write_error = write_error if write_error is not None \
                            else write
         self.write_log   = write_log
+        self.write_wallflowers = write_wallflowers
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
         self.tier        = tier
@@ -1315,26 +1324,24 @@ class CPlainFlow(CRunReportReceiver):
 
     def _write_silent(self, write, w):
         """
-        RETURN: None. ONE NOTE at the end naming every file no carrier
+        RETURN: None. ONE NOTE at the end on every file no carrier
                 speaks for, each by its path RELATIVE TO THE DIRECTORY
                 THE RUN WAS CALLED IN, and the two lines that settle
-                them: ignore them, or name one under 'apps'. Nothing
-                where nothing was silent.
+                them: ignore them, or name one under 'apps'. The paths
+                go to 'write_wallflowers' where it stands and takes
+                them, and the note names that file; else the note
+                lists them. Nothing where nothing was silent.
         """
         if not self.silent_db: return
         path_list = sorted(
             os.path.relpath(os.path.join(directory, node))
             for directory, node_list in self.silent_db.items()
             for node in node_list)
+        list_name = self.write_wallflowers(path_list) \
+                    if self.write_wallflowers is not None else None
         write("")
-        write("NOTE  %d file(s) carry no 'hwut { }' and stand under no "
-              "'apps':" % len(path_list))
-        for path in path_list:
-            write("          %s" % path)
-        write("      helpers?  hwut.config.ignore %s"
-              % " ".join(path_list))
-        write("      a test?   name it under 'apps' in its "
-              "directory's hwut.conf")
+        for line in wallflower_note_list(path_list, list_name):
+            write(line)
 
     def _write_refused(self, write, w):
         """
@@ -1356,6 +1363,29 @@ class CPlainFlow(CRunReportReceiver):
             write(self._ink_dir(directory))
             for node, reason in pair_list:
                 write("    %-*s%s" % (column, node, reason))
+
+
+def wallflower_note_list(path_list, list_name):
+    """
+    RETURN: list[str], the NOTE on the files no carrier speaks for
+            (X-SILENT): their count, where they are listed, and the two
+            ways to settle them -- naming 'list_name' where the paths
+            stand in that file, else naming every path of 'path_list'.
+            Spoken alike by every face that finds them.
+    """
+    head = "NOTE  %d file(s) carry no 'hwut { }' and stand under no " \
+           "'apps'" % len(path_list)
+    if list_name is not None:
+        line_list = ["%s -- listed in %s" % (head, list_name),
+                     "      helpers?  hwut.config.ignore $(cat %s)"
+                     % list_name]
+    else:
+        line_list = [head + ":"] \
+                    + ["          %s" % path for path in path_list] \
+                    + ["      helpers?  hwut.config.ignore %s"
+                       % " ".join(path_list)]
+    return line_list + ["      a test?   name it under 'apps' in its "
+                        "directory's hwut.conf"]
 
 
 def render(event_iterable, write, write_error=None, width=78,

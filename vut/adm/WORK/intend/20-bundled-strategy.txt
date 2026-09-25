@@ -1,0 +1,83 @@
+==============================================================================
+INTEND 20 -- 'BUNDLED': THE MISSING STRATEGY MEMBER AND THE REAL DEFAULT
+==============================================================================
+RULED (Frank-Rene): WE BUNDLE DIRECTORIES; SLOW DIRECTORIES FIRST; IN EACH
+DIRECTORY, SLOW TEST RUNS FIRST; AN APPLICATION'S CHOICES TOGETHER.
+This is cut C of three: the strategy member. Cut D (bundle an application's
+choices at node level) and cut B ('--fastest') follow, each green first.
+
+------------------------------------------------------------------------------
+1  THE RULE, AND WHY IT IS NOT A NUMBER
+------------------------------------------------------------------------------
+Open a further directory ONLY WHERE THE OPEN ONES CANNOT FILL THE BUDGET.
+
+    free slots now            b
+    admissible nodes the
+    open units could start    r   (summed over open units)
+
+    open the next unit  <=>  r < b
+
+O-29's measurement is the evidence that a NUMBER is wrong: two directories
+suffice at 8 jobs, three at 16, four at 16 for the last second -- the count
+that serves is a function of the tree, not a constant. The rule asks the
+units what they can do and opens exactly as far as it must.
+
+------------------------------------------------------------------------------
+2  WHAT THE TREE HOLDS TODAY  (measured, this tree)
+------------------------------------------------------------------------------
+'CStrategy.may_start(index, running)'   sees the unit index and the set of
+                                        units in flight. NOT the budget, NOT
+                                        what the open units could start.
+'CStrategy.run'                         wakes on FIRST_COMPLETED of a UNIT.
+                                        A slot freed inside another directory
+                                        wakes nothing here.
+'Scheduler._dispatch_all'               already waits on 'budget.changed()'
+                                        beside its own tasks, and asks
+                                        'state.ready()' anew before every
+                                        start (an exclusion set withdraws
+                                        admission, so a snapshot lies).
+'CDirectoryWork.run(emit, budget)'      builds its Scheduler INSIDE 'run';
+                                        nothing outside can ask it anything.
+
+So all three of the prompt's seams are real: strategy, CDirectoryWork,
+Scheduler.
+
+------------------------------------------------------------------------------
+3  THE PLUMBING, SMALLEST FIRST
+------------------------------------------------------------------------------
+  (1) Scheduler exposes 'ready_n()' -- how many nodes could start NOW, asked
+      of 'state.ready()', never cached. Zero while it is blocked behind its
+      own frame or an exclusion set. Its own '_dispatch_all' is untouched.
+  (2) CDirectoryWork holds its Scheduler once built and answers 'ready_n()';
+      zero before the Scheduler stands and after the unit ends.
+  (3) CStrategy gains a BIND: the budget and the unit list, given once by
+      CTreeScheduler. 'may_start' keeps its signature; BUNDLED reads what it
+      needs off the binding. LINEAR, SUCCESSOR, PARALLEL ignore it.
+  (4) CStrategy.run waits on 'budget.changed()' BESIDE the unit tasks where
+      the strategy says it must ('wakes_on_budget_f'), and cancels the future
+      as 'Scheduler._dispatch_all' does. Only BUNDLED sets it: the others'
+      answers cannot change when a slot comes free.
+
+------------------------------------------------------------------------------
+4  WHAT IS OPEN, AND MUST BE RULED BEFORE THE DEFAULT MOVES
+------------------------------------------------------------------------------
+  - THE DEFAULT. O-29 left SUCCESSOR as interim. Moving it to BUNDLED moves
+    every flow-subject nominal in the tree. Classify mechanically first (bin
+    section 4), then bless; the glob pass runs too, not the census alone
+    (bin 2.8).
+  - A UNIT THAT IS BLOCKED, NOT DONE ('r' = 0 for a frame that is running):
+    the rule opens the next directory. That is wanted -- but it means a
+    directory can be opened for a moment's gap. Measure before ruling: does
+    the count of open directories oscillate on this tree?
+  - FAILED_FIRST is a separate member and a separate cut ('book.csv' holds
+    the verdicts; one enum member, one line in '_component_of').
+
+------------------------------------------------------------------------------
+5  ENTRY CONDITION
+------------------------------------------------------------------------------
+The tree is green at 841/12 (census) and 829/12 (glob pass) and bundle 62 is
+applied. The traces of a full census must stand ('hwut-traces.csv' is
+machine-local): without them every node is unmeasured, longest-first is plan
+order, and the strategy cannot be judged. On a one-core sandbox the budget is
+one and BUNDLED reduces to LINEAR: ITS WORTH CANNOT BE MEASURED HERE, only
+its correctness. The numbers in O-29 came from a machine with cores.

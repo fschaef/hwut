@@ -454,3 +454,35 @@ COST      MEASURED on the whole tree: no verdict moved anywhere. At ratio
 GRAVEYARD A sign only where it stands free (bundle 19) -- replaced by
           ruling: it left the '+' of '1+2' as uncoloured text.
 
+C-13  NO TRANSPOSITION INSIDE A LINE                               (2026-09-24)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.diff test-import_graph.sh vut' never returned.
+          The element search of ONE line pair swapped a later subject
+          element forward wherever it matched (TRANSPOSE), and kept the
+          permuted line in its merge key. Two paths permuting
+          differently never merge, so the search grew exponentially:
+          7 words 875 509 expansions, 8 words beyond 30 s. Path-like
+          lines ('/', '.') offer a candidate at nearly every position.
+
+DECISION  RULED (Frank-Rene): the element search reorders nothing.
+          Swapped elements read as DELETE plus INSERT. A swap never
+          made a line equivalent -- TRANSPOSE was no GOOD edit -- so no
+          verdict depends on it; it changed only the cost that pairs
+          lines, the 'out of order' mark, and an analogy only a swap
+          could bind.
+
+COST      MEASURED: the pair above associates in about 2 s.
+          'test-association-cost long_lines' no longer explodes, and
+          'fixture' measures the whole real pair without reaching the
+          stopping rule -- though the step from line 30 to 32 still
+          multiplies the nodes by 12.5 (32 155 nodes). 'test-line'
+          and 'test-line-2' read DELETE/INSERT where they read
+          TRANSPOSE, at the higher cost, and gained the '<hwut-end>'
+          they never printed (R-70). No verdict moved.
+          'E_EditId.TRANSPOSE', 'cost_TRANSPOSE' and their display
+          marks remain, now produced by nothing.
+
+GRAVEYARD Transposition inside a window |ai - si| <= K -- rejected: it
+          keeps a threshold and a mark nobody reads, for a line that is
+          DIFFERENT either way.
+

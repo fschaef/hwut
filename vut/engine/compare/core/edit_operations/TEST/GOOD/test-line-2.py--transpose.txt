@@ -1,21 +1,22 @@
 subject: 'sn'
 nominal: 'ns'
-=> Cost: 0.250000
-[0] TRANSPOSE (1)
+=> Cost: 1.000000
+[0] DELETE
 [1] GOOD
+[2] INSERT
 
 subject: 'sxxn'
 nominal: 'nxxs'
-=> Cost: 0.187500
-[0] TRANSPOSE (3)
+=> Cost: 0.500000
+[0] SUBSTITUTE_TYPE
 [1] GOOD_TOLERATED
 [2] GOOD_TOLERATED
-[3] GOOD
+[3] SUBSTITUTE_TYPE
 
 subject: 'sxxxxxxxxxn'
 nominal: 'nxxxxxxxxxs'
-=> Cost: 0.082645
-[0] TRANSPOSE (10)
+=> Cost: 0.181818
+[0] SUBSTITUTE_TYPE
 [1] GOOD_TOLERATED
 [2] GOOD_TOLERATED
 [3] GOOD_TOLERATED
@@ -25,12 +26,12 @@ nominal: 'nxxxxxxxxxs'
 [7] GOOD_TOLERATED
 [8] GOOD_TOLERATED
 [9] GOOD_TOLERATED
-[10] GOOD
+[10] SUBSTITUTE_TYPE
 
 subject: 'sxxxxxxxxxxn'
 nominal: 'nxxxxxxxxxxs'
-=> Cost: 0.076389
-[0] TRANSPOSE (11)
+=> Cost: 0.166667
+[0] SUBSTITUTE_TYPE
 [1] GOOD_TOLERATED
 [2] GOOD_TOLERATED
 [3] GOOD_TOLERATED
@@ -41,13 +42,15 @@ nominal: 'nxxxxxxxxxxs'
 [8] GOOD_TOLERATED
 [9] GOOD_TOLERATED
 [10] GOOD_TOLERATED
-[11] GOOD
+[11] SUBSTITUTE_TYPE
 
 subject: 'snxy'
 nominal: 'nsyx'
-=> Cost: 0.125000
-[0] TRANSPOSE (1)
+=> Cost: 0.500000
+[0] DELETE
 [1] GOOD
-[2] GOOD_TOLERATED
+[2] INSERT
 [3] GOOD_TOLERATED
+[4] GOOD_TOLERATED
 
+<hwut-end>

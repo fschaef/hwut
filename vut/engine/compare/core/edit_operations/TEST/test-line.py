@@ -119,3 +119,5 @@ if "analogies" in sys.argv:
     test_mseq("xx", "zx")
     test_mseq("xyx", "zzx")      # transpose analogies
 
+
+print("<hwut-end>")

@@ -78,31 +78,27 @@ Cost: 0.333333
 subject:  STRING:string, NUMERIC:4711
 nominal:  NUMERIC:4711, STRING:string
 =>
-Cost: 0.250000
-[0] TRANSPOSE (1)
+Cost: 1.000000
+[0] DELETE
 [1] GOOD
+[2] INSERT
 
 subject:  STRING:string, NUMERIC:4711, ANALOGY:((x))
 nominal:  ANALOGY:((y)), STRING:string, NUMERIC:4711
 =>
-Cost: 0.388889
-[0] TRANSPOSE (2)
-[1] TRANSPOSE (2)
+Cost: 0.666667
+[0] INSERT
+[1] GOOD
 [2] GOOD
-AnalogyDb:
-  "((x))"="((y))"
+[3] DELETE
 
 subject:  STRING:string, STRING:, ANALOGY:((x))
 nominal:  ANALOGY:((y)), STRING:string, STRING:
-
 =>
-Cost: 0.388889
-[0] TRANSPOSE (2)
-[1] TRANSPOSE (2)
+Cost: 0.666667
+[0] INSERT
+[1] GOOD
 [2] GOOD
+[3] DELETE
 
-
-
-AnalogyDb:
-  "((x))"="((y))"
-
+<hwut-end>
