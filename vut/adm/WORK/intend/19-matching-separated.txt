@@ -228,10 +228,9 @@ WHAT "DONE" CHANGES
     2. The element level keeps a search, but only for what needs one.
        Grading goes into the table. Analogy is what the search is for.
 
-    3. NO INPUT HANGS. Rare is not never: the analogy-constrained case
-       is uncommon in practice and always possible in principle, and
-       when it arrives the face must answer -- with a budget declared
-       where a reader can find it, as potpourri's is.
+    3. NO INPUT HANGS. The line level is a table (1.), the element
+       level reorders nothing (o-1), and no budget stands in for either
+       (o-3).
 
     4. 'test-association-cost.py fixture' stops reproducing a hang by
        hanging, and its numbers become the standing record of what the
@@ -244,34 +243,12 @@ Not in scope: fault 2 (the stream drained whole before comparison), plan
 OPEN
 ====
 
-o-1  TRANSPOSITION AT THE ELEMENT LEVEL
+o-1  RULED 2026-09-24 -- (a) NO TRANSPOSITION AT THE ELEMENT LEVEL.
 
-     (a) drop it. A reordering costs a substitution like anything else.
-         buys:  the table is reachable with nothing further to rule;
-                'subject_modified' leaves the key and the code
-         costs:  loses the statement that reordering is a milder fault
-                than a wrong word -- which is visible in output today
-
-     (b) adjacent only, with T set so that 2T >= I + D (T = 1 against
-         I = D = 1). Lowrance-Wagner territory, and a swap still costs
-         1 where the two substitutions it replaces cost 2.
-         buys:  the milder-fault statement survives; the bound is one
-                the literature vouches for
-         costs:  sub-unit transposition cost is gone; a distant
-                reordering is no longer recognised as a reordering
-
-     (c) keep arbitrary distance, behind a declared budget as potpourri
-         has.
-         buys:  nothing of today's behaviour is given up
-         costs:  the element level stays a search on every pair, not
-                only on analogy-bearing ones; the budget decides
-                alignments, and a budget that decides is a semantics
-
-     WHICHEVER: nothing in the suite currently pins what
-     'subject_modified' protects. Measured -- the whole compare suite
-     answers 24 ok / 39 fail both with and without it, verdicts
-     byte-identical. A test must be written before this is ruled, or a
-     fix cannot be told from a regression.
+     A reordering inside a line reads as DELETE plus INSERT. BUILT:
+     compare C-13; 'subject_modified' left the key and the code, and
+     'test-line-2.py transpose' pins the new reading. MEASURED after:
+     the pair above associates in about 2 seconds.
 
 o-2  RULED -- 'WorkItemHistory' IS REMOVED.
 
@@ -298,30 +275,24 @@ o-2  RULED -- 'WorkItemHistory' IS REMOVED.
      position is therefore left OPEN and decided after anchoring is
      measured, not before.
 
-o-3  WHAT HAPPENS WHEN THE ANALOGY BUDGET IS SPENT
+o-3  RULED 2026-09-24 -- THERE IS NO ANALOGY BUDGET.
 
-     (a) REFUSE, naming the budget and the pair.
-         buys:  no alignment is ever silently not the best one
-         costs:  a rare input turns a working session into a refusal
+     An analogy comparison costs about what a string comparison costs;
+     nothing is bounded on its account, and nothing is refused or
+     coarsened. TO MEASURE in the plan: a line dense in analogies with
+     several candidate partners each -- the one shape in which the
+     'analogy_db' in the merge key could multiply states. Only such a
+     measurement reopens this.
 
-     (b) fall back to the analogy-free table and say so in the output.
-         buys:  the face always answers
-         costs:  an alignment that is declared coarse is still an
-                alignment a GOOD may be recorded against
+o-4  RULED 2026-09-24 -- EVERY NUMBER OF THE MATCHING IS A CONFIGURATION
+     FIELD, shown with its provenance by the machinery that already
+     stands (default, app, hwut.conf:<n>), as potpourri's
+     'max_comparisons' is. Nothing new is built for the display.
 
-o-4  WHERE THE BUDGET IS DECLARED
-
-     (a) alongside potpourri's, in 'region' scope.
-     (b) a Configuration field of its own, since the sequential path is
-         not a region handler.
-     Cost of each is small; the cost of choosing wrongly is a reader who
-     looks in one place and finds nothing.
-
-o-5  STANDING FROM EARLIER, UNRULED: the knee check inside 'Tally' in
-     'test-association-cost.py', so the 'fixture' choice abandons at
-     KNEE_NODE_N instead of hanging. Measured: 2 seconds against never,
-     and it names lines 31-32 as the knee. No recorded GOOD moves,
-     because 'fixture' has never had one.
+o-5  BUILT -- the knee check inside 'Tally' in 'test-association-cost.py'
+     stands, and 'fixture' has its GOOD. After o-1 the fixture no longer
+     reaches KNEE_NODE_N; the step from line 30 to 32 still multiplies
+     the nodes by 12.5 -- the line-level search that anchoring replaces.
 
 o-6  RULED -- THE SECOND PHASE IS BOTH CRITERIA, IN ORDER.
 
@@ -355,26 +326,13 @@ o-6  RULED -- THE SECOND PHASE IS BOTH CRITERIA, IN ORDER.
      the two criteria stands. Each is a number, and each wants a
      measurement rather than a guess.
 
-o-7  WHAT AN ANCHOR CANDIDATE IS COSTED WITH
+o-7  RULED 2026-09-24 -- (c): A CANDIDATE PAIRING IS COSTED WITH CONTEXT,
+     CONFIGURABLE.
 
-     Both phase-two criteria need a cost per candidate pairing, and the
-     real cost is the element-level comparison -- the very thing that
-     does not terminate. The anchor pass must therefore rank on a CHEAP
-     surrogate.
-
-     The literature does exactly this. LHDiff (Asaduzzaman) uses
-     locality-sensitive hashing plus normalised Levenshtein over
-     content AND context. Reiss compared eighteen line-tracking
-     methods and found the best to be whitespace-insensitive
-     normalised Levenshtein with four lines of context, above 97 per
-     cent. ldiff (Canfora) ranks hunk pairs by cosine similarity
-     first and only then compares lines within the best.
-
-     (a) token-bag overlap of the two lines, O(n+m)
-     (b) normalised Levenshtein over the raw text
-     (c) (a) or (b) PLUS a line or two of context either side
-
-     Any of the three is admissible as a LOWER BOUND on the real cost
-     if chosen to be one, in which case it also prunes the element
-     search and sharpens 'min_cost_remaining'. Ruling it as a bound
-     rather than a score is worth more than the choice between them.
+     Both phase-two criteria rank candidate pairings; each is costed on
+     the two lines PLUS k lines of context either side. The base
+     measure and k are Configuration fields (o-4). Their defaults are
+     measured, not guessed. MEASURE FIRST whether the element-level
+     cost itself is now cheap enough to serve as the base measure
+     (after o-1 the whole fixture pair aligns in about 1.3 seconds);
+     if so, it is the default.

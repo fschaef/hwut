@@ -3,7 +3,8 @@
 # @hwut {
 #     title      = "The traces table: a machine class, and 'the one above'"
 #     choices    = ["key", "table", "elision"]
-#     tolerance { eq_pattern = ["SUCCESS.*", "FAILURE.*"] }
+#     tolerance { eq_pattern = ["SUCCESS.*", "FAILURE.*",
+#                               "[0-9]{4}-[0-9]{2}-[0-9]{2}"] }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -20,6 +21,9 @@ CLASS, beside the tests -- committed, replaced per key, deletable.
     elision   an empty 'system' or 'test' is the one above; an empty
               'choice' is a test that has none, and an empty number is
               one the platform did not measure
+
+THE DAY A ROW WAS WRITTEN is the recording's calendar, not the table's
+behaviour: the page's eq_pattern takes any ISO date.
 ______________________________________________________________________________
 """
 import os

@@ -486,3 +486,29 @@ GRAVEYARD Transposition inside a window |ai - si| <= K -- rejected: it
           keeps a threshold and a mark nobody reads, for a line that is
           DIFFERENT either way.
 
+C-14  THE AUTHOR'S PATTERN BEFORE NUMBERS AND BLANKS              (2026-09-24)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED: an 'eq_pattern' that begins at a free-standing
+          number never matched. The reading is one alternation, and it
+          took the earliest alternative at a position -- NUMERIC and
+          SEPARATOR stood before the author's patterns. '[0-9]+ x'
+          never took '9 x' against '6 x'; 'n[0-9]+ x' did. A count, a
+          date ('2026-09-24' reads three numbers, C-12) could not be
+          tolerated by the means every page uses.
+
+DECISION  RULED (Frank-Rene): the author's patterns are registered
+          BEFORE NUMERIC and SEPARATOR, after the constraint binding and
+          the analogy. An 'eq_pattern' is the most specific word there
+          is, as the binding is before the analogy. Where no pattern
+          claims the text, a number is still always a number (C-11).
+
+COST      MEASURED: three 'test-pattern_finder' pages print the
+          registration order and moved by it; no verdict moved on the
+          whole tree.
+
+GRAVEYARD Rewriting the output in the harness so a pattern need not
+          start at a number -- rejected: the page stops showing the
+          tool's own words, and every later author meets the same trap.
+          A numeric ratio on the page -- rejected: a ratio wide enough
+          for 9 against 186 tolerates every number on it.
+

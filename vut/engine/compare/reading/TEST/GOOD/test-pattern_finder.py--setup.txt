@@ -30,9 +30,9 @@ None -> STRING
 size: 5;
 None -> STRING
 \(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
-(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
 hallo -> EQUIVALENCE_PATTERN
 welt -> EQUIVALENCE_PATTERN
+(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
 
 size: 5;
 None -> STRING

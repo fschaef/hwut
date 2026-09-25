@@ -4,9 +4,9 @@ None -> STRING
 nothing -> VISIBLE_NOTHING
 \(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
+hallo -> EQUIVALENCE_PATTERN
 (?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
 \s+ -> SEPERATOR
-hallo -> EQUIVALENCE_PATTERN
 string: 'hallo welt 4711'
    EQUIVALENCE_PATTERN [0] 'hallo'
    SEPERATOR ' '

@@ -3,8 +3,14 @@
 #
 # @hwut {
 #     title      = "adm/import_graph.py: who depends on whom, and the layering"
-#     choices    = ["depth", "formats", "layering", "refused", "shared",
-#                   "unreadable", "vut"]
+#     choices {
+#         depth { }  formats { }  layering { }  refused { }  shared { }
+#         unreadable { }
+#         vut { tolerance { eq_pattern = ["STATUS: [0-9]",
+#                                         "[0-9]+ module\\(s\\): .*",
+#                                         "(--> .*|imports nothing of this tree)",
+#                                         "LAYERING( VIOLATED --|:) .*"] } }
+#     }
 #     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
@@ -35,12 +41,18 @@
 #             read is a graph that lies.
 # refused     by name: an unknown format, an unknown option, a
 #             declaration that is not one.
-# vut         THE REAL TREE. The outer picture, and the layering it
-#             declares -- so a change to either shows up here.
+# vut         THE REAL TREE: the tool reads all of it, draws the outer
+#             picture, and JUDGES it against the declaration. What the
+#             tree holds -- its modules, its edges, whether its layering
+#             holds -- is no behaviour of the tool, and is tolerated:
+#             the choice's own eq_patterns take any module list, any
+#             edges, and either judgement. What is not tolerated: a
+#             component missing or added, a refusal, a crash.
 #
 # THE FIXTURES ARE TINY TREES built in a work directory, so what this
 # suite proves does not depend on the shape of the tree it lives in --
-# except in the 'vut' choice, which is about exactly that.
+# except for the 'vut' choice, whose tolerances say which parts of the
+# page are the tree's.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)      # the tree root: adm/TEST is two below
@@ -225,12 +237,22 @@ vut)
     python3 "$TOOL" . --depth=1 --exclude="*/TEST/*" \
         --exclude="*/test-*" --exclude="*/config.py" > "$WORK/o.txt" 2>&1
     echo "STATUS: $?"
-    echo "THE OUTER PICTURE {"; sed 's/^/    /' < "$WORK/o.txt"; echo "}"
+    #  ONE LINE OF EDGES PER COMPONENT: their number is the tree's, so
+    #  they stand on one line where one pattern takes them all.
+    echo "THE OUTER PICTURE {"
+    awk '/^ *--> / { sub(/^ *--> /, ""); e = e ? e ", " $0 : $0; next }
+         e != ""   { print "    --> " e; e = "" }
+                   { print }' < "$WORK/o.txt" | sed 's/^/    /'
+    echo "}"
     python3 "$TOOL" . --depth=2 --check=adm/LAYERING.txt \
         --exclude="*/TEST/*" --exclude="*/test-*" \
         --exclude="*/config.py" > "$WORK/c.txt" 2>&1
     echo "STATUS: $?"
-    echo "THE LAYERING {"; sed 's/^/    /' < "$WORK/c.txt"; echo "}"
+    #  THE JUDGEMENT LINE ALONE: what follows it lists what the tree
+    #  holds (violations, seals, doors) -- the 'layering' choice shows
+    #  that listing on fixtures. A refusal is its first line too, and
+    #  no pattern takes it.
+    echo "THE LAYERING {"; head -1 "$WORK/c.txt" | sed 's/^/    /'; echo "}"
     ;;
 
 *)

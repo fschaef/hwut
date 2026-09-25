@@ -242,7 +242,8 @@ def _held(column_n):
 
 
 def console_view(rendering_wish, write, write_error, environ, tty_f,
-                 write_log=None, color_of=None, write_wallflowers=None):
+                 write_log=None, color_of=None, write_wallflowers=None,
+                 root=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
@@ -271,4 +272,5 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
                           =rendering_wish.failure_summary_f,
                       brief_f=rendering_wish.brief_f,
                       write_log=write_log,
-                      write_wallflowers=write_wallflowers)
+                      write_wallflowers=write_wallflowers,
+                      root=root)

@@ -204,7 +204,8 @@ class CPlainFlow(CRunReportReceiver):
     def __init__(self, write, write_error=None, width=78, ink=None,
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
-                 brief_f=False, write_log=None, write_wallflowers=None):
+                 brief_f=False, write_log=None, write_wallflowers=None,
+                 root=None):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -245,12 +246,16 @@ class CPlainFlow(CRunReportReceiver):
                  be written. The note then names that file instead of
                  every path. None means no such sink stands, and the
                  note lists the paths itself.
+        'root'   the directory the run was asked of, as the CALLER
+                 spelt it; the stream's directories are relative to it.
+                 None means the call directory itself.
         """
         self.write       = write
         self.write_error = write_error if write_error is not None \
                            else write
         self.write_log   = write_log
         self.write_wallflowers = write_wallflowers
+        self.root        = root
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
         self.tier        = tier
@@ -1334,7 +1339,7 @@ class CPlainFlow(CRunReportReceiver):
         """
         if not self.silent_db: return
         path_list = sorted(
-            os.path.relpath(os.path.join(directory, node))
+            os.path.relpath(os.path.join(self.root or "", directory, node))
             for directory, node_list in self.silent_db.items()
             for node in node_list)
         list_name = self.write_wallflowers(path_list) \

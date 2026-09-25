@@ -575,7 +575,8 @@ def _main(argv, write, write_error, captured_f, demand=None,
         flow = console_view(rendering_wish, write, write_error,
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color,
-                            write_wallflowers=wallflowers_writer(write_error))
+                            write_wallflowers=wallflowers_writer(write_error),
+                            root=directory)
         try:
             tally = do(request, sink=event_sink, flow=flow, demand=demand, write=write)
         except FaceError as error:

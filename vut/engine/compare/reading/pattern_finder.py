@@ -117,6 +117,13 @@ class PatternFinder:
             b, e = re.escape(config.analogy_begin_marker), re.escape(config.analogy_end_marker)
             _register(E_ToleranceId.ANALOGY, f"{b}(?:.|\\n)+?{e}")
 
+        # THE AUTHOR'S PATTERNS BEFORE NUMBERS AND BLANKS (C-14): the
+        # alternation takes the earliest alternative at a position, and an
+        # 'eq_pattern' is the most specific word there is -- so
+        # '[0-9]+ module\(s\): .*' is taken whole, not cut at its number.
+        for pattern in config.equivalent_pattern_list:
+            _register(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
+
         # A NUMBER IS ALWAYS A NUMBER (C-11). The ratio sets how
         # far two numbers may differ -- 0 is 'by value, exactly', so
         # '1.0' is '1' -- and it never decides WHETHER a number is one.
@@ -142,8 +149,6 @@ class PatternFinder:
         if config.backslash_f:
             _register(E_ToleranceId.EQUIVALENCE_PATTERN, r"[\\/]+")
 
-        for pattern in config.equivalent_pattern_list:
-            _register(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
 
         # Pre-filter equivalence patterns for the secondary overlap check
         self._equiv_patterns = tuple(

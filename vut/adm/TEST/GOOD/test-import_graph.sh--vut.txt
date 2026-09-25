@@ -1,34 +1,28 @@
 STATUS: 0
 THE OUTER PICTURE {
     adm {
-        6 module(s): cythonizer.py, good_audit.py, import_graph.py, python_tracer.py, unread_modules.py, version.py
-        imports nothing of this tree
+        9 module(s): cythonizer.py, dependency.py, fail_book.py, good_audit.py, import_graph.py, python_tracer.py, ... (3 more)
+        --> engine
     }
     auxiliary {
-        4 module(s): async_helper.py, binary_codec.py, directory_mutex.py, parent_child_list.py
+        5 module(s): async_helper.py, binary_codec.py, clock.py, directory_mutex.py, parent_child_list.py
         imports nothing of this tree
     }
     engine {
-        172 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (166 more)
-        --> adm
-        --> auxiliary
-        --> test_writing_support
+        186 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (180 more)
+        --> adm, auxiliary, test_writing_support
     }
     services {
-        36 module(s): _boundary.py, _config.py, _core.py, _exit.py, _follow.py, accept.py, ... (30 more)
-        --> auxiliary
-        --> engine
-        --> test_writing_support
+        67 module(s): _accept_common.py, _boundary.py, _cases.py, _config.py, _core.py, _exit.py, ... (61 more)
+        --> auxiliary, engine, test_writing_support
     }
     test_writing_support {
         8 module(s): hwut_pype.py, __init__.py, deterministic_random.py, deterministic_timeline.py, hwut_hocon.py, hwut_runner.py, ... (2 more)
         imports nothing of this tree
     }
 }
-STATUS: 0
+STATUS: 1
 THE LAYERING {
-    LAYERING: every edge obeys 'adm/LAYERING.txt' (14 component(s), 32 edge(s))
-    SEALED: engine/compare/contract, engine/protocol, engine/procsitter, auxiliary, test_writing_support -- nothing leaves
-    DOORS: engine/compare/api, engine/procsitter/api, engine/coverage/api, engine/bookkeeper/api -- nothing enters but here
+    LAYERING VIOLATED -- 1 edge(s) no rule permits:
 }
 <hwut-end>
