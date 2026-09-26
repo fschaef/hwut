@@ -4,6 +4,7 @@ build/
 **/TEST/ADM
 **/TEST/TMP
 **/tmp
+**/*.tmp
 **/tmp.*
 **/*.coverage
 **/*.bak
@@ -12,3 +13,4 @@ build/
 **/stats.log
 **/htmlcov
 zz-trash.tgz
+**/hwut-wallflowers.txt
