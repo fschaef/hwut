@@ -4,7 +4,12 @@
 # @hwut {
 #     title      = "A test named by path ENTERS its directory (E-47)."
 #     choices    = ["enter", "refused"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
+#     tolerance { eq_pattern = ["(\\.( \\.){2,}|\\.{3,}) +",
+#                              ", [0-9]+\\.[0-9]+ \\[sec\\] total"] }
+#     #  the display's dot leader, whose length is the display's layout,
+#     #  not this page's subject. EVERY STATUS IS EXACT: a spelling that
+#     #  starts refusing, or a refusal that starts passing, is the page's
+#     #  subject.
 # }
 #
 # ---------------------------------------------------------------------------
@@ -18,7 +23,7 @@
 # enter      the same test asked for by a path below, by a path with
 #            '..', by an absolute path, and relative to '--directory'
 #            -- four spellings, one selection,
-#            on 'hwut.wishlist' and 'hwut.run'; 'hwut.config.show' by path.
+#            on 'hwut.report.wishlist' and 'hwut.run'; 'hwut.config.show' by path.
 #            A glob in the DIRECTORY part is not a path: it stays a
 #            wish over the tree below.
 # refused    two words naming two directories; an absolute path
@@ -28,7 +33,7 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-WISHLIST="python3 -m vut.services.wishlist"
+WISHLIST="python3 -m vut.services.lib.report.wishlist"
 RUN="python3 -m vut.services.run"
 SHOW="python3 -m vut.services.lib.config.show"
 unset NO_COLOR CI COLUMNS
@@ -37,7 +42,6 @@ case "$1" in
     --hwut-info)
         echo "A test named by path ENTERS its directory (E-47).;"
         echo "CHOICES: enter, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 
@@ -56,7 +60,8 @@ face() {                # <face> <args...> -- status and stdout
     fi
 }
 
-fixture() {             # three directories, two apps each
+fixture() {             # three directories, two apps each; 'test-a.sh one'
+                        # has its nominal, so a run of it RUNS and passes
     for where in messaging/queue messaging/net storage; do
         mkdir -p "tree/$where/TEST/GOOD"
         printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
@@ -65,6 +70,8 @@ fixture() {             # three directories, two apps each
             > "tree/$where/TEST/test-a.sh"
         printf '#!/bin/bash\n# @hwut { title = "B" }\necho "b"\necho "<hwut-end>"\n' \
             > "tree/$where/TEST/test-b.sh"
+        printf 'line one\n<hwut-end>\n' \
+            > "tree/$where/TEST/GOOD/test-a.sh--one.txt"
         chmod +x "tree/$where/TEST/"*.sh
     done
 }

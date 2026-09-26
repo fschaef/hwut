@@ -1,5 +1,5 @@
 
---- hwut.wishlist, called as a library ---
+--- hwut.report.wishlist, called as a library ---
     ./test-a.sh one
     ./test-a.sh two
     ./test-b.sh

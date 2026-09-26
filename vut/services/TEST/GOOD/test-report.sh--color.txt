@@ -25,6 +25,9 @@
                                                                  (2 tests)
     
     ======================================================================
+    
+    RESULTS: 1 ok, 1 fail
+    ESC[97;42m|                ok                ESC[0mESC[30;43mESC[0mESC[97;48;5;196m|              fail               ESC[0mESC[97;48;5;196m|ESC[0m
 --- and the same page, piped, is plain
     ESC count: 0
 <hwut-end>

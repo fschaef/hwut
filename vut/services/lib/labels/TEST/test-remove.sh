@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "hwut.labels.remove: take a label off what a wish selects."
 #     choices    = ["comments", "delete", "doors", "take"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -31,7 +30,6 @@ case "$1" in
     --hwut-info)
         echo "hwut.labels.remove: take a label off what a wish selects.;"
         echo "CHOICES: take, delete, doors;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

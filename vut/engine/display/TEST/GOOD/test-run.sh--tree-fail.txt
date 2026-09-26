@@ -30,7 +30,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, s.ss [sec]
+    RESULTS: 3 ok, 1 fail, s.ss [sec], s.ss [sec] total
     |                           ok                            |       fail       |
 }
 successor: digest identical to linear: True

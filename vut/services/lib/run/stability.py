@@ -85,7 +85,7 @@ from   vut.engine.orchestrator.run.strategy          import words_of
 from   vut.services._target import split_words, TargetError
 from   vut.services._exit                            import E_ExitCode
 from   vut.services.lib.cmdline import (face_parser, usage_of,
-                                        parse_or_refuse, did_you_mean)
+                                        parse_or_refuse)
 
 REPEAT_DEFAULT  = 3
 #  THE TWO BARS a cadence finding must clear (disc-7). High enough that

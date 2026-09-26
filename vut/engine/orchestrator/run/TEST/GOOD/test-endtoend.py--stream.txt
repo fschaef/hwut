@@ -1,6 +1,6 @@
 
 --- the stream ---
-    {"directory_list": ["suite/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory_list": ["suite/TEST"], "format": 1, "kind": "tree-begun", "node_n": 16, "when": "T01"}
     {"directory": "suite/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block", "when": "T02"}
     {"directory": "suite/TEST", "format": 1, "kind": "silent", "node": "Makefile", "when": "T03"}
     {"directory": "suite/TEST", "format": 1, "kind": "silent", "node": "strip_noise.py", "when": "T04"}

@@ -4,16 +4,15 @@ config:  adm/ruff.toml
 ignored: E221, E701, E702, I001, S101, S105, UP031
 
 TOLERATED {
-    E401           1  multiple-imports-on-one-line
-    E402          11  module-import-not-at-top-of-file
-    E731           7  lambda-assignment
-    E741           2  ambiguous-variable-name
-    F401           1  unused-import
+    E402           3  module-import-not-at-top-of-file
+    E731           4  lambda-assignment
+    E741           5  ambiguous-variable-name
 }
 
-total tolerated: 22
+total tolerated: 12
 
 MUST STAND AT ZERO {
-    F401 1
+    empty -- no name that is not there, no dispatch that
+    vanishes under '-O', no swallow without a reason
 }
 <hwut-end>

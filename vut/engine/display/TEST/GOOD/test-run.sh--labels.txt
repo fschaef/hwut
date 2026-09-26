@@ -2,58 +2,67 @@
 STATUS: 0
 STDOUT {
     DIR  alpha/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
     DIR  beta/TEST                                                                
-    DONE  test-one.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
     DIR  gamma/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
+    
+    RESULTS: 3 ok, 0 fail, 3 meta, 0.06 [sec]
+    |                                     ok                                     |
 }
 --- '--label meta' lifts the silence (only test-two runs)
 STATUS: 0
 STDOUT {
     DIR  alpha/TEST                                                               
-    DONE  test-two.sh ....................................................... [OK]
+    DONE  test-two.sh .................................................. [OK]  ||0
     DIR  beta/TEST                                                                
-    DONE  test-two.sh ....................................................... [OK]
+    DONE  test-two.sh .................................................. [OK]  ||0
     DIR  gamma/TEST                                                               
-    DONE  test-two.sh ....................................................... [OK]
+    DONE  test-two.sh .................................................. [OK]  ||0
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      1/1
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
+    
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.06 [sec]
+    |                  ok                  |                skip                 |
 }
 --- '--label all' is the universe
 STATUS: 0
 STDOUT {
     DIR  alpha/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]
-          test-two.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
+          test-two.sh .................................................. [OK]  ||0
     DIR  beta/TEST                                                                
-    DONE  test-one.sh ....................................................... [OK]
-          test-two.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
+          test-two.sh .................................................. [OK]  ||0
     DIR  gamma/TEST                                                               
-    DONE  test-one.sh ....................................................... [OK]
-          test-two.sh ....................................................... [OK]
+    DONE  test-one.sh .................................................. [OK]  ||0
+          test-two.sh .................................................. [OK]  ||0
     
     ==============================================================================
     DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      2/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      2/2
+       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
+    
+    RESULTS: 6 ok, 0 fail, 0.07 [sec]
+    |                                     ok                                     |
 }
 --- a label that does not stand, refused by name
 STATUS: 2
@@ -63,38 +72,37 @@ STDOUT {
 --- a LITERAL target overrides the silence
 STATUS: 0
 STDOUT {
-    DIR  alpha/TEST                                                               
-    DONE  test-two.sh ....................................................... [OK]
-    DIR  beta/TEST                                                                
-    DIR  gamma/TEST                                                               
+    DIR  .                                                                        
+    DONE  test-two.sh .................................................. [OK]  ||0
     
     ==============================================================================
     DIRECTORIES                                             1 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      1/1
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
+       . . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
+    
+    RESULTS: 1 ok, 0 fail, 1 skip, 0.03 [sec]
+    |                  ok                  |                skip                 |
 }
 --- a GLOB does not; wholly swallowed, it warns
 STATUS: 3
 STDOUT {
-    WARNING: the glob 'alpha/TEST/test-tw*.sh' met only runs the standard label silences -- name a label ('--label meta') to reach them
-    DIR  alpha/TEST                                                               
-    DIR  beta/TEST                                                                
-    DIR  gamma/TEST                                                               
+    WARNING: the glob 'test-tw*.sh' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    DIR  .                                                                        
+    NOTE  the selection is empty: no test case answers the wish
     
     ==============================================================================
     DIRECTORIES                                             0 ok, 0 fail, hh:mm:ss
     ------------------------------------------------------------------------------
-       +--- alpha/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
-       +--- beta/TEST . . . . . . . . . . . . . . . . . . . . . .    [OK]      0/0
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
+       . . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
+    
+    RESULTS: 0 ok, 0 fail, 1 skip, 1 meta, 0.01 [sec]
+    |                                    skip                                    |
 }
 --- a broken labels file is a FAULT at the door
 STATUS: 1
 STDOUT {
-    FAULT: WORK/hwut-root.labels:7: a target starts './' -- the file's own ground -- and 'x' does not
+    FAULT: WORK/hwut-root.labels:26: a target starts './' -- the file's own ground -- and 'x' does not
 }
 <hwut-end>

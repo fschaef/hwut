@@ -1184,7 +1184,7 @@ PART V -- REFERENCE
                                             tier, two marking views (11.5)
                       services/           the service faces (11.5):
                         lib/accept/interactive.py  'hwut.accept.interactive'
-                        diff.py             'hwut.diff'
+                        diff.py             'hwut.run.diff'
                         report.py           'hwut.report' -- one test
                                             packed whole: metadata,
                                             source, GOOD, OUT, cadence

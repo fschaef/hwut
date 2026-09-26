@@ -190,7 +190,7 @@ def test_not_accepted():
                     if count else "?"))   # the count, never the clock
     ok = _check([
         (len(hit) == 1, "the new test stands once in the REFUSED block"),
-        (hit and "no nominal" in hit[0] and "hwut.play --save" in hit[0],
+        (hit and "no nominal" in hit[0] and "hwut.run.play --save" in hit[0],
          "the reason names the way in"),
         (count and "2 ok, 0 fail" in count[0],
          "it is not counted: two ok, none failed"),

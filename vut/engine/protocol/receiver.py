@@ -91,7 +91,7 @@ class CRunReportReceiver:
         dict at all (then 'kind' is '?' and 'raw' carries the item)."""
 
     # -- one handler per kind, NAMED parameters, concrete no-ops -------
-    def on_tree_begun(self, when, directory_list):
+    def on_tree_begun(self, when, directory_list, node_n=None):
         """RETURN: None. The run begins; the test directories in walk
         order."""
 

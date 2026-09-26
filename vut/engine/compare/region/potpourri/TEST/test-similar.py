@@ -23,7 +23,7 @@ First, equivalent lines are associated.
 
 Seconds, associations are done according to similarity in terms of their 'edit
 distance'. That is, it is measured how many editions of (SUBSTITUTE, DELETE,
-INSERT, TRANSPOSE) are necessary to transform the subject into the nominal
+INSERT) are necessary to transform the subject into the nominal
 line. Line pairs which require less of edit operations than others are
 considered more similar.
 

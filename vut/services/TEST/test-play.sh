@@ -2,15 +2,14 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The hwut.play face: run one test, show the reading"
+#     title      = "The hwut.run.play face: run one test, show the reading"
 #     choices    = ["build", "pyped", "reading", "refused", "silent",
 #                   "solo", "stderr"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
 #
-# 'hwut.play <test-app> [<choice>]' -- run one test and display the
+# 'hwut.run.play <test-app> [<choice>]' -- run one test and display the
 # READING of what it produced, under the TEST'S OWN setup (disc-4).
 #
 # pyped     THE THREE VIEWS. The default shows THE SUBJECT -- what
@@ -41,14 +40,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 export PATH="$ROOT/vut/bin:$PATH"    # '#! /usr/bin/env hwut.pype'
-FACE="python3 -m vut.services.play"
+FACE="python3 -m vut.services.lib.run.play"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.play face: run one test, show the reading;"
+        echo "The hwut.run.play face: run one test, show the reading;"
         echo "CHOICES: reading, pyped, solo, stderr, build, silent, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

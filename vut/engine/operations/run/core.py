@@ -164,7 +164,7 @@ async def read_all(reader, on_line=None):
 
     'on_line' is a TAP (services E-83): where given, every RAW line is
     handed to it AS IT ARRIVES, decoded, newline kept -- the live pane
-    of 'hwut.play'. Without it the reader is drained in blocks, as it
+    of 'hwut.run.play'. Without it the reader is drained in blocks, as it
     always was; the product is byte-identical either way.
     """
     if on_line is None:

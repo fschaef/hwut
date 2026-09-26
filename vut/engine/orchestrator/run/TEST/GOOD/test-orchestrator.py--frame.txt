@@ -1,6 +1,6 @@
 
 --- alpha's frame does not stand; beta runs ---
-    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "node_n": 4, "when": "T01"}
     {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 3, "when": "T02"}
     {"directory": "alpha/TEST", "format": 1, "good": false, "kind": "frame", "role": "on_entry", "when": "T03"}
     {"directory": "alpha/TEST", "fail_db": {}, "format": 1, "good": false, "kind": "dir-done", "when": "T04"}

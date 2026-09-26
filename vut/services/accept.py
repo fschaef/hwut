@@ -902,7 +902,7 @@ def ask(key, text, write, read_line, setup=None):
 
     THE READING IS SHOWN, NOT THE TEXT (E-57): the candidate fed
     against itself through compare's one door, rendered as
-    'hwut.play' renders it -- every '{numeric}', '~analogy~',
+    'hwut.run.play' renders it -- every '{numeric}', '~analogy~',
     '<pattern>', '!binding!' and '|nothing|' marked. A blessing is a
     promise about how this stream will be READ, and the reading is
     what that promise says. Anything but 'y' leaves the pole alone --
@@ -910,7 +910,7 @@ def ask(key, text, write, read_line, setup=None):
     """
     import asyncio
     from .lib.viewers.tui import TuiDisplay
-    from .diff             import reading_view
+    from vut.services.lib.run.diff import reading_view
     write("")
     write("=" * 78)
     write("ACCEPT  %s" % key.name)

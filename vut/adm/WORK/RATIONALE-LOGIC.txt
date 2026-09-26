@@ -73,7 +73,7 @@ answers it: "The scope is LOCAL, never inherited (R-69's locality law);
 a parent cannot bind a target for a subtree." E-7 also settles the walk
 question -- "a directory binding any target is WALKED, test
 applications or none: definition is membership" -- and the service is
-BUILT ('services/target.py', 'bin/hwut.target').
+BUILT ('services/execute.py', 'bin/hwut.execute').
 
 SO LOCALITY HAS EXACTLY ONE EXCEPTION, R-73's one table at the root,
 and 'target { }' is not a second one. Subject 2 is settled throughout.
@@ -302,7 +302,7 @@ ruling was not universal, and now is'.
     E-32  one usage line per face, GENERATED
     E-14  'hwut.tell' tells about ONE TEST; 'hwut.report' about A RUN
     E-4   acceptance, and what it refuses
-    E-22  'hwut.play' -- the command line's way to stand INSIDE a test
+    E-22  'hwut.run.play' -- the command line's way to stand INSIDE a test
     E-18  'hwut.sanitize' -- reports by default; never guesses at
           blessed work
     E-13  a wishlist is a file of targets, and THE ROUND TRIP CLOSES

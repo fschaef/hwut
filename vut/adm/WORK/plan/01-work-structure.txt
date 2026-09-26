@@ -268,7 +268,7 @@ STATE
                               B-8 ('hwut.convert_to_lcov', built as
                               'hwut.run.cov convert'), gathered/0j (the
                               TARGET SERVICE -- E-7 rules its two
-                              hardest forks and 'services/target.py'
+                              hardest forks and 'services/execute.py'
                               is 414 lines), gathered/0m (the
                               WISHLIST -- E-13, and '--wishlist' sits
                               in 'plan/wish.py' exactly where the
@@ -310,11 +310,11 @@ STATE
                                               and the exit law ("targets
                                               are not tests; exit codes
                                               are informational").
-                                              'services/target.py', 414
+                                              'services/execute.py', 414
                                               lines.
-        0l  'hwut.play'                       E-5, E-22; four forks
+        0l  'hwut.run.play'                       E-5, E-22; four forks
                                               ruled AND built
-        0m  'hwut.wishlist'                   E-13; and its ONE blocking
+        0m  'hwut.report.wishlist'                   E-13; and its ONE blocking
                                               question is answered --
                                               'CTestTaskListQuery' takes
                                               'directory' and 'root'

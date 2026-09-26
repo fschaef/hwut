@@ -8,8 +8,8 @@ adapt to a setting of an accordin position in the nominal sequence.
 
 E_EditId:     identifies the operation (INSERT, DELETE, SUBSTITUTE, etc.)
 
-Edit:         identifies names the operation and provides a possible
-              additional parameter (the transpose index, if required)
+Edit:         names the operation, its cost, and -- for a line-level
+              edit -- the element-level edits within the line
 
 EditSequence: maintains a list of edit objects.
 """
@@ -19,24 +19,12 @@ from  vut.engine.compare.reading.line_element import E_ToleranceId
 from  vut.engine.compare.contract.semantics          import E_EditId  # noqa: F401
 
 class Edit:
-    __slots__ = ('id', '_auxiliary', 'cost')
+    __slots__ = ('id', 'edit_list', 'cost')
 
-    def __init__(self, id, transpose_ai=None, edit_list=None, cost: float = 0.0):
-        # TOO EXPENSIVE: assert transpose_ai is None or edit_list is None
-        # (this function is called too often, mio of times)
-        self.id = id
-        if transpose_ai is not None: self._auxiliary = transpose_ai
-        elif edit_list is not None:  self._auxiliary = edit_list
-        else:                        self._auxiliary = None
-        self.cost = cost
-
-    @property
-    def transpose_ai(self):
-        return self._auxiliary
-
-    @property
-    def edit_list(self):
-        return self._auxiliary
+    def __init__(self, id, edit_list=None, cost: float = 0.0):
+        self.id        = id
+        self.edit_list = edit_list
+        self.cost      = cost
 
 class EditSequence:
     """Maintains a list of edit objects, their cost and the required analogy database.

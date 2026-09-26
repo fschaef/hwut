@@ -1,4 +1,4 @@
-E-79: the screen for LOOKING -- 'hwut.diff'
+E-79: the screen for LOOKING -- 'hwut.run.diff'
 
 -- the viewing table: nothing that changes the nominal
      PANE

@@ -19,7 +19,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.08 [sec]
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.07 [sec], 0.07 [sec] total
     |                  ok                  |                skip                 |
 }
 --- a globbed app
@@ -49,7 +49,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 6 ok, 0 fail, 0.10 [sec]
+    RESULTS: 6 ok, 0 fail, 0.10 [sec], 0.11 [sec] total
     |                                     ok                                     |
 }
 --- a bare word that names nothing selects nothing
@@ -70,7 +70,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec]
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec], 0.04 [sec] total
     |                                    skip                                    |
 }
 --- a bare word that names a standing LABEL: the run stays
@@ -92,7 +92,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec]
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.03 [sec], 0.04 [sec] total
     |                                    skip                                    |
     NOTE: no test application answers 'steady', but a LABEL of that name stands -- 'hwut.run -l steady'
 }

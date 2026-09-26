@@ -172,10 +172,8 @@
 :/: immutability                                                                        : okay
 :/: member_functions                                                                    : okay
 :/test-line-pair-report.py accordion                                                    : okay
-:/: circular                                                                            : okay
 :/: exhaustion                                                                          : okay
 :/: monkey                                                                              : okay
-:/: transpose                                                                           : okay
 :/: visible-nothing                                                                     : okay
 ./engine/compare/feeder/TEST/test-html_feeder.py                                        : okay
 :/test-ui.py potpourri                                                                  : okay

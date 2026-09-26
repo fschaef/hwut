@@ -1,0 +1,27 @@
+--- two paths, two directories
+STATUS: 0
+STDOUT {
+    a/TEST/hwut.conf:  ignore helper.py
+    b/TEST/hwut.conf:  ignore bench.log
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["helper.py"]
+    }
+}
+b/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log"]
+    }
+}
+--- again, with one name already ignored
+STATUS: 0
+STDOUT {
+    a/TEST/hwut.conf:  ignore bench.log
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["helper.py", "bench.log"]
+    }
+}
+<hwut-end>

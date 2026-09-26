@@ -3,7 +3,8 @@
 DIR  time-stamping-pio-tests/TEST                                             
 ERROR hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer
 SKIP  test-m.sh .................................................. [FAIL]  ||0
-DONE  build[make  test-built.c] .................................. [FAIL]  ||0
+BUILD build[make test-built.c]                                             ||1
+END   build[make test-built.c] ................................... [FAIL]  ||0
 SKIP  test-built.c ............................................... [FAIL]  ||0
 START test-app.sh  a                                                       ||1
       :            b                                                       ||2

@@ -47,6 +47,43 @@ from .task_list     import (CTestTaskList, CTestTaskListAll,
 RUN_OPERATION = "Run"
 
 
+def directory_hit_f(where, glob_text):
+    """
+    RETURN: bool, True where 'glob_text' names the directory 'where'
+            (relative, '/'-separated) or an ancestor of it.
+
+    ONE RULE WHEREVER A DIRECTORY IS NAMED (disc-10): a glob carrying '/'
+    is matched against the path and every ancestor; a BARE NAME against
+    every path COMPONENT -- so everything below what it names goes too.
+    """
+    where = where.replace(os.sep, "/").strip("/")
+    if glob_text.startswith("./"): glob_text = glob_text[2:]
+    if "/" in glob_text:
+        part_list = where.split("/")
+        return any(fnmatch.fnmatchcase("/".join(part_list[:end]), glob_text)
+                   for end in range(1, len(part_list) + 1))
+    return any(fnmatch.fnmatchcase(part, glob_text)
+               for part in where.split("/"))
+
+
+def dir_ruled_out_f(where, rule_tuple):
+    """
+    RETURN: bool, True where the directory rules -- ('+', glob) for
+            '--dir', ('-', glob) for '--exclude-dir', in command-line
+            order -- leave the directory 'where' out.
+
+    GREP'S RULE (services E-15): the LAST rule matching decides; where
+    none matches, the directory is out only where the FIRST rule is a
+    '--dir'.
+    """
+    if not rule_tuple: return False
+    last = None
+    for kind, text in rule_tuple:
+        if directory_hit_f(where, text.strip()): last = kind
+    if last is not None: return last == "-"
+    return rule_tuple[0][0] == "+"
+
+
 class CTestTaskListQuery(CTestTaskList):
     """The cases of the directory that answer every question the wish
     asks. Several globs hold ONE question, OR'ed; questions of
@@ -159,7 +196,7 @@ class CTestTaskListQuery(CTestTaskList):
         RETURN: bool, True where the case answers every question the
                 wish asks, the labels apart.
         """
-        if self._outside_dir_f():                           return False
+        if self._dir_ruled_out_f():                         return False
         if self._outside_language_f(case):                  return False
         if self._excluded_f(case):                          return False
         if self.wish.asks_glob_f() and not self._glob_hit_f(case):
@@ -333,7 +370,7 @@ class CTestTaskListQuery(CTestTaskList):
 
         THE SILENCE IS THE WISH'S, not one face's: a wish that asks no
         label does not want what 'meta' labels, and every face that
-        selects through a wish is silent alike -- else 'hwut.wishlist'
+        selects through a wish is silent alike -- else 'hwut.report.wishlist'
         and 'hwut.run --wishlist' would select different sets and the
         disc-5 round trip would no longer close.
         """
@@ -360,39 +397,41 @@ class CTestTaskListQuery(CTestTaskList):
         if now.tzinfo is None: now = now.replace(tzinfo=timezone.utc)
         return now
 
-    def _outside_dir_f(self):
+    def _dir_ruled_out_f(self):
         """
-        RETURN: bool, True where the wish names DIRECTORIES and this
-                query's directory is none of them.
+        RETURN: bool, True where the wish's directory rules -- '--dir'
+                and '--exclude-dir' -- leave this query's directory out.
 
-        '--dir' NARROWS, it does not add (disc-10, fork a): '--dir a
-        --fail' is 'the failing runs under a', which is how a person
-        says it. Several globs are a UNION among themselves -- naming
-        two directories asks for both -- exactly as '--label' unions
-        its labels and narrows against the rest.
+        GREP'S RULE, as GNU grep settles '--include' against
+        '--exclude': the rules are read IN COMMAND-LINE ORDER and the
+        LAST ONE MATCHING decides. Where none matches, the directory is
+        out only where the FIRST rule is a '--dir' -- naming a
+        directory asks for it and nothing else, and several are a union
+        among themselves (disc-10), NARROWING the rest of the wish:
+        '--dir a --fail' is 'the failing runs under a'.
 
-        THE MATCHING IS '--exclude-dir's OWN: a glob carrying '/' is
-        matched against the whole relative path, a BARE NAME against
-        every path COMPONENT. One rule, learnt once.
+        A wish built without its ordered rules states includes before
+        excludes, so an exclusion still wins there.
+
+        THE MATCHING IS ONE RULE: a glob carrying '/' is matched
+        against the whole relative path and every ancestor, a BARE NAME
+        against every path COMPONENT -- so an '--exclude-dir' takes
+        everything below what it names.
         """
-        if not self.wish.dir_tuple: return False
-        return not any(self._directory_hit_f(text.strip())
-                       for text in self.wish.dir_tuple)
+        rule_tuple = self.wish.dir_rule_tuple \
+                     or tuple(("+", text) for text in self.wish.dir_tuple) \
+                      + tuple(("-", text)
+                              for text in self.wish.exclude_dir_tuple)
+        if not rule_tuple or self.directory is None: return False
+        return dir_ruled_out_f(self.directory, rule_tuple)
 
     def _excluded_f(self, case):
         """
-        RETURN: bool, True where an exclusion of the wish names the
-                case -- and an exclusion OUTRANKS every include: a
-                case an exclusion names is not wanted, whatever else
-                selected it.
-
-        '--exclude-dir' names a DIRECTORY AND EVERYTHING BELOW IT. A
-        glob carrying a '/' is matched against the whole relative
-        path; a BARE NAME is matched against every path COMPONENT, so
-        'OUT' drops 'a/OUT/TEST' and 'a/OUT/b/TEST' alike.
+        RETURN: bool, True where an '--exclude' of the wish names the
+                case -- and such an exclusion OUTRANKS every include: a
+                case it names is not wanted, whatever else selected it.
+                Directories are the directory rules' ('_dir_ruled_out_f').
         """
-        for text in self.wish.exclude_dir_tuple:
-            if self._directory_hit_f(text.strip()):        return True
         for text in self.wish.exclude_tuple:
             file_glob, _, choice_glob = text.partition(" ")
             if not self._file_hit_f(case, file_glob.strip()): continue
@@ -401,28 +440,6 @@ class CTestTaskListQuery(CTestTaskList):
             choice = "" if case.choice is None else case.choice
             if fnmatch.fnmatchcase(choice, choice_glob):   return True
         return False
-
-    def _directory_hit_f(self, glob_text):
-        """
-        RETURN: bool, True where 'glob_text' names this query's
-                directory or an ancestor of it.
-                False where the query does not know its directory --
-                the question cannot be answered, and answering it by
-                guessing would drop the wrong tests.
-        """
-        if self.directory is None: return False
-        where = self.directory.replace(os.sep, "/").strip("/")
-        if glob_text.startswith("./"): glob_text = glob_text[2:]
-        if "/" in glob_text:
-            #  A PATH: it names the directory or an ancestor of it.
-            part_list = where.split("/")
-            for end in range(1, len(part_list) + 1):
-                if fnmatch.fnmatchcase("/".join(part_list[:end]),
-                                       glob_text):          return True
-            return False
-        #  A BARE NAME: any component, so everything below it goes too.
-        return any(fnmatch.fnmatchcase(part, glob_text)
-                   for part in where.split("/"))
 
     def _named_literally_f(self, case):
         """

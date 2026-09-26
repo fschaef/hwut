@@ -68,7 +68,7 @@ def explore(directory, interview_runner=None, inherited=None):
     'inherited' is the DirectorySpec the CONFIGURATION TREE hands down
     (R-69): its inheritable fields govern where this directory states
     no word of its own; the directory's own 'hwut.conf' wins field by
-    field, 'default_app' parameter by parameter.
+    field, 'app_defaults' parameter by parameter.
     """
     fault_list = []
 
@@ -198,25 +198,25 @@ def _language_of(spec, directory_spec):
 
 def _resolve(spec, directory_spec=None):
     """
-    RETURN: CTestApp, 'spec' folded: the directory's 'default_app' is the
+    RETURN: CTestApp, 'spec' folded: the directory's 'app_defaults' is the
             outermost default, the application's own root the next, and a
             choice's own value stands over both.
 
     The provenance of every value is settled here, while the three
     sources still stand apart, and travels in 'origin_db'.
     """
-    default_app = getattr(directory_spec, "default_app", None) \
+    app_defaults = getattr(directory_spec, "app_defaults", None) \
                   if directory_spec is not None else None
 
     base = TestParameters()
-    if default_app is not None: base = base.overwritten_by(default_app)
+    if app_defaults is not None: base = base.overwritten_by(app_defaults)
     base = base.overwritten_by(spec.root_parameters)
 
     choice_db = {}
     origin_db = {}
     for name, parameters in spec.choice_db.items():
         choice_db[name] = base.overwritten_by(parameters)
-        origin_db[name] = provenance.of_choice(spec, name, default_app,
+        origin_db[name] = provenance.of_choice(spec, name, app_defaults,
                                                directory_spec)
 
     language, derived_f = _language_of(spec, directory_spec)

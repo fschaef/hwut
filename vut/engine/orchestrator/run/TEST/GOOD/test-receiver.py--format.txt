@@ -14,10 +14,11 @@ a consumer may zero-pad one into an integer.
 
 tree-begun
     directory_list   list   every test directory of the tree, walk order
+    node_n           int    (optional) how many nodes the directory's plan holds -- on 'tree-begun', the whole tree's
 
 dir-begun
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    node_n           int    how many nodes the directory's plan holds
+    node_n           int    how many nodes the directory's plan holds -- on 'tree-begun', the whole tree's
 
 frame
     directory        str    the test directory, RELATIVE to the root, '/'-separated
@@ -34,23 +35,30 @@ run-ended
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
     node_kind        str    'TEST', 'BUILD' or 'SESSION'
     good             bool   true where the thing stood
-    verdict          str    WHY it ended so: ok, test-failed, build-failed, launch-failed, unsupported, misdep, ... (open; unknown reads not-ok)
+    verdict          str    WHY it ended so: ok, test-failed, build-failed, launch-failed, unsupported, misdep, unaccepted, ... (open; unknown reads not-ok)
     cause            str    (optional) the node whose breaking failed this one; absent else
     report           str    (optional) the operation's own word for WHY (open list, e.g. 'pype-failed', 'test-app-stalled'); absent where nothing finer than the verdict is known
     detail           str    (optional) the report's numbers, where it has them: which cap, the cap, the peak (O-19); absent else
 
 fault
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+
+warning
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
 
 report
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
 
 refused
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41)
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+
+silent
+    directory        str    the test directory, RELATIVE to the root, '/'-separated
+    node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
 
 dir-done
     directory        str    the test directory, RELATIVE to the root, '/'-separated
@@ -60,5 +68,7 @@ dir-done
 tree-done
     good             bool   true where the thing stood
     fail_n           int    how many nodes failed, tree-wide
+    meta_n           int    (optional) how many cases the standard label 'meta' hid from a wish that named no label -- excluded, not run, not refused; stated once in the closing numbers
+    skip_n           int    (optional) how many cases the wish did not want -- present in the tree, not selected, not run; the SKIPPED of the closing bar
 
 <hwut-end>

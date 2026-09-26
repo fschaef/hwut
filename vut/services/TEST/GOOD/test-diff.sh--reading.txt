@@ -1,4 +1,4 @@
-STIMULUS  hwut.diff --console subject.txt --plain      (one argument)
+STIMULUS  hwut.run.diff --console subject.txt --plain      (one argument)
 REACTION  stdout {
               
               =[ subject.txt ]==================================== round 1

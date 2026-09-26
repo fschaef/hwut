@@ -5,7 +5,6 @@
 #     title      = "The hwut.report face: the databases, rendered."
 #     choices    = ["color", "json", "junit", "never_run", "refused",
 #                   "stain", "tap", "traditional", "width"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -45,7 +44,6 @@ case "$1" in
     --hwut-info)
         echo "The hwut.report face: the databases, rendered.;"
         echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused, color;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

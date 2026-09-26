@@ -823,14 +823,14 @@ RATIONALE Both readings are wanted at different moments: the complete
           did anybody ask for".
 
 
-R-52  'default_app' IN 'hwut.conf'
+R-52  'app_defaults' IN 'hwut.conf'
 ______________________________________________________________________________
 PROBLEM   A directory of applications that share a comment marker, a
           cap, a tolerance, had to state it once per file.
-DECISION  'hwut.conf' may carry a 'default_app' scope of test
+DECISION  'hwut.conf' may carry a 'app_defaults' scope of test
           parameters. Every application of the directory receives them,
           and they DO NOT OVERWRITE: what an application states itself
-          stands. The three sources, outermost first: 'default_app', the
+          stands. The three sources, outermost first: 'app_defaults', the
           application's own root, the choice.
 COST      A value an author does not find in his file may stand in
           'hwut.conf'. The provenance answers that: 'hwut.conf:<line>'.
@@ -846,7 +846,7 @@ PROBLEM   'root' named the place in a file rather than the thing that
           stated the value, and said nothing to a reader who had not
           read this document.
 DECISION  'app'. An application configured in 'hwut.conf' -- under
-          'apps' or through 'default_app' -- carries provenances of the
+          'apps' or through 'app_defaults' -- carries provenances of the
           form 'hwut.conf:<line>' throughout.
 RATIONALE The provenance answers "who said this", and the answer is an
           application, a file and a line, a component, or the
@@ -1196,12 +1196,12 @@ PROBLEM   A project is a TREE of test directories; each stating its
 DECISION  'explore_tree(root)': the stage before 'explore()'. It walks
           down, finds every TEST DIRECTORY, and folds 'hwut.conf' down
           the tree -- a parent's values flow down, the child's own
-          word wins (R-26 lifted one level; 'default_app' merges
+          word wins (R-26 lifted one level; 'app_defaults' merges
           parameter by parameter). A test directory is one whose NAME
           equals the effective 'test_directory' key -- a root-only
           directory key, itself inherited, 'TEST' where nobody states
           it; the name that applies to a directory is decided by its
-          parent chain. WHAT FLOWS: default_app, language_setup,
+          parent chain. WHAT FLOWS: app_defaults, language_setup,
           ignore, test_directory. WHAT DOES NOT: on_entry, on_exit,
           collision, dependency -- they name LOCAL matters; stated at
           a tree level they draw a fault and flow nowhere.
@@ -1775,11 +1775,17 @@ DECISION  RULED (Frank-Rene): A FILE WITHOUT AN 'hwut { }' SECTION IS
           under 'apps'. Nothing is guessed and nothing is asked. An
           'apps' entry does not pass through candidacy, so ANY file may
           be named one -- an '.xml' as well as a '.sh'.
-          The run says so ONCE, at its end: one NOTE, every silent file
-          by its path RELATIVE TO THE CALL DIRECTORY, and the two ways
-          to settle it -- 'hwut.config.ignore <paths>' for a helper, an
-          'apps' entry for a test. Not a fault and not a refusal: a
-          helper, a log and a table are ordinary.
+          The run says so ONCE, at its end: one NOTE line, the count
+          and '**/TMP/wallflowers.txt'. The WALLFLOWER LISTS carry the
+          rest, one per explored directory holding any, in 'TMP' --
+          DELETABLE, rewritten by every face that explores, removed
+          where none stands: a '#' header saying how to settle them,
+          then './../<name>' per line, so the list reads right from
+          anywhere by the one list reader the tree has ('--wishlist':
+          '#' and blanks dropped, './' the list's own directory). Not a
+          fault and not a refusal: a helper, a log and a table are
+          ordinary; a list of them does not belong in the call
+          directory, where it outlives its truth.
           MEASURED on this tree: 51 files in 25 directories, 24 of them
           'config.py'. One 'ignore' line in 'hwut-root.conf' answers
           those 24, which is why the bootstrap is named there.
@@ -1788,7 +1794,10 @@ COST      The interview survives as 'hwut.renovate's reader -- an
           injected runner still asks -- but it is no longer a carrier.
           A new face, 'hwut.config.ignore', writes the 'ignore' key and
           NOTHING else in the author's file (E-48), asking unless
-          '--dont-ask' stands.
+          '--dont-ask' stands. It takes paths, '--wishlist <list>' --
+          the tree's one name for 'lines of a file' ('--from' is taken:
+          'hwut.run.cov' reads a FORMAT by it) -- and '--wallflowers',
+          every list below the caller, each removed once settled.
           OPEN, AND NOT DECIDED HERE: a directory's own 'ignore'
           REPLACES the inherited one rather than adding to it, so a
           directory that states any 'ignore' states the root's again.

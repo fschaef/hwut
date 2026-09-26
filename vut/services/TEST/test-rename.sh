@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The rename face: the boundary records follow the name."
 #     choices    = ["labels", "across", "notes"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]", "-- [0-9]+ file\\(s\\)"] }
+#     tolerance { eq_pattern = ["-- [0-9]+ file\\(s\\)"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -47,7 +47,6 @@ case "$1" in
     --hwut-info)
         echo "The rename face: the boundary records follow the name.;"
         echo "CHOICES: labels, across, notes;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

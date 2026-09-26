@@ -22,7 +22,7 @@ Nothing warned; the references are prose, and prose does not compile.
 FIFTEEN outside 'adm/WORK', in RATIONALE files, READMEs and PYTHON
 SOURCE COMMENTS:
 
-    services/play.py                          -> gathered/06
+    services/lib/run/play.py                          -> gathered/06
     services/RATIONALE.txt        (x3)        -> gathered/0p, 0w, 0k
     engine/display/RATIONALE.txt              -> gathered/06
     engine/compare/RATIONALE.txt              -> gathered/0k

@@ -5,6 +5,14 @@ import vut.engine.compare.core.edit_operations.line_sequence as     edit_operati
 from   vut.engine.compare.core.edit_operations.edit          import (E_EditId,
                                                                                    EditSequence)
 
+def _diff_display_parameters_of(chunk):
+    """RETURN: ConfigurationDiffDisplayParameters, the chunk's -- or the defaults, where
+               the chunk carries no configuration."""
+    from vut.engine.compare.configuration import ConfigurationDiffDisplayParameters
+    configuration = getattr(chunk, "configuration", None)
+    return getattr(configuration, "diff_display_parameters", None) or ConfigurationDiffDisplayParameters()
+
+
 def do(subject, nominal, analogy_db):
     """RETURNS: list 'LinePair'-s
 
@@ -19,7 +27,8 @@ def do(subject, nominal, analogy_db):
     """
     editions: EditSequence = edit_operations_line_sequence.do(subject.line_list,
                                                               nominal.line_list,
-                                                              FrozenAnalogyDb(analogy_db))
+                                                              FrozenAnalogyDb(analogy_db),
+                                                              _diff_display_parameters_of(subject))
 
     if not editions.edit_list:
         return [], editions.analogy_db.to_AnalogyDb()
@@ -40,7 +49,6 @@ def do(subject, nominal, analogy_db):
                 subject_seq = subject.line_list[si]
                 nominal_seq = None # subject inserted, no counterpart in nominal
             else:
-                assert edit.id != E_EditId.TRANSPOSE         # pragma: no cover
                 assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
                 raise AssertionError("")
 

@@ -31,7 +31,6 @@ from  vut.engine.compare.core.edit_operations.core     import (max_cost,
 from  vut.engine.compare.core.edit_operations.edit     import E_EditId
 from  vut.engine.compare.reading.pattern_finder import E_ToleranceId
 
-TRANSPOSE       = E_EditId.TRANSPOSE
 GOOD            = E_EditId.GOOD
 GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
 GOOD_INSERT     = E_EditId.GOOD_INSERT
@@ -130,12 +129,7 @@ class SeparatorAdaptor:
             return self._good_Edit(self.subject_sequence[si], self.nominal_sequence[ni])
 
         def _from_edit_list(ei):
-            edit = edit_list_raw[ei]
-            if edit.id == TRANSPOSE:
-                translated_si = self.subject_index_map[edit.transpose_ai]
-                return self.Edit(TRANSPOSE, translated_si)
-            else:
-                return edit
+            return edit_list_raw[ei]
 
         Ls = len(self.subject_sequence)
         Ln = len(self.nominal_sequence)

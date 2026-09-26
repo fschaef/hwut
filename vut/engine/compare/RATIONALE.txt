@@ -118,7 +118,7 @@ PROBLEM   '##! <handler>' and '####' were read in EVERY text, always.
           'test-equivalence-vs-association.py' prints a side-by-side
           table whose CELLS hold '##! potpourri', and the reader saw
           a shebang with a parameter '|'. Four choices of the compare
-          suite failed on it, carried as open; 'hwut.play' on any of
+          suite failed on it, carried as open; 'hwut.run.play' on any of
           them ended in a traceback.
 
 DECISION  'ConfigurationPatternFinder.regions_f: bool = True'. False:
@@ -181,7 +181,7 @@ PROBLEM   'RegionSyntaxError' stands in the contract BECAUSE THE
           REASON, not an exception". Of the three roads into
           compare's door, only that one obeyed. 'consume/
           difference_display.py' and 'services/compare.reading_view'
-          let it through, so 'hwut.play' and 'hwut.compare' answered
+          let it through, so 'hwut.run.play' and 'hwut.compare' answered
           a text they could not read with a Python traceback -- which
           tells the person the framework broke when it was their text
           that could not be read.
@@ -194,7 +194,7 @@ DECISION  Each ROAD catches once, in the operation that owns it, and
               READING   services/compare.reading_view -> a REFUSED
                         line naming the line, and a FAULT exit; the
                         one place for both faces that show a reading
-                        ('hwut.compare' and 'hwut.play')
+                        ('hwut.compare' and 'hwut.run.play')
           Not four faces each rolling their own: three roads, three
           catches.
 
@@ -456,7 +456,7 @@ GRAVEYARD A sign only where it stands free (bundle 19) -- replaced by
 
 C-13  NO TRANSPOSITION INSIDE A LINE                               (2026-09-24)
 ----------------------------------------------------------------------------
-PROBLEM   MEASURED: 'hwut.diff test-import_graph.sh vut' never returned.
+PROBLEM   MEASURED: 'hwut.run.diff test-import_graph.sh vut' never returned.
           The element search of ONE line pair swapped a later subject
           element forward wherever it matched (TRANSPOSE), and kept the
           permuted line in its merge key. Two paths permuting
@@ -479,8 +479,9 @@ COST      MEASURED: the pair above associates in about 2 s.
           and 'test-line-2' read DELETE/INSERT where they read
           TRANSPOSE, at the higher cost, and gained the '<hwut-end>'
           they never printed (R-70). No verdict moved.
-          'E_EditId.TRANSPOSE', 'cost_TRANSPOSE' and their display
-          marks remain, now produced by nothing.
+          The vocabulary went with it: 'E_EditId.TRANSPOSE',
+          'cost_TRANSPOSE', the edit's 'transpose_ai', and the display's
+          'out of order' marks.
 
 GRAVEYARD Transposition inside a window |ai - si| <= K -- rejected: it
           keeps a threshold and a mark nobody reads, for a line that is
@@ -511,4 +512,86 @@ GRAVEYARD Rewriting the output in the harness so a pattern need not
           tool's own words, and every later author meets the same trap.
           A numeric ratio on the page -- rejected: a ratio wide enough
           for 9 against 186 tolerates every number on it.
+
+C-15  THE LINE LEVEL IS ANCHORED FIRST                            (2026-09-25)
+----------------------------------------------------------------------------
+PROBLEM   The line level aligned a chunk pair by one search over every
+          subject line against every nominal line. Its costs are flat
+          and it reorders nothing: it is diff, and diff is anchored.
+
+DECISION  RULED (intend 19, phase one; L-1, L-2): within ONE chunk pair,
+          lines EQUIVALENT and UNIQUE on both sides pair up, and the
+          longest chain of them in order on both sides is kept
+          (patience, Cohen 2007); the begin and the end anchor
+          virtually and every anchor grows over equal neighbours
+          (Heckel 1978). The sections between anchors, and each anchor
+          as a 1x1 section, go through the search IN ORDER, each from
+          the analogy bindings its predecessor ended with. A chunk with
+          no anchor is one section, the search as before.
+
+          THE KEY IS THE EQUIVALENCE CLASS, NOT THE TEXT: separators
+          one token, visible-nothing dropped, strings by content,
+          numbers only where their tolerance is exact. A line holding an
+          equivalence pattern, a tolerated number, an analogy or a
+          binding never anchors -- no key names its class; nor does a
+          line with no content at all (empty, whitespace, ignored by the
+          comment markers), which equals every other such line: anchored,
+          it only picks a partner at random (measured: 11 of phase one's
+          12 disagreements with a known pairing). Keyed by
+          text, a unique 'glad' paired with a unique 'glad' where the
+          partner was an equivalent 'happy' (measured, 'test-
+          consistency-fuzz.py consistency', case 312).
+
+COST      MEASURED on the fixture pair: the line level expands 47 items
+          for the whole pair; the pair aligns in 0.42 s, and
+          'hwut.run.diff test-import_graph.sh vut' answers in 0.37 s.
+          What remains is the ELEMENT level inside the one unanchored
+          section: 30 to 32 lines take the element search from 1 083 to
+          29 782 expansions (0.29 s) -- intend 19's second point. The
+          judge and the association agree on 2 200 generated cases over
+          seven seeds.
+
+GRAVEYARD Anchoring by literal text -- rejected on the counterexample
+          above. Anchoring over the whole stream -- rejected by L-1: it
+          would bind a line in one region to a line in another.
+
+C-16  A SECTION IS SEARCHED WITHIN A BUDGET; PHASE TWO BEYOND IT  (2026-09-25)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED ('benchmark-anchoring.py --knee', 1 462 sections phase
+          one left in 300 real GOOD revisions): the search's time is
+          driven by the section's ELEMENT WORK W -- the elements of its
+          subject lines times those of its nominal lines, which counts
+          long lines where the pair count does not (a 2x2 section of
+          3 080-element lines ran 3 s). The p90 bends at W = 8 192 (x5 per
+          doubling after it); 16 sections ran past 3 s.
+
+DECISION  RULED (Frank-Rene): the search stays where it is affordable, and
+          its budget is COUNTED IN EXPANSIONS, not predicted and not
+          timed -- counted, the result is the same on every machine.
+          'diff_display_parameters.search_budget' 20 000: every section below the knee
+          fits (the largest used 10 968); ~11 us an expansion. A section
+          that spends it goes to PHASE TWO (intend 19, o-6, o-7): pairs
+          clearly the closest anchor first (the runner-up, or DELETE +
+          INSERT at 1.0, 'margin' 0.10 above), else the 'lowest_n' 4
+          cheapest, non-crossing; the gaps are aligned the same way, from
+          ONE budget pool per section. A pair is costed by the FUZZ RATIO
+          averaged with 'context_k' 1 line either side; a pair whose own
+          element alignment spends a budget shows as DELETE + INSERT.
+          The four numbers are 'Configuration.diff_display_parameters' (o-4).
+
+COST      MEASURED: no section reaches 3 s; all up to W = 524 287 within
+          460 ms; the three largest (W up to 7.6 million) 0.6-1.7 s. On
+          30 mutated pairs with known truth: search alone 159 wrong /
+          187 missed pairings in 141 s; now 141 wrong / 335 missed in
+          9.2 s. A missed pairing shows as a line removed and one added:
+          coarser, never a false equivalence -- the verdict is the
+          Judge's.
+
+GRAVEYARD The ELEMENT cost as phase two's measure: 3.6 ms a pair against
+          1 us, and no more accurate (k=1: 257/330 against 214/273).
+          Context k=0: 774 misses against 273. A larger margin: fewer
+          wrong 'clearly closest' anchors, more wrong cheapest ones --
+          total 214 -> 301. A W threshold predicted from structure: the
+          counted budget takes exactly the sections the search cannot
+          finish, whatever makes them hard.
 

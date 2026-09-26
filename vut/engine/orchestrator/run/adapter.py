@@ -295,11 +295,19 @@ def _compare_of(parameters):
                  "comment"):
         stated["tolerance.%s" % leaf] = \
             getattr(tolerance, leaf) if tolerance is not None else None
+    #  THE LINE LEVEL'S NUMBERS (compare C-16) travel the same way.
+    matching = getattr(parameters, "diff_display_parameters", None)
+    for leaf in ("search_budget", "margin", "lowest_n", "context_k"):
+        stated["diff_display_parameters.%s" % leaf] = \
+            getattr(matching, leaf) if matching is not None else None
     if all(value is None for value in stated.values()): return None
 
     from ...compare.api import Configuration
     options = Configuration()
     finder  = options.pattern_finder
+    for leaf in ("search_budget", "margin", "lowest_n", "context_k"):
+        if stated["diff_display_parameters.%s" % leaf] is not None:
+            setattr(options.diff_display_parameters, leaf, stated["diff_display_parameters.%s" % leaf])
 
     if stated["tolerance.numeric_ratio"] is not None:
         finder.numeric_tolerance_ratio      = stated["tolerance.numeric_ratio"]

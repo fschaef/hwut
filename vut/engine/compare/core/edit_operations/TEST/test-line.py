@@ -17,7 +17,8 @@ DESCRIPTION:
 A 'Line' object is an interpretation of a line of text in terms of
 'LineElement'-s. The edit operation investigations determine how
 'LineElement'-s need to be modified in order to transform one line into the
-other. Operations are 'substitute', 'transpose', 'insert', and 'delete'.
+other. Operations are 'substitute', 'insert', and 'delete'; nothing is
+reordered (compare C-13).
 
 The output of these investigations is a list of edit operations together with
 the accumulated 'cost', i.e. a measure for the edit distance. Also, the
@@ -48,10 +49,7 @@ def test_mseq(a, b):
     assert cost <= 1
     print("Cost: %.6f" % cost)
     for i, edit in enumerate(edit_list):
-        if edit.transpose_ai is not None:
-            print("[%i] %s (%s)" % (i, edit.id.name, edit.transpose_ai))
-        else:
-            print("[%i] %s"      % (i, edit.id.name))
+        print("[%i] %s"      % (i, edit.id.name))
     if len(analogy_db.to_AnalogyDb()):
         print("AnalogyDb:")
         print(repr(analogy_db))

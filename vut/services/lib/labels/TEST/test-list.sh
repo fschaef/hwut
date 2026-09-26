@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "hwut.labels.list: every label, with a count beside it."
 #     choices    = ["counts", "empty", "refused"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -32,7 +31,6 @@ case "$1" in
     --hwut-info)
         echo "hwut.labels.list: every label, with a count beside it.;"
         echo "CHOICES: counts, empty, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

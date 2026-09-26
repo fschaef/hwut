@@ -289,8 +289,13 @@ class CTreeScheduler:
         def emit(kind, **field_db):
             queue.put_nowait(event(kind, self.clock(), **field_db))
 
+        #  THE WHOLE PLAN'S SIZE, counted exactly as each 'dir-begun'
+        #  counts its own: what a progress display divides by.
         emit("tree-begun",
-             directory_list=[entry.directory for entry in tree_plan])
+             directory_list=[entry.directory for entry in tree_plan],
+             node_n=sum(len(entry.plan) + len(_broken_app_tuple(entry))
+                        + len(_vanished_tuple(tree_plan.root, entry))
+                        for entry in tree_plan))
         for fault in tree_plan.fault_tuple:
             emit("fault", directory=".", text=str(fault))
         #  A FINDING THAT DECIDES NOTHING still belongs before the
@@ -327,10 +332,17 @@ class CTreeScheduler:
         """
         RETURN: list[CDirectoryWork], the units in the order the
                 selection order asks for -- THE SAME CRITERIA RECORD
-                the node level uses, over a directory's WEIGHT: the sum
-                of every case this machine has measured in it
+                the node level uses, over a directory's WEIGHT: its
+                LONGEST case this machine has measured
                 ('duration_db_of'), or None where it has measured
                 none (O-28).
+
+        THE LONGEST CASE, NOT THE SUM (ruled 2026-09-26). The longest
+        case cannot be split across workers: it is the directory's
+        critical path, and started late it is the tail the whole run
+        waits for. A sum measures how much work a directory holds, and
+        many short cases outweighed one long one: the CSP solver's
+        5.4 s case started fifth, behind directories of short cases.
 
         ONE VOCABULARY, BOTH LEVELS. 'longest first' says the same
         sentence about a directory as about a test, and a directory
@@ -350,7 +362,7 @@ class CTreeScheduler:
         for unit in unit_list:
             db = duration_db_of(os.path.normpath(
                      os.path.join(root, unit.directory)))
-            weight_db[unit.directory] = sum(db.values()) if db else None
+            weight_db[unit.directory] = max(db.values()) if db else None
         key_of = sort_key_of(self.selection_order, weight_db.get)
         return [unit for _, unit
                 in sorted(enumerate(unit_list),

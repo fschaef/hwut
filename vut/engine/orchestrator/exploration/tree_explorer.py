@@ -37,7 +37,7 @@ cannot rename itself.
 
 WHAT FLOWS DOWN -- the keys that configure tests in general:
 
-    default_app       merged parameter by parameter, child's word wins
+    app_defaults       merged parameter by parameter, child's word wins
     language_setup    per language, the child's word wins whole
     ignore            the child's word wins whole
     test_directory    the child's word wins
@@ -69,7 +69,7 @@ from .configuration_tree import DirectorySpec
 FALLBACK_TEST_DIRECTORY = "TEST"
 
 #  The keys that flow down the tree; everything else is local.
-INHERITABLE_FIELD_TUPLE = ("default_app", "language_setup", "ignore",
+INHERITABLE_FIELD_TUPLE = ("app_defaults", "language_setup", "ignore",
                            "test_directory", "variant_db")
 LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
                            "dependency", "target_db")
@@ -112,8 +112,9 @@ def root_only_fault(name, conf_name, position):
 
 #  Field -> the KEY AN AUTHOR WRITES. A fault that names the record
 #  field sends the reader looking for a word that is not in his file.
-KEY_OF_FIELD = {"variant_db": "variant_group",
-                "target_db":  "target"}
+KEY_OF_FIELD = {"variant_db":     "variant_group",
+                "target_db":      "target",
+                "language_setup": "language-setup"}
 
 #  THE BOUNDARY OF THE ASCENT, and the most dominant configuration
 #  there is. It plays BOTH ROLES: it is READ like any other conf --
@@ -225,18 +226,24 @@ def inherited_spec(parent, child):
     """
     RETURN: DirectorySpec, the spec that GOVERNS where 'child' stands:
             the inheritable fields of 'parent', each overwritten where
-            'child' states its own word; 'default_app' merged parameter
+            'child' states its own word; 'app_defaults' merged parameter
             by parameter (R-26); the local fields are the child's
             alone.
     """
     field_db = {}
     for name in INHERITABLE_FIELD_TUPLE:
         mine, theirs = getattr(parent, name), getattr(child, name)
-        if name == "default_app" and mine is not None \
+        if name == "app_defaults" and mine is not None \
            and theirs is not None:
             field_db[name] = mine.merged_with(theirs)
         else:
             field_db[name] = theirs if theirs else mine
+    #  THE PLACES GO WITH THE VALUES: leaf by leaf, the child's where it
+    #  spoke, the parent's where it did not -- else a root value, merged
+    #  under a child's 'app_defaults', loses the line it stands on.
+    for name in ("app_defaults_position_db", "app_defaults_file_db"):
+        field_db[name] = dict(getattr(parent, name) or {},
+                              **(getattr(child, name) or {}))
     return replace(child, **field_db)
 
 
@@ -346,8 +353,18 @@ def ascended_spec(start):
                 text = handle.read()
         except OSError:
             continue
-        spec, _app_db, conf_fault_list = reader.read_conf(text, shown)
+        spec, app_db, conf_fault_list = reader.read_conf(text, shown)
         fault_list.extend(conf_fault_list)
+        #  'apps' NAMES THE FILES OF ONE DIRECTORY, and a conf met on the
+        #  climb is no test directory's own: nothing would ever read the
+        #  entries. Refused, not dropped.
+        if app_db:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, shown,
+                spec.position if spec is not None else None,
+                "'apps' in '%s': it names the files of one directory and "
+                "belongs in that directory's own '%s'"
+                % (os.path.basename(shown), finder.CONF_NAME)))
         if spec is None: continue
         for name in LOCAL_FIELD_TUPLE:
             if getattr(spec, name):

@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "hwut.labels.query: the runs a label expression names."
 #     choices    = ["doors", "forms", "silence", "wishlist"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -37,7 +36,6 @@ case "$1" in
     --hwut-info)
         echo "hwut.labels.query: the runs a label expression names.;"
         echo "CHOICES: wishlist, forms, silence, doors;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

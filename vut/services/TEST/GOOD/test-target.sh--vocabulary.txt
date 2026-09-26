@@ -1,5 +1,0 @@
-
---- a standard target inside 'target { }': refused by name ---
-./hwut.conf:3:9: VOCABULARY: 'on_entry' is a standard target with its own key; it cannot stand inside 'target { }'
-REFUSED: nothing has run.
-[status 1]

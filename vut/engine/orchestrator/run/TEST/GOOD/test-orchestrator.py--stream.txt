@@ -1,6 +1,6 @@
 
 --- everything stands ---
-    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "node_n": 4, "when": "T01"}
     {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 3, "when": "T02"}
     {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_entry", "when": "T03"}
     {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "build[make test-a.py]", "node_kind": "BUILD", "when": "T04"}

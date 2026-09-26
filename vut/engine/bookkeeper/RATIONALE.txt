@@ -522,7 +522,7 @@ PROBLEM   A book entry meant "a nominal stands, blessed or accepted",
 DECISION  INITIATION IS TWO STEPS. A test run is accepted AS A TEST
           RUN and appears in the book -- it is KNOWN, an id is issued.
           It becomes a MEMBER when a nominal stands. Until then it is
-          an ASPIRANT: played by 'hwut.play', refused by 'hwut.run'
+          an ASPIRANT: played by 'hwut.run.play', refused by 'hwut.run'
           (NOT_ACCEPTED_REASON, the gate 'admit_of' already judges per
           case), neither passed nor failed.
 

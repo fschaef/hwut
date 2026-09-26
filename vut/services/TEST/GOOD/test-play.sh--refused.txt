@@ -11,22 +11,22 @@ STDOUT {
 --- an option the face does not take
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.play' does not take: --sideways
-    usage: hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
-                     [--save] [--directory=<path>]
+    REFUSED: 'hwut.run.play' does not take: --sideways
+    usage: hwut.run.play <test-app> [<choice>] [--raw] [--pyped] [--stderr]
+                         [--plain] [--save] [--directory=<path>]
 }
 --- two words too many
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.play' plays ONE test, and one choice of it: <test-app> [<choice>]
-    usage: hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
-                     [--save] [--directory=<path>]
+    REFUSED: 'hwut.run.play' plays ONE test, and one choice of it: <test-app> [<choice>]
+    usage: hwut.run.play <test-app> [<choice>] [--raw] [--pyped] [--stderr]
+                         [--plain] [--save] [--directory=<path>]
 }
 --- no application named at all
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.play' plays ONE test, and one choice of it: <test-app> [<choice>]
-    usage: hwut.play <test-app> [<choice>] [--raw] [--pyped] [--stderr] [--plain]
-                     [--save] [--directory=<path>]
+    REFUSED: 'hwut.run.play' plays ONE test, and one choice of it: <test-app> [<choice>]
+    usage: hwut.run.play <test-app> [<choice>] [--raw] [--pyped] [--stderr]
+                         [--plain] [--save] [--directory=<path>]
 }
 <hwut-end>

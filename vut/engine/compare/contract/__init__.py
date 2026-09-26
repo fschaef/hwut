@@ -39,7 +39,7 @@ from .analogy_db        import AnalogyDb
 from .frozen_analogy_db import FrozenAnalogyDb
 from .enums     import E_Chunk, E_ToleranceId, E_Verdict
 from .semantics import (E_EditId, GOOD_EDIT_ID_SET, analogy_commitment,
-                        commit_analogies, cost_TRANSPOSE,
+                        commit_analogies,
                         element_cost_db, is_equivalent_verdict,
                         is_good_edit, is_insignificant_line,
                         is_plainly_equivalent_verdict, line_cost_db,
@@ -56,7 +56,6 @@ __all__ = [
                         "FrozenAnalogyDb",
                         "analogy_commitment",
                         "commit_analogies",
-                        "cost_TRANSPOSE",
                         "element_cost_db",
                         "is_equivalent_verdict",
                         "is_good_edit",

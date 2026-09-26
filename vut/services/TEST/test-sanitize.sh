@@ -6,7 +6,6 @@
 #     choices    = ["report", "session", "lock", "nameless", "out",
 #                   "orphans", "unreachable", "apply", "target",
 #                   "refused", "transient"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -44,7 +43,6 @@ case "$1" in
     --hwut-info)
         echo "The hwut.sanitize face: what a tree accumulates;"
         echo "CHOICES: report, session, lock, nameless, out, orphans, unreachable, apply, target, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

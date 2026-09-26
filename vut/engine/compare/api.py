@@ -43,10 +43,10 @@ test directly: a door is for callers, and a test of the potpourri
 solver is not a caller.
 ______________________________________________________________________________
 """
-from .configuration        import Configuration
+from .configuration        import Configuration, ConfigurationDiffDisplayParameters
 from .contract.enums       import RegionSyntaxError
 from .feeder               import ui as feeder_ui
 from .main                 import associate, is_equivalent
 
-__all__ = ("Configuration", "RegionSyntaxError", "associate",
+__all__ = ("Configuration", "ConfigurationDiffDisplayParameters", "RegionSyntaxError", "associate",
            "feeder_ui", "is_equivalent")

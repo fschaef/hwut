@@ -12,7 +12,6 @@ ______________________________________________________________________________
 """
 from ..exploration.task_list_query import CTestTaskListQuery
 from .determine                    import determine
-from ...bookkeeper.api             import nominal_stands_f
 from ...bookkeeper.test_run_info   import of_case, E_MemberState
 from .label     import swallowed_warning_tuple
 from .printer   import print_plan
@@ -26,7 +25,7 @@ from  dataclasses import dataclass
 UNACCEPTED_REASON   = ("the nominal carries lines nobody has accepted: "
                        "an aspirant, finish it with 'hwut.accept'")
 NOT_ACCEPTED_REASON = ("no nominal stands in GOOD/: not accepted, not "
-                       "run ('hwut.play --save', then 'hwut.accept')")
+                       "run ('hwut.run.play --save', then 'hwut.accept')")
 
 
 def admit_of(directory):
@@ -139,7 +138,7 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         #  THE GATE (E-41): a test with no nominal in GOOD/ is not
         #  run -- a verdict needs something to compare against -- and
         #  the refusal is named, once per test, in the run's closing
-        #  REFUSED block. 'hwut.play --save' then 'hwut.accept' is a
+        #  REFUSED block. 'hwut.run.play --save' then 'hwut.accept' is a
         #  new test's way in. Exploration's own refusals (backup-
         #  shaped names, finder.py) stand in the same block.
         plan, report_list, refused_list = determine(

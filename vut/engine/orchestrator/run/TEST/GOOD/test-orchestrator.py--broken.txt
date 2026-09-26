@@ -1,6 +1,6 @@
 
 --- build broken; one case unsatisfiable ---
-    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "node_n": 5, "when": "T01"}
     {"directory": "alpha/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:7: DIRECTORY: 'dependency' names 'test-ghost.py', which this directory does not offer", "when": "T02"}
     {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 4, "when": "T03"}
     {"directory": "alpha/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-m.py", "node_kind": "TEST", "verdict": "misdep", "when": "T04"}

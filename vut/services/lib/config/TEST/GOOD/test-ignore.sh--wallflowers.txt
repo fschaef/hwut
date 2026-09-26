@@ -1,0 +1,28 @@
+--- the run's NOTE
+    NOTE: 4 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+--- every list below here
+STATUS: 0
+STDOUT {
+    a/TEST/hwut.conf:  ignore bench.log helper.py
+    b/TEST/hwut.conf:  ignore bench.log helper.py
+    removed: a/TEST/TMP/wallflowers.txt
+    removed: b/TEST/TMP/wallflowers.txt
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+b/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+--- the lists are gone: 0
+--- run again: 0 NOTE line(s)
+--- and nothing left to settle
+STATUS: 0
+STDOUT {
+    Nothing to do: no '**/TMP/wallflowers.txt' stands below here.
+}
+<hwut-end>

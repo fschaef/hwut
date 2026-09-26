@@ -58,7 +58,7 @@ THREE TIERS, AND ONLY THE FIRST IS FREE
                never by importing the module that holds it.
 
     CHEAP      test applications here, choices of one, directories
-               ONE DIRECTORY LISTING, or one file read. 'hwut.play
+               ONE DIRECTORY LISTING, or one file read. 'hwut.run.play
                <TAB>' offering the applications of this directory
                costs an 'os.listdir' and a line scan for the marker.
 
@@ -92,9 +92,9 @@ WHAT WOULD BE COMPLETED
     hwut.<TAB>                    the face names
     hwut.run --<TAB>              the wish's options, and run's own
     hwut.run --label <TAB>        the labels that stand          DEAR
-    hwut.play <TAB>               the applications here          CHEAP
-    hwut.play test-a.sh <TAB>     that application's choices     CHEAP
-    hwut.target <TAB>             the targets bound here         DEAR
+    hwut.run.play <TAB>               the applications here          CHEAP
+    hwut.run.play test-a.sh <TAB>     that application's choices     CHEAP
+    hwut.execute <TAB>             the targets bound here         DEAR
     hwut.labels.remove <TAB>      the labels that stand          DEAR
     --dir <TAB>                   directories below here         CHEAP
 
@@ -114,5 +114,5 @@ OPEN
  b  IS THERE A COMPLETION FOR '<file-glob>'? The short form takes
     bare words as targets, and a person may want the applications
     offered there too.
-    RECOMMENDED: yes, same CHEAP tier as 'hwut.play'.
+    RECOMMENDED: yes, same CHEAP tier as 'hwut.run.play'.
 ______________________________________________________________________________

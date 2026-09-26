@@ -98,10 +98,7 @@ if "info" in sys.argv:
 
         print("Cost: %.6f" % cost)
         for i, edit in enumerate(edit_list):
-            if edit.transpose_ai is not None:
-                print("[%i] %s (%s)" % (i, edit.id.name, edit.transpose_ai))
-            else:
-                print("[%i] %s"      % (i, edit.id.name))
+            print("[%i] %s"      % (i, edit.id.name))
         print("AnalogyDb:")
         print(repr(analogy_db))
 

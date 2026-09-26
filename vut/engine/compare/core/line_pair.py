@@ -31,7 +31,6 @@ class E_NominalRelationId(Enum):
     OK_TOLERATED               = auto()  # == GOOD, only that content may differ (used in diff-display).
     OK_VISIBLE_NOTHING         = auto()  # == GOOD, nominal has a 'visible nothing' where subject has nothing.
     OK_SUBJECT_VISIBLE_NOTHING = auto()  # == GOOD, subject has a 'visible nothing' where nominal has nothing.
-    BAD_TRANSPOSE              = auto()  # Heal: Two 'element' objects in subject are transposed.
     BAD_SUBJECT_HAS_NOT        = auto()  # Heal: 'element' from nominal is inserted.
     BAD_SUBJECT_HAS            = auto()  # Heal: 'element' from subject is deleted.
     BAD_SUBJECT_DIFFERS        = auto()  # Bad:  Content of subject and nominal 'element' differs.
@@ -42,7 +41,6 @@ class E_SubjectRelationId(Enum):
     OK_TOLERATED               = auto()  # == GOOD, only that content may differ (used in diff-display).
     OK_NOMINAL_VISIBLE_NOTHING = auto()  # == GOOD, nominal has a 'visible nothing' where subject has nothing.
     OK_VISIBLE_NOTHING         = auto()  # == GOOD, subject has a 'visible nothing' where nominal has nothing.
-    BAD_TRANSPOSE              = auto()  # Heal: Two 'element' objects in subject are transposed.
     BAD_NOMINAL_HAS            = auto()  # Heal: 'element' from nominal is inserted.
     BAD_NOMINAL_HAS_NOT        = auto()  # Heal: 'element' from nominal is inserted.
     BAD_NOMINAL_DIFFERS        = auto()  # Bad:  Content of subject and nominal 'element' differs.
@@ -53,7 +51,6 @@ E_NominalRelationId.db = {
     E_EditId.GOOD_TOLERATED:  E_NominalRelationId.OK_TOLERATED,
     E_EditId.GOOD_INSERT:     E_NominalRelationId.OK_VISIBLE_NOTHING,
     E_EditId.GOOD_DELETE:     E_NominalRelationId.OK_SUBJECT_VISIBLE_NOTHING,
-    E_EditId.TRANSPOSE:       E_NominalRelationId.BAD_TRANSPOSE,
     E_EditId.INSERT:          E_NominalRelationId.BAD_SUBJECT_HAS_NOT,
     E_EditId.DELETE:          E_NominalRelationId.BAD_SUBJECT_HAS,
     E_EditId.SUBSTITUTE:      E_NominalRelationId.BAD_SUBJECT_DIFFERS,
@@ -65,7 +62,6 @@ E_SubjectRelationId.db = {
     E_EditId.GOOD_TOLERATED:  E_SubjectRelationId.OK_TOLERATED,
     E_EditId.GOOD_INSERT:     E_SubjectRelationId.OK_NOMINAL_VISIBLE_NOTHING,
     E_EditId.GOOD_DELETE:     E_SubjectRelationId.OK_VISIBLE_NOTHING,
-    E_EditId.TRANSPOSE:       E_SubjectRelationId.BAD_TRANSPOSE,
     E_EditId.INSERT:          E_SubjectRelationId.BAD_NOMINAL_HAS,
     E_EditId.DELETE:          E_SubjectRelationId.BAD_NOMINAL_HAS_NOT,
     E_EditId.SUBSTITUTE:      E_SubjectRelationId.BAD_NOMINAL_DIFFERS,
@@ -118,15 +114,6 @@ class LinePairRaw:
         subject_list, nominal_list = [], []
         si = ni = 0
 
-        # Pre-calculate transposition mapping for cell references
-        nominal_element_to_cell_map = {}
-        for cell_i, edit in enumerate(self.edit_list):
-            _, n_incr = position_increment_db[edit.id]
-            if n_incr > 0:
-                nominal_element_to_cell_map[ni] = cell_i
-            ni += n_incr
-
-        ni = 0 # Reset
         for cell_i, edit in enumerate(self.edit_list):
             s_incr, n_incr = position_increment_db[edit.id]
 
@@ -136,10 +123,7 @@ class LinePairRaw:
             else:
                 s_txt, s_tol = None, E_ToleranceId.STRING
 
-            if edit.id == E_EditId.TRANSPOSE:
-                n_ref = nominal_element_to_cell_map.get(edit.transpose_ai, cell_i)
-            else:
-                n_ref = cell_i
+            n_ref = cell_i
 
             # Extract Subject Data
             subject_list.append(SubjectCell(relation_id=E_SubjectRelationId.db[edit.id],

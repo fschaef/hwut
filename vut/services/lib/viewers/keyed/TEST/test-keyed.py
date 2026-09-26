@@ -598,7 +598,7 @@ def test_report():
 
 
 def test_view():
-    print("E-79: the screen for LOOKING -- 'hwut.diff'")
+    print("E-79: the screen for LOOKING -- 'hwut.run.diff'")
     import asyncio
     from types import SimpleNamespace
     from vut.services.lib.viewers.keyed.driver import KeyedDisplay

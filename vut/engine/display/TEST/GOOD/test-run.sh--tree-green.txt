@@ -27,7 +27,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 6 ok, 0 fail, s.ss [sec]
+    RESULTS: 6 ok, 0 fail, s.ss [sec], s.ss [sec] total
     |                                     ok                                     |
 }
 successor: digest identical to linear: True

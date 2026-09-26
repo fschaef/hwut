@@ -3,5 +3,7 @@ THE LIST {
     ./messaging/queue/TEST/test-a.sh one
 }
 WHAT RAN:
-STATUS: 3
+STATUS: 0
+    messaging/net/TEST: test-a.sh one
+    messaging/queue/TEST: test-a.sh one
 <hwut-end>

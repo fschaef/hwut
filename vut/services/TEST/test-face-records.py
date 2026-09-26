@@ -9,7 +9,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-'services/lib/face.py' and the two faces cut to it, 'hwut.wishlist' and
+'services/lib/face.py' and the two faces cut to it, 'hwut.report.wishlist' and
 'hwut.plan'. What is pinned here is the CONTRACT, not the pages: the
 pages are pinned where they always were, and that they did not move is
 the proof of the cut.
@@ -42,7 +42,8 @@ import shutil
 import tempfile
 
 from   config import HwutRunner                                  # noqa F401,E402
-from   vut.services import wishlist, plan                        # noqa: E402
+from   vut.services import plan                                  # noqa: E402
+from   vut.services.lib.report import wishlist                   # noqa: E402
 from   vut.services.lib.face import (record_check, Refused, Fault,  # noqa: E402
                                      Empty, answered)
 from   vut.services._exit import E_ExitCode                      # noqa: E402
@@ -79,7 +80,7 @@ def banner(label):
 
 def test_reuse():
     fixture()
-    banner("hwut.wishlist, called as a library")
+    banner("hwut.report.wishlist, called as a library")
     result = wishlist.do(wishlist.Request(directory=TEST))
     for line in result.line_tuple: print("    %s" % line)
     print("    warnings: %s" % (list(result.warning_tuple) or "none"))
@@ -248,7 +249,7 @@ def test_run():
     for name in ("test-a.sh", "test-b.sh"):
         for choice in (["one", "two"] if name == "test-a.sh" else [""]):
             argv = [name] + ([choice] if choice else [])
-            subprocess.run([sys.executable, "-m", "vut.services.play"] + argv
+            subprocess.run([sys.executable, "-m", "vut.services.lib.run.play"] + argv
                            + ["--save"], cwd=TEST, capture_output=True)
             subprocess.run([sys.executable, "-m", "vut.services.accept"] + argv
                            + ["--force"], cwd=TEST, capture_output=True)

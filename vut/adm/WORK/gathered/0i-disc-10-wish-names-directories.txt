@@ -5,7 +5,7 @@ disc-10  THE WISH NAMES DIRECTORIES TOO                     ** SETTLED **
 ______________________________________________________________________________
 
 RAISED (chat, 2026-08-29) out of the face inventory (disc-9), which
-found 'hwut.target' sharing NOTHING with any other face. The reason is
+found 'hwut.execute' sharing NOTHING with any other face. The reason is
 not that target is peculiar. It is that THE WISH CANNOT SAY WHAT
 TARGET NEEDS.
 
@@ -26,7 +26,7 @@ A vocabulary that can SUBTRACT a thing and cannot NAME it is a
 vocabulary with a hole in it, and the hole was there before anybody
 wanted the feature.
 
-'hwut.target' EXPOSES IT because its subject genuinely IS directories.
+'hwut.execute' EXPOSES IT because its subject genuinely IS directories.
 It iterates every directory whose 'hwut.conf' binds the named target
 and executes it there -- one directory implementing 'clean' as 'make
 clean', another as 'rm *.o *.so', and what unifies them is not the
@@ -51,7 +51,7 @@ translation runs BOTH WAYS:
 
     IN A DIRECTORY-RELATED MODE, the directories ARE the subject and
     the runs are not consulted at all.
-        'hwut.target clean --dir "messaging/*"' clean, in each
+        'hwut.execute clean --dir "messaging/*"' clean, in each
 
     AND A RUN NAMES ITS DIRECTORY. A wish stating only runs still
     answers the directory question: the directories are those the
@@ -159,11 +159,11 @@ RULED, AND BUILT (2026-08-29)
 
  b  RULED: UNCHANGED. What does a directory-related face do with a
     directory that binds nothing?
-    'hwut.target clean --dir "messaging/*"' where a matched directory
+    'hwut.execute clean --dir "messaging/*"' where a matched directory
     binds no 'clean'. Today target reports 'no directory binds any
     target' only when NONE does.
     A directory that does not bind the target is not an error, and
-    'hwut.target' already says so.
+    'hwut.execute' already says so.
 
 WHAT WAS BUILT
 ______________________________________________________________________________
@@ -174,10 +174,10 @@ ______________________________________________________________________________
                                     '--exclude-dir' already had
     selection.directory_tuple       THE OTHER VIEW: the directories a
                                     wish names, however it names them
-    hwut.target --dir               the first directory-related face
+    hwut.execute --dir               the first directory-related face
                                     to read the wish's own word
 
-AND ONE LAW HAD TO BE STATED RATHER THAN CHANGED. 'hwut.target' passes
+AND ONE LAW HAD TO BE STATED RATHER THAN CHANGED. 'hwut.execute' passes
 EVERYTHING AFTER THE TARGET NAME to each directory's script,
 argv-style and untouched -- so '--dir' names directories where it
 stands FIRST, and is a word for the script where it stands second.

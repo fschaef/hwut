@@ -3,12 +3,17 @@
 #
 # @hwut {
 #     title      = "The hwut.run face: the tree run, rendered live."
-#     choices    = ["busy", "colour", "empty", "fail", "green",
-#                   "tree-ink",
-#                   "jobs-budget", "labels", "linear-raw", "nostore",
-#                   "refused", "short-form", "strategy-refused",
-#                   "tiers", "timing", "tree-fail", "tree-green"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]", ", [0-9]+\\.[0-9]+ \\[sec\\]"] }
+#     choices {
+#         busy { }  colour { }  empty { }  fail { }  green { }  tree-ink { }
+#         jobs-budget { }  linear-raw { }  nostore { }  refused { }
+#         short-form { }  strategy-refused { }  tiers { }  timing { }
+#         tree-fail { }  tree-green { }
+#         labels { tolerance { eq_pattern = [
+#             ", [0-9]+\\.[0-9]+ \\[sec\\]",
+#             "(\\.( \\.){2,}|\\.{3,}) +", "RESULTS: .*", "\\|[ a-z|]*\\|",
+#             "hwut-root\\.labels:[0-9]+:"] } }
+#     }
+#     tolerance { eq_pattern = [", [0-9]+\\.[0-9]+ \\[sec\\]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -61,7 +66,6 @@ case "$1" in
     --hwut-info)
         echo "The hwut.run face: the tree run, rendered live.;"
         echo "CHOICES: green, fail, nostore, timing, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused, labels, short-form;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 
@@ -441,28 +445,30 @@ short-form)
     ;;
 
 labels)
-    #  The silence, live in the run itself.
+    #  The silence, live in the run itself. '--brief' is the page's own
+    #  choice of flow form, not the display's default; the layout's
+    #  lengths are tolerated in this choice's header.
     fixture_tree
     python3 -m vut.services.lib.labels.add meta \
         --glob "tree/*/TEST/test-two.sh" > /dev/null
     echo "--- bare: the standard label is silent (no test-two runs)"
-    face --plain --deterministic --jobs=1 --no-store --directory=tree
+    face --plain --brief --deterministic --jobs=1 --no-store --directory=tree
     echo "--- '--label meta' lifts the silence (only test-two runs)"
-    face --plain --deterministic --jobs=1 --no-store --directory=tree \
+    face --plain --brief --deterministic --jobs=1 --no-store --directory=tree \
          --label meta
     echo "--- '--label all' is the universe"
-    face --plain --deterministic --jobs=1 --no-store --directory=tree \
+    face --plain --brief --deterministic --jobs=1 --no-store --directory=tree \
          --label all
     echo "--- a label that does not stand, refused by name"
-    face --plain --no-store --directory=tree --label cocnern
+    face --plain --brief --no-store --directory=tree --label cocnern
     echo "--- a LITERAL target overrides the silence"
-    face --plain --deterministic --jobs=1 --no-store --directory=tree \
+    face --plain --brief --deterministic --jobs=1 --no-store --directory=tree \
          alpha/TEST/test-two.sh
     echo "--- a GLOB does not; wholly swallowed, it warns"
-    face --plain --no-store --directory=tree "alpha/TEST/test-tw*.sh"
+    face --plain --brief --no-store --directory=tree "alpha/TEST/test-tw*.sh"
     echo "--- a broken labels file is a FAULT at the door"
     echo "x : y" >> hwut-root.labels
-    face --plain --no-store --directory=tree
+    face --plain --brief --no-store --directory=tree
     ;;
 
 *)

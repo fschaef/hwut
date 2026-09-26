@@ -8,7 +8,7 @@ The provenances, in the order they overrule one another:
 
     None              the choice's own word: the author wrote it here
     "app"             the application's root, reaching every choice
-    "hwut.conf:<n>"   'default_app' of the directory, or the 'apps' entry
+    "hwut.conf:<n>"   'app_defaults' of the directory, or the 'apps' entry
                       that carries this application; the line is the key's
     "--hwut-info"     the application said it through its info block
     "default"         the component that owns the parameter declared it
@@ -17,6 +17,7 @@ The names are the relation table's, so a scope's leaf reads
 'caps.timeout_sec' and a plain parameter reads 'numeric'.
 ______________________________________________________________________________
 """
+import os
 from dataclasses    import dataclass
 
 from .relation      import RELATION
@@ -52,7 +53,7 @@ class Provenance:
         return "%s:%d:%d" % (self.file, self.line, self.column)
 
 
-def of_choice(spec, choice, default_app, directory_spec):
+def of_choice(spec, choice, app_defaults, directory_spec):
     """
     RETURN: dict, parameter name -> Provenance, for one choice of one
             specification.
@@ -61,7 +62,9 @@ def of_choice(spec, choice, default_app, directory_spec):
     choice_parameters  = spec.choice_db[choice]
     choice_position_db = (spec.choice_position_db or {}).get(choice, {})
     root_position_db   = spec.position_db or {}
-    conf_position_db   = getattr(directory_spec, "default_app_position_db",
+    conf_position_db   = getattr(directory_spec, "app_defaults_position_db",
+                                 None) or {}
+    conf_file_db       = getattr(directory_spec, "app_defaults_file_db",
                                  None) or {}
 
     #  An application whose carrier is 'hwut.conf' or the interview has
@@ -78,9 +81,11 @@ def of_choice(spec, choice, default_app, directory_spec):
         elif _stated_f(spec.root_parameters, name):
             result[name] = _made(carrier, "app", spec.source_file,
                                  root_position_db, name, conf_file)
-        elif default_app is not None and _stated_f(default_app, name):
-            result[name] = _made("hwut.conf", None, conf_file,
-                                 conf_position_db, name, conf_file)
+        elif app_defaults is not None and _stated_f(app_defaults, name):
+            stated_in = conf_file_db.get(name) \
+                        or conf_file_db.get(name.split(".")[0]) or conf_file
+            result[name] = _made(stated_in, None, stated_in,
+                                 conf_position_db, name, stated_in)
         else:
             result[name] = Provenance("default")
     return result
@@ -97,8 +102,15 @@ def _made(carrier, own_text, file, position_db, name, conf_file):
     position = position_db.get(name) or position_db.get(name.split(".")[0])
     if carrier == "--hwut-info":
         return Provenance("--hwut-info", file)
-    if carrier == "hwut.conf" or carrier is None and file == conf_file:
-        text = ("hwut.conf:%d" % position.line) if position else "hwut.conf"
+    if (carrier is not None and carrier.endswith(".conf")) \
+       or carrier is None and file == conf_file:
+        #  THE CONF THAT SPOKE, by the name it has in the tree: the
+        #  root's is 'hwut-root.conf', a directory's 'hwut.conf'; one
+        #  met on the climb is named by its file name, never by an
+        #  absolute path.
+        label = os.path.basename(conf_file) if os.path.isabs(conf_file) \
+                else conf_file
+        text = ("%s:%d" % (label, position.line)) if position else label
         return Provenance(text, conf_file,
                           position.line if position else None,
                           position.column if position else None)

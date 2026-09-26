@@ -2,23 +2,27 @@
 STATUS: 2
 STDOUT {
     REFUSED: the words name two directories: 'tree/storage/TEST' and 'tree/messaging/net/TEST'
-    usage: hwut.wishlist [--fail] [--pass] [--since=<point>] [--until=<point>]
-                         [--glob <target>]... [--exclude <target>]...
-                         [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [-l|--label <expr>]
-                         [--language=<name>]... [--faster-than=<sec>]
-                         [<file-glob> [choice-glob]...] [--directory=<path>]
+    usage: hwut.report.wishlist [--fail] [--pass] [--since=<point>]
+                                [--until=<point>] [--glob <target>]...
+                                [--exclude <target>]... [--dir <glob>]...
+                                [--exclude-dir <glob>]... [--wishlist <file>]...
+                                [-l|--label <expr>] [--language=<name>]...
+                                [--faster-than=<sec>]
+                                [<file-glob> [choice-glob]...]
+                                [--directory=<path>]
 }
 --- an absolute path outside '--directory'
 STATUS: 2
 STDOUT {
     REFUSED: the path '$WORK/tree/messaging/net/TEST' lies outside '--directory=tree/storage'
-    usage: hwut.wishlist [--fail] [--pass] [--since=<point>] [--until=<point>]
-                         [--glob <target>]... [--exclude <target>]...
-                         [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [-l|--label <expr>]
-                         [--language=<name>]... [--faster-than=<sec>]
-                         [<file-glob> [choice-glob]...] [--directory=<path>]
+    usage: hwut.report.wishlist [--fail] [--pass] [--since=<point>]
+                                [--until=<point>] [--glob <target>]...
+                                [--exclude <target>]... [--dir <glob>]...
+                                [--exclude-dir <glob>]... [--wishlist <file>]...
+                                [-l|--label <expr>] [--language=<name>]...
+                                [--faster-than=<sec>]
+                                [<file-glob> [choice-glob]...]
+                                [--directory=<path>]
 }
 --- the same, on 'hwut.run'
 STATUS: 2

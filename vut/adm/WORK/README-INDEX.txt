@@ -134,7 +134,7 @@ engine/orchestrator/exploration/README.txt   [798 lines]
   4      THE HEADER
       4.1    '%' IS THE SOURCE FILE'S STEM
   5      hwut.conf
-      5.1    'default_app'
+      5.1    'app_defaults'
       5.2    TARGETS
   6      EXCLUSIVITY
   7      LANGUAGE

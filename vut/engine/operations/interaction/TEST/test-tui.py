@@ -343,7 +343,7 @@ def test_reading_view():
          "a numeric is marked as numeric -- it CAN vary"),
         ("~((X9))~" in rendering,
          "an analogy is marked as analogy"),
-        ("established at S:1/N:1" in rendering,
+        ("established at line 1" in rendering,          # E-56
          "and its self-binding names the FIRST occurrence"),
         ("<v1.2.3-build907>" in rendering,
          "an equivalence-pattern element is marked as pattern"),

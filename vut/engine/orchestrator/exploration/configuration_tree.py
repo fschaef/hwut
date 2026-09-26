@@ -31,6 +31,7 @@ KEY_TO_FIELD = {
     "caps":        "caps",
     "pype":        "pype",
     "tolerance":   "tolerance",
+    "diff_display_parameters": "diff_display_parameters",
     "same":        "same",
     "interactive": "interactive",
     "execute":     "execute",
@@ -146,6 +147,24 @@ class Tolerance(_Scope):
 
 
 @dataclass(frozen=True, slots=True)
+class DiffDisplayParameters(_Scope):
+    """How the line level aligns what differs (compare C-16): compare's
+    'Configuration.diff_display_parameters', stated. Compare owns every default; this
+    record holds only what the author stated.
+
+    'search_budget' expansions a section's search may spend before phase
+                    two takes it; 'margin' how far a pair's runner-up
+                    must stand above it; 'lowest_n' the cheapest pairs
+                    anchored where none is clearly closest; 'context_k'
+                    lines either side averaged into a pair's cost.
+    """
+    search_budget: int   | None = None
+    margin:        float | None = None
+    lowest_n:      int   | None = None
+    context_k:     int   | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class TestParameters(_Scope):
     """One choice's test parameters, as stated. 'None' throughout means:
     nothing stated -- the default table answers at the point of use.
@@ -160,6 +179,7 @@ class TestParameters(_Scope):
     caps:        Caps  | None = None
     pype:        str   | None = None
     tolerance:   Tolerance | None = None
+    diff_display_parameters: DiffDisplayParameters | None = None
     same:        bool  | None = None
     interactive: bool  | None = None
     execute:     str   | None = None
@@ -261,11 +281,11 @@ class DirectorySpec:
     'dependency' names, per target, what must have RUN FIRST -- an
     ordering relation, and no verdict enters it.
 
-    'default_app' carries test parameters every application of the
+    'app_defaults' carries test parameters every application of the
     directory receives. It does not overwrite: what an application states
     itself stands.
 
-    'target_db' binds the USER-DEFINED TARGETS of 'hwut.target' (E-7):
+    'target_db' binds the USER-DEFINED TARGETS of 'hwut.execute' (E-7):
     an open-ended namespace of the directory's own, local, never
     inherited. 'on_entry'/'on_exit' are standard targets with their own
     keys and are refused inside it by name.
@@ -283,8 +303,9 @@ class DirectorySpec:
     collision:       tuple      = ()     # of Target
     dependency:      dict       = None   # Target -> tuple of Target
     target_db:       dict       = None   # target name -> script (E-7)
-    default_app:     object     = None   # TestParameters, or None
-    default_app_position_db: dict = None # key -> Position
+    app_defaults:     object     = None   # TestParameters, or None
+    app_defaults_position_db: dict = None # key -> Position
+    app_defaults_file_db:     dict = None # key -> the conf that stated it
     variant_db:      dict       = None   # alternative name -> Variant
     language_setup:  dict       = None
     position:        Position   = None
@@ -307,7 +328,7 @@ class CTestApp:
     position:    Position
     origin_db:   dict = None              # choice -> {name: str}
     #  THE APPLICATION'S OWN WORD, RESOLVED (O-21): the directory's
-    #  'default_app' folded, then the header's root -- what every
+    #  'app_defaults' folded, then the header's root -- what every
     #  choice inherits BEFORE its own statement. The caps a multi
     #  session or a build run under are these, never one choice's.
     root:        object = None            # TestParameters

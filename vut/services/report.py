@@ -76,7 +76,9 @@ from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 from   vut.services.lib.face    import Refused, Fault, FaceError
 from   vut.services.lib.wallflowers import wallflowers_writer
-from   vut.engine.display.plain import wallflower_note_list
+from   vut.engine.display.plain import (wallflower_note_list,
+                                       results_line_list)
+from   vut.engine.display.word  import CInk
 from   vut.engine.orchestrator.plan.wish import Wish
 from   dataclasses import dataclass, field
 
@@ -353,16 +355,16 @@ def _tallied(entry_stream, fail_box):
         yield entry
 
 
-def entry_stream_of(root, wish, silent_list=None):
+def entry_stream_of(root, wish, silent_db=None):
     """
     YIELD: [0] str            one directory, relative to 'root', walk
                               order.
            [1] str            its title.
            [2] list[CRow]     one row per case the wish selected there.
 
-    'silent_list', where given, receives every file no carrier speaks
-    for (X-SILENT), by its path relative to the CALL directory, as each
-    directory is explored.
+    'silent_db', where given, receives EVERY explored directory, as seen
+    from the CALL directory, with the files no carrier speaks for there
+    (X-SILENT) -- an empty list where none is.
 
     ONE DIRECTORY AT A TIME, the moment it is known. Exploring a
     directory interviews its applications -- subprocesses -- so on a
@@ -383,9 +385,9 @@ def entry_stream_of(root, wish, silent_list=None):
                                      base_f=True):
         whole      = os.path.join(root, directory)
         app_db     = {app.source_file: app for app in result.app_set}
-        if silent_list is not None:
-            silent_list.extend(os.path.relpath(os.path.join(whole, name))
-                               for name in result.app_set.silent_tuple)
+        if silent_db is not None:
+            silent_db[os.path.relpath(whole)] = \
+                sorted(result.app_set.silent_tuple)
         row_list   = []
         for case in (entry.case for entry in selected_list):
             test   = case.source_file
@@ -761,8 +763,8 @@ class Tally:
     row_n:    int = 0
     fail_n:   int = 0
     empty_f:  bool = False
-    silent_tuple: tuple = ()     # X-SILENT: paths, sorted, relative to
-                                 # the call directory
+    silent_db:    dict  = None   # X-SILENT: explored directory, as seen
+                                 # from the call directory -> [name, ...]
 
 
 def _row_of(crow):
@@ -874,9 +876,9 @@ def do(request, sink):
     if not os.path.isdir(directory):
         raise Refused("REFUSED: the directory '%s' does not exist" % directory)
     try:
-        silent_list = []
+        silent_db = {}
         stream    = entry_stream_of(os.path.abspath(directory),
-                                    wish_of(request), silent_list)
+                                    wish_of(request), silent_db)
         #  HELD ONLY UNTIL THE FIRST CASE: 'empty' is a fact about the
         #  WHOLE selection, and a stream cannot know it before the end
         #  -- but it CAN know the moment it stops being true.
@@ -886,7 +888,7 @@ def do(request, sink):
             if entry[2]: break
         else:
             return Tally(empty_f=True,
-                         silent_tuple=tuple(sorted(silent_list)))
+                         silent_db=silent_db)
         block_n = row_n = fail_n = 0
         for where, title, row_list in itertools.chain(held_list, stream):
             block = Block(where, title,
@@ -896,7 +898,7 @@ def do(request, sink):
             fail_n  += sum(1 for row in row_list if not row.good_f)
             sink(block)
         return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n,
-                     silent_tuple=tuple(sorted(silent_list)))
+                     silent_db=silent_db)
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     except SelectionError as error:
@@ -997,17 +999,29 @@ def main(argv=None, write=None):
     #  THE WALLFLOWERS (X-SILENT): listed in the call directory, and
     #  REMINDED OF wherever a person reads this face -- never inside a
     #  machine format on stdout, whose reader parses every line.
-    list_name = wallflowers_writer(write)(list(tally.silent_tuple)) \
-                if tally.silent_tuple else None
-    remind_f  = bool(tally.silent_tuple) \
+    silent_db = tally.silent_db or {}
+    path_list = sorted(os.path.normpath(os.path.join(directory, name))
+                       for directory, name_list in silent_db.items()
+                       for name in name_list)
+    where     = wallflowers_writer(write)(silent_db)
+    remind_f  = bool(path_list) \
                 and (format_name == "traditional" or out_name is not None)
     def remind():
-        """RETURN: None. The wallflower note, where one is owed."""
-        if not remind_f: return
+        """RETURN: None. The wallflower note, where one is owed; then
+        the closing numbers and their bar, as 'hwut.run' closes --
+        drawn from this page's own counts, and with no seconds: a
+        report runs nothing."""
+        if remind_f:
+            write("")
+            for line in wallflower_note_list(path_list, where):
+                write(line)
+        if format_name != "traditional" and out_name is None: return
+        line_list = results_line_list(tally.row_n - tally.fail_n,
+                                      tally.fail_n, width_of(width),
+                                      CInk(color_f))
+        if not line_list: return
         write("")
-        for line in wallflower_note_list(list(tally.silent_tuple),
-                                         list_name):
-            write(line)
+        for line in line_list: write(line)
     if tally.empty_f:
         write("EMPTY: the wish selects no case in '%s'" % directory)
         remind()

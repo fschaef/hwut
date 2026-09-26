@@ -96,19 +96,12 @@ DESCRIPTION
        selected nothing; REFUSED where the words cannot be read.
 ______________________________________________________________________________
 """
-import io
 import sys
-import asyncio
 from . import engine
 from vut.services.lib.cmdline import parse_or_refuse
 from .engine import merge_text, MERGE_ROUND_MAX  # noqa: F401 (E-51's names)
 import argparse
 
-from   vut.services.lib.viewers               import (driver_for,
-                                                      E_DisplayTarget)
-from   vut.engine.operations.interaction.port import (merge_session,
-                                                      E_Intent,
-                                                      MERGE_ROUND_MAX)
 from   vut.engine.orchestrator.plan.wish      import parse_wish, WishError
 from   vut.services._cases                    import (select,
                                                       differing_keys)
@@ -116,9 +109,6 @@ from   vut.services.lib.checklist             import Checklist
 from   vut.services._core                     import (add_setup_arguments,
                                                       setup_from_arguments)
 from   vut.services._exit                     import E_ExitCode
-from   vut.services.accept                    import (token_terminated_f,
-                                                      stderr_spoke_db,
-                                                      stderr_decision)
 
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
          "[--directory=<path>] [--all] [--force] [--console] [-y] "

@@ -5,7 +5,7 @@ INPUT SEQUENCES:
 EDIT LIST:
   [00] INSERT
   [01] DELETE
-  [02] TRANSPOSE (aux:0)
+  [02] GOOD
   [03] DELETE
 
 RESULT TABLE:
@@ -17,8 +17,8 @@ N[00] | SUBJECT_HAS_NOT | STRING | 'N0' | sub:0
 S[01] | NOMINAL_HAS_NOT | STRING | 'S0' | nom:1
 N[01] | SUBJECT_HAS     | STRING | None | sub:1
 ------+-----------------+--------+------+------
-S[02] | TRANSPOSE       | STRING | 'S1' | nom:0
-N[02] | TRANSPOSE       | STRING | None | sub:2
+S[02] | GOOD            | STRING | 'S1' | nom:2
+N[02] | GOOD            | STRING | None | sub:2
 ------+-----------------+--------+------+------
 S[03] | NOMINAL_HAS_NOT | STRING | None | nom:3
 N[03] | SUBJECT_HAS     | STRING | None | sub:3
@@ -26,3 +26,4 @@ N[03] | SUBJECT_HAS     | STRING | None | sub:3
 
 ================================================================================
 
+<hwut-end>

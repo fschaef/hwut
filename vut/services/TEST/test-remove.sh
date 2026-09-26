@@ -5,7 +5,6 @@
 #     title      = "The removal faces: a test, or one choice, forgotten."
 #     choices    = ["asking", "choice", "labels", "refused", "stain", "words",
 #                   "unknown", "untouched", "whole"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -44,7 +43,6 @@ case "$1" in
     --hwut-info)
         echo "The removal faces: a test, or one choice, forgotten.;"
         echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused, words;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

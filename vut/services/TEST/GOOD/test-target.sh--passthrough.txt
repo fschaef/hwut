@@ -1,6 +1,0 @@
-
---- everything after the target name reaches the script, untouched ---
-:: .: ./args.sh [exit 0]
-argv: --fast|-q|two words
-directories: 1  executed: 1  skipped: 0
-[status 0]

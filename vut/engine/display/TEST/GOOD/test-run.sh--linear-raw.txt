@@ -28,7 +28,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.08 [sec]
+    RESULTS: 3 ok, 1 fail, 0.08 [sec], 0.09 [sec] total
     |                           ok                            |       fail       |
 }
 == --dbd --jobs=1 ==
@@ -49,7 +49,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.09 [sec]
+    RESULTS: 3 ok, 1 fail, 0.09 [sec], 0.09 [sec] total
     |                           ok                            |       fail       |
 }
 == --directory-by-directory, the long spelling ==
@@ -70,7 +70,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.10 [sec]
+    RESULTS: 3 ok, 1 fail, 0.08 [sec], 0.09 [sec] total
     |                           ok                            |       fail       |
 }
 <hwut-end>

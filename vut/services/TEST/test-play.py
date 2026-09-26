@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.play: shows and forgets, or saves the candidate"
+#     title      = "hwut.run.play: shows and forgets, or saves the candidate"
 #     choices    = ["accept_runs", "entrance", "forgets", "save"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -10,14 +10,14 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-'hwut.play' THROUGH THE ONE CHANNEL (operations disc-2, services E-40).
+'hwut.run.play' THROUGH THE ONE CHANNEL (operations disc-2, services E-40).
 
     forgets    a bare play renders and writes NOTHING: no candidate, no
                book entry, no register entry.
     save       '--save' hands the subjects to the channel's 'record()':
                the candidates stand in the store; still no verdict, no
                book entry.
-    entrance   A NEW TEST'S WAY IN: 'hwut.play --save', then
+    entrance   A NEW TEST'S WAY IN: 'hwut.run.play --save', then
                'hwut.accept --force' -- and a nominal stands in GOOD/.
                Nothing in between asked 'hwut.run'.
     accept_runs  the text changed after the save: 'hwut.accept' does
@@ -37,7 +37,7 @@ import config                                                    # noqa F401
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.services.play   import main as play_main              # noqa E402
+from   vut.services.lib.run.play   import main as play_main              # noqa E402
 from   vut.services.accept import main as accept_main            # noqa E402
 from   vut.engine.bookkeeper.api import Bookkeeper, Store         # noqa E402
 
@@ -210,7 +210,7 @@ def test_accept_runs():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "hwut.play: shows and forgets, or saves the candidate",
+        title      = "hwut.run.play: shows and forgets, or saves the candidate",
         choice_map = {
             "accept_runs": test_accept_runs,
             "entrance": test_entrance,

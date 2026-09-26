@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "hwut.labels.add: grow a STANDING label."
 #     choices    = ["doors", "grow", "standard"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -31,7 +30,6 @@ case "$1" in
     --hwut-info)
         echo "hwut.labels.add: grow a STANDING label.;"
         echo "CHOICES: grow, standard, doors;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

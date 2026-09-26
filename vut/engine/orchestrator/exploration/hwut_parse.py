@@ -45,8 +45,34 @@ def text_of_file(directory, name, no_default_f=False,
     if spec is None or fault_list: return "", fault_list
 
     from .explorer import _resolve
-    return app_text(_resolve(spec, _inherited_of(directory)),
-                    no_default_f, provenance_f, gnu_f, verbose_f), fault_list
+    governing, conf_fault_list = _governing_of(directory)
+    return app_text(_resolve(spec, governing),
+                    no_default_f, provenance_f, gnu_f, verbose_f), \
+           fault_list + conf_fault_list
+
+
+def _governing_of(directory):
+    """
+    RETURN: [0] DirectorySpec, what governs a file in 'directory': the
+                root's word folded down ('_inherited_of'), then the
+                directory's OWN 'hwut.conf' folded in over it -- exactly
+                what exploration applies ('explore()' reads that conf
+                itself, which is why the climb leaves it out).
+                None where no 'hwut-root.conf' stands above.
+            [1] list[Fault], what the climbed confs and the directory's
+                own conf got wrong. A conf's fault is the author's to
+                see; this face does not drop it.
+    """
+    from .tree_explorer import ascended_spec, inherited_spec, RootConfMissing
+    try:                      spec, fault_list = ascended_spec(directory)
+    except RootConfMissing:   return None, []
+    fault_list = list(fault_list)
+    text = finder.conf_text(directory)
+    if text is not None:
+        own, _app_db, own_fault_list = reader.read_conf(text, finder.CONF_NAME)
+        fault_list.extend(own_fault_list)
+        if own is not None: spec = inherited_spec(spec, own)
+    return spec, fault_list
 
 
 def _inherited_of(directory):
@@ -71,8 +97,11 @@ def text_of_directory(directory, interview_runner=None,
 
     The order is the explorer's: 'hwut.conf' first, then the files.
     """
+    from .tree_explorer import ascended_spec, RootConfMissing
+    try:                      inherited, climb_fault_list = ascended_spec(directory)
+    except RootConfMissing:   inherited, climb_fault_list = None, []
     result = explore(directory, interview_runner=interview_runner,
-                     inherited=_inherited_of(directory))
+                     inherited=inherited)
     text_list = []
 
     spec = result.app_set.directory_spec
@@ -96,7 +125,7 @@ def text_of_directory(directory, interview_runner=None,
         text_list.append("%s %s   [MISDEP]"
                          % (case[0], "-" if case[1] is None else case[1]))
 
-    return "\n".join(text_list), list(result.fault_list)
+    return "\n".join(text_list), list(climb_fault_list) + list(result.fault_list)
 
 
 def _printed(value):

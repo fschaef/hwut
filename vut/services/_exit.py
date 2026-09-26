@@ -128,7 +128,7 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
         sys.unraisablehook = lambda unraisable: None
         return ending["code"]
     except BrokenPipeError:
-        #  THE READER HUNG UP ('hwut.diff ... | head'): an ordinary
+        #  THE READER HUNG UP ('hwut.run.diff ... | head'): an ordinary
         #  ending. stdout is pointed at the void so the interpreter's
         #  own flush at exit cannot raise a second time.
         try:
@@ -138,5 +138,8 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
         return E_ExitCode.SIGPIPE
     finally:
         if previous is not None:
-            try:               signal.signal(signal.SIGTERM, previous)
-            except Exception:  pass
+            #  A 'finally' must not raise over what it closes: restoring
+            #  can fail only as 'signal.signal' fails -- ValueError, off
+            #  the main thread -- and then nothing was installed either.
+            try:                signal.signal(signal.SIGTERM, previous)
+            except ValueError:  pass

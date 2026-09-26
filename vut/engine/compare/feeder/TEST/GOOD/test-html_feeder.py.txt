@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
     <title>VUT Report</title><style>
         :root {
-            --lh: 24px; 
+            --lh: 24px;
             --gw: 40px;
             --bg: #0d1117; --fg: #c9d1d9;
             --border: #30363d; --gutter: #161b22;
@@ -9,16 +9,16 @@
         body { background: var(--bg); color: var(--fg); font-family: 'SFMono-Regular', Consolas, monospace; margin: 0; padding: 20px; font-size: 13px; }
         .container { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); overflow: hidden; }
         .scroll-wrap { overflow-x: auto; }
-        
+
         /* Layout Grid */
         .row { display: grid; grid-template-columns: var(--gw) 1fr 20px var(--gw) 1fr; border-bottom: 1px solid #21262d; height: var(--lh); }
         .row:hover { background: rgba(255,255,255,0.03); }
-        
+
         /* Columns */
         .ln { background: var(--gutter); color: #6e7681; text-align: right; padding-right: 8px; line-height: var(--lh); font-size: 11px; user-select: none; border-right: 1px solid var(--border); }
         .side { padding: 0 8px; white-space: pre; line-height: var(--lh); overflow: hidden; }
         .mid { background: var(--gutter); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-        
+
         /* Potpourri */
         .potpourri-frame { border: 1px solid #30363d; margin: 10px 0; background: #0d1117; position: relative; }
         .potpourri-marker { background: #161b22; color: #8b949e; text-align: center; font-size: 10px; letter-spacing: 2px; padding: 2px; border-bottom: 1px solid var(--border); font-weight: bold; }
@@ -30,7 +30,7 @@
 
         /* Tokens */
         .tok { display: inline-block; padding: 0 2px; border-radius: 2px; border: 1px solid transparent; cursor: help; }
-        
+
         /* Generated Styles */
         .OK_GOOD { color: inherit; }
 .OK_TOLERATED { color: #e3b341; text-decoration: underline dotted #d29922; font-style: italic; }
@@ -40,7 +40,6 @@
 .BAD_SUBJECT_HAS_NOT { color: #484f58; border: 1px dashed #484f58; }
 .BAD_NOMINAL_DIFFERS { color: #58a6ff; background-color: rgba(56, 139, 253, 0.1); border: 1px solid #1f6feb; }
 .BAD_NOMINAL_HAS { color: #58a6ff; background-color: rgba(56, 139, 253, 0.1); font-weight: bold; }
-.BAD_TRANSPOSE { color: #d2a8ff; background-color: rgba(163, 113, 247, 0.1); border: 1px solid #8957e5; }
     </style></head><body><div class="container"><div class="scroll-wrap">
     
 <div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
@@ -245,3 +244,4 @@ Analogy established at S:29 / N:30">((hole&nbsp;in&nbsp;the&nbsp;wall))</span><s
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">turned</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">into</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">liquid</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sat</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">on</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">grass.</span></div></div>
 </div></div></body></html>
 <!-- terminated -->
+<hwut-end>

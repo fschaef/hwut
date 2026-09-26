@@ -285,7 +285,7 @@ PROBLEM   The wish selected RUNS. A directory entered only as a filter
           on a run's path, so a vocabulary that could SUBTRACT a
           directory ('--exclude-dir') could not NAME one. That is a
           hole, and it was there before anybody wanted the feature.
-          'hwut.target' exposed it: its subject genuinely IS
+          'hwut.execute' exposed it: its subject genuinely IS
           directories, so it parsed its own arguments and shared no
           selection with any other face (disc-9).
 

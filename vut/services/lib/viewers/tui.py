@@ -39,13 +39,13 @@ DESCRIPTION
 
        TWO WAYS TO MARK, one renderer. The VERDICT marking (the merge
        view) marks what DID differ, by relation. The READING marking
-       ('reading_f', the interpretation view -- 'hwut.diff FILE')
+       ('reading_f', the interpretation view -- 'hwut.run.diff FILE')
        marks what CAN vary, by tolerance kind:
 
            {numeric}   ~analogy~   <pattern>   !binding!   |nothing|
 
        Same rows, same notes, same banner -- an author moves between
-       'hwut.diff' and 'hwut.accept.interactive' without relearning
+       'hwut.run.diff' and 'hwut.accept.interactive' without relearning
        the picture.
 
        TWO COLUMNS ('--side-by-side', '-y'; E-49). One row per aligned
@@ -246,7 +246,7 @@ class TuiDisplay(DisplayAdapter):
     async def open(self, subject_name):
         """RETURN: None. The session for one subject begins; the round
         count starts afresh -- one driver may carry several subjects
-        in turn ('hwut.diff', 'hwut.accept.interactive')."""
+        in turn ('hwut.run.diff', 'hwut.accept.interactive')."""
         self.subject_name = subject_name
         self.generation_n = 0
 
@@ -650,10 +650,6 @@ class TuiDisplay(DisplayAdapter):
         if any(name.endswith("TYPE_DIFFERS") for name in name_set):
             note_list.append("type differs -- one side is a number, "
                              "the other is not")
-        if "BAD_TRANSPOSE" in name_set:
-            note_list.append("transposed -- present on both sides, "
-                             "out of order")
-
         #  THE MEASUREMENT, where DOWN carries it: a numeric's measured
         #  deviation against the limit it stood against -- the number
         #  that decides widen-the-limit vs fix-the-code -- and the

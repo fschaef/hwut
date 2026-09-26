@@ -4,6 +4,7 @@ INSPECT: every member of 'TestParameters', stated alone
          caps             caps
          pype             canonicalisers
          tolerance        compare
+         diff_display_parameters compare
          same             naming
          interactive      interactive
          execute          execute

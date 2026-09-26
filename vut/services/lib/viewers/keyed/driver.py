@@ -57,10 +57,9 @@ from vut.engine.operations.interaction.port import (DisplayAdapter,
 from vut.services.lib.viewers.keyed.act     import E_Act, E_Pane
 from vut.services.lib.viewers.keyed.state   import MergeState
 from vut.services.lib.viewers.keyed.reduce  import reduce
-from vut.services.lib.viewers.keyed.project import (project, banner, foot,
+from vut.services.lib.viewers.keyed.project import (project, foot,
                                                     row_of_cursor, E_Kind,
-                                                    pane_title, fitted,
-                                                    PANE_TITLE_DB)
+                                                    pane_title)
 from vut.services.lib.viewers.keyed         import keymap
 from vut.services.lib.viewers.keyed         import element
 from vut.services.lib.viewers.keyed         import report
@@ -134,7 +133,7 @@ class KeyedDisplay(DisplayAdapter):
         self.act_script  = list(act_script) if act_script is not None else None
         self.width       = width
         self.plain_f     = (color_f is False)
-        #  VIEW ONLY ('hwut.diff'): the same screen, the viewing keymap,
+        #  VIEW ONLY ('hwut.run.diff'): the same screen, the viewing keymap,
         #  and no act that changes the nominal.
         self.view_only_f = view_only_f
         self.keymap      = keymap.VIEW_KEYMAP if view_only_f else keymap.KEYMAP

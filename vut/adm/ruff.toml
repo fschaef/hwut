@@ -28,3 +28,12 @@ exclude = [
 #                a key named 'token' and guesses wrong.
 lint.ignore = ["E701", "E702", "E221", "UP031", "I001",
                "S101", "S105"]
+
+
+#  THE RULE SET IS THIS FILE'S, NOT THE INSTALLATION'S. Without a
+#  'select' ruff applies its own default, and that default is ruff's to
+#  change: one 0.16.5 enabled ~410 rules where another enabled the four
+#  families below, and 'adm/TEST/test-static-analysis.sh' read 375
+#  tolerated findings against 22 with no line of the tree moved. The
+#  families are ruff's long-standing default, pinned.
+lint.select = ["E4", "E7", "E9", "F"]

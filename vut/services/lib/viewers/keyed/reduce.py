@@ -47,7 +47,6 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 from vut.services.lib.viewers.keyed.act    import E_Act, E_Pane
-from vut.services.lib.viewers.keyed.state  import MergeState
 from vut.services.lib.viewers.keyed.region import (take_placed as region_take_placed,
                                                    region_list_of, region_of)
 from vut.engine.compare.reading.line_scanner import REGION_END_LINE

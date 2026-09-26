@@ -31,10 +31,7 @@ def test_mseq(a, b):
     print(f"nominal: '{b}'")
     print(f"=> Cost: {cost:.6f}")
     for i, edit in enumerate(edit_list):
-        if edit.transpose_ai is not None:
-            print(f"[{i}] {edit.id.name} ({edit.transpose_ai})")
-        else:
-            print(f"[{i}] {edit.id.name}")
+        print(f"[{i}] {edit.id.name}")
     print()
 
 if "transpose" in sys.argv:
@@ -73,7 +70,7 @@ if "visible-nothing" in sys.argv:
     test_mseq("vvsvv", "s")
 
     # 5. Complex mixture: Transpose + Visible Nothing deletion
-    # Should result in TRANSPOSE (approx 0.5) + GOOD_DELETE (1e-10)
+    # Reads DELETE + INSERT: nothing is reordered (compare C-13)
     test_mseq("snv", "ns")
 
     # 6. Significant change hidden among visible nothings

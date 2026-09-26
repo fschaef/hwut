@@ -1,6 +1,6 @@
 
 --- a glob matching nothing ---
-    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "node_n": 0, "when": "T01"}
     {"directory": "alpha/TEST", "format": 1, "kind": "report", "text": "the selection is empty: no test case answers the wish", "when": "T02"}
     {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 0, "when": "T03"}
     {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_entry", "when": "T04"}

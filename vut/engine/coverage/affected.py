@@ -55,9 +55,7 @@ ______________________________________________________________________________
 import os
 import sys
 
-from .database.api import (ranges_of, RecordFault, CoverageRecord,
-                           FileCoverage, unpack_record, index_of,
-                           Gathered)
+from .database.api import (ranges_of, index_of)
 
 
 class E_ExitCode:
@@ -143,7 +141,7 @@ def change_db_of_diff(text, strip=1):
 #  side module importing this face -- itself built ON the database
 #  api -- closed a circular import. Both are re-exported through
 #  '.database.api' so nothing else in this module changes.
-from .database.api import record_iterable, rebased
+from .database.api import record_iterable
 
 # ------------------------------------------------------------------- face
 

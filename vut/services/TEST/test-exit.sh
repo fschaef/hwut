@@ -111,12 +111,12 @@ printf 'hwut.pype           %s      %s        %s      -\n' \
     "$(status python3 -m vut.services.pype ok.pype a.txt)" \
     "$(status python3 -m vut.services.pype broken.pype a.txt)" \
     "$(status python3 -m vut.services.pype)"
-printf 'hwut.diff           %s      %s        %s      -\n' \
-    "$(status python3 -m vut.services.diff \
+printf 'hwut.run.diff           %s      %s        %s      -\n' \
+    "$(status python3 -m vut.services.lib.run.diff \
               a.txt a.txt)" \
-    "$(status python3 -m vut.services.diff \
+    "$(status python3 -m vut.services.lib.run.diff \
               a.txt b.txt)" \
-    "$(status python3 -m vut.services.diff)"
+    "$(status python3 -m vut.services.lib.run.diff)"
 
     ;;
 

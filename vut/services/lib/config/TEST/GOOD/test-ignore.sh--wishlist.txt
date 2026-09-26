@@ -1,0 +1,38 @@
+--- the list a run wrote
+    #  WALLFLOWERS: files in this test directory that are none of
+    #     - ignored,       named under 'ignore' in its hwut.conf,
+    #     - a test,        named under 'apps' in its hwut.conf,
+    #     - self-declared, carrying a '@hwut { }' block.
+    #  hwut asks nothing of them. This file is deletable; the next run
+    #  writes it again where wallflowers still stand.
+    #
+    #  To ignore passive helper files, from this test directory:
+    #     > hwut.config.ignore --wishlist TMP/wallflowers.txt
+    #  or every list in a tree at once, from above it:
+    #     > hwut.config.ignore --wallflowers
+    #  To make a file a test application: name it under 'apps' in this
+    #  directory's hwut.conf.
+    #
+    ./../bench.log
+    ./../helper.py
+--- read from its own test directory
+STATUS: 0
+STDOUT {
+    ./hwut.conf:  ignore bench.log helper.py
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+--- read from the root: './' is the list's own directory
+STATUS: 0
+STDOUT {
+    b/TEST/hwut.conf:  ignore bench.log helper.py
+}
+b/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+<hwut-end>

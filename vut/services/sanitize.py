@@ -86,7 +86,7 @@ ALL OF THEM, because a wish that states nothing wants everything.
     --target <name>
                 RUN A DIRECTORY'S OWN TARGET, e.g. 'clean'. The
                 framework does not know what a project's rubbish is;
-                the project does, and 'hwut.target' is where it says
+                the project does, and 'hwut.execute' is where it says
                 so (E-7). Several may stand; each runs in every
                 directory that binds it, in walk order. A target that
                 no directory binds is REFUSED BY NAME rather than
@@ -615,7 +615,7 @@ def target_line_tuple(root, target_tuple, apply_f, write):
             [1] bool, True where some directory bound each target.
 
     THE FRAMEWORK DOES NOT KNOW WHAT A PROJECT'S RUBBISH IS. The
-    project does, and 'hwut.target' (E-7) is where it says so. So this
+    project does, and 'hwut.execute' (E-7) is where it says so. So this
     face does not clean a project's own leavings; it CALLS the verb
     the project bound, in every directory that bound it, in walk order.
 
@@ -623,7 +623,7 @@ def target_line_tuple(root, target_tuple, apply_f, write):
     that quietly does nothing is worse than one that stops: the author
     believes their tree was cleaned.
     """
-    from . import target as target_service
+    from . import execute as execute_service
 
     good_f  = True
     bound_f = True
@@ -634,8 +634,8 @@ def target_line_tuple(root, target_tuple, apply_f, write):
                   "binds it ('--apply' runs it)" % name)
             continue
         write("  target '%s':" % name)
-        code = target_service.main(argv, write=lambda line:
-                                   write("    " + str(line)))
+        code = execute_service.main(argv, write=lambda line:
+                                    write("    " + str(line)))
         if code is E_ExitCode.EMPTY:
             write("    REFUSED: no directory binds a target '%s'" % name)
             bound_f = False

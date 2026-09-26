@@ -3,7 +3,7 @@ STATUS: 2
     DONE  test-ok.sh [ ?! ]  ||0
        suite/TEST . . . . . . . . . . . . . . . . . . . . . .      [OK]      0/0
         test-ok.sh      the nominal carries lines nobody has accepted: an aspirant, finish it with 'hwut.accept'
-    RESULTS: 0 ok, 0 fail, 3 refused
+    RESULTS: 0 ok, 0 fail, 3 refused, 0.02 [sec] total
 --- '--unaccepted' selects the cases with NO nominal: test-two.sh
     ./test-two.sh a
     ./test-two.sh b

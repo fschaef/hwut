@@ -7,8 +7,16 @@ PURPOSE: THE 'hwut.config.ignore' COMMAND LINE -- the answer to the run's
          this face says so once and for good, by writing the file's name
          into its directory's 'hwut.conf' under 'ignore'.
 
-    hwut.config.ignore <path>...   whitespace separated, as the NOTE prints
-                                   them: relative to where you stand
+    hwut.config.ignore <path>...   whitespace separated, relative to
+                                   where you stand
+    --wishlist <file>              the file's lines as paths, read as every
+                                   '--wishlist' is: '#' comments and blanks
+                                   dropped, './' meaning the file's own
+                                   directory. May stand several times.
+    --wallflowers                  every wallflower list below here
+                                   ('**/TMP/wallflowers.txt', the run's
+                                   NOTE): all of them ignored, and each
+                                   list removed once its files are
     --dont-ask                     write without showing and asking
     --help                         this text
 
@@ -27,10 +35,14 @@ import os
 import sys
 
 from   ..._exit  import E_ExitCode, guarded
+from   ...lib.wallflowers                import (wallflower_list_paths,
+                                                  WALLFLOWERS_GLOB)
+from   vut.engine.orchestrator.plan.wish import (wishlist_target_tuple,
+                                                  WishError)
 
 
-USAGE = ("usage: hwut.config.ignore <path>... [--dont-ask]\n"
-         "                          [--help]")
+USAGE = ("usage: hwut.config.ignore [<path>...] [--wishlist <file>]...\n"
+         "                          [--wallflowers] [--dont-ask] [--help]")
 
 
 def _entry_text(name_list):
@@ -99,6 +111,9 @@ def do(path_list, ask_f=True, write=print, ask=input):
         return E_ExitCode.REFUSED
     group_db = {}
     for path in path_list:
+        #  A LIST'S './' IS A PLACE, not the reader's standpoint: shown
+        #  as seen from here, like every other path this face names.
+        if os.path.isabs(path): path = os.path.relpath(path)
         if not os.path.isfile(path):
             write("REFUSED: '%s' is no file that stands" % path)
             return E_ExitCode.REFUSED
@@ -116,6 +131,10 @@ def do(path_list, ask_f=True, write=print, ask=input):
                 write("REFUSED: '%s' holds no 'hwut { ... }' block to "
                       "extend" % conf_path)
                 return E_ExitCode.REFUSED
+            #  THE PLAN NAMES WHAT IS WRITTEN: a name already ignored is
+            #  neither written nor said.
+            ignored   = _ignored_set_of(text)
+            name_list = [name for name in name_list if name not in ignored]
         else:
             amended = _entry_text(name_list)
         if not os.path.exists(conf_path) or amended != text:
@@ -139,22 +158,57 @@ def do(path_list, ask_f=True, write=print, ask=input):
 
 def main(argv):
     """RETURN: E_ExitCode, as 'do' gives it; REFUSED where the command
-               line itself is not understood.
+               line itself is not understood or a list cannot be read.
     """
     if "--help" in argv:
         write = print
         write(__doc__.split("PURPOSE:", 1)[1].rstrip())
         return E_ExitCode.OK
-    ask_f     = "--dont-ask" not in argv
-    path_list = [word for word in argv[1:] if not word.startswith("-")]
-    unknown   = [word for word in argv[1:]
-                 if word.startswith("-") and word != "--dont-ask"]
-    if unknown:
-        print("REFUSED: '%s' is no option of 'hwut.config.ignore'"
-              % unknown[0])
-        print(USAGE)
-        return E_ExitCode.REFUSED
-    return do(path_list, ask_f=ask_f)
+    ask_f         = True
+    wallflowers_f = False
+    path_list     = []
+    list_path_list = []
+    word_list     = argv[1:]
+    i = 0
+    while i < len(word_list):
+        word = word_list[i]; i += 1
+        if   word == "--dont-ask":          ask_f = False
+        elif word == "--wallflowers":       wallflowers_f = True
+        elif word == "--wishlist":
+            if i >= len(word_list):
+                print("REFUSED: '--wishlist' stands without a file")
+                print(USAGE)
+                return E_ExitCode.REFUSED
+            list_path_list.append(word_list[i]); i += 1
+        elif word.startswith("--wishlist="):
+            list_path_list.append(word[len("--wishlist="):])
+        elif word.startswith("-"):
+            print("REFUSED: '%s' is no option of 'hwut.config.ignore'"
+                  % word)
+            print(USAGE)
+            return E_ExitCode.REFUSED
+        else:
+            path_list.append(word)
+    wallflower_list = list(wallflower_list_paths(".")) if wallflowers_f \
+                      else []
+    if wallflowers_f and not wallflower_list:
+        print("Nothing to do: no '%s' stands below here."
+              % WALLFLOWERS_GLOB)
+        if not path_list and not list_path_list: return E_ExitCode.OK
+    for list_path in list_path_list + wallflower_list:
+        try:
+            path_list.extend(wishlist_target_tuple(list_path))
+        except WishError as error:
+            print("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
+    status = do(path_list, ask_f=ask_f)
+    #  A LIST SETTLED IS A LIST GONE: its files are ignored now, so it
+    #  names no wallflower any more.
+    if status is E_ExitCode.OK:
+        for list_path in wallflower_list:
+            os.remove(list_path)
+            print("removed: %s" % os.path.relpath(list_path))
+    return status
 
 
 if __name__ == "__main__":

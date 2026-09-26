@@ -13,6 +13,10 @@ caps.memory_mb     ProcsitterConfig    max_memory_mb                            
 caps.network       ConfigCaps          network                                        True
 caps.timeout_sec   ProcsitterConfig    max_wall_clock_sec                             300.0
 caps.write_directory_list ConfigCaps          write_directory_list                           None
+diff_display_parameters.context_k ConfigurationDiffDisplayParameters context_k                                      1
+diff_display_parameters.lowest_n ConfigurationDiffDisplayParameters lowest_n                                       4
+diff_display_parameters.margin ConfigurationDiffDisplayParameters margin                                         0.1
+diff_display_parameters.search_budget ConfigurationDiffDisplayParameters search_budget                                  20000
 execute            ConfigRunner        execute                                        None
 interactive        ConfigRunner        interactive_f                                  False
 output             ConfigRunner        output                                         ('<stdout>',)

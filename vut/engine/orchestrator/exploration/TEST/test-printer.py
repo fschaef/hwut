@@ -24,7 +24,7 @@ file       one source file, printed IN THE SPECIFICATION LANGUAGE:
 
 origins    the provenances, in a comment, and only where the value is
            not this choice's own word: 'app' from the application's
-           root, 'hwut.conf:<line>' from 'default_app' or from an
+           root, 'hwut.conf:<line>' from 'app_defaults' or from an
            'apps' entry, '--hwut-info' from the interview, 'default'
            from the owning component.
 
@@ -126,7 +126,7 @@ def test_no_default():
                             '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                             '# }\n',
                "hwut.conf": 'hwut {\n'
-                            '    default_app { tolerance { comment = ["//", ""] } }\n'
+                            '    app_defaults { tolerance { comment = ["//", ""] } }\n'
                             '}\n'}
     banner("everything")
     directory = build_directory(file_db)
@@ -156,7 +156,7 @@ def test_origins():
                                    '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                                    '# }\n',
                     "hwut.conf":  'hwut {\n'
-                                  '    default_app { tolerance { slash = yes } }\n'
+                                  '    app_defaults { tolerance { slash = yes } }\n'
                                   '    apps {\n'
                                   '        gen.c { title = "generated"\n'
                                   '                tolerance { comment = ["//", "//"] } }\n'
@@ -177,7 +177,7 @@ def test_places():
                             '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                             '# }\n',
                "hwut.conf": 'hwut {\n'
-                            '    default_app {\n'
+                            '    app_defaults {\n'
                             '        tolerance { slash = no }\n'
                             '        comment   = ["//", "//"]\n'
                             '    }\n'

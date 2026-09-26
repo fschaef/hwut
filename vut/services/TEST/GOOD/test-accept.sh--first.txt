@@ -9,5 +9,5 @@ STATUS: 0
 STATUS: 2
     DONE  test-ok.sh [ ?! ]  ||0
        suite/TEST . . . . . . . . . . . . . . . . . . . . . .      [OK]      0/0
-    RESULTS: 0 ok, 0 fail, 2 skip, 1 refused
+    RESULTS: 0 ok, 0 fail, 2 skip, 1 refused, 0.02 [sec] total
 <hwut-end>

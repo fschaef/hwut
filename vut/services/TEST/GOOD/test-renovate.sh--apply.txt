@@ -4,7 +4,7 @@ suite/TEST
         applied
     hwut.conf: ignore = ["helper*.py", "*.bak"]  (from hwut-info.dat '--not')
         applied
-    hwut.conf: slash_eqv = false -> default_app { tolerance { slash = false } }
+    hwut.conf: slash_eqv = false -> app_defaults { tolerance { slash = false } }
         applied
     test-a.sh: numeric = 0.01, whitespace_eqv = yes -> tolerance { numeric_ratio = 0.01, whitespace = yes }
         applied
@@ -14,7 +14,7 @@ STATUS: 0
         ignore = ["helper*.py", "*.bak"]
         title = "The Old Suite"
         on_entry = "true"
-        default_app { tolerance { slash = false } }
+        app_defaults { tolerance { slash = false } }
     }
 --- test-a.sh, line 2
 # @hwut { title = "A"  tolerance { numeric_ratio = 0.01  whitespace = yes } }
@@ -27,5 +27,5 @@ suite/TEST
     unknown in hwut-info.dat, left to you: 'coverage run --omit x'
 nothing to renovate below '.'
 --- the directory is now VUT's:
-RESULTS: 1 ok, 0 fail, N [sec]
+RESULTS: 1 ok, 0 fail, N [sec], N [sec] total
 <hwut-end>

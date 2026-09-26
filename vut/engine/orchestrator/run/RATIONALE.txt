@@ -794,7 +794,7 @@ PROBLEM   Determination's warnings -- 'the glob met only runs the
           'orchestrator(..., warn=<callable>)', a parameter the
           caller had to remember. MEASURED: 'services/run.py's 'do'
           called '_drive' without it, so 'hwut.run' printed no
-          warning at all, on any wish, while 'hwut.wishlist' on the
+          warning at all, on any wish, while 'hwut.report.wishlist' on the
           same tree and the same glob printed it and exited 3. The
           loss was invisible because display's own suite was already
           red for O-24. A callback nobody is obliged to pass is a
@@ -813,7 +813,7 @@ DECISION  'warning' is a KIND of the vocabulary -- {"text": str},
           -- sees the finding for the first time.
 
           THE TEXT IS VERBATIM. Determination's line already opens
-          'WARNING:' and is the same line 'hwut.wishlist' prints;
+          'WARNING:' and is the same line 'hwut.report.wishlist' prints;
           the renderer adds no word of its own (D-8: display owns
           the rendering words, and here the word is determination's).
           SILENT drops it, as it drops the flow.
@@ -1212,3 +1212,25 @@ COST      One dict per plan, built once per run. Measured on the
           whole, 'd.py' (unmeasured) last. No flow nominal moved in
           the tree: every raw flow of two or more runs is pinned by
           D-16, and this is what the pin was for.
+
+------------------------------------------------------------------------------
+O-33  A DIRECTORY WEIGHS ITS LONGEST CASE                      (2026-09-26)
+------------------------------------------------------------------------------
+PROBLEM   O-28 weighed a directory by the SUM of its measured cases. A
+          sum says how much work a directory holds, not what cannot be
+          split: many short cases outweighed one long one, and the CSP
+          solver's 5.4 s case started fifth, behind directories of
+          short cases (MEASURED, this tree's own traces).
+
+DECISION  RULED (Frank-Rene): a directory's weight is its LONGEST
+          measured case -- its critical path, the one case no worker
+          count shortens. 'longest first' among directories now puts
+          first the directory whose single longest case would otherwise
+          become the tail the run waits for. A directory nobody has
+          measured still goes first (O-28).
+
+COST      MEASURED on this tree: the solver's directory moves from
+          fifth to third, behind 'bin/TEST' (7.7 s) and 'services/TEST'
+          (6.4 s). A directory of many medium cases may now start later
+          than before; the worker budget still fills with its cases as
+          soon as anything frees.

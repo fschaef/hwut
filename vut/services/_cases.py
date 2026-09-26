@@ -3,7 +3,7 @@
 ______________________________________________________________________________
 PURPOSE: THE CASES A WISH SELECTS, WITH THEIR STREAMS -- the one block
          every store-reading face runs between its words and its work
-         ('hwut.accept', 'hwut.accept.interactive', 'hwut.diff'; E-50,
+         ('hwut.accept', 'hwut.accept.interactive', 'hwut.run.diff'; E-50,
          E-51).
 
     entered path -> directory exists -> the climb (ascended_spec)
@@ -206,8 +206,12 @@ def differing_keys(selected, write):
                             asyncio.run(run_test(configuration,
                                                  Request(choice=choice, record=True),
                                                  bookkeeper=store.bookkeeper))
-                    except Exception:                          # noqa: BLE001
-                        pass
+                    except Exception as error:                 # noqa: BLE001
+                        #  SAID, NOT SWALLOWED: the case is counted below
+                        #  as never run, and here is why.
+                        write("FAULT: '%s %s' -- no first candidate could "
+                              "be made: %s: %s" % (test, choice,
+                              type(error).__name__, error))
             if not out_path.exists():  no_run_n += 1; continue
             try:
                 subject_text = io.open(str(out_path),  encoding="utf-8").read()

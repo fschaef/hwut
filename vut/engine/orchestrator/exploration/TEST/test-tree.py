@@ -20,7 +20,7 @@ DESCRIPTION:
 walk     three levels, two test directories, walk order; the walk does
          not descend into a test directory.
 
-inherit  'default_app' flows down and merges parameter by parameter;
+inherit  'app_defaults' flows down and merges parameter by parameter;
          a level's own word wins; a test directory's own 'hwut.conf'
          wins last.
 
@@ -108,13 +108,13 @@ def test_walk():
 def test_inherit():
     """RETURN: None. The configuration tree, three levels deep."""
     tree, root = tree_of({
-        "hwut.conf":            'hwut { default_app { tolerance { numeric_ratio = 0.5 }\n'
+        "hwut.conf":            'hwut { app_defaults { tolerance { numeric_ratio = 0.5 }\n'
                                 '                     pype = "root.pype" '
                                 '} }\n',
-        "sub/hwut.conf":        'hwut { default_app { tolerance { numeric_ratio = 0.1 } } '
+        "sub/hwut.conf":        'hwut { app_defaults { tolerance { numeric_ratio = 0.1 } } '
                                 '}\n',
         "sub/TEST/test-a.py":   '# @hwut { title = "A" }\n',
-        "sub/TEST/hwut.conf":   'hwut { default_app { pype = '
+        "sub/TEST/hwut.conf":   'hwut { app_defaults { pype = '
                                 '"own.pype" } }\n',
         "other/TEST/test-b.py": '# @hwut { title = "B" }\n',
     })

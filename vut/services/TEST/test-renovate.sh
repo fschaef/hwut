@@ -57,9 +57,9 @@ apply)
     echo "--- the relic stays until the person deletes it:"; ls suite/TEST/hwut-info.dat
     echo "--- a second run:"; $FACE
     echo "--- the directory is now VUT's:"
-    ( cd suite/TEST && python3 -m vut.services.play test-a.sh --save >/dev/null 2>&1
+    ( cd suite/TEST && python3 -m vut.services.lib.run.play test-a.sh --save >/dev/null 2>&1
       python3 -m vut.services.accept test-a.sh --force >/dev/null 2>&1
-      python3 -m vut.services.run 2>&1 | grep RESULTS | sed 's/[0-9.]* \[sec\]/N [sec]/' )
+      python3 -m vut.services.run 2>&1 | grep RESULTS | sed 's/[0-9.]* \[sec\]/N [sec]/g' )
     ;;
 kept)
     fixture

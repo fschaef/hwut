@@ -47,8 +47,8 @@ from   vut.services.lib.cmdline import (did_you_mean,            # noqa: E402
                                         completion_table,
                                         parse_or_refuse)
 
-FACE_TUPLE = ("accept", "plan", "play", "rename", "report", "run",
-              "sanitize", "lib.run.stability", "wishlist")
+FACE_TUPLE = ("accept", "plan", "lib.run.play", "rename", "report", "run",
+              "sanitize", "lib.run.stability", "lib.report.wishlist")
 #  The wish words each wish-taking face also accepts are the wish's,
 #  and are not in its own table: 'parse_wish' reads them first.
 
@@ -203,7 +203,7 @@ def test_faces():
                the completion table each prints, one row per face."""
     import subprocess, sys
     for module in ["vut.services.%s" % name for name in FACE_TUPLE] \
-                  + ["vut.services.diff",
+                  + ["vut.services.lib.run.diff",
                      "vut.services.lib.accept.interactive"]:
         run = subprocess.run([sys.executable, "-m", module,
                               "--intern-cmd-get-completion-info"],

@@ -1,4 +1,4 @@
-STIMULUS  hwut.diff --console s.txt n.txt --plain --side-by-side --width 80
+STIMULUS  hwut.run.diff --console s.txt n.txt --plain --side-by-side --width 80
 REACTION  stdout {
               
               =[ s.txt ]========================================== round 1

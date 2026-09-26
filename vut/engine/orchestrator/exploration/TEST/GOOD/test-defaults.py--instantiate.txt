@@ -43,6 +43,11 @@ ConfigCompare:
     analogy_begin_marker           '(('
     analogy_end_marker             '))'
     constraint_db                  None
+ConfigurationDiffDisplayParameters:
+    search_budget                  20000
+    margin                         0.1
+    lowest_n                       4
+    context_k                      1
 ConfigStore:
     same_nominal_f                 False
 ConfigRunner:

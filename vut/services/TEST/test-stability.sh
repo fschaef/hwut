@@ -5,7 +5,6 @@
 #     title      = "The hwut.run.stability face: what did not stay the same."
 #     choices    = ["bytes", "cadence", "length", "refused", "stain",
 #                   "steady", "verbose", "verdict"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -47,7 +46,6 @@ case "$1" in
     --hwut-info)
         echo "The hwut.run.stability face: what did not stay the same.;"
         echo "CHOICES: steady, verdict, bytes, length, cadence, verbose, stain, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

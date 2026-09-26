@@ -20,7 +20,7 @@ STDOUT {
         test-ok.sh   missing dependency
     ==============================================================================
     
-    RESULTS: 0 ok, 1 fail, 0.01 [sec]
+    RESULTS: 0 ok, 1 fail, 0.01 [sec], 0.02 [sec] total
     |                                    fail                                    |
 }
 == --silent ==

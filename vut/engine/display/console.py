@@ -25,6 +25,7 @@ a terminal is worth.
 ______________________________________________________________________________
 """
 import shutil
+import sys
 
 from dataclasses import dataclass
 
@@ -241,9 +242,16 @@ def _held(column_n):
     return min(max(column_n, MINIMUM_WIDTH), MAXIMUM_WIDTH)
 
 
+def _terminal_write(text):
+    """RETURN: None. 'text' written to the terminal as it stands -- no
+    newline -- and flushed, so a line redrawn in place shows at once."""
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
 def console_view(rendering_wish, write, write_error, environ, tty_f,
                  write_log=None, color_of=None, write_wallflowers=None,
-                 root=None):
+                 root=None, started_at=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
@@ -273,4 +281,13 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
                       brief_f=rendering_wish.brief_f,
                       write_log=write_log,
                       write_wallflowers=write_wallflowers,
+                      #  THE PROGRESS LINE is a COLOURED TERMINAL's: it
+                      #  stands exactly where the colours stand -- never
+                      #  in a pipe, a log or a test page, never where the
+                      #  colours are turned off, and not under SILENT.
+                      started_at=started_at,
+                      progress_write=_terminal_write
+                          if tty_f and ink.on_f
+                             and rendering_wish.tier is not E_Tier.SILENT
+                          else None,
                       root=root)

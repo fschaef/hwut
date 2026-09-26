@@ -24,6 +24,12 @@ $ hwut.config.show test-a.py
                     comment = ["##", "##"]        # default
                     regions = true                # default
                 }
+                diff_display_parameters {
+                    search_budget = 20000         # default
+                    margin = 0.1                  # default
+                    lowest_n = 4                  # default
+                    context_k = 1                 # default
+                }
                 same = false                      # default
                 interactive = false               # default
                 output = ["<stdout>"]             # default
@@ -47,6 +53,12 @@ $ hwut.config.show test-a.py
                     constraints = []              # default
                     comment = ["##", "##"]        # default
                     regions = true                # default
+                }
+                diff_display_parameters {
+                    search_budget = 20000         # default
+                    margin = 0.1                  # default
+                    lowest_n = 4                  # default
+                    context_k = 1                 # default
                 }
                 same = false                      # default
                 interactive = false               # default

@@ -64,6 +64,27 @@ def _region_default():
 
 
 @dataclass(slots=True)
+class ConfigurationDiffDisplayParameters:
+    """THE LINE LEVEL'S NUMBERS (intend 19; compare C-16), measured by
+    'core/edit_operations/TEST/benchmark-anchoring.py'.
+
+    'search_budget'  expansions a section's search may spend, line and
+                     element level together, before phase two takes the
+                     section; counted, not timed, so the result is the
+                     same on every machine. 20 000: every section below
+                     the knee (element work W = 8 192) fits; ~11 us each.
+    'margin'         how far the runner-up must stand above a pair for
+                     the pair to be 'clearly the closest'.
+    'lowest_n'       where no pair is, the n cheapest pairs anchor.
+    'context_k'      lines either side averaged into a pair's cost.
+    """
+    search_budget: int   = 20000
+    margin:        float = 0.10
+    lowest_n:      int   = 4
+    context_k:     int   = 1
+
+
+@dataclass(slots=True)
 class Configuration:
     """The compare module's configuration.
 
@@ -90,6 +111,8 @@ class Configuration:
     constraint_expression_list: list = field(default_factory=list)
     constraint_db:              dict = field(default_factory=dict)
     region:                     dict = field(default_factory=_region_default)
+    diff_display_parameters: ConfigurationDiffDisplayParameters = \
+                            field(default_factory=ConfigurationDiffDisplayParameters)
     cross_check_f:              bool = field(
                                         default_factory=_cross_check_default)
 

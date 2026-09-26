@@ -34,7 +34,7 @@ error: a tree that labels nothing behaves exactly as today.
 
     <target> : <label> [<label>...]
 
-THE PART BEFORE ':' IS A TARGET, in the form 'hwut.wishlist' prints
+THE PART BEFORE ':' IS A TARGET, in the form 'hwut.report.wishlist' prints
 and '--wishlist' reads: a path from the tree's root, then an optional
 choice. It carries the PATH because the file sits at the root and
 'test-x.py' alone is ambiguous across directories.
@@ -148,7 +148,7 @@ byte, that it walked before labels existed ('CLabelView.silences_f').
 THE SILENCE IS THE WISH'S, NOT 'hwut.run's. '--label' lives in the
 wish module, so 'plan', 'wishlist', 'accept', 'cov', 'report' and
 'stability' are silent alike. THIS IS LOAD-BEARING: were the silence
-'hwut.run's alone, 'hwut.wishlist > list.txt' and 'hwut.run
+'hwut.run's alone, 'hwut.report.wishlist > list.txt' and 'hwut.run
 --wishlist list.txt' would select different sets, and disc-5's round
 trip -- the whole reason a wishlist is worth keeping -- would no
 longer close.
@@ -336,7 +336,7 @@ aloud; the feature unused costs no line of output.
                             TARGET FILE, not of the labels file, so
                             wishlists read it too. One expander, both
                             files.
-                            'hwut.wishlist' keeps printing EXPANDED:
+                            'hwut.report.wishlist' keeps printing EXPANDED:
                             its output is in WALK order, not sorted,
                             so compression would fire almost never
                             and would suggest an adjacency the file
@@ -383,7 +383,7 @@ extends rather than bends. Rejected: 'hwut.labels-add' (five
 launchers, and the hyphen already means '_' in a module name, so
 'labels_add.py' would sit beside 'remove_choice.py' meaning something
 else entirely); 'hwut.labels add' (a face with a verb -- no face does
-this today, and 'hwut.target' shows the tree prefers a face per act).
+this today, and 'hwut.execute' shows the tree prefers a face per act).
 
 ==============================================================================
 OPEN -- two, and neither blocks the build
@@ -433,7 +433,7 @@ A 'META/' DIRECTORY beside 'TEST/' -- rejected: the file system would
 carry the classification, so a test could not be two things at once,
 and moving it between sets would move the file.
 
-'hwut.target' (E-7) -- rejected: a target is DIRECTORY-LOCAL by
+'hwut.execute' (E-7) -- rejected: a target is DIRECTORY-LOCAL by
 ruling; a label is a property of the run wherever it stands.
 
 NUMBERING LABELS FOR REFERENCE -- rejected: a handle that shifts when

@@ -174,6 +174,10 @@ ROLE_DEFAULT_DB = {
     "run.ground-ok":     "bright-white bg-green",
     "run.ground-skip":   "black bg-yellow",
     "run.ground-fail":   "bright-white bg256:196",
+    "run.ground-open":   "bright-white bg-blue",
+    "run.build":         "green",
+    "run.built":         "bright-white",
+    "run.progress":      "bright-white bg-blue",
 }
 
 
@@ -262,6 +266,10 @@ class CInk:
     def ground_ok(self, text):    return self.role(text, "run.ground-ok")
     def ground_skip(self, text):  return self.role(text, "run.ground-skip")
     def ground_fail(self, text):  return self.role(text, "run.ground-fail")
+    def ground_open(self, text):  return self.role(text, "run.ground-open")
+    def build(self, text):        return self.role(text, "run.build")
+    def built(self, text):        return self.role(text, "run.built")
+    def progress(self, text):     return self.role(text, "run.progress")
 
     def directory(self, text):
         """

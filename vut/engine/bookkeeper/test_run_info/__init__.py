@@ -25,7 +25,7 @@ answered in three places and joined in none:
 So ASPIRANT -- a state the enum had always carried -- was UNREACHABLE
 by the path that should create it. MEASURED: a case whose GOOD held
 nothing but '##! unaccepted' was booked PASS, selected, run, booked
-FAIL, and then answered 'hwut.wishlist --fail' while answering
+FAIL, and then answered 'hwut.report.wishlist --fail' while answering
 '--unaccepted' not at all.
 
     THE THREE STATES

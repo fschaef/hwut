@@ -193,7 +193,7 @@ class CMemberState:
         return _STATE_DB[self._state].RUNNABLE
 
     def is_playable(self):
-        """RETURN: bool, whether 'hwut.play' may open this case --
+        """RETURN: bool, whether 'hwut.run.play' may open this case --
                    ASPIRANT and MEMBER; an UNKNOWN has nothing to
                    play against."""
         return _STATE_DB[self._state].PLAYABLE

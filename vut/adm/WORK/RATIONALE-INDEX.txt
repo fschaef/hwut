@@ -88,7 +88,7 @@ TOTAL: 237 rulings across 13 carriers.
      A retirement recorded in the series itself -- the right way to
      leave a hole, and the only one in the tree that says so.
 
-2.6  E-7's title begins lowercase ('hwut.target -- ...') where every
+2.6  E-7's title begins lowercase ('hwut.execute -- ...') where every
      other heading is uppercase. Harmless, but it defeated a first
      extraction pass and would defeat a checker written the same way.
 
@@ -150,7 +150,7 @@ engine/orchestrator/exploration/RATIONALE.txt   [80]
   R-49   A STRING VALUE IS WRITTEN IN DOUBLE QUOTES
   R-50   THE PRINTED CONFIGURATION IS WRITTEN IN THE SPECIFICATIO
   R-51   THE PROVENANCE IS A COMMENT; '--no-default' DROPS THE RE
-  R-52   'default_app' IN 'hwut.conf'
+  R-52   'app_defaults' IN 'hwut.conf'
   R-53   'app', NOT 'root'; AND A CONF-BORNE VALUE NAMES ITS LINE
   R-54   'whitespace_eqv' AND 'slash_eqv': A CLASS OF DIFFERENCE
   R-55   'constraints' IS A LIST; COMPARE BUILDS THE DATABASE
@@ -189,7 +189,7 @@ services/RATIONALE.txt   [43]
   E-4    ACCEPTANCE, AND WHAT IT REFUSES
   E-5    STDERR IS NEVER SUBJECT TO TESTING
   E-6    ACCEPT REFUSES THE STREAM THAT NEVER COMPLETED
-  E-7    hwut.target -- USER-DEFINED DIRECTORY TARGETS
+  E-7    hwut.execute -- USER-DEFINED DIRECTORY TARGETS
   E-8    THE LAUNCHER ROOF 'bin/'
   E-9    hwut_compare.py RETIRED -- THE READING VIEW SUPERSEDES
   E-10   '--timing' RAISES THE STORE; 'hwut.stability' READS IT
@@ -204,7 +204,7 @@ services/RATIONALE.txt   [43]
   E-19   LABELS -- SETS OF RUNS IN ONE FILE; THE NAMING LAW'S DOT
   E-20   THE LABELS GO LIVE -- THE VIEW IN EVERY WISH; NAMES FOLL
   E-21   THE SHORT FORM OF HWUT 1.0; AN EXPLICIT TARGET OVERRIDES
-  E-22   'hwut.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A
+  E-22   'hwut.run.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A
   E-23   A PACK STATES ITS PLACE, AND TELLS BOTH READINGS
   E-24   OPENING THE LABELS IS ONE BRICK -- 'labels/_editing.py'
   E-25   THE BOUNDARY FACE WRITES THE LANGUAGE TABLE              2026-08-30

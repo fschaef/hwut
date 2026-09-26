@@ -71,7 +71,7 @@ KEYMAP = (
     (("c-c",),          E_Act.CANCEL,       BOTH, "cancel: nothing is written"),
 )
 
-#  THE VIEWING TABLE ('hwut.diff'): the same keys, and only the acts
+#  THE VIEWING TABLE ('hwut.run.diff'): the same keys, and only the acts
 #  that change nothing -- a view has no nominal to change.
 VIEW_ACT_SET = {E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_UP,
                 E_Act.PAGE_DOWN, E_Act.PAGE_UP, E_Act.SCROLL_LEFT,

@@ -6,12 +6,11 @@
 #     choices {
 #         depth { }  formats { }  layering { }  refused { }  shared { }
 #         unreadable { }
-#         vut { tolerance { eq_pattern = ["STATUS: [0-9]",
+#         vut { tolerance { eq_pattern = ["STATUS: [01]",
 #                                         "[0-9]+ module\\(s\\): .*",
 #                                         "(--> .*|imports nothing of this tree)",
 #                                         "LAYERING( VIOLATED --|:) .*"] } }
 #     }
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -63,7 +62,6 @@ case "$1" in
     --hwut-info)
         echo "adm/import_graph.py: who depends on whom, and the layering;"
         echo "CHOICES: depth, formats, layering, shared, unreadable, refused, vut, door;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

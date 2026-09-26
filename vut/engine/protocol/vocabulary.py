@@ -30,7 +30,7 @@ VERDICT_TUPLE = ("ok", "test-failed", "build-failed", "launch-failed",
 #  kind -> (required {field: type}, optional {field: type}).
 #  'when' is on EVERY event and stated once below the table.
 KIND_DB = {
-    "tree-begun": ({"directory_list": list}, {}),
+    "tree-begun": ({"directory_list": list}, {"node_n": int}),
     "dir-begun":  ({"directory": str, "node_n": int}, {}),
     "frame":      ({"directory": str, "role": str, "good": bool}, {}),
     "run-begun":  ({"directory": str, "node": str,
@@ -57,7 +57,8 @@ _FIELD_TEXT_DB = {
     "directory":      "the test directory, RELATIVE to the root, "
                       "'/'-separated",
     "directory_list": "every test directory of the tree, walk order",
-    "node_n":         "how many nodes the directory's plan holds",
+    "node_n":         "how many nodes the directory's plan holds -- on "
+                      "'tree-begun', the whole tree's",
     "role":           "'on_entry' or 'on_exit'",
     "good":           "true where the thing stood",
     "node":           "the plan node's name, e.g. 'test-a.py one', "

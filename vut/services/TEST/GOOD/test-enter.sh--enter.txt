@@ -19,9 +19,10 @@ STDOUT {
     ./test-a.sh one
 }
 --- 'hwut.run' by a path with '..': only that directory is walked
-STATUS: 3
-       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   [OK]      0/0
-    RESULTS: 0 ok, 0 fail, 2 skip, 1 refused
+STATUS: 0
+    END   :          one ............................................... [OK]  ||0
+       . . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
+    RESULTS: 1 ok, 0 fail, 2 skip, 0.04 [sec] total
 --- 'hwut.config.show' by a path: the test, from its own directory
 STATUS: 0
     test-b.sh {

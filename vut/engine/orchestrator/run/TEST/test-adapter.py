@@ -59,7 +59,8 @@ from vut.engine.orchestrator.exploration.configuration_tree import (
                                                   Build, Caps,
                                                   CTestApp, E_Origin,
                                                   Position,
-                                                  TestParameters, Tolerance)
+                                                  TestParameters, Tolerance,
+                                                  DiffDisplayParameters)
 from vut.engine.orchestrator.run.adapter import (naming_of,
                                                  test_configuration_of,
                                                  _compare_of)
@@ -119,6 +120,8 @@ def _stated_value(member):
                                          executable="app")
         case "caps":        return Caps(timeout_sec=11)
         case "tolerance":   return Tolerance(numeric_ratio=0.25)
+        case "diff_display_parameters":
+                            return DiffDisplayParameters(search_budget=777)
         case "pype":        return "python3 filter.py"
         case "tolerance.numeric_ratio":  return 0.25
         case "tolerance.eq_pattern":     return ("alpha|beta",)

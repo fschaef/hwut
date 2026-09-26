@@ -161,7 +161,7 @@ class CTestRunInfo:
         return self._member_state.is_runnable()
 
     def is_playable(self):
-        """RETURN: bool, whether 'hwut.play' may open this case."""
+        """RETURN: bool, whether 'hwut.run.play' may open this case."""
         return self._member_state.is_playable()
 
     #  ---- what moves it ---------------------------------------------

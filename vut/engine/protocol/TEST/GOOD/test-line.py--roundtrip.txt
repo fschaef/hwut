@@ -7,7 +7,7 @@
   0.41:run-begun:sample text,sample text,sample text
   0.41:run-ended:sample text,sample text,sample text,true,sample text,sample text,sample text,sample text
   0.41:silent:sample text,sample text
-  0.00:tree-begun:{"when": "2026-09-07T13:17:02+00:00", "directory_list": ["a", "b c"]}
+  0.00:tree-begun:{"when": "2026-09-07T13:17:02+00:00", "directory_list": ["a", "b c"], "node_n": 7}
   0.41:tree-done:true,7,7,7
   0.41:warning:{"text": "sample text"}
   OK  : dir-begun: the dict comes back whole; t = 0.41

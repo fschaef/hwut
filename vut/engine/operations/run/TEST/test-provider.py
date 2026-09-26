@@ -260,8 +260,10 @@ def test_live():
     gap = arrival_list[1][0] - arrival_list[0][0] if len(arrival_list) > 1 else 0
     print("INSPECT: lines tapped, in order : %s"
           % [line for _, line in arrival_list])
+    #  THE BOUND, NOT THE MEASUREMENT: how far past 0.25 the gap runs
+    #  is the machine's load, which this page does not test.
     print("         gap first->second       : %s  (the program slept 0.25)"
-          % ("%.2fs" % gap if gap >= 0.2 else "< 0.2s"))
+          % ("at least 0.2s" if gap >= 0.2 else "under 0.2s"))
     print("         every tap before delivery: %s"
           % all(when < done_at for when, _ in arrival_list))
     print("         product same as untapped : %s"

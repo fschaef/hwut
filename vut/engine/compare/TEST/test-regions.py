@@ -48,7 +48,7 @@ from   vut.engine.compare.api import (Configuration,             # noqa E402
                                       is_equivalent)
 from   vut.engine.compare.reading.line_scanner import classify   # noqa E402
 from   vut.engine.compare.reading.pattern_finder import PatternFinder  # noqa E402
-from   vut.services.diff    import reading_view                  # noqa E402
+from   vut.services.lib.run.diff import reading_view             # noqa E402
 
 #  The table that forced C-4: each CELL holds a framing marker.
 TABLE = ("SUBJECT                        | NOMINAL\n"

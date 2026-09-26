@@ -23,6 +23,12 @@ gen.c {
                 comment = ["//", "//"]        # hwut.conf:5
                 regions = true                # default
             }
+            diff_display_parameters {
+                search_budget = 20000         # default
+                margin = 0.1                  # default
+                lowest_n = 4                  # default
+                context_k = 1                 # default
+            }
             same = false                      # default
             interactive = false               # default
             output = ["<stdout>"]             # default
@@ -53,6 +59,12 @@ legacy.bas {
                 comment = ["##", "##"]        # default
                 regions = true                # default
             }
+            diff_display_parameters {
+                search_budget = 20000         # default
+                margin = 0.1                  # default
+                lowest_n = 4                  # default
+                context_k = 1                 # default
+            }
             same = true                       # --hwut-info
             interactive = false               # default
             output = ["<stdout>"]             # default
@@ -82,6 +94,12 @@ test-own.py {
                 constraints = []              # default
                 comment = ["##", "##"]        # default
                 regions = true                # default
+            }
+            diff_display_parameters {
+                search_budget = 20000         # default
+                margin = 0.1                  # default
+                lowest_n = 4                  # default
+                context_k = 1                 # default
             }
             same = false                      # default
             interactive = false               # default

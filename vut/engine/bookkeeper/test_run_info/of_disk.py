@@ -12,7 +12,6 @@ peeked on fresh readers, exactly as 'operations/consume' peeked them
 at compare time, and the readers are consumed and closed.
 ______________________________________________________________________________
 """
-import os
 
 from   .info import CTestRunInfo, of_row
 

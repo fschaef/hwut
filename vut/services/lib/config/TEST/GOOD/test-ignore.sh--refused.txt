@@ -1,0 +1,28 @@
+--- a path that stands nowhere
+STATUS: 2
+STDOUT {
+    REFUSED: 'a/TEST/nothing.py' is no file that stands
+}
+--- an unknown option
+STATUS: 2
+STDOUT {
+    REFUSED: '--from' is no option of 'hwut.config.ignore'
+    usage: hwut.config.ignore [<path>...] [--wishlist <file>]...
+                              [--wallflowers] [--dont-ask] [--help]
+}
+--- '--wishlist' without a file
+STATUS: 2
+STDOUT {
+    REFUSED: '--wishlist' stands without a file
+    usage: hwut.config.ignore [<path>...] [--wishlist <file>]...
+                              [--wallflowers] [--dont-ask] [--help]
+}
+--- a list that is not there
+STATUS: 2
+STDOUT {
+    REFUSED: the wishlist 'gone.txt' cannot be read -- [Errno 2] No such file or directory: 'gone.txt'
+}
+a/TEST/hwut.conf {
+    (none)
+}
+<hwut-end>

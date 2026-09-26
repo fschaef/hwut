@@ -41,7 +41,6 @@ DEFAULT_CONFIG = {
         "BAD_SUBJECT_DIFFERS":        "Content Mismatch",
         "BAD_SUBJECT_HAS_NOT":        "Missing in Subject",
         "BAD_SUBJECT_HAS":            "Unexpected Insertion",
-        "BAD_TRANSPOSE":              "Out of Order",
         "BAD_SUBJECT_TYPE_DIFFERS":   "Type Mismatch (e.g. Number vs String)"
     },
     "styles": {
@@ -64,7 +63,6 @@ DEFAULT_CONFIG = {
         "BAD_NOMINAL_HAS":      {"bg": "rgba(56, 139, 253, 0.1)", "color": "#58a6ff", "weight": "bold"},
 
         # Structural
-        "BAD_TRANSPOSE":        {"bg": "rgba(163, 113, 247, 0.1)", "color": "#d2a8ff", "border": "1px solid #8957e5"},
 
         # Bezier Curves
         "connector_ok":         "#3fb950", # Green

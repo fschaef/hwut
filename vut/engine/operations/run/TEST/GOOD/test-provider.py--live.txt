@@ -1,5 +1,5 @@
 INSPECT: lines tapped, in order : ['first', 'second', '<hwut-end>']
-         gap first->second       : 0.25s  (the program slept 0.25)
+         gap first->second       : at least 0.2s  (the program slept 0.25)
          every tap before delivery: True
          product same as untapped : True
   OK  : every raw line reaches the tap, in order

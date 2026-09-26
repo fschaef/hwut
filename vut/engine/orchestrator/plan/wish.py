@@ -42,6 +42,12 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         BARE NAME, in which case it matches any path
                         COMPONENT: '--exclude-dir OUT' drops
                         'a/OUT/TEST' and 'a/OUT/b/TEST' alike.
+                        WHERE '--dir' AND '--exclude-dir' MEET, grep's
+                        rule decides: they are read in command-line
+                        order and the LAST ONE MATCHING a directory
+                        decides; where none matches, the directory is
+                        wanted unless the FIRST of them is a '--dir'.
+                        '--exclude-dir a --dir a/keep' keeps 'a/keep'.
     --wishlist <file>   read the file's lines as targets, one per
                         line: a WISHLIST an author keeps and edits.
                         Lines starting with '#' are comments; blank
@@ -53,7 +59,7 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         previous line's directory, ':/:' its directory
                         and file, a choice following (disc-8). The
                         lines join the '--glob' targets and are OR'ed
-                        with them. 'hwut.wishlist' PRINTS this form,
+                        with them. 'hwut.report.wishlist' PRINTS this form,
                         so the round trip closes.
 THE SHORT FORM OF HWUT 1.0 lives here too ('desugar_positional',
 'with_targets'): a face may take BARE WORDS -- 'hwut.run test-app.sh
@@ -172,6 +178,12 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --exclude-dir <glob>
                         a directory not wanted, and every directory
                         below it; a bare name matches any component
+                        WHERE '--dir' AND '--exclude-dir' MEET, grep's
+                        rule decides: they are read in command-line
+                        order and the LAST ONE MATCHING a directory
+                        decides; where none matches, the directory is
+                        wanted unless the FIRST of them is a '--dir'.
+                        '--exclude-dir a --dir a/keep' keeps 'a/keep'.
     --wishlist <file>   the file's lines as targets, '#' comments and
                         blanks dropped, './' meaning the file's own
                         directory
@@ -228,6 +240,9 @@ class Wish:
     #  NO NOMINAL STANDS (E-58): what was never accepted -- the whole
     #  case, as '##! unaccepted' marks a stretch of one.
     unaccepted_f:      bool  = False
+    #  '--dir' and '--exclude-dir' IN COMMAND-LINE ORDER, as ('+', glob)
+    #  and ('-', glob): the order decides (grep's rule, see HELP).
+    dir_rule_tuple:    tuple = ()
 
     def states_nothing_f(self):
         """
@@ -334,6 +349,7 @@ def parse_wish(argv):
     exclude_list     = []
     exclude_dir_list = []
     dir_list         = []
+    dir_rule_list    = []
     wishlist_f       = False
     label_spec       = None
     language_list    = []
@@ -366,18 +382,23 @@ def parse_wish(argv):
             if index >= len(argv):
                 raise WishError("'%s' stands without a target" % argument)
             if argument == "--exclude": exclude_list.append(argv[index])
-            else:                       exclude_dir_list.append(argv[index])
+            else:
+                exclude_dir_list.append(argv[index])
+                dir_rule_list.append(("-", argv[index]))
             index += 1
         elif argument.startswith("--exclude="):
             exclude_list.append(argument[len("--exclude="):])
         elif argument.startswith("--exclude-dir="):
             exclude_dir_list.append(argument[len("--exclude-dir="):])
+            dir_rule_list.append(("-", argument[len("--exclude-dir="):]))
         elif argument == "--dir":
             if index >= len(argv):
                 raise WishError("'--dir' stands without a glob")
-            dir_list.append(argv[index]); index += 1
+            dir_list.append(argv[index])
+            dir_rule_list.append(("+", argv[index])); index += 1
         elif argument.startswith("--dir="):
             dir_list.append(argument[len("--dir="):])
+            dir_rule_list.append(("+", argument[len("--dir="):]))
         elif argument == "--wishlist":
             if index >= len(argv):
                 raise WishError("'--wishlist' stands without a file")
@@ -457,7 +478,7 @@ def parse_wish(argv):
                  tuple(glob_list), wishlist_f,
                  tuple(exclude_list), tuple(exclude_dir_list),
                  tuple(dir_list), label_spec, tuple(language_list),
-                 faster_than_ms, unaccepted_f),
+                 faster_than_ms, unaccepted_f, tuple(dir_rule_list)),
             rest_list)
 
 

@@ -10,7 +10,7 @@ the engine ('plan/label.py'), because the selection evaluates it.
 
 'view_at(directory)' is the ONE DOOR through which any other face
 obtains the label view it hands to a selection -- 'hwut.run',
-'hwut.plan', 'hwut.wishlist', 'hwut.accept', 'hwut.report' and what
+'hwut.plan', 'hwut.report.wishlist', 'hwut.accept', 'hwut.report' and what
 rides them. The engine never opens 'hwut-root.labels'; a face builds
 the view here and hands it down.
 ______________________________________________________________________________

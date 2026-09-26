@@ -3,13 +3,13 @@
 setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
 reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
 --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-     1    1 | id ~((X9))~ opened
-            | ^ analogy '((X9))' ~ '((X9))' -- established at S:1/N:1
-     2    2 | count {42} items
-     3    3 | version <v1.2.3-build907>
-     4    4 | |_| filler
-     5    5 | !((limit: 100))!
-            | ^ constraint binding ((limit: 100)) -- the value enters the constraint space
+     1 | id ~((X9))~ opened
+       | ^ analogy '((X9))' ~ '((X9))' -- established at line 1
+     2 | count {42} items
+     3 | version <v1.2.3-build907>
+     4 | |_| filler
+     5 | !((limit: 100))!
+       | ^ constraint binding ((limit: 100)) -- the value enters the constraint space
 ============================================================
 
   OK  : the legend states the marks -- it is part of the rules

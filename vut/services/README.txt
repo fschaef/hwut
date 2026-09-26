@@ -89,7 +89,7 @@ The faces:
                  need run first. It implies '--dont-ask'. The two
                  readings of a first acceptance:
 
-                     hwut.play <app> --save     look, again, until
+                     hwut.run.play <app> --save     look, again, until
                      hwut.accept <app>          it is right, then
                                                 decide the lines
 
@@ -339,7 +339,7 @@ The faces:
                  it. Two words naming two directories are refused, as
                  is an absolute path outside '--directory'.
 
-    hwut.diff    (diff.py)
+    hwut.run.diff    (diff.py)
                  'SUBJECT NOMINAL': how two files compare (the VERDICT
                  view). 'FILE' without an '@hwut' block: how compare
                  READS it. Otherwise THE STORE FORM: the wish, a test,
@@ -409,7 +409,7 @@ The faces:
     hwut.accept.interactive   (lib/accept/interactive.py)
                  the cases a wish selects whose stdout candidate is
                  not equivalent to its nominal (measured now, as
-                 'hwut.diff'), the checklist, then ONE SESSION PER
+                 'hwut.run.diff'), the checklist, then ONE SESSION PER
                  CASE on stderr: the view ('-y' two columns), then
                  [t]ake the subject whole, [e]dit the nominal,
                  [c]ommit the nominal as it stands, [q]uit. COMMIT IS
@@ -467,11 +467,11 @@ The faces:
                  interpreter unread. A '#! /usr/bin/env hwut.pype'
                  she-bang line reaches it by PATH.
 
-    hwut.target  (target.py)
+    hwut.execute  (target.py)
                  one USER-DEFINED TARGET run over every directory that
                  binds targets (E-7):
 
-                     hwut.target <option-list> <target> <passed-through>
+                     hwut.execute <option-list> <target> <passed-through>
 
                  A directory takes part where its 'hwut.conf' carries a
                  'target { }' binding; definition is membership.

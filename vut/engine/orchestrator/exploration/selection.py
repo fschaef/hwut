@@ -11,10 +11,10 @@ Six faces wrote these four lines apiece:
     CTestTaskListQuery(...)     the selection
     .get_test_cases(app_set)    the runs
 
-'plan', 'wishlist', 'accept', 'report', 'play' and the label faces
-each assembled them, differing only in whether they walk ONE DIRECTORY
-or A TREE. That is not six faces using a component -- it is ONE ACTION
-IMPLEMENTED SIX TIMES, and the sixth copy is where they start to
+'plan', 'report.wishlist', 'accept', 'report', 'run.play' and the label
+faces each assembled them, differing only in whether they walk ONE
+DIRECTORY or A TREE. That is not six faces using a component -- it is ONE
+ACTION IMPLEMENTED SIX TIMES, and the sixth copy is where they start to
 disagree.
 
 TWO DOORS, because there are two shapes and no more:
@@ -113,7 +113,7 @@ def of_directory(directory, wish, label_view=None, inherited=None,
     """
     #  THE ROOT'S WORD REACHES A SINGLE DIRECTORY TOO (R-73): a face
     #  that has not ascended itself gets the climb here, so
-    #  'language-setup' governs 'hwut.play' as it governs 'hwut.run'.
+    #  'language-setup' governs 'hwut.run.play' as it governs 'hwut.run'.
     if inherited is None:
         inherited, _ascent_fault_list = ascended_spec(directory)
     result     = explore(directory, inherited=inherited)
@@ -224,7 +224,7 @@ def directory_tuple(root, wish):
             'root', in walk order.
 
     THE OTHER VIEW OF ONE SELECTION (disc-10). A face whose subject is
-    directories -- 'hwut.target' cleaning in each, 'hwut.sanitize'
+    directories -- 'hwut.execute' cleaning in each, 'hwut.sanitize'
     clearing wreckage -- asks this instead of asking for cases, and
     the wish it hands in is the very wish every other face uses.
 

@@ -35,7 +35,6 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                             ascended_spec)
 from   vut.engine.orchestrator.plan.determine          import determine
 from   vut.engine.orchestrator.plan.tree               import admit_of
-from   vut.engine.orchestrator.plan.printer            import print_plan
 from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP,
                                                                WishError,
                                                                parse_wish,

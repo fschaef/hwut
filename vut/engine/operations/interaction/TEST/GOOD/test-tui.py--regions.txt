@@ -20,7 +20,7 @@ setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##.
 ============================================================
 
 -- round 1: 0 differing pair(s) --
-[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+[t]ake the subject whole   [e]dit the nominal   [c]ommit the nominal as it stands   [q]uit (cancel) ? 
   OK  : every region kind opens its own section, in stream order
   OK  : potpourri: the crossed line numbers SHOW the unordered match
   OK  : table: rows met by KEY, not by position

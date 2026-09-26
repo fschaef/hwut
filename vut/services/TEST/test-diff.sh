@@ -11,10 +11,10 @@
 #
 # THE DIFF SERVICE, IN ITS NATURAL HABITAT. The shell asks, the
 # service answers by the DIFF CONVENTION -- so it composes where diff
-# composes ('if hwut.diff A B; then ...'):
+# composes ('if hwut.run.diff A B; then ...'):
 #
-#     hwut.diff SUBJECT NOMINAL      the VERDICT view
-#     hwut.diff FILE                 the READING view
+#     hwut.run.diff SUBJECT NOMINAL      the VERDICT view
+#     hwut.run.diff FILE                 the READING view
 #
 #     EXIT 0    equivalent (or: a reading was displayed)
 #     EXIT 1    at least one differing pair
@@ -29,7 +29,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 #  --console (E-79): the suite writes into a pipe and wants the TEXT rendering,
 #  and says so, instead of being told so by a NOTE on every page.
-DIFF="python3 -m vut.services.diff --console"
+DIFF="python3 -m vut.services.lib.run.diff --console"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
@@ -77,7 +77,7 @@ differing)
     #  3.140 against 3.141, no tolerance granted: a differing pair.
     echo "STIMULUS  subject.txt: alpha, value 3.140"
     echo "          nominal.txt: alpha, value 3.141"
-    echo "          hwut.diff --console subject.txt nominal.txt --plain"
+    echo "          hwut.run.diff --console subject.txt nominal.txt --plain"
     $DIFF subject.txt nominal.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -93,7 +93,7 @@ tolerated)
     #  The SAME streams, one flag wider: '--numeric 0.01'. The verdict
     #  flips; the machinery does not.
     echo "STIMULUS  the same streams,"
-    echo "          hwut.diff --console subject.txt nominal.txt --plain --numeric 0.01"
+    echo "          hwut.run.diff --console subject.txt nominal.txt --plain --numeric 0.01"
     $DIFF subject.txt nominal.txt --plain --numeric 0.01 \
              > out.txt 2> err.txt
     code=$?
@@ -108,7 +108,7 @@ tolerated)
 reading)
     #  ONE argument asks the other question: how does compare READ this
     #  stream? Fed against itself, so only interpretation shows.
-    echo "STIMULUS  hwut.diff --console subject.txt --plain      (one argument)"
+    echo "STIMULUS  hwut.run.diff --console subject.txt --plain      (one argument)"
     $DIFF subject.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -124,7 +124,7 @@ side-by-side)
     #  merge goes. The gutter says the relation; a wide line wraps.
     printf 'alpha\nvalue 3.140\nonly in subject\nsame ((token)) here\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > s.txt
     printf 'alpha\nvalue 3.141\nsame ((other)) here\ninserted in nominal\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > n.txt
-    echo "STIMULUS  hwut.diff --console s.txt n.txt --plain --side-by-side --width 80"
+    echo "STIMULUS  hwut.run.diff --console s.txt n.txt --plain --side-by-side --width 80"
     $DIFF s.txt n.txt --plain --side-by-side --width 80 > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -144,7 +144,7 @@ store)
     #  THE STORE FORM (E-50): the wish, the verdict measured now, the
     #  checklist, the view per case.
     store_fixture
-    echo "STIMULUS  hwut.diff --console --directory=tree/suite/TEST --all --plain -y --width 70"
+    echo "STIMULUS  hwut.run.diff --console --directory=tree/suite/TEST --all --plain -y --width 70"
     $DIFF --directory=tree/suite/TEST --all --plain -y --width 70 > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -156,7 +156,7 @@ store)
     echo "          stderr (the checklist) {"; sed 's/^/              /' err.txt; echo "          }"
     grep -E '^=\[' out.txt | sed 's/^/          shown: /'
     echo
-    echo "STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.sh one"
+    echo "STIMULUS  a path word enters the directory: hwut.run.diff tree/suite/TEST/test-app.sh one"
     $DIFF tree/suite/TEST/test-app.sh one --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     grep -E '^=\[|^[SN] ' out.txt | sed 's/^/              /'

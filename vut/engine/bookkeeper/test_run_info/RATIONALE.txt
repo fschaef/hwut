@@ -27,7 +27,7 @@ PROBLEM   One question -- what standing does this case have? -- was
           then SELECTS the case (nothing upstream knows better), runs
           it, spends a process on it, refuses it at compare time in
           'equivalence_check' as UNACCEPTED, and rewrites the row to
-          'false;unaccepted' -- FAIL. After which 'hwut.wishlist
+          'false;unaccepted' -- FAIL. After which 'hwut.report.wishlist
           --fail' SELECTS it (exit 0) and '--unaccepted' selects
           nothing (exit 3). Both ways round.
 

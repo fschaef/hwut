@@ -3,7 +3,6 @@
 # @hwut {
 #     title      = "Every supervisor event reaches the HINTS by name"
 #     choices    = ["caps", "multi"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 #     #  THIS TEST STORMS ON PURPOSE (O-21): its 'pids' offender forks
 #     #  40 past an INNER cap of 4. The outer supervisor watches the
 #     #  same process group, so it says what it costs.
@@ -41,7 +40,6 @@ case "$1" in
     --hwut-info)
         echo "Every supervisor event reaches the HINTS by name;"
         echo "CHOICES: caps, multi;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

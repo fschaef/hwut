@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "adm/bundle.sh --self: a bundle that lands in a standing tree"
 #     choices    = ["self", "refused"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -36,7 +35,6 @@ case "$1" in
     --hwut-info)
         echo "adm/bundle.sh --self: a bundle that lands in a standing tree;"
         echo "CHOICES: self, refused;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

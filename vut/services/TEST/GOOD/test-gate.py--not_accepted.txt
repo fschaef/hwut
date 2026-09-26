@@ -1,4 +1,4 @@
-  test-new.py          no nominal stands in GOOD/: not accepted, not run ('hwut.play --save', then 'hwut.accept')
+  test-new.py          no nominal stands in GOOD/: not accepted, not run ('hwut.run.play --save', then 'hwut.accept')
   2 ok, 0 fail
   OK  : the new test stands once in the REFUSED block
   OK  : the reason names the way in

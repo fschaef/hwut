@@ -41,6 +41,7 @@ only door.
 ______________________________________________________________________________
 """
 import os
+import time
 
 from datetime import datetime
 from enum     import Enum
@@ -186,7 +187,7 @@ def _tag_and_count(tag, counts, good, ink):
 #  have been announced is closed with 'END  ', so the eye can pair
 #  the two and a reader never hunts for a START that was never
 #  written.
-FLOW_BADGE_TUPLE = ("START", "DONE ", "END  ", "SKIP ")
+FLOW_BADGE_TUPLE = ("START", "DONE ", "END  ", "SKIP ", "BUILD", "BUILT")
 #  THE BADGES THAT CLOSE A RUN: their '||n' excludes the line's own
 #  run, so it says what stands open after it (D-18).
 CLOSING_BADGE_TUPLE = ("DONE ", "END  ")
@@ -205,7 +206,7 @@ class CPlainFlow(CRunReportReceiver):
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
                  brief_f=False, write_log=None, write_wallflowers=None,
-                 root=None):
+                 root=None, progress_write=None, started_at=None):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -240,12 +241,22 @@ class CPlainFlow(CRunReportReceiver):
         meaningful thing to ask for.
 
         'write_wallflowers'
-                 where the SILENT files' paths go (X-SILENT): called
-                 once, with the sorted list, and RETURNS the name the
-                 list now stands under -- or None where it could not
-                 be written. The note then names that file instead of
-                 every path. None means no such sink stands, and the
-                 note lists the paths itself.
+                 where the SILENT files go (X-SILENT): called once, with
+                 {directory: [name, ...]} for EVERY explored directory,
+                 an empty list where none was silent; RETURNS where the
+                 lists stand -- or None where one could not be written.
+                 The note then names that place instead of every path.
+                 None means no such sink stands, and the note lists the
+                 paths itself.
+        'started_at'
+                 'time.monotonic()' when the FACE began -- what the
+                 progress head counts from and what the closing line's
+                 TOTAL measures. None: neither is shown (a view fed
+                 events by a test, whose clock is not the wall's).
+        'progress_write'
+                 where THE PROGRESS LINE goes: raw text, no newline --
+                 the terminal's own stream. None: no progress line, as
+                 every pipe, log and test page has it.
         'root'   the directory the run was asked of, as the CALLER
                  spelt it; the stream's directories are relative to it.
                  None means the call directory itself.
@@ -255,6 +266,21 @@ class CPlainFlow(CRunReportReceiver):
                            else write
         self.write_log   = write_log
         self.write_wallflowers = write_wallflowers
+        #  THE PROGRESS LINE (terminal only): what the plan holds, what
+        #  has ended, how it ended, and since when.
+        self.progress_write  = progress_write
+        self.started_at      = started_at
+        if progress_write is not None:
+            #  EVERY LINE THE FLOW WRITES LIFTS THE BAR FIRST -- inside an
+            #  event or not, to stdout or to stderr -- so no line ever
+            #  lands on the row the bar stands on.
+            self.write       = self._lifted(self.write)
+            self.write_error = self._lifted(self.write_error)
+        self.progress_total  = 0
+        self.progress_ok_n   = 0
+        self.progress_fail_n = 0
+        self.progress_t0     = None
+        self.progress_shown_f = False
         self.root        = root
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
@@ -417,8 +443,12 @@ class CPlainFlow(CRunReportReceiver):
         none.
         """
         name          = _display_name(node)
-        file, _, rest = name.partition(" ")
-        choice        = rest.strip()
+        #  A 'build[...]' OR 'session[...]' NODE IS ONE NAME, spaces and
+        #  all: split at its first blank it read as an application
+        #  'build[make' with a choice 'test-b.sh]' -- and its END, a
+        #  repeat of that, as ':'.
+        file, choice  = _split_node(name)
+        choice        = (choice or "").strip()
         key           = (directory, file)
         repeat_f      = (self.last_key == key)
         if not repeat_f:
@@ -492,9 +522,11 @@ class CPlainFlow(CRunReportReceiver):
         if self.when_first is None: self.when_first = when
         self.when_last = when
 
-    def on_tree_begun(self, when, directory_list):
+    def on_tree_begun(self, when, directory_list, node_n=None):
         """RETURN: None. The roll-call's order registered in walk
-        order; a line in the VERBOSE tier alone."""
+        order; a line in the VERBOSE tier alone. 'node_n', the whole
+        plan's size, is what the progress line divides by."""
+        self.progress_total = node_n or 0
         for directory in directory_list:
             if directory not in self.dir_order:
                 self.dir_order.append(directory)
@@ -561,17 +593,20 @@ class CPlainFlow(CRunReportReceiver):
     def _provision_hidden_f(self, node_kind):
         """
         RETURN: bool, True where a node of this kind does not speak:
-                SESSION and BUILD are PROVISION, and only the tests
+                a SESSION is PROVISION, and only the tests, the builds
                 and the directory's own lines make a flow worth
-                reading. '--show-details' shows them; the VERBOSE
-                tier shows everything.
+                reading. '--show-details' shows it; the VERBOSE tier
+                shows everything.
+
+        A BUILD SPEAKS: it opens with 'BUILD' and closes with 'BUILT'
+        -- the reader waiting on a compile sees what is compiling.
 
         A FAILING provision node always speaks, wherever this is
         asked: a failed precondition is a test result, not a silence.
         """
         if self.detail_f:                    return False
         if self.tier is E_Tier.VERBOSE:      return False
-        return node_kind in ("SESSION", "BUILD")
+        return node_kind == "SESSION"
 
     def on_run_begun(self, when, directory, node, node_kind):
         """
@@ -600,7 +635,10 @@ class CPlainFlow(CRunReportReceiver):
         #  its closing line is decided by nothing else.
         self.screen_n += 1
         self.announced_set.add((directory, node))
-        self._line(when, "START", self.ink.start("START"), body, body_ink)
+        if node_kind == "BUILD":
+            self._line(when, "BUILD", self.ink.build("BUILD"), body, body_ink)
+        else:
+            self._line(when, "START", self.ink.start("START"), body, body_ink)
 
     def _count_tail(self, badge="START"):
         """
@@ -650,15 +688,98 @@ class CPlainFlow(CRunReportReceiver):
 
     def on_tick(self, when):
         """
-        RETURN: None, and NOTHING WRITTEN. Nothing is held any more,
-                so a tick has nothing to release (D-15).
-
-        THE METHOD STAYS because it is the receiver protocol's, and a
-        consumer calls it when no event arrived. It was the release
-        of held STARTs; holding is gone with the delay that measured
-        it, and a launch is announced at the launch.
+        RETURN: None. Nothing is held any more, so a tick releases no
+                line (D-15); it REDRAWS THE PROGRESS LINE, whose
+                remaining time moves while nothing ends.
         """
-        return
+        self._progress_draw()
+
+    # -- the progress line ---------------------------------------------
+    def _dispatch(self, item):
+        """
+        RETURN: None. One event handled, the progress line lifted off
+                the terminal before any line is written and put back
+                after -- so the flow scrolls above it and it stays at
+                the bottom, as 'apt' keeps its own.
+        """
+        self._progress_clear()
+        super()._dispatch(item)
+        self._progress_draw()
+
+    def _lifted(self, write):
+        """RETURN: callable, 'write' with the progress line lifted off
+        the terminal before each line it writes."""
+        def lifted(line):
+            """RETURN: None. The bar lifted, then 'line' written."""
+            self._progress_clear()
+            write(line)
+        return lifted
+
+    def _progress_clear(self):
+        """RETURN: None. The progress line erased, where one is shown."""
+        if self.progress_shown_f:
+            self.progress_write("\r\x1b[K")
+            self.progress_shown_f = False
+
+    def _progress_draw(self):
+        """
+        RETURN: None. THE PROGRESS LINE, redrawn in place -- where a
+                terminal takes it, the plan's size is known, and the
+                run has not closed:
+
+            [42% 17sec] <green>|<red>|<blue>|
+
+        The head, white on blue, is the share of runs ended and the
+        seconds since the face began.
+
+        A green region for the runs that ended well, red for those that
+        did not, blue for those still open, each IN PROPORTION over the
+        width, a '|' closing each. It is drawn only where the colours
+        are on: the colours ARE the bar.
+        """
+        if self.progress_write is None or not self.progress_total: return
+        if self.progress_t0 is None: self.progress_t0 = time.monotonic()
+        #  ONE BAR ON ONE ROW: a redraw -- a tick between two events --
+        #  lifts the bar it replaces, or the two stand side by side.
+        self._progress_clear()
+        done  = self.progress_ok_n + self.progress_fail_n
+        total = max(self.progress_total, done)
+        open_n = total - done
+        since = self.started_at if self.started_at is not None \
+                else self.progress_t0
+        text  = "[%d%% %dsec]" % (100 * done // total,
+                                  round(time.monotonic() - since))
+        head  = text + " "
+        #  NEVER THE FULL WIDTH: a line that fills the last column wraps
+        #  on many terminals, and the next '\r' then lifts only the part
+        #  that wrapped -- the rest of the bar stays on screen for good.
+        count_db = {"ok": self.progress_ok_n, "fail": self.progress_fail_n,
+                    "open": open_n}
+        #  THE ROW: the head, then each region that has runs, each closed
+        #  by its '|' -- all within 'width - 1'.
+        shown = [key for key in ("ok", "fail", "open") if count_db[key]]
+        room  = max(self.width - 1 - len(head) - len(shown), len(shown))
+        width_db = {key: (count_db[key] * room // total if key in shown else 0)
+                    for key in count_db}
+        #  A REGION THAT HAS RUNS SHOWS, one column at least; what the
+        #  division leaves goes to the largest -- never to a region that
+        #  has nothing in it.
+        for key in shown: width_db[key] = max(width_db[key], 1)
+        if shown:
+            largest = max(shown, key=lambda key: count_db[key])
+            width_db[largest] += room - sum(width_db.values())
+        def region(width, paint):
+            """RETURN: str, 'width' columns and the '|' that closes them,
+            painted in the region's colour -- the marker wears the ground
+            of the field to its left; empty where the region is."""
+            return paint(" " * width + "|") if width > 0 else ""
+        #  GREEN | RED | BLUE |: the colour carries the meaning, a '|'
+        #  closes each region that stands, in that region's ground.
+        bar = region(width_db["ok"],   self.ink.ground_ok)   \
+            + region(width_db["fail"], self.ink.ground_fail) \
+            + region(width_db["open"], self.ink.ground_open)
+        self.progress_write(self.ink.progress(text) + " " + bar)
+        self.progress_shown_f = True
 
     def on_run_ended(self, when, directory, node, node_kind, good,
                      verdict, cause=None, report=None, detail=None):
@@ -686,6 +807,8 @@ class CPlainFlow(CRunReportReceiver):
         """
         key      = (directory, node)
         began_f  = key in self.began_set
+        if good: self.progress_ok_n   += 1
+        else:    self.progress_fail_n += 1
         try:
             self._run_ended_line(when, directory, node, node_kind,
                                  good, verdict, cause, report, detail,
@@ -709,7 +832,13 @@ class CPlainFlow(CRunReportReceiver):
         here is a path on which no line is written, and the caller's
         'finally' still lowers what the launch raised.
         """
-        self.verdict_db.setdefault(key[0], {})[key[1]] = verdict
+        #  A PASSING PROVISION NODE IS NO CASE. SESSION and BUILD wrap
+        #  cases; counted, they would make this run's numbers disagree
+        #  with the cases it prints and with 'hwut.report', which counts
+        #  cases. A FAILING one is recorded -- a failed precondition is a
+        #  test result -- whatever the tier shows.
+        if not (good and node_kind in ("SESSION", "BUILD")):
+            self.verdict_db.setdefault(key[0], {})[key[1]] = verdict
         if report is not None: self.report_db[key] = report
         if cause  is not None: self.cause_db[key]  = cause
         if detail is not None: self.detail_db[key] = detail
@@ -747,6 +876,11 @@ class CPlainFlow(CRunReportReceiver):
         #  START was never released is 'DONE ' -- it finished before
         #  it was worth announcing.
         badge = "END  " if announced_f else "DONE "
+        #  A BUILD THAT STANDS CLOSES WITH 'BUILT'; one that failed keeps
+        #  the closing every failure has -- 'BUILT' beside '[FAIL]' would
+        #  contradict itself.
+        built_f = node_kind == "BUILD" and good and announced_f
+        if built_f: badge = "BUILT"
         #  '||n' UPON PRINT. An 'END  ' closes an announcement that is
         #  still open while its own line is written, so it prints the
         #  count and falls afterwards (the caller's 'finally'). A
@@ -757,8 +891,9 @@ class CPlainFlow(CRunReportReceiver):
             self.screen_n += 1
             self.announced_set.add(key)
         if good:
-            self._line(when, badge, badge, body, body_ink,
-                       "[OK]", self.ink.tag_ok("[OK]"))
+            self._line(when, badge,
+                       self.ink.built(badge) if built_f else badge,
+                       body, body_ink, "[OK]", self.ink.tag_ok("[OK]"))
         elif verdict == "unaccepted":
             #  NOT A RUN AT ALL (O-25, amended): the nominal carries
             #  lines nobody accepted, so nothing could be judged. The
@@ -819,7 +954,7 @@ class CPlainFlow(CRunReportReceiver):
         tier but SILENT, before any run: it stands where it always
         stood on the page, ahead of the flow (O-26). The text carries
         its own 'WARNING:' -- determination's word, the same line
-        'hwut.wishlist' prints -- and this renderer adds nothing."""
+        'hwut.report.wishlist' prints -- and this renderer adds nothing."""
         if self.tier is E_Tier.SILENT: return
         self._flow(text, text)
 
@@ -1101,12 +1236,22 @@ class CPlainFlow(CRunReportReceiver):
                    != "differs from GOOD"]
 
     def tail(self):
+        """RETURN: None. See '_tail'; the progress line is lifted for
+        good before the closing blocks are written."""
+        self._progress_clear()
+        self.progress_write = None
+        self._tail()
+
+    def _tail(self):
         """
         RETURN: None. The DIRECTORIES roll-call, the FAULTS met (QUIET
         tier), and the HINTS block, last -- nothing in the SILENT
         tier.
         """
-        if self.tier is E_Tier.SILENT: return
+        #  THE LISTS ARE THE TREE'S, NOT THE SCREEN'S: a silent run still
+        #  leaves them as they stand, and only says nothing about them.
+        if self.tier is E_Tier.SILENT:
+            self._wallflowers_refreshed(); return
         write, ink, w = self.write, self.ink, self.width
         ok_total   = sum(1 for node_db in self.verdict_db.values()
                          for verdict in node_db.values()
@@ -1217,101 +1362,32 @@ class CPlainFlow(CRunReportReceiver):
 
     def _write_final_bar(self, write, w):
         """
-        RETURN: None. THE LAST TWO LINES OF A RUN: one line of numbers
-                under the prefix 'RESULTS:', then one bordered bar of
-                width 'w' whose green, yellow and red regions are the
-                ok, skipped and failed counts IN PROPORTION -- the
-                shape of the run, read before its numbers are. Nothing
-                where nothing was counted.
+        RETURN: None. THE LAST TWO LINES OF A RUN, as 'results_line_list'
+                draws them, from the counts this flow kept. Nothing where
+                nothing was counted.
 
-            RESULTS: <ok> ok, <fail> fail, [<skip> skip,]
-                     [<refused> refused,] [<meta> meta,] <s.ss> [sec]
-            |    ok    |skip|   fail   |
-
-        SIX NUMBERS, NONE DERIVABLE FROM ANOTHER. 'run' (ok + fail)
-        and 'total' (run + skip) were dropped: a reader recomputes
-        them faster than he reads them, and 'total' did not count the
-        refused, so the word did not mean what it said. Each of skip,
-        refused and meta appears only where it is not zero.
-
-        THE PREFIX IS THE ANCHOR. A test whose subject is the run's
-        FLOW and not its arithmetic tolerates this line with one
-        eq-pattern, 'RESULTS: .*'; a test whose subject IS the line
-        must not.
-
-        Each region opens with '|' and carries its word CENTRED -- or
-        its first letter where the word does not fit, or nothing where
-        only the border fits. A NON-EMPTY REGION IS NEVER NARROWER
-        THAN ITS BORDER: one failure among a thousand passes still
-        shows, which proportion alone would round away.
-
-        SKIPPED is what the wish did not want. REFUSED is what could
-        not run for want of a nominal -- stated, and listed by name in
-        the REFUSED block above. META is what the standard label hid.
-        Neither refused nor meta is drawn: neither was ever selected.
+        UNACCEPTED IS COUNTED APART (O-25): a nominal with lines nobody
+        decided is not a failure of the software, and a count that folds
+        it into 'fail' sends the eye after a regression that is not
+        there.
         """
-        ink = self.ink
         ok_n   = sum(1 for node_db in self.verdict_db.values()
                      for verdict in node_db.values() if verdict == "ok")
         run_n  = sum(len(node_db) for node_db in self.verdict_db.values())
-        #  UNACCEPTED IS COUNTED APART (O-25): a nominal with lines
-        #  nobody decided is not a failure of the software, and a
-        #  count that folds it into 'fail' sends the eye after a
-        #  regression that is not there.
         undecided_n = sum(1 for node_db in self.verdict_db.values()
                           for verdict in node_db.values()
                           if verdict == "unaccepted")
-        fail_n = run_n - ok_n - undecided_n
-        skip_n = self.skip_n
         refused_n = sum(len(pl) for pl in self.refused_db.values())
-        if run_n == 0 and skip_n == 0 and refused_n == 0: return
-
-        part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
-        if undecided_n: part_list.append("%d unaccepted" % undecided_n)
-        if skip_n:      part_list.append("%d skip" % skip_n)
-        if refused_n:   part_list.append("%d refused" % refused_n)
-        if self.meta_n: part_list.append("%d meta" % self.meta_n)
-        part_list.append("%s [sec]" % self._elapsed_seconds())
+        line_list = results_line_list(
+                        ok_n, run_n - ok_n - undecided_n, w, self.ink,
+                        undecided_n=undecided_n, skip_n=self.skip_n,
+                        refused_n=refused_n, meta_n=self.meta_n,
+                        seconds=self._elapsed_seconds(),
+                        total=None if self.started_at is None
+                              else "%.2f" % (time.monotonic() - self.started_at))
+        if not line_list: return
         write("")
-        write("RESULTS: %s" % ", ".join(part_list))
-
-        total = run_n + skip_n
-        if total == 0: return
-        span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n + undecided_n}
-        #  A NON-EMPTY REGION IS AT LEAST ITS BORDER. Reserve one
-        #  column each, share the rest by proportion, and give the
-        #  remainder to the largest. ONE COLUMN IS HELD BACK for the
-        #  CLOSING MARKER: the bar is bounded on both sides, so its
-        #  right edge is as plain as its left and a region that runs
-        #  to the end does not look cut off.
-        floor_db = {k: (1 if n else 0) for k, n in span_db.items()}
-        free     = w - 1 - sum(floor_db.values())
-        width_db = {k: floor_db[k] + (n * free) // total
-                    for k, n in span_db.items()}
-        rest     = w - 1 - sum(width_db.values())
-        width_db[max(span_db, key=lambda k: span_db[k])] += rest
-
-        def region(word, width):
-            """RETURN: str, '|' then 'word' centred in what is left;
-            the first letter where the word does not fit; the border
-            alone where nothing else does; nothing where the region is
-            empty."""
-            if width <= 0: return ""
-            room = width - 1
-            text = word if len(word) + 2 <= room \
-                   else word[0] if room >= 1 else ""
-            left = (room - len(text)) // 2
-            return "|" + " " * left + text + " " * (room - left - len(text))
-
-        #  THE CLOSING MARKER wears the ground of the LAST non-empty
-        #  region, so the bar's colour runs to its own edge.
-        last = "fail" if fail_n else "skip" if skip_n else "ok"
-        paint_db = {"ok": ink.ground_ok, "skip": ink.ground_skip,
-                    "fail": ink.ground_fail}
-        write(ink.ground_ok  (region("ok",   width_db["ok"]))
-              + ink.ground_skip(region("skip", width_db["skip"]))
-              + ink.ground_fail(region("fail", width_db["fail"]))
-              + paint_db[last]("|"))
+        for line in line_list: write(line)
 
     def _elapsed_seconds(self):
         """
@@ -1329,24 +1405,42 @@ class CPlainFlow(CRunReportReceiver):
 
     def _write_silent(self, write, w):
         """
-        RETURN: None. ONE NOTE at the end on every file no carrier
-                speaks for, each by its path RELATIVE TO THE DIRECTORY
-                THE RUN WAS CALLED IN, and the two lines that settle
-                them: ignore them, or name one under 'apps'. The paths
-                go to 'write_wallflowers' where it stands and takes
-                them, and the note names that file; else the note
-                lists them. Nothing where nothing was silent.
+        RETURN: None. THE WALLFLOWERS (X-SILENT), once at the end: the lists
+                refreshed, and ONE NOTE line naming where they are. Where no
+                sink stands or a list could not be written, the note lists
+                the paths itself. Nothing is printed where nothing was
+                silent.
         """
-        if not self.silent_db: return
-        path_list = sorted(
-            os.path.relpath(os.path.join(self.root or "", directory, node))
-            for directory, node_list in self.silent_db.items()
-            for node in node_list)
-        list_name = self.write_wallflowers(path_list) \
-                    if self.write_wallflowers is not None else None
+        path_list, where = self._wallflowers_refreshed()
+        if not path_list: return
         write("")
-        for line in wallflower_note_list(path_list, list_name):
+        for line in wallflower_note_list(path_list, where):
             write(line)
+
+    def _wallflowers_refreshed(self):
+        """
+        RETURN: (list[str], str|None) -- every wallflower's path as seen
+                from the call directory, and where the lists stand (None:
+                no sink, or a list could not be written). Every EXPLORED
+                directory goes to 'write_wallflowers', none included, so a
+                stale list goes.
+        """
+        def reachable(directory):
+            """RETURN: str, 'directory' as seen from the call directory."""
+            return os.path.relpath(os.path.join(self.root or "", directory))
+
+        directory_db = {reachable(directory): sorted(self.silent_db.get(
+                                                         directory, []))
+                        for directory in self.dir_order}
+        for directory in self.silent_db:
+            directory_db.setdefault(reachable(directory),
+                                    sorted(self.silent_db[directory]))
+        path_list = sorted(os.path.normpath(os.path.join(directory, name))
+                           for directory, name_list in directory_db.items()
+                           for name in name_list)
+        where = self.write_wallflowers(directory_db) \
+                if self.write_wallflowers is not None else None
+        return path_list, where
 
     def _write_refused(self, write, w):
         """
@@ -1370,27 +1464,114 @@ class CPlainFlow(CRunReportReceiver):
                 write("    %-*s%s" % (column, node, reason))
 
 
-def wallflower_note_list(path_list, list_name):
+def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
+                      refused_n=0, meta_n=0, seconds=None, total=None):
+    """
+    RETURN: list[str], THE CLOSING TWO LINES: one line of numbers under
+            the prefix 'RESULTS:', then one bordered bar of width 'w'
+            whose green, yellow and red regions are the ok, skipped and
+            failed counts IN PROPORTION -- the shape of the run, read
+            before its numbers are. Empty where nothing was counted;
+            the numbers alone where nothing was drawn.
+
+            RESULTS: <ok> ok, <fail> fail, [<unaccepted> unaccepted,]
+                     [<skip> skip,] [<refused> refused,] [<meta> meta,]
+                     [<s.ss> [sec]]
+            |    ok    |skip|   fail   |
+
+    Spoken alike by every face that closes on counts: 'hwut.run' from
+    its flow, 'hwut.report' from its rows -- which ran no run and so
+    passes no 'seconds'.
+
+    SIX NUMBERS, NONE DERIVABLE FROM ANOTHER. 'run' (ok + fail) and
+    'total' (run + skip) were dropped: a reader recomputes them faster
+    than he reads them, and 'total' did not count the refused, so the
+    word did not mean what it said. Each of unaccepted, skip, refused
+    and meta appears only where it is not zero.
+
+    THE PREFIX IS THE ANCHOR. A test whose subject is the FLOW and not
+    its arithmetic tolerates this line with one eq-pattern,
+    'RESULTS: .*'; a test whose subject IS the line must not.
+
+    Each region opens with '|' and carries its word CENTRED -- or its
+    first letter where the word does not fit, or nothing where only the
+    border fits. A NON-EMPTY REGION IS NEVER NARROWER THAN ITS BORDER:
+    one failure among a thousand passes still shows, which proportion
+    alone would round away.
+
+    SKIPPED is what the wish did not want. REFUSED is what could not run
+    for want of a nominal. META is what the standard label hid. Neither
+    refused nor meta is drawn: neither was ever selected. UNACCEPTED is
+    drawn with the failures.
+    """
+    run_n = ok_n + fail_n + undecided_n
+    if run_n == 0 and skip_n == 0 and refused_n == 0: return []
+
+    part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
+    if undecided_n: part_list.append("%d unaccepted" % undecided_n)
+    if skip_n:      part_list.append("%d skip" % skip_n)
+    if refused_n:   part_list.append("%d refused" % refused_n)
+    if meta_n:      part_list.append("%d meta" % meta_n)
+    if seconds is not None: part_list.append("%s [sec]" % seconds)
+    #  THE WHOLE RUN, not only its tests: 'seconds' spans the event
+    #  stream, from the first run to the last; 'total' is the wall time
+    #  since the face began -- exploring, planning and closing included.
+    if total is not None:   part_list.append("%s [sec] total" % total)
+    line_list = ["RESULTS: %s" % ", ".join(part_list)]
+
+    total = run_n + skip_n
+    if total == 0: return line_list
+    span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n + undecided_n}
+    #  A NON-EMPTY REGION IS AT LEAST ITS BORDER. Reserve one column
+    #  each, share the rest by proportion, and give the remainder to the
+    #  largest. ONE COLUMN IS HELD BACK for the CLOSING MARKER: the bar
+    #  is bounded on both sides, so its right edge is as plain as its
+    #  left and a region that runs to the end does not look cut off.
+    floor_db = {k: (1 if n else 0) for k, n in span_db.items()}
+    free     = w - 1 - sum(floor_db.values())
+    width_db = {k: floor_db[k] + (n * free) // total
+                for k, n in span_db.items()}
+    rest     = w - 1 - sum(width_db.values())
+    width_db[max(span_db, key=lambda k: span_db[k])] += rest
+
+    def region(word, width):
+        """RETURN: str, '|' then 'word' centred in what is left; the
+        first letter where the word does not fit; the border alone where
+        nothing else does; nothing where the region is empty."""
+        if width <= 0: return ""
+        room = width - 1
+        text = word if len(word) + 2 <= room \
+               else word[0] if room >= 1 else ""
+        left = (room - len(text)) // 2
+        return "|" + " " * left + text + " " * (room - left - len(text))
+
+    #  THE CLOSING MARKER wears the ground of the LAST non-empty region,
+    #  so the bar's colour runs to its own edge.
+    last = "fail" if fail_n else "skip" if skip_n else "ok"
+    paint_db = {"ok": ink.ground_ok, "skip": ink.ground_skip,
+                "fail": ink.ground_fail}
+    line_list.append(ink.ground_ok  (region("ok",   width_db["ok"]))
+                     + ink.ground_skip(region("skip", width_db["skip"]))
+                     + ink.ground_fail(region("fail", width_db["fail"]))
+                     + paint_db[last]("|"))
+    return line_list
+
+
+def wallflower_note_list(path_list, where):
     """
     RETURN: list[str], the NOTE on the files no carrier speaks for
-            (X-SILENT): their count, where they are listed, and the two
-            ways to settle them -- naming 'list_name' where the paths
-            stand in that file, else naming every path of 'path_list'.
-            Spoken alike by every face that finds them.
+            (X-SILENT): one line with their count and 'where' the lists
+            stand -- or, where 'where' is None (no list could be
+            written), that line followed by every path of 'path_list'
+            and the one command that ignores them. Spoken alike by every
+            face that finds them.
     """
-    head = "NOTE  %d file(s) carry no 'hwut { }' and stand under no " \
-           "'apps'" % len(path_list)
-    if list_name is not None:
-        line_list = ["%s -- listed in %s" % (head, list_name),
-                     "      helpers?  hwut.config.ignore $(cat %s)"
-                     % list_name]
-    else:
-        line_list = [head + ":"] \
-                    + ["          %s" % path for path in path_list] \
-                    + ["      helpers?  hwut.config.ignore %s"
-                       % " ".join(path_list)]
-    return line_list + ["      a test?   name it under 'apps' in its "
-                        "directory's hwut.conf"]
+    head = "NOTE: %d wallflower file(s) in TEST directories" % len(path_list)
+    if where is not None:
+        return ['%s => "%s"' % (head, where)]
+    return [head + ":"] \
+           + ["          %s" % path for path in path_list] \
+           + ["      helpers?  hwut.config.ignore %s" % " ".join(path_list)]
 
 
 def render(event_iterable, write, write_error=None, width=78,

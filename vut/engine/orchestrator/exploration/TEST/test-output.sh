@@ -4,7 +4,9 @@
 # @hwut {
 #     title      = "The 'output' parameter: declared subjects, files included."
 #     choices    = ["cycle", "declare", "forgotten", "refuse"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
+#     tolerance { eq_pattern = ["(\\.( \\.){2,}|\\.{3,}) +"] }
+#     #  the second: the display's dot leader, whose length is the
+#     #  display's layout, not this page's subject
 # }
 #
 # ---------------------------------------------------------------------------
@@ -26,14 +28,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../../.." && pwd)
 RUN="python3 -m vut.services.run"
 ACCEPT="python3 -m vut.services.accept"
-PLAY="python3 -m vut.services.play"
+PLAY="python3 -m vut.services.lib.run.play"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
         echo "The 'output' parameter: declared subjects, files included.;"
         echo "CHOICES: declare, refuse, cycle, forgotten;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

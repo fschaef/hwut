@@ -2,8 +2,7 @@
 #
 # @hwut {
 #     title      = "LinePair: subject_and_nominal_line_element_lists()"
-#     choices    = ["accordion", "circular", "exhaustion", "monkey",
-#                   "transpose", "visible-nothing"]
+#     choices    = ["accordion", "exhaustion", "monkey", "visible-nothing"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -25,23 +24,13 @@ from vut.engine.compare.configuration        import Configuration
 
 if "--hwut-info" in sys.argv:
     print("LinePair: subject_and_nominal_line_element_lists();")
-    choices = ["transpose", "monkey", "visible-nothing", "accordion", "exhaustion", "circular"]
+    choices = ["monkey", "visible-nothing", "accordion", "exhaustion"]
     print(f"CHOICES: {', '.join(choices)};")
     sys.exit()
 
 # ------------------------------------------------------------------------------
 # TEST SCENARIOS
 # ------------------------------------------------------------------------------
-
-def TEST_transpose():
-    print("TEST: Standard Transpose")
-    subject = FRAME_create_line(1, ["A", "B"])
-    nominal = FRAME_create_line(1, ["B", "A"])
-    edit_list = [
-        Edit(E_EditId.TRANSPOSE, transpose_ai=1),
-        Edit(E_EditId.TRANSPOSE, transpose_ai=0),
-    ]
-    FRAME_execute_and_print(subject, nominal, edit_list)
 
 def TEST_visible_nothing():
     print("TEST: Visible Nothing (Placeholder Alignment)")
@@ -75,17 +64,6 @@ def TEST_exhaustion():
     ]
     FRAME_execute_and_print(subject, nominal, edit_list)
 
-def TEST_circular():
-    print("TEST: Circular Transpose (Jumping References)")
-    subject = FRAME_create_line(1, ["A", "B", "C"])
-    nominal = FRAME_create_line(1, ["C", "A", "B"])
-    edit_list = [
-        Edit(E_EditId.TRANSPOSE, transpose_ai=1),
-        Edit(E_EditId.TRANSPOSE, transpose_ai=2),
-        Edit(E_EditId.TRANSPOSE, transpose_ai=0),
-    ]
-    FRAME_execute_and_print(subject, nominal, edit_list)
-
 def TEST_monkey_chaos():
     print("TEST: Monkey Chaos")
     subject = FRAME_create_line(10, ["S0", "S1"])
@@ -93,7 +71,7 @@ def TEST_monkey_chaos():
     edit_list = [
         Edit(E_EditId.INSERT),
         Edit(E_EditId.DELETE),
-        Edit(E_EditId.TRANSPOSE, transpose_ai=0),
+        Edit(E_EditId.GOOD),
         Edit(E_EditId.DELETE)
     ]
     FRAME_execute_and_print(subject, nominal, edit_list)
@@ -121,8 +99,7 @@ def FRAME_execute_and_print(subject, nominal, edit_list):
 
     print("EDIT LIST:")
     for i, e in enumerate(edit_list):
-        aux = f" (aux:{e.transpose_ai})" if e.transpose_ai is not None else ""
-        print(f"  [{i:02d}] {e.id.name}{aux}")
+        print(f"  [{i:02d}] {e.id.name}")
     print()
 
     s_cells, n_cells = lp.subject_list(), lp.nominal_list()
@@ -172,12 +149,11 @@ def FRAME_print_table(subject_list, nominal_list):
 if __name__ == "__main__":
     choice = sys.argv[1] if len(sys.argv) > 1 else ""
     test_map = {
-        "transpose":       TEST_transpose,
         "monkey":          TEST_monkey_chaos,
         "visible-nothing": TEST_visible_nothing,
         "accordion":       TEST_accordion,
         "exhaustion":      TEST_exhaustion,
-        "circular":        TEST_circular,
     }
     if choice in test_map:
         test_map[choice]()
+    print("<hwut-end>")

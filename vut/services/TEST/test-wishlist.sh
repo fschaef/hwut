@@ -2,16 +2,15 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The hwut.wishlist face: the list, printed and spent."
-#     choices    = ["elided", "empty", "labels", "print", "refused",
+#     title      = "The hwut.report.wishlist face: the list, printed and spent."
+#     choices    = ["dirs", "elided", "empty", "labels", "print", "refused",
 #                   "roundtrip", "select", "short-form", "spent",
 #                   "travels"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
 #
-# THE 'hwut.wishlist' FACE AND THE '--wishlist' KEYWORD -- the list,
+# THE 'hwut.report.wishlist' FACE AND THE '--wishlist' KEYWORD -- the list,
 # printed and spent.
 #
 # print       every case the wish selects, one wishlist line each, in
@@ -20,7 +19,7 @@
 #             the first naming files, each further one a choice --
 #             sugar for '--glob', so the two spell one selection.
 # labels      the silence is THE WISH'S (disc-8): a bare
-#             'hwut.wishlist' does not print what the standard label
+#             'hwut.report.wishlist' does not print what the standard label
 #             silences, so its output and 'hwut.run --wishlist' of it
 #             select ONE set and the disc-5 round trip closes over
 #             labels too; '--label' lifts and composes.
@@ -37,21 +36,23 @@
 #             the run is rooted.
 # spent       'hwut.run --wishlist' runs exactly the listed cases and
 #             nothing else.
+# dirs        '--dir' and '--exclude-dir' by grep's rule: read in order,
+#             the LAST matching decides; none matching, a directory is
+#             wanted unless the first rule is a '--dir'.
 # refused     a wishlist that is not there; '--wishlist' with no file;
 #             an unknown option; a directory that is not there.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-FACE="python3 -m vut.services.wishlist"
+FACE="python3 -m vut.services.lib.report.wishlist"
 RUN="python3 -m vut.services.run"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.wishlist face: the list, printed and spent.;"
-        echo "CHOICES: print, select, roundtrip, travels, spent, empty, elided, labels, short-form, refused;"
-        echo "HAPPY: STATUS: [0-9];"
+        echo "The hwut.report.wishlist face: the list, printed and spent.;"
+        echo "CHOICES: dirs, print, select, roundtrip, travels, spent, empty, elided, labels, short-form, refused;"
         exit 0 ;;
 esac
 
@@ -134,15 +135,33 @@ travels)
 
 spent)
     #  'hwut.run --wishlist' runs exactly those, and nothing else.
+    #  EVERY case gets its nominal, so every case COULD run: what does
+    #  not run stays out because the list leaves it out, not because
+    #  it has nothing to run against.
     fixture
+    for where in messaging/queue messaging/net storage; do
+        printf 'line one\n<hwut-end>\n' > "tree/$where/TEST/GOOD/test-a.sh--one.txt"
+        printf 'line two\n<hwut-end>\n' > "tree/$where/TEST/GOOD/test-a.sh--two.txt"
+        printf 'b\n<hwut-end>\n'        > "tree/$where/TEST/GOOD/test-b.sh.txt"
+    done
     $FACE --directory=tree --glob "messaging/*/test-a.sh one" \
         > tree/quick.txt
     echo "THE LIST {"; sed 's/^/    /' < tree/quick.txt; echo "}"
     echo "WHAT RAN:"
-    $RUN --directory=tree --wishlist tree/quick.txt --plain \
-        > run.txt 2>&1
+    $RUN --directory=tree --wishlist tree/quick.txt --plain --brief \
+         --deterministic --jobs=1 > run.txt 2>&1
     echo "STATUS: $?"
-    grep -E "\[START\]" run.txt | sed -E 's/^[0-9:]+ \| [0-9]+ \| /    /'
+    #  directory, test, choice of every case that RAN -- read off the
+    #  brief flow's three line forms ('DONE test choice', ': choice'
+    #  for the same test, a bare next test), never off its layout
+    awk '/^DIRECTORIES/                { exit }
+         /^DIR /                       { d = $2; next }
+         d != "" && /\[[A-Z]+\]/       { line = $0; sub(/^DONE/, "", line)
+                                         split(line, w, " ")
+                                         t = w[1]
+                                         c = (w[2] ~ /^\./) ? "" : " " w[2]
+                                         if (t == ":") t = last; else last = t
+                                         print "    " d ": " t c }' run.txt
     ;;
 
 empty)
@@ -210,7 +229,7 @@ labels)
 
 elided)
     #  The reader takes the elided forms; only a SORTED writer emits
-    #  them, which 'hwut.wishlist' is not: its walk order would make
+    #  them, which 'hwut.report.wishlist' is not: its walk order would make
     #  the ditto fire almost never and suggest an adjacency the file
     #  does not have.
     fixture
@@ -237,6 +256,21 @@ LIST
     face --directory=tree --wishlist tree/lone.txt
     ;;
 
+dirs)
+    #  a/TEST, a/keep/TEST, b/TEST -- five orders of the two rules
+    printf 'hwut {\n}\n' > hwut-root.conf
+    for where in a a/keep b; do
+        mkdir -p "tree/$where/TEST"
+        printf '#!/bin/bash\n# @hwut { title = "T" }\necho x\necho "<hwut-end>"\n' \
+            > "tree/$where/TEST/test-x.sh"
+        chmod +x "tree/$where/TEST/test-x.sh"
+    done
+    for rule in "--dir a" "--exclude-dir a" "--exclude-dir a --dir a/keep" \
+                "--dir a/keep --exclude-dir a" "--dir a --exclude-dir keep"; do
+        echo "--- $rule"
+        $FACE --directory=tree $rule | sed 's/^/    /'
+    done
+    ;;
 refused)
     #  Every door, by name.
     fixture

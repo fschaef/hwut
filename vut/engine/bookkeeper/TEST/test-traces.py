@@ -27,6 +27,7 @@ behaviour: the page's eq_pattern takes any ISO date.
 ______________________________________________________________________________
 """
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -86,9 +87,17 @@ def test_key():
                       % long_tag))
     traces._SYSTEM_KEY = None
     here = traces.system_key()
-    pair_list.append((here.count("-") >= 3 and here == traces.system_key(),
+    #  THIS MACHINE'S KEY IS THE MACHINE'S, NOT THE PAGE'S: which class
+    #  the recording computer was is foreign to what the key does. The
+    #  FORM is the page's; the value is shown only where it breaks it.
+    form_f = re.fullmatch(r"[a-z0-9]+-[a-z0-9-]+-[0-9]+c-[a-z0-9-]+",
+                          here) is not None
+    pair_list.append((form_f, "this machine's key has the form "
+                              "'<os>-<cpu>-<n>c-<arch>'"))
+    pair_list.append((here == traces.system_key(),
                       "this machine's key is stable within the process"))
-    print("  this machine: %s" % here)
+    print("  this machine: %s" % ("<os>-<cpu>-<n>c-<arch>" if form_f
+                                  else here))
     _verdict(_check(pair_list), "the key names a class; the model number "
                                 "survives the cut.")
 

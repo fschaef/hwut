@@ -69,7 +69,7 @@ class E_TestVerdict(Enum):
                accepted, which is the same statement (E-15).
     FAIL       ran and was not.
     ASPIRANT   in the book, never accepted: registered, an id issued,
-               no nominal to be judged against. Played by 'hwut.play',
+               no nominal to be judged against. Played by 'hwut.run.play',
                refused by 'hwut.run' (NOT_ACCEPTED_REASON). Neither a
                pass nor a failure -- '--fail' iterates FAIL and nothing
                else, since what never ran cannot have failed.

@@ -40,6 +40,7 @@ ______________________________________________________________________________
 from dataclasses import dataclass, fields, replace, MISSING
 
 from ...procsitter.api             import ProcsitterConfig
+from ...compare.api                import ConfigurationDiffDisplayParameters
 from ...bookkeeper.api             import CAPS_FIELD_DB
 from .owner_faces_provisional import (ConfigBuild, ConfigCaps,
                                       ConfigCanonicalise, ConfigCompare,
@@ -156,6 +157,13 @@ RELATION = {
     #  (C-4). 'tolerance.regions = false': '##!' and '####' are
     #  ordinary content -- what a text that TALKS ABOUT framing needs.
     "tolerance.regions":       (ConfigCompare, "regions_f"),
+
+    #  THE LINE LEVEL'S NUMBERS (compare C-16), answered by compare's OWN
+    #  declaration -- no mirror to keep in step.
+    "diff_display_parameters.search_budget":  (ConfigurationDiffDisplayParameters, "search_budget"),
+    "diff_display_parameters.margin":         (ConfigurationDiffDisplayParameters, "margin"),
+    "diff_display_parameters.lowest_n":       (ConfigurationDiffDisplayParameters, "lowest_n"),
+    "diff_display_parameters.context_k":      (ConfigurationDiffDisplayParameters, "context_k"),
 
     "same":            (ConfigStore,  "same_nominal_f"),
     "interactive":     (ConfigRunner, "interactive_f"),

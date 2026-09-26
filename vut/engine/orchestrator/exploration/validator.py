@@ -25,7 +25,7 @@ from vut.test_writing_support.python.hwut_hocon import (ScalarNode,
                                                       ObjectNode)
 from vut.engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
-                            LanguageSetup, Build, Caps, Tolerance, Target, E_Origin,
+                            LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
 
 _STRUCTURAL_KEY_SET = ("title", "language", "choices")
@@ -39,7 +39,7 @@ _CAP_POSITIVE_SET   = {"timeout_sec":         float,
                        "file_handle_max_n":   int}
 _EXECUTE_VARIABLE   = re.compile(r"\$(\w+)")
 _CONF_KEY_SET       = ("on_entry", "on_exit", "ignore", "collision",
-                       "dependency", "default_app", "language-setup",
+                       "dependency", "app_defaults", "language-setup",
                        "apps")
 
 
@@ -165,10 +165,13 @@ def validate_conf(hwut_node, file):
         elif entry.key == "target":
             value = _target_map(entry, file, fault_list)
             if value is not None: field_db["target_db"] = value
-        elif entry.key == "default_app":
-            parameters, position_db = _default_app(entry, file, fault_list)
-            field_db["default_app"]             = parameters
-            field_db["default_app_position_db"] = position_db
+        elif entry.key == "app_defaults":
+            parameters, position_db = _app_defaults(entry, file, fault_list)
+            field_db["app_defaults"]            = parameters
+            field_db["app_defaults_position_db"] = position_db
+            #  WHICH FILE SAID IT: a value from 'hwut-root.conf' is not
+            #  a value from 'hwut.conf', and provenance must not say so.
+            field_db["app_defaults_file_db"] = {key: file for key in position_db}
         elif entry.key == "language-setup":
             language_setup = _language_setup(entry, file, fault_list)
         elif entry.key == "variant_group":
@@ -179,9 +182,10 @@ def validate_conf(hwut_node, file):
         elif entry.key in KEY_TO_FIELD or entry.key in _STRUCTURAL_KEY_SET:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
-                "'%s' at the root of hwut.conf: the root carries "
-                "directory keys only; this key belongs to an 'apps' "
-                "entry" % entry.key))
+                "'%s' at the root of %s: the root carries directory "
+                "keys only; a test parameter belongs in 'app_defaults' "
+                "(every application of the directory) or an 'apps' entry"
+                % (entry.key, file)))
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
@@ -290,7 +294,8 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     if position_db is not None:
         position_db[key] = entry.key_position
         if isinstance(entry.node, ObjectNode) \
-           and key in ("caps", "build", "tolerance"):
+           and key in ("caps", "build", "tolerance",
+                       "diff_display_parameters"):
             for inner in entry.node.entry_list:
                 position_db["%s.%s" % (key, inner.key)] = \
                                                     inner.key_position
@@ -313,6 +318,9 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     elif key == "tolerance":
         value = _tolerance(entry, file, fault_list)
         if value is not None: parameter_db["tolerance"] = value
+    elif key == "diff_display_parameters":
+        value = _diff_display_parameters(entry, file, fault_list)
+        if value is not None: parameter_db["diff_display_parameters"] = value
     elif key == "output":
         value = _string_list(entry, file, fault_list)
         if value is not None:
@@ -490,6 +498,58 @@ def _tolerance(entry, file, fault_list):
     return Tolerance(**field_db)
 
 
+DIFF_DISPLAY_KEYS = "search_budget, margin, lowest_n, context_k"
+
+#  key -> (integer_f, lowest, highest): the range each number must lie in.
+_DIFF_DISPLAY_RANGE_DB = {
+    "search_budget": (True,  1,   None),
+    "margin":        (False, 0.0, 1.0),
+    "lowest_n":      (True,  1,   None),
+    "context_k":     (True,  0,   None),
+}
+
+
+def _diff_display_parameters(entry, file, fault_list):
+    """
+    RETURN: DiffDisplayParameters, how differences are aligned for
+            display (compare C-16): 'search_budget' and 'lowest_n' whole
+            numbers >= 1,
+            'context_k' a whole number >= 0, 'margin' in [0..1].
+            None, the value is no scope (fault recorded).
+
+    Compare owns every default; this record holds only what was stated.
+    """
+    node = entry.node
+    if not isinstance(node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, _position_of(node, entry),
+            "'diff_display_parameters' is a scope: %s" % DIFF_DISPLAY_KEYS))
+        return None
+    field_db = {}
+    for inner in node.entry_list:
+        spec = _DIFF_DISPLAY_RANGE_DB.get(inner.key)
+        if spec is None:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "unknown diff_display_parameters key '%s'; known: %s"
+                % (inner.key, DIFF_DISPLAY_KEYS)))
+            continue
+        value = _number(inner, file, fault_list)
+        if value is None: continue
+        integer_f, lowest, highest = spec
+        if (integer_f and not isinstance(value, int)) \
+           or value < lowest or (highest is not None and value > highest):
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, inner.node.position,
+                "'%s' is %s %s%s" % (inner.key,
+                    "a whole number" if integer_f else "a number",
+                    ">= %s" % lowest if highest is None else "in [%s..%s]" % (lowest, highest),
+                    "")))
+            continue
+        field_db[inner.key] = value if integer_f else float(value)
+    return DiffDisplayParameters(**field_db)
+
+
 def _caps(entry, file, fault_list):
     """
     RETURN: Caps, what the author permits the process to spend and reach.
@@ -640,7 +700,7 @@ def _dependency(entry, file, fault_list):
     return result
 
 
-def _default_app(entry, file, fault_list):
+def _app_defaults(entry, file, fault_list):
     """
     RETURN: [0] TestParameters, what every application of the directory
                 receives. It does not overwrite: what an application
@@ -651,7 +711,7 @@ def _default_app(entry, file, fault_list):
     if not isinstance(entry.node, ObjectNode):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, entry.key_position,
-            "'default_app' is a scope of test parameters"))
+            "'app_defaults' is a scope of test parameters"))
         return None, {}
 
     parameters  = {}
@@ -662,7 +722,7 @@ def _default_app(entry, file, fault_list):
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, inner.key_position,
-                "unknown key '%s' in 'default_app'" % inner.key))
+                "unknown key '%s' in 'app_defaults'" % inner.key))
     return TestParameters(**parameters), position_db
 
 
@@ -733,7 +793,7 @@ _STANDARD_TARGET_SET = ("on_entry", "on_exit")
 
 def _target_map(entry, file, fault_list):
     """RETURN: dict, target name -> script -- the user-defined targets
-    of 'hwut.target' (E-7)."""
+    of 'hwut.execute' (E-7)."""
     if not isinstance(entry.node, ObjectNode):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, entry.key_position,

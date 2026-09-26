@@ -72,6 +72,7 @@ import argparse
 import asyncio
 import os
 import sys
+import time
 from   contextlib import contextmanager
 from   datetime import datetime, timezone
 from   dataclasses import dataclass, field
@@ -106,7 +107,7 @@ from   ._target                                      import entered
 from   vut.services.lib.face                         import Refused, Fault, FaceError
 from   vut.services.lib.wallflowers                  import wallflowers_writer
 from   vut.services.lib.cmdline                      import (face_parser, usage_of,
-                                                             parse_or_refuse, did_you_mean)
+                                                             parse_or_refuse)
 
 
 #  THE STANDARD READER (E-84): the wish, then the rendering words, then
@@ -484,6 +485,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
     the seam through which 'hwut.run.cov' and its tests state the tool
     until '--variant' selects it from the configuration (todo-13).
     """
+    started_at = time.monotonic()   # the TOTAL counts from here
     if argv is None:
         argv = sys.argv[1:]
     if "--help" in argv:
@@ -576,7 +578,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color,
                             write_wallflowers=wallflowers_writer(write_error),
-                            root=directory)
+                            root=directory, started_at=started_at)
         try:
             tally = do(request, sink=event_sink, flow=flow, demand=demand, write=write)
         except FaceError as error:

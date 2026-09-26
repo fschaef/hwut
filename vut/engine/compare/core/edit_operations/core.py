@@ -49,7 +49,6 @@ from   collections import defaultdict
 from   abc         import ABC, abstractmethod
 
 # Shortcuts:
-TRANSPOSE       = E_EditId.TRANSPOSE
 GOOD            = E_EditId.GOOD
 GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
 GOOD_INSERT     = E_EditId.GOOD_INSERT
@@ -67,7 +66,6 @@ position_increment_db = {
     GOOD_TOLERATED:   (1,           1),    #          -- " --
     GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
     GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
-    TRANSPOSE:        (1,           1),    #          -- " --
     INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
     #                                      # => compare subject[si+1] with nominal[ni]
     DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
@@ -101,6 +99,37 @@ class WorkItemBase(ABC):
                     position.
         """
         return
+
+class SearchBudgetSpent(Exception):
+    """The search spent its budget ('search_budget') before it finished."""
+
+
+#  THE BUDGET IN FORCE, shared by every search started under it -- the
+#  line level and the element searches it causes count together. None:
+#  unbounded, as every caller outside a budget has it.
+_budget = None
+
+
+class search_budget:
+    """
+    RETURN: context manager; searches run within it together may expand
+            'n' items, and the next expansion raises SearchBudgetSpent.
+            'n' may be a POOL -- a one-element list -- shared by several
+            searches in turn: what one spends, the next does not have.
+            The budget in force before is restored on exit.
+    """
+    def __init__(self, n):
+        self.n = n
+    def __enter__(self):
+        global _budget
+        pool = self.n if isinstance(self.n, list) else [self.n]
+        self.previous, _budget = _budget, pool
+        return self
+    def __exit__(self, *_exc):
+        global _budget
+        _budget = self.previous
+        return False
+
 
 class WorkListBase(list):
     """Implements a work list finding optimate edit operations to transform a
@@ -146,9 +175,13 @@ class WorkListBase(list):
         self.best     = EditSequence(self.max_cost, [], [])
 
     def run(self) -> EditSequence:
+        budget = _budget
         while self:
             item = self.pop()
             if not self.end_of_sequence(item):
+                if budget is not None:
+                    budget[0] -= 1
+                    if budget[0] < 0: raise SearchBudgetSpent()
                 self.produce_derived(item)
         return self.best
 

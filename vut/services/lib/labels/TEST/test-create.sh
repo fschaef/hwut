@@ -4,7 +4,6 @@
 # @hwut {
 #     title      = "hwut.labels.create: a NEW label, a snapshot of a wish."
 #     choices    = ["doors", "empty", "snapshot", "union"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -34,7 +33,6 @@ case "$1" in
     --hwut-info)
         echo "hwut.labels.create: a NEW label, a snapshot of a wish.;"
         echo "CHOICES: snapshot, union, empty, doors;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

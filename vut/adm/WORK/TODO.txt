@@ -442,7 +442,7 @@ BAND E -- TWO ENTRIES ARE NOT WAITING ON ANYTHING
 ------------------------------------------------------------------------------
 
     gathered/0j  THE TARGET SERVICE      ** RULED AND BUILT **
-        E-7 ('hwut.target -- USER-DEFINED DIRECTORY TARGETS') stands
+        E-7 ('hwut.execute -- USER-DEFINED DIRECTORY TARGETS') stands
         as an entry and RULES THE TWO HARDEST FORKS of the file:
           fork (a) inheritance -- "The scope is LOCAL, never inherited
                    (R-69's locality law); a parent cannot bind a
@@ -450,16 +450,16 @@ BAND E -- TWO ENTRIES ARE NOT WAITING ON ANYTHING
           fork (b) walk membership -- "A directory binding any target
                    is WALKED, test applications or none: definition
                    is membership."
-        And it is BUILT: 'services/target.py' (414 lines),
-        'bin/hwut.target', 'target { }' read by the validator into
+        And it is BUILT: 'services/execute.py' (414 lines),
+        'bin/hwut.execute', 'target { }' read by the validator into
         'field_db["target_db"]'.
         I CALLED FORK (a) "the hardest fork of the cluster" AND IT WAS
         SETTLED BEFORE I SAID IT.
 
-    gathered/0m  'hwut.wishlist'         ** RULED AND BUILT **
+    gathered/0m  'hwut.report.wishlist'         ** RULED AND BUILT **
         E-13 ('a wishlist is a file of targets, and THE ROUND TRIP
-        CLOSES') stands. Built: 'bin/hwut.wishlist',
-        'services/wishlist.py', and '--wishlist' in
+        CLOSES') stands. Built: 'bin/hwut.report.wishlist',
+        'services/lib/report/wishlist.py', and '--wishlist' in
         'plan/wish.py' -- exactly the one place the entry argued it
         belonged, "not in one face".
 
@@ -501,8 +501,8 @@ the discussion is residue and the sorting rule says DELETE.
 
     gathered/08  the dispatcher       O-7      (was B-1)
     gathered/0j  the target service   E-7      (was band E)
-    gathered/0l  'hwut.play'          E-5,E-22
-    gathered/0m  'hwut.wishlist'      E-13     (was band E)
+    gathered/0l  'hwut.run.play'          E-5,E-22
+    gathered/0m  'hwut.report.wishlist'      E-13     (was band E)
     gathered/11  the directory keys   R-31..36
     gathered/12  the parser move      R-27,R-34
     coverage     todo-3               built as 'hwut.run.cov convert'

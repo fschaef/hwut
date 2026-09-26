@@ -6,7 +6,9 @@
 #     choices    = ["ask", "bless", "first", "labels", "merge", "onedoor",
 #                   "opening", "stderr", "sugar", "token", "interactive",
 #                   "unaccepted"]
-#     tolerance { eq_pattern = ["STATUS: [0-9]"] }
+#     #  the run's TOTAL is wall time since the face began: this machine's,
+#     #  not the page's subject
+#     tolerance { eq_pattern = [", [0-9]+\\.[0-9]+ \\[sec\\] total"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -30,14 +32,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 RUN="python3 -m vut.services.run"
 ACCEPT="python3 -m vut.services.accept"
-WISHLIST="python3 -m vut.services.wishlist"
+WISHLIST="python3 -m vut.services.lib.report.wishlist"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
         echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted, first, opening, onedoor;"
-        echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
 

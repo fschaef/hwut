@@ -9,7 +9,7 @@ STDOUT {
        suite/TEST . . . . . . . . . . . . . . . . . . . . . . .      [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 1 skip, 0.01 [sec]
+    RESULTS: 0 ok, 0 fail, 1 skip, 0.01 [sec], 0.02 [sec] total
     |                                    skip                                    |
 }
 <hwut-end>

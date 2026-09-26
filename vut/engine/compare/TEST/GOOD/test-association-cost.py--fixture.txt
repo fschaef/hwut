@@ -5,22 +5,22 @@ A REAL PAIR, where one was captured
     the growth over the first n lines of each, STOPPING at
     the knee -- a test that reproduces a hang by hanging is
     no use to anybody:
-      first  4 lines   nodes 355        -
-      first  6 lines   nodes 596        x1.7
-      first  8 lines   nodes 606        x1.0
-      first 10 lines   nodes 614        x1.0
-      first 12 lines   nodes 718        x1.2
-      first 14 lines   nodes 724        x1.0
-      first 16 lines   nodes 729        x1.0
-      first 18 lines   nodes 967        x1.3
-      first 20 lines   nodes 973        x1.0
-      first 22 lines   nodes 978        x1.0
-      first 24 lines   nodes 994        x1.0
-      first 26 lines   nodes 1002       x1.0
-      first 28 lines   nodes 1006       x1.0
-      first 30 lines   nodes 2569       x2.6
-      first 32 lines   nodes 32155      x12.5
-      first 34 lines   nodes 46682      x1.5
+      first  4 lines   nodes 266        -
+      first  6 lines   nodes 274        x1.0
+      first  8 lines   nodes 284        x1.0
+      first 10 lines   nodes 292        x1.0
+      first 12 lines   nodes 396        x1.4
+      first 14 lines   nodes 402        x1.0
+      first 16 lines   nodes 407        x1.0
+      first 18 lines   nodes 645        x1.6
+      first 20 lines   nodes 651        x1.0
+      first 22 lines   nodes 656        x1.0
+      first 24 lines   nodes 672        x1.0
+      first 26 lines   nodes 680        x1.0
+      first 28 lines   nodes 684        x1.0
+      first 30 lines   nodes 1113       x1.6
+      first 32 lines   nodes 20691      x18.6
+      first 34 lines   nodes 20692      x1.0
 
     the whole pair was measured; no knee was met
 SUCCESS: the fixture was bisected

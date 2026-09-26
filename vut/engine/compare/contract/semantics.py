@@ -19,7 +19,6 @@ CONTENT:
     GOOD_EDIT_ID_SET      the edit classes that PRESERVE equivalence
     element_cost_db       cost of an edit class at LineElement level
     line_cost_db          cost of an edit class at Line level
-    cost_TRANSPOSE        distance-scaled transposition cost
 
 IMPORTANT -- equivalence is edit-CLASS membership, never a cost-value test:
 cost and equivalence deliberately disagree in the margins.  A GOOD_INSERT /
@@ -41,7 +40,6 @@ class E_EditId(IntEnum):
     GOOD_TOLERATED  = 1
     GOOD_INSERT     = 9
     GOOD_DELETE     = 8
-    TRANSPOSE       = 2
     INSERT          = 3
     DELETE          = 4
     SUBSTITUTE      = 5
@@ -70,7 +68,6 @@ element_cost_db = {
     E_EditId.GOOD_TOLERATED:   0,       # good, tolerated is better than good insert + delete delete
     E_EditId.GOOD_INSERT:      1e-10,   # good insert visible nothing (slightly worse than 'good')
     E_EditId.GOOD_DELETE:      1e-10,   # good delete visible nothing (slightly worse than 'good')
-    E_EditId.TRANSPOSE:        0.5,     # good, when swapped elements (--> cost_TRANSPOSE)
     E_EditId.SUBSTITUTE:       1,       # good, when content is substituted
     E_EditId.INSERT:           1,       # bad, need to insert element
     E_EditId.DELETE:           1,       # bad, need to remove element
@@ -85,22 +82,6 @@ line_cost_db = {
     E_EditId.INSERT:     0.5,
     E_EditId.DELETE:     0.5
 }
-
-
-def cost_TRANSPOSE(si, transpose_ai):
-    """RETURNS: cost, a float in [0.5, 1.0) scaled by transposition distance.
-
-        Distance:       Cost:
-        1 (adjacent) -> 1 - 1/2 = 0.5
-        2            -> 1 - 1/3 = 0.66
-        10           -> 1 - 1/11 = 0.909
-        infinity     -> 1.0
-
-    The greater the distance between the transposed elements, the higher the
-    cost -- an adjacent swap is the most forgivable re-ordering.
-    """
-    # distance is the physical offset between the subject and nominal indices
-    return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 
 # ------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-STIMULUS  hwut.diff --console --directory=tree/suite/TEST --all --plain -y --width 70
+STIMULUS  hwut.run.diff --console --directory=tree/suite/TEST --all --plain -y --width 70
 REACTION  stdout {
               
               =[ test-app.sh one ]================================ round 1
@@ -33,7 +33,7 @@ STIMULUS  the checklist: 'printf 2\n' picks case 2 and goes
           }
           shown: =[ test-app.sh two ]================================ round 1
 
-STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.sh one
+STIMULUS  a path word enters the directory: hwut.run.diff tree/suite/TEST/test-app.sh one
           exit code : 1
               =[ test-app.sh one ]================================ round 1
               S    1      | [changed ]line for one

@@ -250,7 +250,13 @@ o-1  RULED 2026-09-24 -- (a) NO TRANSPOSITION AT THE ELEMENT LEVEL.
      'test-line-2.py transpose' pins the new reading. MEASURED after:
      the pair above associates in about 2 seconds.
 
-o-2  RULED -- 'WorkItemHistory' IS REMOVED.
+o-2  RULED AND BUILT 2026-09-25 -- 'WorkItemHistory' IS REMOVED.
+
+     BUILT: 'line_sequence.py' prices each line-level step flat by
+     '_step_cost'; nothing is carried from item to item. MEASURED: the
+     compare suites 151 ok, 0 fail, no nominal moved -- the history
+     never priced anything, as found below.
+
 
      It never ran: 'clone()' hands the counters to '__init__', which
      accepts and discards them, so every derived item starts a fresh
@@ -293,6 +299,20 @@ o-5  BUILT -- the knee check inside 'Tally' in 'test-association-cost.py'
      stands, and 'fixture' has its GOOD. After o-1 the fixture no longer
      reaches KNEE_NODE_N; the step from line 30 to 32 still multiplies
      the nodes by 12.5 -- the line-level search that anchoring replaces.
+
+PHASE TWO BUILT 2026-09-25 (compare C-16): a section is searched within
+     a counted budget (20 000 expansions); beyond it, phase two with the
+     measured numbers -- margin 0.10, n 4, fuzz measure, k 1 -- all four
+     in 'Configuration.diff_display_parameters'. o-6's and o-7's numbers are ruled by
+     measurement. No section of the real corpus reaches 3 s.
+
+PHASE ONE BUILT 2026-09-25 (compare C-15): anchors keyed by EQUIVALENCE
+     CLASS, not text; sections searched in order, analogy bindings
+     threaded. MEASURED: fixture line level 47 expansions, pair 0.42 s,
+     'hwut.run.diff' 0.37 s; the knee now lies wholly in the ELEMENT
+     search of the last section (30->32 lines: 1 083 -> 29 782, 0.29 s).
+     o-3's analogy-dense line: 16 words, 425 expansions, 5 ms --
+     polynomial; o-3 stands.
 
 o-6  RULED -- THE SECOND PHASE IS BOTH CRITERIA, IN ORDER.
 

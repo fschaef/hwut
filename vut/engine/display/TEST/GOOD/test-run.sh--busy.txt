@@ -24,7 +24,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 4 ok, 0 fail, s.ss [sec]
+    RESULTS: 4 ok, 0 fail, s.ss [sec], s.ss [sec] total
     |                                     ok                                     |
 }
 successor: digest identical to linear: True
@@ -50,7 +50,7 @@ STDOUT {
     ERROR DirectoryBusy: the directory '<work>/tree/beta/TEST' is held by a live process
     ==============================================================================
     
-    RESULTS: 4 ok, 0 fail, s.ss [sec]
+    RESULTS: 4 ok, 0 fail, s.ss [sec], s.ss [sec] total
     |                                     ok                                     |
 }
 successor: digest identical to linear: True

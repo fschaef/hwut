@@ -54,12 +54,14 @@ Four gates, in order. A file passes all four or it is no test application.
 
   3  THERE IS NO THIRD CARRIER. A file neither speaks for is SILENT:
      no application, no fault, nothing asked -- whatever it would have
-     answered. The run NAMES the silent files once, at its end: their
-     count, and 'hwut-wallflowers.txt' in the call directory holding each
-     by its path relative to that directory, one per line; then the two
-     ways to settle them: 'hwut.config.ignore $(cat hwut-wallflowers.txt)'
-     for helpers, an 'apps' entry for a test. A run with none leaves
-     no such file. The INTERVIEW ('app --hwut-info') survives as the reader
+     answered. A face that explores writes, in every explored
+     directory holding such files, 'TMP/wallflowers.txt': a '#' header
+     saying how to settle them, then one './../<name>' per line; an
+     explored directory with none has its list removed. The run's
+     closing NOTE is one line, the count and '**/TMP/wallflowers.txt'.
+     'hwut.config.ignore --wishlist <list>' ignores one list's files,
+     '--wallflowers' every list below the caller; an 'apps' entry makes
+     one a test. The INTERVIEW ('app --hwut-info') survives as the reader
      'hwut.renovate' drives, not as a carrier.
 
   4  IT HAS A TITLE -- or gets one. A specification lacking 'title' is NOT
@@ -392,7 +394,7 @@ relation and not a success relation: a dependant runs once its dependencies
 have run to completion, whatever their verdict. A cycle is a directory
 failure; every case whose dependencies cannot be met reports '[MISDEP]'.
 
-'target' binds the USER-DEFINED TARGETS of 'hwut.target' (services E-7)
+'target' binds the USER-DEFINED TARGETS of 'hwut.execute' (services E-7)
 in a dictionary of its own -- an open-ended namespace of user-chosen
 names, local, never inherited:
 
@@ -404,26 +406,26 @@ names, local, never inherited:
 
 'on_entry' and 'on_exit' are STANDARD targets with fixed semantics and
 their own top-level keys; a standard name inside 'target { }' is refused
-by name. A directory binding any target is walked by 'hwut.target':
+by name. A directory binding any target is walked by 'hwut.execute':
 definition is membership.
 
 
-5.1  'default_app'
+5.1  'app_defaults'
 ______________________________________________________________________________
 
-'hwut.conf' may carry a 'default_app' scope of test parameters. Every
+'hwut.conf' may carry a 'app_defaults' scope of test parameters. Every
 application of the directory receives them, and they DO NOT OVERWRITE: what
 an application states itself stands.
 
     @hwut {
-        default_app {
+        app_defaults {
             comment = "//"
             caps    { timeout_sec = 5 }
         }
     }
 
-The three sources, outermost first: 'default_app', the application's own
-root, the choice. A value taken from 'default_app' reports its provenance
+The three sources, outermost first: 'app_defaults', the application's own
+root, the choice. A value taken from 'app_defaults' reports its provenance
 as 'hwut.conf:<line>' (section 7.1).
 
 
@@ -594,7 +596,7 @@ choice's own word:
 
     (nothing)       the author wrote it here
     app             the application's root, reaching every choice
-    hwut.conf:<n>   'default_app', or the 'apps' entry carrying the
+    hwut.conf:<n>   'app_defaults', or the 'apps' entry carrying the
                     application; the line is the key's own
     --hwut-info     the application said it through its info block
     default         the component that owns the parameter declared it

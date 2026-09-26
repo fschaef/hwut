@@ -30,6 +30,12 @@ $ hwut.plan --help
         --exclude-dir <glob>
                             a directory not wanted, and every directory
                             below it; a bare name matches any component
+                            WHERE '--dir' AND '--exclude-dir' MEET, grep's
+                            rule decides: they are read in command-line
+                            order and the LAST ONE MATCHING a directory
+                            decides; where none matches, the directory is
+                            wanted unless the FIRST of them is a '--dir'.
+                            '--exclude-dir a --dir a/keep' keeps 'a/keep'.
         --wishlist <file>   the file's lines as targets, '#' comments and
                             blanks dropped, './' meaning the file's own
                             directory

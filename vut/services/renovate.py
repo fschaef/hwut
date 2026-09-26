@@ -198,9 +198,6 @@ def main(argv=None, write=None):
                                 apply_f=arguments.apply), write, printed)
 
 
-    return status
-
-
 class _Step:
     """One thing renovate would do to one file: what to say, and the
     callable that does it. 'plan_of' builds these; 'do' turns each into
@@ -270,9 +267,9 @@ def plan_of(directory):
         if not hit_list: continue
         #  IN THE CONF the old keys stood at the ROOT, directory-wide;
         #  the root carries directory keys only, so the tolerance goes
-        #  under 'default_app', which is what 'directory-wide' means now.
+        #  under 'app_defaults', which is what 'directory-wide' means now.
         conf_f = (name == finder.CONF_NAME)
-        home   = "default_app { tolerance { %s } }" if conf_f else "tolerance { %s }"
+        home   = "app_defaults { tolerance { %s } }" if conf_f else "tolerance { %s }"
         plan.change_list.append(_Step(
             "%s: %s -> %s" % (
                 name,
@@ -332,7 +329,7 @@ def _code_of(line):
 def _rewrite_old_keys(path, conf_f=False):
     """RETURN: None. Every old tolerance key in the file rewritten as
                its new spelling inside 'tolerance { }', in place, on
-               the line where it stood -- inside 'default_app { }' too
+               the line where it stood -- inside 'app_defaults { }' too
                where the file is the conf ('conf_f')."""
     text = _read(path)
     out  = []
@@ -346,7 +343,7 @@ def _rewrite_old_keys(path, conf_f=False):
         hit_list = list(_OLD_KEY_RE.finditer(code))
         block = "tolerance { %s }" % "  ".join(
             "%s = %s" % (OLD_KEY_DB[m.group(1)], m.group(3)) for m in hit_list)
-        if conf_f: block = "default_app { %s }" % block
+        if conf_f: block = "app_defaults { %s }" % block
         lead0 = code[:len(code) - len(code.lstrip())]
         new = lead0 + code[len(lead0):hit_list[0].start()] + block
         cursor = hit_list[0].end()

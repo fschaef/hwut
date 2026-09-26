@@ -33,6 +33,12 @@ STDOUT {
                 comment = ["##", "##"]
                 regions = true
             }
+            diff_display_parameters {
+                search_budget = 20000
+                margin = 0.1
+                lowest_n = 4
+                context_k = 1
+            }
             same = false
             interactive = false
             output = ["<stdout>"]
@@ -76,6 +82,12 @@ STDOUT {
                 constraints = []
                 comment = ["##", "##"]
                 regions = true
+            }
+            diff_display_parameters {
+                search_budget = 20000
+                margin = 0.1
+                lowest_n = 4
+                context_k = 1
             }
             same = false
             interactive = false

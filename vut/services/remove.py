@@ -10,7 +10,7 @@ PURPOSE: THE 'hwut.remove' COMMAND LINE -- a test, or one choice of it,
 
 THE WORDS ARE EVERY FACE'S (E-53): one word names a test, two name a
 test and one of its choices, and a word carrying a path enters its
-directory (E-47) -- as on 'hwut.rename', 'hwut.diff', 'hwut.report.details'.
+directory (E-47) -- as on 'hwut.rename', 'hwut.run.diff', 'hwut.report.details'.
 'hwut.remove-choice' is gone: it existed only because this face read a
 LIST OF TESTS, so 'hwut.remove a.sh one' meant two tests where every
 other face means a test and a choice. MANY AT ONCE is

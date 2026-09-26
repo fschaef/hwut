@@ -171,7 +171,7 @@ COST      Every fixture and every hand-run application must speak the
           fixture that lies.
 
 ----------------------------------------------------------------------------
-E-7  hwut.target -- USER-DEFINED DIRECTORY TARGETS
+E-7  hwut.execute -- USER-DEFINED DIRECTORY TARGETS
 ----------------------------------------------------------------------------
 PROBLEM   A test tree accumulates directory chores -- clean, regenerate,
           repack -- that belong to the directories and not to any test.
@@ -199,7 +199,7 @@ DECISION  'hwut.conf' binds user-defined targets in a SEPARATE
           A directory binding any target is WALKED, test applications
           or none: definition is membership.
 
-          THE FACE:  hwut.target <option-list> <target> <passed-through>
+          THE FACE:  hwut.execute <option-list> <target> <passed-through>
           Everything before the target name is the service's
           vocabulary; everything after it goes to each directory's
           script, argv-style, untouched. One target per invocation.
@@ -224,7 +224,7 @@ DECISION  'hwut.conf' binds user-defined targets in a SEPARATE
           except under '-i'. The reason-2 refusal hints at '+x'.
 
           TARGETS ARE NOT TESTS. Exit codes are informational:
-          reported per directory, never deciding. 'hwut.target'
+          reported per directory, never deciding. 'hwut.execute'
           succeeds iff phase one accepted and every planned script
           was found and executed -- however it exited. Outputs and
           exit codes are recorded into a per-directory report; '-q'
@@ -483,7 +483,7 @@ PROBLEM   A suite worth quick-checking -- 'the messaging tests' -- is
           it cannot be commented, cannot be reviewed, cannot be
           committed beside the tree it describes.
 
-DECISION  'hwut.wishlist [<wish>]' PRINTS what a wish selects, one
+DECISION  'hwut.report.wishlist [<wish>]' PRINTS what a wish selects, one
           line per case, in walk order:
 
               ./<path>/<test-app> [<choice>]
@@ -592,9 +592,18 @@ DECISION  '--exclude <target>' takes the same form as '--glob', path
           COMPONENT, so '--exclude-dir OUT' drops 'a/OUT/TEST' and
           'a/OUT/b/TEST' alike.
 
-          AN EXCLUSION OUTRANKS EVERY INCLUDE. Asked first, answered
-          first: a case an exclusion names is not wanted, whatever
-          selected it -- a wishlist line, a glob, or the bare wish.
+          AN '--exclude' OUTRANKS EVERY INCLUDE. Asked first, answered
+          first: a case it names is not wanted, whatever selected it --
+          a wishlist line, a glob, or the bare wish.
+
+          DIRECTORIES ARE DECIDED BY ORDER, as GNU grep decides
+          '--include' against '--exclude': '--dir' and '--exclude-dir'
+          are read in command-line order, the LAST ONE MATCHING a
+          directory decides, and where none matches the directory is
+          wanted unless the FIRST of them is a '--dir'. So a subtree
+          can be taken back out of an excluded one --
+          '--exclude-dir a --dir a/keep' -- which a flat 'exclusion
+          wins' could not say. (Ruled 2026-09-25.)
 
           'bin/hwut' IS 'hwut.run'. A bare 'hwut' states no wish, a
           wish that states nothing wants everything, so 'hwut' runs
@@ -784,7 +793,7 @@ DECISION  ONE FILE, 'hwut-root.labels', beside 'hwut-root.conf' at
           selection evaluates it; the file's reader and writer are
           the faces' own ('services/lib/labels/_file.py'). ABSENT A LABEL
           QUESTION, the standard label 'meta' is SILENT -- and the
-          silence is THE WISH'S, not one face's, or 'hwut.wishlist'
+          silence is THE WISH'S, not one face's, or 'hwut.report.wishlist'
           and 'hwut.run --wishlist' would select different sets and
           the disc-5 round trip would not close. A face the label
           view does not reach REFUSES '--label' rather than guessing.
@@ -827,7 +836,7 @@ PROBLEM   E-19 delivered the file and its faces, but '--label'
 
 DECISION  'view_at(directory)' ('services/lib/labels/__init__.py') is THE
           ONE DOOR a face obtains the view through; 'hwut.plan',
-          'hwut.wishlist', 'hwut.report' and 'hwut.accept' build it
+          'hwut.report.wishlist', 'hwut.report' and 'hwut.accept' build it
           at their doors, and 'hwut.run' threads it through
           'orchestrator' -> 'orchestrate' -> 'determine_tree', which
           also serves 'hwut.cov' and 'hwut.stability' riding
@@ -878,7 +887,7 @@ DECISION  THE SHORT FORM MOVES TO THE WISH ('desugar_positional',
           files, every further word a choice, globbing in both, and
           it is SUGAR FOR '--glob' -- one selection language, so the
           short form can never mean what the long form cannot say.
-          'hwut.run', 'hwut.plan', 'hwut.wishlist', 'hwut.report' and
+          'hwut.run', 'hwut.plan', 'hwut.report.wishlist', 'hwut.report' and
           'hwut.accept' take it; 'hwut.stability' and 'hwut.cov'
           inherit it by forwarding their words to 'hwut.run'. A face
           whose bare words already mean something else --
@@ -911,7 +920,7 @@ GRAVEYARD '--force-also-meta' -- rejected: '--label meta', '--label
           the words of every face that has its own.
 
 
-E-22  'hwut.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A TEST
+E-22  'hwut.run.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A TEST
 
 PROBLEM   'hwut.compare FILE' shows how compare READS a stream, but
           under the command line's setup. An author asking 'why did
@@ -919,7 +928,7 @@ PROBLEM   'hwut.compare FILE' shows how compare READS a stream, but
           reading under THE TEST'S OWN setup -- and had no way to ask
           that did not also produce a verdict and a record.
 
-DECISION  A face, 'hwut.play <test-app> [<choice>]', BUILT AS WIRING
+DECISION  A face, 'hwut.run.play <test-app> [<choice>]', BUILT AS WIRING
           over bricks that already exist and owning no ceremony of
           its own: the wish and 'CTestTaskListQuery' say which run is
           meant; 'provision_of' builds, launches, contains, collects
@@ -1215,7 +1224,7 @@ PROBLEM   'hwut.report --help' printed its usage TWICE and the two
           disagreed: a hand-written block inside the module docstring,
           which named neither the target globs, and the generated
           'USAGE' appended at the end, which did. 'hwut.sanitize' and
-          'hwut.wishlist' carried the same pair. A usage line written
+          'hwut.report.wishlist' carried the same pair. A usage line written
           by hand drifts from the tokens the face actually reads --
           which is the defect 'usage_line' exists to prevent.
 DECISION  THE DOCSTRING STATES NO USAGE. One 'USAGE = usage_line(...)'
@@ -1564,7 +1573,7 @@ DECISION  The channel is made whole. 'subject_provision.py' owns
 COST      'hwut.accept' may now run a test. It says so, by name and
           with the step that decided, before it does:
               RUN: test-x.py choice   (A.1) 'test-x.py' is younger ...
-          'hwut.play' now opens the Bookkeeper ('base_f=True') even
+          'hwut.run.play' now opens the Bookkeeper ('base_f=True') even
           without '--save', to find the candidate path the decision
           is made against; it still writes nothing without the word.
           'stability' reads text where it read bytes; the snapshot
@@ -1638,7 +1647,7 @@ RULED     (Frank-Rene, 2026-09-01/02)
              stands => something was accepted => the case may run.
              No nominal => the case is NOT RUN. The gate is on the
              goal that REQUIRES a nominal -- 'hwut.run' -- and on
-             nothing else: 'hwut.play' is the explicit run and
+             nothing else: 'hwut.run.play' is the explicit run and
              'hwut.accept' is the source of the nominal (E-40).
           2  A missing register entry is INSANITY, not grounds for
              refusal: where a nominal stands the case runs, the entry
@@ -1665,7 +1674,7 @@ DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
           NAME_GLOB_TUPLE': '*~', '#*#', '.bak', '.backup', '.orig',
           '.old', '.save', '.rej', '.copy', '.swp', '.tmp') and the
           gate's stand in the same block. Each refusal names its way
-          in: "'hwut.play --save', then 'hwut.accept'".
+          in: "'hwut.run.play --save', then 'hwut.accept'".
 
           THE ATTENTION: the dispatcher opens the register for every
           run; a case that runs on a nominal's word and has no entry
@@ -1704,10 +1713,10 @@ COST      A directory with no register file gets one on its first run
 GRAVEYARD The gate at the session (E_Goal) -- rejected: the case would
           still be scheduled, built, and would reach the book before
           the refusal; "not run at all" means no node.
-          The gate on 'hwut.play' -- rejected: play requires no
+          The gate on 'hwut.run.play' -- rejected: play requires no
           nominal, and with '--save' it is the way in.
           Refusal as a FAULT of exploration -- rejected: a fault makes
-          the directory unreadable and 'hwut.play' refuses the whole
+          the directory unreadable and 'hwut.run.play' refuses the whole
           directory; a stray copy is not a broken specification.
           '--books' findings removable under '--apply' -- rejected: a
           disagreement has no side the tool may take.
@@ -2105,7 +2114,7 @@ PROBLEM   E-45 stated the path rule for EVERY bare-name face and three
           glob with a path member over the tree BELOW the current
           directory: a path below worked by walking the whole tree; a
           path above or beside ('../x/TEST/x.sh', an absolute one)
-          matched nothing and said nothing. 'hwut.play' and
+          matched nothing and said nothing. 'hwut.run.play' and
           'hwut.show' did not read a path at all. One spelling, three
           meanings, by face -- and the ruling that 'hwut path/app'
           means 'enter path, perform app' had been said and never
@@ -2226,7 +2235,7 @@ GRAVEYARD 'prompt_toolkit' for a scrolling, keyed view -- deferred, not
           alignment the verdict was not about.
 
 ----------------------------------------------------------------------------
-E-50  'hwut.diff' -- THE FACE RENAMED; THE STORE FORM; THE CHECKLIST (2026-09-07)
+E-50  'hwut.run.diff' -- THE FACE RENAMED; THE STORE FORM; THE CHECKLIST (2026-09-07)
 ----------------------------------------------------------------------------
 PROBLEM   'hwut.compare' wore the component's name on a face whose
           every word was diff's: exit 0 equivalent, 1 differing, "the
@@ -2237,7 +2246,7 @@ PROBLEM   'hwut.compare' wore the component's name on a face whose
           directories -- had no face that showed them, or let an
           author say "these three, not that one".
 
-DECISION  THE FACE IS 'hwut.diff' ('services/diff.py', 'bin/hwut.diff';
+DECISION  THE FACE IS 'hwut.run.diff' ('services/lib/run/diff.py', 'bin/hwut.run.diff';
           the suite 'test-diff.sh', carried by 'hwut.rename' itself).
           A face is a spelling; the component keeps its name.
 
@@ -2359,7 +2368,7 @@ E-53  'hwut.remove' READS THE WORDS EVERY FACE READS               (2026-09-07)
 ----------------------------------------------------------------------------
 PROBLEM   'hwut.remove <test> [<test>...]' read a LIST OF TESTS, and
           'hwut.remove-choice <test> <choice> [...]' read PAIRS. Every
-          other face -- 'hwut.rename', 'hwut.diff', 'hwut.tell',
+          other face -- 'hwut.rename', 'hwut.run.diff', 'hwut.tell',
           'hwut.accept.interactive' -- reads one word as a test and
           two as a test and one of its choices (E-46, E-47, E-50).
           E-46 exempted this pair explicitly, and the exemption bit:
@@ -2481,8 +2490,8 @@ GRAVEYARD 'os._exit(code)' after the line, skipping teardown entirely
 ----------------------------------------------------------------------------
 E-56  THE READING SHOWS ONE STREAM, SO ONE LINE NUMBER            (2026-09-07)
 ----------------------------------------------------------------------------
-PROBLEM   The reading view ('hwut.diff FILE', and the reading
-          'hwut.play' renders) printed two line-number columns
+PROBLEM   The reading view ('hwut.run.diff FILE', and the reading
+          'hwut.run.play' renders) printed two line-number columns
           carrying the SAME number, and its provenance notes said
           'established at S:2/N:2'. The reading is the stream fed
           against ITSELF -- one association, no second feeder -- so
@@ -2510,7 +2519,7 @@ PROBLEM   'hwut.accept' asked a person to bless a NAME and a block of
           raw text. But a nominal is a promise about how a stream will
           be READ -- which token compare will take as '{numeric}',
           which as '~analogy~', which region under which rule -- and
-          none of that was shown at the asking. 'hwut.play' rendered
+          none of that was shown at the asking. 'hwut.run.play' rendered
           exactly that reading, one door over, and accept did not use
           it. And two flags both meant 'proceed': '--yes' (do not
           ask) and '--force' (overwrite a standing nominal, over the
@@ -2518,7 +2527,7 @@ PROBLEM   'hwut.accept' asked a person to bless a NAME and a block of
           accept."
 
 DECISION  THE ASKING SHOWS THE READING: the candidate fed against
-          itself through compare's one door, rendered as 'hwut.play'
+          itself through compare's one door, rendered as 'hwut.run.play'
           renders it, under the choice's own setup, one line number
           per line (E-56). Anything but 'y' leaves the pole alone and
           says where a PARTIAL acceptance lives, so the person who
@@ -2565,9 +2574,9 @@ DECISION  A WISH WORD, not a face: '--unaccepted' selects every case
               hwut.accept --unaccepted --force    accept what was never
                                                   accepted; touch nothing
                                                   that stands; ask nobody
-              hwut.diff   --unaccepted            what has never been
+              hwut.run.diff   --unaccepted            what has never been
                                                   accepted
-              hwut.wishlist --unaccepted          the list of it
+              hwut.report.wishlist --unaccepted          the list of it
 
           ONE WORD AT TWO SCALES: a case never accepted, and a stretch
           of a nominal marked '##! unaccepted' (compare C-9), are the
@@ -2908,7 +2917,7 @@ DECISION  '[X]' MEANS HANDLED -- what this session has already worked.
 
 COST      'a' (mark all) and 'n' (mark none) are gone -- they were
           operations on a selection that no longer exists; Enter is
-          what 'a' was. 'hwut.diff' shares the menu and does not loop,
+          what 'a' was. 'hwut.run.diff' shares the menu and does not loop,
           so its column of marks is always blank: diff VIEWS, it does
           not handle. Two recorded GOODs moved ('test-accept.sh
           opening', 'test-diff.sh store'), and test-diff.sh's own
@@ -2921,16 +2930,16 @@ GRAVEYARD '[X]' = handled AND the door refusing to re-accept a member
           have left only aspirants, which is 'hwut.accept's door.
 
 
-E-66  '--yes' GOES FROM 'hwut.diff' AND FROM THE USAGE TEXT       (2026-09-13)
+E-66  '--yes' GOES FROM 'hwut.run.diff' AND FROM THE USAGE TEXT       (2026-09-13)
 ----------------------------------------------------------------------------
 PROBLEM   E-57 struck '--yes' from 'hwut.accept', but MEASURED: it was
-          still a live option on 'hwut.diff' ('as --all, for scripts'
+          still a live option on 'hwut.run.diff' ('as --all, for scripts'
           -- two words, one act, the exact defect E-57 named), still
           printed in two of 'hwut.accept's own usage blocks while the
           parser refused it, and still standing in the launchers' GOOD
           for both faces.
 
-DECISION  Gone from 'hwut.diff', REFUSED BY NAME there as accept
+DECISION  Gone from 'hwut.run.diff', REFUSED BY NAME there as accept
           refuses it, so a script that still says it is told rather
           than silently given the default. The two stale usage lines
           in 'accept.py' deleted. 'choose' loses its vestigial
@@ -2944,7 +2953,7 @@ COST      'bin/TEST' was standing at 1 of 2 on this alone; it is 2 of 2
 
 E-67  ONE CHECKLIST, SHARED; ONE CASE PER ASK                     (2026-09-13)
 ----------------------------------------------------------------------------
-PROBLEM   'hwut.accept.interactive' and 'hwut.diff' both offer a list
+PROBLEM   'hwut.accept.interactive' and 'hwut.run.diff' both offer a list
           and both work its cases one after another, and each held its
           own copy of that loop. MEASURED: the copies had already
           drifted -- accept re-entered the menu and marked what it had
@@ -3010,7 +3019,7 @@ PROBLEM   '--yes' names an ANSWER, and on the command line -- before
           everywhere -- output volume, never consent -- so neither may
           be borrowed for it. And MEASURED: '-y' is already bound in
           this tree, to '--side-by-side', on two faces; a person
-          carrying apt's habit who types 'hwut.diff -y' gets two
+          carrying apt's habit who types 'hwut.run.diff -y' gets two
           columns and no warning.
 
 DECISION  '--dont-ask' on every face that asks: 'hwut.rename',
@@ -3191,7 +3200,7 @@ GRAVEYARD Making 'explore_tree' itself a generator -- rejected:
 
 E-72  A REFUSAL ABOUT ONE APPLICATION IS ANSWERED IN ITS CHOICES (2026-09-13)
 ----------------------------------------------------------------------------
-PROBLEM   'hwut.play test-report-details.sh' answered with a list of
+PROBLEM   'hwut.run.play test-report-details.sh' answered with a list of
           RUNS -- "names 7 runs, and this face plays ONE:
           test-report-details.sh bare, test-report-details.sh coverage,
           ..." -- the file name repeated on every entry, and the word
@@ -3199,7 +3208,7 @@ PROBLEM   'hwut.play test-report-details.sh' answered with a list of
 
           Worse, a WRONG CHOICE on a RIGHT application fell into the
           nothing-matched branch and answered with the directory's
-          whole roster: MEASURED, 'hwut.play test-report-details.sh
+          whole roster: MEASURED, 'hwut.run.play test-report-details.sh
           nosuch' listed twenty-one files and never once said what
           choices that file offers. The one thing the person needed
           was the one thing missing.
@@ -3275,7 +3284,7 @@ DECISION  'services/lib/cmdline.py' -- the command line's SECOND
           choice refusals and its directory roster (E-72).
 
 COST      A face is only as helpful as its usage line is complete.
-          MEASURED: 'hwut.wishlist --labl' suggests nothing, because
+          MEASURED: 'hwut.report.wishlist --labl' suggests nothing, because
           that face's usage names only '--directory' -- the wish
           vocabulary it also accepts is documented elsewhere. The gap
           is in the usage line, which is where it should be fixed, and
@@ -3289,9 +3298,9 @@ GRAVEYARD A hand-kept option list per face -- rejected: two lists, one
           of which is never updated.
 
 
-E-74  'hwut.play' SAYS CONFIGURATION, THEN OUTPUT                 (2026-09-13)
+E-74  'hwut.run.play' SAYS CONFIGURATION, THEN OUTPUT                 (2026-09-13)
 ----------------------------------------------------------------------------
-PROBLEM   'hwut.play' opened straight into "SUBJECT -- what enters the
+PROBLEM   'hwut.run.play' opened straight into "SUBJECT -- what enters the
           comparator". Two faults in one banner: the word SUBJECT is
           the comparator's vocabulary, not the author's -- he ran his
           program and wants its OUTPUT -- and the rules that run stood
@@ -3468,13 +3477,13 @@ GRAVEYARD A 'display { colors }' block in 'hwut-root.conf' -- rejected
 
 E-79  THE SCREEN BY DEFAULT; THE FALLBACK SAYS ITS NAME              (2026-09-16)
 ----------------------------------------------------------------------------
-PROBLEM   'hwut.diff' always drew the text display, and
+PROBLEM   'hwut.run.diff' always drew the text display, and
           'hwut.accept.interactive' fell back to it SILENTLY without a
           terminal or without 'prompt_toolkit' -- the person could not
           tell which display they had asked for.
 
 DECISION  Where a person sits at a terminal, both faces open the keyed
-          SCREEN -- 'hwut.diff' in a VIEW mode: the same panes and
+          SCREEN -- 'hwut.run.diff' in a VIEW mode: the same panes and
           element colours, moving, searching, help, 'q'; no act that
           changes the nominal. '--console' asks for the text display
           outright ('--force' implies it). Without '--console', where the
@@ -3518,8 +3527,8 @@ COST      One recorded page, rewritten. The page now names the instant.
 E-81  THE VOCABULARY IS THE PARSER'S                             (2026-09-16)
 ----------------------------------------------------------------------------
 PROBLEM   E-73 read a face's options off its USAGE line, which under-
-          documents ('hwut.wishlist' names one option). And the two faces
-          that parse with 'argparse' ('hwut.diff', 'hwut.accept.interactive')
+          documents ('hwut.report.wishlist' names one option). And the two faces
+          that parse with 'argparse' ('hwut.run.diff', 'hwut.accept.interactive')
           suggested nothing at all: argparse's own error exited the
           process. MEASURED WORSE: argparse's abbreviation made
           '--forc' RUN as '--force'.
@@ -3566,12 +3575,12 @@ COST      None recorded: escapes byte-identical, measured by the same
 
 E-83  THE RAW STREAM FLOWS AS IT IS PRODUCED                      (2026-09-16)
 ----------------------------------------------------------------------------
-PROBLEM   'hwut.play' showed nothing until the program had finished:
+PROBLEM   'hwut.run.play' showed nothing until the program had finished:
           'stage_execute' drained stdout to EOF in blocks.
 
 DECISION  A TAP, 'on_raw_line', at the ONE seam where the raw stream is
           read ('run/core.read_all', 'read_all_timed'), threaded through
-          'Run' and 'provider_of' like the observer. 'hwut.play' feeds it a
+          'Run' and 'provider_of' like the observer. 'hwut.run.play' feeds it a
           writer where a person watches (a terminal, not '--plain' into
           a pipe), under a LIVE banner. What is live is the RAW line:
           the reading follows once the pype has seen the whole stream,
@@ -3603,7 +3612,7 @@ DECISION  ARGPARSE IS THE STANDARD -- it is the standard library's, it
           the wish tokens, one token per option, the positional --
           so the line cannot under-document the parser.
 
-          'hwut.wishlist' is the model, migrated: its usage line now
+          'hwut.report.wishlist' is the model, migrated: its usage line now
           names every word it takes (the gap E-73 measured), and
           '--labl' finds '--label'. THE OTHER EIGHT FOLLOW, one bundle
           each or together: 'accept', 'plan', 'play', 'rename',
@@ -3662,7 +3671,7 @@ COST      MEASURED byte-identical usage for 'plan', 'play', 'run',
           refused', two of 'test-cmdline.py parser'; 'test-cmdline.py
           faces' now reads every face's parser.
 
-          THE CENSUS CAUGHT A CRASH of this migration: 'hwut.play' lost
+          THE CENSUS CAUGHT A CRASH of this migration: 'hwut.run.play' lost
           'did_you_mean' from its imports while '_settled_case' still
           used it -- 'test-play.sh refused' printed a traceback. Fixed,
           and every migrated face swept with pyflakes for undefined
@@ -4113,7 +4122,7 @@ DECISION  'services/renovate.py', 'hwut.renovate [--directory=X]
             - 'numeric', 'whitespace_eqv', 'slash_eqv' in a header
               -> 'tolerance { ... }', ONE block per line however many
               keys the line stated; in the conf's root
-              -> 'default_app { tolerance { ... } }', since the root
+              -> 'app_defaults { tolerance { ... } }', since the root
               carries directory keys only (MEASURED: a root 'tolerance'
               is refused).
           A key the conf already states is never overwritten: the
@@ -4161,7 +4170,7 @@ DECISION  THREE PARTS PER FACE, in this order of dependency:
           outcome becomes a page.
 
           'services/lib/face.py' plus three faces cut to it:
-          'hwut.wishlist', 'hwut.plan', 'hwut.renovate' -- the last
+          'hwut.report.wishlist', 'hwut.plan', 'hwut.renovate' -- the last
           showing that a WRITING face fits the shape too, '--apply'
           being a field of the Request and not a decision of the
           caller's.
@@ -4650,3 +4659,26 @@ COST      A rename and nothing else: the module and the launcher move,
           ignoring whitespace, every one is identical under the
           rename. The bare word had to be swept too -- 'test-launchers.
           sh' lists faces without the 'hwut.' prefix (bin 5c).
+
+----------------------------------------------------------------------------
+E-116  A FACE'S MODES ARE NAMED UNDER IT                         (2026-09-25)
+----------------------------------------------------------------------------
+DECISION  A face that is a MODE of another is named under it, as
+          'hwut.run.cov' and 'hwut.run.stability' already were:
+              'hwut.run.play'            one test, run and shown
+              'hwut.run.diff'            a subject against its nominal
+              'hwut.report.wishlist'     the selection, printed
+              'hwut.report.wallflowers'  the files no carrier speaks for
+          Each lives in 'services/lib/<face>/<mode>.py'. No old name
+          survives as an alias: a name that still works is a name
+          people keep typing.
+
+          'hwut.target' IS 'hwut.execute': it executes, in the tree's
+          directories, either a target a directory binds or -- with
+          '-c "<commands>"' -- shell commands in every TEST DIRECTORY,
+          the directories 'hwut.run' walks. Same lock, same cwd, same
+          report; exit codes informational, as a target's are.
+
+          WALLFLOWERS ARE A MODE OF THE REPORT, not an option of it:
+          what they print is a list of FILES, one per line, piped into
+          'hwut.config.ignore' -- not a page of cases.
