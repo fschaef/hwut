@@ -1,0 +1,157 @@
+==============================================================================
+intend/21-tolerance-editing -- SEE THE TOLERANCE WORK, THEN KEEP IT
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: services/lib/accept (interactive merge), services/lib/viewers/
+            keyed (keymap, driver), engine/compare (configuration, judge)
+STATE:      OPEN. Asked 2026-09-26 (Frank-Rene): "urgent ... it is going
+            to be very important. Let us design that mode together."
+            Four forks below; slice 1 (section 5) stands whatever they
+            decide.
+
+______________________________________________________________________________
+
+1  WHAT IS ASKED, IN FRANK-RENE'S OWN FORMULATION
+
+    "CTRL-<enter> (or propose a better key) => edit tolerance parameters
+    mode. I call it ETPM for now. GOOD side is covered by window with the
+    code for the configuration parameters for the tolerance patterns.
+    Provide all defined parameters + default parameters. In that mode the
+    status bar prints <enter> try <ctrl-enter> back. When the user goes
+    back ask whether a file 'test-app-configuration.conf' shall be
+    written, where the user may find tolerance adaptions."
+
+    "We want the user to be able to see the influence of the tolerance
+    parameter settings immediately. We want him to be able to integrate
+    that configuration immediately into his code. Problem: the code may
+    be of any shape ... so maybe just print the code into a file or at
+    the head of his file for him to adapt."
+
+    "If hwut detects numeric deviations, one might propose numeric
+    tolerances of the deviation +10% or so. When a regular expression is
+    to be defined, the mode might propose a pattern for a float number, a
+    string; it may consider the deviating strings and propose a pattern
+    that includes all those letters around some letters from the
+    surrounding string."
+
+______________________________________________________________________________
+
+2  WHAT ALREADY STANDS
+
+    't'   the TOLERANCE REPORT: analogies, patterns, constraints -- read
+          only. ETPM is this report made editable.
+    'z'   RE-ALIGN: ask compare again. ETPM's "try" is 'z' with a trial
+          configuration instead of the page's.
+    'e'   the GOOD in $EDITOR.
+
+    The tolerance keys a page can state ('tolerance { }', validator):
+    numeric_ratio, whitespace, slash, regions, eq_pattern, nothing,
+    analogy, constraints, comment. Compare owns every default
+    ('ConfigCompare' mirrors 'ConfigurationPatternFinder').
+
+    WHERE A PAGE'S TOLERANCE CAN STAND TODAY (test-namespace.py): its
+    '@hwut { }' header, a choice of it, a directory's 'hwut.conf' --
+    'app_defaults' or one 'apps' entry -- and the root's 'app_defaults'.
+    A file with a header AND an 'apps' entry is a directory error.
+
+______________________________________________________________________________
+
+3  OPEN -- four forks, each with a recommendation
+
+o-1  THE KEY.
+
+     Ctrl-Enter cannot be read: a terminal sends Enter's own byte for
+     it (or Ctrl-J, Enter again). 'Enter' is taken (TAKE_RANGE).
+
+        (a) 'T'   the editable sibling of 't', which is the report
+                  <- recommended
+        (b) 'c-t'
+        (c) Ctrl-Enter where the terminal distinguishes it -- nowhere
+            reliably
+
+o-2  THE KEYS INSIDE ETPM. The pane is a TEXT EDITOR: Enter must insert a
+     line, so "<enter> try" cannot be Enter there.
+
+        (a) F5 try, Esc back   <- recommended: F5 is "run" in most IDEs
+        (b) Alt-Enter try (a terminal sends ESC CR: readable), Esc back
+        (c) Ctrl-S try, Ctrl-Q back
+
+o-3  WHERE THE KEPT TOLERANCE GOES, AND WHETHER HWUT READS IT.
+     THE DECIDING QUESTION: is ETPM's result a proposal the author moves
+     into his page, or a place hwut itself reads?
+
+        (a) A PROPOSAL FILE hwut does not read: on leaving, the block is
+            written to 'TMP/<source>.tolerance.conf' (TMP: deletable,
+            never a wallflower) and its path printed with the one line
+            that says where to paste it (the header's 'tolerance { }').
+            <- recommended for slice 2: no new carrier, no namespace
+            change, works for every language because hwut never edits
+            the author's file.
+        (b) A SIDECAR hwut READS ('<source>.tolerance.conf' beside the
+            source): immediate, but a NEW CARRIER of test parameters --
+            it needs a place in the namespace, a precedence against the
+            header, and a rule for a header that states the same key.
+        (c) hwut WRITES into the author's 'hwut.conf' 'apps' entry: only
+            possible where the test has no header (both is a directory
+            error) -- so not for most pages.
+
+o-4  WHAT "TRY" SHOWS.
+
+        (a) the case re-judged AND re-aligned under the trial settings,
+            the verdict line saying EQUIVALENT or DIFFERENT, and the
+            elements the trial now tolerates marked as such   <- recommended
+        (b) the verdict only
+
+______________________________________________________________________________
+
+4  PROPOSALS (what the pane is filled with)
+
+    The pane opens with EVERY tolerance key: those the page states, with
+    their values, and the rest with compare's default, each marked
+    '# default'. Below them, COMMENTED PROPOSALS drawn from this case's
+    differences -- uncommented by the author, never applied unasked:
+
+    NUMERIC. Every numeric pair the alignment calls different gives a
+    relative deviation |s - n| / |n|. Proposed:
+        numeric_ratio = <largest deviation> * 1.1     # "+10%"
+    with the pair that set it named beside it.
+
+    EQUIVALENCE PATTERNS. The differing tokens of each substituted pair
+    are classified, first match wins:
+        float         [-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?
+        integer       [-+]?[0-9]+
+        hex           0x[0-9a-fA-F]+
+        date / time   [0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}:[0-9]{2}(:[0-9]{2})?
+        path          (/[^ /]+)+
+        identifier    [A-Za-z_][A-Za-z0-9_]*
+    Where none fits, the pattern is BUILT from the deviating strings: the
+    context both sides share before and after them stays literal (a few
+    characters, escaped), and the varying part becomes the class of the
+    characters seen in it, with the lengths seen:
+        subject 'id=ab12;'  nominal 'id=zz7;'  ->  'id=[0-9abz]{3,4};'
+    A proposal is shown only if it takes every observed variant AND the
+    nominal's own text -- checked by compiling it before it is shown.
+
+    WHITESPACE / NOTHING. Differences that are all blanks propose
+    'whitespace = true'; that are all 'visible nothing' words propose the
+    'nothing' list they need.
+
+______________________________________________________________________________
+
+5  THE FIRST SLICE -- independent of every fork
+
+    A PURE, TESTABLE CORE in engine/compare, no screen:
+      a. tolerance_text(parameters)        every key, value or default,
+                                           as the pane's text
+      b. proposal_list(alignment)          the proposals of section 4,
+                                           each checked before it stands
+      c. trial(text, subject, nominal)     parse the pane's text, judge
+                                           and align under it; a text
+                                           that does not parse answers
+                                           with the fault, not a crash
+    Each gets its own test page. The screen (slice 2) then only wires
+    keys, the pane and the leaving question to these three.
+
+ENTRY CONDITION for slice 2: o-1 .. o-4 ruled.
