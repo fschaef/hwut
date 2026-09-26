@@ -1,0 +1,25 @@
+--- every test directory, from its own cwd
+:: a/TEST: basename $(dirname $PWD); ls [exit 0]
+a
+TMP
+test-x.sh
+:: b/c/TEST: basename $(dirname $PWD); ls [exit 0]
+c
+TMP
+test-x.sh
+directories: 2  executed: 2  skipped: 0
+STATUS: 0
+--- '--dir' narrows
+:: b/c/TEST: echo in $(basename $(dirname $PWD)) [exit 0]
+in c
+directories: 1  executed: 1  skipped: 0
+STATUS: 0
+--- an exit code informs, it does not decide
+:: a/TEST: exit 7 [exit 7]
+:: b/c/TEST: exit 7 [exit 7]
+directories: 2  executed: 2  skipped: 0
+STATUS: 0
+--- a tree without tests
+no directory below 'tree/no-tests-here' holds any test.
+STATUS: 3
+<hwut-end>

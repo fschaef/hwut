@@ -1,0 +1,24 @@
+--- the wallflowers, as the report finds them
+STATUS: 0
+    a/TEST/bench.log
+    a/TEST/helper.py
+    b/TEST/bench.log
+    b/TEST/helper.py
+--- piped into the face that settles them
+STATUS: 0
+STDOUT {
+    a/TEST/hwut.conf:  ignore bench.log helper.py
+    b/TEST/hwut.conf:  ignore bench.log helper.py
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+--- none left
+STATUS: 3
+--- a wish word is not its business
+REFUSED: 'hwut.report.wallflowers' does not take '--fail'
+usage: hwut.report.wallflowers [--directory=<path>] [--help]
+STATUS: 2
+<hwut-end>

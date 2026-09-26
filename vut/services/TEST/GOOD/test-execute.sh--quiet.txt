@@ -1,0 +1,5 @@
+
+--- '-q': no per-directory recording, the summary alone ---
+directories: 2  executed: 2  skipped: 0
+[status 0]
+<hwut-end>

@@ -1,0 +1,17 @@
+
+--- no target named ---
+REFUSED: no target named, and no '-c'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+[status 2]
+
+--- an unknown option before the target name ---
+REFUSED: unknown option '--bogus'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+[status 2]
+
+--- no directory binds any target: EMPTY ---
+no directory below '.' binds any target.
+[status 3]
+<hwut-end>

@@ -1,0 +1,12 @@
+--- --dir a
+    ./a/TEST/test-x.sh
+    ./a/keep/TEST/test-x.sh
+--- --exclude-dir a
+    ./b/TEST/test-x.sh
+--- --exclude-dir a --dir a/keep
+    ./a/keep/TEST/test-x.sh
+    ./b/TEST/test-x.sh
+--- --dir a/keep --exclude-dir a
+--- --dir a --exclude-dir keep
+    ./a/TEST/test-x.sh
+<hwut-end>

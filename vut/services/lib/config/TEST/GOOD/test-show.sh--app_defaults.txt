@@ -1,0 +1,9 @@
+--- a: the root's app_defaults alone
+    numeric_ratio = 0.2           # hwut-root.conf:3
+    slash = true                  # default
+    STATUS: 0
+--- b: its own app_defaults over the root's
+    numeric_ratio = 0.2           # hwut-root.conf:3
+    slash = false                 # hwut.conf:3
+    STATUS: 0
+<hwut-end>

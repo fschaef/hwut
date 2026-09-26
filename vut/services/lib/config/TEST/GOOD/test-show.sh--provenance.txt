@@ -1,0 +1,5 @@
+--- b, each value naming its file
+    numeric_ratio = 0.2           # hwut-root.conf:3
+    slash = false                 # hwut.conf:3
+    STATUS: 0
+<hwut-end>

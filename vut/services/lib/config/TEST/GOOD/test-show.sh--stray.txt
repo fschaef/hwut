@@ -1,0 +1,11 @@
+--- a test parameter directly under 'hwut { }' in a conf
+STATUS: 1
+hwut.conf:2:5: VOCABULARY: 'tolerance' at the root of hwut.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+test-x.sh {
+}
+--- the same in the root conf
+STATUS: 1
+hwut-root.conf:2:5: VOCABULARY: 'tolerance' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+test-x.sh {
+}
+<hwut-end>

@@ -1,0 +1,26 @@
+key                      root      root.def  dir       dir.def   dir.app   header    choice  
+build                    -         +         -         +         +         +         +       
+caps                     -         +         -         +         +         +         +       
+pype                     -         +         -         +         +         +         +       
+tolerance                -         +         -         +         +         +         +       
+diff_display_parameters  -         +         -         +         +         +         +       
+same                     -         +         -         +         +         +         -       
+interactive              -         +         -         +         +         +         -       
+execute                  -         +         -         +         +         +         +       
+output                   -         +         -         +         +         +         +       
+title                    +         -         +         -         +         +         -       
+language                 -         -         -         -         +         +         -       
+choices                  -         -         -         -         +         +         -       
+on_entry                 -         -         +         -         -         -         -       
+on_exit                  -         -         +         -         -         -         -       
+test_directory           +         -         +         -         -         -         -       
+ignore                   +         -         +         -         -         -         -       
+collision                -         -         +         -         -         -         -       
+dependency               -         -         +         -         -         -         -       
+target                   -         -         +         -         -         -         -       
+app_defaults             +         -         +         -         -         -         -       
+apps                     -         -         +         -         -         -         -       
+language-setup           +         -         -         -         -         -         -       
+variant_group            +         -         -         -         -         -         -       
+colors                   -         -         -         -         -         -         -       
+<hwut-end>

@@ -1,0 +1,11 @@
+
+--- the target over the tree: exit codes reported, never deciding ---
+:: alpha: ./clean.sh [exit 3]
+alpha cleaned: 
+:: beta/TEST: ./tidy.sh [exit 0]
+beta tidied
+-- stderr --
+beta grumbles
+directories: 2  executed: 2  skipped: 0
+[status 0]
+<hwut-end>

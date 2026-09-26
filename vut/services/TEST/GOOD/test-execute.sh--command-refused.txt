@@ -1,0 +1,21 @@
+REFUSED: '-c' stands without commands
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+STATUS: 2
+REFUSED: '-c' runs its commands and nothing follows it: 'extra'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+STATUS: 2
+REFUSED: '+x' belongs to a target's script, not to '-c'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+STATUS: 2
+REFUSED: '--default' belongs to a target's script, not to '-c'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+STATUS: 2
+REFUSED: no target named, and no '-c'
+usage: hwut.execute [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] -c "<commands>"
+STATUS: 2
+<hwut-end>
