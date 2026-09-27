@@ -1,0 +1,10 @@
+-- the engine of 'diff': the steps executed
+             build     compiled  ran  
+   absent    none      -         yes   
+   absent    make      no        yes   
+   present   none      -         no    
+   present   make      no        no    
+   source    none      -         yes   
+   source    make      yes       yes   
+SUCCESS
+<hwut-end>

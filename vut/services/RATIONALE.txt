@@ -1612,7 +1612,8 @@ AMENDED (2026-09-05, the criterion). E-40's sweep found "the faces that
                      be -- so 'the recording is current' is a claim a
                      producer cannot verify, and it was found replaying
                      a stale OUT/ against a fresh GOOD/.
-            REFRESH  'hwut.tell', 'hwut.accept'. PROVIDE where the
+            REFRESH  'hwut.tell', 'hwut.accept', the merge and
+                     'hwut.run.diff' (E-122). PROVIDE where the
                      recording is older than what it was recorded
                      from, RECORDED where it is not; where it runs, it
                      runs through the session. tell's header says which
@@ -1620,7 +1621,7 @@ AMENDED (2026-09-05, the criterion). E-40's sweep found "the faces that
                      (A.2) ...'); accept prints 'RUN:' per case it ran.
                      accept's '--force-run' runs every selected case
                      regardless -- the same word 'hwut.run' has.
-            READ     merge, stability, replay, report. Never execute.
+            READ     stability, replay, report. Never execute.
 
           THE RE-RUN TRIGGER. Freshness is a comparison of modification
           times, so 'hwut.sanitize --apply' TOUCHES every test
@@ -4860,3 +4861,45 @@ DECISION  RULED (Frank-Rene): "normal mode: display <F5>=tolerance edit";
 
 COST      <F6> joins 'c-e'; <Esc> in an editing pane waits 'prompt_toolkit''s
           0.5 s for a following byte, as the search line's does.
+
+----------------------------------------------------------------------------
+E-122  EVERY FACE THAT WORKS ON A CANDIDATE REFRESHES IT, IN ONE PLACE (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   Reported (Frank-Rene): "I changed the content of regression-1.py
+          and run 'hwut.accept.interactive regression-1.py amnesia'. the
+          fact that I changed the source file, shall trigger the
+          reproduction of the output file. it did not. something is wrong
+          with the provisioning". MEASURED: 'services/_cases.py
+          differing_keys' read the recorded candidate directly; it asked
+          the provision channel only where neither candidate nor nominal
+          stood (a first acceptance, E-60). The merge judged the old
+          candidate and answered "nothing to accept". And 'hwut.accept',
+          which did ask, asked WITHOUT BUILDING and without a built
+          target: a built application answered '(B.1) not built', was
+          never rebuilt, and its OLD binary ran -- every time, current or
+          not (measured by 'test-refresh.py' against the old step).
+
+DECISION  RULED (Frank-Rene): the merge refreshes; "actually,
+          hwut.run.diff, of course needs to comply, too."
+          ONE STEP, 'operations/session.py refresh': a built application
+          is BUILT first -- the build tool decides what is out of date
+          (B.1) -- and its target is what the decision weighs; then
+          'provider_of(refresh=True)': nothing recorded, or the source
+          (the built target) younger than the recording, RUNS through the
+          session, held, recorded and booked; a current recording does not
+          run. Its users, each face's ENGINE: 'accept.refresh_cases',
+          'interactive.keys_of', 'diff.keys_of' (the latter two through
+          'differing_keys(refresh_f=True)'); each prints one 'RUN:' line
+          per case it ran. SUPERSEDES E-40's placing of the merge among
+          the READERS; 'hwut.run.diff' is no reader either.
+          'services/TEST/test-refresh.py' drives each engine through
+          three circumstances -- no candidate, a current one, an edited
+          source -- for a script and for a program 'make' builds, and
+          observes ONLY the steps executed, by the logs they leave:
+                          no build     build
+              absent      run          compiled no, run
+              present     -            compiled no, no run
+              source      run          compiled, run
+
+COST      Every refreshing face now invokes the build tool for a built
+          application, even where it compiles nothing.

@@ -1,0 +1,12 @@
+--- the source edited, NO run: the candidate is older than it
+STATUS: 0
+    RUN: test-two.sh a   (A.1) '<tree>/test-two.sh' is younger than the recording
+    S    1      | [edited ]choice a
+    N         1 | choice a
+--- the candidate is what the edited source prints
+    edited choice a
+    <hwut-end>
+--- again, nothing edited: no run, the same difference
+STATUS: 0
+    RUN lines: 0
+<hwut-end>

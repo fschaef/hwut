@@ -68,10 +68,8 @@ from   vut.engine.orchestrator.plan.wish               import (HELP as WISH_HELP
                                                                WishError,
                                                                parse_wish,
                                                                with_targets)
-from   vut.engine.operations                           import subject_provision
 from   vut.engine.compare.api                          import Configuration
-from   vut.engine.operations.session                   import (run_test,
-                                                               Request)
+from   vut.engine.operations.session                   import refresh
 from   vut.engine.orchestrator.run.adapter             import \
                                                        test_configuration_of
 from   vut.auxiliary.directory_mutex                   import DirectoryBusy
@@ -1192,6 +1190,39 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     return worst
 
 
+def refresh_cases(directory, result, bookkeeper, case_sequence,
+                  force_run_f, write, brief_f=False):
+    """
+    RETURN: None, every case's candidate is current -- refreshed where
+                  it was not.
+            E_ExitCode.REFUSED, the directory is held by another run.
+
+    ACCEPT'S ENGINE FOR PROVISION: 'session.refresh' per case (E-40,
+    E-122) -- build where the application is built, run where the
+    recording is not current -- and one 'RUN:' line per case it ran,
+    unless 'brief_f' (a column of verdicts is wanted, and a line per
+    refreshed case is noise between the reader and his answer).
+    '--force-run' ('force_run_f') runs every case regardless.
+    """
+    language_setup = result.app_set.directory_spec.language_setup
+    for case in case_sequence:
+        configuration = test_configuration_of(
+                            result.app_set.app_db[case.source_file],
+                            directory, language_setup=language_setup)
+        try:
+            done = asyncio.run(refresh(configuration, case.choice, bookkeeper,
+                                       force_run=force_run_f))
+        except DirectoryBusy as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
+        if "run" in done.step_tuple and not brief_f:
+            write("RUN: %s%s   %s" % (case.source_file,
+                                      "" if case.choice is None
+                                      else " " + case.choice,
+                                      done.decision.because))
+    return None
+
+
 def accept_one(directory, result, bookkeeper, case_sequence,
                force_f, force_run_f, stderr_tol_f, propose_n,
                write, read_line, put=None, brief_list=None,
@@ -1222,35 +1253,12 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     #  reader to judge it; a run is the reader's next act, not this
     #  one's. 'hwut.run' refreshes, 'hwut.accept' refreshes before it
     #  blesses -- proposing is neither.
-    language_setup = result.app_set.directory_spec.language_setup
-    for case in case_sequence if propose_n is None else []:
-        configuration = test_configuration_of(
-                            result.app_set.app_db[case.source_file],
-                            directory, language_setup=language_setup)
-        _, decision = subject_provision.provider_of(configuration, store,
-                                                    case.choice,
-                                                    refresh=True,
-                                                    force_run=force_run_f)
-        if decision.what is not subject_provision.E_Decision.PROVIDE:
-            continue
-        #  THE REFRESH IS NOT THE REPORT. Where a column of verdicts is
-        #  wanted ('hwut.accept.apply'), a line per case saying it had
-        #  to be re-run first is noise between the reader and his
-        #  answer: the verdict says what became of the case, and that
-        #  is what he asked.
-        if brief_list is None:
-            write("RUN: %s%s   %s" % (case.source_file,
-                                      "" if case.choice is None
-                                      else " " + case.choice,
-                                      decision.because))
-        try:
-            asyncio.run(run_test(configuration,
-                                 Request(choice=case.choice, record=True),
-                                 bookkeeper=bookkeeper))
-        except DirectoryBusy as error:
-            write("REFUSED: %s" % error)
-            return E_ExitCode.REFUSED
+    if propose_n is None:
+        refused = refresh_cases(directory, result, bookkeeper, case_sequence,
+                                force_run_f, write, brief_f=brief_list is not None)
+        if refused is not None: return refused
 
+    language_setup = result.app_set.directory_spec.language_setup
     if propose_n is not None:
         return propose(store, case_sequence, directory, propose_n, write,
                        result, language_setup, put=put)

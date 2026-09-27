@@ -189,6 +189,61 @@ async def run_test(configuration, request=None, bookkeeper=None):
         return await run_test_held(configuration, request, store=store)
 
 
+@dataclass(frozen=True)
+class Refresh:
+    """What 'refresh' did for one (test, choice): the provisioning steps
+    it EXECUTED, in order -- 'build', 'run' -- and the decision that
+    chose whether to run."""
+    step_tuple: tuple
+    decision:   object
+
+
+async def refresh(configuration, choice_name, bookkeeper, force_run=False):
+    """
+    RETURN: Refresh, the steps executed to make the recorded candidate of
+            (test, choice) CURRENT, and the decision.
+
+    THE REFRESH INTENT (services E-40, E-122), in ONE place -- the faces
+    that work on a candidate ('hwut.accept', 'hwut.accept.interactive',
+    'hwut.run.diff') all come here:
+
+        (B.1)  a BUILT application is built first: the build TOOL decides
+               whether anything is out of date (provision does not
+               second-guess it); the built target is what the decision
+               then weighs
+        (0), (A.1), (B.2)
+               nothing recorded, or the source -- the built target, for
+               a built application -- younger than the recording: RUN,
+               through the session, held, recorded and booked
+        (A.2), (B.2) otherwise
+               the recording is current: nothing runs
+
+    MEASURED before this function: the refreshing faces called the
+    channel without building and without a built target, so a built
+    application was never rebuilt -- (B.1) answered 'not built' and the
+    OLD binary ran -- and ran every time, current or not.
+    """
+    store      = store_of(configuration, bookkeeper)
+    step_list  = []
+    built_path = None
+    if configuration.build is not None:
+        from .build_action import build
+        outcome = await build(configuration)
+        step_list.append("build")
+        target_list = list(configuration.build.target_list)
+        if outcome.succeeded and target_list:
+            built_path = configuration.build_directory / str(target_list[0])
+    _, decision = subject_provision.provider_of(configuration, store,
+                                                choice_name, refresh=True,
+                                                force_run=force_run,
+                                                built_path=built_path)
+    if decision.what is subject_provision.E_Decision.PROVIDE:
+        await run_test(configuration, Request(choice=choice_name, record=True),
+                       bookkeeper=bookkeeper)
+        step_list.append("run")
+    return Refresh(tuple(step_list), decision)
+
+
 async def run_test_held(configuration, request=None, store=None,
                         provision=None, bookkeeper=None, run_id=None):
     """

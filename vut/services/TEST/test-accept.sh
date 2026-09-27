@@ -4,8 +4,8 @@
 # @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
 #     choices    = ["ask", "bless", "first", "labels", "merge", "onedoor",
-#                   "opening", "stderr", "sugar", "token", "interactive",
-#                   "unaccepted"]
+#                   "opening", "refresh", "stderr", "sugar", "token",
+#                   "interactive", "unaccepted"]
 #     #  the run's TOTAL is wall time since the face began: this machine's,
 #     #  not the page's subject
 #     tolerance { eq_pattern = [", [0-9]+\\.[0-9]+ \\[sec\\] total"] }
@@ -25,6 +25,9 @@
 #     sugar      the short form desugars into the wish's own '--glob'
 #     ask        the interactive question shows the CANDIDATE and
 #                anything but 'y' leaves the pole alone
+#     refresh    E-122: the merge REFRESHES -- a source edited after its
+#                candidate was recorded is run again before it is judged,
+#                with one 'RUN:' line; a current candidate is not
 #
 # The wall clock is masked; fixture paths are relative.
 # ---------------------------------------------------------------------------
@@ -38,7 +41,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses.;"
-        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted, first, opening, onedoor;"
+        echo "CHOICES: bless, merge, stderr, sugar, labels, ask, token, interactive, unaccepted, first, opening, onedoor, refresh;"
         exit 0 ;;
 esac
 
@@ -217,6 +220,29 @@ interactive)
         | grep -E '\[OK\]|\[FAIL\]' | sed 's/ \.\+/ /; s/^/    /'
     echo "--- the book notes the acceptance of 'a' only"
     grep -c 'test-two.sh;a;' tree/suite/TEST/GOOD/book.csv | sed 's/^/    a: /'
+    ;;
+
+refresh)
+    #  THE MERGE WORKS ON THE CANDIDATE, SO IT REFRESHES IT (E-122).
+    #  Reported: 'regression-1.py' edited, then 'hwut.accept.interactive
+    #  regression-1.py amnesia' judged the OLD candidate and found nothing.
+    fixture
+    $ACCEPT --directory=tree/suite/TEST --force > /dev/null
+    INTERACTIVE="python3 -m vut.services.lib.accept.interactive"
+    echo "--- the source edited, NO run: the candidate is older than it"
+    #  THE RECORDING MADE OLDER than any edit could be, so mtime's
+    #  granularity cannot decide the page.
+    touch -d "-60 seconds" tree/suite/TEST/OUT/test-two.sh--a.txt
+    sed -i 's/echo "choice \$1"/echo "edited choice $1"/' tree/suite/TEST/test-two.sh
+    printf 'q\n' | $INTERACTIVE --directory=tree/suite/TEST --console test-two.sh a \
+        > out.txt 2> ui.txt; echo "STATUS: $?"
+    grep -E '^RUN:|^[SN] ' ui.txt | sed "s|'[^']*/test-two.sh'|'<tree>/test-two.sh'|; s/^/    /"
+    echo "--- the candidate is what the edited source prints"
+    sed 's/^/    /' tree/suite/TEST/OUT/test-two.sh--a.txt
+    echo "--- again, nothing edited: no run, the same difference"
+    printf 'q\n' | $INTERACTIVE --directory=tree/suite/TEST --console test-two.sh a \
+        > out.txt 2> ui.txt; echo "STATUS: $?"
+    grep -cE '^RUN:' ui.txt | sed 's/^/    RUN lines: /'
     ;;
 
 first)

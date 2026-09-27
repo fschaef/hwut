@@ -31,7 +31,10 @@ DESCRIPTION
 
        WHAT IS SELECTED is measured, not remembered ('services/
        _cases.py'): compare's engine judges each candidate against
-       its nominal under the choice's own setup, now. More than one
+       its nominal under the choice's own setup, now -- and the
+       candidate is REFRESHED first, as 'hwut.accept' refreshes: one
+       older than its test's source is run again, one 'RUN:' line
+       saying so (E-122). More than one
        differing case: the CHECKLIST first; '--all'/'--force' skip it.
        THE CHECKLIST IS RE-ENTERED after every round and its '[X]'
        says HANDLED -- what this session has already worked, and will
@@ -114,6 +117,21 @@ from   vut.services._core                     import (add_setup_arguments,
                                                       setup_from_arguments)
 from   vut.services._exit                     import E_ExitCode
 
+def keys_of(selected, write):
+    """
+    RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
+            'differing_keys' with the candidates REFRESHED first -- built
+            where the application is built, run where the recording is
+            not current ('session.refresh'; E-122) -- and how many were
+            judged.
+
+    A face that shows or merges a candidate works on it, so it must hold
+    a current one: a stale candidate shown as the run's is the lie E-40
+    forbids.
+    """
+    return differing_keys(selected, write, refresh_f=True)
+
+
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
          "[--directory=<path>] [--all] [--force] [--console] [-y] "
          "[--width N] [--plain] [--editor E] [--stderr-tol]")
@@ -182,7 +200,7 @@ def main(argv=None):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n = differing_keys(selected, err)
+    key_list, judged_n = keys_of(selected, err)
     if not key_list:
         err("nothing to accept: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)

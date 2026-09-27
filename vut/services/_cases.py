@@ -151,7 +151,7 @@ class DifferingKey:
                else "%s/%s" % (self.where, self.name)
 
 
-def differing_keys(selected, write):
+def differing_keys(selected, write, refresh_f=False):
     """
     RETURN: [0] list[DifferingKey], every selected (test, choice) whose
                 stdout candidate stands, whose nominal stands, and
@@ -165,6 +165,13 @@ def differing_keys(selected, write):
     A case without a candidate (never run) or without a nominal
     (never accepted) is not a difference to show; it is skipped, and
     the skip is said once per kind.
+
+    'refresh_f': the caller WORKS on the candidate -- the merge accepts
+    what it shows -- so it REFRESHES as 'hwut.accept' does (E-40's
+    REFRESH intent): a recording older than the test's source is run
+    again, through the session, before it is judged, and one 'RUN:' line
+    says so. Without it, only a first acceptance's missing candidate is
+    made.
     """
     from vut.engine.compare.api import is_equivalent, Configuration
     key_list  = []
@@ -188,24 +195,29 @@ def differing_keys(selected, write):
             test, choice = case.source_file, case.choice
             out_path  = store.bookkeeper.candidate_path(test, choice, "stdout")
             good_path = store.bookkeeper.nominal_path(test, choice, "stdout")
-            if not out_path.exists() and not good_path.exists():
+            if refresh_f or (not out_path.exists() and not good_path.exists()):
                 #  A FIRST ACCEPTANCE HAS NO CANDIDATE YET: 'hwut.run'
                 #  refuses to run what nobody accepted, so the candidate
                 #  is made HERE, the way 'hwut.accept' refreshes (E-40)
                 #  -- through provision, held, recorded and booked as a
-                #  run books it.
+                #  run books it. UNDER 'refresh_f' EVERY CASE IS ASKED:
+                #  a candidate older than its source is made again
+                #  (E-122) -- MEASURED: the merge judged the old candidate
+                #  of an edited 'regression-1.py' and found nothing to do.
+                #  THE STEPS are 'session.refresh''s, shared with accept:
+                #  build where built, run where not current.
                 configuration = config_db.get(test)
                 if configuration is not None:
-                    from vut.engine.operations         import subject_provision
-                    from vut.engine.operations.session import run_test, Request
+                    from vut.engine.operations.session import refresh
+                    had_f = out_path.exists()
                     try:
-                        _, decision = subject_provision.provider_of(
-                                          configuration, store, choice,
-                                          refresh=True, force_run=False)
-                        if decision.what is subject_provision.E_Decision.PROVIDE:
-                            asyncio.run(run_test(configuration,
-                                                 Request(choice=choice, record=True),
-                                                 bookkeeper=store.bookkeeper))
+                        done = asyncio.run(refresh(configuration, choice,
+                                                   store.bookkeeper))
+                        if "run" in done.step_tuple and had_f:
+                            write("RUN: %s%s   %s"
+                                  % (test, "" if choice is None
+                                     else " " + choice,
+                                     done.decision.because))
                     except Exception as error:                 # noqa: BLE001
                         #  SAID, NOT SWALLOWED: the case is counted below
                         #  as never run, and here is why.

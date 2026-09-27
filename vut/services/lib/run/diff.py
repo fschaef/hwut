@@ -272,7 +272,7 @@ def _main(argv):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n = differing_keys(selected, err)
+    key_list, judged_n = keys_of(selected, err)
     if not key_list:
         err("nothing differs: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)
@@ -296,6 +296,21 @@ def _main(argv):
         err("NOTE: nothing shown")
         return E_ExitCode.OK
     return E_ExitCode.FAULT
+
+
+def keys_of(selected, write):
+    """
+    RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
+            'differing_keys' with the candidates REFRESHED first -- built
+            where the application is built, run where the recording is
+            not current ('session.refresh'; E-122) -- and how many were
+            judged.
+
+    A face that shows or merges a candidate works on it, so it must hold
+    a current one: a stale candidate shown as the run's is the lie E-40
+    forbids.
+    """
+    return differing_keys(selected, write, refresh_f=True)
 
 
 USAGE = ("usage: hwut.run.diff SUBJECT NOMINAL | FILE | [<wish>] "
