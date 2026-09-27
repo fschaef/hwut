@@ -78,19 +78,17 @@ def _amended(text, name_list):
                      the other directory keys where it does not.
               None, where the file holds no 'hwut { ... }' block to
                      extend, so the caller may refuse rather than guess.
+
+    The amending is 'exploration/amend.py''s, shared with every face that
+    writes into an author's file.
     """
+    from vut.engine.orchestrator.exploration import amend
     ignored = _ignored_set_of(text)
     fresh   = [name for name in name_list if name not in ignored]
     if not fresh: return text
-    start = text.find("ignore")
-    if start >= 0:
-        close_i = text.find("]", text.find("[", start))
-        addition = "".join(', "%s"' % name for name in fresh)
-        return text[:close_i] + addition + text[close_i:]
-    open_i = text.find("{", text.find("hwut"))
-    if open_i < 0: return None
-    block = "\n    ignore = [%s]" % ", ".join('"%s"' % n for n in fresh)
-    return text[:open_i + 1] + block + text[open_i + 1:]
+    container = amend.conf_container(text)
+    if container is None: return None
+    return amend.list_extend(text, container, "ignore", fresh)
 
 
 def do(path_list, ask_f=True, write=print, ask=input):

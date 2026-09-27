@@ -4703,7 +4703,8 @@ DECISION  RULED (Frank-Rene, intend 21): "<e> shall open the nano-like
           'e': GOOD is covered by an editable text; the keymap yields to
           it as it yields to the search line. <F5>: a changed text is
           the nominal and the round ends as a REALIGN; an unchanged one
-          closes. 'c-e': $EDITOR, as 'e' was. In the editing pane
+          closes; <Esc> closes discarding what was typed. <F6> ('c-e'):
+          $EDITOR, as 'e' was. In the editing pane
           'c-z'/'c-y' are the TEXT's undo and redo; in the merge 'u'/
           'c-z' and 'r'/'c-y'. 'c-c' in an editing pane means nothing
           ("drop <c-c>"). The line-based fallback keeps 'e' = $EDITOR.
@@ -4744,8 +4745,8 @@ DECISION  RULED (Frank-Rene, intend 21): "we maintain the configuration
           ('port.py') counts that as progress and hands it to the
           caller's 'align' as a third argument from then on; it does
           not travel in the envelope. <F5> also opens the pane from the
-          't' report. 'c-e' edits the pane in $EDITOR on a temporary
-          file. IN THE PANE THE LOWER LINE STANDS: a key stated twice,
+          't' report. <F6> ('c-e') edits the pane in $EDITOR on a
+          temporary file; <Esc> closes it discarding what was typed. IN THE PANE THE LOWER LINE STANDS: a key stated twice,
           each whole on its line, keeps the later -- so an uncommented
           proposal replaces the key above it, where the header's rule
           would make it a fault.
@@ -4769,17 +4770,26 @@ DECISION  RULED (Frank-Rene, intend 21): "upon exit, if changed
           the other config is located. (3) omit it." "yes ask write or
           cancel changes upon cancellation."
           'services/lib/accept/keep.py', asked by 'run_sessions' once a
-          key is decided. After a commit (1)/(2)/(3); otherwise (1)/(3).
-          Nobody to answer (stdin closed): (1), which touches nothing of
-          the author's. (2) replaces the header's own top-level
-          'tolerance' scope or adds one line before its closing brace,
-          in the header's lead; every other byte stays. It refuses by
-          name and writes (1) instead where the file has no header,
-          where the choice states its own 'tolerance', or where the
-          header read back by 'reader.read_header' does not state what
-          was meant. Written: every key not compare's default, and every
-          key that differs from the test's own. (3) after a commit
-          prints a NOTE: the next run judges under the test's own.
+          key is decided. RULED too: "when quitting, pretty print the
+          changed settings (so users may copy them) on the screen. then
+          provide the menu with [] brackets around numbers [...]
+          consistent with all menus on the command line [...] [1] ...
+          store, [2] ... enter, <enter> omit". The scope is printed one
+          key a line, then the menu in the checklist's idiom ('lib/
+          checklist.py'): '[1]' TMP/<test>--<choice>.tolerance.conf,
+          '[2]' into the header (after a commit only), '<enter>' omit;
+          prompt '> '; an answer that picks nothing is said and asked
+          again. Nobody to answer (stdin closed): [1], which touches
+          nothing of the author's. [2] is 'exploration/amend.py''s
+          (exploration X-AMEND): the header's own top-level 'tolerance'
+          replaced or a line added in the header's own decoration --
+          any language (X-DECORATION); every other byte stays. It
+          refuses by name and writes [1] instead where the file has no
+          header, where the choice states its own 'tolerance', or where
+          the header read back by 'reader.read_header' does not state
+          what was meant. Written: every key not compare's default, and
+          every key that differs from the test's own. <enter> after a
+          commit prints a NOTE: the next run judges under the test's own.
           E-48's GRAVEYARD ("rewriting the '@hwut' block") IS LIFTED FOR
           THIS ONE SCOPE by the ruling; 'hwut.renovate --apply' already
           rewrote tolerance keys in headers (B-7).
@@ -4795,19 +4805,58 @@ DECISION  RULED (Frank-Rene): "we need a tolerance pattern generator
           out. this does not have to be perfect, just some idea, that
           the user might pick up."
           'services/lib/viewers/keyed/proposal.py', pure: this round's
-          line pairs in, commented 'tolerance' lines out. Words are
-          read, not cells -- a line compare did not split arrives as
-          ONE cell. Numbers: the largest |s - n| / |n| + 10 %, rounded
-          up, where it exceeds the ratio in force and stays at most 1.
-          Other words: a class the whole words share (float, integer,
-          hex, date, time, path, identifier), else the shared context
-          literal and the middle classed (no 'identifier' then) or
-          BUILT from the characters seen -- 'id=[0-9abz]{3,4};'.
+          line pairs in, commented 'tolerance' lines out, PER KEY -- the
+          pane prints them directly under the key they would replace
+          (ruled: "so users only have to comment the old and uncomment
+          the new and see everything in one place"); the lower of two
+          lines of one key stands. Words are read, not cells -- a line
+          compare did not split arrives as ONE cell. Numbers: the largest
+          |s - n| / |n| + 10 %, rounded up, where it exceeds the ratio in
+          force and stays at most 1. Other words, TWO ALTERNATIVES where
+          they differ (ruled: "one proposal that uses edit operations,
+          another one as you did before relying on identifiers"):
+          BY CLASS -- a class the whole words share (float, integer, hex,
+          date, time, path, identifier), else the shared context literal
+          and the middle classed or BUILT from the characters seen --
+          'id=[0-9abz]{3,4};'; BY EDIT OPERATIONS -- the Levenshtein
+          alignment ('rapidfuzz', as 'compare/core/edit_operations/
+          string.py'): shared stretches literal, changed ones classed run
+          by run where both sides run through the same kinds --
+          'id=[a-z]{2}[0-9]{1,2};', 'v1\.[0-9]\.3-rc[0-9]'; a shared
+          stretch of one character between two changes is coincidence.
           Blanks only, under 'whitespace = false': 'whitespace = true'.
           A word on one side only: 'nothing = ["<word>\\s*"]' --
           MEASURED: the word alone left the blank after it standing.
-          A pattern is shown only if it matches both words whole; one
+          A pattern is shown only if it matches both words whole; each
           'eq_pattern' line holds the patterns in force first.
           MEASURED on 'test-proposal.py applied': every proposal of a
           four-line case uncommented, compare finds all four lines
-          equivalent.
+          equivalent -- by class, and by edit operations.
+
+----------------------------------------------------------------------------
+E-121  THE FOOT: FUNCTION KEYS FIRST, LEFT; UNDO AND REDO LIT OR GREY (2026-09-27)
+----------------------------------------------------------------------------
+DECISION  RULED (Frank-Rene): "normal mode: display <F5>=tolerance edit";
+          "ETPM: display <F5>=save and done; and may be <Esc> drop and
+          done"; "display <F6>=$EDITOR on the left hand side, not hidden
+          to the right. Same for the other GOOD editing mode"; "have all
+          function key shortcuts be displayed on the status bar on the
+          left, left aligned"; "highlight u=undo as soon as something can
+          be undone; turn it back gray if nothing more can be undone" (and
+          r=redo alike); 'q' and 'c-c' stay ("your comment about <F10>
+          being taken convinced me").
+          The foot is LEFT-ALIGNED, whole hints dropped from the right.
+          Panes: <F1>=help <F5>=tolerance <F6>=$EDITOR, then u=undo r=redo
+          q=done, then the merge's keys -- MEASURED at 110 columns: in the
+          header's order undo, redo and done were the hints dropped. An
+          editing pane: <F5>=done (GOOD) or <F5>=try+close (the tolerance),
+          <Esc>=discard, <F6>=$EDITOR, <c-z>=undo <c-y>=redo. Undo and redo
+          are LIT (preference 'keyed.status-on') where their stack holds
+          something and GREY ('keyed.status-off') where it does not -- the
+          merge's stacks in the panes, the text's own in an editing pane.
+          MEASURED on a pseudo-terminal: grey before a take, undo lit
+          after it, redo lit after the undo; in the pane, c-z lit after a
+          typed character, c-y after c-z.
+
+COST      <F6> joins 'c-e'; <Esc> in an editing pane waits 'prompt_toolkit''s
+          0.5 s for a following byte, as the search line's does.

@@ -1815,3 +1815,61 @@ COST      The interview survives as 'hwut.renovate's reader -- an
           stated, 'HAPPY:' as 'tolerance { eq_pattern }'. Measured
           after: 9 ok, 0 fail, the same nominals. Nothing else in the
           tree answered an interview.
+
+----------------------------------------------------------------------------
+X-DECORATION  WHAT PRECEDES '@hwut {' IS DECORATION, IN ANY LANGUAGE (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   X-HEAD admitted six comment leads (#, //, --, ;, *, /*): the
+          ones the tree used. MEASURED against the comment styles of the
+          languages Frank-Rene listed: 5 of 25 line triggers read ('%' of
+          TeX, 'REM', "'" of VB, '!' of Fortran ... did not), and 1 of 24
+          block comments with the opener on the marker's line.
+
+DECISION  RULED (Frank-Rene): "we do not care about the language in
+          order to determine the initial trigger; we define a regular
+          expression for the ignorable start of line decoration/comment
+          that precedes the HOCON code. that is, no marker would also be
+          okay. if nothing works, we might advice in the documentation to
+          use the hwut.conf file to configure the test application. That
+          ignorable start, may contain the '--\s|' of Haddock."
+          'source_file_detector.DECORATION': up to TWO tokens, blank-
+          separated, each at most 8 characters and without a DIGIT; the
+          last may touch the marker unless it is a QUOTE. It stands in
+          the Region; the unwrapper strips it from every following line
+          where each opens with it (the common prefix as before where
+          that already covers it); the brace matcher skips it at a line's
+          head, and a string ends with its line (triple quotes are
+          refused), so a quote-shaped decoration -- Vim's '"', troff's
+          '.\"' -- swallows nothing. The bounds are X-HEAD's protection:
+          the numbered screen log ('   1 # @hwut {'), prose of three
+          words, a quoted '@hwut { }' and a nine-letter word stay out --
+          MEASURED: letting anything precede the marker admitted three
+          files of this tree that are no tests (two GOODs, a docstring).
+          MEASURED: all 25 line triggers and all 24 block styles read
+          ('test-detector_unwrapper.py decoration'); the tree's 151 test
+          applications read exactly as before.
+
+COST      A trigger of three words, or one of nine characters, is no
+          decoration: README section 4 advises an 'apps' entry for such
+          a file. SUPERSEDES X-HEAD's list of leads; its head rule stands.
+
+----------------------------------------------------------------------------
+X-AMEND  ONE IMPLEMENTATION AMENDS WHAT AN AUTHOR WROTE           (2026-09-27)
+----------------------------------------------------------------------------
+DECISION  RULED (Frank-Rene): "make sure that the insertion of parameters
+          is a shared functionality between all modules that do it."
+          'exploration/amend.py': a CONTAINER (a header's region, with its
+          decoration; a conf's 'hwut { }'), its ENTRIES read at a level, its
+          SCOPES found at any depth; a scope set or rewritten on one line,
+          an entry added in the container's own lead (or first), an entry
+          removed with its line where nothing else stood there, a list
+          extended where it stands. Its users: 'hwut.config.ignore', 'hwut.
+          renovate', the merge's keeping of a tolerance (services E-119).
+          Text surgery, never a re-render: every other byte stays.
+          'exploration/TEST/test-amend.py languages' writes a scope into one
+          header per comment style -- '#', '//', '--', ';', '%', "'", 'REM',
+          '!', '"', '-- |', '/* * */', '(* *)', '<!-- -->', '=begin', and a
+          one-line header -- and reads each back through the reader.
+
+COST      Comments INSIDE a rewritten scope are lost; the scope comes back
+          on one line.

@@ -27,17 +27,18 @@ P-20/P-21/P-22: the table is the keymap
        z             re-align: ask compare again
        t             the tolerance report: analogies, patterns, constraints
        e             edit GOOD here; <F5> ends the edit and re-aligns
-       <c-e>         edit the GOOD in $EDITOR
+       <F6>, <c-e>   edit the GOOD in $EDITOR
        <F5>          the tolerance in memory, editable; <F5> tries it
        <F1>          this table
        q             done: GOOD as it stands is written
        <c-c>         cancel: nothing is written
 
 -- the editing table (intend 21): letters type there
-       <F5>          done: re-align under what the pane says
+       <F5>          done: close the pane; what changed is re-aligned
+       <Esc>         discard: close the pane; nothing changes
+       <F6>, <c-e>   this text in $EDITOR; its exit ends the edit
        <c-z>         undo, in this text
        <c-y>         redo, in this text
-       <c-e>         this text in $EDITOR; its exit ends the edit
 
 -- no key is bound twice
      keyed   : none

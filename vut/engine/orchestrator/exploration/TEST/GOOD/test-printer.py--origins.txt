@@ -14,8 +14,7 @@ gen.c {
             }
             tolerance {
                 numeric_ratio = 0.0           # default
-                slash = true                  # hwut.conf:2
-                whitespace = true             # default
+                whitespace = false            # hwut.conf:2
                 eq_pattern = []               # default
                 nothing = []                  # default
                 analogy = ["((", "))"]        # default
@@ -50,8 +49,7 @@ legacy.bas {
             }
             tolerance {
                 numeric_ratio = 0.0           # default
-                slash = true                  # hwut.conf:2
-                whitespace = true             # default
+                whitespace = false            # hwut.conf:2
                 eq_pattern = []               # default
                 nothing = []                  # default
                 analogy = ["((", "))"]        # default
@@ -86,8 +84,7 @@ test-own.py {
             }
             tolerance {
                 numeric_ratio = 0.05
-                slash = true                  # hwut.conf:2
-                whitespace = true             # default
+                whitespace = false            # hwut.conf:2
                 eq_pattern = []               # default
                 nothing = []                  # default
                 analogy = ["((", "))"]        # default

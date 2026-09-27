@@ -15,7 +15,6 @@ $ hwut.config.show test-a.py
                 }
                 tolerance {
                     numeric_ratio = 0.01          # app
-                    slash = true                  # default
                     whitespace = true             # default
                     eq_pattern = []               # default
                     nothing = []                  # default
@@ -45,7 +44,6 @@ $ hwut.config.show test-a.py
                 }
                 tolerance {
                     numeric_ratio = 0.01          # app
-                    slash = true                  # default
                     whitespace = true             # default
                     eq_pattern = []               # default
                     nothing = []                  # default

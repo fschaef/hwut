@@ -29,7 +29,6 @@ tolerance.eq_pattern ConfigCompare       equivalent_pattern_list                
 tolerance.nothing  ConfigCompare       visible_nothing_pattern_list                   ()
 tolerance.numeric_ratio ConfigCompare       numeric_tolerance_ratio                        0.0
 tolerance.regions  ConfigCompare       regions_f                                      True
-tolerance.slash    ConfigCompare       backslash_f                                    True
 tolerance.whitespace ConfigCompare       whitespace_f                                   True
 
 --- a member renamed behind our back ---

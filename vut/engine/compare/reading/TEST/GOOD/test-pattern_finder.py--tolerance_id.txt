@@ -5,7 +5,7 @@ None -> STRING
 \(\((?:.|\n)+?\)\) -> ANALOGY
 otto -> EQUIVALENCE_PATTERN
 fritz -> EQUIVALENCE_PATTERN
-(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w) -> NUMERIC
+(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.(?:\d+|(?=[eE][-+]?\d)))?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w|\.\w) -> NUMERIC
 
 Map:
   [0] STRING

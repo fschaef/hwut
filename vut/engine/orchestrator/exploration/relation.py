@@ -137,7 +137,6 @@ RELATION = {
     #  place a tolerance may be written, and 'hwut.config.show' prints them
     #  inside the braces because the printer walks THESE keys.
     "tolerance.numeric_ratio": (ConfigCompare, "numeric_tolerance_ratio"),
-    "tolerance.slash":         (ConfigCompare, "backslash_f"),
     "tolerance.whitespace":    (ConfigCompare, "whitespace_f"),
     "tolerance.eq_pattern":    (ConfigCompare, "equivalent_pattern_list"),
     "tolerance.nothing":       (ConfigCompare,

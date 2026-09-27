@@ -441,7 +441,7 @@ def _unknown_key_text(key):
     return "unknown key '%s'" % key
 
 
-TOLERANCE_KEYS = ("numeric_ratio, whitespace, slash, regions, "
+TOLERANCE_KEYS = ("numeric_ratio, whitespace, regions, "
                   "eq_pattern, nothing, analogy, constraints, comment")
 
 
@@ -449,7 +449,7 @@ def _tolerance(entry, file, fault_list):
     """
     RETURN: Tolerance, how far the subject may differ and still pass,
             per lexical kind (R-77): 'numeric_ratio' in [0..1];
-            'whitespace', 'slash', 'regions' as booleans; 'eq_pattern'
+            'whitespace', 'regions' as booleans; 'eq_pattern'
             and 'nothing' as string lists; 'analogy' and 'comment' as
             marker PAIRS; 'constraints' as expressions.
             None, the value is no scope (fault recorded).
@@ -476,7 +476,16 @@ def _tolerance(entry, file, fault_list):
                     "'numeric_ratio' is a relative ratio in [0..1]"))
                 continue
             field_db["numeric_ratio"] = float(value)
-        elif inner.key in ("whitespace", "slash", "regions"):
+        elif inner.key == "slash":
+            #  RETIRED (compare C-18): an equivalence is an 'eq_pattern'.
+            #  Refused BY NAME, with the spelling that replaces it and the
+            #  face that writes it.
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "'slash' is retired: '/' and '\\' are equivalent by "
+                "eq_pattern = [\"[\\\\\\\\/]+\"]; 'hwut.renovate --apply' "
+                "rewrites it"))
+        elif inner.key in ("whitespace", "regions"):
             value = _bool(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
         elif inner.key in ("eq_pattern", "nothing"):

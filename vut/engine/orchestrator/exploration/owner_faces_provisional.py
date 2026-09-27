@@ -71,7 +71,6 @@ class ConfigCompare:
     analogy_f:                    bool  = True
     constraint_f:                 bool  = True
     whitespace_f:                 bool  = True
-    backslash_f:                  bool  = True
     numeric_tolerance_ratio:      float = 0.0
     equivalent_pattern_list:      tuple = ()
     visible_nothing_pattern_list: tuple = ()

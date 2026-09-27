@@ -156,7 +156,7 @@ def test_origins():
                                    '#     choices { two { tolerance { numeric_ratio = 0.05 } } }\n'
                                    '# }\n',
                     "hwut.conf":  'hwut {\n'
-                                  '    app_defaults { tolerance { slash = yes } }\n'
+                                  '    app_defaults { tolerance { whitespace = no } }\n'
                                   '    apps {\n'
                                   '        gen.c { title = "generated"\n'
                                   '                tolerance { comment = ["//", "//"] } }\n'
@@ -178,7 +178,7 @@ def test_places():
                             '# }\n',
                "hwut.conf": 'hwut {\n'
                             '    app_defaults {\n'
-                            '        tolerance { slash = no }\n'
+                            '        tolerance { whitespace = no }\n'
                             '        comment   = ["//", "//"]\n'
                             '    }\n'
                             '}\n'}

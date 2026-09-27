@@ -2,13 +2,13 @@
    OUTPUT | x WARN y
    GOOD   | x y
    ->
-     # PROPOSALS -- uncomment what you want, then <F5>
-     # nothing = ["WARN\\s*"]
-     #     OUTPUT 1: 'WARN' on one side only
+     [nothing]
+       # nothing = ["WARN\\s*"]
+       #     OUTPUT 1: 'WARN' on one side only
    OUTPUT | x y
    GOOD   | x NOTE y
    ->
-     # PROPOSALS -- uncomment what you want, then <F5>
-     # nothing = ["NOTE\\s*"]
-     #     OUTPUT 1: 'NOTE' on one side only
+     [nothing]
+       # nothing = ["NOTE\\s*"]
+       #     OUTPUT 1: 'NOTE' on one side only
 <hwut-end>

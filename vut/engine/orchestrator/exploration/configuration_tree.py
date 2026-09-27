@@ -116,7 +116,6 @@ class Tolerance(_Scope):
     'numeric_ratio' the relative ratio two numbers may differ by, in
                     [0..1]; 0 is exact
     'whitespace'    runs of blanks are one blank
-    'slash'         a backslash and a slash are the same separator
     'regions'       region framing is READ ('##! <handler>' ... '####');
                     false: those lines are ordinary content (C-4) --
                     what a text that TALKS ABOUT framing needs
@@ -137,7 +136,6 @@ class Tolerance(_Scope):
     """
     numeric_ratio: float | None = None
     whitespace:    bool  | None = None
-    slash:         bool  | None = None
     regions:       bool  | None = None
     eq_pattern:    tuple | None = None
     nothing:       tuple | None = None

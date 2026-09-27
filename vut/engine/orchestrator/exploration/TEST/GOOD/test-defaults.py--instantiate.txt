@@ -1,6 +1,6 @@
 
 --- a case stating two things, and what it yields ---
-record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, slash=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)
+record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)
 
 ConfigBuild:
     framework                      None
@@ -32,7 +32,6 @@ ConfigCompare:
     analogy_f                      True
     constraint_f                   True
     whitespace_f                   True
-    backslash_f                    True
     numeric_tolerance_ratio        0.05
     equivalent_pattern_list        ()
     visible_nothing_pattern_list   ()

@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "Detector and unwrapper: no comment syntax known"
-#     choices    = ["blank", "dash", "detect", "hash", "head", "offsets",
-#                   "single", "star"]
+#     choices    = ["blank", "dash", "decoration", "detect", "hash", "head",
+#                   "offsets", "single", "star"]
 #     interactive = true
 # }
 #
@@ -14,7 +14,7 @@ PURPOSE: The detector and the unwrapper -- finding the region without
          knowing any language's comment syntax, and stripping the
          discovered leader while carrying the offsets.
 
-CHOICES: detect, star, hash, dash, single, blank, offsets, head;
+CHOICES: detect, star, hash, dash, single, blank, offsets, head, decoration;
 
 DESCRIPTION:
 
@@ -39,6 +39,15 @@ blank      a blank line inside the region takes no part in the prefix
 
 offsets    each unwrapped line names its file line and its stripped
            column count -- the numbers an error message will use.
+
+decoration X-DECORATION: whatever stands before '@hwut {' on its line --
+           up to two tokens, each at most 8 characters and without a
+           digit, the last glued to the marker unless it is a quote -- is
+           the decoration, and is stripped from every following line.
+           No language is known: every comment style of the languages
+           listed (Frank-Rene, 2026-09-27) is read, as a line comment
+           and as a block comment with its opener on the marker's line
+           or on the line before; and what must stay out stays out.
 ______________________________________________________________________________
 """
 import sys
@@ -160,6 +169,58 @@ def test_blank():
          '# }\n')
 
 
+LINE_TRIGGER_LIST = ("//", "#", ";", "--", "%", "'", "REM", "!", '"', "\\",
+                     "@", "|", "\u235d", "NB.", "/", "dnl", '.\\"', "@c",
+                     "..", "*>", "///", "//!", "##", "#'", "-- |")
+BLOCK_LIST = (("/*", "*/"), ("/+", "+/"), ("(*", "*)"), ("{", "}"),
+              ("{-", "-}"), ("--[[", "]]"), ("#|", "|#"), ("#=", "=#"),
+              ("#[", "]#"), ("<#", "#>"), ("%{", "%}"), ("=begin", "=end"),
+              ("=pod", "=cut"), ("#[[", "]]"), ("#cs", "#ce"), ("(:", ":)"),
+              ("(", ")"), ('"', '"'), ("<!--", "-->"), ("comment", ";"),
+              ("co", "co"), ("/**", "*/"), ("(**", "*)"), ('"""', '"""'))
+
+
+def _read_f(text):
+    """RETURN: str, 'read' where the header gives title 'T' and the one
+               choice 'a'; else what went wrong."""
+    from vut.engine.orchestrator.exploration import reader
+    if detect(text) is None: return "NOT DETECTED"
+    spec, fault_list = reader.read_header(text, "x")
+    if spec is None or fault_list:
+        return "NOT READ: %s" % (fault_list[0].message if fault_list else "-")
+    if spec.title != "T" or list(spec.choice_db) != ["a"]: return "READ WRONG"
+    return "read"
+
+
+def test_decoration():
+    """RETURN: None. X-DECORATION over the comment styles of the listed
+               languages, and what must stay out."""
+    banner("line triggers: the decoration on every line")
+    for m in LINE_TRIGGER_LIST:
+        text = ('%s @hwut {\n%s     title = "T"\n%s     choices = ["a"]\n'
+                '%s }\nbody\n' % (m, m, m, m))
+        print("  %-8s %s" % (m, _read_f(text)))
+    banner("block comments: opener on the marker's line / on the line before")
+    for o, c in BLOCK_LIST:
+        same = '%s @hwut {\n    title = "T"\n    choices = ["a"]\n} %s\nbody\n' % (o, c)
+        own  = '%s\n@hwut {\n    title = "T"\n    choices = ["a"]\n}\n%s\nbody\n' % (o, c)
+        print("  %-14s %-6s %s" % (o + " " + c, _read_f(same), _read_f(own)))
+    banner("a C block with ' * ' lines under a '/**' opener")
+    print("  %s" % _read_f('/** @hwut {\n *   title = "T"\n *   choices = ["a"]\n * }\n */\n'))
+    banner("a marker glued to its trigger")
+    print("  %s" % _read_f('#@hwut {\n#  title = "T"\n#  choices = ["a"]\n# }\n'))
+    banner("what stays out")
+    for label, text in (
+        ("a numbered screen log",   '   1 # @hwut {\n   2 #   title = "T"\n   3 # }\n'),
+        ("three words of prose",    'see the header @hwut { title = "T" }\n'),
+        ("a quoted marker",         "the block '@hwut { }' declares\n"),
+        ("a token of nine",         'REMARKABLE @hwut { title = "T" }\n'),
+        ("a string in code",        'print("@hwut { title = 1 }")\n')):
+        region = detect(text)
+        print("  %-24s %s" % (label, "stays out" if region is None
+                              else "DETECTED at %d:%d" % (region.line, region.column)))
+
+
 def test_offsets():
     """RETURN: None. The region deep in a file: line numbers are the
     file's, columns count what was stripped."""
@@ -183,4 +244,5 @@ if __name__ == "__main__":
         "blank":   test_blank,
         "offsets": test_offsets,
         "head":    test_head,
+        "decoration": test_decoration,
     }).run()

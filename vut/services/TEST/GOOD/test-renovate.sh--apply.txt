@@ -4,7 +4,7 @@ suite/TEST
         applied
     hwut.conf: ignore = ["helper*.py", "*.bak"]  (from hwut-info.dat '--not')
         applied
-    hwut.conf: slash_eqv = false -> app_defaults { tolerance { slash = false } }
+    hwut.conf: slash_eqv = false -> nothing: '/' and '\' differ unless a pattern says otherwise
         applied
     test-a.sh: numeric = 0.01, whitespace_eqv = yes -> tolerance { numeric_ratio = 0.01, whitespace = yes }
         applied
@@ -14,7 +14,6 @@ STATUS: 0
         ignore = ["helper*.py", "*.bak"]
         title = "The Old Suite"
         on_entry = "true"
-        app_defaults { tolerance { slash = false } }
     }
 --- test-a.sh, line 2
 # @hwut { title = "A"  tolerance { numeric_ratio = 0.01  whitespace = yes } }

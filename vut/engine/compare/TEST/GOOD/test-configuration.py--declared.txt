@@ -6,7 +6,6 @@
     analogy_f                      True
     constraint_f                   True
     whitespace_f                   True
-    backslash_f                    True
     numeric_tolerance_ratio        0
     equivalent_pattern_list        []
     visible_nothing_pattern_list   []

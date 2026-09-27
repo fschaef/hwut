@@ -60,7 +60,6 @@ def leaf_db_of(options):
     return {
         "numeric_ratio": float(finder.numeric_tolerance_ratio),
         "whitespace":    bool(finder.whitespace_f),
-        "slash":         bool(finder.backslash_f),
         "regions":       bool(finder.regions_f),
         "eq_pattern":    tuple(finder.equivalent_pattern_list),
         "nothing":       tuple(finder.visible_nothing_pattern_list),
@@ -73,21 +72,35 @@ def leaf_db_of(options):
     }
 
 
-def text_of(options, proposal_line_list=()):
+PROPOSAL_HEAD = ("# PROPOSALS stand, commented, under the key they would replace: "
+                 "uncomment one -- the lower line stands -- then <F5>")
+
+
+def text_of(options, proposal_db=None):
     """
     RETURN: str, the pane: 'tolerance { ... }' with every key and its
-            value, '# default' beside each that is compare's own, and the
-            proposal lines -- comments -- before the closing brace.
+            value, '# default' beside each that is compare's own, and
+            under a key the PROPOSALS for it -- comments, '# key = value'
+            aligned as the key's own line is -- so a person comments the
+            old, uncomments the new, and sees both in one place.
+
+    'proposal_db' is 'proposal.proposal_db''s: key -> comment lines.
     """
     from vut.engine.compare.api import Configuration
-    default_db = leaf_db_of(Configuration())
-    line_list  = ["tolerance {"]
+    default_db  = leaf_db_of(Configuration())
+    proposal_db = proposal_db or {}
+    line_list   = [PROPOSAL_HEAD] if proposal_db else []
+    line_list.append("tolerance {")
     for leaf, value in leaf_db_of(options).items():
         line = "%s%-*s = %s" % (_INDENT, _KEY_WIDTH, leaf, value_text(value))
         if value == default_db[leaf]:
             line = "%-*s # default" % (_VALUE_COLUMN, line)
         line_list.append(line)
-    line_list.extend(_INDENT + line for line in proposal_line_list)
+        for proposal in proposal_db.get(leaf, ()):
+            match = re.match(r"#\s*%s\s*=\s*(.*)$" % re.escape(leaf), proposal)
+            if match is not None:
+                proposal = "# %-*s = %s" % (_KEY_WIDTH, leaf, match.group(1))
+            line_list.append(_INDENT + proposal)
     line_list.append("}")
     return "\n".join(line_list) + "\n"
 

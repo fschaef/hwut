@@ -27,16 +27,30 @@ from dataclasses import dataclass
 
 _MARKER_RE = re.compile(r"@hwut\s*\{")
 
-#  THE HEAD OF A FILE (E-95): the marker is a source file's DECLARATION,
-#  and a declaration stands at the top. MEASURED across the tree: every
-#  test application's marker sits within its first four lines, as the
-#  first word of a comment. So the marker is looked for in the first
-#  HEAD_LINE_N lines only, and it must be the first word of its line
-#  after blanks and a comment lead (#, //, --, ;, *, /*). A file that
-#  QUOTES a header deeper in -- a 'script' log of a screen, a README, a
-#  mail -- was measured to become a test called by the file's name.
+#  THE HEAD OF A FILE (X-HEAD): the marker is a source file's DECLARATION,
+#  and a declaration stands at the top -- within the first HEAD_LINE_N
+#  lines. A file that QUOTES a header deeper in -- a 'script' log of a
+#  screen, a README, a mail -- was measured to become a test called by
+#  the file's name.
 HEAD_LINE_N = 8
-_LEAD_RE    = re.compile(r"^[ \t]*(?:#+|//|--|;+|\*+|/\*)?[ \t]*@hwut\s*\{", re.M)
+
+#  THE DECORATION (X-DECORATION): what may stand before '@hwut {' on its
+#  line -- a comment trigger of ANY language, or nothing. No language is
+#  known here and none is needed: the decoration is whatever stands
+#  there, within these bounds, and the same text is stripped from the
+#  head of every following header line ('unwrapper.py').
+#
+#      at most TWO tokens, blank-separated     '%', 'REM', '-- |', '(*'
+#      each at most 8 characters, no digit     a numbered screen log --
+#                                              '   1 # @hwut {' -- is no
+#                                              header (X-HEAD's case)
+#      the last may touch the marker           '#@hwut {', '//@hwut {'
+#      ... unless it is a quote                prose quoting '@hwut { }'
+#                                              is no header
+_TOKEN   = r"[^\s\d]{1,8}"
+_GLUED   = r"[^\s\d'\"`]{1,8}"
+DECORATION = r"(?:%s[ \t]+(?:%s[ \t]+|%s)?|%s)?" % (_TOKEN, _TOKEN, _GLUED, _GLUED)
+_LEAD_RE = re.compile(r"^[ \t]*(" + DECORATION + r")[ \t]*@hwut\s*\{", re.M)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +61,7 @@ class Region:
     i_close:  int     # index of the matching closing brace
     line:     int     # 1-based line of the marker
     column:   int     # 1-based column of the marker
+    decoration: str = ""  # what stood before the marker, blanks trimmed
 
 
 def detect(text):
@@ -58,35 +73,48 @@ def detect(text):
     head  = "".join(text.splitlines(True)[:HEAD_LINE_N])
     match = _LEAD_RE.search(head)
     if match is None: return None
+    decoration = match.group(1).strip()
     match = _MARKER_RE.search(text, match.start())
 
     i_marker = match.start()
     i_open   = match.end() - 1
-    i_close  = _matching_brace(text, i_open)
+    i_close  = _matching_brace(text, i_open, decoration)
     if i_close is None: return None
 
     line   = text.count("\n", 0, i_marker) + 1
     column = i_marker - (text.rfind("\n", 0, i_marker) + 1) + 1
-    return Region(i_marker, i_open, i_close, line, column)
+    return Region(i_marker, i_open, i_close, line, column, decoration)
 
 
-def _matching_brace(text, i_open):
+def _matching_brace(text, i_open, decoration=""):
     """
     RETURN: int,  index of the brace matching the one at 'i_open'.
             None, no match before the end of the text.
 
-    Double-quoted strings are skipped; a backslash escapes inside them.
+    Double-quoted strings are skipped; a backslash escapes inside them. A
+    STRING ENDS WITH ITS LINE: the header's strings never span lines
+    (triple quotes are refused), and a decoration that IS a quote --
+    Vim's '"', troff's '.\\"' -- would otherwise swallow the rest.
+    The DECORATION is skipped at the head of every line, for the same
+    reason.
     """
     depth = 0
     i     = i_open
     n     = len(text)
     while i < n:
         c = text[i]
+        if c == "\n" and decoration:
+            j = i + 1
+            while j < n and text[j] in " \t": j += 1
+            if text.startswith(decoration, j):
+                i = j + len(decoration)
+                continue
         if   c == '"':
             i += 1
-            while i < n and text[i] != '"':
+            while i < n and text[i] != '"' and text[i] != "\n":
                 if text[i] == "\\": i += 1
                 i += 1
+            if i < n and text[i] == "\n": continue
         elif c == "{":
             depth += 1
         elif c == "}":

@@ -14,7 +14,7 @@
 #
 # app_defaults  the directory's own 'app_defaults' is SHOWN, merged over the
 #              root's: 'b' shows the root's numeric_ratio and its own
-#              slash; 'a', with no conf of its own, the root's alone.
+#              whitespace; 'a', with no conf of its own, the root's alone.
 # provenance   every value names the file it stands in: the root's as
 #              'hwut-root.conf:<n>', the directory's as 'hwut.conf:<n>'.
 # stray        a test parameter written directly under 'hwut { }' in a
@@ -44,11 +44,11 @@ for where in a b; do
         > "$where/TEST/test-x.sh"
     chmod +x "$where/TEST/test-x.sh"
 done
-printf 'hwut {\n    app_defaults {\n        tolerance { slash = false }\n    }\n}\n' > b/TEST/hwut.conf
+printf 'hwut {\n    app_defaults {\n        tolerance { whitespace = false }\n    }\n}\n' > b/TEST/hwut.conf
 
 leaves() {              # <file> <option...> -- the two tolerances, and status
     $SHOW "$@" > out.txt 2>&1; status=$?
-    grep -E "numeric_ratio|slash" out.txt | sed 's/^ */    /'
+    grep -E "numeric_ratio|whitespace" out.txt | sed 's/^ */    /'
     echo "    STATUS: $status"
 }
 case "$1" in
@@ -63,11 +63,11 @@ provenance)
     leaves b/TEST/test-x.sh --provenance
     ;;
 stray)
-    printf 'hwut {\n    tolerance { slash = false }\n}\n' > a/TEST/hwut.conf
+    printf 'hwut {\n    tolerance { whitespace = false }\n}\n' > a/TEST/hwut.conf
     echo "--- a test parameter directly under 'hwut { }' in a conf"
     $SHOW a/TEST/test-x.sh > out.txt 2>&1; echo "STATUS: $?"
     grep -vE "^ " out.txt | sed "s|$WORK|\$WORK|g"
-    printf 'hwut {\n    tolerance { slash = false }\n}\n' > hwut-root.conf
+    printf 'hwut {\n    tolerance { whitespace = false }\n}\n' > hwut-root.conf
     rm a/TEST/hwut.conf
     echo "--- the same in the root conf"
     $SHOW a/TEST/test-x.sh > out.txt 2>&1; echo "STATUS: $?"

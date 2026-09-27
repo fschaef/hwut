@@ -32,7 +32,7 @@ HEADER = "@" + '''hwut {
     caps        { timeout_sec = 30  network = false  memory_mb = 512 }
     pype        = "strip.pype"
     tolerance {
-        numeric_ratio = 0.01  slash = yes
+        numeric_ratio = 0.01  whitespace = yes
         eq_pattern  = ["bonjour|hello", "v[0-9.]+-build[0-9]+"]
         nothing     = ["_"]
         analogy     = ["((", "))"]

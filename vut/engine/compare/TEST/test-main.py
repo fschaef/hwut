@@ -55,7 +55,6 @@ if "--hwut-info" in sys.argv:
 config = Configuration()
 config.pattern_finder.analogy_f                    = False
 config.pattern_finder.whitespace_f                 = True
-config.pattern_finder.backslash_f                  = False
 config.pattern_finder.numeric_tolerance_ratio      = 0
 config.pattern_finder.equivalent_pattern_list      = []
 config.pattern_finder.visible_nothing_pattern_list = ["nothing", "nix"]

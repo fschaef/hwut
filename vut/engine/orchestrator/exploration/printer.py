@@ -33,7 +33,7 @@ this choice's own word (see provenance.py).
                     it:
 
                         test-a.py:5:23:     tolerance { numeric_ratio = 0.05 }
-                        hwut.conf:3:21:     tolerance { slash = false }
+                        hwut.conf:3:21:     tolerance { whitespace = false }
                                             title = "T"
 
                     EVERY line carries a place. A line with none of

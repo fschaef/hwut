@@ -47,7 +47,7 @@ VALUE_DB = {
     "build":                   'build { framework = "make"  executable = "app" }',
     "caps":                    "caps { timeout_sec = 5 }",
     "pype":                    'pype = "cat"',
-    "tolerance":               "tolerance { slash = false }",
+    "tolerance":               "tolerance { whitespace = false }",
     "diff_display_parameters": "diff_display_parameters { margin = 0.2 }",
     "same":                    "same = true",
     "interactive":             "interactive = true",

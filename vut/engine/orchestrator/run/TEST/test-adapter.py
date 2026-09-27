@@ -129,7 +129,6 @@ def _stated_value(member):
         case "tolerance.analogy":        return ("<<", ">>")
         case "tolerance.constraints":    return ("x < y",)
         case "tolerance.comment":        return ("/*", "*/")
-        case "tolerance.slash":          return False
         case "tolerance.whitespace":     return False
         case "tolerance.regions":        return False
         case "same":        return True
@@ -202,7 +201,6 @@ def test_compare():
 
     options = _compare_of(TestParameters(
                               tolerance = Tolerance(numeric_ratio = 0.01,
-                                                    slash         = False,
                                                     whitespace    = False,
                                                     eq_pattern    = ("a|b",),
                                                     nothing       = ("~",),
@@ -221,7 +219,6 @@ def test_compare():
           % (finder.ignored_line_begin_marker,
              finder.ignored_line_end_marker, finder.ignored_line_f))
     print("         tolerance.constraints  -> %s" % options.constraint_expression_list)
-    print("         tolerance.slash      -> backslash_f %s" % finder.backslash_f)
     print("         tolerance.whitespace -> whitespace_f %s" % finder.whitespace_f)
 
     off = _compare_of(TestParameters(
@@ -240,8 +237,8 @@ def test_compare():
         (finder.analogy_begin_marker == "<<"
          and finder.analogy_end_marker == ">>",
          "a marker PAIR arrives as begin and end"),
-        (finder.backslash_f is False and finder.whitespace_f is False,
-         "the equivalence flags arrive under compare's own names"),
+        (finder.whitespace_f is False,
+         "the equivalence flag arrives under compare's own name"),
         (options.constraint_expression_list == ["x < y"],
          "the constraint expressions arrive"),
         (off.pattern_finder.analogy_f is False

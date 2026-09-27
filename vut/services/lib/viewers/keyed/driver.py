@@ -57,7 +57,7 @@ from vut.engine.operations.interaction.port import (DisplayAdapter,
 from vut.services.lib.viewers.keyed.act     import E_Act, E_Pane
 from vut.services.lib.viewers.keyed.state   import MergeState
 from vut.services.lib.viewers.keyed.reduce  import reduce
-from vut.services.lib.viewers.keyed.project import (project, foot,
+from vut.services.lib.viewers.keyed.project import (project,
                                                     row_of_cursor, E_Kind,
                                                     pane_title)
 from vut.services.lib.viewers.keyed         import keymap
@@ -83,6 +83,8 @@ STYLE_ROLE_DB = {
     "title.good.active":    "keyed.title-good-active",
     "separator":      "keyed.separator",
     "status":         "keyed.status",
+    "status.on":      "keyed.status-on",
+    "status.off":     "keyed.status-off",
     "el.cursor":      "keyed.element-cursor",
     "el.bad.subject":     "keyed.mismatch",
     "el.bad.nominal":     "verdict.nominal",
@@ -459,11 +461,11 @@ class KeyedDisplay(DisplayAdapter):
                    (intend 21, section 4)."""
         from vut.engine.compare.api                    import Configuration
         from vut.engine.orchestrator.run.tolerance_text import text_of
-        from vut.services.lib.viewers.keyed.proposal    import proposal_line_list
+        from vut.services.lib.viewers.keyed.proposal    import proposal_db
         options = self.tolerance_options if self.tolerance_options is not None \
                   else Configuration()
         finder  = options.pattern_finder
-        proposal = proposal_line_list(
+        proposal = proposal_db(
                        self.pair_db,
                        numeric_ratio = finder.numeric_tolerance_ratio,
                        pattern_list  = tuple(finder.equivalent_pattern_list),
@@ -473,12 +475,17 @@ class KeyedDisplay(DisplayAdapter):
 
     def _apply_editing(self, act, argument):
         """RETURN: None. One act while a pane is edited: <F5> closes it,
-                   'c-z'/'c-y' are the TEXT's undo and redo (a stack apart
-                   from the merge's), 'c-e' hands the text to $EDITOR.
+                   <Esc> closes it discarding what was typed, 'c-z'/'c-y'
+                   are the TEXT's undo and redo (a stack apart from the
+                   merge's), <F6> ('c-e') hands the text to $EDITOR.
                    Everything else means nothing here.
         """
         if act is E_Act.CLOSE_EDIT:
             self._close_edit()
+        elif act is E_Act.DISCARD:
+            #  <Esc>: THE PANE CLOSES AS IF NEVER OPENED -- no round, the
+            #  memory as it was (ruled: "<Esc> drop and done").
+            self._end_edit()
         elif act is E_Act.TYPE:
             self._set_edit_text(argument or "")
         elif act in (E_Act.UNDO, E_Act.REDO) and self.edit_buffer is not None:
@@ -781,6 +788,8 @@ class KeyedDisplay(DisplayAdapter):
                 "title.good.active":    "bold",
                 "separator":      "",
                 "status":         "reverse",
+                "status.on":      "reverse bold",
+                "status.off":     "reverse",
                 "el.cursor":      "underline",
                 "el.bad.subject":       "bold",
                 "el.bad.nominal":       "bold",
@@ -1076,40 +1085,102 @@ class KeyedDisplay(DisplayAdapter):
                    that apply to what is ON SCREEN -- the help window
                    offers only its close, the report its jump and its
                    close, the panes the merge keys; an element the
-                   cursor stands on is described instead."""
+                   cursor stands on is described instead.
+
+        LEFT-ALIGNED, THE FUNCTION KEYS FIRST (intend 21, ruled: "have all
+        function key shortcuts be displayed on the status bar on the left,
+        left aligned"). Whole hints are dropped from the right where the
+        width does not hold them. UNDO AND REDO SAY WHETHER THEY CAN
+        ("highlight u=undo as soon as something can be undone; turn it
+        back gray if nothing more can be undone"): lit where the stack
+        holds something, grey where it is empty -- the merge's stacks in
+        the panes, the text's own in an editing pane.
+        """
         width = self._screen_width()
-        if self.editing is not None:
-            hint_list = ["<c-z>=undo", "<c-y>=redo", "<c-e>=$EDITOR"]
-            if self.editing == "tolerance":
-                hint_list.append("the lower line stands")
-            text = foot(hint_list, width, head="<F5>=done")
-            if self.edit_fault is not None:
-                text = "NOT READ -- %s   <F5>=try again" % self.edit_fault
-            return [("class:status", " " + text)]
-        if self.help_f:
-            text = foot([], width, head="<F1>=close")
-        elif self.reporting_f:
-            text = foot(["<enter>=go there"], width, head="t=close")
-        else:
+        if self.editing is not None and self.edit_fault is not None:
+            return [("class:status",
+                     " NOT READ -- %s   <F5>=try again  <Esc>=discard"
+                     % self.edit_fault)]
+        if self.editing is None and not self.help_f and not self.reporting_f:
             pane       = self.state.pane
             side       = "subject" if pane is E_Pane.SUBJECT else "nominal"
             piece_list = self._placed_of(self._cursor_line(), pane)
             if self.element_at == self._here() and self.element_i is not None \
                and piece_list is not None and self.element_i < len(piece_list):
-                text = element.status_of(piece_list[self.element_i], side,
-                                         self.numeric_ratio)
-            else:
-                text = self._hints()
-            if self.stderr_spoke_f and not self.view_only_f:
-                text = "STDERR SPOKE: 'q' will be refused without --stderr-tol   " + text
-        return [("class:status", " " + text)]
+                return [("class:status", " " + element.status_of(
+                             piece_list[self.element_i], side,
+                             self.numeric_ratio))]
+        item_list = self._foot_item_list()
+        if self.stderr_spoke_f and not self.view_only_f and self.editing is None:
+            item_list = [("STDERR SPOKE: 'q' will be refused without "
+                          "--stderr-tol ", None)] + item_list
+        return self._fragments_of(item_list, width)
+
+    def _foot_item_list(self):
+        """RETURN: list[(str, E_Act | None)], the hints of what is on
+                   screen, function keys first."""
+        if self.editing is not None:
+            item_list = [("<F5>=done" if self.editing == "good"
+                          else "<F5>=try+close", None),
+                         ("<Esc>=discard", None),
+                         ("<F6>=$EDITOR", None),
+                         ("<c-z>=undo", E_Act.UNDO),
+                         ("<c-y>=redo", E_Act.REDO)]
+            if self.editing == "tolerance":
+                item_list.append(("the lower line stands", None))
+            return item_list
+        if self.help_f:
+            return [("<F1>=close", None)]
+        if self.reporting_f:
+            head = [] if self.view_only_f else [("<F5>=tolerance", None)]
+            return head + [("t=close", None), ("<enter>=go there", None)]
+        if self.view_only_f:
+            return keymap.item_list_of(keymap.VIEW_FUNCTION_TUPLE, self.keymap) \
+                   + keymap.item_list_of(keymap.VIEW_BASIC_TUPLE, self.keymap)
+        #  WHAT MUST NOT FALL OFF THE RIGHT EDGE COMES FIRST: undo and
+        #  redo (lit or grey), and done -- MEASURED at 110 columns: in the
+        #  header's order they were the hints dropped.
+        first = (E_Act.UNDO, E_Act.REDO, E_Act.DONE)
+        basic = keymap.item_list_of(keymap.BASIC_TUPLE, self.keymap)
+        return keymap.item_list_of(keymap.FUNCTION_TUPLE, self.keymap) \
+               + [item for act in first for item in basic if item[1] is act] \
+               + [item for item in basic if item[1] not in first]
+
+    def _can_f(self, act):
+        """RETURN: bool, True where 'act' (UNDO or REDO) would do
+                   something now -- on the text's own stack while a pane
+                   is edited, on the merge's otherwise."""
+        if self.editing is not None:
+            if self.edit_buffer is None: return False
+            stack = getattr(self.edit_buffer, "_undo_stack" if act is E_Act.UNDO
+                                              else "_redo_stack", None)
+            return bool(stack)
+        stack = self.state.undo_stack if act is E_Act.UNDO else self.state.redo_stack
+        return bool(stack)
+
+    def _fragments_of(self, item_list, width):
+        """RETURN: list[(style, text)], the hints left-aligned, two blanks
+                   apart, as many whole ones as 'width' holds; undo and
+                   redo lit or grey."""
+        room = None if width is None else width - 2
+        result, used = [("class:status", " ")], 1
+        for text, act in item_list:
+            gap = "  " if used > 1 else ""
+            if room is not None and used + len(gap) + len(text) > room: break
+            style = "class:status"
+            if act in (E_Act.UNDO, E_Act.REDO):
+                style += " class:status.on" if self._can_f(act) \
+                         else " class:status.off"
+            if gap: result.append(("class:status", gap))
+            result.append((style, text))
+            used += len(gap) + len(text)
+        return result
 
     def _hints(self):
-        """RETURN: str, the foot's key hints for the panes."""
-        basic = keymap.basic_text(keymap.VIEW_BASIC_TUPLE, keymap.VIEW_KEYMAP) \
-                if self.view_only_f else keymap.basic_text()
-        width = self._screen_width()
-        return foot(basic.split("  "), None if width is None else width - 1)
+        """RETURN: str, the foot's key hints for the panes, as text."""
+        return "".join(text for _, text in
+                       self._fragments_of(self._foot_item_list(),
+                                          self._screen_width()))[1:]
 
     def _cut(self, piece_list):
         """RETURN: list[(style, text)], the line as the sideways view

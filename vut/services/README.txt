@@ -385,7 +385,8 @@ The faces:
                  subject over the complete nominal. Copying is always
                  line-wise, left to right; text is altered by 'e' --
                  GOOD becomes an editable text, <F5> ends the edit and
-                 re-aligns -- or by 'c-e', GOOD in $EDITOR. A take inside an 'unaccepted' region
+                 re-aligns, <Esc> discards it -- or by <F6> ('c-e'),
+                 GOOD in $EDITOR. A take inside an 'unaccepted' region
                  SPLITS it and an emptied region is REMOVED, framing
                  and all; no region of any other kind is ever CUT, on
                  either side.
@@ -400,20 +401,27 @@ The faces:
                  THE TOLERANCE PANE (intend 21): <F5> covers GOOD with
                  the tolerance the session holds IN MEMORY -- every key
                  of 'tolerance { }', '# default' where compare's own,
-                 and below them, commented, PROPOSALS drawn from this
-                 round's differences ('proposal.py'). <F5> again reads
-                 the text with the header's own reader and, where it
-                 changed, TRIES it: the next round aligns under it. A
-                 text the reader refuses keeps the pane open, the fault
-                 in the foot. In the pane the lower of two lines of one
-                 key stands, so an uncommented proposal replaces the
-                 key above it. 'c-e' edits the pane in $EDITOR. In both
-                 editing panes 'c-z'/'c-y' are the text's undo and redo,
-                 a stack apart from the merge's ('u'/'c-z', 'r'/'c-y').
-                 At the end, a changed tolerance is ASKED about
-                 ('lib/accept/keep.py'): (1) TMP/<test>--<choice>.
-                 tolerance.conf, (2) into the test's '@hwut { }' header,
-                 (3) omit -- after a cancel only (1) or (3).
+                 and under each key, commented, the PROPOSALS this
+                 round's differences give ('proposal.py'): numbers, and
+                 for 'eq_pattern' two alternatives, by class and by edit
+                 operations. <F5> again reads the text with the header's
+                 own reader and, where it changed, TRIES it: the next
+                 round aligns under it. <Esc> closes the pane discarding
+                 what was typed. A text the reader refuses keeps the
+                 pane open, the fault in the foot. In the pane the lower
+                 of two lines of one key stands, so an uncommented
+                 proposal replaces the key above it. <F6> ('c-e') edits
+                 the pane in $EDITOR. In both editing panes 'c-z'/'c-y'
+                 are the text's undo and redo, a stack apart from the
+                 merge's ('u'/'c-z', 'r'/'c-y').
+                 THE FOOT is left-aligned, function keys first; undo and
+                 redo are lit where something can be undone or redone,
+                 grey where not (E-121).
+                 At the end, a changed tolerance is printed to copy and
+                 ASKED about ('lib/accept/keep.py'), in the checklist's
+                 idiom: [1] TMP/<test>--<choice>.tolerance.conf, [2] into
+                 the test's '@hwut { }' header, <enter> omit -- after a
+                 cancel only [1] or <enter>.
 
                  THE SEAM: 'prompt_toolkit' owns the Windows, the
                  scrolling and the search; VUT owns the merge state --

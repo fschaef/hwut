@@ -22,9 +22,20 @@ DESCRIPTION
            in a header or hwut.conf:
                numeric        = <ratio>   -> tolerance { numeric_ratio }
                whitespace_eqv = <bool>    -> tolerance { whitespace }
-               slash_eqv      = <bool>    -> tolerance { slash }
+               slash_eqv      = true      -> tolerance { eq_pattern =
+                                                 ["[\\\\/]+"] }
+               slash_eqv      = false     -> nothing: '/' and '\\'
+                                             differ unless a pattern
+                                             says otherwise
                                              (the three old keys were
                                              REMOVED, not aliased)
+           in any 'tolerance { }', VUT 2.0's own retired word:
+               slash = true               -> eq_pattern gains "[\\\\/]+"
+               slash = false              -> removed (compare C-18)
+
+       THE AMENDING IS 'exploration/amend.py''s: every other key, comment
+       and line of the file stays as it was; a scope that changes is
+       rewritten on one line.
 
        WHAT IT LEAVES: a key the directory already states is never
        overwritten -- the newer word stands, and the relic's is reported
@@ -50,6 +61,7 @@ import sys
 from   vut.engine.orchestrator.exploration.tree_explorer import (RootConfMissing,
                                                                  explore_tree)
 from   vut.engine.orchestrator.exploration               import finder
+from   vut.engine.orchestrator.exploration               import amend
 from   ._exit                                            import E_ExitCode
 from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse)
@@ -72,12 +84,11 @@ RELIC_NAME = "hwut-info.dat"
 #  tolerance entry): one spelling for one thing.
 OLD_KEY_DB = {"numeric":        "numeric_ratio",
               "whitespace_eqv": "whitespace",
-              "slash_eqv":      "slash"}
-#  An old key is a WORD followed by '=' and a value that runs to the
-#  next blank, '}' or line end -- a 1.0 header states several on one
-#  line ('numeric = 0.01  whitespace_eqv = yes').
-_OLD_KEY_RE = re.compile(r"(?<![\w.])(numeric|whitespace_eqv|slash_eqv)"
-                         r"(\s*=\s*)([^\s}#]+)")
+              "slash_eqv":      "eq_pattern"}
+
+#  THE SLASH EQUIVALENCE AS A PATTERN (compare C-18), as a header writes
+#  it: the regex [\\/]+ in a HOCON string.
+SLASH_PATTERN = '"[\\\\\\\\/]+"'
 
 
 @dataclass(frozen=True)
@@ -255,7 +266,8 @@ def plan_of(directory):
             plan.note_list.append("unknown in %s, left to you: %r"
                                   % (RELIC_NAME, line))
 
-    #  THE OLD TOLERANCE KEYS, in the conf and in every header.
+    #  THE OLD TOLERANCE KEYS, in the conf and in every header; and the
+    #  retired 'slash' inside any 'tolerance { }'.
     for name in sorted(os.listdir(directory)):
         path = os.path.join(directory, name)
         if not os.path.isfile(path): continue
@@ -263,19 +275,12 @@ def plan_of(directory):
         if name.startswith("."): continue
         text = _read(path)
         if text is None: continue
-        hit_list = _old_key_hits(text)
-        if not hit_list: continue
-        #  IN THE CONF the old keys stood at the ROOT, directory-wide;
-        #  the root carries directory keys only, so the tolerance goes
-        #  under 'app_defaults', which is what 'directory-wide' means now.
         conf_f = (name == finder.CONF_NAME)
-        home   = "app_defaults { tolerance { %s } }" if conf_f else "tolerance { %s }"
+        said = _tolerance_said(text, conf_f)
+        if not said: continue
         plan.change_list.append(_Step(
-            "%s: %s -> %s" % (
-                name,
-                ", ".join("%s = %s" % (k, v) for k, v in hit_list),
-                home % ", ".join("%s = %s" % (OLD_KEY_DB[k], v) for k, v in hit_list)),
-            lambda p=path, c=conf_f: _rewrite_old_keys(p, conf_f=c)))
+            "%s: %s" % (name, said),
+            lambda p=path, c=conf_f: _write(p, _renovated(_read(p), c))))
     return plan
 
 
@@ -305,62 +310,145 @@ def _relic_of(path):
     return title, ignore_list, unknown_list
 
 
-def _old_key_hits(text):
-    """RETURN: list[(old key, value)], every old tolerance key stated
-               in 'text' -- inside a header comment line as well as on
-               a conf line; text after a '#' that is NOT a header lead
-               is a comment and not searched."""
-    result = []
-    for line in text.splitlines():
-        result.extend((m.group(1), m.group(3))
-                      for m in _OLD_KEY_RE.finditer(_code_of(line)))
+def _container(text, conf_f):
+    """RETURN: amend.Container, the conf's 'hwut { }' or the header's
+               '@hwut { }'; None where the text holds neither."""
+    return amend.conf_container(text) if conf_f else amend.header_container(text)
+
+
+def _old_entries(text, container):
+    """RETURN: list[amend.Entry], hwut 1.0's tolerance keys standing at
+               the container's top level."""
+    return [entry for entry in amend.entry_list(text, container.i_open,
+                                                container.i_close,
+                                                container.decoration)
+            if entry.key in OLD_KEY_DB]
+
+
+def _slash_scopes(text, container):
+    """RETURN: list[amend.Entry], every 'tolerance { }' stating 'slash'."""
+    return [scope for scope in amend.scope_list(text, container, "tolerance")
+            if any(key == "slash" for key, _ in
+                   amend.scope_pair_list(text, container, scope))]
+
+
+def _true_f(value):
+    """RETURN: bool, True where a boolean's text says yes."""
+    return value.strip().strip('"').lower() in ("true", "yes", "on", "1")
+
+
+def _new_pair(key, value):
+    """RETURN: (key, value text), hwut 1.0's key in VUT 2.0's word.
+               None, where the word says nothing any more ('slash_eqv =
+               false')."""
+    if key == "slash_eqv":
+        return ("eq_pattern", "[%s]" % SLASH_PATTERN) if _true_f(value) else None
+    return (OLD_KEY_DB[key], value)
+
+
+def _merged(pair_list, new_pair_list):
+    """RETURN: list[(key, value text)], 'pair_list' with 'new_pair_list'
+               added: a key it states already stands (the newer word),
+               except 'eq_pattern', whose patterns are joined."""
+    result = list(pair_list)
+    for key, value in new_pair_list:
+        i = next((i for i, (k, _) in enumerate(result) if k == key), None)
+        if i is None:
+            result.append((key, value))
+        elif key == "eq_pattern":
+            have = amend.string_list_of(result[i][1])
+            fresh = [s for s in amend.string_list_of(value) if s not in have]
+            result[i] = (key, "[%s]" % ", ".join('"%s"' % s for s in have + fresh))
     return result
 
 
-def _code_of(line):
-    """RETURN: str, the part of 'line' a key may stand in: the whole
-               line where its first non-blank is '#' (a header line in
-               a script), else the part before any '#'."""
-    stripped = line.lstrip()
-    if stripped.startswith("#"): return stripped[1:]
-    return line.split("#", 1)[0]
+def _without_slash(pair_list):
+    """RETURN: list[(key, value text)], a scope's pairs with 'slash'
+               retired: gone, and where it said yes, the pattern added."""
+    slash = [value for key, value in pair_list if key == "slash"]
+    rest  = [(key, value) for key, value in pair_list if key != "slash"]
+    if slash and _true_f(slash[-1]):
+        return _merged(rest, [("eq_pattern", "[%s]" % SLASH_PATTERN)])
+    return rest
 
 
-def _rewrite_old_keys(path, conf_f=False):
-    """RETURN: None. Every old tolerance key in the file rewritten as
-               its new spelling inside 'tolerance { }', in place, on
-               the line where it stood -- inside 'app_defaults { }' too
-               where the file is the conf ('conf_f')."""
-    text = _read(path)
-    out  = []
-    for line in text.splitlines(True):
-        body = line.rstrip("\n")
-        code = _code_of(body)
-        if not _OLD_KEY_RE.search(code):
-            out.append(line); continue
-        #  ONE BLOCK PER LINE: the keys of a line gather into a single
-        #  'tolerance { }' where the first stood; the others vanish.
-        hit_list = list(_OLD_KEY_RE.finditer(code))
-        block = "tolerance { %s }" % "  ".join(
-            "%s = %s" % (OLD_KEY_DB[m.group(1)], m.group(3)) for m in hit_list)
-        if conf_f: block = "app_defaults { %s }" % block
-        lead0 = code[:len(code) - len(code.lstrip())]
-        new = lead0 + code[len(lead0):hit_list[0].start()] + block
-        cursor = hit_list[0].end()
-        for m in hit_list[1:]:
-            gap = code[cursor:m.start()]
-            new += gap.rstrip() if gap.strip() else ""
-            cursor = m.end()
-        new += code[cursor:]
-        new = lead0 + re.sub(r"[ \t]{3,}", "  ", new[len(lead0):])
-        if body.lstrip().startswith("#"):
-            lead = body[:len(body) - len(body.lstrip())] + "#"
-            out.append(lead + new + "\n")
-        else:
-            tail = body[len(code):]
-            out.append(new + tail + "\n")
+def _tolerance_said(text, conf_f):
+    """RETURN: str, what renovating the text's tolerance words does, as
+               the report says it; '' where nothing needs it."""
+    container = _container(text, conf_f)
+    if container is None: return ""
+    part_list = []
+    old_list = _old_entries(text, container)
+    if old_list:
+        old_pair_list = [(e.key, amend.value_text(text, e, container.decoration))
+                         for e in old_list]
+        new_list = [pair for pair in (_new_pair(k, v) for k, v in old_pair_list)
+                    if pair is not None]
+        home = "app_defaults { tolerance { %s } }" if conf_f else "tolerance { %s }"
+        part_list.append("%s -> %s" % (
+            ", ".join("%s = %s" % pair for pair in old_pair_list),
+            home % ", ".join("%s = %s" % pair for pair in new_list)
+            if new_list else "nothing: '/' and '\\' differ unless a pattern "
+                             "says otherwise"))
+    for scope in _slash_scopes(text, container):
+        pair_list = amend.scope_pair_list(text, container, scope)
+        value = [v for k, v in pair_list if k == "slash"][-1]
+        part_list.append("tolerance { slash = %s } -> %s" % (
+            value, "eq_pattern gains %s" % SLASH_PATTERN if _true_f(value)
+                   else "removed"))
+    return "; ".join(part_list)
+
+
+def _renovated(text, conf_f):
+    """RETURN: str, 'text' with its tolerance words renovated: every
+               'slash' retired, hwut 1.0's keys taken out of the top
+               level and stated in the tolerance scope -- the header's,
+               or under the conf's 'app_defaults'."""
+    container = _container(text, conf_f)
+    for scope in reversed(_slash_scopes(text, container)):
+        text = amend.scope_rewrite(
+                   text, container, scope,
+                   _without_slash(amend.scope_pair_list(text, container, scope)))
+        container = _container(text, conf_f)
+
+    old_list = _old_entries(text, container)
+    if not old_list: return text
+    new_list = [pair for pair in
+                (_new_pair(e.key, amend.value_text(text, e, container.decoration))
+                 for e in old_list) if pair is not None]
+    for entry in reversed(old_list):
+        text = amend.entry_remove(text, container, entry)
+        container = _container(text, conf_f)
+    if not new_list: return text
+    if not conf_f:
+        scope = _top_scope(text, container, "tolerance")
+        present = amend.scope_pair_list(text, container, scope) if scope else []
+        return amend.scope_set(text, container, "tolerance",
+                               _merged(present, new_list))
+    home = _top_scope(text, container, "app_defaults")
+    if home is None:
+        return amend.entry_add(text, container, "app_defaults { %s }"
+                               % amend.scope_text("tolerance", new_list))
+    inner = amend.Container(home.i_value, home.i_end - 1, "",
+                            container.lead + "    ")
+    scope = _top_scope(text, inner, "tolerance")
+    present = amend.scope_pair_list(text, inner, scope) if scope else []
+    return amend.scope_set(text, inner, "tolerance", _merged(present, new_list))
+
+
+def _top_scope(text, container, name):
+    """RETURN: amend.Entry, the container's top-level scope 'name'; None
+               where it states none."""
+    return next((entry for entry in amend.entry_list(text, container.i_open,
+                                                     container.i_close,
+                                                     container.decoration)
+                 if entry.key == name and entry.object_f), None)
+
+
+def _write(path, text):
+    """RETURN: None. 'text' is the file at 'path' now."""
     with open(path, "w", encoding="utf-8") as fh:
-        fh.write("".join(out))
+        fh.write(text)
 
 
 def _conf_states(conf_text, key):
@@ -370,20 +458,18 @@ def _conf_states(conf_text, key):
 
 
 def _conf_add(path, line):
-    """RETURN: None. 'line' added inside the 'hwut { }' block of the
-               conf at 'path' -- the file created around it where none
-               stands."""
+    """RETURN: None. 'line' added as the first entry inside the 'hwut { }'
+               block of the conf at 'path' -- the file created around it
+               where none stands."""
     text = _read(path)
     if text is None:
         text = "hwut {\n}\n"
-    i = text.find("hwut {")
-    if i < 0:
+    container = amend.conf_container(text)
+    if container is None:
         text = "hwut {\n    %s\n}\n%s" % (line, text)
     else:
-        i += len("hwut {")
-        text = text[:i] + "\n    " + line + text[i:]
-    with open(path, "w", encoding="utf-8") as fh:
-        fh.write(text)
+        text = amend.entry_add(text, container, line, first_f=True)
+    _write(path, text)
 
 
 def _read(path):

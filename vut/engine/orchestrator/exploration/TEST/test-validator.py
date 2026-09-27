@@ -158,7 +158,7 @@ def test_header():
            '        write_directory_list = ["tmp", "out"]\n'
            '    }\n'
            '    pype        = \"strip.pype\"\n'
-           '    tolerance { numeric_ratio = 0.01  slash = yes }\n'
+           '    tolerance { numeric_ratio = 0.01  whitespace = yes }\n'
            '    tolerance {\n'
            '        eq_pattern  = ["bonjour|hello"]\n'
            '        nothing     = "_"\n'
@@ -208,6 +208,14 @@ def test_vocabulary():
            '    tolerance { numeric_ratio =  }\n'
            '    tolerance { comment = null }\n'
            '}\n')
+    #  THROUGH THE READER a source file's header takes: 'header()'
+    #  parses the text as a conf, where '@hwut' names no block.
+    banner("a retired key: 'slash' (compare C-18), refused with its successor")
+    from vut.engine.orchestrator.exploration import reader
+    spec, fault_list = reader.read_header(
+        '# @hwut {\n#     title = "T"\n#     tolerance { slash = true }\n# }\n',
+        "f.py")
+    for fault in fault_list: print("FAULT %s" % fault)
     header("'title' absent",
            '@hwut {\n'
            '    tolerance { numeric_ratio = 0.5 }\n'
@@ -219,7 +227,7 @@ def test_types():
     header("wrong shapes, each named",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    tolerance { numeric_ratio = 1.5  slash = "maybe" }\n'
+           '    tolerance { numeric_ratio = 1.5  whitespace = "maybe" }\n'
            '    build   = yes\n'
            '    caps    { timeout_sec = \"fast\"  memory_mb = -1\n'
            '              bandwidth   = 10 }\n'

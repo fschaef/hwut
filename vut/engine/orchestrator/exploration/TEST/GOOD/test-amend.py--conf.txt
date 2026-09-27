@@ -1,0 +1,30 @@
+--- the list extended where it stands; a name it holds not twice
+    |hwut {
+    |    ignore = ["a.py", "b.py"]   # helpers
+    |    app_defaults {
+    |        tolerance { numeric_ratio = 0.1 }
+    |    }
+    |    apps {
+    |        gen.c { tolerance { whitespace = false } }
+    |    }
+    |}
+--- a key added as the first entry
+    |hwut {
+    |    title = "T"
+    |    ignore = ["a.py"]   # helpers
+    |    app_defaults {
+    |        tolerance { numeric_ratio = 0.1 }
+    |    }
+    |    apps {
+    |        gen.c { tolerance { whitespace = false } }
+    |    }
+    |}
+--- every 'tolerance' at any depth
+    tolerance { numeric_ratio = 0.1 }
+    tolerance { whitespace = false }
+--- a conf without the list gains it first
+    |hwut {
+    |    ignore = ["x.py"]
+    |    title = "T"
+    |}
+<hwut-end>

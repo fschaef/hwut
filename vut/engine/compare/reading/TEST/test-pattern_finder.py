@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "Tolerance PatternFinder"
-#     choices    = ["aggressive", "do", "setup", "tolerance_id"]
+#     choices    = ["aggressive", "do", "dot", "setup", "tolerance_id"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -44,7 +44,7 @@ from   vut.engine.compare.reading.line_element   import E_ToleranceId
 
 if "--hwut-info" in sys.argv:
     print("Tolerance PatternFinder;")
-    print("CHOICES: setup, tolerance_id, do, aggressive;")
+    print("CHOICES: setup, tolerance_id, do, aggressive, dot;")
     sys.exit()
 
 
@@ -52,7 +52,6 @@ def empty_config():
     config = ConfigurationPatternFinder()
     config.analogy_f               = False
     config.whitespace_f            = False
-    config.backslash_f             = False
     config.numeric_tolerance_ratio = 0
     config.equivalent_pattern_list      = []
     return config
@@ -79,8 +78,9 @@ if "setup" in sys.argv:
     config.whitespace_f = True
     show(PatternFinder(config))
 
+    #  NO SLASH SWITCH (C-18): '/' and '\\' by an 'eq_pattern'.
     config = empty_config()
-    config.backslash_f = True
+    config.equivalent_pattern_list = [r"[\\/]+"]
     show(PatternFinder(config))
 
     config = empty_config()
@@ -169,6 +169,17 @@ if "aggressive" in sys.argv:
 
     # Case 6: Numeric next to literal
     test_agg("value: 100.5 units")
+
+if "dot" in sys.argv:
+    #  C-17: a dot belongs to a number only where digits or an exponent
+    #  follow. Reported: 'A=1.' against 'A=1.01.' marked the last dot.
+    config = empty_config()
+    config.numeric_tolerance_ratio = 0.02
+    pf = PatternFinder(config)
+    for string in ("A=1.", "A=1.01.", "3. and 4.", "1.e5", "1.x", "12.5.", "-.5"):
+        print("string: '%s'" % string)
+        for element in pf.do(string):
+            print("   %s" % element)
 
 #  THE STREAM COMPLETED (R-70).
 print("<hwut-end>")

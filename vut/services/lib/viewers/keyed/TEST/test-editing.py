@@ -2,9 +2,9 @@
 #
 # @hwut {
 #     title      = "The keyed merge's editing panes: GOOD typed into, the tolerance tried."
-#     choices    = ["good-type", "good-undo", "good-unchanged", "good-editor",
-#                   "good-cc", "pane", "try", "fault", "from-report",
-#                   "main-keys", "view"]
+#     choices    = ["discard", "f6", "fault", "foot", "from-report",
+#                   "good-cc", "good-editor", "good-type", "good-unchanged",
+#                   "good-undo", "main-keys", "pane", "try", "view"]
 #     tolerance { comment = []  analogy = [] }
 # }
 #
@@ -26,12 +26,21 @@ PURPOSE: THE EDITING PANES (intend 21) driven by REAL KEYS: the screen runs
                     proposals below
     try             <F5>, 'c-e' uncommenting the numeric proposal: the next
                     round aligns under it (the id still differs); every
-                    proposal: nothing differs. The memory differs from
-                    the test's own; the lower line stands
+                    proposal -- both eq_pattern lines, the lower (by edit
+                    operations) standing: nothing differs. The memory
+                    differs from the test's own
     fault           a text the header's reader refuses keeps the pane open
                     with the fault; a readable one closes it
     from-report     <F5> while the 't' report is up opens the pane
     main-keys       'c-z'/'c-y' beside 'u'/'r' in the merge itself
+    discard         <Esc> closes an editing pane as if never opened: GOOD
+                    typed into, the tolerance pane changed -- no round,
+                    nothing kept
+    f6              <F6> is $EDITOR: on GOOD from the merge, on the pane
+                    from the tolerance pane
+    foot            the status bar, left-aligned, the function keys first;
+                    undo and redo lit where their stack holds something,
+                    grey where it does not
     view            the viewing table: neither 'e' nor <F5> acts
 
 'comment' and 'analogy' are OFF for this page: the pane holds '##' and
@@ -50,6 +59,7 @@ from vut.services.lib.accept.engine        import merge_text
 
 F5, DOWN, END, BACKSPACE = "\x1b[15~", "\x1b[B", "\x1b[F", "\x7f"
 C_C, C_E, C_Y, C_Z       = "\x03", "\x05", "\x19", "\x1a"
+ESC, F6                  = "\x1b", "\x1b[17~"
 
 SUBJECT = "head\ntime: 12.51 ms  id=ab12;\nb\n<hwut-end>\n"
 NOMINAL = "head\ntime: 12.00 ms  id=zz7;\nc\n<hwut-end>\n"
@@ -74,14 +84,28 @@ class Watched(KeyedDisplay):
 def session(key_list, editor_argv=None):
     """RETURN: Watched, the driver after a merge of SUBJECT against
                NOMINAL driven by 'key_list' -- each sent as one chunk, as
-               a terminal delivers a key; the outcome printed."""
+               a terminal delivers a key; the outcome printed.
+
+    <Esc> IS A PREFIX to a terminal: an escape byte followed at once by
+    another reads as Alt and that key. A key after ESC is therefore sent
+    only once the escape was taken alone ('prompt_toolkit' waits
+    'ttimeoutlen', 0.5 s): the keys are fed in time, not at once."""
     with create_pipe_input() as pipe:
         display = Watched(pt_input=pipe, pt_output=DummyOutput(),
                           color_f=False, editor_argv=editor_argv)
-        for key in key_list: pipe.send_text(key)
-        text, intent = asyncio.run(asyncio.wait_for(
-                           merge_text(SUBJECT, NOMINAL, display, "t.sh one", None),
-                           30))
+        async def run():
+            """RETURN: (str, E_Intent), the merge, its keys fed alongside."""
+            async def feed():
+                for key in key_list:
+                    pipe.send_text(key)
+                    await asyncio.sleep(1.0 if key == ESC else 0)
+            task = asyncio.ensure_future(feed())
+            try:
+                return await merge_text(SUBJECT, NOMINAL, display, "t.sh one",
+                                        None)
+            finally:
+                task.cancel()
+        text, intent = asyncio.run(asyncio.wait_for(run(), 30))
     print("     -> %s %s" % (intent.name, None if text is None else text.split("\n")))
     print("     tolerance changed in memory: %s" % display.tolerance_changed_f())
     return display
@@ -130,7 +154,7 @@ def test_try():
     print("\n-- <F5>, 'c-e' uncommenting every proposal, 'q'")
     display = session([F5, C_E, "q"], editor_argv=[
                           "sed", "-i", "-E",
-                          "s/# (numeric_ratio|eq_pattern) = /\\1 = /"])
+                          "s/# (numeric_ratio|eq_pattern) *= /\\1 = /"])
     print("     in memory: numeric ratio %s"
           % display.tolerance_options.pattern_finder.numeric_tolerance_ratio)
 
@@ -169,7 +193,56 @@ def test_view():
     print("     scripted 'e' and <F5> in a view: editing = %s" % display.editing)
 
 
+def test_discard():
+    print("-- 'e', a character typed, <Esc>, 'q': GOOD as it stood")
+    session(["e", "x", ESC, "q"])
+    print("-- <F5>, a character typed into the pane, <Esc>, 'q': the memory")
+    print("   as it was -- the text would not even have read")
+    session([F5, "x", ESC, "q"])
+
+
+def test_f6():
+    print("-- <F6> on GOOD: an editor replacing 'c' by 'b', 'q'")
+    session([F6, "q"], editor_argv=["sed", "-i", "s/^c$/b/"])
+    print("-- <F5>, <F6> on the pane: the numeric proposal uncommented, 'q'")
+    display = session([F5, F6, "q"], editor_argv=[
+                          "sed", "-i", "s/# numeric_ratio = /numeric_ratio = /"])
+    print("     in memory: numeric ratio %s"
+          % display.tolerance_options.pattern_finder.numeric_tolerance_ratio)
+
+
+def test_foot():
+    from vut.services.lib.viewers.keyed.state import MergeState
+    def show(tag, display):
+        """RETURN: None. The foot's hints, each with its state."""
+        item_list = display._foot_item_list()
+        print("   %-26s %s" % (tag, "  ".join(
+            text + ("" if act not in (E_Act.UNDO, E_Act.REDO)
+                    else "(lit)" if display._can_f(act) else "(grey)")
+            for text, act in item_list)))
+    display = KeyedDisplay(act_script=[])
+    display.state = MergeState(subject_line_list=("a", "<hwut-end>"),
+                               nominal_line_list=("b", "<hwut-end>"),
+                               pairing={0: 0, 1: 1})
+    show("fresh", display)
+    display._apply(E_Act.TAKE_ALL);  show("after a take", display)
+    display._apply(E_Act.UNDO);      show("after its undo", display)
+    display._apply(E_Act.REDO);      show("after its redo", display)
+    display._apply(E_Act.REPORT);    show("the report", display)
+    display._apply(E_Act.REPORT)
+    display.help_f = True;           show("help", display)
+    display.help_f = False
+    display.editing = "good";        show("editing GOOD", display)
+    display.editing = "tolerance";   show("the tolerance pane", display)
+    display.editing = None
+    view = KeyedDisplay(view_only_f=True, act_script=[])
+    show("the view", view)
+
+
 CHOICE_DB = {
+    "discard":        test_discard,
+    "f6":             test_f6,
+    "foot":           test_foot,
     "good-type":      test_good_type,
     "good-undo":      test_good_undo,
     "good-unchanged": test_good_unchanged,

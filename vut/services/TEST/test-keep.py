@@ -22,15 +22,19 @@ PURPOSE: 'services/lib/accept/keep.py' (intend 21, 2.7) -- what the merge
          hold '##' and '((' as data, which compare would otherwise read.
 
     unchanged      nothing changed: nothing is asked
-    store          (1): the TMP file
-    enter-replace  (2): the header's own 'tolerance' scope replaced
-    enter-add      (2): a header without one gains the line, in its lead
-    enter-oneline  (2): a one-line header
-    refuse-apps    (2) on a file without a header: refused, (1) instead
-    refuse-choice  (2) where the choice states its own: refused, (1)
-    cancel         a cancelled session offers (1) and (3) only
-    omit           (3) after a commit: the NOTE
-    nobody         no answer can be read: (1)
+    store          [1]: the TMP file
+    enter-replace  [2]: the header's own 'tolerance' scope replaced
+    enter-add      [2]: a header without one gains the line, in its lead
+    enter-oneline  [2]: a one-line header
+    refuse-apps    [2] on a file without a header: refused, [1] instead
+    refuse-choice  [2] where the choice states its own: refused, [1]
+    cancel         a cancelled session offers [1] and <enter> only; an
+                   answer that picks nothing is said and asked again
+    omit           <enter> after a commit: the NOTE
+    nobody         no answer can be read: [1]
+
+    The languages a header can be written in are 'exploration/TEST/
+    test-amend.py''s.
 ______________________________________________________________________________
 """
 import os
@@ -128,7 +132,7 @@ HEADER_CHOICE = """#! /bin/sh
 # @hwut {
 #     title   = "T"
 #     choices {
-#         one { tolerance { slash = false } }
+#         one { tolerance { whitespace = false } }
 #     }
 # }
 echo hello
@@ -143,9 +147,9 @@ CHOICE_DB = {
     "enter-oneline": lambda: run(HEADER_ONELINE, ["2"]),
     "refuse-apps":   lambda: run("echo no header\n", ["2"]),
     "refuse-choice": lambda: run(HEADER_CHOICE, ["2"]),
-    "cancel":        lambda: run(HEADER_WITH, ["2", "x", "3"], commit_f=False,
+    "cancel":        lambda: run(HEADER_WITH, ["2", "x", ""], commit_f=False,
                                  regions_f=False),
-    "omit":          lambda: run(HEADER_WITH, ["3"], regions_f=False),
+    "omit":          lambda: run(HEADER_WITH, [""], regions_f=False),
     "nobody":        lambda: run(HEADER_WITH, [], regions_f=False),
 }
 

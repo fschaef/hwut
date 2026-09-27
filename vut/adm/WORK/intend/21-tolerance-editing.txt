@@ -17,9 +17,10 @@ COMPONENTS CONCERNED:
     engine/compare                  UNCHANGED -- a consumer of
                                     'Configuration', as before
 
-STATE:      RULED 2026-09-26 (Frank-Rene); BUILT the same night --
-            services E-117..E-120 hold the results. Section 6 is what is
-            still open; the file goes once it is settled.
+STATE:      RULED 2026-09-26/27 (Frank-Rene); BUILT -- services
+            E-117..E-121, compare C-17/C-18, exploration X-DECORATION and
+            X-AMEND hold the results. Section 7 is what is still open; the
+            file goes once it is settled.
 
 ______________________________________________________________________________
 
@@ -202,12 +203,25 @@ ______________________________________________________________________________
 
 ______________________________________________________________________________
 
-6  OPEN
+6  THE SECOND ROUND (2026-09-27), RULED AND BUILT
 
-o-1  THE KEY THAT OPENS ETPM. Ruled "F5 for entering and exiting";
-     later "we enter with <T> if I remember correctly". Built: F5, the
-     earlier and explicit ruling. 'T' is free and is one table row if
-     wanted.
+    Frank-Rene's points of 2026-09-27, each with where its result stands:
+
+    F5 / F6 / Esc, function keys first on a left-aligned foot, undo and
+    redo lit or grey; 'q' and 'c-c' stay (F10 dropped)   services E-121
+    proposals under their key; an edit-operation
+    alternative beside the class one                     services E-120
+    'slash' retired: an eq_pattern; renovate carries it  compare C-18
+    'A=1.' against 'A=1.01.': the sentence's dot         compare C-17
+    the leaving question printed to copy, the menu in
+    the checklist's idiom                                services E-119
+    one amending implementation; a suite per comment
+    style                                                exploration X-AMEND
+    the decoration before '@hwut {', no language known   exploration X-DECORATION
+
+7  OPEN
+
+o-1  THE KEY THAT OPENS ETPM: F5, as built. 'T' stays free.
 
 o-2  UNDO ACROSS A ROUND. Every round opens a fresh MergeState, and
      its undo stack with it -- as for 'z' and $EDITOR before this work.
@@ -224,9 +238,13 @@ o-3  MEASURED WHILE BUILDING, NOT FIXED (outside the ask):
         'derive_constraint_db()' -> not. Fixing it can turn a green page
         red -- a value change, so it waits for a ruling. The pane's
         'constraints' key inherits the defect.
-     b. 'hwut.config.show' prints a pattern's backslash unescaped:
-        the header's "ruff [0-9]+\\.[0-9]+" is shown as
-        "ruff [0-9]+\.[0-9]+", which does not read back as written
-        (the printer's own claim); a long value also runs into its
-        '# app' comment. The pane has its own printer, which escapes.
-
+     b. 'hwut.config.show' prints a pattern's backslash unescaped: the
+        header's "[\\\\/]+" is shown as "[\\/]+", which does not read
+        back as written (the printer's own claim); a long value also runs
+        into its '# app' comment. The pane has its own printer, which
+        escapes.
+     c. 'exploration/TEST/test-validator.py' parses its fixtures as a
+        CONF ('plain_lines'), where '@hwut' names no block: every
+        fixture of 'vocabulary' records "no 'hwut { ... }' block" and
+        pins nothing. The retired-'slash' case added there goes through
+        'reader.read_header' instead.

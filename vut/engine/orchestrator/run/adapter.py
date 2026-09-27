@@ -272,7 +272,6 @@ def _compare_of(parameters):
 
         tolerance.numeric_ratio -> numeric_tolerance_ratio   (R-77)
         tolerance.whitespace    -> whitespace_f
-        tolerance.slash         -> backslash_f
         tolerance.regions       -> regions_f                  (C-4)
         tolerance.eq_pattern    -> equivalent_pattern_list
         tolerance.nothing       -> visible_nothing_pattern_list
@@ -290,9 +289,7 @@ def _compare_of(parameters):
     #  absent leaves.
     tolerance = parameters.tolerance
     stated    = {}
-    for leaf in ("numeric_ratio", "whitespace", "slash", "regions",
-                 "eq_pattern", "nothing", "analogy", "constraints",
-                 "comment"):
+    for leaf in TOLERANCE_LEAF_TUPLE:
         stated["tolerance.%s" % leaf] = \
             getattr(tolerance, leaf) if tolerance is not None else None
     #  THE LINE LEVEL'S NUMBERS (compare C-16) travel the same way.
@@ -312,7 +309,7 @@ def _compare_of(parameters):
     return options
 
 
-TOLERANCE_LEAF_TUPLE = ("numeric_ratio", "whitespace", "slash", "regions",
+TOLERANCE_LEAF_TUPLE = ("numeric_ratio", "whitespace", "regions",
                         "eq_pattern", "nothing", "analogy", "constraints",
                         "comment")
 
@@ -337,8 +334,6 @@ def tolerance_applied(options, tolerance):
         finder.equivalent_pattern_list      = list(stated["tolerance.eq_pattern"])
     if stated["tolerance.nothing"]        is not None:
         finder.visible_nothing_pattern_list = list(stated["tolerance.nothing"])
-    if stated["tolerance.slash"]      is not None:
-        finder.backslash_f                  = stated["tolerance.slash"]
     if stated["tolerance.whitespace"] is not None:
         finder.whitespace_f                 = stated["tolerance.whitespace"]
     if stated["tolerance.regions"]    is not None:

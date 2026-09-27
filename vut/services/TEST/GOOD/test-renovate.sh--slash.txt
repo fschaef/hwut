@@ -1,0 +1,38 @@
+suite/TEST
+    hwut.conf: tolerance { slash = false } -> removed
+    test-new.sh: tolerance { slash = true } -> eq_pattern gains "[\\\\/]+"; tolerance { slash = no } -> removed
+    test-old.sh: slash_eqv = yes -> tolerance { eq_pattern = ["[\\\\/]+"] }
+
+3 change(s) reported, none written: '--apply' writes them.
+STATUS: 0
+STATUS: 0
+--- suite/TEST/test-old.sh
+    #!/bin/bash
+    # @hwut { title = "O"  tolerance { eq_pattern = ["[\\\\/]+"] } }
+    echo o
+    echo "<hwut-end>"
+--- suite/TEST/test-new.sh
+    #!/bin/bash
+    # @hwut {
+    #     title = "N"
+    #     tolerance { eq_pattern = ["id=[0-9]+", "[\\\\/]+"] }
+    #     choices { one { } }
+    # }
+    echo n
+    echo "<hwut-end>"
+--- suite/TEST/hwut.conf
+    hwut {
+        app_defaults {
+            tolerance { numeric_ratio = 0.1 }
+        }
+    }
+--- a second run:
+nothing to renovate below '.'
+--- the exploration reads them:
+    test-old.sh {
+                    numeric_ratio = 0.1           # hwut.conf:3
+                    eq_pattern = ["[\\/]+"]       # app
+    test-new.sh {
+                    numeric_ratio = 0.1           # hwut.conf:3
+                    eq_pattern = ["id=[0-9]+", "[\\/]+"]# app
+<hwut-end>

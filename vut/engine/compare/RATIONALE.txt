@@ -595,3 +595,56 @@ GRAVEYARD The ELEMENT cost as phase two's measure: 3.6 ms a pair against
           counted budget takes exactly the sections the search cannot
           finish, whatever makes them hard.
 
+
+----------------------------------------------------------------------------
+C-17  A DOT IS THE NUMBER'S ONLY WHERE DIGITS OR AN EXPONENT FOLLOW (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   Reported (Frank-Rene, 'engine/compare/TEST/regression-1.py
+          amnesia'): the nominal's 'This implies A=1.' against a subject
+          'A=1.01.' marked the final dot as a deviation, under a numeric
+          tolerance that took the number. MEASURED: the number pattern
+          '\d+(?:\.\d*)?' read the nominal's '1.' as ONE number, the
+          sentence's dot included; the subject's '1.01' left its dot
+          standing alone, with nothing to stand against.
+
+DECISION  The fraction's dot belongs to the number only where digits or
+          an exponent follow ('1.5', '1.e5'); 'A=1.' is the number '1'
+          and the sentence's '.'. A number followed by a dot and a word
+          character is no number, as before ('1.x' stays text).
+
+COST      A number written '3.' is now '3' and a dot: against '3.0' the
+          dot stands alone. Measured on this tree: no nominal moved; the
+          three pages printing the pattern's text moved by that line
+          ('test-pattern_finder.py' do/setup/tolerance_id), and 'dot'
+          pins the reading.
+
+----------------------------------------------------------------------------
+C-18  NO SLASH SWITCH: '/' AND '\' ARE AN EQUIVALENCE PATTERN       (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   'slash' (compare's 'backslash_f', on by default) registered the
+          pattern [\\/]+ as an equivalence, and 'uniform()' rewrote every
+          '\' to '/' before the literal comparison -- a second mechanism
+          for one equivalence, and one a person could only switch, not
+          see.
+
+DECISION  RULED (Frank-Rene): "the engine behind the 'slash' is actually
+          an equivalence pattern '/' and '\' are equivalent. so we must
+          remove it from the engine and add it to the equivalence
+          patterns. parameter 'slash' has no reason to exist." "slash
+          removed, where it is actually used it is replaced with an
+          equivalence pattern. ensure the renovate functionality is in
+          place."
+          Gone: 'backslash_f' (compare, its mirror, 'ConfigInst' -- the
+          DOWN protocol's signature moves), the rewrite in 'uniform()',
+          the key 'tolerance.slash' (validator, relation, printer, pane).
+          A header or conf still stating 'slash' is refused BY NAME with
+          its successor, eq_pattern = ["[\\\\/]+"], and 'hwut.renovate
+          --apply' rewrites it -- as it rewrites hwut 1.0's 'slash_eqv':
+          yes joins "[\\\\/]+" to the scope's 'eq_pattern', no disappears.
+          MEASURED, the default switched off over the census: no page's
+          verdict depended on it; 'test-association-cost.py' fixture and
+          long_lines count fewer search nodes (intend 19's hang fixture:
+          3207 nodes at 32 lines instead of 20691) -- every path had been
+          cut into tokens at its slashes.
+
+COST      '/' and '\' differ unless a page says otherwise.

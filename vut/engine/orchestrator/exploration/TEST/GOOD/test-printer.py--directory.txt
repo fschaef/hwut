@@ -19,7 +19,6 @@ test-a.py {
             }
             tolerance {
                 numeric_ratio = 0.0           # default
-                slash = true                  # default
                 whitespace = true             # default
                 eq_pattern = []               # default
                 nothing = []                  # default
@@ -49,7 +48,6 @@ test-a.py {
             }
             tolerance {
                 numeric_ratio = 0.0           # default
-                slash = true                  # default
                 whitespace = true             # default
                 eq_pattern = []               # default
                 nothing = []                  # default
@@ -85,7 +83,6 @@ test-b.py {
             }
             tolerance {
                 numeric_ratio = 0.0           # default
-                slash = true                  # default
                 whitespace = true             # default
                 eq_pattern = []               # default
                 nothing = []                  # default

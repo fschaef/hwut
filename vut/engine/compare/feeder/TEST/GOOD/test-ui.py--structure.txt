@@ -1,5 +1,5 @@
 --- TEST: Structural Mismatch (LineSequence) ---
-Packet: HEADER (Signature: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8)) )
+Packet: HEADER (Signature: ((7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM)) )
 Packet: CONFIG
 Packet: SECTION 'LINE_SEQUENCE/LINE_SEQUENCE' Type: ChunkPair
 Packet: ROW S:01 | N:01 (Cost: 0.00)

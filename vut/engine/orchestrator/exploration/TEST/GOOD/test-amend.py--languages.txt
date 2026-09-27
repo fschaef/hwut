@@ -1,0 +1,138 @@
+
+--- #  (sh, Python, Perl, Ruby, R, Make)
+    |#!/bin/sh
+    |# @hwut {
+    |#     title   = "T"
+    |#     choices = ["a"]
+    |#     tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |# }
+    |echo
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- //  (C++, Java, C#, Go, Rust, JavaScript)
+    |// @hwut {
+    |//     title   = "T"
+    |//     choices = ["a"]
+    |//     tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |// }
+    |int main() {}
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- --  (SQL, Lua, Haskell, Ada, VHDL)
+    |-- @hwut {
+    |--   title   = "T"
+    |--   choices = ["a"]
+    |--   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |-- }
+    |print(1)
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- ;  (Lisp, Scheme, NASM, INI)
+    |; @hwut {
+    |;   title   = "T"
+    |;   choices = ["a"]
+    |;   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |; }
+    |(print 1)
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- %  (TeX/LaTeX, MATLAB, Erlang, Prolog)
+    |% @hwut {
+    |%   title   = "T"
+    |%   choices = ["a"]
+    |%   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |% }
+    |\documentclass{article}
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- '  (Visual Basic, VBA, VBScript)
+    |' @hwut {
+    |'   title   = "T"
+    |'   choices = ["a"]
+    |'   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |' }
+    |MsgBox 1
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- REM  (BASIC, Windows batch)
+    |REM @hwut {
+    |REM   title   = "T"
+    |REM   choices = ["a"]
+    |REM   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |REM }
+    |echo 1
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- !  (Fortran 90+)
+    |! @hwut {
+    |!   title   = "T"
+    |!   choices = ["a"]
+    |!   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |! }
+    |program p
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- "  (Vim script)
+    |" @hwut {
+    |"   title   = "T"
+    |"   choices = ["a"]
+    |"   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |" }
+    |echo 1
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- -- |  (Haskell (Haddock))
+    |-- | @hwut {
+    |-- |   title   = "T"
+    |-- |   choices = ["a"]
+    |-- |   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |-- | }
+    |main = pure ()
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- /* * */  (C, CSS, block style with ' * ' lines)
+    |/* @hwut {
+    | *   title   = "T"
+    | *   choices = ["a"]
+    | *   tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    | * }
+    | */
+    |int x;
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- (* *)  (OCaml, Pascal, Mathematica: opener on the marker's line)
+    |(* @hwut {
+    |     title   = "T"
+    |     choices = ["a"]
+    |     tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |   } *)
+    |let () = ()
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- <!-- -->  (XML, HTML, Markdown: opener on the line before)
+    |<!--
+    |@hwut {
+    |    title   = "T"
+    |    choices = ["a"]
+    |    tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |}
+    |-->
+    |<a/>
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- =begin  (Ruby: a block of words on lines of their own)
+    |=begin
+    |@hwut {
+    |  title   = "T"
+    |  choices = ["a"]
+    |  tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] }
+    |}
+    |=end
+    |puts 1
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+
+--- one line  (any: the header on one line)
+    |# @hwut { title = "T"  choices = ["a"]  tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9]+"] } }
+    |echo
+    read back: title 'T', choices ['a'], numeric_ratio 0.047, eq_pattern ['id=[0-9]+']
+<hwut-end>

@@ -41,8 +41,33 @@ def unwrap(text, region):
     if len(line_list) == 1:
         return [SourceLine(line_list[0], region.line, region.column)]
 
-    prefix = _common_prefix(line_list[1:])
     result = [SourceLine(line_list[0], region.line, region.column)]
+    #  THE MARKER LINE'S DECORATION IS EVERY LINE'S (X-DECORATION): where
+    #  each following line with content opens with it, after blanks, it
+    #  is stripped there -- whatever it is: 'REM', '%', '-- |', '"'. A
+    #  header whose lines carry another lead -- '/*' over ' * ' -- or none
+    #  -- a block comment's inside -- falls to the common prefix.
+    #  Where the common prefix already covers it -- '#', '//', '--' --
+    #  the common prefix is taken, as it always was, blanks after the
+    #  decoration included.
+    decoration = getattr(region, "decoration", "")
+    content_list = [line for line in line_list[1:] if line.strip()]
+    prefix = _common_prefix(line_list[1:])
+    if decoration and content_list \
+       and not prefix.strip().startswith(decoration) \
+       and all(line.lstrip().startswith(decoration) for line in content_list):
+        #  THE BLANKS AFTER IT, as far as every line shares them, go too.
+        blank_n = min(len(rest) - len(rest.lstrip(" \t"))
+                      for rest in (line.lstrip()[len(decoration):]
+                                   for line in content_list))
+        for i, line in enumerate(line_list[1:], start=1):
+            stripped = line.lstrip()
+            n = len(line) - len(stripped)
+            if stripped.startswith(decoration):
+                n += len(decoration) + min(blank_n, len(stripped) - len(decoration))
+            result.append(SourceLine(line[n:], region.line + i, n))
+        return result
+
     for i, line in enumerate(line_list[1:], start=1):
         n = min(len(prefix), len(line)) if not line.strip() else len(prefix)
         result.append(SourceLine(line[n:], region.line + i, n))

@@ -24,7 +24,6 @@ STDOUT {
             pype = "./tidy.pype"
             tolerance {
                 numeric_ratio = 0.0
-                slash = true
                 whitespace = true
                 eq_pattern = []
                 nothing = []
@@ -74,7 +73,6 @@ STDOUT {
             }
             tolerance {
                 numeric_ratio = 0.0
-                slash = true
                 whitespace = true
                 eq_pattern = []
                 nothing = []

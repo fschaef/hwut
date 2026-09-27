@@ -19,9 +19,9 @@ tolerant comparison.
  * ANALOGY: pattern allows for different strings to appear, as long as it is
             always the same strings and their counterpart.
 
- * SLASH: the exact number of characters of that type is unimportant for
-          equivalence. The 'slash' pattern helps with output of file names
-          under different operating systems.
+ * SLASH: no pattern of its own (C-18). File names printed under
+          different operating systems are an author's 'eq_pattern':
+          "[\\\\/]+" makes any run of slashes and backslashes one.
 
  * SEPERATOR: not under consideration for comparison, but sperates elements
               of the line.
@@ -139,16 +139,24 @@ class PatternFinder:
         #             it, '4.5s' backtracked to NUMERIC '4' + STRING '.5s' --
         #             half a number. Glued to a word, it is no number, as
         #             'x86' is none.
-        # (?!\w)   -- at back:  look ahead: no 'word character directly after'
+        # \.(?:\d+|(?=[eE]))
+        #          -- A DOT IS THE NUMBER'S ONLY WHERE DIGITS OR AN EXPONENT
+        #             FOLLOW (C-17). 'A=1.' ends a sentence: the number is
+        #             '1' and the dot is the sentence's. MEASURED: '1.' was
+        #             read as ONE number, so against 'A=1.01.' the dot
+        #             after '1.01' stood alone and was marked a deviation.
+        # (?!\w|\.\w)
+        #          -- at back:  look ahead: no 'word character directly
+        #             after', nor a dot and one ('1.x' stays text, as before)
         _register(E_ToleranceId.NUMERIC,
-                  r"(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w)")
+                  r"(?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.(?:\d+|(?=[eE][-+]?\d)))?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w|\.\w)")
 
         if config.whitespace_f:
             _register(E_ToleranceId.SEPERATOR, r"\s+")
 
-        if config.backslash_f:
-            _register(E_ToleranceId.EQUIVALENCE_PATTERN, r"[\\/]+")
-
+        #  NO 'SLASH' SWITCH (C-18): '/' and '\' are equivalent where
+        #  an author says so, with an 'eq_pattern' -- the regex [\\/]+ -- like
+        #  every other equivalence.
 
         # Pre-filter equivalence patterns for the secondary overlap check
         self._equiv_patterns = tuple(
@@ -158,7 +166,6 @@ class PatternFinder:
         )
 
         # Configuration state
-        self.backslash_f                = config.backslash_f
         self.strip_whitespace_f         = config.strip_whitespace_f
         self.whitespace_f               = config.whitespace_f
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
@@ -243,7 +250,6 @@ class PatternFinder:
     def uniform(self, line):
         if self.strip_whitespace_f: line = line.strip()
         if self.whitespace_f:       line = self._whitespace_re.sub(" ", line)
-        if self.backslash_f:        line = line.replace("\\", "/")
         return line
 
     def is_irrelevant(self, line):

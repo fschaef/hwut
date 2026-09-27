@@ -84,7 +84,6 @@ class ConfigInst(DisplayInst):
     strip_whitespace_f:         bool
     analogy_f:                  bool
     whitespace_f:               bool
-    backslash_f:                bool
     numeric_tolerance_ratio:    float
     ignored_line_begin_marker:  str
     ignored_line_end_marker:    str
@@ -122,7 +121,6 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
     yield ConfigInst(strip_whitespace_f         = pf.strip_whitespace_f,
                      analogy_f                  = pf.analogy_f,
                      whitespace_f               = pf.whitespace_f,
-                     backslash_f                = pf.backslash_f,
                      numeric_tolerance_ratio    = pf.numeric_tolerance_ratio,
                      ignored_line_begin_marker  = pf.ignored_line_begin_marker,
                      ignored_line_end_marker    = pf.ignored_line_end_marker,

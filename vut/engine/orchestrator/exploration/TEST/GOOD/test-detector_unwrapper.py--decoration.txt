@@ -1,0 +1,67 @@
+
+--- line triggers: the decoration on every line ---
+  //       read
+  #        read
+  ;        read
+  --       read
+  %        read
+  '        read
+  REM      read
+  !        read
+  "        read
+  \        read
+  @        read
+  |        read
+  ⍝        read
+  NB.      read
+  /        read
+  dnl      read
+  .\"      read
+  @c       read
+  ..       read
+  *>       read
+  ///      read
+  //!      read
+  ##       read
+  #'       read
+  -- |     read
+
+--- block comments: opener on the marker's line / on the line before ---
+  /* */          read   read
+  /+ +/          read   read
+  (* *)          read   read
+  { }            read   read
+  {- -}          read   read
+  --[[ ]]        read   read
+  #| |#          read   read
+  #= =#          read   read
+  #[ ]#          read   read
+  <# #>          read   read
+  %{ %}          read   read
+  =begin =end    read   read
+  =pod =cut      read   read
+  #[[ ]]         read   read
+  #cs #ce        read   read
+  (: :)          read   read
+  ( )            read   read
+  " "            read   read
+  <!-- -->       read   read
+  comment ;      read   read
+  co co          read   read
+  /** */         read   read
+  (** *)         read   read
+  """ """        read   read
+
+--- a C block with ' * ' lines under a '/**' opener ---
+  read
+
+--- a marker glued to its trigger ---
+  read
+
+--- what stays out ---
+  a numbered screen log    stays out
+  three words of prose     stays out
+  a quoted marker          stays out
+  a token of nine          stays out
+  a string in code         stays out
+<hwut-end>

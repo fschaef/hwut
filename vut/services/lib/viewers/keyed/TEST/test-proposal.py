@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "The tolerance proposals: discrepancies in, proposal out."
-#     choices    = ["example", "classes", "numeric", "blanks", "nothing",
-#                   "in-force", "none", "applied"]
+#     choices    = ["applied", "blanks", "classes", "edit", "example",
+#                   "in-force", "none", "nothing", "numeric"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -21,9 +21,12 @@ PURPOSE: THE PROPOSAL GENERATOR (intend 21, section 4), fed with what the
     nothing    a word on one side only
     in-force   what stands is not proposed again, and is kept in the line
     none       nothing differs: nothing is proposed
-    applied    every proposal uncommented, compare asked again: what is
-               still standing is printed -- the proposals are ideas, and
-               this choice records how far they reach
+    applied    every proposal uncommented, compare asked again -- once with
+               the eq_patterns BY CLASS, once BY EDIT OPERATIONS: what is
+               still standing is printed; the proposals are ideas, and
+               this choice records how far each reaches
+    edit       the edit-operation pattern beside the class one, word pair
+               by word pair
 ______________________________________________________________________________
 """
 import asyncio
@@ -33,7 +36,7 @@ import sys
 
 from vut.engine.compare.api                 import feeder_ui, Configuration
 from vut.services.lib.viewers.keyed         import report
-from vut.services.lib.viewers.keyed.proposal import proposal_line_list
+from vut.services.lib.viewers.keyed.proposal import proposal_db
 
 
 def pair_list_of(subject, nominal, configuration=None):
@@ -58,11 +61,13 @@ def show(subject, nominal, configuration=None, **in_force):
                and the lines."""
     for tag, text in (("OUTPUT", subject), ("GOOD", nominal)):
         for line in text.splitlines(): print("   %-6s | %s" % (tag, line))
-    line_list = proposal_line_list(pair_list_of(subject, nominal, configuration),
-                                   **in_force)
+    db = proposal_db(pair_list_of(subject, nominal, configuration), **in_force)
     print("   ->")
-    for line in line_list or ["(no proposal)"]: print("     %s" % line)
-    return line_list
+    if not db: print("     (no proposal)")
+    for key, line_list in db.items():
+        print("     [%s]" % key)
+        for line in line_list: print("       %s" % line)
+    return db
 
 
 def test_example():
@@ -128,26 +133,42 @@ def test_applied():
                "at 2026-01-02 09:00:00 pid 0xFF in /var/x took 700 s\n"
                "x y\n"
                "count 4\n")
-    line_list = show(subject, nominal)
-    configuration = Configuration()
-    finder = configuration.pattern_finder
-    for line in line_list:
-        match = re.match(r"# (numeric_ratio|eq_pattern|nothing) = (.*)$", line)
-        if match is None: continue
-        key, value = match.groups()
-        if key == "numeric_ratio":
-            finder.numeric_tolerance_ratio = float(value)
-            continue
-        text_list = [t.replace('\\\\', '\\') for t in re.findall(r'"((?:[^"\\]|\\.)*)"', value)]
-        if key == "eq_pattern": finder.equivalent_pattern_list = text_list
-        else:                   finder.visible_nothing_pattern_list = text_list
-    print("\n   compare, asked again:")
-    for pair in pair_list_of(subject, nominal, configuration):
-        bad_n = sum(1 for cell in tuple(pair.cells_s) + tuple(pair.cells_n)
-                    if not cell.relation_id.name.startswith("OK_"))
-        print("     OUTPUT %i: %s" % (pair.line_n_s,
-                                      "equivalent" if bad_n == 0
-                                      else "%i element(s) differ" % bad_n))
+    db = show(subject, nominal)
+    for label in ("by class", "by edit operations"):
+        configuration = Configuration()
+        finder = configuration.pattern_finder
+        for line in [each for key in db for each in db[key]]:
+            match = re.match(r"# (numeric_ratio|eq_pattern|nothing) *= (\S+|\[.*\])(?:    # (.*))?$",
+                             line)
+            if match is None: continue
+            key, value, note = match.groups()
+            if key == "numeric_ratio":
+                finder.numeric_tolerance_ratio = float(value)
+                continue
+            if key == "eq_pattern" and note and label not in note: continue
+            text_list = [t.replace('\\\\', '\\')
+                         for t in re.findall(r'"((?:[^"\\]|\\.)*)"', value)]
+            if key == "eq_pattern": finder.equivalent_pattern_list = text_list
+            else:                   finder.visible_nothing_pattern_list = text_list
+        print("\n   compare, asked again, the eq_patterns %s:" % label)
+        for pair in pair_list_of(subject, nominal, configuration):
+            bad_n = sum(1 for cell in tuple(pair.cells_s) + tuple(pair.cells_n)
+                        if not cell.relation_id.name.startswith("OK_"))
+            print("     OUTPUT %i: %s" % (pair.line_n_s,
+                                          "equivalent" if bad_n == 0
+                                          else "%i element(s) differ" % bad_n))
+
+
+def test_edit():
+    print("-- word pair by word pair: by class | by edit operations")
+    from vut.services.lib.viewers.keyed.proposal import pattern_of, edit_pattern_of
+    for word_s, word_n in (("id=ab12;", "id=zz7;"), ("v1.2.3-rc1", "v1.4.3-rc2"),
+                           ("2026-09-26", "2026-01-02"), ("run=done", "run=fail"),
+                           ("/tmp/a/b", "/var/x"), ("0x1f", "0xFF"),
+                           ("build-4711", "build-815"), ("Alpha", "beta")):
+        print("   %-12s %-12s | %-28s | %s" % (word_s, word_n,
+                                                pattern_of(word_s, word_n),
+                                                edit_pattern_of(word_s, word_n)))
 
 
 CHOICE_DB = {
@@ -159,6 +180,7 @@ CHOICE_DB = {
     "in-force": test_in_force,
     "none":     test_none,
     "applied":  test_applied,
+    "edit":     test_edit,
 }
 
 choice = sys.argv[1] if len(sys.argv) > 1 else "example"

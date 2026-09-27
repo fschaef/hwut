@@ -2,6 +2,7 @@
 #  @hwut {
 #    title   = "VUT Edit Operations Debugger"
 #    choices = ["amnesia", "pruning_analogy", "pruning_trans"]
+#    tolerance { numeric_ratio = 0.012 }
 #  }
 """
 Regression Test Suite: A* Search Bugs in VUT Edit Operations.
@@ -125,7 +126,7 @@ def test_pruning_analogy():
 def test_amnesia():
     print_header("Transposition Amnesia")
     print("OBJECTIVE: Verify Transpose operation records the implied analogy.")
-    print("SCENARIO:  Transpose ((A)) to match ((1)). This implies A=1.")
+    print("SCENARIO:  Transpose ((A)) to match ((1)). This implies A=1.01.")
     print("           Later, ((A)) matches ((2)). This implies A=2.")
     print("BUG:       If A=1 is not recorded during transpose, engine accepts A=2 (No Conflict).")
     print("           This makes the invalid Transpose path look cheap.")

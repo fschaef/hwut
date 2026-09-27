@@ -92,7 +92,7 @@ def run(n, complexity, seed):
     config.analogy_f = True
     config.numeric_tolerance_ratio = 0.5
     config.whitespace_f = True
-    config.backslash_f = True
+    config.equivalent_pattern_list = [r"[\\/]+"]     # the slashes (C-18)
 
     # Initialize the generator
     stream = string_stream(n=n, complexity=complexity, seed=seed)

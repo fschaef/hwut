@@ -1,9 +1,15 @@
-   | tolerances were changed in memory for 'test.sh one':
-   |     tolerance { numeric_ratio = 0.047  regions = false  eq_pattern = ["id=[0-9abz]{3,4};", "a\\.b"] }
-   |   (1) store them in TMP/test.sh--one.tolerance.conf
-   |   (2) enter them into test.sh, where its other configuration stands
-   |   (3) omit them
-   | keep? [1/2/3] 2
+   | tolerances were changed in memory for 'test.sh one' -- to copy:
+   | 
+   |     tolerance {
+   |         numeric_ratio = 0.047
+   |         regions       = false
+   |         eq_pattern    = ["id=[0-9abz]{3,4};", "a\\.b"]
+   |     }
+   | 
+   |   [1]      store them in TMP/test.sh--one.tolerance.conf
+   |   [2]      enter them into test.sh, where its other configuration stands
+   |   <enter>  omit them -- copy them from above
+   | > 2
    | entered into test.sh
    -> entered
 

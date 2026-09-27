@@ -337,6 +337,27 @@ compiler or interpreter reads it.
 'hwut.parse' shows what was extracted from a file, how it parsed, and the
 effective value of every parameter with its provenance.
 
+NO LANGUAGE IS KNOWN (X-DECORATION). The marker '@hwut {' stands within the
+file's first eight lines; what stands before it ON ITS LINE is the
+DECORATION -- up to two tokens, each at most 8 characters and without a
+digit, the last glued to the marker unless it is a quote -- and the same
+decoration is stripped from every following header line. So a header is
+written in any language's own comment:
+
+    # @hwut {          % @hwut {          REM @hwut {        -- | @hwut {
+    #   title = "T"    %   title = "T"    REM   title = "T"  -- |   title = "T"
+    # }                % }                REM }              -- | }
+
+and inside any block comment, its opener on the marker's line or on the
+line before ('(* @hwut {', '<!--' then '@hwut {'). A line trigger,
+a block, nothing at all: 'exploration/TEST/test-detector_unwrapper.py
+decoration' reads every style of the languages it lists.
+
+WHERE NO DECORATION FITS -- a language whose comment is longer, a file
+that must not carry a header at all (a data file, a generated source) --
+the test application is named under 'apps' in its directory's 'hwut.conf'
+(section 5) and carries no header.
+
 
 4.1  '%' IS THE SOURCE FILE'S STEM
 ______________________________________________________________________________

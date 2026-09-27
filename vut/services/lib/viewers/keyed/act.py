@@ -52,6 +52,7 @@ class E_Act(Enum):
     EDIT_HERE    = auto()   # GOOD becomes an editable text (intend 21)
     TOLERANCE    = auto()   # the tolerance pane opens (intend 21)
     CLOSE_EDIT   = auto()   # an editing pane closes: <F5>, try and realign
+    DISCARD      = auto()   # an editing pane closes: <Esc>, nothing changed
     TYPE         = auto()   # SCRIPT ONLY: the editing pane's text becomes
                             #   the argument -- a keyboard types instead
     DONE         = auto()   # 'q': what stands is written (E-89)

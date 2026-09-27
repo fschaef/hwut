@@ -59,7 +59,6 @@ def make_config():
     pf = c.pattern_finder
     pf.analogy_f                    = True
     pf.whitespace_f                 = True
-    pf.backslash_f                  = False
     pf.numeric_tolerance_ratio      = 0.1               # +/-10%
     pf.equivalent_pattern_list      = [r"happy|glad"]
     pf.visible_nothing_pattern_list = ["nothing", "nix"]

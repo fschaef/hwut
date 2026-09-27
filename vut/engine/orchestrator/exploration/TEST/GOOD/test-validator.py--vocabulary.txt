@@ -8,6 +8,9 @@ no specification
 FAULT f.py:4:5: SYNTAX: duplicate key 'tolerance'; the first stands, this one is refused
 FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
 
+--- a retired key: 'slash' (compare C-18), refused with its successor ---
+FAULT f.py:3:19: VOCABULARY: 'slash' is retired: '/' and '\' are equivalent by eq_pattern = ["[\\\\/]+"]; 'hwut.renovate --apply' rewrites it
+
 --- 'title' absent ---
 no specification
 FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block

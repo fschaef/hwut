@@ -1,0 +1,10 @@
+   fresh                      <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo(grey)  r=redo(grey)  q=done  <space>=range  <enter>=accept range  A=accept all  d=remove  <tab>=pane
+   after a take               <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo(lit)  r=redo(grey)  q=done  <space>=range  <enter>=accept range  A=accept all  d=remove  <tab>=pane
+   after its undo             <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo(grey)  r=redo(lit)  q=done  <space>=range  <enter>=accept range  A=accept all  d=remove  <tab>=pane
+   after its redo             <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo(lit)  r=redo(grey)  q=done  <space>=range  <enter>=accept range  A=accept all  d=remove  <tab>=pane
+   the report                 <F5>=tolerance  t=close  <enter>=go there
+   help                       <F1>=close
+   editing GOOD               <F5>=done  <Esc>=discard  <F6>=$EDITOR  <c-z>=undo(grey)  <c-y>=redo(grey)
+   the tolerance pane         <F5>=try+close  <Esc>=discard  <F6>=$EDITOR  <c-z>=undo(grey)  <c-y>=redo(grey)  the lower line stands
+   the view                   <F1>=help  <tab>=pane  /=search  q=quit
+<hwut-end>

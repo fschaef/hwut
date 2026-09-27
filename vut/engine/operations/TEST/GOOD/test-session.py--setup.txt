@@ -9,7 +9,6 @@ INSPECT: default setup  -> verdict False entry 'compare' False
          analogy_f                      True           False          yes
          constraint_f                   True           False          yes
          whitespace_f                   True           False          yes
-         backslash_f                    True           False          yes
          numeric_tolerance_ratio        0              1              yes
          equivalent_pattern_list        []             ['chosen']     yes
          visible_nothing_pattern_list   []             ['chosen']     yes

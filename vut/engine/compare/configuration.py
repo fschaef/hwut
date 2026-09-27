@@ -42,7 +42,6 @@ class ConfigurationPatternFinder:
     analogy_f:                    bool  = True
     constraint_f:                 bool  = True   # '((name: value))' bindings
     whitespace_f:                 bool  = True
-    backslash_f:                  bool  = True
     numeric_tolerance_ratio:      float = 0      # [0:1] 0=equal values; 1=any number works
     equivalent_pattern_list:      list  = field(default_factory=list)
     visible_nothing_pattern_list: list  = field(default_factory=list)

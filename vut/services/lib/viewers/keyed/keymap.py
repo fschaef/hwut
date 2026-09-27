@@ -66,7 +66,7 @@ KEYMAP = (
     (("z",),            E_Act.REALIGN,      BOTH, "re-align: ask compare again"),
     (("t",),            E_Act.REPORT,       BOTH, "the tolerance report: analogies, patterns, constraints"),
     (("e",),            E_Act.EDIT_HERE,    BOTH, "edit GOOD here; <F5> ends the edit and re-aligns"),
-    (("c-e",),          E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
+    (("f6", "c-e"),     E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
     (("f5",),           E_Act.TOLERANCE,    BOTH, "the tolerance in memory, editable; <F5> tries it"),
     (("f1",),           E_Act.HELP,         BOTH, "this table"),
     (("q",),            E_Act.DONE,         BOTH, "done: GOOD as it stands is written"),
@@ -78,10 +78,11 @@ KEYMAP = (
 #  to nothing here (ruled: "drop <c-c>; no undo all"). Undo and redo are
 #  the TEXT's own, a stack apart from the merge's.
 EDIT_KEYMAP = (
-    (("f5",),           E_Act.CLOSE_EDIT,   BOTH, "done: re-align under what the pane says"),
+    (("f5",),           E_Act.CLOSE_EDIT,   BOTH, "done: close the pane; what changed is re-aligned"),
+    (("escape",),       E_Act.DISCARD,      BOTH, "discard: close the pane; nothing changes"),
+    (("f6", "c-e"),     E_Act.EDIT,         BOTH, "this text in $EDITOR; its exit ends the edit"),
     (("c-z",),          E_Act.UNDO,         BOTH, "undo, in this text"),
     (("c-y",),          E_Act.REDO,         BOTH, "redo, in this text"),
-    (("c-e",),          E_Act.EDIT,         BOTH, "this text in $EDITOR; its exit ends the edit"),
 )
 
 #  THE VIEWING TABLE ('hwut.run.diff'): the same keys, and only the acts
@@ -146,6 +147,14 @@ def help_line_list(keymap=KEYMAP):
 #  'c' STANDS BESIDE '<enter>' (E-88): what '<enter>' copies stays on the
 #  screen until 'c' writes it -- MEASURED: without the hint, a person
 #  copied, pressed 'q', and GOOD was untouched.
+#  THE FUNCTION KEYS (intend 21): at the LEFT of the foot, before every
+#  other hint, in every mode -- ruled: "have all function key shortcuts
+#  be displayed on the status bar on the left, left aligned".
+FUNCTION_TUPLE      = ((E_Act.HELP,      "help"),
+                       (E_Act.TOLERANCE, "tolerance"),
+                       (E_Act.EDIT,      "$EDITOR"))
+VIEW_FUNCTION_TUPLE = ((E_Act.HELP,      "help"),)
+
 BASIC_TUPLE = ((E_Act.ANCHOR,     "range"),
                (E_Act.TAKE_RANGE, "accept range"),
                (E_Act.TAKE_ALL,   "accept all"),
@@ -167,6 +176,15 @@ def basic_text(basic_tuple=BASIC_TUPLE, keymap=KEYMAP):
                      for act, word in basic_tuple if key_list_of(act, keymap))
 
 
+def item_list_of(basic_tuple, keymap=KEYMAP):
+    """RETURN: list[(str, E_Act)], the foot's hints -- 'key=word' under
+               each act's FIRST key in 'keymap', with the act, so a
+               painter may colour the hint by what the act can do now;
+               an act the table does not bind is left out."""
+    return [("%s=%s" % (_named(key_list_of(act, keymap)[0]), word), act)
+            for act, word in basic_tuple if key_list_of(act, keymap)]
+
+
 def _named(key):
     """RETURN: str, the key as a person would write it (E-87): a
                single character as itself, every NAMED key in angle
@@ -174,6 +192,7 @@ def _named(key):
     """
     if key == " ":  return "<space>"
     if key == "c-m": return "<enter>"
+    if key == "escape": return "<Esc>"
     if key[:1] == "f" and key[1:].isdigit(): return "<F%s>" % key[1:]
     if key.startswith("<"): return key         # already written, e.g. '<number>g'
     return "<%s>" % key if len(key) > 1 else key

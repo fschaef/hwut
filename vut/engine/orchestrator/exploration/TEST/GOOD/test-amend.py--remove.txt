@@ -1,0 +1,7 @@
+--- from a shared line
+    |# @hwut { title = "A"  whitespace_eqv = yes }
+--- from a line of its own: the line goes
+    |hwut {
+    |    on_entry  = "true"
+    |}
+<hwut-end>

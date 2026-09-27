@@ -49,7 +49,6 @@ if "--hwut-info" in sys.argv:
 config = Configuration()
 config.pattern_finder.analogy_f               = True
 config.pattern_finder.whitespace_f            = True
-config.pattern_finder.backslash_f             = False
 config.pattern_finder.numeric_tolerance_ratio = 0.1
 config.pattern_finder.equivalent_pattern_list = ["number|Zahl"]
 
