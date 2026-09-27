@@ -219,7 +219,8 @@ def _handler_db():
     from vut.engine.compare.region.potpourri.chunk import InputChunkPotpourri
     from vut.engine.compare.region.verbatim.chunk    import InputChunkVerbatim
     from vut.engine.compare.region.ignore.chunk      import InputChunkIgnore
-    from vut.engine.compare.region.unaccepted.chunk  import InputChunkUnaccepted
+    from vut.engine.compare.region.unaccepted.chunk  import (InputChunkUnaccepted,
+                                                             InputChunkConstraintViolation)
     from vut.engine.compare.region.point_cloud.chunk import InputChunkPointCloud
     from vut.engine.compare.region.table.chunk       import (InputChunkTable,
                                                              convert_ignore,
@@ -272,6 +273,11 @@ def _handler_db():
         "unaccepted": RegionHandler(
             shebang_name = "unaccepted",
             chunk_class  = InputChunkUnaccepted),
+        #  THE OTHER BAD REGION (C-21): what a run found a constraint
+        #  broken by, written where it was found (services E-123).
+        "constraint-violation": RegionHandler(
+            shebang_name = "constraint-violation",
+            chunk_class  = InputChunkConstraintViolation),
     }
 
 

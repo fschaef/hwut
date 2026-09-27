@@ -28,11 +28,12 @@ from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
 from   ..result                 import E_TestRunResult
-from   ...compare.api           import (Configuration, RegionSyntaxError,
+from   ...compare.api           import (Configuration, ConstraintSpecError,
+                                        RegionSyntaxError,
                                         is_equivalent)
 from   ..nominal                import NominalNotAvailable
 from   .terminal                import (ends_in_terminal,
-                                        carries_unaccepted_f)
+                                        bad_region_of)
 from   ..observer               import notify
 from   ..report                 import (Comparison, TestResult)
 
@@ -95,6 +96,8 @@ class EquivalenceCheck:
                     if self.config.compare is not None else Configuration()
         verdict_db = {}
         report     = E_TestRunResult.OK
+        finding_db = {}
+        detail_list = []
 
         #  A FORBIDDEN STDERR (the book's note, S-1): a word on that
         #  stream is an ERROR, reported BY NAME -- never a line
@@ -148,10 +151,15 @@ class EquivalenceCheck:
             #  NAME: the reason is 'unaccepted', never 'not
             #  equivalent' -- a partial acceptance is not a regression
             #  and must not read as one. Peeked on a fresh reader.
-            if carries_unaccepted_f(nominal.open()):
+            #  A 'constraint-violation' REGION (C-21, E-123) fails by ITS
+            #  name: a run found a constraint broken there.
+            bad = bad_region_of(nominal.open())
+            if bad is not None:
                 verdict_db[name] = False
                 if report is E_TestRunResult.OK:
-                    report = E_TestRunResult.UNACCEPTED
+                    report = E_TestRunResult.UNACCEPTED \
+                             if bad == "unaccepted" \
+                             else E_TestRunResult.CONSTRAINT
                 notify(self.observer, "verdict", name, False)
                 close = getattr(nominal_reader, "close", None)
                 if close is not None: close()
@@ -159,10 +167,17 @@ class EquivalenceCheck:
                 continue
 
             subject_reader = provided[name].open()
+            finding_list   = []
             try:
-                ok = await is_equivalent(options,
-                                                      subject_reader,
-                                                      nominal_reader)
+                ok = await is_equivalent(options, subject_reader,
+                                         nominal_reader, finding_list)
+            except ConstraintSpecError as error:
+                #  A CONSTRAINT THAT DOES NOT COMPILE is this case's
+                #  verdict with its reason -- never the end of the
+                #  directory's run (E-123).
+                ok     = False
+                report = E_TestRunResult.CONSTRAINT
+                detail_list.append(str(error))
             except RegionSyntaxError as error:
                 #  THE TEXT ARRIVED AND CANNOT BE READ. A broken region
                 #  framing is a VERDICT WITH A REASON, not an exception:
@@ -177,8 +192,17 @@ class EquivalenceCheck:
                     close = getattr(reader, "close", None)
                     if close is not None: close()
 
+            #  WHAT THE CONSTRAINTS FOUND (C-20) is this subject's reason,
+            #  said in full (E-123).
+            finding_db[name] = tuple(finding_list)
+            if finding_list:
+                if report is E_TestRunResult.OK:
+                    report = E_TestRunResult.CONSTRAINT
+                detail_list.extend(f.text() for f in finding_list)
             verdict_db[name] = bool(ok)
             notify(self.observer, "verdict", name, bool(ok))
             if not ok and self.config.fast_fail: break
 
-        return Comparison(subject_verdict_db=verdict_db, report=report)
+        return Comparison(subject_verdict_db=verdict_db, report=report,
+                          finding_db=finding_db,
+                          detail="; ".join(detail_list) or None)

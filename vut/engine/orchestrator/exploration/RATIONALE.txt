@@ -1873,3 +1873,64 @@ DECISION  RULED (Frank-Rene): "make sure that the insertion of parameters
 
 COST      Comments INSIDE a rewritten scope are lost; the scope comes back
           on one line.
+
+----------------------------------------------------------------------------
+X-PRINTED  WHAT IS PRINTED READS BACK AS WRITTEN                   (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.config.show' printed a string between quotes as it stood:
+          the header's "[\\\\/]+" came out "[\\/]+", which reads back as
+          another pattern, and an 'id=\"x\"' did not read back at all.
+          A value longer than the comment column ran into its '# app'. The
+          'hwut.conf' block printed 'ignore  a, b' -- no specification
+          language. MEASURED: the tolerance scope pasted from the printed
+          tree into a header read back with SYNTAX faults.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "characters must appear in the
+          target stream in the way that they configured in the
+          configuration section. the stream should be able to be taken
+          copy/pasted into a configuration section."
+          ONE PRINTER OF VALUES, 'printer.value_text': backslash and quote
+          escaped, booleans lower case, absence 'null', tuples and lists
+          as lists. Its users: the tree ('printer'), the 'hwut.conf'
+          block ('hwut_parse', now 'hwut.conf { key = value }', a
+          'dependency' as its scope of quoted targets), the merge's
+          tolerance pane and the keeping of a tolerance
+          ('run/tolerance_text' re-exports it). A value past the column
+          keeps two blanks before its comment.
+          Pinned by 'TEST/test-printer.py read_back': the printed
+          tolerance scope, pasted into a header, configures compare
+          exactly as the original; against the old printer it does not
+          read back.
+
+          'same' and 'interactive' print ONCE, at the application's root
+          beside the title -- the one place an author may write them;
+          under a choice the validator refuses them (RULED 2026-09-27,
+          "yes, as discussed"). So the WHOLE tree reads back too: pasted
+          as a header it prints the same tree again, comments aside
+          ('read_back', second half).
+
+COST      Every printed tree moved two lines; nothing else changed.
+
+----------------------------------------------------------------------------
+X-FIXTURE  A PAGE READS ITS FIXTURES AS THE FRAMEWORK READS THEM     (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   'TEST/test-validator.py' parsed every fixture itself, as a
+          'hwut.conf', where only 'hwut { }' names the block. Headers are
+          written '@hwut { }' and so were its conf fixtures: all nine
+          choices recorded "no 'hwut { ... }' block" and pinned nothing.
+          Unseen, the fixtures had kept the vocabulary from before
+          services E-42 ('analogy', 'comment', 'constraints' at the root, a
+          choice's 'numeric', two 'tolerance' scopes in one header). The
+          README's 'hwut.conf' examples were written '@hwut { }' too, and
+          one listed its choices unquoted.
+
+DECISION  The page reads through the readers a file takes:
+          'reader.read_header' (region detected, unwrapped, parsed,
+          validated) and 'reader.read_conf'. Its conf fixtures are written
+          'hwut { }'; its header fixtures in today's vocabulary, each
+          stating what its choice's description claims. The nine GOODs now
+          record specifications and the refusals named. The README's three
+          'hwut.conf' examples read without a fault (MEASURED through
+          'read_conf').
+
+COST      None in behaviour; the validator was not touched.

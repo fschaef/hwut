@@ -223,28 +223,79 @@ ______________________________________________________________________________
 
 o-1  THE KEY THAT OPENS ETPM: F5, as built. 'T' stays free.
 
-o-2  UNDO ACROSS A ROUND. Every round opens a fresh MergeState, and
-     its undo stack with it -- as for 'z' and $EDITOR before this work.
-     So 'u' cannot take back an edit that F5 has realigned. Carrying the
-     stack across rounds means carrying pairings that the new round
-     replaced; not built, not presumed.
+     SETTLED 2026-09-27: o-2 "simply no; keep it simple" -- undo stays
+     within a round. o-3a "fix this please!" -> orchestrator/run O-34.
+     o-3b "obviously we need to fix that" -> exploration X-PRINTED.
+     o-3c -> exploration X-FIXTURE.
 
-o-3  MEASURED WHILE BUILDING, NOT FIXED (outside the ask):
-     a. A PAGE'S 'constraints' ARE NEVER ENFORCED. '_compare_of' sets
-        'constraint_expression_list' and never calls
-        'derive_constraint_db()', so 'constraint_db' stays empty.
-        MEASURED: 'tolerance { constraints = ["x < 5"] }', subject
-        'v ((x: 9))' against 'v ((x: 1))' -> equivalent; after
-        'derive_constraint_db()' -> not. Fixing it can turn a green page
-        red -- a value change, so it waits for a ruling. The pane's
-        'constraints' key inherits the defect.
-     b. 'hwut.config.show' prints a pattern's backslash unescaped: the
-        header's "[\\\\/]+" is shown as "[\\/]+", which does not read
-        back as written (the printer's own claim); a long value also runs
-        into its '# app' comment. The pane has its own printer, which
-        escapes.
-     c. 'exploration/TEST/test-validator.py' parses its fixtures as a
-        CONF ('plain_lines'), where '@hwut' names no block: every
-        fixture of 'vocabulary' records "no 'hwut { ... }' block" and
-        pins nothing. The retired-'slash' case added there goes through
-        'reader.read_header' instead.
+o-5  SETTLED 2026-09-27: "constraints simply don't fire as long as not
+     all variables are defined" -> compare C-19; the demo states
+     "twice == 2 * once".
+
+o-9  CONSTRAINTS AS A VERDICT, RULED AND BUILT 2026-09-27 (bookkeeper B-18,
+     compare C-20, services E-123/E-124; o-6 with it):
+     REVISED the same day: "Diff and merge shall better not print the
+     CONSTRAINT thing. Instead the hwut.run inserts a ##! Unaccepted region
+     describing the violation directly after the line that was causing
+     it." -> E-123 and E-124 rewritten.
+     AND: "## error: \"...\" with: [variable=value]+"; "'##! constraint-
+     violation' [...] in the list of 'bad regions'" -> compare C-21, E-123.
+     "a variable being part of a constraint, must occur. Otherwise this is
+     a flaw of the constraint definition. The test run shall be marked as
+     failed, with the according remark in the traces. The diff and accept
+     displays shall also inform about that."
+     "A subject violating constraints shall never be accepted; a
+     constraint that contradicts a good recording must stain that good
+     file; constraint contradictions must be displayed prominently in
+     diff and accept interactive."
+     o-6: "yes and it becomes a sanitizer issue" -- the run fails that one
+     case, hwut.sanitize finds such GOODs (a new aspect).
+     AND (2026-09-27): "We have the ##!unaccepted region; there one might
+     write explicit comments. Upon detection, this may be introduced in
+     the good files header. Just make sure, that this edition is not
+     meaninglessly repeated in the same good file. May be, in the books
+     have the stain repeated n transform into a stain-in general taking
+     | separated keywords. A number 'x repeat' is understood as
+     repetition instability." Asked and answered: the RUN writes the
+     region on detection; its remarks are '##' comment lines, one per
+     remark, none twice; "Only stain; change the books beforehand. The
+     software does not deal with the old version."; OUTPUT-side: FAIL,
+     a report token, never accepted, shown on the diff and accept
+     screens.
+
+     PASSES:
+       9.1  the book: one column 'stain', keywords '|'-separated, 'N
+            repeat' the repetition instability; 'stain_repeat_n' and
+            'stain_when' gone; 'adm/book-stain.py' converts a tree's
+            books once, beforehand.
+       9.2  compare: every variable a constraint names must be bound, on
+            either side, by the end of the stream; the findings leave
+            compare as REMARKS (subject side: not equivalent; nominal
+            side: the GOOD contradicts its constraint), never as an
+            exception that ends a directory (o-6).
+       9.3  the run: an OUTPUT finding fails the case with the report
+            token 'constraint' and its sentence; a GOOD finding stains
+            the book 'constraint' and writes the '##! unaccepted' region
+            at the GOOD's head, a remark never twice.
+       9.4  accept refuses an OUTPUT with a finding, '--force' or not;
+            'hwut.run.diff' and 'hwut.accept.interactive' show the
+            findings above the screen.
+       9.5  'hwut.sanitize' finds GOODs that contradict their
+            constraints ('--apply' writes the region).
+
+o-6  SETTLED with o-9: the directory runs on; the case fails by name.
+
+o-7  SETTLED 2026-09-27 ("yes, as discussed"): 'same' and 'interactive'
+     print once at the root; the whole tree reads back -> X-PRINTED.
+
+o-8  PAGES THAT NEVER CLOSE THEIR STREAM. MEASURED: 77 of the tree's 863
+     GOOD files do not end in '<hwut-end>', 75 of them under
+     'engine/compare' (not yet told apart: stdout streams from other
+     outputs). 'hwut.run'
+     passes them; 'hwut.accept' refuses them the day they change (R-70).
+     'test-constraints.py' was one (fixed with C-19).
+
+o-7  THE PRINTED TREE AS A WHOLE DOES NOT READ BACK. MEASURED:
+     'hwut.config.show' prints 'same' and 'interactive' under every
+     choice, where the validator refuses them; they are words of the
+     application's root. Its scopes do read back (X-PRINTED).

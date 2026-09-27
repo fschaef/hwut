@@ -565,3 +565,30 @@ GRAVEYARD A 'standing' column beside 'verdict' -- not taken: two
           already spoken for (the candidate output; C-9's region), the
           fourth says "waiting to be used" where the truth is "waiting
           to be accepted".
+
+
+B-18 THE STAIN IS ONE CELL OF KEYWORDS                           (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   The book knew one disqualification, the repetition
+          instability, in two columns ('stain_repeat_n', 'stain_when').
+          A GOOD that contradicts its own constraints is a second
+          (services E-123), and it had no place.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "in the books have the stain
+          repeated n transform into a stain-in general taking | separated
+          keywords. A number 'x repeat' is understood as repetition
+          instability." -- "Only stain; change the books beforehand. The
+          software does not deal with the old version."
+          ONE column 'stain': '7 repeat|constraint'. 'N repeat' is what
+          'hwut.run.stability' convicted and what it must repeat to clear;
+          it alone keeps a choice from being run or accepted
+          ('unstable_f'). Every other keyword is a disqualification of its
+          own, set and taken away by what detects it ('note_stain_keyword');
+          a cell that would not change is not written. Clearing the
+          repetition leaves the other keywords standing. The instant of the
+          conviction is not kept. 'adm/book_stain.py <dir> --apply'
+          converts a tree's books ONCE, beforehand; B-6's one-cell form is
+          no longer read.
+
+COST      A tree's books must be converted before the first run: an old
+          book's stain columns are unknown columns now, and read as clean.

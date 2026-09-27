@@ -112,8 +112,12 @@ class ProtocolHeader(DisplayInst):
     signature:    str
     hwut_version: str = version.string
 
-async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
-    """YIELDS: DisplayInst for display of the line comparison."""
+async def feed(config, subject_stream, nominal_stream,
+               finding_list=None) -> AsyncIterable[DisplayInst]:
+    """YIELDS: DisplayInst for display of the line comparison.
+
+    'finding_list', where given, receives the constraints' findings (C-20)
+    -- complete once the last item was yielded."""
 
     yield ProtocolHeader(signature=_get_protocol_hash())
 
@@ -129,7 +133,8 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
 
     prov_db = AnalogyProvenanceDb()
 
-    async for chunk in main.associate(config, subject_stream, nominal_stream):
+    async for chunk in main.associate(config, subject_stream, nominal_stream,
+                                      finding_list):
         # 1. Update global provenance with current chunk data
         prov_db.update(chunk)
 

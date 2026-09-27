@@ -435,11 +435,14 @@ dictionary, variable name -> expression (or list of expressions):
         "t": "t > 0 and t < 100",
     }
 
-10.1 CHECK-ON-ENTRY. The moment a variable enters the space, ALL
-     constraints defined for it are checked against the CURRENT space.
-     Each input side (subject, nominal) has its OWN space; values develop
-     in line order. A variable without constraints of its own enters
-     freely -- it may serve as input to other constraints ('x' above).
+10.1 CHECK-ON-ENTRY, ONCE COMPLETE (C-19). An expression belongs to every
+     variable it names. The moment a variable enters the space, each of
+     its expressions whose variables are ALL in the space is checked
+     against the CURRENT space; one still missing a variable does not
+     fire -- it fires when the last of them enters. "y >= x" is checked
+     when 'x' enters after 'y' as when 'y' enters after 'x'. Each input
+     side (subject, nominal) has its OWN space; values develop in line
+     order.
 
 10.2 TEXTUAL EQUIVALENCE of two binding elements is decided by the NAME
      alone; the VALUE is free. Whether a value is ACCEPTABLE is the
@@ -447,13 +450,23 @@ dictionary, variable name -> expression (or list of expressions):
      DIFFERENT; kind mismatch (binding vs. plain text) = MISFIT.
 
 10.3 VERDICTS follow the malformed-data asymmetry (sections 7.5, D-21):
-       - SUBJECT-side violation -- constraint false, dependency not (yet)
-         in the space, division by zero, ANY evaluation failure -- makes
+       - SUBJECT-side violation -- constraint false, division by zero,
+         ANY evaluation failure -- makes
          the test FAIL; the binding's cell is a MISMATCH (red). Never loud.
        - NOMINAL-side violation is a BROKEN SPECIFICATION: the GOOD file
-         breaking its own law -> LOUD ConstraintSpecError. Within a pair
-         the nominal's bindings are processed FIRST (specification
+         breaking its own law. The pair is a MISMATCH as well, and the
+         finding names the GOOD as the side at fault (C-20) -- never an
+         exception that ends the caller's work. Within a pair the
+         nominal's bindings are processed FIRST (specification
          validation precedes judgment).
+       - A VARIABLE NAMED BY A CONSTRAINT AND NEVER BOUND, on either
+         side, by the end of an otherwise equivalent stream: NOT
+         equivalent (C-20). Both faces ask at the same point -- the
+         Judge having met no difference, the Lawyer with the space alive.
+       - Every finding reaches the caller as a 'ConstraintFinding' in the
+         list it hands to 'is_equivalent' / 'associate' / 'feed': side
+         (OUTPUT, GOOD), kind (violated, unbound), expression, variable,
+         and value and line where a binding broke it.
 
 10.4 SEQUENTIALITY IS THE PRECONDITION. Bindings are active ONLY in the
      sequential outer text. In order-free scopes "the value before" is
@@ -474,16 +487,16 @@ dictionary, variable name -> expression (or list of expressions):
      (arithmetic, comparisons, boolean logic, the math function set,
      string constants, Python string methods) and executed by Python with
      empty builtins -- the same safety envelope as region parameter
-     expressions (D-22). Only PRESENT variables are bound at evaluation:
-     short-circuit logic ("y == 2 or y >= x") may pass without 'x'; a
-     missing variable raises exactly when actually needed (-> red).
+     expressions (D-22). An expression is evaluated only with all its
+     variables present (10.1); "y == 2 or y >= x" waits for 'x' too.
 
 10.7 STATIC PRE-CHECKS are LOUD at ConstraintDb build time, before any
-     line is read: unparseable or non-whitelisted expressions, and the
-     CIRCULARITY test over the dependency graph (a cycle between
-     DIFFERENT variables; self-reference is natural and legal). A name
-     that is no known constraint variable is NOT a static error -- it is
-     a free input whose existence is a runtime question (10.6).
+     line is read: unparseable or non-whitelisted expressions. There is
+     NO circularity test (C-19): an expression relates its variables, it
+     does not order them, so "a > b" and "b > a" are two laws over the
+     same pair, each checked once both are bound. A name that is no
+     known constraint variable is NOT a static error -- whether it is
+     bound is a runtime question (10.1).
 
      Implemented in engine/constraints.py; bindings lexed by
      engine/input/pattern_finder.py (registered BEFORE the analogy
@@ -653,10 +666,11 @@ D-26 (2026-07-19) STATEFUL CONSTRAINTS (user-designed, complete ruling;
      '((name: number|"string"))' in the SEQUENTIAL outer text enter a
      constraint space; check-on-entry against Configuration.constraint_db
      (plain dictionary, name -> expression(s)); constraints may depend on
-     each other; subject-side violation / missing dependency / division
-     by zero / any evaluation failure = red cell mismatch (never loud);
-     nominal-side violation = loud (asymmetry); basic circularity test
-     precedes the run (loud); expressions are AST-inspected and executed
+     each other, and one fires once all its variables are bound (C-19);
+     subject-side violation / division by zero / any evaluation failure
+     = red cell mismatch (never loud); nominal-side violation = a
+     mismatch naming the GOOD (C-20); a named variable never bound =
+     not equivalent (C-20); expressions are AST-inspected and executed
      by Python (math + string functions, empty builtins); FORBIDDEN in
      order-free scopes (potpourri, unordered/keyed tables: nominal loud).
      Textual equivalence of bindings is by NAME; the value is judged by

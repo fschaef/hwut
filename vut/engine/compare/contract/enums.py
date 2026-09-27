@@ -35,11 +35,21 @@ class E_Chunk(Enum):
     VERBATIM      = auto()
     IGNORE        = auto()
     UNACCEPTED    = auto()
+    CONSTRAINT_VIOLATION = auto()
     POINT_CLOUD   = auto()
     TABLE         = auto()
     TERMINAL      = auto()
     VOID          = auto()
     NONE          = auto()
+
+#  THE BAD REGIONS (C-21): stretches whose content a comparison can never
+#  pass -- 'unaccepted' (nobody has judged it, C-9) and
+#  'constraint-violation' (a run found a constraint broken there, services
+#  E-123). Both take whatever stands opposite (C-10) and fail while they
+#  hold a line; they differ only in what they say.
+BAD_CHUNK_SET         = frozenset((E_Chunk.UNACCEPTED,
+                                   E_Chunk.CONSTRAINT_VIOLATION))
+BAD_REGION_NAME_TUPLE = ("unaccepted", "constraint-violation")
 
 class E_ToleranceId(int, Enum):
     STRING              = 1

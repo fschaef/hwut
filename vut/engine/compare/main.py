@@ -54,9 +54,14 @@ from   contextlib import aclosing
 @typechecked
 async def is_equivalent(config: Configuration,
                         subject_line_provider,
-                        nominal_line_provider) -> bool:
+                        nominal_line_provider,
+                        finding_list: list | None = None) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
+
+    'finding_list', where given, receives what the constraints found --
+    'ConstraintFinding's naming side and law (C-20): a violated binding on
+    either side, a named variable a side never bound.
 
     The function operates on coroutines reading lines from line providers.
     As soon as 'False' can be stated it aborts immediately-not consuming
@@ -77,14 +82,17 @@ async def is_equivalent(config: Configuration,
     if config.cross_check_f:
         return await _is_equivalent_cross_checked(config,
                                                   subject_line_provider,
-                                                  nominal_line_provider)
+                                                  nominal_line_provider,
+                                                  finding_list)
     return await _is_equivalent_fast(config,
                                      subject_line_provider,
-                                     nominal_line_provider)
+                                     nominal_line_provider,
+                                     finding_list)
 
 async def _is_equivalent_fast(config,
                               subject_line_provider,
-                              nominal_line_provider) -> bool:
+                              nominal_line_provider,
+                              finding_list=None) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
 
@@ -98,7 +106,7 @@ async def _is_equivalent_fast(config,
     token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry())
     # Stateful constraints: fresh space per run; static checks are LOUD here
     # (before any line is read) -- see 'engine/constraints.py'.
-    token_constraints = constraints.context_new(config)
+    token_constraints = constraints.context_new(config, finding_list)
 
     try:
         analogy_db = AnalogyDb()
@@ -122,7 +130,10 @@ async def _is_equivalent_fast(config,
             if not verdict:
                 return False
         else:
-            return True
+            #  EVERY NAMED VARIABLE BOUND, on both sides (C-20).
+            context = constraints.context_get()
+            return not (context is not None and context.alive
+                        and context.unbound_found())
     finally:
         constraints.context_constraint_context.reset(token_constraints)
         frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
@@ -145,12 +156,16 @@ async def is_equivalent_by_association(config: Configuration,
     # 'aclosing': an early 'return False' must finalize the generator IN THIS
     # context -- 'associate' resets a ContextVar in its 'finally'; default
     # event-loop finalization would run it in a foreign context and fail.
+    finding_list = []
     async with aclosing(associate(config, subject_line_provider,
-                                          nominal_line_provider)) as pair_iterable:
+                                          nominal_line_provider,
+                                          finding_list)) as pair_iterable:
         async for chunk_pair in pair_iterable:
             if not chunk_pair.is_equivalent():
                 return False
-    return True
+    #  A NAMED VARIABLE NEVER BOUND (C-20) is found where the association
+    #  ends alive -- where the Judge finds it too.
+    return not any(f.kind == "unbound" for f in finding_list)
 
 class CrossCheckError(AssertionError):
     """Judge and Lawyer disagreed on an input pair -- THE LAW of
@@ -182,7 +197,8 @@ async def _buffer_lines(line_provider) -> str:
 
 async def _is_equivalent_cross_checked(config,
                                        subject_line_provider,
-                                       nominal_line_provider) -> bool:
+                                       nominal_line_provider,
+                                       finding_list=None) -> bool:
     """RETURNS: True/False, the Judge's verdict -- after asserting that the
                 Lawyer's verdict agrees (raises 'CrossCheckError' else).
 
@@ -195,7 +211,8 @@ async def _is_equivalent_cross_checked(config,
 
     verdict_judge  = await _is_equivalent_fast(config,
                                                io.StringIO(subject_txt),
-                                               io.StringIO(nominal_txt))
+                                               io.StringIO(nominal_txt),
+                                               finding_list)
     verdict_lawyer = await is_equivalent_by_association(config,
                                                         io.StringIO(subject_txt),
                                                         io.StringIO(nominal_txt))
@@ -205,8 +222,12 @@ async def _is_equivalent_cross_checked(config,
     return verdict_judge
 
 @typechecked
-async def associate(config: Configuration, subject_line_provider, nominal_line_provider):
+async def associate(config: Configuration, subject_line_provider,
+                    nominal_line_provider, finding_list: list | None = None):
     """YIELDS: ChunkPair
+
+    'finding_list', where given, receives the constraints' findings (C-20),
+    the 'unbound' ones once the last pair was yielded.
 
     where:
 
@@ -238,7 +259,7 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry())
     # Stateful constraints: fresh space per run; static checks are LOUD here
     # (before any line is read) -- see 'engine/constraints.py'.
-    token_constraints = constraints.context_new(config)
+    token_constraints = constraints.context_new(config, finding_list)
 
     try:
         analogy_db = AnalogyDb()
@@ -268,6 +289,12 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
                 context.kill()
 
             yield result
+
+        #  EVERY NAMED VARIABLE BOUND (C-20): asked where the association
+        #  ended alive -- where the Judge asks it too.
+        context = constraints.context_get()
+        if context is not None and context.alive:
+            context.unbound_found()
 
     finally:
         constraints.context_constraint_context.reset(token_constraints)

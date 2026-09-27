@@ -8,7 +8,7 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.core.line_pair      import LinePair
 import vut.engine.compare.region.unaccepted.associate as association_unaccepted
-from   vut.engine.compare.contract.enums                      import E_Chunk
+from   vut.engine.compare.contract.enums                      import E_Chunk, BAD_CHUNK_SET
 from   vut.engine.compare.contract.analogy_db                 import AnalogyDb
 from   vut.engine.compare.contract.frozen_analogy_db          import FrozenAnalogyDb
 from   vut.engine.compare.reading.input_chunk                 import InputChunk
@@ -68,7 +68,7 @@ class ChunkPair(list):
             #  because the dispatch elsewhere runs off the subject's
             #  type and the subject is an ordinary chunk. The argument
             #  order is unchanged: subject first, nominal second.
-            assert nominal.type() == E_Chunk.UNACCEPTED
+            assert nominal.type() in BAD_CHUNK_SET
             subject_type    = subject.type()
             nominal_type    = nominal.type()
             line_pair_list, \

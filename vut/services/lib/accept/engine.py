@@ -193,11 +193,18 @@ def refusal(store, key, text, stderr_tol_f, err):
     """
     from vut.services.accept import stderr_spoke_db, stderr_decision
 
-    if store.bookkeeper.stain(key.test, key.choice) is not None:
+    from vut.engine.bookkeeper.api import unstable_f
+    if unstable_f(store.bookkeeper.stain(key.test, key.choice)):
         return "a stained choice has no pole to declare"
     if not token_terminated_f(text):
         return "the closing token '<hwut-end>' is not the last line " \
                "-- a stream that never COMPLETED is not promotable"
+    #  A TEXT THAT BREAKS ITS CONSTRAINTS IS NEVER ACCEPTED (E-124): held
+    #  against itself, as it would stand as the GOOD.
+    from .constraint import own_finding_text_list
+    own_list = own_finding_text_list(getattr(key, "setup", None), text)
+    if own_list:
+        return "the text breaks its constraints -- %s" % "; ".join(own_list)
 
     class _Case:
         source_file = key.test

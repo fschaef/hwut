@@ -44,9 +44,11 @@ solver is not a caller.
 ______________________________________________________________________________
 """
 from .configuration        import Configuration, ConfigurationDiffDisplayParameters
-from .contract.enums       import RegionSyntaxError
+from .contract.enums       import RegionSyntaxError, BAD_REGION_NAME_TUPLE
+from .engine.constraints   import ConstraintFinding, ConstraintSpecError
 from .feeder               import ui as feeder_ui
 from .main                 import associate, is_equivalent
 
 __all__ = ("Configuration", "ConfigurationDiffDisplayParameters", "RegionSyntaxError", "associate",
+           "ConstraintFinding", "ConstraintSpecError", "BAD_REGION_NAME_TUPLE",
            "feeder_ui", "is_equivalent")

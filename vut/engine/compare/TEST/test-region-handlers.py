@@ -2,7 +2,8 @@
 #
 # @hwut {
 #     title      = "Region Handlers: shebang framing, verbatim, ignore, params, errors"
-#     choices    = ["errors", "ignore", "params", "verbatim", "unaccepted"]
+#     choices    = ["constraint-violation", "errors", "ignore", "params",
+#                   "verbatim", "unaccepted"]
 # }
 #
 """Region handlers via the shebang framing: 'verbatim', 'ignore', the
@@ -99,6 +100,22 @@ if "unaccepted" in sys.argv:
     print("## '##' without '!' is a comment, and a comment PASSES -- the")
     print("## '!' is what makes it a region:")
     show("comment, not region", "## unaccepted\nx\n", "## unaccepted\nx\n")
+
+if "constraint-violation" in sys.argv:
+    V = lambda body: region("constraint-violation", body)
+    print("## The other BAD region (C-21): a run found a constraint broken")
+    print("## here. Compared exactly as 'unaccepted'. Its '## error' lines")
+    print("## are comments, so it holds no line: standing on ONE side it")
+    print("## fails; the same region on both sides has nothing to judge.")
+    print("## (A run fails a GOOD carrying one by its name, before any")
+    print("## comparison -- services E-123.)")
+    show("identical contents", V("## error: \"x < 5\" with: x=9\n"),
+                               V("## error: \"x < 5\" with: x=9\n"))
+    show("against nothing",    "a\n",
+                               "a\n" + V("## error: \"x < 5\" with: x=9\n"))
+    show("empty vs empty",     V(""),               V(""))
+    show("outer equal, region", "a ((x: 9))\n" + V("## e\n") + "b\n",
+                                "a ((x: 9))\n" + V("## e\n") + "b\n")
 
 if "params" in sys.argv:
     P = lambda p, body: region("potpourri" + p, body)

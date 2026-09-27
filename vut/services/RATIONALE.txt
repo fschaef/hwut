@@ -4903,3 +4903,87 @@ DECISION  RULED (Frank-Rene): the merge refreshes; "actually,
 
 COST      Every refreshing face now invokes the build tool for a built
           application, even where it compiles nothing.
+
+----------------------------------------------------------------------------
+E-123  A CONSTRAINT FINDING FAILS ITS CASE BY NAME, AND IS WRITTEN WHERE
+       IT WAS FOUND                                              (2026-09-27)
+----------------------------------------------------------------------------
+PROBLEM   A GOOD breaking its own constraint ended the directory's run
+          (o-6, MEASURED: 0/0); a variable a constraint names and nobody
+          binds passed. Compare now tells both as findings (C-20); the run
+          had nothing to do with them.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "The test run shall be marked as
+          failed, with the according remark"; "a constraint that
+          contradicts a good recording must stain that good file"; "We
+          have the ##!unaccepted region; there one might write explicit
+          comments. [...] Just make sure, that this edition is not
+          meaninglessly repeated in the same good file."; "Diff and merge
+          shall better not print the CONSTRAINT thing. Instead the hwut.run
+          inserts a ##! Unaccepted region describing the violation directly
+          after the line that was causing it." Asked and answered: an
+          OUTPUT's finding goes into the candidate; a variable never bound,
+          at the head.
+          THE VERDICT: the case fails with the report token 'constraint'
+          ("a constraint and the text disagree"), ranked after 'unaccepted'
+          and before the plain 'not equivalent'; each finding's sentence is
+          the run's detail on the HINTS line. A constraint that does not
+          compile is the same verdict with its message -- never the end of
+          the directory.
+          THE REMARK, WHERE IT WAS FOUND: each finding becomes
+          '## error: "<expression>" with: <variable>=<value> ...' -- every
+          variable the expression names, one never bound as '(never
+          bound)' -- inside a '##! constraint-violation' region (compare
+          C-21) DIRECTLY AFTER the line holding the binding that broke the
+          law; a variable never bound has no such line, and goes into the
+          region at the file's head. RULED: "change '## OUTPUT:
+          constraint' to '## error: "..." with: [variable=value]+ for all
+          variables that appear in the constraint". A GOOD's finding is written into the GOOD, and the book is
+          stained 'constraint' (bookkeeper B-18); an OUTPUT's finding into
+          the candidate this run recorded, so 'hwut.run.diff' and the merge
+          show it where it happened, as a difference, and nothing is said
+          beside the view. A remark already standing in the file is not
+          written again ('Bookkeeper.note_nominal_remark',
+          'note_candidate_remark'). A GOOD carrying the region fails the
+          next run by name, 'constraint', before any comparison -- not as
+          an unaccepted aspirant -- until someone decides.
+          A GOOD ACCEPTED UNDER A LOOSER LAW is met the same way when the
+          page's constraints change beneath it: the GOOD's bindings are
+          judged FIRST (compare C-20), so the region is written into the
+          GOOD after the line -- never '##! unaccepted' -- and the case
+          FAILS EVEN WHERE THE OUTPUT FAILS IN EXACTLY THE SAME WAY. RULED:
+          "A GOOD file with a constraint violation always causes a test to
+          fail, even if the OUTPUT also fails in the exact same way."
+          'TEST/test-constraint.py tightened'.
+          A run that passes takes the 'constraint' stain away.
+          'hwut.sanitize --constraints' (a bare call asks it too) finds such
+          GOODs without running anything, holding each against itself;
+          '--apply' writes the remark where it was found and the stain, as
+          a run would, and removes nothing; a remark already written is not
+          reported again.
+          'TEST/test-constraint.py' (good, output, diff, sanitize, cleared).
+
+COST      A run writes into GOOD/ -- the book always did; now a nominal
+          too, and only to say what is wrong with it -- and into the
+          candidate it recorded: that candidate is no longer exactly what
+          the application printed.
+
+----------------------------------------------------------------------------
+E-124  A TEXT THAT BREAKS ITS CONSTRAINTS IS NEVER ACCEPTED       (2026-09-27)
+----------------------------------------------------------------------------
+DECISION  RULED (Frank-Rene, 2026-09-27): "A subject violating
+          constraints shall never be accepted".
+          THE TEXT HELD AGAINST ITSELF: what a text would say were it the
+          GOOD -- a binding that breaks its law, a named variable never
+          bound -- is read by comparing it with itself
+          ('lib/accept/constraint.py'). 'hwut.accept' refuses such a
+          candidate by name, 'REFUSED constraint: ...', one line per
+          finding, before and apart from '--force': no flag reaches past
+          it. The merge ('hwut.accept.interactive', and 'hwut.accept' where
+          it merges) refuses to COMMIT such a text ('refusal'), whatever
+          was taken into it. Neither 'hwut.run.diff' nor the merge screen
+          prints the findings (E-123 writes them into the text).
+          'TEST/test-constraint.py' (accept, interactive).
+
+COST      One more comparison of a text with itself per accepted key whose
+          choice states constraints; none where it states none.

@@ -370,8 +370,45 @@ async def run_test_held(configuration, request=None, store=None,
     if goal is not E_Goal.DISPLAY:
         entry = store.bookkeeper.record(result, configuration, goal,
                                         choice_name, coverage=coverage)
+        _noted_constraint(store, test_name, choice_name, result,
+                          recorded_db)
     return Outcome(result=result, recorded_db=recorded_db, entry=entry,
                    coverage=coverage)
+
+
+def _noted_constraint(store, test, choice, result, recorded_db=None):
+    """
+    RETURN: None. What the constraints found is written WHERE IT WAS FOUND
+            (services E-123): each finding as a remark in an
+            '##! constraint-violation' region directly after the line that caused
+            it -- a variable never bound, at the head. A finding against
+            the NOMINAL goes into the GOOD, and the book's stain says
+            'constraint'; one against the OUTPUT goes into the candidate
+            this run recorded. A remark is never written twice. A run that
+            PASSED takes the stain away: every constraint held and every
+            named variable was bound, on both sides.
+    """
+    from ..bookkeeper.api import STAIN_CONSTRAINT_WORD
+    comparison = getattr(result, "comparison", None)
+    if comparison is None: return              # an acceptance, a failed provision
+    good_f = False
+    for subject, finding_tuple in comparison.finding_db.items():
+        for side, note in (("GOOD",   store.bookkeeper.note_nominal_remark),
+                           ("OUTPUT", store.bookkeeper.note_candidate_remark)):
+            placed_list = [(f.line_n, f.remark()) for f in finding_tuple
+                           if f.side == side]
+            if not placed_list: continue
+            if side == "GOOD":
+                good_f = True
+            elif not recorded_db or subject not in recorded_db:
+                continue                       # no candidate of this run
+            note(test, choice, subject, placed_list)
+    if good_f:
+        store.bookkeeper.note_stain_keyword(test, choice,
+                                            STAIN_CONSTRAINT_WORD, True)
+    elif result.verdict:
+        store.bookkeeper.note_stain_keyword(test, choice,
+                                            STAIN_CONSTRAINT_WORD, False)
 
 
 def _compare_options(configuration, choice_name):

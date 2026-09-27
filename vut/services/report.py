@@ -136,7 +136,7 @@ class CRow:
         self.passed_f     = None if verdict is None \
                             else getattr(verdict, "passed_f", None)
         self.stain_repeat_n = None if stain is None \
-                              else stain.get("repeat_n", 0)
+                              else stain.get("repeat_n")
         self.report      = report
         self.when        = when
         self.stain       = stain
@@ -157,7 +157,7 @@ class CRow:
     def word(self):
         """RETURN: str, the reason it did not stand: the stain first,
         then the recorded report, then the plain absence."""
-        if self.stain is not None:   return "unstable"
+        if self.stain_repeat_n is not None: return "unstable"
         if self.verdict is None:     return "never run"
         if self.verdict is E_TestVerdict.ASPIRANT: return "aspirant"
         return self.report or "failed"
@@ -633,7 +633,7 @@ def junit_line_tuple(entry_list):
 
 def _message_of(row):
     """RETURN: str, why the case did not stand, in one sentence."""
-    if row.stain is not None:
+    if row.stain_repeat_n is not None:
         return ("the choice bears a STAIN: it switched results over %d "
                 "repeat(s) and is not run until proven steady"
                 % row.stain.get("repeat_n", 0))

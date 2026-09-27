@@ -13,8 +13,8 @@ def do(subject:    InputChunk,    #noqa F821
 
     STATEFUL CONSTRAINTS ('engine/constraints.py'): after a pair of lines
     is found equivalent, its '((name: value))' bindings enter the constraint
-    space -- a subject-side violation turns the verdict False (red cell); a
-    nominal-side violation raises loudly (broken specification). On a
+    space -- a violation on either side turns the verdict False (red cell)
+    and is told as a finding naming the side (C-20). On a
     non-equivalent pair the space is killed: no binding after the Judge's
     abort point is ever processed (mirrored by the Lawyer -- THE LAW).
     """

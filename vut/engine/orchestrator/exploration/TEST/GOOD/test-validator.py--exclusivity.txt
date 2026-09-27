@@ -1,7 +1,11 @@
 
 --- test parameters do not stand at the conf root ---
-FAULT hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block
+on_entry 'setup.sh'  on_exit None  ignore ()
+collision []
+FAULT hwut.conf:2:5: VOCABULARY: 'tolerance' at the root of hwut.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
 
 --- a target of three words ---
-FAULT hwut.conf:1:1: VOCABULARY: no 'hwut { ... }' block
+on_entry None  on_exit None  ignore ()
+collision []
+FAULT hwut.conf:2:17: TYPE: 'collision' takes a target: a file name, or a file name and a choice name; 'test-a.py one two' names 3 words
 <hwut-end>

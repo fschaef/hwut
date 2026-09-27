@@ -1,9 +1,22 @@
 
 --- at the root: they reach every choice ---
-no specification
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    same = True
+    interactive = True
+choice 'one':
+    (nothing stated)
+choice 'two':
+    tolerance = Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
 
 --- inside a choice: refused, by name ---
-no specification
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    (nothing stated)
+choice 'one':
+    (nothing stated)
+choice 'two':
+    (nothing stated)
+FAULT f.py:4:15: VOCABULARY: 'same' cannot be a choice attribute
+FAULT f.py:5:15: VOCABULARY: 'interactive' cannot be a choice attribute
 <hwut-end>

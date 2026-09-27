@@ -85,6 +85,11 @@ class E_TestRunResult(Enum):
     #  'Task exception was never retrieved' and the run loses the one
     #  thing it is for.
     REGION_SYNTAX_ERROR         = "region-syntax-error"
+    #  THE CONSTRAINTS found something (compare C-20, services E-123): a
+    #  binding broke its law, or a variable a constraint names was never
+    #  bound -- on the OUTPUT's side or on the GOOD's. The sentence naming
+    #  side, law and variable is the run's detail.
+    CONSTRAINT                  = "constraint"
     STDERR_UNDECIDED            = "stderr-undecided"
 
     # THE PYPE STAGE (deterministicalization):

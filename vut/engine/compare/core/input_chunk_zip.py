@@ -19,7 +19,7 @@ _______________________________________________________________________________
 from vut.engine.compare.reading.chunk_pipe  import ChunkPipe
 from vut.engine.compare.reading.input_chunk import InputChunkVoid, InputChunk_factory
 from vut.engine.compare.configuration     import Configuration
-from vut.engine.compare.contract.enums    import E_Chunk
+from vut.engine.compare.contract.enums    import E_Chunk, BAD_CHUNK_SET
 
 from   typeguard import typechecked
 import asyncio
@@ -200,7 +200,7 @@ def _pairs_f(subject_chunk, nominal_chunk):
     side by side -- which is no use to somebody merging them.
     """
     if subject_chunk.type() == nominal_chunk.type(): return True
-    return nominal_chunk.type() == E_Chunk.UNACCEPTED
+    return nominal_chunk.type() in BAD_CHUNK_SET
 
 
 def _split_to_face(subject_chunk, nominal_chunk, nominal_after, config):
@@ -224,7 +224,7 @@ def _split_to_face(subject_chunk, nominal_chunk, nominal_after, config):
     if len(s_list) < 2: return (subject_chunk, None)
 
     n_type = nominal_chunk.type()
-    if n_type is E_Chunk.UNACCEPTED:
+    if n_type in BAD_CHUNK_SET:
         #  Where does this region END in the subject? At the anchor of
         #  the plain chunk after it; failing that, at its own length.
         cut = _anchor_of(nominal_after, s_list)
@@ -257,7 +257,7 @@ def _unaccepted_f(chunk):
                False for None, the terminal, or any other kind.
     """
     if chunk is None or chunk.is_terminal(): return False
-    return chunk.type() is E_Chunk.UNACCEPTED
+    return chunk.type() in BAD_CHUNK_SET
 
 
 def _text_of(line):

@@ -2,6 +2,8 @@
 --- every provenance in one directory ---
 gen.c {
     title = "generated"
+    same = false                              # default
+    interactive = false                       # default
     choices {                                 # hwut.conf
         - {
             caps {
@@ -28,8 +30,6 @@ gen.c {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = false                      # default
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
     }
@@ -37,6 +37,8 @@ gen.c {
 
 legacy.bas {
     title = "Iron and Blood"
+    same = true                               # --hwut-info
+    interactive = false                       # default
     choices {                                 # --hwut-info
         one {
             caps {
@@ -63,8 +65,6 @@ legacy.bas {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = true                       # --hwut-info
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
     }
@@ -72,6 +72,8 @@ legacy.bas {
 
 test-own.py {
     title = "own"
+    same = false                              # default
+    interactive = false                       # default
     choices {                                 # app
         two {
             caps {
@@ -98,8 +100,6 @@ test-own.py {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = false                      # default
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
     }

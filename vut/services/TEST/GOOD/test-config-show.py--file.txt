@@ -3,6 +3,8 @@
 $ hwut.config.show test-a.py
     test-a.py {
         title = "A"
+        same = false                              # default
+        interactive = false                       # default
         choices {                                 # app
             one {
                 caps {
@@ -29,8 +31,6 @@ $ hwut.config.show test-a.py
                     lowest_n = 4                  # default
                     context_k = 1                 # default
                 }
-                same = false                      # default
-                interactive = false               # default
                 output = ["<stdout>"]             # default
             }
             two {
@@ -58,8 +58,6 @@ $ hwut.config.show test-a.py
                     lowest_n = 4                  # default
                     context_k = 1                 # default
                 }
-                same = false                      # default
-                interactive = false               # default
                 output = ["<stdout>"]             # default
             }
         }

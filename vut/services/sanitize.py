@@ -40,6 +40,16 @@ ALL OF THEM, because a wish that states nothing wants everything.
                 'hwut.remove'). A test in the book with no nominal is
                 an ASPIRANT, not a disagreement.
 
+    --constraints
+                A NOMINAL THAT CONTRADICTS ITS OWN CONSTRAINTS (E-123):
+                held against itself, a binding in it breaks its law, or a
+                variable a constraint names is never bound in it. Found
+                without running anything. '--apply' does what a run does
+                on meeting it: the finding is written into the nominal as
+                a '##! constraint-violation' region directly after the line that
+                caused it -- a variable never bound, at the head -- once;
+                and the book is stained 'constraint'. NOTHING IS REMOVED.
+
     --orphans   RECORDS THAT NAME NOTHING: a nominal under 'GOOD/', a
                 candidate under 'TMP/store/', an entry in the book
                 ('GOOD/book.csv') or a register id whose
@@ -149,7 +159,7 @@ TRANSIENT_ROOT_TUPLE   = ("OUT", "TMP")           # services E-24
 
 #  What a bare command line asks about. Not the targets: running
 #  somebody's script is never implied.
-ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books")
+ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books", "constraints")
 #  Asked for by name only; a bare call never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
@@ -179,13 +189,16 @@ class CFinding:
     'why'    the reason it is believed to be rubbish, in one line
     'bytes'  what it occupies; None where the question is meaningless
     """
-    __slots__ = ("kind", "path", "why", "bytes")
+    __slots__ = ("kind", "path", "why", "bytes", "key")
 
-    def __init__(self, kind, path, why, bytes_n=None):
+    def __init__(self, kind, path, why, bytes_n=None, key=None):
         self.kind  = kind
         self.path  = path
         self.why   = why
         self.bytes = bytes_n
+        #  (directory, test, choice) of a 'constraints' finding: what
+        #  '--apply' writes to.
+        self.key   = key
 
 
 def size_of(path):
@@ -500,6 +513,52 @@ def books_finding_list(root, directory):
                            "-- accepted outside the book", None)
 
 
+def constraint_finding_list(root, directory, result):
+    """
+    YIELD: [0] CFinding  one finding of a standing stdout nominal held
+                         against itself under its choice's constraints
+                         (E-123) -- found, never run.
+
+    A finding already written into the nominal where it was found is not
+    reported again.
+    """
+    from vut.engine.orchestrator.run.adapter import test_configuration_of
+    from vut.services.lib.accept.constraint import (own_finding_list,
+                                                    own_text)
+    where          = shown(root, directory)
+    language_setup = result.app_set.directory_spec.language_setup
+    bookkeeper     = Bookkeeper(directory)
+    for name in sorted(result.app_set.app_db):
+        app = result.app_set.app_db[name]
+        try:
+            configuration = test_configuration_of(app, directory,
+                                                  language_setup=language_setup)
+        except Exception:                                  # noqa: BLE001
+            continue
+        for choice in sorted(app.choice_db, key=lambda c: c or ""):
+            try:
+                setup = configuration.choice_configuration(choice).compare
+            except (KeyError, AttributeError):
+                continue
+            if setup is None or not setup.constraint_db: continue
+            path = bookkeeper.nominal_path(name, choice, "stdout")
+            if not path.exists(): continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            present = set(line.strip() for line in text.splitlines())
+            for finding in own_finding_list(setup, text):
+                if isinstance(finding, str): continue  # does not compile
+                #  ALREADY WRITTEN where it was found: nothing to sanitize.
+                if "## %s" % finding.remark() in present: continue
+                yield CFinding("constraints",
+                               "%s: GOOD/%s" % (where, path.name),
+                               own_text(finding), None,
+                               key=(directory, name, choice, finding.line_n,
+                                    finding.remark()))
+
+
 def directory_finding_list(root, directory, result, aspect_set, wanted_f):
     """
     RETURN: [0] list[CFinding], everything the asked-for aspects found
@@ -533,6 +592,8 @@ def directory_finding_list(root, directory, result, aspect_set, wanted_f):
 
     if "books" in aspect_set:
         finding_list.extend(books_finding_list(root, directory))
+    if "constraints" in aspect_set and not result.fault_list:
+        finding_list.extend(constraint_finding_list(root, directory, result))
 
     if "orphans" in aspect_set:
         if result.fault_list:
@@ -590,6 +651,24 @@ def removal_of(finding, root):
     if finding.kind == "books":
         return Removal(finding.path, kept_f=True,
                        said="a disagreement is mended by hand")
+    if finding.kind == "constraints":
+        #  WHAT A RUN DOES ON MEETING IT (E-123): said in the nominal's
+        #  head, once; the book stained. Nothing is removed.
+        from vut.engine.bookkeeper.api import STAIN_CONSTRAINT_WORD
+        directory, test, choice, line_n, remark = finding.key
+        try:
+            bookkeeper = Bookkeeper(directory)
+            bookkeeper.note_stain_keyword(test, choice,
+                                          STAIN_CONSTRAINT_WORD, True)
+            #  WHERE IT WAS FOUND: after the line, a variable never bound
+            #  at the head -- as a run writes it.
+            bookkeeper.note_nominal_remark(test, choice, "stdout",
+                                           [(line_n, remark)])
+            return Removal(finding.path, kept_f=True,
+                           said="written where it was found; the book "
+                                "stained 'constraint'")
+        except Exception as error:                         # noqa: BLE001
+            return Removal(finding.path, fault=str(error))
     if ": book " in finding.path:
         where, _, rest = finding.path.partition(": book ")
         test, _, choice = rest.partition(" ")
@@ -763,7 +842,7 @@ def main(argv=None, write=None):
                 write("    FAULT: %s -- %s" % (removal.path, removal.fault))
             if removal.gone_f:
                 write("    gone: %s" % finding.path)
-            elif finding.kind != "books":
+            elif finding.kind not in ("books", "constraints"):
                 #  A 'books' finding is KEPT by design, and said so
                 #  ('removed'); a kept disagreement is no fault of
                 #  the removal.

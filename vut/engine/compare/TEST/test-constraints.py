@@ -8,12 +8,13 @@
 """STATEFUL CONSTRAINTS: '((name: value))' bindings + Configuration.constraint_db.
 
 Pins DOC/SEMANTICS.txt section 10: check-on-entry into the constraint
-space; subject-side violation = red cell (verdict False, never loud);
-nominal-side violation = loud ConstraintSpecError (asymmetry); missing
-dependency / division by zero / any evaluation failure = red; static
-circularity pre-check = loud; order-free scopes (potpourri, unordered/key
-tables) reject nominal bindings loudly; Judge/Lawyer reachability of loud
-errors is mirrored (THE LAW).
+space; a constraint fires once all its variables are bound (C-19);
+subject-side violation = red cell (verdict False, never loud);
+nominal-side violation = a mismatch naming the GOOD (C-20); a named
+variable never bound = not equivalent (C-20); division by zero / any
+evaluation failure = red; order-free scopes (potpourri, unordered/key
+tables) reject nominal bindings loudly; Judge/Lawyer reachability is
+mirrored (THE LAW).
 """
 import sys
 import os
@@ -61,18 +62,29 @@ def show(title, constraint_db, subject_txt, nominal_txt):
     agree = "ok" if judge == lawyer else "LAW-BROKEN"
     print("%-46s judge: %-25s lawyer: %-25s [%s]"
           % (title + ":", judge, lawyer, agree))
+    #  WHAT THE CONSTRAINTS FOUND (C-20), as the Judge tells its caller.
+    finding_list = []
+    try:
+        asyncio.run(main.is_equivalent(config, io.StringIO(subject_txt),
+                                       io.StringIO(nominal_txt),
+                                       finding_list))
+    except (ConstraintSpecError, RegionSyntaxError):
+        pass
+    for finding in finding_list:
+        print("    %s" % finding.text())
 
 
 if "basic" in sys.argv:
     print("## Check-on-entry: the moment a variable enters, its constraints run.")
     DB = {"t": "t > 0 and t < 100"}
-    show("no bindings at all",  DB, "hello\n",           "hello\n")
+    show("no bindings: 't' never bound", DB, "hello\n", "hello\n")
     show("binding holds",       DB, "start ((t: 12))\n", "start ((t: 7))\n")
     show("subject violates",    DB, "start ((t: 812))\n","start ((t: 7))\n")
     show("value free if legal", DB, "start ((t: 99))\n", "start ((t: 1))\n")
     show("name mismatch",       DB, "start ((u: 12))\n", "start ((t: 7))\n")
     show("binding vs plain",    DB, "start 12\n",        "start ((t: 7))\n")
-    print("## An unconstrained variable enters freely (it may serve as input).")
+    print("## An unconstrained variable enters freely (it may serve as input);")
+    print("## 't', named by a constraint, is never bound: NOT equivalent (C-20).")
     show("unconstrained var",   DB, "level ((x: 3))\n",  "level ((x: 9))\n")
     print("## Empty constraint_db: bindings still compare by name, no checks.")
     show("no db, names equal",  {}, "a ((t: 812))\n",    "a ((t: 7))\n")
@@ -91,13 +103,17 @@ if "deps" in sys.argv:
                                "a ((x: 1))\nb ((y: 2))\n")
     show("dep violated",   DB, "a ((x: 9))\nb ((y: 7))\n",
                                "a ((x: 1))\nb ((y: 2))\n")
-    print("## Missing dependency on the NOMINAL side: broken spec (loud).")
-    show("dep missing in nominal too", DB,
+    print("## A constraint fires once ALL its variables are bound (C-19):")
+    print("## 'y' first does not fire; 'x' after it fires 'y >= x'.")
+    show("reverse order, holds", DB,
          "b ((y: 7))\na ((x: 3))\n",
          "b ((y: 2))\na ((x: 1))\n")
-    print("## Missing dependency hit by the SUBJECT alone (short-circuit): red.")
+    show("reverse order, violated", DB,
+         "b ((y: 7))\na ((x: 9))\n",
+         "b ((y: 2))\na ((x: 1))\n")
+    print("## A variable never bound: NOT equivalent, on each side (C-20).")
     DBS = {"y": "y == 2 or y >= x"}
-    show("dep missing, subject only", DBS,
+    show("never bound", DBS,
          "b ((y: 7))\n",
          "b ((y: 2))\n")
     print("## Later entries see updated values (monotonic steps).")
@@ -166,12 +182,14 @@ if "errors" in sys.argv:
     loud("forbidden call", {"a": "__import__(\"os\")"})
     loud("forbidden node", {"a": "[a for a in (1,)]"})
     loud("bad attribute",  {"a": "a.__class__"})
-    loud("cycle a->b->a",  {"a": "a > b", "b": "b > a"})
-    loud("cycle 3-long",   {"a": "a > b", "b": "b > c", "c": "c > a"})
+    #  NO CIRCULARITY (C-19): expressions relate variables, they do not
+    #  order them -- each fires once all its variables are bound.
+    loud("a>b, b>a: no cycle",   {"a": "a > b", "b": "b > a"})
+    loud("a>b>c>a: no cycle",    {"a": "a > b", "b": "b > c", "c": "c > a"})
     loud("self-ref is ok", {"a": "a > 0 and a < a + 1"})
     loud("list of constraints", {"a": ["a > 0", "a < 10"]})
 
-    print("## Nominal violating its OWN constraint: loud (asymmetry rule).")
+    print("## Nominal violating its OWN constraint: NOT equivalent, a GOOD finding (C-20).")
     show("nominal violates", {"t": "t > 0"},
          "v ((t: 5))\n", "v ((t: -1))\n")
     print("## ... but not if it sits BEHIND the abort point (reachability):")
@@ -191,7 +209,12 @@ if "errors" in sys.argv:
     show("key table nominal binding", {"t": "t > 0"},
          "##! table key=0\na 1\n####\n",
          "##! table key=0\na ((t: 1))\n####\n")
-    print("## Ordered tables never tolerance-lex: a binding is inert text.")
+    print("## Ordered tables never tolerance-lex: a binding is inert text,")
+    print("## so 't' is never bound (C-20).")
     show("ordered table binding inert", {"t": "t > 0"},
          "##! table\na ((t: -5))\n####\n",
          "##! table\na ((t: -5))\n####\n")
+
+#  THE STREAM COMPLETED (R-70): without the token the stream never
+#  COMPLETED and cannot be accepted.
+print("<hwut-end>")

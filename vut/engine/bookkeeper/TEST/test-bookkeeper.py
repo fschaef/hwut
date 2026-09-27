@@ -4,7 +4,7 @@
 #     title      = "The Bookkeeper: the naming, the base, the verdicts"
 #     choices    = ["damage", "divergence", "naming", "overwrite",
 #                   "protection", "record", "reproduce", "setup_delta",
-#                   "one_act"]
+#                   "one_act", "stain"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -50,7 +50,7 @@ from   vut.engine.bookkeeper.configuration import E_TestVerdict   # noqa E402
 from   vut.engine.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
-                                           BOOK_FILE_NAME)
+                                           BOOK_FILE_NAME, unstable_f)
 from   vut.engine.operations.configuration import (TestConfiguration,  # noqa E402
                                            TestChoiceConfiguration,
                                            E_SourceKind)
@@ -328,7 +328,7 @@ def test_reproduce():
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
          == "test;choice;verdict;report;last_accept;coverage;"
-            "stderr;stain_repeat_n;stain_when;test_id;choice_id",
+            "stderr;stain;test_id;choice_id",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
          "every column a decision -- and since B-13 the REGISTER'S two "
          "id columns, last so that every older column keeps its place. "
@@ -539,6 +539,60 @@ def test_one_act():
     return ok
 
 
+def test_stain():
+    """RETURN: None. The stain cell: keywords, '|'-separated (B-18)."""
+    directory = _place("print('x')\n")
+    book      = Bookkeeper(directory)
+
+    def cell():
+        """RETURN: str, the 'stain' cell of the one row; '' where none."""
+        if not os.path.exists(book.book_path): return ""
+        with open(book.book_path, encoding="utf-8") as fh:
+            line_list = [l for l in fh.read().splitlines()
+                         if not l.startswith("#")]
+        head = line_list[0].split(";")
+        if len(line_list) < 2: return ""
+        row = line_list[1].split(";")        # a row ends with its last fact
+        return row[head.index("stain")] if len(row) > head.index("stain") \
+               else ""
+
+    step_list = []
+    book.note_stain("demo.py", "one", 7, ())
+    step_list.append(("repetition instability over 7", cell()))
+    book.note_stain_keyword("demo.py", "one", "constraint", True)
+    step_list.append(("the GOOD contradicts a constraint", cell()))
+    before = os.stat(book.book_path).st_mtime_ns
+    book.note_stain_keyword("demo.py", "one", "constraint", True)
+    unchanged_f = os.stat(book.book_path).st_mtime_ns == before
+    step_list.append(("said again", cell()))
+    stain = book.stain("demo.py", "one")
+    book.clear_stain("demo.py", "one")
+    step_list.append(("stability proven", cell()))
+    unstable_after = unstable_f(book.stain("demo.py", "one"))
+    book.note_stain_keyword("demo.py", "one", "constraint", False)
+    step_list.append(("the GOOD is fixed", cell()))
+    clean = book.stain("demo.py", "one")
+    for label, text in step_list:
+        print("INSPECT: %-34s stain = '%s'" % (label, text))
+    ok = _check([
+        (step_list[0][1] == "7 repeat",
+         "'N repeat' is the repetition instability"),
+        (step_list[1][1] == "7 repeat|constraint",
+         "a keyword joins the cell, '|'-separated"),
+        (unchanged_f and step_list[2][1] == "7 repeat|constraint",
+         "a keyword said again is not written again"),
+        (stain == {"repeat_n": 7, "keyword_list": ["constraint"]}
+         and unstable_f(stain),
+         "read back: the count and the keywords; unstable"),
+        (step_list[3][1] == "constraint" and not unstable_after,
+         "stability clears the count alone -- no longer unstable"),
+        (step_list[4][1] == "" and clean is None,
+         "the last keyword gone, the choice is clean"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    _verdict(ok, "the stain is one cell of keywords.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -553,6 +607,7 @@ if __name__ == "__main__":
             "divergence":  test_divergence,
             "setup_delta": test_setup_delta,
             "one_act":     test_one_act,
+            "stain":       test_stain,
         },
         happy      = "SUCCESS.*",
     ).run()

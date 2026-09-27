@@ -57,9 +57,7 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.exploration.unwrapper        import plain_lines
-from vut.test_writing_support.python.hwut_hocon import parse
-from vut.engine.orchestrator.exploration                  import validator
+from vut.engine.orchestrator.exploration                  import reader
 
 
 def banner(label):
@@ -92,14 +90,11 @@ def show_spec(spec):
 
 
 def header(label, text):
-    """RETURN: None. Parses and validates 'text' as a header."""
+    """RETURN: None. Reads and validates 'text' as a source file's header,
+    through the reader a source file takes ('reader.read_header'): the
+    region detected, unwrapped, parsed, validated."""
     banner(label)
-    document, fault_list = parse(plain_lines(text), "f.py")
-    node = validator.document_hwut_node(document, "f.py", fault_list)
-    spec = None
-    if node is not None:
-        spec, more = validator.validate_header(node, "f.py")
-        fault_list.extend(more)
+    spec, fault_list = reader.read_header(text, "f.py")
     if spec is not None: show_spec(spec)
     else:                print("no specification")
     for fault in fault_list:
@@ -107,31 +102,28 @@ def header(label, text):
 
 
 def conf(label, text):
-    """RETURN: None. Parses and validates 'text' as hwut.conf."""
+    """RETURN: None. Reads and validates 'text' as 'hwut.conf', through
+    the reader the directory's conf takes ('reader.read_conf')."""
     banner(label)
-    document, fault_list = parse(plain_lines(text), "hwut.conf")
-    node = validator.document_hwut_node(document, "hwut.conf", fault_list)
-    if node is not None:
-        spec, app_db, more = validator.validate_conf(node, "hwut.conf")
-        fault_list.extend(more)
-        if spec is not None:
-            print("on_entry %r  on_exit %r  ignore %r"
-                  % (spec.on_entry, spec.on_exit, spec.ignore))
-            print("collision %s"
-                  % [str(x) for x in spec.collision])
-            for target in sorted(spec.dependency or {}, key=str):
-                print("dependency %-16s <- %s"
-                      % (str(target),
-                         [str(x) for x in spec.dependency[target]]))
-            for name in sorted(spec.language_setup):
-                setup = spec.language_setup[name]
-                print("language '%s': interpreter %r coverage %r "
-                      "profiler %r"
-                      % (name, setup.interpreter, setup.coverage,
-                         setup.profiler))
-            for name in sorted(app_db):
-                print("app '%s':" % name)
-                show_spec(app_db[name])
+    spec, app_db, fault_list = reader.read_conf(text, "hwut.conf")
+    if spec is not None:
+        print("on_entry %r  on_exit %r  ignore %r"
+              % (spec.on_entry, spec.on_exit, spec.ignore))
+        print("collision %s"
+              % [str(x) for x in spec.collision])
+        for target in sorted(spec.dependency or {}, key=str):
+            print("dependency %-16s <- %s"
+                  % (str(target),
+                     [str(x) for x in spec.dependency[target]]))
+        for name in sorted(spec.language_setup):
+            setup = spec.language_setup[name]
+            print("language '%s': interpreter %r coverage %r "
+                  "profiler %r"
+                  % (name, setup.interpreter, setup.coverage,
+                     setup.profiler))
+        for name in sorted(app_db):
+            print("app '%s':" % name)
+            show_spec(app_db[name])
     for fault in fault_list:
         print("FAULT %s" % fault)
 
@@ -158,8 +150,9 @@ def test_header():
            '        write_directory_list = ["tmp", "out"]\n'
            '    }\n'
            '    pype        = \"strip.pype\"\n'
-           '    tolerance { numeric_ratio = 0.01  whitespace = yes }\n'
            '    tolerance {\n'
+           '        numeric_ratio = 0.01\n'
+           '        whitespace  = yes\n'
            '        eq_pattern  = ["bonjour|hello"]\n'
            '        nothing     = "_"\n'
            '        analogy     = ["((", "))"]\n'
@@ -170,7 +163,8 @@ def test_header():
            '    interactive = yes\n'
            '    choices {\n'
            '        one { }\n'
-           '        two { numeric = 0.05  caps { timeout_sec = 5 } }\n'
+           '        two { tolerance { numeric_ratio = 0.05 }\n'
+           '              caps { timeout_sec = 5 } }\n'
            '    }\n'
            '}\n')
 
@@ -205,17 +199,13 @@ def test_vocabulary():
     header("a key bound to nothing, where something is required",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    tolerance { numeric_ratio =  }\n'
-           '    tolerance { comment = null }\n'
+           '    tolerance {\n'
+           '        numeric_ratio =\n'
+           '        comment = null\n'
+           '    }\n'
            '}\n')
-    #  THROUGH THE READER a source file's header takes: 'header()'
-    #  parses the text as a conf, where '@hwut' names no block.
-    banner("a retired key: 'slash' (compare C-18), refused with its successor")
-    from vut.engine.orchestrator.exploration import reader
-    spec, fault_list = reader.read_header(
-        '# @hwut {\n#     title = "T"\n#     tolerance { slash = true }\n# }\n',
-        "f.py")
-    for fault in fault_list: print("FAULT %s" % fault)
+    header("a retired key: 'slash' (compare C-18), refused with its successor",
+           '# @hwut {\n#     title = "T"\n#     tolerance { slash = true }\n# }\n')
     header("'title' absent",
            '@hwut {\n'
            '    tolerance { numeric_ratio = 0.5 }\n'
@@ -227,11 +217,11 @@ def test_types():
     header("wrong shapes, each named",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    tolerance { numeric_ratio = 1.5  whitespace = "maybe" }\n'
+           '    tolerance { numeric_ratio = 1.5  whitespace = "maybe"\n'
+           '                analogy = ["((", "))", "extra"] }\n'
            '    build   = yes\n'
            '    caps    { timeout_sec = \"fast\"  memory_mb = -1\n'
            '              bandwidth   = 10 }\n'
-           '    tolerance { analogy = ["((", "))", "extra"] }\n'
            '    choices = [\"one\", { a = 1 }]\n'
            '}\n')
 
@@ -243,30 +233,31 @@ def test_off():
            '@hwut {\n'
            '    title       = "T"\n'
            '    build       = "make"\n'
-           '    analogy     = []\n'
-           '    constraints = false\n'
+           '    tolerance { analogy     = []\n'
+           '                constraints = false }\n'
            '}\n')
     header("the other spellings of off, and absence beside them",
            '@hwut {\n'
            '    title       = "T"\n'
-           '    analogy     = no\n'
-           '    constraints =\n'
+           '    tolerance { analogy     = no\n'
+           '                constraints =\n'
+           '    }\n'
            '}\n')
     header("'analogy = true' says nothing and is refused",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    analogy = true\n'
+           '    tolerance { analogy = true }\n'
            '}\n')
     header("'comment' is a marker pair, and reads alike",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    comment = ["/*", "*/"]\n'
+           '    tolerance { comment = ["/*", "*/"] }\n'
            '}\n')
     header("'comment' switched off, and one of three markers",
            '@hwut {\n'
            '    title   = "T"\n'
-           '    comment = []\n'
-           '    choices { one { comment = ["#", "#", "#"] } }\n'
+           '    tolerance { comment = [] }\n'
+           '    choices { one { tolerance { comment = ["#", "#", "#"] } } }\n'
            '}\n')
 
 
@@ -293,7 +284,7 @@ def test_root_only():
 def test_conf():
     """RETURN: None. A full hwut.conf."""
     conf("a full hwut.conf",
-         '@hwut {\n'
+         'hwut {\n'
          '    on_entry  = "setup.sh"\n'
          '    on_exit   = "teardown.sh"\n'
          '    ignore    = ["*.gen.c", "tmp-*"]\n'
@@ -322,13 +313,13 @@ def test_conf():
 def test_exclusivity():
     """RETURN: None. A test parameter at the conf root."""
     conf("test parameters do not stand at the conf root",
-         '@hwut {\n'
+         'hwut {\n'
          '    tolerance { numeric_ratio = 0.01 }\n'
          '    title    = "T"\n'
          '    on_entry = "setup.sh"\n'
          '}\n')
     conf("a target of three words",
-         '@hwut {\n'
+         'hwut {\n'
          '    collision = ["test-a.py one two"]\n'
          '}\n')
 

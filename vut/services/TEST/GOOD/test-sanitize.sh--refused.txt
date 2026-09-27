@@ -7,7 +7,8 @@ STDOUT {
                          [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--transient] [--directory=<path>]
+                         [--orphans] [--books] [--constraints] [--transient]
+                         [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -18,7 +19,8 @@ STDOUT {
                          [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--transient] [--directory=<path>]
+                         [--orphans] [--books] [--constraints] [--transient]
+                         [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -29,6 +31,7 @@ STDOUT {
                          [--wishlist <file>]... [-l|--label <expr>]
                          [--language=<name>]... [--faster-than=<sec>] [--apply]
                          [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--transient] [--directory=<path>]
+                         [--orphans] [--books] [--constraints] [--transient]
+                         [--directory=<path>]
 }
 <hwut-end>

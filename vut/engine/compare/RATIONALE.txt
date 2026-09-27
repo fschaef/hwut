@@ -648,3 +648,97 @@ DECISION  RULED (Frank-Rene): "the engine behind the 'slash' is actually
           cut into tokens at its slashes.
 
 COST      '/' and '\' differ unless a page says otherwise.
+
+------------------------------------------------------------------------------
+C-19  A CONSTRAINT FIRES ONCE ALL ITS VARIABLES ARE BOUND          (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   A page's constraint over two variables could not be stated.
+          The page's list gives an expression to every variable it names;
+          the circularity pre-check read "twice == 2 * once" under 'once'
+          and under 'twice' as the cycle once -> twice -> once and was
+          LOUD. Past the check, the first of the two to be bound would
+          have failed red: its partner was "not (yet) in the space".
+          MEASURED once O-34 (orchestrator/run) made page constraints
+          reach compare at all.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "constraints simply don't fire
+          as long as not all variables are defined. There is no cycle in
+          your example. The prohibition is from a time when we had trouble
+          to maintain state."
+          'ConstraintDb' files each expression under EVERY variable it
+          names, once per variable, whichever key it was given under.
+          'ConstraintSpace.enter' checks an expression only when all its
+          variables are in the space; before that it is passed over. So
+          "y >= x" is checked when the later of the two is bound, and
+          again whenever either is bound anew. The circularity pre-check
+          is gone: an expression relates variables, it does not order
+          them. SEMANTICS 10.1/10.3/10.6/10.7 and D-26, MANUAL section 13
+          say the same. 'TEST/test-constraints.py deps' pins both orders
+          and the variable never bound; 'errors' records "a > b" beside
+          "b > a" as no error.
+
+COST      A variable that is never bound leaves its constraints silent: a
+          misspelt binding name no longer turns a line red by itself -- it
+          fails textually, by NAME (10.2), where the GOOD names it right.
+          'test-constraints.py' now closes its stream with '<hwut-end>'
+          (R-70), without which its changed GOODs could not be accepted.
+
+------------------------------------------------------------------------------
+C-20  WHAT A CONSTRAINT FINDS IS TOLD, NEVER RAISED; EVERY NAMED VARIABLE
+      MUST BE BOUND                                               (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   A GOOD breaking its own constraint raised 'ConstraintSpecError'
+          out of compare, through the run, and ended the whole
+          directory's run (0/0; MEASURED). A variable a constraint names
+          and the stream never binds passed silently (C-19).
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "a variable being part of a
+          constraint, must occur. Otherwise this is a flaw of the
+          constraint definition. The test run shall be marked as failed";
+          o-6 "yes and it becomes a sanitizer issue".
+          A violation on EITHER side makes the pair a MISMATCH and is a
+          FINDING ('ConstraintFinding': side OUTPUT or GOOD, kind violated
+          or unbound, expression, variable, value, line). At the end of an
+          otherwise equivalent stream every variable some constraint names
+          must be bound on both sides, else NOT equivalent, one 'unbound'
+          finding per side, expression and variable. The Judge asks having
+          met no difference, the Lawyer with the space alive: the same
+          point (THE LAW). The findings leave compare in the list a caller
+          hands to 'is_equivalent', 'associate' or 'feeder_ui.feed' -- an
+          optional argument, so every caller that hands none is unchanged.
+          'ConstraintFinding' and 'ConstraintSpecError' stand at the door
+          ('api.py'). 'ConstraintSpecError' remains for a definition that
+          does not compile, before any line is read.
+          'TEST/test-constraints.py' prints every finding under its case.
+
+COST      A GOOD that binds none of a page's constrained variables -- a
+          constraint stated for output the test no longer prints -- now
+          fails. What the run does with a GOOD-side finding is services
+          E-123.
+
+------------------------------------------------------------------------------
+C-21  THE BAD REGIONS: 'unaccepted' AND 'constraint-violation'      (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   A run wrote what the constraints found into '##! unaccepted'
+          regions (services E-123). But 'unaccepted' means a partial
+          acceptance nobody finished: the next run called the case an
+          ASPIRANT and advised 'finish it with hwut.accept' -- the wrong
+          story for a GOOD that breaks its own law.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "we use '##! unaccepted' for
+          aspirants. Can we harmonize now backwards for the constraints
+          '##! constraint-violation' and add it to the list of 'bad
+          regions'. Change that whenever we used '##! unaccepted'."
+          A second region handler, 'constraint-violation', compared
+          EXACTLY as 'unaccepted' (C-9, C-10): its chunk takes whatever
+          stands opposite and fails while it holds a line. The two are THE
+          BAD REGIONS -- 'BAD_CHUNK_SET' and 'BAD_REGION_NAME_TUPLE'
+          ('contract/enums.py', the latter at the door) -- and every place
+          that asked for 'unaccepted' in the pairing ('core/chunk_pair.py',
+          'core/input_chunk_zip.py') asks for the set. Its lines are the
+          run's '## error: ...' comments, so a region on one side only
+          fails and the same region on both sides holds nothing to judge.
+          'TEST/test-region-handlers.py constraint-violation'.
+
+COST      One enum member, one handler, one subclass of the unaccepted
+          chunk. The aspirant's 'unaccepted' is unchanged everywhere.

@@ -6,3 +6,4 @@
 -- all constraints hold (all rows green):
    equivalent=True   subject_line_n= 1 nominal_line_n= 1
    equivalent=True   subject_line_n= 2 nominal_line_n= 2
+<hwut-end>

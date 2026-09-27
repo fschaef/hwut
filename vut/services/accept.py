@@ -59,7 +59,7 @@ from   vut.engine.display.console               import colour_decision
 from   vut.engine.operations.result             import E_TestRunResult
 from   vut.engine.bookkeeper.api             import E_StderrNote
 from   vut.engine.bookkeeper.test_run_info.of_disk import UNACCEPTED_OPENER
-from   vut.engine.bookkeeper.api              import Store
+from   vut.engine.bookkeeper.api              import Store, unstable_f
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
 from   vut.engine.orchestrator.exploration            import selection
 from   vut.services.lib.labels                             import view_at
@@ -289,7 +289,7 @@ def key_list_of(store, case_sequence):
         #  POLE of the good cluster; a choice that switches results has
         #  no cluster to be the centre of, and blessing one of its runs
         #  would write the false testimony into the nominal itself.
-        if store.bookkeeper.stain(test, choice) is not None: continue
+        if unstable_f(store.bookkeeper.stain(test, choice)): continue
         for subject in subject_tuple_of(store, test, choice):
             if subject == STDERR_SUBJECT: continue      # never promoted
             key_list.append(CKey(
@@ -1284,9 +1284,8 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     #  refusal is spoken, by name, with the way out.
     stained_list = [(case.source_file, case.choice)
                     for case in case_sequence
-                    if store.bookkeeper.stain(
-                           case.source_file,
-                           case.choice) is not None]
+                    if unstable_f(store.bookkeeper.stain(
+                           case.source_file, case.choice))]
     for test, choice in stained_list:
         choice_str = "" if choice is None else " " + choice
         write("REFUSED stained: '%s%s' bears a STAIN -- unstable under "
@@ -1374,6 +1373,17 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         if text is None:
             write("FAULT: the candidate of '%s' cannot be read"
                   % key.name)
+            skipped_list.append(key)
+            continue
+        #  A SUBJECT THAT BREAKS ITS CONSTRAINTS IS NEVER ACCEPTED -- no
+        #  '--force' reaches past this (E-124). Held against itself: what
+        #  it would say, were it the GOOD.
+        from vut.services.lib.accept.constraint import own_finding_text_list
+        own_list = own_finding_text_list(key_setup_of(key, config_db), text)
+        if own_list:
+            write("REFUSED constraint: '%s' -- the candidate breaks its "
+                  "constraints:" % key.name)
+            for own in own_list: write("    %s" % own)
             skipped_list.append(key)
             continue
         written = text

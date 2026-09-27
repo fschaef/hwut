@@ -359,10 +359,15 @@ def tolerance_applied(options, tolerance):
                 raise AssertionError("'%s' is a marker PAIR; %d stated" \
                        % (name, len(pair)))
 
-    if stated["tolerance.constraints"] is not None:
-        finder.constraint_f = bool(stated["tolerance.constraints"])
+    if stated["tolerance.constraints"]:
+        #  THE EXPRESSIONS ARE COMPILED HERE, NOT ONLY STORED: compare
+        #  checks 'constraint_db', never the list as written. Setting the
+        #  list alone left every page's 'constraints' unenforced (O-34).
+        #  'constraints = []' IS THE DEFAULT, not an off: it leaves
+        #  compare as it stands, so the printed default reads back as one.
         options.constraint_expression_list = \
                                      list(stated["tolerance.constraints"])
+        options.derive_constraint_db()
 
 
 def _root_of(app):

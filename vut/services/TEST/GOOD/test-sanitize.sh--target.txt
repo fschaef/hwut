@@ -1,7 +1,7 @@
 --- a target NO directory binds:
 STATUS: 2
 STDOUT {
-    SANITIZE, in 'tree': books, lock, orphans, out, session
+    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session
     
       books -- 1 found:
           suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
@@ -20,7 +20,7 @@ STDOUT {
 --- a target one directory binds:
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': books, lock, orphans, out, session
+    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session
     
       books -- 1 found:
           suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
@@ -40,7 +40,7 @@ STDOUT {
 --- and without '--apply' it only says so:
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': books, lock, orphans, out, session  (reporting only; '--apply' acts)
+    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session  (reporting only; '--apply' acts)
     
       books -- 1 found:
           suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it

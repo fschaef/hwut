@@ -1,17 +1,33 @@
 
 --- unknown and misspelt keys, by name and position ---
-no specification
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    (nothing stated)
+choice 'one':
+    (nothing stated)
+FAULT f.py:3:5: VOCABULARY: unknown key 'numerc'
+FAULT f.py:5:15: VOCABULARY: unknown key 'pyep' in choice 'one'
 
 --- a key bound to nothing, where something is required ---
-no specification
-FAULT f.py:4:5: SYNTAX: duplicate key 'tolerance'; the first stands, this one is refused
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=())
+choice -:
+    (nothing stated)
+FAULT f.py:4:24: TYPE: 'numeric_ratio' is bound to nothing; leave it unstated for the default, or name a value
 
 --- a retired key: 'slash' (compare C-18), refused with its successor ---
+title    'T'  language None  origin HEADER  at 1:10
+root:
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+choice -:
+    (nothing stated)
 FAULT f.py:3:19: VOCABULARY: 'slash' is retired: '/' and '\' are equivalent by eq_pattern = ["[\\\\/]+"]; 'hwut.renovate --apply' rewrites it
 
 --- 'title' absent ---
-no specification
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'f.py <title unspecified>'  language None  origin HEADER  at 1:8
+root:
+    tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+choice -:
+    (nothing stated)
 <hwut-end>

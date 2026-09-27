@@ -35,14 +35,25 @@ class InputChunkUnaccepted(AssociationRelatedInputChunk,
                            EquivalenceRelatedInputChunk):
     """A stretch nobody has judged. Equivalence: never. Association:
     every pair shown as differing, with the region named."""
+    #  WHICH BAD REGION (C-21): the kind the region's name selected.
+    CHUNK = E_Chunk.UNACCEPTED
 
     def __init__(self, start_line_n, end_line_n, line_list, config,
                  params=None):
-        super().__init__(E_Chunk.UNACCEPTED, start_line_n, end_line_n,
+        super().__init__(self.CHUNK, start_line_n, end_line_n,
                          line_list, config)
+
 
     def _is_equivalent_to_nominal(self, nominal, analogy_db):
         return equivalence_unaccepted.do(self, nominal, analogy_db)
 
     def _associate_with_nominal(self, nominal, analogy_db):
         return association_unaccepted.do(self, nominal, analogy_db)
+
+
+class InputChunkConstraintViolation(InputChunkUnaccepted):
+    """A stretch where a run found a constraint broken (services E-123):
+    '##! constraint-violation', its '## error: ...' lines, '####'. The
+    other BAD region (C-21) -- compared exactly as 'unaccepted', named
+    for what it says."""
+    CHUNK = E_Chunk.CONSTRAINT_VIOLATION

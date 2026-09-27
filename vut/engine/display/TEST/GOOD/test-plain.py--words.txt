@@ -77,11 +77,13 @@ START test-36.sh                                                           ||1
 END   test-36.sh ................................................. [FAIL]  ||0
 START test-37.sh                                                           ||1
 END   test-37.sh ................................................. [FAIL]  ||0
+START test-38.sh                                                           ||1
+END   test-38.sh ................................................. [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 38 fail, 00:00:38
+DIRECTORIES                                            0 ok, 39 fail, 00:00:39
 ------------------------------------------------------------------------------
-   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/38
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/39
 
 ==============================================================================
 HINTS
@@ -110,22 +112,23 @@ suite/TEST
     test-22.sh   output cut short (no <hwut-end>)
     test-23.sh   unexpected stderr
     test-24.sh   region framing is broken
-    test-25.sh   stderr undecided
-    test-26.sh   pype interpreter missing
-    test-27.sh   pype script missing
-    test-28.sh   pype script has a syntax error
-    test-29.sh   pype killed by the supervisor
-    test-30.sh   pype failed
-    test-31.sh   build tool missing
-    test-32.sh   build killed by the supervisor
-    test-33.sh   the build failed
-    test-34.sh   target not built
-    test-35.sh   a dependency would not be acquired
-    test-36.sh   display target unreachable
-    test-37.sh   a token nobody taught
+    test-25.sh   a constraint and the text disagree
+    test-26.sh   stderr undecided
+    test-27.sh   pype interpreter missing
+    test-28.sh   pype script missing
+    test-29.sh   pype script has a syntax error
+    test-30.sh   pype killed by the supervisor
+    test-31.sh   pype failed
+    test-32.sh   build tool missing
+    test-33.sh   build killed by the supervisor
+    test-34.sh   the build failed
+    test-35.sh   target not built
+    test-36.sh   a dependency would not be acquired
+    test-37.sh   display target unreachable
+    test-38.sh   a token nobody taught
 ==============================================================================
 
-RESULTS: 0 ok, 38 fail, 38.00 [sec]
+RESULTS: 0 ok, 39 fail, 39.00 [sec]
 |                                    fail                                    |
-[fold: good_f=False fail_n=38 verdict_n=38 fault_n=0]
+[fold: good_f=False fail_n=39 verdict_n=39 fault_n=0]
 <hwut-end>

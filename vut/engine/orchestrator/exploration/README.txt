@@ -377,7 +377,7 @@ directory's word, and a directory has no stem. Nothing else expands it.
 5  hwut.conf
 ______________________________________________________________________________
 
-    @hwut {
+    hwut {
         on_entry  = "setup.sh"
         on_exit   = "teardown.sh"
         ignore    = ["*.gen.c"]
@@ -393,7 +393,7 @@ ______________________________________________________________________________
             test-gen.c {
                 title = "generated parser"
                 build = "make"
-                choices = [one, two]
+                choices = ["one", "two"]
             }
         }
     }
@@ -419,7 +419,7 @@ failure; every case whose dependencies cannot be met reports '[MISDEP]'.
 in a dictionary of its own -- an open-ended namespace of user-chosen
 names, local, never inherited:
 
-    @hwut {
+    hwut {
         target {
             clean = "./clean.sh"
         }
@@ -438,10 +438,10 @@ ______________________________________________________________________________
 application of the directory receives them, and they DO NOT OVERWRITE: what
 an application states itself stands.
 
-    @hwut {
+    hwut {
         app_defaults {
-            comment = "//"
-            caps    { timeout_sec = 5 }
+            tolerance { comment = ["/*", "*/"] }
+            caps      { timeout_sec = 5 }
         }
     }
 

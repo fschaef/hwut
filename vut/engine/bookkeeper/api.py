@@ -74,7 +74,8 @@ from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             STORE_DIRECTORY_NAME, SUBJECT_BY_SUFFIX_DB,
                             SIDECAR_SUFFIX_TUPLE, compare_setup_delta,
                             error_witness_name, key_parts_of,
-                            nominal_stands_f)
+                            nominal_stands_f, STAIN_CONSTRAINT_WORD,
+                            stain_text, unstable_f)
 from .configuration import (CAPS_FIELD_DB, E_StderrNote, E_TestVerdict,
                             NamingConfig, StoreConfig)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
@@ -95,5 +96,6 @@ __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",
            "SIDECAR_SUFFIX_TUPLE", "TestRunId", "compare_setup_delta",
            "error_witness_name", "key_parts_of", "nominal_stands_f",
-           "observation_of",
+           "observation_of", "STAIN_CONSTRAINT_WORD", "stain_text",
+           "unstable_f",
            "parse_group_table", "run_id_of_text", "source_digest_of")

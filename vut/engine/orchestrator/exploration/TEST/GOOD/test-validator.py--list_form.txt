@@ -1,5 +1,12 @@
 
 --- choices as a list of names ---
-no specification
-FAULT f.py:1:1: VOCABULARY: no 'hwut { ... }' block
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    (nothing stated)
+choice 'one':
+    (nothing stated)
+choice 'three':
+    (nothing stated)
+choice 'two':
+    (nothing stated)
 <hwut-end>

@@ -531,7 +531,7 @@ def _judge(root, key_set, finding_list, repeat_n):
             stained.append(key)
             continue
         stain = book.stain(test, choice)
-        if stain is None: continue
+        if stain is None or stain.get("repeat_n") is None: continue
         if repeat_n >= stain.get("repeat_n", 0):
             book.clear_stain(test, choice)
             cleared.append(key)

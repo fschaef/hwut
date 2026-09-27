@@ -422,12 +422,23 @@ do is satisfy the rules: t=55 is between 0 and 100, and y=7 >= x=3. Had
 the run printed 'value ((y: 2))', the y-line would be shown red and the
 test would FAIL.
 
-Failure is always the quiet kind (section 14): a constraint that is
-false, a rule needing a variable that never entered, a division by zero --
-any trouble evaluating a rule over the SUBJECT's values marks that line
-red. The one exception follows the usual asymmetry: if the GOOD FILE's own
-values violate the GOOD file's own rules, the specification is broken and
-HWUT stops with a message naming the line.
+A rule is checked once every variable it names has entered, whichever
+entered last; until then it waits. But every variable a rule names MUST
+enter, in the program's output and in the GOOD file alike: a stream that
+ends with one never bound is NOT equivalent -- the rules and the output
+disagree about what is there.
+
+Failure is the quiet kind (section 14): a constraint that is false, a
+division by zero -- any trouble evaluating a rule marks that line red, and
+the test fails. What the rules found is said in one sentence naming the
+side, the rule and the variable:
+
+    OUTPUT: constraint "t > 0 and t < 100": broken by ((t: 812)), line 1
+    GOOD: constraint "y == 2 or y >= x": 'x' never bound
+
+A GOOD file whose own values break its own rules is a broken
+specification: the test fails, and the GOOD is named as the side at
+fault -- the rest of the directory is judged as usual.
 
 Expressions are ordinary Python-style conditions: arithmetic, comparisons,
 'and'/'or'/'not', math functions (sqrt, sin, abs, min, max, ...), and
@@ -437,9 +448,8 @@ string methods for quoted-string values:
         "mode": "mode.startswith(\"run-\") and len(mode) < 12",
     }
 
-Rules may depend on each other, but not in a circle: a dependency cycle
-between different variables is reported before the comparison starts.
-(A rule for 'y' mentioning 'y' itself is normal, not a cycle.)
+Rules may relate variables in any direction: "a > b" beside "b > a" is
+two laws over the same pair, not a circle.
 
 
 --------------------------------------------------------------------------------

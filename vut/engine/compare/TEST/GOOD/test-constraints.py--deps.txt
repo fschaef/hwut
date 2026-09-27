@@ -1,13 +1,23 @@
 ## Constraints in terms of each other; values develop in line order.
 dep satisfied:                                 judge: True                      lawyer: True                      [ok]
 dep violated:                                  judge: False                     lawyer: False                     [ok]
-## Missing dependency on the NOMINAL side: broken spec (loud).
-dep missing in nominal too:                    judge: ConstraintSpecError!      lawyer: ConstraintSpecError!      [ok]
-## Missing dependency hit by the SUBJECT alone (short-circuit): red.
-dep missing, subject only:                     judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "y >= x": broken by ((y: 7)), line 2
+## A constraint fires once ALL its variables are bound (C-19):
+## 'y' first does not fire; 'x' after it fires 'y >= x'.
+reverse order, holds:                          judge: True                      lawyer: True                      [ok]
+reverse order, violated:                       judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "y >= x": broken by ((x: 9)), line 2
+## A variable never bound: NOT equivalent, on each side (C-20).
+never bound:                                   judge: False                     lawyer: False                     [ok]
+    GOOD: constraint "y == 2 or y >= x": 'x' never bound
+    OUTPUT: constraint "y == 2 or y >= x": 'x' never bound
 ## Later entries see updated values (monotonic steps).
 monotone ok:                                   judge: True                      lawyer: True                      [ok]
 monotone broken:                               judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "s > p": broken by ((s: 1)), line 1
 ## ANY evaluation failure is red, never loud (subject side):
 division by zero:                              judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "1 / q > 0.1": broken by ((q: 0)), line 1
 type clash:                                    judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "1 / q > 0.1": broken by ((q: "txt")), line 1
+<hwut-end>

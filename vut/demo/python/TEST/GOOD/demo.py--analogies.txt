@@ -1,0 +1,7 @@
+open  ((df17)) input.txt
+open  ((1111)) output.txt
+read  ((df17)) 17 lines
+write ((1111)) 17 lines
+close ((df17))
+close ((1111))
+<hwut-end>

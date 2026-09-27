@@ -96,7 +96,7 @@ GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
 #  before this entry keeps its place and an older book reads unchanged
 #  (a row ends with its last fact, B-9).
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",
-                  "coverage", "stderr", "stain_repeat_n", "stain_when",
+                  "coverage", "stderr", "stain",
                   "test_id", "choice_id")
 
 NO_CHOICE_KEY       = "<none>"
@@ -189,7 +189,6 @@ def _rows_of_model(content):
         choice_db = content[test].get("choices", {})
         for key in sorted(choice_db, key=lambda k: (k != NO_CHOICE_KEY, k)):
             book  = choice_db[key]
-            stain = book.get("stain") or {}
             yield {"test":   "" if test == last_test else test,
                    "choice": "" if key == NO_CHOICE_KEY else key,
                    "verdict":        _verdict_text(book.get("verdict")),
@@ -197,9 +196,7 @@ def _rows_of_model(content):
                    "last_accept":    book.get("last_accept") or "",
                    "coverage":       book.get("coverage") or "",
                    "stderr":         book.get("stderr") or "",
-                   "stain_repeat_n": str(stain["repeat_n"])
-                                     if "repeat_n" in stain else "",
-                   "stain_when":     stain.get("when") or "",
+                   "stain":          stain_text(book.get("stain")),
                    #  THE REGISTER'S COLUMNS (B-13): the id of the
                    #  application and the id of the choice. The MARKS
                    #  are not here -- they bound a SCOPE, and a row can
@@ -241,14 +238,8 @@ def _model_of_rows(row_iterable):
         for name in ("last_accept", "coverage", "stderr",
                      "test_id", "choice_id"):
             if row.get(name): book[name] = row[name]
-        if row.get("stain_repeat_n"):
-            book["stain"] = {"repeat_n": int(row["stain_repeat_n"]),
-                             "when":     row.get("stain_when") or ""}
-        elif row.get("stain"):                          # B-6's one cell
-            legacy = _stain_of_text(row["stain"])
-            if legacy is not None:
-                book["stain"] = {"repeat_n": legacy["repeat_n"],
-                                 "when":     legacy["when"]}
+        stain = stain_of_text(row.get("stain") or "")
+        if stain is not None: book["stain"] = stain
     return content
 
 
@@ -271,8 +262,8 @@ def _model_of_legacy(content):
             if "stderr" in choice_book: out["stderr"] = choice_book["stderr"]
             stain = choice_book.get("stain")
             if isinstance(stain, dict) and "repeat_n" in stain:
-                out["stain"] = {"repeat_n": stain["repeat_n"],
-                                "when":     stain.get("when", "")}
+                out["stain"] = {"repeat_n": int(stain["repeat_n"]),
+                                "keyword_list": []}
             operation_db = choice_book.get("operations", {})
             if not isinstance(operation_db, dict): continue
             run = operation_db.get("Run")
@@ -347,17 +338,117 @@ def _bool_of_text(text):
 
 
 
-def _stain_of_text(text):
-    """RETURN: dict, a stain in B-6's one-cell form '<n>@<when>|...';
-    None where malformed. Read only, for a table of that one day."""
-    try:
-        count, _, rest = text.partition("@")
-        when, _, verdicts = rest.partition("|")
-        return {"repeat_n":     int(count),
-                "when":         when,
-                "verdict_list": [v for v in verdicts.split(";") if v]}
-    except (ValueError, AttributeError):
-        return None
+#  THE STAIN (B-18): one cell of keywords, '|'-separated. 'N repeat' is
+#  the repetition instability that 'hwut.run.stability' convicted over N
+#  repeats; every other keyword names a disqualification of its own --
+#  'constraint': the GOOD contradicts its own constraints.
+STAIN_REPEAT_WORD     = "repeat"
+STAIN_CONSTRAINT_WORD = "constraint"
+
+
+def stain_of_text(text):
+    """
+    RETURN: dict, the stain a book cell states -- 'repeat_n' (int) where
+            it carries 'N repeat', and 'keyword_list', every other keyword
+            in the order written.
+            None, the cell is empty: the choice is clean.
+    """
+    repeat_n, keyword_list = None, []
+    for word in (part.strip() for part in text.split("|")):
+        if not word: continue
+        count, _, tail = word.partition(" ")
+        if tail.strip() == STAIN_REPEAT_WORD and count.isdigit():
+            repeat_n = int(count)
+        elif word not in keyword_list:
+            keyword_list.append(word)
+    if repeat_n is None and not keyword_list: return None
+    stain = {"keyword_list": keyword_list}
+    if repeat_n is not None: stain["repeat_n"] = repeat_n
+    return stain
+
+
+def stain_text(stain):
+    """RETURN: str, the book cell of 'stain' -- 'N repeat' first, then the
+               keywords, '|'-separated; '' where the choice is clean."""
+    if not stain: return ""
+    word_list = []
+    if stain.get("repeat_n") is not None:
+        word_list.append("%d %s" % (stain["repeat_n"], STAIN_REPEAT_WORD))
+    word_list.extend(stain.get("keyword_list") or ())
+    return "|".join(word_list)
+
+
+def unstable_f(stain):
+    """RETURN: bool, the stain convicts of REPETITION INSTABILITY -- the
+               one kind that keeps a choice from being run or accepted."""
+    return bool(stain) and stain.get("repeat_n") is not None
+
+
+def _remarked(path, placed_list):
+    """
+    RETURN: bool, True where the file at 'path' was written; False where
+            every remark already stood in it, or no file stands.
+
+    WHAT A RUN FOUND, WHERE IT WAS FOUND (services E-123): each remark of
+    'placed_list' -- (line_n, text) -- becomes '## <text>' inside a
+    '##! constraint-violation' region DIRECTLY AFTER line 'line_n'
+    (1-based, the file as it stands); a remark without a line (a variable
+    never bound) goes into the region at the file's HEAD. The region is a
+    BAD one (compare C-21): it keeps the case from passing and says why. A remark already standing anywhere
+    in the file is not written again: a run meeting the same finding twice
+    writes it once.
+    """
+    if not path.exists(): return False
+    line_list = path.read_text(encoding="utf-8").split("\n")
+    present   = set(line.strip() for line in line_list)
+    at_db, head_list = {}, []
+    for line_n, remark in placed_list:
+        line = "## %s" % remark
+        if line in present: continue
+        present.add(line)
+        if line_n is None or not 0 < line_n <= len(line_list):
+            head_list.append(line)
+        else:
+            at_db.setdefault(line_n, []).append(line)
+    if not at_db and not head_list: return False
+    #  FROM THE BOTTOM UP, so no insertion moves a line still to come.
+    for line_n in sorted(at_db, reverse=True):
+        line_list[line_n:line_n] = [VIOLATION_BEGIN_LINE] + at_db[line_n] \
+                                   + ["####"]
+    if head_list:
+        end_i = _head_region_end(line_list, "constraint-violation")
+        if end_i is None:
+            line_list = [VIOLATION_BEGIN_LINE] + head_list + ["####"] \
+                        + line_list
+        else:
+            line_list = line_list[:end_i] + head_list + line_list[end_i:]
+    path.write_text("\n".join(line_list), encoding="utf-8")
+    return True
+
+
+VIOLATION_BEGIN_LINE = "##! constraint-violation"
+
+
+def _head_region_end(line_list, kind):
+    """
+    RETURN: int, the index of the '####' that closes a '##! <kind>' region
+                 opening on the FIRST line (regions nested inside it
+                 counted);
+            None, the first line opens no such region, or it never closes.
+    """
+    if not line_list: return None
+    word_list = line_list[0].strip()[3:].split() \
+                if line_list[0].strip().startswith("##!") else []
+    if word_list[:1] != [kind]: return None
+    depth = 0
+    for i, line in enumerate(line_list):
+        stripped = line.strip()
+        if stripped.startswith("##!"): depth += 1
+        elif stripped == "####":
+            depth -= 1
+            if depth == 0: return i
+    return None
+
 
 def _now():
     """RETURN: str, the current UTC instant, seconds resolution, ISO."""
@@ -1302,16 +1393,19 @@ class Bookkeeper:
     # -- THE STAIN: a test that switched results is disqualified ------
     def stain(self, test, choice):
         """
-        RETURN: dict, the stain standing on that choice -- 'repeat_n',
-                'when' and the 'verdict_list' that convicted it.
+        RETURN: dict, the stain standing on that choice -- 'repeat_n' where
+                a repetition instability convicted it, and 'keyword_list',
+                every other disqualification (B-18).
                 None, the choice is clean.
 
-        A STAIN IS A DISQUALIFICATION, not a failure. A test that came
-        out 'ok' in one repeat and not in another has borne FALSE
-        WITNESS about the unit beneath it, and bears it until it is
-        proven steady over at least as many repeats as convicted it
-        ('hwut.run.stability'). Until then the choice is not run at all:
-        there is nothing to learn from asking a liar again.
+        A REPETITION STAIN ('repeat_n') IS A DISQUALIFICATION, not a
+        failure. A test that came out 'ok' in one repeat and not in
+        another has borne FALSE WITNESS about the unit beneath it, and
+        bears it until it is proven steady over at least as many repeats
+        as convicted it ('hwut.run.stability'). Until then the choice is
+        not run at all: there is nothing to learn from asking a liar
+        again. A 'constraint' stain says the GOOD contradicts its own
+        constraints; the choice runs, and fails, until the GOOD is fixed.
         """
         key = NO_CHOICE_KEY if choice is None else choice
         return self.book().get(test, {}).get("choices", {}) \
@@ -1327,22 +1421,18 @@ class Bookkeeper:
 
     def _note_stain_unlocked(self, test, choice, repeat_n, verdict_list):
         """
-        RETURN: dict, the stain now standing -- replacing any earlier
-                one, so a fresh conviction states the fresh count.
+        RETURN: dict, the stain now standing -- the repetition count
+                replacing any earlier one, so a fresh conviction states the
+                fresh count; the other keywords stand.
 
         'repeat_n' is what it takes to clear it: a later proof must
         repeat AT LEAST as often, or it has not answered the charge.
         """
-        content   = self.book()
-        test_book = content.setdefault(test, {})
-        choice_db = test_book.setdefault("choices", {})
-        key       = NO_CHOICE_KEY if choice is None else choice
         #  THE DECISION ALONE (B-7): the verdicts that convicted are
         #  what this machine saw, and are not the book's.
-        stain     = {"repeat_n": int(repeat_n), "when": _now()}
-        choice_db.setdefault(key, {})["stain"] = stain
-        self._write_book(content)
-        return stain
+        return self._stain_changed(test, choice,
+                                   lambda stain: stain.update(
+                                                     repeat_n=int(repeat_n)))
 
     def clear_stain(self, test, choice):
         """RETURN: what '_clear_stain_unlocked' returns -- the same act, under
@@ -1354,20 +1444,73 @@ class Bookkeeper:
 
     def _clear_stain_unlocked(self, test, choice):
         """
-        RETURN: dict, the stain that is gone.
-                None, none stood.
+        RETURN: dict, the stain standing after the repetition count is gone.
+                None, the choice is clean now.
 
-        THE ONLY WAY OUT BESIDE REMOVAL. 'hwut.run.stability' clears it
-        having repeated at least as often as the conviction and found
-        every verdict alike; nothing else does -- not a run, not an
-        acceptance, not the passage of time.
+        THE ONLY WAY OUT OF A REPETITION STAIN BESIDE REMOVAL.
+        'hwut.run.stability' clears it having repeated at least as often
+        as the conviction and found every verdict alike; nothing else does
+        -- not a run, not an acceptance, not the passage of time. The other
+        keywords are not its to clear.
         """
-        content   = self.book()
-        choice_db = content.get(test, {}).get("choices", {})
-        key       = NO_CHOICE_KEY if choice is None else choice
-        gone      = choice_db.get(key, {}).pop("stain", None)
-        if gone is not None: self._write_book(content)
-        return gone
+        return self._stain_changed(test, choice,
+                                   lambda stain: stain.pop("repeat_n", None))
+
+    def note_stain_keyword(self, test, choice, keyword, standing_f):
+        """
+        RETURN: dict, the stain standing after 'keyword' was set
+                ('standing_f') or taken away (not 'standing_f');
+                None, the choice is clean. Under the directory's lock.
+
+        A RUN SAYS IT EACH TIME: the 'constraint' keyword stands while the
+        GOOD contradicts its constraints and goes the run it no longer
+        does (B-18). The book is written only where the cell changes.
+        """
+        def change(stain):
+            """RETURN: None. 'keyword' set or taken away in 'stain'."""
+            word_list = stain.setdefault("keyword_list", [])
+            if standing_f and keyword not in word_list:
+                word_list.append(keyword)
+            elif not standing_f and keyword in word_list:
+                word_list.remove(keyword)
+        with self._act():
+            return self._stain_changed(test, choice, change)
+
+    def _stain_changed(self, test, choice, change):
+        """
+        RETURN: dict, the choice's stain after 'change' (a function over
+                the stain dict) was applied; None where nothing remains --
+                the cell is then dropped. The book is written only where
+                the cell's text changed.
+        """
+        content = self.book()
+        key     = NO_CHOICE_KEY if choice is None else choice
+        book    = content.setdefault(test, {}).setdefault("choices", {}) \
+                         .setdefault(key, {})
+        before  = stain_text(book.get("stain"))
+        stain   = dict(book.get("stain") or {"keyword_list": []})
+        stain["keyword_list"] = list(stain.get("keyword_list") or [])
+        change(stain)
+        after = stain_of_text(stain_text(stain))
+        if after is None: book.pop("stain", None)
+        else:             book["stain"] = after
+        if stain_text(after) != before: self._write_book(content)
+        return after
+
+    # -- THE REMARK: a finding written where it was found -------------
+    def note_nominal_remark(self, test, choice, subject, placed_list):
+        """RETURN: bool, what '_remarked' returns, for the NOMINAL of that
+                   key -- under the directory's lock."""
+        with self._act():
+            return _remarked(self.nominal_path(test, choice, subject),
+                             placed_list)
+
+    def note_candidate_remark(self, test, choice, subject, placed_list):
+        """RETURN: bool, what '_remarked' returns, for the CANDIDATE of that
+                   key -- the recorded OUTPUT -- under the directory's lock."""
+        with self._act():
+            return _remarked(self.candidate_path(test, choice, subject),
+                             placed_list)
 
     # -- RENAME: the book re-keys; NO RECORD CONTENT IS TOUCHED -------
     def rename_test(self, test, fresh):

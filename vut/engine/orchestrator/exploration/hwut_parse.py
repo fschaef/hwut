@@ -24,7 +24,7 @@ import os
 from .          import finder
 from .          import reader
 from .explorer  import explore
-from .printer   import app_text
+from .printer   import app_text, value_text
 
 
 def text_of_file(directory, name, no_default_f=False,
@@ -110,9 +110,12 @@ def text_of_directory(directory, interview_runner=None,
                            "dependency")
               if getattr(spec, name)]
     if stated:
-        text_list.append(finder.CONF_NAME)
+        #  IN THE SPECIFICATION LANGUAGE, as every application below it
+        #  (X-PRINTED): each line pastes into a configuration section.
+        text_list.append("%s {" % finder.CONF_NAME)
         for name, value in stated:
-            text_list.append("    %-20s %s" % (name, _printed(value)))
+            text_list.extend(_directory_line_list(name, value))
+        text_list.append("}")
         text_list.append("")
 
     for app in result.app_set:
@@ -128,13 +131,20 @@ def text_of_directory(directory, interview_runner=None,
     return "\n".join(text_list), list(climb_fault_list) + list(result.fault_list)
 
 
-def _printed(value):
-    """RETURN: str, a directory key's value, briefly."""
+def _directory_line_list(name, value):
+    """
+    RETURN: list[str], a directory key as 'hwut.conf' writes it, indented
+            one level: 'name = value', and 'dependency' as its scope of
+            quoted targets. A target prints as it is written ('test-a.py
+            one'), values through the one printer of values.
+    """
     if isinstance(value, dict):
-        return "  ".join("%s <- %s" % (target,
-                                       ", ".join(str(x) for x in needed))
-                         for target, needed in sorted(value.items(),
-                                                      key=str))
+        line_list = ["    %s {" % name]
+        for target, needed in sorted(value.items(), key=str):
+            line_list.append("        %s = %s"
+                             % (value_text(str(target)),
+                                value_text([str(x) for x in needed])))
+        return line_list + ["    }"]
     if isinstance(value, tuple):
-        return ", ".join(str(item) for item in value)
-    return str(value)
+        value = [str(item) for item in value]
+    return ["    %s = %s" % (name, value_text(value))]

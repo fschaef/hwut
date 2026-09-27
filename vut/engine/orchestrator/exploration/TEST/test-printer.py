@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "hwut.parse: what the framework read"
 #     choices    = ["directory", "faults", "file", "no_default",
-#                   "origins", "places"]
+#                   "origins", "places", "read_back"]
 #     interactive = true
 # }
 #
@@ -13,7 +13,7 @@ ______________________________________________________________________________
 PURPOSE: What 'hwut.parse' shows: the complete configuration as a tree,
          annotated only where a value is not this choice's own word.
 
-CHOICES: file, origins, no_default, places, directory, faults;
+CHOICES: file, origins, no_default, places, directory, faults, read_back;
 
 DESCRIPTION:
 
@@ -43,6 +43,14 @@ places     '--provenance' names the place of every stated value in a
 
 directory  the whole directory: the directory keys, then each
            application, then the cases that cannot be reached.
+
+read_back  WHAT IS PRINTED READS BACK AS WRITTEN (X-PRINTED): a scope
+           taken from the printed tree and pasted into a configuration
+           section states the same values, and the whole tree pasted as
+           a header prints the same tree again -- 'same' and
+           'interactive' at the root, where they may stand -- backslashes and quotes
+           escaped as the author wrote them; a value longer than the
+           comment column keeps two blanks before its comment.
 
 faults     a file whose specification does not parse prints no tree
            and its faults instead; the service completes.
@@ -210,6 +218,115 @@ def test_directory():
                                  '}\n'})
 
 
+READ_BACK_HEADER = (
+    '# @hwut {\n'
+    '#     title = "Read back \\"as written\\""\n'
+    '#     tolerance {\n'
+    '#         eq_pattern = ["[\\\\\\\\/]+", "id=\\"[a-z]+\\"",\n'
+    '#                       "(hello|bonjour|hallo|buongiorno|hola|ciao)"]\n'
+    '#         nothing    = ["WARN\\\\s*"]\n'
+    '#     }\n'
+    '#     choices = ["one"]\n'
+    '# }\n')
+
+
+def _scope_of(text, name):
+    """RETURN: list[str], the lines of the first scope 'name { ... }' in
+               the printed 'text', braces included, unindented."""
+    line_list = text.splitlines()
+    i = next(i for i, line in enumerate(line_list)
+             if line.strip().startswith(name + " {"))
+    indent = len(line_list[i]) - len(line_list[i].lstrip())
+    j = next(j for j in range(i + 1, len(line_list))
+             if line_list[j] == " " * indent + "}")
+    return [line[indent:] for line in line_list[i:j + 1]]
+
+
+def test_read_back():
+    """RETURN: None. The printed tolerance, pasted, reads back the same."""
+    from vut.engine.orchestrator.exploration.explorer import explore
+    banner("written")
+    print(READ_BACK_HEADER, end="")
+    directory = build_directory({"test-a.py": READ_BACK_HEADER})
+    pasted    = None
+    try:
+        text, fault_list = hwut_parse.text_of_file(directory, "test-a.py")
+        scope = _scope_of(text, "tolerance")
+        banner("printed, the scope taken")
+        print("\n".join(scope))
+        pasted = build_directory({"test-a.py":
+                     "# @hwut {\n#     title = \"pasted\"\n"
+                     + "".join("#     %s\n" % line for line in scope)
+                     + "#     choices = [\"one\"]\n# }\n"})
+        first  = explore(directory).app_set.app_db["test-a.py"]
+        second = explore(pasted)
+        banner("pasted, read back")
+        for fault in list(fault_list) + list(second.fault_list):
+            print("FAULT %s" % fault)
+        second = second.app_set.app_db.get("test-a.py")
+        if second is None:
+            print("FAIL: the pasted scope does not read back")
+            return
+        for name in ("eq_pattern", "nothing"):
+            print("%-10s %s" % (name, list(getattr(
+                                   second.choice_db["one"].tolerance, name))))
+        #  JUDGED AS COMPARE WILL USE IT: the pasted scope states the
+        #  defaults too, so the records differ in what was STATED while
+        #  compare's configuration must not differ at all.
+        from vut.engine.orchestrator.run.adapter import _compare_of
+        same_f = _compare_of(first.choice_db["one"]).pattern_finder \
+                 == _compare_of(second.choice_db["one"]).pattern_finder
+        print("%s: the pasted scope configures compare the same"
+              % ("SUCCESS" if same_f else "FAIL"))
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+        if pasted: shutil.rmtree(pasted, ignore_errors=True)
+    _read_back_whole()
+
+
+WHOLE_HEADER = (
+    '# @hwut {\n'
+    '#     title = "The whole tree"\n'
+    '#     same  = yes\n'
+    '#     tolerance { eq_pattern = ["[\\\\\\\\/]+"] }\n'
+    '#     choices {\n'
+    '#         one { }\n'
+    '#         two { caps { timeout_sec = 5 } }\n'
+    '#     }\n'
+    '# }\n')
+
+
+def _uncommented(text):
+    """RETURN: list[str], the printed lines without their comments."""
+    import re
+    return [re.sub(r'\s+# [^"]*$', "", line) for line in text.splitlines()]
+
+
+def _read_back_whole():
+    """RETURN: None. The WHOLE printed application, pasted as a header,
+    prints the same tree again -- comments aside, which name where a
+    value came from (X-PRINTED): 'same' and 'interactive' stand at the
+    root, where the validator admits them."""
+    banner("the whole tree: printed, pasted, printed again")
+    directory = build_directory({"test-a.py": WHOLE_HEADER})
+    pasted    = None
+    try:
+        text, _ = hwut_parse.text_of_file(directory, "test-a.py")
+        body    = text.splitlines()[1:-1]
+        pasted  = build_directory({"test-a.py":
+                      "# @hwut {\n" + "".join("# %s\n" % line[4:]
+                                               for line in body) + "# }\n"})
+        again, fault_list = hwut_parse.text_of_file(pasted, "test-a.py")
+        for fault in fault_list: print("FAULT %s" % fault)
+        print("\n".join(_uncommented(text)[:6]))
+        same_f = _uncommented(text) == _uncommented(again)
+        print("%s: the whole tree reads back as printed"
+              % ("SUCCESS" if same_f and not fault_list else "FAIL"))
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+        if pasted: shutil.rmtree(pasted, ignore_errors=True)
+
+
 def test_faults():
     """RETURN: None. A specification that does not parse."""
     show_file("a header with a fault prints no tree",
@@ -230,4 +347,5 @@ if __name__ == "__main__":
         "places":     test_places,
         "directory":  test_directory,
         "faults":     test_faults,
+        "read_back":  test_read_back,
     }).run()

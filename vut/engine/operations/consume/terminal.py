@@ -49,23 +49,26 @@ def ends_in_terminal(reader):
     return last == TERMINAL_TOKEN
 
 
-#  THE UNACCEPTED REGION (compare C-9): '##! unaccepted' opens a stretch
-#  nobody has judged. The '!' is what makes it a region and not a
+#  THE BAD REGIONS (compare C-9, C-21): '##! unaccepted' opens a stretch
+#  nobody has judged, '##! constraint-violation' one where a run found a
+#  constraint broken. The '!' is what makes it a region and not a
 #  comment; the name is read as the scanner reads a shebang -- the
 #  first word after '##!', case as written.
-def carries_unaccepted_f(reader):
+def bad_region_of(reader):
     """
-    RETURN: bool, whether the stream opens an 'unaccepted' region
-            anywhere -- a line '##! unaccepted' (optionally followed by
-            parameters). The reader is consumed and closed.
+    RETURN: str, the name of the first BAD region (compare C-21) the stream
+                 opens -- 'unaccepted' or 'constraint-violation';
+            None, it opens none. The reader is consumed and closed.
     """
+    from ...compare.api import BAD_REGION_NAME_TUPLE
     try:
         for line in reader:
             stripped = line.strip()
             if not stripped.startswith("##!"): continue
             word_list = stripped[3:].split()
-            if word_list and word_list[0] == "unaccepted": return True
-        return False
+            if word_list and word_list[0] in BAD_REGION_NAME_TUPLE:
+                return word_list[0]
+        return None
     finally:
         close = getattr(reader, "close", None)
         if close is not None: close()

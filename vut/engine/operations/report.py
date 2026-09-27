@@ -87,6 +87,9 @@ _PRECEDENCE = (
     #  -- undecided precedes judgement: a nominal with an unaccepted
     #     region cannot pass and says WHY before any line difference
     E_TestRunResult.UNACCEPTED,
+    #  -- the constraints' findings name the law the text broke, which a
+    #     plain 'not equivalent' would hide (E-123)
+    E_TestRunResult.CONSTRAINT,
     # -- the judgement: everything ran, the subject does not match
     E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
     E_TestRunResult.NOT_EQUIVALENT_GREW,
@@ -138,6 +141,11 @@ class Comparison:
     """WHAT WAS COMPARED. Absent altogether when provision failed."""
     subject_verdict_db: Mapping[str, bool] = field(default_factory=dict)
     report:             E_TestRunResult    = E_TestRunResult.OK
+    #  WHAT THE CONSTRAINTS FOUND (compare C-20), per subject: a tuple of
+    #  'ConstraintFinding' -- empty where a subject was judged and nothing
+    #  was found. 'detail' is the sentence a run speaks; never booked.
+    finding_db:         Mapping[str, tuple] = field(default_factory=dict)
+    detail:             Optional[str]      = None
 
     @property
     def verdict(self):

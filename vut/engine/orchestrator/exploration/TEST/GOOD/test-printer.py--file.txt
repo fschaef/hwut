@@ -2,6 +2,8 @@
 --- a file with two choices ---
 test-a.py {
     title = "Tolerances"
+    same = false                              # default
+    interactive = false                       # default
     choices {                                 # app
         one {
             caps {
@@ -28,8 +30,6 @@ test-a.py {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = false                      # default
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
         two {
@@ -57,8 +57,6 @@ test-a.py {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = false                      # default
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
     }

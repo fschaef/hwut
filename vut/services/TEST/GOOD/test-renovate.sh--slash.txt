@@ -31,8 +31,8 @@ nothing to renovate below '.'
 --- the exploration reads them:
     test-old.sh {
                     numeric_ratio = 0.1           # hwut.conf:3
-                    eq_pattern = ["[\\/]+"]       # app
+                    eq_pattern = ["[\\\\/]+"]     # app
     test-new.sh {
                     numeric_ratio = 0.1           # hwut.conf:3
-                    eq_pattern = ["id=[0-9]+", "[\\/]+"]# app
+                    eq_pattern = ["id=[0-9]+", "[\\\\/]+"]  # app
 <hwut-end>

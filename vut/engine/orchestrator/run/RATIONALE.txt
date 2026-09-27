@@ -1234,3 +1234,28 @@ COST      MEASURED on this tree: the solver's directory moves from
           (6.4 s). A directory of many medium cases may now start later
           than before; the worker budget still fills with its cases as
           soon as anything frees.
+
+------------------------------------------------------------------------------
+O-34  A PAGE'S CONSTRAINTS ARE COMPILED WHERE THEY ARE MAPPED  (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   'tolerance { constraints = [...] }' reached compare as
+          'constraint_expression_list' and nothing more. Compare checks
+          'constraint_db', which only 'derive_constraint_db()' builds, and
+          nothing called it: every page's constraints were stored and
+          never enforced. MEASURED: 'constraints = ["x < 5"]', subject
+          'v ((x: 9))' against 'v ((x: 1))' -> equivalent.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "fix this please!". The one
+          mapping ('tolerance_applied') compiles the expressions right
+          after it sets them, so the run and the merge's tolerance pane
+          enforce the same constraints. Pinned by 'test-adapter.py
+          constraints': the case above is now NOT equivalent, 'x: 3'
+          still is; against the old mapping the page reads FAIL.
+          'constraints = []' is the DEFAULT, not an off (unlike a marker
+          pair's '[]'): it leaves compare's configuration as it stands.
+          It used to clear 'constraint_f', so the default that
+          'hwut.config.show' prints did not read back as the default
+          (measured by 'test-printer.py read_back', X-PRINTED).
+
+COST      A page whose output violated its own constraints would turn
+          red. MEASURED: none in this tree -- the census stayed 853/0.

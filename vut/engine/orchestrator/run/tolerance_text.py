@@ -41,6 +41,9 @@ import re
 from vut.test_writing_support.python             import hwut_hocon
 from vut.engine.orchestrator.exploration         import validator
 from vut.engine.orchestrator.exploration.unwrapper import plain_lines
+#  ONE PRINTER OF VALUES (exploration X-PRINTED): what the pane shows is
+#  what 'hwut.config.show' shows, escaped so it reads back as written.
+from vut.engine.orchestrator.exploration.printer   import value_text
 from .adapter import TOLERANCE_LEAF_TUPLE, tolerance_applied
 
 PANE_FILE = "<tolerance pane>"
@@ -150,23 +153,6 @@ def configuration_of(text, base):
     options = copy.deepcopy(base)
     tolerance_applied(options, tolerance)
     return options, None
-
-
-def value_text(value):
-    """RETURN: str, a value as the header writes it -- booleans lower
-               case, strings in double quotes with backslash and quote
-               escaped, tuples as lists."""
-    match value:
-        case True:  return "true"
-        case False: return "false"
-        case str():
-            return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"')
-        case tuple() | list():
-            return "[%s]" % ", ".join(value_text(item) for item in value)
-        case float():
-            return repr(value)
-        case _:
-            return str(value)
 
 
 _KEY_LINE_RE = re.compile(r"^\s*([A-Za-z_]+)\s*=")

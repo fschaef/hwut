@@ -47,7 +47,7 @@ ______________________________________________________________________________
 """
 from .relation      import RELATION, default_of
 from .configuration_tree import E_Origin
-from .configuration_tree import KEY_TO_FIELD
+from .configuration_tree import KEY_TO_FIELD, ROOT_ONLY_KEY_SET
 
 _INDENT      = "    "
 _VALUE_COLUMN = 46
@@ -91,6 +91,16 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False,
                    % text.ljust(_VALUE_COLUMN)
         pair_list.append((place, text))
 
+    #  THE ROOT'S OWN WORDS ('same', 'interactive') stand where an author
+    #  may write them -- once, beside the title -- not under every choice,
+    #  where the validator refuses them (X-PRINTED). The resolution gave
+    #  every choice the root's value; the first choice's is shown.
+    first = sorted(app.choice_db, key=lambda c: (c is None, c or ""))[0]
+    pair_list.extend(_parameter_line_list(
+        app.choice_db[first], (app.origin_db or {}).get(first, {}), 1,
+        no_default_f, provenance_f, gnu_f, app_place, verbose_f,
+        key_set=ROOT_ONLY_KEY_SET))
+
     #  THE CHOICE LIST HAS A PROVENANCE OF ITS OWN -- the specification's
     #  source, which is the application's 'origin' -- and it reads in
     #  the leaves' own words: 'app' (the header), 'hwut.conf', or
@@ -110,7 +120,8 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False,
         pair_list.extend(_parameter_line_list(
             app.choice_db[choice],
             (app.origin_db or {}).get(choice, {}), 3, no_default_f,
-            provenance_f, gnu_f, app_place, verbose_f))
+            provenance_f, gnu_f, app_place, verbose_f,
+            key_set=_CHOICE_KEY_SET))
         pair_list.append((app_place, "%s}" % (_INDENT * 2)))
     pair_list.append((app_place, "%s}" % _INDENT))
     pair_list.append((app_place, "}"))
@@ -136,9 +147,15 @@ def case_text(case, origin_db=None, no_default_f=False,
                    + [(case_place, "}")], case_place))
 
 
+#  What a choice may state: every parameter but the root's own words.
+_CHOICE_KEY_SET = tuple(key for key in KEY_TO_FIELD
+                        if key not in ROOT_ONLY_KEY_SET)
+
+
 def _parameter_line_list(parameters, origin_db, depth, no_default_f,
                          provenance_f=False, gnu_f=False,
-                         enclosing_place=None, verbose_f=False):
+                         enclosing_place=None, verbose_f=False,
+                         key_set=None):
     """
     YIELD is a list here: [0] str | None  the line's PLACE, in the GNU
                                           error format, where it has one
@@ -150,9 +167,11 @@ def _parameter_line_list(parameters, origin_db, depth, no_default_f,
     A scope whose every leaf would be dropped is dropped whole: an empty
     brace pair says nothing. A NULL leaf is dropped unless 'verbose_f':
     "nothing set here" is what every unwritten line already says.
+    'key_set' restricts the parameters to those named; all where None.
     """
     result = []
     for key in KEY_TO_FIELD:
+        if key_set is not None and key not in key_set: continue
         field     = KEY_TO_FIELD[key]
         value     = getattr(parameters, field)
         leaf_list = [name for name in RELATION
@@ -249,7 +268,7 @@ def _line(name, value, origin, depth, provenance_f=False, gnu_f=False):
     Without a flag, a value the author wrote HERE carries no comment: he
     is reading his own file.
     """
-    text = "%s%s = %s" % (_INDENT * depth, name, _printed(value))
+    text = "%s%s = %s" % (_INDENT * depth, name, value_text(value))
     if origin is None: return (None, text)
 
     if gnu_f:
@@ -258,7 +277,11 @@ def _line(name, value, origin, depth, provenance_f=False, gnu_f=False):
 
     comment = _place_text(origin) if provenance_f else str(origin)
     if not comment: return (None, text)
-    return (None, "%s# %s" % (text.ljust(_VALUE_COLUMN), comment))
+    #  A VALUE LONGER THAN THE COLUMN keeps two blanks before its
+    #  comment, so the comment never runs into it.
+    return (None, "%s# %s" % (text.ljust(_VALUE_COLUMN)
+                              if len(text) < _VALUE_COLUMN - 1
+                              else text + "  ", comment))
 
 
 def _place_text(origin):
@@ -269,14 +292,25 @@ def _place_text(origin):
     return "%s:%d" % (origin.file, origin.line)
 
 
-def _printed(value):
-    """RETURN: str, a value as a specification writes it -- strings in
-    double quotes, booleans lower case, absence as 'null'."""
+def value_text(value):
+    """
+    RETURN: str, a value AS A SPECIFICATION WRITES IT -- strings in double
+            quotes with backslash and quote escaped, booleans lower case,
+            absence as 'null', tuples and lists as lists.
+
+    WHAT IS PRINTED READS BACK AS WRITTEN (X-PRINTED): the header's
+    "[\\\\/]+" is printed "[\\\\/]+", so a printed line pasted into a
+    configuration section states the same value. ONE implementation:
+    'hwut.config.show', the merge's tolerance pane and the keeping of a
+    tolerance all print through here.
+    """
     match value:
         case None:   return "null"
         case True:   return "true"
         case False:  return "false"
-        case str():  return '"%s"' % value
-        case tuple():
-            return "[%s]" % ", ".join(_printed(item) for item in value)
+        case str():
+            return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"')
+        case tuple() | list():
+            return "[%s]" % ", ".join(value_text(item) for item in value)
         case _:      return repr(value)
+

@@ -1,6 +1,10 @@
 ## Quoted-string values; Python string functions in constraints.
 strings hold:                                  judge: True                      lawyer: True                      [ok]
 prefix violated:                               judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "mode.startswith("run-") and len(mode) < 12": broken by ((mode: "walk-fast")), line 1
 cross-var string dep violated:                 judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "tag.lower() == mode.replace("run-", "")": broken by ((tag: "slow")), line 2
 ## Number vs string in the same variable: evaluation failure = red.
 kind drift:                                    judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "v > 0": broken by ((v: "high")), line 1
+<hwut-end>

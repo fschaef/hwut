@@ -32,6 +32,7 @@ PHRASE_DB = {
     "ok":                          "ok",
     "test-failed":                 "the test failed",
     "unaccepted":                  "the nominal carries lines nobody has accepted",
+    "constraint":                  "a constraint and the text disagree",
     "build-failed":                "the build failed",
     "launch-failed":               "the launch failed",
     "unsupported":                 "not supported here",

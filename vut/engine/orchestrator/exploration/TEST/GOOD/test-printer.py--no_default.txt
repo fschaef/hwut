@@ -2,6 +2,8 @@
 --- everything ---
 test-a.py {
     title = "Tolerances"
+    same = false                              # default
+    interactive = false                       # default
     choices {                                 # app
         two {
             caps {
@@ -28,8 +30,6 @@ test-a.py {
                 lowest_n = 4                  # default
                 context_k = 1                 # default
             }
-            same = false                      # default
-            interactive = false               # default
             output = ["<stdout>"]             # default
         }
     }

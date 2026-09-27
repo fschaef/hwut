@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "The translation: stated parameters reach their owners"
-#     choices    = ["caps", "caps_inherit", "compare", "naming",
-#                   "refused", "sweep"]
+#     choices    = ["caps", "caps_inherit", "compare", "constraints",
+#                   "naming", "refused", "sweep"]
 #     interactive = true
 # }
 #
@@ -21,7 +21,7 @@ and a parameter it drops is worse than one it refuses: the test then
 runs under a setup nobody chose, and its verdict means something other
 than what its author asked for.
 
-CHOICES: sweep, compare, caps, naming, refused;
+CHOICES: sweep, compare, constraints, caps, naming, refused;
 
 DESCRIPTION:
 
@@ -33,6 +33,11 @@ sweep    EVERY member of 'TestParameters', stated, and where it
 compare  the TOLERANCES, member by member, into compare's own
          Configuration: the ratio, the pattern lists, the marker
          PAIRS, and the stated OFF (the empty tuple).
+
+constraints  A PAGE'S CONSTRAINTS ARE ENFORCED (O-34): the expressions
+         arrive COMPILED into 'constraint_db', and compare judges by
+         them -- a binding that violates one is not equivalent, one that
+         keeps it is.
 
 caps_inherit  CAPS TRAVEL BY INHERITANCE (O-20): a choice's word
          stands over the application's, the application's over
@@ -250,6 +255,35 @@ def test_compare():
                  "name.")
 
 
+def test_constraints():
+    """RETURN: None. The stated constraints, enforced by compare."""
+    import asyncio
+    import io
+    from vut.engine.compare.api import is_equivalent
+    options = _compare_of(TestParameters(
+                  tolerance=Tolerance(constraints=("x < 5",))))
+    print("INSPECT: constraints = [\"x < 5\"]  ->  constraint_db %s"
+          % sorted(options.constraint_db))
+    nominal = "v ((x: 1))\n"
+    verdict_db = {}
+    for subject in ("v ((x: 3))\n", "v ((x: 9))\n"):
+        verdict_db[subject] = asyncio.run(is_equivalent(
+                                  options, io.StringIO(subject),
+                                  io.StringIO(nominal)))
+        print("         %-12s vs %-12s -> %s"
+              % (subject.strip(), nominal.strip(),
+                 "equivalent" if verdict_db[subject] else "NOT equivalent"))
+    ok = _check([
+        (sorted(options.constraint_db) == ["x"],
+         "the expression is compiled, under the variable it names"),
+        (verdict_db["v ((x: 3))\n"] is True,
+         "a binding inside the constraint is equivalent"),
+        (verdict_db["v ((x: 9))\n"] is False,
+         "a binding that violates it is not"),
+    ])
+    _verdict(ok, "a page's constraints are enforced.")
+
+
 def test_caps():
     """RETURN: None. The caps into procsitter's configuration."""
     default = _configuration(TestParameters()).caps
@@ -360,6 +394,7 @@ if __name__ == "__main__":
         choice_map = {
             "sweep":   test_sweep,
             "compare": test_compare,
+            "constraints": test_constraints,
             "caps":    test_caps,
             "caps_inherit": test_caps_inherit,
             "naming":  test_naming,

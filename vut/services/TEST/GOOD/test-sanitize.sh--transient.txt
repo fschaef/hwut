@@ -14,7 +14,7 @@ STDOUT {
 --- a bare call never takes them
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': books, lock, orphans, out, session  (reporting only; '--apply' acts)
+    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session  (reporting only; '--apply' acts)
     
       session -- 1 found:
           suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody

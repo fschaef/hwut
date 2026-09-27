@@ -1,0 +1,3 @@
+greeting: buongiorno, world
+value:    19.93
+<hwut-end>

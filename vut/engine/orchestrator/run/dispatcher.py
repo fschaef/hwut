@@ -36,7 +36,7 @@ from ...operations.session          import Request, run_test_held
 from ...operations.result           import E_TestRunResult
 from ...bookkeeper.api   import Bookkeeper
 
-from ...bookkeeper.api import Store, DirectoryBusy
+from ...bookkeeper.api import Store, DirectoryBusy, unstable_f
 from ...procsitter.api       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
 from .adapter                       import (naming_of,
@@ -245,7 +245,7 @@ class TestRunDispatcher(I_Dispatcher):
         stain = None if self.despite_stain_f \
                 else self.bookkeeper.stain(configuration.key_name,
                                            node.choice)
-        if stain is not None:
+        if unstable_f(stain):
             self.report_db[node.name()] = E_TestRunResult.UNSTABLE.value
             return False
         if self.register.run_id_of(configuration.key_name,
@@ -286,6 +286,10 @@ class TestRunDispatcher(I_Dispatcher):
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
             detail = getattr(outcome.result.provision, "detail", None)
+            #  WHAT THE CONSTRAINTS FOUND is said in full (E-123).
+            comparison = outcome.result.comparison
+            if not detail and comparison is not None:
+                detail = comparison.detail
             if detail: self.detail_db[node.name()] = detail
         return bool(outcome.verdict)
 

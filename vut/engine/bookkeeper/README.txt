@@ -46,7 +46,7 @@ THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is
 refused at the specification's door.
 
-    test;choice;verdict;report;last_accept;coverage;stderr;stain_repeat_n;stain_when
+    test;choice;verdict;report;last_accept;coverage;stderr;stain
 
     test            the application's file name; EMPTY means "the
                     same as the row above" -- an empty name means
@@ -59,9 +59,11 @@ refused at the specification's door.
     coverage        the coverage step's token; empty where not asked
     stderr          the stderr note ('ignored', 'forbidden'); empty
                     where none
-    stain_repeat_n  the repeats a proof must make to clear the stain
-    stain_when      the instant of the conviction
-                    -- both empty where the choice is clean
+    stain           the disqualifications, '|'-separated (B-18):
+                    'N repeat' -- unstable over N repeats, the count a
+                    proof must repeat to clear it; 'constraint' -- the
+                    GOOD contradicts its own constraints. Empty where
+                    the choice is clean
 
 An empty cell is ABSENCE. No row carries a configuration, an
 operation name, a host, a duration or an attribution: the first is

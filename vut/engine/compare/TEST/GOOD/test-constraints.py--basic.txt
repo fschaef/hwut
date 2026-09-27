@@ -1,14 +1,21 @@
 ## Check-on-entry: the moment a variable enters, its constraints run.
-no bindings at all:                            judge: True                      lawyer: True                      [ok]
+no bindings: 't' never bound:                  judge: False                     lawyer: False                     [ok]
+    GOOD: constraint "t > 0 and t < 100": 't' never bound
+    OUTPUT: constraint "t > 0 and t < 100": 't' never bound
 binding holds:                                 judge: True                      lawyer: True                      [ok]
 subject violates:                              judge: False                     lawyer: False                     [ok]
+    OUTPUT: constraint "t > 0 and t < 100": broken by ((t: 812)), line 1
 value free if legal:                           judge: True                      lawyer: True                      [ok]
 name mismatch:                                 judge: False                     lawyer: False                     [ok]
 binding vs plain:                              judge: False                     lawyer: False                     [ok]
-## An unconstrained variable enters freely (it may serve as input).
-unconstrained var:                             judge: True                      lawyer: True                      [ok]
+## An unconstrained variable enters freely (it may serve as input);
+## 't', named by a constraint, is never bound: NOT equivalent (C-20).
+unconstrained var:                             judge: False                     lawyer: False                     [ok]
+    GOOD: constraint "t > 0 and t < 100": 't' never bound
+    OUTPUT: constraint "t > 0 and t < 100": 't' never bound
 ## Empty constraint_db: bindings still compare by name, no checks.
 no db, names equal:                            judge: True                      lawyer: True                      [ok]
 no db, names differ:                           judge: False                     lawyer: False                     [ok]
 ## Sequentiality: entries after the abort point are not processed.
 mismatch shields late binding:                 judge: False                     lawyer: False                     [ok]
+<hwut-end>

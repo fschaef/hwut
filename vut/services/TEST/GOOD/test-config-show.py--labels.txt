@@ -1,8 +1,11 @@
 
 --- the directory: entries shown, the silent one marked ---
 $ hwut.config.show --no-default
-    hwut.conf
-        dependency           test-b.py <- test-a.py one
+    hwut.conf {
+        dependency {
+            "test-b.py" = ["test-a.py one"]
+        }
+    }
 
     test-a.py {
         title = "A"
