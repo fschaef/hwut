@@ -1,0 +1,3 @@
+-- 't', <F5>: the report closes, the pane opens; <F5>, 'q'
+     report up: False, editing: tolerance
+<hwut-end>

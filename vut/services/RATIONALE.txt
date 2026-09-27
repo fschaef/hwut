@@ -4682,3 +4682,132 @@ DECISION  A face that is a MODE of another is named under it, as
           WALLFLOWERS ARE A MODE OF THE REPORT, not an option of it:
           what they print is a list of FILES, one per line, piped into
           'hwut.config.ignore' -- not a page of cases.
+
+----------------------------------------------------------------------------
+E-117  THE MERGE EDITS IN PLACE; $EDITOR IS 'c-e'                 (2026-09-26)
+----------------------------------------------------------------------------
+PROBLEM   Text could be altered only in $EDITOR, and leaving $EDITOR
+          without a change -- or an editor that failed, or 'z' before
+          any take -- ended the whole merge as CANCEL: the driver sent
+          the hub a REALIGN carrying the nominal the round opened on,
+          and the hub's no-progress guard answers that with CANCEL.
+          MEASURED with the act script: EDIT then DONE under 'true' and
+          under 'false' both 'cancel'; the DONE never ran.
+
+DECISION  RULED (Frank-Rene, intend 21): "<e> shall open the nano-like
+          editor mode on GOOD. we type normally. <F5> terminates editing
+          and re-runs the line association. <c-e> opens $EDITOR [...]
+          Re-run of line association upon exit." And: "add <c-z> and
+          <c-y> as undo and redo alternative keys in both modes [...]
+          each undo stack is separate."
+          'e': GOOD is covered by an editable text; the keymap yields to
+          it as it yields to the search line. <F5>: a changed text is
+          the nominal and the round ends as a REALIGN; an unchanged one
+          closes. 'c-e': $EDITOR, as 'e' was. In the editing pane
+          'c-z'/'c-y' are the TEXT's undo and redo; in the merge 'u'/
+          'c-z' and 'r'/'c-y'. 'c-c' in an editing pane means nothing
+          ("drop <c-c>"). The line-based fallback keeps 'e' = $EDITOR.
+          A ROUND THAT CHANGED NOTHING STAYS ON THE SCREEN: the driver
+          sends no REALIGN whose nominal is the round's own and which
+          tries no tolerance.
+          A ROUND'S PAIRS ARE THAT ROUND'S: compare's configuration, the
+          first item of every delivery, begins a round. MEASURED: after
+          one 'z' the report of a three-line text held six pairs.
+
+COST      Every round still opens a fresh undo stack (intend 21, o-2):
+          'u' does not take back an edit that <F5> realigned. The
+          editing pane shows GOOD without the elements' colours.
+          OUTPUT follows the edit cursor by the last alignment's rows;
+          a line typed since has none.
+
+----------------------------------------------------------------------------
+E-118  THE TOLERANCE PANE: IN MEMORY, TRIED ON <F5>               (2026-09-26)
+----------------------------------------------------------------------------
+PROBLEM   The 't' report shows what compare allowed and bound; the
+          tolerance that decides it could be changed only in the test's
+          file, and seen only after a new run.
+
+DECISION  RULED (Frank-Rene, intend 21): "we maintain the configuration
+          in memory and the ETPM works on that memory." "<F5> closes,
+          remember that you have changed tolerances in memory, and
+          realigns." "TRY means simply re-run the compare on subject and
+          nominal under changed tolerance parameters."
+          <F5> covers GOOD with the tolerance in memory as TEXT
+          ('engine/orchestrator/run/tolerance_text.py'): every key of
+          'tolerance { }', '# default' where compare's own, the
+          proposals (E-120) below. <F5> reads it with the HEADER'S OWN
+          READER ('hwut_hocon', the validator's '_tolerance') onto the
+          memory by the run's own mapping ('adapter.tolerance_applied',
+          split out of '_compare_of': one mapping, two users). A fault
+          keeps the pane open, named in the foot. A change ends the
+          round as a REALIGN carrying the tried configuration: the hub
+          ('port.py') counts that as progress and hands it to the
+          caller's 'align' as a third argument from then on; it does
+          not travel in the envelope. <F5> also opens the pane from the
+          't' report. 'c-e' edits the pane in $EDITOR on a temporary
+          file. IN THE PANE THE LOWER LINE STANDS: a key stated twice,
+          each whole on its line, keeps the later -- so an uncommented
+          proposal replaces the key above it, where the header's rule
+          would make it a fault.
+
+COST      What the pane cannot state -- the line level's numbers, the
+          region parameters -- stays as the choice has it. The pane's
+          comments are not kept: it opens on the memory, rendered anew.
+          The view ('hwut.run.diff') has no pane: it has no round.
+          OPEN (intend 21, o-1): ruled "<F5> for entering and exiting",
+          later "we enter with <T> if I remember correctly"; F5 built.
+
+GRAVEYARD Ctrl-Enter: a terminal sends Enter's byte for it;
+          'prompt_toolkit' has no key for it (measured, 3.0.53).
+
+----------------------------------------------------------------------------
+E-119  A TRIED TOLERANCE IS ASKED ABOUT AT THE END                (2026-09-26)
+----------------------------------------------------------------------------
+DECISION  RULED (Frank-Rene, intend 21): "upon exit, if changed
+          tolerances are present, ask (1) store them in TMP/<source>--
+          <choice>.tolerance.conf (2) try to enter it in <source> where
+          the other config is located. (3) omit it." "yes ask write or
+          cancel changes upon cancellation."
+          'services/lib/accept/keep.py', asked by 'run_sessions' once a
+          key is decided. After a commit (1)/(2)/(3); otherwise (1)/(3).
+          Nobody to answer (stdin closed): (1), which touches nothing of
+          the author's. (2) replaces the header's own top-level
+          'tolerance' scope or adds one line before its closing brace,
+          in the header's lead; every other byte stays. It refuses by
+          name and writes (1) instead where the file has no header,
+          where the choice states its own 'tolerance', or where the
+          header read back by 'reader.read_header' does not state what
+          was meant. Written: every key not compare's default, and every
+          key that differs from the test's own. (3) after a commit
+          prints a NOTE: the next run judges under the test's own.
+          E-48's GRAVEYARD ("rewriting the '@hwut' block") IS LIFTED FOR
+          THIS ONE SCOPE by the ruling; 'hwut.renovate --apply' already
+          rewrote tolerance keys in headers (B-7).
+
+COST      A multi-line 'tolerance' scope comes back as one line. A
+          choice-level scope is not written into.
+
+----------------------------------------------------------------------------
+E-120  PROPOSALS: DISCREPANCIES IN, IDEAS OUT                     (2026-09-26)
+----------------------------------------------------------------------------
+DECISION  RULED (Frank-Rene): "we need a tolerance pattern generator
+          based on the found discrepancies. discrepancies in, proposal
+          out. this does not have to be perfect, just some idea, that
+          the user might pick up."
+          'services/lib/viewers/keyed/proposal.py', pure: this round's
+          line pairs in, commented 'tolerance' lines out. Words are
+          read, not cells -- a line compare did not split arrives as
+          ONE cell. Numbers: the largest |s - n| / |n| + 10 %, rounded
+          up, where it exceeds the ratio in force and stays at most 1.
+          Other words: a class the whole words share (float, integer,
+          hex, date, time, path, identifier), else the shared context
+          literal and the middle classed (no 'identifier' then) or
+          BUILT from the characters seen -- 'id=[0-9abz]{3,4};'.
+          Blanks only, under 'whitespace = false': 'whitespace = true'.
+          A word on one side only: 'nothing = ["<word>\\s*"]' --
+          MEASURED: the word alone left the blank after it standing.
+          A pattern is shown only if it matches both words whole; one
+          'eq_pattern' line holds the patterns in force first.
+          MEASURED on 'test-proposal.py applied': every proposal of a
+          four-line case uncommented, compare finds all four lines
+          equivalent.

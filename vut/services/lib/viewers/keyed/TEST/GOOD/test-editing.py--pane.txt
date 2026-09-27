@@ -1,0 +1,24 @@
+-- <F5>: the pane as it opens
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.00 ms  id=zz7;', 'c', '<hwut-end>', '']
+     tolerance changed in memory: False
+
+   the text it showed:
+     | tolerance {
+     |     numeric_ratio = 0.0                    # default
+     |     whitespace    = true                   # default
+     |     slash         = true                   # default
+     |     regions       = true                   # default
+     |     eq_pattern    = []                     # default
+     |     nothing       = []                     # default
+     |     analogy       = ["((", "))"]           # default
+     |     constraints   = []                     # default
+     |     comment       = ["##", "##"]           # default
+     |     # PROPOSALS -- uncomment what you want, then <F5>
+     |     # numeric_ratio = 0.047
+     |     #     OUTPUT 2: 12.51 vs 12.00 -- 4.25% + 10%
+     |     # eq_pattern = ["id=[0-9abz]{3,4};", "[A-Za-z_][A-Za-z0-9_]*"]
+     |     #     OUTPUT 2: 'id=ab12;' vs 'id=zz7;' -> "id=[0-9abz]{3,4};"
+     |     #     OUTPUT 3: 'b' vs 'c' -> "[A-Za-z_][A-Za-z0-9_]*"
+     | }
+<hwut-end>

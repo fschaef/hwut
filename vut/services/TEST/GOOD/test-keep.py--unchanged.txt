@@ -1,0 +1,13 @@
+   -> None
+
+   == test.sh
+   #! /bin/sh
+   # @hwut {
+   #     title   = "T"
+   #     choices = ["one", "two"]
+   #     tolerance {
+   #         regions = false
+   #     }
+   # }
+   echo hello
+<hwut-end>

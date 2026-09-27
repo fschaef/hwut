@@ -1,0 +1,7 @@
+-- the viewing table binds neither 'e' nor <F5>
+     e    -> None
+     f5   -> None
+     c-e  -> None
+     c-z  -> None
+     scripted 'e' and <F5> in a view: editing = None
+<hwut-end>

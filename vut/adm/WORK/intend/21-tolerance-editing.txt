@@ -2,14 +2,24 @@
 intend/21-tolerance-editing -- SEE THE TOLERANCE WORK, THEN KEEP IT
 ==============================================================================
 
-VERSION: 1
+VERSION: 2   (v1 2026-09-26 morning; v2 the same day, after the rulings)
 
-COMPONENTS: services/lib/accept (interactive merge), services/lib/viewers/
-            keyed (keymap, driver), engine/compare (configuration, judge)
-STATE:      OPEN. Asked 2026-09-26 (Frank-Rene): "urgent ... it is going
-            to be very important. Let us design that mode together."
-            Four forks below; slice 1 (section 5) stands whatever they
-            decide.
+COMPONENTS CONCERNED:
+
+    services/lib/viewers/keyed      keymap, act, driver (the screen), the
+                                    proposal generator (new)
+    services/lib/accept             engine (the leaving question), the
+                                    keeping of a tolerance (new)
+    engine/operations/interaction   port.py: a round may change the
+                                    tolerance as well as the nominal
+    engine/orchestrator/run         the tolerance as TEXT and back (new),
+                                    beside '_compare_of'
+    engine/compare                  UNCHANGED -- a consumer of
+                                    'Configuration', as before
+
+STATE:      RULED 2026-09-26 (Frank-Rene); BUILT the same night --
+            services E-117..E-120 hold the results. Section 6 is what is
+            still open; the file goes once it is settled.
 
 ______________________________________________________________________________
 
@@ -18,140 +28,205 @@ ______________________________________________________________________________
     "CTRL-<enter> (or propose a better key) => edit tolerance parameters
     mode. I call it ETPM for now. GOOD side is covered by window with the
     code for the configuration parameters for the tolerance patterns.
-    Provide all defined parameters + default parameters. In that mode the
-    status bar prints <enter> try <ctrl-enter> back. When the user goes
-    back ask whether a file 'test-app-configuration.conf' shall be
-    written, where the user may find tolerance adaptions."
+    Provide all defined parameters + default parameters. [...] When the
+    user goes back ask whether a file [...] shall be written, where the
+    user may find tolerance adaptions."
 
     "We want the user to be able to see the influence of the tolerance
     parameter settings immediately. We want him to be able to integrate
-    that configuration immediately into his code. Problem: the code may
-    be of any shape ... so maybe just print the code into a file or at
-    the head of his file for him to adapt."
+    that configuration immediately into his code."
 
     "If hwut detects numeric deviations, one might propose numeric
     tolerances of the deviation +10% or so. When a regular expression is
-    to be defined, the mode might propose a pattern for a float number, a
-    string; it may consider the deviating strings and propose a pattern
-    that includes all those letters around some letters from the
-    surrounding string."
+    to be defined, the mode might propose a pattern [...]"
 
 ______________________________________________________________________________
 
-2  WHAT ALREADY STANDS
+2  THE RULINGS, VERBATIM, WITH WHAT FOLLOWS FROM EACH
 
-    't'   the TOLERANCE REPORT: analogies, patterns, constraints -- read
-          only. ETPM is this report made editable.
-    'z'   RE-ALIGN: ask compare again. ETPM's "try" is 'z' with a trial
-          configuration instead of the page's.
-    'e'   the GOOD in $EDITOR.
+    2.1  "we maintain the configuration in memory and the ETPM works on
+         that memory."
 
-    The tolerance keys a page can state ('tolerance { }', validator):
-    numeric_ratio, whitespace, slash, regions, eq_pattern, nothing,
-    analogy, constraints, comment. Compare owns every default
-    ('ConfigCompare' mirrors 'ConfigurationPatternFinder').
+         The session holds a WORKING tolerance beside the working
+         nominal. The pane renders it as text; leaving the pane parses
+         the text back into it. A round (port.py) now carries BOTH: a
+         REALIGN is progress when the nominal OR the tolerance changed.
+         Nothing reaches a file until the leaving question (2.6).
 
-    WHERE A PAGE'S TOLERANCE CAN STAND TODAY (test-namespace.py): its
-    '@hwut { }' header, a choice of it, a directory's 'hwut.conf' --
-    'app_defaults' or one 'apps' entry -- and the root's 'app_defaults'.
-    A file with a header AND an 'apps' entry is a directory error.
+    2.2  "what about the <F5> for entering and exiting the ETPM?"
+         "<F5> closes, remember that you have changed tolerances in
+         memory, and realigns shows subject vs. nominal."
+         "TRY means simply re-run the compare on subject and nominal
+         under changed tolerance parameters."
 
-______________________________________________________________________________
+         F5 opens ETPM from the panes and from the 't' report; F5 in
+         ETPM closes it. TRY and CLOSE are ONE act: parse, remember,
+         realign. A text that does not parse keeps the pane open with
+         the fault in the status bar -- there is nothing to realign
+         under. An unchanged text closes without a round.
+         The realigned screen marks nothing specially: it is what any
+         round shows (GOOD's count, 'w'/'b' intervals, the 't' report
+         of the patterns that matched).
+         Not in the viewing table ('hwut.run.diff'): a view has no round.
 
-3  OPEN -- four forks, each with a recommendation
+    2.3  "drop <c-c>; no undo all."
 
-o-1  THE KEY.
+         Inside ETPM 'c-c' is bound to nothing.
 
-     Ctrl-Enter cannot be read: a terminal sends Enter's own byte for
-     it (or Ctrl-J, Enter again). 'Enter' is taken (TAKE_RANGE).
+    2.4  "we need the keystrokes of undo and redo as applied in the main
+         mode also. then the main mode undo is not affected by the
+         tolerance configuration. each undo stack is separate."
+         "add <c-z> and <c-y> as undo and redo alternative keys in both
+         modes."
 
-        (a) 'T'   the editable sibling of 't', which is the report
-                  <- recommended
-        (b) 'c-t'
-        (c) Ctrl-Enter where the terminal distinguishes it -- nowhere
-            reliably
+         Main mode: 'u', 'c-z' undo; 'r', 'c-y' redo.
+         In an EDITING pane (2.5, 2.6) letters type, so 'c-z'/'c-y' are
+         the pane's undo/redo, on the pane's own stack (the text
+         buffer's). A tolerance change enters no stack of the main mode.
 
-o-2  THE KEYS INSIDE ETPM. The pane is a TEXT EDITOR: Enter must insert a
-     line, so "<enter> try" cannot be Enter there.
+    2.5  "In normal mode: <e> shall open the nano-like editor mode on
+         GOOD. we type normally. <F5> terminates editing and re-runs the
+         line association. <c-e> opens $EDITOR and allows to edit the
+         file in the given editor. Re-run of line association upon
+         exit."
 
-        (a) F5 try, Esc back   <- recommended: F5 is "run" in most IDEs
-        (b) Alt-Enter try (a terminal sends ESC CR: readable), Esc back
-        (c) Ctrl-S try, Ctrl-Q back
+         'e' no longer means $EDITOR; 'c-e' does. While GOOD is edited
+         the keymap yields to the buffer as it yields to the search
+         line; F5 hands the text to the hub as a REALIGN. An unchanged
+         text, or an editor that changed nothing or failed, goes BACK
+         TO THE SCREEN -- it does not end the session (defect 5.2).
+         The line-based fallback keeps 'e' = $EDITOR: it has no screen
+         to edit on.
 
-o-3  WHERE THE KEPT TOLERANCE GOES, AND WHETHER HWUT READS IT.
-     THE DECIDING QUESTION: is ETPM's result a proposal the author moves
-     into his page, or a place hwut itself reads?
+    2.6  "In ETPM mode [...] default-wise we are in nano-like editing
+         mode and leave as said with <F5>. <c-e> opens $EDITOR and
+         allows to edit. exit re-runs line association and loads/stores
+         config. editing happens on a temporary file."
 
-        (a) A PROPOSAL FILE hwut does not read: on leaving, the block is
-            written to 'TMP/<source>.tolerance.conf' (TMP: deletable,
-            never a wallflower) and its path printed with the one line
-            that says where to paste it (the header's 'tolerance { }').
-            <- recommended for slice 2: no new carrier, no namespace
-            change, works for every language because hwut never edits
-            the author's file.
-        (b) A SIDECAR hwut READS ('<source>.tolerance.conf' beside the
-            source): immediate, but a NEW CARRIER of test parameters --
-            it needs a place in the namespace, a precedence against the
-            header, and a rule for a header that states the same key.
-        (c) hwut WRITES into the author's 'hwut.conf' 'apps' entry: only
-            possible where the test has no header (both is a directory
-            error) -- so not for most pages.
+         The pane opens editable. 'c-e' writes the pane's text to a
+         temporary file, runs the editor on it, deletes it, and treats
+         the result as F5 treats the pane's text.
 
-o-4  WHAT "TRY" SHOWS.
+    2.7  "upon exit, if changed tolerances are present, ask (1) store
+         them in TMP/<source>--<choice>.tolerance.conf (2) try to enter
+         it in <source> where the other config is located. (3) omit it."
+         "yes ask write or cancel changes upon cancellation."
 
-        (a) the case re-judged AND re-aligned under the trial settings,
-            the verdict line saying EQUIVALENT or DIFFERENT, and the
-            elements the trial now tolerates marked as such   <- recommended
-        (b) the verdict only
+         On commit ('q'): (1), (2) or (3).
+         On cancel ('c-c' in the main mode): (1) or (3); (2) edits the
+         page, which a cancelled session does not do.
+         (2) TRIES: it writes 'tolerance { }' into the '@hwut { }'
+         header, replacing the header's own 'tolerance' where one
+         stands, and reads the file back through the exploration's own
+         reader. It REFUSES by name, writing (1) instead so the work is
+         not lost, where the file has no header (an 'apps' entry), where
+         the choice states its own 'tolerance' (the header's would not
+         reach it), or where the file read back does not parse (the
+         original is restored).
+         A commit under a changed tolerance with (3) chosen prints one
+         NOTE: the next run judges under the page's own tolerance.
 
-______________________________________________________________________________
+    2.8  "we need a tolerance pattern generator based on the found
+         discrepancies. discrepancies in, proposal out. this does not
+         have to be perfect, just some idea, that the user might pick
+         up."  (Q5, the worked example, answered: "you understood
+         properly. yes.")
 
-4  PROPOSALS (what the pane is filled with)
-
-    The pane opens with EVERY tolerance key: those the page states, with
-    their values, and the rest with compare's default, each marked
-    '# default'. Below them, COMMENTED PROPOSALS drawn from this case's
-    differences -- uncommented by the author, never applied unasked:
-
-    NUMERIC. Every numeric pair the alignment calls different gives a
-    relative deviation |s - n| / |n|. Proposed:
-        numeric_ratio = <largest deviation> * 1.1     # "+10%"
-    with the pair that set it named beside it.
-
-    EQUIVALENCE PATTERNS. The differing tokens of each substituted pair
-    are classified, first match wins:
-        float         [-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?
-        integer       [-+]?[0-9]+
-        hex           0x[0-9a-fA-F]+
-        date / time   [0-9]{4}-[0-9]{2}-[0-9]{2}, [0-9]{2}:[0-9]{2}(:[0-9]{2})?
-        path          (/[^ /]+)+
-        identifier    [A-Za-z_][A-Za-z0-9_]*
-    Where none fits, the pattern is BUILT from the deviating strings: the
-    context both sides share before and after them stays literal (a few
-    characters, escaped), and the varying part becomes the class of the
-    characters seen in it, with the lengths seen:
-        subject 'id=ab12;'  nominal 'id=zz7;'  ->  'id=[0-9abz]{3,4};'
-    A proposal is shown only if it takes every observed variant AND the
-    nominal's own text -- checked by compiling it before it is shown.
-
-    WHITESPACE / NOTHING. Differences that are all blanks propose
-    'whitespace = true'; that are all 'visible nothing' words propose the
-    'nothing' list they need.
+         THE GENERATOR (slice 1, section 4): the pairs the screen holds
+         in, commented 'tolerance' lines out, appended to the pane.
 
 ______________________________________________________________________________
 
-5  THE FIRST SLICE -- independent of every fork
+3  WHAT STANDS AND IS REUSED (measured)
 
-    A PURE, TESTABLE CORE in engine/compare, no screen:
-      a. tolerance_text(parameters)        every key, value or default,
-                                           as the pane's text
-      b. proposal_list(alignment)          the proposals of section 4,
-                                           each checked before it stands
-      c. trial(text, subject, nominal)     parse the pane's text, judge
-                                           and align under it; a text
-                                           that does not parse answers
-                                           with the fault, not a crash
-    Each gets its own test page. The screen (slice 2) then only wires
-    keys, the pane and the leaving question to these three.
+    't'        the tolerance report (E-91), read only
+    'z'        realign: a fresh association from compare's one door
+    ConfigInst compare's first DOWN item; the driver already reads the
+               numeric ratio from it for 'w'/'b'
+    printer    'hwut.config.show' prints the tolerance scope with every
+               key and default; the pane uses the same key names
+    validator  '_tolerance' parses a scope into faults, never a crash;
+               '_compare_of' maps it to 'Configuration'
+    E-48       graveyard: 'rewriting the @hwut block' -- LIFTED for the
+               tolerance scope by 2.7 (renovate '--apply' had already
+               rewritten tolerance keys in headers, B-7)
 
-ENTRY CONDITION for slice 2: o-1 .. o-4 ruled.
+______________________________________________________________________________
+
+4  THE PROPOSAL GENERATOR
+
+    IN   the delivered line pairs (report.Pair: line numbers, both cell
+         lists); the tolerance in force.
+    OUT  lines of text, every one a comment, appended to the pane:
+
+         # PROPOSALS -- uncomment what you want, then <F5>
+         # numeric_ratio = 0.047       # OUTPUT 2: 12.51 vs 12.00, 4.3% + 10%
+         # eq_pattern = ["id=[0-9abz]{3,4};"]
+         #     OUTPUT 2: 'id=ab12;' vs 'id=zz7;'
+
+    NUMERIC   every NUMERIC cell pair compare calls different gives
+              |s - n| / |n|; the largest, * 1.1, rounded up, is
+              proposed where it is below 1 and above the ratio in force.
+    WORDS     each differing line pair is split into words; the words a
+              line-level diff substitutes are paired. A pair both of
+              whose words are numbers the NUMERIC rule covers is left to
+              it. Otherwise the shared prefix and suffix stay LITERAL
+              (escaped) and the middle becomes:
+                a CLASS where both middles are one -- float, integer,
+                hex, date, time, path; identifier only where no context
+                is shared;
+                else BUILT: digits as 0-9, every other character seen
+                literal, lengths as seen: '[0-9abz]{3,4}'.
+              One 'eq_pattern' line holds the patterns in force plus
+              every new one, so uncommenting it keeps what stood.
+    BLANKS    a line pair equal but for blanks, under 'whitespace =
+              false', proposes 'whitespace = true'.
+    NOTHING   a word present on one side only proposes it for 'nothing'.
+    CHECKED   a pattern is shown only if it matches both words whole.
+    Imperfect by design: a proposal is an idea, applied only when the
+    author uncomments it.
+
+______________________________________________________________________________
+
+5  ORDER OF WORK (one attributable change each, suites green between)
+
+    5.1  the proposal generator, pure, its own test page
+    5.2  DEFECT: leaving $EDITOR with no change (or a failing editor)
+         ended the whole merge as CANCEL -- measured with the act
+         script: EDIT then DONE under 'true' and 'false' both 'cancel'.
+         The editor's no-change goes back to the screen.
+    5.3  keymap: 'c-z'/'c-y' beside 'u'/'r'; 'c-e' = $EDITOR
+    5.4  the GOOD edit mode ('e', F5)
+    5.5  ETPM: tolerance as text and back, the round carrying it, the
+         pane, 'c-e', the leaving questions and the keeping (2.7)
+
+______________________________________________________________________________
+
+6  OPEN
+
+o-1  THE KEY THAT OPENS ETPM. Ruled "F5 for entering and exiting";
+     later "we enter with <T> if I remember correctly". Built: F5, the
+     earlier and explicit ruling. 'T' is free and is one table row if
+     wanted.
+
+o-2  UNDO ACROSS A ROUND. Every round opens a fresh MergeState, and
+     its undo stack with it -- as for 'z' and $EDITOR before this work.
+     So 'u' cannot take back an edit that F5 has realigned. Carrying the
+     stack across rounds means carrying pairings that the new round
+     replaced; not built, not presumed.
+
+o-3  MEASURED WHILE BUILDING, NOT FIXED (outside the ask):
+     a. A PAGE'S 'constraints' ARE NEVER ENFORCED. '_compare_of' sets
+        'constraint_expression_list' and never calls
+        'derive_constraint_db()', so 'constraint_db' stays empty.
+        MEASURED: 'tolerance { constraints = ["x < 5"] }', subject
+        'v ((x: 9))' against 'v ((x: 1))' -> equivalent; after
+        'derive_constraint_db()' -> not. Fixing it can turn a green page
+        red -- a value change, so it waits for a ruling. The pane's
+        'constraints' key inherits the defect.
+     b. 'hwut.config.show' prints a pattern's backslash unescaped:
+        the header's "ruff [0-9]+\\.[0-9]+" is shown as
+        "ruff [0-9]+\.[0-9]+", which does not read back as written
+        (the printer's own claim); a long value also runs into its
+        '# app' comment. The pane has its own printer, which escapes.
+

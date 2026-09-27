@@ -1,0 +1,6 @@
+-- nothing differs
+   OUTPUT | same 1
+   GOOD   | same 1
+   ->
+     (no proposal)
+<hwut-end>

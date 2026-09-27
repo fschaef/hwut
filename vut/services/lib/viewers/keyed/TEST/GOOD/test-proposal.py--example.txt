@@ -1,0 +1,10 @@
+-- the case ruled on 2026-09-26
+   OUTPUT | time: 12.51 ms  id=ab12;
+   GOOD   | time: 12.00 ms  id=zz7;
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # numeric_ratio = 0.047
+     #     OUTPUT 1: 12.51 vs 12.00 -- 4.25% + 10%
+     # eq_pattern = ["id=[0-9abz]{3,4};"]
+     #     OUTPUT 1: 'id=ab12;' vs 'id=zz7;' -> "id=[0-9abz]{3,4};"
+<hwut-end>

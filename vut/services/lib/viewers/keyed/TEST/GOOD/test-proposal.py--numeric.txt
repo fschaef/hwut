@@ -1,0 +1,28 @@
+-- the largest deviation, + 10%, rounded up
+   OUTPUT | a 3
+   OUTPUT | b 12.51
+   OUTPUT | c v12
+   GOOD   | a 4
+   GOOD   | b 12.00
+   GOOD   | c v13
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # numeric_ratio = 0.275
+     #     OUTPUT 1: 3 vs 4 -- 25% + 10%
+
+-- a deviation that would need a ratio above 1: a pattern
+   OUTPUT | took 3 s
+   GOOD   | took 700 s
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # eq_pattern = ["[-+]?[0-9]+"]
+     #     OUTPUT 1: '3' vs '700' -> "[-+]?[0-9]+"
+
+-- a nominal 0 has no relative deviation
+   OUTPUT | x 5
+   GOOD   | x 0
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # eq_pattern = ["[-+]?[0-9]+"]
+     #     OUTPUT 1: '5' vs '0' -> "[-+]?[0-9]+"
+<hwut-end>

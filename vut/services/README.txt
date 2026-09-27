@@ -383,16 +383,37 @@ The faces:
                  subject range into the marked nominal range; 'a', this
                  region into its associated region; 'A', the complete
                  subject over the complete nominal. Copying is always
-                 line-wise, left to right; 'e' remains the one way to
-                 alter text. A take inside an 'unaccepted' region
+                 line-wise, left to right; text is altered by 'e' --
+                 GOOD becomes an editable text, <F5> ends the edit and
+                 re-aligns -- or by 'c-e', GOOD in $EDITOR. A take inside an 'unaccepted' region
                  SPLITS it and an emptied region is REMOVED, framing
                  and all; no region of any other kind is ever CUT, on
                  either side.
 
                  THE TARGET is derived from the alignment and TRACKS
                  the subject range while VIRGIN; entry never latches it,
-                 modification does. 'g' asks compare again and the
-                 banner counts takes since it did.
+                 modification does. 'z' asks compare again and the
+                 banner counts takes since it did. A round that changed
+                 nothing -- 'z' before a take, an editor that changed
+                 nothing or failed -- stays on the screen.
+
+                 THE TOLERANCE PANE (intend 21): <F5> covers GOOD with
+                 the tolerance the session holds IN MEMORY -- every key
+                 of 'tolerance { }', '# default' where compare's own,
+                 and below them, commented, PROPOSALS drawn from this
+                 round's differences ('proposal.py'). <F5> again reads
+                 the text with the header's own reader and, where it
+                 changed, TRIES it: the next round aligns under it. A
+                 text the reader refuses keeps the pane open, the fault
+                 in the foot. In the pane the lower of two lines of one
+                 key stands, so an uncommented proposal replaces the
+                 key above it. 'c-e' edits the pane in $EDITOR. In both
+                 editing panes 'c-z'/'c-y' are the text's undo and redo,
+                 a stack apart from the merge's ('u'/'c-z', 'r'/'c-y').
+                 At the end, a changed tolerance is ASKED about
+                 ('lib/accept/keep.py'): (1) TMP/<test>--<choice>.
+                 tolerance.conf, (2) into the test's '@hwut { }' header,
+                 (3) omit -- after a cancel only (1) or (3).
 
                  THE SEAM: 'prompt_toolkit' owns the Windows, the
                  scrolling and the search; VUT owns the merge state --

@@ -72,10 +72,17 @@ class Resolution:
 
     'nominal_text' is the plain canonicalised nominal stream -- the
     material a merge produced, not a rendering of it.
+
+    'tolerance' is what a driver TRIED (intend 21): the configuration the
+    next round aligns under, opaque to this hub -- it is handed to the
+    caller's 'align' and read nowhere here. None: the tolerance stands as
+    it was. It does not travel in the envelope; a driver across a pipe
+    tries nothing.
     """
     intent:       E_Intent
     nominal_text: Optional[str] = None
     signature:    str           = PROTOCOL_SIGNATURE
+    tolerance:    object        = None
 
 
 class ProtocolMismatch(Exception):
@@ -258,8 +265,8 @@ async def merge_session(align, subject_text, nominal_text,
     CANCEL -- the nominal is left exactly as it was:
 
         NO PROGRESS   a REALIGN with no artifact, or one byte-identical
-                      to the round before it, cannot align to anything
-                      new. Refused at once. This catches the ordinary
+                      to the round before it and trying no new
+                      tolerance, cannot align to anything new. Refused at once. This catches the ordinary
                       bug -- a driver echoing its input -- on the very
                       next round, and it never touches an author, since
                       every real edit progresses.
@@ -271,13 +278,18 @@ async def merge_session(align, subject_text, nominal_text,
                       any human merge.
     """
     working    = nominal_text
+    tolerance  = None
     resolution = None
     round_n    = 0
     await _call(adapter, "open", subject_name)
     try:
         resolve = getattr(adapter, "resolve", None)
         while True:
-            async for item in align(subject_text, working):
+            #  A TRIED TOLERANCE IS A THIRD ARGUMENT, and only once one
+            #  was tried: an 'align' no such driver meets keeps its two.
+            round_iterable = align(subject_text, working) if tolerance is None \
+                             else align(subject_text, working, tolerance)
+            async for item in round_iterable:
                 await _call(adapter, "present", item)
 
             #  A driver with no 'resolve' is half-duplex by its own
@@ -291,8 +303,10 @@ async def merge_session(align, subject_text, nominal_text,
             check_signature(resolution.signature)
             if resolution.intent is not E_Intent.REALIGN: break
 
+            tried = resolution.tolerance
             if resolution.nominal_text is None \
-               or resolution.nominal_text == working:
+               or (resolution.nominal_text == working
+                   and (tried is None or tried is tolerance)):
                 #  No progress: nothing to align differently. Ending here
                 #  bounds the driver's bug without bounding the author.
                 resolution = Resolution(intent=E_Intent.CANCEL)
@@ -303,6 +317,7 @@ async def merge_session(align, subject_text, nominal_text,
                 resolution = Resolution(intent=E_Intent.CANCEL)
                 break
             working = resolution.nominal_text
+            if tried is not None: tolerance = tried
     finally:
         await _call(adapter, "close")
 

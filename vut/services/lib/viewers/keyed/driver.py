@@ -120,7 +120,8 @@ class KeyedDisplay(DisplayAdapter):
     """The keyed merge session, as the hub's DisplayAdapter."""
 
     def __init__(self, out=None, editor_argv=None, act_script=None,
-                 width=None, color_f=None, view_only_f=False, **_ignored):
+                 width=None, color_f=None, view_only_f=False,
+                 pt_input=None, pt_output=None, **_ignored):
         """RETURN: None.
 
         'out' and the rest of '**_ignored' are accepted so that
@@ -128,6 +129,9 @@ class KeyedDisplay(DisplayAdapter):
         this driver draws on the terminal and needs none of them.
         'color_f' IS read: '--plain' was measured to leave this tier
         fully coloured, because the argument was swallowed here.
+        'pt_input'/'pt_output' are 'prompt_toolkit''s own input and
+        output, for a suite that types real keys without a terminal;
+        None: the terminal's.
         """
         self.editor_argv = editor_argv
         self.act_script  = list(act_script) if act_script is not None else None
@@ -157,8 +161,22 @@ class KeyedDisplay(DisplayAdapter):
         self.column_i     = 0
         self.help_f       = False
 
+        #  THE EDITING PANES (intend 21): GOOD typed into ('e'), or the
+        #  tolerance in memory (<F5>). None: the panes are the merge's.
+        self.editing       = None       # None | "good" | "tolerance"
+        self.edit_text     = ""         # the pane's text where no screen runs
+        self.edit_fault    = None       # why the tolerance text was not read
+        #  THE TOLERANCE IN MEMORY: what the next round aligns under.
+        #  'page_options' is the choice's own, to tell a change by.
+        self.page_options      = None
+        self.tolerance_options = None
+        self.tried_options     = None   # tried by the pane, for the hub
+
+        self.pt_input      = pt_input
+        self.pt_output     = pt_output
         self.application   = None
         self.search_buffer = None
+        self.edit_buffer   = None
         self.subject_ctl   = None
 
     #  ---------------------------------------------------- the hub's calls
@@ -170,6 +188,24 @@ class KeyedDisplay(DisplayAdapter):
                    banner says 'aspirant'.
         """
         self.aspirant_f = bool(aspirant_f)
+
+    def note_tolerance(self, options):
+        """RETURN: None. The choice's own compare configuration, told by
+                   the merge door before the first round: the tolerance
+                   pane opens on it, and a change is measured against it.
+        """
+        self.page_options      = options
+        self.tolerance_options = options
+        self.tried_options     = None
+
+    def tolerance_changed_f(self):
+        """RETURN: bool, True where the tolerance in memory reads
+                   otherwise than the choice's own -- what the leaving
+                   question asks about (intend 21, 2.7)."""
+        if self.page_options is None or self.tolerance_options is None:
+            return False
+        from vut.engine.orchestrator.run.tolerance_text import leaf_db_of
+        return leaf_db_of(self.page_options) != leaf_db_of(self.tolerance_options)
 
     async def open(self, subject_name):
         """RETURN: None. The session for one subject begins; the
@@ -193,6 +229,12 @@ class KeyedDisplay(DisplayAdapter):
         ratio = getattr(item, "numeric_tolerance_ratio", None)
         if ratio is not None and not hasattr(item, "line_n_s"):
             self.numeric_ratio = ratio       # compare's ConfigInst (E-87)
+            #  A ROUND BEGINS HERE: compare's configuration is the first
+            #  item of every delivery. MEASURED: without this, the pairs
+            #  of every round were kept, and after one 'z' the report of
+            #  a three-line text held six pairs.
+            self.pair_db    = []
+            self.bad_pair_n = 0
             return
         line_n_s = getattr(item, "line_n_s", None)
         line_n_n = getattr(item, "line_n_n", None)
@@ -229,20 +271,33 @@ class KeyedDisplay(DisplayAdapter):
                    nominal after his takes (or after '$EDITOR').
         """
         self.state = self._opening_state(subject_text, nominal_text)
-        self.leaving_act = None
+        while True:
+            self.leaving_act = None
+            if self.act_script is not None:
+                #  CONSUMED, not replayed: a script spans rounds the way a
+                #  person's keystrokes do, so what is left after a REALIGN
+                #  is what the next round reads.
+                while self.act_script and self.leaving_act is None:
+                    each = self.act_script.pop(0)
+                    act, argument = each if isinstance(each, tuple) else (each, None)
+                    self._apply(act, argument)
+            else:
+                await self.application.run_async()
 
-        if self.act_script is not None:
-            #  CONSUMED, not replayed: a script spans rounds the way a
-            #  person's keystrokes do, so what is left after a REALIGN
-            #  is what the next round reads.
-            while self.act_script and self.leaving_act is None:
-                each = self.act_script.pop(0)
-                act, argument = each if isinstance(each, tuple) else (each, None)
-                self._apply(act, argument)
-        else:
-            await self.application.run_async()
-
-        return await self._resolution_of(self.leaving_act)
+            resolution = await self._resolution_of(self.leaving_act)
+            #  NOTHING CHANGED, NOTHING TO ALIGN: BACK TO THE SCREEN
+            #  (intend 21, 5.2). A REALIGN carrying the nominal the round
+            #  opened on is refused by the hub as NO PROGRESS, and the
+            #  refusal is a CANCEL -- MEASURED: '$EDITOR' left without a
+            #  change, a failing editor, and 'z' before any take each
+            #  ended the whole merge, and a following 'q' never ran.
+            if resolution.intent is E_Intent.REALIGN \
+               and resolution.tolerance is None \
+               and resolution.nominal_text.splitlines() == nominal_text.splitlines():
+                if self.act_script is not None and not self.act_script:
+                    return Resolution(E_Intent.CANCEL)
+                continue
+            return resolution
 
     async def close(self):
         """RETURN: None. The session ends; the Application goes with it.
@@ -319,6 +374,15 @@ class KeyedDisplay(DisplayAdapter):
         #  Ctrl-C leave -- and no accept, remove, undo or edit fires.
         if self.help_f:
             return
+        #  AN EDITING PANE TAKES THE KEYS (intend 21): the text's own
+        #  undo and redo, $EDITOR, <F5> -- nothing of the merge.
+        if self.editing is not None:
+            self._apply_editing(act, argument)
+            return
+        if act in (E_Act.EDIT_HERE, E_Act.TOLERANCE) and not self.view_only_f:
+            self.reporting_f = False            # <F5> from the report, too
+            self._open_edit("good" if act is E_Act.EDIT_HERE else "tolerance")
+            return
         if act is E_Act.REPORT:
             self.reporting_f = not self.reporting_f
             self.report_row  = self._report_first_row() if self.reporting_f else None
@@ -364,21 +428,167 @@ class KeyedDisplay(DisplayAdapter):
             return
         self.state = reduce(self.state, act, argument)
 
+    #  ------------------------------------------------ the editing panes
+
+    def _open_edit(self, kind):
+        """RETURN: None. The GOOD side becomes an editable text -- GOOD
+                   itself ('good'), or the tolerance in memory with the
+                   proposals below it ('tolerance'); the keymap yields
+                   to it until <F5>.
+        """
+        if kind == "good":
+            text = "\n".join(self.state.nominal_line_list) + "\n"
+        else:
+            text = self._tolerance_pane_text()
+        self.editing    = kind
+        self.edit_fault = None
+        self._set_edit_text(text, fresh_f=True)
+        if self.application is not None and self.edit_buffer is not None:
+            if kind == "good":
+                #  THE EDIT BEGINS WHERE THE CURSOR STOOD, not at the top.
+                document = self.edit_buffer.document
+                row = max(0, min(self.state.cursor_n, document.line_count - 1))
+                self.edit_buffer.cursor_position = \
+                    document.translate_row_col_to_index(row, 0)
+            self.application.layout.focus(self.edit_buffer)
+        self._redraw()
+
+    def _tolerance_pane_text(self):
+        """RETURN: str, the tolerance pane: the tolerance in memory, every
+                   key, and the proposals this round's differences give
+                   (intend 21, section 4)."""
+        from vut.engine.compare.api                    import Configuration
+        from vut.engine.orchestrator.run.tolerance_text import text_of
+        from vut.services.lib.viewers.keyed.proposal    import proposal_line_list
+        options = self.tolerance_options if self.tolerance_options is not None \
+                  else Configuration()
+        finder  = options.pattern_finder
+        proposal = proposal_line_list(
+                       self.pair_db,
+                       numeric_ratio = finder.numeric_tolerance_ratio,
+                       pattern_list  = tuple(finder.equivalent_pattern_list),
+                       nothing_list  = tuple(finder.visible_nothing_pattern_list),
+                       whitespace_f  = finder.whitespace_f)
+        return text_of(options, proposal)
+
+    def _apply_editing(self, act, argument):
+        """RETURN: None. One act while a pane is edited: <F5> closes it,
+                   'c-z'/'c-y' are the TEXT's undo and redo (a stack apart
+                   from the merge's), 'c-e' hands the text to $EDITOR.
+                   Everything else means nothing here.
+        """
+        if act is E_Act.CLOSE_EDIT:
+            self._close_edit()
+        elif act is E_Act.TYPE:
+            self._set_edit_text(argument or "")
+        elif act in (E_Act.UNDO, E_Act.REDO) and self.edit_buffer is not None:
+            if act is E_Act.UNDO: self.edit_buffer.undo()
+            else:                 self.edit_buffer.redo()
+        elif act is E_Act.EDIT:
+            self._leave(E_Act.EDIT)
+        self._redraw()
+
+    def _close_edit(self):
+        """RETURN: None. The editing pane closes -- <F5> (intend 21).
+
+        GOOD: a changed text becomes the nominal, and the round ends as
+        a REALIGN; an unchanged one closes and nothing else happens.
+        THE TOLERANCE: the text is read by the header's own reader onto
+        the tolerance in memory. A text that cannot be read keeps the
+        pane OPEN, its fault in the status bar -- there is nothing to
+        align under. A text that reads as the tolerance already held
+        closes without a round; any other becomes the tolerance in
+        memory and the round ends as a REALIGN under it: TRY.
+        """
+        text = self._edit_text()
+        if self.editing == "good":
+            line_tuple = tuple(text.splitlines())
+            self._end_edit()
+            if line_tuple != self.state.nominal_line_list:
+                self.state = self.state.with_(nominal_line_list=line_tuple)
+                self._leave(E_Act.REALIGN)
+            return
+
+        from vut.engine.compare.api                    import Configuration
+        from vut.engine.orchestrator.run.tolerance_text import (configuration_of,
+                                                               leaf_db_of)
+        base = self.tolerance_options if self.tolerance_options is not None \
+               else Configuration()
+        options, fault = configuration_of(text, base)
+        if fault is not None:
+            self.edit_fault = fault
+            return
+        self._end_edit()
+        if leaf_db_of(options) == leaf_db_of(base): return
+        self.tolerance_options = options
+        self.tried_options     = options
+        self._leave(E_Act.REALIGN)
+
+    def _end_edit(self):
+        """RETURN: None. The panes are the merge's again."""
+        self.editing    = None
+        self.edit_fault = None
+        if self.application is not None and self.subject_ctl is not None:
+            self.application.layout.focus(self.subject_ctl)
+
+    def _leave(self, act):
+        """RETURN: None. The round ends with 'act'."""
+        self.leaving_act = act
+        #  AFTER $EDITOR THE SCREEN IS NOT RUNNING: nothing to exit then.
+        if self.application is not None and self.application.is_running:
+            self.application.exit()
+
+    def _edit_text(self):
+        """RETURN: str, the editing pane's text -- the buffer's where the
+                   screen runs."""
+        if self.edit_buffer is not None: return self.edit_buffer.text
+        return self.edit_text
+
+    def _set_edit_text(self, text, fresh_f=False):
+        """RETURN: None. The editing pane holds 'text'; 'fresh_f' starts
+                   the text's undo history anew (a pane just opened)."""
+        self.edit_text = text
+        if self.edit_buffer is None: return
+        from prompt_toolkit.document import Document
+        if fresh_f:
+            self.edit_buffer.reset(Document(text, 0))
+        else:
+            self.edit_buffer.text = text
+
     async def _resolution_of(self, act):
         """RETURN: Resolution, the hub's UP message for the act that ended
                    the turn. CANCEL where none did -- a session that ended
                    without deciding decided nothing.
         """
+        pane_editor_f = (act is E_Act.EDIT and self.editing is not None)
+        if pane_editor_f:
+            #  $EDITOR ON AN EDITING PANE: its exit ends the edit as <F5>
+            #  would -- a fault keeps the pane open, with the text as the
+            #  editor left it.
+            edited = await self._run_editor(self._edit_text(),
+                                            ".conf" if self.editing == "tolerance"
+                                            else ".nominal")
+            if edited is not None: self._set_edit_text(edited)
+            self.leaving_act = None
+            self._close_edit()
+            act = self.leaving_act
         nominal_text = "\n".join(self.state.nominal_line_list) + "\n"
         if act is E_Act.DONE:    return Resolution(E_Intent.COMMIT, nominal_text)
-        if act is E_Act.REALIGN: return Resolution(E_Intent.REALIGN, nominal_text)
+        if act is E_Act.REALIGN:
+            tried, self.tried_options = self.tried_options, None
+            return Resolution(E_Intent.REALIGN, nominal_text, tolerance=tried)
+        if act is None and pane_editor_f:
+            #  THE EDITOR CHANGED NOTHING THE ROUND DEPENDS ON, or its text
+            #  was refused and the pane stays open: the same round, the
+            #  screen again -- MEASURED: this ended the merge as CANCEL.
+            return Resolution(E_Intent.REALIGN, nominal_text)
         if act is E_Act.EDIT:
             edited = await self._run_editor(nominal_text)
             if edited is None: return Resolution(E_Intent.REALIGN, nominal_text)
             return Resolution(E_Intent.REALIGN, edited)
         return Resolution(E_Intent.CANCEL)
 
-    async def _run_editor(self, text):
+    async def _run_editor(self, text, suffix=".nominal"):
         """RETURN: str, the file as the author's editor left it.
 
                    None, where the editor failed OR COULD NOT BE RUN AT
@@ -392,7 +602,7 @@ class KeyedDisplay(DisplayAdapter):
         if argv is None:
             argv = [os.environ.get("VISUAL") or os.environ.get("EDITOR") or "vi"]
 
-        descriptor, path = tempfile.mkstemp(suffix=".nominal", text=True)
+        descriptor, path = tempfile.mkstemp(suffix=suffix, text=True)
         try:
             with io.open(descriptor, "w", encoding="utf-8") as file_handle:
                 file_handle.write(text)
@@ -461,9 +671,28 @@ class KeyedDisplay(DisplayAdapter):
                            "output" if pane is E_Pane.SUBJECT else "good",
                            ".active" if self.state.pane is pane else "")),
                 Window(control, wrap_lines=False)], width=half)
-        body = VSplit([column(E_Pane.SUBJECT, self.subject_ctl),
+        #  THE EDITING PANE COVERS GOOD'S LINES (intend 21): the same
+        #  column, its title saying what is edited.
+        editing = Condition(lambda: self.editing is not None)
+        self.edit_buffer = Buffer(multiline=True)
+        def column_of(pane):
+            """RETURN: HSplit, one pane: its title, then its lines -- for
+                       GOOD, the editing pane instead while one is open."""
+            if pane is E_Pane.SUBJECT: return column(pane, self.subject_ctl)
+            return HSplit([
+                Window(FormattedTextControl(text=lambda: self._title(pane)),
+                       height=1,
+                       style=lambda: "class:title.good%s" % (
+                           ".active" if self.state.pane is pane
+                                        or self.editing is not None else "")),
+                ConditionalContainer(Window(nominal_ctl, wrap_lines=False),
+                                     filter=~editing),
+                ConditionalContainer(Window(BufferControl(self.edit_buffer),
+                                            wrap_lines=False),
+                                     filter=editing)], width=half)
+        body = VSplit([column_of(E_Pane.SUBJECT),
                        Window(width=1, char="|", style="class:separator"),
-                       column(E_Pane.NOMINAL, nominal_ctl)])
+                       column_of(E_Pane.NOMINAL)])
         #  NO HEADER LINE (E-90): the test's name stands in the OUTPUT
         #  title, the keys in the bottom bar.
         root = HSplit([
@@ -498,7 +727,18 @@ class KeyedDisplay(DisplayAdapter):
         #  bound letter is eaten before the buffer sees it.
         table_bindings = ConditionalKeyBindings(
                              keymap.key_bindings(self._on_act, self.keymap),
-                             ~searching)
+                             ~searching & ~editing)
+        #  THE EDITING PANE'S KEYS: 'prompt_toolkit''s basic editing --
+        #  letters, Enter, Backspace, the arrows -- and the editing
+        #  table AFTER it, since the last binding matching a key wins and
+        #  the basic set binds <F5>, 'c-z', 'c-y', 'c-e' to nothing.
+        from prompt_toolkit.key_binding.bindings.basic import load_basic_bindings
+        edit_bindings = ConditionalKeyBindings(
+                            merge_key_bindings([
+                                load_basic_bindings(),
+                                keymap.key_bindings(self._on_act,
+                                                    keymap.EDIT_KEYMAP)]),
+                            editing)
         search_bindings = KeyBindings()
 
         @search_bindings.add("escape", filter=searching)
@@ -513,17 +753,18 @@ class KeyedDisplay(DisplayAdapter):
 
         digit_bindings = KeyBindings()
         for digit in "0123456789":
-            digit_bindings.add(digit, filter=~searching)(
+            digit_bindings.add(digit, filter=~searching & ~editing)(
                 lambda event, d=digit: self._on_digit(d))
-        digit_bindings.add("g", filter=~searching)(
+        digit_bindings.add("g", filter=~searching & ~editing)(
             lambda event: self._on_goto())
         bindings = merge_key_bindings([table_bindings, search_bindings,
-                                       digit_bindings])
+                                       digit_bindings, edit_bindings])
 
         style = self._style(Style)
         layout = Layout(root, focused_element=self.subject_ctl)
         return Application(layout=layout, key_bindings=bindings,
-                           style=style, full_screen=True, mouse_support=False)
+                           style=style, full_screen=True, mouse_support=False,
+                           input=self.pt_input, output=self.pt_output)
 
     def _style(self, Style):
         """RETURN: Style, prompt_toolkit's, colourful on a terminal and
@@ -579,6 +820,10 @@ class KeyedDisplay(DisplayAdapter):
         style = "class:title.%s%s" % (
             "output" if pane is E_Pane.SUBJECT else "good",
             ".active" if self.state.pane is pane else "")
+        if pane is E_Pane.NOMINAL and self.editing is not None:
+            return [("class:title.good.active",
+                     " GOOD -- editing" if self.editing == "good" else
+                     " TOLERANCE -- in memory")]
         return [(style, pane_title(self.state, pane,
                                    self._channel_name(),
                                    self._differ_n()))]
@@ -833,6 +1078,14 @@ class KeyedDisplay(DisplayAdapter):
                    close, the panes the merge keys; an element the
                    cursor stands on is described instead."""
         width = self._screen_width()
+        if self.editing is not None:
+            hint_list = ["<c-z>=undo", "<c-y>=redo", "<c-e>=$EDITOR"]
+            if self.editing == "tolerance":
+                hint_list.append("the lower line stands")
+            text = foot(hint_list, width, head="<F5>=done")
+            if self.edit_fault is not None:
+                text = "NOT READ -- %s   <F5>=try again" % self.edit_fault
+            return [("class:status", " " + text)]
         if self.help_f:
             text = foot([], width, head="<F1>=close")
         elif self.reporting_f:
@@ -902,4 +1155,12 @@ class KeyedDisplay(DisplayAdapter):
         subject line 20 against nominal line 1.
         """
         from prompt_toolkit.data_structures import Point
-        return Point(x=0, y=row_of_cursor(project(self.state), self.state.pane))
+        row_list = project(self.state)
+        if self.editing == "good" and self.edit_buffer is not None:
+            #  WHILE GOOD IS TYPED INTO, OUTPUT follows the edit cursor: the
+            #  row of the GOOD line it stands in, as the last round aligned
+            #  it -- a line typed since has no row yet, and OUTPUT stays.
+            line_i = self.edit_buffer.document.cursor_position_row
+            for y, row in enumerate(row_list):
+                if row.nominal.index == line_i: return Point(x=0, y=y)
+        return Point(x=0, y=row_of_cursor(row_list, self.state.pane))

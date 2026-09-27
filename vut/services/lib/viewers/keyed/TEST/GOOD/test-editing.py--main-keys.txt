@@ -1,0 +1,9 @@
+-- 'A' takes all; 'c-z' undoes it, 'c-y' redoes it; 'q'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.51 ms  id=ab12;', 'b', '<hwut-end>', '']
+     tolerance changed in memory: False
+-- 'A', 'c-z', 'q'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.00 ms  id=zz7;', 'c', '<hwut-end>', '']
+     tolerance changed in memory: False
+<hwut-end>

@@ -1,0 +1,14 @@
+-- <F5>, 'c-e' uncommenting the numeric proposal, 'q'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     round 2: 2 pair(s) differ, numeric ratio 0.047
+     -> COMMIT ['head', 'time: 12.00 ms  id=zz7;', 'c', '<hwut-end>', '']
+     tolerance changed in memory: True
+     in memory: numeric ratio 0.047
+
+-- <F5>, 'c-e' uncommenting every proposal, 'q'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     round 2: 0 pair(s) differ, numeric ratio 0.047
+     -> COMMIT ['head', 'time: 12.00 ms  id=zz7;', 'c', '<hwut-end>', '']
+     tolerance changed in memory: True
+     in memory: numeric ratio 0.047
+<hwut-end>

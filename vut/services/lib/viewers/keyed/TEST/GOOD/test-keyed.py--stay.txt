@@ -1,0 +1,7 @@
+intend 21, 5.2: nothing changed, nothing to align -- the screen stays
+     'z' before any take, then 'q'      -> COMMIT ['a', 'c', '<hwut-end>']
+     $EDITOR changes nothing, 'q'       -> COMMIT ['a', 'c', '<hwut-end>']
+     $EDITOR fails, 'q'                 -> COMMIT ['a', 'c', '<hwut-end>']
+     $EDITOR changes 'c' to 'b', 'q'    -> COMMIT ['a', 'b', '<hwut-end>']
+     'z' and the keys run out           -> CANCEL None
+<hwut-end>

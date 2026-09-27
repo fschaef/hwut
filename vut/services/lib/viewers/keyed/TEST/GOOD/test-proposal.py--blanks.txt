@@ -1,0 +1,14 @@
+-- whitespace on (the default): compare already takes blanks
+   OUTPUT | a   b
+   GOOD   | a b
+   ->
+     (no proposal)
+
+-- whitespace off: proposed
+   OUTPUT | a   b
+   GOOD   | a b
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # whitespace = true
+     #     OUTPUT 1: blanks only
+<hwut-end>

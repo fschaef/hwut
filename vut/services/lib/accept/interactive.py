@@ -62,7 +62,10 @@ DESCRIPTION
        cursor stands in -- '##! unaccepted' and its '####' with it), 'u'
        undoes, 'r' redoes, 'R' resets to how GOOD stood when the screen
        opened, '<tab>' changes pane, 'q' is DONE and writes GOOD as it
-       stands; Ctrl-C writes nothing; 'g' asks compare to re-align;
+       stands; Ctrl-C writes nothing; 'z' asks compare to re-align;
+       'e' makes GOOD an editable text and 'c-e' opens it in $EDITOR;
+       <F5> opens the TOLERANCE PANE -- the tolerance in memory, with
+       proposals, tried on <F5> (intend 21); 'c-z'/'c-y' undo and redo;
        '<F1>' the whole table; '<number>g' goes to that OUTPUT line
        (the gutter numbers them; GOOD is aligned, so one gutter tells
        where both stand); 't' opens the TOLERANCE REPORT -- the

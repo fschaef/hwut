@@ -1,0 +1,5 @@
+-- 'e', <F5>, 'q'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.00 ms  id=zz7;', 'c', '<hwut-end>', '']
+     tolerance changed in memory: False
+<hwut-end>

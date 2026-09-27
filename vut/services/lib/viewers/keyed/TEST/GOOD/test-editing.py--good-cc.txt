@@ -1,0 +1,5 @@
+-- 'e', 'c-c', <F5>, 'c-c'
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> CANCEL None
+     tolerance changed in memory: False
+<hwut-end>

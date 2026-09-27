@@ -1,0 +1,5 @@
+a round's pairs are that round's: the report, the count
+     round: 3 pair(s) held, 1 differing
+     round: 3 pair(s) held, 0 differing
+     -> COMMIT ['a', 'b', '<hwut-end>']
+<hwut-end>

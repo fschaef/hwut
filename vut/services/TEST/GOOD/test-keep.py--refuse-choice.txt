@@ -1,0 +1,40 @@
+   | tolerances were changed in memory for 'test.sh one':
+   |     tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9abz]{3,4};", "a\\.b"] }
+   |   (1) store them in TMP/test.sh--one.tolerance.conf
+   |   (2) enter them into test.sh, where its other configuration stands
+   |   (3) omit them
+   | keep? [1/2/3] 2
+   | REFUSED: not entered into test.sh -- choice 'one' states its own 'tolerance'; the header's would not reach it
+   | stored in TMP/test.sh--one.tolerance.conf
+   -> stored
+
+   == test.sh
+   #! /bin/sh
+   # @hwut {
+   #     title   = "T"
+   #     choices {
+   #         one { tolerance { slash = false } }
+   #     }
+   # }
+   echo hello
+
+   == TMP/test.sh--one.tolerance.conf
+   # THE TOLERANCE TRIED for 'test.sh one' in the merge screen.
+   # In the '@hwut { }' header -- or the choice, or an 'apps'
+   # entry of 'hwut.conf' -- the one line it needs:
+   #
+   #     tolerance { numeric_ratio = 0.047  eq_pattern = ["id=[0-9abz]{3,4};", "a\\.b"] }
+   #
+   # Every key, as the pane showed it:
+   tolerance {
+       numeric_ratio = 0.047
+       whitespace    = true                   # default
+       slash         = true                   # default
+       regions       = true                   # default
+       eq_pattern    = ["id=[0-9abz]{3,4};", "a\\.b"]
+       nothing       = []                     # default
+       analogy       = ["((", "))"]           # default
+       constraints   = []                     # default
+       comment       = ["##", "##"]           # default
+   }
+<hwut-end>

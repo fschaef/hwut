@@ -1,0 +1,23 @@
+-- a word per class; the whole word first, then the middle
+   OUTPUT | at 2026-09-26 12:01:07 pid 0x1f in /tmp/a/b as done
+   GOOD   | at 2026-01-02 09:00:00 pid 0xFF in /var/x as fail
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # eq_pattern = ["[0-9]{4}-[0-9]{2}-[0-9]{2}", "[0-9]{2}:[0-9]{2}(:[0-9]{2})?(\\.[0-9]+)?", "0[xX][0-9a-fA-F]+", "(/[^ /]+)+/?", "[A-Za-z_][A-Za-z0-9_]*"]
+     #     OUTPUT 1: '2026-09-26' vs '2026-01-02' -> "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+     #     OUTPUT 1: '12:01:07' vs '09:00:00' -> "[0-9]{2}:[0-9]{2}(:[0-9]{2})?(\.[0-9]+)?"
+     #     OUTPUT 1: '0x1f' vs '0xFF' -> "0[xX][0-9a-fA-F]+"
+     #     OUTPUT 1: '/tmp/a/b' vs '/var/x' -> "(/[^ /]+)+/?"
+     #     OUTPUT 1: 'done' vs 'fail' -> "[A-Za-z_][A-Za-z0-9_]*"
+
+-- context kept literal, the middle classed; 'identifier' only
+   where no context is shared
+   OUTPUT | v=1.5e3 run=done n=17
+   GOOD   | v=2.25 run=fail n=4000
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # eq_pattern = ["v=[-+]?[0-9]*\\.[0-9]+([eE][-+]?[0-9]+)?", "run=[adefilno]{4}", "n=[-+]?[0-9]+"]
+     #     OUTPUT 1: 'v=1.5e3' vs 'v=2.25' -> "v=[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?"
+     #     OUTPUT 1: 'run=done' vs 'run=fail' -> "run=[adefilno]{4}"
+     #     OUTPUT 1: 'n=17' vs 'n=4000' -> "n=[-+]?[0-9]+"
+<hwut-end>

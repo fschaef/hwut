@@ -54,11 +54,16 @@ async def merge_text(subject_text, nominal_text, adapter,
     from vut.engine.compare.api import Configuration
     options = compare_options if compare_options is not None \
               else Configuration()
-    def align(subject, working):
+    #  THE TOLERANCE IN MEMORY BEGINS AS THE CHOICE'S OWN (intend 21):
+    #  optional on the contract, so this call is the same on every tier.
+    note = getattr(adapter, "note_tolerance", None)
+    if note is not None: note(options)
+    def align(subject, working, tried=None):
         """RETURN: AsyncIterable[DisplayInst], the alignment of
-        'subject' against 'working'."""
-        return compare_feeder.feed(options, io.StringIO(subject),
-                                   io.StringIO(working))
+        'subject' against 'working' -- under the tolerance the author
+        TRIED where he tried one (intend 21), else under the choice's."""
+        return compare_feeder.feed(tried if tried is not None else options,
+                                   io.StringIO(subject), io.StringIO(working))
     return await merge_session(align, subject_text, nominal_text,
                                adapter, subject_name,
                                max_round_n=max_round_n)
@@ -98,7 +103,7 @@ def adapter_for(editor_argv=None, plain_f=False, side_by_side_f=False,
 
 
 def run_sessions(key_list, store_of, adapter, err, setup=None,
-                 max_round_n=None, stderr_tol_f=False):
+                 max_round_n=None, stderr_tol_f=False, ask=None):
     """
     RETURN: (accepted_list, refused_list, left_list) -- the keys that
             became nominals, the (key, reason) pairs refused after a
@@ -114,6 +119,10 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
     'setup' overrides each key's own compare configuration where the
     caller stated one on the command line; None leaves each key with
     its own.
+
+    A TOLERANCE TRIED IN THE SESSION is asked about once the key is
+    decided (intend 21, 2.7; 'keep.py'): 'ask' reads the answer, the
+    terminal's by default.
     """
     accepted_list, refused_list, left_list = [], [], []
     for key in key_list:
@@ -136,19 +145,43 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         text, intent = asyncio.run(merge_text(
             key.subject_text, key.nominal_text, adapter, key.label,
             options, max_round_n=max_round_n or MERGE_ROUND_MAX))
+        accepted_f = False
         if intent is not E_Intent.COMMIT or text is None:
             left_list.append(key)
-            continue
-        reason = refusal(store, key, text, stderr_tol_f, err)
-        if reason is not None:
-            refused_list.append((key, reason))
-            continue
-        #  THE THREE WRITES OF AN ACCEPTANCE, as 'hwut.accept' makes
-        #  them (E-41): the nominal, the register, the book.
-        store.accept(key.test, key.choice, "stdout", text)
-        store.bookkeeper.note_accept(key.test, key.choice)
-        accepted_list.append(key)
+        else:
+            reason = refusal(store, key, text, stderr_tol_f, err)
+            if reason is not None:
+                refused_list.append((key, reason))
+            else:
+                #  THE THREE WRITES OF AN ACCEPTANCE, as 'hwut.accept'
+                #  makes them (E-41): the nominal, the register, the book.
+                store.accept(key.test, key.choice, "stdout", text)
+                store.bookkeeper.note_accept(key.test, key.choice)
+                accepted_list.append(key)
+                accepted_f = True
+        from .keep import keep_question
+        keep_question(adapter, key, _directory_of(store, key), accepted_f,
+                      err, ask or _terminal_ask)
     return (accepted_list, refused_list, left_list)
+
+
+def _directory_of(store, key):
+    """RETURN: str, the directory the test stands in -- where its GOOD
+               directory stands."""
+    return str(store.bookkeeper.nominal_path(key.test, key.choice,
+                                             "stdout").parent.parent)
+
+
+def _terminal_ask(prompt):
+    """RETURN: str, one line the person typed after 'prompt' -- asked on
+               stderr like every session face's UI.
+
+               Raises EOFError where stdin is closed."""
+    sys.stderr.write(prompt)
+    sys.stderr.flush()
+    line = sys.stdin.readline()
+    if not line: raise EOFError
+    return line
 
 
 def refusal(store, key, text, stderr_tol_f, err):

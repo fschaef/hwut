@@ -1,0 +1,15 @@
+-- the ratio in force already takes the deviation
+   OUTPUT | a 3
+   GOOD   | a 4
+   ->
+     (no proposal)
+
+-- a pattern in force is kept in the line, not proposed again
+   OUTPUT | id=ab12; k=zz1
+   GOOD   | id=zz7; k=zz99
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # eq_pattern = ["zz[0-9]+", "id=[0-9abz]{3,4};", "k=zz[-+]?[0-9]+"]
+     #     OUTPUT 1: 'id=ab12;' vs 'id=zz7;' -> "id=[0-9abz]{3,4};"
+     #     OUTPUT 1: 'k=zz1' vs 'k=zz99' -> "k=zz[-+]?[0-9]+"
+<hwut-end>

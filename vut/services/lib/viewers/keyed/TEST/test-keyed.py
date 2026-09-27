@@ -4,7 +4,8 @@
 #     title      = "The keyed merge: the laws of taking, and the keymap."
 #     choices    = ["crossing", "cut", "element", "filler", "header",
 #                   "keymap", "latch", "merge-colour", "reindex", "remove",
-#                   "report", "split", "take", "token", "undo", "view"]
+#                   "report", "rounds", "split", "stay", "take", "token",
+#                   "undo", "view"]
 #     tolerance { regions = false }
 # }
 #
@@ -303,8 +304,14 @@ def test_keymap():
     print("P-20/P-21/P-22: the table is the keymap")
     print("\n-- the help screen IS the table")
     for line in keymap.help_line_list(): print("     %s" % line)
+    print("\n-- the editing table (intend 21): letters type there")
+    for key_tuple, _, _, text in keymap.EDIT_KEYMAP:
+        print("       %-12s  %s" % (", ".join(keymap._named(k) for k in key_tuple),
+                                    text))
     print("\n-- no key is bound twice")
     print("     keyed   : %s" % (keymap.duplicate_key_list() or "none"))
+    print("     editing : %s"
+          % (keymap.duplicate_key_list(keymap.EDIT_KEYMAP) or "none"))
     print("     fallback: %s"
           % (keymap.duplicate_key_list(keymap.FALLBACK_KEYMAP) or "none"))
     print("\n-- the fallback speaks the SAME acts")
@@ -637,7 +644,48 @@ def test_view():
     print("     hints          %s" % display._hints())
 
 
+def test_stay():
+    print("intend 21, 5.2: nothing changed, nothing to align -- the screen stays")
+    import asyncio
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.accept.engine        import merge_text
+    subject, nominal = "a\nb\n<hwut-end>\n", "a\nc\n<hwut-end>\n"
+    for tag, act_list, argv in (
+            ("'z' before any take, then 'q'",  [E_Act.REALIGN, E_Act.DONE], None),
+            ("$EDITOR changes nothing, 'q'",   [E_Act.EDIT, E_Act.DONE],    ["true"]),
+            ("$EDITOR fails, 'q'",             [E_Act.EDIT, E_Act.DONE],    ["false"]),
+            ("$EDITOR changes 'c' to 'b', 'q'", [E_Act.EDIT, E_Act.DONE],
+                                                ["sed", "-i", "s/^c$/b/"]),
+            ("'z' and the keys run out",       [E_Act.REALIGN],             None)):
+        display = KeyedDisplay(act_script=act_list, editor_argv=argv)
+        text, intent = asyncio.run(merge_text(subject, nominal, display, "x", None))
+        print("     %-34s -> %-6s %s" % (tag, intent.name,
+                                         None if text is None else text.split()))
+
+
+def test_rounds():
+    print("a round's pairs are that round's: the report, the count")
+    import asyncio
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.accept.engine        import merge_text
+
+    class Watched(KeyedDisplay):
+        """The keyed driver, telling what it holds when a round asks."""
+        async def resolve(self, *argument_list):
+            print("     round: %i pair(s) held, %i differing"
+                  % (len(self.pair_db), self.bad_pair_n))
+            return await super().resolve(*argument_list)
+
+    display = Watched(act_script=[E_Act.TAKE_ALL, E_Act.REALIGN, E_Act.DONE])
+    text, intent = asyncio.run(merge_text("a\nb\n<hwut-end>\n",
+                                          "a\nc\n<hwut-end>\n",
+                                          display, "x", None))
+    print("     -> %s %s" % (intent.name, text.split()))
+
+
 CHOICE_DB = {
+    "rounds":   test_rounds,
+    "stay":     test_stay,
     "report":   test_report,
     "element":  test_element,
     "merge-colour":  test_merge_colour,

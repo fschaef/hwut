@@ -304,11 +304,33 @@ def _compare_of(parameters):
 
     from ...compare.api import Configuration
     options = Configuration()
-    finder  = options.pattern_finder
     for leaf in ("search_budget", "margin", "lowest_n", "context_k"):
         if stated["diff_display_parameters.%s" % leaf] is not None:
             setattr(options.diff_display_parameters, leaf, stated["diff_display_parameters.%s" % leaf])
 
+    tolerance_applied(options, tolerance)
+    return options
+
+
+TOLERANCE_LEAF_TUPLE = ("numeric_ratio", "whitespace", "slash", "regions",
+                        "eq_pattern", "nothing", "analogy", "constraints",
+                        "comment")
+
+
+def tolerance_applied(options, tolerance):
+    """
+    RETURN: None. Every leaf 'tolerance' STATES is set on 'options'
+            (compare's Configuration), by the mapping of '_compare_of';
+            an absent leaf leaves compare's value as it stands.
+
+    ONE MAPPING, TWO USERS: the run's own configuration, and the merge
+    screen's tolerance pane (intend 21), which applies the author's text
+    onto the configuration the session holds.
+    """
+    finder = options.pattern_finder
+    stated = {"tolerance.%s" % leaf:
+                  getattr(tolerance, leaf) if tolerance is not None else None
+              for leaf in TOLERANCE_LEAF_TUPLE}
     if stated["tolerance.numeric_ratio"] is not None:
         finder.numeric_tolerance_ratio      = stated["tolerance.numeric_ratio"]
     if stated["tolerance.eq_pattern"]     is not None:
@@ -346,8 +368,6 @@ def _compare_of(parameters):
         finder.constraint_f = bool(stated["tolerance.constraints"])
         options.constraint_expression_list = \
                                      list(stated["tolerance.constraints"])
-
-    return options
 
 
 def _root_of(app):

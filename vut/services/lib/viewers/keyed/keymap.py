@@ -60,15 +60,28 @@ KEYMAP = (
     (("<number>g",),    E_Act.GOTO,         PANE, "go to that OUTPUT line"),
     #  GLOBAL -- the acts that work on the whole session.
     (("tab",),          E_Act.SWAP_PANE,    BOTH, "switch pane"),
-    (("u",),            E_Act.UNDO,         BOTH, "undo"),
-    (("r",),            E_Act.REDO,         BOTH, "redo"),
+    (("u", "c-z"),      E_Act.UNDO,         BOTH, "undo"),
+    (("r", "c-y"),      E_Act.REDO,         BOTH, "redo"),
     (("R",),            E_Act.RESET,        BOTH, "reset: GOOD as it stood when the screen opened"),
     (("z",),            E_Act.REALIGN,      BOTH, "re-align: ask compare again"),
     (("t",),            E_Act.REPORT,       BOTH, "the tolerance report: analogies, patterns, constraints"),
-    (("e",),            E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
+    (("e",),            E_Act.EDIT_HERE,    BOTH, "edit GOOD here; <F5> ends the edit and re-aligns"),
+    (("c-e",),          E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
+    (("f5",),           E_Act.TOLERANCE,    BOTH, "the tolerance in memory, editable; <F5> tries it"),
     (("f1",),           E_Act.HELP,         BOTH, "this table"),
     (("q",),            E_Act.DONE,         BOTH, "done: GOOD as it stands is written"),
     (("c-c",),          E_Act.CANCEL,       BOTH, "cancel: nothing is written"),
+)
+
+#  THE EDITING TABLE (intend 21): while GOOD or the tolerance is edited
+#  in place, letters type, so only keys no text holds act. 'c-c' is bound
+#  to nothing here (ruled: "drop <c-c>; no undo all"). Undo and redo are
+#  the TEXT's own, a stack apart from the merge's.
+EDIT_KEYMAP = (
+    (("f5",),           E_Act.CLOSE_EDIT,   BOTH, "done: re-align under what the pane says"),
+    (("c-z",),          E_Act.UNDO,         BOTH, "undo, in this text"),
+    (("c-y",),          E_Act.REDO,         BOTH, "redo, in this text"),
+    (("c-e",),          E_Act.EDIT,         BOTH, "this text in $EDITOR; its exit ends the edit"),
 )
 
 #  THE VIEWING TABLE ('hwut.run.diff'): the same keys, and only the acts

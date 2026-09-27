@@ -21,18 +21,27 @@ P-20/P-21/P-22: the table is the keymap
      
      GLOBAL
        <tab>         switch pane
-       u             undo
-       r             redo
+       u, <c-z>      undo
+       r, <c-y>      redo
        R             reset: GOOD as it stood when the screen opened
        z             re-align: ask compare again
        t             the tolerance report: analogies, patterns, constraints
-       e             edit the GOOD in $EDITOR
+       e             edit GOOD here; <F5> ends the edit and re-aligns
+       <c-e>         edit the GOOD in $EDITOR
+       <F5>          the tolerance in memory, editable; <F5> tries it
        <F1>          this table
        q             done: GOOD as it stands is written
        <c-c>         cancel: nothing is written
 
+-- the editing table (intend 21): letters type there
+       <F5>          done: re-align under what the pane says
+       <c-z>         undo, in this text
+       <c-y>         redo, in this text
+       <c-e>         this text in $EDITOR; its exit ends the edit
+
 -- no key is bound twice
      keyed   : none
+     editing : none
      fallback: none
 
 -- the fallback speaks the SAME acts

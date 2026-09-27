@@ -1,0 +1,29 @@
+-- every proposal applied: which lines still differ
+   OUTPUT | time: 12.51 ms  id=ab12;
+   OUTPUT | at 2026-09-26 12:01:07 pid 0x1f in /tmp/a/b took 3 s
+   OUTPUT | x WARN y
+   OUTPUT | count 3
+   GOOD   | time: 12.00 ms  id=zz7;
+   GOOD   | at 2026-01-02 09:00:00 pid 0xFF in /var/x took 700 s
+   GOOD   | x y
+   GOOD   | count 4
+   ->
+     # PROPOSALS -- uncomment what you want, then <F5>
+     # numeric_ratio = 0.275
+     #     OUTPUT 4: 3 vs 4 -- 25% + 10%
+     # eq_pattern = ["id=[0-9abz]{3,4};", "[0-9]{4}-[0-9]{2}-[0-9]{2}", "[0-9]{2}:[0-9]{2}(:[0-9]{2})?(\\.[0-9]+)?", "0[xX][0-9a-fA-F]+", "(/[^ /]+)+/?", "[-+]?[0-9]+"]
+     #     OUTPUT 1: 'id=ab12;' vs 'id=zz7;' -> "id=[0-9abz]{3,4};"
+     #     OUTPUT 2: '2026-09-26' vs '2026-01-02' -> "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+     #     OUTPUT 2: '12:01:07' vs '09:00:00' -> "[0-9]{2}:[0-9]{2}(:[0-9]{2})?(\.[0-9]+)?"
+     #     OUTPUT 2: '0x1f' vs '0xFF' -> "0[xX][0-9a-fA-F]+"
+     #     OUTPUT 2: '/tmp/a/b' vs '/var/x' -> "(/[^ /]+)+/?"
+     #     OUTPUT 2: '3' vs '700' -> "[-+]?[0-9]+"
+     # nothing = ["WARN\\s*"]
+     #     OUTPUT 3: 'WARN' on one side only
+
+   compare, asked again:
+     OUTPUT 1: equivalent
+     OUTPUT 2: equivalent
+     OUTPUT 3: equivalent
+     OUTPUT 4: equivalent
+<hwut-end>
