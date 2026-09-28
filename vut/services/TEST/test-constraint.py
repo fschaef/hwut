@@ -38,11 +38,11 @@ PURPOSE: WHAT A RUN DOES WITH WHAT THE CONSTRAINTS FOUND (compare C-20),
               fails 'b' by name with the OUTPUT's finding and writes it
               into the candidate, after the line that caused it; the GOOD
               is not touched and the book carries no stain.
-    sanitize  'hwut.sanitize --constraints' finds the GOODs that
-              contradict their constraints without running anything;
-              '--apply' writes each finding into the GOOD where it was
-              found and stains the book, as a run would; asked again,
-              nothing is found: what is written stands.
+    sanitize  'hwut.sanitize.propose --constraints' proposes a 'remark'
+              for each GOOD that contradicts its constraints, without
+              running anything; 'hwut.sanitize.apply' writes each finding
+              into the GOOD where it was found and stains the book, as a
+              run would; proposed again, nothing: what is written stands.
     tightened a GOOD accepted under 'load <= 200' (b printing 150), then the
               page's constraint tightened to 'load <= 100': the run writes
               '##! constraint-violation' into the GOOD, after the line --
@@ -274,16 +274,28 @@ def test_cleared():
 def test_sanitize():
     import re
     root, test = tree_of(load="50")
+    proposal = os.path.join(root, "p.txt")
     try:
         put_good(test, "b", "x ((load: 150))\n<hwut-end>\n")
         put_good(test, "c", "x ((once: 3))\n<hwut-end>\n")
-        for label, word_list in (("reported", ()), ("--apply", ("--apply",)),
-                                 ("again", ())):
+        for label, name, word_list in (
+                ("proposed", "lib.sanitize.propose",
+                 ("--constraints", "-o", proposal)),
+                ("applied",  "lib.sanitize.apply", (proposal,)),
+                ("proposed again", "lib.sanitize.propose",
+                 ("--constraints", "-o", proposal))):
             print("-- %s" % label)
-            said = face(test, "sanitize", "--constraints", *word_list)
+            said = face(test, name, *word_list)
+            if name.endswith("propose"):
+                said = open(proposal).read()
+                said = "\n".join(text for text in said.splitlines()
+                                 if not text.startswith("#")
+                                 or text.startswith("# CONSTRAINT")
+                                 or text == "# nothing to sanitize")
             for line in said.splitlines():
                 line = re.sub(r"^TOUCHED.*", "TOUCHED ...", line.rstrip())
-                if line.strip() and not line.startswith("    could not"):
+                if line.strip() and not line.startswith("    could not") \
+                   and not line.startswith(("=====", "-----")):
                     print("   %s" % line.replace(test, "<TEST>"))
         print("-- the book's stain: %s" % stain_db(test))
         for choice in ("b", "c"):

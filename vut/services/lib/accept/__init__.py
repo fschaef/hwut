@@ -7,8 +7,8 @@
                  first, target after.
     apply.py     'hwut.accept.apply': blesses what such a file names,
                  with '--force' implicit -- the reading was the
-                 consent. The word is the tree's own: 'hwut.sanitize'
-                 reports and acts on '--apply', and this is the same
+                 consent. The word is the tree's own: 'hwut.sanitize.
+                 propose' and 'hwut.sanitize.apply' are the same
                  relation.
 
 ONE BRICK, NOT TWO ('services/accept.py'). Selection, provision and

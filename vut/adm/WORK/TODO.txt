@@ -545,7 +545,8 @@ TO BE DONE  THE FACE CUT, what remains (services E-101..E-106)
      (batch), 'stability' and 'cov' (both fold 'hwut.run', so they
      inherit 'run.do'), and 'diff' last -- its product is a screen,
      so only its store form has an answer to give.
-     'hwut.sanitize' is split (E-103) but not yet a 'do()'.
+     'hwut.sanitize': a command answers a CDone (E-103, E-125); the
+     walk of 'hwut.sanitize.propose' is not yet a 'do()'.
      'hwut.accept' keeps its conversation; its Outcomes are data
      (E-105), the asking half is not.
 

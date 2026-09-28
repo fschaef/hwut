@@ -1,58 +1,34 @@
---- report: the roots, not their pieces
+--- the roots, not their pieces; 'other' is held by a live run
 STATUS: 0
-STDOUT {
-    SANITIZE, in 'tree': transient  (reporting only; '--apply' acts)
-    
-      transient -- 4 found:
-          other/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
-          other/TEST/TMP                                       transient root; 0 file(s), all of it a run can make again
-          suite/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
-          suite/TEST/TMP                                       transient root; 2 file(s), all of it a run can make again
-    
-      4 item(s), <size> kB
-}
---- a bare call never takes them
-STATUS: 0
-STDOUT {
-    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session  (reporting only; '--apply' acts)
-    
-      session -- 1 found:
-          suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody
-    
-      lock -- 1 found:
-          other/TEST/TMP/lock                                  the holder (pid ?) is gone
-    
-      out -- 2 found:
-          other/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
-          suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
-    
-      books -- 2 found:
-          other/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
-    
-      6 item(s), <size> kB
-}
---- apply: 'other' holds a live lock and is refused whole
-STATUS: 0
-STDOUT {
-    SANITIZE, in 'tree': transient
-    
-      NOTE: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
-    
-      transient -- 2 found:
-          suite/TEST/OUT                                       transient root; 1 file(s), all of it a run can make again
-          suite/TEST/TMP                                       transient root; 2 file(s), all of it a run can make again
-    
-      2 item(s), <size> kB
-    
-    REMOVING:
-        gone: suite/TEST/OUT
-        gone: suite/TEST/TMP
-    
-    TOUCHED (the re-run trigger): 2 test application(s)
+COMMANDS {
+    remove tree/suite/TEST/OUT
+    remove tree/suite/TEST/TMP
 }
 STDERR {
-    REFUSED: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+    NOTE: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+}
+--- a bare proposal never takes them
+STATUS: 0
+COMMANDS {
+    remove tree/suite/TEST/TMP/session
+    remove tree/suite/TEST/OUT
+    book tree/other/TEST/test-app.sh
+    book tree/suite/TEST/test-app.sh
+}
+STDERR {
+    NOTE: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+}
+--- applied
+STATUS: 0
+STDOUT {
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     remove tree/suite/TEST/OUT ........................................... [DONE]
+     remove tree/suite/TEST/TMP ........................................... [DONE]
+    ==============================================================================
+    Done 2/2
+    TOUCHED (the re-run trigger): 1 test application(s)
 }
 STANDING {
     hwut-root.conf

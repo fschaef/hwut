@@ -1,0 +1,44 @@
+STATUS: 0
+STDOUT {
+    # hwut.sanitize.propose -- in 'tree': session, lock, out, orphans, books, constraints
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # SESSION WRECKAGE: a 'TMP/session/' outlived its run; nothing reads
+    # it between runs, and the next run makes its own.
+    # 'remove' deletes the directory.
+    remove tree/suite/TEST/TMP/session
+    
+    # PRODUCT SPACE: 'OUT/' is the application's scratch, rewritten by
+    # the next run that uses it.
+    # 'remove' deletes it. A directory a live run holds is refused.
+    remove tree/suite/TEST/OUT
+    
+    # BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry
+    # for the case (E-41).
+    # 'book' enters the standing nominal as accepted; nothing runs,
+    # nothing in GOOD/ moves.
+    book tree/suite/TEST/test-app.sh
+}
+'-o' writes what stdout carries: yes
+STANDING {
+    hwut-root.conf
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/OUT
+    suite/TEST/OUT/product.txt
+    suite/TEST/TMP
+    suite/TEST/TMP/session
+    suite/TEST/TMP/session/a.out
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
+}
+<hwut-end>

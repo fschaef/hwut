@@ -303,7 +303,7 @@ ruling was not universal, and now is'.
     E-14  'hwut.tell' tells about ONE TEST; 'hwut.report' about A RUN
     E-4   acceptance, and what it refuses
     E-22  'hwut.run.play' -- the command line's way to stand INSIDE a test
-    E-18  'hwut.sanitize' -- reports by default; never guesses at
+    E-18  'hwut.sanitize' -- proposes; never guesses at
           blessed work
     E-13  a wishlist is a file of targets, and THE ROUND TRIP CLOSES
     E-19  labels -- sets of runs in one file

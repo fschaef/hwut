@@ -19,7 +19,9 @@ hwut.remove.propose exit 0: hwut.remove.propose -- the test runs that have lost 
 hwut.remove.apply  exit 0: hwut.remove.apply -- forget what a file names, and nothing else.
 hwut.rename        exit 0: PURPOSE: THE 'hwut.rename' COMMAND LINE -- a test, or one choice of it,
 hwut.move          exit 0: PURPOSE: THE 'hwut.move' COMMAND LINE -- the shorthand of
-hwut.sanitize      exit 0: PURPOSE: THE 'hwut.sanitize' COMMAND LINE -- what a tree accumulates,
+hwut.sanitize      exit 0: PURPOSE: THE 'hwut.sanitize' COMMAND LINE -- one sanitize command, done.
+hwut.sanitize.propose exit 0: hwut.sanitize.propose -- what a tree accumulates, as commands to read,
+hwut.sanitize.apply exit 0: hwut.sanitize.apply -- do the commands a file holds, and nothing else.
 hwut.pype          exit 0: usage: hwut.pype [--trace] SCRIPT < input
 hwut.labels.create exit 0: PURPOSE: THE 'hwut.labels.create' COMMAND LINE -- a NEW label, from a
 hwut.labels.add    exit 0: PURPOSE: THE 'hwut.labels.add' COMMAND LINE -- grow a STANDING label

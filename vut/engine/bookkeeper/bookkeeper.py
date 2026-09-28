@@ -1368,7 +1368,7 @@ class Bookkeeper:
 
         ACCEPTANCE IS A DECISION AND THE BOOK HOLDS DECISIONS (E-20,
         E-36): whoever makes a nominal stand enters it here, or the
-        book says "accepted outside the book" ('hwut.sanitize --books',
+        book says "accepted outside the book" ('hwut.sanitize.propose --books',
         E-41). 'hwut.accept' calls this beside 'Store.accept()'; the
         engine's NOMINAL goal reaches the same row through 'record()'.
         A fresh acceptance means the candidate IS the nominal, so the

@@ -42,7 +42,7 @@ esac
 FACE_LIST="config.show plan run run.play accept accept.propose accept.apply renovate
            accept.interactive execute run.cov run.diff report.details run.stability report.wishlist
            report remove remove.propose remove.apply
-           rename move sanitize pype
+           rename move sanitize sanitize.propose sanitize.apply pype
            labels.create labels.add labels.remove labels.list labels.query"
 
 first_line() { grep -m1 -v '^[[:space:]]*$'; }

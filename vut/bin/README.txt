@@ -23,7 +23,8 @@ by PATH and by path alike.
                         hwut.run.stability  hwut.report.wishlist  hwut.report
                         hwut.remove
                         hwut.rename   hwut.move
-                        hwut.sanitize hwut.pype
+                        hwut.sanitize hwut.sanitize.propose
+                        hwut.sanitize.apply  hwut.pype
 
     hwut            THE DEFAULT FACE: 'hwut' alone is 'hwut.run'. A
                     bare 'hwut' states no wish, and a wish that states

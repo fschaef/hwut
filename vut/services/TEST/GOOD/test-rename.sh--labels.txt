@@ -23,7 +23,7 @@ STATUS: 2
     REFUSED: 'two' already stands among the choices of 'test-fresh.sh'
 --- a fresh name that stands only in the FILE: a fault, not a merge
 STATUS: 1
-        FAULT: labels -- './tree/suite/TEST/test-fresh.sh stale' already stands; the old entries keep their name for 'hwut.sanitize --orphans'
+        FAULT: labels -- './tree/suite/TEST/test-fresh.sh stale' already stands; the old entries keep their name for 'hwut.sanitize.propose --orphans'
 THE FILE {
     ./tree/suite/TEST/test-fresh.sh first : concern meta
     :/: two                               : concern

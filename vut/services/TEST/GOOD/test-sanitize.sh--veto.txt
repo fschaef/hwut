@@ -1,0 +1,48 @@
+--- the line under '#' is not done:
+STATUS: 0
+STDOUT {
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     remove tree/suite/TEST/TMP/session ................................... [DONE]
+    ==============================================================================
+    Done 1/1
+    TOUCHED (the re-run trigger): 1 test application(s)
+}
+STANDING {
+    hwut-root.conf
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/OUT
+    suite/TEST/OUT/a.txt
+    suite/TEST/TMP
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
+}
+--- a line that spells no command refuses the file:
+STATUS: 2
+STDOUT {
+    REFUSED: line 2: unknown command 'erase' -- 'erase tree/suite/TEST/OUT'
+    REFUSED: line 3: 'book' takes <dir>/<test> [<choice>] -- 'book'
+    REFUSED: 'broken.txt' -- nothing has been done
+}
+STANDING {
+    hwut-root.conf
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/OUT
+    suite/TEST/OUT/a.txt
+    suite/TEST/TMP
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
+}
+--- nothing but comments:
+STATUS: 3
+STDOUT {
+    NOTE: 'empty.txt' names no command -- every line is a comment or blank
+}
+<hwut-end>

@@ -16,7 +16,7 @@ never having been labelled.
 
 So every affected face calls HERE, once, as its LAST step: a crash
 before this step leaves a boundary entry naming a name that no longer
-exists -- which 'hwut.sanitize --orphans' can find and say aloud
+exists -- which 'hwut.sanitize.propose --orphans' can find and say aloud
 (E-18) -- never a record silently pointing at nothing.
 
 A DIRECTORY OUTSIDE ANY TREE follows nothing: no boundary, no
@@ -107,7 +107,7 @@ def labels_renamed(test_directory, test, choice, fresh_test,
         if target in target_db:
             write("    FAULT: labels -- '%s' already stands; the "
                   "old entries keep their name for "
-                  "'hwut.sanitize --orphans'"
+                  "'hwut.sanitize.propose --orphans'"
                   % _file.target_text(target))
             return False
     for source, target in pair_list:

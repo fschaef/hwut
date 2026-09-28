@@ -29,7 +29,7 @@ literal targets only.
 THE DOMAIN IS WHAT THE TREE OFFERS below '--directory': 'NOT concern'
 names the unlabelled too, which only a walked tree can answer. An
 entry naming a run the tree no longer offers is not printed here;
-finding it is 'hwut.sanitize --orphans' business (E-18).
+finding it is 'hwut.sanitize.propose --orphans' business (E-18).
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       the expression named at least one run; printed

@@ -1,37 +1,61 @@
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.sanitize' does not take: --sideways
-    usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
-                         [--glob <target>]... [--exclude <target>]...
-                         [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [-l|--label <expr>]
-                         [--language=<name>]... [--faster-than=<sec>] [--apply]
-                         [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--constraints] [--transient]
-                         [--directory=<path>]
+}
+STDERR {
+    REFUSED: 'hwut.sanitize.propose' does not take: --sideways
+    usage: hwut.sanitize.propose [--fail] [--pass] [--since=<point>]
+                                 [--until=<point>] [--glob <target>]...
+                                 [--exclude <target>]... [--dir <glob>]...
+                                 [--exclude-dir <glob>]... [--wishlist <file>]...
+                                 [-l|--label <expr>] [--language=<name>]...
+                                 [--faster-than=<sec>] [--output=<path>]
+                                 [--target <name>]... [--session] [--lock] [--out]
+                                 [--orphans] [--books] [--constraints]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
+}
+STDERR {
     REFUSED: '--target' stands without a name
-    usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
-                         [--glob <target>]... [--exclude <target>]...
-                         [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [-l|--label <expr>]
-                         [--language=<name>]... [--faster-than=<sec>] [--apply]
-                         [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--constraints] [--transient]
-                         [--directory=<path>]
+    usage: hwut.sanitize.propose [--fail] [--pass] [--since=<point>]
+                                 [--until=<point>] [--glob <target>]...
+                                 [--exclude <target>]... [--dir <glob>]...
+                                 [--exclude-dir <glob>]... [--wishlist <file>]...
+                                 [-l|--label <expr>] [--language=<name>]...
+                                 [--faster-than=<sec>] [--output=<path>]
+                                 [--target <name>]... [--session] [--lock] [--out]
+                                 [--orphans] [--books] [--constraints]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
+}
+STDERR {
     REFUSED: the directory 'nowhere' does not exist
-    usage: hwut.sanitize [--fail] [--pass] [--since=<point>] [--until=<point>]
-                         [--glob <target>]... [--exclude <target>]...
-                         [--dir <glob>]... [--exclude-dir <glob>]...
-                         [--wishlist <file>]... [-l|--label <expr>]
-                         [--language=<name>]... [--faster-than=<sec>] [--apply]
-                         [--target <name>]... [--session] [--lock] [--out]
-                         [--orphans] [--books] [--constraints] [--transient]
-                         [--directory=<path>]
+    usage: hwut.sanitize.propose [--fail] [--pass] [--since=<point>]
+                                 [--until=<point>] [--glob <target>]...
+                                 [--exclude <target>]... [--dir <glob>]...
+                                 [--exclude-dir <glob>]... [--wishlist <file>]...
+                                 [-l|--label <expr>] [--language=<name>]...
+                                 [--faster-than=<sec>] [--output=<path>]
+                                 [--target <name>]... [--session] [--lock] [--out]
+                                 [--orphans] [--books] [--constraints]
+                                 [--transient] [--directory=<path>]
+}
+STATUS: 2
+STDOUT {
+    REFUSED: a file name is required -- the commands to do
+             (write one with 'hwut.sanitize.propose -o <file>')
+}
+STATUS: 2
+STDOUT {
+    REFUSED: [Errno 2] No such file or directory: 'no-such-file.txt'
+}
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.sanitize' does not take: --sideways
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, forget, book, remark, run; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

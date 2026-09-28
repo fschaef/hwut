@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.sanitize --books: the three records of acceptance"
-#     choices    = ["agree", "apply_keeps", "disagree"]
+#     title      = "hwut.sanitize.propose --books: the records of acceptance"
+#     choices    = ["agree", "apply_books", "disagree"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -12,18 +12,22 @@ ______________________________________________________________________________
 
 THE TWO RECORDS OF ACCEPTANCE MUST AGREE (services E-41): the nominals
 in GOOD/, and the book -- which is also the register (B-13) and carries
-'last_accept'. 'hwut.sanitize --books' names every disagreement and
-'--apply' never touches one. A test the book calls ASPIRANT with no
-nominal is not a disagreement (B-14).
+'last_accept'. 'hwut.sanitize.propose --books' proposes a 'book' for
+every disagreement, each under its kind (E-125). A test the book calls
+ASPIRANT with no nominal is not a disagreement (B-14).
 
     disagree     one fixture holds all three disagreements:
-                   test-reg.py     registered, no nominal
-                   test-nom.py     a nominal, not registered
-                   test-book.py    a nominal, registered, booked by a
-                                   run and never accepted
-                 and each is named once, by its record.
-    agree        the same directory after 'hwut.accept': silence.
-    apply_keeps  '--apply' reports 'kept', and the three records stand.
+                   test-reg.py     the book says aspirant, a nominal
+                                   stands
+                   test-nom.py     a nominal, and no entry in the book
+                   test-book.py    a nominal, booked by a run and never
+                                   accepted: 'last_accept' empty
+                 and each is proposed once, under its kind.
+    agree        the same directory after 'hwut.accept': nothing
+                 proposed.
+    apply_books  the proposal applied: each disagreement booked, nothing
+                 in GOOD/ moved, the aspirant still an aspirant; proposed
+                 again, nothing.
 ______________________________________________________________________________
 """
 import os
@@ -35,10 +39,12 @@ import config                                                    # noqa F401
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.services.sanitize import main as sanitize_main        # noqa E402
+from   vut.services.lib.sanitize.propose import main as propose_main  # noqa E402
+from   vut.services.lib.sanitize.apply   import main as apply_main    # noqa E402
 from   vut.services.run      import main as run_main             # noqa E402
 from   vut.services.accept   import main as accept_main          # noqa E402
-from   vut.engine.bookkeeper.api import Bookkeeper               # noqa E402
+from   vut.engine.bookkeeper.api import (Bookkeeper,              # noqa E402
+                                         E_TestVerdict)
 
 ROOT_CONF = """\
 hwut {
@@ -107,40 +113,56 @@ def fixture():
     return root, test
 
 
-def _sanitize(test, *extra):
-    """RETURN: list[str], what the face wrote."""
-    line_list = []
-    sanitize_main(["--books", "--directory=%s" % test] + list(extra),
-                  write=line_list.append)
-    return line_list
+def _proposal(test):
+    """RETURN: list[str], the proposal '--books' writes for 'test' -- its
+               block comments and commands, the head left out."""
+    text_list = []
+    old = os.getcwd()
+    os.chdir(test)
+    try:
+        propose_main(["--books"], write=text_list.append,
+                     err=lambda _: None)
+    finally:
+        os.chdir(old)
+    line_list = "".join(text_list).splitlines()
+    first = next((i for i, text in enumerate(line_list) if not text.strip()),
+                 len(line_list))
+    return [text for text in line_list[first:] if text.strip()]
 
 
 def _finding_list(line_list):
-    """RETURN: list[str], the finding lines, whitespace folded."""
-    return [" ".join(l.split()) for l in line_list
-            if l.startswith("      ")]
+    """RETURN: list[str], the command lines of a proposal."""
+    return [text for text in line_list if not text.startswith("#")]
 
 
 def test_disagree():
     """Each disagreement named once, by its record."""
     root, test = fixture()
-    finding_list = _finding_list(_sanitize(test))
-    for line in finding_list: print("  " + line)
+    line_list    = _proposal(test)
+    for line in line_list: print("  " + line)
+    finding_list = _finding_list(line_list)
+
+    def under(kind_word, command):
+        """RETURN: bool, 'command' stands in the block whose comment
+                   opens with 'kind_word'."""
+        head = next((i for i, text in enumerate(line_list)
+                     if text.startswith("# " + kind_word)), None)
+        return head is not None and command in line_list[head:] \
+               and all(text.startswith("#") or text.startswith("book ")
+                       for text in line_list[head:line_list.index(command)])
     ok = _check([
-        (len(finding_list) == 3, "three findings"),
-        (any(l.startswith(".: book test-reg.py") and "aspirant" in l
-             for l in finding_list),
+        (len(finding_list) == 3, "three commands"),
+        (under("BOOK STALE", "book test-reg.py"),
          "the book stale: it says aspirant, and a nominal stands"),
-        (any(l.startswith(".: GOOD/ test-nom.py") for l in finding_list),
-         "the book behind: a nominal, and the book lacks it"),
-        (not any("test-asp.py" in l for l in finding_list),
+        (under("BOOK BEHIND", "book test-nom.py"),
+         "the book behind: a nominal, and no entry"),
+        (not any("test-asp.py" in text for text in finding_list),
          "an aspirant is no disagreement (B-14)"),
-        (any(l.startswith(".: book test-book.py") and "last_accept" in l
-             for l in finding_list),
+        (under("ACCEPTANCE UNDATED", "book test-book.py"),
          "the book: a nominal, and 'last_accept' empty"),
     ])
     shutil.rmtree(root, ignore_errors=True)
-    _verdict(ok, "every disagreement is named by its record.")
+    _verdict(ok, "every disagreement is proposed under its kind.")
 
 
 def test_agree():
@@ -157,43 +179,59 @@ def test_agree():
     os.remove(os.path.join(test, "GOOD", "test-nom.py.txt"))
     accept_main(["test-reg.py", "--force", "--directory=%s" % test],
                 write=lambda _: None)
-    finding_list = _finding_list(_sanitize(test))
+    finding_list = _finding_list(_proposal(test))
     for line in finding_list: print("  " + line)
     entry = Bookkeeper(test).result("test-book.py", None)
     ok = _check([
         (entry is not None and bool(entry.get("last_accept")),
          "accept wrote 'last_accept'"),
-        (not finding_list, "no finding: the three agree"),
+        (not finding_list, "nothing proposed: the records agree"),
     ])
     shutil.rmtree(root, ignore_errors=True)
-    _verdict(ok, "where the records agree, the aspect is silent.")
+    _verdict(ok, "where the records agree, nothing is proposed.")
 
 
-def test_apply_keeps():
-    """'--apply' keeps every books finding and says so."""
+def test_apply_books():
+    """The proposal applied books every disagreement; GOOD/ is not
+    touched; asked again, nothing is proposed."""
     root, test = fixture()
-    line_list = _sanitize(test, "--apply")
-    kept = [" ".join(l.split()) for l in line_list if "kept:" in l]
-    for line in kept: print("  " + line)
+    good = os.path.join(test, "GOOD")
+
+    def good_db():
+        """RETURN: dict, name -> content of every nominal."""
+        return {n: open(os.path.join(good, n)).read()
+                for n in sorted(os.listdir(good)) if n != "book.csv"}
+    before = good_db()
+    proposal = os.path.join(root, "p.txt")
+    with open(proposal, "w") as fh:
+        fh.write("\n".join(_proposal(test)) + "\n")
+    said = []
+    apply_main([proposal, "--directory=%s" % test], write=said.append)
+    for line in said:
+        if line.startswith(" book "): print("  " + " ".join(line.split()))
+    book = Bookkeeper(test)
     ok = _check([
-        (len(kept) == 3, "three kept, none removed"),
-        (os.path.isfile(os.path.join(test, "GOOD", "test-nom.py.txt")),
-         "the nominal stands"),
-        (Bookkeeper(test).run_id_of("test-reg.py") is not None,
-         "the register entry stands"),
-        (Bookkeeper(test).result("test-book.py", None) is not None,
-         "the book entry stands"),
+        (sum(1 for text in said if text.startswith(" book ")
+             and text.endswith("[DONE]")) == 3, "three booked"),
+        (good_db() == before, "nothing in GOOD/ moved"),
+        (all(book.result(t, None) is not None
+             and bool(book.result(t, None).get("last_accept"))
+             for t in ("test-reg.py", "test-nom.py", "test-book.py")),
+         "each carries 'last_accept'"),
+        ((book.result("test-asp.py", None) or {}).get("verdict")
+         is E_TestVerdict.ASPIRANT, "the aspirant is still an aspirant"),
+        (not _finding_list(_proposal(test)), "asked again: nothing"),
     ])
     shutil.rmtree(root, ignore_errors=True)
-    _verdict(ok, "a disagreement is mended by hand, never by --apply.")
+    _verdict(ok, "'book' mends the book and never GOOD/.")
 
 
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "hwut.sanitize --books: the two records of acceptance",
+        title      = "hwut.sanitize.propose --books: the records of acceptance",
         choice_map = {
             "agree":       test_agree,
-            "apply_keeps": test_apply_keeps,
+            "apply_books": test_apply_books,
             "disagree":    test_disagree,
         }).run()

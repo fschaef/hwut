@@ -1,11 +1,29 @@
 STATUS: 0
+COMMANDS {
+    forget tree/suite/TEST/test-gone.sh
+    forget tree/suite/TEST/test-app.sh nochoice
+}
+STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': orphans  (reporting only; '--apply' acts)
-    
-      orphans -- 2 found:
-          suite/TEST/GOOD/test-app.sh--nochoice.txt            'test-app.sh' offers no choice 'nochoice'
-          suite/TEST/GOOD/test-gone.sh.txt                     no application 'test-gone.sh' stands here
-    
-      2 item(s), <size> kB
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     forget tree/suite/TEST/test-gone.sh .................................. [DONE]
+     forget tree/suite/TEST/test-app.sh nochoice .......................... [DONE]
+    ==============================================================================
+    Done 2/2
+    TOUCHED (the re-run trigger): 1 test application(s)
+}
+STANDING {
+    hwut-root.conf
+    suite
+    suite/TEST
+    suite/TEST/GOOD
+    suite/TEST/GOOD/book.csv
+    suite/TEST/GOOD/notes.md
+    suite/TEST/GOOD/test-app.sh.txt
+    suite/TEST/TMP
+    suite/TEST/hwut.conf
+    suite/TEST/test-app.sh
 }
 <hwut-end>

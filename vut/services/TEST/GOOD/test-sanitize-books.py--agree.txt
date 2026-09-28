@@ -1,4 +1,4 @@
   OK  : accept wrote 'last_accept'
-  OK  : no finding: the three agree
-SUCCESS: where the records agree, the aspect is silent.
+  OK  : nothing proposed: the records agree
+SUCCESS: where the records agree, nothing is proposed.
 <hwut-end>

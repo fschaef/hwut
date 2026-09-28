@@ -1,52 +1,27 @@
 --- a target NO directory binds:
 STATUS: 2
-STDOUT {
-    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session
-    
-      books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
-    
-    
-    REMOVING:
-        kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
-    
-    TOUCHED (the re-run trigger): 1 test application(s)
-    
-    TARGETS:
-      target 'clean':
-        no directory below '<work>/tree' binds any target.
-        REFUSED: no directory binds a target 'clean'
+COMMANDS {
+}
+STDERR {
+    REFUSED: no directory binds a target 'clean'
 }
 --- a target one directory binds:
 STATUS: 0
-STDOUT {
-    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session
-    
-      books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
-    
-    
-    REMOVING:
-        kept: suite/TEST: GOOD/ test-app.sh -- a disagreement is mended by hand
-    
-    TOUCHED (the re-run trigger): 1 test application(s)
-    
-    TARGETS:
-      target 'clean':
-        :: suite/TEST: ./clean.sh [exit 0]
-        the project cleaned itself
-        directories: 1  executed: 1  skipped: 0
+COMMANDS {
+    book tree/suite/TEST/test-app.sh
+    run tree clean
 }
---- and without '--apply' it only says so:
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': books, constraints, lock, orphans, out, session  (reporting only; '--apply' acts)
-    
-      books -- 1 found:
-          suite/TEST: GOOD/ test-app.sh                        a nominal stands, and the book lacks it
-    
-    
-    TARGETS:
-      target 'clean': would run in every directory that binds it ('--apply' runs it)
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     run tree clean ....................................................... [DONE]
+          :: suite/TEST: ./clean.sh [exit 0]
+          the project cleaned itself
+          directories: 1  executed: 1  skipped: 0
+    ==============================================================================
+    Done 1/1
+    TOUCHED (the re-run trigger): 1 test application(s)
 }
 <hwut-end>

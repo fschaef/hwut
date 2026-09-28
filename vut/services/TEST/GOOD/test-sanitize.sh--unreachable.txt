@@ -1,10 +1,9 @@
-STATUS: 0
+STATUS: 3
+COMMANDS {
+}
+STATUS: 1
 STDOUT {
-    SANITIZE, in 'tree': orphans
-    
-      nothing to sanitize
-    
-    TOUCHED (the re-run trigger): 1 test application(s)
+    REFUSED: forget tree/suite/TEST/test-hidden.sh -- the application stands and exploration cannot see it: unreachable, not orphaned
 }
 the nominal still stands: yes
 <hwut-end>

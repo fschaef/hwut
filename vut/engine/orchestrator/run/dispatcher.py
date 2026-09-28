@@ -117,7 +117,7 @@ class TestRunDispatcher(I_Dispatcher):
         #  passed the nominal gate, so something was accepted for it;
         #  where the register has no entry, one is made and the run
         #  says so ('notice_list', emitted as NOTE by the orchestrator).
-        #  'hwut.sanitize --books' reads the same disagreement.
+        #  'hwut.sanitize.propose --books' reads the same disagreement.
         self.register    = self.store.bookkeeper
         self.notice_list = []
         #  ONE RUN AT A TIME per directory under coverage (coverage D-22):

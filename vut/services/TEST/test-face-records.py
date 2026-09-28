@@ -22,9 +22,9 @@ the proof of the cut.
     refuse   a refusal is an OUTCOME: 'Refused'/'Fault' carry the
              sentence and the exit code the face has always used, and
              'answered' is the one place they become a page
-    split    the acting split from the saying (E-103): 'sanitize'
-             removes and answers WHAT BECAME of each finding; the page
-             is made from that answer, not written from inside it
+    split    the acting split from the saying (E-103): a sanitize
+             command acts and answers WHAT BECAME of it (E-125); the
+             page is made from that answer, not written from inside it
     accept   what 'hwut.accept' DECIDED, as data (E-105): one Outcome
              per key, and the page -- report block or brief row -- made
              from it
@@ -210,34 +210,42 @@ def test_stream():
 
 
 def test_split():
-    """RETURN: None. E-103: 'sanitize.removal_of' removes and ANSWERS;
-               nothing is printed from inside the action."""
-    from vut.services.sanitize import removal_of, Removal, CFinding
-    banner("a books finding is kept BY DESIGN, and says why")
-    removal = removal_of(CFinding("books", "suite/TEST: book x one",
-                                  "the book and the register disagree"), ROOT)
-    print("    %-9s gone=%-5s kept=%-5s fault=%s"
-          % (removal.path.split(":")[0], removal.gone_f, removal.kept_f,
-             removal.fault))
-    print("    said : %s" % removal.said)
-
-    banner("a file that stands: gone")
+    """RETURN: None. E-103: a sanitize command ('CContext.execute') acts
+               and ANSWERS a CDone; nothing is printed from inside the
+               action."""
+    import io
+    import contextlib
+    from vut.services.lib.sanitize.command import CContext, CCommand, CDone
     fixture()
+    context = CContext(ROOT)
+
+    def done_of(verb, *word_list):
+        """RETURN: (CDone, str), the answer and what was PRINTED."""
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            done = context.execute(CCommand(verb, word_list))
+        return done, printed.getvalue()
+
+    banner("a path 'remove' does not take: refused, and says why")
+    done, printed = done_of("remove", "suite/TEST/GOOD")
+    print("    %-8s printed=%r" % (done.outcome, printed))
+    print("    said : %s" % done.reason)
+
+    banner("a directory that stands: gone")
     victim = os.path.join(TEST, "OUT")
     os.makedirs(victim, exist_ok=True)
     with open(os.path.join(victim, "x.txt"), "w") as fh: fh.write("x\n")
-    removal = removal_of(CFinding("out", os.path.relpath(victim, ROOT),
-                                  "the last run's output"), ROOT)
-    print("    gone=%-5s exists now: %s" % (removal.gone_f,
-                                            os.path.exists(victim)))
+    done, printed = done_of("remove", "suite/TEST/OUT")
+    print("    %-8s printed=%r exists now: %s"
+          % (done.outcome, printed, os.path.exists(victim)))
 
-    banner("a path that cannot go: the fault is ANSWERED, not printed")
-    removal = removal_of(CFinding("out", "no/such/place", "gone already"), ROOT)
-    print("    gone=%-5s fault=%s" % (removal.gone_f,
-                                      removal.fault is not None))
+    banner("a path that is gone already: ANSWERED, not printed")
+    done, printed = done_of("remove", "suite/TEST/OUT")
+    print("    %-8s printed=%r reason: %s" % (done.outcome, printed,
+                                             done.reason))
 
     banner("the record is plain")
-    print("    %s" % (record_check(Removal("p")) or "yes"))
+    print("    %s" % (record_check(CDone("DONE")) or "yes"))
 
 
 def test_run():

@@ -281,7 +281,7 @@ o-9  CONSTRAINTS AS A VERDICT, RULED AND BUILT 2026-09-27 (bookkeeper B-18,
             'hwut.run.diff' and 'hwut.accept.interactive' show the
             findings above the screen.
        9.5  'hwut.sanitize' finds GOODs that contradict their
-            constraints ('--apply' writes the region).
+            constraints and proposes 'remark' (E-125).
 
 o-6  SETTLED with o-9: the directory runs on; the case fails by name.
 

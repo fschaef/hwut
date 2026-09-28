@@ -1,0 +1,18 @@
+--- proposed while the holder was gone:
+    remove tree/suite/TEST/TMP/lock
+--- applied after a live run took the directory:
+STATUS: 1
+STDOUT {
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     remove tree/suite/TEST/TMP/lock ................................... [REFUSED]
+    ==============================================================================
+    REPORT:
+    ------------------------------------------------------------------------------
+     remove tree/suite/TEST/TMP/lock  the holder (pid <n>) lives, or cannot be told
+    ==============================================================================
+    Done 0/1
+}
+the lock still stands: yes
+<hwut-end>

@@ -31,9 +31,10 @@ comment, so its output is this face's input unedited.
 -------------------------------------------------------------------
 IT ASKS NOTHING
 -------------------------------------------------------------------
-THE WORD IS THE TREE'S OWN. 'hwut.sanitize' reports by default and
-acts on '--apply'; this face is the same relation under the same word
--- propose says what would happen, apply makes it happen.
+THE WORD IS THE TREE'S OWN. 'hwut.sanitize.propose' and
+'hwut.sanitize.apply', 'hwut.remove.propose' and 'hwut.remove.apply'
+are the same relation under the same word -- propose says what would
+happen, apply makes it happen.
 
 'hwut.accept' asks twice before it overwrites a standing nominal: for
 '--force', because that is a CHANGE to the thing every later run is

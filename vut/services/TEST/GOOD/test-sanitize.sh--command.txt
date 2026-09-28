@@ -1,0 +1,56 @@
+--- done:
+STATUS: 0
+STDOUT {
+    done: remove tree/suite/TEST/OUT
+    TOUCHED (the re-run trigger): 1 test application(s)
+}
+--- nothing to do, it is gone:
+STATUS: 0
+STDOUT {
+    nothing to do: remove tree/suite/TEST/OUT -- nothing stands there
+}
+--- the path is none that 'remove' takes:
+STATUS: 1
+STDOUT {
+    REFUSED: remove tree/suite/TEST/GOOD -- 'remove' takes <dir>/TMP/session | <dir>/TMP/lock | <dir>/OUT | <dir>/TMP -- nothing else
+}
+--- the book, from '--directory':
+STATUS: 0
+STDOUT {
+    done: book suite/TEST/test-app.sh
+    TOUCHED (the re-run trigger): 1 test application(s)
+}
+STATUS: 0
+STDOUT {
+    nothing to do: book suite/TEST/test-app.sh -- the book agrees with GOOD/
+}
+--- no nominal, nothing to book:
+STATUS: 1
+STDOUT {
+    REFUSED: book tree/suite/TEST/test-none.sh -- no nominal stands: nothing to book ('hwut.accept' makes one)
+}
+--- an offered case is no orphan:
+STATUS: 1
+STDOUT {
+    REFUSED: forget tree/suite/TEST/test-app.sh -- the case is offered: not an orphan
+}
+--- words that spell no command:
+STATUS: 2
+STDOUT {
+    REFUSED: unknown command 'frget' -- did you mean 'forget'?
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, forget, book, remark, run; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+}
+STATUS: 2
+STDOUT {
+    REFUSED: 'run' takes <dir> <target>
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, forget, book, remark, run; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+}
+STATUS: 2
+STDOUT {
+    REFUSED: no command -- one of remove, forget, book, remark, run
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, forget, book, remark, run; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+}
+<hwut-end>

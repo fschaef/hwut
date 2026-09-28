@@ -103,7 +103,7 @@ The faces:
                  with 'last_accept' written, AND a file in 'GOOD/' --
                  at least '##! unaccepted', its fillers, '####' and
                  the closing token. Never one without the other. That
-                 the two agree is 'hwut.sanitize --books' business
+                 the two agree is 'hwut.sanitize.propose --books' business
                  (E-41), not any face's: a nominal the book lacks, a
                  book that says ASPIRANT beside a standing nominal, a
                  nominal whose 'last_accept' is empty -- each named,
@@ -219,7 +219,7 @@ The faces:
                  are skipped, which is how a reader vetoes, and which
                  makes 'hwut.accept.propose's output this face's
                  input unedited. The word is the tree's own:
-                 'hwut.sanitize' reports and acts on '--apply'.
+                 'hwut.sanitize.propose' and 'hwut.sanitize.apply'.
                  IT REPORTS TWO SECTIONS, 'EXECUTION:' and 'REPORT:',
                  in the style a run's report wears, closing on
                  'Accepted <n>/<m>'. Grouped by directory as a run
@@ -278,6 +278,37 @@ The faces:
                  'hwut.remove', one target at a time. '--dont-ask' is
                  implicit -- the reading was the consent. Reports as
                  'hwut.accept.apply' does, closing on 'Forgotten n/m'.
+
+    hwut.sanitize.propose
+                 (lib/sanitize/propose.py)
+                 ACTS ON NOTHING. Walks the tree and writes what it
+                 accumulated as COMMANDS, '<command> <concerned
+                 entity>', to '-o <file>' or to stdout: stale sessions,
+                 dead locks, 'OUT/', orphans, disagreeing books,
+                 nominals that break their own constraints, and --
+                 asked for by name -- the transient roots and a
+                 project's targets. Issues of one kind stand in
+                 adjacent lines under ONE comment, the problem and what
+                 its command heals; an empty line separates the kinds.
+                 What cannot be proposed goes to stderr as 'NOTE:'.
+
+    hwut.sanitize.apply
+                 (lib/sanitize/apply.py)
+                 does every command such a file still holds, in order;
+                 '#' before a line is the veto. The file is read whole
+                 first: a line that spells no command refuses it, and
+                 nothing is done. Every command JUDGES AGAIN before it
+                 acts. Reports as 'hwut.accept.apply' does, closing on
+                 'Done n/m'.
+
+    hwut.sanitize  (sanitize.py)
+                 '<command> <concerned entity>' does ONE line of a
+                 proposal: 'remove' (a session, a dead lock, 'OUT/',
+                 'TMP/'), 'forget' (an orphan, through 'hwut.remove'),
+                 'book' (the standing nominal entered as accepted),
+                 'remark' (constraint findings written into the
+                 nominal), 'run' (a project's target). Refused where the
+                 tree no longer finds the entity insane (E-125).
 
     (adm/bundle.sh)
                  '--app <name>' bundles ONE FACE whole -- its module,

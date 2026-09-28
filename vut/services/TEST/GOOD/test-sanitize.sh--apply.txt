@@ -1,18 +1,12 @@
 STATUS: 0
 STDOUT {
-    SANITIZE, in 'tree': out, session
-    
-      session -- 1 found:
-          suite/TEST/TMP/session                               a session that did not finish; 1 sink file(s), read by nobody
-    
-      out -- 1 found:
-          suite/TEST/OUT                                       the application's product space; 1 file(s), rewritten by the next run
-    
-    
-    REMOVING:
-        gone: suite/TEST/TMP/session
-        gone: suite/TEST/OUT
-    
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     remove tree/suite/TEST/TMP/session ................................... [DONE]
+     remove tree/suite/TEST/OUT ........................................... [DONE]
+    ==============================================================================
+    Done 2/2
     TOUCHED (the re-run trigger): 1 test application(s)
 }
 STANDING {

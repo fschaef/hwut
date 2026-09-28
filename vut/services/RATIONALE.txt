@@ -696,24 +696,25 @@ GRAVEYARD '--format' on 'hwut.run' -- rejected with E-14: the run's
           at the end is what a reader scrolls to.
 
 ----------------------------------------------------------------------------
-E-18  'hwut.sanitize' -- REPORTS BY DEFAULT; NEVER GUESSES AT BLESSED WORK
+E-18  'hwut.sanitize' -- PROPOSES; NEVER GUESSES AT BLESSED WORK
 ----------------------------------------------------------------------------
 PROBLEM   A tree accumulates: sessions that did not finish, locks whose
           holder is gone, 'OUT/' from last week, records naming cases
           nobody offers. Nothing found any of it, and nothing could
           call the project's own 'clean'.
 
-DECISION  'hwut.sanitize [<wish>] [--apply] [--target <name>]...'.
-          IT REPORTS AND DOES NOT ACT; '--apply' is the whole
-          difference, because the answers here are IRREVERSIBLE.
+DECISION  'hwut.sanitize.propose [<wish>] [--target <name>]...' FINDS
+          AND DOES NOT ACT; what it finds is written as commands that a
+          person reads, edits and hands to 'hwut.sanitize.apply' (E-125),
+          because the answers here are IRREVERSIBLE.
 
-          FIVE ASPECTS, none stated meaning all -- EXCEPT the targets,
+          THE ASPECTS, none stated meaning all -- EXCEPT the targets,
           which are never implied: running somebody's script is an act
           nobody asked for.
 
             --session  wreckage; nothing reads it between runs
             --lock     a lock WHOSE HOLDER IS GONE. A LIVE LOCK IS
-                       NEVER TOUCHED, not even under '--apply'. The
+                       NEVER TOUCHED, not even by a command naming it. The
                        liveness is asked through the mutex's OWN
                        predicate, so this face and the runner cannot
                        disagree about who is alive.
@@ -741,7 +742,7 @@ DECISION  'hwut.sanitize [<wish>] [--apply] [--target <name>]...'.
           work.
 
           MEASURED ON THIS TREE, and this is why the guard exists:
-          without it '--apply' would have deleted NINE blessed
+          without it sanitize would have deleted NINE blessed
           nominals -- 'regression-1.py', 'regression-2.py',
           'regression-3.py', 'verify_signature.sh' -- applications
           hwut 1.0 runs and VUT 2.0 cannot yet see because their
@@ -1624,8 +1625,9 @@ AMENDED (2026-09-05, the criterion). E-40's sweep found "the faces that
             READ     stability, replay, report. Never execute.
 
           THE RE-RUN TRIGGER. Freshness is a comparison of modification
-          times, so 'hwut.sanitize --apply' TOUCHES every test
-          application it explored: younger than every recording, so no
+          times, so a sanitize command that ACTED TOUCHES every test
+          application of the directory it acted on (E-125): younger than
+          every recording, so no
           recording that predates the sanitize is presented as current
           by any refreshing face. 'hwut.cov' still reads the coverage
           record directly and is the one face left outside the channel.
@@ -1685,12 +1687,13 @@ DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
           Its book row is the run's, with 'last_accept' empty -- the
           mark 'sanitize' reads.
 
-          'hwut.sanitize --books', a default aspect, names every
-          disagreement between the three records -- a registered
-          case with no nominal; a nominal the register lacks; a
-          nominal with a book row and no 'last_accept' -- and
-          '--apply' removes NONE of them: only a person can say which
-          record is wrong.
+          'hwut.sanitize.propose --books', a default aspect, proposes a
+          'book' for every offered case whose records disagree -- the
+          book says aspirant and a nominal stands; a nominal and no
+          book entry; a nominal with a book row and no 'last_accept'.
+          Nothing is removed: 'book' enters the STANDING NOMINAL as
+          accepted, and a person who thinks the nominal is the wrong
+          record deletes the line and mends it by hand (E-125).
 
 FOUND     'hwut.accept' ITSELF accepted outside the book: it wrote
           GOOD/ and the register and never 'last_accept'; only the
@@ -1896,7 +1899,7 @@ DECISION  'hwut.accept.propose <n>' -- ITS OWN FACE, over accept's
           selects; 'hwut.accept.propose' blesses NOTHING and writes
           what could be; 'hwut.accept.apply' blesses what a FILE
           names -- the word the tree already uses for 'act on what was
-          reported' ('hwut.sanitize --apply'). Each is a face over the one brick, and none is a flag
+          reported' ('hwut.sanitize.apply', 'hwut.remove.apply'). Each is a face over the one brick, and none is a flag
           on another: a face that blesses should not also be the face
           that refuses to, and running a script of blessings is not
           the same act as answering a wish.
@@ -4267,21 +4270,16 @@ PROBLEM   'hwut.sanitize' removed and PRINTED in one loop: 'removed'
           prints from inside its action cannot be called by anything
           but a command line -- and cannot be asked what it DID.
 
-DECISION  'removal_of(finding, root)' removes and ANSWERS: a 'Removal'
-          record -- the path, 'gone_f', 'kept_f' where the thing is
-          kept BY DESIGN (a 'books' disagreement, mended by hand), and
-          the fault where one was met. The page is made from that
-          answer; the sentences are unchanged.
+DECISION  A sanitize command ACTS AND ANSWERS (E-125):
+          'CContext.execute(command)' returns a plain 'CDone' -- the
+          outcome ('DONE', 'NOTHING', 'REFUSED', 'ERROR'), the reason in
+          one line, and what an act said on its way (a target's output).
+          The one-command face and 'hwut.sanitize.apply' make their pages
+          from that answer; nothing is printed from inside the action.
 
-COST      Eleven 'test-sanitize.sh' pages and three
-          'test-sanitize-books.py' pages unmoved.
-          'test-face-records.py split' pins the three outcomes -- kept,
-          gone, fault -- and that the record is plain.
-
-          'hwut.sanitize' IS NOT YET A 'do()': its walk gathers
-          findings, targets and the re-run trigger in one pass and
-          decides the exit from four flags. The split above is the step
-          that was in the way; the cut itself is the next.
+COST      'test-face-records.py split' pins three outcomes -- refused,
+          done, nothing -- that nothing was printed, and that the record
+          is plain.
 
 
 E-104  'hwut.run' IS A do() WITH A RENDERER HANDED IN               (2026-09-18)
@@ -4956,11 +4954,12 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "The test run shall be marked as
           fail, even if the OUTPUT also fails in the exact same way."
           'TEST/test-constraint.py tightened'.
           A run that passes takes the 'constraint' stain away.
-          'hwut.sanitize --constraints' (a bare call asks it too) finds such
-          GOODs without running anything, holding each against itself;
-          '--apply' writes the remark where it was found and the stain, as
-          a run would, and removes nothing; a remark already written is not
-          reported again.
+          'hwut.sanitize.propose --constraints' (a bare call asks it too)
+          finds such GOODs without running anything, holding each against
+          itself, and proposes 'remark' for each; the command writes the
+          remark where it was found and the stain, as a run would, and
+          removes nothing; a remark already written is not proposed again
+          (E-125).
           'TEST/test-constraint.py' (good, output, diff, sanitize, cleared).
 
 COST      A run writes into GOOD/ -- the book always did; now a nominal
@@ -4987,3 +4986,85 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "A subject violating
 
 COST      One more comparison of a text with itself per accepted key whose
           choice states constraints; none where it states none.
+
+----------------------------------------------------------------------------
+E-125  SANITIZE PROPOSES COMMANDS; A PERSON EDITS; APPLY DOES THEM (2026-09-28)
+----------------------------------------------------------------------------
+PROBLEM   'hwut.sanitize' reported, and '--apply' removed ALL of what it
+          reported or none of it. A report is read and cannot be edited;
+          the one lever was the aspect flags. And a disagreement between
+          the records of acceptance could only be named, never healed.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "hwut.sanitze splits to:
+          hwut.sanitize.propose and hwut.sanitize.apply" ... "important:
+          the output can be easily read and edited such that a human user
+          can pass it to 'hwut.sanitize.apply', and it shall be conform
+          with other services that hwut provides." ... "the output shall
+          be saved via "-o <file>" or via pipe "> <file>", edited and
+          applied to by hwut.sanitize.apply".
+          RULED (2026-09-28): "For the hwut.sanitize.propose file format
+          of lines of <command> <concerned entity> with "#" being a
+          comment. the "#" can be used to uncomment lines not to be
+          executed. issues of the same type shall appear in adjacent
+          lines, empty lines shall separate blocks of issues. Ahead of
+          each block of same commands add a comment, about the problem and
+          what the command heals." ... "the commands mentioned in the
+          proposes file (such as forget, etc.) shall be available as
+          'hwut.sanitize <command> <concerned entity>, too."
+          RULED (2026-09-28), of the vocabulary: "Verb = act" -- the verb
+          names the ACT, and the entity decides the guard.
+
+          THREE FACES, ONE JUDGEMENT ('services/sanitize.py', one function
+          per aspect; 'lib/sanitize/'):
+              hwut.sanitize.propose [-o <file>]   finds, acts on nothing
+              hwut.sanitize.apply <file>          does what a file holds
+              hwut.sanitize <command> <entity>    does one line
+          FIVE COMMANDS:
+              remove <dir>/TMP/session | TMP/lock | OUT | TMP
+              forget <dir>/<test> [<choice>]   an orphan, via 'hwut.remove'
+              book   <dir>/<test> [<choice>]   the standing nominal entered
+                                               as accepted (note_accept);
+                                               nothing runs, GOOD/ unmoved
+              remark <dir>/<test> [<choice>]   E-123's region and stain
+              run    <dir> <target>            'hwut.execute' (E-7)
+          THE FILE: a head of comments; then one BLOCK per kind of issue
+          -- its comment, the problem and what the command heals; then its
+          commands, one per line -- the blocks separated by an empty line.
+          Kinds: session, lock, out, transient, orphan-test, orphan-choice,
+          book-lacks, book-aspirant, book-undated, constraint, target.
+          ENTITIES are relative to the directory the proposal was written
+          in; apply and the one-command face read them relative to
+          '--directory', the current directory by default. Stdout carries
+          the proposal and nothing else; '-o' writes the same bytes; what
+          cannot be proposed goes to stderr as 'NOTE:'.
+          THE FILE SAYS WHAT, THE TREE SAYS WHETHER. Every command asks
+          the aspect that proposes it again and acts only where it still
+          finds the entity insane: REFUSED where the entity stands and is
+          sane (a live lock, an offered case, an unreachable application,
+          a directory whose exploration faults); NOTHING where nothing
+          stands to heal. 'remove' takes the four paths above and nothing
+          else -- the face is not 'rm'. Apply reads the file WHOLE first:
+          one line that spells no command refuses the file, and nothing is
+          done.
+          'OUT/' is now refused under a live lock as 'TMP/' always was: a
+          live run reads it. The re-run trigger touches the applications
+          of the directories acted on, and below a 'run'.
+          Exits: propose OK / EMPTY (nothing found) / REFUSED, as
+          'hwut.remove.propose'; apply and the command OK where everything
+          was done or had nothing to do, FAULT where one was refused or
+          failed, REFUSED where the line or file cannot be read.
+          'TEST/test-sanitize.sh' (14 choices), 'test-sanitize-books.py'
+          (disagree, agree, apply_books), 'test-constraint.py sanitize',
+          'test-face-records.py split'.
+
+COST      '--apply' is gone, and 'hwut.sanitize' alone no longer reports:
+          it wants a command. Two launchers more. A books disagreement is
+          now healed toward the nominal by default; the other direction is
+          a deleted line and a hand.
+
+GRAVEYARD HOCON-LIKE BLOCKS named by category ('book_E4711 { explain ...
+          action ... }') and ONE LONG SELF-DESCRIBING KEY PER LINE -- not
+          taken: the house propose/apply shape is '#' comments over bare
+          lines ('hwut.accept.propose', 'hwut.remove.propose').
+          VERB = ISSUE ('remove-lock', 'remove-session', ...) -- rejected
+          by ruling: nine verbs where five say the act.

@@ -1,10 +1,22 @@
-  .: GOOD/ test-nom.py a nominal stands, and the book lacks it
-  .: book test-book.py a nominal stands, and 'last_accept' is empty -- accepted outside the book
-  .: book test-reg.py the book says aspirant, and a nominal stands -- accepted outside the book
-  OK  : three findings
+  # BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry
+  # for the case (E-41).
+  # 'book' enters the standing nominal as accepted; nothing runs,
+  # nothing in GOOD/ moves.
+  book test-nom.py
+  # BOOK STALE: the book says aspirant, and a nominal stands -- it was
+  # accepted outside the book (B-14).
+  # 'book' enters the standing nominal as accepted; nothing runs,
+  # nothing in GOOD/ moves.
+  book test-reg.py
+  # ACCEPTANCE UNDATED: a nominal stands and the book's 'last_accept'
+  # is empty -- accepted outside the book (E-41).
+  # 'book' enters the standing nominal as accepted; nothing runs,
+  # nothing in GOOD/ moves.
+  book test-book.py
+  OK  : three commands
   OK  : the book stale: it says aspirant, and a nominal stands
-  OK  : the book behind: a nominal, and the book lacks it
+  OK  : the book behind: a nominal, and no entry
   OK  : an aspirant is no disagreement (B-14)
   OK  : the book: a nominal, and 'last_accept' empty
-SUCCESS: every disagreement is named by its record.
+SUCCESS: every disagreement is proposed under its kind.
 <hwut-end>
