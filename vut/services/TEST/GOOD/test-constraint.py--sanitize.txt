@@ -1,0 +1,31 @@
+-- reported
+   SANITIZE, in '.': constraints  (reporting only; '--apply' acts)
+     constraints -- 2 found:
+         .: GOOD/t.py--b.txt                                  constraint "load <= 100": broken by ((load: 150)), line 1
+         .: GOOD/t.py--c.txt                                  constraint "twice == 2 * once": 'twice' never bound
+-- --apply
+   SANITIZE, in '.': constraints
+     constraints -- 2 found:
+         .: GOOD/t.py--b.txt                                  constraint "load <= 100": broken by ((load: 150)), line 1
+         .: GOOD/t.py--c.txt                                  constraint "twice == 2 * once": 'twice' never bound
+   REMOVING:
+       kept: .: GOOD/t.py--b.txt -- written where it was found; the book stained 'constraint'
+       kept: .: GOOD/t.py--c.txt -- written where it was found; the book stained 'constraint'
+   TOUCHED ...
+-- again
+   SANITIZE, in '.': constraints  (reporting only; '--apply' acts)
+     nothing to sanitize
+-- the book's stain: {'a': '', 'b': 'constraint', 'c': 'constraint'}
+-- GOOD of 'b'
+      | x ((load: 150))
+      | ##! constraint-violation
+      | ## error: "load <= 100" with: load=150
+      | ####
+      | <hwut-end>
+-- GOOD of 'c'
+      | ##! constraint-violation
+      | ## error: "twice == 2 * once" with: once=3 twice=(never bound)
+      | ####
+      | x ((once: 3))
+      | <hwut-end>
+<hwut-end>

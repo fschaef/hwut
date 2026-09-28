@@ -1,0 +1,19 @@
+-- accepted under 'load <= 200'
+   RUN: t.py b   (0) nothing recorded for this choice
+   REFUSED constraint: 't.py c .stdout' -- the candidate breaks its constraints:
+       blessed        t.py b .stdout
+-- the constraint tightened to 'load <= 100'; OUTPUT unchanged
+-- first run
+       t.py  b   a constraint and the text disagree  (GOOD: constraint "load <= 100": broken by ((load: 150)), line 1)
+   RESULTS: 0 ok, 1 fail, 2 skip
+-- second run
+       t.py  b   a constraint and the text disagree
+   RESULTS: 0 ok, 1 fail, 2 skip
+-- GOOD of 'b'
+      | x ((load: 150))
+      | ##! constraint-violation
+      | ## error: "load <= 100" with: load=150
+      | ####
+      | <hwut-end>
+-- the book's stain: {'a': '', 'b': 'constraint', 'c': ''}
+<hwut-end>

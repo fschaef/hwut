@@ -1,0 +1,18 @@
+-- without '--apply': said, not done
+   would convert  a/TEST/GOOD/book.csv
+   1 book(s) to convert (--apply)
+-- with '--apply'
+   converted  a/TEST/GOOD/book.csv
+   1 book(s) converted
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+demo.py;one;true;ok;2026-09-27T12:31:35Z;;;;0;0
+;two;false;unstable;;;;7 repeat;0;1
+;three;true;ok
+-- again: nothing left to do
+   0 book(s) converted
+-- read back through the bookkeeper
+   one    stain = None
+   two    stain = {'keyword_list': [], 'repeat_n': 7}
+   three  stain = None
+<hwut-end>

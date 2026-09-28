@@ -1,0 +1,13 @@
+INSPECT: repetition instability over 7      stain = '7 repeat'
+INSPECT: the GOOD contradicts a constraint  stain = '7 repeat|constraint'
+INSPECT: said again                         stain = '7 repeat|constraint'
+INSPECT: stability proven                   stain = 'constraint'
+INSPECT: the GOOD is fixed                  stain = ''
+  OK  : 'N repeat' is the repetition instability
+  OK  : a keyword joins the cell, '|'-separated
+  OK  : a keyword said again is not written again
+  OK  : read back: the count and the keywords; unstable
+  OK  : stability clears the count alone -- no longer unstable
+  OK  : the last keyword gone, the choice is clean
+SUCCESS: the stain is one cell of keywords.
+<hwut-end>

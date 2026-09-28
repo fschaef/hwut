@@ -1,0 +1,38 @@
+
+--- written ---
+# @hwut {
+#     title = "Read back \"as written\""
+#     tolerance {
+#         eq_pattern = ["[\\\\/]+", "id=\"[a-z]+\"",
+#                       "(hello|bonjour|hallo|buongiorno|hola|ciao)"]
+#         nothing    = ["WARN\\s*"]
+#     }
+#     choices = ["one"]
+# }
+
+--- printed, the scope taken ---
+tolerance {
+    numeric_ratio = 0.0           # default
+    whitespace = true             # default
+    eq_pattern = ["[\\\\/]+", "id=\"[a-z]+\"", "(hello|bonjour|hallo|buongiorno|hola|ciao)"]  # app
+    nothing = ["WARN\\s*"]        # app
+    analogy = ["((", "))"]        # default
+    constraints = []              # default
+    comment = ["##", "##"]        # default
+    regions = true                # default
+}
+
+--- pasted, read back ---
+eq_pattern ['[\\\\/]+', 'id="[a-z]+"', '(hello|bonjour|hallo|buongiorno|hola|ciao)']
+nothing    ['WARN\\s*']
+SUCCESS: the pasted scope configures compare the same
+
+--- the whole tree: printed, pasted, printed again ---
+test-a.py {
+    title = "The whole tree"
+    same = true
+    interactive = false
+    choices {
+        one {
+SUCCESS: the whole tree reads back as printed
+<hwut-end>

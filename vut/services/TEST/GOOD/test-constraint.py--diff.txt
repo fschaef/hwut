@@ -1,0 +1,10 @@
+-- no 'CONSTRAINT:' line: True
+   --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+        1    1 | x ~((load: 150))~
+               | ^ constraint binding ((load: 150)) -- the value enters the constraint space
+               | ^ constraint binding ((load: 50)) -- the value enters the constraint space
+   --[ CONSTRAINT_VIOLATION/NONE ]--
+   S    3      | [## error: "load <= 100" with: load=150]
+   --[ CLOSING-TOKEN ]--
+        5    2 | <hwut-end>
+<hwut-end>

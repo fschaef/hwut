@@ -1,0 +1,10 @@
+   REFUSED constraint: 't.py b .stdout' -- the candidate breaks its constraints:
+       constraint "load <= 100": broken by ((load: 150)), line 1
+   REFUSED constraint: 't.py c .stdout' -- the candidate breaks its constraints:
+       constraint "twice == 2 * once": 'twice' never bound
+   ACCEPTED  1 of 3
+       blessed        t.py a .stdout
+       left alone     t.py b .stdout
+       left alone     t.py c .stdout
+-- GOOD/ holds: ['t.py--a.txt']
+<hwut-end>

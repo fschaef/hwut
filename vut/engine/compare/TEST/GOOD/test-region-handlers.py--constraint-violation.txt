@@ -1,0 +1,11 @@
+## The other BAD region (C-21): a run found a constraint broken
+## here. Compared exactly as 'unaccepted'. Its '## error' lines
+## are comments, so it holds no line: standing on ONE side it
+## fails; the same region on both sides has nothing to judge.
+## (A run fails a GOOD carrying one by its name, before any
+## comparison -- services E-123.)
+identical contents:                        judge: True  lawyer: True  [ok]
+against nothing:                           judge: False lawyer: False [ok]
+empty vs empty:                            judge: True  lawyer: True  [ok]
+outer equal, region:                       judge: True  lawyer: True  [ok]
+<hwut-end>

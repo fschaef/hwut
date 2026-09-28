@@ -1,0 +1,8 @@
+INSPECT: constraints = ["x < 5"]  ->  constraint_db ['x']
+         v ((x: 3))   vs v ((x: 1))   -> equivalent
+         v ((x: 9))   vs v ((x: 1))   -> NOT equivalent
+  OK  : the expression is compiled, under the variable it names
+  OK  : a binding inside the constraint is equivalent
+  OK  : a binding that violates it is not
+SUCCESS: a page's constraints are enforced.
+<hwut-end>

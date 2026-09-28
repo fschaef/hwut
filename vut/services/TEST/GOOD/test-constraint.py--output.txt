@@ -1,0 +1,20 @@
+-- the run, 'b' printing 150
+       t.py  b   a constraint and the text disagree  (OUTPUT: constraint "load <= 100": broken by ((load: 150)), line 1)
+   RESULTS: 0 ok, 1 fail, 2 skip
+-- the book's stain: {'a': '', 'b': '', 'c': ''}
+-- GOOD of 'b'
+      | x ((load: 50))
+      | <hwut-end>
+-- the candidate of 'b', as the run recorded it
+      | x ((load: 150))
+      | ##! constraint-violation
+      | ## error: "load <= 100" with: load=150
+      | ####
+      | <hwut-end>
+-- a second run: the candidate is recorded afresh, the remark written once
+      | x ((load: 150))
+      | ##! constraint-violation
+      | ## error: "load <= 100" with: load=150
+      | ####
+      | <hwut-end>
+<hwut-end>

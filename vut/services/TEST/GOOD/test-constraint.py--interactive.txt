@@ -1,0 +1,4 @@
+   'x ((load: 150))'      -> the text breaks its constraints -- constraint "load <= 100": broken by ((load: 150)), line 1
+   'x ((load: 99))'       -> may become the GOOD
+   'x 150'                -> the text breaks its constraints -- constraint "load <= 100": 'load' never bound
+<hwut-end>
