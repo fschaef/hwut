@@ -118,9 +118,11 @@ PROBLEM   B-15 moved the aspirant's refusal to the door, where it
 DECISION  BUILT, two halves.
           THE FLOW SHOWS EVERY REFUSAL, where it happened, with the tag
           that says WHICH: '[ ?! ]' for an ASPIRANT -- an acceptance
-          stands and is incomplete -- and '[REFUSED]' for a case
-          nothing was ever accepted for. The closing REFUSED block
-          keeps the reason; the flow keeps the place.
+          stands and is incomplete -- and '[REFUSED]' for any other
+          refusal. The closing REFUSED block keeps the reason; the flow
+          keeps the place. A case NOTHING WAS EVER ACCEPTED FOR is no
+          refusal: it reads 'no GOOD file [FAIL]' and fails (display
+          D-32).
           THE EXIT STATUS: a run that ran nothing AND refused something
           exits REFUSED (2), not EMPTY (3). E-1's four codes stand
           unchanged; this assigns the case that had none. 'Nothing
@@ -130,7 +132,7 @@ DECISION  BUILT, two halves.
           'refused_db', and the Tally 'refused_n', for that one rule.
 
 COST      A refusal is NOT counted as a case and does NOT fail its
-          directory: nothing ran, and a directory that failed would say
+          directory (a case with no GOOD file is not a refusal, D-32): nothing ran, and a directory that failed would say
           a verdict was formed where none was. The three pages of
           'test-accept.sh' that encoded the pre-B-15 shape ('1
           unaccepted', a failed directory, status 1) were re-recorded;

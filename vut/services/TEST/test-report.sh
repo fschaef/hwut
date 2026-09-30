@@ -4,7 +4,8 @@
 # @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
 #     choices    = ["color", "json", "junit", "never_run", "refused",
-#                   "stain", "tap", "traditional", "width"]
+#                   "stain", "tap", "traditional", "width", "run_agrees",
+#                   "run_width"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -27,10 +28,22 @@
 # json         the document, its verdicts true/false/null.
 # stain        A STAIN IS A FAILURE IN EVERY FORMAT, never a 'skipped':
 #              JUnit goes red and the message names it.
-# never_run    a case the books never saw: 'never run', verdict null,
-#              and the page still counts it.
+# never_run    a case with no GOOD file, which the books never saw:
+#              'no GOOD file [FAIL]', a failure in every format (display
+#              D-32), and the page counts it.
 # refused      an unknown format, a bad width, an unknown option, a
 #              directory that is not there.
+# run_width    THE REPORT IS AS WIDE AS THE RUN (display D-33): the widest
+#              line of each, piped, piped under 'COLUMNS=100', and on a
+#              terminal of 60, 100 and 200 columns (a pty).
+# run_agrees   EVERY FAILURE THE RUN COUNTS, THE REPORT SHOWS (E-128):
+#              a header that does not parse, a test and a choice the book
+#              records and the tree no longer declares, a case whose
+#              dependency cannot be met, a case with no GOOD file, a
+#              plain difference. The run's
+#              failing cases and the report's, side by side, and equal;
+#              then the page, each failure but the plain difference
+#              carrying its reason word before '[FAIL]' (display D-31).
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -43,7 +56,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.report face: the databases, rendered.;"
-        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused, color;"
+        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused, color, run_agrees, run_width;"
         exit 0 ;;
 esac
 
@@ -160,7 +173,7 @@ stain)
     ;;
 
 never_run)
-    #  The books never saw it: 'never run', verdict null, still counted.
+    #  No GOOD file, and the books never saw it: 'no GOOD file [FAIL]'.
     good_app
     echo "--- traditional"
     masked --directory=tree --width=70
@@ -192,6 +205,88 @@ color)
         | sed -e 's/\x1b/ESC/g' | mask | sed 's/^/    /'
     echo "--- and the same page, piped, is plain"
     $FACE --directory=tree --width=70 | grep -c ESC | sed 's/^/    ESC count: /'
+    ;;
+
+run_width)
+    mixed
+    widest() { awk '{ n = length($0); if (n > m) m = n } END { print m }'; }
+    echo "piped:              run $($RUN --directory=tree --plain | widest)" \
+         " report $($FACE --directory=tree --plain | widest)"
+    echo "piped, COLUMNS=100: run $(COLUMNS=100 $RUN --directory=tree --plain | widest)" \
+         " report $(COLUMNS=100 $FACE --directory=tree --plain | widest)"
+    for cols in 60 100 200; do
+        printf 'terminal of %3d:   ' $cols
+        for face in run report; do
+            python3 - "$face" "$cols" <<'PYEOF'
+import fcntl, os, pty, re, struct, sys, termios
+face, cols = sys.argv[1], int(sys.argv[2])
+pid, fd = pty.fork()
+if pid == 0:
+    fcntl.ioctl(1, termios.TIOCSWINSZ, struct.pack("HHHH", 50, cols, 0, 0))
+    env = dict(os.environ); env.pop("COLUMNS", None)
+    os.execvpe(sys.executable, [sys.executable, "-m", "vut.services." + face,
+                                "--directory=tree", "--plain"], env)
+out = b""
+while True:
+    try:    chunk = os.read(fd, 4096)
+    except OSError: break
+    if not chunk: break
+    out += chunk
+os.waitpid(pid, 0)
+text = re.sub(rb"\x1b\[[0-9;?]*[A-Za-z]", b"", out).decode(errors="replace")
+print(" %s %d" % (face, max(len(l) for l in re.split(r"[\r\n]", text))), end="")
+PYEOF
+        done
+        echo
+    done
+    ;;
+
+run_agrees)
+    T=tree/suite/TEST
+    mkdir -p $T/GOOD
+    app() {     # <file> <header words> -- prints its first argument
+        printf '#!/bin/bash\n# @hwut { title = "%s" %s }\necho "$1"\necho "<hwut-end>"\n' \
+            "$1" "$2" > $T/$1
+        chmod +x $T/$1
+    }
+    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' > $T/hwut.conf
+    app test-ok.sh   ''
+    app test-ch.sh   'choices = ["one", "two"]'
+    app test-gone.sh ''
+    app test-dep.sh  ''
+    app test-diff.sh ''
+    app test-new.sh  ''                                   # no GOOD file
+    ( cd $T && for t in test-ok.sh test-ch.sh test-gone.sh test-dep.sh test-diff.sh; do
+          python3 -m vut.services.accept $t --whole --dont-ask > /dev/null 2>&1
+      done )
+    $RUN --directory=tree --silent > /dev/null 2>&1
+    #  THE DAMAGE, each kind once.
+    sed -i 's/"one", "two"/"one"/' $T/test-ch.sh          # a choice vanished
+    rm $T/GOOD/test-ch.sh--two.txt
+    rm $T/test-gone.sh                                    # a test vanished
+    printf '#!/bin/bash\n# @hwut { title = "B" frobnicate = 1 }\necho b\n' \
+        > $T/test-broken.sh                               # a broken header
+    chmod +x $T/test-broken.sh
+    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n    dependency { "test-dep.sh" = ["test-ghost.sh"] }\n}\n' \
+        > $T/hwut.conf                                    # a dependency lost
+    printf 'other\n<hwut-end>\n' > $T/GOOD/test-diff.sh.txt # a difference
+    $RUN --directory=tree --plain > run.txt 2>&1
+    echo "RUN STATUS: $?"
+    $FACE --directory=tree --format=tap > report.txt 2>&1
+    echo "REPORT STATUS: $?"
+    grep -E '^[A-Z ]{5} ' run.txt | grep '\[FAIL\]' \
+        | sed -E 's/^.{6}//; s/ *\.{3,}.*//; s/  +/ /g' | sort > run-fail.txt
+    grep '^not ok' report.txt | sed -E 's/^not ok [0-9]+ - suite\/TEST: //' \
+        | sort > report-fail.txt
+    echo "RUN FAILS {";    sed 's/^/    /' run-fail.txt;    echo "}"
+    echo "REPORT FAILS {"; sed 's/^/    /' report-fail.txt; echo "}"
+    echo "the same: $(cmp -s run-fail.txt report-fail.txt && echo yes || echo NO)"
+    #  THE REASON WORD BEFORE '[FAIL]' (display D-31): each kind but
+    #  the plain difference carries its word.
+    echo "PAGE {"
+    $FACE --directory=tree --width=70 | grep '\[FAIL\]$' | grep -v '^ *[0-9]' \
+        | sed 's/^/    /'
+    echo "}"
     ;;
 
 *)

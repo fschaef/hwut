@@ -6,7 +6,6 @@ OUTSIDE_BUT_NOT_FORGOTTEN/
 **/hwut.log
 **/TEST/hwut-traces*
 **/TEST/TMP
-**/TEST/GOOD/book.csv
 **/TMP/wallflowers.txt
 bundle-*.sh
 *.tmp

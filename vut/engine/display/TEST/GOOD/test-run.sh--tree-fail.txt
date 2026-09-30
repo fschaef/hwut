@@ -1,6 +1,6 @@
 STATUS: 1
 STDOUT {
-    FRAME gamma/TEST:on_entry .. the frame failed  [FAIL]
+    FRAME gamma/TEST:on_entry .. frame [FAIL]
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST

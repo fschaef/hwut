@@ -1,0 +1,7 @@
+
+--- 3000 mutated headers ---
+    clean        619
+    with faults  2381
+    hang         0
+    exception    0
+<hwut-end>

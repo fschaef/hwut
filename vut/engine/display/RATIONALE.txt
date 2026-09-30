@@ -762,3 +762,105 @@ COST      Eleven pages re-recorded, classified first: the dotted fill
           itself', '||0' on the last serial line) and D-19 (the
           terminal is asked, 'COLUMNS' wins where it stands, held
           between 40 and 120) were already built and stand untouched.
+
+D-31  A FAILURE THAT IS NOT ABOUT EQUIVALENCE SAYS ITS REASON BEFORE
+      '[FAIL]', IN THE RUN AND IN THE REPORT                     (2026-09-29)
+----------------------------------------------------------------------------
+PROBLEM   '[FAIL]' said the same for a regression and for a test that
+          never got as far as a comparison -- a header that does not
+          parse, an application gone, a process killed. The reason
+          stood in the run's HINTS only, and on the report's page
+          nowhere. D-11 had moved it off the flow line; O-25 had
+          already found the cost: a tag that lies by omission in the
+          flow is read a hundred times before HINTS is read once.
+
+DECISION  RULED (Frank-Rene, 2026-09-29): "i like the ". . .  hinted
+          [FAIL]" a lot" -- in the run and in the report, "referring to
+          O-25, but the plain differences shall not be mentioned, i.e.
+          only if the reason for failure was not related to
+          equivalence, the reason shall be printed as shown." And "for
+          the tests that work with hwut's output we might give an
+          equivalence pattern".
+          ONE SHORT WORD PER GROUP of reasons, 'word.reason_word()',
+          plain, a blank before it, the badge alone painted:
+              stderr  cut-short  no-output  killed  no-launch
+              no-session  constraint  spec  no-app  no-choice  no-dep
+              no-build  pype  no-good  frame  unstable  failed (else)
+          NO WORD for success or equivalence ('QUIET_REASON_SET': the
+          'not-equivalent-*' family, 'test-failed' naming nothing) --
+          the same line HINTS draws. HINTS keeps the full phrase and
+          the numbers. The report asks the book's 'report' token of a
+          row; a stain is 'unstable'; a row never run or aspirant
+          carries none.
+          THE REPORT: 'services/TEST/test-report.sh run_agrees' shows
+          each word; 'stain' moved by its word alone. THE RUN: every
+          failing flow line -- 'END', 'DONE', 'SKIP' -- asks
+          'reason_word' of its report token, else its verdict; the
+          frame's 'the frame failed  [FAIL]' became 'frame [FAIL]'.
+          MEASURED, eight pages moved, every differing line classified:
+          'test-plain.py' badge, mixed, tiers, unknown, words and
+          'test-run.sh' linear-raw, tree-fail by the word (and the
+          frame line) alone; 'test-stability.sh stain' by one line --
+          its reader greps 'unstable', and the flow line now says it.
+
+COST      Every reader of a failing line must read past the word. The
+          EQUIVALENCE PATTERN proposed for tests that read hwut's output
+          found no customer: the pages that moved are the display's
+          own, whose subject IS the word, and a pattern there would
+          blind them to it; the one outside reader ('test-stability.sh')
+          moved by a whole line, which no pattern absorbs.
+
+D-32  A CASE WITH NO GOOD FILE READS 'no GOOD file [FAIL]', AND FAILS
+                                                                  (2026-09-30)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED: a case nothing was ever accepted for read '[REFUSED]'
+          in the run -- counted as 'refused', exit 0 -- and '[FAIL]'
+          ('never run') in the report, exit 1. Two answers to one
+          question, and '[REFUSED]' does not say what is missing.
+
+DECISION  RULED (Frank-Rene, 2026-09-30): "[REFUSED] is not telling
+          much; a brief comment " . . . no GOOD file [FAIL]" says
+          everything." And, of the count: "Count it as a fail".
+          The nominal gate's NOT_ACCEPTED refusal becomes the verdict
+          'no-good-file' (protocol, add-only): not run, as E-41 rules,
+          and FAILING -- counted, the directory red, exit 1. The run
+          emits it as 'run-ended' ('orchestrate.no_good_file_tuple');
+          the report fails every selected case whose nominal does not
+          stand. The word is 'no GOOD file', which also takes
+          'nominal-file-not-found'; 'recording-missing' and
+          'output-file-not-found' go to 'no-output'. HINTS says 'no GOOD
+          file: not accepted, not run' and no recipe (RULED 2026-09-30:
+          "I hate this comment "('hwut.run.play --save', then
+          'hwut.accept')" -- remove it!"). The other
+          refusals -- an aspirant ('[ ?! ]'), a backup-shaped name --
+          stay refusals, not counted.
+          'services/TEST/test-report.sh run_agrees' holds such a case:
+          in both lists, with its word; the old run did not list it.
+
+COST      A directory holding a test nobody has accepted yet is red
+          until it is accepted.
+
+D-33  'hwut.report' IS AS WIDE AS 'hwut.run'                     (2026-09-30)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED on one tree: piped, the run drew 78 columns and the
+          report 80; with 'COLUMNS=100' piped, the run 78 and the report
+          100; on a 200-column terminal the run held to 120 and the
+          report took whatever 'COLUMNS' or the device said. Two width
+          policies for two pages meant to be read side by side.
+
+DECISION  RULED (Frank-Rene, 2026-09-30): "hwut.report in the traditional
+          view should imitate the text width from hwut.run."
+          The report asks the run's own function, 'console.console_width'
+          (D-19): the terminal's width, 'COLUMNS' winning where it stands,
+          held between 40 and 120, and 78 where the page is not written
+          to a terminal -- piped, or to '--out'. '--width' still states
+          it outright. MEASURED after, through a pty: 60, 100, 200
+          columns -> run 60, 100, 120; report 60, 100, 120; piped, both
+          78.
+
+          'services/TEST/test-report.sh run_width' pins all five; the old
+          report reads 80, 100 and 200 where the run reads 78, 78, 120.
+
+COST      A report piped without '--width' is two columns narrower than
+          before. No recorded page moved: every one states '--width'.
+

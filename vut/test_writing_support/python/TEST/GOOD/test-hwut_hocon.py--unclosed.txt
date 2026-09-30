@@ -1,0 +1,26 @@
+
+--- a list closed by the object's brace ---
+{ at 1:1
+  key '@hwut' at 1:1 ->
+    { at 1:8
+      key 'title' at 1:9 ->
+        'B' (str) at 1:17
+      key 'choices' at 1:21 ->
+        [ at 1:31
+        ]
+    }
+  key 'after' at 2:1 ->
+    1 (int) at 2:9
+}
+FAULT f.hocon:1:33: SYNTAX: unterminated list: ']' missing before '}'
+
+--- a stray character in a list ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    [ at 1:5
+        1 (int) at 1:6
+        2 (int) at 1:11
+    ]
+}
+FAULT f.hocon:1:9: SYNTAX: a string is written in double quotes: ";"
+<hwut-end>

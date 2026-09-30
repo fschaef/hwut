@@ -1,0 +1,5 @@
+# vut-register 5 generation:4 apps:1 marks:0=3
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-line.py;quoting;true;ok;;;;;0;0
+;refused;true;ok;;;;;0;1
+;roundtrip;true;ok;2026-09-19T11:47:33Z;;;;0;2

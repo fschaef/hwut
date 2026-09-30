@@ -4,7 +4,7 @@
 #     title      = "HOCON parser: subset (A), annotated tree"
 #     choices    = ["comments", "faults", "numbers", "oneline",
 #                   "positions", "quoting", "refused", "scalars",
-#                   "structure"]
+#                   "structure", "unclosed", "fuzz"]
 #     interactive = true
 # }
 #
@@ -15,7 +15,7 @@ PURPOSE: The HOCON parser against HOCON alone -- no exploration vocabulary
          appears anywhere in this file.
 
 CHOICES: scalars, numbers, quoting, structure, oneline, comments,
-         refused, faults, positions;
+         refused, faults, positions, unclosed, fuzz;
 
 DESCRIPTION:
 
@@ -51,6 +51,18 @@ faults     duplicate keys, unterminated strings, unmatched and missing
 
 positions  every key and value knows its file-relative place, offsets
            included -- the line and column an editor shows.
+
+fuzz       TYPOS DO NOT HANG AND DO NOT RAISE: valid headers, each edited
+           by one to four random insertions, deletions and duplications
+           of the characters HOCON reads ('deterministic_random', fixed
+           seed); every parse must END within a bound and answer faults,
+           never an exception. Only the counts are recorded. Measured
+           before the fix of 'unclosed': 49 of 400 hung.
+
+unclosed   a list whose ']' was forgotten before the object's '}', and
+           a stray character in a list: the parse ENDS and says so once.
+           It looped for ever, and a test header with the typo hung
+           every face that explored its directory.
 ______________________________________________________________________________
 """
 import sys
@@ -230,6 +242,93 @@ def test_faults():
         '    d = 3\n')
 
 
+def test_unclosed():
+    """RETURN: None. A list whose ']' was forgotten ENDS: the brace
+    closes the object, the fault is said once -- it once looped for
+    ever, and a test header with the typo hung every face that read
+    it."""
+    run("a list closed by the object's brace",
+        '@hwut { title = "B" choices = [ }\n'
+        'after = 1\n')
+    run("a stray character in a list",
+        'a = [1, ; 2]\n')
+
+
+FUZZ_SEED_TUPLE = (
+    '@hwut {\n'
+    '    title    = "T"\n'
+    '    choices  = ["a", "b"]\n'
+    '    tolerance { eq_pattern = ["x.*"] }\n'
+    '    n        = -1.5e3\n'
+    '    f        = true\n'
+    '}\n',
+    'hwut {\n'
+    '    target     { clean = "./c.sh" }\n'
+    '    dependency { "a.py" = ["b.py one"] }\n'
+    '    ignore     = ["x"]   // comment\n'
+    '    # comment\n'
+    '}\n')
+#  WHAT A TYPO IS MADE OF: the characters HOCON gives meaning to, a few
+#  that it refuses by name, and some ordinary ones.
+FUZZ_ALPHABET = tuple('{}[]",=:#/\\$ \n\t-+.eE0a') \
+                + ('"""', '${', '//', '+=')
+FUZZ_INPUT_N  = 3000
+FUZZ_BOUND_S  = 0.5              # one parse takes well under a millisecond
+
+
+def mutated(stream, text):
+    """RETURN: str, 'text' edited by one to four random insertions,
+               deletions and duplications of a short stretch."""
+    for _ in range(stream.next_int(1, 4)):
+        i = stream.next_int(0, len(text))
+        match stream.next_int(0, 2):
+            case 0: text = text[:i] + stream.select(FUZZ_ALPHABET) + text[i:]
+            case 1: text = text[:i] + text[i + 1:]
+            case _:
+                j = stream.next_int(0, len(text))
+                text = text[:i] + text[j:j + 5] + text[i:]
+    return text
+
+
+def test_fuzz():
+    """RETURN: None. Every mutated header ends and answers faults."""
+    import signal
+    from vut.test_writing_support.python.deterministic_random import \
+        DeterministicStream
+
+    class Hang(Exception):
+        """A parse past FUZZ_BOUND_S."""
+
+    def alarmed(*_):
+        raise Hang()
+
+    signal.signal(signal.SIGALRM, alarmed)
+    stream  = DeterministicStream(4711)
+    tally   = {"clean": 0, "with faults": 0, "hang": 0, "exception": 0}
+    example = {}
+    for _ in range(FUZZ_INPUT_N):
+        text = mutated(stream, stream.select(FUZZ_SEED_TUPLE))
+        try:
+            signal.setitimer(signal.ITIMER_REAL, FUZZ_BOUND_S)
+            _document, fault_list = parse(lines(text), "f.hocon")
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            tally["with faults" if fault_list else "clean"] += 1
+        except Hang:
+            tally["hang"] += 1
+            example.setdefault("hang", text)
+        except Exception as error:                        # noqa: BLE001
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            tally["exception"] += 1
+            example.setdefault("exception",
+                               "%s: %s\n%s" % (type(error).__name__,
+                                               error, text))
+    banner("%d mutated headers" % FUZZ_INPUT_N)
+    for key, n in tally.items():
+        print("    %-12s %d" % (key, n))
+    for key, text in example.items():
+        print("FIRST %s:\n%s" % (key.upper(), text))
+
+
 def test_positions():
     """RETURN: None. Offsets carried: the same text reported at its
     place in a larger file, as an unwrapped header would be."""
@@ -250,6 +349,8 @@ if __name__ == "__main__":
         "oneline":   test_oneline,
         "comments":  test_comments,
         "refused":   test_refused,
+        "unclosed":  test_unclosed,
+        "fuzz":      test_fuzz,
         "faults":    test_faults,
         "positions": test_positions,
     }).run()

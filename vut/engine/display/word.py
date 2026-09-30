@@ -40,7 +40,7 @@ PHRASE_DB = {
 
     #  THE APPLICATION'S OWN HEADER, not 'hwut.conf': the file the
     #  fault names carries an '@hwut { ... }' block that does not
-    #  parse, so it never became a node ('orchestrate._broken_app_tuple'
+    #  parse, so it never became a node ('orchestrate.broken_app_tuple'
     #  skips '.conf' deliberately). 'the specification' alone left the
     #  reader to guess which of the two it was.
     "spec-broken":                 "the test's own @hwut header does not parse",
@@ -83,6 +83,8 @@ PHRASE_DB = {
     "recording-missing":           "no recording to replay",
     "output-file-not-found":       "output file missing",
     "nominal-file-not-found":      "GOOD missing",
+    #  NOT RUN, AND A FAILURE (display D-32): nothing was ever accepted.
+    "no-good-file":                "no GOOD file: not accepted, not run",
     "terminated-without-hwut-end": "output cut short (no <hwut-end>)",
     "unexpected-stderr":           "unexpected stderr",
     "stderr-undecided":            "stderr undecided",
@@ -98,6 +100,58 @@ PHRASE_DB = {
     "acquisition-failed":          "a dependency would not be acquired",
     "display-target-unreachable":  "display target unreachable",
 }
+
+
+#  THE REASON WORD BEFORE '[FAIL]' (display D-31): one short word per
+#  GROUP of reasons, where a failure is not about equivalence. The full
+#  phrase stays in HINTS; the word is what the eye meets in the flow.
+_REASON_WORD_GROUP_TUPLE = (
+    ("stderr",     ("unexpected-stderr", "stderr-undecided")),
+    ("cut-short",  ("terminated-without-hwut-end",)),
+    ("no-output",  ("test-app-no-output", "test-app-stalled",
+                    "recording-missing", "output-file-not-found")),
+    ("killed",     ("test-app-contained", "test-app-wall-clock-exceeded",
+                    "test-app-cpu-time-exceeded", "test-app-memory-exceeded",
+                    "test-app-file-size-exceeded", "test-app-pids-exceeded",
+                    "test-app-disk-exceeded")),
+    ("no-launch",  ("launch-failed", "test-app-launch-failed",
+                    "source-not-found", "interpreter-not-found")),
+    ("no-session", ("test-app-session-gone",)),
+    ("constraint", ("constraint",)),
+    ("spec",       ("spec-broken",)),
+    ("no-app",     ("test-vanished",)),
+    ("no-choice",  ("test-choice-vanished",)),
+    ("no-dep",     ("misdep", "acquisition-failed")),
+    ("no-build",   ("build-failed", "target-not-built", "build-tool-not-found",
+                    "build-contained")),
+    ("pype",       ("pype-interpreter-not-found", "pype-file-not-found",
+                    "pype-file-syntax-error", "pype-contained", "pype-failed")),
+    ("no GOOD file", ("no-good-file", "nominal-file-not-found")),
+    ("frame",      ("frame-failed",)),
+    ("unstable",   ("unstable",)),
+)
+REASON_WORD_DB = {token: word for word, token_tuple in _REASON_WORD_GROUP_TUPLE
+                  for token in token_tuple}
+
+#  EQUIVALENCE IS THE ORDINARY BUSINESS OF A TEST (ruled 2026-09-29): a
+#  plain difference from GOOD carries no word, and neither does a token
+#  that names no reason at all.
+QUIET_REASON_SET = frozenset(("ok", "test-failed",
+                              "not-equivalent-with-nominal",
+                              "not-equivalent-grew", "not-equivalent-shrank",
+                              "not-equivalent-diverged"))
+
+
+def reason_word(token):
+    """
+    RETURN: str,  the short word that stands before '[FAIL]' for the
+                  reason 'token' -- the group's word from
+                  'REASON_WORD_DB', 'failed' for a reason no group names.
+            None, where no word stands: no token, success, or a failure
+                  about equivalence ('QUIET_REASON_SET').
+    """
+    if not token or token in QUIET_REASON_SET: return None
+    return REASON_WORD_DB.get(token, "failed")
 
 
 def phrase(token):

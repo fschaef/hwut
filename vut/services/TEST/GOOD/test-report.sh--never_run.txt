@@ -8,7 +8,7 @@ STDOUT {
     
      * The steady one:
     
-            test-app.sh ..........................................[FAIL]
+            test-app.sh ............................ no GOOD file [FAIL]
     
     ======================================================================
     
@@ -37,9 +37,9 @@ STDOUT {
               "choice": null,
               "file": "test-app.sh",
               "name": "test-app.sh",
-              "reason": "never run",
+              "reason": "no-good-file",
               "stained": false,
-              "verdict": null,
+              "verdict": false,
               "when": null
             }
           ],

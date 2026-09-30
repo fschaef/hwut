@@ -592,3 +592,33 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "in the books have the stain
 
 COST      A tree's books must be converted before the first run: an old
           book's stain columns are unknown columns now, and read as clean.
+
+
+------------------------------------------------------------------------------
+B-24 THE BOOK IS VERSIONED WITH ITS NOMINALS                      (2026-09-28)
+------------------------------------------------------------------------------
+PROBLEM   'GOOD/book.csv' stood in '.gitignore' (2026-09-08, for storage
+          economy), while README 1a says the book is "Versioned with the
+          tests". A clone received the nominals and no book; its first run
+          wrote rows with an empty 'last_accept', and 'hwut.sanitize.propose
+          --books' proposed a 'book' for every case of the tree -- MEASURED
+          on a proved clone: 873 lines, 860 of them 'acceptance undated'.
+          The check was noise on every machine but the one that accepted.
+
+DECISION  RULED (Frank-Rene, 2026-09-28): "yes, book.csv should be
+          versioned, it does not belong to the deletables. I gitignored it
+          at the time for storage economy. So we resolved that and can/must
+          take book.csv into git, as any hwut-tested app should."
+          '**/TEST/GOOD/book.csv' leaves '.gitignore'. The book travels with
+          the nominals it speaks for; the two records of acceptance (E-41)
+          arrive together, so '--books' means on a clone what it means on
+          the accepting machine. No sanitize aspect proposes to remove it.
+
+COST      A run whose verdict CHANGES changes the book, and that change is
+          a diff to commit. MEASURED: a book after 'accept', then after two
+          green runs -- byte-identical; a green run writes nothing new.
+          Books made on a machine that never accepted (a fresh clone's
+          first run) carry empty 'last_accept' cells and must not be
+          committed as if accepted: the books to add are the accepting
+          machine's.
+

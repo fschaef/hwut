@@ -17,9 +17,10 @@ command -- an unknown verb, an entity of the wrong length -- REFUSES
 THE FILE, by line number, and nothing is done: a proposal edited into
 nonsense is not half-applied.
 
-'--yes' IS IMPLICIT. The file cannot exist unless somebody read what
+NOTHING IS ASKED. The file cannot exist unless somebody read what
 would be done, line by line, and deleted what he did not want. THE
-READING IS THE CONSENT. But the file is not trusted: EVERY COMMAND
+READING IS THE CONSENT, so this face takes no '--dont-ask' (E-68):
+there is no question for it to suppress. But the file is not trusted: EVERY COMMAND
 JUDGES AGAIN before it acts, exactly as 'hwut.sanitize <command>' does,
 and what the tree no longer finds insane is refused or has nothing to
 do -- a lock whose holder lives by now, an orphan whose choice came

@@ -1,0 +1,9 @@
+# vut-register 5 generation:9 apps:2 marks:0=4,1=3
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-csp_backtracking_mrv.py;backtracking;true;ok;;;;;0;0
+;lane-trap;true;ok;;;;;0;1
+;massive-pipe;true;ok;;;;;0;2
+;soduko;true;ok;;;;;0;3
+test-maximum_bipartite_matching.py;basic;true;ok;;;;;1;0
+;chain;true;ok;;;;;1;1
+;stress;true;ok;;;;;1;2

@@ -5,11 +5,11 @@
     propose.py   'hwut.remove.propose -o <file>': REMOVES NOTHING. Walks
                  the tree and writes, as a file to read, every test run
                  whose record has lost its ground -- the application
-                 gone, the choice no longer offered, the nominal absent
-                 -- each headed by the reason, telegraphically.
+                 gone, the choice no longer offered -- each headed by
+                 the reason, telegraphically.
     apply.py     'hwut.remove.apply <file>': forgets what such a file
-                 names, with '--yes' implicit -- the reading was the
-                 consent.
+                 names, one case per call to 'hwut.remove' with
+                 '--dont-ask' -- the reading was the consent (E-126).
 
 The judgement of what is rubbish is 'hwut.sanitize's ('orphans'), used
 here through its own functions and never re-implemented: one law, one

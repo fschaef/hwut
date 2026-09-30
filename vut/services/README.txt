@@ -254,9 +254,10 @@ The faces:
                  (lib/remove/propose.py)
                  REMOVES NOTHING. Walks the tree and writes, as a file
                  to read, every test run whose record has lost its
-                 ground -- 'app absent', 'choice not offered',
-                 'nominal absent, book entry stands' -- the reason in
-                 a few words above each target; where the absent
+                 ground -- 'app absent', 'choice not offered' -- the
+                 reason in a few words above each target (an
+                 ASPIRANT, a book entry with no nominal, is never
+                 proposed, E-126); where the absent
                  application stands ELSEWHERE in the tree the reason
                  says 'possibly moved to <there>', so a directory
                  split is not mistaken for a death. The judgement is
@@ -274,9 +275,9 @@ The faces:
 
     hwut.remove.apply
                  (lib/remove/apply.py)
-                 forgets what such a file names, per directory, through
-                 'hwut.remove', one target at a time. '--dont-ask' is
-                 implicit -- the reading was the consent. Reports as
+                 forgets what such a file names through 'hwut.remove',
+                 one case per call, handing it '--dont-ask' -- the
+                 reading was the consent (E-126). Reports as
                  'hwut.accept.apply' does, closing on 'Forgotten n/m'.
 
     hwut.sanitize.propose

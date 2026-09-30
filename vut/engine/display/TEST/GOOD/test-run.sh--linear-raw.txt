@@ -12,7 +12,7 @@ STDOUT {
     START test-two.sh                                                          ||1
     END   test-two.sh ................................................ [FAIL]  ||0
     DIR  gamma/TEST                                                               
-    FRAME gamma/TEST:on_entry ........................... the frame failed  [FAIL]
+    FRAME gamma/TEST:on_entry ....................................... frame [FAIL]
     
     ==============================================================================
     DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
@@ -28,7 +28,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.08 [sec], 0.09 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.58 [sec], 0.61 [sec] total
     |                           ok                            |       fail       |
 }
 == --dbd --jobs=1 ==
@@ -49,7 +49,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.09 [sec], 0.09 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.70 [sec], 0.73 [sec] total
     |                           ok                            |       fail       |
 }
 == --directory-by-directory, the long spelling ==
@@ -70,7 +70,7 @@ STDOUT {
         frame on_entry   the frame failed
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.08 [sec], 0.09 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.66 [sec], 0.69 [sec] total
     |                           ok                            |       fail       |
 }
 <hwut-end>

@@ -1,0 +1,4 @@
+# vut-register 5 generation:3 apps:1 marks:0=2
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-launchers.sh;answer;true;ok;;;;;0;0
+;path;true;ok;;;;;0;1

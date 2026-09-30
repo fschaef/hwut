@@ -4,6 +4,7 @@ STATUS: 1
 removed:
     the stain went with the book: True
 runs again, with no history:
-STATUS: 2
-        test-app.sh   no nominal stands in GOOD/: not accepted, not run ('hwut.run.play --save', then 'hwut.accept')
+STATUS: 1
+    SKIP  test-app.sh ................................... no GOOD file [FAIL]  ||0
+        test-app.sh   no GOOD file: not accepted, not run
 <hwut-end>

@@ -1,0 +1,26 @@
+# vut-register 5 generation:29 apps:5 marks:0=7,1=3,2=4,3=4,4=6
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-adapter.py;caps;true;ok;;;;;0;0
+;caps_inherit;true;ok;;;;;0;1
+;compare;true;ok;;;;;0;2
+;constraints;true;ok;;;;;0;6
+;naming;true;ok;;;;;0;3
+;refused;true;ok;;;;;0;4
+;sweep;true;ok;;;;;0;5
+test-endtoend.py;frame;true;ok;;;;;1;0
+;nostore;true;ok;;;;;1;1
+;stream;true;ok;;;;;1;2
+test-orchestrator.py;broken;true;ok;;;;;2;0
+;empty;true;ok;;;;;2;1
+;frame;true;ok;;;;;2;2
+;stream;true;ok;;;;;2;3
+test-receiver.py;dispatch;true;ok;;;;;3;0
+;emitter;true;ok;;;;;3;1
+;format;true;ok;;;;;3;2
+;misfit;true;ok;;;;;3;3
+test-strategy.py;bundled;true;ok;;;;;4;4
+;contract;true;ok;;;;;4;0
+;linear;true;ok;;;;;4;1
+;parallel;true;ok;;;;;4;2
+;successor;true;ok;;;;;4;3
+;together;true;ok;;;;;4;5

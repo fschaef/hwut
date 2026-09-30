@@ -1,0 +1,19 @@
+STATUS: 0
+STDOUT {
+    NOTE(suite/TEST) the choice-less records of 'test-two.sh' name no offered case; forgetting 'test-two.sh' alone would take the whole test -- not proposed
+}
+FILE {
+    #  proposal -- delete or '#' out what you want to KEEP, then hand it back:
+    #      hwut.remove.apply <this file>
+    
+    # app absent
+    suite/TEST/test-gone.sh
+    
+    # app absent, possibly moved to other/TEST
+    suite/TEST/test-moved.sh
+    
+    # choice not offered
+    suite/TEST/test-new.sh gone
+    
+}
+<hwut-end>

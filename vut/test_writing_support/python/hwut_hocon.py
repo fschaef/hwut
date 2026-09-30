@@ -408,10 +408,24 @@ def _parse_list(cursor, position, file, fault_list):
                 break
             case ",":
                 cursor.skip(1)
+            case "}":
+                #  A BRACE CLOSES THE OBJECT AROUND THE LIST: the ']' was
+                #  forgotten. Said once, and the brace left to its owner --
+                #  read as a value, it was refused without being consumed,
+                #  and the loop asked it again for ever.
+                fault_list.append(ParseFault(
+                    E_ParseFault.SYNTAX, file, cursor.position(),
+                    "unterminated list: ']' missing before '}'"))
+                break
             case _:
+                before = (cursor.i_line, cursor.i_col)
                 item = _parse_value(cursor, file, fault_list,
                                     in_list_f=True)
                 if item is not None: item_list.append(item)
+                #  NO VALUE READ AND NOTHING CONSUMED: step over the
+                #  character the value refused, or the loop never ends.
+                if item is None and (cursor.i_line, cursor.i_col) == before:
+                    cursor.skip(1)
     return ListNode(tuple(item_list), position)
 
 

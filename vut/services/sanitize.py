@@ -411,8 +411,8 @@ def orphan_issue_list(directory, app_set):
                                                 (test,)))
         elif choice is None:
             note_list.append("%s: the choice-less records of '%s' name no "
-                             "offered case; 'forget %s' would take the "
-                             "whole test -- not proposed"
+                             "offered case; forgetting '%s' alone would "
+                             "take the whole test -- not proposed"
                              % (directory, test, test))
         else:
             issue_db[(test, choice)] = CIssue("orphan-choice", directory,

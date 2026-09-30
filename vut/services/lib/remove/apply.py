@@ -18,10 +18,11 @@ THE FILE: one target per line, '<dir>/<test-app> [<choice>]'. The PATH
 is separated from the NAME so a target is forgotten in ITS directory
 and nowhere else; '#' and blank lines are skipped, which is the veto.
 
-'--yes' IS IMPLICIT. 'hwut.remove' asks first because what it forgets
-cannot be recovered; here the file cannot exist unless somebody read
-what would be forgotten, line by line, and deleted what he wanted
-kept. THE READING IS THE CONSENT.
+THE ASKING IS DONE BY THE READING. 'hwut.remove' asks first because
+what it forgets cannot be recovered; here the file cannot exist unless
+somebody read what would be forgotten, line by line, and deleted what
+he wanted kept. So this face hands every line to 'hwut.remove' with
+'--dont-ask' (E-68) itself, and takes no such word of its own.
 
 IT REPORTS as 'hwut.accept.apply' does: 'EXECUTION:' with one line per
 target, '[DONE]' or '[ERROR]', then 'REPORT:' with one sentence per
@@ -45,11 +46,10 @@ def main(argv=None, write=None):
     RETURN: E_ExitCode, the exit status (see the module purpose).
 
     THE FACE IS A SPELLING: the file's targets are read with accept's
-    own reader (one format, one reader), grouped by directory, and
-    handed to 'remove.main' per directory -- the choice-less ones in
-    the plain form, the others in the '<test> <choice>' form -- with
-    '--yes'. What remove says is captured; what this face says is the
-    column.
+    own reader (one format, one reader) and handed to 'remove.main' ONE
+    CASE PER CALL, as 'hwut.remove' reads its words (E-53): one word a
+    test, two a test and its choice -- with '--dont-ask' (E-68). What
+    remove says is captured; what this face says is the column.
     """
     if argv is None:  argv  = sys.argv[1:]
     if write is None: write = print
@@ -77,35 +77,24 @@ def main(argv=None, write=None):
               "or blank" % file_name)
         return E_ExitCode.EMPTY
 
-    #  GROUPED BY DIRECTORY, then by form: remove takes one directory
-    #  per call and reads its words in one of two shapes.
-    group_db = {}
+    #  ONE CASE PER CALL (E-53, E-126): 'hwut.remove' reads one word as
+    #  a test and two as a test and its choice, and refuses a third.
+    brief_list, worst = [], E_ExitCode.OK
     for where, target in entry_list:
         test, _, choice = target.partition(" ")
-        group_db.setdefault(where or ".", []).append((test, choice.strip()))
-
-    brief_list, worst = [], E_ExitCode.OK
-    for where, case_list in sorted(group_db.items()):
-        plain  = [t for t, c in case_list if not c]
-        paired = [(t, c) for t, c in case_list if c]
-        for word_list, choice_form_f in ((plain, False), (paired, True)):
-            if not word_list: continue
-            argv_ = ["--directory=%s" % where, "--yes"]
-            argv_ += [w for pair in word_list
-                      for w in (pair if choice_form_f else (pair,))]
-            said = []
-            code = remove.main(argv_, write=said.append,
-                               choice_form_f=choice_form_f)
-            failed_f = code not in (E_ExitCode.OK, E_ExitCode.EMPTY)
-            reason = next((line.strip() for line in said
-                           if line.startswith(("REFUSED", "FAULT"))),
-                          "not forgotten") if failed_f else None
-            for pair in word_list:
-                test, choice = pair if choice_form_f else (pair, "")
-                brief_list.append(((where, test, choice),
-                                   accept.ERROR_TEXT if failed_f
-                                   else accept.DONE_TEXT, reason))
-            if failed_f: worst = code
+        choice = choice.strip()
+        argv_  = ["--directory=%s" % (where or "."), "--dont-ask", test] \
+                 + ([choice] if choice else [])
+        said   = []
+        code   = remove.main(argv_, write=said.append)
+        failed_f = code not in (E_ExitCode.OK, E_ExitCode.EMPTY)
+        reason = next((line.strip() for line in said
+                       if line.startswith(("REFUSED", "FAULT"))),
+                      "not forgotten") if failed_f else None
+        brief_list.append(((where or ".", test, choice),
+                           accept.ERROR_TEXT if failed_f
+                           else accept.DONE_TEXT, reason))
+        if failed_f: worst = code
 
     brief_list.sort()
     accept.write_brief(brief_list, write,

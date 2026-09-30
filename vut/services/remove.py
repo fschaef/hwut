@@ -60,7 +60,8 @@ import os
 from dataclasses import dataclass
 import sys
 
-from   vut.engine.bookkeeper.api   import Bookkeeper
+from   vut.engine.bookkeeper.api   import (Bookkeeper, STORE_DIRECTORY_NAME,
+                                           key_parts_of)
 from   vut.engine.bookkeeper.api import Store
 from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
@@ -98,8 +99,11 @@ def victim_tuple(store, test, choice, whole_test_f):
             and that STANDS -- nominals, candidates, sidecars, and the
             coverage record. Sorted, so the announcement is stable.
 
-    'whole_test_f' takes every choice the book knows of the test, not
-    the one named: 'hwut.remove' forgets a test entire.
+    'whole_test_f' takes every choice of the test -- those the book
+    knows AND those a record lying in 'GOOD/' or 'TMP/store/' names --
+    not the one named: 'hwut.remove' forgets a test entire. A book that
+    lacks a choice (a clone's first run, a book never versioned) must
+    not strand that choice's nominal (services E-127).
 
     The subjects are read from what LIES THERE, not from what a
     configuration says: removal must reach a subject whose declaration
@@ -108,8 +112,15 @@ def victim_tuple(store, test, choice, whole_test_f):
     #  THROUGH THE DOOR: 'choices()' speaks None for the choiceless
     #  case; the book's key spelling is its own.
     if whole_test_f:
-        choice_list = store.bookkeeper.choices(test)
-        if not choice_list: choice_list = [choice]
+        choice_set = set(store.bookkeeper.choices(test)) | {choice}
+        for holder in ("GOOD", STORE_DIRECTORY_NAME):
+            base = os.path.join(str(store.directory), holder)
+            if not os.path.isdir(base): continue
+            for name in os.listdir(base):
+                parts = key_parts_of(name)
+                if parts is not None and parts[0] == test:
+                    choice_set.add(parts[1])
+        choice_list = sorted(choice_set, key=lambda c: c or "")
     else:
         choice_list = [choice]
 

@@ -1,9 +1,10 @@
-  test-new.py          no nominal stands in GOOD/: not accepted, not run ('hwut.run.play --save', then 'hwut.accept')
-  2 ok, 0 fail
-  OK  : the new test stands once in the REFUSED block
-  OK  : the reason names the way in
-  OK  : it is not counted: two ok, none failed
+  test-new.py      no GOOD file: not accepted, not run
+  2 ok, 2 fail
+  OK  : the flow says 'no GOOD file [FAIL]', once
+  OK  : HINTS names it
+  OK  : it is no refusal
+  OK  : it is counted: two ok, two failed (and 'test-two.py b')
   OK  : the book has no entry for it
-  OK  : the run is OK
-SUCCESS: no nominal, no run -- and the way in is named.
+  OK  : the run fails
+SUCCESS: no GOOD file, no run -- a failure, named in HINTS.
 <hwut-end>

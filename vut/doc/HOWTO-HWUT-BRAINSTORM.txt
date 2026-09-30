@@ -457,6 +457,14 @@ BIN DISCIPLINE
            '--whole' is a different act
     - GENERAL: a fixture built by hand tests a state the product
       cannot produce
+    - case: 'services test-exit.sh' made its 'mktemp' scratch INSIDE
+      the 'law' branch; 'signal' built its tree in the page's own
+      directory. 'services/TEST/tree/', 'out.txt' and 'err.txt' were
+      left behind and COMMITTED (2026-09-10), and every run wrote a
+      book into 'tree/suite/TEST/GOOD/' -- noticed only when the book
+      became versioned (B-24)
+    - cure: the scratch directory is made ONCE, BEFORE the switch over
+      the choices, so no choice can run outside it
 
 ==============================================================================
 7.  WHAT 'ACCEPT' MEANS -- SO A TEST AUTHOR KNOWS WHAT IS GUARANTEED
@@ -501,6 +509,12 @@ BIN DISCIPLINE
 
     - the digest/pype filter IS part of the oracle. A mask missing
       there is an oracle defect, not a cosmetic one
+    - A PARSER IS FUZZED, NOT ONLY EXAMPLED. Ten hand-written choices
+      of 'test-hwut_hocon.py' never met a hang that 49 of 400 randomly
+      mistyped headers met (one to four edits each). A seeded mutation
+      page ('fuzz', 'deterministic_random') records COUNTS only --
+      clean, with faults, hang, exception -- so it is deterministic and
+      a new hang moves one number
     - '--no-log' retired by O-24; usage lines in GOODs still showed it
       long after
     - THE '@hwut { }' BLOCK HAS THE AUTHORITY OF THE GOOD FILE.

@@ -15,9 +15,6 @@ longer has a test behind it:
     # choice not offered
     <dir>/<test-app> <choice>
 
-    # nominal absent, book entry stands
-    <dir>/<test-app> <choice>
-
 The comment is TELEGRAPHIC: the reason in a few words, since fifty of
 them are read as a list. Delete or '#' out what you want to keep, then
 
@@ -42,19 +39,23 @@ WHAT IS PROPOSED
     CHOICE NOT OFFERED  the application stands and is understood, and
                         does not name that choice. A reliable orphan:
                         the configuration was read.
-    NOMINAL ABSENT      the book records the case but no nominal
-                        stands for it -- a run without a pole. The
-                        entry is bookkeeping about nothing.
 
 WHAT IS NEVER PROPOSED. An application that STANDS but exploration
 cannot see -- a header that stopped parsing, an 'hwut-info.dat' it
 does not read, an 'ignore' glob -- is UNREACHABLE, not orphaned. Its
 records are blessed work and the mending is in the configuration.
 'hwut.sanitize' draws that line and this face keeps it ('orphans').
+AND A BOOK ENTRY OF AN OFFERED CASE WITH NO NOMINAL is an ASPIRANT
+(bookkeeper B-14): registered, awaiting its first acceptance. It has
+lost no ground, and is never proposed (services E-126).
+A CHOICE-LESS RECORD OF A TEST THAT STANDS WITH CHOICES is said on
+stdout as 'NOTE(<dir>)' and not proposed: 'hwut.remove <test>' would
+take the whole test. The judgement is 'hwut.sanitize's own function,
+called, not copied: the two faces cannot disagree about an orphan.
 
 '-o <file>' IS REQUIRED: what cannot be judged -- a directory whose
-exploration faulted -- goes to STDOUT, one line each, and never into
-the file.
+exploration faulted -- and what is found and not proposed go to
+STDOUT, one line each, and never into the file.
 
 EXIT: OK where something was proposed, EMPTY where nothing has lost
 its ground, REFUSED where '-o' is missing.
@@ -63,12 +64,7 @@ import os
 import sys
 
 from vut.services._exit                       import E_ExitCode
-from vut.services.sanitize                    import (offered_key_set,
-                                                      record_key_of)
-from vut.engine.bookkeeper.api                import (Bookkeeper,
-                                                      GOOD_OWNED_FILE_TUPLE,
-                                                      STORE_DIRECTORY_NAME,
-                                                      nominal_stands_f)
+from vut.services.sanitize                    import orphan_issue_list
 from vut.engine.orchestrator.exploration      import selection
 from vut.engine.orchestrator.exploration.task_list import SelectionError
 from vut.engine.orchestrator.plan.wish        import parse_wish
@@ -95,17 +91,21 @@ def application_home_db(found):
 
 def lost_case_list(directory, app_set, home_db=None, here=None):
     """
-    RETURN: list of (test, choice, reason) -- every case recorded under
-            'directory' that has LOST ITS GROUND, each once, with the
-            reason in a few words. 'choice' is None for a choice-less
-            test.
+    RETURN: [0] list of (test, choice, reason) -- every case recorded
+                under 'directory' that has LOST ITS GROUND, each once,
+                with the reason in a few words: the whole test (choice
+                None) where its application is gone, one choice where
+                the application stands and does not name it.
+            [1] list[str], the cases found and NOT proposed, with why.
 
-    THE JUDGEMENT IS SANITIZE'S. 'offered_key_set' says what exploration
-    offers; 'record_key_of' says what a file records. A case found on
-    disk or in the book and not offered is lost -- UNLESS its
-    application still stands, in which case it is unreachable, not
-    orphaned, and is left alone (the guard 'hwut.sanitize' keeps for
-    the same reason).
+    THE JUDGEMENT IS SANITIZE'S, CALLED, NOT COPIED (E-126):
+    'sanitize.orphan_issue_list' decides, and this face adds only the
+    telegraphic reason and the MOVE. So both faces keep the same guards:
+    an application that stands and cannot be explored is UNREACHABLE,
+    never proposed; a book entry of an offered case with no nominal is
+    an ASPIRANT (B-14); a choice-less record of a test that stands is
+    said, not proposed -- 'hwut.remove <test>' would take the whole
+    test.
 
     A MOVE IS NAMED. Where the absent application stands in ANOTHER
     directory of the tree ('home_db'), the reason says so:
@@ -113,14 +113,11 @@ def lost_case_list(directory, app_set, home_db=None, here=None):
         # app absent, possibly moved to engine/coverage/readers/TEST
 
     -- and the reader decides between forgetting the record and
-    carrying it after its test ('adm/rescue_goods.py' writes the
-    'git mv' for the nominal). The proposal itself still proposes
-    removal: it cannot know the move was meant.
+    carrying it after its test ('hwut.move', 'hwut.rename -to'). The
+    proposal itself still proposes removal: it cannot know the move was
+    meant.
     """
-    offered = offered_key_set(app_set)
-    if not offered: return []                 # nothing offered: judge nothing
-    known_test_set = {test for test, _ in offered}
-    found = {}
+    issue_list, note_list = orphan_issue_list(directory, app_set)
 
     def absent_reason(test):
         """RETURN: str, 'app absent', naming where else it stands."""
@@ -130,40 +127,14 @@ def lost_case_list(directory, app_set, home_db=None, here=None):
         return "app absent, possibly moved to %s" % ", ".join(
                    sorted(os.path.normpath(w) for w in elsewhere))
 
-    def note(test, choice, reason):
-        """RETURN: None. First reason wins; a case is proposed once."""
-        found.setdefault((test, choice), reason)
-
-    #  -- the files ----------------------------------------------------
-    for holder in ("GOOD", STORE_DIRECTORY_NAME, "OUT"):
-        base = os.path.join(directory, holder)
-        if not os.path.isdir(base): continue
-        for name in sorted(os.listdir(base)):
-            if name in GOOD_OWNED_FILE_TUPLE: continue
-            key = record_key_of(name)
-            if key is None: continue
-            test, choice = key
-            if test not in known_test_set:
-                if os.path.exists(os.path.join(directory, test)):
-                    continue                  # stands, unseen: unreachable
-                note(test, choice, absent_reason(test))
-            elif (test, choice) not in offered:
-                note(test, choice, "choice not offered")
-
-    #  -- the book -----------------------------------------------------
-    bookkeeper = Bookkeeper(directory)
-    for test in bookkeeper.tests():
-        for choice in bookkeeper.choices(test):
-            if test not in known_test_set:
-                if os.path.exists(os.path.join(directory, test)): continue
-                note(test, choice, absent_reason(test))
-            elif (test, choice) not in offered:
-                note(test, choice, "choice not offered")
-            elif not nominal_stands_f(directory, test, choice):
-                note(test, choice, "nominal absent, book entry stands")
-
-    return sorted((test, choice, reason)
-                  for (test, choice), reason in found.items())
+    row_list = []
+    for issue in issue_list:
+        if issue.kind == "orphan-test":
+            row_list.append((issue.word_tuple[0], None,
+                             absent_reason(issue.word_tuple[0])))
+        else:
+            row_list.append(issue.word_tuple + ("choice not offered",))
+    return row_list, note_list
 
 
 def main(argv=None, write=None):
@@ -235,9 +206,13 @@ def main(argv=None, write=None):
                     write("FAULT(%s) exploration failed -- not judged"
                           % shown)
                     continue
-                for test, choice, reason in lost_case_list(whole,
-                                                           result.app_set,
-                                                           where_db, where):
+                row_list, note_list = lost_case_list(whole, result.app_set,
+                                                     where_db, where)
+                for note in note_list:
+                    #  FOUND AND NOT PROPOSED: said on stdout, like a
+                    #  directory that could not be judged.
+                    write("NOTE(%s) %s" % (shown, note.split(": ", 1)[-1]))
+                for test, choice, reason in row_list:
                     put("# %s" % reason)
                     put("%s%s" % (os.path.join(shown, test),
                                   "" if choice is None else " " + choice))

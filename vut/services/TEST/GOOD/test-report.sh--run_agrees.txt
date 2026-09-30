@@ -1,0 +1,28 @@
+RUN STATUS: 1
+REPORT STATUS: 1
+RUN FAILS {
+    test-broken.sh
+    test-ch.sh two
+    test-dep.sh
+    test-diff.sh
+    test-gone.sh
+    test-new.sh
+}
+REPORT FAILS {
+    test-broken.sh
+    test-ch.sh two
+    test-dep.sh
+    test-diff.sh
+    test-gone.sh
+    test-new.sh
+}
+the same: yes
+PAGE {
+                       two ............................ no-choice [FAIL]
+            test-dep.sh .................................. no-dep [FAIL]
+            test-diff.sh .........................................[FAIL]
+            test-new.sh ............................ no GOOD file [FAIL]
+            test-broken.sh ................................. spec [FAIL]
+            test-gone.sh ................................. no-app [FAIL]
+}
+<hwut-end>

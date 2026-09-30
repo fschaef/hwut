@@ -1,0 +1,40 @@
+BEFORE {
+    GOOD/test-app.sh--one.txt
+    GOOD/test-app.sh--two.txt
+    TMP/store/observations.bin
+    TMP/store/test-app.sh--one.stdout.times
+    TMP/store/test-app.sh--one.stdout.when
+    TMP/store/test-app.sh--two.stdout.times
+    TMP/store/test-app.sh--two.stdout.when
+    book: []
+}
+STATUS: 0
+STDOUT {
+    TO BE FORGOTTEN, in 'tree/suite/TEST':
+      test-app.sh -- 8 file(s), the book entry, the register id
+          GOOD/test-app.sh--one.txt
+          GOOD/test-app.sh--two.txt
+          OUT/test-app.sh--one.txt
+          OUT/test-app.sh--two.txt
+          TMP/store/test-app.sh--one.stdout.times
+          TMP/store/test-app.sh--one.stdout.when
+          TMP/store/test-app.sh--two.stdout.times
+          TMP/store/test-app.sh--two.stdout.when
+    test-app.sh:
+        forgotten: GOOD/test-app.sh--one.txt
+        forgotten: GOOD/test-app.sh--two.txt
+        forgotten: OUT/test-app.sh--one.txt
+        forgotten: OUT/test-app.sh--two.txt
+        forgotten: TMP/store/test-app.sh--one.stdout.times
+        forgotten: TMP/store/test-app.sh--one.stdout.when
+        forgotten: TMP/store/test-app.sh--two.stdout.times
+        forgotten: TMP/store/test-app.sh--two.stdout.when
+        book entry: none stood
+        register: not registered
+}
+AFTER {
+    GOOD/book.csv
+    TMP/store/observations.bin
+    book: []
+}
+<hwut-end>

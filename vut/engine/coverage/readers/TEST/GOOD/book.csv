@@ -1,0 +1,25 @@
+# vut-register 5 generation:25 apps:2 marks:0=20,1=3
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-readers.py;absent;true;ok;;;;;0;0
+;agreement;true;ok;;;;;0;1
+;aliases;true;ok;;;;;0;2
+;calls;true;ok;;;;;0;3
+;cobertura;true;ok;;;;;0;4
+;gather;true;ok;;;;;0;5
+;gcov;true;ok;;;;;0;6
+;ghdl;true;ok;;;;;0;7
+;go;true;ok;;;;;0;8
+;jacoco;true;ok;;;;;0;9
+;lcov;true;ok;;;;;0;10
+;luacov;true;ok;;;;;0;11
+;native;true;ok;;;;;0;12
+;psl;true;ok;;;;;0;13
+;python;true;ok;;;;;0;14
+;resultset;true;ok;;;;;0;15
+;roles;true;ok;;;;;0;16
+;ucis;true;ok;;;;;0;17
+;verilator;true;ok;;;;;0;18
+;witnessed;true;ok;;;;;0;19
+test-real-input.py;every_artefact;true;ok;;;;;1;0
+;every_format;true;ok;;;;;1;1
+;no_orphan;true;ok;;;;;1;2

@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
+test-member_state.py;consistency;true;ok;2026-09-19T20:18:22Z;;;;0;3
+;evidence;true;ok;2026-09-19T20:18:21Z;;;;0;0
+;sealed;true;ok;2026-09-19T20:18:21Z;;;;0;2
+;transitions;true;ok;2026-09-19T20:18:21Z;;;;0;1

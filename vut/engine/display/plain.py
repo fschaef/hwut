@@ -48,7 +48,7 @@ from enum     import Enum
 
 from ..protocol.receiver import CRunReportReceiver
 from ..protocol.summary  import fold
-from .word                       import CInk, phrase
+from .word                       import CInk, phrase, reason_word
 
 
 class E_Tier(Enum):
@@ -584,9 +584,7 @@ class CPlainFlow(CRunReportReceiver):
             self._line(when, "FRAME", "FRAME", body, body_ink,
                        "[OK]", self.ink.tag_ok("[OK]"))
         else:
-            right = "the frame failed  [FAIL]"
-            right_ink = "%s  %s" % (self.ink.fail("the frame failed"),
-                                    self.ink.tag_fail("[FAIL]"))
+            right, right_ink = self._fail_right("frame-failed")
             self._line(when, "FRAME", "FRAME", body, body_ink,
                        right, right_ink)
 
@@ -794,11 +792,13 @@ class CPlainFlow(CRunReportReceiver):
                              where its kind is otherwise silent
                     'SKIP '  a node that never ran at all
 
-        THE FLOW SAYS [OK] OR [FAIL] AND NO MORE. A reason belongs to
-        the reader who has stopped to ask why, and that reader is
-        reading HINTS; carrying it here spends the width of every
-        failing line on a phrase the eye is not scanning for while a
-        run is still going.
+        THE FLOW SAYS [OK] OR [FAIL], AND ONE WORD BEFORE [FAIL] WHERE
+        THE FAILURE IS NOT ABOUT EQUIVALENCE (display D-31): 'spec',
+        'no-app', 'killed'. The phrase and the numbers belong to the
+        reader who has stopped to ask why, and that reader is reading
+        HINTS; the word is for the eye that scans the flow while a run
+        is still going, which would otherwise read a lie by omission
+        (O-25).
 
         THE LAUNCHER'S COUNT FALLS LAST, after the line is written,
         so that a '--brief' 'DONE ' counts its own run -- the run was
@@ -868,9 +868,9 @@ class CPlainFlow(CRunReportReceiver):
                            body, body_ink,
                            "[OK]", self.ink.tag_ok("[OK]"))
             else:
+                right, right_ink = self._fail_right(report or verdict)
                 self._line(when, "SKIP ", self.ink.warn("SKIP "),
-                           body, body_ink,
-                           "[FAIL]", self.ink.tag_fail("[FAIL]"))
+                           body, body_ink, right, right_ink)
             return
         #  'END  ' CLOSES THE 'START' THIS NODE OPENED; a node whose
         #  START was never released is 'DONE ' -- it finished before
@@ -902,8 +902,22 @@ class CPlainFlow(CRunReportReceiver):
             self._line(when, badge, badge, body, body_ink,
                        "[NO GOOD]", self.ink.tag_undecided("[NO GOOD]"))
         else:
+            right, right_ink = self._fail_right(report or verdict)
             self._line(when, badge, badge, body, body_ink,
-                       "[FAIL]", self.ink.tag_fail("[FAIL]"))
+                       right, right_ink)
+
+    def _fail_right(self, token):
+        """
+        RETURN: (str, str), the right part of a failing flow line, plain
+                and inked: '[FAIL]' alone where the failure is about
+                equivalence, else the reason word before it --
+                'no-app [FAIL]' (display D-31) -- the badge alone
+                painted. The same word 'hwut.report' prints.
+        """
+        word = reason_word(token)
+        if word is None: return "[FAIL]", self.ink.tag_fail("[FAIL]")
+        return ("%s [FAIL]" % word,
+                "%s %s" % (word, self.ink.tag_fail("[FAIL]")))
 
     def on_fault(self, when, directory, text):
         """
@@ -1561,17 +1575,19 @@ def wallflower_note_list(path_list, where):
     """
     RETURN: list[str], the NOTE on the files no carrier speaks for
             (X-SILENT): one line with their count and 'where' the lists
-            stand -- or, where 'where' is None (no list could be
-            written), that line followed by every path of 'path_list'
-            and the one command that ignores them. Spoken alike by every
-            face that finds them.
+            stand, then the one command that ignores every one of them
+            ('see: hwut.config.ignore --wallflowers') -- or, where 'where' is
+            None (no list could be written), the count followed by every
+            path of 'path_list' and the command that ignores those.
+            Spoken alike by every face that finds them.
     """
     head = "NOTE: %d wallflower file(s) in TEST directories" % len(path_list)
     if where is not None:
-        return ['%s => "%s"' % (head, where)]
+        return ['%s => "%s"' % (head, where),
+                "      see: hwut.config.ignore --wallflowers"]
     return [head + ":"] \
            + ["          %s" % path for path in path_list] \
-           + ["      helpers?  hwut.config.ignore %s" % " ".join(path_list)]
+           + ["      see: hwut.config.ignore %s" % " ".join(path_list)]
 
 
 def render(event_iterable, write, write_error=None, width=78,

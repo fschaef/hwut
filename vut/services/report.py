@@ -8,8 +8,17 @@ IT READS THE BOOKS, NOT A RUN. A report may be asked of a run that
 happened yesterday, and only 'GOOD/book.csv' remembers it. So
 this face explores the tree for its SHAPE -- which applications, which
 choices, what they are called -- and asks each directory's book for the
-VERDICT. A case the book has never seen is reported as never run,
-which is a finding and not a fault.
+VERDICT. A case whose GOOD file does not stand fails, 'no GOOD file'
+(display D-32), as it does in the run; a case with a GOOD file the book
+has never seen is reported as never run, which is a finding and not a
+fault.
+
+WHAT THE RUN FAILS WITHOUT BOOKING IT IS ASKED OF THE TREE (E-128):
+every failure 'hwut.run' counts appears here too. A header that does
+not parse, a test or choice the book records and the directory no
+longer declares ('orchestrate.unstood_tuple', the run's own function),
+and a case whose dependencies cannot be met ('misdep') are FAILs in
+every format, in the run's words -- whatever the wish, as in the run.
 
 FORMATS ('--format'):
 
@@ -22,9 +31,11 @@ FORMATS ('--format'):
     tap          Test Anything Protocol, version 13.
     json         for whoever builds their own.
 
-THE WIDTH IS THE TERMINAL'S. '--width' states it; otherwise COLUMNS,
-otherwise the terminal's own, otherwise 80. Nothing here assumes a
-constant: the page fills what it is given.
+THE WIDTH IS THE RUN'S (display D-33). '--width' states it; otherwise
+'hwut.run's own width: the terminal's, 'COLUMNS' winning where it
+stands, held between 40 and 120 -- and 78 where the page is piped or
+written to '--out'. A report and the run it reports on are the same
+width on the same screen.
 
 '[OK]' AND '[FAIL]' ARE RIGHT-ALIGNED TO ONE COLUMN, so the dot leader
 runs two shorter for a failure and the verdicts stand in a line. That
@@ -59,9 +70,11 @@ import shutil
 import sys
 import xml.sax.saxutils as saxutils
 
-from   vut.engine.bookkeeper.api                     import E_TestVerdict
+from   vut.engine.bookkeeper.api                     import (E_TestVerdict,
+                                                             nominal_stands_f)
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration          import selection
+from   vut.engine.orchestrator.run.orchestrate       import unstood_tuple
 from   vut.services.lib.labels                           import view_at
 from   vut.services.lib.labels._file                     import LabelFileError
 from   vut.engine.orchestrator.exploration.tree_explorer \
@@ -76,6 +89,8 @@ from   vut.services.lib.cmdline import (face_parser, usage_of,
                                         parse_or_refuse, did_you_mean)
 from   vut.services.lib.face    import Refused, Fault, FaceError
 from   vut.services.lib.wallflowers import wallflowers_writer
+from   vut.engine.display.word  import phrase, reason_word
+from   vut.engine.display.console import console_width
 from   vut.engine.display.plain import (wallflower_note_list,
                                        results_line_list)
 from   vut.engine.display.word  import CInk
@@ -106,6 +121,14 @@ USAGE  = usage_of(PARSER, ARG_DB)
 #  The licence line and the rule are the FILE's, not the face's.
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n\n" + WISH_HELP + "\n" + USAGE
+
+
+#  WHAT THE RUN FAILS WITHOUT DISPATCHING ('orchestrate.unstood_tuple', and
+#  a case whose dependencies cannot be met): said in the run's own phrase,
+#  not as a report the run never wrote.
+UNSTOOD_REPORT_SET = frozenset(("spec-broken", "test-vanished",
+                                "test-choice-vanished", "misdep",
+                                "no-good-file"))
 
 
 class CRow:
@@ -193,19 +216,20 @@ HEIGHT_DEFAULT = 24
 HEIGHT_MINIMUM = 8
 
 
-def width_of(stated):
+def width_of(stated, tty_f=None):
     """
-    RETURN: int, the page width: what was stated, else COLUMNS, else
-            the terminal's own, else 80 -- and never below 40, at
-            which point the dot leader has nothing left to give.
+    RETURN: int, the page width: what '--width' stated (never below 40,
+            at which point the dot leader has nothing left to give);
+            else THE RUN'S OWN WIDTH, 'console_width' -- the terminal's,
+            'COLUMNS' winning where it stands, held between 40 and 120;
+            78 where the page is not written to a terminal (display
+            D-33).
+
+    'tty_f' says whether the page goes to a terminal; None asks stdout.
     """
     if stated is not None: return max(stated, WIDTH_MINIMUM)
-    text = os.environ.get("COLUMNS", "")
-    if text.isdigit() and int(text) > 0:
-        return max(int(text), WIDTH_MINIMUM)
-    try:    got = shutil.get_terminal_size((WIDTH_DEFAULT, 24)).columns
-    except Exception: got = WIDTH_DEFAULT
-    return max(got or WIDTH_DEFAULT, WIDTH_MINIMUM)
+    if tty_f is None: tty_f = sys.stdout.isatty()
+    return console_width(os.environ, tty_f)
 
 
 def painted(text, role, color_f):
@@ -404,16 +428,48 @@ def entry_stream_of(root, wish, silent_db=None):
             #  subject every test has.
             if report == "not-equivalent-with-nominal":
                 report = bookkeeper.shape_of(test, case.choice, "stdout")
+            verdict = run.get("verdict")
+            #  A CASE WHOSE DEPENDENCIES CANNOT BE MET is never dispatched:
+            #  the run FAILS it by name ('misdep', P-6) and books nothing,
+            #  so the book still holds whatever an earlier run said. The
+            #  report says what the run says (E-128).
+            if getattr(case, "misdep_f", False):
+                verdict, report = E_TestVerdict.FAIL, "misdep"
+            #  NO GOOD FILE: never accepted, not run -- and a FAILURE, in
+            #  the run as here (display D-32), whatever the book holds.
+            elif not nominal_stands_f(whole, test, case.choice):
+                verdict, report = E_TestVerdict.FAIL, "no-good-file"
             row_list.append(CRow(
                 directory   = directory,
                 source_file = case.source_file,
                 choice      = case.choice,
-                verdict     = run.get("verdict"),
+                verdict     = verdict,
                 report      = report,
                 when        = _observed_instant(bookkeeper, case),
                 stain       = bookkeeper.stain(test, case.choice),
                 title       = getattr(app_db.get(case.source_file),
                                       "title", "") or ""))
+        #  WHAT THE RUN FAILS BEFORE ANYTHING RUNS (E-128): a header
+        #  that does not parse, a test or choice the book records and
+        #  the directory no longer declares. The run counts each as a
+        #  failing case and never books it, so the report asks the
+        #  run's own function -- whatever the wish, as the run does.
+        for name, verdict in unstood_tuple(whole, result.app_set,
+                                           tuple(result.fault_list)):
+            test, _, choice = name.partition(" ")
+            #  A CHOICE THAT VANISHED stands with its test's other rows,
+            #  under the test's title; anything else closes the block.
+            at = max((i + 1 for i, row in enumerate(row_list)
+                      if row.source_file == test), default=len(row_list))
+            row_list.insert(at, CRow(
+                directory   = directory,
+                source_file = test,
+                choice      = choice or None,
+                verdict     = E_TestVerdict.FAIL,
+                report      = verdict,
+                when        = "",
+                stain       = None,
+                title       = getattr(app_db.get(test), "title", "") or ""))
         yield (directory, directory_title(whole), row_list)
 
 
@@ -439,6 +495,20 @@ def elided(previous, current):
     if same == 0: return current
     prefix = "/".join(a[:same])
     return "." * len(prefix) + current[len(prefix):]
+
+
+def reason_word_of(row):
+    """
+    RETURN: str, the word before a failing row's '[FAIL]' (display D-31):
+                 'unstable' for a stain, else the word of the recorded
+                 report.
+            None, where the failure is about equivalence, or the book
+                 names no reason (never run, aspirant).
+    """
+    if row.stain_repeat_n is not None: return reason_word("unstable")
+    if row.verdict is None or row.verdict is E_TestVerdict.ASPIRANT:
+        return None
+    return reason_word(row.report)
 
 
 def leader_line(left, verdict_text, width, indent=4, shown=None):
@@ -483,13 +553,17 @@ def traditional_line_tuple(entry_list, width, color_f=False):
     to the full width first, or the background would stop where the
     text does and the block would read as a ragged stripe.
     """
-    def verdict_of(good_f):
+    def verdict_of(good_f, word=None):
         """RETURN: (str, str), the verdict's PLAIN text (what the
-                   layout measures) and what is printed for it.
+                   layout measures) and what is printed for it -- with
+                   'word', the reason before '[FAIL]' (display D-31),
+                   set off from the dots by a blank, plain, the badge
+                   alone painted.
         """
-        text = "[OK]" if good_f else "[FAIL]"
-        return text, painted(text, ANSI_OK if good_f else ANSI_FAIL,
-                             color_f)
+        text  = "[OK]" if good_f else "[FAIL]"
+        badge = painted(text, ANSI_OK if good_f else ANSI_FAIL, color_f)
+        if word is None: return text, badge
+        return " %s %s" % (word, text), " %s %s" % (word, badge)
 
     rule_equals = "=" * width
     rule_dashes = "-" * width
@@ -526,7 +600,9 @@ def traditional_line_tuple(entry_list, width, color_f=False):
             #  name, whether a choice stands or not.
             left = (shown if row.choice is None
                     else "%s %s" % (shown, row.choice)) + " "
-            text, shown = verdict_of(row.good_f)
+            text, shown = verdict_of(row.good_f,
+                                     None if row.good_f
+                                     else reason_word_of(row))
             yield leader_line(left, text, width, 8, shown=shown)
         if not row_list:
             yield "    (no case selected here)"
@@ -646,6 +722,8 @@ def _message_of(row):
         return ("the run reported a difference from GOOD; the stored "
                 "candidate and the nominal, read whole, are '%s'"
                 % row.report)
+    if row.report in UNSTOOD_REPORT_SET:
+        return phrase(row.report)
     return "the run reported '%s'" % (row.report or "failure")
 
 
@@ -983,7 +1061,9 @@ def main(argv=None, write=None):
     request    = request_of(wish, directory)
     entry_list = []
     stream_f   = (out_name is None and format_name == "traditional")
-    writer     = _block_writer(format_name, width_of(width), color_f, write) \
+    tty_f      = out_name is None and sys.stdout.isatty()
+    writer     = _block_writer(format_name, width_of(width, tty_f), color_f,
+                               write) \
                  if stream_f else None
     def sink(block):
         """RETURN: None. One directory's block: written now, or kept."""
@@ -1017,7 +1097,7 @@ def main(argv=None, write=None):
                 write(line)
         if format_name != "traditional" and out_name is None: return
         line_list = results_line_list(tally.row_n - tally.fail_n,
-                                      tally.fail_n, width_of(width),
+                                      tally.fail_n, width_of(width, tty_f),
                                       CInk(color_f))
         if not line_list: return
         write("")
@@ -1031,7 +1111,7 @@ def main(argv=None, write=None):
         remind()
     else:
         line_tuple = line_tuple_of(entry_list, format_name,
-                                   width_of(width), color_f)
+                                   width_of(width, tty_f), color_f)
         if out_name is None:
             for line in line_tuple: write(line)
         else:

@@ -31,7 +31,8 @@ from datetime    import datetime, timezone
 from ...bookkeeper.api       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
 from ..plan.form                   import E_NodeKind
-from ..plan.tree                   import determine_tree
+from ..plan.tree                   import (determine_tree,
+                                           NOT_ACCEPTED_REASON)
 from ..scheduler.budget            import CBudget
 from ..scheduler.scheduler         import Scheduler
 from ..scheduler.state             import E_NodeState
@@ -138,10 +139,13 @@ class CDirectoryWork:
         for report in entry.report_tuple:
             emit("report", directory=directory, text=str(report))
         #  NOT RUN, AND SAID SO (E-41): exploration's refusals and the
-        #  nominal gate's, one event each, collected by the display
-        #  into the closing REFUSED block. None is a node of the plan
-        #  and none is counted.
+        #  aspirant's, one event each, collected by the display into the
+        #  closing REFUSED block. None is a node of the plan and none is
+        #  counted. A CASE WITH NO GOOD FILE IS NOT RUN EITHER, and it
+        #  FAILS (display D-32): 'no GOOD file [FAIL]', counted, below.
+        no_good_tuple = no_good_file_tuple(entry.refused_tuple)
         for name, reason in entry.refused_tuple:
+            if name in no_good_tuple: continue
             emit("refused", directory=directory, node=name, text=reason)
         #  SILENT, NOT REFUSED (X-SILENT): a candidate carrying no
         #  'hwut { }' and named under no 'apps'. Ordinary -- a helper,
@@ -150,23 +154,23 @@ class CDirectoryWork:
         #  vanish without a word.
         for name in entry.app_set.silent_tuple:
             emit("silent", directory=directory, node=name)
-        broken_tuple  = _broken_app_tuple(entry)
-        vanished_tuple = _vanished_tuple(self.root, entry)
+        unstood = unstood_tuple(
+                      os.path.normpath(os.path.join(self.root, directory)),
+                      entry.app_set, entry.fault_tuple)
         emit("dir-begun", directory=directory,
-             node_n=len(entry.plan) + len(broken_tuple)
-                    + len(vanished_tuple))
-        for name in broken_tuple:
-            emit("run-ended", directory=directory, node=name,
-                 node_kind="TEST", good=False, verdict="spec-broken")
+             node_n=len(entry.plan) + len(unstood) + len(no_good_tuple))
         #  THE BOOK DOCUMENTS WHAT TESTS EXIST, and a test it records
         #  that no longer stands is a FAILING TEST, not a silence: the
         #  documentation and the tree disagree, and only a person can
         #  say which of the two is wrong. Reported exactly as a broken
         #  specification is -- terminal before anything runs, counted,
         #  and named in HINTS.
-        for name, verdict in vanished_tuple:
+        for name, verdict in unstood:
             emit("run-ended", directory=directory, node=name,
                  node_kind="TEST", good=False, verdict=verdict)
+        for name in no_good_tuple:
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict="no-good-file")
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
         #  their 'run-ended' comes first, verdict named.
@@ -242,7 +246,7 @@ class CDirectoryWork:
         fail_db = {name: state.name for name, state
                    in sorted(report.failure_db().items())}
         good_f  = report.good_f() and not entry.fault_tuple \
-                  and not vanished_tuple
+                  and not unstood and not no_good_tuple
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
         return CDirDone(good_f, len(fail_db))
@@ -293,8 +297,12 @@ class CTreeScheduler:
         #  counts its own: what a progress display divides by.
         emit("tree-begun",
              directory_list=[entry.directory for entry in tree_plan],
-             node_n=sum(len(entry.plan) + len(_broken_app_tuple(entry))
-                        + len(_vanished_tuple(tree_plan.root, entry))
+             node_n=sum(len(entry.plan)
+                        + len(no_good_file_tuple(entry.refused_tuple))
+                        + len(unstood_tuple(
+                              os.path.normpath(os.path.join(tree_plan.root,
+                                                            entry.directory)),
+                              entry.app_set, entry.fault_tuple))
                         for entry in tree_plan))
         for fault in tree_plan.fault_tuple:
             emit("fault", directory=".", text=str(fault))
@@ -387,32 +395,30 @@ class CTreeScheduler:
             return CDirDone(False, 0)
 
 
-def _broken_app_tuple(entry):
+def broken_app_tuple(app_set, fault_tuple):
     """
-    RETURN: tuple[str], every source file a fault of this directory
-            names that DID NOT become a node -- sorted, each once.
+    RETURN: tuple[str], every source file a fault of the directory names
+            that exploration could NOT read as an application -- sorted,
+            each once.
 
-    A file that parsed and ran stands in the plan; a file the fault
-    names and the plan does not is one exploration could not read.
-    The directory's own file ('hwut.conf') names no application and
-    is left to the fault line alone.
+    A file that parsed stands in the APP SET; a file the fault names and
+    the app set does not hold is one exploration could not read. The
+    directory's own file ('hwut.conf') names no application and is left
+    to the fault line alone. THE APP SET, NEVER THE PLAN: the wish
+    narrows what runs, and narrows nothing about what is broken -- so
+    'hwut.run' and 'hwut.report' name the same files (services E-128).
     """
-    planned = set()
-    for node in entry.plan:
-        name = node.name()
-        planned.add(name)
-        planned.add(name.split(" ", 1)[0])
-        if "[" in name: planned.add(name.split("[", 1)[0].strip())
+    readable = {app.source_file for app in app_set}
     named = set()
-    for fault in entry.fault_tuple:
+    for fault in fault_tuple:
         file = getattr(fault, "file", None)
         if not file or file.endswith(".conf"):     continue
-        if file in planned:                        continue
+        if file in readable:                       continue
         named.add(file)
     return tuple(sorted(named))
 
 
-def _vanished_tuple(root, entry):
+def vanished_tuple(directory, app_set):
     """
     RETURN: tuple[(str, str)], one (node name, verdict) for every test
             the BOOK records that the directory no longer declares:
@@ -421,8 +427,8 @@ def _vanished_tuple(root, entry):
                                         choice of it does not
             Empty where book and tree agree, and where no book stands.
 
-    THE DECLARATION IS THE APP SET, NEVER THE PLAN. 'entry.app_set' is
-    what EXISTS in the directory; 'entry.plan' is what the WISH
+    THE DECLARATION IS THE APP SET, NEVER THE PLAN. 'app_set' is
+    what EXISTS in the directory; a plan is what the WISH
     selected of it. Asking against the plan would read every
     unselected choice as vanished, so 'hwut.run test-x.py one' would
     accuse 'two' of not existing -- the wish narrows what runs, and
@@ -431,13 +437,11 @@ def _vanished_tuple(root, entry):
     A BOOK THAT CANNOT BE READ SAYS NOTHING. The absence of a base, or
     a base that will not open, is not evidence that a test vanished.
     """
-    app_set = getattr(entry, "app_set", None)
     if app_set is None: return ()
     declared_db = {app.source_file: list(app.choice_db)
                    for app in app_set}
     try:
-        book = Bookkeeper(os.path.normpath(os.path.join(root,
-                                                        entry.directory)))
+        book = Bookkeeper(directory)
         divergence = book.divergence(declared_db)
     except (OSError, ValueError):
         return ()
@@ -449,6 +453,36 @@ def _vanished_tuple(root, entry):
             name = test if choice is None else "%s %s" % (test, choice)
             result.append((name, "test-choice-vanished"))
     return tuple(result)
+
+
+def no_good_file_tuple(refused_tuple):
+    """
+    RETURN: tuple[str], the case names the nominal gate refused because
+            NO GOOD FILE stands (E-41's 'NOT_ACCEPTED_REASON') -- each is
+            not run and FAILS, 'no GOOD file [FAIL]' (display D-32). The
+            other refusals -- an aspirant, a backup-shaped name -- stay
+            refusals.
+    """
+    return tuple(name for name, reason in refused_tuple
+                 if reason == NOT_ACCEPTED_REASON)
+
+
+def unstood_tuple(directory, app_set, fault_tuple):
+    """
+    RETURN: tuple[(str, str)], one (case name, verdict) for every case a
+            directory FAILS BEFORE ANYTHING RUNS -- the files exploration
+            could not read ('spec-broken'), then the book's tests and
+            choices the directory no longer declares ('test-vanished',
+            'test-choice-vanished').
+
+    ONE LAW, TWO READERS (services E-128): 'hwut.run' counts these as
+    failing cases, and 'hwut.report' reports what the run counts. Neither
+    is in the book as a verdict of its own -- the run never dispatches
+    them -- so both ask this function, and the tree, directly.
+    """
+    return tuple((name, "spec-broken")
+                 for name in broken_app_tuple(app_set, fault_tuple)) \
+           + vanished_tuple(directory, app_set)
 
 
 def orchestrate(root, wish, build_interview=None, label_view=None):

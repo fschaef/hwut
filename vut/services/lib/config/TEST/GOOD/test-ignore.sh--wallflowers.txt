@@ -1,5 +1,6 @@
 --- the run's NOTE
     NOTE: 4 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+          see: hwut.config.ignore --wallflowers
 --- every list below here
 STATUS: 0
 STDOUT {

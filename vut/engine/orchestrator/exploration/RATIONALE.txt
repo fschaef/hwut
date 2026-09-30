@@ -1776,7 +1776,13 @@ DECISION  RULED (Frank-Rene): A FILE WITHOUT AN 'hwut { }' SECTION IS
           'apps' entry does not pass through candidacy, so ANY file may
           be named one -- an '.xml' as well as a '.sh'.
           The run says so ONCE, at its end: one NOTE line, the count
-          and '**/TMP/wallflowers.txt'. The WALLFLOWER LISTS carry the
+          and '**/TMP/wallflowers.txt', and under it the command that
+          settles them all, '      see: hwut.config.ignore
+          --wallflowers' (RULED 2026-09-29: "after the wallflower
+          comment, mention the "hwut.config.ignore --wallflowers"
+          option"; 2026-09-30: "the 'helpers? hwut.config.ignore
+          --wallflowers' comment should become 'see: hwut.config.ignore
+          --walflowers'"). The WALLFLOWER LISTS carry the
           rest, one per explored directory holding any, in 'TMP' --
           DELETABLE, rewritten by every face that explores, removed
           where none stands: a '#' header saying how to settle them,

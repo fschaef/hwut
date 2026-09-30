@@ -1,0 +1,14 @@
+STATUS: 2
+STDOUT {
+    REFUSED: a file name is required -- the test runs to forget
+             (write one with 'hwut.remove.propose -o <file>')
+}
+STATUS: 2
+STDOUT {
+    REFUSED: [Errno 2] No such file or directory: 'no-such-file.txt'
+}
+STATUS: 3
+STDOUT {
+    NOTE: 'empty.txt' names no target -- every line is a comment or blank
+}
+<hwut-end>

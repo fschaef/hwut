@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The removal faces: a test, or one choice, forgotten."
 #     choices    = ["asking", "choice", "labels", "refused", "stain", "words",
-#                   "unknown", "untouched", "whole"]
+#                   "unknown", "untouched", "whole", "unbooked"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -16,6 +16,9 @@
 # whole       a test entire: its nominal, its candidate and every
 #             sidecar, its book entry, its register id. What stood
 #             before and after is listed, so the loss is on the page.
+# unbooked    a test entire whose book is gone and whose application is
+#             gone: its choices are read from the records lying there,
+#             and none is stranded (E-127).
 # choice      ONE choice gone, the test's other choice standing --
 #             its nominal, its candidate, its book entry, and no more.
 # untouched   the test application, the 'hwut.conf' and 'OUT/' are the
@@ -42,7 +45,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The removal faces: a test, or one choice, forgotten.;"
-        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused, words;"
+        echo "CHOICES: whole, choice, untouched, unknown, asking, stain, labels, refused, words, unbooked;"
         exit 0 ;;
 esac
 
@@ -139,6 +142,15 @@ whole)
     standing "AFTER"
     ;;
 
+unbooked)
+    #  THE BOOK DOES NOT NAME THE CHOICES; the records lying there do.
+    choice_app
+    rm -f tree/suite/TEST/GOOD/book.csv tree/suite/TEST/test-app.sh
+    standing "BEFORE"
+    face $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask
+    standing "AFTER"
+    ;;
+
 choice)
     #  One choice gone; the other stands, nominal and all.
     choice_app
@@ -196,9 +208,10 @@ print(Bookkeeper('tree/suite/TEST').tests() == [])")"
     echo "runs again, with no history:"
     $RUN --directory=tree --plain > run.txt 2>&1
     echo "STATUS: $?"
-    #  THE GOOD WENT WITH IT (E-41): no nominal, so the gate refuses
-    #  the case outright rather than running it into "GOOD missing".
-    grep -E "no nominal stands" run.txt | mask | sed 's/^/    /'
+    #  THE GOOD WENT WITH IT (E-41): no nominal, so the case is not
+    #  run, and fails by name -- 'no GOOD file' (display D-32) -- rather
+    #  than running into "GOOD missing".
+    grep -E "no GOOD file" run.txt | mask | sed 's/^/    /'
     ;;
 
 refused)

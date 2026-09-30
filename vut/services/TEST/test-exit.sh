@@ -27,13 +27,17 @@ case "$1" in
         exit 0 ;;
 esac
 
-case "${1:-law}" in
-
-law)
-
+#  EVERY CHOICE IN A SCRATCH DIRECTORY. 'signal' once built its tree in
+#  the page's own directory: 'tree/', 'out.txt' and 'err.txt' were left
+#  in 'services/TEST' and committed (2026-09-10), and each run wrote a
+#  book into 'tree/suite/TEST/GOOD/'.
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
+
+case "${1:-law}" in
+
+law)
 
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a

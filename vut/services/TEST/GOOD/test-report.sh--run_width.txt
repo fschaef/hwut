@@ -1,0 +1,6 @@
+piped:              run 78  report 78
+piped, COLUMNS=100: run 78  report 78
+terminal of  60:    run 60 report 60
+terminal of 100:    run 100 report 100
+terminal of 200:    run 120 report 120
+<hwut-end>

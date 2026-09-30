@@ -1667,8 +1667,10 @@ DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
           'determine()' for every selected case, for 'hwut.run' and
           'hwut.plan' alike; the evidence is 'bookkeeper.nominal_
           stands_f(directory, test, choice)' -- a look at GOOD/ by
-          NAME, never at the book. A refused case is no node: not
-          run, not booked, not counted.
+          NAME, never at the book. A case refused there is no node:
+          not run, not booked. A case with NO GOOD FILE is not run and
+          FAILS -- 'no GOOD file [FAIL]', counted (display D-32); the
+          other refusals are not counted.
 
           ONE BLOCK: the protocol gains the kind 'refused' (add-only;
           FORMAT stays 1) and the display a closing 'REFUSED -- not
@@ -1676,8 +1678,10 @@ DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
           but SILENT. Exploration's refusals (finder.py, 'REFUSED_
           NAME_GLOB_TUPLE': '*~', '#*#', '.bak', '.backup', '.orig',
           '.old', '.save', '.rej', '.copy', '.swp', '.tmp') and the
-          gate's stand in the same block. Each refusal names its way
-          in: "'hwut.run.play --save', then 'hwut.accept'".
+          gate's stand in the same block. A refusal names its reason
+          and no recipe (RULED 2026-09-30: "I hate this comment
+          "('hwut.run.play --save', then 'hwut.accept')" -- remove
+          it!").
 
           THE ATTENTION: the dispatcher opens the register for every
           run; a case that runs on a nominal's word and has no entry
@@ -2017,14 +2021,14 @@ DECISION  ONE RULE, ONE PLACE ('services/_target.py'): a word carrying
           'hwut.remove.propose -o <file>' and 'hwut.remove.apply
           <file>', the shape of E-44 for forgetting. Propose walks the
           tree and names every record that has LOST ITS GROUND -- the
-          application absent, the choice not offered, the nominal gone
-          while the book entry stands -- with the reason in a few
-          words above each. The judgement is SANITIZE'S, through its
+          application absent, the choice not offered -- with the reason
+          in a few words above each. A book entry of an offered case
+          with no nominal is an ASPIRANT (B-14), never proposed (E-126). The judgement is SANITIZE'S, through its
           own functions and never re-implemented: what stands and
           cannot be explored is unreachable, not orphaned, and is left
-          alone. Apply forgets what is left, per directory, through
-          'hwut.remove' itself, with '--yes' implicit: the reading was
-          the consent.
+          alone. Apply forgets what is left through 'hwut.remove' itself,
+          one case per call, with '--dont-ask' (E-68) given by the face:
+          the reading was the consent (E-126).
 
           A TEST THAT MOVED IS NOT A TEST THAT DIED. 'app absent' is
           the commonest finding after a refactoring, and it is also
@@ -5068,3 +5072,108 @@ GRAVEYARD HOCON-LIKE BLOCKS named by category ('book_E4711 { explain ...
           lines ('hwut.accept.propose', 'hwut.remove.propose').
           VERB = ISSUE ('remove-lock', 'remove-session', ...) -- rejected
           by ruling: nine verbs where five say the act.
+
+----------------------------------------------------------------------------
+E-126  'hwut.remove.apply' FORGETS ONE CASE PER CALL; AN ASPIRANT HAS
+       LOST NO GROUND                                             (2026-09-28)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED on a scratch tree: 'hwut.remove.apply' crashed on its
+          first line -- 'TypeError: main() got an unexpected keyword
+          argument 'choice_form_f''. Three changes had passed it by, none
+          seen because no page ran the face (only its '--help'):
+            09-06  E-45 builds it: several tests per call, the pair form
+                   chosen by 'choice_form_f=', and '--yes'
+            09-08  E-53: 'hwut.remove' reads one word as a test, two as
+                   a test and its choice, refuses a third; the parameter
+                   goes -- the crash
+            09-13  E-68: '--yes' refused by name -- a refusal behind the
+                   crash
+          And 'hwut.remove.propose' proposed 'nominal absent, book entry
+          stands' for an OFFERED case: an ASPIRANT (B-14), registered and
+          awaiting its first acceptance, offered for deletion -- the
+          judgement 'hwut.sanitize' does not make. On a test holding a
+          choice-less record and a choice's, propose itself crashed
+          sorting None against a choice.
+
+DECISION  RULED (Frank-Rene, 2026-09-28), of retiring the pair in favour
+          of 'hwut.sanitize': "Keep and repair the pair" -- "Fix
+          hwut.remove.apply (one call per case, --dont-ask), drop the
+          aspirant kind, add a test page."
+          Apply hands 'remove.main' ONE CASE PER CALL, in the words
+          'hwut.remove' reads, with '--dont-ask'; its own command line
+          takes no such word.
+          RULED (2026-09-29), of the two faces that judge orphans: "do
+          they rely on the same code in the background? they should."
+          Propose JUDGES THROUGH 'sanitize.orphan_issue_list', called,
+          not copied, and adds only the telegraphic reason and the move
+          ('possibly moved to <dir>': an application of that base name
+          stands in another directory of the tree). So it keeps
+          sanitize's guards: an ASPIRANT is not proposed; a choice-less
+          record of a test that stands with choices is said on stdout
+          as 'NOTE(<dir>)', never proposed ('hwut.remove <test>' would
+          take the whole test); an absent application is proposed ONCE,
+          whole; records under 'OUT/', the application's scratch, are
+          not judged.
+          'TEST/test-remove-apply.sh' (propose, apply, veto, refused).
+          POSITIVE CONTROL: the old two modules fail 'propose' and 'apply'
+          (the sort, then the crash).
+
+COST      Two faces propose forgetting orphans, one judgement behind
+          both; only 'hwut.remove.propose' says 'possibly moved to <dir>'
+          (a sanitize proposal carries no per-line note, E-125). One call
+          of 'hwut.remove' per line instead of one per directory.
+
+----------------------------------------------------------------------------
+E-127  A TEST FORGOTTEN WHOLE TAKES EVERY CHOICE ITS RECORDS NAME  (2026-09-29)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.remove <test>' took the choices of a whole test
+          from the BOOK alone. Where the book did not name them -- a clone
+          whose book never travelled (B-24), a book deleted -- the choices'
+          nominals and candidates were STRANDED: 'test-app.sh--one.txt'
+          and '--two.txt' stood after the test was 'forgotten'. Found while
+          making 'hwut.remove.propose' judge through sanitize's function,
+          which proposes an absent test once, whole.
+
+DECISION  The choices of a whole test are those the book knows AND those a
+          record lying in 'GOOD/' or 'TMP/store/' names ('key_parts_of') --
+          the face's own law that subjects are read from what LIES THERE,
+          extended to the choices. 'TEST/test-remove.sh unbooked'; the old
+          module leaves both nominals standing.
+
+COST      One listing of 'GOOD/' and 'TMP/store/' per whole test forgotten.
+
+----------------------------------------------------------------------------
+E-128  EVERY FAILURE 'hwut.run' COUNTS, 'hwut.report' SHOWS        (2026-09-29)
+----------------------------------------------------------------------------
+PROBLEM   MEASURED on one directory: 'hwut.run' counted five failing
+          cases, 'hwut.report' two. The report reads the book for the
+          cases the wish selects; the run also fails, WITHOUT BOOKING, a
+          header that does not parse ('spec-broken'), a test or choice
+          the book records and the directory no longer declares
+          ('test-vanished', 'test-choice-vanished' -- Frank-Rene's
+          'apply_keeps' and 'report' in 'services/TEST'), and a case
+          whose dependencies cannot be met ('misdep', never dispatched;
+          the book kept an earlier run's 'true'). And a directory
+          without any of them was marked [FAIL] by the run: the new
+          function's name shadowed the old tuple in 'good_f' -- caught
+          by the same fixture before it was committed.
+
+DECISION  RULED (Frank-Rene, 2026-09-29): "any failure recorded by
+          hwut.run must also appear in hwut.report".
+          ONE FUNCTION, TWO READERS: 'orchestrate.unstood_tuple(directory,
+          app_set, fault_tuple)' names what a directory fails before
+          anything runs; the run emits it, the report adds it as FAIL
+          rows -- in every directory the report shows, whatever the
+          wish, as the run does. A broken file is judged against the APP
+          SET, no longer the plan: a wish narrows what runs, not what is
+          broken. A selected case marked [MISDEP] is a FAIL 'misdep' in
+          the report whatever the book holds. The reason is the run's
+          phrase ('engine/display/word.py'); a vanished choice stands
+          with its test's other rows, under its title.
+          'TEST/test-report.sh run_agrees': both lists printed, and equal;
+          the old report shows one of five.
+
+COST      The report re-reads each directory's book for its divergence
+          from the declaration, as the run does. A report whose exit
+          code said 0 over such a tree now says 1.
+
