@@ -288,12 +288,11 @@ o-6  SETTLED with o-9: the directory runs on; the case fails by name.
 o-7  SETTLED 2026-09-27 ("yes, as discussed"): 'same' and 'interactive'
      print once at the root; the whole tree reads back -> X-PRINTED.
 
-o-8  PAGES THAT NEVER CLOSE THEIR STREAM. MEASURED: 77 of the tree's 863
-     GOOD files do not end in '<hwut-end>', 75 of them under
-     'engine/compare' (not yet told apart: stdout streams from other
-     outputs). 'hwut.run'
-     passes them; 'hwut.accept' refuses them the day they change (R-70).
-     'test-constraints.py' was one (fixed with C-19).
+o-8  RULED AND BUILT 2026-10-01 (operations R-70): a stdout GOOD file
+     without '<hwut-end>' FAILS -- 'no <hwut-end> marker [FAIL]'. The 76
+     were all stdout nominals; the 21 pages of 'engine/compare' that
+     never printed the token were mended and 74 GOODs re-accepted
+     before the rule landed.
 
 o-7  THE PRINTED TREE AS A WHOLE DOES NOT READ BACK. MEASURED:
      'hwut.config.show' prints 'same' and 'interactive' under every
