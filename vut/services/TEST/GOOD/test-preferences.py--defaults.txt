@@ -49,7 +49,6 @@
     run.start                'blue'                       sgr '34'                   pt 'ansiblue'
     run.tag-fail             'bright-white bg256:196'     sgr '97;48;5;196'          pt 'ansiwhite bg:#ff0000'
     run.tag-ok               'bright-white bg-green'      sgr '97;42'                pt 'ansiwhite bg:ansigreen'
-    run.tag-undecided        'black bg-yellow'            sgr '30;43'                pt 'ansiblack bg:ansiyellow'
     run.warn                 'yellow'                     sgr '33'                   pt 'ansiyellow'
     verdict.nominal          'blue'                       sgr '34'                   pt 'ansiblue'
     verdict.subject          'red'                        sgr '31'                   pt 'ansired'
@@ -63,7 +62,6 @@
     run    fail           True 
     run    tag_ok         True 
     run    tag_fail       True 
-    run    tag_undecided  True 
     run    warn           True 
     run    start          True 
     run    dim            True 

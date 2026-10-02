@@ -24,7 +24,8 @@ standard output, so '> <file>' writes the same file:
     book services/TEST/test-x.py basic
 
 ONE LINE, ONE COMMAND: '<command> <concerned entity>', the entity
-relative to the CURRENT directory. Issues of one kind stand in adjacent
+relative to the CURRENT directory. A line may end in '  # <note>',
+which no reader of commands reads. Issues of one kind stand in adjacent
 lines; an empty line separates the kinds; a comment heads each block --
 the problem, and what its command heals. Put '#' before a line, or
 delete it, and it is not done; then
@@ -51,7 +52,12 @@ candidates.
                 not proposed, and said on stderr. Healed by 'remove'.
     --orphans   RECORDS THAT NAME NOTHING: nominals, candidates and book
                 entries of a (test, choice) the configuration no longer
-                offers. Healed by 'forget', through 'hwut.remove'.
+                offers. Healed by 'forget', through 'hwut.remove' -- or,
+                where the application stands in ONE other directory with
+                nothing recorded of it there, by 'move': its records are
+                carried after it (E-131). Where it is recorded there
+                already, or stands in several places, the 'forget' line
+                says so in a note.
                 AN APPLICATION THAT STANDS AND CANNOT BE EXPLORED is
                 UNREACHABLE, not orphaned, and never proposed: the
                 mending is in its configuration. A directory whose
@@ -217,6 +223,14 @@ def main(argv=None, write=None, err=None):
 
     issue_list, note_list = [], []
     bound_set = set()
+    exploration = list(exploration)
+    #  WHERE ELSE AN APPLICATION OF THAT NAME STANDS (E-130): asked of
+    #  an orphan whose application is gone -- it may have MOVED.
+    home_db = {}
+    for where, result in exploration:
+        for name in result.app_set.app_db:
+            home_db.setdefault(name, []).append(
+                os.path.normpath(os.path.join(root, where)))
     for where, result in exploration:
         whole = os.path.normpath(os.path.join(root, where))
         bound_set.update(result.app_set.directory_spec.target_db or {})
@@ -228,7 +242,16 @@ def main(argv=None, write=None, err=None):
             wanted_f = False
         found, noted = sanitize.directory_issue_list(root, whole, result,
                                                      aspect_set, wanted_f)
-        issue_list.extend(found)
+        for issue in found:
+            if issue.kind == "orphan-test":
+                #  A MOVE IS AN ADD PLUS A REMOVE (E-131): what is
+                #  proposed depends on what the other side holds.
+                issue = sanitize.moved_issue_of(
+                            issue,
+                            sorted(d for d in home_db.get(issue.word_tuple[0], ())
+                                   if d != whole),
+                            root)
+            issue_list.append(issue)
         note_list.extend(noted)
 
     unbound_list = [name for name in arguments.target if name not in bound_set]

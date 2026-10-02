@@ -38,6 +38,7 @@ class E_Failure(Enum):
     LAUNCH_FAILED               = "launch-failed"
     MISDEP                      = "misdep"
     NO_GOOD_FILE                = "no-good-file"
+    NOT_IN_BOOK                 = "not-in-book"
     NOMINAL_FILE_NOT_FOUND      = "nominal-file-not-found"
     NOMINAL_WITHOUT_END         = "nominal-without-hwut-end"
     NOT_EQUIVALENT_DIVERGED     = "not-equivalent-diverged"
@@ -125,6 +126,11 @@ def category_of(token):
            else failure.category
 
 
+#  THE FIXED OPENING OF THE HEALING PARAGRAPH in 'hwut.help' (D-36): one
+#  spelling for every failure, so a page that reads it reads one string.
+HEAL_OPENER_STR = "In order to heal, "
+
+
 @dataclass(frozen=True)
 class Failure:
     """
@@ -137,7 +143,8 @@ class Failure:
                                 DEVIATION, which carries no word
         description             the phrase the HINTS block speaks
         what                    what the failure means -- 'hwut.help'
-        heal                    how a person resolves it -- 'hwut.help'
+        heal                    how a person resolves it -- 'hwut.help',
+                                printed after 'HEAL_OPENER_STR'
         sanitize                how 'hwut.sanitize' heals it: the
                                 aspect and the verb; None where no
                                 sanitize command does
@@ -155,19 +162,17 @@ class Failure:
                    no word before '[FAIL]', no help needed."""
         return self.category is E_FailureCategory.DEVIATION
 
-    def explanation_f(self, example=None):
+    def paragraph_list(self):
         """
-        RETURN: str, the explanation 'hwut.help' prints: WHAT, HEAL,
-                SANITIZE where one stands, and EXAMPLE where one is
-                named -- one labelled line each.
+        RETURN: list of str, the paragraphs 'hwut.help' prints for this
+                failure, each a fixed string of the table: what it
+                means; how it is healed, opening 'In order to heal, ';
+                and how 'hwut.sanitize' heals it, where a command does.
         """
-        line_list = ["WHAT      %s" % self.what,
-                     "HEAL      %s" % self.heal]
-        if self.sanitize is not None:
-            line_list.append("SANITIZE  %s" % self.sanitize)
-        if example is not None:
-            line_list.append("EXAMPLE   %s" % example)
-        return "\n".join(line_list)
+        result = [self.what,
+                  HEAL_OPENER_STR + self.heal[0].lower() + self.heal[1:]]
+        if self.sanitize is not None: result.append(self.sanitize)
+        return result
 
 
 _C = E_FailureCategory
@@ -183,6 +188,7 @@ _brief_failure_db = {
     _F.REGION_SYNTAX_ERROR:         (_C.NOMINAL,    "region"),
     _F.NO_GOOD_FILE:                (_C.NOMINAL,    "no GOOD file"),
     _F.NOMINAL_FILE_NOT_FOUND:      (_C.NOMINAL,    "no GOOD file"),
+    _F.NOT_IN_BOOK:                 (_C.NOMINAL,    "not in book"),
     #  BUILD
     _F.LAUNCH_FAILED:               (_C.BUILD,      "no-launch"),
     _F.TEST_APP_LAUNCH_FAILED:      (_C.BUILD,      "no-launch"),
@@ -246,8 +252,9 @@ def _failure(failure_id, description, what, heal, sanitize=None):
 _DEVIATION_WHAT = "The output differs from GOOD -- the ordinary business of a test."
 _DEVIATION_HEAL = ("Read 'hwut.run.diff <test> [<choice>]'; mend the code, or "
                    "accept the new output with 'hwut.accept'.")
-_CAP_HEAL = ("Look for the cause first; raise the cap in the header's "
-             "'caps { %s = ... }' only for a test that needs it by nature.")
+_CAP_RAISE = ("raise the cap in the header's 'caps { %s = ... }' only for a "
+              "test that needs it by nature.")
+_CAP_HEAL  = "Look for the cause first; " + _CAP_RAISE
 
 #  THE FAILURES, each once: the phrase HINTS speaks, what it means, how
 #  it is healed, and how 'hwut.sanitize' heals it where it can.
@@ -258,6 +265,16 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "a verdict needs a nominal to compare against (E-41).",
              "Look at its output with 'hwut.run.play <test> [<choice>]', "
              "then accept it: 'hwut.accept <test> [<choice>]'."),
+    _failure(_F.NOT_IN_BOOK, "GOOD file stands; case not in GOOD/book.csv",
+             "A GOOD file stands for this case, and 'GOOD/book.csv' has no "
+             "row for it: it was accepted outside the book -- by a commit, "
+             "a copy, another machine -- and has not been run here since "
+             "(E-41).",
+             "Run it: 'hwut.run <test> [<choice>]' enters the case and "
+             "judges it.",
+             "'hwut.sanitize.propose --books' proposes 'book <test> "
+             "[<choice>]', which enters the standing GOOD file as accepted; "
+             "nothing runs, nothing in GOOD/ moves."),
     _failure(_F.NOMINAL_FILE_NOT_FOUND, "GOOD missing",
              "The GOOD file named for a subject cannot be read.",
              "Restore it from git, or accept anew with 'hwut.accept'."),
@@ -289,7 +306,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "'hwut.sanitize.propose --constraints' proposes "
              "'remark <test> [<choice>]' for every GOOD that breaks its "
              "own constraints: the finding is written into the GOOD and "
-             "the book is stained 'constraint'; nothing is removed."),
+             "'GOOD/book.csv' is stained 'constraint'; nothing is removed."),
 
     #  BUILD
     _failure(_F.BUILD_FAILED, "build failed",
@@ -345,18 +362,21 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
 
     #  BOOK
     _failure(_F.TEST_VANISHED, "in book, no such test",
-             "The book records a test that no longer stands in its "
-             "directory; the book and the tree disagree, and only a "
+             "'GOOD/book.csv' records a test that no longer stands in its "
+             "directory; the file and the tree disagree, and only a "
              "person can say which is wrong.",
              "If it moved: 'hwut.rename <old> <new>' or 'hwut.move' "
              "carries its history. If it is gone on purpose: "
              "'hwut.remove <test>'.",
-             "'hwut.sanitize.propose --orphans' proposes "
-             "'forget <test>', which drops every record of it: nominals, "
-             "candidates, book entry, register id."),
+             "'hwut.sanitize.propose --orphans' proposes 'move <test> "
+             "<new-dir>' where the application stands in one other "
+             "directory with nothing recorded of it there -- its records "
+             "are carried after it -- and 'forget <test>' else, which "
+             "drops every record of it: nominals, candidates, its row in "
+             "'GOOD/book.csv', register id."),
     _failure(_F.TEST_CHOICE_VANISHED,
              "in book, no such choice",
-             "The book records a choice the test no longer offers.",
+             "'GOOD/book.csv' records a choice the test no longer offers.",
              "If it was renamed: 'hwut.rename'. If it is gone on purpose: "
              "'hwut.remove <test> <choice>'.",
              "'hwut.sanitize.propose --orphans' proposes "
@@ -410,22 +430,25 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.TEST_APP_WALL_CLOCK_EXCEEDED,
              "killed; wall-clock cap exceeded",
              "The application ran longer than its wall-clock cap.",
-             "Look for a hang or a wait first. " + _CAP_HEAL % "timeout_sec"),
+             "Look for a hang or a wait first; "
+             + _CAP_RAISE % "timeout_sec"),
     _failure(_F.TEST_APP_CPU_TIME_EXCEEDED, "killed; cpu-time cap exceeded",
              "The application used more cpu time than its cap.",
-             "Look for a busy loop first. " + _CAP_HEAL % "cpu_sec"),
+             "Look for a busy loop first; "
+             + _CAP_RAISE % "cpu_sec"),
     _failure(_F.TEST_APP_MEMORY_EXCEEDED, "killed; memory cap exceeded",
              "The application used more memory than its cap.",
-             "Look for a leak or an unbounded collection first. "
-             + _CAP_HEAL % "memory_mb"),
+             "Look for a leak or an unbounded collection first; "
+             + _CAP_RAISE % "memory_mb"),
     _failure(_F.TEST_APP_FILE_SIZE_EXCEEDED,
              "killed; file-size cap exceeded",
              "The application wrote a file larger than its cap.",
-             "Look for a runaway log first. " + _CAP_HEAL % "file_size_mb"),
+             "Look for a runaway log first; "
+             + _CAP_RAISE % "file_size_mb"),
     _failure(_F.TEST_APP_PIDS_EXCEEDED, "killed; process cap exceeded",
              "The application started more processes than its cap.",
-             "Look for a fork loop first. "
-             + _CAP_HEAL % "child_process_max_n"),
+             "Look for a fork loop first; "
+             + _CAP_RAISE % "child_process_max_n"),
     _failure(_F.TEST_APP_DISK_EXCEEDED, "killed; disk cap exceeded",
              "The application wrote more to disk than its cap.",
              "Let it clean up as it goes, or write less."),

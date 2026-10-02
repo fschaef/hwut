@@ -10,8 +10,8 @@ this face explores the tree for its SHAPE -- which applications, which
 choices, what they are called -- and asks each directory's book for the
 VERDICT. A case whose GOOD file does not stand fails, 'no GOOD file'
 (display D-32), as it does in the run; a case with a GOOD file the book
-has never seen is reported as never run, which is a finding and not a
-fault.
+has never seen fails 'not in book' (display D-37) -- a NOMINAL failure,
+healed by a run or by 'hwut.sanitize'.
 
 WHAT THE RUN FAILS WITHOUT BOOKING IT IS ASKED OF THE TREE (E-128):
 every failure 'hwut.run' counts appears here too. A header that does
@@ -182,7 +182,7 @@ class CRow:
         """RETURN: str, the reason it did not stand: the stain first,
         then the recorded report, then the plain absence."""
         if self.stain_repeat_n is not None: return "unstable"
-        if self.verdict is None:     return "never run"
+        if self.verdict is None:     return "not in book"
         if self.verdict is E_TestVerdict.ASPIRANT: return "aspirant"
         return self.report or "failed"
 
@@ -440,6 +440,12 @@ def entry_stream_of(root, wish, silent_db=None):
             #  the run as here (display D-32), whatever the book holds.
             elif not nominal_stands_f(whole, test, case.choice):
                 verdict, report = E_TestVerdict.FAIL, "no-good-file"
+            #  A GOOD FILE STANDS AND THE BOOK NEVER SAW THE CASE: a
+            #  NOMINAL failure by its name, 'not in book' (D-37) -- not
+            #  a wordless '[FAIL]'.
+            elif verdict is None \
+                 and bookkeeper.stain(test, case.choice) is None:
+                verdict, report = E_TestVerdict.FAIL, "not-in-book"
             row_list.append(CRow(
                 directory   = directory,
                 source_file = case.source_file,
@@ -505,7 +511,7 @@ def reason_word_of(row):
                  report.
                  'unaccepted' for an aspirant, as the run says it (O-25).
             None, where the failure is about equivalence, or the book
-                 names no reason (never run).
+                 names no reason.
     """
     if row.stain_repeat_n is not None: return reason_word("unstable")
     if row.verdict is E_TestVerdict.ASPIRANT:
@@ -718,7 +724,7 @@ def _message_of(row):
                 "repeat(s) and is not run until proven steady"
                 % row.stain.get("repeat_n", 0))
     if row.verdict is None:
-        return "the result database holds no run of this case"
+        return "'GOOD/book.csv' holds no row for this case"
     #  THE SHAPES ARE THIS FACE'S WORD, not the run's (E-31): the run
     #  said 'differs', and the files read afterwards said how.
     if row.report in ("not-equivalent-grew", "not-equivalent-shrank",

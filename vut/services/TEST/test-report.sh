@@ -3,9 +3,9 @@
 #
 # @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
-#     choices    = ["color", "json", "junit", "never_run", "refused",
-#                   "stain", "tap", "traditional", "width", "run_agrees",
-#                   "run_width"]
+#     choices    = ["color", "json", "junit", "never_run", "not_in_book",
+#                   "refused", "stain", "tap", "traditional", "width",
+#                   "run_agrees", "run_width"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -31,6 +31,10 @@
 # never_run    a case with no GOOD file, which the books never saw:
 #              'no GOOD file [FAIL]', a failure in every format (display
 #              D-32), and the page counts it.
+# not_in_book  a GOOD file stands and 'GOOD/book.csv' has no row for the
+#              case: 'not in book [FAIL]' (display D-37), with the
+#              pointer to 'hwut.help'; after a run the row stands and
+#              the case reads '[OK]'.
 # refused      an unknown format, a bad width, an unknown option, a
 #              directory that is not there.
 # run_width    THE REPORT IS AS WIDE AS THE RUN (display D-33): the widest
@@ -56,7 +60,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.report face: the databases, rendered.;"
-        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, refused, color, run_agrees, run_width;"
+        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, not_in_book, refused, color, run_agrees, run_width;"
         exit 0 ;;
 esac
 
@@ -179,6 +183,17 @@ never_run)
     masked --directory=tree --width=70
     echo "--- json"
     masked --directory=tree --format=json
+    ;;
+
+not_in_book)
+    #  A GOOD FILE THE BOOK NEVER SAW (D-37).
+    good_app
+    printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
+    echo "--- before any run"
+    masked --directory=tree --width=70
+    $RUN --directory=tree --silent > /dev/null 2>&1
+    echo "--- after a run"
+    masked --directory=tree --width=70
     ;;
 
 refused)

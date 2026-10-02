@@ -5018,6 +5018,8 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "hwut.sanitze splits to:
           FIVE COMMANDS:
               remove <dir>/TMP/session | TMP/lock | OUT | TMP
               forget <dir>/<test> [<choice>]   an orphan, via 'hwut.remove'
+              move   <dir>/<test> <new-dir>    an orphan whose application
+                                               moved, via 'hwut.move' (E-131)
               book   <dir>/<test> [<choice>]   the standing nominal entered
                                                as accepted (note_accept);
                                                nothing runs, GOOD/ unmoved
@@ -5063,7 +5065,7 @@ GRAVEYARD HOCON-LIKE BLOCKS named by category ('book_E4711 { explain ...
           taken: the house propose/apply shape is '#' comments over bare
           lines ('hwut.accept.propose', 'hwut.remove.propose').
           VERB = ISSUE ('remove-lock', 'remove-session', ...) -- rejected
-          by ruling: nine verbs where five say the act.
+          by ruling: nine verbs where the acts say it.
 
 ----------------------------------------------------------------------------
 E-126  'hwut.remove.apply' FORGETS ONE CASE PER CALL; AN ASPIRANT HAS
@@ -5203,4 +5205,74 @@ COST      A change to any block comment moves this page as well as the
           built, each after its own fork: a nominal that does not end
           in '<hwut-end>' (o-8), and a candidate carrying constraint
           findings.
+
+
+E-130  A PROPOSAL LINE MAY CARRY A NOTE; THE CANDIDATE'S REMARK STANDS
+                                                              (2026-10-02)
+______________________________________________________________________________
+PROBLEM   Only 'hwut.remove.propose' could say that an orphan's
+          application "possibly moved to" another directory:
+          'hwut.sanitize.propose' writes one comment per KIND of issue
+          and had no place for a word about one line. Separately, it was
+          asked whether a run should keep writing its constraint
+          finding into the CANDIDATE, which then differs from what the
+          application printed.
+
+DECISION  RULED (Frank-Rene, 2026-10-02): "The note after the one line
+          does not hurt, if ignored; the candidate constraint violation
+          is a very elegant way to document output and prevent
+          acceptance of violated constraints".
+          THE NOTE: a line of a proposal may end in '  # <note>'.
+          'CIssue.note' carries it, 'line()' writes it, and every reader
+          of commands drops it ('command.NOTE_RE': a blank, '#', a
+          blank, to the line's end). 'hwut.sanitize.propose' sets
+          "possibly moved to <dir>, ..." on an orphan whose application
+          is gone from its directory and stands in another of the walk.
+          'TEST/test-sanitize-scenarios.sh': 's13-orphan-moved', and
+          the noted line applied -- 'forget ... [DONE]'. The old reader
+          refused that line ("'forget' takes <dir>/<test> [<choice>]").
+          THE CANDIDATE: unchanged. The '##! constraint-violation'
+          region a run writes into the candidate (E-123) documents the
+          output where the law was broken, and is why 'hwut.accept'
+          refuses it. Sanitize has nothing to report there.
+
+COST      A walk narrower than the tree cannot see where an application
+          went: the note stands only where both directories are walked.
+
+
+E-131  A MOVE IS AN ADD PLUS A REMOVE: SANITIZE PROPOSES 'move'  (2026-10-02)
+______________________________________________________________________________
+PROBLEM   An application moved by hand to another directory leaves its
+          records behind. Sanitize proposed 'forget' for them -- the
+          nominals and the book entry dropped, the history lost -- and
+          could only note where the application "possibly" went (E-130).
+
+DECISION  RULED (Frank-Rene, 2026-10-02): "can we not propose a move
+          command instead of forget? Or, consider that a move consist of
+          an add plus a remove. So look, if it had been added to the
+          other side. Then, propose appropriate action".
+          'sanitize.moved_issue_of' decides, for records whose
+          application is gone from its directory, by what the OTHER
+          side holds ('recorded_f': a nominal of any choice, or a row
+          in 'GOOD/book.csv'):
+              stands in ONE other directory,     'move <dir>/<test>
+              nothing recorded of it there       <new-dir>' -- kind
+                                                 'orphan-moved'
+              stands elsewhere and IS recorded   'forget', noted
+              there (the add is done)            '# recorded anew in ...'
+              stands in several, unrecorded      'forget', noted
+                                                 '# possibly moved to ...'
+              stands nowhere                     'forget'
+          A SIXTH VERB, 'move' (E-125's list grows by one): it calls
+          'hwut.move <dir>/<test> <new-dir> --dont-ask', which carries
+          nominals, candidates and the book entry. It JUDGES AGAIN: the
+          records must still be an orphan's, the application must stand
+          in the directory named, and nothing may be recorded of it
+          there -- else REFUSED, by reason.
+          'TEST/test-sanitize-scenarios.sh': s13 (move), s14 (recorded
+          anew), s15 (twice), proposed and applied.
+
+COST      Whether a move was MEANT cannot be known: the block says how
+          to forget instead. A walk narrower than the tree sees no other
+          side and proposes 'forget'.
 

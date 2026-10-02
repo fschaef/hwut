@@ -15,7 +15,9 @@ THE FAILURE TABLE (display D-34), 'engine/display/failure.py'.
                before '[FAIL]', as '_brief_failure_db' states them --
                and the word 'reason_word()' prints for each token is
                that word.
-    explain    an explanation alone, and with an example case named.
+    explain    the paragraphs 'hwut.help' prints for a failure: what it
+               means, how it is healed (one fixed opening), and how
+               sanitize heals it where it does.
     total      the table covers every report token the operations can
                write ('E_TestRunResult' but 'ok'); every member of
                'E_Failure' has its brief line and its Failure; the
@@ -26,6 +28,7 @@ import sys
 from config import HwutRunner                                # noqa: F401
 
 from vut.engine.display.failure    import (E_Failure, E_FailureCategory,
+                                           HEAL_OPENER_STR,
                                            failure_db, failure_of)
 from vut.engine.display.failure    import _brief_failure_db
 from vut.engine.display.word       import reason_word, phrase
@@ -65,17 +68,24 @@ def test_brief():
 
 
 def test_explain():
-    failure = failure_of("nominal-without-hwut-end")
-    print("-- alone")
-    print(failure.explanation_f(None))
-    print("-- with an example")
-    print(failure.explanation_f("engine/compare/TEST test-exact.py basic"))
+    for token in ("nominal-without-hwut-end", "test-choice-vanished"):
+        failure = failure_of(token)
+        print("-- %s" % token)
+        for paragraph in failure.paragraph_list():
+            print("   | %s" % paragraph)
     ok = _check([
+        (all(f.paragraph_list()[1].startswith(HEAL_OPENER_STR)
+             for f in failure_db.values()),
+         "every failure's second paragraph opens '%s'"
+         % HEAL_OPENER_STR.strip()),
+        (all(len(f.paragraph_list()) == (3 if f.sanitize else 2)
+             for f in failure_db.values()),
+         "a third paragraph stands exactly where sanitize heals it"),
         (failure_of("ok") is None, "success is no failure"),
         (failure_of("a-token-nobody-taught") is None,
          "an unknown token is no failure of the table"),
     ])
-    _verdict(ok, "an explanation names its example last.")
+    _verdict(ok, "what it means, how to heal it, what sanitize does.")
 
 
 def test_total():

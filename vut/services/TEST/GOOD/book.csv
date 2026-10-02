@@ -1,4 +1,4 @@
-# vut-register 5 generation:247 apps:34 marks:0=7,1=4,2=13,3=5,4=8,5=6,6=4,7=2,8=5,9=2,10=2,11=5,12=6,13=4,14=7,15=5,16=6,17=10,18=3,19=5,20=7,21=11,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3
+# vut-register 5 generation:248 apps:34 marks:0=7,1=4,2=13,3=5,4=8,5=6,6=4,7=2,8=5,9=2,10=2,11=5,12=6,13=4,14=7,15=5,16=6,17=10,18=3,19=5,20=7,21=12,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3
 test;choice;verdict;report;coverage;stderr;stain;test_id;choice_id
 test-accept-door.py;cancel;true;ok;;;;1;0
 ;done;true;ok;;;;1;1
@@ -165,6 +165,7 @@ test-report.sh;color;true;ok;;;;21;0
 ;json;true;ok;;;;21;1
 ;junit;true;ok;;;;21;2
 ;never_run;true;ok;;;;21;3
+;not_in_book;true;ok;;;;21;11
 ;refused;true;ok;;;;21;4
 ;run_agrees;true;ok;;;;21;9
 ;run_width;true;ok;;;;21;10

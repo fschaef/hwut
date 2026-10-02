@@ -1,4 +1,4 @@
-# vut-register 5 generation:32 apps:3 marks:0=9,1=17,2=3
+# vut-register 5 generation:36 apps:3 marks:0=9,1=17,2=3
 test;choice;verdict;report;coverage;stderr;stain;test_id;choice_id
 test-failure.py;brief;true;ok;;;;2;0
 ;explain;true;ok;;;;2;1

@@ -1,11 +1,13 @@
--- alone
-WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so it cannot say what a complete stream is.
-HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner does so itself; a pype script prints it from '<eof>'), run it, and accept the new output with 'hwut.accept'.
--- with an example
-WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so it cannot say what a complete stream is.
-HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner does so itself; a pype script prints it from '<eof>'), run it, and accept the new output with 'hwut.accept'.
-EXAMPLE   engine/compare/TEST test-exact.py basic
+-- nominal-without-hwut-end
+   | Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so it cannot say what a complete stream is.
+   | In order to heal, let the test print '<hwut-end>' as its last line (HwutRunner does so itself; a pype script prints it from '<eof>'), run it, and accept the new output with 'hwut.accept'.
+-- test-choice-vanished
+   | 'GOOD/book.csv' records a choice the test no longer offers.
+   | In order to heal, if it was renamed: 'hwut.rename'. If it is gone on purpose: 'hwut.remove <test> <choice>'.
+   | 'hwut.sanitize.propose --orphans' proposes 'forget <test> <choice>', which drops every record of the choice.
+  OK  : every failure's second paragraph opens 'In order to heal,'
+  OK  : a third paragraph stands exactly where sanitize heals it
   OK  : success is no failure
   OK  : an unknown token is no failure of the table
-SUCCESS: an explanation names its example last.
+SUCCESS: what it means, how to heal it, what sanitize does.
 <hwut-end>

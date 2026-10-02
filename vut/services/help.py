@@ -12,15 +12,16 @@ DESCRIPTION
        case the wish selects below '--directory' (the current one where
        none is given). Runs nothing.
 
-       ONCE PER FAILURE, UNDER ITS CATEGORY -- the headings the run's
-       HINTS block carries (display D-35). Every failure that occurred is
-       explained once: its word before '[FAIL]' and its phrase, how many
-       cases it struck, then
+       AN INTRODUCTION FIRST: how many cases failed for how many
+       reasons, and that each has a known remedy below.
 
-           WHAT      what the failure means
-           HEAL      how a person resolves it
-           SANITIZE  how 'hwut.sanitize' heals it, where a command does
-           EXAMPLE   one of the cases that failed so
+       ONCE PER FAILURE, UNDER ITS CATEGORY -- the headings the run's
+       HINTS block carries (display D-35, D-36). For every failure that
+       occurred: its word before '[FAIL]', its phrase and the number of
+       cases; a paragraph saying what it means; a paragraph opening 'In
+       order to heal, ' saying how it is resolved; a paragraph on how
+       'hwut.sanitize' heals it, where a command does; and 'CONCERNED:',
+       the cases as HINTS lists them -- directory, application, choice.
 
        A plain difference from GOOD is the ordinary business of a test
        and is not explained here; neither is a case the book never saw.
@@ -43,7 +44,9 @@ from   vut.engine.orchestrator.plan.wish import (HELP as WISH_HELP,
 from   vut.engine.display.failure       import (failure_db, failure_of,
                                                 subtle_f, category_of,
                                                 E_FailureCategory,
-                                                CATEGORY_HEADING_DB)
+                                                CATEGORY_HEADING_DB,
+                                                HEAL_OPENER_STR)
+from   vut.engine.display.plain         import CHOICE_GAP
 from   vut.services.lib.cmdline         import (face_parser, usage_of,
                                                 parse_or_refuse)
 from   vut.services.lib.face            import FaceError
@@ -51,8 +54,7 @@ from   ._exit                           import E_ExitCode
 from   ._target                         import entered
 from   .report                          import do, request_of
 
-WRAP_WIDTH = 62          # the text column, after the four-blank indent
-                         # and the ten-column label: 76 in all
+WRAP_WIDTH = 68          # a paragraph's text, eight blanks deep: 76 in all
 
 PARSER = face_parser("hwut.help", "Explain the subtle failures of the "
                                   "last results.",
@@ -82,48 +84,88 @@ def token_of(row):
 
 def occurrence_db_of(block_list):
     """
-    RETURN: dict, failure token -> list of (directory, case name), every
-            subtle failure among the blocks' rows, in the order met.
+    RETURN: dict, failure token -> list of (directory, file, choice),
+            every subtle failure among the blocks' rows, in the order
+            met; 'choice' None where the test has none.
     """
     occurrence_db = {}
     for block in block_list:
         for row in block.row_tuple:
             token = token_of(row)
             if not subtle_f(token): continue
-            name = row.source_file if row.choice is None \
-                   else "%s %s" % (row.source_file, row.choice)
             occurrence_db.setdefault(token, []).append(
-                (block.directory, name))
+                (block.directory or ".", row.source_file, row.choice))
     return occurrence_db
+
+
+def concerned_line_list(case_list):
+    """
+    RETURN: list of str, the cases a failure struck, AS HINTS LISTS THEM
+            (display D-35) and without the phrase: the directory once,
+            each application once beneath it, ':' where its choices
+            repeat it.
+    """
+    directory_db = {}
+    for directory, file, choice in case_list:
+        directory_db.setdefault(directory, []).append((file, choice))
+    line_list = []
+    for directory, item_list in directory_db.items():
+        line_list.append(directory)
+        last_file, column = None, 0
+        for file, choice in item_list:
+            repeat_f = (file == last_file)
+            if not repeat_f: column = len(file) + CHOICE_GAP
+            last_file = file
+            shown     = ":" if repeat_f else file
+            line_list.append("    " + ("%-*s%s" % (column, shown, choice)
+                                       if choice else shown))
+    return line_list
 
 
 def explanation_line_list(token, case_list):
     """
-    RETURN: list of str, the paragraph explaining one failure: its word
-            and phrase, how many cases, then the explanation naming the
-            first case as the example.
+    RETURN: list of str, what 'hwut.help' says of one failure: the head
+            (its word, its phrase, how many cases); then, each after an
+            empty line, the table's paragraphs wrapped -- what it means,
+            how it is healed, how 'hwut.sanitize' heals it where it
+            does; then 'CONCERNED:' and the cases.
     """
     failure = failure_of(token)
-    first_directory, first_name = case_list[0]
-    example = "%s  %s" % (first_directory or ".", first_name)
     if failure is None:
         head = "failed -- '%s'" % token
-        body = "WHAT      A reason this table does not know.\n" \
-               "HEAL      Read the HINTS of 'hwut.run' for the case.\n" \
-               "EXAMPLE   %s" % example
+        paragraph_list = ["A reason the failure table does not know.",
+                          HEAL_OPENER_STR + "read the HINTS of 'hwut.run' "
+                          "for the cases below."]
     else:
         head = "%s -- %s" % (failure.comment_before_FAIL_str,
                              failure.description)
-        body = failure.explanation_f(example)
+        paragraph_list = failure.paragraph_list()
     line_list = ["%s  [%i case(s)]" % (head, len(case_list))]
-    #  WRAPPED UNDER THE TEXT, the label standing alone in its column.
-    for line in body.splitlines():
-        label, _, text = line.partition("  ")
-        wrapped = textwrap.wrap(text.strip(), width=WRAP_WIDTH,
-                                break_on_hyphens=False) or [""]
-        line_list.append("    %-9s %s" % (label, wrapped[0]))
-        line_list.extend("    %-9s %s" % ("", more) for more in wrapped[1:])
+    for paragraph in paragraph_list:
+        line_list.append("")
+        line_list.extend("    " + line for line in
+                         textwrap.wrap(paragraph, width=WRAP_WIDTH,
+                                       break_on_hyphens=False))
+    line_list.append("")
+    line_list.append("    CONCERNED:")
+    line_list.extend("        " + line
+                     for line in concerned_line_list(case_list))
     return line_list
+
+
+def introduction_line_list(case_n, failure_n):
+    """
+    RETURN: list of str, the opening of the page: how many cases failed
+            for how many reasons, and that each has a known remedy
+            below.
+    """
+    return textwrap.wrap(
+        "The last results hold %i case(s) that failed for %i reason(s) "
+        "other than a plain difference from GOOD. Every one of them has "
+        "a known cause and a known remedy: the paragraphs below explain "
+        "each reason once, say how to heal it, and name the cases "
+        "concerned." % (case_n, failure_n),
+        width=WRAP_WIDTH + 8, break_on_hyphens=False)
 
 
 def main(argv=None, write=None):
@@ -174,7 +216,11 @@ def main(argv=None, write=None):
     #  by the table's order, so the page is the same whatever the walk
     #  met first; a token the table does not carry comes last.
     rank_db = {member.value: i for i, member in enumerate(failure_db)}
-    first_f = True
+    for line in introduction_line_list(
+                    sum(len(v) for v in occurrence_db.values()),
+                    len(occurrence_db)):
+        write(line)
+    first_f = False
     for category in E_FailureCategory:
         token_list = sorted((t for t in occurrence_db
                              if category_of(t) is category),

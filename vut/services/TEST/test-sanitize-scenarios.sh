@@ -28,6 +28,16 @@
 #     s10-constraint      a nominal breaks its constraint,     remark
 #                         and one never binds a variable
 #     s12-target          '--target clean', bound here         run
+#   A MOVE IS AN ADD PLUS A REMOVE (E-131): what the other side holds
+#   decides what is proposed for records whose application is gone.
+#     s13-orphan-moved    it stands in 'c06-home', where       move
+#                         nothing is recorded of it: the
+#                         records are carried after it
+#     s14-orphan-readded  it stands in 'c07-readded', and is   forget
+#                         recorded there: '# recorded anew in'
+#     s15-orphan-twice    it stands in 'c08-one' and           forget
+#                         'c09-two': '# possibly moved to'
+#                         (E-130; the note is never read)
 #   SAID, NOT PROPOSED (stderr, NOTE)
 #     n01-out-live        'OUT/' of a directory a live run holds
 #     n02-choiceless      choice-less records of a test with choices
@@ -40,6 +50,9 @@
 #     c03-live-lock       a lock whose holder lives
 #     c04-remarked        a constraint finding already written
 #     c05-unreachable     an application that stands, hidden by 'ignore'
+#     c06-home            where the application of s13 stands now
+#     c07-readded         where s14's stands, accepted there
+#     c08-one, c09-two    where s15's stands twice
 #
 # Every directory but s08 and s09 holds one application, accepted: its
 # nominal and its book row agree, so it adds nothing but its scenario.
@@ -49,6 +62,7 @@ ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 PROPOSE="python3 -m vut.services.lib.sanitize.propose"
 COMMAND="python3 -m vut.services.sanitize"
+APPLY="python3 -m vut.services.lib.sanitize.apply"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
@@ -139,13 +153,32 @@ catalogue)
     for d in s01-session s02-lock-dead s03-lock-nameless s04-out \
              s05-transient s06-orphan-test s07-orphan-choice \
              s10-constraint n01-out-live n02-choiceless n04-wish \
-             n05-register c01-aspirant c03-live-lock c04-remarked; do
+             n05-register c01-aspirant c03-live-lock c04-remarked \
+             s13-orphan-moved c06-home s14-orphan-readded c07-readded \
+             s15-orphan-twice c08-one c09-two; do
         app $d; booked $d
     done
 
     printf 'stale\n<hwut-end>\n' > tree/s06-orphan-test/TEST/GOOD/test-gone.sh.txt
     printf 'stale\n<hwut-end>\n' \
         > tree/s07-orphan-choice/TEST/GOOD/test-app.sh--nochoice.txt
+
+    far() {               #  <dir> <name>: the application, standing there
+        printf '#! /bin/bash\n# @hwut { title = "F" }\necho "far"\necho "<hwut-end>"\n' \
+            > "tree/$1/TEST/$2"
+        chmod +x "tree/$1/TEST/$2"
+    }
+    printf 'far\n<hwut-end>\n' > tree/s13-orphan-moved/TEST/GOOD/test-far.sh.txt
+    far c06-home test-far.sh
+
+    printf 'far\n<hwut-end>\n' > tree/s14-orphan-readded/TEST/GOOD/test-re.sh.txt
+    far c07-readded test-re.sh
+    printf 'far\n<hwut-end>\n' > tree/c07-readded/TEST/GOOD/test-re.sh.txt
+    $COMMAND book tree/c07-readded/TEST/test-re.sh > /dev/null 2>&1
+
+    printf 'far\n<hwut-end>\n' > tree/s15-orphan-twice/TEST/GOOD/test-two.sh.txt
+    far c08-one test-two.sh
+    far c09-two test-two.sh
 
     app s08-book-behind
 
@@ -222,6 +255,21 @@ Bookkeeper('tree/c01-aspirant/TEST').run_id_of('test-new.sh', allocate_f=True)"
     propose --directory=tree --transient
     echo "=== A WISH THAT HIDES CASES"
     propose --directory=tree/n04-wish --orphans --glob "test-none*"
+    echo "=== THE THREE ORPHANS APPLIED: one moved, two forgotten past their notes"
+    $PROPOSE --directory=tree --orphans 2> /dev/null \
+        | grep -E 's13-orphan-moved|s14-orphan-readded|s15-orphan-twice' > moved.txt
+    sed 's/^/    /' moved.txt
+    $APPLY moved.txt 2>&1 | grep -E '^ *(move|forget) |Done|REFUSED' \
+        | sed 's/ \.\+ / /; s/^ */    /'
+    here() { [ -f "tree/$1" ] && echo yes || echo NO; }
+    echo "    s13: the nominal left          : $([ -f tree/s13-orphan-moved/TEST/GOOD/test-far.sh.txt ] && echo NO || echo yes)"
+    echo "    s13: and stands in c06-home    : $(here c06-home/TEST/GOOD/test-far.sh.txt)"
+    echo "    s14: the old nominal is gone   : $([ -f tree/s14-orphan-readded/TEST/GOOD/test-re.sh.txt ] && echo NO || echo yes)"
+    echo "    s14: c07-readded keeps its own : $(here c07-readded/TEST/GOOD/test-re.sh.txt)"
+    echo "    s15: the old nominal is gone   : $([ -f tree/s15-orphan-twice/TEST/GOOD/test-two.sh.txt ] && echo NO || echo yes)"
+    echo "--- asked again"
+    $PROPOSE --directory=tree --orphans 2> /dev/null \
+        | grep -cE 's13-orphan-moved|s14-orphan-readded|s15-orphan-twice' | sed 's/^/    lines: /'
     ;;
 
 *)

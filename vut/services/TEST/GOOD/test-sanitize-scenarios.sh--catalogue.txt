@@ -28,12 +28,22 @@ STDOUT {
     # 'remove' deletes it. A directory a live run holds is refused.
     remove tree/s04-out/TEST/OUT
     
+    # ORPHAN, APPLICATION MOVED: records name a test application that
+    # stands in ANOTHER directory now, where nothing is recorded of it.
+    # 'move' carries every record after it -- nominals, candidates, book
+    # entry -- through 'hwut.move'; nothing is lost. To drop the records
+    # instead, write 'forget <dir>/<test>'.
+    move tree/s13-orphan-moved/TEST/test-far.sh tree/c06-home/TEST
+    
     # ORPHAN, APPLICATION GONE: records name a test application that no
-    # longer stands in its directory. IT MAY HAVE MOVED: then carry its
-    # history with 'hwut.rename' and delete the line here.
+    # longer stands in its directory. Where it stands elsewhere and is
+    # RECORDED there already, or stands in several places, the line
+    # says so.
     # 'forget' drops every record of the test: nominals, candidates,
     # book entry, register id.
     forget tree/s06-orphan-test/TEST/test-gone.sh
+    forget tree/s14-orphan-readded/TEST/test-re.sh  # recorded anew in c07-readded/TEST
+    forget tree/s15-orphan-twice/TEST/test-two.sh  # possibly moved to c08-one/TEST, c09-two/TEST
     
     # ORPHAN, CHOICE NOT OFFERED: the application stands and is
     # understood, and does not name that choice.
@@ -119,4 +129,19 @@ STDOUT {
 STDERR {
     NOTE: TEST: orphans not judged -- the wish hides cases here, and the hidden ones would look orphaned
 }
+=== THE THREE ORPHANS APPLIED: one moved, two forgotten past their notes
+    move tree/s13-orphan-moved/TEST/test-far.sh tree/c06-home/TEST
+    forget tree/s14-orphan-readded/TEST/test-re.sh  # recorded anew in c07-readded/TEST
+    forget tree/s15-orphan-twice/TEST/test-two.sh  # possibly moved to c08-one/TEST, c09-two/TEST
+    move tree/s13-orphan-moved/TEST/test-far.sh tree/c06-home/TEST [DONE]
+    forget tree/s14-orphan-readded/TEST/test-re.sh [DONE]
+    forget tree/s15-orphan-twice/TEST/test-two.sh [DONE]
+    Done 3/3
+    s13: the nominal left          : yes
+    s13: and stands in c06-home    : yes
+    s14: the old nominal is gone   : yes
+    s14: c07-readded keeps its own : yes
+    s15: the old nominal is gone   : yes
+--- asked again
+    lines: 0
 <hwut-end>

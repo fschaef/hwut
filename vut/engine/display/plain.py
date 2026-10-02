@@ -1492,7 +1492,7 @@ class CPlainFlow(CRunReportReceiver):
                 write("    %-*s%s" % (column, node, reason))
 
 
-def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
+def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
                       refused_n=0, meta_n=0, seconds=None, total=None):
     """
     RETURN: list[str], THE CLOSING TWO LINES: one line of numbers under
@@ -1502,7 +1502,7 @@ def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
             before its numbers are. Empty where nothing was counted;
             the numbers alone where nothing was drawn.
 
-            RESULTS: <ok> ok, <fail> fail, [<unaccepted> unaccepted,]
+            RESULTS: <ok> ok, <fail> fail,
                      [<skip> skip,] [<refused> refused,] [<meta> meta,]
                      [<s.ss> [sec]]
             |    ok    |skip|   fail   |
@@ -1511,11 +1511,11 @@ def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
     its flow, 'hwut.report' from its rows -- which ran no run and so
     passes no 'seconds'.
 
-    SIX NUMBERS, NONE DERIVABLE FROM ANOTHER. 'run' (ok + fail) and
+    FIVE NUMBERS, NONE DERIVABLE FROM ANOTHER. 'run' (ok + fail) and
     'total' (run + skip) were dropped: a reader recomputes them faster
     than he reads them, and 'total' did not count the refused, so the
-    word did not mean what it said. Each of unaccepted, skip, refused
-    and meta appears only where it is not zero.
+    word did not mean what it said. Each of skip, refused and meta
+    appears only where it is not zero.
 
     THE PREFIX IS THE ANCHOR. A test whose subject is the FLOW and not
     its arithmetic tolerates this line with one eq-pattern,
@@ -1532,11 +1532,10 @@ def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
     refused nor meta is drawn: neither was ever selected. UNACCEPTED is
     drawn with the failures.
     """
-    run_n = ok_n + fail_n + undecided_n
+    run_n = ok_n + fail_n
     if run_n == 0 and skip_n == 0 and refused_n == 0: return []
 
     part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
-    if undecided_n: part_list.append("%d unaccepted" % undecided_n)
     if skip_n:      part_list.append("%d skip" % skip_n)
     if refused_n:   part_list.append("%d refused" % refused_n)
     if meta_n:      part_list.append("%d meta" % meta_n)
@@ -1549,7 +1548,7 @@ def results_line_list(ok_n, fail_n, w, ink, undecided_n=0, skip_n=0,
 
     total = run_n + skip_n
     if total == 0: return line_list
-    span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n + undecided_n}
+    span_db  = {"ok": ok_n, "skip": skip_n, "fail": fail_n}
     #  A NON-EMPTY REGION IS AT LEAST ITS BORDER. Reserve one column
     #  each, share the rest by proportion, and give the remainder to the
     #  largest. ONE COLUMN IS HELD BACK for the CLOSING MARKER: the bar

@@ -123,7 +123,6 @@ ROLE_DEFAULT_DB = {
     "run.fail":          "c256:196",
     "run.tag-ok":        "bright-white bg-green",
     "run.tag-fail":      "bright-white bg256:196",
-    "run.tag-undecided": "black bg-yellow",
     "run.warn":          "yellow",
     "run.start":         "blue",
     "run.dim":           "dim",
@@ -192,9 +191,6 @@ class CInk:
     #  the bright foreground, 42 and 41 the grounds.
     def tag_ok(self, text):   return self.role(text, "run.tag-ok")
     def tag_fail(self, text): return self.role(text, "run.tag-fail")
-    #  '[ ?! ]' (O-25): CANNOT BE USED FOR COMPARISON -- not green, not
-    #  the red of a regression: black on the amber of a warning.
-    def tag_undecided(self, text): return self.role(text, "run.tag-undecided")
     def warn(self, text):    return self.role(text, "run.warn")
     def start(self, text):   return self.role(text, "run.start")
     def dim(self, text):     return self.role(text, "run.dim")

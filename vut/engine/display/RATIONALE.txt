@@ -993,3 +993,65 @@ COST      Twelve pages moved at the grouping, every line by the heading,
           with failures in two categories is named once under each --
           the ruling's grouping, not a repetition.
 
+
+D-36  'hwut.help' READS AS PROSE: AN INTRODUCTION, PARAGRAPHS, 'CONCERNED:'
+                                                              (2026-10-02)
+______________________________________________________________________________
+PROBLEM   'hwut.help' opened on a heading with nothing before it, and
+          drew each failure as a form -- 'WHAT', 'HEAL', 'SANITIZE',
+          'EXAMPLE' -- naming one case of several. "The book" was said
+          as though a reader knew what it is.
+
+DECISION  RULED (Frank-Rene, 2026-10-02): "Add introductory phrase. That
+          somehow provides relief giving the perspective of a solution
+          at hand. [...] start the paragraph directly with the
+          explanation. Instead of "WHAT .... ", write "The GOOD/book.csv
+          records a choice that ..." [...] Then new paragraph starting
+          with 'In order to heal' [...] associate these phrases fixed
+          with the issue, otherwise relying tests get confused with
+          deviating strings. Finally, a Section starting with
+          'CONCERNDED:' and the files listed in the way that we list
+          them in the hints (without the comment at the end)".
+          THE INTRODUCTION: how many cases failed for how many reasons
+          other than a plain difference from GOOD, and that each has a
+          known cause and a known remedy below.
+          PER FAILURE, under its category's heading (D-35): the head
+          unchanged -- word, phrase, number of cases; then paragraphs,
+          each a FIXED STRING OF THE TABLE ('Failure.paragraph_list()'):
+          what it means; how it is healed, opening 'failure.
+          HEAL_OPENER_STR' ("In order to heal, ") for every failure
+          alike; how 'hwut.sanitize' heals it, where a command does.
+          Then 'CONCERNED:' and EVERY case the failure struck, in HINTS'
+          own columns -- directory once, application once, ':' where
+          its choices repeat it -- and no phrase.
+          'GOOD/book.csv' is named where the texts said "the book".
+
+COST      The 'EXAMPLE' line is gone: all cases are listed. Two pages
+          moved, both this face's own.
+
+
+D-37  A GOOD FILE THE BOOK NEVER SAW FAILS 'not in book'       (2026-10-02)
+______________________________________________________________________________
+PROBLEM   'hwut.report' showed a case whose GOOD file stands and which
+          'GOOD/book.csv' has no row for as a bare '[FAIL]' -- no word,
+          no pointer, nothing 'hwut.help' could explain; its machine
+          formats said "never run".
+
+DECISION  RULED (Frank-Rene, 2026-10-02): "thats a nominal failure
+          [...] 'never run' is not a good comment, better 'not in
+          book'."
+          'E_Failure.NOT_IN_BOOK' ('not-in-book'), category NOMINAL,
+          word 'not in book'. The report gives the row that failure
+          where the GOOD file stands, the book holds no verdict and no
+          stain. 'hwut.help' explains it: a run enters and judges the
+          case; 'hwut.sanitize.propose --books' proposes 'book'.
+          THE RUN IS UNCHANGED: it runs such a case on the nominal's
+          word and enters it (services E-41), so the failure stands
+          only until the next run.
+
+COST      Pages showing such a row move by the word, and by the pointer
+          to 'hwut.help' where it was the only subtle failure.
+          RETIRED WITH IT (ruled "they should go"): the '[ ?! ]' tag's
+          colour role 'run.tag-undecided' and the 'unaccepted' count of
+          'results_line_list', unused since O-25.
+

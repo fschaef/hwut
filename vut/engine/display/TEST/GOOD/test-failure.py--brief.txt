@@ -15,6 +15,7 @@ not-equivalent-diverged        deviation    -
 not-equivalent-grew            deviation    -
 not-equivalent-shrank          deviation    -
 not-equivalent-with-nominal    deviation    -
+not-in-book                    nominal      not in book
 output-file-not-found          execution    no-output
 pype-contained                 execution    pype
 pype-failed                    execution    pype

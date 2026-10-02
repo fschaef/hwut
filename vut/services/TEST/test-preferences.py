@@ -90,7 +90,7 @@ def test_defaults():
     ink = CInk(True)
     for name, code in (("ok", "32"), ("fail", "38;5;196"),
                        ("tag_ok", "97;42"), ("tag_fail", "97;48;5;196"),
-                       ("tag_undecided", "30;43"), ("warn", "33"),
+                       ("warn", "33"),
                        ("start", "34"), ("dim", "2"), ("bold", "1"),
                        ("dir_band", "97;48;5;208"),
                        ("block_error", "1;97;48;5;196"),

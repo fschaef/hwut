@@ -20,6 +20,11 @@ relative to '--directory' (the current directory where none is given):
                                  configuration no longer offers --
                                  nominals, candidates, book entry,
                                  register id -- through 'hwut.remove'
+    move   <dir>/<test> <new-dir>
+                                 an orphan whose application stands in
+                                 <new-dir> now, with nothing recorded of
+                                 it there: its records carried after it,
+                                 through 'hwut.move' (E-131)
     book   <dir>/<test> [<choice>]
                                  a nominal stands and the book
                                  disagrees: the standing nominal is
@@ -118,10 +123,17 @@ ISSUE_KIND_TUPLE = (
         "TRANSIENT ROOT: 'OUT/' or 'TMP/' whole, the candidates with them",
         "-- all of it a run can make again (E-24).",
         "'remove' deletes it. A directory a live run holds is refused.")),
+    CIssueKind("orphan-moved", "move", (
+        "ORPHAN, APPLICATION MOVED: records name a test application that",
+        "stands in ANOTHER directory now, where nothing is recorded of it.",
+        "'move' carries every record after it -- nominals, candidates, book",
+        "entry -- through 'hwut.move'; nothing is lost. To drop the records",
+        "instead, write 'forget <dir>/<test>'.")),
     CIssueKind("orphan-test", "forget", (
         "ORPHAN, APPLICATION GONE: records name a test application that no",
-        "longer stands in its directory. IT MAY HAVE MOVED: then carry its",
-        "history with 'hwut.rename' and delete the line here.",
+        "longer stands in its directory. Where it stands elsewhere and is",
+        "RECORDED there already, or stands in several places, the line",
+        "says so.",
         "'forget' drops every record of the test: nominals, candidates,",
         "book entry, register id.")),
     CIssueKind("orphan-choice", "forget", (
@@ -164,11 +176,15 @@ class CIssue:
     (test,) or (test, choice) for a case, (target,) for a target.
     'payload' is what the healing needs and the naming does not -- the
     placed remarks of a 'constraint' -- and takes no part in equality.
+    'note' is what a reader of the proposal should know about this ONE
+    line -- "possibly moved to ..." -- written after it as '# <note>'
+    and ignored by every reader of commands (E-130).
     """
     kind:      str
     directory: str
     word_tuple: tuple
     payload:   object = field(default=None, compare=False)
+    note:      object = field(default=None, compare=False)
 
     def verb(self):
         """RETURN: str, the command that heals this issue."""
@@ -180,18 +196,27 @@ class CIssue:
                 relative to 'base':
                     remove  <dir>/TMP/session
                     forget  <dir>/<test> [<choice>]
+                    move    <dir>/<test> <new-dir>
                     run     <dir> <target>
         """
         where = shown(base, self.directory).replace(os.sep, "/")
         if self.verb() == "run":
             return "%s %s" % (where, self.word_tuple[0])
+        if self.verb() == "move":
+            head = self.word_tuple[0] if where == "." \
+                   else "%s/%s" % (where, self.word_tuple[0])
+            return "%s %s" % (head, shown(base, self.word_tuple[1])
+                                    .replace(os.sep, "/"))
         head = self.word_tuple[0] if where == "." \
                else "%s/%s" % (where, self.word_tuple[0])
         return " ".join((head,) + tuple(self.word_tuple[1:]))
 
     def line(self, base):
-        """RETURN: str, the proposal's line: '<command> <entity>'."""
-        return "%s %s" % (self.verb(), self.entity(base))
+        """RETURN: str, the proposal's line: '<command> <entity>', and
+                   '  # <note>' after it where the issue carries one."""
+        text = "%s %s" % (self.verb(), self.entity(base))
+        if self.note: text += "  # %s" % self.note
+        return text
 
 
 class DirectoryLive(Exception):
@@ -413,6 +438,60 @@ def orphan_issue_list(directory, app_set):
             issue_db[(test, choice)] = CIssue("orphan-choice", directory,
                                               (test, choice))
     return [issue_db[k] for k in sorted(issue_db)], note_list
+
+
+def recorded_f(directory, test):
+    """
+    RETURN: bool, whether anything is recorded of 'test' in that test
+            directory -- a nominal of any choice in GOOD/, or a row in
+            'GOOD/book.csv'.
+    """
+    good = os.path.join(directory, "GOOD")
+    if os.path.isdir(good) and any(
+            record_key_of(name) is not None
+            and record_key_of(name)[0] == test
+            for name in os.listdir(good)
+            if name not in GOOD_OWNED_FILE_TUPLE):
+        return True
+    try:
+        return test in Bookkeeper(directory).book()
+    except TestIdFault:
+        return True
+
+
+def moved_issue_of(issue, home_list, root):
+    """
+    RETURN: CIssue, what to propose for an orphan whose application is
+            gone from its directory, given 'home_list' -- the OTHER test
+            directories (absolute) an application of that name stands
+            in, named in a note as they read from 'root':
+
+                none                     the issue as it is: 'forget'
+                ONE, nothing recorded    'orphan-moved': 'move' the
+                there                    records after the application
+                ONE or more, recorded    'forget', noted 'recorded anew
+                there                    in <dir>': the move was an add
+                                         and a remove, and the add is done
+                several, else            'forget', noted 'possibly moved
+                                         to <dir>, ...': which, nobody
+                                         can know
+
+    A MOVE IS AN ADD PLUS A REMOVE (E-131): where the other side already
+    holds its own records, only the remove is left.
+    """
+    if not home_list: return issue
+    test = issue.word_tuple[0]
+    recorded_list = [d for d in home_list if recorded_f(d, test)]
+    if len(home_list) == 1 and not recorded_list:
+        return CIssue("orphan-moved", issue.directory, (test, home_list[0]))
+    if recorded_list:
+        note = "recorded anew in %s" % ", ".join(
+                   shown(root, d).replace(os.sep, "/") for d in recorded_list)
+    else:
+        note = "possibly moved to %s" % ", ".join(
+                   shown(root, d).replace(os.sep, "/") for d in home_list)
+    return CIssue(issue.kind, issue.directory, issue.word_tuple,
+                  payload=issue.payload, note=note)
 
 
 def books_issue_list(directory, app_set):

@@ -10,22 +10,38 @@
     HINT: use 'hwut.help' for explanation of subtle issues.
 --- hwut.help:
 STATUS: 0
+    The last results hold 3 case(s) that failed for 2 reason(s) other than a
+    plain difference from GOOD. Every one of them has a known cause and a known
+    remedy: the paragraphs below explain each reason once, say how to heal it,
+    and name the cases concerned.
+    
     NOMINAL -- error in GOOD file
     
         no <hwut-end> marker -- GOOD file does not end in <hwut-end>  [2 case(s)]
-            WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does
-                      not, so it cannot say what a complete stream is.
-            HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner
-                      does so itself; a pype script prints it from '<eof>'), run it,
-                      and accept the new output with 'hwut.accept'.
-            EXAMPLE   TEST  test-noend-a.sh
+        
+            Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so
+            it cannot say what a complete stream is.
+        
+            In order to heal, let the test print '<hwut-end>' as its last line
+            (HwutRunner does so itself; a pype script prints it from '<eof>'),
+            run it, and accept the new output with 'hwut.accept'.
+        
+            CONCERNED:
+                TEST
+                    test-noend-a.sh
+                    test-noend-b.sh
     
     EXECUTION -- application invocation error
     
         stderr -- unexpected stderr  [1 case(s)]
-            WHAT      The application wrote to stderr, and the choice does not
-                      tolerate it (E-5).
-            HEAL      Stop the writing; or declare it in the header: 'tolerance {
-                      stderr = ignored }'.
-            EXAMPLE   TEST  test-err.sh
+        
+            The application wrote to stderr, and the choice does not tolerate it
+            (E-5).
+        
+            In order to heal, stop the writing; or declare it in the header:
+            'tolerance { stderr = ignored }'.
+        
+            CONCERNED:
+                TEST
+                    test-err.sh
 <hwut-end>

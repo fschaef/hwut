@@ -22,6 +22,7 @@ THE ACTING IS SPLIT FROM THE SAYING (E-103): 'execute' answers a CDone
 and prints nothing; the faces turn it into lines.
 ______________________________________________________________________________
 """
+import re
 import os
 import shutil
 from   dataclasses import dataclass, field
@@ -82,6 +83,7 @@ ARITY_DB = {
     "remove": (1, 1, "<dir>/TMP/session | <dir>/TMP/lock | <dir>/OUT | "
                      "<dir>/TMP"),
     "forget": (1, 2, "<dir>/<test> [<choice>]"),
+    "move":   (2, 2, "<dir>/<test> <new-dir>"),
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "run":    (2, 2, "<dir> <target>"),
@@ -92,6 +94,11 @@ assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
 REMOVE_TAIL_TUPLE = (SESSION_DIRECTORY_NAME, LOCK_DIRECTORY_NAME,
                      sanitize.OUT_DIRECTORY_NAME,
                      sanitize.TRANSIENT_DIRECTORY_NAME)
+
+
+#  THE NOTE BEHIND A COMMAND (E-130): a blank, '#', a blank, and
+#  whatever follows. An entity never holds ' # '.
+NOTE_RE = re.compile(r"\s+#\s.*$")
 
 
 def line_of_words(word_list):
@@ -118,9 +125,13 @@ def line_of_text(text):
             None,     the line is a comment or blank -- THE VETO: a
                       line that starts '#' is not done.
             str,      why the line spells no command.
+
+    A NOTE AFTER THE COMMAND IS NOT READ (E-130): from a '#' that stands
+    after a blank to the line's end -- "  # possibly moved to ...".
     """
     stripped = text.strip()
     if not stripped or stripped.startswith("#"): return None
+    stripped = NOTE_RE.sub("", stripped)
     return line_of_words(stripped.split())
 
 
@@ -272,6 +283,41 @@ class CContext:
                                if line.startswith(("REFUSED", "FAULT"))),
                               "not forgotten"))
         self._touch_set.add(directory)
+        return CDone(E_Done.DONE)
+
+    def _do_move(self, word_tuple):
+        """RETURN: CDone -- an orphan's every record carried after its
+                   application into the directory it stands in now,
+                   through 'hwut.move' (E-131)."""
+        from vut.services import move
+        directory, test, _ = self.case_of(word_tuple[:1])
+        target = self.path_of(word_tuple[1])
+        result, refusal = self._explored(directory)
+        if refusal is not None: return refusal
+        issue_list, _ = sanitize.orphan_issue_list(directory, result.app_set)
+        if (test,) not in set(issue.word_tuple for issue in issue_list):
+            if os.path.exists(os.path.join(directory, test)):
+                return CDone(E_Done.REFUSED,
+                             "the application stands here: nothing moved")
+            return CDone(E_Done.NOTHING, "nothing is recorded of it")
+        if not os.path.exists(os.path.join(target, test)):
+            return CDone(E_Done.REFUSED,
+                         "the application does not stand in the directory "
+                         "named")
+        if sanitize.recorded_f(target, test):
+            return CDone(E_Done.REFUSED,
+                         "it is recorded there already: 'forget' the "
+                         "records here instead")
+        said = []
+        code = move.main([os.path.join(directory, test), target,
+                          "--dont-ask"], write=said.append)
+        if code.name != "OK":
+            return CDone(E_Done.FAULT,
+                         next((line.strip() for line in said
+                               if line.startswith(("REFUSED", "FAULT"))),
+                              "not moved"))
+        self._touch_set.add(directory)
+        self._touch_set.add(target)
         return CDone(E_Done.DONE)
 
     def _do_book(self, word_tuple):
