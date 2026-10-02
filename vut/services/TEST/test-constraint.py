@@ -150,9 +150,13 @@ def hint_list(text):
     """RETURN: list[str], the run's HINTS lines and its RESULTS line --
                what does not depend on the order the cases ran in."""
     import re
-    return [re.sub(r", [0-9.]+ \[sec\].*$", "", line.rstrip())
+    #  A CASE LINE STANDS EIGHT DEEP in HINTS since D-35 (category,
+    #  directory, case); read it back to the four this page records.
+    return [re.sub(r", [0-9.]+ \[sec\].*$", "", line.rstrip())[4:]
+            if line.startswith("        ") else
+            re.sub(r", [0-9.]+ \[sec\].*$", "", line.rstrip())
             for line in text.splitlines()
-            if line.startswith("    t.py") or line.startswith("    :")
+            if line.startswith("        t.py") or line.startswith("        :")
             or line.startswith("RESULTS:")]
 
 

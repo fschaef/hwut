@@ -77,6 +77,9 @@ class E_TestRunResult(Enum):
     OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
     NOMINAL_FILE_NOT_FOUND      = "nominal-file-not-found"
     TERMINATED_WITHOUT_END      = "terminated-without-hwut-end"
+    #  THE NOMINAL is the incomplete record (R-70, o-8): it does not end
+    #  in '<hwut-end>', so it cannot say what a complete stream is.
+    NOMINAL_WITHOUT_END         = "nominal-without-hwut-end"
     UNEXPECTED_STDERR           = "unexpected-stderr"
     #  The REGION FRAMING of a compared text is broken -- an unknown
     #  handler, a bad parameter, a nested or unclosed region. The text

@@ -1,10 +1,10 @@
 stained, so not run:
 STATUS: 1
-        test-app.sh   UNSTABLE -- not run
+            test-app.sh   UNSTABLE -- not run
 removed:
     the stain went with the book: True
 runs again, with no history:
 STATUS: 1
     SKIP  test-app.sh ................................... no GOOD file [FAIL]  ||0
-        test-app.sh   no GOOD file: not accepted, not run
+            test-app.sh   no GOOD file; not accepted, not run
 <hwut-end>

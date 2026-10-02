@@ -47,4 +47,5 @@ RegionSyntaxError: line 2: region shebang inside an open region ('##! potpourri'
 ####
 ----------------------------------
 =>
-RegionSyntaxError: line 1: unknown region handler 'quacksalber'; known handlers: ignore, point-cloud, potpourri, table, verbatim
+RegionSyntaxError: line 1: unknown region handler 'quacksalber'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim
+<hwut-end>

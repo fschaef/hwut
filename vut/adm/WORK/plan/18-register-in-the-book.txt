@@ -61,7 +61,7 @@ ______________________________________________________________________________
      'gather.py:142' puts 'register_generation' into every delivery, and
      'stale_tuple' asks whether a directory has moved since the snapshot
      was copied. The BOOK changes on every run -- a verdict, a
-     'last_accept', a stain. If the merged file carried one counter,
+     stain. If the merged file carried one counter,
      every run would bump it and EVERY coverage snapshot would read
      stale immediately.
 

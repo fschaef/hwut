@@ -1,7 +1,7 @@
 --- CSP Scenario: Sudoku MRV Trap (5000 nodes) ---
   Success:  True
   Matching: 5000/5000
-##Time:     9.657618999481201 [sec]
+##Time:     1.8724017143249512 [sec]
     [0] -> 5000
     [1] -> 1
     [2] -> 2
@@ -13,3 +13,4 @@
     [8] -> 8
     [9] -> 9
 ...
+<hwut-end>

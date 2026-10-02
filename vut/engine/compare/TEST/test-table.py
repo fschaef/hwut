@@ -124,3 +124,6 @@ if "errors" in sys.argv:
             print("%-36s -> NO ERROR (unexpected!)" % name)
         except RegionSyntaxError as e:
             print("%-36s -> %s" % (name, e))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

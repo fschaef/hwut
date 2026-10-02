@@ -10,3 +10,4 @@ MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          '4711'
 NOMINAL.difference_cost: 0.000000
 NOMINAL.representation:  NUMERIC '4711'
+<hwut-end>

@@ -175,3 +175,6 @@ if choice == "LineElementAnalogy":
     test(LineElementAnalogy("A ((fox)) jumps"[2:9]),
          LineElementAnalogy("((there is no false analogy))"[0:29]),
          LineElementAnalogy("((mouse))"[0:9]))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

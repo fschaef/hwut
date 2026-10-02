@@ -34,3 +34,4 @@ MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          ''
 NOMINAL.difference_cost: 0.000000
 NOMINAL.representation:  STRING ''
+<hwut-end>

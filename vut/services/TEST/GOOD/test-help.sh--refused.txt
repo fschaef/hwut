@@ -1,0 +1,17 @@
+STATUS: 2
+    REFUSED: 'hwut.help' does not take: --sideways
+    usage: hwut.help [--fail] [--pass] [--since=<point>] [--until=<point>]
+                     [--glob <target>]... [--exclude <target>]...
+                     [--dir <glob>]... [--exclude-dir <glob>]...
+                     [--wishlist <file>]... [-l|--label <expr>]
+                     [--language=<name>]... [--faster-than=<sec>]
+                     [<file-glob> [choice-glob]...] [--directory=<path>]
+STATUS: 2
+    REFUSED: the directory 'nowhere' does not exist
+    usage: hwut.help [--fail] [--pass] [--since=<point>] [--until=<point>]
+                     [--glob <target>]... [--exclude <target>]...
+                     [--dir <glob>]... [--exclude-dir <glob>]...
+                     [--wishlist <file>]... [-l|--label <expr>]
+                     [--language=<name>]... [--faster-than=<sec>]
+                     [<file-glob> [choice-glob]...] [--directory=<path>]
+<hwut-end>

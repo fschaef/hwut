@@ -43,3 +43,4 @@ ratio: 0.01
          1.0       -100.0   1.000000   opposite signs, capped
          0.0          5.0   1.000000   pole at zero, capped
          5.0          0.0   0.990000   subject at zero
+<hwut-end>

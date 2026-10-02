@@ -3,7 +3,7 @@ STDOUT {
     REPEATS: 4   KEYS: 1
     
     suite/TEST: test-app.sh
-        CADENCE unsteady: subject 'stdout', 1 line(s) of 3, first at line 3
+        CADENCE unsteady: subject 'stdout', 1 line(s) of 4, first at line 3
             line 3  spread=<s>  factor=<f>  deltas <delta> <delta> <delta> <delta>
     
     TALLY: 0 unstable, 1 warned, 0 steady

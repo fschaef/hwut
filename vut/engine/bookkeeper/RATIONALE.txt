@@ -220,7 +220,7 @@ DECISION  THE CONFIGURATION LEAVES THE BOOK, all of it -- test facts,
           a DECISION about a (test, choice), and nothing else:
 
               test  choice  operation  verdict  report  coverage
-                                       last_accept  stderr  stain
+                                       stderr  stain
 
           THAT IS A TABLE, AND THE BOOK IS WRITTEN AS ONE:
           'GOOD/result_db.csv', one row per (test, choice, operation)
@@ -270,7 +270,7 @@ PROBLEM   B-6 carried the MODEL'S shape onto disk -- an 'operation'
           remove.
 DECISION  ONE ROW PER (TEST, CHOICE). The columns are the decision
           about that choice, flat:
-              test;choice;verdict;report;last_accept;coverage;
+              test;choice;verdict;report;coverage;
               stderr;stain_repeat_n;stain_when
           THE SEPARATOR IS ';', AND IT IS NEVER QUOTED: a test or
           choice name containing ';' or ':' is REFUSED at the
@@ -289,8 +289,6 @@ DECISION  ONE ROW PER (TEST, CHOICE). The columns are the decision
           (E-36) and leaves the book; nothing read it.
           A DISPLAY DOES NOT RECORD. 'session.py' enters the book for
           VERDICT and NOMINAL goals only; a viewing writes nothing.
-          'last_accept' lands on the choice's row when the acceptance
-          face is made to enter the book -- a separate, named gap.
 INDEX     The rulings that shape the book, wherever they stand:
               E-20, E-22  (services)  the run's base; observations
               E-34, E-36  (services)  the local database; time-and-
@@ -617,8 +615,70 @@ DECISION  RULED (Frank-Rene, 2026-09-28): "yes, book.csv should be
 COST      A run whose verdict CHANGES changes the book, and that change is
           a diff to commit. MEASURED: a book after 'accept', then after two
           green runs -- byte-identical; a green run writes nothing new.
-          Books made on a machine that never accepted (a fresh clone's
-          first run) carry empty 'last_accept' cells and must not be
-          committed as if accepted: the books to add are the accepting
-          machine's.
+          The books to add are the accepting machine's.
+
+
+------------------------------------------------------------------------------
+B-25 THE BOOK DATES NO ACCEPTANCE                                 (2026-09-30)
+------------------------------------------------------------------------------
+PROBLEM   The book carried a column of acceptance instants (services
+          E-36). MEASURED on the committed books of 26y09m30d: 843 of
+          885 rows had it empty, because a nominal that reaches a tree
+          by a commit or a bundle was accepted on another machine.
+          'hwut.sanitize.propose --books' proposed 840 'book' lines
+          under ACCEPTANCE UNDATED -- one per nominal, none a defect.
+          Since B-24 the book is versioned beside its nominals, so git
+          already dates every acceptance, attributed and undoable.
+
+DECISION  RULED (Frank-Rene, 2026-09-30): "remove the 'last_accept'
+          from the book.csv file. Make sure that no module relates to
+          that attribute."
+          The column leaves '_COLUMN_TUPLE'; 'record()' and
+          'note_accept()' write no instant; 'CTestRunInfo' has no such
+          field; the legacy readers drop it. A book that still carries
+          the column reads unchanged -- an unknown column is ignored --
+          and is written without it. 'hwut.sanitize.propose --books'
+          loses the kind 'book-undated': the two records of acceptance
+          (E-41) disagree in two ways, not three.
+          THE COMMITTED BOOKS ARE CUT MECHANICALLY, not re-run (RULED,
+          same day, "Mechanical column cut"): the one column is dropped
+          from every row that has it; every other cell is proved
+          identical. A green census afterwards leaves them
+          byte-identical.
+
+COST      When a nominal was accepted is asked of git ('git log --
+          GOOD/<nominal>'), not of the book. Ten nominals moved, each
+          only in lines naming the column, its check or the ACCEPTANCE
+          UNDATED block; 'test-accept.py ledger' was rewritten to state
+          this entry instead of E-36's old clause.
+
+
+------------------------------------------------------------------------------
+B-26 ONE TEST FOR AN 'unaccepted' REGION, AND IT IS A REGEX     (2026-10-01)
+------------------------------------------------------------------------------
+PROBLEM   Two readers decided whether a GOOD is unaccepted. The door's
+          'carries_unaccepted_f' read '##!' and then the word
+          'unaccepted'; 'hwut.accept' booked ASPIRANT on ANY line
+          starting '##!' -- so a GOOD carrying a '##! potpourri' or
+          '##! constraint-violation' region was booked
+          'aspirant;unaccepted' at acceptance. MEASURED (2026-10-01):
+          re-accepting 'engine/compare/reading/TEST test-chunk_pipe.py'
+          wrote three such rows; the next run repaired them, which is
+          why no census saw it. Until that run, '--books' proposed
+          BOOK STALE for each, and 'hwut.report' read
+          'unaccepted [FAIL]'.
+
+DECISION  RULED (Frank-Rene, 2026-10-01): "There should be regex search
+          for "##! <space> unaccepted"".
+          'of_disk.UNACCEPTED_LINE_RE', '^\s*##!\s+unaccepted(\s|$)',
+          is the one test; 'carries_unaccepted_text_f(text)' applies it
+          and 'carries_unaccepted_f(path)' reads a file through it; both
+          stand at the door ('api'). 'hwut.accept' books by the text
+          form over what it wrote. 'TEST/test-unaccepted.py': 'lines'
+          (every spelling), 'booked' (the positive control: the old
+          accept failed it).
+
+COST      None in output: no standing GOOD moved. A row mis-booked
+          before this entry is mended by its next run, or by
+          'hwut.sanitize.propose --books'.
 

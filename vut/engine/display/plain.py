@@ -49,6 +49,9 @@ from enum     import Enum
 from ..protocol.receiver import CRunReportReceiver
 from ..protocol.summary  import fold
 from .word                       import CInk, phrase, reason_word
+from .failure                    import (HELP_HINT_STR, subtle_f,
+                                         E_FailureCategory,
+                                         CATEGORY_HEADING_DB, category_of)
 
 
 class E_Tier(Enum):
@@ -894,14 +897,10 @@ class CPlainFlow(CRunReportReceiver):
             self._line(when, badge,
                        self.ink.built(badge) if built_f else badge,
                        body, body_ink, "[OK]", self.ink.tag_ok("[OK]"))
-        elif verdict == "unaccepted":
-            #  NOT A RUN AT ALL (O-25, amended): the nominal carries
-            #  lines nobody accepted, so nothing could be judged. The
-            #  tag says WHAT IS WRONG WITH THE GOOD, not what the run
-            #  found -- there was no run. HINTS says what to do.
-            self._line(when, badge, badge, body, body_ink,
-                       "[NO GOOD]", self.ink.tag_undecided("[NO GOOD]"))
         else:
+            #  EVERY NOMINAL-RELATED FAILURE IS A '[FAIL]' with its word
+            #  before it (O-25): 'unaccepted [FAIL]' as 'no GOOD file
+            #  [FAIL]'.
             right, right_ink = self._fail_right(report or verdict)
             self._line(when, badge, badge, body, body_ink,
                        right, right_ink)
@@ -978,17 +977,12 @@ class CPlainFlow(CRunReportReceiver):
         the reason. Both stand in every tier but SILENT -- a refusal is
         never marginalia, and a flow that showed nothing where a case
         was passed over read as though the case had never been asked
-        for (B-17).
-
-        The tag says WHICH refusal: an ASPIRANT carries '[ ?! ]' -- an
-        acceptance stands and is incomplete -- where a case nothing was
-        ever accepted for carries '[REFUSED]'."""
+        for (B-17). An aspirant is no refusal: it FAILS 'unaccepted'
+        (O-25)."""
         self.refused_db.setdefault(directory, []).append((node, text))
         if self.tier is E_Tier.SILENT: return
-        aspirant_f = "nobody has accepted" in text
-        tag        = "[ ?! ]" if aspirant_f else "[REFUSED]"
-        ink_tag    = (self.ink.tag_undecided(tag) if aspirant_f
-                      else self.ink.tag_fail(tag))
+        tag        = "[REFUSED]"
+        ink_tag    = self.ink.tag_fail(tag)
         body, body_ink = self._run_body(directory, node)
         self._line(when, "DONE ", "DONE ", body, body_ink, tag, ink_tag)
 
@@ -1238,16 +1232,16 @@ class CPlainFlow(CRunReportReceiver):
     def _hint_key_list(self, directory):
         """
         RETURN: list, the directory's not-ok (directory, node) keys
-                whose word is NOT 'differs from GOOD' -- a plain
-                compare mismatch is the ordinary business a test suite
-                exists to catch, not a hint. What earns a line here is
+                whose failure is NOT a DEVIATION -- a plain compare
+                mismatch is the ordinary business a test suite exists
+                to catch, not a hint. What earns a line here is
                 why a test never got as far as a comparison at all:
                 killed by the supervisor, a broken pipe, a missing
                 pype script, an interpreter not found, and the like.
         """
         return [key for key in self._failure_key_list(directory)
-                if phrase(self.report_db.get(key, self._verdict_of(key)))
-                   != "differs from GOOD"]
+                if category_of(self.report_db.get(key, self._verdict_of(key)))
+                   is not E_FailureCategory.DEVIATION]
 
     def tail(self):
         """RETURN: None. See '_tail'; the progress line is lifted for
@@ -1320,55 +1314,81 @@ class CPlainFlow(CRunReportReceiver):
         #  translate (D-6). A phrase written inline at a call site is
         #  a word no reviewer of the table would ever see.
         #
-        #  THE COLUMNS READ AS THE FLOW'S DO: the application once,
-        #  ':' beneath where it repeats, and THE APPLICATION'S OWN
-        #  NAME setting where its choices stand. A new application is
-        #  a new column, exactly as in the flow ('_run_body').
+        #  GROUPED, AND NOTHING SAID TWICE (D-35): the CATEGORY first,
+        #  under its heading; the DIRECTORY once within it; the
+        #  APPLICATION once within that, ':' beneath where its choices
+        #  repeat it -- the flow's own columns ('_run_body'). A failed
+        #  frame is ENVIRONMENT's, under its directory.
         #
         #  THE BRIEFING FOLLOWS THE WIDEST OF THEM, so the reasons
         #  stand in one column down the whole block: the reason is
         #  what this block exists to be read for, and a reason that
         #  moves is one the eye must hunt for on every line.
-        brief_column = 0
+        group_db = {}                     # category -> directory -> [item]
         for directory in fail_dir_list:
             for role in self.frame_bad_db.get(directory, []):
-                brief_column = max(brief_column,
-                                   len("frame %s" % role) + BRIEF_GAP)
+                group_db.setdefault(E_FailureCategory.ENVIRONMENT, {}) \
+                        .setdefault(directory, []) \
+                        .append(("frame %s" % role, None, "frame-failed",
+                                 None))
             for key in self._hint_key_list(directory):
-                file, _, rest = _display_name(key[1]).partition(" ")
-                choice        = rest.strip()
-                width         = len(file)
-                if choice: width += CHOICE_GAP + len(choice)
-                brief_column  = max(brief_column, width + BRIEF_GAP)
-        for directory in fail_dir_list:
-            #  THE DIRECTORY, ONCE, and in the directory's colour.
-            write(self._ink_dir(directory))
-            last_file    = None
-            choice_column = 0
-            for role in self.frame_bad_db.get(directory, []):
-                write("    %-*s%s"
-                      % (brief_column, "frame %s" % role,
-                         ink.fail(phrase("frame-failed"))))
-            for key in self._hint_key_list(directory):
-                name          = _display_name(key[1])
-                file, _, rest = name.partition(" ")
-                choice        = rest.strip()
-                repeat_f      = (last_file == file)
-                if not repeat_f: choice_column = len(file) + CHOICE_GAP
-                last_file     = file
-                shown         = ":" if repeat_f else file
-                left          = "%-*s%s" % (choice_column, shown,
-                                            choice) if choice else shown
                 token = self.report_db.get(key, self._verdict_of(key))
-                line  = "    %-*s%s" % (brief_column, left,
-                                        ink.fail(phrase(token)))
-                #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the cap,
-                #  the peak -- what a reader of a kill asks first.
-                detail = self.detail_db.get(key)
-                if detail is not None: line += "  (%s)" % detail
-                cause = self.cause_db.get(key)
-                if cause is not None: line += "  <- %s" % cause
-                write(line)
+                file, _, rest = _display_name(key[1]).partition(" ")
+                group_db.setdefault(category_of(token), {}) \
+                        .setdefault(directory, []) \
+                        .append((file, rest.strip() or None, token, key))
+        brief_column = 0
+        for directory_db in group_db.values():
+            for item_list in directory_db.values():
+                for file, choice, _, _ in item_list:
+                    width = len(file)
+                    if choice: width += CHOICE_GAP + len(choice)
+                    brief_column = max(brief_column, width + BRIEF_GAP)
+        first_f = True
+        for category in E_FailureCategory:
+            directory_db = group_db.get(category)
+            if not directory_db: continue
+            if not first_f: write("")
+            first_f = False
+            write(CATEGORY_HEADING_DB[category])
+            for directory in fail_dir_list:
+                item_list = directory_db.get(directory)
+                if not item_list: continue
+                #  THE DIRECTORY, ONCE, and in the directory's colour.
+                write("    " + self._ink_dir(directory))
+                last_file     = None
+                last_phrase   = None
+                choice_column = 0
+                for file, choice, token, key in item_list:
+                    repeat_f = (last_file == file)
+                    if not repeat_f: choice_column = len(file) + CHOICE_GAP
+                    last_file = file
+                    shown     = ":" if repeat_f else file
+                    left      = "%-*s%s" % (choice_column, shown,
+                                            choice) if choice else shown
+                    #  THE SAME PHRASE IS NOT SAID TWICE (D-35): ':'
+                    #  under the one above, as the application's name.
+                    said      = phrase(token)
+                    right     = ":" if said == last_phrase else said
+                    last_phrase = said
+                    line = "        %-*s%s" % (brief_column, left,
+                                               ink.fail(right))
+                    #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the
+                    #  cap, the peak -- what a reader of a kill asks first.
+                    detail = self.detail_db.get(key) if key else None
+                    if detail is not None: line += "  (%s)" % detail
+                    cause = self.cause_db.get(key) if key else None
+                    if cause is not None: line += "  <- %s" % cause
+                    write(line)
+        #  THE POINTER TO 'hwut.help' (D-34): once, where any failure is
+        #  more than a plain deviation from GOOD.
+        if any(self.frame_bad_db.get(d)
+               or any(subtle_f(self.report_db.get(key,
+                                                  self._verdict_of(key)))
+                      for key in self._hint_key_list(d))
+               for d in fail_dir_list):
+            write("")
+            write(HELP_HINT_STR)
         self._write_refused(write, w)
         self._write_silent(write, w)
         write("=" * w)
@@ -1380,21 +1400,15 @@ class CPlainFlow(CRunReportReceiver):
                 draws them, from the counts this flow kept. Nothing where
                 nothing was counted.
 
-        UNACCEPTED IS COUNTED APART (O-25): a nominal with lines nobody
-        decided is not a failure of the software, and a count that folds
-        it into 'fail' sends the eye after a regression that is not
-        there.
+        AN UNACCEPTED NOMINAL IS A FAILURE, counted as one (O-25).
         """
         ok_n   = sum(1 for node_db in self.verdict_db.values()
                      for verdict in node_db.values() if verdict == "ok")
         run_n  = sum(len(node_db) for node_db in self.verdict_db.values())
-        undecided_n = sum(1 for node_db in self.verdict_db.values()
-                          for verdict in node_db.values()
-                          if verdict == "unaccepted")
         refused_n = sum(len(pl) for pl in self.refused_db.values())
         line_list = results_line_list(
-                        ok_n, run_n - ok_n - undecided_n, w, self.ink,
-                        undecided_n=undecided_n, skip_n=self.skip_n,
+                        ok_n, run_n - ok_n, w, self.ink,
+                        skip_n=self.skip_n,
                         refused_n=refused_n, meta_n=self.meta_n,
                         seconds=self._elapsed_seconds(),
                         total=None if self.started_at is None

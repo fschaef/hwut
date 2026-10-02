@@ -1297,11 +1297,9 @@ E-35  THE BASE HOLDS DECISIONS                                 (2026-08-30)
 ______________________________________________________________________________
 DECISION  E-20 and E-21, built (bookkeeper todo-3, pass B), after D.
           'when', 'host' and 'records' leave the entry; 'verdict',
-          'report', 'canonicaliser', 'compare', 'coverage' and
-          'first_accept' stay -- the last as the ONLY instant, because
-          acceptance is a decision and no run makes it again. A
-          re-accept moves nothing in the book: where the LAST accept
-          was is an observation. 'hwut.report' dates its page from the
+          'report', 'canonicaliser', 'compare' and 'coverage' stay. No
+          instant stays: when an acceptance was made is git's, with the
+          book versioned beside its nominals (bookkeeper B-24, B-25). 'hwut.report' dates its page from the
           observations and says '<no date>' where this machine has
           seen none -- the truth about what it knows.
 MEASURED  like for like, 'services/TEST/GOOD/result_db.json':
@@ -1357,16 +1355,14 @@ DECISION  THE QUESTION IS WHETHER A THING DEPENDS ON WHEN AND WHERE.
           fields, place-dependent, and growing whenever the procsitter
           grows.
 
-          'first_accept' BECOMES 'last_accept'. The book dates the
-          nominal NOW STANDING -- a fact about the oracle in front of
-          the reader -- and a re-accept moves it. Every earlier
-          acceptance is HISTORY, and history is the configuration
-          management system's: git holds each one dated, attributed
-          and undoable, and a second, poorer copy in the book is a
-          copy that can disagree.
-COST      A book written before this entry carries 'first_accept'; it
-          is not read, and the next acceptance writes 'last_accept'
-          beside it.
+          THE BOOK DATES NO ACCEPTANCE. When a nominal was blessed is
+          HISTORY, and history is the configuration management
+          system's: git holds each acceptance dated, attributed and
+          undoable, with the book versioned beside its nominals
+          (bookkeeper B-24), and a second, poorer copy in the book is
+          a copy that can disagree (bookkeeper B-25).
+COST      A book that still carries a column of acceptance instants is
+          read with that column ignored, and written without it.
 GRAVEYARD "Machine-authored is transient": bins 'GOOD/test_ids.dat'
           wrong (B-2 -- ids are issued once and a re-run issues
           different ones), which is why E-20 reached for
@@ -1688,20 +1684,19 @@ DECISION  ONE GATE: 'plan/tree.py: admit_of(directory)', asked by
           gets one, and the run says so once, as a NOTE:
               REGISTERED test choice: a nominal stands and the
               register had no entry -- accepted outside the book
-          Its book row is the run's, with 'last_accept' empty -- the
-          mark 'sanitize' reads.
+          Its book row is the run's.
 
           'hwut.sanitize.propose --books', a default aspect, proposes a
           'book' for every offered case whose records disagree -- the
           book says aspirant and a nominal stands; a nominal and no
-          book entry; a nominal with a book row and no 'last_accept'.
+          book entry.
           Nothing is removed: 'book' enters the STANDING NOMINAL as
           accepted, and a person who thinks the nominal is the wrong
           record deletes the line and mends it by hand (E-125).
 
 FOUND     'hwut.accept' ITSELF accepted outside the book: it wrote
-          GOOD/ and the register and never 'last_accept'; only the
-          engine's NOMINAL goal did. So every directory accepted by
+          GOOD/ and the register and never booked the acceptance; only
+          the engine's NOMINAL goal did. So every directory accepted by
           the face would have lit up under '--books'. 'Bookkeeper.
           note_accept(test, choice)' is added and the face calls it
           beside 'Store.accept()'. Found by the regression test's
@@ -1713,10 +1708,7 @@ COST      A directory with no register file gets one on its first run
           would be refused by the gate and all but two are already
           excluded ('benchmark*', 'ON_HOLD-*', the pype filters); the
           two are the known open items ('test-service.sh', 'benchmark-
-          hwut_hocon.py'). '--books' on today's tree reports every
-          face-accepted row as lacking 'last_accept' until each is
-          re-accepted or the rows are healed; that is the state of
-          the tree told truthfully, not a defect of the aspect.
+          hwut_hocon.py').
 
 GRAVEYARD The gate at the session (E_Goal) -- rejected: the case would
           still be scheduled, built, and would reach the book before
@@ -2664,8 +2656,8 @@ DECISION  A FIRST ACCEPTANCE WITHOUT '--force' RECORDS THE CANDIDATE'S
           chunks by compare's own reader ('lawyer_reading'), and EACH
           chunk becomes one '##! unaccepted' region holding ONE FILLER
           LINE PER LINE of that chunk; the closing token stands outside
-          every region as the last line. The next run reads '[ ?! ]'
-          (O-25) -- a decision still owed, not a failure.
+          every region as the last line. The next run reads
+          'unaccepted [FAIL]' (O-25) -- a decision still owed.
 
           A MIRROR, NOT A WRAPPER. Chunk counts and order correspond 1:1,
           so the pairing has an unambiguous partner for every chunk, and
@@ -5035,7 +5027,7 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "hwut.sanitze splits to:
           -- its comment, the problem and what the command heals; then its
           commands, one per line -- the blocks separated by an empty line.
           Kinds: session, lock, out, transient, orphan-test, orphan-choice,
-          book-lacks, book-aspirant, book-undated, constraint, target.
+          book-lacks, book-aspirant, constraint, target.
           ENTITIES are relative to the directory the proposal was written
           in; apply and the one-command face read them relative to
           '--directory', the current directory by default. Stdout carries
@@ -5176,4 +5168,39 @@ DECISION  RULED (Frank-Rene, 2026-09-29): "any failure recorded by
 COST      The report re-reads each directory's book for its divergence
           from the declaration, as the run does. A report whose exit
           code said 0 over such a tree now says 1.
+
+
+E-129  EVERY SCENARIO SANITIZE REPORTS, ON ONE PAGE             (2026-09-30)
+______________________________________________________________________________
+PROBLEM   What 'hwut.sanitize.propose' reports stood scattered over
+          'test-sanitize.sh', 'test-sanitize-books.py',
+          'test-constraint.py' and 'test-remove-apply.sh', mostly as
+          command lines without their block. MEASURED by the block heads
+          and NOTE texts standing in any GOOD: DEAD LOCK, TRANSIENT
+          ROOT, both ORPHAN kinds and TARGET in none; of the NOTEs,
+          exploration fault, hidden wish and unreadable register in
+          none. A kind could stop being reported, or start where it
+          must not, and no page would move.
+
+DECISION  RULED (Frank-Rene, 2026-09-30): "In this session we will
+          reflect on scenarios subject to sanitize reporting. A direct
+          result is a unit test where each of those scenarios triggers
+          at least once. The output of hwut.sanitize.protocol will be
+          the GOOD file considered as reference." ('protocol' read as
+          'hwut.sanitize.propose', unstruck.)
+          'services/TEST/test-sanitize-scenarios.sh catalogue': ONE
+          TREE, ONE DIRECTORY PER SCENARIO, NAMED AFTER IT --
+          s01..s12 proposed, n01..n05 said on stderr, c01..c05 the
+          controls that must stay silent (an aspirant, a nominal booked
+          by a run, a live lock, a finding already remarked, an
+          application hidden by 'ignore'). Three calls: every aspect
+          but '--transient' with '--target clean'; '--transient'; a
+          wish that hides cases. The GOOD is each call's status, stdout
+          and stderr, whole.
+
+COST      A change to any block comment moves this page as well as the
+          page that owns the kind. Chosen to join the catalogue once
+          built, each after its own fork: a nominal that does not end
+          in '<hwut-end>' (o-8), and a candidate carrying constraint
+          findings.
 

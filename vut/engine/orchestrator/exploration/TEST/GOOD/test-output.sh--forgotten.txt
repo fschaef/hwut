@@ -8,8 +8,11 @@ STATUS: 1
     ==============================================================================
     HINTS
     ------------------------------------------------------------------------------
-    suite/TEST
-        test-file.sh   output file missing
+    EXECUTION -- application invocation error
+        suite/TEST
+            test-file.sh   output file missing
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
     ==============================================================================
     
     RESULTS: 0 ok, 1 fail, s.ss [sec], s.ss [sec] total

@@ -12,18 +12,20 @@ association: True (2)
 AnalogyDb:
 
 --------------------------------
-
 subject: ['happy', 'fritz']
 nominal: ['fritz', 'funny']
 association: True (2)
    [0] happy           --> [1] funny
    [1] fritz           --> [0] fritz
 AnalogyDb:
---------------------------------
 
+--------------------------------
 subject: ['happy', 'mummie', 'fritz']
 nominal: ['fritz', 'mummie', 'I smart', 'funny']
 association: False
+##   [0] happy           --> [3] funny
+##   [1] mummie          --> [1] mummie
+##   [2] fritz           --> [0] fritz
 --------------------------------
 subject: ['100', '98', '99', '101']
 nominal: ['102', '101', '100', '99']
@@ -34,4 +36,4 @@ association: True (4)
    [3] 101             --> [0] 102
 AnalogyDb:
 
-
+<hwut-end>

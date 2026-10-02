@@ -97,17 +97,18 @@ conf() {                # <extra-lines...>
     } > tree/suite/TEST/hwut.conf
 }
 
-app() {                 # <name> <body...>
+app() {                 # <name> <body...>: its stream ends in the token (R-70)
     { echo '#!/bin/bash'
       echo "# @hwut { title = \"$1\" }"
       shift
       printf '%s\n' "$@"
+      echo 'echo "<hwut-end>"'
     } > tree/suite/TEST/test-app.sh
     chmod +x tree/suite/TEST/test-app.sh
 }
 
-good() {                # <line...>
-    printf '%s\n' "$@" > tree/suite/TEST/GOOD/test-app.sh.txt
+good() {                # <line...>: and the token, as every nominal (R-70)
+    printf '%s\n' "$@" "<hwut-end>" > tree/suite/TEST/GOOD/test-app.sh.txt
 }
 
 # ---------------------------------------------------------------------------

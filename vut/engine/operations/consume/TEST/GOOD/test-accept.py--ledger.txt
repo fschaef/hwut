@@ -1,11 +1,9 @@
-INSPECT: after the FIRST accept
-         last_accept stands   : True
-         after a RE-ACCEPT
-         last_accept moved    : True
-         'when' is not here   : True
-  OK  : an acceptance dates the nominal it produced
-  OK  : a re-accept MOVES it: the nominal now standing is the one this accept blessed
-  OK  : and no earlier acceptance is kept: history is the configuration management system's, which holds every one of them dated and attributed (E-36)
+INSPECT: after the FIRST accept : ['report', 'verdict']
+         after a RE-ACCEPT      : ['report', 'verdict']
+         book header            : test;choice;verdict;report;coverage;stderr;stain;test_id;choice_id
+  OK  : an acceptance writes the decision and nothing else
+  OK  : a re-accept writes the same entry: nothing in it depends on WHEN
+  OK  : the book has no column of acceptance instants: git dates each one (B-25)
   OK  : the run's own instant is an OBSERVATION and is not in the book (E-20)
-SUCCESS: the accept dates the nominal it produced; earlier ones are git's.
+SUCCESS: the accept writes what was decided; when is git's.
 <hwut-end>

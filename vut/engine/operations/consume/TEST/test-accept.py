@@ -76,10 +76,11 @@ def _verdict(ok, sentence):
 
 
 def _place(body):
-    """RETURN: str, a fresh test directory holding 'demo.py'."""
+    """RETURN: str, a fresh test directory holding 'demo.py', which
+               ends its stdout with the terminal token (R-70)."""
     directory = tempfile.mkdtemp(prefix="vut_acc_")
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write(body)
+        fh.write(body + "print('<hwut-end>')\n")
     return directory
 
 
@@ -210,7 +211,7 @@ def test_the_loop_closes():
     after = check()
 
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write("print('behaviour version TWO')\n")
+        fh.write("print('behaviour version TWO')\nprint('<hwut-end>')\n")
     changed = check()
 
     print("INSPECT: before acceptance -> verdict %-5s report %s"
@@ -272,17 +273,17 @@ def test_initiate_needs_its_session():
 
 
 def test_ledger():
-    """THE NOMINAL'S DATE (E-36): an acceptance is a DECISION, and
-    'last_accept' says when the nominal NOW STANDING was blessed. A
-    re-accept moves it. Earlier acceptances are not kept: history is
-    the configuration management system's, and git holds each one
-    dated and attributed."""
+    """NO INSTANT OF ACCEPTANCE (B-25): an acceptance is a DECISION,
+    and the book holds what was decided -- not when. When a nominal was
+    blessed is history, and history is the configuration management
+    system's: the book is versioned beside its nominals (B-24), so git
+    holds every acceptance dated and attributed."""
     directory  = tempfile.mkdtemp(prefix="vut_acc_")
     bookkeeper = Bookkeeper(directory)
 
-    def accept_entry(marker):
-        """RETURN: dict, the book's Accept entry after one recorded
-        acceptance carrying 'marker' as its instant."""
+    def accept_entry():
+        """RETURN: dict, the book's entry after one recorded
+        acceptance."""
         result = SimpleNamespace(name="demo", verdict=True,
                                  report="accepted",
                                  provision=SimpleNamespace(records=()))
@@ -292,32 +293,30 @@ def test_ledger():
                                   choice_name=None)
         return entry
 
-    first  = accept_entry("one")
-    second = accept_entry("two")
+    first  = accept_entry()
+    second = accept_entry()
+    with open(bookkeeper.book_path, encoding="utf-8") as fh:
+        header = [line for line in fh.read().splitlines()
+                  if not line.startswith("#")][0]
 
-    print("INSPECT: after the FIRST accept")
-    print("         last_accept stands   : %s" % ("last_accept" in first))
-    print("         after a RE-ACCEPT")
-    print("         last_accept moved    : %s"
-          % (second["last_accept"] >= first["last_accept"]))
-    print("         'when' is not here   : %s" % ("when" not in second))
+    print("INSPECT: after the FIRST accept : %s" % sorted(first))
+    print("         after a RE-ACCEPT      : %s" % sorted(second))
+    print("         book header            : %s" % header)
     ok = _check([
-        ("last_accept" in first,
-         "an acceptance dates the nominal it produced"),
-        (second["last_accept"] >= first["last_accept"],
-         "a re-accept MOVES it: the nominal now standing is the one "
-         "this accept blessed"),
-        ("first_accept" not in second,
-         "and no earlier acceptance is kept: history is the "
-         "configuration management system's, which holds every one of "
-         "them dated and attributed (E-36)"),
+        (sorted(first) == ["report", "verdict"],
+         "an acceptance writes the decision and nothing else"),
+        (first == second,
+         "a re-accept writes the same entry: nothing in it depends on "
+         "WHEN"),
+        ("accept" not in header,
+         "the book has no column of acceptance instants: git dates "
+         "each one (B-25)"),
         ("when" not in first and "when" not in second,
          "the run's own instant is an OBSERVATION and is not in the "
          "book (E-20)"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "the accept dates the nominal it produced; earlier "
-                 "ones are git's.")
+    _verdict(ok, "the accept writes what was decided; when is git's.")
 
 
 

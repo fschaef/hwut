@@ -10,3 +10,4 @@ MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'Mice'
 NOMINAL.difference_cost: 0.000000
 NOMINAL.representation:  EQUIVALENCE_PATTERN [3, 4, 5] 'Mice'
+<hwut-end>

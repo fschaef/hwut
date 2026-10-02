@@ -241,3 +241,6 @@ if "spatial" in sys.argv:
               % (name, ok, total))
     print("result: %s" % ("PASS" if all(o == t for o, t in agree_db.values())
                           else "FAIL"))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

@@ -109,3 +109,6 @@ if "comment" in sys.argv:
     # '#####' (5+) is commentary, NOT a region end; '####x' likewise
     test(["#####", "line1", "##! potpourri", "line2", "####"])
     test(["##! potpourri", "line1", "####x", "line2", "####"])
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

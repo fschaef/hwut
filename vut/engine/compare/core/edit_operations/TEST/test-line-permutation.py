@@ -159,3 +159,6 @@ elif "same" in sys.argv:
         test_core(subject, nominal)
     for a in [-1] + list(range(len(tolerance_db))):
         test(a, a)
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

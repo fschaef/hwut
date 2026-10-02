@@ -11,18 +11,21 @@
 ______________________________________________________________________________
 
 THE TWO RECORDS OF ACCEPTANCE MUST AGREE (services E-41): the nominals
-in GOOD/, and the book -- which is also the register (B-13) and carries
-'last_accept'. 'hwut.sanitize.propose --books' proposes a 'book' for
-every disagreement, each under its kind (E-125). A test the book calls
-ASPIRANT with no nominal is not a disagreement (B-14).
+in GOOD/, and the book -- which is also the register (B-13).
+'hwut.sanitize.propose --books' proposes a 'book' for every
+disagreement, each under its kind (E-125). A test the book calls
+ASPIRANT with no nominal is not a disagreement (B-14); nor is a nominal
+the book knows by a run's verdict, since the book dates no acceptance
+(B-25).
 
-    disagree     one fixture holds all three disagreements:
+    disagree     one fixture holds both disagreements:
                    test-reg.py     the book says aspirant, a nominal
                                    stands
                    test-nom.py     a nominal, and no entry in the book
-                   test-book.py    a nominal, booked by a run and never
-                                   accepted: 'last_accept' empty
-                 and each is proposed once, under its kind.
+                 and each is proposed once, under its kind; beside them
+                   test-book.py    a nominal, booked by a run
+                   test-asp.py     an aspirant, no nominal
+                 are agreement, and not proposed.
     agree        the same directory after 'hwut.accept': nothing
                  proposed.
     apply_books  the proposal applied: each disagreement booked, nothing
@@ -79,8 +82,9 @@ def _verdict(ok, sentence):
 
 def fixture():
     """RETURN: (str, str), the tree root and a TEST directory whose
-    two records disagree in the three ways (B-14) -- and hold one
-    ASPIRANT, which is no disagreement at all."""
+    two records disagree in the two ways (B-14) -- and hold one
+    ASPIRANT and one run-booked nominal, which are no disagreement at
+    all."""
     root = tempfile.mkdtemp(prefix="vut_books_")
     tree_boundary(root, ROOT_CONF)
     test = os.path.join(root, "suite", "TEST")
@@ -107,7 +111,7 @@ def fixture():
     keeper.run_id_of("test-asp.py",  allocate_f=True)
     keeper.run_id_of("test-book.py", allocate_f=True)
     put(good, "test-reg.py.txt",  "reg\n<hwut-end>\n")
-    #  A RUN books 'test-book.py' with a verdict and no 'last_accept'.
+    #  A RUN books 'test-book.py' with a verdict beside its nominal.
     run_main(["test-book.py", "--directory=%s" % test, "--silent"],
              write=lambda _: None, write_error=lambda _: None)
     return root, test
@@ -151,15 +155,16 @@ def test_disagree():
                and all(text.startswith("#") or text.startswith("book ")
                        for text in line_list[head:line_list.index(command)])
     ok = _check([
-        (len(finding_list) == 3, "three commands"),
+        (len(finding_list) == 2, "two commands"),
         (under("BOOK STALE", "book test-reg.py"),
          "the book stale: it says aspirant, and a nominal stands"),
         (under("BOOK BEHIND", "book test-nom.py"),
          "the book behind: a nominal, and no entry"),
         (not any("test-asp.py" in text for text in finding_list),
          "an aspirant is no disagreement (B-14)"),
-        (under("ACCEPTANCE UNDATED", "book test-book.py"),
-         "the book: a nominal, and 'last_accept' empty"),
+        (not any("test-book.py" in text for text in finding_list),
+         "a nominal booked by a run is no disagreement: the book dates "
+         "no acceptance (B-25)"),
     ])
     shutil.rmtree(root, ignore_errors=True)
     _verdict(ok, "every disagreement is proposed under its kind.")
@@ -183,8 +188,8 @@ def test_agree():
     for line in finding_list: print("  " + line)
     entry = Bookkeeper(test).result("test-book.py", None)
     ok = _check([
-        (entry is not None and bool(entry.get("last_accept")),
-         "accept wrote 'last_accept'"),
+        (entry is not None and entry.get("verdict") is E_TestVerdict.PASS,
+         "accept booked the case"),
         (not finding_list, "nothing proposed: the records agree"),
     ])
     shutil.rmtree(root, ignore_errors=True)
@@ -212,12 +217,12 @@ def test_apply_books():
     book = Bookkeeper(test)
     ok = _check([
         (sum(1 for text in said if text.startswith(" book ")
-             and text.endswith("[DONE]")) == 3, "three booked"),
+             and text.endswith("[DONE]")) == 2, "two booked"),
         (good_db() == before, "nothing in GOOD/ moved"),
-        (all(book.result(t, None) is not None
-             and bool(book.result(t, None).get("last_accept"))
-             for t in ("test-reg.py", "test-nom.py", "test-book.py")),
-         "each carries 'last_accept'"),
+        (all((book.result(t, None) or {}).get("verdict")
+             is E_TestVerdict.PASS
+             for t in ("test-reg.py", "test-nom.py")),
+         "each is booked as accepted"),
         ((book.result("test-asp.py", None) or {}).get("verdict")
          is E_TestVerdict.ASPIRANT, "the aspirant is still an aspirant"),
         (not _finding_list(_proposal(test)), "asked again: nothing"),

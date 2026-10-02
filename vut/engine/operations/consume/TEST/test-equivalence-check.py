@@ -77,10 +77,11 @@ def _verdict(ok, sentence):
 
 
 def _place(body):
-    """RETURN: str, a fresh test directory holding 'demo.py'."""
+    """RETURN: str, a fresh test directory holding 'demo.py', which
+               ends its stdout with the terminal token (R-70)."""
     directory = tempfile.mkdtemp(prefix="vut_eq_")
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write(body)
+        fh.write(body + "print('<hwut-end>')\n")
     return directory
 
 
@@ -109,8 +110,8 @@ def test_verdict():
     """A matching subject passes; a differing one fails and the report
     says which kind of failure it was."""
     directory = _place("print('alpha'); print('beta')\n")
-    same      = _run(directory, {"stdout": BytesNominal("alpha\nbeta\n")})
-    differs   = _run(directory, {"stdout": BytesNominal("alpha\nGAMMA\n")})
+    same      = _run(directory, {"stdout": BytesNominal("alpha\nbeta\n<hwut-end>\n")})
+    differs   = _run(directory, {"stdout": BytesNominal("alpha\nGAMMA\n<hwut-end>\n")})
 
     for title, result in (("subject matches", same),
                           ("subject differs", differs)):
@@ -159,7 +160,7 @@ def test_unjudged_subject():
     directory = _place("import sys\n"
                        "print('alpha')\n"
                        "sys.stderr.write('noise nobody promised\\n')\n")
-    result = _run(directory, {"stdout": BytesNominal("alpha\n")})
+    result = _run(directory, {"stdout": BytesNominal("alpha\n<hwut-end>\n")})
 
     print("INSPECT: judged   = %s" % sorted(result.comparison.subject_verdict_db))
     print("         verdict  = %s, report = %s" % (result.verdict, result.report))
@@ -180,7 +181,7 @@ def test_fast_fail_is_deterministic():
     directory = _place("import sys\n"
                        "print('WRONG')\n"
                        "sys.stderr.write('ALSO WRONG\\n')\n")
-    subject_db = {"stdout": BytesNominal("right\n"),
+    subject_db = {"stdout": BytesNominal("right\n<hwut-end>\n"),
                   "stderr": BytesNominal("right\n")}
     stopping   = _run(directory, subject_db, fast_fail=True)
     exhaustive = _run(directory, subject_db, fast_fail=False)
@@ -225,7 +226,7 @@ def test_failed_provision_leaves_no_comparison():
     result = asyncio.run(EquivalenceCheck(EquivalenceCheckConfig(
         name       = "broke",
         groundwork = Run(configuration),
-        subjects   = {"stdout": BytesNominal("anything\n")})).run())
+        subjects   = {"stdout": BytesNominal("anything\n<hwut-end>\n")})).run())
 
     print("INSPECT: verdict    = %s" % result.verdict)
     print("         report     = %s" % result.report)
@@ -248,8 +249,8 @@ def test_blind_to_provenance():
     verdict: the operation never learns which provision it got."""
     directory = _place("print('alpha'); print('beta')\n")
     store     = Store(Bookkeeper(directory))
-    executed  = _run(directory, {"stdout": BytesNominal("alpha\nbeta\n")})
-    store.write_candidate("demo", None, "stdout", "alpha\nbeta\n")
+    executed  = _run(directory, {"stdout": BytesNominal("alpha\nbeta\n<hwut-end>\n")})
+    store.write_candidate("demo", None, "stdout", "alpha\nbeta\n<hwut-end>\n")
     store.write_candidate("demo", None, "stderr", "")
 
     class _Loaded:
@@ -263,7 +264,7 @@ def test_blind_to_provenance():
     replayed = asyncio.run(EquivalenceCheck(EquivalenceCheckConfig(
         name       = "demo",
         groundwork = _Loaded(),
-        subjects   = {"stdout": BytesNominal("alpha\nbeta\n")})).run())
+        subjects   = {"stdout": BytesNominal("alpha\nbeta\n<hwut-end>\n")})).run())
 
     print("INSPECT: over Run    -> verdict %s, report %s, records %i"
           % (executed.verdict, executed.report,
@@ -298,7 +299,7 @@ def test_observer_sees_the_arc():
         def finished(self, result):     line_list.append("end %s"
                                                          % result.report)
 
-    _run(directory, {"stdout": BytesNominal("alpha\n")},
+    _run(directory, {"stdout": BytesNominal("alpha\n<hwut-end>\n")},
          observer=ObserverGroup(Watcher()))
     print("INSPECT: the observer saw")
     for line in line_list: print("           %s" % line)
@@ -320,7 +321,7 @@ def test_named_but_not_produced():
     hold this one against something, and there is nothing to hold."""
     directory = _place("print('only stdout here')\n")
     result = _run(directory,
-                  {"stdout":            BytesNominal("only stdout here\n"),
+                  {"stdout":            BytesNominal("only stdout here\n<hwut-end>\n"),
                    "OUT/never-written": BytesNominal("expected\n")},
                   fast_fail=False)
 
@@ -343,12 +344,12 @@ def test_named_but_not_produced():
 
 
 def test_terminated():
-    """THE TERMINAL TOKEN (R-70): the nominal decides participation.
-    A participating subject that ends without '<hwut-end>' draws
-    'terminated-without-hwut-end' -- its own name, never a wall of
-    line differences; trailing blank lines after the token are
-    forgiven; a NON-participating nominal sees a token-bearing subject
-    as ordinary content."""
+    """THE TERMINAL TOKEN (R-70): every nominal ends in '<hwut-end>'.
+    A subject that ends without it draws 'terminated-without-hwut-end'
+    -- its own name, never a wall of line differences; trailing blank
+    lines after the token are forgiven. A NOMINAL without it draws
+    'nominal-without-hwut-end', whatever the subject says: the
+    nominal is the record that is incomplete."""
     async def judged(nominal_text, subject_text):
         directory = tempfile.mkdtemp(prefix="vut_eq_")
         try:
@@ -373,6 +374,7 @@ def test_terminated():
                                   "alpha\nbeta\n<hwut-end>\n\n\n"))
     old      = asyncio.run(judged("alpha\nbeta\n",
                                   "alpha\nbeta\n<hwut-end>\n"))
+    both     = asyncio.run(judged("alpha\nbeta\n", "alpha\nbeta\n"))
 
     print("INSPECT: cut      -> verdict %s, report %s"
           % (cut.verdict, cut.report))
@@ -380,8 +382,10 @@ def test_terminated():
           % (complete.verdict, complete.report))
     print("         padded   -> verdict %s, report %s"
           % (padded.verdict, padded.report))
-    print("         old nominal, marked subject -> verdict %s, "
+    print("         unmarked nominal, marked subject -> verdict %s, "
           "report %s" % (old.verdict, old.report))
+    print("         both unmarked -> verdict %s, report %s"
+          % (both.verdict, both.report))
     ok = _check([
         (cut.report is E_TestRunResult.TERMINATED_WITHOUT_END,
          "the missing token has its OWN name, not a line difference"),
@@ -392,12 +396,16 @@ def test_terminated():
         (padded.verdict is True,
          "trailing blank lines after the token are forgiven"),
         (old.verdict is False
-         and old.report is E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
-         "a non-participating nominal sees the token as ordinary "
-         "content: one trailing difference"),
+         and old.report is E_TestRunResult.NOMINAL_WITHOUT_END,
+         "a nominal without the token FAILS by its own name, though "
+         "the subject is complete"),
+        (both.verdict is False
+         and both.report is E_TestRunResult.NOMINAL_WITHOUT_END,
+         "and so it does where neither carries it: equal is not "
+         "complete"),
     ])
-    _verdict(ok, "the nominal decides; absence is named, never "
-                 "diffed.")
+    _verdict(ok, "every nominal ends in the token; absence is named, "
+                 "never diffed.")
 
 
 class _Provided:
@@ -421,7 +429,7 @@ def test_unexpected_stderr():
         directory = tempfile.mkdtemp(prefix="vut_eq_")
         try:
             store = Store(Bookkeeper(directory))
-            store.write_candidate("demo", None, "stdout", "the behaviour\n")
+            store.write_candidate("demo", None, "stdout", "the behaviour\n<hwut-end>\n")
             #  STDERR IS NOT A SUBJECT (E-5): never recorded through the
             #  store. Its one carrier is the error witness 'OUT/<key>.err',
             #  written only where stderr spoke -- so silence writes nothing.
@@ -435,7 +443,7 @@ def test_unexpected_stderr():
                                                    subject_name_list=
                                                    ("stdout", "stderr"))),
                 subjects        = {"stdout":
-                                   BytesNominal("the behaviour\n")},
+                                   BytesNominal("the behaviour\n<hwut-end>\n")},
                 stderr_forbidden_f = True)).run()
         finally:
             shutil.rmtree(directory, ignore_errors=True)

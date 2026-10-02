@@ -8,15 +8,10 @@
   # 'book' enters the standing nominal as accepted; nothing runs,
   # nothing in GOOD/ moves.
   book test-reg.py
-  # ACCEPTANCE UNDATED: a nominal stands and the book's 'last_accept'
-  # is empty -- accepted outside the book (E-41).
-  # 'book' enters the standing nominal as accepted; nothing runs,
-  # nothing in GOOD/ moves.
-  book test-book.py
-  OK  : three commands
+  OK  : two commands
   OK  : the book stale: it says aspirant, and a nominal stands
   OK  : the book behind: a nominal, and no entry
   OK  : an aspirant is no disagreement (B-14)
-  OK  : the book: a nominal, and 'last_accept' empty
+  OK  : a nominal booked by a run is no disagreement: the book dates no acceptance (B-25)
 SUCCESS: every disagreement is proposed under its kind.
 <hwut-end>

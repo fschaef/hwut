@@ -1,0 +1,31 @@
+--- the run's HINTS end with the pointer:
+    HINTS
+    NOMINAL -- error in GOOD file
+        .
+            test-noend-a.sh   GOOD file does not end in <hwut-end>
+            test-noend-b.sh   :
+    EXECUTION -- application invocation error
+        .
+            test-err.sh       unexpected stderr
+    HINT: use 'hwut.help' for explanation of subtle issues.
+--- hwut.help:
+STATUS: 0
+    NOMINAL -- error in GOOD file
+    
+        no <hwut-end> marker -- GOOD file does not end in <hwut-end>  [2 case(s)]
+            WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does
+                      not, so it cannot say what a complete stream is.
+            HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner
+                      does so itself; a pype script prints it from '<eof>'), run it,
+                      and accept the new output with 'hwut.accept'.
+            EXAMPLE   TEST  test-noend-a.sh
+    
+    EXECUTION -- application invocation error
+    
+        stderr -- unexpected stderr  [1 case(s)]
+            WHAT      The application wrote to stderr, and the choice does not
+                      tolerate it (E-5).
+            HEAL      Stop the writing; or declare it in the header: 'tolerance {
+                      stderr = ignored }'.
+            EXAMPLE   TEST  test-err.sh
+<hwut-end>

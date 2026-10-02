@@ -6,3 +6,4 @@ cost: -1.00000; line_associations: 4;
    [01] B ((2))                 --> [01] B ((B))                 {GOOD, GOOD, GOOD_TOLERATED}
    [02] C ((2))                 --> [02] c ((C))                 {SUBSTITUTE, GOOD, SUBSTITUTE}
    [03] D ((3))                 --> [03] d ((D))                 {SUBSTITUTE, GOOD, GOOD_TOLERATED}
+<hwut-end>

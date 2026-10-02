@@ -207,7 +207,7 @@ def test_overwrite():
     book.record(result, configuration, E_Goal.VERDICT)
     book.record(result, configuration, E_Goal.NOMINAL)
     first    = book.result("demo", None)["report"]
-    accepted = book.result("demo", None).get("last_accept")
+    accepted = sorted(book.result("demo", None))
 
     failed = TestResult(name       = "demo",
                         provision  = result.provision,
@@ -224,9 +224,9 @@ def test_overwrite():
          "the second write REPLACED the first"),
         (row_n == 1,
          "ONE ROW PER CHOICE (B-7): an operation is not a dimension"),
-        (accepted is not None and second.get("last_accept") == accepted,
-         "the acceptance's instant stands on the same row, and a later "
-         "run leaves it where it is"),
+        (accepted == ["report", "verdict"],
+         "an acceptance writes no instant: git dates it, with the book "
+         "versioned beside the nominal (B-25)"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "state now, never a log -- and no entry disturbs "
@@ -327,7 +327,7 @@ def test_reproduce():
         (sorted(read) == ["report", "verdict"],
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
-         == "test;choice;verdict;report;last_accept;coverage;"
+         == "test;choice;verdict;report;coverage;"
             "stderr;stain;test_id;choice_id",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
          "every column a decision -- and since B-13 the REGISTER'S two "

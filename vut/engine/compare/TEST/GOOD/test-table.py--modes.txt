@@ -7,3 +7,4 @@ row missing:                               judge: False lawyer: False [ok]
 both empty:                                judge: True  lawyer: True  [ok]
 ## Malformed subject data is a test failure (red), not an error:
 subject width clash:                       judge: False lawyer: False [ok]
+<hwut-end>

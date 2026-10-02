@@ -1,0 +1,10 @@
+INSPECT: failures            = 48
+         report tokens absent = none
+  OK  : every report token is a failure of the table
+  OK  : every failure has its brief line
+  OK  : every failure has its Failure
+  OK  : each Failure knows its own id
+  OK  : exactly the deviations carry no word
+  OK  : the table is frozen
+SUCCESS: one entry per reason, and none missing.
+<hwut-end>

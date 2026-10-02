@@ -3,7 +3,7 @@ STDOUT {
     REPEATS: 4   KEYS: 1
     
     suite/TEST: test-app.sh
-        CADENCE unsteady: subject 'stdout', 1 line(s) of 4, first at line 3
+        CADENCE unsteady: subject 'stdout', 1 line(s) of 5, first at line 3
     
     TALLY: 0 unstable, 1 warned, 0 steady
 }

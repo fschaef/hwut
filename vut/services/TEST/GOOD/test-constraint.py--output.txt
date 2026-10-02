@@ -1,5 +1,5 @@
 -- the run, 'b' printing 150
-       t.py  b   a constraint and the text disagree  (OUTPUT: constraint "load <= 100": broken by ((load: 150)), line 1)
+       t.py  b   constraint violated  (OUTPUT: constraint "load <= 100": broken by ((load: 150)), line 1)
    RESULTS: 0 ok, 1 fail, 2 skip
 -- the book's stain: {'a': '', 'b': '', 'c': ''}
 -- GOOD of 'b'

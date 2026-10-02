@@ -78,3 +78,4 @@ subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'smart ((C)) ((D))', 'glad (
 nominal: ['something ((2)) ((1))', 'happy ((1)) ((2))', 'smart ((3)) ((4))', 'glad ((2)) ((1))', 'something ((2)) ((1))']
 db: size 3; analogy_db: size 3;
 association: False
+<hwut-end>

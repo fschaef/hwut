@@ -9,8 +9,7 @@ DESCRIPTION
        'nobody has judged any of this': the candidate's chunk structure
        mirrored as '##! unaccepted' regions of filler lines, with the
        closing token outside every region. The next run then reads
-       '[ ?! ]' (O-25) -- not a failure and not a regression, but a
-       thing somebody still owes a decision on.
+       'unaccepted [FAIL]' (O-25): a decision somebody still owes.
 
        '--force' is the old blessing: the candidate whole, as it stands.
 

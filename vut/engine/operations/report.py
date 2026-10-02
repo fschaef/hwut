@@ -79,7 +79,9 @@ _PRECEDENCE = (
     #     follows -- terminal, stderr, verdict -- has been established
     E_TestRunResult.REGION_SYNTAX_ERROR,
     # -- completeness precedes judgement: an incomplete stream must
-    #    never masquerade as an ordinary mismatch (R-70)
+    #    never masquerade as an ordinary mismatch (R-70) -- the
+    #    nominal's first, since it is the pole the subject is held to
+    E_TestRunResult.NOMINAL_WITHOUT_END,
     E_TestRunResult.TERMINATED_WITHOUT_END,
     #  -- stderr: a stream nobody blessed, and a decision nobody took
     E_TestRunResult.STDERR_UNDECIDED,

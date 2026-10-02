@@ -286,3 +286,6 @@ if "analogy_interferences" in sys.argv:
 
     test(match_db, AnalogyDb({ "otto":  "fritz" }))
     test(match_db, AnalogyDb({ "otto":  "egon", "lucia": "diana" }))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

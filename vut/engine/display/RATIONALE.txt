@@ -783,9 +783,12 @@ DECISION  RULED (Frank-Rene, 2026-09-29): "i like the ". . .  hinted
           equivalence pattern".
           ONE SHORT WORD PER GROUP of reasons, 'word.reason_word()',
           plain, a blank before it, the badge alone painted:
-              stderr  cut-short  no-output  killed  no-launch
-              no-session  constraint  spec  no-app  no-choice  no-dep
-              no-build  pype  no-good  frame  unstable  failed (else)
+              stderr  cut-short  'no <hwut-end> marker'  no-output
+              killed  no-launch  no-session  constraint  spec  no-app
+              no-choice  no-dep  no-build  pype  no-good  frame
+              unstable  failed (else)
+          ('no <hwut-end> marker' is ruled verbatim with operations
+          R-70.)
           NO WORD for success or equivalence ('QUIET_REASON_SET': the
           'not-equivalent-*' family, 'test-failed' naming nothing) --
           the same line HINTS draws. HINTS keeps the full phrase and
@@ -863,4 +866,130 @@ DECISION  RULED (Frank-Rene, 2026-09-30): "hwut.report in the traditional
 
 COST      A report piped without '--width' is two columns narrower than
           before. No recorded page moved: every one states '--width'.
+
+
+D-34  ONE TABLE OF FAILURES, AND 'hwut.help' TO EXPLAIN THEM    (2026-10-01)
+______________________________________________________________________________
+PROBLEM   What a failure is called stood in three places: its phrase in
+          'word.PHRASE_DB', its word before '[FAIL]' in
+          '_REASON_WORD_GROUP_TUPLE', its meaning nowhere. MEASURED: 39
+          tokens carried a word in 17 groups; 'unaccepted',
+          'region-syntax-error', 'display-target-unreachable' and
+          'unsupported' fell through to 'failed' or to none. A reader of
+          '[FAIL]' was told what, and never how to resolve it.
+
+DECISION  RULED (Frank-Rene, 2026-10-01): "module in services:
+          "_failure.py" contains enum "E_Failure", "E_FailureCategory"
+          and (data)class "Failure" and "failure_db". The module
+          instantiates these Failure objects directly in the failure_db.
+          Then, possibly freeze the dictionary. [...] the failure_db
+          with the instantiations of the failures should be preceed by a
+          '_brief_failure_db' that simply maps E_Failure ->
+          (E_FailureClass, 'comment_before_FAIL_str') [...] If FAIL
+          happens at any point, that is not plain deviation, give a hint
+          at the end like 'HINT: use 'hwut.help' for explanation of
+          subtle issues'."
+          Then, on the forks:
+            PLACE   'engine/display/failure.py' (RULED, recommended), not
+                    'services/': the display reads the word, and engine
+                    imports nothing from services.
+            MEMBER  one per wire token (RULED, recommended): 48 failures;
+                    the word may repeat within a category.
+            CATEGORY  RULED (Frank-Rene, 2026-10-01): "there are at
+                    minimum three failure categories. First of one is
+                    nominals are wrong, meaning there's something wrong
+                    with the good files. Then there's a failure category
+                    with the building of the application. A failure
+                    category, of course, where we detect an equivalent
+                    in the subject and the nominal. And maybe another
+                    category, which is about the books." The 23 that fit
+                    none (RULED, recommended): EXECUTION and ENVIRONMENT.
+                        NOMINAL      6   the GOOD file is wrong
+                        BUILD        9   cannot be made or started
+                        DEVIATION    5   subject and nominal differ
+                        BOOK         3   the book disagrees, or stains
+                        EXECUTION   20   it ran and misbehaved
+                        ENVIRONMENT  5   what the test stands on
+                    'constraint' and 'region-syntax-error' stand under
+                    NOMINAL though either side may carry the finding.
+            HELP    'hwut.help' reads the books below the cwd (RULED,
+                    recommended), as 'hwut.report' does, and explains
+                    each failure that occurred once, naming one example.
+          'Failure' holds 'failure_id', 'category',
+          'comment_before_FAIL_str' (None exactly for a DEVIATION),
+          'description' (the phrase HINTS speaks) and 'explanation_f'
+          (callable(example) -> str). 'failure_db' is built by
+          '_failure()' from the brief and frozen ('MappingProxyType').
+          'word.REASON_WORD_DB', 'QUIET_REASON_SET' and 'phrase()' derive
+          from it; 'PHRASE_DB' keeps the tokens that are no failure.
+          'TEST/test-failure.py': brief, explain, total.
+          THE POINTER: 'failure.HELP_HINT_STR', written once -- by the
+          run as the last line of HINTS, by the report before RESULTS
+          -- where any failing case's failure is not a DEVIATION
+          ('subtle_f'; a token the table does not carry counts).
+
+COST      The first cut moves no output: every token's word and phrase,
+          old against new, compared equal (54 tokens). The three
+          wordless failures gain their words in a cut of their own
+          (defaults stated, unstruck): 'unaccepted', 'region',
+          'no-display'; 'unsupported' keeps 'failed'. THE POINTER moved
+          twelve pages, each by a blank line and the pointer alone. A
+          failed FRAME earns the pointer and stands in no book, so
+          'hwut.help' cannot explain it: the HINTS line names it.
+
+
+D-35  HINTS AND 'hwut.help' GROUP BY CATEGORY, AND SAY NOTHING TWICE
+                                                              (2026-10-01)
+______________________________________________________________________________
+PROBLEM   HINTS listed failing cases by directory only; a run with
+          fifteen reds across six directories gave no sense of whose
+          fault it was -- the GOOD's, the build's, the application's.
+          'hwut.help' explained each failure in table order and said
+          what, not how, nor what 'hwut.sanitize' would do about it.
+
+DECISION  RULED (Frank-Rene, 2026-10-01): "(b)" of the fork -- HINTS
+          grouped by category -- and "HINT: group and avoid redundancy;
+          same directory; same app; do not mention twice." Then: "the
+          two faces should definitely look alike, a bit. hwut.help,
+          however should be more explicit. Also, hwut.help should
+          provide hints how to heal it, or how hwut.sanitize would heal
+          it."
+          HINTS: the CATEGORY heading ('failure.CATEGORY_HEADING_DB',
+          "NOMINAL -- error in GOOD file"), under it each DIRECTORY
+          once, under that each APPLICATION once with ':' beneath where
+          its choices repeat it -- the flow's own columns; a failed
+          frame stands under ENVIRONMENT with its directory. Categories
+          in the enum's order; directories in walk order.
+          'hwut.help': the same headings; under each, every failure
+          once, 'WHAT' (what it means), 'HEAL' (how a person resolves
+          it), 'SANITIZE' where a sanitize command heals it
+          ('--constraints' remark; '--orphans' forget, for a vanished
+          test, choice or source), 'EXAMPLE' (directory and case),
+          wrapped at 76 columns. 'Failure' holds 'what', 'heal' and
+          'sanitize' as fields; 'explanation_f' draws the four lines.
+          'services/TEST/test-help.sh explain' shows both faces over one
+          tree.
+
+          THE WORDING (RULED 2026-10-02): "<category> -- <telegraphic
+          state description>", e.g. "NOMINAL -- error in GOOD file",
+          "EXECUTION -- application invocation error"; every failure's
+          phrase telegraphic, never a sentence ("GOOD file does not end
+          in <hwut-end>", "killed; memory cap exceeded"); and "never
+          mention the same comment twice": a phrase equal to the one
+          above it is ':' in the phrase column, as the application's
+          name is. 'hwut.help' carries the same headings and phrases.
+
+COST      Twelve pages moved at the grouping, every line by the heading,
+          the deeper indent, or a blank between groups; nineteen at the
+          wording, every line by a heading, a phrase of the table, or
+          ':'. Readers moved with the spelling (bin 5c):
+          'test-constraint.py' read the HINTS line by its indent;
+          'test-reporting.sh' grepped the cap phrases; 'test-accept.sh'
+          grepped 'nobody has accepted'; 'test-gate.py' reads an
+          ELIDED block and now expands ':' before it compares;
+          'plain.py' filtered HINTS by the phrase 'differs from GOOD'
+          and now asks the category -- so a scripted 'extra lines; GOOD
+          intact' (a DEVIATION) left HINTS, as D-31 meant. A directory
+          with failures in two categories is named once under each --
+          the ruling's grouping, not a repetition.
 

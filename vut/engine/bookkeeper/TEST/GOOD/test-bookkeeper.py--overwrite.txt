@@ -2,6 +2,6 @@ INSPECT: report was 'ok', now 'not-equivalent-with-nominal'
          rows for the choice = 1
   OK  : the second write REPLACED the first
   OK  : ONE ROW PER CHOICE (B-7): an operation is not a dimension
-  OK  : the acceptance's instant stands on the same row, and a later run leaves it where it is
+  OK  : an acceptance writes no instant: git dates it, with the book versioned beside the nominal (B-25)
 SUCCESS: state now, never a log -- and no entry disturbs another.
 <hwut-end>

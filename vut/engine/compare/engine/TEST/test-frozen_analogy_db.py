@@ -182,3 +182,6 @@ if "hybrid_masks" in sys.argv:
     # Ideally, we check that a NEW small instance (if possible) has masks,
     # but since IDs grow monotonically, we can only test the High-ID behavior here reliably.
     pass
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

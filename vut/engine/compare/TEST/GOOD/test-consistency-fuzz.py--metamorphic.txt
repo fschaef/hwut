@@ -7,3 +7,4 @@
   pot_rename preserved/flipped: 112/112
   seq_conflict preserved/flipped: 54/54
 result: PASS
+<hwut-end>

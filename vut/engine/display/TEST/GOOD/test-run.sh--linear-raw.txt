@@ -24,11 +24,14 @@ STDOUT {
     ==============================================================================
     HINTS
     ------------------------------------------------------------------------------
-    gamma/TEST
-        frame on_entry   the frame failed
+    ENVIRONMENT -- error around the test
+        gamma/TEST
+            frame on_entry   frame failed
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.58 [sec], 0.61 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.97 [sec], 1.02 [sec] total
     |                           ok                            |       fail       |
 }
 == --dbd --jobs=1 ==
@@ -45,11 +48,14 @@ STDOUT {
     ==============================================================================
     HINTS
     ------------------------------------------------------------------------------
-    gamma/TEST
-        frame on_entry   the frame failed
+    ENVIRONMENT -- error around the test
+        gamma/TEST
+            frame on_entry   frame failed
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.70 [sec], 0.73 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.89 [sec], 0.94 [sec] total
     |                           ok                            |       fail       |
 }
 == --directory-by-directory, the long spelling ==
@@ -66,11 +72,14 @@ STDOUT {
     ==============================================================================
     HINTS
     ------------------------------------------------------------------------------
-    gamma/TEST
-        frame on_entry   the frame failed
+    ENVIRONMENT -- error around the test
+        gamma/TEST
+            frame on_entry   frame failed
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.66 [sec], 0.69 [sec] total
+    RESULTS: 3 ok, 1 fail, 0.98 [sec], 1.02 [sec] total
     |                           ok                            |       fail       |
 }
 <hwut-end>

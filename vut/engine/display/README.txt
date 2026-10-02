@@ -6,6 +6,9 @@ The modules:
 
     word.py     the phrase table and the ink -- the ONE place a wire
                 token becomes English, and the ONE colour decision
+    failure.py  the failures: one entry per reason a case fails --
+                category, the word before '[FAIL]', phrase, and the
+                explanation 'hwut.help' gives (D-34)
     plain.py    the tier-1 renderer: CPlainFlow, a receiver that
                 writes console lines
     console.py  the console's own words: the tier flags, the colour
@@ -75,8 +78,10 @@ pass: stdout is a terminal, NO_COLOR is unset, CI is unset, TERM is
 set and not 'dumb', and on Windows ANSI is known enabled.
 
 THE ONE ENGLISH DOOR ('word.py')
-Every wire token becomes a phrase through 'phrase()'. The PHRASE_DB
-maps verdict words and every 'E_TestRunResult' value. A token the
+Every wire token becomes a phrase through 'phrase()'. A failure's
+phrase and its word before '[FAIL]' are its entry in
+'failure.failure_db'; 'PHRASE_DB' maps the tokens that are no
+failure. A token the
 table does not carry prints with its hyphens opened -- the stability
 promise: the wire grows, the display keeps reading.
 

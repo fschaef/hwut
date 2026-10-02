@@ -13,33 +13,41 @@ at compare time, and the readers are consumed and closed.
 ______________________________________________________________________________
 """
 
+import re
+
 from   .info import CTestRunInfo, of_row
 
 
 TERMINAL_TOKEN   = "<hwut-end>"
 UNACCEPTED_OPENER = "##!"
+#  THE ONE TEST FOR AN UNACCEPTED REGION (B-26): the opener, blanks,
+#  the word 'unaccepted', and then a blank, a parameter or the end of
+#  the line. '##! potpourri' and '##! constraint-violation' open regions
+#  too, and are NOT this.
+UNACCEPTED_LINE_RE = re.compile(r"^\s*##!\s+unaccepted(\s|$)")
+
+
+def carries_unaccepted_text_f(text):
+    """
+    RETURN: bool, whether 'text' holds a line that opens an 'unaccepted'
+            region -- 'UNACCEPTED_LINE_RE' matches it (compare C-9).
+    """
+    return any(UNACCEPTED_LINE_RE.match(line)
+               for line in text.splitlines())
 
 
 def carries_unaccepted_f(path):
     """
-    RETURN: bool, whether the file opens an 'unaccepted' region
-            anywhere -- a line '##! unaccepted', optionally followed by
-            parameters (compare C-9). False where it cannot be read:
-            an unreadable nominal is sanitize's finding, not a state.
-
-    The name is read as a scanner reads a shebang: the first word
-    after '##!', case as written.
+    RETURN: bool, whether the file at 'path' holds a line that opens an
+            'unaccepted' region ('carries_unaccepted_text_f'). False
+            where it cannot be read: an unreadable nominal is
+            sanitize's finding, not a state.
     """
     try:
         with open(path, "r", errors="replace") as reader:
-            for line in reader:
-                stripped = line.strip()
-                if not stripped.startswith(UNACCEPTED_OPENER): continue
-                word_list = stripped[len(UNACCEPTED_OPENER):].split()
-                if word_list and word_list[0] == "unaccepted": return True
+            return carries_unaccepted_text_f(reader.read())
     except OSError:
         return False
-    return False
 
 
 def ends_in_terminal_f(path):
@@ -82,5 +90,6 @@ def of_case(directory, test, choice=None, bookkeeper=None):
     return of_row(test, choice, row_db, bool(path_list), mark_f)
 
 
-__all__ = ["of_case", "carries_unaccepted_f", "ends_in_terminal_f",
+__all__ = ["of_case", "carries_unaccepted_f", "carries_unaccepted_text_f",
+           "ends_in_terminal_f",
            "CTestRunInfo"]

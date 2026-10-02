@@ -75,9 +75,8 @@ The faces:
                  region per subject chunk, one filler line per line of
                  it, the closing token outside every region. The report
                  says 'undecided', never 'blessed'. The next run reads
-                 '[ ?! ]' (O-25) -- a decision still owed, not a
-                 failure. '--force' is the old blessing: the candidate
-                 whole.
+                 'unaccepted [FAIL]' (O-25) -- a decision still owed.
+                 '--force' is the old blessing: the candidate whole.
 
                  '--whole', '--as-is' and '--force' ARE ONE ACT
                  (E-109): the candidate becomes the nominal as it
@@ -100,14 +99,14 @@ The faces:
                  the output and wants it recorded whole.
 
                  WHAT ACCEPTANCE MEANS, exactly: a row in 'book.csv'
-                 with 'last_accept' written, AND a file in 'GOOD/' --
+                 AND a file in 'GOOD/' --
                  at least '##! unaccepted', its fillers, '####' and
                  the closing token. Never one without the other. That
                  the two agree is 'hwut.sanitize.propose --books' business
                  (E-41), not any face's: a nominal the book lacks, a
-                 book that says ASPIRANT beside a standing nominal, a
-                 nominal whose 'last_accept' is empty -- each named,
-                 none removable by unlink.
+                 book that says ASPIRANT beside a standing nominal --
+                 each named, none removable by unlink. WHEN a nominal
+                 was accepted is git's to say, not the book's (B-25).
 
                  A CHANGE IS MERGED HERE where stdin and stderr are
                  terminals, through the same engine
@@ -292,6 +291,9 @@ The faces:
                  adjacent lines under ONE comment, the problem and what
                  its command heals; an empty line separates the kinds.
                  What cannot be proposed goes to stderr as 'NOTE:'.
+                 Every scenario it reports, and the controls it must
+                 not, stand on one page: 'TEST/test-sanitize-scenarios.sh'
+                 (E-129).
 
     hwut.sanitize.apply
                  (lib/sanitize/apply.py)
@@ -485,6 +487,16 @@ The faces:
                  with NO nominal is now this face's too (E-60): it
                  provisions the candidate itself, the way 'hwut.accept'
                  refreshes (E-40), and opens on the mirror.
+
+    hwut.help    (help.py)
+                 reads the books as 'hwut.report' does and explains each
+                 failure that is not a plain deviation from GOOD, once:
+                 its word before '[FAIL]', its phrase, how many cases,
+                 and how it is resolved, one case named as the example.
+                 The explanations stand in 'engine/display/failure.py'
+                 (display D-34). Exit 3 where nothing is to explain.
+                 'hwut.run' and 'hwut.report' point to it where such a
+                 failure stands.
 
     hwut.report.details   (lib/report/details.py)
                  the pack of a test -- metadata head, source, GOOD,

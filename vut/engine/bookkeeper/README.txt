@@ -46,7 +46,7 @@ THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is
 refused at the specification's door.
 
-    test;choice;verdict;report;last_accept;coverage;stderr;stain
+    test;choice;verdict;report;coverage;stderr;stain
 
     test            the application's file name; EMPTY means "the
                     same as the row above" -- an empty name means
@@ -54,8 +54,6 @@ refused at the specification's door.
     choice          the choice; empty where the test has none
     verdict         true / false -- of the last run
     report          the run's report token (word.py phrases it)
-    last_accept     the instant the STANDING nominal was blessed;
-                    empty until one is
     coverage        the coverage step's token; empty where not asked
     stderr          the stderr note ('ignored', 'forbidden'); empty
                     where none
@@ -66,9 +64,9 @@ refused at the specification's door.
                     the choice is clean
 
 An empty cell is ABSENCE. No row carries a configuration, an
-operation name, a host, a duration or an attribution: the first is
-git's, the last three the local database's, and an operation is not
-a dimension of a decision.
+instant of acceptance, an operation name, a host, a duration or an
+attribution: the first two are git's (B-6, B-25), the last three the
+local database's, and an operation is not a dimension of a decision.
 
 READ THROUGH THE DOOR: 'tests()', 'choices()', 'result()', 'stain()',
 'stderr_note()', 'divergence()'. The model these answer from is

@@ -100,10 +100,12 @@ def _verdict(ok, sentence):
 
 
 def _place(body, **kwargs):
-    """RETURN: (TestConfiguration, Store, str), a ready test."""
+    """RETURN: (TestConfiguration, Store, str), a ready test whose
+               application ends its stdout with the terminal token
+               (R-70)."""
     directory = tempfile.mkdtemp(prefix="vut_sess_")
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write(body)
+        fh.write(body + "print('<hwut-end>')\n")
     argument_db = dict(source_file    = "demo.py",
                        source_kind    = E_SourceKind.INTERPRETED,
                        test_directory = directory,
@@ -128,7 +130,7 @@ def test_the_arc():
     accept = asyncio.run(run_test(configuration, Request(goal=E_Goal.NOMINAL)))
     passed = asyncio.run(run_test(configuration))
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write("print('behaviour TWO')\n")
+        fh.write("print('behaviour TWO')\nprint('<hwut-end>')\n")
     changed = asyncio.run(run_test(configuration))
 
     for title, outcome in (("no nominal yet", first),
@@ -198,10 +200,10 @@ def test_entry_is_booked():
           % {k: v for k, v in outcome.entry.items()
              if k not in ("when", "host", "records")})
     ok = _check([
-        ("verdict" in book["demo.py"]["choices"]["<none>"]
-         and "last_accept" in book["demo.py"]["choices"]["<none>"],
-         "one row per choice (B-7): the run's verdict and the "
-         "acceptance's instant on it"),
+        (sorted(book["demo.py"]["choices"]["<none>"])
+         == ["report", "verdict"],
+         "one row per choice (B-7): the run's verdict and report on "
+         "it, and no instant of acceptance (B-25)"),
         ("canonicaliser" not in outcome.entry,
          "the canonicaliser is NOT recorded (B-6): what a choice was "
          "configured to do is the header's, versioned beside the book"),
@@ -307,7 +309,7 @@ def test_goal_selects():
          "both goals read the same test and agree"),
         (collected == [],
          "a MATCHING subject is not carried out to the display"),
-        ("verdict" in row and "last_accept" in row
+        (sorted(row) == ["report", "verdict"]
          and display.entry is None,
          "VERDICT and NOMINAL enter the one row; a DISPLAY does not "
          "record (B-7) -- a viewing is not a run of record"),
@@ -552,7 +554,7 @@ def test_the_compare_setup_is_recorded():
 
     directory = tempfile.mkdtemp(prefix="vut_sess_")
     with open(os.path.join(directory, "demo.py"), "w") as fh:
-        fh.write("print('value 100.4')\n")
+        fh.write("print('value 100.4')\nprint('<hwut-end>')\n")
     def configured(options):
         """RETURN: TestConfiguration, with that compare setup."""
         return TestConfiguration(
@@ -565,7 +567,7 @@ def test_the_compare_setup_is_recorded():
             choice_db      = {None: TestChoiceConfiguration(compare=options)})
 
     store = Store(Bookkeeper(directory))
-    store.accept("demo.py", None, "stdout", "value 100.0\n")
+    store.accept("demo.py", None, "stdout", "value 100.0\n<hwut-end>\n")
     strict_outcome = asyncio.run(run_test(configured(None)))
     loose_outcome  = asyncio.run(run_test(configured(loose)))
 

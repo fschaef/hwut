@@ -51,7 +51,6 @@ import sys
 import platform
 import stat
 from   dataclasses import fields, is_dataclass
-from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
 from   contextlib  import contextmanager
@@ -95,7 +94,12 @@ GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
 #  THE REGISTER'S TWO COLUMNS COME LAST, so that every column standing
 #  before this entry keeps its place and an older book reads unchanged
 #  (a row ends with its last fact, B-9).
-_COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "last_accept",
+#  NO INSTANT OF ACCEPTANCE (B-25): the book is versioned with its
+#  nominals (B-24), so git dates every acceptance; a column of dates
+#  was a second, poorer copy, empty wherever a nominal arrived by a
+#  commit. A book that still carries such a column reads unchanged:
+#  an unknown column is ignored.
+_COLUMN_TUPLE  = ("test", "choice", "verdict", "report",
                   "coverage", "stderr", "stain",
                   "test_id", "choice_id")
 
@@ -193,7 +197,6 @@ def _rows_of_model(content):
                    "choice": "" if key == NO_CHOICE_KEY else key,
                    "verdict":        _verdict_text(book.get("verdict")),
                    "report":         book.get("report") or "",
-                   "last_accept":    book.get("last_accept") or "",
                    "coverage":       book.get("coverage") or "",
                    "stderr":         book.get("stderr") or "",
                    "stain":          stain_text(book.get("stain")),
@@ -227,15 +230,14 @@ def _model_of_rows(row_iterable):
         book = content.setdefault(test, {}).setdefault("choices", {}) \
                       .setdefault(key, {})
         operation = row.get("operation")
-        if operation == "Accept":          # B-6's Accept row: its instant
-            if row.get("last_accept"): book["last_accept"] = row["last_accept"]
+        if operation == "Accept":          # B-6's Accept row: no fact left
             continue
         if operation is not None and operation not in ("", "Run"):
             continue                       # B-6's Display rows
         if row.get("verdict"):
             book["verdict"] = E_TestVerdict.of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
-        for name in ("last_accept", "coverage", "stderr",
+        for name in ("coverage", "stderr",
                      "test_id", "choice_id"):
             if row.get(name): book[name] = row[name]
         stain = stain_of_text(row.get("stain") or "")
@@ -246,9 +248,9 @@ def _model_of_rows(row_iterable):
 def _model_of_legacy(content):
     """
     RETURN: dict, a pre-B-6 book ('result_db.json') as the model: the
-            'Run' operation's verdict and report become the choice's,
-            'Accept's instant its 'last_accept'; every configuration
-            key is dropped, since it left the book.
+            'Run' operation's verdict and report become the choice's;
+            the 'Accept' operation and every configuration key are
+            dropped, since both left the book (B-6, B-25).
     """
     model = {}
     for test, test_book in content.items():
@@ -271,9 +273,6 @@ def _model_of_legacy(content):
                 out["verdict"] = _verdict_of_legacy(run["verdict"])
                 out["report"]  = run.get("report", "")
                 if "coverage" in run: out["coverage"] = run["coverage"]
-            accept = operation_db.get("Accept")
-            if isinstance(accept, dict) and accept.get("last_accept"):
-                out["last_accept"] = accept["last_accept"]
     return model
 
 
@@ -448,12 +447,6 @@ def _head_region_end(line_list, kind):
             depth -= 1
             if depth == 0: return i
     return None
-
-
-def _now():
-    """RETURN: str, the current UTC instant, seconds resolution, ISO."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
 
 
 def _plain(value):
@@ -1184,20 +1177,18 @@ class Bookkeeper:
         leaves every other untouched. No configuration rides with it
         (B-6).
 
-        AN ACCEPT KEEPS ITS INSTANT (E-36): 'last_accept' says when the
-        NOMINAL NOW STANDING was blessed -- a fact about the oracle in
-        front of the reader. A re-accept moves it, because a re-accept
-        produced the nominal that now stands. Every EARLIER acceptance
+        AN ACCEPT WRITES NO INSTANT (B-25): when a nominal was blessed
         is history, and history is the configuration management
-        system's: git holds each one, dated and attributed.
+        system's -- git holds each acceptance, dated and attributed,
+        with the book that is versioned beside it (B-24).
         """
         operation = _OPERATION_BY_GOAL[goal.name]
         #  THE BASE HOLDS DECISIONS (E-20). 'when', 'host' and the
         #  attribution 'records' were all things a run can MAKE AGAIN
         #  identically, and went to the local observation database
         #  (E-22); what stays is what a later reader cannot reproduce:
-        #  the verdict, the report, the acceptance's instant, and the
-        #  configuration that says what the entry meant.
+        #  the verdict and the report. The acceptance's instant left
+        #  with B-25, the configuration with B-6.
         entry     = {"verdict": E_TestVerdict.of_bool(result.verdict),
                      "report":  str(result.report)}
         #  NO CONFIGURATION IN THE BOOK (B-6): what held is the same
@@ -1223,17 +1214,6 @@ class Bookkeeper:
         choice_book["verdict"] = entry["verdict"]
         choice_book["report"]  = entry["report"]
         if "coverage" in entry: choice_book["coverage"] = entry["coverage"]
-        if operation == "Accept":
-            #  'last_accept' IS THE ONLY INSTANT LEFT IN THE BASE, and
-            #  belongs here because ACCEPTANCE IS A DECISION: it says
-            #  WHEN THE STANDING NOMINAL WAS BLESSED, which is a fact
-            #  about the oracle in front of the reader, not about any
-            #  run. HISTORY IS THE CONFIGURATION MANAGEMENT SYSTEM'S:
-            #  git holds every earlier acceptance of this file, dated,
-            #  attributed and undoable, and the book need not keep a
-            #  second, poorer copy (E-36).
-            entry["last_accept"] = _now()
-            choice_book["last_accept"] = entry["last_accept"]
         self._write_book(content)
         return entry
 
@@ -1362,12 +1342,12 @@ class Bookkeeper:
 
     def _note_accept_unlocked(self, test, choice, aspirant_f=False):
         """
-        RETURN: str, the instant now standing as 'last_accept' for that
-                choice -- written into its row, which is created where
-                none stood.
+        RETURN: dict, the choice's row as now written -- 'verdict' PASS
+                and 'report' 'ok', or ASPIRANT and 'unaccepted'; the row
+                is created where none stood.
 
-        ACCEPTANCE IS A DECISION AND THE BOOK HOLDS DECISIONS (E-20,
-        E-36): whoever makes a nominal stand enters it here, or the
+        ACCEPTANCE IS A DECISION AND THE BOOK HOLDS DECISIONS (E-20):
+        whoever makes a nominal stand enters it here, or the
         book says "accepted outside the book" ('hwut.sanitize.propose --books',
         E-41). 'hwut.accept' calls this beside 'Store.accept()'; the
         engine's NOMINAL goal reaches the same row through 'record()'.
@@ -1383,12 +1363,11 @@ class Bookkeeper:
         choice_db = test_book.setdefault("choices", {})
         key       = NO_CHOICE_KEY if choice is None else choice
         row       = choice_db.setdefault(key, {})
-        row["verdict"]     = (E_TestVerdict.ASPIRANT if aspirant_f
-                              else E_TestVerdict.PASS)
-        row["report"]      = "unaccepted" if aspirant_f else "ok"
-        row["last_accept"] = _now()
+        row["verdict"] = (E_TestVerdict.ASPIRANT if aspirant_f
+                          else E_TestVerdict.PASS)
+        row["report"]  = "unaccepted" if aspirant_f else "ok"
         self._write_book(content)
-        return row["last_accept"]
+        return row
 
     # -- THE STAIN: a test that switched results is disqualified ------
     def stain(self, test, choice):
@@ -1677,15 +1656,14 @@ class Bookkeeper:
     def result(self, test, choice):
         """
         RETURN: dict, the choice's decision as last recorded --
-                'verdict', 'report', and 'last_accept' / 'coverage'
-                where they stand.
+                'verdict', 'report', and 'coverage' where it stands.
                 None, no such choice was ever recorded.
         """
         key   = NO_CHOICE_KEY if choice is None else choice
         book  = self.book().get(test, {}).get("choices", {}).get(key)
         if book is None or "verdict" not in book: return None
         return {name: book[name] for name in
-                ("verdict", "report", "last_accept", "coverage")
+                ("verdict", "report", "coverage")
                 if name in book}
 
 

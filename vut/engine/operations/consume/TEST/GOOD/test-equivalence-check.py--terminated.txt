@@ -1,11 +1,13 @@
 INSPECT: cut      -> verdict False, report terminated-without-hwut-end
          complete -> verdict True, report ok
          padded   -> verdict True, report ok
-         old nominal, marked subject -> verdict False, report not-equivalent-with-nominal
+         unmarked nominal, marked subject -> verdict False, report nominal-without-hwut-end
+         both unmarked -> verdict False, report nominal-without-hwut-end
   OK  : the missing token has its OWN name, not a line difference
   OK  : and the test FAILED
   OK  : with the token, the same content passes
   OK  : trailing blank lines after the token are forgiven
-  OK  : a non-participating nominal sees the token as ordinary content: one trailing difference
-SUCCESS: the nominal decides; absence is named, never diffed.
+  OK  : a nominal without the token FAILS by its own name, though the subject is complete
+  OK  : and so it does where neither carries it: equal is not complete
+SUCCESS: every nominal ends in the token; absence is named, never diffed.
 <hwut-end>

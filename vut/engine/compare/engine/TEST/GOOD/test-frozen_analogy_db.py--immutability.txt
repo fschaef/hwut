@@ -5,3 +5,4 @@
 -----------------------------------------------------------------------------------------------
 | Merge Side-Effect         | id(base) post-merge                 | Unchanged    | PASS     |
 | Attribute Guard           | Write access to slots               | Error        | PASS     |
+<hwut-end>

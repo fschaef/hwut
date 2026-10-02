@@ -23,6 +23,8 @@ STDOUT {
     
     ======================================================================
     
+    HINT: use 'hwut.help' for explanation of subtle issues.
+    
     RESULTS: 0 ok, 1 fail
     |                                fail                                |
 }

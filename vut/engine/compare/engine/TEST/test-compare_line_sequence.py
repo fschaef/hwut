@@ -101,3 +101,6 @@ if "info" in sys.argv:
     test(["a", "b"],   ["b", "a"])
     test(["a"],        ["b", "a b"])
     test(["a", "a b"], ["b"])
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

@@ -1,6 +1,6 @@
 -- the first run
-       t.py  b   a constraint and the text disagree  (GOOD: constraint "load <= 100": broken by ((load: 150)), line 1)
-       :     c   a constraint and the text disagree  (GOOD: constraint "twice == 2 * once": 'twice' never bound; OUTPUT: constraint "twice == 2 * once": 'twice' never bound)
+       t.py  b   constraint violated  (GOOD: constraint "load <= 100": broken by ((load: 150)), line 1)
+       :     c   :  (GOOD: constraint "twice == 2 * once": 'twice' never bound; OUTPUT: constraint "twice == 2 * once": 'twice' never bound)
    RESULTS: 1 ok, 2 fail
 -- the book's stain: {'a': '', 'b': 'constraint', 'c': 'constraint'}
 -- GOOD of 'b'
@@ -16,8 +16,8 @@
       | x ((once: 3))
       | <hwut-end>
 -- a second run: the GOODs gain nothing
-       t.py  b   a constraint and the text disagree
-       :     c   a constraint and the text disagree
+       t.py  b   constraint violated
+       :     c   :
    RESULTS: 1 ok, 2 fail
 -- GOOD of 'b'
       | x ((load: 150))

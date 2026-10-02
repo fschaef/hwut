@@ -1,17 +1,20 @@
 STATUS: 1
 HINTS {
-    suite/TEST
-     test-cpu.sh killed: over the cpu-time cap
-     test-fsize.sh killed: over the file-size cap
-     test-memory.sh killed: over the memory cap
-     test-pids.sh killed: over the process cap
-     test-wall.sh killed: over the wall-clock cap
+    EXECUTION -- application invocation error
+     suite/TEST
+     test-cpu.sh killed; cpu-time cap exceeded
+     test-fsize.sh killed; file-size cap exceeded
+     test-memory.sh killed; memory cap exceeded
+     test-pids.sh killed; process cap exceeded
+     test-wall.sh killed; wall-clock cap exceeded
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
 }
   OK  : wall-clock: named
   OK  : cpu-time: named
   OK  : memory: named
   OK  : file-size: named
   OK  : process count: named
-  OK  : 'killed by the supervisor' appears nowhere
+  OK  : 'killed by supervisor' appears nowhere
 SUCCESS: every cap is named where it was hit.
 <hwut-end>

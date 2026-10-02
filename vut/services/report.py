@@ -90,6 +90,7 @@ from   vut.services.lib.cmdline import (face_parser, usage_of,
 from   vut.services.lib.face    import Refused, Fault, FaceError
 from   vut.services.lib.wallflowers import wallflowers_writer
 from   vut.engine.display.word  import phrase, reason_word
+from   vut.engine.display.failure import HELP_HINT_STR
 from   vut.engine.display.console import console_width
 from   vut.engine.display.plain import (wallflower_note_list,
                                        results_line_list)
@@ -502,11 +503,14 @@ def reason_word_of(row):
     RETURN: str, the word before a failing row's '[FAIL]' (display D-31):
                  'unstable' for a stain, else the word of the recorded
                  report.
+                 'unaccepted' for an aspirant, as the run says it (O-25).
             None, where the failure is about equivalence, or the book
-                 names no reason (never run, aspirant).
+                 names no reason (never run).
     """
     if row.stain_repeat_n is not None: return reason_word("unstable")
-    if row.verdict is None or row.verdict is E_TestVerdict.ASPIRANT:
+    if row.verdict is E_TestVerdict.ASPIRANT:
+        return reason_word("unaccepted")
+    if row.verdict is None:
         return None
     return reason_word(row.report)
 
@@ -840,6 +844,7 @@ class Tally:
     block_n:  int = 0
     row_n:    int = 0
     fail_n:   int = 0
+    subtle_n: int = 0            # D-34: failing rows 'hwut.help' explains
     empty_f:  bool = False
     silent_db:    dict  = None   # X-SILENT: explored directory, as seen
                                  # from the call directory -> [name, ...]
@@ -967,16 +972,19 @@ def do(request, sink):
         else:
             return Tally(empty_f=True,
                          silent_db=silent_db)
-        block_n = row_n = fail_n = 0
+        block_n = row_n = fail_n = subtle_n = 0
         for where, title, row_list in itertools.chain(held_list, stream):
             block = Block(where, title,
                           tuple(_row_of(row) for row in row_list))
             block_n += 1
             row_n   += len(block.row_tuple)
             fail_n  += sum(1 for row in row_list if not row.good_f)
+            subtle_n += sum(1 for row in row_list
+                            if not row.good_f
+                            and reason_word_of(row) is not None)
             sink(block)
         return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n,
-                     silent_db=silent_db)
+                     subtle_n=subtle_n, silent_db=silent_db)
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     except SelectionError as error:
@@ -1096,6 +1104,10 @@ def main(argv=None, write=None):
             for line in wallflower_note_list(path_list, where):
                 write(line)
         if format_name != "traditional" and out_name is None: return
+        #  THE POINTER TO 'hwut.help' (D-34), as the run closes HINTS.
+        if tally.subtle_n:
+            write("")
+            write(HELP_HINT_STR)
         line_list = results_line_list(tally.row_n - tally.fail_n,
                                       tally.fail_n, width_of(width, tty_f),
                                       CInk(color_f))

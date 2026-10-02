@@ -19,3 +19,4 @@ nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y)), SEPERATOR: , ANALOGY:((x))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => False, 
+<hwut-end>

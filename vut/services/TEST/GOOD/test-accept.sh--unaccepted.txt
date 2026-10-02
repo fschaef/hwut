@@ -1,11 +1,11 @@
---- the run: its own tag, its own count, its own hint
+--- the run: 'unaccepted [FAIL]', counted, named in HINTS
 STATUS: 1
-    DONE  test-ok.sh [ ?! ]  ||0
     SKIP  test-two.sh  a no GOOD file [FAIL]  ||0
           :            b no GOOD file [FAIL]  ||0
-       suite/TEST . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/2
-        test-ok.sh   the nominal carries lines nobody has accepted: an aspirant, finish it with 'hwut.accept'
-    RESULTS: 0 ok, 2 fail, 1 refused, 0.11 [sec] total
+          test-ok.sh unaccepted [FAIL]  ||0
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/3
+            test-ok.sh       GOOD file carries unaccepted lines
+    RESULTS: 0 ok, 3 fail, 0.03 [sec] total
 --- '--unaccepted' selects the cases with NO nominal: test-two.sh
     ./test-two.sh a
     ./test-two.sh b

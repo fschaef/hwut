@@ -225,3 +225,6 @@ if "wild-2" in sys.argv:
 if "DEBUG" in sys.argv:
     test(["I smart", "funny"],
          ["happy"])
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

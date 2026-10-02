@@ -5,3 +5,4 @@
   euclidean  grid == brute (and judge == lawyer): 50/50
   Linf       grid == brute (and judge == lawyer): 50/50
 result: PASS
+<hwut-end>

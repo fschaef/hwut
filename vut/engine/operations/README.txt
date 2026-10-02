@@ -1224,15 +1224,13 @@ STREAM IS COMPLETE, by the testimony of whoever ends it. The token is
 CONTENT -- compared, stored, displayed; the compare framework knows no
 plumbing ('consume/terminal.py' holds the word and the reading law).
 
-THE NOMINAL DECIDES PARTICIPATION: a nominal ending in the token
-requires the subject to; a nominal without it imposes no check. The
-migration therefore needs no switch anywhere -- 'hwut.renovate'
-(planned) appends tokens to nominals; new tests carry them from birth
-through the reference runner.
+EVERY STDOUT NOMINAL ENDS IN THE TOKEN: one that does not fails the
+case as 'nominal-without-hwut-end' -- 'no <hwut-end> marker [FAIL]'
+-- whatever the subject says (R-70). File subjects are exempt.
 
-ABSENCE HAS ITS OWN NAME: a participating subject without the token
-draws 'terminated-without-hwut-end' -- placed in the report precedence
-ABOVE the judgement: an incomplete stream never masquerades as an
+ABSENCE HAS ITS OWN NAME: a subject whose nominal carries the token
+and which does not draws 'terminated-without-hwut-end' -- both placed
+in the report precedence ABOVE the judgement: an incomplete stream never masquerades as an
 ordinary mismatch, and never becomes a wall of line differences.
 
 WHO ENDS A STREAM:

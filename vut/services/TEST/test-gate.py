@@ -25,8 +25,7 @@ THE GATE IS ON THE NOMINAL (services E-41). One fixture tree holds:
                     [FAIL]' in the flow, the way in named in HINTS,
                     counted, the run red (display D-32); not booked.
     registered      the accepted test RUNS, gets a register entry on
-                    the nominal's word, and the run SAYS so (NOTE);
-                    its book entry has no 'last_accept'.
+                    the nominal's word, and the run SAYS so (NOTE).
     plan_agrees     'hwut.plan' refuses exactly what 'hwut.run' does not
                     run: the copy it refuses, the cases with no GOOD file
                     it fails.
@@ -162,12 +161,24 @@ def _refused_block(line_list):
 def _hints_block(line_list):
     """RETURN: list[str], the lines of the HINTS block, stripped; empty
     where none stands."""
+    import re
     result = []
     in_f   = False
+    last   = None
     for line in line_list:
         if line.startswith("HINTS"):                 in_f = True; continue
         if in_f and line.startswith("="):            break
-        if in_f and line.startswith("    "):         result.append(line.strip())
+        if not (in_f and line.startswith("    ")):   continue
+        #  A READER OF AN ELIDED BLOCK EXPANDS BEFORE IT COMPARES (D-35):
+        #  ':' in the phrase column is the phrase of the line above.
+        text  = line.strip()
+        match = re.match(r"^(.*\S)\s{2,}(\S.*)$", text)
+        if match is not None:
+            said = match.group(2)
+            if said == ":": said = last
+            else:           last = said
+            text = "%s   %s" % (match.group(1), said)
+        result.append(text)
     return result
 
 
@@ -230,7 +241,7 @@ def test_not_accepted():
 
 def test_registered():
     """The accepted test runs; the register gets its entry on the
-    nominal's word; the run says so; no 'last_accept'."""
+    nominal's word; the run says so."""
     root, test = fixture()
     before = Bookkeeper(test).run_id_of("test-old.py")
     status, line_list, error_list = _run(root)
@@ -246,8 +257,6 @@ def test_registered():
         (len(note) == 1, "the run said so, once (NOTE)"),
         (entry is not None and entry.get("verdict") is E_TestVerdict.PASS,
          "the book has the run's verdict"),
-        (entry is not None and not entry.get("last_accept"),
-         "and no 'last_accept': the mark for sanitize"),
     ])
     shutil.rmtree(root, ignore_errors=True)
     _verdict(ok, "a nominal's word registers the test, and says so.")

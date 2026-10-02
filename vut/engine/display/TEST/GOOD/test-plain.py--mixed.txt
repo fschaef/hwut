@@ -31,12 +31,21 @@ DIRECTORIES                                             4 ok, 6 fail, 00:00:12
 ==============================================================================
 HINTS
 ------------------------------------------------------------------------------
-time-stamping-pio-tests/TEST
-    build[make  test-built.c]   the build failed
-    test-built.c                not supported here  <- build[make test-built.c]
-    test-cut.sh                 output cut short (no <hwut-end>)
-    test-dead.sh  x             killed by the supervisor
-    test-m.sh                   missing dependency
+BUILD -- build or launch error
+    time-stamping-pio-tests/TEST
+        build[make  test-built.c]   build failed
+
+EXECUTION -- application invocation error
+    time-stamping-pio-tests/TEST
+        test-cut.sh                 output cut short; no <hwut-end>
+        test-dead.sh  x             killed by supervisor
+
+ENVIRONMENT -- error around the test
+    time-stamping-pio-tests/TEST
+        test-built.c                supporter failed; not run  <- build[make test-built.c]
+        test-m.sh                   missing dependency
+
+HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
 RESULTS: 4 ok, 6 fail, 12.00 [sec]

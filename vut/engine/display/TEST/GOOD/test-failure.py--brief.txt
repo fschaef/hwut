@@ -1,0 +1,53 @@
+acquisition-failed             environment  no-dep
+build-contained                build        no-build
+build-failed                   build        no-build
+build-tool-not-found           build        no-build
+constraint                     nominal      constraint
+display-target-unreachable     environment  no-display
+frame-failed                   environment  frame
+interpreter-not-found          build        no-launch
+launch-failed                  build        no-launch
+misdep                         environment  no-dep
+no-good-file                   nominal      no GOOD file
+nominal-file-not-found         nominal      no GOOD file
+nominal-without-hwut-end       nominal      no <hwut-end> marker
+not-equivalent-diverged        deviation    -
+not-equivalent-grew            deviation    -
+not-equivalent-shrank          deviation    -
+not-equivalent-with-nominal    deviation    -
+output-file-not-found          execution    no-output
+pype-contained                 execution    pype
+pype-failed                    execution    pype
+pype-file-not-found            execution    pype
+pype-file-syntax-error         execution    pype
+pype-interpreter-not-found     execution    pype
+recording-missing              execution    no-output
+region-syntax-error            nominal      region
+source-not-found               build        no-launch
+spec-broken                    build        spec
+stderr-undecided               execution    stderr
+target-not-built               build        no-build
+terminated-without-hwut-end    execution    cut-short
+test-app-contained             execution    killed
+test-app-cpu-time-exceeded     execution    killed
+test-app-disk-exceeded         execution    killed
+test-app-file-size-exceeded    execution    killed
+test-app-launch-failed         build        no-launch
+test-app-memory-exceeded       execution    killed
+test-app-no-output             execution    no-output
+test-app-pids-exceeded         execution    killed
+test-app-session-gone          execution    no-session
+test-app-stalled               execution    no-output
+test-app-wall-clock-exceeded   execution    killed
+test-choice-vanished           book         no-choice
+test-failed                    deviation    -
+test-vanished                  book         no-app
+unaccepted                     nominal      unaccepted
+unexpected-stderr              execution    stderr
+unstable                       book         unstable
+unsupported                    environment  failed
+  OK  : the word before '[FAIL]' is the brief's, for every failure
+  OK  : the phrase is the Failure's description, for every failure
+  OK  : a token the table does not carry still reads 'failed'
+SUCCESS: the brief is what the run says.
+<hwut-end>

@@ -32,7 +32,8 @@ from ...bookkeeper.api       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
 from ..plan.form                   import E_NodeKind
 from ..plan.tree                   import (determine_tree,
-                                           NOT_ACCEPTED_REASON)
+                                           NOT_ACCEPTED_REASON,
+                                           UNACCEPTED_REASON)
 from ..scheduler.budget            import CBudget
 from ..scheduler.scheduler         import Scheduler
 from ..scheduler.state             import E_NodeState
@@ -138,14 +139,16 @@ class CDirectoryWork:
             emit("fault", directory=directory, text=str(fault))
         for report in entry.report_tuple:
             emit("report", directory=directory, text=str(report))
-        #  NOT RUN, AND SAID SO (E-41): exploration's refusals and the
-        #  aspirant's, one event each, collected by the display into the
-        #  closing REFUSED block. None is a node of the plan and none is
-        #  counted. A CASE WITH NO GOOD FILE IS NOT RUN EITHER, and it
-        #  FAILS (display D-32): 'no GOOD file [FAIL]', counted, below.
-        no_good_tuple = no_good_file_tuple(entry.refused_tuple)
+        #  NOT RUN, AND SAID SO (E-41): exploration's refusals, one
+        #  event each, collected by the display into the closing REFUSED
+        #  block. None is a node of the plan and none is counted.
+        #  A CASE WHOSE NOMINAL CANNOT SERVE IS NOT RUN EITHER, and it
+        #  FAILS, counted, below: no GOOD file (display D-32), and a GOOD
+        #  carrying '##! unaccepted' (O-25) -- 'unaccepted [FAIL]'.
+        no_good_tuple    = no_good_file_tuple(entry.refused_tuple)
+        unaccepted_tuple = unaccepted_tuple_of(entry.refused_tuple)
         for name, reason in entry.refused_tuple:
-            if name in no_good_tuple: continue
+            if name in no_good_tuple or name in unaccepted_tuple: continue
             emit("refused", directory=directory, node=name, text=reason)
         #  SILENT, NOT REFUSED (X-SILENT): a candidate carrying no
         #  'hwut { }' and named under no 'apps'. Ordinary -- a helper,
@@ -158,7 +161,8 @@ class CDirectoryWork:
                       os.path.normpath(os.path.join(self.root, directory)),
                       entry.app_set, entry.fault_tuple)
         emit("dir-begun", directory=directory,
-             node_n=len(entry.plan) + len(unstood) + len(no_good_tuple))
+             node_n=len(entry.plan) + len(unstood) + len(no_good_tuple)
+                    + len(unaccepted_tuple))
         #  THE BOOK DOCUMENTS WHAT TESTS EXIST, and a test it records
         #  that no longer stands is a FAILING TEST, not a silence: the
         #  documentation and the tree disagree, and only a person can
@@ -171,6 +175,9 @@ class CDirectoryWork:
         for name in no_good_tuple:
             emit("run-ended", directory=directory, node=name,
                  node_kind="TEST", good=False, verdict="no-good-file")
+        for name in unaccepted_tuple:
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict="unaccepted")
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
         #  their 'run-ended' comes first, verdict named.
@@ -202,8 +209,8 @@ class CDirectoryWork:
                 verdict = _verdict(state, node.kind)
                 if not good_f and report == "test-app-launch-failed":
                     verdict = "launch-failed"
-                #  NOT A REGRESSION (C-9, O-25): the nominal carries
-                #  lines nobody decided; the verdict says so by name.
+                #  BY ITS NAME (C-9, O-25): the nominal carries lines
+                #  nobody decided; the verdict says 'unaccepted'.
                 if not good_f and report == "unaccepted":
                     verdict = "unaccepted"
                 emit("run-ended", directory=directory,
@@ -246,7 +253,8 @@ class CDirectoryWork:
         fail_db = {name: state.name for name, state
                    in sorted(report.failure_db().items())}
         good_f  = report.good_f() and not entry.fault_tuple \
-                  and not unstood and not no_good_tuple
+                  and not unstood and not no_good_tuple \
+                  and not unaccepted_tuple
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
         return CDirDone(good_f, len(fail_db))
@@ -465,6 +473,17 @@ def no_good_file_tuple(refused_tuple):
     """
     return tuple(name for name, reason in refused_tuple
                  if reason == NOT_ACCEPTED_REASON)
+
+
+def unaccepted_tuple_of(refused_tuple):
+    """
+    RETURN: tuple[str], the case names the nominal gate refused because
+            their GOOD carries '##! unaccepted' (E-41's
+            'UNACCEPTED_REASON', an ASPIRANT) -- each is not run and
+            FAILS, 'unaccepted [FAIL]' (O-25).
+    """
+    return tuple(name for name, reason in refused_tuple
+                 if reason == UNACCEPTED_REASON)
 
 
 def unstood_tuple(directory, app_set, fault_tuple):

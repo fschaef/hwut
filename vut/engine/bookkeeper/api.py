@@ -87,7 +87,8 @@ from .stream_store  import (DirectoryBusy, DirectoryLock,
                             source_digest_of)
 from .test_id_db    import TestIdDb, TestIdFault
 from .test_run_id   import RunIdFault, TestRunId, run_id_of_text
-from .test_run_info.of_disk import carries_unaccepted_f
+from .test_run_info.of_disk import (carries_unaccepted_f,
+                                    carries_unaccepted_text_f)
 
 __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "DirectoryLock", "E_StderrNote", "E_TestVerdict", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
@@ -96,6 +97,7 @@ __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "STORE_DIRECTORY_NAME", "SUBJECT_BY_SUFFIX_DB",
            "Store", "StoreConfig", "TestIdDb", "TestIdFault",
            "SIDECAR_SUFFIX_TUPLE", "TestRunId", "carries_unaccepted_f",
+           "carries_unaccepted_text_f",
            "compare_setup_delta",
            "error_witness_name", "key_parts_of", "nominal_stands_f",
            "observation_of", "STAIN_CONSTRAINT_WORD", "stain_text",

@@ -5,9 +5,9 @@ STATUS: 0
     | --?--
     | ####
     | <hwut-end>
---- the next run: not a failure, a decision still owed
-STATUS: 2
-    DONE  test-ok.sh [ ?! ]  ||0
-       suite/TEST . . . . . . . . . . . . . . . . . . . . . .      [OK]      0/0
-    RESULTS: 0 ok, 0 fail, 2 skip, 1 refused, 0.02 [sec] total
+--- the next run: a failure by its name, a decision still owed
+STATUS: 1
+    SKIP  test-ok.sh unaccepted [FAIL]  ||0
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/1
+    RESULTS: 0 ok, 1 fail, 2 skip, 0.02 [sec] total
 <hwut-end>

@@ -1,4 +1,4 @@
-  test-new.py      no GOOD file: not accepted, not run
+  test-new.py   no GOOD file; not accepted, not run
   2 ok, 2 fail
   OK  : the flow says 'no GOOD file [FAIL]', once
   OK  : HINTS names it

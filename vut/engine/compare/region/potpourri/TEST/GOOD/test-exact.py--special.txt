@@ -14,11 +14,12 @@ association: False
 subject: ['smart', 'smart', 'glad']
 nominal: ['funny', 'funny', 'none']
 association: False
-##   [1] smart           --> [0] funny
-##   [2] glad            --> [1] funny
+##   [0] smart           --> [0] funny
+##   [1] smart           --> [1] funny
 --------------------------------
 subject: ['funny', 'funny', 'none']
 nominal: ['smart', 'smart', 'glad']
 association: False
 ##   [0] funny           --> [0] smart
-##   [1] funny           --> [2] glad
+##   [1] funny           --> [1] smart
+<hwut-end>

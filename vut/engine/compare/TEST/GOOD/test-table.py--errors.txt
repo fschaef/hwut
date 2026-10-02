@@ -5,3 +5,4 @@ duplicate nominal key                -> line 3: table NOMINAL key 'a' appears tw
 nominal numeric cell not a number    -> line 2: table NOMINAL cell in numeric column 1 is not a number: 'xyz'
 malformed numeric spec               -> line 1: parameter 'numeric' of region handler 'table': cannot interpret value '1'
 unknown parameter                    -> line 1: region handler 'table' knows no parameter 'frobnicate'; known: ignore, key, numeric, sep, unordered
+<hwut-end>

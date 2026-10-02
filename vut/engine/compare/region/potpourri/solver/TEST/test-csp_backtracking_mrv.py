@@ -79,3 +79,6 @@ elif "lane-trap" in sys.argv:
     except Exception: n = 10000
 
     test(f"Lane Trap {n}:", gen.lane_trap(n))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

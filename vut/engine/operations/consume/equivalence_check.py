@@ -37,6 +37,10 @@ from   .terminal                import (ends_in_terminal,
 from   ..observer               import notify
 from   ..report                 import (Comparison, TestResult)
 
+#  THE STREAM SUBJECT (R-70): the one whose nominal must end in the
+#  token -- spelt as the session names it ('session.py': subjects).
+STDOUT_SUBJECT = "stdout"
+
 
 @dataclass(frozen=True)
 class EquivalenceCheckConfig:
@@ -130,17 +134,25 @@ class EquivalenceCheck:
                 if self.config.fast_fail: break
                 continue
 
-            #  THE TERMINAL TOKEN (R-70): the nominal decides
-            #  participation. A participating subject that ends
-            #  without '<hwut-end>' is INCOMPLETE -- its own name, not
-            #  a wall of line differences ending in one missing line.
-            #  Peeked on FRESH readers; the working pair stays
-            #  untouched.
-            if ends_in_terminal(nominal.open()) \
-               and not ends_in_terminal(provided[name].open()):
+            #  THE TERMINAL TOKEN (R-70): EVERY STDOUT NOMINAL ENDS IN
+            #  IT. A stdout nominal without '<hwut-end>' is the
+            #  INCOMPLETE RECORD and fails by that name, whatever the
+            #  subject says -- equal is not complete. FILE SUBJECTS
+            #  ARE EXEMPT: their completeness is the reading point.
+            #  A subject whose nominal carries the token and which
+            #  does not is cut short -- its own name, not a wall of
+            #  line differences ending in one missing line. Peeked on
+            #  FRESH readers; the working pair stays untouched.
+            missing = None
+            if name == STDOUT_SUBJECT and not ends_in_terminal(nominal.open()):
+                missing = E_TestRunResult.NOMINAL_WITHOUT_END
+            elif ends_in_terminal(nominal.open()) \
+                 and not ends_in_terminal(provided[name].open()):
+                missing = E_TestRunResult.TERMINATED_WITHOUT_END
+            if missing is not None:
                 verdict_db[name] = False
                 if report is E_TestRunResult.OK:
-                    report = E_TestRunResult.TERMINATED_WITHOUT_END
+                    report = missing
                 notify(self.observer, "verdict", name, False)
                 close = getattr(nominal_reader, "close", None)
                 if close is not None: close()

@@ -106,3 +106,6 @@ if "combined" in sys.argv:
                                 region(" subset duplicates", "a\nb\n"))
     show("violation still detected", region(" subset duplicates", "x\nx\n"),
                                 region(" subset duplicates", "a\nb\n"))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

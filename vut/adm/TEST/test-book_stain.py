@@ -26,14 +26,14 @@ SCRIPT = os.path.join(HERE, "..", "book_stain.py")
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "..")))
 
 OLD_BOOK = ("# vut-register 5 generation:5 apps:1 marks:0=4\n"
-            "test;choice;verdict;report;last_accept;coverage;stderr;"
+            "test;choice;verdict;report;coverage;stderr;"
             "stain_repeat_n;stain_when;test_id;choice_id\n"
-            "demo.py;one;true;ok;2026-09-27T12:31:35Z;;;;;0;0\n"
-            ";two;false;unstable;;;;7;2026-09-27T12:00:00Z;0;1\n"
+            "demo.py;one;true;ok;;;;;0;0\n"
+            ";two;false;unstable;;;7;2026-09-27T12:00:00Z;0;1\n"
             ";three;true;ok\n")
-NEW_BOOK = ("test;choice;verdict;report;last_accept;coverage;stderr;"
+NEW_BOOK = ("test;choice;verdict;report;coverage;stderr;"
             "stain;test_id;choice_id\n"
-            "x.py;;true;ok;;;;3 repeat;0;0\n")
+            "x.py;;true;ok;;;3 repeat;0;0\n")
 
 
 def put(path, text):

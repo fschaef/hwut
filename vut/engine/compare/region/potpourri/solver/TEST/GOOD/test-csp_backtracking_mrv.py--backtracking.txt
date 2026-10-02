@@ -1,7 +1,7 @@
 --- CSP Scenario: Backtracking Lock (15 depth) ---
   Success:  True
   Matching: 15/15
-##Time:     0.0017578601837158203 [sec]
+##Time:     0.0004405975341796875 [sec]
     [0] -> 0
     [1] -> 16
     [2] -> 17
@@ -13,3 +13,4 @@
     [8] -> 23
     [9] -> 24
 ...
+<hwut-end>

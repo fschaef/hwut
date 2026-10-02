@@ -1,0 +1,16 @@
+  OK    True   '##! unaccepted'
+  OK    True   '##! unaccepted 3 lines'
+  OK    True   '   ##!   unaccepted'
+  OK    True   'x\n##! unaccepted\n####'
+  OK    False  '##!unaccepted'
+  OK    False  '##! unacceptedness'
+  OK    False  '##! potpourri'
+  OK    False  '##! constraint-violation'
+  OK    False  '##! table unaccepted'
+  OK    False  '## unaccepted'
+  OK    False  'unaccepted'
+  OK    False  ''
+  OK  : every spelling judged alike by text and by file
+  OK  : an unreadable file carries nothing
+SUCCESS: '##!', blanks, 'unaccepted', and nothing else.
+<hwut-end>

@@ -21,6 +21,7 @@ by PATH and by path alike.
                         hwut.accept   hwut.execute   hwut.run.cov
                         hwut.run.diff     hwut.report.details
                         hwut.run.stability  hwut.report.wishlist  hwut.report
+                        hwut.help
                         hwut.remove
                         hwut.rename   hwut.move
                         hwut.sanitize hwut.sanitize.propose

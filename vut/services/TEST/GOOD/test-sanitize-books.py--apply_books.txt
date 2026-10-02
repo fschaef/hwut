@@ -1,9 +1,8 @@
   book test-nom.py ..................................................... [DONE]
   book test-reg.py ..................................................... [DONE]
-  book test-book.py .................................................... [DONE]
-  OK  : three booked
+  OK  : two booked
   OK  : nothing in GOOD/ moved
-  OK  : each carries 'last_accept'
+  OK  : each is booked as accepted
   OK  : the aspirant is still an aspirant
   OK  : asked again: nothing
 SUCCESS: 'book' mends the book and never GOOD/.

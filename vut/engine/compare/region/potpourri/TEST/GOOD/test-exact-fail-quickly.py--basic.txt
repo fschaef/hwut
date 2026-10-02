@@ -52,3 +52,4 @@ subject: ['fit ((1))', 'funny ((2))', 'happy ((1))']
 nominal: ['fit ((A))', 'happy ((B))', 'funny ((C))']
 db: size 1; analogy_db: size 1;
 association: False
+<hwut-end>

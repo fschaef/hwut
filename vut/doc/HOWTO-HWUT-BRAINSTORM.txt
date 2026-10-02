@@ -535,3 +535,44 @@ BIN DISCIPLINE
     - a page that asserts in PROSE what the code no longer does is as
       stale as the nominal under it. 'test-accept.sh first' still
       says the next run reads '[ ?! ]' -- it no longer runs at all
+    - A CATALOGUE PAGE PROVES ITS CONTROLS BY NAME. One tree, one
+      directory per scenario, named after it: the proposal then says
+      WHICH scenario a line came from, and a control that shows up is
+      read at once. MEASURED (test-sanitize-scenarios.sh, first run):
+      two controls reported as other scenarios -- an aspirant whose
+      application did not stand was an ORPHAN, and a 'hwut.conf' body
+      handed to printf through '%s' kept its '\n' literally, so the
+      directory FAULTED instead of hiding an application. Read the
+      output for every directory, controls first
+    - A FACE THAT BOOKS LEAVES 'TMP/' BEHIND (it takes the directory's
+      lock). A fixture that books and then places transient scenarios
+      reports the booking's residue as TRANSIENT ROOT everywhere: make
+      the records first, sweep 'TMP/' and 'OUT/', then place what the
+      page is about
+    - A GREEN CASE MAY STAND ON A STALE GOOD that its own tolerance
+      forgives ('##' comments, blank lines, an eq_pattern). Any
+      re-accept then moves those lines too. MEASURED (o-8, 74 GOODs
+      gaining '<hwut-end>'): 63 moved by the token alone, 11 by
+      forgiven lines as well -- wall-clock timings in '##' comments,
+      a handler list grown since. THE PROOF THAT ONLY FORGIVEN LINES
+      MOVED: in a scratch copy, the OLD GOOD plus the token, run
+      against the NEW output -- [OK] for all 11. And a timing printed
+      into a nominal, even as a comment, is a GOOD that differs on
+      every recording
+    - AN IN-MEMORY NOMINAL IS A NOMINAL. When R-70 came to fail every
+      stdout nominal without '<hwut-end>', 21 cases on 6 pages went red
+      -- not GOOD files but fixtures: 'BytesNominal("alpha\n")', a
+      helper's 'put(good, ..., "line\n")', an app body without the
+      token. MENDED IN THE HELPER ('_place', 'app', 'good'), once per
+      page, so every fixture speaks the law; then each page was run
+      against its standing GOOD -- byte-identical but where it prints
+      the fixture (a stored stdout, a line count)
+    - A READER OF AN ELIDED BLOCK EXPANDS BEFORE IT COMPARES -- and the
+      elision has more than one axis. When HINTS gained ':' in the
+      PHRASE column (D-35), 'test-gate.py' already expanded ':' in the
+      NAME column and still broke: it read "test-two.py b   :" as a
+      line without the phrase it was looking for. MEASURED: two
+      choices red, both reading one elided phrase. Split at the LAST
+      wide gap, not the first; a line has as many gaps as it has
+      columns
+

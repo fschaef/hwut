@@ -116,13 +116,15 @@ def fixture(entry_command="true"):
     put(test, "test-ok.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Ok" }\n'
-        'echo "steady line"\n', executable=True)
-    put(good, "test-ok.sh.txt",    "steady line\n")
+        'echo "steady line"\n'
+        'echo "<hwut-end>"\n', executable=True)
+    put(good, "test-ok.sh.txt",    "steady line\n<hwut-end>\n")
     put(test, "test-diff.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Diff" }\n'
-        'echo "what the run says"\n', executable=True)
-    put(good, "test-diff.sh.txt",  "what the GOOD expects\n")
+        'echo "what the run says"\n'
+        'echo "<hwut-end>"\n', executable=True)
+    put(good, "test-diff.sh.txt",  "what the GOOD expects\n<hwut-end>\n")
     put(test, "test-built.c",
         '/* @hwut { title = "Built"\n'
         '          build { framework = "make"'
@@ -132,7 +134,7 @@ def fixture(entry_command="true"):
     #  ACCEPTED (E-41): the gate admits by the nominal; the built and
     #  the misdep tests need one to be RUN at all.
     put(good, "test-built.c.txt", "")
-    put(good, "test-m.sh.txt",    "")
+    put(good, "test-m.sh.txt",    "<hwut-end>\n")
     put(test, "test-noise.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Noise"\n'
@@ -150,23 +152,24 @@ def fixture(entry_command="true"):
         '#        choices = ["a", "b"] }\n'
         'while read cmd token out err; do\n'
         '    [ "$cmd" = run ] || continue\n'
-        '    echo "choice $token served" > "$out"\n'
+        '    printf "choice %s served\\n<hwut-end>\\n" "$token" > "$out"\n'
         '    : > "$err"\n'
         '    echo "done $token 0"\n'
         'done\n'
         'echo bye\n', executable=True)
-    put(good, "test-app.sh--a.txt", "choice a served\n")
-    put(good, "test-app.sh--b.txt", "choice b served\n")
+    put(good, "test-app.sh--a.txt", "choice a served\n<hwut-end>\n")
+    put(good, "test-app.sh--b.txt", "choice b served\n<hwut-end>\n")
     put(test, "test-dead.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Dead"  interactive = yes\n'
         '#        choices = ["x"] }\n'
         'exit 7\n', executable=True)
-    put(good, "test-dead.sh--x.txt", "never\n")
+    put(good, "test-dead.sh--x.txt", "never\n<hwut-end>\n")
     put(test, "test-m.sh",
         '#!/bin/bash\n'
         '# @hwut { title = "Misdep" }\n'
-        'echo never\n', executable=True)
+        'echo never\n'
+        'echo "<hwut-end>"\n', executable=True)
     put(test, "test-tol.sh",
         '#!/bin/bash\n'
         '# @hwut { title   = "Tolerance"\n'

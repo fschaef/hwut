@@ -47,3 +47,4 @@ cost: 0.00000; line_associations: 2;
    [01] a b                     --> [00] b                       {DELETE, DELETE, GOOD}
 AnalogyDb:
 
+<hwut-end>

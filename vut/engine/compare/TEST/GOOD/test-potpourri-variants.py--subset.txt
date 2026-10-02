@@ -11,3 +11,4 @@ with numeric tolerance:                      judge: True  lawyer: True  [ok]
 flag on nominal only:                        judge: True  lawyer: True  [ok]
 ## Without the flag, counts must agree (unchanged):
 plain potpourri:                             judge: False lawyer: False [ok]
+<hwut-end>

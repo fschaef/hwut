@@ -60,9 +60,9 @@ candidates.
                 look orphaned. Both are said on stderr.
     --books     THE TWO RECORDS OF ACCEPTANCE DISAGREE (E-41): a nominal
                 whose test the book lacks; a book entry the book calls
-                ASPIRANT while a nominal stands (B-14); a book entry with
-                a nominal and no 'last_accept'. Healed by 'book': the
-                standing nominal is entered as accepted, nothing runs.
+                ASPIRANT while a nominal stands (B-14). Healed by 'book':
+                the standing nominal is entered as accepted, nothing
+                runs.
                 A test in the book with no nominal is an ASPIRANT, not a
                 disagreement.
     --constraints

@@ -14,7 +14,7 @@
 # THE OUTER LEVEL: 'hwut.run' over a tree of applications that each
 # violate ONE cap, and a reader who looks only at the HINTS block. Every
 # violation must be named there -- the cap that was hit, with its numbers
-# -- and the phrase "killed by the supervisor" must appear NOWHERE. That
+# -- and the phrase "killed by supervisor" must appear NOWHERE. That
 # phrase is the fallback for a containment nobody translated; a test that
 # permits it once permits it for every cap.
 #
@@ -173,18 +173,18 @@ caps)
     echo "}"
     fail=0
     h=$(hints)
-    verdict a "$(echo "$h" | grep -c 'test-wall.sh .*over the wall-clock cap')"   \
+    verdict a "$(echo "$h" | grep -c 'test-wall.sh .*wall-clock cap exceeded')"   \
               "wall-clock: named"
-    verdict b "$(echo "$h" | grep -c 'test-cpu.sh .*over the cpu-time cap')"      \
+    verdict b "$(echo "$h" | grep -c 'test-cpu.sh .*cpu-time cap exceeded')"      \
               "cpu-time: named"
-    verdict c "$(echo "$h" | grep -c 'test-memory.sh .*over the memory cap')"     \
+    verdict c "$(echo "$h" | grep -c 'test-memory.sh .*memory cap exceeded')"     \
               "memory: named"
-    verdict d "$(echo "$h" | grep -c 'test-fsize.sh .*over the file-size cap')"   \
+    verdict d "$(echo "$h" | grep -c 'test-fsize.sh .*file-size cap exceeded')"   \
               "file-size: named"
-    verdict e "$(echo "$h" | grep -c 'test-pids.sh .*over the process cap')"      \
+    verdict e "$(echo "$h" | grep -c 'test-pids.sh .*process cap exceeded')"      \
               "process count: named"
-    verdict f "$([ "$(grep -c 'killed by the supervisor' run.txt)" = 0 ] && echo 1)" \
-              "'killed by the supervisor' appears nowhere"
+    verdict f "$([ "$(grep -c 'killed by supervisor' run.txt)" = 0 ] && echo 1)" \
+              "'killed by supervisor' appears nowhere"
     [ $fail = 0 ] && echo "SUCCESS: every cap is named where it was hit." \
                   || echo "FAILURE: a containment reached the reader untranslated."
     ;;
@@ -200,14 +200,14 @@ multi)
     h=$(hints)
     verdict a "$(grep -c 'a_first .*\[OK\]' run.txt)" \
               "the choice before the offence passed"
-    verdict b "$(echo "$h" | grep -c 'b_blow .*over the process cap')" \
+    verdict b "$(echo "$h" | grep -c 'b_blow .*process cap exceeded')" \
               "the offending choice is named with its cap"
-    verdict c "$(echo "$h" | grep -c 'c_after .*already died')" \
+    verdict c "$(echo "$h" | grep -c 'c_after .*already dead')" \
               "the choice after it says the process had already died"
     verdict d "$([ "$(echo "$h" | grep -c 'c_after .*killed\|d_last .*killed')" = 0 ] && echo 1)" \
               "and is NOT reported as killed"
-    verdict e "$([ "$(grep -c 'killed by the supervisor' run.txt)" = 0 ] && echo 1)" \
-              "'killed by the supervisor' appears nowhere"
+    verdict e "$([ "$(grep -c 'killed by supervisor' run.txt)" = 0 ] && echo 1)" \
+              "'killed by supervisor' appears nowhere"
     [ $fail = 0 ] && echo "SUCCESS: one process, one offence, every choice told the truth." \
                   || echo "FAILURE: the multi road lost the story."
     ;;

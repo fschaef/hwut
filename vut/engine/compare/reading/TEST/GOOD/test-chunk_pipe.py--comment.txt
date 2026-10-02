@@ -76,3 +76,4 @@ line2
 002| [STRING 'line1']
 003| [VISIBLE_NOTHING '####x']
 004| [STRING 'line2']
+<hwut-end>

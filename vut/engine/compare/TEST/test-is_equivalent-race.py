@@ -82,3 +82,6 @@ if __name__ == "__main__":
         asyncio.run(run_test(t_sub, t_nom))
     else:
         assert False
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

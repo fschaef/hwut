@@ -64,3 +64,6 @@ if "chain" in sys.argv:
     N = 50000
     run_test(f"Long Augmenting Path ({N})", gen.long_augmenting_path(N))
     run_test(f"Bottleneck ({N})", gen.the_bottleneck(N))
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

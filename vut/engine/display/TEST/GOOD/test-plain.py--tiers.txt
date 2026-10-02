@@ -20,9 +20,15 @@ DIRECTORIES                                             1 ok, 1 fail, 00:00:03
 ==============================================================================
 HINTS
 ------------------------------------------------------------------------------
-suite/TEST
-    frame on_exit   the frame failed
-    test-b.sh       stalled, no output
+EXECUTION -- application invocation error
+    suite/TEST
+        test-b.sh       stalled; no output
+
+ENVIRONMENT -- error around the test
+    suite/TEST
+        frame on_exit   frame failed
+
+HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
 RESULTS: 1 ok, 1 fail, 3.00 [sec]
@@ -45,9 +51,15 @@ ERROR hwut.conf:2:3: DIRECTORY: a broken statement
 ==============================================================================
 HINTS
 ------------------------------------------------------------------------------
-suite/TEST
-    frame on_exit   the frame failed
-    test-b.sh       stalled, no output
+EXECUTION -- application invocation error
+    suite/TEST
+        test-b.sh       stalled; no output
+
+ENVIRONMENT -- error around the test
+    suite/TEST
+        frame on_exit   frame failed
+
+HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
 RESULTS: 1 ok, 1 fail, 3.00 [sec]

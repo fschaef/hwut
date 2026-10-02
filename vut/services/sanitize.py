@@ -139,11 +139,6 @@ ISSUE_KIND_TUPLE = (
         "accepted outside the book (B-14).",
         "'book' enters the standing nominal as accepted; nothing runs,",
         "nothing in GOOD/ moves.")),
-    CIssueKind("book-undated", "book", (
-        "ACCEPTANCE UNDATED: a nominal stands and the book's 'last_accept'",
-        "is empty -- accepted outside the book (E-41).",
-        "'book' enters the standing nominal as accepted; nothing runs,",
-        "nothing in GOOD/ moves.")),
     CIssueKind("constraint", "remark", (
         "CONSTRAINT BROKEN: a nominal held against itself breaks its",
         "constraints, or never binds a variable they name (E-123).",
@@ -430,13 +425,11 @@ def books_issue_list(directory, app_set):
                                      entry for the case
                     'book-aspirant'  the book says ASPIRANT; a nominal
                                      stands
-                    'book-undated'   a nominal stands; 'last_accept' is
-                                     empty
             [1] list[str], what could not be judged: a register that
                 cannot be read.
 
     THE TWO MUST AGREE (E-41). A nominal in GOOD/ is THE evidence of
-    acceptance; the book's 'last_accept' is written at accept. A case in
+    acceptance; the book's row is written at accept. A case in
     the book with NO nominal is not a disagreement: it is an ASPIRANT
     (B-14), known and not yet accepted, and it says so in its verdict.
 
@@ -461,8 +454,6 @@ def books_issue_list(directory, app_set):
             result.append(CIssue("book-lacks", directory, words))
         elif entry.get("verdict") is E_TestVerdict.ASPIRANT:
             result.append(CIssue("book-aspirant", directory, words))
-        elif not entry.get("last_accept"):
-            result.append(CIssue("book-undated", directory, words))
     return result, []
 
 

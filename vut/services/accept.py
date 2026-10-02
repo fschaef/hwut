@@ -58,7 +58,7 @@ from   vut.engine.display.word                  import CInk
 from   vut.engine.display.console               import colour_decision
 from   vut.engine.operations.result             import E_TestRunResult
 from   vut.engine.bookkeeper.api             import E_StderrNote
-from   vut.engine.bookkeeper.test_run_info.of_disk import UNACCEPTED_OPENER
+from   vut.engine.bookkeeper.api import carries_unaccepted_text_f
 from   vut.engine.bookkeeper.api              import Store, unstable_f
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
 from   vut.engine.orchestrator.exploration            import selection
@@ -1423,9 +1423,9 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         #  AN INCOMPLETE ACCEPTANCE IS BOOKED AS ONE (B-16). 'written'
         #  is the nominal that now stands; a '##! unaccepted' region in
         #  it makes the case an ASPIRANT, and the row must say so
-        #  rather than 'true'.
-        aspirant_f = any(line.lstrip().startswith(UNACCEPTED_OPENER)
-                         for line in written.splitlines())
+        #  rather than 'true'. THE BOOKKEEPER'S OWN TEST (B-26): any
+        #  other '##!' line opens a region that is not this.
+        aspirant_f = carries_unaccepted_text_f(written)
         store.bookkeeper.note_accept(key.test, key.choice,
                                      aspirant_f=aspirant_f)
         (undecided_list if verdict == "first" else blessed_list).append(key)

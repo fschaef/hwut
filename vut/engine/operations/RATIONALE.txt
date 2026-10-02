@@ -43,17 +43,20 @@ DECISION  A SUBJECT STREAM STATES ITS OWN COMPLETENESS. Its last
           any other line; the compare framework knows no plumbing.
           'consume/terminal.py' holds the word and the reading law.
 
-          THE NOMINAL DECIDES PARTICIPATION. A nominal ending in the
-          token requires its subject to end in the token; a nominal
-          without it imposes no check. No switch is needed anywhere
-          for the migration: 'hwut.renovate' appends tokens to
-          nominals, and new tests carry them from birth through the
-          reference runner.
+          EVERY STDOUT NOMINAL ENDS IN THE TOKEN. RULED (Frank-Rene,
+          2026-10-01), of the GOODs without it: show ". . . no
+          <hwut-end> marker [FAIL]". A stdout nominal without the
+          token is the INCOMPLETE RECORD: the case fails
+          'nominal-without-hwut-end', worded 'no <hwut-end> marker'
+          before '[FAIL]' (display D-31), whatever the subject says --
+          equal is not complete. Its subject is then not judged.
 
-          ABSENCE HAS ITS OWN NAME. A participating subject without
-          the token draws 'terminated-without-hwut-end', placed in the
-          report precedence ABOVE the judgement, so an incomplete
-          stream never masquerades as an ordinary mismatch.
+          ABSENCE HAS ITS OWN NAME. A subject whose nominal carries
+          the token and which does not draws
+          'terminated-without-hwut-end' ('cut-short'). Both stand in
+          the report precedence ABOVE the judgement, the nominal's
+          first, so an incomplete stream never masquerades as an
+          ordinary mismatch.
 
           WHO ENDS A STREAM ends it:
               plain        the application; HwutRunner emits the token
@@ -82,9 +85,14 @@ COST      Every fixture and every hand-run application must speak the
           bash fixtures included, which were corrected rather than
           exempted. Every pype script gains an '<eof>' handler that
           prints it. A deliberate 'sys.exit(n)' from a pype block
-          skips pending '<eof>' handlers and so forgoes the token; the
-          nominal, recorded through the same road, agrees, and no
-          check stands.
+          skips pending '<eof>' handlers and so forgoes the token; its
+          nominal then lacks it too, and the case fails 'no <hwut-end>
+          marker' until the script ends the stream.
+          MEASURED (2026-10-01): 76 GOODs stood without the token, 74
+          of them offered, on 21 pages of 'engine/compare' that never
+          printed it; the pages were mended and the 74 re-accepted
+          before the rule landed (the other two: an orphan and an
+          application exploration does not reach).
 
 GRAVEYARD An out-of-band completeness flag (a sidecar file, a field in
           the store): a second carrier of one truth, and one that a
@@ -101,5 +109,4 @@ CITED BY  E-6 and E-39 (services): acceptance refuses a candidate
           than the test that produced it. The coverage harvest law
           (coverage/RATIONALE): "covered" means executed by a test
           that testified, and an ending without the token is not
-          testimony. 'hwut.renovate' (services, planned) appends the
-          token to standing nominals.
+          testimony.

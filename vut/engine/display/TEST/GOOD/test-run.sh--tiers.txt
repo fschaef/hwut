@@ -16,11 +16,14 @@ STDOUT {
     ==============================================================================
     HINTS
     ------------------------------------------------------------------------------
-    suite/TEST
-        test-ok.sh   missing dependency
+    ENVIRONMENT -- error around the test
+        suite/TEST
+            test-ok.sh   missing dependency
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
     ==============================================================================
     
-    RESULTS: 0 ok, 1 fail, 0.01 [sec], 0.02 [sec] total
+    RESULTS: 0 ok, 1 fail, 0.15 [sec], 0.17 [sec] total
     |                                    fail                                    |
 }
 == --silent ==

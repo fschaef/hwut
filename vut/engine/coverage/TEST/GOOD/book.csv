@@ -1,8 +1,8 @@
 # vut-register 5 generation:7 apps:1 marks:0=6
-test;choice;verdict;report;last_accept;coverage;stderr;stain;test_id;choice_id
-test-affected.py;answer;true;ok;;;;;0;0
-;bare;true;ok;;;;;0;1
-;diff;true;ok;;;;;0;2
-;empty;true;ok;;;;;0;3
-;help;true;ok;;;;;0;4
-;refused;true;ok;;;;;0;5
+test;choice;verdict;report;coverage;stderr;stain;test_id;choice_id
+test-affected.py;answer;true;ok;;;;0;0
+;bare;true;ok;;;;0;1
+;diff;true;ok;;;;0;2
+;empty;true;ok;;;;0;3
+;help;true;ok;;;;0;4
+;refused;true;ok;;;;0;5

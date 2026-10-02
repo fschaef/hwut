@@ -249,8 +249,8 @@ first)
     #  ACCEPT IS PARTIAL BY DEFAULT (E-60). A first acceptance WITHOUT
     #  '--force' records the candidate's SHAPE with nothing decided:
     #  one '##! unaccepted' region per chunk, one filler per line, the
-    #  closing token outside. The next run reads '[ ?! ]' (O-25), not
-    #  '[OK]' -- nobody has judged it yet. '--force' is the old
+    #  closing token outside. The next run reads 'unaccepted [FAIL]'
+    #  (O-25), not '[OK]' -- nobody has judged it yet. '--force' is the old
     #  blessing, the candidate whole ('bless' above).
     fixture
     printf 'y\n' | $ACCEPT --directory=tree/suite/TEST test-ok.sh \
@@ -259,10 +259,10 @@ first)
     grep -E 'blessed|ACCEPTED' out.txt | sed 's/^/    /'
     echo "--- what stands in GOOD: the shape, undecided"
     sed 's/^/    | /' tree/suite/TEST/GOOD/test-ok.sh.txt
-    echo "--- the next run: not a failure, a decision still owed"
+    echo "--- the next run: a failure by its name, a decision still owed"
     $RUN --directory=tree --plain test-ok.sh > out.txt 2> err.txt
     echo "STATUS: $?"
-    grep -E '\[ \?! \]|\[FAIL\]|\[OK\]|RESULTS' out.txt \
+    grep -E '\[FAIL\]|\[OK\]|RESULTS' out.txt \
         | sed 's/ \.\+ / /; s/, [0-9.]* \[sec\]//; s/^/    /'
     ;;
 
@@ -319,17 +319,17 @@ opening)
 
 unaccepted)
     #  A NOMINAL WITH AN '##! unaccepted' REGION (C-9, O-25): the run
-    #  reads '[ ?! ]', not '[FAIL]'; it is counted apart; HINTS names
-    #  it; and '--unaccepted' (E-58) selects what has NO nominal at
+    #  reads 'unaccepted [FAIL]', counted with the failures; HINTS
+    #  names it; and '--unaccepted' (E-58) selects what has NO nominal at
     #  all -- the same state at the grain of a whole case.
     fixture
     mkdir -p tree/suite/TEST/GOOD
     printf 'steady line\n##! unaccepted\nnobody looked here\n####\n<hwut-end>\n' \
         > tree/suite/TEST/GOOD/test-ok.sh.txt
-    echo "--- the run: its own tag, its own count, its own hint"
+    echo "--- the run: 'unaccepted [FAIL]', counted, named in HINTS"
     $RUN --directory=tree --plain > out.txt 2> err.txt
     echo "STATUS: $?"
-    grep -E '\[ \?! \]|\[FAIL\]|\[OK\]|RESULTS|nobody has accepted' out.txt \
+    grep -E '\[FAIL\]|\[OK\]|RESULTS|unaccepted lines' out.txt \
         | sed 's/ \.\+ / /; s/, [0-9.]* \[sec\]//; s/^/    /'
     echo "--- '--unaccepted' selects the cases with NO nominal: test-two.sh"
     $WISHLIST --directory=tree/suite/TEST --unaccepted | sed 's/^/    /'

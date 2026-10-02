@@ -6,3 +6,4 @@ sets must still agree:                       judge: False lawyer: False [ok]
 whitespace-normalized collapse:              judge: True  lawyer: True  [ok]
 ## Without the flag, duplicates count (unchanged):
 plain potpourri:                             judge: False lawyer: False [ok]
+<hwut-end>

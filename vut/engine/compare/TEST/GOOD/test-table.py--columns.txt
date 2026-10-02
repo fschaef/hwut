@@ -6,3 +6,4 @@ two rules combined:                        judge: True  lawyer: True  [ok]
 sep={;} splitting:                         judge: True  lawyer: True  [ok]
 ## Nominal is authoritative: the subject's params are ignored.
 subject declares no rules:                 judge: True  lawyer: True  [ok]
+<hwut-end>

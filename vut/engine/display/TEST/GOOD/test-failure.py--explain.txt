@@ -1,0 +1,11 @@
+-- alone
+WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so it cannot say what a complete stream is.
+HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner does so itself; a pype script prints it from '<eof>'), run it, and accept the new output with 'hwut.accept'.
+-- with an example
+WHAT      Every stdout GOOD ends in '<hwut-end>' (R-70); this one does not, so it cannot say what a complete stream is.
+HEAL      Let the test print '<hwut-end>' as its last line (HwutRunner does so itself; a pype script prints it from '<eof>'), run it, and accept the new output with 'hwut.accept'.
+EXAMPLE   engine/compare/TEST test-exact.py basic
+  OK  : success is no failure
+  OK  : an unknown token is no failure of the table
+SUCCESS: an explanation names its example last.
+<hwut-end>

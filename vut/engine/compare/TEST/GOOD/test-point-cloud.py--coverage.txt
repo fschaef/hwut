@@ -8,3 +8,4 @@ both regions empty:                        judge: True  lawyer: True  [ok]
 ## Malformed data is asymmetric (nominal is authoritative):
 subject line is not a point:               judge: False lawyer: False [ok]
 subject dimension clash:                   judge: False lawyer: False [ok]
+<hwut-end>

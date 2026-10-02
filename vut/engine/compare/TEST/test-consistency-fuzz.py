@@ -484,3 +484,6 @@ elif CHOICE == "constraints": asyncio.run(run_constraints(seed=0xC057, cases=300
 else:
     print("unknown choice: %s" % CHOICE)
     sys.exit(1)
+
+#  THE STREAM ENDS WITH ITS OWN TESTIMONY OF COMPLETENESS (R-70).
+print("<hwut-end>")

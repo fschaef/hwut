@@ -10,3 +10,4 @@ MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          '((mouse))'
 NOMINAL.difference_cost: 0.000000
 NOMINAL.representation:  ANALOGY '((mouse))'
+<hwut-end>

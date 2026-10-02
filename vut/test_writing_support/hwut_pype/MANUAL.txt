@@ -111,12 +111,12 @@ A pype-d stream that ends WITHOUT the token is therefore THE PYPE
 SCRIPT'S FAULT, and the framework's diagnosis names the script --
 never the test application.
 
-Participation is decided by the NOMINAL: where the recorded GOOD ends
-in the token, the subject must ('terminated-without-hwut-end' else);
-where it does not, no check stands. 'sys.exit(n)' from a block skips
-pending '<eof>' handlers (section 6) -- a script that gates and exits
-deliberately forgoes the token, and its nominal, recorded through the
-same road, will agree.
+Every stdout GOOD ends in the token, and the subject must as well
+('terminated-without-hwut-end' else); a GOOD without it fails the case
+as 'no <hwut-end> marker' (operations R-70). 'sys.exit(n)' from a
+block skips pending '<eof>' handlers (section 6) -- a script that gates
+and exits deliberately forgoes the token, and the case fails until the
+script ends the stream.
 
 
 2  MODEL

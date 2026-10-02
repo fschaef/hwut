@@ -1,6 +1,6 @@
 INSPECT: report        = ok
          accepted      = ['stdout']
-         stdout stored = 'to stdout\n'
+         stdout stored = 'to stdout\n<hwut-end>\n'
          provision run = True (records: 1)
   OK  : acceptance succeeded without any dump being handed over
   OK  : the one subject was accepted

@@ -23,7 +23,6 @@ belongs to the bookkeeper because the bookkeeper owns both witnesses:
                                 member state: a member that failed is
                                 still a member (E-15).
         report                  the run's word for why
-        last_accept             when acceptance was written
         coverage, stderr        what the run recorded beside stdout
         stain                   the flapping record (B-2)
 
@@ -31,8 +30,7 @@ belongs to the bookkeeper because the bookkeeper owns both witnesses:
 
 Every field is sealed, as the member state is. A run's outcome enters
 through 'on_run_verdict'; an acceptance through the accept events,
-which the info forwards to its member state and which also write
-'last_accept'. There is no setter, and '__setattr__' says so with the
+which the info forwards to its member state. There is no setter, and '__setattr__' says so with the
 event names.
 
     THE VERDICT COLUMN AND THE STATE ARE TWO THINGS
@@ -66,11 +64,11 @@ class CTestRunInfo:
     """
     __slots__ = ("_test", "_choice", "_test_id", "_choice_id",
                  "_member_state", "_last_verdict", "_report",
-                 "_last_accept", "_coverage", "_stderr", "_stain")
+                 "_coverage", "_stderr", "_stain")
 
     def __init__(self, test, choice=None, member_state=None,
                  test_id=None, choice_id=None, last_verdict=None,
-                 report=None, last_accept=None, coverage=None,
+                 report=None, coverage=None,
                  stderr=None, stain=None):
         """
         RETURN: CTestRunInfo, the entry as given. 'member_state' None
@@ -84,7 +82,6 @@ class CTestRunInfo:
                             ("_member_state", member_state),
                             ("_last_verdict", last_verdict),
                             ("_report", report),
-                            ("_last_accept", last_accept),
                             ("_coverage", coverage),
                             ("_stderr", stderr), ("_stain", stain)):
             object.__setattr__(self, name, value)
@@ -131,14 +128,6 @@ class CTestRunInfo:
         return self._report
 
     @property
-    def last_accept(self):
-        """RETURN: str or None, when acceptance was written, as the
-                   book holds it. None where nothing was accepted --
-                   which, with a standing nominal, is the
-                   disagreement 'consistency_fault_tuple' names."""
-        return self._last_accept
-
-    @property
     def test_id(self):
         """RETURN: str or None, the id the register issued (B-13)."""
         return self._test_id
@@ -172,36 +161,32 @@ class CTestRunInfo:
             object.__setattr__(self, "_" + name, value)
         return self
 
-    def on_accept_left_unaccepted(self, when=None):
-        """RETURN: CTestRunInfo, self -- the case is an ASPIRANT, and
-                   'last_accept' says when the incomplete acceptance
-                   was written. An acceptance happened; it was not
-                   finished."""
+    def on_accept_left_unaccepted(self):
+        """RETURN: CTestRunInfo, self -- the case is an ASPIRANT. An
+                   acceptance happened; it was not finished."""
         self._member_state.on_accept_left_unaccepted()
-        return self._with(last_accept=when or self._last_accept)
+        return self
 
-    def on_accept_clean_good(self, when=None):
+    def on_accept_clean_good(self):
         """RETURN: CTestRunInfo, self -- the case is a MEMBER, and the
                    last run's verdict is dropped: what was judged
                    against is no longer what stands."""
         self._member_state.on_accept_clean_good()
-        return self._with(last_accept=when or self._last_accept,
-                          last_verdict=None, report=None)
+        return self._with(last_verdict=None, report=None)
 
     def on_detected_unaccepted_in_good(self):
         """RETURN: CTestRunInfo, self -- the mark was FOUND in a
                    standing nominal, so the case is an aspirant
                    however it was booked. The repair door; no
-                   acceptance happened, so 'last_accept' stands."""
+                   acceptance happened."""
         self._member_state.on_detected_unaccepted_in_good()
         return self
 
     def on_nominal_removed(self):
         """RETURN: CTestRunInfo, self -- nothing is accepted any more,
-                   so the acceptance and the verdict go with it."""
+                   so the verdict goes with it."""
         self._member_state.on_nominal_removed()
-        return self._with(last_accept=None, last_verdict=None,
-                          report=None)
+        return self._with(last_verdict=None, report=None)
 
     def on_no_output(self):
         """RETURN: CTestRunInfo, self, UNMOVED in state. A run that
@@ -262,7 +247,6 @@ def of_row(test, choice, row_db, nominal_stands_f, carries_unaccepted_f):
         choice_id     = row_db.get("choice_id"),
         last_verdict  = None if verdict is None else bool(verdict is True),
         report        = row_db.get("report"),
-        last_accept   = row_db.get("last_accept") or None,
         coverage      = row_db.get("coverage") or None,
         stderr        = row_db.get("stderr") or None,
         stain         = row_db.get("stain"))

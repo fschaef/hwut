@@ -15,10 +15,10 @@ WHO ENDS A STREAM:
                            reference implementation, emits it as a
                            choice's last act.
 
-THE NOMINAL DECIDES PARTICIPATION: where the nominal ends in the
-token, the subject must; where it does not, no check stands -- the
-migration needs no switch, no key, anywhere ('hwut.renovate' appends
-tokens to nominals).
+EVERY STDOUT NOMINAL ENDS IN THE TOKEN (R-70): one that does not is
+the incomplete record, and the case fails 'no <hwut-end> marker';
+where it does, the subject must end in it too. File subjects are
+exempt: their completeness is the reading point.
 
 The token is CONTENT: compared, stored, displayed; the compare
 framework knows no plumbing. Completeness and CONTAINMENT are

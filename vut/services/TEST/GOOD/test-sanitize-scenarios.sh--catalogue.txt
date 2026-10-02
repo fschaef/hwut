@@ -1,0 +1,122 @@
+=== EVERY ASPECT BUT '--transient', AND THE PROJECT'S VERB
+$ hwut.sanitize.propose --directory=tree --session --lock --out --orphans --books --constraints --target clean
+STATUS: 0
+STDOUT {
+    # hwut.sanitize.propose -- in 'tree': session, lock, out, orphans, books, constraints, target
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # SESSION WRECKAGE: a 'TMP/session/' outlived its run; nothing reads
+    # it between runs, and the next run makes its own.
+    # 'remove' deletes the directory.
+    remove tree/s01-session/TEST/TMP/session
+    
+    # DEAD LOCK: a 'TMP/lock/' whose holder is gone, or which cannot
+    # name its holder; honoured, it blocks the directory for ever.
+    # 'remove' deletes it. A holder alive by then is refused.
+    remove tree/s02-lock-dead/TEST/TMP/lock
+    remove tree/s03-lock-nameless/TEST/TMP/lock
+    
+    # PRODUCT SPACE: 'OUT/' is the application's scratch, rewritten by
+    # the next run that uses it.
+    # 'remove' deletes it. A directory a live run holds is refused.
+    remove tree/s04-out/TEST/OUT
+    
+    # ORPHAN, APPLICATION GONE: records name a test application that no
+    # longer stands in its directory. IT MAY HAVE MOVED: then carry its
+    # history with 'hwut.rename' and delete the line here.
+    # 'forget' drops every record of the test: nominals, candidates,
+    # book entry, register id.
+    forget tree/s06-orphan-test/TEST/test-gone.sh
+    
+    # ORPHAN, CHOICE NOT OFFERED: the application stands and is
+    # understood, and does not name that choice.
+    # 'forget' drops every record of the choice: nominals, candidates,
+    # book entry, register id.
+    forget tree/s07-orphan-choice/TEST/test-app.sh nochoice
+    
+    # BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry
+    # for the case (E-41).
+    # 'book' enters the standing nominal as accepted; nothing runs,
+    # nothing in GOOD/ moves.
+    book tree/s08-book-behind/TEST/test-app.sh
+    
+    # BOOK STALE: the book says aspirant, and a nominal stands -- it was
+    # accepted outside the book (B-14).
+    # 'book' enters the standing nominal as accepted; nothing runs,
+    # nothing in GOOD/ moves.
+    book tree/s09-book-stale/TEST/test-app.sh
+    
+    # CONSTRAINT BROKEN: a nominal held against itself breaks its
+    # constraints, or never binds a variable they name (E-123).
+    # 'remark' writes each finding into the nominal after the line that
+    # caused it -- a variable never bound at the head -- and stains the
+    # book 'constraint'. Nothing is removed; mend the nominal.
+    remark tree/s10-constraint/TEST/test-c.sh b
+    remark tree/s10-constraint/TEST/test-c.sh c
+    
+    # TARGET: the project's own verb, asked for by '--target' (E-7).
+    # 'run' calls it through 'hwut.execute' in the directory and every
+    # directory below that binds it.
+    run tree clean
+}
+STDERR {
+    NOTE: n01-out-live/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+    NOTE: n02-choiceless/TEST: the choice-less records of 'test-b.sh' name no offered case; forgetting 'test-b.sh' alone would take the whole test -- not proposed
+    NOTE: n03-fault/TEST: orphans not judged -- exploration reported 1 fault(s), and a directory that cannot be read cannot say what it offers
+    NOTE: n05-register/TEST: the register cannot be read -- the book bears test ids and no '# vut-register' block to bound them
+}
+=== '--transient': THE TWO ROOTS WHOLE
+$ hwut.sanitize.propose --directory=tree --transient
+STATUS: 0
+STDOUT {
+    # hwut.sanitize.propose -- in 'tree': transient
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # TRANSIENT ROOT: 'OUT/' or 'TMP/' whole, the candidates with them
+    # -- all of it a run can make again (E-24).
+    # 'remove' deletes it. A directory a live run holds is refused.
+    remove tree/s01-session/TEST/TMP
+    remove tree/s02-lock-dead/TEST/TMP
+    remove tree/s03-lock-nameless/TEST/TMP
+    remove tree/s04-out/TEST/OUT
+    remove tree/s05-transient/TEST/OUT
+    remove tree/s05-transient/TEST/TMP
+}
+STDERR {
+    NOTE: c03-live-lock/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+    NOTE: n01-out-live/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched
+}
+=== A WISH THAT HIDES CASES
+$ hwut.sanitize.propose --directory=tree/n04-wish --orphans --glob test-none*
+STATUS: 3
+STDOUT {
+    # hwut.sanitize.propose -- in 'tree/n04-wish': orphans
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # nothing to sanitize
+}
+STDERR {
+    NOTE: TEST: orphans not judged -- the wish hides cases here, and the hidden ones would look orphaned
+}
+<hwut-end>

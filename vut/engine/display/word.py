@@ -18,135 +18,38 @@ every gate, 'NO_COLOR' included; '--no-colour' is refusal; where
 neither is spoken, the gates decide and ALL must pass.
 ______________________________________________________________________________
 """
+from .failure import failure_db, failure_of
 
-#  Wire token -> the phrase. Verdict words first, the operations'
-#  report words after, one voice throughout.
+#  Wire token -> the phrase, for every token that is NOT a failure. A
+#  failure's phrase is its 'description' in 'failure.failure_db' (D-34).
 #
-#  THIS TABLE IS THE WHOLE OF THE FRAMEWORK'S ENGLISH. Every phrase a
-#  rendering speaks stands here and nowhere else -- the flow line, the
-#  roll-call and the HINTS block all read it -- so the vocabulary can
-#  be reviewed in one screen, and translated by replacing one object.
-#  A phrase written inline at a call site is a word no reviewer of
-#  this table would ever see, and no translator would ever find.
+#  THESE TWO TABLES ARE THE WHOLE OF THE FRAMEWORK'S ENGLISH. Every
+#  phrase a rendering speaks stands in one of them and nowhere else --
+#  the flow line, the roll-call and the HINTS block all read them
+#  through 'phrase()'. A phrase written inline at a call site is a word
+#  no reviewer would ever see, and no translator would ever find.
 PHRASE_DB = {
     "ok":                          "ok",
-    "test-failed":                 "the test failed",
-    "unaccepted":                  "the nominal carries lines nobody has accepted",
-    "constraint":                  "a constraint and the text disagree",
-    "build-failed":                "the build failed",
-    "launch-failed":               "the launch failed",
-    "unsupported":                 "not supported here",
-    "misdep":                      "missing dependency",
-
-    #  THE APPLICATION'S OWN HEADER, not 'hwut.conf': the file the
-    #  fault names carries an '@hwut { ... }' block that does not
-    #  parse, so it never became a node ('orchestrate.broken_app_tuple'
-    #  skips '.conf' deliberately). 'the specification' alone left the
-    #  reader to guess which of the two it was.
-    "spec-broken":                 "the test's own @hwut header does not parse",
-
-    #  The frame of a directory -- its setup or its teardown.
-    "frame-failed":                "the frame failed",
-
-    #  THE BOOK DOCUMENTS WHAT TESTS EXIST. Where it records one the
-    #  tree no longer declares, the two disagree and only a person can
-    #  say which is wrong -- so it is a failing test, never a silence.
-    #  ('hwut.remove' heals the book where the
-    #  removal was intended.)
-    "test-vanished":               "recorded in the book, but no such test stands",
-    "test-choice-vanished":        "recorded in the book, but the test offers no such choice",
-
-    "unstable":                    "UNSTABLE -- not run",
-
-    "source-not-found":            "source file missing",
-    "interpreter-not-found":       "interpreter missing",
-    "not-equivalent-with-nominal": "differs from GOOD",
-    "not-equivalent-grew":         "extra lines; GOOD intact",
-    "not-equivalent-shrank":       "lines missing; rest intact",
-    "not-equivalent-diverged":     "differs from GOOD",
-    "test-app-launch-failed":      "the application would not launch",
-    "test-app-contained":          "killed by the supervisor",
-    #  ONE PHRASE PER CAP (O-19): the HINT names what was hit; the
-    #  numbers follow it in parentheses, from the event's 'detail'.
-    "test-app-wall-clock-exceeded": "killed: over the wall-clock cap",
-    "test-app-cpu-time-exceeded":   "killed: over the cpu-time cap",
-    "test-app-memory-exceeded":     "killed: over the memory cap",
-    "test-app-file-size-exceeded":  "killed: over the file-size cap",
-    "test-app-pids-exceeded":       "killed: over the process cap",
-    "test-app-disk-exceeded":       "killed: over the disk cap",
-    #  THE MULTI ROAD (O-21): the process serving every choice was
-    #  already gone when this one's turn came. The choice it died on
-    #  carries the cap; this one carries only that it never ran.
-    "test-app-session-gone":        "not run: the process had already died",
-    "test-app-no-output":          "produced no output",
-    "test-app-stalled":            "stalled, no output",
-    "recording-missing":           "no recording to replay",
-    "output-file-not-found":       "output file missing",
-    "nominal-file-not-found":      "GOOD missing",
-    #  NOT RUN, AND A FAILURE (display D-32): nothing was ever accepted.
-    "no-good-file":                "no GOOD file: not accepted, not run",
-    "terminated-without-hwut-end": "output cut short (no <hwut-end>)",
-    "unexpected-stderr":           "unexpected stderr",
-    "stderr-undecided":            "stderr undecided",
-    "pype-interpreter-not-found":  "pype interpreter missing",
-    "pype-file-not-found":         "pype script missing",
-    "pype-file-syntax-error":      "pype script has a syntax error",
-    "region-syntax-error":         "region framing is broken",
-    "pype-contained":              "pype killed by the supervisor",
-    "pype-failed":                 "pype failed",
-    "build-tool-not-found":        "build tool missing",
-    "build-contained":             "build killed by the supervisor",
-    "target-not-built":            "target not built",
-    "acquisition-failed":          "a dependency would not be acquired",
-    "display-target-unreachable":  "display target unreachable",
 }
 
 
-#  THE REASON WORD BEFORE '[FAIL]' (display D-31): one short word per
-#  GROUP of reasons, where a failure is not about equivalence. The full
-#  phrase stays in HINTS; the word is what the eye meets in the flow.
-_REASON_WORD_GROUP_TUPLE = (
-    ("stderr",     ("unexpected-stderr", "stderr-undecided")),
-    ("cut-short",  ("terminated-without-hwut-end",)),
-    ("no-output",  ("test-app-no-output", "test-app-stalled",
-                    "recording-missing", "output-file-not-found")),
-    ("killed",     ("test-app-contained", "test-app-wall-clock-exceeded",
-                    "test-app-cpu-time-exceeded", "test-app-memory-exceeded",
-                    "test-app-file-size-exceeded", "test-app-pids-exceeded",
-                    "test-app-disk-exceeded")),
-    ("no-launch",  ("launch-failed", "test-app-launch-failed",
-                    "source-not-found", "interpreter-not-found")),
-    ("no-session", ("test-app-session-gone",)),
-    ("constraint", ("constraint",)),
-    ("spec",       ("spec-broken",)),
-    ("no-app",     ("test-vanished",)),
-    ("no-choice",  ("test-choice-vanished",)),
-    ("no-dep",     ("misdep", "acquisition-failed")),
-    ("no-build",   ("build-failed", "target-not-built", "build-tool-not-found",
-                    "build-contained")),
-    ("pype",       ("pype-interpreter-not-found", "pype-file-not-found",
-                    "pype-file-syntax-error", "pype-contained", "pype-failed")),
-    ("no GOOD file", ("no-good-file", "nominal-file-not-found")),
-    ("frame",      ("frame-failed",)),
-    ("unstable",   ("unstable",)),
-)
-REASON_WORD_DB = {token: word for word, token_tuple in _REASON_WORD_GROUP_TUPLE
-                  for token in token_tuple}
-
-#  EQUIVALENCE IS THE ORDINARY BUSINESS OF A TEST (ruled 2026-09-29): a
-#  plain difference from GOOD carries no word, and neither does a token
-#  that names no reason at all.
-QUIET_REASON_SET = frozenset(("ok", "test-failed",
-                              "not-equivalent-with-nominal",
-                              "not-equivalent-grew", "not-equivalent-shrank",
-                              "not-equivalent-diverged"))
+#  THE REASON WORD BEFORE '[FAIL]' (display D-31) and every failure's
+#  phrase stand in ONE table, 'failure.failure_db' (D-34): a failure's
+#  category, word, phrase and help, each once. A plain difference from
+#  GOOD carries no word (ruled 2026-09-29), and neither does success.
+REASON_WORD_DB = {f.failure_id.value: f.comment_before_FAIL_str
+                  for f in failure_db.values() if not f.is_deviation()}
+QUIET_REASON_SET = frozenset(["ok"] + [f.failure_id.value
+                                       for f in failure_db.values()
+                                       if f.is_deviation()])
 
 
 def reason_word(token):
     """
     RETURN: str,  the short word that stands before '[FAIL]' for the
-                  reason 'token' -- the group's word from
-                  'REASON_WORD_DB', 'failed' for a reason no group names.
+                  reason 'token' -- its failure's word from
+                  'failure.failure_db', 'failed' for a token the table
+                  does not carry.
             None, where no word stands: no token, success, or a failure
                   about equivalence ('QUIET_REASON_SET').
     """
@@ -161,6 +64,8 @@ def phrase(token):
             hyphens opened else, so a word the wire grew later is
             read, not swallowed.
     """
+    failure = failure_of(token)
+    if failure is not None: return failure.description
     known = PHRASE_DB.get(token)
     if known is not None: return known
     return str(token).replace("-", " ")
