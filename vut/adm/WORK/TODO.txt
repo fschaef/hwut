@@ -2,41 +2,31 @@
 TODO -- ALL OUTSTANDING LABOUR, IN ONE PLACE
 ==============================================================================
 
-VERSION: 12
+VERSION: 13 (2026-10-04)
 
-Goal (1) of three: the TODOs gathered. Rationale logic is goal (2),
-README knowledge goal (3).
+THIS IS THE ONE LIST. Every piece of LABOUR OWED anywhere in the tree
+stands here and nowhere else as labour: a RATIONALE entry may say
+'OWED' as the record of what its decision left open, a DISCUSSIONS
+todo may hold the discussion -- but the item that says 'this is to be
+built' is here, with a pointer back. A session that leaves work owed
+adds a line here in the same bundle; a session that builds one strikes
+it here and moves its residue to the RATIONALE (the WORK rule: WORK
+holds only what is OPEN).
 
-WHAT THIS IS. Every piece of LABOUR OWED anywhere in the tree, from
-'adm/WORK/gathered/' (40 files), 'engine/coverage/DISCUSSIONS.txt',
-'engine/operations/DISCUSSIONS.txt' and 'services/DISCUSSIONS.txt'.
-An item is here if a DECISION EXISTS and the WORK DOES NOT. Pure
-forks -- where the choice itself is still owed -- are NOT here; they
-are listed at the foot under WAITING ON A RULING, because labour
-cannot start on them.
+An item is here if a DECISION EXISTS and the WORK DOES NOT. Pure forks
+-- where the choice itself is still owed -- stand under E, WAITING ON A
+RULING, because labour cannot start on them.
 
 WHAT IT IS NOT. Not a schedule and not a priority order. Where one
 item blocks another, it says so.
 
+WHAT WAS STRUCK between versions stands at the foot (STRUCK), one line
+each with the ruling that holds the residue, so a sweep does not
+re-open it.
+
 ==============================================================================
 A  BLOCKED -- something else must land first
 ==============================================================================
-
-A-1  RULED 2026-09-06 -> B-20                    ** MOVED **
-     The spike (D-3) was made; the ruling is E-46; the labour is
-     B-20. Nothing blocks it but the files named there.
-
-A-2  THE THREE COVERAGE 'TEST/' BOOKS ARE STALE            ** DONE -- STRIKE **
-     MEASURED 2026-09-07: 'database/TEST' and 'readers/TEST' were
-     already whole (each test registered and booked where it stands);
-     only 'coverage/TEST/GOOD/test_ids.dat' still held eight register
-     entries with no book entry, no nominal and no file -- the
-     tree's own verdict ('hwut.sanitize --books': "registered, and no
-     nominal stands"). A rename across was REFUSED by construction:
-     every name already stands in its new directory's book. The eight
-     were RETIRED through 'hwut.remove' from 'coverage/TEST'; the
-     suite runs 7 ok; sanitize --books/--orphans is quiet. coverage
-     todo-13 deleted.
 
 A-3  THE PROCSITTER CALL IN '--hwut-info'
      gathered/0z todo-3
@@ -59,34 +49,18 @@ A-5  'same' AND 'interactive' -- THE OWNERS' REAL FACES
      'interactive' flag whose member name may differ.
      WAITS ON: the same owner-face work as A-4.
 
+A-6  MC/DC FROM A REAL TOOL
+     coverage/DISCUSSIONS.txt todo-8; TODO C-4c
+     WAITS ON: a machine with gcc 14 to witness 'gcov --conditions'.
+
 ==============================================================================
 B  READY -- decided, unblocked, nothing in the way
 ==============================================================================
-
-B-1  THE DISPATCHER INTO operations            ** BUILT -- STRIKE **
-     gathered/08 todo-1
-     MEASURED 2026-09-04 against the complete tree: BUILT AND WIRED.
-     'engine/orchestrator/run/dispatcher.py', 297 lines,
-     'TestRunDispatcher(I_Dispatcher)', carrying ALL FIVE methods the
-     entry calls owed -- 'run_test', 'run_build', 'open_session',
-     'close_session', 'run_script' -- plus 'close', 'report_of' and
-     'detail_of'. Wired end to end: 'services/run.py' imports
-     'test_run_dispatcher_factory'; 'orchestrate.py' hands it to
-     'CTreeScheduler'; 'run/TEST/test-endtoend.py' exercises it. The
-     ruling is O-7, which stands as an entry.
-     gathered/08 is RESIDUE and may be struck. Its banner reads
-     '** LABOUR OWED **' -- THE FOURTH SELF-MARKER IN THIS MIGRATION
-     TO DISAGREE WITH THE TREE.
 
      VERSION 1 OF THIS FILE CALLED B-1 'the one everything downstream
      of a run waits on'. THAT WAS WRONG, and wrong for the reason
      r-5 named twice: this file was built by READING the entries, not
      by measuring them. See the note at the foot.
-
-B-2  'hwut.run' AND '--format'
-     gathered/0b todo-1
-     The command-line face over 'orchestrator()': run the tree, drive
-     a consumer, fold to a summary, print it, exit status from it.
 
 B-3  THE 'hwut.parse' SERVICE -- THE COMMAND LINE
      gathered/13 todo-7
@@ -107,10 +81,15 @@ B-5  THE 'special' KEY AND 'hwut.special'
      The choice is made (P-11); nothing is built. Labour lands in
      exploration (the key) and services (the face).
 
-B-6  'hwut.affected' -- THE SERVICE SHIM
+B-6  'hwut.affected' READS WHAT NO LONGER STANDS
      coverage/DISCUSSIONS.txt todo-6      [part]
-     'coverage/affected.py' is built and 'E_ExitCode' stands in
-     'services/_exit.py'. Owed: 'services/affected.py'.
+     'coverage/affected.py' is built over the PER-CASE RECORDS, and
+     the coverage run REMOVES them when it has gathered (coverage
+     D-42): today the face answers 'nobody' on a tree that has been
+     measured. Owed: the face over the OUTPUT DIRECTORY -- the
+     gathered files carry who executed every range (D-42, D-43), which
+     is exactly the question -- and 'services/affected.py' as its
+     shim. SILENTLY WRONG TODAY, not merely missing.
 
 B-7  'hwut.renovate'
      gathered/0r todo-1
@@ -124,11 +103,6 @@ B-7  'hwut.renovate'
      'hwut-info.dat' to know candidacy.
      SEE ALSO C-6 (the stderr survey belongs with it).
 
-B-8  'hwut.convert_to_lcov'                                        BUILT
-     coverage/DISCUSSIONS.txt todo-3
-     The export face (D-6): BUILT as 'hwut.cov.conv.to_lcov' (coverage
-     D-43 pass 5, services E-133), lossy as D-43 states.
-
 B-9  '--global-conf [<file>]' ON THE SERVICES
      coverage/DISCUSSIONS.txt todo-5
      Plus the upward search: nearest enclosing 'hwut.conf' wins,
@@ -137,9 +111,10 @@ B-9  '--global-conf [<file>]' ON THE SERVICES
 B-10 THE PACK STOPS RESERVING AND STARTS SHOWING
      coverage/DISCUSSIONS.txt todo-4
      'services/report.py' renders per source file the percentage and
-     the uncovered line ranges -- which is what the stored form
-     already is, so no conversion at display time. Retires
-     operations' todo-22. Moves two GOODs, both INTENDED.
+     the uncovered line ranges. THE FOLD EXISTS since D-44
+     ('services/lib/cov/summary.py', what 'to_html' renders); the
+     report reads it, or points at 'hwut.cov.conv.to_html'. Retires
+     operations' todo-22.
 
 B-11 COMMAND-LINE COMPLETION
      gathered/0s todo-2
@@ -180,45 +155,14 @@ B-16 THE FACE OF THE SECOND QUESTION
      S-1 is built beneath -- three states, the refusal, the mark. The
      face over it is not.
 
-B-17 DONE 2026-09-04. PHILOSOPHY 1.1: STALE SYMMETRY PARAGRAPH STRUCK
-     adm/WORK/intend/16-pole-and-tolerance.txt, section 3
-     The paragraph demanding a symmetric Eq contradicts the pole
-     passage three paragraphs above it, and names 'the larger
-     magnitude' -- the very form the ruling rejects. Its durable half
-     (nothing checks the tolerance) is kept; the remedy goes. Sweep
-     the notation with it: 't' and 't(b, b_nominal)' become
-     't( d(b_nominal) )'.
-
-B-18 DONE 2026-09-04. operations' todo-19 STRUCK WHOLE.
-
-B-19 __slots__-CLASS DEFECTS ALREADY FIXED -- nothing owed
-     (recorded so the next sweep does not re-open it: operations'
-     todo-12 is BUILT and struck, C-8.)
-
-B-20 ONE 'hwut.rename' ACROSS DIRECTORIES; 'hwut.move'   ** BUILT -- STRIKE **
-     services/RATIONALE.txt E-46
-     BUILT AND JUDGED 2026-09-06 on the complete tree: 'hwut.run
-     test-rename.sh' -> 2 ok ('labels' re-recorded with the terminal
-     token, 'across' recorded), both nominals blessed through
-     'hwut.accept' on real infrastructure; the services suite's
-     failure set before and after is the same eleven, none of them in
-     a touched file. intend/17 deleted. A-2 IS UNBLOCKED.
-
-B-23 'hwut.run.cov'                                ** BUILT -- STRIKE **
-     services/RATIONALE.txt E-115
-     Second face of 'hwut.run', as stability. 'rename', 'move', 'diff'
-     stay as they are -- ruled, no cut owed.
-
-B-22 'hwut.report.timings'                          ** BUILT -- STRIKE **
-     services/RATIONALE.txt E-114
-     traditional (default), '--table', '-o <file>', '--directory=',
-     '-r'. Page writes its own traces fixture; five nominals.
-
-B-21 '-l' IS '--label'                             ** BUILT -- STRIKE **
-     services/RATIONALE.txt E-112
-     '-l' in 'parse_wish', so every wish-taking face has it. A bare
-     word is never resolved into a label; where a run selects nothing
-     and the word names a standing label, a NOTE says '-l <word>'.
+B-24 'hwut.cov.conv.to_pdf' CHECKS ITS TeX PACKAGES AND ADVISES
+     services/RATIONALE.txt E-133; coverage D-45
+     Before compiling, ask 'kpsewhich' for geometry, xcolor, colortbl,
+     longtable, array; where one is missing refuse by name with the
+     package to install (Debian names as the hint); a '--check' word
+     does the same without compiling. ASKED 2026-10-04, NOT YET RULED
+     -- stands here as ready because the shape was described and not
+     objected to; strike or build on the word.
 
 ==============================================================================
 C  PARTLY BUILT -- a body exists, a named piece is missing
@@ -246,20 +190,20 @@ C-3  THE PER-LANGUAGE READERS
 
 C-4  THE MEASUREMENTS BESIDE THE LINE AXIS
      coverage/DISCUSSIONS.txt todo-8      [part]
-     BUILT: 'measure.py' registration (D-11), 'branch' and 'mcdc',
-     cobertura reading branch data, named-point measures (D-12).
-     OPEN: 'condition' as a third measure if the MC/DC distinction is
-     wanted; moving branch and mcdc onto the named-point shape so they
-     merge -- which costs their record TAGS a format change, and waits
-     for somebody who actually wants an aggregate over branch data.
-
-C-5  THE NUMERIC TOLERANCE                          ** RESOLVED **
-     operations/DISCUSSIONS.txt todo-19
-     RULED 2026-09-04 (intend/16): the first defect (missing 'abs()')
-     was real and is FIXED; the second is NOT A DEFECT -- the pole
-     sets the scale, t( d(b_nominal) ), and the asymmetry is the
-     doctrine. NOTHING IS OWED TO COMPARE. todo-19 may be struck
-     whole; it moves to band B below as a one-line strike.
+     BUILT: registration (D-11), branch and mc/dc as MASKS that merge
+     (D-43), named points (D-12), FN registered (D-43 pass 4), every
+     measure carried into the output files and every converter (D-44,
+     D-45). OWED, each a labour of its own:
+       C-4a  PRODUCERS OF FN: gcov's 'function' lines (skipped today,
+             readers/gcov.py), coverage.py's 'functions' in its json
+             (unread), cobertura and JaCoCo methods, lcov 'FN'/'FNDA'.
+             Each against a real artefact. The measure is registered,
+             carried and converted -- and empty.
+       C-4b  lcov's 'BRDA' read by the lcov reader: seen and skipped,
+             and since D-43 straightforward (a BRDA names its arm).
+       C-4c  MC/DC FROM A REAL TOOL (gcc 14 '-fcondition-coverage',
+             'gcov --conditions'), and with it lcov 2.2's 'MCDC' line
+             in 'to_lcov'. BLOCKED on a machine with gcc 14; see A-6.
 
 C-6  RENOVATE AND THE STDERR SURVEY
      operations/DISCUSSIONS.txt todo-26
@@ -278,24 +222,33 @@ C-7  README DEEP-SECTION POLISH AFTER THE SURGERY
 D  A MEASUREMENT IS OWED BEFORE THE WORK CAN BE JUDGED
 ==============================================================================
 
-D-1  THE MEASUREMENT THAT RULES coverage disc-1
-     coverage/DISCUSSIONS.txt todo-7
-     Write of one run, read of a cross-directory aggregate, forms (a)
-     and (c). Until it exists, disc-1 (text or binary) stays open --
-     and disc-1 says explicitly it is NOT TO BE RULED WITHOUT NUMBERS.
+D-4  THE DEVELOPMENT IMAGE HAS NEVER BEEN BUILT
+     services/RATIONALE.txt E-134; adm/container/Containerfile
+     Written in a sandbox without an engine. The first
+     'hwut.dev.podman.build' on a real machine is the proof; where it
+     fails, the Containerfile is wrong, not the faces.
+
+D-5  NO REAL READER HAS READ THE EXPORTED FORMATS
+     coverage D-45
+     lcov, Cobertura and JaCoCo were checked against the formats' text
+     and parse as XML; none went through 'genhtml', Jenkins, GitLab or
+     SonarQube. 'to_pdf' is the one format proven through its real
+     consumer. One tracefile through 'genhtml', one report into a
+     Jenkins, and the formats are proven or corrected.
+
+D-6  THE FINAL FOLD WITH MEASURES, ON A REAL TREE
+     coverage D-43 pass 4
+     Measured on a synthetic corpus only (300 records x 200 sources:
+     12.5 s, 869 MB peak, against 3.7 s / 436 MB for lines alone).
+     D-42's 181 MB figure is of the real tree and lines alone. One
+     'hwut.cov.run' over the real tree with branches says whether the
+     bit loop of 'output._measures_of' needs saving.
 
 D-2  THE OUTER-TEXT BLOCK BOUNDARY
      operations/DISCUSSIONS.txt todo-2 (a)
      Whether to cut the outer text, and on what boundary. CHECKABLE
      rather than arguable: split it, run compare's own suite, see
      whether any GOOD moves. If none does, the boundary is free.
-
-D-3  THE TWO-Store SHAPE FOR A CROSS-DIRECTORY RENAME   ** MEASURED **
-     MEASURED 2026-09-06: adm/WORK/intend/17-rename-across, section 2.
-     The two-Store threading is eight call sites; what todo-1 called
-     'every primitive exists' was false in four places, one of them
-     dangerous (the coverage record's directory-local run id). Ruled
-     as E-46; labour is B-20.
 
 ==============================================================================
 E  WAITING ON A RULING -- no labour can start
@@ -328,25 +281,75 @@ E  WAITING ON A RULING -- no labour can start
      r-6a          re-dump with --complete; todo-9 unverified
      r-6d          services/DISCUSSIONS.txt is a re-seeding: gate s-3
      r-7a          two unrepairable citations
+     coverage      disc-1 (text or binary) is RULED: D-20 and D-43,
+                   binary on disk, text the presentation -- strike
+                   the entry, or let it stand as history
+     display       THE WALLFLOWER NOTE INSIDE THE LAST BLOCK: the NOTE
+                   is printed within the rules of HINTS or REFUSED,
+                   indented like an entry. The readers tolerate it
+                   (test-gate.py, 2026-10-04); closing the block
+                   before the NOTE would move every page with
+                   wallflowers -- a formatting cut, if wanted
+     coverage      'condition' as a measure beside mc/dc (todo-8):
+                   wanted at all?
 
 ==============================================================================
-COUNTS
+F  IF NOTHING ELSE MATTERS -- owed, harmless while it waits
 ==============================================================================
 
-     A  blocked                     5
-     B  ready                      17   (B-17, B-18 built same day)
-     C  partly built                6   (-1: C-5 resolved)
-     D  measurement first           3
-     E  waiting on a ruling        23   (-1: r-5c closed)
+F-2  'test-wishlist.sh' READS A FLOW IT PINS
+     doc/HOWTO-HWUT-BRAINSTORM.txt 5c (2026-10-04)
+     Its awk expands one species of elision and is right only because
+     its subject runs '--jobs=1 --deterministic'. The day that changes
+     it is 'test-gate.py new_choice' again. Teach it both species, or
+     leave the pin and this line.
 
-     READY TO BUILD TODAY: the seventeen of B, of which B-1 (the
-     dispatcher) is the one everything downstream of a run waits on.
-     B-17 and B-18 were built on the day they were listed; r-5c is
-     closed in the code, the documents and the discussion files alike.
-     The 'd'/'D' collision is CLOSED (2026-09-04, ruling (a)): 'D' is
-     the description function, 'd' stays the distance. Nothing to
-     build -- the edit already used 'D'.
+F-1  'bin/README.txt' SAYS EVERY LAUNCHER RUNS 'vut.services.<n>'
+     Untrue for every second face: 'hwut.config.show' runs
+     'vut.services.lib.config.show', 'hwut.accept.apply' and
+     'hwut.run.stability' likewise under 'lib/'. The sentence and the
+     irregular launcher grid beneath it want one pass together.
 
+==============================================================================
+COUNTS (version 13)
+==============================================================================
+
+     A  blocked                     4   (A-3, A-4, A-5, A-6)
+     B  ready                      13   (B-3..B-7, B-9..B-16, B-24)
+     C  partly built                6   (C-1, C-2, C-3, C-4 with a/b/c,
+                                         C-6, C-7; C-5 struck)
+     D  measurement first           4   (D-2, D-4, D-5, D-6)
+     E  waiting on a ruling        25
+     F  harmless while it waits     2
+
+     SILENTLY WRONG TODAY, as opposed to missing: B-6 alone.
+
+==============================================================================
+STRUCK -- version 12 to 13 (2026-10-04); residue in the ruling named
+==============================================================================
+
+     A-1  -> B-20                                   E-46
+     A-2  the three coverage books                   done 2026-09-07
+     B-1  the dispatcher                             O-7
+     B-2  'hwut.run' over 'orchestrator()'           built; services
+     B-8  'hwut.convert_to_lcov'                     D-43 pass 5, E-133
+                                                     ('hwut.cov.conv.to_lcov')
+     B-17 B-18 B-19                                  done 2026-09-04
+     B-20 'hwut.rename' across, 'hwut.move'          E-46
+     B-21 '-l' is '--label'                          E-112
+     B-22 'hwut.report.timings'                      E-114
+     B-23 'hwut.run.cov'                             E-115, then E-133
+                                                     ('hwut.cov.run')
+     C-5  the numeric tolerance                      intend/16, 2026-09-04
+     D-1  the measurement that rules disc-1          D-20, D-43
+     D-3  the two-Store shape                        E-46
+
+==============================================================================
+==============================================================================
+HISTORY -- the measured passes of versions 1 to 12, kept as they were
+written; nothing below is owed. The STRUCK ledger above is the one
+place a struck item is looked up.
+==============================================================================
 ==============================================================================
 THE MEASURED PASS, DONE
 ==============================================================================
@@ -550,14 +553,3 @@ TO BE DONE  THE FACE CUT, what remains (services E-101..E-106)
      walk of 'hwut.sanitize.propose' is not yet a 'do()'.
      'hwut.accept' keeps its conversation; its Outcomes are data
      (E-105), the asking half is not.
-
-
-==============================================================================
-F  IF NOTHING ELSE MATTERS -- owed, harmless while it waits
-==============================================================================
-
-F-1  'bin/README.txt' SAYS EVERY LAUNCHER RUNS 'vut.services.<n>'
-     Untrue for every second face: 'hwut.config.show' runs
-     'vut.services.lib.config.show', 'hwut.accept.apply' and
-     'hwut.run.stability' likewise under 'lib/'. The sentence and the
-     irregular launcher grid beneath it want one pass together.

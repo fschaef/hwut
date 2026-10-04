@@ -425,6 +425,8 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
         BUILT (2026-10-03, D-43 pass 4): every measure is carried into
         the output files, and 'function'/FN is registered as a named
         point of one item.
+        THE LABOUR STANDS IN 'adm/WORK/TODO.txt' C-4 (a, b, c); what
+        follows is the discussion of it.
         OWED:
           -- PRODUCERS OF FN: gcov's 'function' lines, coverage.py's
              'functions' (present in its json), cobertura and JaCoCo
@@ -445,6 +447,7 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
              different tags.
 
 todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
+        LABOUR: 'adm/WORK/TODO.txt' B-10.
         'services/report.py' renders per source file the
         percentage and the UNCOVERED line ranges -- which the stored form
         already is, so there is no conversion at display time. Retires
@@ -453,10 +456,12 @@ todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
         changes.
 
 todo-5  '--global-conf [<file>]' ON THE SERVICES
+        LABOUR: 'adm/WORK/TODO.txt' B-9.
         Plus the UPWARD search: nearest enclosing 'hwut.conf' wins,
         layered over what stands further out (D-2).
 
 todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [part]
+        LABOUR: 'adm/WORK/TODO.txt' B-6.
         Built as 'coverage/affected.py' with 'main(argv, write)'. The
         shared 'E_ExitCode' is BUILT too ('services/_exit.py'). The
         thin service shim under 'services/' is STILL OWED: there is no

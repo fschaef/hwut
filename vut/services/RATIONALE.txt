@@ -5374,4 +5374,5 @@ COST      The copy-in census of the day before ('adm/container/entry.sh',
           an image that does not stand is named with the face that
           builds it. The sandbox this was written in has no engine, so
           the image was never built here: the first 'podman build' on
-          a real machine is the proof still owed.
+          a real machine is the proof still owed ('adm/WORK/TODO.txt'
+          D-4).

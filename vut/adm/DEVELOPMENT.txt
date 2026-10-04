@@ -457,6 +457,20 @@ has to be written down and asked deliberately: for each format, WHICH
 elements does the material contain, and which does it not?
 
 
+THE ONE LIST OF LABOUR
+
+'adm/WORK/TODO.txt' is the one place a piece of owed work stands AS
+LABOUR. A RATIONALE entry says 'OWED' as the record of what its
+decision left open; a DISCUSSIONS todo holds the discussion; the item
+that says 'this is to be built', with its band (blocked, ready, partly
+built, measurement first, waiting on a ruling, harmless) and a pointer
+back, is in TODO.txt and nowhere else. A session that leaves work owed
+adds the line in the same bundle; a session that builds one strikes it
+there, into the STRUCK ledger at the foot with the ruling that holds
+the residue. 'do we see anything undone?' is answered by reading that
+file, not by remembering.
+
+
 THE DEVELOPMENT CONTAINER
 
 Every requirement of working on hwut stands in one image

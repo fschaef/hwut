@@ -1769,7 +1769,7 @@ COST      A source the root no longer holds gets its page without the
           of mine, to be struck. No browser is opened.
           OWED, on the same fold: 'to_cobertura' (Cobertura XML, what
           Jenkins and GitLab read) and 'to_json'; which formats matter
-          was asked and not yet answered. 'present.py's TeX table has
+          was asked and not yet answered. (BUILT the same day, D-45.) 'present.py's TeX table has
           no successor until somebody asks for one.
 
 
@@ -1845,3 +1845,7 @@ COST      The output-visitor vocabulary is a second one beside the
           directory. The PDF was looked at (pdftoppm): the index, the
           coloured listing, the runs column; a reader's style retitling
           and retinting it was proven through the same road.
+          OWED, listed in 'adm/WORK/TODO.txt': D-5 (no real reader has
+          read lcov, Cobertura or JaCoCo), C-4a (FN has no producer),
+          C-4c (MC/DC, and its lcov line), B-24 ('to_pdf' checking its
+          packages).
