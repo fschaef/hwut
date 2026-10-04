@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "The readers: three artifact formats, one record"
-#     choices    = ["absent", "agreement", "aliases", "calls",
+#     choices    = ["absent", "agreement", "aliases", "branches", "calls",
 #                   "cobertura", "gather", "gcov", "ghdl", "go",
 #                   "jacoco", "lcov", "luacov", "native", "psl",
 #                   "python", "resultset", "roles", "ucis", "verilator",
@@ -18,7 +18,7 @@ PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
 CHOICES: roles, python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
          verilator, native, ghdl, psl, resultset, ucis, agreement,
-         aliases, calls, absent, gather;
+         aliases, calls, absent, gather, branches;
 
 DESCRIPTION:
 
@@ -53,9 +53,10 @@ lcov       the tracefile: EX is every 'DA', CV is every 'DA' whose count
 gcov       the annotated source: '-' is not executable, '#####' is
            executable and never run, '<n>*' is <n>. The source path
            comes from the 'Source:' header, never from the file name --
-           '-p' mangles that on purpose. 'function'/'branch'/'call'
-           annotations are skipped: branch coverage is a different
-           measurement.
+           '-p' mangles that on purpose. The 'branch' annotations are
+           the ARMS of the line, in order: one 'branch' point whose mask
+           has bit i set where arm i was taken. 'function' and 'call'
+           annotations are skipped. See 'branches'.
 
 cobertura  the SECOND lingua franca, and the first reader that keeps a
            measurement beside lines: 'condition-coverage="50% (1/2)"'
@@ -170,9 +171,10 @@ roles      the two roles (RATIONALE D-23): every tool is a
            and stamps no tool, the framework invokes and stamps its
            name; 'instrumented_f' answers None where it cannot check.
 
-calls      what a framework NAMES rather than makes: 'coverage run' wraps,
-           'coverage json' is a second supervised call, gcov wraps
-           nothing and names a call only where a '.gcda' exists.
+calls      what a framework NAMES rather than makes: 'coverage run'
+           runs the script by its call scheme (D-39), 'coverage json'
+           is a second supervised call, gcov is not on the command
+           line and names a call only where a '.gcda' exists.
 
 absent     no artifact is ABSENT, not empty: harvest answers None, and a
            caller must not report it as a measurement of nothing.
@@ -694,25 +696,105 @@ def test_gcov():
          "gcov is gcc's, and gcc's languages are c and c++"),
         (record.tool == "gcov" and record.source == "gcov-annotated",
          "the header names the tool and the format"),
+        (entry_branch_of(record) == ((4, 1, 2),),
+         "the two 'branch' lines under line 4 are its two arms: the "
+         "first taken (100%), the second not (0%) -- mask 1 of 2"),
         (harvested("gcov", [("x.gcov", "function f called 1\n"
-                                       "branch 0 taken 100%\n")]) is None
-         or True,
-         "'function'/'branch'/'call' lines are skipped -- branch "
-         "coverage is a different measurement"),
+                                       "branch 0 taken 100%\n")]
+                   ).file_db == {},
+         "'function' and 'branch' lines of a file that names no source "
+         "attach to no line, and nothing is read"),
     ])
     verdict(ok, "gcov's three markers read as three different facts.")
 
 
+def entry_branch_of(record, path="prog.c"):
+    """RETURN: tuple of (line, mask, total), the branch points of the
+    file 'path' of 'record'; empty where it has none."""
+    return record.file_db[path].measure_db.get("branch", ())
+
+
+def test_branches():
+    """The arms taken, from the tools that name them; and their union."""
+    from vut.engine.coverage.database.record import merge
+
+    banner("gcov -b -c over classify.c (real)")
+    real_record = harvested("gcov", [("classify.c.gcov",
+                                      real("gcov/c-classify.c.gcov"))])
+    for line in format_record(real_record).splitlines():
+        if line.startswith(("BR:", "EX:", "CV:")):
+            print("         | %s" % line)
+
+    banner("the same arms as percentages (constructed, prog.c)")
+    percent = harvested("gcov", [("prog.c.gcov", PROG_GCOV)])
+    print("         %s" % (entry_branch_of(percent),))
+
+    banner("two annotations of one source: arm by arm")
+    flipped = PROG_GCOV.replace(
+        "branch  0 taken 100% (fallthrough)\nbranch  1 taken 0%",
+        "branch  0 taken 0% (fallthrough)\nbranch  1 taken 50%")
+    union = harvested("gcov", [("a.c.gcov", PROG_GCOV),
+                               ("b.c.gcov", flipped)])
+    print("         %s" % (entry_branch_of(union),))
+    longer = PROG_GCOV.replace(
+        "branch  1 taken 0%",
+        "branch  1 taken 0%\nbranch  2 taken 0%")
+    clash = harvested("gcov", [("a.c.gcov", PROG_GCOV),
+                               ("b.c.gcov", longer)])
+    print("         arms 2 and 3: %s" % (entry_branch_of(clash),))
+
+    banner("coverage.py --branch, two real runs")
+    run_a2 = harvested("coverage", [("coverage.json",
+                          real("python_coverage/branches-a2.json"))])
+    run_a1 = harvested("coverage", [("coverage.json",
+                          real("python_coverage/branches-a1.json"))])
+    both   = merge([run_a2, run_a1])
+    for label, record in (("argument 2", run_a2), ("argument 1", run_a1),
+                          ("together", both)):
+        print("         %-10s %s"
+              % (label, entry_branch_of(record, "branches.py")))
+
+    real_branch = dict((line, (mask, total)) for line, mask, total
+                       in entry_branch_of(real_record, "classify.c"))
+    ok = check([
+        (real_branch == {3: (2, 4), 4: (2, 2), 5: (7, 3), 10: (3, 2)},
+         "gcov's arms in listed order: line 3 ('a && b') has four, only "
+         "the second taken; the loop's 'call' line does not shift the "
+         "arms of line 10"),
+        (entry_branch_of(percent) == ((4, 1, 2),),
+         "a percentage above zero is taken, '0%' is not"),
+        (entry_branch_of(union) == ((4, 3, 2),),
+         "the same source twice, the other arm taken the second time: "
+         "the union is both"),
+        (entry_branch_of(clash) == (),
+         "a line with two arms in one annotation and three in the other "
+         "carries NO point: which arm is which is not known"),
+        (entry_branch_of(run_a2, "branches.py") == ((3, 1, 2), (5, 0, 2)),
+         "coverage.py: the arms of a decision are the destinations of "
+         "its arcs, executed and missing together, in ascending order; "
+         "argument 2 took the first arm of line 3 and never reached "
+         "line 5"),
+        (entry_branch_of(run_a1, "branches.py") == ((3, 2, 2), (5, 1, 2)),
+         "argument 1 took the other arm of line 3, and the first of "
+         "line 5"),
+        (entry_branch_of(both, "branches.py") == ((3, 3, 2), (5, 1, 2)),
+         "two runs, different arms: the record merges, by OR, where "
+         "counts (1 and 1) could not"),
+        (harvested("coverage", [("coverage.json", COVERAGE_JSON)])
+         .file_db["app.py"].measure_db.get("branch") is None,
+         "a json without arcs, from a run without '--branch', carries "
+         "no branch point: absence stays absent"),
+    ])
+    verdict(ok, "the arms taken are a set, and sets can be unioned.")
+
+
 def test_cobertura():
     """The second lingua franca, and the first measurement beside lines."""
-    from vut.engine.coverage.database.measure import BRANCH
     record = harvested("cobertura", [("cov.xml", COBERTURA_XML)])
     banner("the xml, read")
     show(record)
     entry = record.file_db["app.py"]
-    print("INSPECT: branch = %s   summary = %s"
-          % (entry.measure_db.get("branch"),
-             BRANCH.summary(entry.measure_db["branch"])))
+    print("INSPECT: branch = %s" % (entry.measure_db.get("branch"),))
 
     banner("a JaCoCo report in the same directory")
     print("         %s" % harvested("cobertura", [("jacoco.xml", JACOCO_XML)]))
@@ -727,10 +809,10 @@ def test_cobertura():
          "EX is every '<line>' -- the same fact LCOV's 'DA' carries"),
         (entry.covered == ((1, 4), (7, 8), (10, 11)),
          "CV is every one whose 'hits' is not zero"),
-        (entry.measure_db.get("branch") == ((2, 1, 2),),
-         "and the BRANCH data is kept: line 2, one arm of two"),
-        ("BR:2*1/2" in format_record(record),
-         "which the record writes under the measure's own tag"),
+        (entry.measure_db.get("branch") is None
+         and "BR:" not in format_record(record),
+         "and the BRANCH data is NOT kept: 'condition-coverage' is a "
+         "count, and the measure is the set of arms taken (D-43)"),
         (record.language == "python",
          "the language is read from the extensions -- a Cobertura "
          "document carries none, that being the price of a format five "
@@ -851,7 +933,6 @@ def counter_db_of(text):
 
 def test_jacoco():
     """The JVM's report, and the fixture's own witness."""
-    from vut.engine.coverage.database.measure import BRANCH
     record = harvested("jacoco", [("jacoco.xml", JACOCO_XML)])
     banner("the report, read")
     show(record)
@@ -863,13 +944,12 @@ def test_jacoco():
         name  = path.rsplit("/", 1)[-1]
         line_missed  = line_n(entry.uncovered)
         line_covered = line_n(entry.covered)
-        branch_point = entry.measure_db.get("branch", ())
-        taken, total = BRANCH.summary(branch_point)
         print("         %-22s LINE   read %i/%i   says %s"
               % (path, line_covered, line_covered + line_missed,
                  counter_db.get((name, "LINE"))))
-        print("         %-22s BRANCH read %i/%i   says %s"
-              % ("", taken, total, counter_db.get((name, "BRANCH"))))
+        print("         %-22s BRANCH read %s   says %s"
+              % ("", entry.measure_db.get("branch", "-"),
+                 counter_db.get((name, "BRANCH"))))
 
     banner("a report that cannot say whether anything ran")
     print("         raised %s"
@@ -885,19 +965,17 @@ def test_jacoco():
              == counter_db[("Calc.java", "LINE")][0],
          "LINE agrees with the report's own counter -- 4 covered, 1 "
          "missed"),
-        (BRANCH.summary(calc.measure_db["branch"])
-         == (counter_db[("Calc.java", "BRANCH")][1],
-             sum(counter_db[("Calc.java", "BRANCH")])),
-         "and BRANCH agrees: 1 taken of 4"),
+        (counter_db[("Calc.java", "BRANCH")] == (3, 1)
+         and "branch" not in calc.measure_db,
+         "the report's BRANCH counter says 1 taken of 4, and the record "
+         "carries no branch measure: a count does not name the arms "
+         "(D-43)"),
         (calc.covered == ((6, 8), (12, 13), (20, 21)),
          "a PARTIALLY covered line ('ci'>0 and 'mi'>0, line 12) is "
          "COVERED here: partial is an INSTRUCTION fact, and this record "
          "holds no instruction axis"),
         (calc.uncovered == ((21, 22),),
          "and the one line with no instruction executed is uncovered"),
-        (calc.measure_db["branch"] == ((12, 0, 2), (20, 1, 2)),
-         "a branch point exists only where 'mb + cb' is above zero -- "
-         "'0/0' is no decision at all, not a decision with no arms"),
         (record.language == "unknown",
          "java and kotlin in ONE report is what the JVM does, so no "
          "single language is claimed"),
@@ -914,7 +992,6 @@ def test_jacoco():
 
 def test_witnessed():
     """The report JaCoCo itself wrote, read like any other."""
-    from vut.engine.coverage.database.measure import BRANCH
     record = harvested("jacoco", [("report.xml", JACOCO_WITNESSED_XML)])
     banner("the report, read")
     show(record)
@@ -926,13 +1003,12 @@ def test_witnessed():
         name  = path.rsplit("/", 1)[-1]
         line_missed  = line_n(entry.uncovered)
         line_covered = line_n(entry.covered)
-        branch_point = entry.measure_db.get("branch", ())
-        taken, total = BRANCH.summary(branch_point)
         print("         %-27s LINE   read %i/%i   says %s"
               % (path, line_covered, line_covered + line_missed,
                  counter_db.get((name, "LINE"))))
-        print("         %-27s BRANCH read %i/%i   says %s"
-              % ("", taken, total, counter_db.get((name, "BRANCH"))))
+        print("         %-27s BRANCH read %s   says %s"
+              % ("", entry.measure_db.get("branch", "-"),
+                 counter_db.get((name, "BRANCH"))))
 
     calc = record.file_db["com/example/Calculator.java"]
     ok = check([
@@ -944,16 +1020,18 @@ def test_witnessed():
              == counter_db[("Calculator.java", "LINE")][0],
          "LINE agrees with the counter the tool wrote beside its own "
          "lines -- 6 covered, 1 missed"),
-        (BRANCH.summary(calc.measure_db["branch"])
-         == (counter_db[("Calculator.java", "BRANCH")][1],
-             sum(counter_db[("Calculator.java", "BRANCH")])),
-         "and BRANCH agrees: 1 taken of 2"),
+        (counter_db[("Calculator.java", "BRANCH")] == (1, 1)
+         and "branch" not in calc.measure_db,
+         "the tool's BRANCH counter says 1 taken of 2, and the record "
+         "carries no branch measure: a count does not name the arms "
+         "(D-43)"),
         (calc.uncovered == ((8, 9),),
          "the arm that never ran is line 8, 'return number;' -- the "
          "one call was negative"),
-        (calc.measure_db["branch"] == ((5, 1, 2),),
-         "the 'if' on line 5 is the report's ONE decision: one arm "
-         "taken of two"),
+        ("branch" not in calc.measure_db,
+         "the 'if' on line 5 is the report's ONE decision, and the tool "
+         "counted its arms (1 of 2) without naming them: no branch "
+         "measure (D-43)"),
         (record.language == "java",
          "one language stands in the report, so one language is named"),
     ])
@@ -1074,7 +1152,7 @@ def test_native():
          "the two 'cover property' points: DONE reached, the impossible "
          "state not"),
         (blk.measure_db["branch"]
-         == ((12, 2, 2), (17, 2, 2), (20, 2, 2)),
+         == ((12, 3, 2), (17, 3, 2), (20, 3, 2)),
          "every decision's arms both taken -- per ARM, not per line "
          "count"),
         (top.executable == () and top.covered == ()
@@ -1179,7 +1257,7 @@ def test_ucis():
          "line coverage from 'blockCoverage//statement' agrees with "
          "every other witnessed road: the case default, the one line "
          "that did not run"),
-        (blk.measure_db["branch"] == ((12, 2, 2), (17, 2, 2), (20, 2, 2))
+        (blk.measure_db["branch"] == ((12, 3, 2), (17, 3, 2), (20, 3, 2))
          and BRANCH.summary(blk.measure_db["branch"]) == (6, 6),
          "branch arms grouped by THEIR OWN line -- the artifact wraps "
          "every decision of a file under one '<statement>', and the "
@@ -1356,20 +1434,25 @@ def test_calls():
     config = CoverageConfig(include=("*.py",), omit=("TEST/*",))
     root   = work_dir_with([])
     try:
-        banner("coverage.py wraps the application")
-        wrapped = framework_of("coverage").wrap(
-            ["python3", "-u", "test-parse.py", "basic"], config, root)
-        print("         %s" % " ".join(
-            w.replace(root, "<work>") for w in wrapped))
+        banner("coverage.py runs the application: its call scheme")
+        print("         %s" % framework_of("coverage").call_scheme)
+        wrapped = framework_of("coverage").specify_command_line(
+            config.include, config.omit, "test-parse.py", "basic")
+        print("         %s" % " ".join(wrapped))
+        bare = framework_of("coverage").specify_command_line(
+            (), (), "test-parse.py", None)
+        print("         %s" % " ".join(bare))
 
         banner("and names a SECOND call: what the run left is a database")
         second = framework_of("coverage").report_argv(config, root)
         print("         %s" % " ".join(
             w.replace(root, "<work>") for w in second))
 
-        banner("gcov wraps nothing -- it instruments at BUILD time")
+        banner("gcov is not on the command line -- it instruments at "
+               "BUILD time")
         print("         %s"
-              % framework_of("gcov").wrap(["./prog"], config, root))
+              % framework_of("gcov").specify_command_line(
+                    config.include, config.omit, "./prog", None))
 
         banner("and names no call where the build left no '.gcda'")
         print("         %s" % framework_of("gcov").report_argv(config, root))
@@ -1382,17 +1465,25 @@ def test_calls():
              "the application runs UNDER the tool"),
             ("--" in wrapped
              and wrapped[wrapped.index("--") + 1:]
-                 == ["python3", "-u", "test-parse.py", "basic"],
+                 == ["test-parse.py", "basic"],
+             "the tool is handed the SCRIPT, no interpreter before it; "
              "'--' keeps an application flag the tool also knows from "
              "being eaten by the tool"),
+            (bare[-2:] == ["--", "test-parse.py"]
+             and not any(w.startswith(("--include", "--omit"))
+                         for w in bare),
+             "a word whose field is empty is dropped whole: no choice, "
+             "no '--include=', no '--omit='"),
             ("--include=*.py" in wrapped and "--omit=TEST/*" in wrapped,
              "the gather set goes to the GATHERER, which is the cheapest "
              "place to gather less"),
             (second[:2] == ["coverage", "json"],
              "the second call is NAMED here and MADE by the execute "
              "stage: a reader spawns nothing"),
-            (framework_of("gcov").wrap(["./prog"], config, root) == ["./prog"],
-             "gcov leaves the command line alone"),
+            (framework_of("gcov").specify_command_line(
+                 config.include, config.omit, "./prog", None) is None,
+             "gcov names no command line: the application is called as "
+             "it stands"),
             (framework_of("gcov").report_argv(config, root) is None,
              "and names no call over a build that was not instrumented, "
              "rather than running gcov over nothing"),
@@ -1488,6 +1579,7 @@ if __name__ == "__main__":
             "agreement": test_agreement,
             "aliases":   test_aliases,
             "calls":     test_calls,
+            "branches":  test_branches,
             "absent":    test_absent,
             "gather":    test_gather,
         },

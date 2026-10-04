@@ -28,9 +28,17 @@ DESCRIPTION
 
        The explanations stand in ONE table, 'engine/display/failure.py'.
 
+       THE LAST COVERAGE RUN, AFTER THAT (coverage D-41): every selected
+       case it left WITHOUT A RECORD, read from the local trace
+       'TMP/hwut-traces-coverage.csv' of each directory, under the headings
+       and with the words of the coverage run's HINTS. Its explanations
+       stand in 'engine/display/coverage_reason.py'. A directory no
+       coverage run has visited says nothing.
+
 EXIT STATUS (E-1, services/_exit.py):
     0  something was explained
-    3  nothing to explain: no selected case failed for a subtle reason
+    3  nothing to explain: no selected case failed for a subtle reason,
+       and none was left without a coverage record
     2  the command line cannot be read
 ______________________________________________________________________________
 """
@@ -47,6 +55,10 @@ from   vut.engine.display.failure       import (failure_db, failure_of,
                                                 CATEGORY_HEADING_DB,
                                                 HEAL_OPENER_STR)
 from   vut.engine.display.plain         import CHOICE_GAP
+from   vut.engine.display.coverage_reason import (E_NoRecordCategory,
+                                                  HEADING_DB,
+                                                  no_record_db)
+from   vut.engine.coverage.api          import CoverageTraceDb, OUTCOME_OK
 from   vut.services.lib.cmdline         import (face_parser, usage_of,
                                                 parse_or_refuse)
 from   vut.services.lib.face            import FaceError
@@ -153,6 +165,70 @@ def explanation_line_list(token, case_list):
     return line_list
 
 
+def coverage_occurrence_db_of(block_list, root):
+    """
+    RETURN: dict, coverage token -> list of (directory, file, choice):
+            every case among the blocks' rows that the LAST COVERAGE
+            RUN left without a record, by the local trace of its
+            directory (coverage D-41); 'choice' None where the test has
+            none. Empty where no trace stands.
+    """
+    occurrence_db = {}
+    for block in block_list:
+        outcome_db = CoverageTraceDb(
+                         os.path.join(root, block.directory or ".")).read()
+        if not outcome_db: continue
+        for row in block.row_tuple:
+            outcome = outcome_db.get((row.source_file, row.choice or ""))
+            if outcome is None or outcome == OUTCOME_OK: continue
+            occurrence_db.setdefault(outcome, []).append(
+                (block.directory or ".", row.source_file, row.choice))
+    return occurrence_db
+
+
+def coverage_explanation_line_list(token, case_list):
+    """
+    RETURN: list of str, what 'hwut.help' says of one reason a coverage
+            run left no record: the head (its word, its phrase, how
+            many cases), the table's paragraphs wrapped, then
+            'CONCERNED:' and the cases.
+    """
+    reason = no_record_db.get(token)
+    if reason is None:
+        head = "no record -- '%s'" % token
+        paragraph_list = ["A reason the coverage table does not know.",
+                          HEAL_OPENER_STR + "read the HINTS of "
+                          "'hwut.cov.run' for the cases below."]
+    else:
+        head = "%s -- %s" % (reason.word, reason.phrase)
+        paragraph_list = reason.paragraph_list()
+    line_list = ["%s  [%i case(s)]" % (head, len(case_list))]
+    for paragraph in paragraph_list:
+        line_list.append("")
+        line_list.extend("    " + line for line in
+                         textwrap.wrap(paragraph, width=WRAP_WIDTH,
+                                       break_on_hyphens=False))
+    line_list.append("")
+    line_list.append("    CONCERNED:")
+    line_list.extend("        " + line
+                     for line in concerned_line_list(case_list))
+    return line_list
+
+
+def coverage_introduction_line_list(case_n, reason_n):
+    """
+    RETURN: list of str, the opening of the coverage part: how many
+            cases the last coverage run left without a record, for how
+            many reasons.
+    """
+    return textwrap.wrap(
+        "The last coverage run left %i case(s) without a record, for "
+        "%i reason(s). The paragraphs below explain each reason once, "
+        "say how to heal it, and name the cases concerned."
+        % (case_n, reason_n),
+        width=WRAP_WIDTH + 8, break_on_hyphens=False)
+
+
 def introduction_line_list(case_n, failure_n):
     """
     RETURN: list of str, the opening of the page: how many cases failed
@@ -208,31 +284,56 @@ def main(argv=None, write=None):
         write(error.said)
         return error.code
     occurrence_db = occurrence_db_of(block_list)
-    if not occurrence_db:
+    coverage_db   = coverage_occurrence_db_of(block_list, directory)
+    if not occurrence_db and not coverage_db:
         write("nothing to explain: no case below '%s' failed for a "
               "reason other than a plain difference from GOOD" % directory)
         return E_ExitCode.EMPTY
     #  UNDER ITS CATEGORY'S HEADING (D-35), as HINTS does, and within it
     #  by the table's order, so the page is the same whatever the walk
     #  met first; a token the table does not carry comes last.
-    rank_db = {member.value: i for i, member in enumerate(failure_db)}
-    for line in introduction_line_list(
-                    sum(len(v) for v in occurrence_db.values()),
-                    len(occurrence_db)):
-        write(line)
-    first_f = False
-    for category in E_FailureCategory:
-        token_list = sorted((t for t in occurrence_db
-                             if category_of(t) is category),
-                            key=lambda t: (rank_db.get(t, len(rank_db)), t))
-        if not token_list: continue
-        if not first_f: write("")
-        first_f = False
-        write(CATEGORY_HEADING_DB[category])
-        for token in token_list:
+    if occurrence_db:
+        rank_db = {member.value: i for i, member in enumerate(failure_db)}
+        for line in introduction_line_list(
+                        sum(len(v) for v in occurrence_db.values()),
+                        len(occurrence_db)):
+            write(line)
+        for category in E_FailureCategory:
+            token_list = sorted((t for t in occurrence_db
+                                 if category_of(t) is category),
+                                key=lambda t: (rank_db.get(t, len(rank_db)),
+                                               t))
+            if not token_list: continue
             write("")
-            for line in explanation_line_list(token, occurrence_db[token]):
-                write("    " + line)
+            write(CATEGORY_HEADING_DB[category])
+            for token in token_list:
+                write("")
+                for line in explanation_line_list(token,
+                                                  occurrence_db[token]):
+                    write("    " + line)
+    #  THE COVERAGE RUN'S PART (coverage D-41), in the same shape and in
+    #  its own words; an unknown token comes last, under no heading.
+    if coverage_db:
+        if occurrence_db: write("")
+        for line in coverage_introduction_line_list(
+                        sum(len(v) for v in coverage_db.values()),
+                        len(coverage_db)):
+            write(line)
+        rank_db = {token: i for i, token in enumerate(no_record_db)}
+        for category in list(E_NoRecordCategory) + [None]:
+            token_list = sorted(
+                (t for t in coverage_db
+                 if (no_record_db[t].category if t in no_record_db
+                     else None) is category),
+                key=lambda t: (rank_db.get(t, len(rank_db)), t))
+            if not token_list: continue
+            write("")
+            if category is not None: write(HEADING_DB[category])
+            for token in token_list:
+                write("")
+                for line in coverage_explanation_line_list(
+                                token, coverage_db[token]):
+                    write("    " + line)
     return E_ExitCode.OK
 
 

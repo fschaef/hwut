@@ -1,6 +1,6 @@
 
 --- the resultset, read ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: ruby
          | ##tool:     simplecov

@@ -169,17 +169,18 @@ $(grep -c '^==\[ COVERAGE \]' with.txt)"
     echo "          COVERAGE sections, --no-coverage: \
 $(grep -c '^==\[ COVERAGE \]' without.txt)"
     echo
-    echo "One flag, two spellings; and where the book knows nothing of"
-    echo "coverage, no section pretends there was anything to show."
+    echo "One flag, two spellings; and where no record stands, no"
+    echo "section pretends there was anything to show."
     echo "SUCCESS: the default is the useful one, and absence is spoken."
     ;;
 
 coverage)
     build_fixture
-    #  A HARVESTED RUN: the book's entry and the binary record, written
-    #  as a real coverage run would leave them.
+    #  A HARVESTED RUN: the binary record, where a coverage run leaves
+    #  it -- keyed by the source file WHOLE, 'demo.py--basic.cover'.
+    #  The book holds nothing of it (coverage D-38).
     ROOT="$ROOT" python3 - <<'PYEOF_INNER'
-import json, os, sys
+import os, sys
 sys.path.insert(0, os.environ["ROOT"])
 from vut.engine.coverage.database.api import (CoverageRecord, FileCoverage,
                                               ranges_of, pack_record)
@@ -189,12 +190,7 @@ record = CoverageRecord("python", "coverage", "coverage.py-json",
                         file_db={"demo.py": FileCoverage(
                             "demo.py", ranges_of([1, 2, 3, 4, 5]),
                             ranges_of([1, 2]))})
-open("TMP/store/demo--basic.cover", "wb").write(pack_record(record))
-book = {"demo": {"configuration": {}, "choices": {"basic": {
-    "operations": {"Run": {"verdict": False, "report": "ok",
-                           "coverage": "ok"}}}}}}
-os.makedirs("GOOD", exist_ok=True)
-json.dump(book, open("GOOD/result_db.json", "w"))
+open("TMP/store/demo.py--basic.cover", "wb").write(pack_record(record))
 PYEOF_INNER
     echo "STIMULUS  hwut.report.details demo.py basic          (a HARVESTED run)"
     run_report demo.py basic

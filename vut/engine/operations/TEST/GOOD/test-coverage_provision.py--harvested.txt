@@ -1,7 +1,9 @@
-INSPECT: verdict False report nominal-file-not-found
-         coverage on the entry: ok
+INSPECT: the call, plain:     python3 -u demo.py
+         under the tool:      python3 -u demo.py --witness
+INSPECT: the run came to: ok
+         book entry: <none>
          record: TMP/store/demo.py.cover  (binary; shown converted)
-           | ##VUT-COVERAGE 2
+           | ##VUT-COVERAGE 4
            | ##run:      0.0
            | ##language: python
            | ##tool:     witness
@@ -9,10 +11,10 @@ INSPECT: verdict False report nominal-file-not-found
            | ##counts:   no
            | SF:demo.py
            | EX:1+6
-  OK  : the step concluded OK, and the book entry says so
+  OK  : the step concluded OK
   OK  : the record lives in the store's own ground, never in OUT/
   OK  : the record is SEATED with the run id handed in
   OK  : and carries what the reader read
-  OK  : the subject is what the application printed -- the wrapper added nothing to what is judged
-SUCCESS: the run's closing act harvests, seats, stores, and the book says 'ok'.
+  OK  : the book holds no entry of the run: nothing was judged
+SUCCESS: one coverage run harvests, seats and stores; the record is the whole product.
 <hwut-end>

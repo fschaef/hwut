@@ -1,0 +1,21 @@
+
+--- the text spelling ---
+##VUT-COVERAGE 3
+##source:   engine/compare/core.py
+##language: python
+##tool:     coverage
+##format:   coverage.py-json
+##id-width: 2
+EX:3+12,5+5
+BR:5*2,0*3,4*2
+TG:4*clk*1,0*rst*1
+CV@02:3+4
+CV@0G:8+7,5+5
+BR@02:1*1,1*5
+BR@0G:1*2,1*2
+BR@0K:3*3
+TG@0G:1*1
+TG@0K:2*1
+  OK  : printed
+SUCCESS: the page the format is read from.
+<hwut-end>

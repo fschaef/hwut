@@ -1,0 +1,114 @@
+$ hwut.cov.conv.to_json <dir>/out
+    [102 line(s) written to stdout]
+    [status 0]
+    {
+      {
+        "format": "hwut-coverage-json",
+        "root": "<dir>",
+        "sources": [
+          {
+            "lines": {
+              "covered": [
+                [
+                  1,
+                  6
+                ]
+              ],
+              "executable": [
+                [
+                  1,
+                  10
+                ]
+              ],
+              "uncovered": [
+                [
+                  6,
+                  10
+                ]
+              ]
+            },
+            "measures": {
+              "branch": [
+                [
+                  3,
+                  3,
+                  2
+                ],
+                [
+                  8,
+                  0,
+                  2
+                ]
+              ],
+              "function": [
+                [
+                  1,
+                  "main",
+                  1,
+                  1
+                ],
+                [
+                  6,
+                  "f",
+                  1,
+                  1
+                ]
+              ],
+              "toggle": [
+                [
+                  2,
+                  "clk",
+                  1,
+                  1
+                ]
+              ]
+            },
+            "source": "src/a.c",
+            "who_ran": [
+              {
+                "ranges": [
+                  [
+                    3,
+                    5
+                  ]
+                ],
+                "runs": [
+                  "t0"
+                ]
+              },
+              {
+                "ranges": [
+                  [
+                    5,
+                    6
+                  ]
+                ],
+                "runs": [
+                  "t2"
+                ]
+              },
+              {
+                "ranges": [
+                  [
+                    1,
+                    3
+                  ]
+                ],
+                "runs": [
+                  "t0",
+                  "t1"
+                ]
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    }
+  OK  : the document names its format and version
+  OK  : the three range lists
+  OK  : a decision point in its own shape, the mask OR'd over the runs
+  OK  : a named point in its own shape
+  OK  : who ran what: the group of t0 and t1 ran lines 1 and 2
+SUCCESS: everything the directory says, as JSON.
+<hwut-end>

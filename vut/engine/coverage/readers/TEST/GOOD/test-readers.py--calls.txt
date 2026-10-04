@@ -1,12 +1,14 @@
 
---- coverage.py wraps the application ---
-         coverage run --data-file=<work>/OUT/COVERAGE/.coverage --include=*.py --omit=TEST/* -- python3 -u test-parse.py basic
+--- coverage.py runs the application: its call scheme ---
+         coverage run --branch --data-file=OUT/COVERAGE/.coverage --include={include} --omit={omit} -- {test} {choice}
+         coverage run --branch --data-file=OUT/COVERAGE/.coverage --include=*.py --omit=TEST/* -- test-parse.py basic
+         coverage run --branch --data-file=OUT/COVERAGE/.coverage -- test-parse.py
 
 --- and names a SECOND call: what the run left is a database ---
          coverage json --data-file=<work>/OUT/COVERAGE/.coverage -o <work>/OUT/COVERAGE/coverage.json -q
 
---- gcov wraps nothing -- it instruments at BUILD time ---
-         ['./prog']
+--- gcov is not on the command line -- it instruments at BUILD time ---
+         None
 
 --- and names no call where the build left no '.gcda' ---
          None
@@ -14,10 +16,11 @@
 --- the tracefile tools name none either: it is text already ---
          None
   OK  : the application runs UNDER the tool
-  OK  : '--' keeps an application flag the tool also knows from being eaten by the tool
+  OK  : the tool is handed the SCRIPT, no interpreter before it; '--' keeps an application flag the tool also knows from being eaten by the tool
+  OK  : a word whose field is empty is dropped whole: no choice, no '--include=', no '--omit='
   OK  : the gather set goes to the GATHERER, which is the cheapest place to gather less
   OK  : the second call is NAMED here and MADE by the execute stage: a reader spawns nothing
-  OK  : gcov leaves the command line alone
+  OK  : gcov names no command line: the application is called as it stands
   OK  : and names no call over a build that was not instrumented, rather than running gcov over nothing
   OK  : a tracefile needs no second call
 SUCCESS: a reader names its calls; the execute stage makes them.

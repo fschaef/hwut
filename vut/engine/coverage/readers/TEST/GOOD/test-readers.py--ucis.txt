@@ -1,6 +1,6 @@
 
 --- the document, read ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: verilog
          | ##tool:     ucis
@@ -9,7 +9,7 @@
          | SF:blinker.v
          | EX:11,5+2,3+2
          | CV:11,5+2,3
-         | BR:12*2/2,5*2/2,3*2/2
+         | BR:12*3/2,5*3/2,3*3/2
          | TG:1*toggle_blinker_v.bit0*1/1
          | SF:tb.v
          | EX:3,3,1

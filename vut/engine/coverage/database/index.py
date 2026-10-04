@@ -80,7 +80,7 @@ from ...bookkeeper.api import (GroupTable,       # noqa: F401
                                       EMPTY_GROUP, GroupFault)
 
 
-RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.run.cov convert' shows it
+RECORD_SUFFIX = ".cover"        # binary (D-20); 'hwut.cov.conv.to_humans' shows it
 
 
 @dataclass(frozen=True, order=True)
@@ -406,7 +406,8 @@ def rebased(record, directory):
         fresh = os.path.normpath(os.path.join(directory, path))
         fresh = fresh.replace(os.sep, "/")
         file_db[fresh] = FileCoverage(fresh, entry.executable,
-                                      entry.covered, entry.counts)
+                                      entry.covered, entry.counts,
+                                      entry.measure_db)
     return CoverageRecord(language=record.language, tool=record.tool,
                           source=record.source, counts_f=record.counts_f,
                           file_db=file_db, version=record.version,

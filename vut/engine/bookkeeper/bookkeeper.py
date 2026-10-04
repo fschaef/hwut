@@ -99,8 +99,11 @@ GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
 #  was a second, poorer copy, empty wherever a nominal arrived by a
 #  commit. A book that still carries such a column reads unchanged:
 #  an unknown column is ignored.
+#  NO COVERAGE TOKEN (B-27): a coverage run books nothing (coverage
+#  D-38); its record is its whole product. An older book's 'coverage'
+#  column is ignored like any unknown one.
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report",
-                  "coverage", "stderr", "stain",
+                  "stderr", "stain",
                   "test_id", "choice_id")
 
 NO_CHOICE_KEY       = "<none>"
@@ -197,7 +200,6 @@ def _rows_of_model(content):
                    "choice": "" if key == NO_CHOICE_KEY else key,
                    "verdict":        _verdict_text(book.get("verdict")),
                    "report":         book.get("report") or "",
-                   "coverage":       book.get("coverage") or "",
                    "stderr":         book.get("stderr") or "",
                    "stain":          stain_text(book.get("stain")),
                    #  THE REGISTER'S COLUMNS (B-13): the id of the
@@ -237,8 +239,7 @@ def _model_of_rows(row_iterable):
         if row.get("verdict"):
             book["verdict"] = E_TestVerdict.of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
-        for name in ("coverage", "stderr",
-                     "test_id", "choice_id"):
+        for name in ("stderr", "test_id", "choice_id"):
             if row.get(name): book[name] = row[name]
         stain = stain_of_text(row.get("stain") or "")
         if stain is not None: book["stain"] = stain
@@ -272,7 +273,6 @@ def _model_of_legacy(content):
             if isinstance(run, dict) and "verdict" in run:
                 out["verdict"] = _verdict_of_legacy(run["verdict"])
                 out["report"]  = run.get("report", "")
-                if "coverage" in run: out["coverage"] = run["coverage"]
     return model
 
 
@@ -1140,17 +1140,17 @@ class Bookkeeper:
                     pass
 
     # -- recording ----------------------------------------------------
-    def record(self, result, configuration, goal, choice_name=None,
-               coverage=None):
+    def record(self, result, configuration, goal, choice_name=None):
         """RETURN: what '_record_unlocked' returns -- the same act, under
         the directory's lock (B-9).
         """
         with self._act():
             return self._record_unlocked(
-                       result=result, configuration=configuration, goal=goal, choice_name=choice_name, coverage=coverage)
+                       result=result, configuration=configuration,
+                       goal=goal, choice_name=choice_name)
 
-    def _record_unlocked(self, result, configuration, goal, choice_name=None,
-               coverage=None):
+    def _record_unlocked(self, result, configuration, goal,
+                         choice_name=None):
         """
         RETURN: dict, the entry as written -- DECISIONS ONLY (E-20).
                 What the run merely observed -- its duration, its
@@ -1158,10 +1158,6 @@ class Bookkeeper:
                 the LOCAL observation database instead (E-22), which
                 this method also does, so no caller has to remember
                 either.
-
-        'coverage' is the coverage step's token ('E_CoverageResult'),
-        written as 'coverage' on the entry; None where none was asked,
-        and then the key is absent -- absence is data.
 
         DERIVED, not handed in: the verdict and the report token from
         the result; both halves of freeing from the choice's
@@ -1200,8 +1196,6 @@ class Bookkeeper:
         #  (E-22), not here: a run can make it again. The book keeps the
         #  decisions.
         self._note_observation(result, operation, choice_name, records)
-        if coverage is not None:
-            entry["coverage"] = str(coverage)
 
         content    = self.book()
         test_book  = content.setdefault(result.name, {})
@@ -1213,7 +1207,6 @@ class Bookkeeper:
         #  of a decision.
         choice_book["verdict"] = entry["verdict"]
         choice_book["report"]  = entry["report"]
-        if "coverage" in entry: choice_book["coverage"] = entry["coverage"]
         self._write_book(content)
         return entry
 
@@ -1656,14 +1649,13 @@ class Bookkeeper:
     def result(self, test, choice):
         """
         RETURN: dict, the choice's decision as last recorded --
-                'verdict', 'report', and 'coverage' where it stands.
+                'verdict' and 'report'.
                 None, no such choice was ever recorded.
         """
         key   = NO_CHOICE_KEY if choice is None else choice
         book  = self.book().get(test, {}).get("choices", {}).get(key)
         if book is None or "verdict" not in book: return None
-        return {name: book[name] for name in
-                ("verdict", "report", "coverage")
+        return {name: book[name] for name in ("verdict", "report")
                 if name in book}
 
 

@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 PURPOSE: THE BINARY SPELLING of the coverage record -- the ONE form on
          disk (RATIONALE D-20). The text spelling ('record.py') is the
-         presentation, made on demand by 'hwut.run.cov convert'.
+         presentation, made on demand by 'hwut.cov.conv.to_humans'.
 
 DESCRIPTION
        ONE RECORD, TWO CODECS. 'pack_record' and 'unpack_record' here,
@@ -22,6 +22,9 @@ DESCRIPTION
        nothing where it is not met. A stream is packed and unpacked in
        ONE 'struct' call, which is what makes this spelling twenty
        times faster to read than the text and no larger than a varint.
+
+       A DECISION POINT is 'delta, total' and then its MASK, ceil(total /
+       8) little-endian bytes spliced into the stream (D-43).
 
        THE LAYOUT (FORMAT.txt section 8 is the normative statement):
 
@@ -55,7 +58,7 @@ from ...bookkeeper.api import TestRunId
 
 
 MAGIC          = b"VUTC"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 NO_CHOICE      = 0xFFFFFFFF
 
 
@@ -65,7 +68,7 @@ _Writer = Writer
 _Reader = Reader
 
 
-def _numbers_of_ranges(range_tuple):
+def numbers_of_ranges(range_tuple):
     """RETURN: list of int, 'd, L' per range (FORMAT.txt 4.2), the
     delta from the previous range's end."""
     out, previous_end = [], 0
@@ -75,7 +78,7 @@ def _numbers_of_ranges(range_tuple):
     return out
 
 
-def _ranges_of_numbers(number_list):
+def ranges_of_numbers(number_list):
     """RETURN: tuple of (begin, end). Raises RecordFault where a delta
     does not advance or a length covers no line."""
     if len(number_list) % 2:
@@ -127,8 +130,8 @@ def _pack_plain(record):
     for path in sorted(record.file_db):
         entry = record.file_db[path]
         w.string(path)
-        w.stream(_numbers_of_ranges(entry.executable))
-        w.stream(_numbers_of_ranges(entry.covered))
+        w.stream(numbers_of_ranges(entry.executable))
+        w.stream(numbers_of_ranges(entry.covered))
         if record.counts_f:
             w.stream(entry.counts if entry.counts is not None else ())
         measure_db = entry.measure_db or {}
@@ -140,32 +143,111 @@ def _pack_plain(record):
     return zlib.compress(w.bytes(), 6)
 
 
-def _pack_points(w, measure, entry):
-    """RETURN: None. A measure's points as one stream: named points
-    carry the name as a 'str' inside the stream, via the escape."""
-    previous  = 0
-    named_f   = _named_f(measure)
-    byte_list = []
-    for point in sorted(entry):
-        if named_f:
-            line, name, covered, total = point
-        else:
-            line, covered, total = point
-        byte_list.append(("n", line - previous)); previous = line
-        if named_f: byte_list.append(("s", name))
-        byte_list.append(("n", covered)); byte_list.append(("n", total))
-    #  One stream: names are spliced as 'str' between the numbers. A
-    #  reader knows from the measure whether a name stands there.
+def splice_bytes(piece_list):
+    """
+    RETURN: bytes, the pieces spliced into ONE stream's bytes. A piece is
+            ('n', int)           a number, escaped above 254
+            ('s', str)           a name: u16 length, UTF-8
+            ('m', (mask, total)) a mask: ceil(total / 8) little-endian
+                                 bytes
+
+    A reader knows from its own grammar which kind stands where
+    ('SpliceReader'). THE ONE PLACE the point streams of the per-case
+    record and of the gathered file are spelt.
+    """
     out = []
-    for kind, value in byte_list:
+    for kind, value in piece_list:
         if kind == "n":
             if value < ESCAPE: out.append(value)
             else: out.append(ESCAPE); out += struct.pack("<I", value)
-        else:
+        elif kind == "s":
             data = value.encode("utf-8")
             out += struct.pack("<H", len(data)); out += data
+        else:
+            mask, total = value
+            out += mask.to_bytes((total + 7) // 8, "little")
+    return bytes(out)
+
+
+class SpliceReader:
+    """The reader of 'splice_bytes': numbers, names and masks in the
+    order the caller's grammar says."""
+
+    def __init__(self, byte_seq):
+        """RETURN: SpliceReader at the start of 'byte_seq'."""
+        self.byte_seq = byte_seq
+        self.n        = len(byte_seq)
+        self.at       = 0
+
+    def more(self):
+        """RETURN: True, bytes remain."""
+        return self.at < self.n
+
+    def number(self):
+        """RETURN: int. Raises RecordFault where the stream ends mid-point
+        or an escaped number is cut short."""
+        if self.at >= self.n: raise RecordFault("a point stream ends mid-point")
+        b = self.byte_seq[self.at]; self.at += 1
+        if b != ESCAPE: return b
+        if self.at + 4 > self.n:
+            raise RecordFault("an escaped number is cut short")
+        value = struct.unpack_from("<I", self.byte_seq, self.at)[0]
+        self.at += 4
+        return value
+
+    def string(self):
+        """RETURN: str. Raises RecordFault where the name is cut short."""
+        if self.at + 2 > self.n: raise RecordFault("a point name is cut short")
+        length = struct.unpack_from("<H", self.byte_seq, self.at)[0]
+        self.at += 2
+        if self.at + length > self.n:
+            raise RecordFault("a point name is cut short")
+        value = self.byte_seq[self.at:self.at + length].decode("utf-8")
+        self.at += length
+        return value
+
+    def mask(self, total):
+        """RETURN: int, the mask of a point of 'total' items. Raises
+        RecordFault where it is cut short or names an item the point
+        does not have."""
+        size = (total + 7) // 8
+        if self.at + size > self.n: raise RecordFault("a mask is cut short")
+        value = int.from_bytes(self.byte_seq[self.at:self.at + size],
+                               "little")
+        self.at += size
+        if value >> total:
+            raise RecordFault("a mask names an item of a decision that "
+                              "has %i" % total)
+        return value
+
+
+def _pack_points(w, measure, entry):
+    """RETURN: None. A measure's points as one stream: named points
+    carry the name as a 'str' inside the stream, via the escape; a
+    decision point carries its MASK as ceil(total / 8) little-endian
+    bytes after its total."""
+    previous   = 0
+    named_f    = _named_f(measure)
+    piece_list = []
+    #  A decision point's PLACE among those of its line is its identity
+    #  (measure.py), so the order of the entry is kept: the sort is by
+    #  line alone, and stable.
+    for point in (sorted(entry) if named_f
+                  else sorted(entry, key=lambda point: point[0])):
+        if named_f:
+            line, name, covered, total = point
+        else:
+            line, mask, total = point
+        piece_list.append(("n", line - previous)); previous = line
+        if named_f:
+            piece_list.append(("s", name))
+            piece_list.append(("n", covered)); piece_list.append(("n", total))
+        else:
+            piece_list.append(("n", total))
+            piece_list.append(("m", (mask, total)))
+    out = splice_bytes(piece_list)
     w.u32(len(out))
-    w.part_list.append(bytes(out))
+    w.part_list.append(out)
 
 
 def _named_f(measure):
@@ -214,8 +296,8 @@ def _unpack_plain(plain):
     file_db = {}
     for _ in range(r.u32()):
         path       = r.string()
-        executable = _ranges_of_numbers(r.stream())
-        covered    = _ranges_of_numbers(r.stream())
+        executable = ranges_of_numbers(r.stream())
+        covered    = ranges_of_numbers(r.stream())
         counts     = None
         if counts_f:
             counts = tuple(r.stream())
@@ -244,34 +326,17 @@ def _unpack_plain(plain):
 def _unpack_points(r, measure):
     """RETURN: tuple of points, the measure's own shape."""
     n        = r.u32()
-    byte_seq = r.raw(n)
+    splice   = SpliceReader(r.raw(n))
     named_f  = _named_f(measure)
-    at, previous, out = 0, 0, []
-
-    def number():
-        nonlocal at
-        if at >= n: raise RecordFault("a point stream ends mid-point")
-        b = byte_seq[at]; at += 1
-        if b != ESCAPE: return b
-        if at + 4 > n: raise RecordFault("an escaped number is cut short")
-        value = struct.unpack_from("<I", byte_seq, at)[0]; at += 4
-        return value
-
-    def string():
-        nonlocal at
-        if at + 2 > n: raise RecordFault("a point name is cut short")
-        length = struct.unpack_from("<H", byte_seq, at)[0]; at += 2
-        if at + length > n: raise RecordFault("a point name is cut short")
-        value = byte_seq[at:at + length].decode("utf-8"); at += length
-        return value
-
-    while at < n:
-        line = previous + number(); previous = line
+    previous, out = 0, []
+    while splice.more():
+        line = previous + splice.number(); previous = line
         if named_f:
-            name = string()
-            covered, total = number(), number()
+            name = splice.string()
+            covered, total = splice.number(), splice.number()
             out.append((line, name, covered, total))
         else:
-            covered, total = number(), number()
-            out.append((line, covered, total))
+            total = splice.number()
+            if total < 1: raise RecordFault("a decision with nothing to take")
+            out.append((line, splice.mask(total), total))
     return tuple(out)

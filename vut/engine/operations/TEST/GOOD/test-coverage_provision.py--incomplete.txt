@@ -1,10 +1,16 @@
-INSPECT: verdict False report test-app-stalled
-         coverage on the entry: run-incomplete
+INSPECT: the call, plain:     python3 -u demo.py
+         under the tool:      python3 -u demo.py --witness
+INSPECT: the run came to: run-incomplete
+         book entry: <none>
          record: <none>
-  OK  : the run did not end by itself
+INSPECT: the call, plain:     python3 -u demo.py
+         under the tool:      python3 -u demo.py --witness
+INSPECT: the run came to: run-incomplete
+         book entry: <none>
+         record: <none>
   OK  : the tool DID leave an artefact -- lines were touched
-  OK  : and it is NOT harvested: a killed process testifies to nothing, so the lines it touched are a claim of nothing
+  OK  : a killed run is NOT harvested: it testifies to nothing, so the lines it touched are a claim of nothing
   OK  : no record is written
-  OK  : the book says why
+  OK  : a run that ends by itself WITHOUT '<hwut-end>' did not testify either -- no nominal is consulted for that
 SUCCESS: coverage rides on testimony; no testimony, no coverage.
 <hwut-end>

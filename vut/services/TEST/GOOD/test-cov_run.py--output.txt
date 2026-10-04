@@ -1,0 +1,84 @@
+$ hwut.cov.run -o <out> --silent
+    [status 1]
+    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+      -- suite/TEST/py.py.cover
+      | ##VUT-COVERAGE 3
+      | ##source:   suite/TEST/py.py
+      | ##language: python
+      | ##tool:     witness
+      | ##format:   witness-json
+      | ##id-width: 2
+      | EX:1+8
+      | CV@00:1+2
+      | CV@01:4+2
+      | CV@10:3
+      -- test_run_group_id_db.csv
+      | # This file defines groups of test run ids: a group is a set of
+      | # test runs that executed some range of source together.
+      | # A group id and a test run id ('test_run_id_db.csv') never
+      | # overlap: an identifier stands in exactly one of the two files.
+      | test_run_group_id;test_run_ids
+      | 10;00,01
+      -- test_run_id_db.csv
+      | directory;test;choice;test_run_id
+      | suite/TEST;test-py.py;a;00
+      | ;;b;01
+    per-case records: none
+$ hwut.cov.run test-py.py a -o <out> --silent
+    [status 0]
+    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+      -- suite/TEST/py.py.cover
+      | ##VUT-COVERAGE 3
+      | ##source:   suite/TEST/py.py
+      | ##language: python
+      | ##tool:     witness
+      | ##format:   witness-json
+      | ##id-width: 2
+      | EX:1+8
+      | CV@00:1+3
+      -- test_run_group_id_db.csv
+      | # This file defines groups of test run ids: a group is a set of
+      | # test runs that executed some range of source together.
+      | # A group id and a test run id ('test_run_id_db.csv') never
+      | # overlap: an identifier stands in exactly one of the two files.
+      | test_run_group_id;test_run_ids
+      -- test_run_id_db.csv
+      | directory;test;choice;test_run_id
+      | suite/TEST;test-py.py;a;00
+$ hwut.cov.run -o <root>/mine --silent
+    | REFUSED: '<root>/mine' holds files and no 'hwut-coverage.marker': not emptied. Name an empty directory, or one a coverage run made
+    | usage: hwut.cov.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+    |                     [--glob <target>]... [--exclude <target>]...
+    |                     [--dir <glob>]... [--exclude-dir <glob>]...
+    |                     [--wishlist <file>]... [-l|--label <expr>]
+    |                     [--language=<name>]... [--faster-than=<sec>]
+    |                     [<file-glob> [choice-glob]...] [--output=<path>]
+    |                     [--dont-ask] [--jobs=<n>] [--variant=<a,b>]
+    |                     [-v|--verbose|--plain|--quiet|--silent]
+    |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
+    |                     [--show-details] [--no-failure-summary] [--brief]
+    |                     [--log <file>] [--directory=<path>]
+    [status 2]
+$ hwut.cov.run --silent
+    | REFUSED: no output directory: state '-o <directory>', or '--dont-ask' for './hwut.coverage/'
+    | usage: hwut.cov.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+    |                     [--glob <target>]... [--exclude <target>]...
+    |                     [--dir <glob>]... [--exclude-dir <glob>]...
+    |                     [--wishlist <file>]... [-l|--label <expr>]
+    |                     [--language=<name>]... [--faster-than=<sec>]
+    |                     [<file-glob> [choice-glob]...] [--output=<path>]
+    |                     [--dont-ask] [--jobs=<n>] [--variant=<a,b>]
+    |                     [-v|--verbose|--plain|--quiet|--silent]
+    |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
+    |                     [--show-details] [--no-failure-summary] [--brief]
+    |                     [--log <file>] [--directory=<path>]
+    [status 2]
+  OK  : the two tables, one coverage file per source file, and the marker
+  OK  : every test run that left a record has its id
+  OK  : a range one run executed carries that run's id; the range both executed carries a GROUP id, and the group names both
+  OK  : no per-case record is left behind
+  OK  : the output directory holds exactly the last run: emptied at the start, the narrowed run alone in it
+  OK  : a directory holding files and no marker is REFUSED, and left as it stands
+  OK  : no '-o' and nobody to ask: REFUSED
+SUCCESS: coverage is gathered into one place that holds one run, every covered range with who executed it.
+<hwut-end>

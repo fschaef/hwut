@@ -45,8 +45,29 @@ DESCRIPTION
        NO HIT COUNTS BY DEFAULT. gcov reports them and this reader reads
        them, but a record carries them only where they were ASKED for
        (D-5). '<n>*' is read as <n>: the star says some block on the line
-       did not run, which is a BRANCH fact, and branch coverage is a
-       different measurement (todo).
+       did not run, which the branch lines below it say in detail.
+
+       THE BRANCHES (RATIONALE D-43). Under '-b' gcov writes, after a
+       line, one annotation per ARM leaving it:
+
+           branch  0 taken 0 (fallthrough)
+           branch  1 taken 5
+           branch  2 never executed
+
+       The arms of a line, IN THE ORDER gcov lists them, are the items of
+       one 'branch' point: bit i of its mask is set where arm i was
+       taken. '-c' is asked for, so that 'taken' is a COUNT; without it
+       gcov prints a percentage, which this reader also reads -- a
+       percentage above zero is taken, and a '0%' is read as not taken,
+       which for an arm taken once in a million runs is the cautious
+       error. 'call' and 'function' annotations are a different
+       measurement and are skipped; so are the 'branch' annotations of a
+       line gcov did not admit as executable.
+
+       Two '.gcov' files naming one source (a header compiled into two
+       objects) are UNIONED arm by arm when the line has the same number
+       of arms in both; where it has not, the line carries NO branch
+       point rather than a guess at which arm is which.
 ______________________________________________________________________________
 """
 import io
@@ -82,15 +103,26 @@ class GcovFormat(CCoverageFormat):
         for path in path_list:
             with io.open(path, "r", encoding="utf-8",
                          errors="replace") as handle:
-                source, line_db = read_annotated(handle.read())
+                source, line_db, branch_db = read_annotated(handle.read())
             if source is None: continue
-            standing = entry_db.setdefault(source, {})
+            standing = entry_db.setdefault(source, ({}, {}))
+            line_standing, branch_standing = standing
             for number, count in line_db.items():
                 if count is None:
-                    standing.setdefault(number, None)
+                    line_standing.setdefault(number, None)
                 else:
-                    was = standing.get(number)
-                    standing[number] = count if was is None else was + count
+                    was = line_standing.get(number)
+                    line_standing[number] = count if was is None \
+                                            else was + count
+            for number, taken_list in branch_db.items():
+                held = branch_standing.get(number, taken_list)
+                if held is not None and len(held) != len(taken_list):
+                    branch_standing[number] = None       # conflict
+                elif held is None:
+                    pass
+                else:
+                    branch_standing[number] = [a or b for a, b
+                                               in zip(held, taken_list)]
 
         return record_of(self, "c",
                          entry_iterable(entry_db, source_root, config,
@@ -127,7 +159,7 @@ class GcovFramework(CCoverageFramework):
 
     def report_argv(self, config, work_dir):
         """
-        RETURN: list[str], 'gcov -b -p <every .gcda the run wrote>'.
+        RETURN: list[str], 'gcov -b -c -p <every .gcda the run wrote>'.
                 None, where the run wrote none -- the build was not
                 instrumented, and gcov over nothing would only add a
                 failure with a misleading name.
@@ -137,7 +169,7 @@ class GcovFramework(CCoverageFramework):
         """
         path_list = gcda_path_tuple(work_dir)
         if not path_list: return None
-        return ["gcov", "-b", "-p"] + list(path_list)
+        return ["gcov", "-b", "-c", "-p"] + list(path_list)
 
 
 def gcda_path_tuple(work_dir):
@@ -179,20 +211,32 @@ def read_annotated(text):
             [1] dict, line number -> hit count; None as the count where
                       the line is EXECUTABLE but was never executed.
                       Non-executable lines do not appear at all.
+            [2] dict, line number -> list of bool, per arm leaving the
+                      line in the order gcov lists them, whether it was
+                      taken. Only lines of [1] appear, and only those
+                      with at least one arm.
 
-    Lines that are not '<count>:<number>:<text>' -- gcov's 'function',
-    'branch' and 'call' annotations under '-b' -- are skipped: they are a
-    different measurement.
+    'function' and 'call' annotations are skipped: they are a different
+    measurement.
     """
-    source  = None
-    line_db = {}
+    source    = None
+    line_db   = {}
+    branch_db = {}
+    current   = None
     for raw in text.splitlines():
+        if raw.startswith("branch"):
+            if current is not None:
+                taken_f = _arm_taken_f(raw)
+                if taken_f is not None:
+                    branch_db.setdefault(current, []).append(taken_f)
+            continue
         part_list = raw.split(":", 2)
         if len(part_list) < 3: continue
         count_text = part_list[0].strip()
         try:    number = int(part_list[1].strip())
-        except ValueError: continue          # 'function'/'branch'/'call'
+        except ValueError: continue          # 'function'/'call'
 
+        current = None
         if number == 0:
             body = part_list[2].strip()
             if body.startswith("Source:"): source = body[7:].strip()
@@ -200,28 +244,47 @@ def read_annotated(text):
         if count_text == NOT_EXECUTABLE:     continue
         if count_text in NEVER_EXECUTED:
             line_db[number] = None
+            current = number
             continue
-        #  '<n>*': executed, though not every block on the line was. The
-        #  star is a BRANCH fact; the count is the line's.
+        #  '<n>*': executed, though not every block on the line was.
+        #  The star is a BRANCH fact; the count is the line's.
         try:    line_db[number] = int(count_text.rstrip("*"))
         except ValueError: continue
-    return source, line_db
+        current = number
+    return source, line_db, branch_db
+
+
+def _arm_taken_f(raw):
+    """
+    RETURN: True,  the 'branch' annotation says the arm was taken --
+                   a count or a percentage above zero.
+            False, it says 'never executed', or a count or percentage
+                   of zero.
+            None,  it is no branch annotation gcov writes.
+    """
+    word_list = raw.split()
+    if len(word_list) < 3 or word_list[0] != "branch": return None
+    if word_list[2] == "never": return False
+    if word_list[2] != "taken" or len(word_list) < 4: return None
+    try:    return float(word_list[3].rstrip("%")) > 0
+    except ValueError: return None
 
 
 def entry_iterable(entry_db, source_root, config, counts_f):
     """
-    YIELD: (path, executable_lines, covered_lines, count_list) per source
-           file inside the gather set, paths relative to the test
-           directory.
+    YIELD: (path, executable_lines, covered_lines, count_list,
+            measure_db) per source file inside the gather set, paths
+           relative to the test directory.
 
     EX is every line gcov admitted as executable -- counted or '#####'
-    alike. CV is those with a count above zero.
+    alike. CV is those with a count above zero. The 'branch' measure
+    holds one point per line that has arms (see the module header).
     """
     from ..database.record import ranges_of
     for raw_path in sorted(entry_db):
         path = relative_path(raw_path, source_root)
         if not wanted(path, config): continue
-        line_db    = entry_db[raw_path]
+        line_db, branch_db = entry_db[raw_path]
         executable = sorted(line_db)
         covered    = [n for n in executable
                       if line_db[n] is not None and line_db[n] > 0]
@@ -230,7 +293,13 @@ def entry_iterable(entry_db, source_root, config, counts_f):
             count_list = [max(line_db[n] for n in range(begin, end)
                               if line_db.get(n) is not None)
                           for begin, end in ranges_of(covered)]
-        yield path, executable, covered, count_list
+        point_tuple = tuple(
+            (n, sum(1 << i for i, taken_f in enumerate(branch_db[n])
+                    if taken_f), len(branch_db[n]))
+            for n in sorted(branch_db)
+            if n in line_db and branch_db[n])
+        yield path, executable, covered, count_list, \
+              {"branch": point_tuple}
 
 
 register(GcovFramework())

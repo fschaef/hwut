@@ -411,21 +411,28 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
         and two measures on it -- 'branch' and 'mcdc'. A measure owns a
         tag, an encoding and the answer to whether it merges; admitting
         a third is one 'register' call.
-        BUILT: 'cobertura' READS branch data ('condition-coverage'), so
-        the branch measure has a real source today.
+        BUILT (2026-10-03, RATIONALE D-43): 'branch' and 'mcdc' carry
+        the SET of items taken, a mask, and merge by OR. Their sources
+        today: gcov ('-b -c'), coverage.py ('--branch'), ucis,
+        verilator. Cobertura and JaCoCo give counts and name no arm:
+        they no longer yield a branch measure.
         BUILT (2026-08-24, RATIONALE D-12): the NAMED-POINT measures
         'toggle'/TG and 'cover'/CP, and 'NamedPointMeasure' beneath
         them. They carry POINT IDENTITY, so they declare 'mergeable =
         True' honestly, and 'verilator' and 'ghdl' both produce them
         from witnessed artifacts. This closes the OWED item that asked
         for 'a mergeable encoding': the encoding EXISTS and is shipped.
-        What it does NOT do is make 'branch' or 'mcdc' mergeable --
-        those keep the anonymous digest they were defined with, and
-        keep refusing.
+        BUILT (2026-10-03, D-43 pass 4): every measure is carried into
+        the output files, and 'function'/FN is registered as a named
+        point of one item.
         OWED:
-          -- gcov's 'branch N taken' lines, and lcov's 'BRDA'. Both are
-             seen and skipped by their readers; both are straightforward
-             once somebody wants them.
+          -- PRODUCERS OF FN: gcov's 'function' lines, coverage.py's
+             'functions' (present in its json), cobertura and JaCoCo
+             methods, lcov 'FN'/'FNDA'. Each read against a real
+             artefact.
+          -- lcov's 'BRDA' (block, branch, taken): seen and skipped by
+             its reader, and now straightforward, since a BRDA names
+             its arm.
           -- MC/DC FROM A REAL TOOL. GCC 14 gained '-fcondition-coverage'
              and 'gcov --conditions'; the machine this was written on
              carries gcc 13, so the artifact was never SEEN. The encoding
@@ -436,12 +443,6 @@ todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
              took both values, MC/DC whether each term alone can flip
              the outcome. They are different questions and deserve
              different tags.
-          -- BRANCH AND MC/DC ON THE NAMED-POINT SHAPE. The mergeable
-             encoding is no longer hypothetical -- 'NamedPointMeasure'
-             is built and in use. Moving 'branch' and 'mcdc' onto it
-             would make them merge too, and costs their record TAGS a
-             format change; nobody has yet wanted an aggregate over
-             branch data, so it waits for somebody who does.
 
 todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
         'services/report.py' renders per source file the

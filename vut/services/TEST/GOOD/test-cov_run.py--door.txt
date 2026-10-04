@@ -1,20 +1,66 @@
 $ hwut.run --coverage --glob test-py*
-    [status 0]
-    the book {
-      test-py.py--a  report ok                       coverage ok
-      test-py.py--b  report ok                       coverage no-data-provided
-      test-hang.py--x report ok                       coverage <absent>
-      test-new.py    report -                        coverage <no entry>
-    }
-    the records {
-      test-py.py--a  ##run:      0.0 | CV:1+3
-      test-py.py--b  <none>
-      test-hang.py--x <none>
-      test-new.py    <none>
-    }
-$ hwut.run.cov --glob nothing-matches*
+    [status 2]
+$ hwut.cov.run --glob test-py* -o <out>
+    | DIR  suite/TEST
+    | START test-py.py  a                                                        ||1
+    | END   :           a ............................................... [REC]  ||0
+    | START :           b                                                        ||1
+    | END   :           b .................................... no data [NO REC]  ||0
+    | 
+    | ==============================================================================
+    | DIRECTORIES                                          1 rec, 1 no rec, <h:m:s>
+    | ------------------------------------------------------------------------------
+    |    suite/TEST . . . . . . . . . . . . . . . . . . . . . .   [PARTIAL]      1/2
+    | 
+    | ==============================================================================
+    | HINTS
+    | ------------------------------------------------------------------------------
+    | TOOL -- no usable data from tool
+    |     suite/TEST
+    |         test-py.py  b   tool left nothing in OUT/COVERAGE
+    | 
+    | HINT: use 'hwut.help' for explanation of subtle issues.
+    | ==============================================================================
+    | 
+    | RESULTS: 1 rec, 1 no rec, 2 skip, <s> [sec], <s> [sec] total
+    | |       rec        |                 skip                 |      no rec      |
+    | COVERAGE DATA: <root>/out -- 1 test run(s), 1 source file(s)
+    [status 1]
+    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+      -- suite/TEST/py.py.cover
+      | ##VUT-COVERAGE 3
+      | ##source:   suite/TEST/py.py
+      | ##language: python
+      | ##tool:     witness
+      | ##format:   witness-json
+      | ##id-width: 2
+      | EX:1+8
+      | CV@00:1+3
+      -- test_run_group_id_db.csv
+      | # This file defines groups of test run ids: a group is a set of
+      | # test runs that executed some range of source together.
+      | # A group id and a test run id ('test_run_id_db.csv') never
+      | # overlap: an identifier stands in exactly one of the two files.
+      | test_run_group_id;test_run_ids
+      -- test_run_id_db.csv
+      | directory;test;choice;test_run_id
+      | suite/TEST;test-py.py;a;00
+$ hwut.cov.run --glob nothing-matches* -o <out>
+    | DIR  suite/TEST
+    | NOTE  the selection is empty: no test case answers the wish
+    | 
+    | ==============================================================================
+    | DIRECTORIES                                          0 rec, 0 no rec, <h:m:s>
+    | ------------------------------------------------------------------------------
+    |    suite/TEST . . . . . . . . . . . . . . . . . . . . . .   [OMITTED]      0/0
+    | ==============================================================================
+    | 
+    | RESULTS: 0 rec, 0 no rec, 4 skip, <s> [sec], <s> [sec] total
+    | |                                    skip                                    |
+    | COVERAGE DATA: <root>/out -- 0 test run(s), 0 source file(s)
     [status 3]
-  OK  : 'hwut.run --coverage' with a wish is the same demand, the wish honoured
+  OK  : 'hwut.run --coverage' is REFUSED: the test run measures no coverage
+  OK  : 'hwut.cov.run' with a wish runs what the wish names, and nothing else
   OK  : a wish that asks for nothing is EMPTY, as hwut.run says
-SUCCESS: one door, one demand, two spellings of the command.
+SUCCESS: one door for coverage, and it is not the test run's.
 <hwut-end>

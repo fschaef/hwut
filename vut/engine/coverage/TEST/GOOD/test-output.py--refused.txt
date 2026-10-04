@@ -1,0 +1,8 @@
+
+--- a decision of two sizes ---
+         two sizes -> OutputRefused: 'src/a.c' cannot be gathered: the point '' of 'branch' at line 3 has 2 items in one run and 3 in another: these are not one point
+         a count   -> OutputRefused: 'src/a.c' cannot be gathered: point 'bus' at line 2 has 4 items and a COUNT of 3 taken: a count names no item, and only a point of one item can be carried
+  OK  : refused: two sizes
+  OK  : refused: a count
+SUCCESS: a measure that cannot name its items is not gathered.
+<hwut-end>

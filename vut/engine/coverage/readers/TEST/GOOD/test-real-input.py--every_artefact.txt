@@ -2,6 +2,7 @@
   OK  : cobertura    kcov-shell.xml               absorbed
   OK  : cobertura    simplecov-export.xml         absorbed
   OK  : gcov         ada-calc.adb.gcov            annotates calc.adb, 4 line(s)
+  OK  : gcov         c-classify.c.gcov            annotates classify.c, 10 line(s)
   OK  : gcov         cobol-calc.c.gcov            annotates calc.c, 93 line(s)
   OK  : gcov         d-calc.d.gcov                annotates calc.d, 4 line(s)
   OK  : gcov         fortran-calc.f90.gcov        annotates calc.f90, 6 line(s)
@@ -14,6 +15,8 @@
   OK  : lcov         node-c8.info                 parsed 2 file(s)
   OK  : lcov         node-typescript.info         parsed 1 file(s)
   OK  : lcov         verilator-export.info        parsed 3 file(s)
+  OK  : python_coverage branches-a1.json             read 1 file(s)
+  OK  : python_coverage branches-a2.json             read 1 file(s)
   OK  : simplecov    .resultset.json              absorbed
   OK  : ucis         coverage.ucis.xml            absorbed
   OK  : verilator    coverage.dat                 absorbed

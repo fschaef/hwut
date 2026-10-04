@@ -14,8 +14,7 @@ vanish into a default.
 THE LANGUAGE TABLE IS THE ROOT CONF'S (exploration R-73). 'language_setup'
 is the resolved 'language-setup' dict of the tree; this module carries
 NO table of its own. The interpreter is the entry's word, else the
-language's own name (R-10); the coverage tools are the entry's list;
-the coverage target is the entry's pattern, '%' the stem (R-74).
+language's own name (R-10).
 ______________________________________________________________________________
 """
 import os
@@ -71,8 +70,7 @@ def naming_of(app):
     return NamingConfig(same_nominal_f=bool(root.same))
 
 
-def test_configuration_of(app, directory, coverage=None,
-                          variant_tuple=(), variant_db=None,
+def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
                           timing_f=False, language_setup=None):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
@@ -89,14 +87,6 @@ def test_configuration_of(app, directory, coverage=None,
     states DIFFERENCES; what it leaves unstated keeps what the author
     wrote.
 
-    'coverage' is a 'CoverageConfig' where coverage is asked (coverage
-    RATIONALE D-19): the reader is ELECTED among the language entry's
-    'coverage' candidates, the build then names the entry's
-    'coverage_target' ('%' expanded) in place of the executable, and
-    the configuration carries a 'CoverageSetup'. A COMPILED test whose
-    language states no 'coverage_target' gets the setup with the note
-    'NO_COVERAGE_TARGET' and builds and runs its executable as ever.
-
     'language_setup' is the tree's resolved 'language-setup' dict
     (R-73); None reads as empty, and every language is then called by
     its own name.
@@ -112,10 +102,7 @@ def test_configuration_of(app, directory, coverage=None,
         from ..exploration.variant import merged_parameters
         root = merged_parameters(variant_tuple, variant_db, root)
 
-    entry = (language_setup or {}).get(app.language)
-    setup = None if coverage is None \
-            else _coverage_setup_of(app, root, coverage, entry)
-    build = _build_of(root, app.source_file, setup, entry)
+    build = _build_of(root, app.source_file)
     #  THE APPLICATION'S CAPS COME FROM ITS RESOLVED ROOT (O-20, O-21):
     #  'app.root' -- the directory's default folded with the header's
     #  root, what every choice inherits before its own word. Never
@@ -125,9 +112,6 @@ def test_configuration_of(app, directory, coverage=None,
     #  where the header names no choice at all.
     caps  = _caps_of(app.root) if app.root is not None \
             else ProcsitterConfig()
-    if setup is not None:
-        from ...operations.coverage_action import uncapped
-        caps = uncapped(caps)          # time is luxury under coverage (D-19)
     interpreter = None
     if build is not None:
         source_kind = E_SourceKind.COMPILED
@@ -151,7 +135,6 @@ def test_configuration_of(app, directory, coverage=None,
         choice_db      = choice_db,
         interpreter    = interpreter,
         build          = build,
-        coverage       = setup,
         interactive    = any(p.interactive for p in
                              app.choice_db.values()),
         execute        = (None if root.execute is None
@@ -161,14 +144,12 @@ def test_configuration_of(app, directory, coverage=None,
                           if timing_f else None))
 
 
-def _build_of(parameters, source_file, setup=None, entry=None):
+def _build_of(parameters, source_file):
     """
     RETURN: BuildConfig from the stated 'build' key, 'None' where none
             stands. The framework word must be known; the executable
-            is the one target -- or, under coverage with the language
-            entry stating a 'coverage_target', THAT is the one target:
-            built by name and run in its place. '%' in either is the
-            source file's stem (R-74).
+            is the one target. '%' in either is the source file's
+            stem (R-74).
     """
     stated = parameters.build
     if stated is None or stated.framework is None: return None
@@ -176,44 +157,7 @@ def _build_of(parameters, source_file, setup=None, entry=None):
     assert framework in _BUILD_SYSTEM_DB, \
            "no build system declared for framework '%s'" % framework
     target = stem_expanded(stated.executable or "app", source_file)
-    if setup is not None and setup.note is None \
-       and entry is not None and entry.coverage_target is not None:
-        target = stem_expanded(entry.coverage_target, source_file)
     return BuildConfig(_BUILD_SYSTEM_DB[framework], [target])
-
-
-def _coverage_setup_of(app, root, coverage, entry):
-    """
-    RETURN: CoverageSetup: the reader elected among the language
-            entry's 'coverage' candidates -- the first this machine has
-            -- the config, and the note 'NO_COVERAGE_TARGET' where the
-            test is COMPILED and its language states no
-            'coverage_target'; else no note.
-
-    Raises CoverageRefused where the test has no language, where no
-    entry stands for it, where the entry's candidate list is empty, or
-    where every candidate is absent here -- each named at the door.
-    """
-    from ...coverage.api import elect, CoverageRefused
-    from ...coverage.api   import framework_of
-    from ...operations.coverage_action import CoverageSetup, E_CoverageResult
-
-    if app.language is None:
-        raise CoverageRefused(
-            "'%s' has no language: coverage needs one to elect a tool. "
-            "State 'language' in its header, or claim its extension in "
-            "'language-setup' of 'hwut-root.conf'." % app.source_file)
-    if entry is None:
-        raise CoverageRefused(
-            "no 'language-setup' entry stands for language '%s' of '%s' "
-            "in 'hwut-root.conf'" % (app.language, app.source_file))
-    reader = framework_of(elect(app.language, entry.coverage))
-    stated = root.build
-    note   = None
-    if stated is not None and stated.framework is not None \
-       and entry.coverage_target is None:
-        note = E_CoverageResult.NO_COVERAGE_TARGET
-    return CoverageSetup(reader=reader, config=coverage, note=note)
 
 
 def _caps_of(parameters, inherited=None):

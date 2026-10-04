@@ -2,7 +2,7 @@
 #
 # @hwut {
 #     title      = "The coverage provision chain"
-#     choices    = ["harvested", "incomplete", "no_target", "not_asked",
+#     choices    = ["harvested", "incomplete", "no_target",
 #                   "nothing_borne"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -13,25 +13,26 @@ ______________________________________________________________________________
 
 THE COVERAGE PROVISION CHAIN.
 
-    UNIT     'coverage_action' inside the session's ceremony, and the
-             adapter's build-side half: the call is WRAPPED by the
-             elected reader, the run's closing act HARVESTS, the record
-             is SEATED with the run id and stored in the store's own
-             ground, and the book entry carries one 'E_CoverageResult'.
+    UNIT     'coverage_action.measured' -- one coverage run -- and
+             'coverage_dispatcher.coverage_configuration_of', which
+             makes the configuration it runs: the call is the elected tool's
+             COMMAND LINE (D-39), the application is executed, a
+             testified run is HARVESTED, the record is SEATED with the
+             run id and stored in the store's own ground. NOTHING IS
+             COMPARED AND NOTHING IS BOOKED (coverage D-38).
 
     CAUSAL CONTRACT
-             coverage asked + artefacts left  ->  '.cover' + 'ok'
-             coverage asked + nothing left    ->  no file  + 'no-data-provided'
-             coverage not asked               ->  no key on the entry
+             artefacts left                   ->  '.cover' + 'ok'
+             nothing left                     ->  no file  + 'no-data-provided'
              the application did not testify  ->  nothing READ,
                                                   'run-incomplete'
              compiled, language names no 'coverage_target' -> 'no-coverage-target',
-                                                  executable built as ever
+                                                  the case is not run
 
     CONSISTENCY CONTRACT
              a record is never written without a run id; an empty
              record is never written for a run that bore nothing; the
-             subjects are judged exactly as without coverage.
+             book holds no entry of a coverage run.
 
     THE WITNESS READER stands in for a tool: it is registered here, in
     this test, and reads an artefact the fixture application writes when
@@ -58,11 +59,14 @@ from   vut.engine.operations.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
                                                    E_SourceKind)
-from   vut.engine.operations.session         import (run_test_held, # noqa E402
-                                                   Request)
+from   vut.engine.operations.session         import store_of  # noqa E402
+from   vut.engine.operations.run.core        import application_argv  # noqa E402
 from   vut.engine.operations.coverage_action import (CoverageSetup, # noqa E402
                                                    E_CoverageResult,
-                                                   uncapped)
+                                                   measured, uncapped)
+from   vut.engine.orchestrator.run.coverage_dispatcher import (  # noqa E402
+                                                   coverage_configuration_of,
+                                                   run_configuration_of)
 from   vut.engine.bookkeeper.api      import Bookkeeper     # noqa E402
 from   vut.engine.bookkeeper.api    import StoreConfig    # noqa E402
 from   vut.engine.bookkeeper.api     import TestRunId      # noqa E402
@@ -86,6 +90,7 @@ if "--witness" in sys.argv:
     with open(os.path.join("OUT", "COVERAGE", "%s"), "w") as fh:
         json.dump({"demo.py": {"executable": [1, 2, 3, 4, 5, 6],
                                "covered":    [1, 2, 3, 4, 5, 6]}}, fh)
+print("<hwut-end>")
 ''' % WITNESS_FILE
 
 
@@ -110,9 +115,7 @@ class WitnessFramework(CCoverageFramework):
     name   = "witness"
     format = WitnessFormat()
 
-    def wrap(self, argv, config, work_dir):
-        """RETURN: list of str, the call with '--witness' appended."""
-        return list(argv) + ["--witness"]
+    call_scheme = "python3 -u {test} --witness {choice}"
 
     def report_argv(self, config, work_dir):
         """RETURN: None: no second call."""
@@ -135,7 +138,7 @@ def _verdict(ok, sentence):
 
 def _place(setup, body=APPLICATION):
     """RETURN: (TestConfiguration, Bookkeeper, str), a ready test whose
-    configuration carries 'setup' as its coverage."""
+    configuration is the coverage run's under 'setup'."""
     directory = tempfile.mkdtemp(prefix="vut_cov_")
     with open(os.path.join(directory, "demo.py"), "w") as fh:
         fh.write(body)
@@ -146,23 +149,31 @@ def _place(setup, body=APPLICATION):
         caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
         interpreter    = ["python3", "-u"],
         store          = StoreConfig(directory=directory),
-        choice_db      = {None: TestChoiceConfiguration()},
-        coverage       = setup)
+        choice_db      = {None: TestChoiceConfiguration()})
+    print("INSPECT: the call, plain:     %s"
+          % " ".join(application_argv(configuration, None)))
+    configuration = run_configuration_of(
+                        coverage_configuration_of(configuration, setup,
+                                                  None),
+                        setup, None)
+    print("         under the tool:      %s"
+          % " ".join(application_argv(configuration, None)))
     return configuration, Bookkeeper(directory), directory
 
 
-def _run(configuration, bookkeeper, run_id):
-    """RETURN: Outcome of the held entry, the run id handed in."""
-    return asyncio.run(run_test_held(configuration, Request(),
-                                     bookkeeper=bookkeeper, run_id=run_id))
+def _run(setup, configuration, bookkeeper, run_id):
+    """RETURN: E_CoverageResult of the one coverage run."""
+    return asyncio.run(measured(setup, configuration,
+                                store_of(configuration, bookkeeper),
+                                None, run_id))
 
 
-def _show(outcome, bookkeeper, directory):
-    """RETURN: None. Prints the entry's coverage token and the record."""
-    print("INSPECT: verdict %-5s report %s" % (outcome.verdict,
-                                                outcome.report.value))
-    print("         coverage on the entry: %s"
-          % outcome.entry.get("coverage", "<absent>"))
+def _show(token, bookkeeper, directory):
+    """RETURN: None. Prints the token, the record, and what the book
+    holds of the run."""
+    print("INSPECT: the run came to: %s" % token)
+    print("         book entry: %s"
+          % (bookkeeper.result("demo.py", None) or "<none>"))
     path = bookkeeper.coverage_path("demo.py", None)
     if not path.is_file():
         print("         record: <none>")
@@ -177,18 +188,17 @@ def _show(outcome, bookkeeper, directory):
 #  ------------------------------------------------------------- choices
 
 def test_harvested():
-    """Coverage asked, the tree bore fruit: a record, seated, stored."""
+    """The tree bore fruit: a record, seated, stored; nothing booked."""
     setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
     configuration, bookkeeper, directory = _place(setup)
-    outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
-    _show(outcome, bookkeeper, directory)
+    token = _run(setup, configuration, bookkeeper, TestRunId(0, 0))
+    _show(token, bookkeeper, directory)
 
     path   = bookkeeper.coverage_path("demo.py", None)
     record = unpack_record(path.read_bytes())
     ok = _check([
-        (outcome.coverage is E_CoverageResult.OK
-         and outcome.entry["coverage"] == "ok",
-         "the step concluded OK, and the book entry says so"),
+        (token is E_CoverageResult.OK,
+         "the step concluded OK"),
         (str(path).endswith(os.path.join("TMP/store", "demo.py.cover")),
          "the record lives in the store's own ground, never in OUT/"),
         (record.run == frozenset([TestRunId(0, 0)]),
@@ -196,97 +206,94 @@ def test_harvested():
         (record.tool == "witness"
          and record.file_db["demo.py"].covered == ((1, 7),),
          "and carries what the reader read"),
-        (bookkeeper.candidate_path("demo.py", None, "stdout")
-                   .read_text(encoding="utf-8").startswith("behaviour one"),
-         "the subject is what the application printed -- the wrapper "
-         "added nothing to what is judged"),
+        (not bookkeeper.result("demo.py", None),
+         "the book holds no entry of the run: nothing was judged"),
     ])
     shutil.rmtree(directory)
-    _verdict(ok, "the run's closing act harvests, seats, stores, "
-                 "and the book says 'ok'.")
+    _verdict(ok, "one coverage run harvests, seats and stores; the "
+                 "record is the whole product.")
 
 
 def test_nothing_borne():
-    """Coverage asked, the application left nothing: no record, and the
-    book says why."""
+    """The application left nothing: no record, and the token says
+    why."""
     setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
     mute  = APPLICATION.replace('"--witness" in sys.argv', "False")
     configuration, bookkeeper, directory = _place(setup, mute)
-    outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
-    _show(outcome, bookkeeper, directory)
+    token = _run(setup, configuration, bookkeeper, TestRunId(0, 0))
+    _show(token, bookkeeper, directory)
 
     ok = _check([
-        (outcome.coverage is E_CoverageResult.NO_DATA_PROVIDED,
+        (token is E_CoverageResult.NO_DATA_PROVIDED,
          "a tree that did not grow makes the harvest trivial: "
          "NO_DATA_PROVIDED"),
         (not bookkeeper.coverage_path("demo.py", None).exists(),
          "and NO record is written -- absent, never empty"),
-        (outcome.entry["coverage"] == "no-data-provided",
-         "the book entry carries the cause beside the absence"),
     ])
     shutil.rmtree(directory)
-    _verdict(ok, "absence and its cause travel together, in the book.")
+    _verdict(ok, "absence is answered with its cause, and stored "
+                 "nowhere.")
 
 
 def test_incomplete():
     """The application did not testify: nothing is read (D-21)."""
     setup = CoverageSetup(reader=WitnessFramework(), config=CoverageConfig())
-    #  Writes its witness file, then stalls without the terminal token
-    #  being the point: it is killed by the (tiny) wall clock.
+    #  Writes its witness file, then stalls: it is killed by the (tiny)
+    #  wall clock, set AFTER the coverage configuration lifted it.
     stalling = APPLICATION + "import time\nsys.stdout.flush()\ntime.sleep(30)\n"
     configuration, bookkeeper, directory = _place(setup, stalling)
-    configuration = replace(configuration,
-                            caps=ProcsitterConfig(max_wall_clock_sec=2.0,
-                                                  max_output_gap_sec=1.0))
-    outcome = _run(configuration, bookkeeper, TestRunId(0, 0))
-    _show(outcome, bookkeeper, directory)
+    tiny = ProcsitterConfig(max_wall_clock_sec=2.0, max_output_gap_sec=1.0)
+    configuration = replace(configuration, caps=tiny,
+                            choice_db={None: TestChoiceConfiguration(
+                                                 caps=tiny)})
+    token = _run(setup, configuration, bookkeeper, TestRunId(0, 0))
+    _show(token, bookkeeper, directory)
     witness_left = os.path.isfile(os.path.join(
         artifact_directory_of(directory), WITNESS_FILE))
 
+    #  A SECOND APPLICATION leaves its witness and ends by itself, but
+    #  never says the terminal token.
+    silent = APPLICATION.replace('print("<hwut-end>")\n', "")
+    configuration, bookkeeper_2, directory_2 = _place(setup, silent)
+    token_2 = _run(setup, configuration, bookkeeper_2, TestRunId(0, 0))
+    _show(token_2, bookkeeper_2, directory_2)
+
     ok = _check([
-        (outcome.report.value in ("test-app-stalled", "test-app-contained"),
-         "the run did not end by itself"),
         (witness_left,
          "the tool DID leave an artefact -- lines were touched"),
-        (outcome.coverage is E_CoverageResult.RUN_INCOMPLETE,
-         "and it is NOT harvested: a killed process testifies to "
-         "nothing, so the lines it touched are a claim of nothing"),
+        (token is E_CoverageResult.RUN_INCOMPLETE,
+         "a killed run is NOT harvested: it testifies to nothing, so "
+         "the lines it touched are a claim of nothing"),
         (not bookkeeper.coverage_path("demo.py", None).exists(),
          "no record is written"),
-        (outcome.entry["coverage"] == "run-incomplete",
-         "the book says why"),
+        (token_2 is E_CoverageResult.RUN_INCOMPLETE
+         and not bookkeeper_2.coverage_path("demo.py", None).exists(),
+         "a run that ends by itself WITHOUT '<hwut-end>' did not "
+         "testify either -- no nominal is consulted for that"),
     ])
     shutil.rmtree(directory)
+    shutil.rmtree(directory_2)
     _verdict(ok, "coverage rides on testimony; no testimony, no coverage.")
 
 
-def test_not_asked():
-    """No coverage asked: the call is not wrapped, the entry has no key."""
-    configuration, bookkeeper, directory = _place(None)
-    outcome = _run(configuration, bookkeeper, None)
-    _show(outcome, bookkeeper, directory)
-
-    ok = _check([
-        (outcome.coverage is None and "coverage" not in outcome.entry,
-         "no key on the entry -- absence is data"),
-        (not os.path.isdir(artifact_directory_of(directory)),
-         "the call was not wrapped: the application left no artefact"),
-    ])
-    shutil.rmtree(directory)
-    _verdict(ok, "a plain run is a plain run.")
-
-
 def test_no_target():
-    """The build-side half: a compiled test whose LANGUAGE declares no
-    'coverage_target' is noted, and builds its executable as ever. The
-    target is the language's word (exploration R-73), '%' its stem
-    (R-74)."""
-    from vut.engine.orchestrator.run.adapter import _build_of
+    """The build-side half: under coverage the LANGUAGE's
+    'coverage_target' is built in place of the executable, '%' its stem
+    (R-73, R-74); a compiled test whose language declares none is not
+    run and is answered 'no-coverage-target'."""
+    from vut.engine.operations.build_action import BuildConfig, E_BuildSystem
     from vut.engine.orchestrator.exploration.configuration_tree import (
-                                     Build, LanguageSetup, TestParameters)
+                                                          LanguageSetup)
 
-    parameters = TestParameters(build=Build(framework="make",
-                                            executable="%.exe"))
+    plain_caps = ProcsitterConfig(max_wall_clock_sec=30.0,
+                                  max_cpu_time_sec=20, max_memory_mb=256)
+    compiled   = TestConfiguration(
+        source_file    = "test-app.c",
+        source_kind    = E_SourceKind.COMPILED,
+        test_directory = "/tmp",
+        caps           = plain_caps,
+        build          = BuildConfig(E_BuildSystem.MAKE, ["test-app.exe"]),
+        choice_db      = {None: TestChoiceConfiguration(caps=plain_caps)})
     declared   = LanguageSetup(coverage=("witness",),
                                coverage_target="%.cov.exe")
     undeclared = LanguageSetup(coverage=("witness",))
@@ -295,42 +302,39 @@ def test_no_target():
     noted      = CoverageSetup(reader=WitnessFramework(),
                                config=CoverageConfig(),
                                note=E_CoverageResult.NO_COVERAGE_TARGET)
-    source     = "test-app.c"
+    made_db = {}
     for label, entry, setup in (
-            ("no coverage asked",         declared,   None),
-            ("asked, target declared",    declared,   plain),
-            ("asked, NO target declared", undeclared, noted)):
-        build = _build_of(parameters, source, setup, entry)
-        print("INSPECT: %-26s -> target %s" % (label, build.target_list))
+            ("target declared",    declared,   plain),
+            ("NO target declared", undeclared, noted)):
+        made = coverage_configuration_of(compiled, setup, entry)
+        made_db[label] = made
+        print("INSPECT: %-19s -> target %s" % (label,
+                                               list(made.build.target_list)))
 
-    plain_caps = ProcsitterConfig(max_wall_clock_sec=30.0,
-                                  max_cpu_time_sec=20, max_memory_mb=256)
-    cov_caps   = uncapped(plain_caps)
+    cov_caps = made_db["target declared"].caps
     print("INSPECT: caps under coverage: wall %s cpu %s memory %s MB"
           % ("lifted" if cov_caps.max_wall_clock_sec > 1e8 else "kept",
              "lifted" if cov_caps.max_cpu_time_sec  > 1e8 else "kept",
              cov_caps.max_memory_mb))
+    choice_caps = made_db["target declared"].choice_db[None].caps
 
     ok = _check([
         (cov_caps.max_wall_clock_sec > 1e8 and cov_caps.max_cpu_time_sec > 1e8
          and cov_caps.max_memory_mb == 256,
          "time is luxury under coverage and is lifted; memory keeps "
          "the machine alive and stands"),
-        (_build_of(parameters, source, None, declared).target_list
-         == ["test-app.exe"],
-         "without coverage the executable is the one target, '%' the "
-         "stem"),
-        (_build_of(parameters, source, plain, declared).target_list
+        (choice_caps.max_wall_clock_sec > 1e8,
+         "for every choice, not only for the application"),
+        (list(made_db["target declared"].build.target_list)
          == ["test-app.cov.exe"],
          "under coverage the language's COVERAGE TARGET is built and "
          "run in its place -- the name is the whole communication"),
-        (_build_of(parameters, source, noted, undeclared).target_list
-         == ["test-app.exe"],
-         "a language declaring none builds the executable as ever; "
-         "the note NO_COVERAGE_TARGET rides on the entry"),
+        (made_db["NO target declared"] is compiled,
+         "a language declaring none leaves the configuration as it "
+         "stands; the note NO_COVERAGE_TARGET answers for the case"),
     ])
-    _verdict(ok, "the demand shapes the build; a missing declaration is "
-                 "noted, not fatal.")
+    _verdict(ok, "the coverage run shapes the build; a missing "
+                 "declaration is answered, not guessed around.")
 
 
 if __name__ == "__main__":
@@ -341,7 +345,6 @@ if __name__ == "__main__":
             "harvested":     test_harvested,
             "nothing_borne": test_nothing_borne,
             "incomplete":    test_incomplete,
-            "not_asked":     test_not_asked,
             "no_target":     test_no_target,
         },
         happy      = "SUCCESS.*",

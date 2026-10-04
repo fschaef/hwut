@@ -1,0 +1,94 @@
+$ hwut.cov.conv.to_html <dir>/out
+    COVERAGE PAGES: <dir>/out/html/index.html -- 1 source file(s)
+    [status 0]
+    index.html {
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="utf-8">
+      <title>Coverage</title>
+      <style>
+          body { font-family: sans-serif; margin: 1.5em; color: #222; }
+          table { border-collapse: collapse; }
+          th, td { padding: 0.2em 0.7em; text-align: left;
+                   border-bottom: 1px solid #ddd; vertical-align: top; }
+          th { background: #f0f0f0; }
+          td.n { text-align: right; }
+          .src td { padding: 0 0.6em; border: none; font-family: monospace;
+                    white-space: pre; }
+          .src td.ln { color: #888; text-align: right; }
+          .src td.runs, .src td.pts { font-family: sans-serif; font-size: 85%;
+                                      color: #555; white-space: normal; }
+          tr.cov td.txt { background: #dff5dd; }
+          tr.unc td.txt { background: #f8d7d7; }
+          tr.cov td.pts { color: #2a6; }
+          p.note { color: #a33; }
+      </style>
+      </head>
+      <body>
+      <h1>Coverage</h1>
+      <p>root: <code><dir></code></p>
+      <table>
+      <tr><th>source</th><th>lines</th><th>%</th><th>branch arms</th><th>%</th><th>functions</th><th>%</th><th>toggle bits</th><th>%</th></tr>
+      <tr><td><a href="src/a.c.html">src/a.c</a></td><td class="n">5/9</td><td class="n">55.6%</td><td class="n">2/4</td><td class="n">50.0%</td><td class="n">2/2</td><td class="n">100.0%</td><td class="n">1/1</td><td class="n">100.0%</td></tr>
+      <tr><th>all</th><th class="n">5/9</th><th class="n">55.6%</th><th class="n">2/4</th><th class="n">50.0%</th><th class="n">2/2</th><th class="n">100.0%</th><th class="n">1/1</th><th class="n">100.0%</th></tr>
+      </table>
+      </body>
+      </html>
+    }
+    src/a.c.html {
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="utf-8">
+      <title>src/a.c</title>
+      <style>
+          body { font-family: sans-serif; margin: 1.5em; color: #222; }
+          table { border-collapse: collapse; }
+          th, td { padding: 0.2em 0.7em; text-align: left;
+                   border-bottom: 1px solid #ddd; vertical-align: top; }
+          th { background: #f0f0f0; }
+          td.n { text-align: right; }
+          .src td { padding: 0 0.6em; border: none; font-family: monospace;
+                    white-space: pre; }
+          .src td.ln { color: #888; text-align: right; }
+          .src td.runs, .src td.pts { font-family: sans-serif; font-size: 85%;
+                                      color: #555; white-space: normal; }
+          tr.cov td.txt { background: #dff5dd; }
+          tr.unc td.txt { background: #f8d7d7; }
+          tr.cov td.pts { color: #2a6; }
+          p.note { color: #a33; }
+      </style>
+      </head>
+      <body>
+      <p><a href="../index.html">index</a></p>
+      <h1>src/a.c</h1>
+      <p>lines 5/9 (55.6%); branch arms 2/4 (50.0%); functions 2/2 (100.0%); toggle bits 1/1 (100.0%)</p>
+      <table class="src">
+      <tr class="cov"><td class="ln">1</td><td class="txt">int main(void) {</td><td class="pts">FN main</td><td class="runs">t0, t1</td></tr>
+      <tr class="cov"><td class="ln">2</td><td class="txt">    int x = 1;</td><td class="pts">TG clk</td><td class="runs">t0, t1</td></tr>
+      <tr class="cov"><td class="ln">3</td><td class="txt">    if (x) {</td><td class="pts">BR 2/2</td><td class="runs">t0</td></tr>
+      <tr class="cov"><td class="ln">4</td><td class="txt">        x = 2;</td><td class="pts"></td><td class="runs">t0</td></tr>
+      <tr class="cov"><td class="ln">5</td><td class="txt">        f();</td><td class="pts"></td><td class="runs">t2</td></tr>
+      <tr class="unc"><td class="ln">6</td><td class="txt">    } else {</td><td class="pts">FN f</td><td class="runs"></td></tr>
+      <tr class="unc"><td class="ln">7</td><td class="txt">        x = 3;</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr class="unc"><td class="ln">8</td><td class="txt">        if (x) f();</td><td class="pts">BR 0/2</td><td class="runs"></td></tr>
+      <tr class="unc"><td class="ln">9</td><td class="txt">    }</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr class="non"><td class="ln">10</td><td class="txt">    return 0;</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr class="non"><td class="ln">11</td><td class="txt">}</td><td class="pts"></td><td class="runs"></td></tr>
+      </table>
+      </body>
+      </html>
+    }
+$ hwut.cov.conv.to_html <dir>/out -o <dir>/pages
+    COVERAGE PAGES: <dir>/pages/index.html -- 1 source file(s)
+    [status 0]
+  OK  : the index says 5 of 9 lines, 55.6%
+  OK  : and 2 of 4 branch arms
+  OK  : line 1 was run by t0 and t1, and holds the function point
+  OK  : line 3 names the runs that executed it (t0) and the arms taken over EVERY run (2/2: the fixture's t1 reports the arm alone)
+  OK  : line 8 is uncovered with its two arms untaken
+  OK  : a line that is not executable is neither
+  OK  : a missing source keeps its lines and says the text is gone
+SUCCESS: pages for people: the lines, the points, and who ran them.
+<hwut-end>

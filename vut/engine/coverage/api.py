@@ -18,10 +18,18 @@ PURPOSE: THE ONE DOOR into 'engine/coverage'. Everything outside the
     pack_record, unpack_record, format_record, seated, RecordFault
                         the record: its binary form, its text form,
                         its seating under a run id, its fault
-    snapshot_db_of, stale_tuple, gathered_index, bundle_of,
-    read_bundle, write_bundle, BUNDLE_FILE, GatherFault
-                        the gathered bundle: what a tree's coverage
-                        adds up to, and where it is stale
+    GatheredFile, pack_gathered, unpack_gathered, format_gathered,
+    parse_gathered, binary_version
+                        a coverage file of the output directory, record
+                        version 3, in both spellings (D-43)
+    prepared, gather, Output, root_of, DEFAULT_DIRECTORY_NAME,
+    id_text, measure_db_of, measure_of, name_tuple, subtract, union,
+    OutputRefused
+                        the output directory of a coverage run: the
+                        test run ids, the groups, and one annotated
+                        coverage file per source file (D-42)
+    CoverageTraceDb, OUTCOME_OK
+                        the local trace of the last coverage run (D-41)
     CCoverageFormat, CCoverageFramework, register, record_of
                         what a NEW TOOL implements, how it says so, and
                         how it turns entries into a record -- the
@@ -43,20 +51,28 @@ THE RULE IS EXECUTABLE: 'adm/LAYERING.txt' names this module in a
 ______________________________________________________________________________
 """
 from .configuration import CoverageConfig, CoverageRefused
-from .database.api  import (BUNDLE_FILE, GatherFault, RecordFault,
-                            bundle_of, format_record, gathered_index,
-                            pack_record, parse_record, read_bundle,
-                            seated, snapshot_db_of, stale_tuple,
-                            unpack_record, write_bundle)
+from .database.api  import (GatheredFile, RecordFault, binary_version,
+                            format_gathered, format_record, pack_gathered,
+                            pack_record, parse_gathered, parse_record,
+                            id_text, measure_db_of, measure_of, name_tuple,
+                            seated, subtract, unpack_gathered, union,
+                            unpack_record)
 from .readers.api   import (CCoverageFormat, CCoverageFramework,
                             artifact_directory_of, elect, framework_of,
                             record_of, register, registered_tuple)
+from .trace         import OUTCOME_OK, CoverageTraceDb
+from .output        import (DEFAULT_DIRECTORY_NAME, Output,
+                            OutputRefused, gather, prepared, root_of)
 
-__all__ = ("BUNDLE_FILE", "CCoverageFormat", "CCoverageFramework",
-           "CoverageConfig", "CoverageRefused", "GatherFault",
-           "RecordFault", "artifact_directory_of", "bundle_of", "elect",
-           "format_record", "framework_of", "gathered_index",
-           "pack_record", "parse_record", "read_bundle", "record_of",
-           "register",
-           "registered_tuple", "seated", "snapshot_db_of",
-           "stale_tuple", "unpack_record", "write_bundle")
+__all__ = ("DEFAULT_DIRECTORY_NAME", "GatheredFile", "Output",
+           "OutputRefused", "binary_version", "format_gathered",
+           "pack_gathered", "parse_gathered", "unpack_gathered",
+           "id_text", "measure_db_of", "measure_of", "name_tuple",
+           "subtract", "union",
+           "gather", "prepared", "root_of",
+           "CCoverageFormat", "CCoverageFramework", "CoverageConfig",
+           "CoverageRefused", "CoverageTraceDb", "OUTCOME_OK",
+           "RecordFault", "artifact_directory_of", "elect",
+           "format_record", "framework_of", "pack_record",
+           "parse_record", "record_of", "register",
+           "registered_tuple", "seated", "unpack_record")

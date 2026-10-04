@@ -9,14 +9,21 @@ The modules:
     failure.py  the failures: one entry per reason a case fails --
                 category, the word before '[FAIL]', phrase, and the
                 explanation 'hwut.help' gives (D-34)
+    vocabulary.py
+                what a flow SAYS: the badges, the counting words, the
+                reasons (D-40). 'RUN_VOCABULARY' is the test run's
+    coverage_reason.py
+                the coverage run's reasons -- word before '[NO REC]',
+                phrase, category -- and 'COVERAGE_VOCABULARY'
     plain.py    the tier-1 renderer: CPlainFlow, a receiver that
-                writes console lines
+                writes console lines, in the vocabulary handed in
     console.py  the console's own words: the tier flags, the colour
                 flags, the width policy. 'parse_rendering()' and
                 'console_view()' -- what a face calls.
 
 A face calls 'console.py' and nothing else. 'plain.py' and 'word.py'
-are reached through it.
+are reached through it; a face that is not the test run hands
+'console_view()' its vocabulary.
 
 LAYERING LAW: this component imports the orchestrator's vocabulary,
 receiver and summary; nothing imports display back. The queue is the

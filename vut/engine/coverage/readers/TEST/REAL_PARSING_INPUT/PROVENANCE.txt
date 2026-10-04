@@ -18,6 +18,9 @@ files does MY format have", and that is the directory to open.
     simplecov/   resultset.json, and the ruby that produced it
     cobertura/   simplecov's export, kcov over a shell script, kcov
                  over a binary
+    python_coverage/
+                 coverage.py's json report over one python file, run
+                 twice taking a different branch each time
 
 THIS DIRECTORY IS SCENARIO COVERAGE MADE CONCRETE (adm/DEVELOPMENT.txt):
 at least one real artefact per format, and every syntax element at
@@ -127,3 +130,24 @@ REPRODUCTION
     vhdl/gcovwork/
                ghdl-gcc -a -Wc,-fprofile-arcs -Wc,-ftest-coverage ...
                ghdl-gcc -e -Wl,-lgcov tb && ./tb && gcov -b blinker
+
+
+______________________________________________________________________________
+BRANCHES, WITNESSED 2026-10-03 (RATIONALE D-43)
+==============================================================================
+
+    gcov/c-classify.c, c-classify.c.gcov
+        gcc 13.3.0 '--coverage -O0', one run of five calls,
+        'gcov -b -c -p classify.gcda'. '-c' makes the branch lines
+        COUNTS ('branch  1 taken 5'); without it they are percentages,
+        which the older '.gcov' files here carry. A line may list more
+        arms than its source shows (line 3, 'a && b', lists four), and
+        'call' lines interleave with the branch lines of a loop: the
+        arms of a line are the 'branch' lines after it, in order.
+
+    python_coverage/branches.py, branches-a2.json, branches-a1.json
+        coverage.py 7.16.2, 'coverage run --branch' then 'coverage
+        json', once with argument 2 and once with 1. The two runs take
+        different arms of the same decisions, which is what makes them
+        the witness for a UNION of arms: 'executed_branches' and
+        'missing_branches' together name the same arcs in both.

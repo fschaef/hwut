@@ -1,0 +1,45 @@
+$ hwut.cov.conv.to_tex <dir>/out
+    [26 line(s) written to stdout]
+    [status 0]
+    {
+      \documentclass{article}
+      \usepackage[margin=2cm]{geometry}
+      \usepackage{hwut-coverage}
+      \begin{document}
+      \covtitle{Coverage}
+      \covroot{<dir>}
+      \begin{covindex}{3}
+        \covindexhead{source & lines & \% & branch arms & \% & functions & \% & toggle bits & \%}
+        \covindexrow{\texttt{src/a.c} & 5/9 & 55.6\% & 2/4 & 50.0\% & 2/2 & 100.0\% & 1/1 & 100.0\%}
+        \covindextotal{all & 5/9 & 55.6\% & 2/4 & 50.0\% & 2/2 & 100.0\% & 1/1 & 100.0\%}
+      \end{covindex}
+      \covsource{src/a.c}{lines 5/9 (55.6\%); branch arms 2/4 (50.0\%); functions 2/2 (100.0\%); toggle bits 1/1 (100.0\%)}
+      \begin{covlisting}
+        \covline{cov}{1}{int~main(void)~\{}{FN main}{t0, t1}
+        \covline{cov}{2}{~~~~int~x~=~1;}{TG clk}{t0, t1}
+        \covline{cov}{3}{~~~~if~(x)~\{}{BR 2/2}{t0}
+        \covline{cov}{4}{~~~~~~~~x~=~2;}{}{t0}
+        \covline{cov}{5}{~~~~~~~~f();}{}{t2}
+        \covline{unc}{6}{~~~~\}~else~\{}{FN f}{}
+        \covline{unc}{7}{~~~~~~~~x~=~3;}{}{}
+        \covline{unc}{8}{~~~~~~~~if~(x)~f();}{BR 0/2}{}
+        \covline{unc}{9}{~~~~\}}{}{}
+        \covline{non}{10}{~~~~return~0;}{}{}
+        \covline{non}{11}{\}}{}{}
+      \end{covlisting}
+      \end{document}
+    }
+$ hwut.cov.conv.to_tex <dir>/out -o <dir>/cov.tex --style mystyle
+    [status 0]
+$ hwut.cov.conv.to_tex <dir>/out --body-only
+    [21 line(s) written to stdout]
+    [status 0]
+  OK  : a document over the package
+  OK  : a line is a macro call: state, number, code, points, runs
+  OK  : uncovered and non-executable lines likewise
+  OK  : no colour, no font, no table shape in the document -- the package owns them
+  OK  : '--style' loads the reader's package after hwut's
+  OK  : the package is placed beside '-o FILE'
+  OK  : '--body-only' is the body for \input
+SUCCESS: a document of macros; the style decides how they look.
+<hwut-end>

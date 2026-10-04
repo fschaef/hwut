@@ -1,0 +1,7 @@
+
+--- a record of x/TEST naming ../../src/a.c ---
+         sources: ['src/a.c']
+  OK  : the source stands under the root
+  OK  : and carries what the run took
+SUCCESS: a measure follows its source to the root.
+<hwut-end>

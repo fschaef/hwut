@@ -1,35 +1,69 @@
-$ hwut.run.cov --sideways
-    REFUSED: 'hwut.run' does not take: --sideways
-    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
-                    [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
-                    [--exclude-dir <glob>]... [--wishlist <file>]...
-                    [-l|--label <expr>] [--language=<name>]...
-                    [--faster-than=<sec>] [<file-glob> [choice-glob]...]
-                    [--no-store] [--timing] [--jobs=<n>] [--strategy=<name>]
-                    [--deterministic] [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--show-timing] [--show-jobs]
-                    [--show-details] [--no-failure-summary] [--brief]
-                    [--log <file>] [--directory=<path>]
-    [status 2]
-$ hwut.run.cov convert --to yaml <dir>/a
+$ hwut.cov.conv.to_humans --to yaml <dir>/a
     REFUSED: '--to' takes one of binary, text
-    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.cov.conv.to_humans [--from binary|text] [--to binary|text] FILE | --help
     [status 2]
-$ hwut.run.cov convert --bogus <dir>/a
+$ hwut.cov.conv.to_humans --bogus <dir>/a
     REFUSED: unknown option '--bogus'
-    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+    usage: hwut.cov.conv.to_humans [--from binary|text] [--to binary|text] FILE | --help
     [status 2]
-$ hwut.run.cov convert <dir>/a <dir>/a
-    REFUSED: 'convert' takes exactly one FILE
-    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+$ hwut.cov.conv.to_humans <dir>/a <dir>/a
+    REFUSED: hwut.cov.conv.to_humans takes exactly one FILE
+    usage: hwut.cov.conv.to_humans [--from binary|text] [--to binary|text] FILE | --help
     [status 2]
-$ hwut.run.cov convert
-    REFUSED: 'convert' takes exactly one FILE
-    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+$ hwut.cov.conv.to_humans
+    REFUSED: hwut.cov.conv.to_humans takes exactly one FILE
+    usage: hwut.cov.conv.to_humans [--from binary|text] [--to binary|text] FILE | --help
     [status 2]
-$ hwut.run.cov formats extra
-    REFUSED: 'formats' takes no argument
-    usage: hwut.run.cov [<wish>] | convert [--from binary|text] [--to binary|text] FILE | formats | --help
+$ hwut.cov.conv.to_lcov --sideways
+    REFUSED: unknown option '--sideways'
+    usage: hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE] | --help
     [status 2]
-SUCCESS: the door refuses by name, with the usage line.
+$ hwut.cov.conv.to_lcov <dir>/a <dir>/a
+    REFUSED: hwut.cov.conv.to_lcov takes at most one DIRECTORY
+    usage: hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE] | --help
+    [status 2]
+$ hwut.cov.conv.to_lcov -o
+    REFUSED: '-o' takes one target, once
+    usage: hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE] | --help
+    [status 2]
+$ hwut.cov.conv.to_html --sideways
+    REFUSED: unknown option '--sideways'
+    usage: hwut.cov.conv.to_html [DIRECTORY] [-o OUTDIR] | --help
+    [status 2]
+$ hwut.cov.conv.to_html <dir>/a <dir>/a
+    REFUSED: hwut.cov.conv.to_html takes at most one DIRECTORY
+    usage: hwut.cov.conv.to_html [DIRECTORY] [-o OUTDIR] | --help
+    [status 2]
+$ hwut.cov.conv.to_html <dir>/none
+    FAULT: '<dir>/none' is no directory
+    [status 1]
+$ hwut.cov.conv.to_cobertura --sideways
+    REFUSED: unknown option '--sideways'
+    usage: hwut.cov.conv.to_cobertura [DIRECTORY] [-o FILE] | --help
+    [status 2]
+$ hwut.cov.conv.to_jacoco -o
+    REFUSED: '-o' takes one target, once
+    usage: hwut.cov.conv.to_jacoco [DIRECTORY] [-o FILE] | --help
+    [status 2]
+$ hwut.cov.conv.to_json <dir>/a <dir>/a
+    REFUSED: hwut.cov.conv.to_json takes at most one DIRECTORY
+    usage: hwut.cov.conv.to_json [DIRECTORY] [-o FILE] | --help
+    [status 2]
+$ hwut.cov.conv.to_tex --style
+    REFUSED: '--style' takes one FILE, once
+    usage: hwut.cov.conv.to_tex [DIRECTORY] [-o FILE] [--style FILE] [--body-only] | --help
+    [status 2]
+$ hwut.cov.conv.to_tex --style a --style b
+    REFUSED: '--style' takes one FILE, once
+    usage: hwut.cov.conv.to_tex [DIRECTORY] [-o FILE] [--style FILE] [--body-only] | --help
+    [status 2]
+$ hwut.cov.conv.to_pdf --bogus
+    REFUSED: unknown option '--bogus'
+    usage: hwut.cov.conv.to_pdf [DIRECTORY] [-o FILE] [--style FILE] | --help
+    [status 2]
+$ hwut.cov.formats extra
+    REFUSED: hwut.cov.formats takes no argument
+    usage: hwut.cov.formats | --help
+    [status 2]
+SUCCESS: each door refuses by name, with its usage line.
 <hwut-end>

@@ -18,7 +18,12 @@ by PATH and by path alike.
                     one shim per service face:
 
                         hwut.config.show     hwut.plan     hwut.run
-                        hwut.accept   hwut.execute   hwut.run.cov
+                        hwut.accept   hwut.execute
+                        hwut.cov.run  hwut.cov.formats
+                        hwut.cov.conv.to_humans  hwut.cov.conv.to_lcov
+                        hwut.cov.conv.to_html  hwut.cov.conv.to_cobertura
+                        hwut.cov.conv.to_jacoco  hwut.cov.conv.to_json
+                        hwut.cov.conv.to_tex  hwut.cov.conv.to_pdf
                         hwut.run.diff     hwut.report.details
                         hwut.run.stability  hwut.report.wishlist  hwut.report
                         hwut.help

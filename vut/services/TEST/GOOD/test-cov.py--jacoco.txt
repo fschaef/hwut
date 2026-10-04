@@ -1,0 +1,52 @@
+$ hwut.cov.conv.to_jacoco <dir>/out
+    [38 line(s) written to stdout]
+    [status 0]
+    {
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd">
+      <!-- not rendered by hwut.cov.conv.to_jacoco: toggle -->
+      <report name="hwut">
+        <package name="src">
+          <class name="src/a" sourcefilename="a.c">
+            <method name="main" desc="()" line="1">
+              <counter type="METHOD" missed="0" covered="1"/>
+            </method>
+            <method name="f" desc="()" line="6">
+              <counter type="METHOD" missed="0" covered="1"/>
+            </method>
+          </class>
+          <sourcefile name="a.c">
+            <line nr="1" mi="0" ci="1" mb="0" cb="0"/>
+            <line nr="2" mi="0" ci="1" mb="0" cb="0"/>
+            <line nr="3" mi="0" ci="1" mb="0" cb="2"/>
+            <line nr="4" mi="0" ci="1" mb="0" cb="0"/>
+            <line nr="5" mi="0" ci="1" mb="0" cb="0"/>
+            <line nr="6" mi="1" ci="0" mb="0" cb="0"/>
+            <line nr="7" mi="1" ci="0" mb="0" cb="0"/>
+            <line nr="8" mi="1" ci="0" mb="2" cb="0"/>
+            <line nr="9" mi="1" ci="0" mb="0" cb="0"/>
+            <counter type="INSTRUCTION" missed="4" covered="5"/>
+            <counter type="LINE" missed="4" covered="5"/>
+            <counter type="BRANCH" missed="2" covered="2"/>
+            <counter type="METHOD" missed="0" covered="2"/>
+          </sourcefile>
+          <counter type="INSTRUCTION" missed="4" covered="5"/>
+          <counter type="LINE" missed="4" covered="5"/>
+          <counter type="BRANCH" missed="2" covered="2"/>
+          <counter type="METHOD" missed="0" covered="2"/>
+        </package>
+        <counter type="INSTRUCTION" missed="4" covered="5"/>
+        <counter type="LINE" missed="4" covered="5"/>
+        <counter type="BRANCH" missed="2" covered="2"/>
+        <counter type="METHOD" missed="0" covered="2"/>
+      </report>
+    }
+  OK  : the document parses as XML
+  OK  : line 3: covered, both arms
+  OK  : line 8: missed, both arms missed
+  OK  : the LINE counter is 4 missed, 5 covered
+  OK  : the METHOD counter counts the functions
+  OK  : the class is the source's path
+  OK  : the toggle bit is named as not rendered
+SUCCESS: JaCoCo for the tools that read it; the directory keeps what it cannot say.
+<hwut-end>

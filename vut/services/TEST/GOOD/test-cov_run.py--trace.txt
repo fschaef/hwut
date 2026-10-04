@@ -1,0 +1,102 @@
+$ hwut.cov.run --silent -o <out>
+    [status 1]
+    TMP/hwut-traces-coverage.csv {
+      test;choice;outcome
+      test-hang.py;x;run-incomplete
+      test-new.py;;not-registered
+      test-py.py;a;ok
+      ;b;no-data-provided
+    }
+$ hwut.help
+    | The last results hold 1 case(s) that failed for 1 reason(s) other than a
+    | plain difference from GOOD. Every one of them has a known cause and a known
+    | remedy: the paragraphs below explain each reason once, say how to heal it,
+    | and name the cases concerned.
+    | 
+    | NOMINAL -- error in GOOD file
+    | 
+    |     not in book -- GOOD file stands; case not in GOOD/book.csv  [1 case(s)]
+    | 
+    |         A GOOD file stands for this case, and 'GOOD/book.csv' has no row for
+    |         it: it was accepted outside the book -- by a commit, a copy, another
+    |         machine -- and has not been run here since (E-41).
+    | 
+    |         In order to heal, run it: 'hwut.run <test> [<choice>]' enters the
+    |         case and judges it.
+    | 
+    |         'hwut.sanitize.propose --books' proposes 'book <test> [<choice>]',
+    |         which enters the standing GOOD file as accepted; nothing runs,
+    |         nothing in GOOD/ moves.
+    | 
+    |         CONCERNED:
+    |             suite/TEST
+    |                 test-new.py
+    | 
+    | The last coverage run left 3 case(s) without a record, for 3 reason(s). The
+    | paragraphs below explain each reason once, say how to heal it, and name the
+    | cases concerned.
+    | 
+    | SETUP -- no coverage run possible
+    | 
+    |     not in book -- no run id in GOOD/book.csv; accept first  [1 case(s)]
+    | 
+    |         'GOOD/book.csv' holds no run id for the case. A coverage record is
+    |         attributed by that id, and a coverage run reads the book without
+    |         writing it, so the case was not run.
+    | 
+    |         In order to heal, run the case once with 'hwut.run', which enters it
+    |         into 'GOOD/book.csv', or accept it with 'hwut.accept'.
+    | 
+    |         CONCERNED:
+    |             suite/TEST
+    |                 test-new.py
+    | 
+    | RUN -- application did not testify
+    | 
+    |     incomplete -- run did not end with <hwut-end>; nothing read  [1 case(s)]
+    | 
+    |         The application did not testify under the coverage tool: it was
+    |         killed, could not be started, or its output did not end in
+    |         '<hwut-end>'. Lines touched by such a run are a claim of nothing, so
+    |         the tool's data was not read. Where 'hwut.run' passes the same case,
+    |         the tool's call is at fault, not the application.
+    | 
+    |         In order to heal, run the case with 'hwut.run.play' to see what it
+    |         prints without the tool, then make the tool's call by hand in the
+    |         test directory and read what it says.
+    | 
+    |         CONCERNED:
+    |             suite/TEST
+    |                 test-hang.py  x
+    | 
+    | TOOL -- no usable data from tool
+    | 
+    |     no data -- tool left nothing in OUT/COVERAGE  [1 case(s)]
+    | 
+    |         The run ended well and the coverage tool left no artefact under
+    |         'OUT/COVERAGE'. Either the application is not instrumented, or the
+    |         tool wrote its data elsewhere.
+    | 
+    |         In order to heal, check that the build instruments the coverage
+    |         target, and that the tool writes into 'OUT/COVERAGE' of the test
+    |         directory.
+    | 
+    |         CONCERNED:
+    |             suite/TEST
+    |                 test-py.py  b
+    [status 0]
+$ hwut.cov.run test-py.py b --silent -o <out>
+    [status 0]
+    TMP/hwut-traces-coverage.csv {
+      test;choice;outcome
+      test-hang.py;x;run-incomplete
+      test-new.py;;not-registered
+      test-py.py;a;ok
+      ;b;ok
+    }
+  OK  : one row per case the run was asked for: 'ok', or the token
+  OK  : 'hwut.help' explains the cases without a record, from the trace
+  OK  : a later run replaces the rows it selects and keeps the rest
+  OK  : 'GOOD/book.csv' did not move by a byte
+SUCCESS: the trace says what the last coverage run came to; the record stays the product.
+<hwut-end>

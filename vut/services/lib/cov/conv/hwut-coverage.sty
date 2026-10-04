@@ -1,0 +1,61 @@
+%% SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+%%
+%% hwut-coverage.sty -- the macros 'hwut.cov.conv.to_tex' writes its
+%% document with, and NOTHING ELSE: every colour, every font, every
+%% table shape stands here, so a reader's own style loaded AFTER this
+%% one (--style FILE) redefines what it wants and the document follows.
+%%
+%% THE VOCABULARY the generated body uses:
+%%
+%%   \covtitle{Coverage}                   the heading
+%%   \covroot{<root>}                      the run's root, as a remark
+%%   \covnote{<text>}                      a notice (a measure not rendered,
+%%                                         a source whose text is gone)
+%%   \begin{covindex}{<n>}                 the table over the sources, n
+%%     \covindexhead{<cells>}              measure columns; the head row,
+%%     \covindexrow{<cells>}               a row, a total row -- cells '&'
+%%     \covindextotal{<cells>}             separated, 3 + 2n of them
+%%   \end{covindex}
+%%   \covsource{<path>}{<summary>}         a source's section
+%%   \begin{covlisting}                    the listing of one source
+%%     \covline{<state>}{<n>}{<code>}{<points>}{<runs>}
+%%   \end{covlisting}                      state: cov, unc, non
+%%
+%% Redefine, for instance, '\covcolorcov' to change the covered tint, or
+%% '\covline' whole to drop the runs column.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{hwut-coverage}[2026/10/04 coverage pages of hwut.cov.conv.to_tex]
+\RequirePackage{xcolor}
+\RequirePackage{colortbl}
+\RequirePackage{longtable}
+\RequirePackage{array}
+
+\definecolor{covgreen}{RGB}{223,245,221}
+\definecolor{covred}{RGB}{248,215,215}
+\definecolor{covgrey}{RGB}{136,136,136}
+\definecolor{covnote}{RGB}{170,51,51}
+
+\newcommand{\covcolorcov}{covgreen}
+\newcommand{\covcolorunc}{covred}
+\newcommand{\covcolornon}{white}
+
+\newcommand{\covtitle}[1]{\section*{#1}}
+\newcommand{\covroot}[1]{\noindent root: \texttt{#1}\par\medskip}
+\newcommand{\covnote}[1]{\noindent\textcolor{covnote}{#1}\par\medskip}
+
+\newenvironment{covindex}[1]{%
+  \begin{longtable}{l*{\numexpr2+2*#1\relax}{r}}}{\end{longtable}}
+\newcommand{\covindexhead}[1]{\hline #1 \\ \hline\endhead}
+\newcommand{\covindexrow}[1]{#1 \\}
+\newcommand{\covindextotal}[1]{\hline #1 \\ \hline}
+
+\newcommand{\covsource}[2]{\subsection*{\texttt{#1}}\noindent #2\par\medskip}
+
+\newenvironment{covlisting}{%
+  \begin{longtable}{r>{\ttfamily}l>{\small}l>{\small\color{covgrey}}l}}%
+  {\end{longtable}}
+%% #1 state (cov|unc|non)  #2 line number  #3 code  #4 points  #5 runs
+\newcommand{\covline}[5]{%
+  \textcolor{covgrey}{#2} &
+  \cellcolor{\csname covcolor#1\endcsname}#3 & #4 & #5 \\}
+\endinput

@@ -109,8 +109,6 @@ class Outcome:
     result:      object                       # TestResult | AcceptResult
     recorded_db: Mapping[str, str] = None
     entry:       Optional[dict]    = None     # the book entry, as written
-    coverage:    object            = None     # E_CoverageResult; None
-                                              # where none was asked
 
     @property
     def verdict(self):
@@ -245,14 +243,9 @@ async def refresh(configuration, choice_name, bookkeeper, force_run=False):
 
 
 async def run_test_held(configuration, request=None, store=None,
-                        provision=None, bookkeeper=None, run_id=None):
+                        provision=None, bookkeeper=None):
     """
     RETURN: Outcome, the operation's result and what the ceremony did.
-
-    'run_id' -- the register's id of this run, where coverage is asked:
-    the harvested record is seated with it (coverage D-18). Coverage
-    asked and no run id handed in is a fault of the caller: a record
-    nobody can attribute is not written.
 
     THE HELD ENTRY: the caller HOLDS the test directory and has verified
     the configuration -- an orchestrator spanning a session locks ONCE
@@ -352,28 +345,15 @@ async def run_test_held(configuration, request=None, store=None,
                                                choice_name, groundwork,
                                                request.record)
 
-    coverage = None
-    if configuration.coverage is not None and not request.replay:
-        #  THE HARVEST is the run's closing act (coverage D-19): the
-        #  application has ended, the artefacts stand, the run id is
-        #  known. A replay executed nothing and harvests nothing.
-        assert run_id is not None, \
-               "coverage asked and no run id handed in: the record " \
-               "could not be attributed"
-        from .coverage_action import harvest
-        coverage = await harvest(configuration, store.bookkeeper,
-                                 test_name, choice_name, run_id,
-                                 result.report)
     #  A DISPLAY DOES NOT RECORD (B-7): a viewing is not a run of
     #  record, and must not write a verdict into the book.
     entry = None
     if goal is not E_Goal.DISPLAY:
         entry = store.bookkeeper.record(result, configuration, goal,
-                                        choice_name, coverage=coverage)
+                                        choice_name)
         _noted_constraint(store, test_name, choice_name, result,
                           recorded_db)
-    return Outcome(result=result, recorded_db=recorded_db, entry=entry,
-                   coverage=coverage)
+    return Outcome(result=result, recorded_db=recorded_db, entry=entry)
 
 
 def _noted_constraint(store, test, choice, result, recorded_db=None):

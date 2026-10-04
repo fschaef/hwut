@@ -234,8 +234,11 @@ def _record_of(fmt, entry_db, source_root, config, counts_f):
         measure_db = {}
         branch_db = axis_db.get("branch")
         if branch_db:
+            #  THE ARMS in the order the document gives them; bit i of
+            #  the mask is arm i (RATIONALE D-43).
             measure_db["branch"] = tuple(
-                (line, sum(1 for c in count_list if c > 0), len(count_list))
+                (line, sum(1 << i for i, c in enumerate(count_list)
+                           if c > 0), len(count_list))
                 for line, count_list in sorted(branch_db.items()))
         toggle_db = axis_db.get("toggle")
         if toggle_db:

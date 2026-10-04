@@ -1,0 +1,53 @@
+$ hwut.cov.conv.to_lcov <dir>/out
+    [27 line(s) written to stdout]
+    [status 0]
+    the tracefile {
+      # not rendered by hwut.cov.conv.to_lcov: toggle
+      TN:
+      SF:<dir>/src/a.c
+      BRDA:3,0,0,1
+      BRDA:3,0,1,1
+      BRDA:8,0,0,-
+      BRDA:8,0,1,-
+      BRF:4
+      BRH:2
+      FN:1,main
+      FN:6,f
+      FNDA:1,main
+      FNDA:1,f
+      FNF:2
+      FNH:2
+      DA:1,1
+      DA:2,1
+      DA:3,1
+      DA:4,1
+      DA:5,1
+      DA:6,0
+      DA:7,0
+      DA:8,0
+      DA:9,0
+      LF:9
+      LH:5
+      end_of_record
+    }
+$ hwut.cov.conv.to_lcov <dir>/out -o <dir>/cov.info
+    [status 0]
+$ hwut.cov.conv.to_lcov <dir>/plain
+    FAULT: '<dir>/plain' carries no marker of a coverage run; name the '-o' directory of 'hwut.cov.run'
+    [status 1]
+$ hwut.cov.conv.to_lcov <dir>/nowhere
+    FAULT: '<dir>/nowhere' is no directory
+    [status 1]
+$ hwut.cov.conv.to_lcov
+    FAULT: '<dir>/hwut.coverage' is no directory
+    [status 1]
+  OK  : '-o FILE' writes what stdout would carry
+  OK  : a line any run executed is 1, one no run did is 0
+  OK  : LF counts the executable lines, LH the covered
+  OK  : both arms of line 3 were taken, by different runs
+  OK  : the arms of a line never executed read '-'
+  OK  : BRF counts the arms, BRH the taken
+  OK  : each function was entered by some run
+  OK  : the toggle bit has no lcov line
+SUCCESS: lcov for the tools that read lcov; the directory keeps what lcov cannot say.
+<hwut-end>

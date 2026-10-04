@@ -14,11 +14,11 @@ REACTION  exit code : 0   stderr : 0 bytes
                 TMP/store/demo.py--basic.stdout.raw          19 bytes  (out raw stdout)
                 OUT/demo.py--basic.txt                       11 bytes  (out stdout)
                 TMP/store/demo.py--basic.stdout.times        51 bytes  (out timing stdout)
-              coverage: ok
+              coverage: TMP/store/demo.py--basic.cover
               cadence: as '<delta-t>:<line>' prefixes
               
               ==[ COVERAGE ]==================================================================
-              outcome: ok
+              record: TMP/store/demo.py--basic.cover
               
               NOT EXECUTED by this run:
                 demo.py                                      3..5

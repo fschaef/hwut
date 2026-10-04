@@ -2,34 +2,29 @@
 ______________________________________________________________________________
 
 PURPOSE
-       COVERAGE -- a step inside provision, for a run asked to measure
-       what it reaches.
+       COVERAGE -- the chain of ONE coverage run, for the coverage
+       dispatcher ('orchestrator/run/coverage_dispatcher.py').
 
 DESCRIPTION
-       THE CHAIN (coverage RATIONALE D-19). 'hwut.run.cov' -- or 'hwut.run
-       --coverage' -- is the DEMAND, and the demand shapes the run:
+       THE CHAIN (coverage RATIONALE D-19, D-38). The configuration
+       handed in is already the coverage run's: it builds the coverage
+       target and its call carries the tool.
 
-           build  cov-target      the author's build rules instrument
-                                  THAT target; hwut asks for it by name
-           run    wrapped argv    the elected reader's 'wrap' puts the
-                                  tool around the call, where the tool
-                                  needs it (interpreted languages)
-           report second call     'report_argv', where the tool turns
-                                  raw state into a readable artifact
-           harvest -> record      the reader reads, this seats the run
-                                  id, the bookkeeper stores '.cover'
-                                  in its BINARY spelling (D-20)
+           prepare   'OUT/COVERAGE' emptied
+           run       the provision executes the call; NOTHING IS
+                     COMPARED with any nominal
+           testify   the run ended by itself AND its stdout ends in
+                     '<hwut-end>' -- else nothing is read (D-21)
+           report    the tool's second call, where it has one,
+                     supervised
+           harvest   the reader reads 'OUT/COVERAGE', the record is
+                     seated with the run id and stored as '.cover' in
+                     its BINARY spelling (D-20)
 
-       THIS MODULE IS THE RUN-SIDE HALF. The build-side half is one
-       line in the adapter: 'target_list' names the coverage target
-       instead of the executable. Everything else the run does is
-       unchanged -- the subjects are judged exactly as without coverage.
-
-       IT JUDGES NOTHING. Like the build, it reports what happened as
-       one token, 'E_CoverageResult', and the token goes into the book
-       entry beside the verdict. A run whose tree bore nothing yields
-       NO record and 'NO_DATA_PROVIDED'; an empty record is never
-       written for it.
+       IT JUDGES NOTHING AND BOOKS NOTHING. What the run came to is
+       one token, 'E_CoverageResult', handed back to the caller. A run
+       whose tree bore nothing yields NO record and 'NO_DATA_PROVIDED';
+       an empty record is never written for it.
 
        COVERAGE RIDES ON TESTIMONY (coverage RATIONALE D-21). "These
        lines are covered" means "a test that testified executed them".
@@ -40,20 +35,19 @@ DESCRIPTION
 
        ONE ARTEFACT DIRECTORY PER TEST DIRECTORY (D-22): every tool
        writes into 'OUT/COVERAGE', so two runs of one directory at once
-       would write over each other. Under coverage the dispatcher runs
-       ONE TEST AT A TIME per directory, and 'prepare' empties the
+       would write over each other. The coverage dispatcher runs ONE
+       TEST AT A TIME per directory, and 'prepare' empties the
        directory before each; other directories proceed in parallel.
 
-       CAPS UNDER COVERAGE (D-19): the adapter drops the caps that guard
+       CAPS UNDER COVERAGE (D-19): 'uncapped' lifts the caps that guard
        the author's patience ('timeout_sec', 'cpu_sec') -- instrumented
-       code is slower and a plain run's timeout is a false failure --
-       and keeps the ones that keep the machine alive; 'OUT/COVERAGE'
-       is admitted to the write sandbox.
+       code is slower and a plain run's timeout is a false miss -- and
+       keeps the ones that keep the machine alive.
 
        THE RECORD LIVES IN THE STORE'S OWN GROUND, 'TMP/store/
-       <test>--<choice>.cover': it is a measurement of the LAST run of
-       that choice, kept per run (D-8), never a nominal, never a
-       subject.
+       <test>--<choice>.cover': it is a measurement of the LAST
+       coverage run of that choice, kept per run (D-8), never a
+       nominal, never a subject.
 ______________________________________________________________________________
 """
 from   dataclasses import dataclass
@@ -61,7 +55,9 @@ from   enum        import Enum
 from   pathlib     import Path
 
 from   ..procsitter.api import Procsitter, E_Containment
+from   .consume.terminal       import ends_in_terminal
 from   .result                 import E_TestRunResult
+from   .                       import subject_provision
 from   ..coverage.api       import artifact_directory_of
 from   ..coverage.api       import seated
 from   ..coverage.api       import pack_record
@@ -101,7 +97,9 @@ class E_CoverageResult(Enum):
                                                 # harvested (D-21)
     REPORT_FAILED      = "report-failed"        # the tool's second call
                                                 # did not end well
-    NOT_ASKED          = "not-asked"            # no coverage was asked
+    NOT_REGISTERED     = "not-registered"       # the register names no
+                                                # such run: no id to seat
+                                                # a record with (D-18)
 
     def __str__(self):
         """RETURN: str, the token, as the book holds it."""
@@ -110,12 +108,12 @@ class E_CoverageResult(Enum):
 
 @dataclass(frozen=True)
 class CoverageSetup:
-    """The coverage step's OWN struct, held verbatim by the test's
-    configuration. None there means: coverage was not asked.
+    """The coverage step's OWN struct, one per test application of a
+    coverage run.
 
     'reader' is the elected tool's framework (coverage
     'CCoverageFramework');
-    'config' its 'CoverageConfig'; 'note' is what the ADAPTER already
+    'config' its 'CoverageConfig'; 'note' is what was already
     concluded before any run -- 'NO_COVERAGE_TARGET' where a compiled
     test declares none -- or None where nothing stands against it.
     """
@@ -124,31 +122,15 @@ class CoverageSetup:
     note:   E_CoverageResult | None = None
 
 
-def prepare(configuration):
+def prepare(test_directory):
     """
-    RETURN: None. Empties the artefact directory of the test directory
-            where coverage is asked: what the tool leaves there is
-            THIS run's and nobody's inheritance (D-22).
+    RETURN: None. Empties the artefact directory of 'test_directory':
+            what the tool leaves there is THIS run's and nobody's
+            inheritance (D-22).
     """
-    if configuration.coverage is None: return
     import shutil
-    directory = artifact_directory_of(str(configuration.test_directory))
-    shutil.rmtree(directory, ignore_errors=True)
-
-
-def wrapped_argv(configuration, argv):
-    """
-    RETURN: list of str, 'argv' run UNDER the coverage tool where the
-            configuration asks for coverage; 'argv' itself else.
-
-    The one change coverage makes to the execute stage. A reader whose
-    tool needs no wrapping (the instrumented binary measures itself)
-    returns the argv unchanged.
-    """
-    setup = configuration.coverage
-    if setup is None: return argv
-    return list(setup.reader.wrap(list(argv), setup.config,
-                                  str(configuration.test_directory)))
+    shutil.rmtree(artifact_directory_of(str(test_directory)),
+                  ignore_errors=True)
 
 
 #  A run that ended with one of these did NOT testify (D-21). Every
@@ -181,23 +163,22 @@ def testified_f(report):
     return report not in _NOT_TESTIFIED
 
 
-async def harvest(configuration, bookkeeper, test, choice, run_id,
+async def harvest(setup, configuration, bookkeeper, test, choice, run_id,
                   report=E_TestRunResult.OK):
     """
     RETURN: E_CoverageResult, what the step concluded -- 'OK' with a
             record written to 'bookkeeper.coverage_path(test, choice)',
             else the token naming why none was.
 
-    'report' is the run's own E_TestRunResult; where it says the
-    application did not testify, NOTHING IS READ and the answer is
-    'RUN_INCOMPLETE' (D-21). Else the reader's second call runs under
-    procsitter where the tool has one, then the artifact under
-    'OUT/COVERAGE' is read. The record is seated with 'run_id' before
-    it is written: a record without a run is a record nobody can
-    attribute (D-18).
+    'setup' is the run's CoverageSetup: the elected tool and what the
+    run gathers. 'report' is the run's own E_TestRunResult; where it
+    says the application did not testify, NOTHING IS READ and the
+    answer is 'RUN_INCOMPLETE' (D-21). Else the reader's second call
+    runs under procsitter where the tool has one, then the artifact
+    under 'OUT/COVERAGE' is read. The record is seated with 'run_id'
+    before it is written: a record without a run is a record nobody
+    can attribute (D-18).
     """
-    setup = configuration.coverage
-    if setup is None:                         return E_CoverageResult.NOT_ASKED
     if setup.note is not None:                return setup.note
     if not testified_f(report):               return E_CoverageResult.RUN_INCOMPLETE
 
@@ -221,3 +202,32 @@ async def harvest(configuration, bookkeeper, test, choice, run_id,
     path.write_bytes(pack_record(seated(record, run_id)))
     return E_CoverageResult.OK
 
+
+
+async def measured(setup, configuration, store, choice, run_id):
+    """
+    RETURN: E_CoverageResult, what ONE coverage run of '(test, choice)'
+            came to: 'OK' with the record written, else the token
+            naming why none was.
+
+    'configuration' is the coverage run's own -- coverage target and
+    wrapped call in place. The application is executed afresh and
+    NOTHING IS COMPARED: the run's only statement is its testimony
+    (D-21), which is the provision's report and the terminal token at
+    the end of its stdout. The caller holds the directory and lets no
+    second run of it proceed meanwhile (D-22).
+    """
+    prepare(configuration.test_directory)
+    provision, _ = subject_provision.provider_of(configuration, store,
+                                                 choice, force_run=True)
+    subjects = await provision.provide()
+    report   = subjects.provision.report
+    #  THE TERMINAL TOKEN IS THE STATEMENT (D-21, R-70): a stream that
+    #  does not end in it never completed, whatever the process said
+    #  on its way out.
+    if testified_f(report) \
+       and ("stdout" not in subjects
+            or not ends_in_terminal(subjects["stdout"].open())):
+        report = E_TestRunResult.TERMINATED_WITHOUT_END
+    return await harvest(setup, configuration, store.bookkeeper,
+                         configuration.key_name, choice, run_id, report)

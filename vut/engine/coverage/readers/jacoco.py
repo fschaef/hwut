@@ -32,10 +32,10 @@ DESCRIPTION
        covered: partial coverage is an INSTRUCTION fact, and the
        instruction axis is not one this record holds.
 
-       BRANCHES: total is 'mb + cb', taken is 'cb', and the point exists
-       only where that total is above zero -- most lines carry
-       'mb="0" cb="0"', which is not a decision with no arms taken but no
-       decision at all.
+       BRANCHES ARE NOT READ (RATIONALE D-43). 'mb' and 'cb' are COUNTS
+       of missed and covered branches; the branch measure is the SET of
+       arms taken, which a count does not carry. A format that cannot
+       name its arms contributes no branch measure.
 
        '<counter>' IS A SUMMARY AND IS NOT CONSULTED. It is derived by
        JaCoCo from the very '<line>' elements beside it; a summary that
@@ -126,12 +126,12 @@ def _read(path):
 def _absorb(entry_db, root, origin_name):
     """
     RETURN: None. Folds one report into 'entry_db':
-            path -> {line: [ci, mi, cb, mb]}.
+            path -> {line: [ci, mi]}.
 
     Packages may NEST inside groups, so every '<package>' in the tree is
     taken, wherever it stands. A file named in two reports is UNIONED:
-    instructions and branches add, which is what two runs of one file
-    mean on those axes.
+    instructions add, which is what two runs of one file mean on that
+    axis.
 
     Raises CoverageRefused on a '<line>' carrying neither 'ci' nor 'mi'.
     """
@@ -157,11 +157,9 @@ def _absorb(entry_db, root, origin_name):
                         "and both are inventions."
                         % (origin_name, number, path))
 
-                was = standing.get(number) or [0, 0, 0, 0]
+                was = standing.get(number) or [0, 0]
                 was[0] += _number(covered_text)
                 was[1] += _number(missed_text)
-                was[2] += _number(line_node.get("cb"))
-                was[3] += _number(line_node.get("mb"))
                 standing[number] = was
 
 
@@ -176,24 +174,15 @@ def _number(text):
 
 def _record_of(fmt, entry_db, source_root, config, counts_f):
     """
-    RETURN: CoverageRecord, with the branch measurement seated beside the
-            line one.
+    RETURN: CoverageRecord of the lines the report gave.
 
     'counts' are INSTRUCTION counts, not execution counts: JaCoCo says
     how many instructions of a line ran, never how often the line did. So
     they are recorded only where counts were asked for, and what they
     mean is stated here rather than left to look like hit counts.
     """
-    def branch_of(line_db, executable):
-        """RETURN: tuple, (line, covered, total) per line that carries
-        a branch at all; JaCoCo counts COVERED and MISSED, so the
-        total is their sum and a line with neither has no branch."""
-        return tuple((n, line_db[n][2], line_db[n][2] + line_db[n][3])
-                     for n in executable
-                     if line_db[n][2] + line_db[n][3] > 0)
-
     return line_record_of(fmt, entry_db, config, source_root, counts_f,
-                          _language_of, branch_of)
+                          _language_of)
 
 
 #  THE JVM'S SUFFIXES. A JaCoCo report covers the JVM, not one

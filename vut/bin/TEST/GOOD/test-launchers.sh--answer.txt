@@ -8,9 +8,18 @@ hwut.accept.apply  exit 0: hwut.accept.apply -- bless what a file names, and not
 hwut.renovate      exit 0: usage: hwut.renovate [--directory=<path>] [--apply]
 hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [-f] [--plain] [--console] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--stderr-tol] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.execute       exit 0: hwut.execute -- run one user-defined target over the tree
-hwut.run.cov       exit 0: PURPOSE: THE 'hwut.run.cov' COMMAND LINE -- coverage, as one executable with
+hwut.cov.run       exit 0: PURPOSE: 'hwut.cov.run', THE COVERAGE RUN (coverage D-38) -- every
+hwut.cov.formats   exit 0: PURPOSE: 'hwut.cov.formats' -- the table of coverage tools, formats and
+hwut.cov.conv.to_humans exit 0: PURPOSE: 'hwut.cov.conv.to_humans' -- a coverage file in its TEXT
+hwut.cov.conv.to_lcov exit 0: PURPOSE: 'hwut.cov.conv.to_lcov' -- the output directory of a coverage
+hwut.cov.conv.to_html exit 0: PURPOSE: 'hwut.cov.conv.to_html' -- the output directory of a coverage
+hwut.cov.conv.to_cobertura exit 0: PURPOSE: 'hwut.cov.conv.to_cobertura' -- the output directory of a
+hwut.cov.conv.to_jacoco exit 0: PURPOSE: 'hwut.cov.conv.to_jacoco' -- the output directory of a coverage
+hwut.cov.conv.to_json exit 0: PURPOSE: 'hwut.cov.conv.to_json' -- the output directory of a coverage
+hwut.cov.conv.to_tex exit 0: PURPOSE: 'hwut.cov.conv.to_tex' -- the output directory of a coverage
+hwut.cov.conv.to_pdf exit 0: PURPOSE: 'hwut.cov.conv.to_pdf' -- the document of 'hwut.cov.conv.to_tex'
 hwut.run.diff      exit 0: usage: hwut.run.diff [-h] [--reading] [--plain] [--console] [-y] [--width WIDTH] [--directory DIRECTORY] [--all] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
-hwut.report.details exit 0: usage: hwut.report.details [-h] [--directory DIRECTORY] [-r] [--no-coverage] [word ...]
+hwut.report.details exit 0: usage: hwut.report.details [-h] [--directory DIRECTORY] [-r] [--no-coverage] [--cov-dir directory] [word ...]
 hwut.run.stability exit 0: PURPOSE: THE 'hwut.run.stability' COMMAND LINE -- run the same wish SEVERAL
 hwut.report.wishlist exit 0: PURPOSE: THE 'hwut.report.wishlist' COMMAND LINE -- print, one per line, every
 hwut.report        exit 0: PURPOSE: THE 'hwut.report' COMMAND LINE -- what the RESULT DATABASES

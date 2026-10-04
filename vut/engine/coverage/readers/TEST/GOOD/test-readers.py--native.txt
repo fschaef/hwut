@@ -1,6 +1,6 @@
 
 --- the artifact, read whole ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: verilog
          | ##tool:     verilator
@@ -9,7 +9,7 @@
          | SF:blinker.v
          | EX:11,5+3,2+2
          | CV:11,5+3,2
-         | BR:12*2/2,5*2/2,3*2/2
+         | BR:12*3/2,5*3/2,3*3/2
          | CP:31*cover*1/1,1*cover*0/1
          | TG:3*clk*1/1,1*rst*1/1,1*enable*1/1,1*state[0]*1/1,0*state[1]*1/1,1*count[0]*1/1,0*count[1]*1/1,0*count[2]*1/1,0*count[3]*0/1,23*clk*1/1,0*state[0]*1/1,0*state[1]*1/1
          | SF:tb.v

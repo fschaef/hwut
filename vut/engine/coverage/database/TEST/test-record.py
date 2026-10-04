@@ -366,20 +366,24 @@ def test_merge():
 
 def test_faults():
     """What a record must never be read as."""
-    good = ("##VUT-COVERAGE 2\n##run:      0.0\n"
+    good = ("##VUT-COVERAGE 4\n##run:      0.0\n"
             "##language: python\n##tool:     coverage\n"
             "##format:   coverage.py-json\n##counts:   no\n"
             "SF:a.py\nEX:1+3\nCV:1\n")
 
     case_list = [
         ("no version",
-         good.replace("##VUT-COVERAGE 2\n", "")),
+         good.replace("##VUT-COVERAGE 4\n", "")),
         ("a version this reader does not know",
-         good.replace("VUT-COVERAGE 2", "VUT-COVERAGE 7")),
+         good.replace("VUT-COVERAGE 4", "VUT-COVERAGE 7")),
         ("version 1, which named the run by NAME",
          "##VUT-COVERAGE 1\n##test: a\n##choice: basic\n"
          "##language: python\n##tool: coverage\n##format: x\n"
          "##counts: no\nSF:a.py\nEX:1\nCV:1\n"),
+        ("version 2, which counted the arms taken",
+         good.replace("VUT-COVERAGE 4", "VUT-COVERAGE 2")),
+        ("version 3, the gathered file of one source",
+         good.replace("VUT-COVERAGE 4", "VUT-COVERAGE 3")),
         ("no 'tool' in the header",
          good.replace("##tool:     coverage\n", "")),
         ("no 'run' in the header -- the record would be anonymous",
@@ -391,7 +395,7 @@ def test_faults():
         ("a block without 'CV'",
          good.replace("CV:1\n", "")),
         ("'EX' before any 'SF'",
-         "##VUT-COVERAGE 2\n##run: -\n##language: python\n"
+         "##VUT-COVERAGE 4\n##run: -\n##language: python\n"
          "##tool: coverage\n##format: x\n##counts: no\nEX:1\n"),
         ("a delta that does not advance",
          good.replace("CV:1", "CV:0")),

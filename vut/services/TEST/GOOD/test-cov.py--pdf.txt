@@ -1,0 +1,13 @@
+$ hwut.cov.conv.to_pdf <dir>/out
+    COVERAGE PDF: <dir>/out/coverage.pdf -- 1 source file(s)
+    [status 0]
+$ hwut.cov.conv.to_pdf <dir>/out -o <dir>/styled.pdf --style <dir>/mystyle.sty
+    COVERAGE PDF: <dir>/styled.pdf -- 1 source file(s)
+    [status 0]
+    kept in the build directory: coverage.tex, hwut-coverage.sty, mystyle.sty
+  OK  : a TeX engine stands on this machine
+  OK  : the PDF is written beside the data
+  OK  : and where '-o' says
+  OK  : the build keeps the document, the package and the style
+SUCCESS: the document, compiled.
+<hwut-end>

@@ -3,6 +3,8 @@
          no version                             -> RecordFault
          a version this reader does not know    -> RecordFault
          version 1, which named the run by NAME -> RecordFault
+         version 2, which counted the arms taken -> RecordFault
+         version 3, the gathered file of one source -> RecordFault
          no 'tool' in the header                -> RecordFault
          no 'run' in the header -- the record would be anonymous -> RecordFault
          a 'run' that spells no run id          -> RecordFault
@@ -20,6 +22,8 @@ INSPECT: a.py EX=((1, 4),) CV=((1, 2),)
   OK  : refused: no version
   OK  : refused: a version this reader does not know
   OK  : refused: version 1, which named the run by NAME
+  OK  : refused: version 2, which counted the arms taken
+  OK  : refused: version 3, the gathered file of one source
   OK  : refused: no 'tool' in the header
   OK  : refused: no 'run' in the header -- the record would be anonymous
   OK  : refused: a 'run' that spells no run id

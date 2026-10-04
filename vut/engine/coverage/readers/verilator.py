@@ -195,14 +195,16 @@ def _record_of(fmt, point_db, source_root, config, counts_f):
         measure_db = {}
         arm_db = kind_db.get(_PAGE_BRANCH, {})
         if arm_db:
+            #  THE ARMS of a decision in the order of their names (an
+            #  arm's name carries its span, so the order is the
+            #  source's); bit i of the mask is arm i (RATIONALE D-43).
             decision_db = {}
-            for (line, _), count in arm_db.items():
-                total, taken = decision_db.get(line, (0, 0))
-                decision_db[line] = (total + 1,
-                                     taken + (1 if count > 0 else 0))
+            for (line, name), count in sorted(arm_db.items()):
+                decision_db.setdefault(line, []).append(count)
             measure_db["branch"] = tuple(
-                (line, taken, total)
-                for line, (total, taken) in sorted(decision_db.items()))
+                (line, sum(1 << i for i, count in enumerate(count_list)
+                           if count > 0), len(count_list))
+                for line, count_list in sorted(decision_db.items()))
         for kind, measure_name in ((_PAGE_TOGGLE, "toggle"),
                                    (_PAGE_USER,   "cover")):
             named_db = kind_db.get(kind, {})

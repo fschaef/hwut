@@ -1,0 +1,24 @@
+
+--- two runs, one decision, DIFFERENT arms ---
+         run A: line 2, arm 0 taken   (mask 1 of 2 arms)
+         run B: line 2, arm 1 taken   (mask 2 of 2 arms)
+         | BR:2*3/2
+         | MC:4*3/3
+         together the decision is FULLY covered: mask 3
+
+--- what is still refused ---
+INSPECT: totals that disagree -> MeasureFault
+INSPECT: a measure that cannot name items -> MeasureNotMergeable
+
+--- the same records without the measure merge as ever ---
+         ((1, 3), (4, 5))
+  OK  : the union of masks is their OR: both arms taken
+  OK  : MC/DC likewise: independence shown of the conditions either run showed
+  OK  : and the summary derives from the union, not from adding summaries
+  OK  : one decision with two totals: not one decision, refused rather than adjudicated
+  OK  : a measure that cannot say WHICH is refused BY NAME
+  OK  : and a caller that does not distinguish still sees a RecordFault
+  OK  : a record carrying no measure merges exactly as before
+  OK  : an EMPTY measure is not a measurement: it blocks no merge
+SUCCESS: a mask is a measurement a union can answer.
+<hwut-end>

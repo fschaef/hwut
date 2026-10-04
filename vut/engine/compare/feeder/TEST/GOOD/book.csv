@@ -1,6 +1,6 @@
 # vut-register 5 generation:5 apps:2 marks:0=0,1=3
-test;choice;verdict;report;coverage;stderr;stain;test_id;choice_id
-test-html_feeder.py;;true;ok;;;;0
-test-ui.py;potpourri;true;ok;;;;1;0
-;structure;true;ok;;;;1;1
-;types;true;ok;;;;1;2
+test;choice;verdict;report;stderr;stain;test_id;choice_id
+test-html_feeder.py;;true;ok;;;0
+test-ui.py;potpourri;true;ok;;;1;0
+;structure;true;ok;;;1;1
+;types;true;ok;;;1;2

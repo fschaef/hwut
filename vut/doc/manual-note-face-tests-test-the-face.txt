@@ -1,0 +1,44 @@
+MANUAL NOTE — for the section on what to test where, and on coverage
+====================================================================
+
+TITLE:  A face test tests the face
+
+THE RULE
+--------
+Each face has its service module. The exploration of BEHAVIOUR happens
+there, in tests that call the module. A test that goes through the
+face tests FACE FUNCTIONALITY only: the words it takes, what it
+refuses, what it prints, its exit status.
+
+In the author's words (Frank-Rene, 2026-10-03):
+
+    "if the test app drives stuff though a subprocess, no chance, for
+     the moment. but each face has it's service module. the test
+     behavior exploration should happen there. faces should only test
+     'face functionality'."
+
+    "when using an external face to access libs, we must be sure that
+     we are testing the face itself not the internal behavior."
+
+WHY COVERAGE MAKES IT VISIBLE
+-----------------------------
+A coverage tool measures the PROCESS it runs. A test application that
+starts a face as a subprocess is measured as far as its own lines go;
+the face in the child process is not measured. The same holds for a
+shell page: its tool sees the shell's lines, not the library the shell
+calls.
+
+So behaviour explored through a face is behaviour no coverage record
+shows as reached. The record is not wrong; the test stands in the
+wrong place.
+
+MEASURED, 2026-10-03, on this tree: 155 test pages; 33 are shell
+pages, standing in 9 of 33 test directories, and 9 of the 122 Python
+pages name 'subprocess'.
+
+FOR THE MANUAL
+--------------
+  - Say where each kind of test belongs: behaviour at the module, the
+    face's own conduct at the face.
+  - Say what a coverage record of a face test does and does not show.
+  - Subprocess measurement is not offered, for the moment.

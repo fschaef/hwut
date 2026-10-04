@@ -4,6 +4,7 @@
 #     title      = "Configuration: declarations, slots, constraint relation"
 #     choices    = ["constraint_db", "declared", "edges", "namespace",
 #                   "slots"]
+#     tolerance { eq_pattern = ["'( and no __dict__ for setting new attributes)?$"] }
 #     interactive = true
 # }
 #

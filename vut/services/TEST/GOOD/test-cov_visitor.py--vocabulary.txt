@@ -1,0 +1,11 @@
+  the base declares: done, header, lines, measure, source_close, source_open, unrendered, who_ran
+  the walk called:   done, header, lines, measure, source_close, source_open, who_ran
+  OK  : cobertura defines nothing outside the vocabulary
+  OK  : html defines nothing outside the vocabulary
+  OK  : jacoco defines nothing outside the vocabulary
+  OK  : json defines nothing outside the vocabulary
+  OK  : lcov defines nothing outside the vocabulary
+  OK  : tex defines nothing outside the vocabulary
+  OK  : every declared step is a step the walk takes
+SUCCESS: the base declares the vocabulary, and nothing else stands.
+<hwut-end>

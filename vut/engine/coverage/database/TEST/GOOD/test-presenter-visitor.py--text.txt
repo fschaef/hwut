@@ -1,7 +1,8 @@
-  registered axes: branch, cover, mcdc, toggle
+  registered axes: branch, cover, function, mcdc, toggle
   declared unrendered: (none)
   OK  : 'branch' is rendered
   OK  : 'cover' is rendered
+  OK  : 'function' is rendered
   OK  : 'mcdc' is rendered
   OK  : 'toggle' is rendered
   OK  : the presenter produced output

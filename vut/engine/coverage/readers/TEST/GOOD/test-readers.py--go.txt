@@ -1,6 +1,6 @@
 
 --- the profile, read ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: go
          | ##tool:     go

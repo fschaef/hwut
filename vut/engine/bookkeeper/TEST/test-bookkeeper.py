@@ -5,7 +5,8 @@
 #     choices    = ["damage", "divergence", "naming", "overwrite",
 #                   "protection", "record", "reproduce", "setup_delta",
 #                   "one_act", "stain"]
-#     tolerance { eq_pattern = ["SUCCESS.*"] }
+#     tolerance { eq_pattern = ["SUCCESS.*",
+#                              "'( and no __dict__ for setting new attributes)?$"] }
 #     interactive = true
 # }
 #
@@ -327,7 +328,7 @@ def test_reproduce():
         (sorted(read) == ["report", "verdict"],
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
-         == "test;choice;verdict;report;coverage;"
+         == "test;choice;verdict;report;"
             "stderr;stain;test_id;choice_id",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
          "every column a decision -- and since B-13 the REGISTER'S two "

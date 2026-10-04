@@ -1,0 +1,16 @@
+
+--- points of items ---
+         branch    [(3, '', 2, 1), (3, '', 3, 6), (9, '', 2, 0)]
+         mcdc      [(4, '', 2, 3), (4, '', 3, 0)]
+         toggle    [(2, 'clk', 1, 1), (2, 'rst', 1, 0)]
+         cover     [(5, 'p', 1, 1)]
+         function  [(1, 'main', 1, 1), (6, 'f', 1, 0)]
+  OK  : 'branch' goes to points and comes back
+  OK  : 'mcdc' goes to points and comes back
+  OK  : 'toggle' goes to points and comes back
+  OK  : 'cover' goes to points and comes back
+  OK  : 'function' goes to points and comes back
+  OK  : a count of 3 of 4 items names none: refused
+  OK  : the function is a named point of one item
+SUCCESS: one shape for every measure.
+<hwut-end>

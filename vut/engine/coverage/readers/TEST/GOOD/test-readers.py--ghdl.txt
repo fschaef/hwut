@@ -1,6 +1,6 @@
 
 --- the annotation, read ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: c
          | ##tool:     gcov
@@ -9,6 +9,7 @@
          | SF:blinker.vhdl
          | EX:1,4,10+2,1,1+4,1,1+2,2+3,2,5
          | CV:1,4,10+2,1,1+4,1,1+2,2+3,2,5
+         | BR:6*6/4,38*39b/10
 
 --- the FSM, per arm ---
 INSPECT: line 29  IDLE:   'if enable'          covered = True

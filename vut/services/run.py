@@ -15,12 +15,7 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --timing                    keep the RUN'S CADENCE beside each
                                 candidate: the delta time per line, in
                                 seconds. An analyst aid, and what
-                                'hwut.run.stability' reads. Refused beside
-                                '--coverage': one measurement at a time
-    --coverage                  the DEMAND (coverage D-19): every test
-                                is built and run for coverage, every
-                                completed run harvested; what
-                                'hwut.run.cov <wish>' says
+                                'hwut.run.stability' reads
     --variant=<a>[,<b>...]      the VARIANT selection (E-9): one
                                 alternative per variant group, merged
                                 over the base configuration. Two
@@ -126,7 +121,6 @@ PARSER.add_argument("--deterministic", action="store_true")
 PARSER.add_argument("--directory", default=None)
 #  TAKEN, NOT ADVERTISED: what the usage line never named.
 PARSER.add_argument("--force-run", action="store_true", help=argparse.SUPPRESS)
-PARSER.add_argument("--coverage", action="store_true", help=argparse.SUPPRESS)
 PARSER.add_argument("--variant", default="", help=argparse.SUPPRESS)
 PARSER.add_argument("--dbd", "--directory-by-directory", action="store_true",
                     help=argparse.SUPPRESS)
@@ -223,7 +217,7 @@ TICK_SECONDS = 0.25
 @dataclass(frozen=True)
 class Execution:
     """WHAT GOVERNS THE RUN (E-101.b): record, concurrency, strategy,
-    variants, timing, coverage, and stability bypasses."""
+    variants, timing, and stability bypasses."""
     record:          bool | None = None
     worker_max_n:    int | None  = None
     strategy:        E_SchedulerTestRun_Strategy = DEFAULT_STRATEGY
@@ -231,7 +225,6 @@ class Execution:
                                  = DEFAULT_SELECTION_ORDER
     variant_text:    str         = ""
     timing_f:        bool        = False
-    coverage_f:      bool        = False
     despite_stain_f: bool        = False
     force_run_f:     bool        = False
 
@@ -324,8 +317,8 @@ def optional_log_writer(log_path: str, write_error):
         yield None
 
 
-async def _drive(root, request: Request, flow, demand=None,
-                 event_sink=None, label_view=None, write=None):
+async def _drive(root, request: Request, flow, event_sink=None,
+                 label_view=None, write=None):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
             'flow' as each event arrived; the closing 'None' consumed,
@@ -335,15 +328,9 @@ async def _drive(root, request: Request, flow, demand=None,
     BEFORE the first event.
     """
     exec_conf = request.execution
-    coverage = None
-    if exec_conf.coverage_f:
-        from vut.engine.coverage.api import CoverageConfig
-        coverage = demand if demand is not None else CoverageConfig()
-
     queue = orchestrator(root, request.wish,
                          test_run_dispatcher_factory(
                              record          = exec_conf.record,
-                             coverage        = coverage,
                              variant_tuple   = name_tuple_of(exec_conf.variant_text),
                              timing_f        = exec_conf.timing_f,
                              despite_stain_f = exec_conf.despite_stain_f,
@@ -375,7 +362,7 @@ async def _drive(root, request: Request, flow, demand=None,
         flow.dispatch(item)
 
 
-def do(request: Request, sink=None, flow=None, demand=None, write=None):
+def do(request: Request, sink=None, flow=None, write=None):
     """
     RETURN: Tally, the fold of the run's own event stream (O-4).
 
@@ -406,7 +393,7 @@ def do(request: Request, sink=None, flow=None, demand=None, write=None):
         event_list = asyncio.run(
             _drive(directory, request, 
                    flow if flow is not None else _NoFlow(), 
-                   demand=demand, event_sink=sink, 
+                   event_sink=sink, 
                    label_view=label_view, 
                    write=write if write is not None else (lambda line: None)))
     except RootConfMissing as error:
@@ -438,8 +425,8 @@ def exit_code_of(tally):
     return E_ExitCode.OK
 
 
-def main(argv=None, write=None, write_error=None, demand=None,
-         event_sink=None, despite_stain_f=False, force_run_f=False):
+def main(argv=None, write=None, write_error=None, event_sink=None,
+         despite_stain_f=False, force_run_f=False):
     """
     RETURN: E_ExitCode, the exit status of the run (E-1): OK where
             every test stood and no fault was met, FAULT where one
@@ -469,21 +456,17 @@ def main(argv=None, write=None, write_error=None, demand=None,
         def write_error(line):
             print(line, file=sys.stderr)
     try:
-        return _main(argv, write, write_error, captured_f, demand,
-                     event_sink, despite_stain_f, force_run_f)
+        return _main(argv, write, write_error, captured_f, event_sink,
+                     despite_stain_f, force_run_f)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         return E_ExitCode.SIGPIPE
 
 
-def _main(argv, write, write_error, captured_f, demand=None,
-          event_sink=None, despite_stain_f=False, force_run_f=False):
+def _main(argv, write, write_error, captured_f, event_sink=None,
+          despite_stain_f=False, force_run_f=False):
     """
     RETURN: E_ExitCode -- 'main' without the pipe guard.
-
-    'demand' is a CoverageConfig a FACE hands in for '--coverage' --
-    the seam through which 'hwut.run.cov' and its tests state the tool
-    until '--variant' selects it from the configuration (todo-13).
     """
     started_at = time.monotonic()   # the TOTAL counts from here
     if argv is None:
@@ -536,14 +519,6 @@ def _main(argv, write, write_error, captured_f, demand=None,
             return _abort(write, "'--jobs' takes a positive integer, not '%s'" % arguments.jobs)
         worker_max_n = int(arguments.jobs)
 
-    #  ONE MEASUREMENT AT A TIME (coverage D-3): a coverage run's times
-    #  are the instrumentation's, not the test's, and a cadence read
-    #  from it would be a lie. Refused at the door, never silently
-    #  preferred.
-    if arguments.timing and arguments.coverage:
-        return _abort(write, "'--timing' and '--coverage' cannot both stand: "
-                             "a coverage run's times are the instrumentation's")
-
     directory = arguments.directory or "."
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(arguments.word, directory, write, USAGE)
@@ -563,7 +538,6 @@ def _main(argv, write, write_error, captured_f, demand=None,
             selection_order = selection_order,
             variant_text    = arguments.variant,
             timing_f        = arguments.timing,
-            coverage_f      = bool(arguments.coverage),
             despite_stain_f = despite_stain_f,
             force_run_f     = force_run_f or arguments.force_run
         )
@@ -580,7 +554,7 @@ def _main(argv, write, write_error, captured_f, demand=None,
                             write_wallflowers=wallflowers_writer(write_error),
                             root=directory, started_at=started_at)
         try:
-            tally = do(request, sink=event_sink, flow=flow, demand=demand, write=write)
+            tally = do(request, sink=event_sink, flow=flow, write=write)
         except FaceError as error:
             write(error.said)
             return error.code

@@ -1,0 +1,58 @@
+
+--- what the readers refuse ---
+         not a zlib stream                        -> RecordFault
+         no magic                                 -> RecordFault
+         version 1                                -> RecordFault
+         a truncated buffer                       -> RecordFault
+         bytes after the last reference           -> RecordFault
+         references that do not ascend            -> RecordFault
+         a universe under a tag nobody claims     -> RecordFault
+         a mask of an item the point lacks        -> RecordFault
+         a mask of no item                        -> RecordFault
+         an ordinal outside the universe          -> RecordFault
+         ordinals that do not ascend              -> RecordFault
+         an item under two references             -> RecordFault
+         items of a measure the universe lacks    -> RecordFault
+         a point of no item                       -> RecordFault
+         a decision point with a name             -> RecordFault
+         a named point without a name             -> RecordFault
+         a measure nobody registered              -> RecordFault
+         text: no version line                    -> RecordFault
+         text: a header key missing               -> RecordFault
+         text: identifier of the wrong width      -> RecordFault
+         text: a line of no kind                  -> RecordFault
+         text: a universe nobody claims           -> RecordFault
+         text: items before their universe        -> RecordFault
+         text: a universe twice                   -> RecordFault
+         text: a mask of an item the point lacks  -> RecordFault
+         text: items that do not advance          -> RecordFault
+         text: 'CV@' before 'EX'                  -> RecordFault
+  OK  : refused: not a zlib stream
+  OK  : refused: no magic
+  OK  : refused: version 1
+  OK  : refused: a truncated buffer
+  OK  : refused: bytes after the last reference
+  OK  : refused: references that do not ascend
+  OK  : refused: a universe under a tag nobody claims
+  OK  : refused: a mask of an item the point lacks
+  OK  : refused: a mask of no item
+  OK  : refused: an ordinal outside the universe
+  OK  : refused: ordinals that do not ascend
+  OK  : refused: an item under two references
+  OK  : refused: items of a measure the universe lacks
+  OK  : refused: a point of no item
+  OK  : refused: a decision point with a name
+  OK  : refused: a named point without a name
+  OK  : refused: a measure nobody registered
+  OK  : refused: text: no version line
+  OK  : refused: text: a header key missing
+  OK  : refused: text: identifier of the wrong width
+  OK  : refused: text: a line of no kind
+  OK  : refused: text: a universe nobody claims
+  OK  : refused: text: items before their universe
+  OK  : refused: text: a universe twice
+  OK  : refused: text: a mask of an item the point lacks
+  OK  : refused: text: items that do not advance
+  OK  : refused: text: 'CV@' before 'EX'
+SUCCESS: a file half read is a report that lies; nothing is half read.
+<hwut-end>

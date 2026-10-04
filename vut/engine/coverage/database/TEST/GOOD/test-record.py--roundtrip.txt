@@ -1,6 +1,6 @@
 
 --- the stored form ---
-    | ##VUT-COVERAGE 2
+    | ##VUT-COVERAGE 4
     | ##run:      0.1
     | ##language: python
     | ##tool:     coverage

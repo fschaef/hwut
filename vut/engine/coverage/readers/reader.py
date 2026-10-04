@@ -7,8 +7,11 @@ PURPOSE: THE TWO ROLES OF A COVERAGE TOOL -- the FRAMEWORK that is
 
 DESCRIPTION
        CCoverageFramework      one per TOOL: gcov, coverage.py, jacoco
-           wrap(argv)          the tool's own call form -- THE one place
-                               a language's coverage tool is named
+           specify_command_line()
+                               the command line by which the tool runs
+                               the test application, from the class's
+                               'call_scheme' (D-39) -- THE one place a
+                               coverage tool's call is spelt
            report_argv()       the SECOND supervised call, where the tool
                                needs one to turn its raw data into
                                something readable ('coverage json',
@@ -46,7 +49,7 @@ DESCRIPTION
        (RATIONALE D-4).
 
        THE GATHER SET, TWICE. 'include'/'omit' are a GATHERING knob
-       (D-3). A tool that takes them gets them in 'wrap'; a tool that
+       (D-3). A tool that takes them gets them in its call scheme; a tool that
        does not gets them applied at READ instead. Either way the same
        globs decide, and neither is a reporting filter.
 
@@ -171,6 +174,55 @@ class CCoverageFormat(ABC):
         return self.record_of(accumulator, source_root, config, counts_f)
 
 
+SCHEME_FIELD_TUPLE = ("include", "omit", "test", "choice")
+
+
+def scheme_argv(call_scheme, included_paths, omitted_paths, test_app,
+                choice):
+    """
+    RETURN: list[str], the words of 'call_scheme' with its fields
+            filled:
+
+                {include}   the included paths, ',' between
+                {omit}      the omitted paths, ',' between
+                {test}      the test application; where it is several
+                            words (a stated call, R-68) they stay
+                            several
+                {choice}    the choice
+
+            A WORD WHOSE FIELD IS EMPTY IS DROPPED WHOLE: '--omit={omit}'
+            leaves no '--omit=' behind where nothing is omitted, and
+            '{choice}' leaves nothing where the application has no
+            choice.
+
+    Raises ValueError where the scheme names a field that is none of
+    the four.
+    """
+    import re
+    import shlex
+    value_db = {"include": ",".join(str(p) for p in included_paths or ()),
+                "omit":    ",".join(str(p) for p in omitted_paths or ()),
+                "test":    str(test_app),
+                "choice":  "" if choice is None else str(choice)}
+    argv = []
+    for word in shlex.split(call_scheme):
+        field_list = re.findall(r"\{([^{}]*)\}", word)
+        for field in field_list:
+            if field not in SCHEME_FIELD_TUPLE:
+                raise ValueError(
+                    "call scheme '%s' names '{%s}'; the fields are %s"
+                    % (call_scheme, field,
+                       ", ".join("{%s}" % f for f in SCHEME_FIELD_TUPLE)))
+        if any(not value_db[field] for field in field_list): continue
+        if word == "{test}":
+            argv += shlex.split(value_db["test"])
+            continue
+        for field in field_list:
+            word = word.replace("{%s}" % field, value_db[field])
+        argv.append(word)
+    return argv
+
+
 class CCoverageFramework(ABC):
     """THE TOOL -- one per coverage framework: how it is INVOKED, what
     it LEAVES, and which format that is in (RATIONALE D-23).
@@ -187,24 +239,37 @@ class CCoverageFramework(ABC):
     name   = None
     format = None                 # a CCoverageFormat instance
 
-    def wrap(self, argv, config, work_dir):
+    #  THE CALL SCHEME (D-39): the tool's command line as a template.
+    #  None: this tool is not on the command line at all, and the
+    #  application is called as it stands.
+    call_scheme = None
+
+    def specify_command_line(self, included_paths, omitted_paths,
+                             test_app, choice):
         """
-        RETURN: list[str], the argv that runs 'argv' UNDER the coverage
-                tool -- the only change a coverage run makes to the
-                execute stage. 'argv' UNCHANGED by default, which is
-                the answer for every tool that instruments somewhere
-                this component does not reach: at BUILD time (gcov's
-                '--coverage', verilator's, ghdl's '-fpsl'), on the
-                run's OWN command line ('go test -coverprofile'),
+        RETURN: list[str], the command line by which the TOOL runs the
+                test application: 'call_scheme' with its fields filled
+                ('scheme_argv').
+                None, where the tool is not on the command line -- the
+                application is then called as it stands. The default,
+                and the answer for every tool that instruments
+                somewhere this component does not reach: at BUILD time
+                (gcov's '--coverage', verilator's, ghdl's '-fpsl'),
                 through a JVM AGENT (jacoco), or from INSIDE the
-                process (simplecov, luacov). Eight of the registered
-                frameworks are in that position and said so eight
-                times before this default existed; each states WHY in
-                its own class docstring, which is per-format and worth
-                keeping, and overrides this only where there is
-                genuinely something to wrap.
+                process (simplecov, luacov). Each such framework says
+                WHY in its own class docstring.
+
+        'included_paths', 'omitted_paths'  the gather set (D-3), as the
+                    run states it; either may be empty.
+        'test_app'  the test application, as the tool is handed it:
+                    the source file of an interpreted test, the built
+                    coverage target of a compiled one.
+        'choice'    the choice of this run; None where the application
+                    has none.
         """
-        return list(argv)
+        if self.call_scheme is None: return None
+        return scheme_argv(self.call_scheme, included_paths,
+                           omitted_paths, test_app, choice)
 
     def report_argv(self, config, work_dir):
         """
@@ -337,19 +402,25 @@ def record_of(fmt, language, entry_iterable, counts_f=False):
     """
     RETURN: CoverageRecord, built from (path, executable_lines,
             covered_lines, count_list) tuples -- the ONE place a format
-            turns its findings into the homogeneous shape. 'tool' is
-            left EMPTY: the framework stamps it ('harvest').
+            turns its findings into the homogeneous shape. A fifth
+            element, a dict of measure name -> points ('measure.py'),
+            seats the measures beside the lines; a format that has none
+            gives four. 'tool' is left EMPTY: the framework stamps it
+            ('harvest').
 
     'run' is left EMPTY here: a format knows the ARTEFACT, not the run.
     The caller that knows the id seats it ('record.seated', D-8, D-18).
     """
     file_db = {}
-    for path, executable, covered, count_list in entry_iterable:
+    for path, executable, covered, count_list, *rest in entry_iterable:
         covered_range = ranges_of(covered)
         file_db[path] = FileCoverage(
             path, ranges_of(executable), covered_range,
             tuple(count_list) if counts_f and count_list is not None
-            else None)
+            else None,
+            {name: tuple(point_tuple)
+             for name, point_tuple in (rest[0] if rest else {}).items()
+             if point_tuple})
     return CoverageRecord(language = language,
                           tool     = "",
                           source   = fmt.name,
@@ -358,7 +429,7 @@ def record_of(fmt, language, entry_iterable, counts_f=False):
 
 
 def line_record_of(fmt, entry_db, config, source_root, counts_f,
-                   language_of, branch_of=None):
+                   language_of):
     """
     RETURN: CoverageRecord, built from a LINE DATABASE -- the shape
             'path -> {line number: format-specific tuple}' that every
@@ -371,13 +442,9 @@ def line_record_of(fmt, entry_db, config, source_root, counts_f,
     line's tuple is ITS HIT COUNT, which is all this fold reads of a
     format's own shape.
 
-    'branch_of' IS THE FORMAT'S OWN PART, and the only part: given the
-    line database and the executable line numbers it answers a tuple
-    of branch measure points, or None where the format carries none.
-    Cobertura counts a condition's taken/total; JaCoCo sums covered
-    and missed; the fields differ and so does the predicate that says
-    a line HAS a branch at all -- so the fold takes the answer and
-    does not guess at it.
+    A format that names no arm of a decision (a count of taken and
+    missing) seats no branch measure: the measure is the SET of arms
+    taken (RATIONALE D-43), and a count is not one.
 
     'language_of' is likewise the format's: a document that names no
     language of its own works it out from the extensions it carries.
@@ -395,12 +462,9 @@ def line_record_of(fmt, entry_db, config, source_root, counts_f,
             count_list = tuple(max(line_db[n][0] for n in range(begin, end)
                                    if n in line_db)
                                for begin, end in ranges_of(covered))
-        point_tuple = branch_of(line_db, executable) if branch_of else ()
-        measure_db  = {"branch": point_tuple} if point_tuple else {}
 
         file_db[path] = FileCoverage(path, ranges_of(executable),
-                                     ranges_of(covered), count_list,
-                                     measure_db)
+                                     ranges_of(covered), count_list)
 
     return CoverageRecord(language = language_of(file_db),
                           tool     = "",

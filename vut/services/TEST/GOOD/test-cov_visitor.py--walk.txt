@@ -1,0 +1,22 @@
+  header(/r)
+  open(src/a_b.c)
+  lines
+  measure(branch)
+  measure(cover)
+  measure(function)
+  measure(mcdc)
+  measure(toggle)
+  who_ran(1)
+  close(src/a_b.c)
+  open(b.c)
+  lines
+  who_ran(0)
+  close(b.c)
+  done
+  OK  : the header comes first, with the root
+  OK  : measures come in registered-name order, every one once
+  OK  : a source closes before the next opens
+  OK  : 'done' is last and its value comes back
+  OK  : a source nobody ran still passes 'who_ran'
+SUCCESS: one traversal, in one order, with nothing visited that has no point.
+<hwut-end>

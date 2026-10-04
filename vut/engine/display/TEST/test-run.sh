@@ -263,7 +263,8 @@ d = json.load(open('tree/suite/TEST/TMP/store/test-ok.sh.stdout.times'))
 print('unit: %s   deltas: %d   every delta a number: %s'
       % (d['unit'], len(d['delta_list']),
          all(isinstance(x, float) for x in d['delta_list'])))"
-    #  ONE MEASUREMENT AT A TIME: refused beside '--coverage'.
+    #  'hwut.run' MEASURES NO COVERAGE (coverage D-38): the word is
+    #  not taken; the coverage run is 'hwut.cov.run'.
     refusal --directory=tree --timing --coverage
     ;;
 

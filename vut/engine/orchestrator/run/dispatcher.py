@@ -26,8 +26,6 @@ dispatcher keeps each failed node's E_TestRunResult word in
 it on the wire as 'run-ended.report' (O-6).
 ______________________________________________________________________________
 """
-import asyncio
-
 from ...operations.build_action     import build
 from ...operations.run.multi_execute import MultiExecute
 from ...operations.run.stage_canonicalise import StageCanonicalise
@@ -49,8 +47,8 @@ FRAME_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
 class TestRunDispatcher(I_Dispatcher):
     """Drives one directory's plan against the real machinery."""
 
-    def __init__(self, directory, entry, record=None, coverage=None,
-                 variant_tuple=(), timing_f=False,
+    def __init__(self, directory, entry, record=None, variant_tuple=(),
+                 timing_f=False,
                  despite_stain_f=False, force_run_f=False):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
@@ -66,13 +64,6 @@ class TestRunDispatcher(I_Dispatcher):
         'variant_tuple' the alternatives named by '--variant' (E-9):
                    what each states is merged over every application's
                    configuration, one alternative per variant group.
-        'coverage' a CoverageConfig where coverage is asked (coverage
-                   D-19): every configuration is then made for the
-                   coverage target, and every run harvests. The run id
-                   comes from the directory's register -- and every
-                   run here HAS one: the gate admitted the case on its
-                   nominal's word (E-41), and a case the register did
-                   not name is registered before it runs, said so.
         'despite_stain_f' runs a STAINED choice anyway. THE PROVER'S
                    SEAM ALONE: 'hwut.run.stability' must be able to run
                    what it disqualified, or a stain could never be
@@ -110,9 +101,6 @@ class TestRunDispatcher(I_Dispatcher):
                 % directory)
         self.despite_stain_f = despite_stain_f
         self.force_run_f    = force_run_f
-        self.coverage   = coverage
-        self.id_db      = None if coverage is None \
-                          else self.store.bookkeeper
         #  THE REGISTER, for the E-41 attention: a test that runs here
         #  passed the nominal gate, so something was accepted for it;
         #  where the register has no entry, one is made and the run
@@ -120,16 +108,12 @@ class TestRunDispatcher(I_Dispatcher):
         #  'hwut.sanitize.propose --books' reads the same disagreement.
         self.register    = self.store.bookkeeper
         self.notice_list = []
-        #  ONE RUN AT A TIME per directory under coverage (coverage D-22):
-        #  every tool leaves its artefact in the directory's OUT/COVERAGE.
-        self.cov_lock   = None if coverage is None else asyncio.Lock()
         directory_spec  = getattr(getattr(entry, "app_set", None),
                                   "directory_spec", None)
         variant_db      = getattr(directory_spec, "variant_db", None)
         language_setup  = getattr(directory_spec, "language_setup", None)
         self.config_db  = {app.source_file:
                                test_configuration_of(app, directory,
-                                                     coverage,
                                                      variant_tuple,
                                                      variant_db,
                                                      timing_f,
@@ -219,14 +203,6 @@ class TestRunDispatcher(I_Dispatcher):
             await multi.close()
 
     async def run_test(self, node):
-        """RETURN: bool, the verdict; under coverage, one run at a time
-        in this directory (coverage D-22)."""
-        if self.cov_lock is None:
-            return await self._run_test(node)
-        async with self.cov_lock:
-            return await self._run_test(node)
-
-    async def _run_test(self, node):
         """
         RETURN: bool, the choice's VERDICT from the full ceremony:
                 provision (the session's own ChoiceExecute where one
@@ -264,25 +240,12 @@ class TestRunDispatcher(I_Dispatcher):
                 stage_execute      = multi.provider(node.choice),
                 stage_canonicalise = StageCanonicalise(configuration,
                                                        node.choice))
-        run_id = None
-        if self.id_db is not None:
-            run_id = self.id_db.run_id_of(configuration.key_name,
-                                          node.choice)
-            #  ACCEPTANCE IS THE ENTRY CEREMONY (B-13). A coverage run
-            #  is a run without necessarily a verdict on the outcome,
-            #  and a test nobody has accepted has no nominal to be
-            #  right or wrong against -- so there is nothing for a
-            #  record to attribute, and no id to attribute it with. We
-            #  do not coverage-run what was never accepted.
-            if run_id is not None:
-                from ...operations.coverage_action import prepare
-                prepare(configuration)
         outcome = await run_test_held(
             configuration,
             Request(choice=node.choice, record=self.record,
                     force_run=self.force_run_f),
             store=self.store_db.get(node.file, self.store),
-            provision=provision, run_id=run_id)
+            provision=provision)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
             detail = getattr(outcome.result.provision, "detail", None)
@@ -294,19 +257,17 @@ class TestRunDispatcher(I_Dispatcher):
         return bool(outcome.verdict)
 
 
-def test_run_dispatcher_factory(record=None, coverage=None,
-                                variant_tuple=(), timing_f=False,
+def test_run_dispatcher_factory(record=None, variant_tuple=(),
+                                timing_f=False,
                                 despite_stain_f=False,
                                 force_run_f=False):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
             factory 'orchestrator()' consumes, the store knob, the
-            coverage demand, the variant selection and the cadence
-            demand bound.
+            variant selection and the cadence demand bound.
     """
     return lambda directory, entry: TestRunDispatcher(
                                         directory, entry, record=record,
-                                        coverage=coverage,
                                         variant_tuple=variant_tuple,
                                         timing_f=timing_f,
                                         despite_stain_f=despite_stain_f,

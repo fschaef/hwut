@@ -1,56 +1,327 @@
-$ hwut.run.cov <dir>-<dir>-<dir>h<dir>e<dir>l<dir>p<dir>
+$ hwut.cov.conv.to_humans --help
 
-    PURPOSE: THE 'hwut.run.cov' COMMAND LINE -- coverage, as one executable with
-             verbs (coverage RATIONALE D-13, D-20).
+    PURPOSE: 'hwut.cov.conv.to_humans' -- a coverage file in its TEXT
+             spelling, on stdout (coverage RATIONALE D-20, D-43).
 
-        hwut.run.cov [<wish>] [--variant=<a>,<b>] [<hwut.run options>]
-                                    THE RUN, for coverage: 'hwut.run
-                                    --coverage' with the same wish and
-                                    options; every test is built and run
-                                    for coverage, every completed run
-                                    harvested (coverage D-19, D-21). The
-                                    tool is the configuration's, selected
-                                    by '--variant' (E-9); elected for the
-                                    language else
-        hwut.run.cov gather [--directory=<path>] [--out=<file>]
-                                    FOLD every record below the root into
-                                    ONE index whose keys are (directory,
-                                    run id), and write the DELIVERY BUNDLE
-                                    -- the gather's group-of-groups table
-                                    and index, plus a versioned snapshot of
-                                    each directory's register and group
-                                    table (coverage D-25). Writes into no
-                                    directory's 'GOOD/'.
-        hwut.run.cov stale BUNDLE [--directory=<path>]
-                                    which directories of that bundle have
-                                    MOVED since it was taken
-        hwut.run.cov convert [--from <form>] [--to <form>] FILE
-                                    the record in another spelling, on
-                                    stdout. Forms: 'binary' (what the store
-                                    holds, '.cover'), 'text' (the
-                                    presentation, FORMAT.txt). '--from'
-                                    defaults by the file's first bytes,
-                                    '--to' to the other form.
-        hwut.run.cov formats            the table of tools, formats and
-                                    aliases this build READS, GENERATED
-                                    from the registry -- the one author of
-                                    that table. Which tool serves a language
-                                    is the root conf's word (D-26)
-        hwut.run.cov --help             this text
+        hwut.cov.conv.to_humans [--from <form>] [--to <form>] FILE
+                                    the record in another spelling. Forms:
+                                    'binary' (what the store and the output
+                                    directory hold, '.cover'), 'text' (the
+                                    presentation, 'database/FORMAT.txt').
+                                    '--from' defaults by the file's first
+                                    bytes, '--to' to the OTHER form -- so
+                                    the bare call turns a '.cover' into
+                                    text, and '--to binary' turns the text
+                                    back. A per-case record (version 4) and
+                                    a file of an output directory (version
+                                    3) are each converted as what they are.
+        hwut.cov.conv.to_humans --help
+                                    this text
 
-    A first word that is a VERB ('gather', 'stale', 'convert', 'formats')
-    is that verb; anything else is the wish of a run. Faults set the exit
-    status (E-1); a record that cannot be read is refused by name and
-    nothing is written.
+    A record that cannot be read is refused by name and nothing is
+    written; the exit status says so (E-1).
     ____________________________________________________________________
     [status 0]
-$ hwut.run.cov 
+$ hwut.cov.conv.to_lcov --help
 
-    ==============================================================================
-    DIRECTORIES                                             0 ok, 0 fail, 00:00:00
-    ------------------------------------------------------------------------------
-        (no directory ran)
-    ==============================================================================
-    [status 3]
-SUCCESS: help on request; an empty command line is EMPTY.
+    PURPOSE: 'hwut.cov.conv.to_lcov' -- the output directory of a coverage
+             run as ONE lcov tracefile (coverage RATIONALE D-6, D-43, D-44),
+             for 'genhtml' and every other tool that reads lcov.
+
+        hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the tracefile goes to FILE, or
+                                    to stdout.
+        hwut.cov.conv.to_lcov --help
+                                    this text
+
+    THE MAPPING IS LOSSY BY CONSTRUCTION, as D-43 states, and in exactly
+    these ways:
+
+        SF    the source's path from the run's root, made absolute with the
+              root the marker names
+        DA    every executable line, count 1 where ANY test run executed it
+              and 0 where none did -- hwut carries no hit counts
+        FN    every function point, at its line; FNDA 1 or 0
+        BRDA  every arm of every decision: the BLOCK is the decision's place
+              among the decisions of its line, the BRANCH the arm's index;
+              taken is 1 or 0, and '-' where the decision's line was never
+              executed, as lcov spells a block never entered
+        TG CP not rendered: lcov has no toggle and no cover point; the
+              tracefile SAYS so in a '#' line before the record
+        MC    not rendered, OWED: lcov 2.2 spells MC/DC, but no reader
+              produces the measure yet and no tracefile carrying it was
+              witnessed; writing the line from memory would be the
+              invention every reader of this component refuses
+
+    WHO EXECUTED WHAT -- the test runs and the groups behind each range --
+    is what lcov cannot say and this component's own files do. The
+    tracefile is a presentation for the tools that want lcov; the output
+    directory stays the one place the data is kept.
+
+    The exit status (E-1): OK with the tracefile written, FAULT where the
+    directory cannot be read, REFUSED where the command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_html --help
+
+    PURPOSE: 'hwut.cov.conv.to_html' -- the output directory of a coverage
+             run as HTML pages for people (coverage RATIONALE D-44): what
+             was covered, what was not, and WHO ran what -- the one thing
+             every other coverage format cannot say.
+
+        hwut.cov.conv.to_html [DIRECTORY] [-o OUTDIR]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named). The pages go to OUTDIR,
+                                    'DIRECTORY/html' where none is named:
+
+            index.html              one row per source file: lines covered
+                                    of executable and the percentage, then
+                                    one column per measure any source
+                                    carries (branch arms, functions, mc/dc,
+                                    toggle bits, cover points), covered of
+                                    total and the percentage; 'n/a' where
+                                    there is nothing to cover
+            <source path>.html      the source, every executable line
+                                    coloured covered or not, the points of
+                                    the line beside it ('BR 1/2', 'FN main'),
+                                    and the TEST RUNS that executed the
+                                    line: 'directory/test choice', from
+                                    the output's own tables
+
+        hwut.cov.conv.to_html --help
+                                    this text
+
+    THE PAGES ARE SELF-CONTAINED: one style block, no script, no file
+    fetched from anywhere, so they open from a disk and travel in a mail.
+    Nothing in them is the machine's or the day's: two runs over one tree
+    write the same pages (O-30).
+
+    EVERY REGISTERED MEASURE IS RENDERED: branch and mc/dc as the items
+    taken of the items there are, the named points by name. A measure that
+    registers later and is none of these is declared and NAMED on the index
+    page rather than guessed at (D-29).
+
+    A SOURCE THE ROOT NO LONGER HOLDS gets its page without the text: the
+    line numbers, the colour and the runs stand, and the page says the file
+    was not found. The browser is never opened; the path of 'index.html' is
+    written.
+
+    The exit status (E-1): OK with the pages written, FAULT where the
+    directory cannot be read or OUTDIR not written, REFUSED where the
+    command line cannot be read.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_cobertura --help
+
+    PURPOSE: 'hwut.cov.conv.to_cobertura' -- the output directory of a
+             coverage run as ONE Cobertura XML report (coverage RATIONALE
+             D-44), the format the CI dashboards read (Jenkins, GitLab,
+             Azure, Codecov).
+
+        hwut.cov.conv.to_cobertura [DIRECTORY] [-o FILE]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the report goes to FILE, or to
+                                    stdout.
+        hwut.cov.conv.to_cobertura --help
+                                    this text
+
+    THE MAPPING, against the Cobertura DTD (coverage-04.dtd):
+
+        <coverage>      line-rate, branch-rate, lines-valid, lines-covered,
+                        branches-valid, branches-covered over the run;
+                        'timestamp' is 0 and 'version' names hwut: nothing
+                        of the day stands in the report (O-30)
+        <source>        the run's root
+        <package>       the directory of the source ('.' at the root);
+                        <class> the source file, 'filename' its path from
+                        the root
+        <method>        one per function point: 'name', its line with
+                        hits 1 or 0; 'signature' empty, which the DTD
+                        allows and the readers accept
+        <line>          every executable line, hits 1 or 0 -- hwut carries
+                        no hit counts; a line with decisions carries
+                        branch="true", condition-coverage="P% (taken/arms)"
+                        and one <condition> per decision, type "jump"
+        TG CP MC        not rendered: Cobertura has no toggle, cover point
+                        or condition-independence; an XML comment names
+                        them so a reader sees the gap
+
+    'complexity' is 0 everywhere: hwut does not measure it and will not
+    guess. WHO ran a line is not Cobertura's to say.
+
+    The exit status (E-1): OK with the report written, FAULT where the
+    directory cannot be read, REFUSED where the command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_jacoco --help
+
+    PURPOSE: 'hwut.cov.conv.to_jacoco' -- the output directory of a coverage
+             run as ONE JaCoCo XML report (coverage RATIONALE D-44), for the
+             tools that read JaCoCo (SonarQube, Jenkins' JaCoCo plugin).
+
+        hwut.cov.conv.to_jacoco [DIRECTORY] [-o FILE]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the report goes to FILE, or to
+                                    stdout.
+        hwut.cov.conv.to_jacoco --help
+                                    this text
+
+    THE MAPPING, against JaCoCo's report.dtd:
+
+        <report>        name "hwut"; no <sessioninfo>: nothing of the day
+                        stands in the report (O-30)
+        <package>       the directory of the source ('.' at the root)
+        <class>         one per source file, 'name' the path without its
+                        extension (JaCoCo's class names are paths),
+                        'sourcefilename' the base name; one <method> per
+                        function point with 'name', 'desc' "()", 'line',
+                        and a METHOD counter 0/1
+        <sourcefile>    the source file, 'name' its base name; one <line>
+                        per executable line with mi/ci (missed/covered
+                        instructions: 1/0 or 0/1 -- hwut counts lines, so
+                        a line is one instruction) and mb/cb (missed and
+                        covered branch arms of the line's decisions)
+        <counter>       INSTRUCTION, LINE, BRANCH, METHOD per class,
+                        sourcefile, package and report
+        TG CP MC        not rendered: JaCoCo has none; an XML comment names
+                        them so a reader sees the gap
+
+    WHO ran a line is not JaCoCo's to say.
+
+    The exit status (E-1): OK with the report written, FAULT where the
+    directory cannot be read, REFUSED where the command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_json --help
+
+    PURPOSE: 'hwut.cov.conv.to_json' -- the output directory of a coverage
+             run as ONE JSON document, LOSSLESS (coverage RATIONALE D-44):
+             everything the directory says, for a script that wants it
+             without reading the binary files.
+
+        hwut.cov.conv.to_json [DIRECTORY] [-o FILE]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the document goes to FILE, or
+                                    to stdout.
+        hwut.cov.conv.to_json --help
+                                    this text
+
+    THE DOCUMENT, keys sorted, two-space indent, LF terminated:
+
+        {"format": "hwut-coverage-json", "version": 1,
+         "root": "<the run's root>",
+         "sources": [
+           {"source": "src/a.c",
+            "lines": {"executable": [[1, 10]], "covered": [[1, 6]],
+                      "uncovered": [[6, 10]]},
+            "measures": {"branch": [[3, 1, 2], ...],
+                         "toggle": [[2, "clk", 1, 1], ...]},
+            "who_ran": [{"runs": ["t0", "t1"], "ranges": [[1, 3]]}, ...]
+           }, ...]}
+
+    Ranges are half-open [begin, end) as everywhere in this component. A
+    measure stands in its OWN SHAPE (database/measure.py): a decision point
+    '[line, mask, total]', a named point '[line, name, covered, total]'. So
+    EVERY REGISTERED MEASURE IS RENDERED by construction, as the record's
+    text spelling renders it, and none is declared unrendered -- the one
+    format beside the record's own that may say so (D-29).
+
+    The exit status (E-1): OK with the document written, FAULT where the
+    directory cannot be read, REFUSED where the command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_tex --help
+
+    PURPOSE: 'hwut.cov.conv.to_tex' -- the output directory of a coverage
+             run as a LaTeX document (coverage RATIONALE D-44): the index
+             over the sources, then every source listed with its lines
+             coloured, its points and the test runs that executed them --
+             for a report, an appendix, a print-out.
+
+        hwut.cov.conv.to_tex [DIRECTORY] [-o FILE] [--style FILE]
+                             [--body-only]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the document goes to FILE, or
+                                    to stdout. With '-o FILE' the package
+                                    'hwut-coverage.sty' is written beside it
+                                    where none stands yet, so the document
+                                    compiles where it lands.
+            --style FILE            a style of the reader's: the document
+                                    loads '\usepackage{FILE}' AFTER
+                                    'hwut-coverage', so every macro of the
+                                    package may be redefined there -- the
+                                    colours, the index table, the shape of
+                                    a listed line, or '\covline' whole
+            --body-only             the body alone, for '\input' into a
+                                    document that owns the preamble and
+                                    loads 'hwut-coverage' itself
+        hwut.cov.conv.to_tex --help
+                                    this text
+
+    THE BODY USES THE PACKAGE'S MACROS AND NOTHING ELSE ('hwut-coverage.sty'
+    beside this module names them): no colour, no font and no table shape
+    is written into the document, so a style decides every one of them.
+    Code is written escaped in '\texttt', spaces as '~', so a line reads
+    as it stands in the file.
+
+    EVERY REGISTERED MEASURE IS RENDERED in the index and beside the lines
+    as 'to_html' renders it; a measure of another shape is declared and
+    named by '\covnote' (D-29). A source the root no longer holds is listed
+    without its text, and the note says so. Nothing of the machine or the
+    day stands in the document (O-30).
+
+    The exit status (E-1): OK with the document written, FAULT where the
+    directory cannot be read or the files not written, REFUSED where the
+    command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.conv.to_pdf --help
+
+    PURPOSE: 'hwut.cov.conv.to_pdf' -- the document of 'hwut.cov.conv.to_tex'
+             compiled to PDF (coverage RATIONALE D-44).
+
+        hwut.cov.conv.to_pdf [DIRECTORY] [-o FILE] [--style FILE]
+                                    DIRECTORY is the '-o' of 'hwut.cov.run'
+                                    ('./hwut.coverage' where none is
+                                    named); the PDF goes to FILE,
+                                    'DIRECTORY/coverage.pdf' where none is
+                                    named. '--style' as 'to_tex'.
+        hwut.cov.conv.to_pdf --help
+                                    this text
+
+    THE ENGINE IS THE MACHINE'S: 'latexmk -pdf' where it stands, else
+    'pdflatex' twice; where neither stands the face says so by name and
+    writes nothing. The build runs in a directory of its own beside the
+    target; the '.tex', the package and the engine's log stay there under
+    '<target>.build/' so a failing build can be read. A reader's style
+    ('--style FILE') is copied in beside the document.
+
+    The exit status (E-1): OK with the PDF written, FAULT where the
+    directory cannot be read, no engine stands, or the engine failed (its
+    last lines are shown), REFUSED where the command line cannot be.
+    ____________________________________________________________________
+    [status 0]
+$ hwut.cov.formats --help
+
+    PURPOSE: 'hwut.cov.formats' -- the table of coverage tools, formats and
+             aliases this build READS, generated from the registry
+             (coverage RATIONALE D-13, D-26).
+
+        hwut.cov.formats            the table. Which tool serves a language
+                                    is not the registry's to say: it stands
+                                    in 'language-setup' of 'hwut-root.conf'
+        hwut.cov.formats --help     this text
+
+    The registry is the ONE author of the table; a machine that lacks a
+    tool is refused BY NAME against this list.
+    ____________________________________________________________________
+    [status 0]
+SUCCESS: help on request.
 <hwut-end>

@@ -3,6 +3,6 @@ cadence sidecars with --timing: 1
 unit: second   deltas: 2   every delta a number: True
 STATUS: 2
 STDOUT {
-    REFUSED: '--timing' and '--coverage' cannot both stand: a coverage run's times are the instrumentation's
+    REFUSED: 'hwut.run' does not take: --coverage
 }
 <hwut-end>

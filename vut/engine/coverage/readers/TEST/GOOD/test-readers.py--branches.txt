@@ -1,0 +1,27 @@
+
+--- gcov -b -c over classify.c (real) ---
+         | EX:2+5,1+5
+         | CV:2+5,1+5
+         | BR:3*2/4,1*2/2,1*7/3,5*3/2
+
+--- the same arms as percentages (constructed, prog.c) ---
+         ((4, 1, 2),)
+
+--- two annotations of one source: arm by arm ---
+         ((4, 3, 2),)
+         arms 2 and 3: ()
+
+--- coverage.py --branch, two real runs ---
+         argument 2 ((3, 1, 2), (5, 0, 2))
+         argument 1 ((3, 2, 2), (5, 1, 2))
+         together   ((3, 3, 2), (5, 1, 2))
+  OK  : gcov's arms in listed order: line 3 ('a && b') has four, only the second taken; the loop's 'call' line does not shift the arms of line 10
+  OK  : a percentage above zero is taken, '0%' is not
+  OK  : the same source twice, the other arm taken the second time: the union is both
+  OK  : a line with two arms in one annotation and three in the other carries NO point: which arm is which is not known
+  OK  : coverage.py: the arms of a decision are the destinations of its arcs, executed and missing together, in ascending order; argument 2 took the first arm of line 3 and never reached line 5
+  OK  : argument 1 took the other arm of line 3, and the first of line 5
+  OK  : two runs, different arms: the record merges, by OR, where counts (1 and 1) could not
+  OK  : a json without arcs, from a run without '--branch', carries no branch point: absence stays absent
+SUCCESS: the arms taken are a set, and sets can be unioned.
+<hwut-end>

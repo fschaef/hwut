@@ -1,0 +1,45 @@
+  registered measures: branch, cover, function, mcdc, toggle
+  cobertura declared unrendered: cover, mcdc, toggle
+  html      declared unrendered: (none)
+  jacoco    declared unrendered: cover, mcdc, toggle
+  json      declared unrendered: (none)
+  lcov      declared unrendered: cover, mcdc, toggle
+  tex       declared unrendered: (none)
+  OK  : cobertura: 'branch' is rendered
+  OK  : cobertura: 'cover' is declared unrendered and named
+  OK  : cobertura: 'function' is rendered
+  OK  : cobertura: 'mcdc' is declared unrendered and named
+  OK  : cobertura: 'toggle' is declared unrendered and named
+  OK  : cobertura produced output
+  OK  : html: 'branch' is rendered
+  OK  : html: 'cover' is rendered
+  OK  : html: 'function' is rendered
+  OK  : html: 'mcdc' is rendered
+  OK  : html: 'toggle' is rendered
+  OK  : html produced output
+  OK  : jacoco: 'branch' is rendered
+  OK  : jacoco: 'cover' is declared unrendered and named
+  OK  : jacoco: 'function' is rendered
+  OK  : jacoco: 'mcdc' is declared unrendered and named
+  OK  : jacoco: 'toggle' is declared unrendered and named
+  OK  : jacoco produced output
+  OK  : json: 'branch' is rendered
+  OK  : json: 'cover' is rendered
+  OK  : json: 'function' is rendered
+  OK  : json: 'mcdc' is rendered
+  OK  : json: 'toggle' is rendered
+  OK  : json produced output
+  OK  : lcov: 'branch' is rendered
+  OK  : lcov: 'cover' is declared unrendered and named
+  OK  : lcov: 'function' is rendered
+  OK  : lcov: 'mcdc' is declared unrendered and named
+  OK  : lcov: 'toggle' is declared unrendered and named
+  OK  : lcov produced output
+  OK  : tex: 'branch' is rendered
+  OK  : tex: 'cover' is rendered
+  OK  : tex: 'function' is rendered
+  OK  : tex: 'mcdc' is rendered
+  OK  : tex: 'toggle' is rendered
+  OK  : tex produced output
+SUCCESS: every converter renders a measure or says that it does not.
+<hwut-end>

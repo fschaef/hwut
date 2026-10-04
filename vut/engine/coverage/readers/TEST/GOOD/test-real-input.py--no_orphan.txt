@@ -3,6 +3,7 @@
   OK  : ghdl_psl     every file is an artefact or named provenance
   OK  : jacoco       every file is an artefact or named provenance
   OK  : lcov         every file is an artefact or named provenance
+  OK  : python_coverage every file is an artefact or named provenance
   OK  : simplecov    every file is an artefact or named provenance
   OK  : ucis         every file is an artefact or named provenance
   OK  : verilator    every file is an artefact or named provenance

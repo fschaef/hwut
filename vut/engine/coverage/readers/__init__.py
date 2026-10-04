@@ -127,9 +127,13 @@ class _SharedFormatFramework(CCoverageFramework):
         self.through = through
         self.format  = through.format
 
-    def wrap(self, argv, config, work_dir):
-        """RETURN: list[str], what the underlying framework would run."""
-        return self.through.wrap(argv, config, work_dir)
+    def specify_command_line(self, included_paths, omitted_paths,
+                             test_app, choice):
+        """RETURN: list[str] | None, the underlying framework's command
+        line."""
+        return self.through.specify_command_line(included_paths,
+                                                 omitted_paths, test_app,
+                                                 choice)
 
     def report_argv(self, config, work_dir):
         """RETURN: list[str] | None, the underlying framework's second

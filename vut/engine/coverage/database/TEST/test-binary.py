@@ -147,7 +147,8 @@ def test_measures():
                 covered=ranges_of([1, 2, 300]),
                 counts=(5, 70000),
                 measure_db={
-                    "branch": ((5, 1, 2), (9, 2, 2)),
+                    "branch": ((5, 1, 2), (9, 2, 2),
+                               (20, (1 << 299) | 5, 300)),
                     "mcdc":   ((4, 2, 3), (4, 3, 3)),
                     "toggle": ((12, "data[0]", 1, 1), (12, "daté[1]", 0, 1)),
                     "cover":  ((3, "p_ok", 1, 1),)}),
@@ -166,6 +167,10 @@ def test_measures():
          "the run set survives, the choice-less id among it"),
         (back.file_db["src/blinker.vhdl"].counts == (5, 70000),
          "a count above 254 took the escape and came back"),
+        (back.file_db["src/blinker.vhdl"].measure_db["branch"][2]
+         == (20, (1 << 299) | 5, 300),
+         "a decision of 300 arms: a mask of 38 bytes, and the total "
+         "above 254 took the escape"),
         (back.file_db["src/blinker.vhdl"].executable[-1] == (70000, 70001),
          "a range delta above 254 took the escape and came back"),
         (back.file_db["src/leer/ü.vhdl"].executable == (),
@@ -239,19 +244,30 @@ def test_faults():
                                         b"a.c\x02\x00\x00\x00\x01\x02",
                                         b"a.c\x02\x00\x00\x00\x00\x02", 1))),
         ("a tag no measure claims",  None),
+        ("a mask naming an arm the decision lacks", None),
+        ("a mask cut short",         None),
     ]
     banner("what the reader refuses")
     result_list = []
     for label, data in case_list:
         if data is None:
-            #  Build a record with one measure, then rename its tag.
+            #  Build a record with one measure, then spoil it.
             with_measure = CoverageRecord(
                 "c", "gcov", "gcov-annotated",
                 file_db={"a.c": FileCoverage(
                     "a.c", ranges_of([1]), ranges_of([1]),
                     measure_db={"branch": ((1, 1, 2),)})})
-            data = rezip(zlib.decompress(pack_record(with_measure))
-                         .replace(b"BR", b"ZZ"))
+            plain_m = zlib.decompress(pack_record(with_measure))
+            stream  = b"BR\x03\x00\x00\x00\x01\x02\x01"
+            assert stream in plain_m
+            if label == "a tag no measure claims":
+                data = rezip(plain_m.replace(b"BR", b"ZZ"))
+            elif label == "a mask cut short":
+                data = rezip(plain_m.replace(
+                    stream, b"BR\x02\x00\x00\x00\x01\x02"))
+            else:
+                data = rezip(plain_m.replace(
+                    stream, b"BR\x03\x00\x00\x00\x01\x02\x04"))
         name = raised(lambda d=data: unpack_record(d))
         print("         %-40s -> %s" % (label, name))
         result_list.append((name == "RecordFault", "refused: %s" % label))

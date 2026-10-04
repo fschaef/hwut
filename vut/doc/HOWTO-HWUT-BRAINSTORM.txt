@@ -575,4 +575,30 @@ BIN DISCIPLINE
       choices red, both reading one elided phrase. Split at the LAST
       wide gap, not the first; a line has as many gaps as it has
       columns
-
+    - A STAND-IN TOOL PROVES THE CHAIN, NOT THE CALL. The coverage
+      pages ran a 'witness' tool whose wrap APPENDS a flag to the
+      call; every one was green. MEASURED (demo/python, coverage.py
+      7.16, the command a person types): the real tool takes a SCRIPT
+      where the chain handed it a COMMAND, read 'python3' as the file
+      to run, and all four cases ended 'cut-short [FAIL]'. One page
+      per real tool, run through the face, is owed beside every
+      stand-in -- and until it stands, the stand-in's green says
+      nothing about the tool
+    - A RECORD PLANTED BY HAND IS PLANTED WHERE A REAL RUN LEAVES IT,
+      or the page tests the plant. 'test-report-details.sh coverage'
+      wrote 'TMP/store/demo--basic.cover'; a real coverage run writes
+      'demo.py--basic.cover' (the key is the source file WHOLE). The
+      face stripped '.py' to find the planted file, so page and face
+      agreed with each other and with no real record: 'coverage: none
+      recorded' beside a record that stood. Before planting, RUN the
+      producer once and copy the name it wrote
+    - AN EXCEPTION'S TEXT IS THE INTERPRETER'S, NOT THE SUBJECT'S. Two
+      nominals quoted "'X' object has no attribute 'y'"; Python 3.13
+      appends " and no __dict__ for setting new attributes". MEASURED:
+      'test-bookkeeper.py setup_delta' and 'test-configuration.py
+      slots' red on 3.13, green before. Healed by ONE NARROW
+      eq_pattern, "'( and no __dict__ for setting new attributes)?$":
+      it forgives the tail and nothing else -- a wrong attribute name
+      still fails (control: the name altered in a scratch GOOD, red).
+      Better still, print the exception's TYPE and the name, not its
+      text

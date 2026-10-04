@@ -1,6 +1,6 @@
 
 --- the tracefile, read ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: python
          | ##tool:     lcov
@@ -11,7 +11,7 @@
          | CV:1+3,3,2
 
 --- an ABSOLUTE 'SF', and one file named twice ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: c
          | ##tool:     lcov
@@ -22,7 +22,7 @@
          | CV:1+2,6
 
 --- with counts asked for ---
-         | ##VUT-COVERAGE 2
+         | ##VUT-COVERAGE 4
          | ##run:      -
          | ##language: python
          | ##tool:     lcov

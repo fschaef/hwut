@@ -364,7 +364,7 @@ The faces:
                  absolute paths included -- on every face that takes
                  test words ('entered()': run, plan, wishlist, report,
                  accept, play, show, remove, rename,
-                 move, stability; 'cov' by forwarding). A directory
+                 move, stability, cov.run). A directory
                  part carrying a glob metacharacter is a wish glob
                  with a path member (E-15), over the tree below, and
                  so is every '--glob' argument. A relative path is
@@ -487,6 +487,36 @@ The faces:
                  with NO nominal is now this face's too (E-60): it
                  provisions the candidate itself, the way 'hwut.accept'
                  refreshes (E-40), and opens on the mirror.
+
+    hwut.cov.run   (lib/cov/run.py)
+                 the coverage run (coverage D-38, D-42): the wish's
+                 cases run by their coverage tool, every record gathered
+                 into '-o <directory>'; no verdict, no book. Rendered as
+                 a run is, in its own vocabulary ([REC] / [NO REC]).
+    hwut.cov.conv.to_humans   (lib/cov/conv/to_humans.py)
+                 a coverage file in its text spelling, on stdout; '--to
+                 binary' for the way back. Either record version.
+    hwut.cov.conv.to_lcov     (lib/cov/conv/to_lcov.py)
+                 the output directory as one lcov tracefile, lossy as
+                 coverage D-43 states; '-o FILE' or stdout.
+    hwut.cov.conv.to_html     (lib/cov/conv/to_html.py)
+                 the output directory as pages: an index over the
+                 sources and measures, and per source every line
+                 coloured with its points and the test runs that
+                 executed it (coverage D-44).
+    hwut.cov.conv.to_cobertura, to_jacoco, to_json, to_tex, to_pdf
+                 (lib/cov/conv/to_<format>.py) the same directory as a
+                 Cobertura or JaCoCo XML report, as lossless JSON, as a
+                 LaTeX document of macros under 'hwut-coverage.sty'
+                 ('--style FILE' for a reader's package, '--body-only'
+                 for \input), and that document compiled (coverage
+                 D-45). EVERY CONVERTER IS A VISITOR over the one fold
+                 ('lib/cov/summary.py', 'lib/cov/visitor.py'); one
+                 command line for all ('lib/cov/conv/_face.py').
+    hwut.cov.formats   (lib/cov/formats.py)
+                 the table of tools and formats this build reads,
+                 generated from the registry (coverage D-13).
+                 One family (E-133); 'hwut.run.cov' is gone, no alias.
 
     hwut.help    (help.py)
                  reads the books as 'hwut.report' does and explains each

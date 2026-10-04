@@ -69,7 +69,7 @@ def _verdict(ok, sentence):
 #  FORMATS WITHOUT A REAL ARTEFACT, BY NAME. Stated here so the gap is
 #  a fact the test knows and prints, not a silence. Closing one means
 #  witnessing an artefact and deleting the name.
-KNOWN_GAP_SET = frozenset(("python_coverage", "go", "luacov"))
+KNOWN_GAP_SET = frozenset(("go", "luacov"))
 
 
 def _artefacts_of(directory, suffix_tuple):
@@ -174,7 +174,7 @@ def _absorbs(fmt, name, path):
     if name == "gcov":
         from vut.engine.coverage.readers.gcov import read_annotated
         with open(path, encoding="utf-8", newline="") as fh:
-            source, line_db = read_annotated(fh.read())
+            source, line_db, _ = read_annotated(fh.read())
         #  THE 'Source:' HEADER MAY BE ABSOLUTE -- gcov writes the path
         #  the compiler saw, on the machine it ran on. That is a fact
         #  about the artefact and is what test-readers.py checks is
@@ -184,6 +184,19 @@ def _absorbs(fmt, name, path):
                 "annotates %s, %d line(s)"
                 % (os.path.basename(source) if source else None,
                    len(line_db)))
+    if name == "python_coverage":
+        import shutil
+        import tempfile
+        from vut.engine.coverage.readers.python_coverage import _json_path
+        work_dir = tempfile.mkdtemp()
+        try:
+            os.makedirs(os.path.dirname(_json_path(work_dir)))
+            shutil.copy(path, _json_path(work_dir))
+            record = fmt.read(work_dir, work_dir)
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+        return (record is not None and bool(record.file_db),
+                "read %d file(s)" % (len(record.file_db) if record else 0))
     accumulator = fmt.empty() if hasattr(fmt, "empty") else {}
     fmt.absorb(accumulator, path)
     return bool(accumulator), ("absorbed" if accumulator
@@ -216,7 +229,7 @@ def test_no_orphan():
     #  for by EITHER category.
     provenance_suffix_tuple = (
         ".v", ".vhdl", ".rb", ".cjs", ".mjs", ".ts", ".cpp", ".c",
-        ".cob", ".d", ".f90", ".m", ".adb", ".vala", ".sh")
+        ".cob", ".d", ".f90", ".m", ".adb", ".vala", ".sh", ".py")
     pair_list = []
     for name, (fmt, suffix_tuple, _tools) in sorted(_format_db().items()):
         if name in KNOWN_GAP_SET: continue

@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "Branch and MC/DC: measures registered beside the line axis"
 #     choices    = ["branch", "faults", "in_record", "mcdc", "named",
-#                   "registration", "unmergeable"]
+#                   "points", "registration", "union"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -15,8 +15,12 @@ PURPOSE: THE OTHER MEASUREMENTS -- branch, MC/DC, and the NAMED
          points -- and the registration that admits one more without
          touching the record.
 
-CHOICES: registration, branch, mcdc, named, in_record, unmergeable,
-         faults;
+CHOICES: registration, branch, mcdc, named, in_record, union,
+         points, faults;
+
+points   every measure as POINTS OF ITEMS -- (line, name, total, mask) --
+         the one shape the output files gather (D-43), and back; a named
+         point that counts items it does not name is refused.
 
 DESCRIPTION:
 
@@ -24,18 +28,18 @@ registration  a measure owns its NAME and its record TAG, and a second
               measure claiming either is refused. Admitting a third is a
               'register' call and no change to 'record.py'.
 
-branch        'of the arms leaving this decision, how many were taken' --
-              delta coded per line, and a SECOND decision on one line
-              refused, because branch data is reported per line.
+branch        'of the arms leaving this decision, WHICH were taken' --
+              a mask, bit i for arm i (D-43), delta coded per line, and
+              a SECOND decision on one line refused, because branch
+              data is reported per line.
 
 named         the NAMED points -- 'toggle' and 'cover' -- carry the
-              point's IDENTITY beside its line, which is what makes
-              them MERGEABLE where 'branch' is not: a bit toggled in
-              either run is toggled, by name. Totals that disagree on
-              one named point are refused -- two records that do not
+              point's IDENTITY beside its line: a bit toggled in either
+              run is toggled, by name. Totals that disagree on one
+              named point are refused -- two records that do not
               describe one point.
 
-mcdc          'of the conditions in this decision, for how many was
+mcdc          'of the conditions in this decision, WHICH had their
               INDEPENDENCE demonstrated'. Here a delta of ZERO IS
               admitted: 'if (a) if (b)' is one line and two decisions,
               and a line-keyed record could not otherwise say so. The
@@ -46,15 +50,16 @@ in_record     a measure rides in its own line under its own tag. A file
               of line coverage alone is byte-identical to what it was
               before any measure existed.
 
-unmergeable   WHY these refuse to merge. A COUNT of arms taken does not
-              carry WHICH arms: run A takes arm 0, run B takes arm 1, and
-              no function of 1 and 1 yields 2. A lower bound reported as
-              a measurement is a false red -- and a false green the
-              moment somebody 'fixes' it by summing.
+union         WHY branch and MC/DC now merge. A mask carries WHICH arms
+              were taken: run A takes arm 0, run B takes arm 1, and the
+              union is the OR, 3 -- where a count (1 and 1) had no
+              answer. A measure that cannot name its items still
+              declares itself unmergeable and is refused by name.
 
 faults        a point that spells no point, a delta that does not
-              advance, a total of nothing, and a covered count above the
-              total -- which is arithmetic, not measurement.
+              advance, a total of nothing, and a mask naming an item the
+              decision does not have -- which is arithmetic, not
+              measurement.
 ______________________________________________________________________________
 """
 import sys
@@ -66,7 +71,7 @@ from vut.engine.coverage.database.measure import (I_Measure, PointMeasure,
                                          measure_of, measure_of_tag,
                                          name_tuple, tag_tuple,
                                          MeasureFault, BRANCH, MCDC,
-                                         TOGGLE, COVER)
+                                         TOGGLE, COVER, FUNCTION)
 from vut.engine.coverage.database.record  import (ranges_of, FileCoverage,
                                          CoverageRecord, format_record,
                                          parse_record, merge,
@@ -137,10 +142,10 @@ def test_registration():
           % raised(lambda: register(PointMeasure("arms", "BR"))))
 
     ok = check([
-        (name_tuple() == ("branch", "cover", "mcdc", "toggle"),
-         "four measures are registered, and the record writes them in "
+        (name_tuple() == ("branch", "cover", "function", "mcdc", "toggle"),
+         "five measures are registered, and the record writes them in "
          "this order so the bytes are stable"),
-        (tag_tuple() == ("BR", "CP", "MC", "TG"),
+        (tag_tuple() == ("BR", "CP", "FN", "MC", "TG"),
          "each owns a record tag"),
         (measure_of("branch") is BRANCH and measure_of_tag("MC") is MCDC
          and measure_of("toggle") is TOGGLE
@@ -163,7 +168,7 @@ def test_registration():
 
 def test_branch():
     """Arms taken, per line."""
-    entry = ((2, 1, 2), (10, 0, 2), (11, 3, 3))
+    entry = ((2, 1, 2), (10, 0, 2), (11, 7, 3))
     text  = BRANCH.encode(entry)
     banner("three decisions")
     print("INSPECT: %s" % (entry,))
@@ -174,20 +179,20 @@ def test_branch():
     print("         raised %s" % raised(lambda: BRANCH.decode("2*1/2,0*1/2")))
 
     ok = check([
-        (text == "2*1/2,8*0/2,1*3/3",
+        (text == "2*1/2,8*0/2,1*7/3",
          "delta coded on the line, as the ranges are"),
         (BRANCH.decode(text) == entry,
          "decode inverts encode"),
         (BRANCH.summary(entry) == (4, 7),
-         "the summary sums both halves; the ratio is DERIVED by whoever "
-         "renders, and stored by nobody"),
+         "the summary counts the arms taken and the arms there are; the "
+         "ratio is DERIVED by whoever renders, and stored by nobody"),
         (BRANCH.encode(()) == "" and BRANCH.decode("") == (),
          "no decision encodes to the empty string, and back"),
         (raised(lambda: BRANCH.decode("2*1/2,0*1/2")) == "MeasureFault",
          "branch data is reported PER LINE, so a zero delta means "
          "nothing and is refused"),
-        (BRANCH.mergeable is False,
-         "and it declares itself unmergeable"),
+        (BRANCH.mergeable is True,
+         "and it declares itself mergeable: the mask says which arms"),
     ])
     verdict(ok, "branch coverage is a point measure on the line axis.")
 
@@ -195,7 +200,7 @@ def test_branch():
 def test_mcdc():
     """Independence demonstrated, per decision."""
     #  'if (a) if (b)' -- one line, two decisions.
-    entry = ((4, 2, 3), (4, 3, 3), (9, 0, 2))
+    entry = ((4, 3, 3), (4, 7, 3), (9, 0, 2))
     text  = MCDC.encode(entry)
     banner("two decisions on line 4, one on line 9")
     print("INSPECT: %s" % (entry,))
@@ -206,7 +211,7 @@ def test_mcdc():
     print("         raised %s" % raised(lambda: MCDC.decode("0*1/2")))
 
     ok = check([
-        (text == "4*2/3,0*3/3,5*0/2",
+        (text == "4*3/3,0*7/3,5*0/2",
          "a delta of ZERO is a SECOND decision on the same line"),
         (MCDC.decode(text) == entry,
          "decode inverts encode, the zero delta included"),
@@ -214,9 +219,10 @@ def test_mcdc():
          "five conditions shown independent of eight"),
         (raised(lambda: MCDC.decode("0*1/2")) == "MeasureFault",
          "but the FIRST delta must advance: there is no line zero"),
-        (MCDC.mergeable is False,
-         "MC/DC declares itself unmergeable: two runs may demonstrate "
-         "independence of DIFFERENT conditions"),
+        (MCDC.mergeable is True,
+         "MC/DC declares itself mergeable: the mask says WHICH "
+         "conditions, and two runs may demonstrate independence of "
+         "different ones"),
     ])
     verdict(ok, "MC/DC is per DECISION, and a line may carry several.")
 
@@ -253,10 +259,9 @@ def test_named():
          "a zero delta admitting a second point on one line"),
         (TOGGLE.mergeable and COVER.mergeable,
          "both named measures declare mergeable -- the artifact names "
-         "every point, which is exactly what 'branch' lacks"),
+         "every point"),
         (merged == ((7, "count[0]", 1, 1), (7, "count[3]", 1, 1)),
-         "a bit toggled in EITHER run is toggled: the union 'branch' "
-         "cannot compute, computed by name"),
+         "a bit toggled in EITHER run is toggled, computed by name"),
         (TOGGLE.summary(merged) == (2, 2),
          "and the summary derives from the union, not from adding "
          "summaries"),
@@ -312,26 +317,86 @@ def test_in_record():
                 "registry; the record knows what none of them mean.")
 
 
-def test_unmergeable():
-    """Why a count of arms cannot be merged."""
-    a = record_with({"branch": ((2, 1, 2),)})     # took arm 0
-    b = record_with({"branch": ((2, 1, 2),)})     # took arm 1
+class OpaqueMeasure(PointMeasure):
+    """A measure whose entry cannot name its items: a count. It declares
+    itself unmergeable, as every measure that cannot say WHICH must."""
+
+    def __init__(self):
+        """RETURN: OpaqueMeasure, registered under tag 'ZQ'."""
+        super().__init__("opaque", "ZQ")
+        self.mergeable = False
+
+
+def test_points():
+    """The one shape the output files gather, and back."""
+    banner("points of items")
+    sample_db = {
+        BRANCH:   ((3, 1, 2), (3, 6, 3), (9, 0, 2)),
+        MCDC:     ((4, 3, 2), (4, 0, 3)),
+        TOGGLE:   ((2, "clk", 1, 1), (2, "rst", 0, 1)),
+        COVER:    ((5, "p", 1, 1),),
+        FUNCTION: ((1, "main", 1, 1), (6, "f", 0, 1)),
+    }
+    result_list = []
+    for measure, entry in sample_db.items():
+        points = measure.point_list(entry)
+        print("         %-9s %s" % (measure.name, points))
+        result_list.append((measure.entry_of(points) == entry,
+                            "'%s' goes to points and comes back"
+                            % measure.name))
+    result_list.append((
+        raised(lambda: TOGGLE.point_list(((2, "bus", 3, 4),)))
+        == "MeasureFault",
+        "a count of 3 of 4 items names none: refused"))
+    result_list.append((FUNCTION.tag == "FN" and FUNCTION.mergeable
+                        and FUNCTION.named_f and not BRANCH.named_f,
+                        "the function is a named point of one item"))
+    ok = check(result_list)
+    verdict(ok, "one shape for every measure.")
+
+
+def test_union():
+    """Why a mask merges where a count could not."""
+    a = record_with({"branch": ((2, 1, 2),), "mcdc": ((4, 1, 3),)})
+    b = record_with({"branch": ((2, 2, 2),), "mcdc": ((4, 2, 3),)})
 
     banner("two runs, one decision, DIFFERENT arms")
-    print("         run A: line 2, 1 of 2 arms")
-    print("         run B: line 2, 1 of 2 arms  -- the OTHER one")
-    print("         together the decision is FULLY covered, and no")
-    print("         function of 1 and 1 yields 2.")
-    print("INSPECT: merge raised %s" % raised(lambda: merge([a, b])))
+    print("         run A: line 2, arm 0 taken   (mask 1 of 2 arms)")
+    print("         run B: line 2, arm 1 taken   (mask 2 of 2 arms)")
+    merged = merge([a, b])
+    for line in format_record(merged).splitlines():
+        if line[:3] in ("BR:", "MC:"): print("         | %s" % line)
+    print("         together the decision is FULLY covered: mask 3")
+
+    banner("what is still refused")
+    print("INSPECT: totals that disagree -> %s"
+          % raised(lambda: merge([a, record_with(
+              {"branch": ((2, 1, 3),)})])))
+    register(OpaqueMeasure())
+    opaque = record_with({"opaque": ((2, 1, 2),)})
+    print("INSPECT: a measure that cannot name items -> %s"
+          % raised(lambda: merge([opaque, opaque])))
 
     banner("the same records without the measure merge as ever")
     plain = merge([record_with({}), record_with({})])
     print("         %s" % (plain.file_db["core.c"].covered,))
 
     ok = check([
-        (raised(lambda: merge([a, b])) == "MeasureNotMergeable",
-         "refused BY NAME, rather than resolved by a rule nobody asked "
-         "for"),
+        (merged.file_db["core.c"].measure_db["branch"] == ((2, 3, 2),),
+         "the union of masks is their OR: both arms taken"),
+        (merged.file_db["core.c"].measure_db["mcdc"] == ((4, 3, 3),),
+         "MC/DC likewise: independence shown of the conditions either "
+         "run showed"),
+        (BRANCH.summary(merged.file_db["core.c"].measure_db["branch"])
+         == (2, 2),
+         "and the summary derives from the union, not from adding "
+         "summaries"),
+        (raised(lambda: merge([a, record_with({"branch": ((2, 1, 3),)})]))
+         == "MeasureFault",
+         "one decision with two totals: not one decision, refused "
+         "rather than adjudicated"),
+        (raised(lambda: merge([opaque, opaque])) == "MeasureNotMergeable",
+         "a measure that cannot say WHICH is refused BY NAME"),
         (issubclass(MeasureNotMergeable, RecordFault),
          "and a caller that does not distinguish still sees a "
          "RecordFault"),
@@ -341,8 +406,7 @@ def test_unmergeable():
                 record_with({"mcdc": ()})]) is not None,
          "an EMPTY measure is not a measurement: it blocks no merge"),
     ])
-    verdict(ok, "a lower bound is not a measurement, and is refused "
-                "rather than reported.")
+    verdict(ok, "a mask is a measurement a union can answer.")
 
 
 def test_faults():
@@ -350,11 +414,11 @@ def test_faults():
     case_list = [
         ("no ratio at all",          "2"),
         ("a delta that is no number", "x*1/2"),
-        ("a covered that is no number", "2*x/2"),
+        ("a mask that is no number", "2*x/2"),
         ("a delta that does not advance", "2*1/2,0*1/2"),
         ("a negative delta",         "2*1/2,-1*1/2"),
         ("a total of nothing",       "2*0/0"),
-        ("covered above total",      "2*3/2"),
+        ("a mask naming a missing arm", "2*4/2"),
     ]
     banner("branch")
     result_list = []
@@ -386,7 +450,8 @@ if __name__ == "__main__":
             "mcdc":         test_mcdc,
             "named":        test_named,
             "in_record":    test_in_record,
-            "unmergeable":  test_unmergeable,
+            "union":        test_union,
+            "points":       test_points,
             "faults":       test_faults,
         },
         happy      = "SUCCESS.*",

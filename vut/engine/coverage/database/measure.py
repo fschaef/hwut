@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE OTHER MEASUREMENTS -- branch, condition, MC/DC -- and the
+PURPOSE: THE OTHER MEASUREMENTS -- branch, MC/DC, toggle, cover, function -- and the
          registration that admits one more without touching the format.
 
 DESCRIPTION
@@ -29,33 +29,28 @@ DESCRIPTION
            MC:4*2/3,0*3/3  mc/dc                 this module
 
        THE POINT SHAPE. Both built-in measures are lists of
-       (line, covered, total) -- a DECISION POINT and how much of it was
-       exercised. Delta coded on the line, exactly as the ranges are:
+       (line, mask, total) -- a DECISION POINT, how many ITEMS it has
+       (its arms, its conditions) and WHICH of them were taken: bit i
+       of the mask is set where item i was (RATIONALE D-43). Delta coded
+       on the line, exactly as the ranges are:
 
-           '<line delta>*<covered>/<total>'
+           '<line delta>*<mask in hexadecimal>/<total>'
+
+           BR:2*1/2        line 2, arm 0 of two taken
+           BR:2*3/2        line 2, both arms taken
 
        A delta of ZERO means ANOTHER DECISION ON THE SAME LINE, which
        'a && b || c' in one 'if' produces and which a line-keyed record
        could not otherwise express. The FIRST delta must still advance
        from zero: there is no line zero.
 
-       WHY THESE CANNOT BE MERGED, and why that is refused rather than
-       fudged. A count of arms taken does not carry WHICH arms. Run A
-       takes arm 0, run B takes arm 1: together the decision is fully
-       covered, but the two counts are 1 and 1, and no function of 1 and
-       1 yields 2. The same holds for MC/DC -- two runs may demonstrate
-       independence of DIFFERENT conditions.
-
-           max(1, 1) = 1     a LOWER BOUND, reported as a measurement
-                             -- a false RED, and worse, one that becomes
-                             a false GREEN the moment somebody 'fixes'
-                             it by summing instead
-
-       So a measure DECLARES 'mergeable', both of these declare False,
-       and 'record.merge' refuses by name. A future encoding that carried
-       the SET of arms taken rather than their number would be mergeable,
-       and could then declare so; that is the shape to reach for if an
-       aggregate over branch data is ever wanted (DISCUSSIONS todo-8).
+       ITEMS ARE IDENTIFIED BY POSITION: the order the tool reports
+       them. That is what makes the measures MERGEABLE: run A takes arm
+       0, run B takes arm 1, and the union is the OR of the masks,
+       3 -- where a COUNT of arms taken (1 and 1) had no answer, and
+       'max(1, 1) = 1' was a lower bound reported as a measurement. A
+       tool that cannot name its arms (a count of taken and missing)
+       contributes no such measure at all.
 
        A MEASURE WITHOUT LINES CANNOT LIVE HERE -- AND FEWER LACK ONE
        THAN disc-9 BELIEVED. The witnessed artifacts (TEST/REAL_
@@ -82,15 +77,38 @@ class I_Measure:
 
     'name' is how a configuration and a report speak of it; 'tag' is the
     two letters that carry it in a record. 'mergeable' says whether two
-    records holding it can be unioned -- see the module header for why
-    both built-in measures say False.
+    records holding it can be unioned: a measure whose entry cannot name
+    the items it counted says False, and 'record.merge' refuses it by
+    name.
     """
     name      = None
     tag       = None
     mergeable = False
+    named_f   = False
 
     def encode(self, entry):
         """RETURN: str, the entry as it is stored."""
+        raise NotImplementedError
+
+    def point_list(self, entry):
+        """
+        RETURN: list of (line, name, total, mask), the entry as POINTS OF
+                ITEMS, in the entry's order: bit i of 'mask' is set where
+                item i of the point was taken. 'name' is '' for a
+                decision point, which has none.
+
+        THIS IS THE SHAPE THE OUTPUT FILES GATHER (RATIONALE D-43): the
+        same for every measure, so a gatherer needs to know none of
+        them.
+
+        Raises MeasureFault where the entry holds a point whose items
+        cannot be named -- a count of items taken is no mask.
+        """
+        raise NotImplementedError
+
+    def entry_of(self, point_list):
+        """RETURN: the entry that 'point_list' spells; the inverse of
+        'point_list'."""
         raise NotImplementedError
 
     def decode(self, text):
@@ -109,41 +127,46 @@ class I_Measure:
 
 
 class PointMeasure(I_Measure):
-    """A measure recorded PER DECISION POINT: (line, covered, total).
+    """A measure recorded PER DECISION POINT: (line, mask, total).
 
-    'same_line_f' admits a delta of zero -- a second decision on one
-    line. Branch data is reported per line and does not need it; MC/DC
-    is reported per DECISION, and 'if (a && b || c)' is one line with
-    one decision while 'if (a) if (b)' is one line with two.
+    'total' is the number of items the decision has, 'mask' which of
+    them were taken, bit i for item i. 'same_line_f' admits a delta of
+    zero -- a second decision on one line. Branch data is reported per
+    line and does not need it; MC/DC is reported per DECISION, and
+    'if (a && b || c)' is one line with one decision while 'if (a) if
+    (b)' is one line with two.
     """
 
-    def __init__(self, name, tag, same_line_f=False, mergeable=False):
-        """RETURN: PointMeasure, ready to register."""
+    def __init__(self, name, tag, same_line_f=False):
+        """RETURN: PointMeasure, ready to register. Mergeable: the masks
+        carry which items were taken."""
         self.name        = name
         self.tag         = tag
         self.same_line_f = same_line_f
-        self.mergeable   = mergeable
+        self.mergeable   = True
 
     def encode(self, entry):
         """
-        RETURN: str, '<line delta>*<covered>/<total>' per point, in line
-                order. Empty string where there is no point.
+        RETURN: str, '<line delta>*<mask in hexadecimal>/<total>' per
+                point, in line order. Empty string where there is no
+                point.
         """
         piece_list = []
         previous   = 0
-        for line, covered, total in entry:
-            piece_list.append("%i*%i/%i" % (line - previous, covered, total))
+        for line, mask, total in entry:
+            piece_list.append("%i*%x/%i" % (line - previous, mask, total))
             previous = line
         return ",".join(piece_list)
 
     def decode(self, text):
         """
-        RETURN: tuple of (line, covered, total), in line order.
+        RETURN: tuple of (line, mask, total), in line order.
 
         Raises MeasureFault on a piece that spells no point, on a first
         delta that does not advance from zero, on a zero delta where this
-        measure admits none, and on a covered count above the total --
-        which is not a measurement but an arithmetic mistake.
+        measure admits none, on a decision with nothing to take, and on
+        a mask that names an item the decision does not have -- which is
+        not a measurement but an arithmetic mistake.
         """
         text = text.strip()
         if not text: return ()
@@ -152,13 +175,13 @@ class PointMeasure(I_Measure):
         previous = 0
         for i, piece in enumerate(text.split(",")):
             head, _, ratio = piece.partition("*")
-            covered_text, _, total_text = ratio.partition("/")
+            mask_text, _, total_text = ratio.partition("/")
             try:
-                delta   = int(head)
-                covered = int(covered_text)
-                total   = int(total_text)
+                delta = int(head)
+                mask  = int(mask_text, 16)
+                total = int(total_text)
             except ValueError:
-                raise MeasureFault("'%s' spells no '<delta>*<covered>/"
+                raise MeasureFault("'%s' spells no '<delta>*<mask>/"
                                    "<total>' point" % piece) from None
             if delta < 0 or (delta == 0 and (i == 0 or not self.same_line_f)):
                 raise MeasureFault(
@@ -169,19 +192,60 @@ class PointMeasure(I_Measure):
                             "decision on one line)"))
             if total < 1:
                 raise MeasureFault("'%s' has nothing to cover" % piece)
-            if covered > total:
+            if mask < 0 or mask >> total:
                 raise MeasureFault(
-                    "'%s' covers %i of %i -- an arithmetic mistake, not a "
-                    "measurement" % (piece, covered, total))
+                    "'%s' names an item of a decision that has %i -- an "
+                    "arithmetic mistake, not a measurement"
+                    % (piece, total))
             line = previous + delta
-            result.append((line, covered, total))
+            result.append((line, mask, total))
             previous = line
         return tuple(result)
 
     def summary(self, entry):
-        """RETURN: [0] int, points covered. [1] int, points there were."""
-        return (sum(covered for _, covered, _ in entry),
-                sum(total   for _, _, total   in entry))
+        """RETURN: [0] int, items taken. [1] int, items there were."""
+        return (sum(bin(mask).count("1") for _, mask, _ in entry),
+                sum(total for _, _, total in entry))
+
+    def point_list(self, entry):
+        """RETURN: list of (line, '', total, mask) -- the entry's own
+        points, no name."""
+        return [(line, "", total, mask) for line, mask, total in entry]
+
+    def entry_of(self, point_list):
+        """RETURN: tuple of (line, mask, total) over the points."""
+        return tuple((line, mask, total)
+                     for line, _, total, mask in point_list)
+
+    def merge(self, entry_a, entry_b):
+        """
+        RETURN: tuple of (line, mask, total), the UNION: an item taken in
+                either record is taken. A point is identified by its line
+                and its place among the points of that line.
+
+        Raises MeasureFault where one point carries two different totals
+        -- the two records do not describe one decision, and
+        adjudicating them would be an invention.
+        """
+        point_db = {}
+        for entry in (entry_a, entry_b):
+            seen_db = {}
+            for line, mask, total in entry:
+                place = seen_db.get(line, 0)
+                seen_db[line] = place + 1
+                standing = point_db.get((line, place))
+                if standing is None:
+                    point_db[(line, place)] = (mask, total)
+                    continue
+                if standing[1] != total:
+                    raise MeasureFault(
+                        "the decision at line %i has %i items in one "
+                        "record and %i in the other: these are not one "
+                        "decision" % (line, standing[1], total))
+                point_db[(line, place)] = (standing[0] | mask, total)
+        return tuple((line, mask, total)
+                     for (line, _), (mask, total)
+                     in sorted(point_db.items()))
 
 
 class NamedPointMeasure(I_Measure):
@@ -201,12 +265,40 @@ class NamedPointMeasure(I_Measure):
     stable.
     """
 
+    named_f = True
+
     def __init__(self, name, tag):
         """RETURN: NamedPointMeasure, ready to register. Mergeable by
         construction -- see the class header."""
         self.name      = name
         self.tag       = tag
         self.mergeable = True
+
+    def point_list(self, entry):
+        """
+        RETURN: list of (line, name, 1, mask), the entry's points in
+                (line, name) order: mask 1 where the point was covered.
+
+        Raises MeasureFault on a point with a total above one: 'covered
+        3 of 5' says HOW MANY items were taken and not WHICH, and two
+        such counts cannot be told apart from the same three items.
+        """
+        result = []
+        for line, name, covered, total in sorted(entry):
+            if total != 1:
+                raise MeasureFault(
+                    "point '%s' at line %i has %i items and a COUNT of "
+                    "%i taken: a count names no item, and only a point "
+                    "of one item can be carried" % (name, line, total,
+                                                    covered))
+            result.append((line, name, 1, covered))
+        return result
+
+    def entry_of(self, point_list):
+        """RETURN: tuple of (line, name, covered, total) over the
+        points, each of one item."""
+        return tuple((line, name, mask, total)
+                     for line, name, total, mask in point_list)
 
     def encode(self, entry):
         """
@@ -382,3 +474,10 @@ MCDC = register(PointMeasure("mcdc", "MC", same_line_f=True))
 #  for.
 TOGGLE = register(NamedPointMeasure("toggle", "TG"))
 COVER  = register(NamedPointMeasure("cover",  "CP"))
+
+#  THE FUNCTION: a point of ONE item, entered or not, named by the
+#  function and seated at the line it is declared on. Registered with
+#  the output files (D-43); a reader that produces it is owed
+#  (DISCUSSIONS todo-8): gcov, JaCoCo, cobertura and lcov 'FN' all name
+#  their functions.
+FUNCTION = register(NamedPointMeasure("function", "FN"))

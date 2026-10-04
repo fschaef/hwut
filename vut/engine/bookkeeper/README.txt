@@ -46,7 +46,7 @@ THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is
 refused at the specification's door.
 
-    test;choice;verdict;report;coverage;stderr;stain
+    test;choice;verdict;report;stderr;stain
 
     test            the application's file name; EMPTY means "the
                     same as the row above" -- an empty name means

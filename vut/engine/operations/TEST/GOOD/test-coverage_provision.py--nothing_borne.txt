@@ -1,8 +1,9 @@
-INSPECT: verdict False report nominal-file-not-found
-         coverage on the entry: no-data-provided
+INSPECT: the call, plain:     python3 -u demo.py
+         under the tool:      python3 -u demo.py --witness
+INSPECT: the run came to: no-data-provided
+         book entry: <none>
          record: <none>
   OK  : a tree that did not grow makes the harvest trivial: NO_DATA_PROVIDED
   OK  : and NO record is written -- absent, never empty
-  OK  : the book entry carries the cause beside the absence
-SUCCESS: absence and its cause travel together, in the book.
+SUCCESS: absence is answered with its cause, and stored nowhere.
 <hwut-end>

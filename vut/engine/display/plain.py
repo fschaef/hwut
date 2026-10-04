@@ -48,10 +48,8 @@ from enum     import Enum
 
 from ..protocol.receiver import CRunReportReceiver
 from ..protocol.summary  import fold
-from .word                       import CInk, phrase, reason_word
-from .failure                    import (HELP_HINT_STR, subtle_f,
-                                         E_FailureCategory,
-                                         CATEGORY_HEADING_DB, category_of)
+from .word                       import CInk
+from .vocabulary                 import RUN_VOCABULARY
 
 
 class E_Tier(Enum):
@@ -209,7 +207,8 @@ class CPlainFlow(CRunReportReceiver):
                  tier=E_Tier.PLAIN, timing_f=False, jobs_f=False,
                  detail_f=False, failure_summary_f=True,
                  brief_f=False, write_log=None, write_wallflowers=None,
-                 root=None, progress_write=None, started_at=None):
+                 root=None, progress_write=None, started_at=None,
+                 vocabulary=RUN_VOCABULARY):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -292,6 +291,9 @@ class CPlainFlow(CRunReportReceiver):
         self.jobs_f      = jobs_f
         self.detail_f    = detail_f
         self.failure_summary_f = failure_summary_f
+        #  WHAT THIS FLOW SAYS (D-40): the badges, the counting words
+        #  and the reasons -- the test run's where none is handed in.
+        self.vocabulary = vocabulary
         self.brief_f     = brief_f
         self.last_key    = None      # (directory, file) of the last
                                      # flow line that named a run
@@ -585,7 +587,8 @@ class CPlainFlow(CRunReportReceiver):
         body_ink = "%s:%s" % (self._ink_dir(directory), role)
         if good:
             self._line(when, "FRAME", "FRAME", body, body_ink,
-                       "[OK]", self.ink.tag_ok("[OK]"))
+                       self.vocabulary.tag_good,
+                       self.ink.tag_ok(self.vocabulary.tag_good))
         else:
             right, right_ink = self._fail_right("frame-failed")
             self._line(when, "FRAME", "FRAME", body, body_ink,
@@ -869,7 +872,8 @@ class CPlainFlow(CRunReportReceiver):
             if good:
                 self._line(when, "SKIP ", self.ink.warn("SKIP "),
                            body, body_ink,
-                           "[OK]", self.ink.tag_ok("[OK]"))
+                           self.vocabulary.tag_good,
+                           self.ink.tag_ok(self.vocabulary.tag_good))
             else:
                 right, right_ink = self._fail_right(report or verdict)
                 self._line(when, "SKIP ", self.ink.warn("SKIP "),
@@ -896,7 +900,8 @@ class CPlainFlow(CRunReportReceiver):
         if good:
             self._line(when, badge,
                        self.ink.built(badge) if built_f else badge,
-                       body, body_ink, "[OK]", self.ink.tag_ok("[OK]"))
+                       body, body_ink, self.vocabulary.tag_good,
+                       self.ink.tag_ok(self.vocabulary.tag_good))
         else:
             #  EVERY NOMINAL-RELATED FAILURE IS A '[FAIL]' with its word
             #  before it (O-25): 'unaccepted [FAIL]' as 'no GOOD file
@@ -913,10 +918,11 @@ class CPlainFlow(CRunReportReceiver):
                 'no-app [FAIL]' (display D-31) -- the badge alone
                 painted. The same word 'hwut.report' prints.
         """
-        word = reason_word(token)
-        if word is None: return "[FAIL]", self.ink.tag_fail("[FAIL]")
-        return ("%s [FAIL]" % word,
-                "%s %s" % (word, self.ink.tag_fail("[FAIL]")))
+        tag  = self.vocabulary.tag_bad
+        word = self.vocabulary.reason_word(token)
+        if word is None: return tag, self.ink.tag_fail(tag)
+        return ("%s %s" % (word, tag),
+                "%s %s" % (word, self.ink.tag_fail(tag)))
 
     def on_fault(self, when, directory, text):
         """
@@ -1001,10 +1007,12 @@ class CPlainFlow(CRunReportReceiver):
         self.dir_good_db[directory] = good
         if self.tier is not E_Tier.VERBOSE: return
         ok_n, total_n = self._count(directory)
-        tag    = "[OK]" if good else "[FAIL]"
-        right  = "%d of %d ok  %s" % (ok_n, total_n, tag)
-        right_ink = "%d of %d ok  %s" \
-                    % (ok_n, total_n,
+        tag    = self.vocabulary.tag_good if good \
+                 else self.vocabulary.tag_bad
+        right  = "%d of %d %s  %s" % (ok_n, total_n,
+                                      self.vocabulary.count_good, tag)
+        right_ink = "%d of %d %s  %s" \
+                    % (ok_n, total_n, self.vocabulary.count_good,
                        self.ink.tag_ok(tag) if good else self.ink.tag_fail(tag))
         self._line(when, "ROLL ", "ROLL ", directory,
                    self._ink_dir(directory), right, right_ink)
@@ -1202,7 +1210,8 @@ class CPlainFlow(CRunReportReceiver):
                 left_ink  = "%s%s" % (tree_ink, label_ink)
                 if directory is not None:
                     good   = self.dir_good_db.get(directory)
-                    tag    = "[OK]" if good else "[FAIL]"
+                    tag    = self.vocabulary.tag_good if good \
+                             else self.vocabulary.tag_bad
                     counts = "%d/%d" % self._count(directory)
                     right, right_ink = _tag_and_count(tag, counts,
                                                       good, self.ink)
@@ -1219,7 +1228,8 @@ class CPlainFlow(CRunReportReceiver):
         if len(self.dir_order) == 1:
             directory = self.dir_order[0]
             good      = self.dir_good_db.get(directory)
-            tag       = "[OK]" if good else "[FAIL]"
+            tag       = self.vocabulary.tag_good if good \
+                        else self.vocabulary.tag_bad
             counts    = "%d/%d" % self._count(directory)
             left      = "%s%s" % (TREE_INDENT, directory)
             right, right_ink = _tag_and_count(tag, counts, good, self.ink)
@@ -1240,8 +1250,10 @@ class CPlainFlow(CRunReportReceiver):
                 pype script, an interpreter not found, and the like.
         """
         return [key for key in self._failure_key_list(directory)
-                if category_of(self.report_db.get(key, self._verdict_of(key)))
-                   is not E_FailureCategory.DEVIATION]
+                if self.vocabulary.quiet_category is None
+                or self.vocabulary.category_of(
+                       self.report_db.get(key, self._verdict_of(key)))
+                   is not self.vocabulary.quiet_category]
 
     def tail(self):
         """RETURN: None. See '_tail'; the progress line is lifted for
@@ -1269,8 +1281,11 @@ class CPlainFlow(CRunReportReceiver):
 
         write("")
         write("=" * w)
-        head_right = "%d ok, %d fail, %s" % (ok_total, fail_total,
-                                             self._elapsed())
+        head_right = "%d %s, %d %s, %s" % (ok_total,
+                                           self.vocabulary.count_good,
+                                           fail_total,
+                                           self.vocabulary.count_bad,
+                                           self._elapsed())
         write("DIRECTORIES%*s" % (w - len("DIRECTORIES"), head_right))
         write("-" * w)
         if not self.dir_order:
@@ -1327,14 +1342,14 @@ class CPlainFlow(CRunReportReceiver):
         group_db = {}                     # category -> directory -> [item]
         for directory in fail_dir_list:
             for role in self.frame_bad_db.get(directory, []):
-                group_db.setdefault(E_FailureCategory.ENVIRONMENT, {}) \
+                group_db.setdefault(self.vocabulary.frame_category, {}) \
                         .setdefault(directory, []) \
                         .append(("frame %s" % role, None, "frame-failed",
                                  None))
             for key in self._hint_key_list(directory):
                 token = self.report_db.get(key, self._verdict_of(key))
                 file, _, rest = _display_name(key[1]).partition(" ")
-                group_db.setdefault(category_of(token), {}) \
+                group_db.setdefault(self.vocabulary.category_of(token), {}) \
                         .setdefault(directory, []) \
                         .append((file, rest.strip() or None, token, key))
         brief_column = 0
@@ -1345,12 +1360,12 @@ class CPlainFlow(CRunReportReceiver):
                     if choice: width += CHOICE_GAP + len(choice)
                     brief_column = max(brief_column, width + BRIEF_GAP)
         first_f = True
-        for category in E_FailureCategory:
+        for category in self.vocabulary.category_tuple:
             directory_db = group_db.get(category)
             if not directory_db: continue
             if not first_f: write("")
             first_f = False
-            write(CATEGORY_HEADING_DB[category])
+            write(self.vocabulary.heading_db[category])
             for directory in fail_dir_list:
                 item_list = directory_db.get(directory)
                 if not item_list: continue
@@ -1368,7 +1383,7 @@ class CPlainFlow(CRunReportReceiver):
                                             choice) if choice else shown
                     #  THE SAME PHRASE IS NOT SAID TWICE (D-35): ':'
                     #  under the one above, as the application's name.
-                    said      = phrase(token)
+                    said      = self.vocabulary.phrase(token)
                     right     = ":" if said == last_phrase else said
                     last_phrase = said
                     line = "        %-*s%s" % (brief_column, left,
@@ -1382,13 +1397,15 @@ class CPlainFlow(CRunReportReceiver):
                     write(line)
         #  THE POINTER TO 'hwut.help' (D-34): once, where any failure is
         #  more than a plain deviation from GOOD.
-        if any(self.frame_bad_db.get(d)
-               or any(subtle_f(self.report_db.get(key,
-                                                  self._verdict_of(key)))
-                      for key in self._hint_key_list(d))
-               for d in fail_dir_list):
+        subtle_f = self.vocabulary.subtle_f
+        if self.vocabulary.help_hint is not None \
+           and any(self.frame_bad_db.get(d)
+                   or any(subtle_f(self.report_db.get(key,
+                                                      self._verdict_of(key)))
+                          for key in self._hint_key_list(d))
+                   for d in fail_dir_list):
             write("")
-            write(HELP_HINT_STR)
+            write(self.vocabulary.help_hint)
         self._write_refused(write, w)
         self._write_silent(write, w)
         write("=" * w)
@@ -1412,7 +1429,8 @@ class CPlainFlow(CRunReportReceiver):
                         refused_n=refused_n, meta_n=self.meta_n,
                         seconds=self._elapsed_seconds(),
                         total=None if self.started_at is None
-                              else "%.2f" % (time.monotonic() - self.started_at))
+                              else "%.2f" % (time.monotonic() - self.started_at),
+                        vocabulary=self.vocabulary)
         if not line_list: return
         write("")
         for line in line_list: write(line)
@@ -1493,7 +1511,8 @@ class CPlainFlow(CRunReportReceiver):
 
 
 def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
-                      refused_n=0, meta_n=0, seconds=None, total=None):
+                      refused_n=0, meta_n=0, seconds=None, total=None,
+                      vocabulary=RUN_VOCABULARY):
     """
     RETURN: list[str], THE CLOSING TWO LINES: one line of numbers under
             the prefix 'RESULTS:', then one bordered bar of width 'w'
@@ -1535,7 +1554,10 @@ def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
     run_n = ok_n + fail_n
     if run_n == 0 and skip_n == 0 and refused_n == 0: return []
 
-    part_list = ["%d ok" % ok_n, "%d fail" % fail_n]
+    #  THE COUNTING WORDS ARE THE FLOW'S (D-40): 'ok' and 'fail' for a
+    #  test run, what the vocabulary handed in says for another.
+    good_word, bad_word = vocabulary.count_good, vocabulary.count_bad
+    part_list = ["%d %s" % (ok_n, good_word), "%d %s" % (fail_n, bad_word)]
     if skip_n:      part_list.append("%d skip" % skip_n)
     if refused_n:   part_list.append("%d refused" % refused_n)
     if meta_n:      part_list.append("%d meta" % meta_n)
@@ -1577,9 +1599,9 @@ def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
     last = "fail" if fail_n else "skip" if skip_n else "ok"
     paint_db = {"ok": ink.ground_ok, "skip": ink.ground_skip,
                 "fail": ink.ground_fail}
-    line_list.append(ink.ground_ok  (region("ok",   width_db["ok"]))
+    line_list.append(ink.ground_ok  (region(good_word, width_db["ok"]))
                      + ink.ground_skip(region("skip", width_db["skip"]))
-                     + ink.ground_fail(region("fail", width_db["fail"]))
+                     + ink.ground_fail(region(bad_word, width_db["fail"]))
                      + paint_db[last]("|"))
     return line_list
 

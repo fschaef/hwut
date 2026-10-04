@@ -251,10 +251,13 @@ def _terminal_write(text):
 
 def console_view(rendering_wish, write, write_error, environ, tty_f,
                  write_log=None, color_of=None, write_wallflowers=None,
-                 root=None, started_at=None):
+                 root=None, started_at=None, vocabulary=None):
     """
     RETURN: CPlainFlow, the console view the words asked for -- tier,
             ink and width already decided.
+
+    'vocabulary' is the CFlowVocabulary of the run rendered (D-40);
+    None reads as the test run's.
 
     The colour decision is taken HERE, once, and handed to the view as
     a constructed pen; no line re-sniffs (D-2).
@@ -290,4 +293,6 @@ def console_view(rendering_wish, write, write_error, environ, tty_f,
                           if tty_f and ink.on_f
                              and rendering_wish.tier is not E_Tier.SILENT
                           else None,
-                      root=root)
+                      root=root,
+                      **({} if vocabulary is None
+                         else {"vocabulary": vocabulary}))

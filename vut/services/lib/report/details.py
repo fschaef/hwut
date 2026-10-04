@@ -23,11 +23,22 @@ DESCRIPTION
                                                 prefixes, raw sidecars
                                                 and timing sections
                                                 included
+           hwut.report.details TEST-APP [CHOICE] --cov-dir <directory>
+                                                READ COVERAGE from that
+                                                output directory of
+                                                'hwut.cov.run' (coverage
+                                                D-42). Without it the
+                                                nearest 'hwut.coverage/'
+                                                from the test directory
+                                                upward is read; where
+                                                none stands, no coverage
+                                                is shown
            hwut.report.details TEST-APP [CHOICE] --no-coverage
                                                 LEAVE OUT the coverage
                                                 section. It stands BY
-                                                DEFAULT where a record
-                                                was harvested: a report
+                                                DEFAULT where a coverage
+                                                directory names the
+                                                test run: a report
                                                 says WHAT broke, and
                                                 coverage says WHICH
                                                 LINES the run actually
@@ -213,55 +224,71 @@ def load_timing(path):
         return []
 
 
-def coverage_section_text(directory, application, choice):
+def coverage_directory_of(directory, stated=None):
     """
-    RETURN: str, the coverage of that run: the token the book recorded,
-            and -- where a record stands -- its text spelling, uncovered
-            ranges first, because what a failing run did NOT reach is
-            what a reader is looking for.
-            None, where the book knows nothing of coverage for this run
-            (coverage was never asked): the section is then absent, and
-            absence is not reported as an empty measurement.
+    RETURN: str, the coverage output directory this report reads
+            (coverage D-42): the one 'stated' ('--cov-dir'); else the
+            nearest 'hwut.coverage/' found from 'directory' upward.
+            None, where none is stated and none is found.
     """
-    from vut.engine.bookkeeper.api import Bookkeeper
-    from vut.engine.coverage.api       import unpack_record
-    from vut.engine.coverage.api       import format_record, RecordFault
+    from vut.engine.coverage.api import DEFAULT_DIRECTORY_NAME
+    if stated: return os.path.abspath(stated)
+    here = os.path.abspath(directory)
+    while True:
+        candidate = os.path.join(here, DEFAULT_DIRECTORY_NAME)
+        if os.path.isdir(candidate): return candidate
+        above = os.path.dirname(here)
+        if above == here: return None
+        here = above
 
-    keeper = Bookkeeper(directory)
-    stem   = application[:-3] if application.endswith(".py") else application
-    entry  = keeper.result(stem, choice) or {}
-    token  = entry.get("coverage")
-    path   = keeper.coverage_path(stem, choice)
-    if token is None and not path.is_file(): return None
 
-    line_list = ["outcome: %s" % (token or "<not recorded>")]
-    if not path.is_file():
-        line_list.append("")
-        line_list.append("No record stands. The outcome above says why;")
-        line_list.append("a run that did not testify is never harvested")
-        line_list.append("(coverage RATIONALE D-21).")
+def coverage_section_text(directory, application, choice, cov_dir=None):
+    """
+    RETURN: str, the coverage of that test run, read from the coverage
+            output directory (coverage D-42): its test run id, then per
+            source file it reached what it did NOT execute -- what a
+            failing run did not reach is what a reader is looking for
+            -- and what it executed.
+            None, where no coverage directory is stated or found, or
+            the one found names no such test run: absence is not
+            reported as an empty measurement.
+
+    'cov_dir' is '--cov-dir'; None searches 'hwut.coverage/' from the
+    test directory upward.
+    """
+    from vut.engine.coverage.api import Output, OutputRefused, root_of
+
+    output_directory = coverage_directory_of(directory, cov_dir)
+    if output_directory is None: return None
+    root = root_of(output_directory)
+    if root is None: return None
+    relative = os.path.relpath(os.path.abspath(directory), root) \
+                 .replace(os.sep, "/")
+    try:
+        output = Output(output_directory)
+        found  = output.of_run(relative, application, choice)
+    except OutputRefused as refusal:
+        return "test run: <unread>\n%s" % refusal
+    if found is None: return None
+
+    def spans(range_tuple):
+        """RETURN: str, the ranges as 'first..last', ',' between."""
+        return ", ".join("%i..%i" % (b, e - 1) if e - b > 1 else "%i" % b
+                         for b, e in range_tuple) or "-"
+
+    run_id    = output.run_db[(relative, application, choice or None)]
+    line_list = ["test run: %s" % run_id, ""]
+    if not found:
+        line_list.append("this run executed no line of any gathered "
+                         "source")
         return "\n".join(line_list)
-
-    try:               record = unpack_record(path.read_bytes())
-    except (RecordFault, OSError) as fault:
-        return "outcome: %s\nthe record cannot be read: %s" % (token, fault)
-
-    line_list.append("")
     line_list.append("NOT EXECUTED by this run:")
-    silent_f = True
-    for source in sorted(record.file_db):
-        uncovered = record.file_db[source].uncovered
-        if not uncovered: continue
-        silent_f = False
-        line_list.append("  %-44s %s"
-                         % (source, ", ".join("%i..%i" % (b, e - 1)
-                                              for b, e in uncovered)))
-    if silent_f:
-        line_list.append("  (nothing: every executable line was reached)")
+    for source, _, not_executed in found:
+        line_list.append("  %-44s %s" % (source, spans(not_executed)))
     line_list.append("")
-    line_list.append("the record, in its text spelling "
-                     "('hwut.run.cov convert'):")
-    line_list.append(format_record(record).rstrip("\n"))
+    line_list.append("EXECUTED by this run:")
+    for source, reached, _ in found:
+        line_list.append("  %-44s %s" % (source, spans(reached)))
     return "\n".join(line_list)
 
 
@@ -389,7 +416,7 @@ def refresh(directory, application, choice):
 
 
 def build_pack(directory, application, choice, raw_f,
-               coverage_f=True, provision_line=None):
+               coverage_f=True, provision_line=None, cov_dir=None):
     """
     RETURN: str, the whole pack: metadata first, then one delimited
             section per file -- source, GOOD, OUT (cadence-prefixed
@@ -472,11 +499,12 @@ def build_pack(directory, application, choice, raw_f,
                                                          relative_path)),
                             section))
     timing_db = {k: record_db[k] for k in record_db if " timing " in k}
-    coverage_text = coverage_section_text(directory, application, choice) \
+    coverage_text = coverage_section_text(directory, application, choice,
+                                          cov_dir) \
                     if coverage_f else None
     line_list.append("coverage: %s"
                      % ("left out ('--no-coverage')" if not coverage_f
-                        else coverage_text.splitlines()[0][len("outcome: "):]
+                        else coverage_text.splitlines()[0].replace(": ", " ", 1)
                              if coverage_text else "none recorded"))
     line_list.append("cadence: %s"
                      % ("as '<delta-t>:<line>' prefixes"
@@ -581,7 +609,13 @@ def _main(argv):
                              "sidecars and timing sections included")
     parser.add_argument("--no-coverage", action="store_true",
                         help="leave out the coverage section; it stands "
-                             "by default where a record was harvested")
+                             "by default where a coverage directory "
+                             "names the test run")
+    parser.add_argument("--cov-dir", default=None, metavar="directory",
+                        help="the coverage output directory of "
+                             "'hwut.cov.run' (default: the nearest "
+                             "'hwut.coverage/' from the test directory "
+                             "upward)")
     arguments = parser.parse_args(rest_list)
 
     selected, code = select(wish, arguments.word,
@@ -599,12 +633,13 @@ def _main(argv):
             sys.stdout.write(build_pack(whole, application, case.choice,
                                         arguments.raw,
                                         not arguments.no_coverage,
-                                        provision_line=provision_line))
+                                        provision_line=provision_line,
+                                        cov_dir=arguments.cov_dir))
     return E_ExitCode.OK
 
 
 USAGE = ("usage: hwut.report.details [<wish>] [<test> [<choice>]] [--directory=<path>] "
-         "[-r|--raw] [--no-coverage]")
+         "[-r|--raw] [--no-coverage] [--cov-dir <directory>]")
 
 
 if __name__ == "__main__":

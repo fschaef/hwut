@@ -1,0 +1,14 @@
+
+--- one content, two spellings ---
+         a small file                       binary True  text True
+         escaped numbers, a UTF-8 path      binary True  text True
+         no line and no reference           binary True  text True
+         300 arms, a UTF-8 name             binary True  text True
+  OK  : a small file
+  OK  : escaped numbers, a UTF-8 path
+  OK  : no line and no reference
+  OK  : 300 arms, a UTF-8 name
+  OK  : the version byte reads 3
+  OK  : bytes that are no zlib stream have no version
+SUCCESS: the disk form and the presentation are one content.
+<hwut-end>

@@ -124,9 +124,10 @@ B-7  'hwut.renovate'
      'hwut-info.dat' to know candidacy.
      SEE ALSO C-6 (the stderr survey belongs with it).
 
-B-8  'hwut.convert_to_lcov'
+B-8  'hwut.convert_to_lcov'                                        BUILT
      coverage/DISCUSSIONS.txt todo-3
-     The export face (D-6): the reader registry run backwards.
+     The export face (D-6): BUILT as 'hwut.cov.conv.to_lcov' (coverage
+     D-43 pass 5, services E-133), lossy as D-43 states.
 
 B-9  '--global-conf [<file>]' ON THE SERVICES
      coverage/DISCUSSIONS.txt todo-5
@@ -505,7 +506,7 @@ the discussion is residue and the sorting rule says DELETE.
     gathered/0m  'hwut.report.wishlist'      E-13     (was band E)
     gathered/11  the directory keys   R-31..36
     gathered/12  the parser move      R-27,R-34
-    coverage     todo-3               built as 'hwut.run.cov convert'
+    coverage     todo-3               built as 'hwut.cov.conv.to_lcov'
                                                (was B-8)
 
     gathered/ : 40 -> 34 files.

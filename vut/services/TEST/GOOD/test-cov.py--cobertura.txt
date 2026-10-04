@@ -1,0 +1,57 @@
+$ hwut.cov.conv.to_cobertura <dir>/out
+    [43 line(s) written to stdout]
+    [status 0]
+    {
+      <?xml version="1.0" ?>
+      <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+      <!-- not rendered by hwut.cov.conv.to_cobertura: toggle -->
+      <coverage line-rate="0.5556" branch-rate="0.5000" lines-covered="5" lines-valid="9" branches-covered="2" branches-valid="4" complexity="0" version="hwut" timestamp="0">
+        <sources>
+          <source><dir></source>
+        </sources>
+        <packages>
+          <package name="src" line-rate="0.5556" branch-rate="0.5000" complexity="0">
+            <classes>
+            <class name="a.c" filename="src/a.c" line-rate="0.5556" branch-rate="0.5000" complexity="0">
+              <methods>
+                <method name="main" signature="" line-rate="1.0000" branch-rate="0.0" complexity="0">
+                  <lines><line number="1" hits="1"/></lines>
+                </method>
+                <method name="f" signature="" line-rate="1.0000" branch-rate="0.0" complexity="0">
+                  <lines><line number="6" hits="1"/></lines>
+                </method>
+              </methods>
+              <lines>
+                <line number="1" hits="1"/>
+                <line number="2" hits="1"/>
+                <line number="3" hits="1" branch="true" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="0" type="jump" coverage="100%"/>
+                  </conditions>
+                </line>
+                <line number="4" hits="1"/>
+                <line number="5" hits="1"/>
+                <line number="6" hits="0"/>
+                <line number="7" hits="0"/>
+                <line number="8" hits="0" branch="true" condition-coverage="0% (0/2)">
+                  <conditions>
+                    <condition number="0" type="jump" coverage="0%"/>
+                  </conditions>
+                </line>
+                <line number="9" hits="0"/>
+              </lines>
+            </class>
+            </classes>
+          </package>
+        </packages>
+      </coverage>
+    }
+  OK  : the document parses as XML
+  OK  : the report's totals are the run's
+  OK  : each function is a method
+  OK  : the decision at line 3 is a condition, both arms taken
+  OK  : the one at line 8 is unreached
+  OK  : the toggle bit is named as not rendered
+  OK  : nothing of the day stands in it
+SUCCESS: Cobertura for the dashboards; the directory keeps what it cannot say.
+<hwut-end>

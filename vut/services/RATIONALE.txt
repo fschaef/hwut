@@ -4654,6 +4654,8 @@ COST      A rename and nothing else: the module and the launcher move,
           ignoring whitespace, every one is identical under the
           rename. The bare word had to be swept too -- 'test-launchers.
           sh' lists faces without the 'hwut.' prefix (bin 5c).
+AMENDED   E-133 (2026-10-03): the run is 'hwut.cov.run'; coverage is
+          the family 'hwut.cov.*'.
 
 ----------------------------------------------------------------------------
 E-116  A FACE'S MODES ARE NAMED UNDER IT                         (2026-09-25)
@@ -5276,3 +5278,60 @@ COST      Whether a move was MEANT cannot be known: the block says how
           to forget instead. A walk narrower than the tree sees no other
           side and proposes 'forget'.
 
+
+
+E-132  'hwut.run' TAKES NO '--coverage'                           (2026-10-03)
+______________________________________________________________________________
+PROBLEM   'hwut.run --coverage' was a second door to the coverage run,
+          and through it a coverage tool's failure was booked as a
+          test's (coverage D-38).
+
+DECISION  RULED (Frank-Rene, 2026-10-03): "hwut.run does not coverage
+          analysis at all. at least for the initial version. you
+          mentioned the exact reason: coverage might fail to execute
+          and that would be booked as failure."
+          The option is gone from the parser, the help and
+          'Execution'; 'main' takes no 'demand'. The word is refused
+          like any unknown one ("'hwut.run' does not take:
+          --coverage"), so the refusal of '--timing' beside it is gone
+          too. The coverage run is 'hwut.run.cov <wish>' alone.
+
+COST      'engine/display/TEST/test-run.sh timing' and 'TEST/
+          test-cov_run.py door' moved.
+
+----------------------------------------------------------------------------
+E-133  COVERAGE IS ONE FAMILY: 'hwut.cov.*'                       (2026-10-03)
+----------------------------------------------------------------------------
+PROBLEM   E-115 made the coverage run 'hwut.run.cov' and hung its
+          converter and its table on it as VERBS. Coverage D-43 then
+          ruled two converters by name, 'hwut.cov.conv.to_humans' and
+          'hwut.cov.conv.to_lcov', and B-27 the same day spoke of
+          'hwut.cov.run' -- a family E-115 had just dissolved.
+
+DECISION  RULED (Frank-Rene): the fork put (a) the family 'hwut.cov.*',
+          (b) 'hwut.run.cov' kept beside new 'hwut.cov.conv.*', (c) the
+          converters as further verbs of 'hwut.run.cov'; answered "(a)".
+              hwut.cov.run               the coverage run (E-115's face)
+              hwut.cov.conv.to_humans    a coverage file as text, and
+                                         back ('hwut.run.cov convert')
+              hwut.cov.conv.to_lcov      the output directory as one
+                                         lcov tracefile (coverage D-43)
+              hwut.cov.formats           the table ('hwut.run.cov
+                                         formats')
+          Each lives in 'services/lib/cov/' ('run.py', 'formats.py',
+          'conv/to_humans.py', 'conv/to_lcov.py'), each with its own
+          launcher and '--help'. 'hwut.run.cov' IS GONE, no alias --
+          E-115's own rule -- and E-115 stands amended by this entry:
+          a way of running that has three faces of its own is a family,
+          and E-116 names the family's members under it.
+
+COST      A rename and two new faces. The sweep took 18 files of prose
+          and code and 11 pages: the five of 'test-cov_run.py', the
+          'answer' page of 'test-launchers.sh' and 'formats' of
+          'test-cov.py' move by the spelling alone (ignoring the name,
+          identical); 'convert' is now 'to_humans' (the same page under
+          the new name); 'refused' and 'help' gained the two new faces;
+          'lcov' is new. No tool on the recording machine reads lcov, so the
+          tracefile was checked against the format's text and the
+          module's own statement of the mapping, not through 'genhtml'
+          (OWED: run one real tracefile through it).

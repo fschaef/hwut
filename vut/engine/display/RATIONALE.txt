@@ -1055,3 +1055,51 @@ COST      Pages showing such a row move by the word, and by the pointer
           colour role 'run.tag-undecided' and the 'unaccepted' count of
           'results_line_list', unused since O-25.
 
+
+
+D-40  ONE RENDERER, A VOCABULARY PER KIND OF RUN                 (2026-10-03)
+______________________________________________________________________________
+PROBLEM   The coverage run printed a flat list of its own ('record',
+          or a token) through sixty lines of its own renderer: no
+          START lines, no DIRECTORIES, no HINTS, no tiers, no log.
+          'plain.py' could not serve it: '[OK]', '[FAIL]', 'ok' and
+          'fail' stood there as literals, and every reason came from
+          'failure.py', which is about a test's verdict.
+
+DECISION  RULED (Frank-Rene, 2026-10-03): "We should have the coverage
+          output stdout; similar to the run/report tradition. Test
+          runs that contribute should be labeled [RECORDED]. Else
+          [OMITTED]. Or, find better wording."
+          RULED, the wording: "[REC], [NO REC]".
+          RULED, the renderer: "It would be great to have one renderer
+          which is parametrized for run or coverage".
+          'vocabulary.CFlowVocabulary' is what a flow SAYS: the two
+          badges, the two counting words, the word before the bad
+          badge, the HINTS phrase, the categories with their headings,
+          and the closing hint. 'CPlainFlow', 'console_view' and
+          'results_line_list' take one; 'RUN_VOCABULARY' where none is
+          handed in, so the test run says what it said.
+          'coverage_reason.py' is THE ONE TABLE of the coverage run's
+          reasons -- word, phrase, category -- and 'COVERAGE_VOCABULARY':
+              no-coverage-target  'no target'      SETUP
+              not-registered      'not in book'    SETUP
+              run-incomplete      'incomplete'     RUN
+              no-data-provided    'no data'        TOOL
+              report-failed       'report failed'  TOOL
+          under the headings 'SETUP -- no coverage run possible', 'RUN
+          -- application did not testify', 'TOOL -- no usable data
+          from tool'. A token that table does not carry is the test
+          run's -- a failed build, a missing GOOD file -- and is said
+          in the test run's words.
+          THE WIRE IS UNCHANGED: a verdict stays 'ok' on the event
+          stream; the vocabulary decides what is printed.
+          The coverage run takes the rendering words again.
+
+COST      No page of 'hwut.run' moved: the display suite and the
+          census are byte-identical under the default vocabulary.
+          Five pages of the coverage face moved, each line by this
+          entry. 'hwut.help' does not explain the coverage reasons;
+          the coverage vocabulary carries no closing hint.
+          The '||n' column counts what the scheduler started; under
+          coverage the runs of one directory still proceed one at a
+          time (coverage D-22).

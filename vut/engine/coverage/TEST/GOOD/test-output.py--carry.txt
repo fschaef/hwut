@@ -1,0 +1,35 @@
+
+--- the coverage file of one source, three runs ---
+##VUT-COVERAGE 3
+##source:   src/a.c
+##language: c
+##tool:     gcov
+##format:   gcov
+##id-width: 2
+EX:1+9
+BR:3*2,0*3,5*2
+FN:1*main*1,5*f*1
+TG:2*clk*1,0*rst*1
+CV@00:3+2
+CV@02:8
+CV@10:1+2
+BR@00:1*1
+BR@01:1*2
+BR@02:2*4
+BR@10:2*3
+BR@11:3*1
+FN@01:2*1
+FN@10:1*1
+TG@01:2*1
+TG@10:1*1
+
+--- what each run took, read back from the directory ---
+         t0  branch ((3, 1, 2), (3, 3, 3), (8, 0, 2))
+         t1  branch ((3, 2, 2), (3, 3, 3), (8, 1, 2))
+         t2  branch ((3, 0, 2), (3, 4, 3), (8, 1, 2))
+  OK  : t0 gets back exactly what it reported
+  OK  : t1 gets back exactly what it reported
+  OK  : t2 gets back exactly what it reported
+  OK  : a run the output does not name has no measures
+SUCCESS: nothing a run reported beside the lines is lost.
+<hwut-end>

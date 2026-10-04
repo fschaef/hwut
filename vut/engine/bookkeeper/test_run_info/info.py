@@ -23,7 +23,7 @@ belongs to the bookkeeper because the bookkeeper owns both witnesses:
                                 member state: a member that failed is
                                 still a member (E-15).
         report                  the run's word for why
-        coverage, stderr        what the run recorded beside stdout
+        stderr                  what the run recorded beside stdout
         stain                   the flapping record (B-2)
 
     NOTHING CHANGES BY ASSIGNMENT
@@ -64,12 +64,11 @@ class CTestRunInfo:
     """
     __slots__ = ("_test", "_choice", "_test_id", "_choice_id",
                  "_member_state", "_last_verdict", "_report",
-                 "_coverage", "_stderr", "_stain")
+                 "_stderr", "_stain")
 
     def __init__(self, test, choice=None, member_state=None,
                  test_id=None, choice_id=None, last_verdict=None,
-                 report=None, coverage=None,
-                 stderr=None, stain=None):
+                 report=None, stderr=None, stain=None):
         """
         RETURN: CTestRunInfo, the entry as given. 'member_state' None
                 means a case nothing is known about yet -- UNKNOWN.
@@ -82,7 +81,6 @@ class CTestRunInfo:
                             ("_member_state", member_state),
                             ("_last_verdict", last_verdict),
                             ("_report", report),
-                            ("_coverage", coverage),
                             ("_stderr", stderr), ("_stain", stain)):
             object.__setattr__(self, name, value)
 
@@ -247,6 +245,5 @@ def of_row(test, choice, row_db, nominal_stands_f, carries_unaccepted_f):
         choice_id     = row_db.get("choice_id"),
         last_verdict  = None if verdict is None else bool(verdict is True),
         report        = row_db.get("report"),
-        coverage      = row_db.get("coverage") or None,
         stderr        = row_db.get("stderr") or None,
         stain         = row_db.get("stain"))

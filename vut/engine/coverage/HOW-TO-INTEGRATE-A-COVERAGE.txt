@@ -8,7 +8,7 @@ into the component: what to do, in what order, and where each piece
 goes. It is walked once per tool, by a developer of this component.
 
 It does not explain how a test run OBTAINS coverage -- that chain
-(build the coverage target, wrap, report, harvest) is README section 5
+(build the coverage target, the tool's call, report, harvest) is README section 5
 and RATIONALE D-19, built in 'operations/coverage_action.py'. And it does not restate the laws of
 the record or of a reader; those live in README.txt and RATIONALE.txt
 and are only POINTED AT from here.
@@ -101,8 +101,13 @@ way: one 'CCoverageFramework' subclass naming the existing format.
 
     register(FooFramework())
 
-'wrap', 'report_argv' and 'instrumented_f' ALL HAVE BASE DEFAULTS --
-'argv unchanged', 'no second call', 'cannot check'. State one only
+'call_scheme', 'report_argv' and 'instrumented_f' ALL HAVE BASE
+DEFAULTS -- 'not on the command line', 'no second call', 'cannot
+check'. A tool that runs the application states its call as a scheme
+(RATIONALE D-39):
+
+        call_scheme = "foo run --omit={omit} -- {test} {choice}"
+ State one only
 where the tool genuinely does that thing; where it does not, say WHY
 in the class docstring rather than writing the default out. 'instru-
 mented_f' never answers False for want of a way to know.
@@ -137,8 +142,8 @@ empty measurement), and computes 'counts_f' from the configuration.
 Override it only where that walk genuinely does not fit -- 'go' does,
 because its 'counts_f' depends on a mode discovered DURING the walk.
 
-'wrap' and 'report_argv' ARE THE BASE'S TOO, defaulting to 'argv
-unchanged' and 'no second call'. Eight of the registered frameworks
+'call_scheme' and 'report_argv' ARE THE BASE'S TOO, defaulting to
+'not on the command line' and 'no second call'. Eight of the registered frameworks
 instrument somewhere this component does not reach -- at build time,
 on the run's own command line, through a JVM agent, from inside the
 process -- and say so in a line of their class docstring rather than
@@ -228,7 +233,7 @@ Make the tool electable:
                        TABLE IS NOT IN THIS COMPONENT (D-26): an author's
                        tree carries its own copy in 'hwut-root.conf'.
     EXTENSION_DB       only where the source extension is new; it
-                       serves 'hwut.run.cov convert' and the record header
+                       serves 'hwut.cov.conv.to_humans' and the record header
 
 A candidate with no reader is still listed: the machine then refuses
 BY NAME instead of reporting no coverage. An empty candidate list is
@@ -247,7 +252,7 @@ recorded GOOD file is the specification. No assertions.
     cd TEST && python3 test-readers.py foo > GOOD/test-readers.py--foo.txt
     # audit the file line by line, THEN bless it
 
-Re-record 'GOOD/hwut.run.cov--formats.txt': the generated tool/format table
+Re-record 'GOOD/hwut.cov.run--formats.txt': the generated tool/format table
 gained a row, and a reader admitted without it turns the suite red
 (RATIONALE D-13).
 
@@ -262,4 +267,4 @@ witness:
     OVERVIEW-coverage-roads.txt      the road walked, the finding
 
 Do not copy the tool/format table anywhere; it has one author, the
-registry, and 'hwut.run.cov formats' prints it (RATIONALE D-13).
+registry, and 'hwut.cov.formats' prints it (RATIONALE D-13).

@@ -682,3 +682,33 @@ COST      None in output: no standing GOOD moved. A row mis-booked
           before this entry is mended by its next run, or by
           'hwut.sanitize.propose --books'.
 
+
+------------------------------------------------------------------------------
+B-27 THE BOOK HOLDS NO COVERAGE TOKEN                             (2026-10-03)
+------------------------------------------------------------------------------
+PROBLEM   The book carried a 'coverage' column: one token per run, set
+          by a coverage run that rode inside the test run. MEASURED on
+          the committed books of 26y10m02d: all 891 rows had it empty.
+          A coverage run on 'demo/python' filled it and thereby
+          dirtied a versioned book (B-24) without any acceptance.
+
+DECISION  RULED (Frank-Rene, 2026-10-03): "hwut.cov.run runs coverage,
+          but does not determine verdicts or book entries".
+          RULED, same day: "we have our own coverage format, we extract
+          the coverage from the tool and store it in our own format."
+          The column leaves '_COLUMN_TUPLE'; 'record()' takes no
+          'coverage'; 'result()' answers 'verdict' and 'report';
+          'CTestRunInfo' has no such field; the legacy reader drops
+          it. A book that still carries the column reads unchanged --
+          an unknown column is ignored -- and is written without it.
+          'coverage_path' STAYS: where the record lives is the store's
+          ground, and the record is all that is kept (coverage D-38).
+          THE COMMITTED BOOKS ARE CUT MECHANICALLY, as under B-25: the
+          one column is dropped from every row; 924 lines in 33 books,
+          each proved to be its old line without the fifth field, and
+          that field empty.
+
+COST      Why a case has no coverage record is asked of the coverage
+          run's output, not of the book. 'hwut.report.details' formats
+          the stored record (coverage D-24).
+

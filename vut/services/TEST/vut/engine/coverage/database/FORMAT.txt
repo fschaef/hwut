@@ -1,0 +1,574 @@
+THE VUT COVERAGE RECORD -- the format, line by line
+==============================================================================
+
+Mechanics only. WHY the format is shaped this way stands in RATIONALE
+(D-5 the skeleton, D-7 the provenance, D-8 and D-18 the run, D-11 the
+measures, D-12 named points). What is OPEN stands in DISCUSSIONS.
+
+A record has TWO SPELLINGS of one content: the TEXT spelling, sections
+1 to 7, and the BINARY spelling, section 8. The file on disk,
+'.cover', is BINARY. The text is the presentation: 'hwut.cov.conv.to_humans'
+renders either into the other, and the tests print it.
+
+In the text spelling a record is UTF-8, LF terminated. Every line is
+one of five kinds, in this order:
+
+    ##VUT-COVERAGE <version>     the version line, FIRST
+    ##<key>: <value>             header lines
+    SF:<path>                    a source file, opening a BLOCK
+    EX:<ranges>  CV:<ranges>     the line axis of that block
+    <TAG>:<points>               a registered measure of that block
+
+Blank lines are skipped wherever they stand. Trailing whitespace on a
+line is stripped before reading.
+
+
+------------------------------------------------------------------------------
+1  THE VERSION LINE
+------------------------------------------------------------------------------
+
+    ##VUT-COVERAGE 4
+
+FIRST line of the record. The number is decimal. A reader that does not
+write this version REFUSES; it does not attempt a partial reading.
+
+    1    the header named the run by NAME: '##test:' and '##choice:'
+    2    the header names RUN IDS: '##run:'; 'BR'/'MC' points count
+         the items taken ('covered/total')
+    4    as 2, but 'BR'/'MC' points carry WHICH items were taken, a
+         mask (section 5.2)                   <- what this build writes
+    3    NOT THIS RECORD: the gathered coverage of one source file in
+         an output directory, section 9. It has its own version line,
+         its own header and its own codec; a reader of version 4
+         refuses it by name, and the reader of version 3 refuses this.
+
+The BINARY spelling counts its own version (section 8, 'version 1'; the
+version byte of section 9.4 is 3), which is not this number.
+
+
+------------------------------------------------------------------------------
+2  THE HEADER
+------------------------------------------------------------------------------
+
+Five keys, every one REQUIRED. A missing key is a refusal. Order is as
+written below; a reader accepts any order. Leading and trailing
+whitespace around key and value is stripped, so the column alignment
+below is cosmetic.
+
+    ##run:      <run ids>       WHO ran -- see 2.1
+    ##language: <name>          the language of the sources
+    ##tool:     <name>          the coverage tool that made the artifact
+    ##format:   <name>          the artifact format it was read from
+    ##counts:   no | yes        whether 'CV' carries hit counts -- see 4.3
+
+'language', 'tool' and 'format' are free text without commas. A MERGED
+record whose parts disagree on one of them carries every value it saw,
+comma separated and sorted ('coverage,trace').
+
+2.1  THE RUN LINE
+
+    ##run:      0.1             one run
+    ##run:      -               NO run: the record names none
+    ##run:      0.0,0.1,3       several runs: a MERGED record
+
+A run id is '<app id>' or '<app id>.<choice id>', both decimal, issued
+by the register of the test directory ('bookkeeper/test_id_db.py'). The
+value is a SET: ids sorted ascending, comma separated, no spaces. '-'
+is the empty set, which is what a record fresh from a reader carries
+until 'record.seated' gives it one.
+
+A word that spells no run id is a refusal, and the refusal names the
+word.
+
+
+------------------------------------------------------------------------------
+3  THE SOURCE FILE LINE
+------------------------------------------------------------------------------
+
+    SF:parser/core.py
+
+Opens a BLOCK and closes the one before it. The path is RELATIVE TO THE
+TEST DIRECTORY, with '/' as separator on every platform. It may leave
+the directory ('../core.py'); an aggregator rebases it onto the gather
+root.
+
+Blocks are written in ascending path order, so two runs of one test
+produce the same bytes.
+
+A block MUST carry 'EX' and 'CV'. A block missing either is a refusal.
+A source file that was not measured has NO block -- absence and
+emptiness do not collapse. A source file measured and found to hold no
+executable line has a block with an EMPTY 'EX'.
+
+
+------------------------------------------------------------------------------
+4  THE LINE AXIS
+------------------------------------------------------------------------------
+
+    EX:3+12,5+5        the ranges that COULD be executed
+    CV:3+12            the ranges that WERE
+
+Both are DELTA CODED range lists. 'uncovered = EX - CV' and every
+percentage are DERIVED by whoever renders; neither is stored.
+
+4.1  A RANGE
+
+Half-open: '[begin, end)', 'end' the first line AFTER the range. Ranges
+in one list are sorted, disjoint, and never adjacent -- two adjacent
+runs of lines are ONE range.
+
+4.2  THE DELTA CODING
+
+    <d>            a range of ONE line
+    <d>+<L>        a range of L lines
+
+'d' is the gap from the PREVIOUS range's end; the first 'd' is the
+first line number itself. So every 'd' is positive and small.
+
+    lines 3..14 and 20..24     ->    3+12,5+5
+    lines 3, 7, 40             ->    3,3,32
+
+An EMPTY list is the empty string: 'EX:' with nothing after the colon.
+
+REFUSALS: a piece that spells no number; a delta of zero or less (the
+ranges would not advance); a length below one (the range covers no
+line).
+
+4.3  HIT COUNTS
+
+OFF by default. The header's 'counts:' declares whether they stand, so
+a reader never guesses.
+
+    <d>*<C>        a one-line range hit C times
+    <d>+<L>*<C>    an L-line range hit C times
+
+Counts ride on 'CV' only. 'counts: yes' with a piece carrying no count
+is a refusal, and so is a count where the header promised none.
+
+A MERGE of records carrying counts is REFUSED by name
+('CountsNotMergeable'): the union of two ranges has no answer for two
+different counts over one line.
+
+
+------------------------------------------------------------------------------
+5  THE MEASURES
+------------------------------------------------------------------------------
+
+Every measurement that is not the line axis rides in its own line under
+the TAG its measure claims. A block with no such measurement writes no
+such line, so a record of line coverage alone is byte-identical to what
+it was before any measure existed.
+
+Measures are written in registered-NAME order, after 'EX' and 'CV'.
+A tag no measure claims is a refusal; the refusal names every tag this
+build knows. 'hwut.cov.formats' prints the table this section
+describes, generated from the registry (RATIONALE D-13) -- when the two
+disagree, the generated one is right.
+
+5.1  REGISTERED MEASURES
+
+    TAG  NAME     SHAPE          MERGEABLE   WHAT IT RECORDS
+    BR   branch   point          YES         of the arms leaving this
+                                             decision, WHICH were taken
+    MC   mcdc     point, same    YES         of the conditions in this
+                  line admitted              decision, WHICH had their
+                                             independence demonstrated
+    TG   toggle   named point    YES         whether this signal bit
+                                             reached both 0 and 1
+    CP   cover    named point    YES         whether this cover point
+                                             was hit
+
+MERGEABLE says whether two records holding it may be unioned. 'branch'
+and 'mcdc' say yes since version 4 (RATIONALE D-43): the mask carries
+WHICH items were taken, so two runs covering different arms combine by
+OR. A measure whose entry cannot say which items it counted says no, and
+a merge of records carrying it is refused by name ('MeasureNotMergeable').
+A tool that counts its arms without naming them contributes no 'branch'
+at all.
+
+5.2  THE POINT SHAPE  (BR, MC)
+
+    <d>*<mask>/<total>
+
+per DECISION POINT, comma separated, in line order. 'd' is the delta
+from the previous point's line; the first must advance from zero.
+'total' is the number of items the decision has (its arms, its
+conditions); 'mask' is HEXADECIMAL, bit i set where item i was taken.
+Items are identified by POSITION, the order the tool reports them.
+
+    BR:2*1/2          line 2, arm 0 of two taken
+    BR:2*3/2          line 2, both arms taken
+    MC:4*3/3,0*7/3    line 4, two decisions on it
+
+A delta of ZERO means ANOTHER DECISION ON THE SAME LINE, which
+'if (a && b || c)' produces. It is admitted for 'mcdc' and refused for
+'branch', which is reported per line. A point's identity in a merge is
+its line and its place among the points of that line; two records that
+give it different totals do not describe one decision, and the merge
+refuses (MeasureFault).
+
+REFUSALS: a piece that spells no point; a first delta that does not
+advance from zero; a zero delta where the measure admits none; a total
+below one; a mask naming an item above 'total'.
+
+5.3  THE NAMED POINT SHAPE  (TG, CP)
+
+    <d>*<name>*<covered>/<total>
+
+per NAMED point, comma separated, in (line, name) order. The line is
+the point's DECLARED position -- a signal's declaration, a 'cover
+property' statement -- so several points share one line as a matter of
+course: a delta of zero is admitted from the SECOND point on.
+
+    TG:12*data[0]*1/1,0*data[1]*0/1
+
+THE NAME IS WHAT MAKES THE MEASURE MERGEABLE: point identity is
+carried, so two runs are unioned point by point and a point covered in
+either is covered.
+
+A name carrying '*' or ',' -- the encoding's own separators -- is
+REFUSED at writing. There is no escape scheme: a refusal is preferable
+to a corruption, and no witnessed identifier carries one.
+
+REFUSALS: as 5.2, plus a piece that names no point, and a MERGE where
+one (line, name) carries two different totals -- the two records do not
+describe one point.
+
+
+------------------------------------------------------------------------------
+6  A WHOLE RECORD
+------------------------------------------------------------------------------
+
+    ##VUT-COVERAGE 4
+    ##run:      0.1
+    ##language: c
+    ##tool:     gcov
+    ##format:   gcov-annotated
+    ##counts:   no
+    SF:parser/core.c
+    EX:3+12,5+5
+    CV:3+12
+    BR:5*1/2
+    SF:parser/table.c
+    EX:
+    CV:
+
+'table.c' was measured and holds no executable line. A source file that
+was NOT measured would have no block at all.
+
+
+------------------------------------------------------------------------------
+7  WHAT A READER REFUSES
+------------------------------------------------------------------------------
+
+Every refusal names the FIRST fault and stops. A coverage record half
+read is a coverage report that lies, so nothing recovers and carries
+on.
+
+    RecordFault            the record cannot be read
+      no version line, or one that spells no number
+      a version this build does not write
+      a header key missing
+      a 'run' word that spells no run id
+      a block without 'EX' or 'CV'
+      'EX', 'CV' or a measure line before any 'SF'
+      a line whose key is neither 'SF', 'EX', 'CV' nor a claimed tag
+      a range or count that spells no number
+      a delta that does not advance, a length below one
+      counts promised and absent, or given and not promised
+    MeasureFault           a measure line cannot be read -- see 5.2, 5.3
+    NotMergeable           the records cannot be unioned
+      CountsNotMergeable     one of them carries hit counts
+      MeasureNotMergeable    one of them carries a measure declaring
+                             itself unmergeable
+
+A file that does not parse is SKIPPED by an aggregator and named on
+stderr: one broken record must not cost a whole selection, and it must
+not vanish either. So is a record that names NO run -- it cannot be
+attributed, and a guess would be worse than the loss.
+
+
+------------------------------------------------------------------------------
+8  THE BINARY SPELLING
+------------------------------------------------------------------------------
+
+Little-endian throughout. The whole file is ONE zlib stream (level 6);
+what follows is its content, front to back, no padding, no offsets.
+
+    file     =  "VUTC"  u8 version  header  u32 n_files  file_block*
+    header   =  run_set  str language  str tool  str format  u8 counts
+    run_set  =  u32 n  (u32 app_id  u32 choice_id)*
+    str      =  u16 length  UTF-8 bytes
+    file_block = str path  stream EX  stream CV  [stream counts]
+                 u8 n_measures  (tag  stream)*
+    stream   =  u32 n_bytes  byte*
+    tag      =  two ASCII bytes, the measure's tag (5.1)
+
+    version     2 -- what this build writes and reads (1 counted the
+                arms taken: 'd, covered, total')
+    choice_id   0xFFFFFFFF spells 'no choice' ('47' in the text)
+    counts      0 or 1; 'stream counts' stands iff 1
+    n_files     blocks follow in ascending path order
+
+8.1  THE NUMBER STREAM
+
+Every delta-coded sequence is a stream of unsigned bytes with one
+escape:
+
+    0x00 .. 0xFE   the number itself
+    0xFF           the number follows as u32
+
+Ranges: the stream holds 'd, L' pairs as section 4.2 defines them.
+Counts: one number per COVERED range, in order.
+Points (5.2): 'd, total' per point, then the MASK as ceil(total / 8)
+little-endian bytes spliced into the stream (not a number: it can be
+longer than 32 bits).
+Named points (5.3): 'd, name, covered, total' per point, the name
+spliced into the stream as a 'str' (u16 length, UTF-8 bytes).
+
+8.2  REFUSALS, in addition to section 7's
+
+    not a zlib stream; no "VUTC"; a version this build does not write;
+    a mask cut short or naming an item above 'total'; a total below one;
+    the buffer ends where a field expects more; bytes after the last
+    block; a range delta of zero or a length of zero; an escaped number
+    cut short; a tag no measure claims.
+
+8.3  ONE CONTENT
+
+'unpack(pack(r))' and 'parse(format(r))' are the same record, and
+'format(unpack(pack(r))) == format(r)' byte for byte. The test proves
+it on every witnessed artifact ('TEST/test-binary.py').
+
+
+------------------------------------------------------------------------------
+9  VERSION 3: THE GATHERED COVERAGE OF ONE SOURCE FILE
+------------------------------------------------------------------------------
+
+What a coverage run leaves in its OUTPUT DIRECTORY (RATIONALE D-42,
+D-43): one file per source file, '<source path>.cover'. The file on disk
+is BINARY (9.4); its text spelling is the presentation, which
+'hwut.cov.conv.to_humans' prints and the tests read. Written and read by
+'coverage/output.py' and 'database/gathered.py'; the codecs of versions
+1 and 2 refuse it.
+
+A WHOLE OUTPUT, from 'demo/python', the three kinds of file together:
+
+    test_run_id_db.csv
+        directory;test;choice;test_run_id
+        TEST;demo.py;analogies;00
+        ;;constraints;01
+        ;;plain;02
+        ;;tolerance;03
+
+    test_run_group_id_db.csv
+        # This file defines groups of test run ids: ...
+        test_run_group_id;test_run_ids
+        10;00,01,02,03
+
+    TEST/demo.py.cover       in its text spelling
+        ##VUT-COVERAGE 3
+        ##source:   TEST/demo.py        path from the run's root
+        ##language: python
+        ##tool:     coverage
+        ##format:   coverage.py-json
+        ##id-width: 2                   digits of every identifier
+        EX:60+3,1,2,1+2,2,1+2,2,1+5,2,2+7,2,4+7
+        CV@00:91+7
+        CV@01:81+5
+        CV@02:69+2
+        CV@03:75+2
+        CV@10:60+3,1,2,5,5,8,11,4+3,2+2
+
+'EX' as in section 4, once. Each 'CV@<reference>:' line holds the
+ranges executed by ONE reference, delta coded as in section 4.2 from
+the start of the file. The lines are DISJOINT; their union is the
+covered set. They ascend by reference. Blank lines are skipped, and a
+header line may come in any order, as in section 2.
+
+9.1  THE REFERENCE
+
+A test run id or a test run group id. Which of the two is decided by
+the two tables beside the coverage files, never by the file:
+
+    test_run_id_db.csv          directory;test;choice;test_run_id
+    test_run_group_id_db.csv    test_run_group_id;test_run_ids
+
+ONE run executed the ranges: its test run id. SEVERAL did: the id of
+the group that is exactly that set. An identifier stands in exactly
+ONE of the tables; a reader of the output asserts it.
+
+9.2  THE TABLES
+
+';' separated, a header line, rows sorted. In 'test_run_id_db.csv' a
+'directory' or 'test' cell equal to the one above is left EMPTY, as in
+'GOOD/book.csv'; 'choice' is empty for a test without choices.
+'test_run_ids' lists the members ',' separated, ascending. Lines
+beginning '#' are comment.
+
+9.3  AN IDENTIFIER
+
+A number in base 64, the digits in ASCII order:
+
+    0-9  A-Z  _  a-z  ~
+
+Every identifier of one output is written at ONE width, padded with
+'0', so sorting the text sorts the numbers; the width stands in every
+coverage file as 'id-width', so a file presents itself without its
+tables. Test run ids count from zero; group ids begin at the next round
+value above the last test run id ('g00' after 'f2g'). The coverage
+files hold the identifier as a NUMBER ('database/identifier.py').
+
+9.4  THE BINARY SPELLING
+
+Little-endian, ONE zlib stream (level 6), the number stream of 8.1:
+
+    file       =  "VUTC"  u8 3  str source  str language  str tool
+                  str format  u8 id_width  stream EX
+                  u8 n_universe  universe*
+                  u32 n_reference  reference*
+    universe   =  tag[2]  u32 n  n bytes spliced:  (delta [str name] total)*
+    reference  =  u32 number  stream CV  u8 n_measure  items*
+    items      =  tag[2]  u32 n  n bytes spliced:  (ordinal delta, mask)*
+
+'str' and 'stream' as in section 8; a SPLICE is the point stream of 8.1
+in which numbers (escaped above 254), names ('str') and masks
+(ceil(total / 8) bytes, little-endian) follow each other as the grammar
+above says. The 'name' stands for a named measure only. The references
+ascend; a reference with items and no lines has an empty 'CV'. The
+measures stand in the order of their NAMES in the universe and in every
+reference, so the bytes are stable. Section 10 says what they mean.
+
+'unpack(pack(f))' and 'parse(format(f))' are the same file, proven by
+'TEST/test-gathered.py'.
+
+9.5  WHAT A READER REFUSES
+
+Every refusal names the FIRST fault and stops (section 7).
+
+    RecordFault, in the binary
+      not a zlib stream; no "VUTC"; a version byte other than 3
+      the buffer ends where a field expects more
+      bytes after the last reference
+      a range delta of zero or a length of zero
+      references that do not strictly ascend
+      a universe or an item list under a tag no measure claims
+      a measure twice or out of the order of its names
+      a point with nothing to take; a decision point with a name, or a
+        named point without one; a universe that does not ascend
+        by line and name
+      items of a measure the universe lacks, an ordinal that does not
+        ascend or names no point, a mask of no item or of an item the
+        point lacks, an item under two references
+    RecordFault, in the text
+      no version line '##VUT-COVERAGE 3'
+      a header key missing: source, language, tool, format, id-width
+      'id-width' that spells no number
+      'EX' missing or twice; 'CV@' before 'EX'
+      a reference that is no identifier of 'id-width' digits
+      a universe twice, or '<TAG>@' before its '<TAG>:'
+      a line of no known kind
+    OutputRefused, reading the output directory
+      a table or a coverage file that cannot be read
+      an identifier that stands in both tables
+      a reference that stands in neither table
+
+9.6  WHAT IT DOES NOT CARRY
+
+Hit counts. The run ids of 'bookkeeper/test_id_db.py': the identifiers
+here are this output's own.
+
+
+------------------------------------------------------------------------------
+10  VERSION 3 CARRIES EVERY MEASURE
+------------------------------------------------------------------------------
+
+RULED (RATIONALE D-43), BUILT (pass 4).
+
+10.1  THE ITEMS OF A POINT
+
+A POINT of a measure has ITEMS, counted from 0 and in the order the tool
+reports them:
+
+    BR   the arms leaving a decision
+    MC   the conditions of a decision
+    TG   the one bit of a signal (item 0: reached 0, item 1: reached 1)
+    CP   the one cover point
+    FN   the one function (entered)
+
+'BR' and 'MC' carry a MASK, bit i set where item i was taken (5.2).
+'TG', 'CP' and 'FN' are points of ONE item and read 'covered/1' (5.3);
+a named point of more than one item, whose 'covered' only COUNTS, names
+no item and is refused by the gatherer ('MeasureFault', in the output
+'OutputRefused'). 'FN' is registered; a reader that produces it is owed
+(DISCUSSIONS todo-8).
+
+10.2  WHAT A FILE HOLDS
+
+    EX:...                      the line axis, once        (section 4)
+    <TAG>:<universe>            per measure, once, by measure name
+    CV@<ref>:...               per reference, the lines   (section 9)
+    <TAG>@<ref>:<items>         per reference, the items it took
+
+The UNIVERSE is every point of the source, any run reported, with its
+number of items, ascending by line and name:
+
+    BR:5*2,0*3                  line delta * total; a zero delta is
+                                another decision on the same line
+    TG:4*clk*1,0*rst*1          line delta * name * total
+    FN:1*main*1,5*f*1
+
+A POINT IS IDENTIFIED by its line, its name ('' for a decision) and its
+place among the points of that line and name, as in a merge (5.2). Two
+runs that disagree on the number of items of one point are refused.
+
+An ITEM LIST holds, per point with at least one item taken by that
+reference, 'ordinal delta * mask'. The ORDINAL is the point's place in
+the universe counted from 1; its delta from the previous listed point
+(the first delta is the ordinal itself); the mask in hexadecimal.
+
+    BR@02:1*1,1*5               the first point, arm 0; the second point,
+                                arms 0 and 2
+
+EVERY ITEM STANDS UNDER EXACTLY ONE REFERENCE, the one whose set of runs
+is exactly the set that took it (9.1). The union over the references is
+what was taken. A reference that took items and ran no line has item
+lists and no 'CV' line.
+
+A WHOLE FILE, from 'TEST/test-output.py', three runs 00, 01, 02 and the
+groups 10 = {00, 01} and 11 = {01, 02}:
+
+    ##VUT-COVERAGE 3
+    ##source:   src/a.c
+    ##language: c
+    ##tool:     gcov
+    ##format:   gcov
+    ##id-width: 2
+    EX:1+9
+    BR:3*2,0*3,5*2
+    FN:1*main*1,5*f*1
+    TG:2*clk*1,0*rst*1
+    CV@00:3+2
+    CV@02:8
+    CV@10:1+2
+    BR@00:1*1               run 00 took arm 0 of the first decision
+    BR@01:1*2               run 01 took its arm 1
+    BR@02:2*4               run 02 took arm 2 of the second
+    BR@10:2*3               runs 00 and 01 both took arms 0 and 1 of it
+    BR@11:3*1               runs 01 and 02 both took arm 0 of the third
+    FN@01:2*1
+    FN@10:1*1
+    TG@01:2*1
+    TG@10:1*1
+
+WHAT A RUN TOOK is read back by OR-ing the masks of the references that
+include it ('measure_db_of'; 'Output.measures_of_run'): every point of
+the universe, the items it did not take an empty mask.
+
+10.3  THE BINARY SPELLING
+
+Section 9.4. The text of 10.2 is the presentation of it:
+'hwut.cov.conv.to_humans' makes it, the tests print it;
+'hwut.cov.conv.to_lcov' makes the lcov tracefile of a whole output
+directory, lossy as D-43 states (its module says exactly how), and
+'hwut.cov.conv.to_html' the pages for people (D-44).
