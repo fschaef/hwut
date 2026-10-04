@@ -1,0 +1,56 @@
+$ hwut.dev.podman.build --help
+    
+PURPOSE: 'hwut.dev.podman.build' -- the development container's image,
+         built from 'vut/adm/container/Containerfile'.
+
+    hwut.dev.podman.build [--rebuild] [--directory=<path>]
+                                builds the image 'hwut-dev' where none
+                                stands; '--rebuild' builds it anew (after
+                                an edit of the Containerfile). The build
+                                runs at the tree's root -- the directory
+                                holding 'vut/', found by ascending from
+                                the working directory or '--directory'.
+    hwut.dev.podman.build --help
+                                this text
+
+The engine is 'podman', or 'docker' where podman does not stand; neither
+is a FAULT by name. The engine's call is printed before it runs, and its
+exit status is the face's (E-1).
+____________________________________________________________________
+    [status 0]
+$ hwut.dev.podman.enter --help
+    
+PURPOSE: 'hwut.dev.podman.enter' -- a shell, or one command, inside the
+         development container, over the tree ON THE HOST'S DISK.
+
+    hwut.dev.podman.enter [--directory=<path>] [-- <command>...]
+                                enters the container 'hwut-dev' with the
+                                tree's root -- the directory holding
+                                'vut/', found by ascending from the
+                                working directory or '--directory' --
+                                mounted READ-WRITE at its own absolute
+                                path, the working directory the same
+                                inside as outside, as the user you are.
+                                Without a command: an interactive shell.
+                                With one: that command, its exit status
+                                the face's.
+    hwut.dev.podman.enter --help
+                                this text
+
+    hwut.dev.podman.enter                              a shell
+    hwut.dev.podman.enter bin/hwut.run --plain         the census
+    hwut.dev.podman.enter -- sh -c 'cd vut/services/TEST && ../../bin/hwut.run'
+
+THE TREE IS THE HOST'S, NOT A COPY: an edit, an accepted GOOD, a book
+entry made inside stands outside the moment it is made, under your own
+user id ('--userns=keep-id' with podman; '--user' with docker). The
+container holds the requirements and nothing of the tree; it is thrown
+away on exit ('--rm').
+
+Where the image does not stand, the face says so and names
+'hwut.dev.podman.build'; it does not build unasked. Where no engine
+stands, FAULT by name.
+____________________________________________________________________
+    [status 0]
+SUCCESS: help on request.
+<hwut-end>

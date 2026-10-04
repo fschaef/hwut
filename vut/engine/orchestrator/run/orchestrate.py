@@ -30,6 +30,7 @@ from datetime    import datetime, timezone
 
 from ...bookkeeper.api       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
+from ..exploration.finder          import REFUSED_NAME_REASON
 from ..plan.form                   import E_NodeKind
 from ..plan.tree                   import (determine_tree,
                                            NOT_ACCEPTED_REASON,
@@ -155,8 +156,16 @@ class CDirectoryWork:
         #  a log -- so it is no fault and no refusal; the display says
         #  so ONCE at the end, lest a test that stopped being seen
         #  vanish without a word.
+        #  A REFUSED FILE IS A WALLFLOWER TOO (X-SILENT, amended 2026-10-
+        #  04): a backup-shaped name is refused by name in the REFUSED
+        #  block, and it is ALSO a file nobody speaks for -- so it
+        #  stands in the wallflower list, where 'hwut.config.ignore
+        #  --wallflowers' settles it with the rest.
         for name in entry.app_set.silent_tuple:
             emit("silent", directory=directory, node=name)
+        for name, reason in entry.refused_tuple:
+            if reason == REFUSED_NAME_REASON:
+                emit("silent", directory=directory, node=name)
         unstood = unstood_tuple(
                       os.path.normpath(os.path.join(self.root, directory)),
                       entry.app_set, entry.fault_tuple)

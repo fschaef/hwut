@@ -16,8 +16,9 @@ PURPOSE: THE COVERAGE DISPATCHER -- what 'hwut.cov.run' plugs into the
 
 THE ANSWER OF 'run_test' IS NO VERDICT. True says 'a record stands',
 False 'none does', and 'report_of' names why in one token of
-'E_CoverageResult'. The record is the whole product: no outcome is
-stored beside it, in the book or anywhere else.
+'E_CoverageResult'. The record is the whole product. What each case
+came to is also left as a LOCAL TRACE ('TMP/hwut-traces-coverage.csv',
+coverage D-41), for 'hwut.help' and for nothing else.
 
 THE REGISTER IS READ, NEVER WRITTEN. The record is seated with the
 run id the register holds (D-18); a case the register does not name
@@ -28,6 +29,7 @@ in the directory's 'OUT/COVERAGE', emptied before each run.
 ______________________________________________________________________________
 """
 import asyncio
+import os
 import shlex
 from   dataclasses import replace
 
@@ -37,8 +39,9 @@ from ...operations.coverage_action    import (CoverageSetup,
                                               E_CoverageResult, measured,
                                               uncapped)
 from ...operations.run.core           import application_argv
-from ...coverage.api                  import (CoverageConfig,
-                                              CoverageRefused, elect,
+from ...coverage.api                  import (OUTCOME_OK, CoverageConfig,
+                                              CoverageRefused,
+                                              CoverageTraceDb, elect,
                                               framework_of)
 from .adapter                         import stem_expanded
 from .dispatcher                      import TestRunDispatcher
@@ -153,13 +156,21 @@ class CoverageRunDispatcher(TestRunDispatcher):
     """Drives one directory's plan for coverage: every test case is run
     under its tool and harvested; none is judged, none is booked."""
 
-    def __init__(self, directory, entry, demand=None, variant_tuple=()):
+    def __init__(self, directory, entry, demand=None, variant_tuple=(),
+                 relative_directory=None, run_list=None):
         """
         RETURN: CoverageRunDispatcher holding 'directory', its lock
                 taken as the test run's dispatcher takes it.
 
         'demand' the CoverageConfig: what this run gathers. None reads
                  as the default demand.
+        'run_list'
+                 where every test run that left a record is noted for
+                 the run's final gathering (coverage D-42), as
+                 '(directory, test, choice, record path)' --
+                 'directory' being 'relative_directory', this
+                 directory's path from the run's root. None: nobody
+                 gathers.
 
         Raises CoverageRefused where an application of the directory
         cannot be served by any tool; DirectoryBusy where another live
@@ -192,6 +203,18 @@ class CoverageRunDispatcher(TestRunDispatcher):
                          for action, configuration
                          in self.build_db.items()}
         self.cov_lock = asyncio.Lock()
+        #  (test, choice) -> outcome, for the LOCAL TRACE of this run
+        #  (coverage D-41), written at 'close()'.
+        self.outcome_db = {}
+        self.relative_directory = relative_directory
+        self.run_list           = run_list
+
+    async def close(self):
+        """RETURN: None. The trace of this run written under 'TMP/',
+        then the directory released as the test run's dispatcher
+        releases it."""
+        CoverageTraceDb(self.directory).note(self.outcome_db)
+        await super().close()
 
     async def open_session(self, node):
         """RETURN: True. No session stands up: under coverage every
@@ -209,7 +232,15 @@ class CoverageRunDispatcher(TestRunDispatcher):
         except CoverageRefused as refusal:
             self.report_db[node.name()] = str(refusal)
             return False
-        if token is E_CoverageResult.OK: return True
+        key = (self.config_db[node.file].key_name, node.choice)
+        if token is E_CoverageResult.OK:
+            self.outcome_db[key] = OUTCOME_OK
+            if self.run_list is not None:
+                self.run_list.append(
+                    (self.relative_directory, key[0], key[1],
+                     str(self.bookkeeper.coverage_path(*key))))
+            return True
+        self.outcome_db[key]        = str(token)
         self.report_db[node.name()] = str(token)
         return False
 
@@ -233,12 +264,22 @@ class CoverageRunDispatcher(TestRunDispatcher):
                               node.choice, run_id)
 
 
-def coverage_run_dispatcher_factory(demand=None, variant_tuple=()):
+def coverage_run_dispatcher_factory(demand=None, variant_tuple=(),
+                                    root=None, run_list=None):
     """
     RETURN: callable(directory, entry) -> CoverageRunDispatcher -- the
             factory 'orchestrator()' consumes, the demand and the
             variant selection bound.
+
+    'run_list' collects, over every directory, the test runs that left
+    a record -- each with its directory's path from 'root' -- for the
+    run's final gathering (D-42); None collects nothing.
     """
-    return lambda directory, entry: CoverageRunDispatcher(
-                                        directory, entry, demand=demand,
-                                        variant_tuple=variant_tuple)
+    def made(directory, entry):
+        relative = os.path.relpath(directory, root or directory) \
+                     .replace(os.sep, "/")
+        return CoverageRunDispatcher(directory, entry, demand=demand,
+                                     variant_tuple=variant_tuple,
+                                     relative_directory=relative,
+                                     run_list=run_list)
+    return made

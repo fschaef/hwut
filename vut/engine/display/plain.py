@@ -135,7 +135,7 @@ def _dot_space_fill(width):
     return (". " * (width // 2 + 1))[:width]
 
 
-def _tag_and_count(tag, counts, good, ink):
+def _tag_and_count(tag, counts, good, ink, tag_width=TAG_WIDTH):
     """
     RETURN: [0] str, the right side UNPAINTED -- the tag and the count
                 in their fixed columns. Its LENGTH is what the fill is
@@ -149,11 +149,11 @@ def _tag_and_count(tag, counts, good, ink):
     sequence has length and no width, and a fill measured over one
     would pull every dot rule out of true.
     """
-    tag_field   = "%*s" % (TAG_WIDTH, tag)
+    tag_field   = "%*s" % (tag_width, tag)
     count_field = "%*s" % (COUNT_WIDTH, counts)
     tag_ink     = ink.tag_ok(tag) if good else ink.tag_fail(tag)
     return ("%s%s" % (tag_field, count_field),
-            "%s%s%s" % (" " * (TAG_WIDTH - len(tag)), tag_ink,
+            "%s%s%s" % (" " * (tag_width - len(tag)), tag_ink,
                         count_field))
 
 #  TWO MODES, AND THE BADGE SAYS WHICH ONE YOU ARE IN (D-15).
@@ -1007,8 +1007,7 @@ class CPlainFlow(CRunReportReceiver):
         self.dir_good_db[directory] = good
         if self.tier is not E_Tier.VERBOSE: return
         ok_n, total_n = self._count(directory)
-        tag    = self.vocabulary.tag_good if good \
-                 else self.vocabulary.tag_bad
+        tag    = self.vocabulary.directory_tag(good, ok_n, total_n)
         right  = "%d of %d %s  %s" % (ok_n, total_n,
                                       self.vocabulary.count_good, tag)
         right_ink = "%d of %d %s  %s" \
@@ -1210,11 +1209,12 @@ class CPlainFlow(CRunReportReceiver):
                 left_ink  = "%s%s" % (tree_ink, label_ink)
                 if directory is not None:
                     good   = self.dir_good_db.get(directory)
-                    tag    = self.vocabulary.tag_good if good \
-                             else self.vocabulary.tag_bad
+                    tag    = self.vocabulary.directory_tag(
+                                 good, *self._count(directory))
                     counts = "%d/%d" % self._count(directory)
-                    right, right_ink = _tag_and_count(tag, counts,
-                                                      good, self.ink)
+                    right, right_ink = _tag_and_count(
+                        tag, counts, good, self.ink,
+                        self.vocabulary.tag_width(TAG_WIDTH))
                     fill = max(w - len(left) - len(right) - 2, 1)
                     dots = _dot_space_fill(fill)
                     write("%s %s %s" % (left_ink, self.ink.dim(dots),
@@ -1228,11 +1228,13 @@ class CPlainFlow(CRunReportReceiver):
         if len(self.dir_order) == 1:
             directory = self.dir_order[0]
             good      = self.dir_good_db.get(directory)
-            tag       = self.vocabulary.tag_good if good \
-                        else self.vocabulary.tag_bad
+            tag       = self.vocabulary.directory_tag(
+                            good, *self._count(directory))
             counts    = "%d/%d" % self._count(directory)
             left      = "%s%s" % (TREE_INDENT, directory)
-            right, right_ink = _tag_and_count(tag, counts, good, self.ink)
+            right, right_ink = _tag_and_count(
+                tag, counts, good, self.ink,
+                self.vocabulary.tag_width(TAG_WIDTH))
             fill = max(w - len(left) - len(right) - 2, 1)
             write("%s %s %s" % (left, self.ink.dim(_dot_space_fill(fill)),
                                 right_ink))

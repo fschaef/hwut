@@ -1,0 +1,24 @@
+--- the REFUSED block names it
+        test-x.sh.bak   backup-shaped name: not a source candidate
+--- and the NOTE counts it
+    NOTE: 5 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+          see: hwut.config.ignore --wallflowers
+--- the list holds it
+    ./../bench.log
+    ./../helper.py
+    ./../test-x.sh.bak
+--- settled with the rest
+STATUS: 0
+STDOUT {
+    a/TEST/hwut.conf:  ignore bench.log helper.py test-x.sh.bak
+    b/TEST/hwut.conf:  ignore bench.log helper.py
+    removed: a/TEST/TMP/wallflowers.txt
+    removed: b/TEST/TMP/wallflowers.txt
+}
+a/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py", "test-x.sh.bak"]
+    }
+}
+--- run again: 0 REFUSED or NOTE line(s)
+<hwut-end>

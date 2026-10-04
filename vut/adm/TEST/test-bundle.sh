@@ -23,7 +23,8 @@
 #             same file into an empty directory. An empty member and a
 #             member without a final newline travel intact.
 # refused     a directory where nothing listed stands and no root marker
-#             is; a bundle whose content was tampered with after
+#             is -- refused with or without '--force', taken with
+#             '--here'; a bundle whose content was tampered with after
 #             signing; '--self' beside '--binary' and '--max-bytes'.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -72,8 +73,8 @@ case "$1" in
 
 self)
     fixture
-    echo "--- the header carries the mode and the deletion"
-    grep -E '^# (mode|delete) ' b.sh | sed 's/^/    /'
+    echo "--- the header carries the mode, the deletion and the anchor"
+    grep -E '^# (mode|delete|anchor) ' b.sh | sed 's/^/    /'
     cd recv
     echo "--- --check: reported, nothing touched"
     apply ../b.sh --check
@@ -100,6 +101,15 @@ refused)
     echo "--- a directory where nothing listed stands, no root marker"
     mkdir elsewhere && cd elsewhere
     apply ../b.sh
+    echo "--- and '--force' does not make it the right directory"
+    apply ../b.sh --force
+    echo "--- '--here' does: the one word that says 'yes, this empty place'"
+    apply ../b.sh --here
+    find . -type f | sort | sed 's/^/    /'
+    cd ..
+    echo "--- a directory where ONE listed file stands, but not the anchor"
+    mkdir -p nearly/a/b && cp recv/a/b/same.txt nearly/a/b/ && cd nearly
+    apply ../b.sh --force
     cd ..
     echo "--- tampered after signing: a member no longer rebuilds to its sha256"
     sed 's/^+sender line$/+tampered line/' b.sh > tampered.sh

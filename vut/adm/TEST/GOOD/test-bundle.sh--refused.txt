@@ -1,6 +1,18 @@
 --- a directory where nothing listed stands, no root marker
 STATUS: 2
 STDOUT {
+    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+       receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
+}
+--- and '--force' does not make it the right directory
+STATUS: 2
+STDOUT {
+    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+       receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
+}
+--- '--here' does: the one word that says 'yes, this empty place'
+STATUS: 0
+STDOUT {
       NEW        +1          a/b/edited.txt
       NEW        +2          a/b/same.txt
       NEW        +1          a/b/short.txt
@@ -8,8 +20,22 @@ STDOUT {
       NEW        +2          a/run.sh
       (absent)               a/gone.txt
     == 5 new, 0 identical, 0 changed, 0 to delete
-    !! not one listed file stands here and no 'hwut-root.conf' marks a root --
-       is this the right directory? 'sh ../b.sh --force' creates them here anyway.
+    == applying
+    == verifying
+      every member verified: 5 created, 0 overwritten, 0 deleted
+}
+    ./a/b/edited.txt
+    ./a/b/same.txt
+    ./a/b/short.txt
+    ./a/empty.txt
+    ./a/run.sh
+    ./err.txt
+    ./out.txt
+--- a directory where ONE listed file stands, but not the anchor
+STATUS: 2
+STDOUT {
+    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+       receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
 }
 --- tampered after signing: a member no longer rebuilds to its sha256
 STATUS: 2

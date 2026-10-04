@@ -1,6 +1,7 @@
---- the header carries the mode and the deletion
+--- the header carries the mode, the deletion and the anchor
     # mode a+x  a/run.sh
     # delete  a/gone.txt
+    # anchor  hwut-root.conf
 --- --check: reported, nothing touched
 STATUS: 2
 STDOUT {

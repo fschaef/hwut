@@ -1,12 +1,15 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
-PURPOSE: WHAT A RUN COST, PER MACHINE CLASS -- 'TEST/hwut-traces.csv',
-         a table beside the tests, keyed by (system, test, choice,
+PURPOSE: WHAT A RUN COST, PER MACHINE CLASS -- 'TEST/TMP/
+         hwut-traces.csv', a table keyed by (system, test, choice,
          operation), holding the LAST run's numbers for each (B-11).
 
-    address   '<test directory>/hwut-traces.csv' -- beside the tests,
-              not under 'TMP/': it TRAVELS, so a fresh checkout carries
-              the numbers a colleague measured
+    address   '<test directory>/TMP/hwut-traces.csv' -- UNDER 'TMP/',
+              with everything else a run leaves that is not a record
+              of the tree (B-28): a trace beside the tests is a file
+              nobody lists and nobody misses. A trace that still
+              stands beside the tests is read, and gone at the next
+              write
     form      ';'-separated CSV with a header, as the book is
     key       system;test;choice;operation
     columns   system;test;choice;operation;day;duration_ms;cpu_time_ms;
@@ -57,6 +60,14 @@ import subprocess
 from   datetime import date
 
 FILE_NAME    = "hwut-traces.csv"
+#  EVERY TRACE STANDS UNDER 'TMP/' (B-28).
+TRACE_DIRECTORY_NAME = "TMP"
+
+
+def trace_path(directory, file_name):
+    """RETURN: str, where the trace 'file_name' of the test directory
+    'directory' stands: under its 'TMP/'."""
+    return os.path.join(str(directory), TRACE_DIRECTORY_NAME, file_name)
 SEPARATOR    = ";"
 COLUMN_TUPLE = ("system", "test", "choice", "operation", "day",
                 "duration_ms", "cpu_time_ms", "peak_memory_mb")
@@ -168,7 +179,9 @@ class TraceDb:
     -- as the book is."""
 
     def __init__(self, directory):
-        self.path = os.path.join(str(directory), FILE_NAME)
+        self.path   = trace_path(directory, FILE_NAME)
+        #  WHERE IT STOOD BEFORE B-28: beside the tests.
+        self.legacy = os.path.join(str(directory), FILE_NAME)
 
     def read(self):
         """
@@ -178,8 +191,9 @@ class TraceDb:
         """
         row_db = {}
         system = test = None
+        path = self.path if os.path.isfile(self.path) else self.legacy
         try:
-            with open(self.path, "r", encoding="utf-8", newline="") as fh:
+            with open(path, "r", encoding="utf-8", newline="") as fh:
                 for row in csv.DictReader(fh, delimiter=SEPARATOR):
                     #  AN EMPTY 'system' OR 'test' IS THE ONE ABOVE
                     #  (B-12). Nothing above it is a fault in the file,
@@ -212,6 +226,7 @@ class TraceDb:
                        "peak_memory_mb": "" if peak_memory_mb is None
                                          else str(peak_memory_mb)}
         try:
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
             temporary = self.path + ".tmp"
             with open(temporary, "w", encoding="utf-8", newline="") as fh:
                 writer = csv.writer(fh, delimiter=SEPARATOR,
@@ -230,6 +245,9 @@ class TraceDb:
                                     + [row_db[key].get(name, "")
                                        for name in COLUMN_TUPLE[4:]])
             os.replace(temporary, self.path)
+            #  THE OLD PLACE IS LEFT EMPTY: its rows were read above
+            #  and are written here.
+            if os.path.isfile(self.legacy): os.remove(self.legacy)
         except OSError:
             pass
 

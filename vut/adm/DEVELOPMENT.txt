@@ -455,3 +455,35 @@ to an artefact of it. That is what this kind of coverage is for.
 IT IS NOT MEASURED BY A TOOL. No instrument counts it, which is why it
 has to be written down and asked deliberately: for each format, WHICH
 elements does the material contain, and which does it not?
+
+
+THE DEVELOPMENT CONTAINER
+
+Every requirement of working on hwut stands in one image
+('adm/container/Containerfile'): python 3.13 and the packages the tree
+imports, coverage.py, ruff, gcc for gcov, git, and the TeX engine with
+the packages 'hwut.cov.conv.to_pdf' loads. The work then reads the same
+on any machine that has podman (or docker), and the organisation of it
+-- the census, the recording of GOODs, the cutting of bundles -- happens
+INSIDE the container, over the tree ON THE HOST'S DISK (services E-134):
+
+    hwut.dev.podman.build              the image 'hwut-dev', where none
+                                       stands ('--rebuild': anew)
+    hwut.dev.podman.enter              a shell inside, the directory
+                                       holding 'vut/' mounted READ-WRITE
+                                       at its own absolute path, the
+                                       working directory kept, as your
+                                       own user
+    hwut.dev.podman.enter bin/hwut.run --plain
+                                       one command inside: the census
+    hwut.dev.podman.enter -- sh -c '...'
+                                       a command with options of its own
+
+Nothing of the tree is in the image, and nothing is copied: an edit, an
+accepted GOOD, a book entry made inside stands outside the moment it is
+made, under your user id. The container is thrown away on exit; the
+image stays.
+
+What the image leaves out, and why, stands in the Containerfile: the
+HDL and other-language tools, whose readers are tested on witnessed
+artefacts and whose census never calls them.

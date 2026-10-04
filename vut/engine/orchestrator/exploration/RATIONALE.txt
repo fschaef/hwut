@@ -1821,6 +1821,15 @@ COST      The interview survives as 'hwut.renovate's reader -- an
           stated, 'HAPPY:' as 'tolerance { eq_pattern }'. Measured
           after: 9 ok, 0 fail, the same nominals. Nothing else in the
           tree answered an interview.
+AMENDED   2026-10-04, RULED (Frank-Rene): "detected and refused but not
+          listed as wallflower. refused files are also wallflowers." A
+          backup-shaped name (finder.py, E-41) stands in the REFUSED
+          block by name AND in the wallflower list, counted in the NOTE,
+          so 'hwut.config.ignore --wallflowers' settles it with the
+          rest ('orchestrate.py' emits 'silent' for it beside
+          'refused'; 'services/lib/config/TEST/test-ignore.sh
+          refused_too').
+
 
 ----------------------------------------------------------------------------
 X-DECORATION  WHAT PRECEDES '@hwut {' IS DECORATION, IN ANY LANGUAGE (2026-09-27)

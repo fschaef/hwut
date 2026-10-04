@@ -1,0 +1,26 @@
+$ hwut.dev.podman.enter 
+    $ podman run --rm -it --userns=keep-id -v <root>:<root> -w <root>/vut/services/TEST -e HOME=/tmp hwut-dev bash
+    [status 0]
+$ hwut.dev.podman.enter bin/hwut.run --plain
+    $ podman run --rm --userns=keep-id -v <root>:<root> -w <root>/vut/services/TEST -e HOME=/tmp hwut-dev bin/hwut.run --plain
+    [status 0]
+$ hwut.dev.podman.enter -- sh -c cd vut && ls
+    $ podman run --rm --userns=keep-id -v <root>:<root> -w <root>/vut/services/TEST -e HOME=/tmp hwut-dev sh -c 'cd vut && ls'
+    [status 0]
+$ hwut.dev.podman.enter --directory=<root>
+    $ podman run --rm -it --userns=keep-id -v <root>:<root> -w <root> -e HOME=/tmp hwut-dev bash
+    [status 0]
+$ hwut.dev.podman.enter 
+    FAULT: the image 'hwut-dev' does not stand; 'hwut.dev.podman.build' builds it
+    [status 1]
+$ hwut.dev.podman.enter 
+    $ docker run --rm --user=<uid>:<gid> -v <root>:<root> -w <root>/vut/services/TEST -e HOME=/tmp hwut-dev bash
+    [status 0]
+  OK  : no command: an interactive shell, the root at its own path, the working directory kept, the user kept
+  OK  : a command runs as given; no terminal, no '-it'
+  OK  : '--' passes a command with options of its own
+  OK  : '--directory' is the working directory inside
+  OK  : an image that does not stand is named, not built
+  OK  : docker keeps the user by '--user'
+SUCCESS: the host's tree, inside.
+<hwut-end>

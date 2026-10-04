@@ -1,0 +1,18 @@
+$ hwut.dev.podman.build 
+    image 'hwut-dev' stands; '--rebuild' builds it anew
+    [status 0]
+$ hwut.dev.podman.build --rebuild
+    $ podman build -t hwut-dev -f vut/adm/container/Containerfile .
+    [status 0]
+$ hwut.dev.podman.build 
+    $ podman build -t hwut-dev -f vut/adm/container/Containerfile .
+    [status 0]
+$ hwut.dev.podman.build 
+    $ podman build -t hwut-dev -f vut/adm/container/Containerfile .
+    [status 1]
+  OK  : an image that stands is not rebuilt unasked
+  OK  : '--rebuild' builds it anew, at the root
+  OK  : an image that does not stand is built
+  OK  : a build that fails is a FAULT
+SUCCESS: the image, built where none stands.
+<hwut-end>

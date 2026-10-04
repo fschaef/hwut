@@ -3,7 +3,8 @@
 #
 # @hwut {
 #     title      = "hwut.config.ignore: the answer to the wallflower NOTE."
-#     choices    = ["paths", "wishlist", "wallflowers", "reported", "refused"]
+#     choices    = ["paths", "wishlist", "wallflowers", "reported", "refused",
+#                   "refused_too"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -23,6 +24,8 @@
 #              removes each list, and the next run finds nothing.
 # reported     'hwut.report.wallflowers' prints them, one path per line,
 #              and its output IS this face's input; then it finds none.
+# refused_too  a backup-shaped file, REFUSED by name, is a wallflower
+#              too: in the list, counted, settled with the rest.
 # refused      a path that stands nowhere; an unknown option;
 #              '--wishlist' without a file; a list that is not there.
 # ---------------------------------------------------------------------------
@@ -93,6 +96,24 @@ wishlist)
     echo "--- read from the root: './' is the list's own directory"
     face --wishlist b/TEST/TMP/wallflowers.txt --dont-ask
     conf b/TEST
+    ;;
+refused_too)
+    fixture
+    #  A REFUSED FILE IS A WALLFLOWER TOO (X-SILENT, amended): a
+    #  backup-shaped name stands in the REFUSED block by name AND in
+    #  the wallflower list, where this face settles it with the rest.
+    cp a/TEST/test-x.sh a/TEST/test-x.sh.bak
+    $RUN --plain > run.txt 2>&1
+    echo "--- the REFUSED block names it"
+    sed -n '/^REFUSED -- not run/,/^====/p' run.txt | grep "bak" | sed 's/^/    /'
+    echo "--- and the NOTE counts it"
+    grep "wallflower" run.txt | sed 's/^/    /'
+    echo "--- the list holds it"
+    grep -v '^#' a/TEST/TMP/wallflowers.txt | sed 's/^/    /'
+    echo "--- settled with the rest"
+    face --wallflowers --dont-ask
+    conf a/TEST
+    echo "--- run again: $($RUN --plain 2>&1 | grep -c 'REFUSED\|wallflower') REFUSED or NOTE line(s)"
     ;;
 wallflowers)
     fixture

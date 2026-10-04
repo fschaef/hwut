@@ -1,0 +1,22 @@
+$ hwut.dev.podman.build --sideways
+    REFUSED: hwut.dev.podman.build does not take: --sideways
+    usage: hwut.dev.podman.build [--rebuild] [--directory=<path>] | --help
+    [status 2]
+$ hwut.dev.podman.enter --sideways
+    REFUSED: hwut.dev.podman.enter does not take: --sideways (a command's own options follow '--')
+    usage: hwut.dev.podman.enter [--directory=<path>] [-- <command>...] | --help
+    [status 2]
+$ hwut.dev.podman.build 
+    FAULT: neither 'podman' nor 'docker' stands on this machine
+    [status 1]
+$ hwut.dev.podman.enter 
+    FAULT: neither 'podman' nor 'docker' stands on this machine
+    [status 1]
+$ hwut.dev.podman.build 
+    image 'hwut-dev' stands; '--rebuild' builds it anew
+    [status 0]
+$ hwut.dev.podman.enter 
+    $ podman run --rm --userns=keep-id -v /home/claude/hwut:/home/claude/hwut -w <root> -e HOME=/tmp hwut-dev bash
+    [status 0]
+SUCCESS: refused by name: the word, the engine, the root.
+<hwut-end>

@@ -121,28 +121,46 @@ def _run(root):
 
 def _expanded(line_list):
     """
-    RETURN: list[str], the same lines with every ':' ELISION RESOLVED
-            to the application it repeats -- so a reader may scan a
-            verdict line for the file that produced it.
+    RETURN: list[str], the same lines with every ELISION RESOLVED -- so a
+            reader may scan a verdict line for the file that produced
+            it.
 
     A READER OF AN ELIDED FLOW MUST EXPAND BEFORE IT COMPARES, which
     is the rule 'test-run.pype' has always kept ('EXPANSION COMES
-    FIRST'). Since D-15 every run writes a 'START' and an 'END', and
-    the END repeats the START's application, so a verdict line
-    carrying a choice reads ':' -- correctly, and unreadably to a
-    filter looking for the name.
+    FIRST'). TWO SPECIES OF ELISION stand in a flow, and a reader that
+    knows one is right by luck until two runs interleave (measured:
+    one failure in two hundred, eight runs beside each other):
+
+        the KEYWORD column blank      the keyword of the line above;
+                                      the application is the first word
+        the application ':'           the application of the line above
+
+    Since D-15 every run writes a 'START' and an 'END', and the END
+    repeats the START's application, so a verdict line carrying a
+    choice reads ':' -- correctly, and unreadably to a filter looking
+    for the name. Under several jobs a START of ANOTHER application may
+    stand between the two, its keyword elided: the application it
+    names is then 'the line above' for the ':' that follows.
     """
     result = []
     last   = None
     for line in line_list:
         field = line.split()
-        if len(field) > 1 and field[1] == ":" and last is not None:
-            result.append(line.replace(":", last, 1))
+        if not field:
+            result.append(line); continue
+        keyword_f = not line.startswith(" ") and field[0] in ("START", "END",
+                                                             "DONE", "SKIP")
+        if keyword_f:
+            application = field[1] if len(field) > 1 else None
+        elif line.startswith(" ") and line.strip():
+            application = field[0]
         else:
-            if len(field) > 1 and field[0] in ("START", "END", "DONE",
-                                               "SKIP"):
-                last = field[1]
-            result.append(line)
+            application = None
+        if application == ":":
+            if last is not None: line = line.replace(":", last, 1)
+        elif application is not None:
+            last = application
+        result.append(line)
     return result
 
 
@@ -153,7 +171,12 @@ def _refused_block(line_list):
     in_f   = False
     for line in line_list:
         if line.startswith("REFUSED -- not run"): in_f = True; continue
-        if in_f and line.startswith("="):           break
+        #  THE BLOCK ENDS AT THE RULE -- or at the blank line before
+        #  the wallflower NOTE, which stands inside the same rules and
+        #  is indented like an entry (X-SILENT: a refused file is a
+        #  wallflower too, so the NOTE now follows every REFUSED block
+        #  of a backup-shaped name).
+        if in_f and (line.startswith("=") or not line.strip()): break
         if in_f and line.startswith("    "):        result.append(line.strip())
     return result
 

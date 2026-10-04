@@ -5335,3 +5335,43 @@ COST      A rename and two new faces. The sweep took 18 files of prose
           tracefile was checked against the format's text and the
           module's own statement of the mapping, not through 'genhtml'
           (OWED: run one real tracefile through it).
+
+
+----------------------------------------------------------------------------
+E-134  THE WORK HAPPENS INSIDE A CONTAINER, OVER THE HOST'S TREE
+                                                              (2026-10-04)
+----------------------------------------------------------------------------
+PROBLEM   A census read differently on two machines of one day: bundles
+          applied out of order, a tool missing, a TeX package absent.
+          The requirements stood in nobody's list but the sandbox's.
+
+DECISION  RULED (Frank-Rene): "develop a podman file with all the
+          requirements for testing, then running all hwut tests in that
+          podman container" -- then: "apps: hwut.dev.podman.build,
+          hwut.dev.podman.enter. I would say, so that everything
+          organization happens from inside podman. make sure, though,
+          that we are working on the hwut source as located on the host
+          disk."
+          'adm/container/Containerfile' holds every requirement and
+          nothing of the tree. 'hwut.dev.podman.build' builds the image
+          'hwut-dev' where none stands; 'hwut.dev.podman.enter' runs a
+          shell -- or the command given -- inside it with the directory
+          holding 'vut/' mounted read-write AT ITS OWN ABSOLUTE PATH,
+          the working directory kept, the user kept ('--userns=keep-id';
+          docker: '--user'), the container thrown away on exit. A path
+          printed inside is the path outside; a file written inside is
+          the host's file. 'services/lib/dev/podman/'; a first
+          'hwut.dev.*' family, the faces of developing hwut rather than
+          using it.
+          THE ENGINE'S CALL IS PRINTED BEFORE IT RUNS, and the suite
+          ('TEST/test-dev_podman.py') records the call against a stand-
+          in engine: the page is what the face hands podman, not a
+          machine's podman.
+
+COST      The copy-in census of the day before ('adm/container/entry.sh',
+          'census.sh', bundle 77) retired within the day: a census over
+          a copy answers for the copy. 'enter' does not build unasked --
+          an image that does not stand is named with the face that
+          builds it. The sandbox this was written in has no engine, so
+          the image was never built here: the first 'podman build' on
+          a real machine is the proof still owed.

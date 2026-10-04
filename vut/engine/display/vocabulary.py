@@ -34,6 +34,10 @@ class CFlowVocabulary:
     'tag_good', 'tag_bad'      the badges at the end of a flow line
     'count_good', 'count_bad'  the words counting them, in DIRECTORIES,
                                RESULTS and the bars
+    'directory_tag_tuple'      the badges of a DIRECTORY in the
+                               roll-call: (every case good, some,
+                               none). None: a directory wears
+                               'tag_good' or 'tag_bad', as it stood
     'reason_word(token)'       the word before the bad badge; None
                                where none stands
     'phrase(token)'            the token in telegraphic English, for
@@ -63,6 +67,27 @@ class CFlowVocabulary:
     frame_category: object
     subtle_f:       Callable
     help_hint:      Optional[str]
+    directory_tag_tuple: Optional[Sequence] = None
+
+    def directory_tag(self, good_f, good_n, total_n):
+        """
+        RETURN: str, the badge of a directory in the roll-call, whose
+                'good_n' of 'total_n' cases ended good and which stood
+                as a whole where 'good_f'.
+        """
+        if self.directory_tag_tuple is None:
+            return self.tag_good if good_f else self.tag_bad
+        complete, partial, none = self.directory_tag_tuple
+        if good_n == 0:                     return none
+        if good_f and good_n == total_n:    return complete
+        return partial
+
+    def tag_width(self, floor_n):
+        """RETURN: int, the column a roll-call badge is right-aligned
+        in: 'floor_n', or the widest badge where that is wider."""
+        tag_list = [self.tag_good, self.tag_bad] \
+                   + list(self.directory_tag_tuple or ())
+        return max([floor_n] + [len(tag) + 1 for tag in tag_list])
 
 
 RUN_VOCABULARY = CFlowVocabulary(

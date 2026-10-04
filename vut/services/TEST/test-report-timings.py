@@ -66,7 +66,8 @@ def fixture(directory, system=None):
     line_list.append(";".join(("some-other-machine", "test-elsewhere.py",
                                "far", "Run", "2026-09-23", "9999",
                                "9999", "99.0")))
-    with open(os.path.join(directory, "hwut-traces.csv"), "w",
+    os.makedirs(os.path.join(directory, "TMP"), exist_ok=True)
+    with open(os.path.join(directory, "TMP", "hwut-traces.csv"), "w",
               encoding="utf-8") as handle:
         handle.write("\n".join(line_list) + "\n")
 

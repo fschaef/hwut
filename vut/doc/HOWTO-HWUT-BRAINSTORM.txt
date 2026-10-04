@@ -400,6 +400,27 @@ BIN DISCIPLINE
       BARE WORD too, and read what it finds -- here the rest was prose
       ('the stability promise'), one hit was a reader
 
+    - case, 2026-10-04, the SAME page a second time: 'test-gate.py
+      new_choice' red in 3 of ~12 eight-job passes, steady alone under
+      'hwut.run.stability --repeat=8'. HUNTED WITH LOAD: eight copies of
+      the test beside each other, 25 rounds -- 1 of 200 red, and the
+      raw flow kept:
+          START test-old.py
+                test-two.py  a          <- keyword column ELIDED
+          END   :            a   [OK]   <- application elided to ':'
+      TWO SPECIES OF ELISION stand in a flow, and the reader knew one:
+      '_expanded' took the application only off lines whose first word
+      is START/END/DONE/SKIP, so the keyword-elided START of the OTHER
+      application never became 'the line above', and the ':' expanded
+      to test-old.py. On one core the two runs never interleave; the
+      reader was right by luck (O-30: a finish order is a foreign fact)
+    - a flake STEADY ALONE AND RED UNDER THE CENSUS is a reader of a
+      parallel flow, until proven otherwise: hunt it with load beside
+      it, keep the raw lines of the red run, and read the elisions
+    - 'test-wishlist.sh' carries the same reader shape and is safe only
+      because its subject runs '--jobs=1 --deterministic': a reader
+      that cannot expand both species must pin the flow it reads
+
 ==============================================================================
 5d. A TACTIC IS MEASURED ON THE TREE, NOT ARGUED
 ==============================================================================

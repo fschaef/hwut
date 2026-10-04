@@ -2,15 +2,15 @@
 #
 # @hwut {
 #     title      = "The traces table: a machine class, and 'the one above'"
-#     choices    = ["key", "table", "elision"]
+#     choices    = ["key", "table", "elision", "place"]
 #     tolerance { eq_pattern = ["SUCCESS.*", "FAILURE.*",
 #                               "[0-9]{4}-[0-9]{2}-[0-9]{2}"] }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
-'TEST/hwut-traces.csv' (B-11, B-12): what a run COST, per machine
-CLASS, beside the tests -- committed, replaced per key, deletable.
+'TEST/TMP/hwut-traces.csv' (B-11, B-12, B-28): what a run COST, per
+machine CLASS, under 'TMP/' -- replaced per key, deletable.
 
     key       the system key names a class, not a host: the vendor
               string with its noise gone, the MODEL NUMBER kept, cut
@@ -21,6 +21,10 @@ CLASS, beside the tests -- committed, replaced per key, deletable.
     elision   an empty 'system' or 'test' is the one above; an empty
               'choice' is a test that has none, and an empty number is
               one the platform did not measure
+
+    place     the table stands under 'TMP/' (B-28); one that still
+              stands beside the tests is read, and gone at the next
+              write
 
 THE DAY A ROW WAS WRITTEN is the recording's calendar, not the table's
 behaviour: the page's eq_pattern takes any ISO date.
@@ -145,7 +149,7 @@ def test_elision():
     line_list = text.splitlines()[1:]
     back = db.read()
     #  A FIRST ROW WITH NOTHING ABOVE IT: the file reads as empty.
-    headless = os.path.join(directory, traces.FILE_NAME)
+    headless = db.path
     open(headless, "w", encoding="utf-8").write(
         text.splitlines()[0] + "\n;;one;Run;2026-01-01;5;;\n")
     ok = _check([
@@ -165,7 +169,39 @@ def test_elision():
     _verdict(ok, "the eye reads a group; the reader reads every row.")
 
 
+def test_place():
+    """Under 'TMP/'; the old place read once, then emptied."""
+    db, directory = _db()
+    old = os.path.join(directory, traces.FILE_NAME)
+    with open(old, "w", encoding="utf-8") as fh:
+        fh.write(";".join(traces.COLUMN_TUPLE) + "\n"
+                 + LINUX + ";test-old.py;;Run;2026-01-01;77;;\n")
+    print("  the path:  %s" % os.path.relpath(db.path, directory))
+    before = db.read()
+    db.note("test-new.py", None, "Run", duration_ms=5)
+    after  = db.read()
+    print("  beside the tests after the write: %s"
+          % ("stands" if os.path.isfile(old) else "gone"))
+    for key in sorted(after): print("  row: %s;%s" % (key[1], after[key]["duration_ms"]))
+    ok = _check([
+        (os.path.relpath(db.path, directory)
+         == os.path.join("TMP", traces.FILE_NAME),
+         "the table stands under 'TMP/'"),
+        (before[(LINUX, "test-old.py", "", "Run")]["duration_ms"] == "77",
+         "a table still beside the tests is read"),
+        (not os.path.isfile(old) and os.path.isfile(db.path),
+         "the next write leaves the old place empty"),
+        (len(after) == 2
+         and after[(LINUX, "test-old.py", "", "Run")]["duration_ms"] == "77",
+         "and carries its rows along"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    _verdict(ok, "one place for every trace, and nothing left beside "
+                 "the tests.")
+
+
 if __name__ == "__main__":
     HwutRunner(argv=sys.argv, title="The traces table",
                choice_map={"key": test_key, "table": test_table,
-                           "elision": test_elision}).run()
+                           "elision": test_elision,
+                           "place": test_place}).run()

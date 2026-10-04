@@ -176,24 +176,38 @@ $(grep -c '^==\[ COVERAGE \]' without.txt)"
 
 coverage)
     build_fixture
-    #  A HARVESTED RUN: the binary record, where a coverage run leaves
-    #  it -- keyed by the source file WHOLE, 'demo.py--basic.cover'.
-    #  The book holds nothing of it (coverage D-38).
+    #  A COVERAGE OUTPUT DIRECTORY, made by the GATHERER ITSELF from a
+    #  per-case record (coverage D-42): 'hwut.coverage/' beside the
+    #  test, where the search finds it, and 'elsewhere/' for '--cov-dir'.
     ROOT="$ROOT" python3 - <<'PYEOF_INNER'
 import os, sys
 sys.path.insert(0, os.environ["ROOT"])
 from vut.engine.coverage.database.api import (CoverageRecord, FileCoverage,
                                               ranges_of, pack_record)
+from vut.engine.coverage.api import prepared, gather
 from vut.engine.bookkeeper.test_run_id import TestRunId
-record = CoverageRecord("python", "coverage", "coverage.py-json",
-                        run=frozenset([TestRunId(0, 1)]),
-                        file_db={"demo.py": FileCoverage(
-                            "demo.py", ranges_of([1, 2, 3, 4, 5]),
-                            ranges_of([1, 2]))})
-open("TMP/store/demo.py--basic.cover", "wb").write(pack_record(record))
+def made(directory, covered):
+    record = CoverageRecord("python", "coverage", "coverage.py-json",
+                            run=frozenset([TestRunId(0, 1)]),
+                            file_db={"demo.py": FileCoverage(
+                                "demo.py", ranges_of([1, 2, 3, 4, 5]),
+                                ranges_of(covered))})
+    open("one.cover", "wb").write(pack_record(record))
+    gather(prepared(directory, "."),
+           [(".", "demo.py", "basic", "one.cover")])
+    os.remove("one.cover")
+made("hwut.coverage", [1, 2])
+made("elsewhere",     [1, 2, 3, 4])
 PYEOF_INNER
-    echo "STIMULUS  hwut.report.details demo.py basic          (a HARVESTED run)"
+    echo "STIMULUS  hwut.report.details demo.py basic          (a GATHERED run)"
     run_report demo.py basic
+    echo
+    echo "STIMULUS  hwut.report.details demo.py basic --cov-dir elsewhere"
+    $TELL demo.py basic --cov-dir elsewhere 2> /dev/null \
+        | sed -n '/^==\[ COVERAGE/,/^==\[ SOURCE/p' | sed -e '$d' -e 's/^/              /'
+    rm -rf hwut.coverage
+    echo "STIMULUS  hwut.report.details demo.py basic          (no coverage directory)"
+    echo "          coverage line : $($TELL demo.py basic 2> /dev/null | grep '^coverage:')"
     echo
     echo "The report says WHAT broke; the coverage says WHICH LINES the"
     echo "run reached -- and, first, which it did NOT."

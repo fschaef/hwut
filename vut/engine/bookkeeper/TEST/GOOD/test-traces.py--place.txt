@@ -1,0 +1,10 @@
+  the path:  TMP/hwut-traces.csv
+  beside the tests after the write: gone
+  row: test-new.py;5
+  row: test-old.py;77
+  OK  : the table stands under 'TMP/'
+  OK  : a table still beside the tests is read
+  OK  : the next write leaves the old place empty
+  OK  : and carries its rows along
+SUCCESS: one place for every trace, and nothing left beside the tests.
+<hwut-end>

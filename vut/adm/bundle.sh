@@ -103,9 +103,16 @@ Modes:
                        nothing). Per member, off the '# sha256' manifest:
                        NEW is created, IDENTICAL is skipped, CHANGED is
                        REFUSED unless '--force' -- the receiver's edit is
-                       never overwritten unasked. '# delete' and '# mode'
-                       header lines are honoured. Text members only; one
-                       part. (Default output: dump-<first-dir-name>.sh)
+                       never overwritten unasked. A directory where not one
+                       member stands and no 'hwut-root.conf' marks a root
+                       is REFUSED, '--force' or not ('--here' overrides):
+                       the wrong directory, far more often than an empty
+                       one; so is a directory without the bundle's ANCHOR
+                       ('# anchor', the root marker the sender stood
+                       beside: 'vut/hwut-root.conf' or 'hwut-root.conf'). '# delete' and '# mode' header lines are
+                       honoured; a directory a deletion empties goes with
+                       it. Text members only; one part. (Default output:
+                       dump-<first-dir-name>.sh)
       --delete PATH1 [PATH2 ...]
                        Record paths the RECEIVER is to remove ('# delete'
                        header lines); a plain 'git apply' ignores them, a
@@ -717,6 +724,14 @@ header_write() {
         for path in ${DELETE_PATHS[@]+"${DELETE_PATHS[@]}"}; do
             printf '# delete  %s\n' "$(path_normalise "$path")"
         done
+        #  THE ANCHOR: a file that stands at the sender's root and must
+        #  stand at the receiver's, or the receiver is in the wrong
+        #  directory. A tree root ('vut/hwut-root.conf' beside the
+        #  package) or a test tree ('hwut-root.conf'); none for a bundle
+        #  cut elsewhere.
+        for anchor in vut/hwut-root.conf hwut-root.conf; do
+            [[ -f "$anchor" ]] && { printf '# anchor  %s\n' "$anchor"; break; }
+        done
     } >> "$target"
 }
 
@@ -735,24 +750,34 @@ self_applier_write() {
     cat > "$target" << 'APPLIER'
 #!/bin/sh
 # SELF-EXTRACTING BUNDLE -- written by adm/bundle.sh --self. Run at the
-# receiving root:   sh <this-file> [--check] [--force]
+# receiving root:   sh <this-file> [--check] [--force] [--here]
 #   --check   report what would happen; touch nothing
 #   --force   overwrite CHANGED members (files standing here with other
 #             content); without it they are refused and nothing is applied
+#   --here    apply although the bundle's ANCHOR (a file at the sender's
+#             root, '# anchor' below) does not stand here, or not one
+#             listed file does and no 'hwut-root.conf' marks a root --
+#             which is otherwise refused, '--force' or not, because it is
+#             the wrong directory far more often than an empty one
 # The bundle itself follows the '__BUNDLE__' line, unchanged: 'git apply'
 # and 'patch -p1' read it as ever, ignoring these lines.
 set -e
-SELF="$0"; CHECK=0; FORCE=0
+SELF="$0"; CHECK=0; FORCE=0; HERE=0
 for a in "$@"; do case "$a" in
-    --check) CHECK=1 ;; --force) FORCE=1 ;;
-    *) echo "usage: sh $SELF [--check] [--force]"; exit 2 ;;
+    --check) CHECK=1 ;; --force) FORCE=1 ;; --here) HERE=1 ;;
+    *) echo "usage: sh $SELF [--check] [--force] [--here]"; exit 2 ;;
 esac; done
 S=$(mktemp -d); trap 'rm -rf "$S"' EXIT
 sed -n '/^__BUNDLE__$/,$p' "$SELF" | sed '1d' > "$S/bundle"
 sed -n '/^# sha256 /p' "$S/bundle" | awk '{print $3, $4}' > "$S/manifest"
 sed -n '/^# mode a+x  /p'  "$S/bundle" | sed 's/^# mode a+x  //' > "$S/modes"
 sed -n '/^# delete  /p'    "$S/bundle" | sed 's/^# delete  //'   > "$S/deletes"
+ANCHOR=$(sed -n '/^# anchor  /p' "$S/bundle" | sed 's/^# anchor  //' | head -1)
 [ -s "$S/manifest" ] || [ -s "$S/deletes" ] || { echo "!! no manifest in this bundle -- REFUSED"; exit 2; }
+if [ -n "$ANCHOR" ] && [ ! -f "$ANCHOR" ] && [ $HERE = 0 ]; then
+    echo "!! '$ANCHOR' stands at the sender's root and not here: this is not the"
+    echo "   receiving root. REFUSED, '--force' or not; 'sh $SELF --here' applies anyway."; exit 2
+fi
 
 #  REBUILD every member from its '+' lines, then prove it against the
 #  manifest: what lands in the tree is what the sender hashed.
@@ -804,9 +829,10 @@ fi
 if [ $NEW = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ]; then
     echo "== already applied: nothing to do"; exit 0
 fi
-if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ ! -f hwut-root.conf ] && [ $FORCE = 0 ]; then
+if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ] && [ ! -f hwut-root.conf ] && [ $HERE = 0 ]; then
     echo "!! not one listed file stands here and no 'hwut-root.conf' marks a root --"
-    echo "   is this the right directory? 'sh $SELF --force' creates them here anyway."; exit 2
+    echo "   this is not the receiving root. REFUSED, '--force' or not; 'sh $SELF --here'"
+    echo "   creates them here anyway."; exit 2
 fi
 [ $CHECK = 0 ] || { echo "== --check: nothing applied"; exit 0; }
 
@@ -814,7 +840,10 @@ echo "== applying"
 while read -r kind path; do
     case "$kind" in
         N|C) mkdir -p "$(dirname "$path")"; cp "$S/tree/$path" "$path" ;;
-        D)   rm -f "$path" ;;
+        D)   rm -f "$path"
+             #  A directory emptied by the deletion goes with it, up to
+             #  the first one that still holds something.
+             d=$(dirname "$path"); while [ "$d" != "." ] && rmdir "$d" 2>/dev/null; do d=$(dirname "$d"); done ;;
     esac
 done < "$S/plan"
 while read -r path; do [ -n "$path" ] && [ -e "$path" ] && chmod a+x "$path"; done < "$S/modes"

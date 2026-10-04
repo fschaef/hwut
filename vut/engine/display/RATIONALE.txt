@@ -1094,12 +1094,21 @@ DECISION  RULED (Frank-Rene, 2026-10-03): "We should have the coverage
           THE WIRE IS UNCHANGED: a verdict stays 'ok' on the event
           stream; the vocabulary decides what is printed.
           The coverage run takes the rendering words again.
+          A DIRECTORY WEARS ITS OWN BADGE in the coverage run's
+          roll-call (RULED: "DIRECTORIES entries [COMPLETE] [PARTIAL]
+          [OMITTED] indicating if coverage analysis was possible"):
+          every case '[REC]' is '[COMPLETE]', some '[PARTIAL]', none
+          -- a directory refused whole included -- '[OMITTED]'. The
+          vocabulary carries the three ('directory_tag_tuple'); the
+          test run carries none and its directories say '[OK]' and
+          '[FAIL]' as before.
 
 COST      No page of 'hwut.run' moved: the display suite and the
           census are byte-identical under the default vocabulary.
           Five pages of the coverage face moved, each line by this
-          entry. 'hwut.help' does not explain the coverage reasons;
-          the coverage vocabulary carries no closing hint.
+          entry. 'hwut.help' explains the coverage reasons from the
+          same table (coverage D-41), and the coverage run closes with
+          the pointer to it.
           The '||n' column counts what the scheduler started; under
           coverage the runs of one directory still proceed one at a
           time (coverage D-22).

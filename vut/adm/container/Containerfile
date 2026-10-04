@@ -1,0 +1,50 @@
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# THE DEVELOPMENT CONTAINER -- every requirement of working on hwut in
+# one image, so the work reads the same on any machine
+# (adm/DEVELOPMENT.txt, 'The development container').
+#
+#     hwut.dev.podman.build                  the image 'hwut-dev', from this
+#     hwut.dev.podman.enter                  a shell in it, the host's tree
+#                                            mounted read-write at its path
+#     hwut.dev.podman.enter bin/hwut.run     the census, in it
+#
+# WHAT STANDS IN IT, and why:
+#     python 3.13            the interpreter the tree is written for
+#                            ('match' statements: 3.10 at least)
+#     bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil
+#                            the packages the tree imports
+#     coverage               coverage.py: 'hwut.cov.run' over python
+#     ruff                   'adm/TEST/test-static-analysis.sh'
+#     gcc                    gcov, the C road of 'hwut.cov.run'
+#     git                    'adm/bundle.sh', 'hwut.affected'
+#     texlive-latex-base, texlive-latex-recommended, latexmk
+#                            'hwut.cov.conv.to_pdf' (geometry, xcolor,
+#                            colortbl, longtable, array)
+#     COLUMNS=300, no colour  the pages are recorded at one width
+#
+# NOT IN IT: verilator, ghdl, go, lua, java. Their readers are tested on
+# WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT'), so the census
+# does not call them; a coverage run over such a tree does.
+#
+# NOTHING OF THE TREE IS IN THE IMAGE: the tree is the host's, mounted
+# by 'hwut.dev.podman.enter'; the image holds the requirements alone.
+
+FROM docker.io/library/python:3.13-slim-bookworm
+
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc libc6-dev git \
+        texlive-latex-base texlive-latex-recommended latexmk \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+        bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil \
+        coverage ruff
+
+ENV COLUMNS=300 \
+    NO_COLOR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+CMD ["bash"]

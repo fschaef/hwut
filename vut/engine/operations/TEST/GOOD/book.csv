@@ -11,10 +11,10 @@ test-configuration.py;aggregation;true;ok;;;1;0
 ;interpreted;true;ok;;;1;3
 ;places;true;ok;;;1;4
 ;refusal;true;ok;;;1;5
-test-coverage_provision.py;harvested;false;test-app-contained;;;2;0
-;incomplete;false;test-app-session-gone;;;2;1
-;no_target;false;test-app-session-gone;;;2;2
-;nothing_borne;false;test-app-session-gone;;;2;4
+test-coverage_provision.py;harvested;true;ok;;;2;0
+;incomplete;true;ok;;;2;1
+;no_target;true;ok;;;2;2
+;nothing_borne;true;ok;;;2;4
 test-diagnosis.py;channel_hint;true;ok;;;3;0
 ;empty_answer;true;ok;;;3;1
 ;never_judges;true;ok;;;3;2

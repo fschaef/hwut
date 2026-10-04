@@ -98,10 +98,11 @@ retired -- 'result_db.csv', 'result_db.json' -- is read where it does
 not stand, and the first write lays down 'book.csv' and removes the
 old file. One book, never two.
 
-BESIDE THE TESTS, NOT UNDER 'GOOD/': 'hwut-traces.csv' (B-11), what a
-run COST per machine class -- one row per '(system, test, choice,
-operation)', replaced where the key stands, committed, and deletable
-without loss. The rows are SORTED, and an empty 'system' or 'test'
+UNDER 'TMP/', NOT UNDER 'GOOD/': 'TMP/hwut-traces.csv' (B-11, B-28),
+what a run COST per machine class -- one row per '(system, test,
+choice, operation)', replaced where the key stands, local to the
+machine, and deletable without loss. EVERY TRACE STANDS UNDER 'TMP/':
+beside the tests it is a file nobody lists and nobody misses. The rows are SORTED, and an empty 'system' or 'test'
 cell means the one above (B-12); an empty 'choice' means a test that
 has none. 'TMP/store/observations.bin' keeps what does NOT travel.
 

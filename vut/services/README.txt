@@ -518,6 +518,12 @@ The faces:
                  generated from the registry (coverage D-13).
                  One family (E-133); 'hwut.run.cov' is gone, no alias.
 
+    hwut.dev.podman.build, hwut.dev.podman.enter   (lib/dev/podman/)
+                 the development container (E-134): the image from
+                 'adm/container/Containerfile', and a shell or one
+                 command inside it over the host's tree, mounted
+                 read-write at its own path.
+
     hwut.help    (help.py)
                  reads the books as 'hwut.report' does and explains each
                  failure that is not a plain deviation from GOOD, once:

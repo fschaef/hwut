@@ -712,3 +712,30 @@ COST      Why a case has no coverage record is asked of the coverage
           run's output, not of the book. 'hwut.report.details' formats
           the stored record (coverage D-24).
 
+
+------------------------------------------------------------------------------
+B-28 EVERY TRACE STANDS UNDER 'TMP/'                              (2026-10-03)
+------------------------------------------------------------------------------
+PROBLEM   'hwut-traces.csv' stood beside the tests (B-11), and the
+          coverage run's trace was placed beside it. A file there is
+          in nobody's list: the tree walk passes it by name, git
+          ignores it, no face reports it.
+
+DECISION  RULED (Frank-Rene, 2026-10-03): "traces should all be
+          located in the TMP sub-directory." -- "yes, we need to move
+          all traces in TMP, otherways they become undetected
+          wallflowers."
+          'TMP/hwut-traces.csv' and 'TMP/hwut-traces-coverage.csv'
+          ('traces.trace_path'). 'TMP/' is made where it does not
+          stand. A 'hwut-traces.csv' STILL BESIDE THE TESTS IS READ --
+          the scheduler keeps its durations (O-27) -- and the next
+          write carries its rows to 'TMP/' and removes it: no second
+          copy, no orphan. 'hwut.report.timings' finds a directory by
+          either place.
+
+COST      B-11's "it TRAVELS" is given up: a trace is local to the
+          machine that made it. Whatever empties 'TMP/' ('hwut.sanitize'
+          'transient', a fresh clone) takes the traces with it; the
+          next run then orders by plan and makes them again.
+          'test-traces.py place': the old code fails it in two claims.
+

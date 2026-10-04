@@ -63,7 +63,9 @@ def directory_list_of(root, recursive_f):
     for directory, sub_list, file_list in os.walk(root):
         sub_list[:] = [name for name in sub_list
                        if name not in ("OUT", "TMP", "__pycache__", ".git")]
-        if "hwut-traces.csv" in file_list: found.append(directory)
+        if os.path.isfile(TraceDb(directory).path) \
+           or "hwut-traces.csv" in file_list:
+            found.append(directory)
     return sorted(found)
 
 

@@ -18,6 +18,8 @@ hwut.cov.conv.to_jacoco exit 0: PURPOSE: 'hwut.cov.conv.to_jacoco' -- the output
 hwut.cov.conv.to_json exit 0: PURPOSE: 'hwut.cov.conv.to_json' -- the output directory of a coverage
 hwut.cov.conv.to_tex exit 0: PURPOSE: 'hwut.cov.conv.to_tex' -- the output directory of a coverage
 hwut.cov.conv.to_pdf exit 0: PURPOSE: 'hwut.cov.conv.to_pdf' -- the document of 'hwut.cov.conv.to_tex'
+hwut.dev.podman.build exit 0: PURPOSE: 'hwut.dev.podman.build' -- the development container's image,
+hwut.dev.podman.enter exit 0: PURPOSE: 'hwut.dev.podman.enter' -- a shell, or one command, inside the
 hwut.run.diff      exit 0: usage: hwut.run.diff [-h] [--reading] [--plain] [--console] [-y] [--width WIDTH] [--directory DIRECTORY] [--all] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.report.details exit 0: usage: hwut.report.details [-h] [--directory DIRECTORY] [-r] [--no-coverage] [--cov-dir directory] [word ...]
 hwut.run.stability exit 0: PURPOSE: THE 'hwut.run.stability' COMMAND LINE -- run the same wish SEVERAL

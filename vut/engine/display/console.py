@@ -76,7 +76,7 @@ THE LOG -- the flow, in a file, where one is asked for
                         (O-24). Without it NO FILE IS WRITTEN. The file
                         is a rendering for the eye and for a mail
                         attachment -- not a record to query: what a run
-                        cost is 'TEST/hwut-traces.csv' (B-11), and what
+                        cost is 'TEST/TMP/hwut-traces.csv' (B-11), and what
                         it decided is the book
 
 COLOUR -- decided once, at the door
