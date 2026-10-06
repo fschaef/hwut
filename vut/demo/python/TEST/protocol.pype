@@ -1,0 +1,48 @@
+#! /usr/bin/env hwut.pype
+# THE LAW OF A REQUEST/RESPONSE PROTOCOL, written as the states it has.
+#
+#     SERVING   a request opens an exchange; a response closes it.
+#               'shutdown' ends the service.
+#     CLOSED    nothing may arrive any more.
+#
+# What the script PRINTS does not depend on the order lines arrive in:
+# one verdict line per exchange, sorted, and every breach of the law,
+# sorted. The test application only reports what happens, as it happens.
+
+SERVING is: ANY
+SERVING/on: <entry> => {
+    open_db = {}                   # id -> responses seen so far
+    breach_set = set()
+}
+SERVING/on: "request" <id = int> => {
+    if id in open_db:
+        breach_set.add("request %d sent twice" % id)
+    open_db.setdefault(id, 0)
+}
+SERVING/on: "response" <id = int> => {
+    if id not in open_db:
+        breach_set.add("response %d without a request before it" % id)
+    else:
+        open_db[id] += 1
+}
+SERVING/on: "shutdown" => goto CLOSED;
+
+CLOSED is: ANY
+CLOSED/on: "request" <id = int> => {
+    breach_set.add("request %d after shutdown" % id)
+}
+CLOSED/on: "response" <id = int> => {
+    breach_set.add("response %d after shutdown" % id)
+}
+
+ANY/on: <else> => ignore;
+ANY/on: <eof> => {
+    for id in sorted(open_db):
+        n = open_db[id]
+        print("exchange %d: %s" % (id, "answered" if n == 1 else
+              "NOT answered" if n == 0 else "answered %d times" % n))
+    for breach in sorted(breach_set):
+        print("BREACH: " + breach)
+    print("law: " + ("kept" if not breach_set and all(n == 1 for n in open_db.values()) else "BROKEN"))
+    print("<hwut-end>")
+}

@@ -1,0 +1,8 @@
+start
+##! potpourri
+worker A done: 3 jobs
+worker B done: 5 jobs
+worker C done: 2 jobs
+####
+all joined
+<hwut-end>
