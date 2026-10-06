@@ -14,6 +14,7 @@
 #                                          "twice == 2 * once"]
 #                       } }
 #         analogies   { }
+#         race        { }
 #     }
 # }
 #
@@ -51,6 +52,11 @@ constraints  '((name: value))' BINDS a value; the expressions under
              checked once both are bound. A binding that breaks its law is
              red.
 
+race         '##! potpourri' ... '####' opens a block whose lines may arrive
+             in ANY order -- three workers print as they finish. The same
+             lines must stand on both sides, each once; the order is free.
+             The program prints the markers, and so does GOOD.
+
 analogies    '((x))' is a placeholder: '((a7f3))' against GOOD's '((91c2))'
              is equivalent where the mapping holds throughout the stream --
              the same handle opened, read and closed. A handle that changes
@@ -59,6 +65,7 @@ ______________________________________________________________________________
 """
 import random
 import sys
+import threading
 import time
 
 GREETING_TUPLE = ("hello", "bonjour", "hallo", "buongiorno", "hola", "ahoj")
@@ -97,10 +104,34 @@ def analogies():
     print("close ((%04x))" % second)
 
 
+def race():
+    """RETURN: None. Three workers print as they finish; the order is the
+    scheduler's, the facts are not. The program frames the unordered block
+    itself: '##! potpourri' ... '####'."""
+    lock = threading.Lock()
+
+    def work(name, jobs):
+        time.sleep(random.uniform(0.0, 0.02))
+        with lock:
+            print("worker %s done: %i jobs" % (name, jobs))
+
+    pool = [threading.Thread(target=work, args=args)
+            for args in (("A", 3), ("B", 5), ("C", 2))]
+    print("start")
+    print("##! potpourri")
+    for thread in pool:
+        thread.start()
+    for thread in pool:
+        thread.join()
+    print("####")
+    print("all joined")
+
+
 CHOICE_DB = {"plain":       plain,
              "tolerance":   tolerance,
              "constraints": constraints,
-             "analogies":   analogies}
+             "analogies":   analogies,
+             "race":        race}
 
 random.seed(time.time_ns())
 choice = sys.argv[1] if len(sys.argv) > 1 else ""
