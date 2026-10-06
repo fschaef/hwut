@@ -1,7 +1,8 @@
-# vut-register 5 generation:10 apps:2 marks:0=5,1=3
+# vut-register 5 generation:11 apps:2 marks:0=6,1=3
 test;choice;verdict;report;stderr;stain;test_id;choice_id
 test-ignore.sh;paths;true;ok;;;0;0
 ;refused;true;ok;;;0;1
+;refused_too;true;ok;;;0;5
 ;reported;true;ok;;;0;4
 ;wallflowers;true;ok;;;0;2
 ;wishlist;true;ok;;;0;3

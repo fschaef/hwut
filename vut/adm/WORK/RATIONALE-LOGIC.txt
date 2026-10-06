@@ -214,7 +214,8 @@ difference (R-54). The rulings converge on ONE SCOPE (R-77, E-42) after
 a period of flat parameters -- the same consolidation R-73 did for
 language-setup.
 
-THE FLOOR, RULED 2026-09-04 (adm/WORK/intend/16-pole-and-tolerance.txt):
+THE FLOOR, RULED 2026-09-04 (adm/PHILOSOPHY.txt 1.1; intend/16 held it
+until 2026-10-05):
 
         Eq( d(b_subject), d(b_nominal), t )    with    t( d(b_nominal) )
 
@@ -428,8 +429,8 @@ WHERE A SUBJECT HAS NO FLOOR
      looked.)
     subject 6   RULED 2026-09-04. t( d(b_nominal) ): the pole sets the
                 scale, the asymmetry is the doctrine, the code is
-                correct. What is owed is a DOCUMENT edit -- see
-                'adm/WORK/intend/16-pole-and-tolerance.txt'.
+                correct. The DOCUMENT edit is done: 'adm/PHILOSOPHY.
+                txt' 1.1 (intend/16 closed and deleted 2026-10-05).
     subject 1   the configuration SPECIFICATION itself is owed and
                 unwritten -- gathered/0v
 

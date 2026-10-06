@@ -1,0 +1,1253 @@
+==============================================================================
+review-r10 -- THE AUDIT OF WHAT REMAINS: EVERY CLAIM MEASURED ON THE TREE
+==============================================================================
+
+VERSION: 2   (v1 the audit, bundle 81; v2 adds section 9, the cleaning
+             ruled the same day, bundle 82)
+
+COMPONENTS: all.
+FOLLOWS:    'adm/WORK/TODO.txt' version 13, after review-r9's pass over
+            band E. Produces version 14.
+TREE:       branch 26y10m4d-review-todo-and-done, head 70417c02 (BASE),
+            cloned fresh; 'git status --ignored --short | wc -l' -> 0
+            before the first run. Dates of measurement: 2026-10-04/05.
+
+THE LAW OF THIS PASS. "Built" and "owed" were both hypotheses until a
+command answered. A claim is settled by exactly one of: the face run
+with the command a person types; a grep whose hit is quoted with file
+and line; a suite run whose verdict is quoted; absence shown in the
+file. A document's word settled nothing. Where the sandbox lacks the
+tool (podman, verilator, ghdl, gcc 14, genhtml), the evidence says so
+and the item stays in band D.
+
+______________________________________________________________________________
+
+0  PASS 0 -- THE BASELINE, AND WHAT IT FOUND
+
+    census     bin/hwut.run --plain           911 ok / 1 fail  (232 s)
+    glob pass  bin/hwut.run --plain --glob 'test-*'
+                                              898 ok / 1 fail / 13 skip
+    expected                                  912 / 0;  899 / 0 / 13
+
+    THE ONE RED, both passes: 'services/TEST/test-dev_podman.py refused'.
+    'diff GOOD OUT' -> line 19 only: the GOOD holds
+    '-v /home/claude/hwut:/home/claude/hwut', the OUT this clone's
+    '/home/claude/work'. A MACHINE-CHOSEN PATH IN A GOOD (O-30). Cause in
+    the page: 'test-dev_podman.py:117 line.replace(root, "<root>")' masks
+    the vut directory; the mount is its PARENT, so the mask misses it.
+    POSITIVE CONTROL: a second clone of BASE at '/home/claude/hwut',
+    'hwut.run --plain --jobs=1 test-dev_podman.py refused' -> [OK] 1/1.
+    The tree is the one bundles 68-80 left; the clone's path is not.
+    A finding, not a task: the page is red by its own defect, and no
+    GOOD is re-recorded by an audit.
+
+    THE BOOKS MOVED under the census: 'services/TEST/GOOD/book.csv'
+    gained four register rows (test-dev_podman.py build/enter/help/
+    refused -- NOTE "a nominal stands and the register had no entry --
+    accepted outside the book (E-41)") and 'services/lib/config/TEST/
+    GOOD/book.csv' one ('test-ignore.sh refused_too'). Two committed
+    books lagged their GOOD files. The two books ride in bundle 81
+    (the apply note says 'chmod u+w' first).
+
+    ALSO MEASURED, for the record: this sandbox has two cores (the
+    skill's text says one); a TeX engine stands; gcc is 13.3; a docker
+    CLIENT stands with no daemon; no podman, no genhtml, no lcov.
+
+______________________________________________________________________________
+
+1  THE INVENTORY -- 321 LINES, ONE PER CLAIM, WITH FILE AND LINE
+
+    source                                  lines   note
+    1  TODO.txt v13                            72   A 4, B 14 (v13's
+                                                    count says 13), C 6
+                                                    + a/b/c, D 4, E 25,
+                                                    F 2, STRUCK 14
+    2  the three DISCUSSIONS.txt               61   coverage 28 (6 struck
+                                                    re-audited),
+                                                    operations 32,
+                                                    services 1 (empty)
+    3  gathered 35, intend 8, spec 1, plan 2   58
+    4  RATIONALE marker lines                 101   THIRTEEN RATIONALE
+                                                    files, not eight;
+                                                    34 word-level claims,
+                                                    67 substring or
+                                                    prose hits
+                                                    ('followed',
+                                                    'showed',
+                                                    'swallowed', plain
+                                                    'until')
+    5  code markers outside TEST               23   15 NotImplementedError
+                                                    (all interface
+                                                    contracts), 8
+                                                    'stand-in' lines
+    6  ISSUES.txt                               6
+       phantoms named by the prompt             2
+                                              ---
+                                              321 (+2)
+
+    Found by the sweep OUTSIDE the six sources: 'doc/disc-hwut-amend.txt'
+    and 'doc/disc-hwut-lint.txt' (unnumbered disc files, 2026-08-27),
+    'doc/OLD/TODO.txt', and the unnumbered twins 'intend/configuration
+    .txt' and 'intend/work-structure.txt'.
+
+______________________________________________________________________________
+
+2  THE TABLE -- artefact | claimed | measured | verdict
+
+2.1  TODO.txt version 13
+
+    A-3  procsitter call  | raises NotImplementedError | hwut_info_
+         in --hwut-info   |                            | interview.py:223
+                          |                            | runs Procsitter;
+                          |                            | test-interview.py
+                          |                            | procsitter [OK]
+                          |                            | -> BUILT, STRUCK
+    A-4  caps defaults    | all stand-ins             | relation.py:125-
+                          |                            | 132: 5 of 8 read
+                          |                            | ProcsitterConfig
+                          |                            | -> NARROWED, A
+    A-5  same/interactive | stand-ins, blocked on the | owners declared
+                          | owner face                | (NamingConfig,
+                          |                            | TestConfiguration)
+                          |                            | -> UNBLOCKED, B
+    A-6  mc/dc gcc 14     | blocked                   | gcc 13.3 -> A
+    B-3  hwut.parse face  | absent                    | ls bin, services
+                          |                            | -> absent -> B
+    B-4  collision groups | one flat group            | validator.py:159
+                          |                            | _target_list -> B
+    B-5  special key      | nothing built             | no key, no face
+                          |                            | -> B
+    B-6  hwut.affected    | reads removed records;    | affected.py:242
+                          | silently wrong            | over per-case
+                          |                            | records; cov/
+                          |                            | run.py:270
+                          |                            | removes them; no
+                          |                            | launcher ->
+                          |                            | UNREACHABLE, B
+    B-7  renovate         | initial built; books,     | renovate.py:47-49
+                          | survey, quex owed         | says so; + r-a
+                          |                            | header generation
+                          |                            | unbuilt (renovate
+                          |                            | never interviews)
+                          |                            | -> B, widened
+    B-9  --global-conf    | absent                    | grep 0 -> B
+    B-10 pack shows cov   | report.py names coverage  | grep 0; summary.py
+                          | nowhere; fold exists      | stands -> B
+    B-11 completion       | design only               | no module; E-81's
+                          |                            | option table
+                          |                            | stands -> B
+    B-12 'output'         | decided, unbuilt          | test-output.sh
+                          |                            | cycle: file
+                          |                            | subject played,
+                          |                            | accepted, green
+                          |                            | -> BUILT, STRUCK;
+                          |                            | residue F-3
+    B-13 variant restates | unbuilt (refused as root- | variant.py has no
+         language-setup   | only key)                 | reach; the key is
+                          |                            | a conf key now
+                          |                            | -> B, note fixed
+    B-14 tree model       | parked; plain.py 696/706/ | lines moved to
+                          | 713, summary.py 36        | 1072/1081/847,
+                          |                            | 40; argument
+                          |                            | holds -> B
+    B-15 staleness law    | second half owed          | E-122: faces
+                          |                            | REFRESH; test-
+                          |                            | refresh.py [OK]
+                          |                            | -> RULED, STRUCK
+    B-16 second question  | S-1 built, face not       | face EXISTS
+         face             |                            | (--stderr-tol);
+                          |                            | E-110 retires it,
+                          |                            | unbuilt; validator
+                          |                            | refuses 'stderr';
+                          |                            | hwut.help advises
+                          |                            | it -> B, REWRITTEN
+    B-24 to_pdf --check   | asked, not ruled          | no kpsewhich, no
+                          |                            | --check -> B
+    C-1  explain seam     | diagnosis.py; chain not   | diagnosis.py:120
+                          | carried; no wiring        | recomputed; no
+                          |                            | --explain -> C
+    C-2  proxy provision  | seam built; rest open     | file subjects per
+                          |                            | choice BUILT
+                          |                            | (multi_execute.py
+                          |                            | :461); isolation
+                          |                            | a fork -> STRUCK,
+                          |                            | residue E
+    C-3  11 readers       | 11 built                  | hwut.cov.formats:
+                          |                            | 11 own readers
+                          |                            | -> C
+    C-4  measures         | registered, carried;      | measure.py:457-
+         a/b/c            | FN producers, BRDA, MCDC  | 483; gcov.py:219
+                          | owed                      | skips; lcov.py:19
+                          |                            | ignores; to_lcov
+                          |                            | no MCDC -> C
+    C-6  stderr survey    | not built                 | renovate.py:48
+                          |                            | -> C
+    C-7  README deep      | old shape                 | 3 unresolved
+         sections         |                            | module paths -> C
+    D-4  dev image        | never built               | no daemon; exit 1
+                          |                            | -> D
+    D-5  real readers     | none                      | no genhtml here
+                          |                            | -> D
+    D-6  final fold real  | synthetic only            | not run here (two
+         tree             |                            | cores) -> D
+    D-2  outer-text       | checkable by a split      | chunk_pipe.py:185;
+         boundary         |                            | split is code
+                          |                            | -> D
+    E    0j target        | five forks                | file deleted
+                          |                            | 2026-09-04, E-7
+                          |                            | -> REMOVED
+    E    0m wishlist      | fork                      | deleted, E-13
+                          |                            | -> REMOVED
+    E    0k --confs       | fork                      | grep confs 0
+                          |                            | -> E
+    E    0v specification | owed                      | no SPECIFICATION
+                          |                            | -> E
+    E    0t test sequence | noted                     | nothing built -> E
+    E    0d, 0e parked    | parked                    | empty-match NOTE
+                          |                            | per directory,
+                          |                            | exit 3 -> E
+    E    0n root causes   | r-1, r-3 open             | r-1 BUILT unruled
+                          |                            | ('.txt',
+                          |                            | bookkeeper.py:
+                          |                            | 828); r-3 tests
+                          |                            | green under O-20
+                          |                            | -> E, both moved
+    E    0o cadence       | theory owed               | --cadence built;
+                          |                            | theory absent -> E
+    E    02 doc session   | goals (2),(3)             | four aggregates
+                          |                            | stand -> E (r-9c)
+    E    07/09/0f         | provisional               | spot-checked as
+                          |                            | built -> E
+    E    0u walk laws     | provisional               | '.' skipped;
+                          |                            | ignore child-wins
+                          |                            | -> E
+    E    coverage disc-1  | ruled, strike?            | D-20, D-43 -> E
+                          |                            | (question stands)
+    E    coverage disc-2  | fork                      | (c) BUILT
+                          |                            | (interactive=
+                          |                            | False), no entry
+                          |                            | -> E, re-stated
+    E    coverage disc-3  | fork, parked              | D-22 ruled and
+                          |                            | built (cov_lock)
+                          |                            | -> RESIDUE
+    E    coverage disc-4  | fork                      | D-42 -> RESIDUE
+    E    coverage disc-5  | fork                      | CountsNotMergeable
+                          |                            | stands; output
+                          |                            | carries no counts
+                          |                            | -> E, narrowed
+    E    coverage disc-6  | moot?                     | helper.py gone ->
+                          |                            | RESIDUE (r-5e)
+    E    coverage disc-7  | fork + stored/rebuilt     | (a) is B-6; (b)
+                          |                            | absent; stored
+                          |                            | = D-42 output ->
+                          |                            | OPEN BESIDE
+                          |                            | RESIDUE
+    E    coverage disc-9  | fork                      | stands -> E
+    E    operations       | parked forks              | the layer built;
+         disc-8, disc-9   |                            | disc-9's check
+                          |                            | ABSENT -> disc-8
+                          |                            | E, disc-9 -> B-28
+    E    todo-15          | parked                    | nvim tier gone
+                          |                            | (E-62) -> RESIDUE
+    E    todo-16          | GOODs owed; phase 2 owed  | GOODs stand; block
+                          |                            | _id absent -> E
+                          |                            | (phase 2 only)
+    E    todo-17, 18      | deferred                  | down_fixture.json,
+                          |                            | protocol.lua gone
+                          |                            | -> E, premises
+                          |                            | stale
+    E    todo-20          | delivered + 4 owed        | nothing carried;
+                          |                            | 'delivered' never
+                          |                            | in any commit ->
+                          |                            | B-32
+    E    r-5c             | closed                    | -- (kept)
+    E    r-5b, r-5d       | forks                     | stand -> E
+    E    r-5e             | disc-6 moot               | helper.py gone
+                          |                            | -> E (strike?)
+    E    r-6a             | re-dump; todo-9           | plan/01: CLOSED,
+                          | unverified                | todo-9 verified
+                          |                            | -> REMOVED
+    E    r-6d             | re-seeding, gate s-3      | file is 14 header
+                          |                            | lines -> REMOVED
+    E    r-7a             | two citations             | both still stand
+                          |                            | (services:1500,
+                          |                            | SEMANTICS:665)
+                          |                            | -> E
+    E    display          | NOTE inside the block     | census: NOTE
+         wallflower NOTE  |                            | before the closing
+                          |                            | rule -> E
+    E    'condition'      | wanted?                   | not registered
+                          |                            | -> E
+    F-2  test-wishlist awk| pins a flow               | :152, :157 -> F
+    F-1  bin/README       | untrue sentence           | three launchers
+                          |                            | under lib/ -> F
+    STRUCK A-1/B-20 E-46  | E-46 holds                | E-46 stands;
+                          |                            | bin/hwut.move
+    STRUCK A-2            | books done                | three coverage
+                          |                            | books ran green
+    STRUCK B-1 O-7        |                            | run/dispatcher.py;
+                          |                            | O-7 stands
+    STRUCK B-2            | built; services           | face built;
+                          |                            | '--format' and
+                          |                            | plan tree mode
+                          |                            | NOT; no ruling
+                          |                            | -> HALF-RIGHT
+    STRUCK B-8            | to_lcov                   | bin/hwut.cov.conv
+                          |                            | .to_lcov; D-43,
+                          |                            | E-133 stand
+    STRUCK B-17/18/19     | done 2026-09-04           | no text to measure
+                          |                            | (what they were
+                          |                            | is in no file of
+                          |                            | this tree)
+    STRUCK B-21 E-112     |                            | hwut.run --help:
+                          |                            | '-l, --label'
+    STRUCK B-22 E-114     |                            | bin/hwut.report
+                          |                            | .timings
+    STRUCK B-23 E-115,133 |                            | bin/hwut.cov.run
+    STRUCK C-5 intend/16  |                            | 'NOTHING OPEN'
+    STRUCK D-1 D-20, D-43 |                            | both stand
+    STRUCK D-3 E-46       |                            | stands
+
+2.2  engine/coverage/DISCUSSIONS.txt
+
+    struck disc-8        | D-15, D-17, D-7, D-8      | entries stand -> ok
+    struck todo-1        | 'services/lib/run/cov.py' | it is services/lib/
+                         | stands                    | cov/run.py (E-133)
+                         |                           | -> text STALE
+    struck todo-9        | _local_resolver gone      | grep 0 -> ok
+    struck todo-10       | gather/stale verbs stand  | D-25 WITHDRAWN;
+                         | (D-25)                    | --help 0 hits
+                         |                           | -> text STALE
+    struck todo-11       | retired                   | nothing to measure
+    struck todo-12       | VERB_TUPLE verified       | only in sanitize.py
+                         |                           | -> text STALE
+    disc-1               | fork                      | ruled D-20/D-43
+                         |                           | -> RESIDUE
+    disc-2 + OPEN BESIDE | fork                      | (c) built, unruled
+    disc-3               | parked                    | D-22 -> RESIDUE
+    disc-4               | fork                      | D-42 -> RESIDUE
+    disc-5               | fork                      | narrowed, stands
+    disc-6               | fork                      | subject gone
+                         |                           | -> RESIDUE
+    disc-7 + OPEN BESIDE | fork                      | (a)=B-6; stored
+                         |                           | ruled -> OPEN
+                         |                           | BESIDE RESIDUE
+    disc-9               | fork                      | stands
+    todo-2 [11 built]    | 11; julia, trace owed     | formats: 11 ->
+                         |                           | stands (C-3)
+    todo-8 [part] + 4    | masks, points, FN;        | as claimed (C-4)
+    OWED                 | producers, BRDA, MCDC,    |
+                         | condition owed            |
+    todo-4, todo-5       | B-10, B-9                 | absent -> stand
+    todo-6 [part]        | affected built, shim      | as claimed (B-6)
+                         | absent                    |
+    todo-7               | measurement owed          | disc-1 ruled
+                         |                           | without it ->
+                         |                           | RESIDUE
+
+2.3  engine/operations/DISCUSSIONS.txt
+
+    struck todo-19       | abs() fixed               | line_element.py:292
+                         |                           | -> ok
+    struck todo-12       | slots=True                | configuration.py:
+                         |                           | 32, 65 -> ok
+    disc-8               | parked                    | layer built -> E
+    disc-9               | parked; stem check owed   | check ABSENT
+                         |                           | -> B-28
+    todo-2 (a)           | fork                      | D-2 stands
+    todo-2 (b)           | registry per associate()  | main.py:258 -> as
+                         |                           | claimed
+    todo-15              | parked                    | nvim gone (E-62)
+                         |                           | -> RESIDUE
+    todo-16 GOODs        | OWED                      | three GOODs stand,
+                         |                           | 20/20 -> DONE
+    todo-16 phase 2      | block_id owed             | absent -> E
+    todo-16 ruling       | per round vs session      | per round by
+                         |                           | construction
+                         |                           | (E-61 'r') -> E
+    todo-17 + OWED       | second IDE                | premises gone -> E
+    todo-18 + OWED       | browser client            | premises gone -> E
+    todo-20 DELIVERED    | numeric_list,             | NEVER in any
+                         | pattern_list              | commit -> WRONG,
+                         |                           | B-32
+    todo-20 4 STILL OWED | point-cloud, params,      | all absent -> B-32
+                         | verdicts, partner         |
+    todo-21 + 3 OWED     | diagnosis.py delivered    | as claimed (C-1)
+    todo-22              | '-c' reserved             | gone; tell.py gone
+                         |                           | -> WRONG; B-10
+    todo-22 OPEN         | coverage of what          | answered by D-3's
+                         |                           | gather set -> moot
+    todo-23 proxy        | built; file subjects,     | file subjects BUILT;
+                         | isolation open            | isolation -> E
+    disc-1 note          | result store built        | 'result_db.json'
+                         |                           | -> book.csv (B-10)
+                         |                           | text STALE
+    todo-23 README       | old prose                 | as claimed (C-7)
+    todo-24              | law not ruled             | E-122 -> RESIDUE
+    todo-25              | face does not exist       | exists; E-110
+                         |                           | unbuilt -> WRONG;
+                         |                           | B-16
+    todo-26              | survey owed               | as claimed (C-6)
+
+2.4  services/DISCUSSIONS.txt: header only; nothing open. Correct.
+
+2.5  adm/WORK/gathered, intend, spec, plan
+
+    02   doc session       | OPEN                 | aggregates stand -> E
+    03   scratch()         | CLOSED; part 1 tidy  | no def scratch -> E
+    04   early abort       | not built; OPEN (1)  | no abort -> E
+    05   tree model        | parked               | B-14
+    06   for the manual    | nothing to build     | no manual exists ->
+                           |                      | stands
+    07   scheduler provis. | items 2, 3           | stand (E)
+    09   run provisional   | items 2-10           | spot-checked (E)
+    0a   caps per choice   | fork                 | O-20 closed it ->
+                           |                      | RESIDUE
+    0b   --format, tree    | owed                 | both unbuilt, struck
+         mode              |                      | with B-2 -> E
+    0c   backend           | decided, not built   | no submit() -> stands
+    0d, 0e                 | parked               | E
+    0f   plan provisional  | items 2,4,6,7,8,10   | E
+    0g, 0h                 | owed                 | B-5, B-4
+    0i   --dir settled;    | sanitize not in tree | propose takes a wish
+         sanitize wish     |                      | (E-18); propose/
+                           |                      | apply (E-125) ->
+                           |                      | RESIDUE
+    0k   --confs           | OPEN                 | absent -> E
+    0n   root causes       | r-1, r-3 open        | r-1 built unruled;
+                           |                      | r-3 green -> E
+    0o   cadence           | OPEN                 | E
+    0p   labels            | SETTLED; 2 OPEN      | both RULED; E-19/20/
+                           | RULED                | 24 -> RESIDUE
+    0q   face inventory    | item 3 open          | items 4, 5 stale
+                           |                      | -> E (item 3)
+    0r   renovate          | 2 OPEN               | E-99 first cut; r-a
+                           |                      | unbuilt -> B-7, E
+    0s   completion        | design; 2 OPEN       | B-11, E
+    0t   test sequence     | noted                | E
+    0u   walk laws         | 1, 2, 4              | E
+    0v   specification     | owed                 | absent -> E
+    0w   'output'          | BUILT; (4) (5) open  | B-12 struck; F-3
+    0x   owner faces       | unbuilt; SAFE_* open | relation.py imports
+                           |                      | six stand-ins; the
+                           |                      | two allow-lists
+                           |                      | DISAGREE -> B-27
+    0y   blessing on real  | unbuilt              | GOOD records the
+         components        |                      | stand-ins -> stands
+    0z   interview         | procsitter call owed | BUILT (A-3 struck);
+                           |                      | X-SILENT retired the
+                           |                      | carrier
+    10   caps vocabulary   | 6 named unbuilt      | 5 on ProcsitterConfig
+                           |                      | (R-78); 3 stand-ins
+                           |                      | -> A-4
+    13   hwut.parse        | face owed            | B-3
+    14   variant/language  | unbuilt              | B-13
+    15   same/interactive  | faces stand-ins      | A-5 -> B
+    DRM 3-5                | built/ruled          | as claimed
+    DRM 4 dispatcher edit  | unverified           | aspirant refusal
+                           |                      | stands at plan/
+                           |                      | tree.py:55 for every
+                           |                      | run -> in force
+    DRM 6                  | OPEN (VCS, two acts) | no VCS detection ->
+                           |                      | stands (E? -- its
+                           |                      | intend is 'NEXT 3')
+    DRM 7                  | --across STATUS 1    | green now
+    intend/00              | placement fork       | no engine/selection
+                           |                      | -> E
+    intend/configuration,  | --                   | unnumbered twins of
+    intend/work-structure  |                      | 00-, 01- -> RESIDUE
+    intend/16              | NOTHING OPEN         | -> RESIDUE
+    intend/19 o-2          | consequence open     | anchoring built -> E
+    intend/19 o-3, o-6, o-7| to measure           | measured, ruled
+                           |                      | (C-15, C-16)
+    intend/20 s.4          | open                 | default SUCCESSOR,
+                           |                      | no FAILED_FIRST -> E
+    intend/21              | o-1 as built; rest   | all settled; STATE
+                           | settled              | BUILT -> RESIDUE
+    spec/01 s-1..s-3       | open                 | no doc_audit.py -> E
+    plan/01                | PHASE S blocked;     | README 3 defence
+                           | trim owed            | hits, MANUAL 0 ->
+                           |                      | stands
+    plan/18 o-1            | (a) recommended      | (b) built (DRM 3.2)
+                           |                      | -> RULED by measure
+    plan/18 steps 4-6      | not started          | 4-5 built (no
+                           |                      | test_ids.dat; cov
+                           |                      | never names it);
+                           |                      | 6 'B-13' cited,
+                           |                      | never written -> E
+                           |                      | 'rulings owed'
+
+2.6  RATIONALE marker lines -- the 34 claims
+
+    compare:155, :315; coverage:1377, :1446, :1533; bookkeeper:304;
+    exploration:313, :1740; plan:64; run:779; services:334, :438,
+    :748, :2155, :2205, :2214, :4945  -- prose, graveyard or history:
+    no labour.
+    compare:328, services:2660   verdict word owed   | O-25 -> CLOSED
+    coverage:386, :1691, :1716   MCDC/FN owed        | C-4
+    coverage:601                 bridge until todo-9 | D-18 -> CLOSED
+    coverage:1160                mcdc unrendered     | to_lcov only ->
+                                                     | C-4c
+    coverage:1621                sect. 10 not built  | FORMAT.txt 10:
+                                                     | BUILT pass 4 ->
+                                                     | superseded in
+                                                     | place
+    coverage:1770                to_cobertura owed   | built same day
+                                                     | (D-45) -> CLOSED
+    coverage:1848                D-5, D-6            | D
+    exploration:1186             $-expansion owed    | NOT built -> B-26
+    exploration:1527-1570        ConfigCaps lied     | R-78/R-79 fixed
+                                                     | -> A-4 narrowed
+    exploration:1815             memo dormant until  | renovate never
+                                 renovate            | asks -> B-7
+    services:304, :306           --confs             | 0k -> E
+    services:1503                stands until        | DONE the same day
+                                 provision           | (text says so)
+    services:2547                hwut.accept.new     | absent -> E
+                                 owed                |
+    services:3547                nine hand-parsing   | 11 parsered,
+                                 faces               | rest by hand ->
+                                                     | F-4
+    services:5337                genhtml owed        | D-5
+    services:5377                image proof owed    | D-4
+    67 remaining lines: substring hits of 'owed' (followed, showed,
+    swallowed, allowed, borrowed, narrowed) or 'until' as plain prose.
+
+2.7  Code markers: 15 NotImplementedError = LineElement.compare/
+    _is_equivalent, I_Measure x5, CCoverageFormat.absorb/record_of,
+    Nominal.open/name, CStrategy.may_start, Trigger.fire -- contracts
+    of base classes, none a stub. 'stand-in': affected.py:49 and
+    index.py:360 (the record walk, B-6); validator.py:114 (X-TITLE's
+    ruled stand-in title); rename.py:463 (a parser placeholder word);
+    the rest prose.
+
+2.8  ISSUES.txt: 1 -> D-7; 2 -> E; 3 -> D-8; 4 -> B-29 (reproduced);
+    5 -> B-30 (reproduced); 6 -> B-31 (reproduced).
+
+______________________________________________________________________________
+
+3  THE CLAIMS THAT WERE WRONG
+
+3.1  Claimed OWED or OPEN -- measured BUILT or RULED (18)
+
+    A-3, B-12, B-15, C-2; E 0j, 0m, r-6a, r-6d; coverage disc-3 (D-22,
+    2026-08-25 -- parked six weeks after it was ruled), disc-4 (D-42),
+    disc-7's OPEN BESIDE (D-42); operations todo-16's GOODs, todo-15
+    (tier removed); gathered 0a (O-20), 0i (E-18, E-125), 0p; intend/
+    16, 21, 19's o-3/o-6/o-7; plan/18's o-1 and steps 4-5.
+
+3.2  Claimed BUILT or RULED -- measured NOT (14)
+
+    B-16's premise: E-110 ruled 2026-09-19, "NOT BUILT in the session
+        that ruled it", not since -- and 'hwut.help' advises the line
+        the validator refuses (GOOD test-help.sh--explain.txt:42 vs
+        validator.py:444).
+    operations todo-20 "DELIVERED": 'LinePairInst.numeric_list' and
+        'pattern_list' -- in no commit of 'feeder/ui.py', ever
+        ('git log -S NumericMeta').
+    operations todo-22: the reserved '-c' is gone; 'hwut.tell' is gone.
+    operations todo-25: "'hwut.accept' does not exist yet" -- it does.
+    operations disc-1 note: 'GOOD/result_db.json' -- it is book.csv.
+    exploration R-66 NOTE "the three cannot drift": two allow-lists,
+        26 functions apart; glob() refused at the door (B-27).
+    exploration R-68: expansion ruled, "owed", unbuilt (B-26).
+    exploration X-SILENT COST: "the interview survives as renovate's
+        reader" -- renovate.py never calls it.
+    multi_execute.py:88-92 docstring: "a test with file subjects
+        takes the classic one-call run" -- its own lines 461-467 read
+        the declared files per choice.
+    STRUCK B-2 (v13): "built; services" -- half: '--format' and the
+        plan's tree mode unbuilt, no ruling named.
+    coverage struck todo-1/10/12 residue text: a moved path, a
+        withdrawn verb set, a tuple that now lives in sanitize.
+    operations todo-17: 'protocol.lua 154 lines', 'view.lua 125' --
+        files that no longer exist.
+    v13 COUNTS: B counted 13 where 14 were listed.
+    plan/18 step 6 and bookkeeper.py:649,670: "B-13" cited; no B-13
+        entry exists.
+
+3.3  Where two documents contradicted each other, the loser
+
+    gathered/0z and TODO A-3 ("raises NotImplementedError") LOST to
+        hwut_info_interview.py; X-SILENT then retired the carrier
+        both described.
+    operations DISCUSSIONS todo-25 LOST to services E-110 (and E-110
+        lost to the tree: unbuilt).
+    coverage DISCUSSIONS disc-3 LOST to coverage RATIONALE D-22.
+    coverage DISCUSSIONS struck-header ("D-25; both verbs stand") LOST
+        to D-25 as amended ("WITHDRAWN").
+    plan/18 o-1's recommendation (a) LOST to DISCUSSION-register-and-
+        moving 3.2's measurement (b) -- the plan file was never
+        updated.
+    TODO v13 STRUCK ("B-2 built") LOST to gathered/0b and to
+        'hwut.run --help'.
+    R-66's NOTE LOST to constraints.py.
+    intend/work-structure.txt (o-1..o-4 open) LOST to intend/01-work-
+        structure.txt v5 -- it is the same intent, two versions old.
+
+______________________________________________________________________________
+
+4  ONE MEASUREMENT IN FULL: THE TWO CONSTRAINT ALLOW-LISTS (B-27)
+
+    python3: from vut.engine.compare.engine import constraints,
+             constraint_namespace
+        functions only in the namespace (refused at the door):
+            all any bool chr copysign cosh degrees fabs factorial fmod
+            gcd glob isclose isfinite isinf isnan log10 log2 ord pow
+            radians sinh sorted sum tanh trunc            (26)
+        constants only in the namespace:  nan tau          (2)
+        str methods only at the door:     islower isupper rfind (3)
+    ConstraintExpression("x", "glob(x, 'a*')")
+        -> ConstraintSpecError: constraint for 'x': "glob(x, 'a*')":
+           only calls to abs, acos, asin, atan, atan2, ceil, cos ...
+    ConstraintExpression("x", "x.rfind('a') >= 0") -> accepted.
+    compare/TEST/test-configuration.py:163 evaluates 'glob(name,
+    "build-*.log")' through eval(expr, {}, namespace_of(binding)) --
+    the namespace, not the door -- which is why the suite is green and
+    the defect unseen.
+
+______________________________________________________________________________
+
+5  RULED DURING THIS AUDIT (2026-10-05, chat) -- QUOTED, NOT YET AN ENTRY
+
+    The discussion of 'how we determine the call that rings the
+    coverage and how we determine how to parse the output' ended in
+    these words, kept here verbatim until a RATIONALE entry (coverage
+    D-46, the first step of B-25) carries them:
+
+    "I like the diagram really a lot and it should be in the prominent
+    position of the README of the coverage component. I would start
+    the section with the explanation how the coverage measurement
+    works, namely through a call of the test app with a coverage tool,
+    respectively, the build with coverage options. A second determining
+    factor is the coverage recording format, since it determines the
+    parser. The coverage tool, usually determines the output format,
+    but possibly offers options."
+
+    "The default case, the case of least astonishment, that there is a
+    coverage format, that we know is the reporting format of the tool
+    and we set this by means of the tool. I would argue, that we only
+    define one coverage tool in the hwut-root.conf. One component, one
+    tool setup. But, have there 'coverage = "" format = ""' where
+    format is optional. The call scheme providing function receives
+    'format' as argument."
+
+    "What I want in the README: The two coverage measurement processes
+    'interpreter based' and 'compilation based'. We should consider
+    that we offer unification, that is, coverage runs and execution
+    runs are the same."
+
+    READ OUT OF IT (the consequences, as played back; none struck):
+    D-2's candidate list and elect() are superseded by one tool per
+    language; ALIAS_DB loses its claim on invocation; specify_command_
+    line gains 'format'; D-23's two classes stay as mechanism under
+    the words 'coverage' and 'format'; the 2026-10-03 chat vocabulary
+    'executor/framework' is superseded; the unification is a FORK (E)
+    against D-38, not labour.
+
+    THE DIAGRAM, as it was shown and as the README is to open:
+
+    hwut-root.conf    language-setup {
+          |             python { coverage = "coverage"
+          |                      format   = "coverage.py-json" } }
+          |           ONE tool per language; 'format' optional -- the
+          |           tool's own reporting format by default
+          v
+    the registry      call_scheme, e.g. "coverage run --branch
+    class for the       --data-file=OUT/COVERAGE/.coverage
+    tool                --include={include} --omit={omit}
+          |             -- {test} {choice}"
+          |           None = the tool is not on the command line: the
+          |           application is BUILT with coverage options
+          |           (gcov, verilator, ghdl) or instrumented by an
+          |           agent or from inside the process (jacoco,
+          |           luacov, simplecov)
+          +-- specify_command_line(included, omitted, test_app,
+          |                        choice, format)
+          +-- report_argv()  the SECOND call, where one stands
+          |                  ('coverage json')
+          +-- format         the CCoverageFormat reading OUT/COVERAGE/
+          v
+    harvest -> CoverageRecord -> TMP/store/<test>--<choice>.cover
+            -> gathered into the output directory (D-42)
+
+    interpreter-based   the TOOL calls the test application
+    compilation-based   the BUILD carries the coverage options; the
+                        application runs bare; the tool reads what
+                        the build left
+
+______________________________________________________________________________
+
+6  THE TWO PHANTOMS
+
+6.1  "executor/framework rename (D-23)". D-23 (2026-08-25) is 'TWO
+     ROLES: THE FRAMEWORK IS INVOKED, THE FORMAT IS READ' --
+     'CCoverageFramework' and 'CCoverageFormat'. The 2026-10-03 chat
+     ruled a vocabulary 'coverage { executor, framework }' (framework
+     = the format) with a list of blocks per language; nothing of it
+     reached a RATIONALE, a README or the code ('executor': 0 hits).
+     NOT A PHANTOM AFTER ALL, BUT UNANCHORED: Frank-Rene re-ruled the
+     matter on 2026-10-05 (section 5) in the words 'coverage' and
+     'format'; the item is B-25. The 2026-10-03 wording is superseded
+     and may be forgotten.
+
+6.2  "narrowing of the shell-page refusal". Anchored in NO document:
+     no RATIONALE, README, DISCUSSIONS or WORK file names it. WHAT THE
+     TREE DOES TODAY, measured: 'hwut.cov.run --plain -o X --dont-ask'
+     in 'bin/TEST' (one '.sh' page, no kcov/bashcov on the machine) ->
+     'ERROR CoverageRefused: no coverage tool for language 'bash' is
+     available here; looked for 'kcov', 'bashcov'', the directory
+     '[OMITTED] 0/0', the run continues, exit 1. Beneath it: 'kcov' is
+     a _SharedFormatFramework over cobertura and inherits 'call_scheme
+     = None', so even where kcov stands it is never put on the command
+     line. B-25 (3) covers the second fact. CLOSED AS PHANTOM; if a
+     narrower refusal was ruled, it was ruled in chat and is owed a
+     line from Frank-Rene.
+
+______________________________________________________________________________
+
+7  RESIDUE -- WHAT MAY BE DELETED BECAUSE ITS RULING STANDS
+   (nothing deleted in this session; Frank-Rene rules)
+
+7.1  Whole files
+
+    gathered/0a-disc-7-caps-per-choice.txt         O-20 ("disc-7, now
+                                                   closed")
+    gathered/0i-disc-10-wish-names-directories.txt  E-18 (propose takes
+                                                   a wish), E-20 (--dir),
+                                                   E-125 (propose/apply
+                                                   is the fix script)
+    gathered/0p-disc-8-labels.txt                  E-19, E-20, E-24; both
+                                                   OPENs ruled in the file
+    gathered/0z-todo-3-hwut-info-hints.txt         R-44 built, superseded
+                                                   by X-SILENT; the memo
+                                                   X-INTERVIEW
+    gathered/15-todo-8-same-and-interactive.txt    R-45, R-46; its OWED is
+                                                   A-5 in TODO
+    gathered/06-todo-2-pype-is-part-of-the-oracle  display D-10 ("the
+                                                   digest is part of the
+                                                   oracle"); a manual
+                                                   note -- MOVE to doc/
+                                                   beside the manual-note
+                                                   files rather than
+                                                   delete
+    gathered/03-disc-1-scratch-leaks-into-tmp.txt  CLOSED (E-27, R-76);
+                                                   its part 1 is one E
+                                                   line
+    gathered/0w-todo-1-output-subjects.txt         R-71, E-5; residue F-3
+                                                   and (5) the manual
+    intend/16-pole-and-tolerance.txt               says NOTHING OPEN
+    intend/21-tolerance-editing.txt                STATE BUILT; every o-N
+                                                   settled
+    intend/configuration.txt                       the unnumbered twin
+                                                   of 00- (v1 minus the
+                                                   VERSION line)
+    intend/work-structure.txt                      the unnumbered, older
+                                                   twin of 01- (v5)
+    gathered/DISCUSSION-register-and-moving.txt    sections 1-5 and 7 are
+                                                   BUILT/RULED (B-9,
+                                                   B-14, D-25 ...); only
+                                                   section 6 is open --
+                                                   CUT, not delete: 6
+                                                   becomes an intend
+                                                   (its own NEXT 3)
+
+7.2  Entries inside files that stay
+
+    coverage/DISCUSSIONS.txt   disc-1 (D-20, D-43), disc-3 (D-22),
+                               disc-4 (D-42), disc-6 (subject gone),
+                               disc-7's OPEN BESIDE (D-42), todo-7
+                               (disc-1 ruled without it); the STRUCK
+                               header's stale residue text (todo-1,
+                               todo-10, todo-12)
+    operations/DISCUSSIONS.txt todo-15 (E-62), todo-24 (E-122), the
+                               disc-1 note, todo-16's GOOD paragraph,
+                               todo-22 whole (B-10 holds the labour;
+                               the reservation it describes is gone),
+                               todo-23 proxy (built; the one fork
+                               'isolation' to E -- BUT its rulings
+                               stand in no RATIONALE: strike only with
+                               an entry), todo-25 (superseded by E-110,
+                               B-16)
+    gathered/0n                r-2, r-4 (r-9b); r-1 once the '.txt'
+                               law has an entry
+    gathered/0q                items 4 and 5 (stale)
+    gathered/0x                the compare-settled block (R-54..R-57,
+                               R-64..R-66); keep 'STILL OPEN in compare'
+                               (B-27) and the per-owner move (A-5)
+    gathered/0u                item 3 (closed by R-73)
+    gathered/07, 09, 0f        their struck items 1
+    intend/19                  o-1, o-3 .. o-7; keep o-2's consequence
+    plan/18                    o-1 (ruled by measurement); steps 0-5
+                               (built) -- keep step 6 and o-2
+
+7.3  Three strikes that WANT A RATIONALE ENTRY FIRST (an audit writes
+     none): the '.txt' nominal law (bookkeeper.py:828; 0n r-1); B-13
+     (cited by code, never written; plan/18 step 6); todo-23's proxy
+     family and 'interactive' as a configuration key (mechanics in
+     run/README-provider.txt). And coverage disc-2's (c), built and
+     unrecorded.
+
+______________________________________________________________________________
+
+8  POINTERS FIXED IN THIS BUNDLE (deliverable C)
+
+    coverage/DISCUSSIONS.txt   todo-8 'THE LABOUR STANDS IN ... C-4'
+                               stands; todo-4 -> B-10, todo-5 -> B-9,
+                               todo-6 -> B-6 stand. No pointer named a
+                               struck item. UNCHANGED.
+    operations/DISCUSSIONS.txt todo-24 names no TODO item; todo-25
+                               names none. UNCHANGED.
+    RATIONALE OWED lines       coverage:1848 names 'D-5 ... D-6' --
+                               both stand; services:5377 names 'D-4'
+                               -- stands; services:4525 (E-110) names
+                               no item. UNCHANGED.
+    So deliverable C is empty: no DISCUSSIONS todo and no RATIONALE
+    OWED line pointed at an item that moved or was struck. The items
+    that moved (A-5, B-16's rewrite, the new B-25..B-32) are pointed
+    at FROM TODO.txt, as the rule wants.
+
+______________________________________________________________________________
+
+9  THE CLEANING, RULED 2026-10-05 (bundle 82)
+
+    Frank-Rene: "remove duplicates, include what is necessary from
+    ISSUES.txt and remove it. Work that is clearly done shall not be
+    listed as todo of any kind. Next we will analyze what is actually
+    done."
+
+9.1  Removed whole, each on the measurement of sections 2 and 7
+
+    ISSUES.txt                      six lines -> TODO B-29, B-30, B-31,
+                                    D-7, D-8, E 'rich'
+    doc/OLD/TODO.txt                an early 'hwut.info' syntax sketch
+                                    (superseded by R-28, R-69, R-72) and
+                                    nine lines of narrative notes, kept
+                                    as 'doc/note-narrative-and-scenario-
+                                    coverage.txt' -- notes, not labour
+    gathered/0a                     O-20
+    gathered/0i                     E-18, E-20, E-125
+    gathered/0p                     E-19, E-20, E-24
+    gathered/0z                     R-44, X-INTERVIEW, X-SILENT
+    gathered/15                     R-45, R-46 (A-5 holds the faces)
+    gathered/03                     E-27, R-76 ('scratch()' one E line)
+    gathered/0w                     R-71, E-5 (F-3 the residue;
+                                    'E_StderrNote.NOMINAL' is REMOVED,
+                                    configuration.py:40; the three laws
+                                    stand in exploration/README.txt:178)
+    gathered/06                     moved: doc/manual-note-pype-is-part-
+                                    of-the-oracle.txt (display D-10)
+    gathered/DISCUSSION-register-   sections 1-5, 7 built and ruled (B-9,
+      and-moving.txt                B-14, D-25); section 6 is now
+                                    intend/22-moving-and-renaming.txt
+    intend/16                       PHILOSOPHY.txt 1.1 holds the ruling
+    intend/21                       E-117..E-125, X-PRINTED, R-70
+    intend/configuration.txt,       unnumbered older twins of 00-, 01-
+      intend/work-structure.txt
+    plan/18                         steps 0-5 built (no test_ids.dat in
+                                    any GOOD/; coverage never names it);
+                                    step 6 and o-2 are E lines
+
+9.2  Entries removed inside files that stay
+
+    coverage/DISCUSSIONS.txt        the STRUCK ledger (a duplicate of
+                                    TODO's, with stale residue text);
+                                    disc-1 (D-20, D-43); disc-3 (D-22);
+                                    disc-4 (D-42); disc-6 (subject gone);
+                                    disc-7's OPEN BESIDE (D-42); todo-7.
+                                    disc-2 became a settled note holding
+                                    the unrecorded (c).      474 -> 311 lines
+    operations/DISCUSSIONS.txt      the STRUCK ledger; disc-8 (the layer
+                                    is built); disc-9 (its check is
+                                    B-28); todo-15 (E-62); todo-22 (B-10);
+                                    todo-24 (E-122); todo-25 (E-110,
+                                    B-16); the disc-1 note. todo-16 cut
+                                    to phase 2 and the round ruling;
+                                    todo-20's false DELIVERED corrected;
+                                    todo-23 proxy became a settled note
+                                    holding its rulings.  676 -> 381 lines
+    gathered/0n                     r-1 (built, '.txt'), r-2, r-4, the odd
+                                    ones struck in the file; r-3 stays
+    gathered/0q                     items 1, 2 (settled), 4, 5 (stale)
+                                    struck; the matrix dated and the
+                                    renames named; item 3 stays
+    gathered/0x                     the settled compare matters struck;
+                                    the per-owner move (A-4, A-5) and the
+                                    allow-list unification (B-27) stay
+    gathered/0u, 07, 09, 0f         their struck items 1 (and 0f's moved
+                                    3, 5, 9) removed
+    intend/19                       o-1, o-3 .. o-7 struck (C-13..C-16);
+                                    o-2's gap penalty stays   358 -> 50 lines
+
+9.3  Citations repointed (the r-7 precedent: a citation by path moves
+     with its target)
+
+    services/lib/run/play.py:52, operations/run/stage_canonicalise.py
+      :116, run/RATIONALE.txt:438, display/RATIONALE.txt:292
+                                    gathered/06 -> the doc note
+    exploration/TEST/test-interview.py:45
+                                    gathered/0z -> "built; X-SILENT"
+    services/RATIONALE.txt:128      gathered/0w -> R-71
+    services/RATIONALE.txt:808      gathered/0p -> _file.py, the faces'
+                                    help, E-19, E-24, E-112
+    adm/WORK/RATIONALE-LOGIC.txt:217, :432
+                                    intend/16 -> PHILOSOPHY.txt 1.1
+    adm/WORK/plan/01-work-structure.txt:230
+                                    intend/16 annotated deleted
+    adm/WORK/intend/00-configuration.txt:2
+                                    the banner names the numbered file
+    No GOOD pins any of these strings (grep over every GOOD/ -> 0), so
+    no nominal moves; the census of the proof clone says the same.
+
+9.4  Left standing, deliberately
+
+    'doc/disc-hwut-amend.txt', 'doc/disc-hwut-lint.txt' -- forks, not
+      duplicates and not done; in E until Frank-Rene places them (r-10g).
+    gathered/0b ('--format', the plan's tree mode) -- the B-2 residue
+      fork (r-10d); the file is the fork's text.
+    gathered/0c, 0d, 0e, 0g, 0h, 0k, 0o, 0r, 0s, 0t, 0v, 0y, 02, 04,
+      05, 10, 13, 14 -- each is the discussion behind one item of A, B
+      or E and holds nothing done.
+    services/RATIONALE.txt:1500 and compare/DOC/SEMANTICS.txt:665 -- the
+      two unrepairable citations (r-7a), as they were.
+
+9.5  What "clearly done" did NOT reach, on purpose: the three laws built
+     and recorded in no RATIONALE ('.txt' nominal, B-13, the proxy
+     family) and coverage's disc-2 (c) -- the WORK is done, the RECORD is
+     not; they stand as settled notes and one E line until a building
+     session writes the entries. And 0n's r-3: the tests are green, the
+     design question is Frank-Rene's to close (r-10c).
+
+______________________________________________________________________________
+
+OPEN -- FOR FRANK-RENE
+
+  r-10a  THE RATIONALE ENTRY AND THE README OPENING OF B-25: written
+         now, as an exception to 'an audit decides nothing', or as the
+         first step of B-25 in the session that builds it?
+         RECOMMENDED: the latter -- a README written now would describe
+         a conf shape the validator does not read, and the entry's COST
+         cannot be measured before the build.
+
+  r-10b  THE THREE UNRECORDED LAWS (7.3): shall a building session
+         write them as entries -- the '.txt' nominal (bookkeeper), B-13
+         (bookkeeper), the proxy family (operations has one entry, R-70,
+         in a file made for it) -- so that 0n r-1, plan/18 step 6 and
+         todo-23 can be struck on the record?
+
+  r-10c  0n r-3: with the four procsitter tests green under their own
+         caps (O-20), is 'should a containment test be capped at all'
+         still a fork, or closed by the build?
+
+  r-10d  B-2's residue: '--format' on 'hwut.run' and the tree mode of
+         'hwut.plan' -- wanted (then B) or dropped (then the v13 strike
+         stands as written)?
+
+  r-10e  B-24: build the kpsewhich check as described, or strike?
+
+  r-10f  RULED 2026-10-05 and done in bundle 82 (section 9).
+
+  r-10g  'doc/disc-hwut-amend.txt', 'doc/disc-hwut-lint.txt': move into
+         'adm/WORK/intend/' under ids 22 and 23, or leave in doc/?
+
+  r-10h  THE TWO BOOKS the census re-registered ride in bundle 81 with
+         a 'chmod u+w' apply note -- confirm, or leave them for your
+         own next census.
+
+______________________________________________________________________________
+
+APPENDIX -- THE INVENTORY AS BUILT BEFORE THE FIRST MEASUREMENT (321 lines)
+
+    INVENTORY OF CLAIMS -- audit r10, 2026-10-04, tree 70417c02 (BASE)
+    one line per claim: id | source:line | the claim as the source states it
+    ===========================================================================
+    SOURCE 1  adm/WORK/TODO.txt version 13
+    ---------------------------------------------------------------------------
+    1.A-3   | TODO.txt:31  | '_procsitter_runner' raises NotImplementedError; w
+    1.A-4   | TODO.txt:39  | ConfigCaps values in owner_faces_provisional are s
+    1.A-5   | TODO.txt:45  | 'same'/'interactive' owner faces are stand-ins
+    1.A-6   | TODO.txt:52  | MC/DC from a real tool waits on gcc 14
+    1.B-3   | TODO.txt:65  | hwut.parse built except face; owed (a) launcher (b
+    1.B-4   | TODO.txt:73  | several collision groups: DirectorySpec.collision 
+    1.B-5   | TODO.txt:79  | 'special' key and hwut.special: nothing built
+    1.B-6   | TODO.txt:84  | hwut.affected over per-case records, answers 'nobo
+    1.B-7   | TODO.txt:94  | hwut.renovate initial built (E-99); owed books, st
+    1.B-9   | TODO.txt:106 | --global-conf on the services + upward search; unb
+    1.B-10  | TODO.txt:111 | report renders per-source coverage percentage + un
+    1.B-11  | TODO.txt:119 | command-line completion: design done, nothing buil
+    1.B-12  | TODO.txt:124 | 'output' parameter decided (R-71), unbuilt; blocks
+    1.B-13  | TODO.txt:129 | variant restating language-setup (R-73) unbuilt (h
+    1.B-14  | TODO.txt:133 | model is a tree; parked; plain.py 696/706/713, pro
+    1.B-15  | TODO.txt:148 | staleness law second half owed (history says: NOT 
+    1.B-16  | TODO.txt:153 | face of the second question: S-1 built beneath, fa
+    1.B-24  | TODO.txt:158 | to_pdf checks TeX packages via kpsewhich, --check 
+    1.C-1   | TODO.txt:171 | explain seam: diagnosis.py delivered; owed resolut
+    1.C-2   | TODO.txt:180 | proxy provision: seam built; rest open
+    1.C-3   | TODO.txt:185 | eleven readers built
+    1.C-4   | TODO.txt:191 | measures beside line axis: registration, masks, na
+    1.C-4a  | TODO.txt:197 | producers of FN absent: gcov 'function' skipped, c
+    1.C-4b  | TODO.txt:202 | lcov BRDA seen and skipped by lcov reader
+    1.C-4c  | TODO.txt:204 | MC/DC from gcc 14; lcov 2.2 MCDC line in to_lcov; 
+    1.C-6   | TODO.txt:208 | renovate stderr survey not built
+    1.C-7   | TODO.txt:213 | README deep sections (operations) describe old sha
+    1.D-4   | TODO.txt:225 | development image never built (podman absent)
+    1.D-5   | TODO.txt:231 | no real reader read lcov/cobertura/jacoco exports;
+    1.D-6   | TODO.txt:239 | final fold with measures measured on synthetic cor
+    1.D-2   | TODO.txt:247 | outer-text block boundary: split, run compare suit
+    1.E-0j  | TODO.txt:257 | gathered/0j target service five forks (HISTORY say
+    1.E-0k  | TODO.txt:259 | --confs: file language; implicit reading
+    1.E-0m  | TODO.txt:260 | wishlist: CTestTaskListQuery learns directory? (HI
+    1.E-0v  | TODO.txt:262 | configuration specification form
+    1.E-0t  | TODO.txt:263 | formal test-sequence form
+    1.E-0d  | TODO.txt:265 | scenario kinds (parked)
+    1.E-0e  | TODO.txt:266 | multi-directory law (parked)
+    1.E-0n  | TODO.txt:267 | hwut 2.0 root causes
+    1.E-0o  | TODO.txt:268 | cadence theory
+    1.E-02  | TODO.txt:269 | document-consistency session = goals (2),(3)
+    1.E-07  | TODO.txt:271 | provisional choices scheduler/run/plan (07/09/0f)
+    1.E-0u  | TODO.txt:273 | tree-walk provisional laws
+    1.E-cov | TODO.txt:274 | coverage disc-1..7, disc-9
+    1.E-ops | TODO.txt:275 | operations disc-8, disc-9, todo-15..18, todo-20
+    1.E-r5c | TODO.txt:277 | r-5c closed (see B-17, B-18)
+    1.E-r5b | TODO.txt:278 | split operations' DISCUSSIONS or let stand
+    1.E-r5d | TODO.txt:279 | two todo-23s
+    1.E-r5e | TODO.txt:280 | coverage disc-6 moot: strike or keep
+    1.E-r6a | TODO.txt:281 | re-dump with --complete; todo-9 unverified (plan/0
+    1.E-r6d | TODO.txt:282 | services/DISCUSSIONS.txt a re-seeding: gate s-3
+    1.E-r7a | TODO.txt:283 | two unrepairable citations
+    1.E-d1  | TODO.txt:284 | coverage disc-1 RULED (D-20, D-43): strike or keep
+    1.E-wf  | TODO.txt:287 | display: wallflower NOTE inside last block; reader
+    1.E-cond| TODO.txt:293 | 'condition' measure beside mc/dc wanted?
+    1.F-2   | TODO.txt:300 | test-wishlist.sh awk expands one species of elisio
+    1.F-1   | TODO.txt:307 | bin/README.txt says every launcher runs vut.servic
+    1.S-A1  | TODO.txt:331 | A-1 -> B-20, residue E-46
+    1.S-A2  | TODO.txt:332 | A-2 three coverage books done 2026-09-07
+    1.S-B1  | TODO.txt:333 | B-1 dispatcher, residue O-7
+    1.S-B2  | TODO.txt:334 | B-2 hwut.run over orchestrator(), built; services
+    1.S-B8  | TODO.txt:335 | B-8 hwut.convert_to_lcov -> hwut.cov.conv.to_lcov,
+    1.S-B17 | TODO.txt:337 | B-17 B-18 B-19 done 2026-09-04
+    1.S-B20 | TODO.txt:338 | B-20 hwut.rename across, hwut.move, E-46
+    1.S-B21 | TODO.txt:339 | B-21 '-l' is '--label', E-112
+    1.S-B22 | TODO.txt:340 | B-22 hwut.report.timings, E-114
+    1.S-B23 | TODO.txt:341 | B-23 hwut.run.cov -> hwut.cov.run, E-115/E-133
+    1.S-C5  | TODO.txt:343 | C-5 numeric tolerance, intend/16
+    1.S-D1  | TODO.txt:344 | D-1 measurement ruling disc-1, D-20/D-43
+    1.S-D3  | TODO.txt:345 | D-3 two-Store shape, E-46
+                                                                     SOURCE 1: 
+    ===========================================================================
+    SOURCE 2  the three DISCUSSIONS.txt
+    ---------------------------------------------------------------------------
+    engine/coverage/DISCUSSIONS.txt
+    2.c.disc8 | :17  | STRUCK disc-8 closed; D-15, D-17, orchestrator D-7, D-8
+    2.c.todo1 | :19  | STRUCK todo-1 record format v2; 'services/lib/run/cov.py
+    2.c.todo9 | :21  | STRUCK todo-9; '_local_resolver' gone
+    2.c.todo10| :24  | STRUCK todo-10 'hwut.run.cov gather'/'stale' both verbs 
+    2.c.todo11| :25  | STRUCK todo-11 two refusals RETIRED
+    2.c.todo12| :26  | STRUCK todo-12 verb set VERB_TUPLE verified
+    2.c.disc1 | :32  | fork text/binary; (a) built; D-6 'hwut.convert_to_lcov'
+    2.c.disc2 | :66  | fork session road; recommendation (c)
+    2.c.disc2o| :95  | OPEN BESIDE: refuse 'interactive'+'record_coverage' at d
+    2.c.disc3 | :102 | in-directory parallelism; parked until parallelism frame
+    2.c.disc4 | :136 | cross-directory identity; 'nothing aggregates yet'
+    2.c.disc5 | :156 | merge meets hit counts: (a) REFUSE 'CountsNotMergeable' 
+    2.c.disc6 | :172 | system/helper.py Interval broken four ways; fork repair/
+    2.c.disc7 | :204 | index built; fork (a) hwut.affected / (b) --affected wis
+    2.c.disc7o| :228 | OPEN BESIDE: index stored or rebuilt
+    2.c.disc9 | :235 | HDL: option (b) bin-keyed record awaits artifact; verila
+    2.c.todo2 | :349 | [11 built] eleven readers; 'hwut.run.cov formats' prints
+    2.c.t2jul | :399 | OWED julia '.jl.*.cov' reader
+    2.c.t2trc | :405 | 'trace' candidate with no reader
+    2.c.todo8 | :409 | [part] measure.py registration; branch/mcdc masks; TG/CP
+    2.c.t8FN  | :431 | OWED producers of FN
+    2.c.t8BRDA| :435 | OWED lcov BRDA
+    2.c.t8MCDC| :438 | OWED MC/DC from gcc 14
+    2.c.t8cond| :443 | OWED 'condition' third measure, if wanted
+    2.c.todo4 | :449 | pack shows coverage (B-10); retires operations todo-22; 
+    2.c.todo5 | :458 | --global-conf (B-9)
+    2.c.todo6 | :463 | [part] coverage/affected.py built with main(argv, write)
+    2.c.todo7 | :472 | the measurement ruling disc-1: write of one run, read of
+    engine/operations/DISCUSSIONS.txt
+    2.o.todo19| :15  | STRUCK todo-19 abs() fixed; second refused by intend/16
+    2.o.todo12| :26  | STRUCK todo-12 slots=True on ConfigurationPatternFinder;
+    2.o.disc8 | :38  | greater map (parked)
+    2.o.disc9 | :62  | configuration file (parked, outside); stem collision che
+    2.o.todo2a| :97  | outer text has no blocks (AssociationChunkPipe flushes a
+    2.o.todo2b| :112 | fold at a block needs state: flyweight registry per asso
+    2.o.todo15| :136 | the channel (nvim) parked; 'hwut.difftool -t nvim' shape
+    2.o.todo16| :168 | merge loop BUILT awaiting oracles; three new choices loo
+    2.o.t16G  | :261 | OWED: their GOOD files
+    2.o.t16P2 | :265 | STILL OWED phase 2: block_id on SectionBeginInst/Resolut
+    2.o.t16R  | :273 | THE ONE RULING OWED: one run per round vs per session
+    2.o.todo17| :302 | second IDE; feed.py 494 lines reused; protocol.lua 154; 
+    2.o.t17O  | :334 | OWED conformance suite from down_fixture.json
+    2.o.todo18| :341 | browser client; needs no library
+    2.o.t18O  | :408 | OWED reuse down_fixture.json; UP envelope over channel
+    2.o.todo20| :414 | DOWN carries measurement: numeric_list, pattern_list DEL
+    2.o.t20a  | :449 | STILL OWED point-cloud distance
+    2.o.t20b  | :452 | STILL OWED region parameters in SectionBeginInst
+    2.o.t20c  | :458 | STILL OWED constraint verdicts carried
+    2.o.t20d  | :461 | STILL OWED transpose partner
+    2.o.todo21| :470 | explain seam DELIVERED diagnosis.py + TEST/test-diagnosi
+    2.o.t21a  | :496 | OWED the EXPLAIN observer switch
+    2.o.t21b  | :504 | OWED resolution reporting via shutil.which carried into 
+    2.o.t21c  | :510 | OWED wrong-channel hint
+    2.o.todo22| :525 | 'hwut.report -c' ACCEPTED AND RESERVED: COVERAGE section
+    2.o.t22q  | :564 | OPEN QUESTION coverage of what
+    2.o.todo23| :572 | proxy provision BUILT provision/provider.py, provision/m
+    2.o.t23fs | :598 | open: file subjects in a session
+    2.o.t23is | :603 | open: isolation
+    2.o.disc1 | :613 | result store RULED AND BUILT; GOOD/result_db.json; bookk
+    2.o.todo23b| :626 | README deep sections 3-7 old prose
+    2.o.todo24| :640 | staleness law not ruled; sidecar '<candidate>.when' with
+    2.o.todo25| :651 | face of second question: 'hwut.accept' does not exist ye
+    2.o.todo26| :670 | renovate stderr survey
+    services/DISCUSSIONS.txt
+    2.s.empty | :1-14| header only; nothing open stands in it
+                                                                     SOURCE 2: 
+    ===========================================================================
+    SOURCE 3  adm/WORK/gathered (35), intend (8), spec (1), plan (2)
+    ---------------------------------------------------------------------------
+    3.02    | gathered/02:4   | disc-1 document-consistency session OPEN (five 
+    3.03    | gathered/03:4   | disc-1 CLOSED (E-27, R-76); part 1 'scratch()' 
+    3.04    | gathered/04:4   | todo-1 judgement timing: early abort NOT built 
+    3.04o1  | gathered/04:50  | OPEN (1) streamability predicate before early a
+    3.04o2  | gathered/04:69  | (2) RULED: abort entity gives FAIL verdict
+    3.05    | gathered/05:4   | todo-1 tree model parked; CRunSummary at protoc
+    3.05o   | gathered/05:54  | OPEN incremental or folded
+    3.06    | gathered/06:4   | todo-2 pype part of oracle: FOR THE MANUAL; not
+    3.07    | gathered/07:4   | disc-1 scheduler provisional: item 2 (session n
+    3.09    | gathered/09:4   | disc-1 run provisional: items 2-10 (root-relati
+    3.0a    | gathered/0a:4   | disc-7 caps accepted per choice and ignored per
+    3.0b    | gathered/0b:4   | todo-1 hwut.run and --format: '--format' printi
+    3.0c    | gathered/0c:4   | todo-2 placement backend DECIDED NOT BUILT; owe
+    3.0d    | gathered/0d:4   | disc-1 scenario kinds parked
+    3.0e    | gathered/0e:4   | disc-2 multi-directory law parked: empty-match 
+    3.0f    | gathered/0f:4   | disc-3 plan provisional: items 2,4,6,7,8,10
+    3.0g    | gathered/0g:4   | todo-4 'special' key: nothing built
+    3.0h    | gathered/0h:4   | todo-7 several collision groups owed in explora
+    3.0i    | gathered/0i:4   | disc-10 SETTLED: --dir built; sanitize takes a 
+    3.0k    | gathered/0k:4   | disc-3 --confs OPEN: (a) file language (b) impl
+    3.0n    | gathered/0n:4   | disc-6 root causes: r-1 suffix OPEN; r-2 CLOSED
+    3.0o    | gathered/0o:4   | disc-7 cadence theory OPEN; '--cadence' off by 
+    3.0p    | gathered/0p:4   | disc-8 labels SETTLED; OPEN a (glob met nothing
+    3.0q    | gathered/0q:4   | disc-9 face inventory; 3 TWO WALKS OPEN; 4 merg
+    3.0r    | gathered/0r:4   | todo-1 hwut.renovate ruled unbuilt; OPEN: heade
+    3.0s    | gathered/0s:4   | todo-2 completion DESIGN NOT BUILT; OPEN a gene
+    3.0t    | gathered/0t:4   | disc-1 test-sequence form NOTED NOT RULED
+    3.0u    | gathered/0u:4   | disc-2 tree-walk provisional laws 1,2,4 (3 CLOS
+    3.0v    | gathered/0v:4   | disc-4 SPECIFICATION.txt owed; suite choice wal
+    3.0w    | gathered/0w:4   | todo-1 'output' BUILT LIVE END TO END (this ses
+    3.0x    | gathered/0x:4   | todo-1 owner faces: mechanism built; UNBUILT ow
+    3.0y    | gathered/0y:4   | todo-2 instantiation blessing against real comp
+    3.0z    | gathered/0z:4   | todo-3 --hwut-info third carrier BUILT except p
+    3.10    | gathered/10:4   | todo-4 caps vocabulary: BUILT timeout_sec, netw
+    3.13    | gathered/13:4   | todo-7 hwut.parse BUILT except command line; OW
+    3.14    | gathered/14:4   | todo-7 variant restating language-setup: ruled 
+    3.15    | gathered/15:4   | todo-8 same/interactive BUILT; OWED the two fac
+    3.DRM   | gathered/DISCUSSION-register-and-moving.txt:80  | 3 register fold
+    3.DRM4  | :135 | 4 book entry meaning BUILT; dispatcher.py change IN TREE U
+    3.DRM5  | :156 | 5 sanitize re-run trigger RULED; app_path_list from result
+    3.DRM6  | :175 | 6 moving/renaming OPEN: 6.2 VCS detection (none in tree), 
+    3.DRM7  | :238 | 7 where the tree stands: test-rename.sh --across STATUS 1 
+    3.i00   | intend/00-configuration.txt:154 | 4 ONE SPECIFICATION DOCUMENT (d
+    3.i00f  | intend/00-configuration.txt:161 | OPEN placement fork (a) engine/
+    3.icfg  | intend/configuration.txt     | duplicate of 00-configuration with
+    3.i01   | intend/01-work-structure.txt  | v5; no OPEN section (o-1..o-4 of 
+    3.iws   | intend/work-structure.txt:113 | OLD duplicate; OPEN o-1 transfer 
+    3.i16   | intend/16-pole-and-tolerance.txt:10 | SECTION 6 CLOSED 2026-09-04
+    3.i19o2 | intend/19-matching-separated.txt:253 | o-2 built; CONSEQUENCE NOT
+    3.i19o3 | intend/19:284 | o-3 RULED no analogy budget; TO MEASURE in plan: 
+    3.i19o6 | intend/19:317 | o-6 STILL TO RULE: margin, n, boundary -- numbers
+    3.i19o7 | intend/19:349 | o-7 MEASURE FIRST whether element-level cost serv
+    3.i20   | intend/20-bundled-strategy.txt:62 | 4 OPEN: the default SUCCESSOR
+    3.i21o1 | intend/21-tolerance-editing.txt:224 | o-1 F5 as built; 'T' free
+    3.i21o7 | intend/21:297 | o-7 printed tree does not read back: config.show 
+    3.s01   | spec/01-work-structure.txt:235 | OPEN s-1 README/INTERNALS split 
+    3.p01   | plan/01-work-structure.txt:19 | STATE: PHASE S blocked on r-2..r-
+    3.p18   | plan/18-register-in-the-book.txt:8 | STATE DRAFT; o-1 marks locat
+    3.p18s  | plan/18:steps | steps 4-6 (coverage readers, stop writing test_id
+                                                                     SOURCE 3: 
+    ===========================================================================
+    SOURCE 4  RATIONALE.txt marker lines (13 files found; prompt said eight)
+    ---------------------------------------------------------------------------
+    101 grep lines (list: rationale-markers.txt). Word-level claims among them:
+    4.cmp155 | compare:155  | 'owner_faces_provisional.ConfigCompare' one leaf
+    4.cmp315 | compare:315  | empty region on both sides ... until someone deci
+    4.cmp328 | compare:328  | OWED, NOT HERE: the verdict WORD for a run failin
+    4.cov386 | coverage:386 | READING somebody else's (record) is owed
+    4.cov601 | coverage:601 | bridge until the record format names run ids (tod
+    4.cov1160| coverage:1160| gap stands where a reader sees it until somebody 
+    4.cov1377| coverage:1377| every page ran a stand-in whose wrap appended
+    4.cov1621| coverage:1621| what is ruled and not yet built
+    4.cov1691| coverage:1691| (FN producers: gcov, coverage.py, cobertura/jacoc
+    4.cov1716| coverage:1716| MCDC line owed with the measure
+    4.cov1770| coverage:1770| OWED on the same fold: 'to_cobertura' ... (BUILT 
+    4.cov1848| coverage:1848| OWED, listed in TODO.txt: D-5, D-6
+    4.bk304  | bookkeeper:304| (B-?) no reader -- deferred until one asks
+    4.exp313 | exploration:313| no shared machinery between task list kinds unt
+    4.exp1186| exploration:1186| ... owed)
+    4.exp1527| exploration:1527-1570| ConfigCaps stand-in LIED; provisional Con
+    4.exp1740| exploration:1740| what is owed, so a report reads as a reminder
+    4.exp1815| exploration:1815| THE MEMO IS DORMANT until
+    4.pl64   | plan:64      | second input carrier beside hwut.conf, drift law 
+    4.run779 | run:779      | unfinished acceptance reads as failure in every r
+    4.sv304  | services:304 | '--config <file>' path gone until (0k) --confs
+    4.sv334  | services:334 | until ... raises one
+    4.sv438  | services:438 | 'hwut.remove' was owed (orchestrator todo-2) and 
+    4.sv748  | services:748 | hwut 1.0 runs and VUT 2.0 cannot yet see
+    4.sv1503 | services:1503| 'accept.main' stands only until provision carries
+    4.sv2155 | services:2155| tolerated until that face is next touched
+    4.sv2205 | services:2205| '--source' behind parsers that round-trip (not ow
+    4.sv2214 | services:2214| ... was owed
+    4.sv2547 | services:2547| 'hwut.accept.new' (owed, not built)
+    4.sv2660 | services:2660| 'unaccepted [FAIL]' (O-25) -- a decision still ow
+    4.sv3547 | services:3547| THE NINE HAND-PARSING FACES STAY ON THEIR USAGE L
+    4.sv4945 | services:4945| an unaccepted aspirant -- until someone decides
+    4.sv5337 | services:5337| (OWED: run one real tracefile through it)
+    4.sv5377 | services:5377| a real machine is the proof still owed (TODO.txt 
+    remaining 67 grep lines: substring hits (followed/showed/swallowed/allowed/
+                                                                     SOURCE 4: 
+    ===========================================================================
+    SOURCE 5  code markers outside TEST (*.py, *.sh)
+    ---------------------------------------------------------------------------
+    5.01 | engine/bookkeeper/configuration.py:136 | prose 'never an empty stand
+    5.02 | engine/compare/reading/line_element.py:92  | raise NotImplementedErr
+    5.03 | engine/compare/reading/line_element.py:120 | raise NotImplementedErr
+    5.04 | engine/coverage/affected.py:49 | 'That is a stand-in: the store's na
+    5.05 | engine/coverage/database/index.py:360 | 'suffix is a stand-in until 
+    5.06 | engine/coverage/database/measure.py:91  | raise NotImplementedError
+    5.07 | engine/coverage/database/measure.py:107 | raise NotImplementedError
+    5.08 | engine/coverage/database/measure.py:112 | raise NotImplementedError
+    5.09 | engine/coverage/database/measure.py:116 | raise NotImplementedError
+    5.10 | engine/coverage/database/measure.py:126 | raise NotImplementedError
+    5.11 | engine/coverage/readers/reader.py:117 | raise NotImplementedError
+    5.12 | engine/coverage/readers/reader.py:121 | raise NotImplementedError
+    5.13 | engine/operations/nominal.py:57 | raise NotImplementedError
+    5.14 | engine/operations/nominal.py:64 | raise NotImplementedError
+    5.15 | engine/orchestrator/exploration/relation.py:45 | from .owner_faces_p
+    5.16 | engine/orchestrator/exploration/task_list.py:30 | raise NotImplement
+    5.17 | engine/orchestrator/exploration/validator.py:114 | 'The stand-in nam
+    5.18 | engine/orchestrator/run/strategy.py:65 | raise NotImplementedError
+    5.19 | services/lib/run/stability.py:244 | prose 'never an empty stand-in'
+    5.20 | services/rename.py:463 | 'THE GRAMMAR WORD IS HELD OUT, its place re
+    5.21 | services/report.py:767 | prose 'never a stand-in for a failure'
+    5.22 | test_writing_support/python/deterministic_timeline.py:96 | docstring
+    5.23 | test_writing_support/python/deterministic_timeline.py:100 | raise No
+                                                                     SOURCE 5: 
+    ===========================================================================
+    SOURCE 6  ISSUES.txt
+    ---------------------------------------------------------------------------
+    6.1 | ISSUES.txt:1 | hwut.run does not print the parallelism for the last t
+    6.2 | ISSUES.txt:2 | use 'rich' for drawing trees and colors
+    6.3 | ISSUES.txt:3 | hwut --labels fail showed 5 ok, no evidence; after hwu
+    6.4 | ISSUES.txt:5 | only directories subject to the wish displayed in SUMM
+    6.5 | ISSUES.txt:6 | hwut.run.play shall display STDERR output (empty if no
+    6.6 | ISSUES.txt:7 | hwut.report.details prints same lines once; where rang
+                                                                     SOURCE 6: 
+    ===========================================================================
+    PHANTOMS (named in the prompt, anchored nowhere in v13)
+    ---------------------------------------------------------------------------
+    P.1 | executor/framework rename (D-23)
+    P.2 | narrowing of the shell-page refusal
+    ===========================================================================
+    TOTAL: 72 + 61 + 58 + 101 + 23 + 6 = 321 lines (+2 phantoms)

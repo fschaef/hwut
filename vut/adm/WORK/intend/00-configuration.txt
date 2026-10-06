@@ -1,5 +1,5 @@
 ==============================================================================
-intend/configuration -- CONFIGURATION MANAGEMENT
+intend/00-configuration -- CONFIGURATION MANAGEMENT
 ==============================================================================
 
 VERSION: 1

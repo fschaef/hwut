@@ -1,4 +1,4 @@
-# vut-register 5 generation:265 apps:35 marks:0=7,1=4,2=13,3=5,4=8,5=6,6=12,7=5,8=5,9=2,10=2,11=5,12=6,13=4,14=7,15=5,16=6,17=10,18=3,19=5,20=7,21=12,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3
+# vut-register 5 generation:270 apps:36 marks:0=7,1=4,2=13,3=5,4=8,5=6,6=12,7=5,8=5,9=2,10=2,11=5,12=6,13=4,14=7,15=5,16=6,17=10,18=3,19=5,20=7,21=12,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4
 test;choice;verdict;report;stderr;stain;test_id;choice_id
 test-accept-door.py;cancel;true;ok;;;1;0
 ;done;true;ok;;;1;1
@@ -63,6 +63,10 @@ test-cov_run.py;door;true;ok;;;7;0
 test-cov_visitor.py;accounted;true;ok;;;34;0
 ;vocabulary;true;ok;;;34;1
 ;walk;true;ok;;;34;2
+test-dev_podman.py;build;true;ok;;;35;0
+;enter;true;ok;;;35;1
+;help;true;ok;;;35;2
+;refused;false;not-equivalent-with-nominal;;;35;3
 test-diff.sh;differing;true;ok;;;8;0
 ;reading;true;ok;;;8;1
 ;side-by-side;true;ok;;;8;2

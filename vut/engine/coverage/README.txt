@@ -315,6 +315,114 @@ test-cov_run.py'.
 
 
 ------------------------------------------------------------------------------
+5b  THE PROCESSES, DRAWN
+------------------------------------------------------------------------------
+
+Every box marked [P] is a child process under the procsitter; everything
+else is this component's own Python inside the 'hwut.cov.run' process.
+Measured on 'operations/coverage_action.py', 'orchestrator/run/
+coverage_dispatcher.py', 'readers/gcov.py', 'readers/python_coverage.py'.
+
+THE COMMON FRAME -- one coverage run of (test, choice):
+
+    hwut.cov.run --> plan --> per test directory, ONE CASE AT A TIME (D-22)
+                                       |
+             +-------------------------+------------------------------+
+             | elect     language-setup.<lang>.coverage = [...] -> the |
+             |           first framework standing on PATH; none ->    |
+             |           refused BY NAME                               |
+             | prepare   rm -rf TEST/OUT/COVERAGE/                     |
+             | run       the provision executes THE CALL         [P]  |
+             | testify   ended by itself AND stdout ends in            |
+             |           '<hwut-end>' -- else NOTHING is read (D-21)   |
+             | report    the tool's second call, where it has one [P]  |
+             | harvest   format.read(OUT/COVERAGE) -> CoverageRecord   |
+             |           seated(run id) -> TMP/store/<t>--<c>.cover    |
+             +-------------------------+------------------------------+
+                                       v
+    gather, at the end of the run: every TMP/store/*.cover folded into
+    '-o <dir>', then removed. Nothing is compared, nothing is booked.
+
+INTERPRETED (python: coverage.py; lua: luacov likewise). THE TOOL RUNS
+THE SCRIPT: the call is the framework's 'call_scheme' with its fields
+filled (D-39); the interpreter is the tool's to choose, never hwut's.
+
+    hwut.cov.run
+       |
+       | run  [P] coverage run --branch --data-file=OUT/COVERAGE/.coverage
+       |            --include=<gather> --omit=<omit> -- test-x.py <choice>
+       |          +----------------------------------------------------+
+       |          | coverage.py (python)                               |
+       |          |   runs test-x.py <choice> in-process               |
+       |          |     stdout --> the subject (testimony: <hwut-end>) |
+       |          |     trace  --> OUT/COVERAGE/.coverage (sqlite)     |
+       |          +----------------------------------------------------+
+       | testify    stdout ends in '<hwut-end>'?  no -> RUN_INCOMPLETE
+       |
+       | report [P] coverage json --data-file=OUT/COVERAGE/.coverage
+       |              -o OUT/COVERAGE/coverage.json -q
+       |          +----------------------------------------------------+
+       |          | .coverage --> coverage.json: executed_lines,       |
+       |          |   missing_lines, executed_branches, missing_branches|
+       |          +----------------------------------------------------+
+       | harvest    readers/python_coverage.py reads coverage.json
+       |            -> EX, CV, BR (arms = the arcs, as a mask) -> .cover
+       v
+    Two child processes per case; hwut never calls the test's interpreter.
+
+COMPILED (c, c++, fortran: gcov; vhdl/ghdl and verilog/verilator alike).
+THE INSTRUMENTED BINARY MEASURES ITSELF. hwut changes the BUILD, not
+the call: 'build.executable' is replaced by 'language-setup.<lang>.
+coverage_target' ('%' the source's stem, R-74), e.g. "%.cov.exe", and
+the provision's build stage runs the build system over that target AS
+FOR ANY BUILD -- 'make test-x.cov.exe'. Whether that target is compiled
+with '--coverage' is the Makefile's business; hwut adds no flag. No
+target stated -> 'no-coverage-target', the case is not run.
+
+    hwut.cov.run
+       |
+       | build [P] make test-x.cov.exe           (the author's Makefile,
+       |          +----------------------------------------------------+
+       |          | gcc --coverage test-x.c -o test-x.cov.exe          | as it
+       |          |   writes test-x.gcno  (the map of the probes)      | would
+       |          +----------------------------------------------------+ for
+       | probe      instrumented_f: any '.gcno' under TEST/?           any
+       |            (the build was instrumented, or it was not)        other
+       |                                                               target)
+       | run   [P] ./test-x.cov.exe <choice>      (called as it stands)
+       |          +----------------------------------------------------+
+       |          | the binary itself                                   |
+       |          |   stdout --> the subject (testimony: <hwut-end>)    |
+       |          |   at exit: the counters --> test-x.gcda             |
+       |          +----------------------------------------------------+
+       | testify    stdout ends in '<hwut-end>'?  no -> RUN_INCOMPLETE
+       |
+       | report [P] gcov -b -c -p <every .gcda under TEST/>
+       |            (made LATE: before the run no .gcda stands; none
+       |             written -> no call, NO_DATA_PROVIDED)
+       |          +----------------------------------------------------+
+       |          | .gcno + .gcda --> <mangled path>.gcov per source   |
+       |          |   per line: a count or '#####'; 'branch N taken K' |
+       |          +----------------------------------------------------+
+       | harvest    readers/gcov.py reads the .gcov files
+       |            -> EX, CV, BR (arms = the branch lines, as a mask)
+       v
+    Three child processes per case (build, run, report); the build is
+    shared where make finds the target up to date.
+
+WHAT DIFFERS, one line each:
+
+    who measures    interpreted: the TOOL wraps the script
+                    compiled:    the BINARY wraps itself (instrumented)
+    what hwut edits interpreted: THE CALL  ('call_scheme', D-39)
+                    compiled:    THE BUILD ('coverage_target', R-74)
+    second call     interpreted: fixed ('coverage json')
+                    compiled:    made late, from the .gcda the run left
+    caps            both: the time caps lifted, the rest kept (D-19)
+    from harvest on identical: record, seat, store, gather, convert
+
+
+------------------------------------------------------------------------------
 5a  WHAT A COVERAGE RUN IS NOT
 ------------------------------------------------------------------------------
 

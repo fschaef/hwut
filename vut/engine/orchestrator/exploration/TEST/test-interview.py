@@ -41,8 +41,8 @@ precedence  the interview is reached ONLY where both carriers are
 
 The runner is a parameter here: what is under test is the reading of the
 answer and the place of the interview in the order, not the running of a
-process. The procsitter call is owed at integration
-(adm/WORK/gathered/0z-todo-3-hwut-info-hints.txt).
+process. The procsitter call is built ('_procsitter_runner', the
+'procsitter' choice); exploration no longer interviews (X-SILENT).
 ______________________________________________________________________________
 """
 import os

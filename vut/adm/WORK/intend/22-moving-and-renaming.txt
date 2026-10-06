@@ -1,0 +1,77 @@
+==============================================================================
+intend/22-moving-and-renaming -- HWUT MOVES ITS OWN ARTEFACTS, WHERE IT
+                                 KNOWS THE GROUND
+==============================================================================
+
+VERSION: 1   (2026-10-05; cut out of 'gathered/DISCUSSION-register-and-
+             moving.txt' section 6 by audit r10 -- the rest of that file
+             was built and ruled, B-9, B-14, D-25, and is deleted)
+
+COMPONENTS CONCERNED:
+
+    services                 rename.py ('hwut.rename', 'hwut.move' its
+                             shorthand, E-46); sanitize (orphans)
+    engine/bookkeeper        the register in 'book.csv' (B-9); the '#'
+                             header NOTE
+    engine/coverage          records re-seated through coverage's own seam
+
+WHAT IS RULED (2026-09-12), and what the tree holds (measured 2026-10-04):
+
+  6.1  THERE IS ONE IMPLEMENTATION. 'hwut.move <app> <app'>' is, word
+       for word, 'hwut.rename <app> -to <app'>' (E-46). Built.
+
+  6.2  RULED: HWUT MOVES ITS OWN ARTEFACTS WHERE IT KNOWS THE UNDERLYING
+       CONFIGURATION MANAGEMENT SYSTEM --
+
+           detect the VCS
+           move with plain filesystem calls
+           STAGE the touched paths
+           then ASK about committing -- or act, where '--commit' is given
+
+       WHY STAGE, AND WHY NOT LET THE VCS MOVE. 'git mv' is 'mv' plus an
+       index update -- git has no rename tracking, renames are found at
+       DIFF time by content similarity -- so invoking it buys no history.
+       What it buys is the INDEX, and that is the real footgun: a plain
+       move leaves the artefacts deleted-plus-untracked, and 'git commit
+       -am' adds no untracked file. The author would commit believing the
+       move was in.
+       NOT BUILT: there is no VCS detection anywhere in the tree; 'git'
+       appears in 'services/rename.py' in prose and one NOTE string only.
+
+  6.3  RULED: WHERE THE SYSTEM IS NOT KNOWN, HWUT COPIES. It does not
+       move and it destroys nothing. It provides a REMOVE SCRIPT for the
+       author to review, and leaves a NOTE in 'book.csv''s '#' header
+       about the move away. The VCS is not the mover: it is the UNDO.
+       NOT BUILT.
+
+  6.4  E-48 STANDS UNTOUCHED. The test application file, its '@hwut'
+       block and any 'hwut.conf' apps section are the AUTHOR'S. This face
+       FOLLOWS a 'git mv' of the source; it does not perform one, and it
+       edits no declaration. What is ruled above concerns hwut's OWN
+       artefacts only.
+
+______________________________________________________________________________
+
+OPEN
+
+  o-1  TWO ACTS, NOT ONE -- to be ruled as such before 6.2/6.3 are built:
+
+       MOVING ONE APPLICATION INTO AN EXISTING DIRECTORY -- two registers
+       must meet: the source retires the id, the target issues a fresh
+       one, the coverage record is re-seated through coverage's own seam.
+
+       MOVING A WHOLE DIRECTORY -- with 'GOOD/' intact NOTHING RECONCILES:
+       the register travels with the book, the ids stay, the coverage
+       records stay seated, and hwut's only job is to notice it happened.
+       This is the case where hwut genuinely should not move anything.
+
+  o-2  CONSEQUENCES OF 6.3 that want an answer with o-1:
+       - the copy path leaves the tree DOUBLED on purpose; 'sanitize'
+         hunts orphan nominals and must not heal what a pending remove
+         script is about to take
+       - the script must survive being ignored: idempotent, and the
+         source's leftovers inert -- which they are, since the book no
+         longer names them
+       - "knows the system" is a PER-DIRECTORY question: a move can
+         cross out of a repository, and the safe reading is that hwut
+         moves only where BOTH ends are known

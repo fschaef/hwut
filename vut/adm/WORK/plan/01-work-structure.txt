@@ -227,7 +227,8 @@ STATE
     subject-against-nominal, and THE ASYMMETRY IS THE DOCTRINE.
     'nominal.epsilon' is correct; nothing is owed to compare;
     todo-19's second half is refused and the entry may be struck.
-    Recorded in 'adm/WORK/intend/16-pole-and-tolerance.txt', id 16.
+    Recorded in 'adm/WORK/intend/16-pole-and-tolerance.txt', id 16
+    (closed; deleted 2026-10-05, PHILOSOPHY.txt 1.1 holds the ruling).
 
     'adm/WORK/review-r8.txt' IS WITHDRAWN IN WHOLE, and kept as a
     trace. It argued from a paragraph of PHILOSOPHY 1.1 that is

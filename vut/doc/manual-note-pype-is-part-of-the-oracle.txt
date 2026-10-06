@@ -1,13 +1,14 @@
-VERSION: 1
-COMPONENTS: engine/display
+MANUAL NOTE -- for the first example that uses a pype
+======================================================
 
-todo-2-pype-is-part-of-the-oracle.txt          ** FOR DOCUMENTATION **
-______________________________________________________________________________
+TITLE:  A pype is part of the oracle
 
-FOR THE DEVELOPER'S MANUAL. Ruled in conversation, 2026-08-28, while
-the flow line was being rebuilt. Nothing to build here; this is a
-thing the manual must SAY, and the place it is written down until the
-manual exists.
+Ruled in conversation, 2026-08-28, while the flow line was being
+rebuilt; display D-10 ('the digest is part of the oracle') holds it.
+Nothing to build: this is a thing the manual must SAY, and this note
+is where it stands until the manual exists. Moved here from
+'adm/WORK/gathered/06' on 2026-10-05 (audit r10): WORK holds only
+what is open, and a note is not labour.
 
 THE POINT
 

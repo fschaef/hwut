@@ -1,13 +1,16 @@
-VERSION: 1
+VERSION: 2
 COMPONENTS: services
 
-THE FACES -- WHAT EACH DOES, AND WHERE THEY COINCIDE
+THE FACES -- WHAT EACH DOES, AND WHERE THEY COINCIDE   (AS OF 2026-08-29)
 ______________________________________________________________________________
 
 READ FROM THE CODE, not from the prose: an action counts where the
 face CALLS it, so a docstring mentioning a thing does not vote. The
 matrix below is what 'adm/import_graph.py' and a call scan agree on
-(2026-08-29).
+(2026-08-29). FACES RENAMED SINCE: compare -> hwut.run.diff (E-50), merge
+-> hwut.accept.interactive (E-51), target -> hwut.execute, stability ->
+hwut.run.stability (E-111), cov -> hwut.cov.* (E-133), show ->
+hwut.config.show; 'tell' is gone. The ACTIONS are unchanged.
 
 WHY IT EXISTS: a face's job is to parse, refuse, WIRE and report. What
 several faces wire alike is a brick that either exists or is missing,
@@ -72,23 +75,7 @@ labels/query    LABELS, BOUNDARY, SELECT (all_of_tree)
 ==============================================================================
 WHERE THEY COINCIDE -- WHAT THE COMPARISON FOUND
 ==============================================================================
-1  THE SELECTION -- SETTLED (R-73)
-   Seven faces assembled 'explore + Bookkeeper + query + get_test_cases'
-   by hand. Now 'exploration/selection.py' does, and hands back what
-   it built. Faces knowing 'Bookkeeper' fell from NINE to FOUR, and
-   the four are the ones whose subject IS the record.
-
-2  'WISH + LABELS + BOUNDARY' -- SETTLED for the three writers (E-24)
-   Every face taking a wish also builds a label view, and nearly every
-   one also climbs to the boundary. THE THREE LABEL WRITERS HAVE THE
-   IDENTICAL ROW -- 'create', 'add' and 'remove' are one action with
-   three verbs applied to the entry set.
-   BUILT: 'labels/_editing.py' -- 'opened', 'stands_f', 'selected',
-   'written'. Six imports fell out of the three faces.
-   WHAT REMAINS OF THIS ROW: the other eight faces take a wish and
-   build a label view, but each does something different with it. The
-   coincidence there is 'view_at(directory)' and nothing more, which
-   is already one line and already one place.
+1, 2  SETTLED (R-73; E-24) -- struck 2026-10-05, audit r10.
 
 3  TWO WALKS, NOT ONE -- OPEN, AND THE INTERESTING ONE
    'run' does not select: 'determine_tree' selects for it, one level
@@ -98,13 +85,7 @@ WHERE THEY COINCIDE -- WHAT THE COMPARISON FOUND
    they answer, cases against a plan.
    WHETHER THEY SHOULD BE ONE IS NOT OBVIOUS and is not settled here.
 
-4  FACES THAT SHARE NOTHING -- WORTH A LOOK
-   'merge' and 'target' call nothing that any other face calls. Either
-   they are genuinely peripheral, or they have built private
-   machinery. Not yet examined.
-
-5  'show' TAKES 'TestIdDb' TO DISPLAY IDS
-   The only BOOK reader whose subject is not the record. A read of the
-   register, not bookkeeping -- small, and worth a name of its own if
-   a second face ever wants it.
+4, 5  STALE and struck 2026-10-05: 'merge' and 'target' are 'hwut.accept.
+   interactive' and 'hwut.execute'; no service names 'TestIdDb' since
+   the register folded into 'book.csv' (B-9, plan 18).
 ______________________________________________________________________________

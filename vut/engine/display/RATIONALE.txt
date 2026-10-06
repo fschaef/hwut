@@ -289,8 +289,8 @@ DECISION  THE RUN SUITE RECORDS THROUGH A PYPE ('test-run.pype').
           deterministicalization; masking a verdict is blindness.
           THE PYPE IS THEREFORE PART OF THE ORACLE, and a defect in
           it is a defect in the oracle -- see
-          adm/WORK/gathered/06-todo-2-pype-is-part-of-the-oracle.txt,
-          which
+          doc/manual-note-pype-is-part-of-the-oracle.txt
+          (gathered/06 until 2026-10-05), which
           the developer's manual must carry.
 
 COST      What a person reads in the run suite's GOOD is the digest's

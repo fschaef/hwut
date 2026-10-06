@@ -435,8 +435,8 @@ DECISION  'product' is None where any canonicaliser fails, so
           provision, and the stages beyond never run".
 
           THE PYPE IS PART OF THE TEST APPLICATION and may contain
-          errors (adm/WORK/gathered/06-todo-2-pype-is-part-of-the-oracle
-          .txt). A missing shebang, a
+          errors (doc/manual-note-pype-is-part-of-the-oracle.txt;
+          cited as gathered/06 until 2026-10-05). A missing shebang, a
           syntax error, a mode with no '<else>' handler, a file that
           is not there: each is a DEFECT IN THE TEST, and a defect in
           a test is a RESULT -- stated, not swallowed.

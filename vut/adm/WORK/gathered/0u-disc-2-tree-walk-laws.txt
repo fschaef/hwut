@@ -1,4 +1,4 @@
-VERSION: 1
+VERSION: 2
 COMPONENTS: engine/orchestrator/exploration
 
 disc-2  TREE WALK -- PROVISIONAL LAWS                        ** OPEN **
@@ -12,7 +12,8 @@ Taken to build R-69; reported, not settled; each one line to change.
  2  The ROOT itself is never a test directory unless its own name
     equals the marker -- 'hwut.plan --directory=X' remains the face
     for one directory taken as a test directory regardless of name.
- 3  CLOSED by R-73: 'language_setup' stands in 'hwut-root.conf' only;
-    there is nothing to inherit. (Was: child-wins whole.)
  4  'ignore' inherits child-wins whole (a child stating 'ignore'
     replaces the parent's, it does not add to it).
+    X-SILENT's COST (2026-09-23) states the same fork from the other
+    side: for a list of things to overlook, replacement 'is arguably
+    not' right. One fork, stated twice; unruled.

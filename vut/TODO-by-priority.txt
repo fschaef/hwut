@@ -1,0 +1,556 @@
+==============================================================================
+TODO BY PRIORITY -- THE WORKING ORDER OF 'adm/WORK/TODO.txt' (VERSION 16)
+==============================================================================
+
+VERSION: 1 (2026-10-06, audit r10)
+
+WHAT THIS IS. 'TODO.txt' is the ONE LIST and says of itself: "not a
+schedule and not a priority order". This file is the ORDER in which to
+work through it -- printed and ticked. Every item here carries the id
+it has in TODO.txt (A-4, G-1, ...) or in 'review-r10.txt' (r-10a ...);
+THE EVIDENCE STAYS THERE, one line per item, with the command that was
+run. This file holds no evidence of its own. When an item is struck in
+TODO.txt it is struck here; when TODO.txt gets a version 17, this file
+gets a version 2 or a note saying which ids moved.
+
+THE RULE OF THE ORDER, so a later reader can re-sort on the same rule:
+
+    TIER 1  a GREEN RESULT OR AN ACCEPTANCE CAN LIE -- the author sees
+            [OK] or 'blessed' and it is not what he stated
+    TIER 2  BREAKS WHEN USED AS DOCUMENTED -- a word the manual or a
+            ruling offers, written in a page, fails or crashes
+    TIER 3  BLOCKS REAL USE, or DECIDED AND UNBUILT with no block
+    TIER 4  THE RECORD IS WRONG -- rulings nowhere, entries overtaken,
+            names moved; cheap, and each one misled this audit once
+    TIER 5  WAITING ON A RULING -- the user's word, then labour
+    TIER 6  A MEASUREMENT ONLY THE USER'S MACHINE CAN GIVE
+    TIER 7  HARMLESS WHILE IT WAITS
+
+Within a tier: what more people would meet comes first. The order is
+the audit's judgement (2026-10-06), NOT a ruling; the user asked for it
+to be sorted, he did not confirm each place.
+
+HOW TO READ AN ITEM.
+
+    [ ] ID   TITLE
+         what is wrong or owed, in one or two lines
+         DO: the labour, as concretely as the audit could say it
+         NEEDS: a ruling (r-10x), another item, or a machine -- if any
+         SEE: where the words and the evidence stand
+
+"PROBE" means 'sh adm/WORK/review-r10-probes.sh' shows it; the script
+writes into a temporary directory and touches nothing of the tree.
+
+==============================================================================
+TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
+==============================================================================
+
+[ ] G-1  AN UNENFORCEABLE CAP IS IGNORED AND THE PAGE IS GREEN
+         A page stating 'caps { network = false }' (likewise
+         'file_handle_max_n', 'write_directory_list') is accepted, run
+         unconfined and reported [OK]. R-48 says: refuse. Without
+         'psutil', memory and process caps are also off and nothing on
+         the run road reads 'ProcsitterResult.unenforced'. PROBE.
+         DO: refuse at the door of the run, by cap name -- or run and
+         SAY so, per r-10o; report '.unenforced' on the run road; build
+         or strike R-48's '--ignore=<cap>'.
+         NEEDS: r-10o (refuse, or run and report). A-4 is the blocked
+         half: procsitter has no field for the three caps.
+         SEE: TODO G-1, A-4; exploration R-48; review-r10 11.5.
+
+[ ] G-5  '--stderr-tol' MARKS TESTS 'IGNORE STDERR' NOBODY LOOKED AT,
+         AND 'hwut.help' ADVISES A LINE THE VALIDATOR REFUSES
+         E-110 ruled: the declaration lives in the test's own block,
+         'tolerance { stderr = ignored }', and the flag goes. Not built.
+         The advised line is a SYNTAX fault unquoted and an unknown
+         tolerance quoted. PROBE.
+         DO: the 'stderr' key in the tolerance vocabulary; the accept
+         path reads it; the flag removed from 'hwut.accept' and the
+         keyed viewer; 'hwut.help' spelt as the validator reads it.
+         NEEDS: nothing; ruled (E-110).
+         SEE: TODO G-5; services E-110.
+
+[ ] NEW-1  THE CENSUS IS RED ON EVERY CLONE BUT ONE PATH
+         'services/TEST/test-dev_podman.py:117' masks the vut directory
+         with '<root>' while the mount it prints is the PARENT; the
+         GOOD file therefore carries a machine path. Baseline here:
+         911 ok / 1 fail instead of 912 / 0. A permanently red baseline
+         hides the next real failure.
+         DO: mask the mount root (the parent), or print no path; re-
+         accept the one GOOD. Then enter this in TODO.txt (it is not
+         there yet -- found in pass 0, carried in review-r10 section 1).
+         NEEDS: nothing.
+         SEE: review-r10 section 1 (pass 0); positive control at
+         '/home/claude/hwut' -> OK.
+
+==============================================================================
+TIER 2  BREAKS WHEN USED AS DOCUMENTED
+==============================================================================
+
+[ ] G-3  A CONSTRAINT THE VALIDATOR ACCEPTS ENDS THE RUN IN A TRACEBACK
+         'constraints = ["glob(name, \"build-*.log\")"]' passes
+         'hwut.config.show' and kills 'hwut.run.play' with an unhandled
+         'ConstraintSpecError'. Cause: 'constraints.py' keeps its own
+         SAFE_* tables and its AST door reads those; the ruled tables
+         are in 'constraint_namespace.py'. 26 functions, 2 constants
+         refused at the door; 3 str methods allowed at the door and
+         absent from the namespace. PROBE.
+         DO: the three names become imports of 'constraint_namespace';
+         the scope is 'namespace_of(bindings)'; a refused constraint is
+         a fault WITH A POSITION, said at validation.
+         NEEDS: nothing; ruled (R-66, gathered/0x).
+         SEE: TODO G-3 (was B-27); gathered/0x.
+
+[ ] G-4  '$file', '$choice', '$filestem' IN 'execute' ARE NOT EXPANDED
+         The validator accepts the three words; the runner passes the
+         call as written. 'execute = "bash $file"' runs a literal
+         '$file' -> "EMPTY". R-74 closed the same hole for '%' in
+         'build'. PROBE.
+         DO: the expansion in 'operations/run/core.py application_argv'
+         (lines 136-139), the way R-74 did it.
+         NEEDS: nothing; ruled (R-68).
+         SEE: TODO G-4 (was B-26).
+
+[ ] G-2  'same = true': ACCEPT AND RUN DISAGREE ON THE NOMINAL'S NAME
+         'hwut.accept' writes one GOOD per choice; 'hwut.run' looks for
+         the shared one and fails every choice -- straight after a
+         successful acceptance. Only 'run/dispatcher.py:88' hands the
+         naming ('naming_of') to the bookkeeper; fourteen 'Bookkeeper('
+         constructions in services have none. PROBE.
+         DO: the naming reaches every face that names a nominal:
+         accept, rename, remove, sanitize, report.details, stability.
+         NEEDS: nothing; ruled (R-45).
+         SEE: TODO G-2.
+
+[ ] G-10 ONE PAGE THROUGH THE FACE, FOR EACH OF G-1 .. G-4
+         Why they stayed green: the pinning page exercises a function
+         and the face takes another road (test-configuration.py via
+         'namespace_of'; test-execute.py prints what the validator read;
+         test-adapter.py reads 'same_nominal_f'; test-interview.py
+         meets the refusal in the interview).
+         DO: with EACH fix above, one fixture page stating the word in
+         its header, the launcher called, the outcome printed. Then
+         'review-r10-probes.sh' goes.
+         NEEDS: the fixes.
+         SEE: TODO G-10; doc/HOWTO-HWUT-BRAINSTORM.txt.
+
+[ ] C-1  'hwut.run.play' SAYS "EMPTY" AND NOT WHY
+         A page whose call cannot start, or whose pype exits 3, gets
+         only "EMPTY: the choice produced no output to read" -- no exit
+         code, no containment, no stderr tail. 'diagnosis.py' can
+         render all of it and is wired to no face.
+         DO: the resolution chain carried IN the record (today
+         recomputed at render); a request flag installing
+         'DiagnosisObserver'; play prints the diagnosis on an empty
+         answer.
+         NEEDS: nothing; ruled (operations todo-21's three laws).
+         SEE: TODO C-1; operations/diagnosis.py.
+
+[ ] D-9  169 RULINGS STAND BY NAME AND BY NO PAGE
+         Of 398 RATIONALE entries, 169 name artefacts that resolve and
+         no page pins what they say. About thirty were probed by
+         behaviour in a scratch tree; seven failed (G-1 .. G-6). Expect
+         more in the rest.
+         DO: the same probe, ruling by ruling: state the word in a
+         page, run the face, read what happens. Each failure becomes a
+         G item; each pass a line "pinned by <page>" in review-r10
+         11.3. A session's worth; can be cut by component.
+         NEEDS: nothing. Tool: scratchpad 'sweep.py' (regenerable from
+         review-r10 11.1) lists the 169 by component.
+         SEE: TODO D-9; review-r10 11.2, 11.3.
+
+==============================================================================
+TIER 3  BLOCKS REAL USE, OR DECIDED AND UNBUILT
+==============================================================================
+
+[ ] B-7  'hwut.renovate' -- WHAT BRINGS A 1.0 TREE TO 2.0
+         Initial version built (E-99): title and '--not' from
+         'hwut-info.dat', the three old tolerance keys; report by
+         default, '--apply' writes. OWED: it enters the books as
+         'hwut.accept' does; the stderr survey (C-6: which tests would
+         newly refuse under S-1); the header GENERATED from the
+         '--hwut-info' interview (r-a, ruled 2026-08-26; today the
+         interview has no caller -- G-7); the proof against the real
+         quex project.
+         DO: the four pieces above, developed against quex.
+         NEEDS: gathered/0r's two OPENs first (header beside or
+         replacing the '--hwut-info' block; book entry under '--apply'
+         only). A real quex checkout.
+         SEE: TODO B-7, C-6, G-7; services E-99; gathered/0r.
+
+[ ] B-25 THE COVERAGE TOOL AND ITS FORMAT, ONE EACH, IN THE CONF
+         RULED 2026-10-05 in chat; no entry yet.
+           (1) 'language-setup.<lang> { coverage = "<tool>"
+                format = "<format>" }', format optional (the tool's own
+                reporting format by default); a tool absent from the
+                machine refuses by name; no fallback.
+           (2) 'specify_command_line(..., format)' -- the scheme
+                function receives the format.
+           (3) 'ALIAS_DB' stops claiming invocation; 'kcov' today
+                inherits cobertura's 'call_scheme = None' and is never
+                called (silent ABSENT).
+           (4) the coverage README opens with HOW A MEASUREMENT WORKS:
+                interpreter-based (a tool calls the app) vs
+                compilation-based (the build carries coverage options,
+                the app runs bare); then the recording format as the
+                second determinant; the call/parse diagram at its head.
+         DO: first the entry (coverage D-46) and the README opening,
+         then the validator, the dispatcher, the readers' ALIAS_DB.
+         NEEDS: r-10a settles WHEN the entry and README are written
+         (recommended: in the building session, not before).
+         SEE: TODO B-25; review-r10 section 5; coverage D-2, D-23,
+         D-39.
+
+[ ] B-29 THE DIRECTORIES BLOCK NAMES ONLY WHAT THE WISH TOUCHED
+         A narrowed wish ('--dir bin') prints all 36 TEST directories,
+         35 as '[OK] 0/0'.
+         DO: print the directories the selection entered.
+         NEEDS: nothing (was ISSUES.txt line 5).
+         SEE: TODO B-29.
+
+[ ] B-30 'hwut.run.play' SHOWS STDERR UNASKED, EMPTY IF NONE
+         The region exists behind '--stderr' only.
+         DO: always print it, an empty one where nothing was written.
+         NEEDS: nothing (was ISSUES.txt line 6).
+         SEE: TODO B-30.
+
+[ ] B-31 'hwut.report.details' PRINTS SHARED LINES ONCE
+         Today GOOD whole, then OUT whole, for one differing line.
+         DO: shared lines once; differing ranges diff-like with
+         '[OUTPUT]' / '[GOOD]' prefixes.
+         NEEDS: nothing (was ISSUES.txt lines 7-8).
+         SEE: TODO B-31.
+
+[ ] C-4a FUNCTION COVERAGE HAS NO PRODUCER
+         The measure is registered, carried into every output file and
+         converter -- and empty: gcov's 'function' lines skipped,
+         coverage.py's 'functions' json unread, cobertura and JaCoCo
+         methods, lcov FN/FNDA ignored.
+         DO: one reader at a time, each against a REAL artefact.
+         NEEDS: nothing.
+         SEE: TODO C-4a; coverage D-43.
+
+[ ] C-4b lcov 'BRDA' READ BY THE lcov READER
+         Seen and skipped; since D-43 a BRDA names its arm.
+         DO: read it into the branch mask.
+         NEEDS: nothing.
+         SEE: TODO C-4b; readers/lcov.py:19-20.
+
+[ ] B-6  'hwut.affected' READS WHAT THE COVERAGE RUN DELETES
+         Built over the per-case records; 'hwut.cov.run' removes them
+         after gathering (D-42). No launcher, so no user is misled yet;
+         as a module it answers 'nobody'.
+         DO: the face over the OUTPUT DIRECTORY (the gathered files say
+         who executed every range); 'services/affected.py' and
+         'bin/hwut.affected'; the suffix spelt at 'affected.py:49' and
+         'database/index.py:360' asked of the bookkeeper instead.
+         NEEDS: nothing.
+         SEE: TODO B-6; coverage D-42, D-43.
+
+[ ] A-5  'RELATION' NAMES SIX STAND-IN CLASSES  (with G-6, A-4)
+         18 of 27 rows of 'exploration/relation.py' point at
+         'owner_faces_provisional.py' (ConfigBuild 2, ConfigCaps 3,
+         ConfigCanonicalise 1, ConfigCompare 8, ConfigRunner 3,
+         ConfigStore 1). The owners have declared most of them.
+         'ConfigCompare' restates compare's thirteen defaults (G-6).
+         DO: per owner, RELATION names the owner's class, the stand-in
+         goes, 'test-defaults.py declared' and 'instantiate' re-recorded
+         (gathered/0x, 0y). ConfigCaps' three rows wait on A-4.
+         NEEDS: r-10i for compare's rows (freeze, or amend R-56/R-57).
+         SEE: TODO A-5, G-6, A-4; gathered/0x, 0y, 10.
+
+[ ] B-3  THE CONFIGURATION SHOWN: THE EXTRACTION
+         'hwut.config.show' prints the resolved tree; a header that
+         does not parse gets 'file:line:col: SYNTAX' and no region, no
+         line, no leader.
+         DO: show which region was found, at which line, what leader
+         was stripped.
+         NEEDS: nothing.
+         SEE: TODO B-3 (narrowed v16); gathered/13.
+
+[ ] B-4  SEVERAL COLLISION GROUPS
+         'DirectorySpec.collision' is one flat group; the ruling admits
+         several per directory.
+         DO: a tuple of groups; validator.py:159-161 reads a list of
+         lists. One line at determination.
+         NEEDS: nothing.
+         SEE: TODO B-4; gathered/0h.
+
+[ ] B-11 COMMAND-LINE COMPLETION
+         The option table ('--intern-cmd-get-completion-info', E-81)
+         exists; no shell function.
+         DO: bash, zsh, PowerShell functions reading that table.
+         NEEDS: gathered/0s's two OPENs (one general face or each; a
+         '<file-glob>' completion). F-4 widens its reach.
+         SEE: TODO B-11; gathered/0s.
+
+[ ] B-13 A VARIANT RESTATING A 'language-setup' ENTRY
+         R-73 intends it; 'exploration/variant.py' knows no 'language'.
+         DO: build it.
+         NEEDS: nothing.
+         SEE: TODO B-13; gathered/14.
+
+[ ] B-24 'hwut.cov.conv.to_pdf' CHECKS ITS TeX PACKAGES
+         'kpsewhich' for geometry, xcolor, colortbl, longtable, array;
+         refuse by name with the Debian package; '--check' without
+         compiling.
+         NEEDS: r-10e -- build as described, or strike.
+         SEE: TODO B-24; services E-133.
+
+[ ] D-2  THE OUTER-TEXT BLOCK BOUNDARY
+         Checkable, not arguable: split the outer text in
+         'chunk_pipe.py' (flushes at '##!', '####', EOF), run compare's
+         suite, see whether a GOOD moves. Doable in any sandbox.
+         SEE: TODO D-2; operations todo-2 (a).
+
+[ ] B-14 THE MODEL IS A TREE  -- PARKED, keep
+         Trigger: the day a SECOND emitter is written. Nothing to do
+         until then.
+         SEE: TODO B-14; gathered/05.
+
+==============================================================================
+TIER 4  THE RECORD IS WRONG
+==============================================================================
+
+[ ] E 'rulings owed'  THREE LAWS BUILT AND RECORDED NOWHERE  (r-10b)
+         The '.txt' nominal (bookkeeper.py:828); B-13 (cited at
+         bookkeeper.py:649,670 and eight places; B-13, B-19..B-23 are
+         empty numbers); the proxy family and 'interactive' as a conf
+         key (mechanics in run/README-provider.txt, decision in no
+         entry); coverage's one-process-per-choice road (disc-2 (c)).
+         DO: one entry each, in a building session; then 0n r-1,
+         plan/18 step 6 and todo-23 are struck on the record.
+         NEEDS: r-10b (yes, write them).
+         SEE: TODO band E 'rulings owed'; review-r10 7.3.
+
+[ ] G-9  RULINGS OVERTAKEN WITHOUT A WORD
+         R-8 (no upward walk; R-69 folds hwut.conf down), P-11
+         ('special'/'hwut.special' -> 'target'/'hwut.execute', E-7),
+         R-29 ('hwut.parse' -> 'hwut.config.show', E-54), D-2 (the
+         candidate list -> one tool, B-25).
+         DO: one AMENDED or SUPERSEDED line each, append-only.
+         SEE: TODO G-9.
+
+[ ] F-6  DOCSTRINGS AND ENTRIES THAT NAME WHAT HAS MOVED
+         build_action.py:13 ('BUILD/<stem>' -> '<file>'),
+         multi_execute.py:88-92, configuration_tree.py:83 (G-1); R-27,
+         R-63 (hocon_parser.py -> hwut_hocon.py), O-10
+         (specification.py -> configuration_tree.py), D-34, D-35
+         ('explanation_f'), E-9 (no migrate_region_syntax.py), C-7
+         (path prefix). One of them produced B-28, a false owed item.
+         DO: fix the docstrings; AMENDED lines on the entries.
+         SEE: TODO F-6; review-r10 11.6.
+
+[ ] r-7a TWO UNREPAIRABLE CITATIONS
+         services/RATIONALE.txt:1500 'disc-2-subject-provision.txt';
+         compare/DOC/SEMANTICS.txt:665 'disc-stateful-constraints'.
+         DO: name what holds the content now, or say it is gone.
+         SEE: TODO band E 'r-7a'.
+
+[ ] r-10h THE TWO BOOKS THE CENSUS RE-REGISTERED
+         They ride in bundle 83 with a 'chmod u+w' apply note.
+         DO: confirm the apply, or run your own census and keep yours.
+         SEE: review-r10 r-10h; bundle 83's apply note.
+
+[ ] r-10n THE IDS OF TODO.txt COLLIDE WITH THE RULING SERIES
+         'B-25' is a TODO item and a bookkeeper ruling. A prefix of
+         their own (T-...)?
+         DO: on the word, renumber in one pass with the pointers.
+         SEE: review-r10 11.7, r-10n.
+
+[ ] r-10g 'doc/disc-hwut-amend.txt', 'doc/disc-hwut-lint.txt'
+         Two forks outside WORK since 2026-08-27 ("number to be
+         assigned"). Move to intend/23, 24 (22 is taken), or leave.
+         SEE: TODO band E 'doc/'; review-r10 r-10g.
+
+==============================================================================
+TIER 5  WAITING ON A RULING
+==============================================================================
+
+     First the forks that need DESIGN, then the ones that need a word.
+     Each line: the fork -- what the tree does today. Ruling means: a
+     RATIONALE entry, or a strike here with the reason.
+
+     DESIGN FORKS
+
+[ ] intend/19 o-2  THE GAP PENALTY -- linear (k x 0.5, today), affine
+         (open + k x extend, Gotoh), or concave (0.5 x H(k), the old
+         'WorkItemHistory' intent). Anchoring is built (C-15, C-16), so
+         the measurement it waited for can be made: a block deletion
+         inside an anchored section under the three, on the fixture
+         pair and the real corpus. Measure first, then rule.
+
+[ ] intend/00  THE PLACEMENT FORK -- 'engine/selection' carries the
+         configuration contract, or 'engine/configuration' stands alone.
+         Today: neither exists; exploration under orchestrator/.
+
+[ ] gathered/0q item 3  TWO WALKS -- the faces' selection and the
+         runner's 'determine_tree'. One or two?
+
+[ ] unification  COVERAGE RUNS AND EXECUTION RUNS AS ONE RUN (asked
+         2026-10-05). Today D-38 rules them apart ("a tool that fails
+         to execute must not book a failure"): two dispatchers, one
+         renderer. Belongs with B-25's README opening.
+
+[ ] intend/22  MOVING AS TWO ACTS -- one application into a populated
+         directory (two registers meet) vs a whole directory with GOOD/
+         intact (nothing reconciles). And 6.3's consequences: the
+         doubled tree, the remove script, "known" per directory. Today:
+         no VCS detection; 'git mv' in prose only.
+
+[ ] intend/20 s.4  the default SUCCESSOR -> BUNDLED; the blocked-unit
+         oscillation; FAILED_FIRST as a member. Today: DEFAULT_STRATEGY
+         = SUCCESSOR; no FAILED_FIRST.
+
+[ ] gathered/0c  the placement backend (O-13 stage 2): how a remote
+         slot and a local slot relate. Today: no backend, no 'submit'.
+
+[ ] gathered/04 (1)  the streamability predicate before an early abort
+         (no abort on any road today).
+
+[ ] operations todo-23  'isolation': which suites accept one process
+         across choices -- the orchestrator's dial.
+
+[ ] operations todo-16 phase 2  'block_id' on SectionBeginInst and
+         Resolution, SIGNATURE_UI_PROTOCOL regenerated; "one run per
+         round" is what E-61's 'r' does, unstated.
+
+[ ] spec/01  s-1 README/INTERNALS split depth; s-2 a checker
+         ('adm/doc_audit.py', absent); s-3 DISCUSSIONS seeding.
+
+[ ] group ids  'group_ids.dat' -- groups by labels, a third id scope.
+         Its own plan when wanted (plan/18 o-2).
+
+     ONE WORD EACH
+
+[ ] r-10o  G-1: refuse an unenforceable cap (R-48), or run and SAY so?
+[ ] r-10i  G-6: freeze compare's configuration (R-56), or amend to
+         'slotted' (C-8) and strike the face (R-57)?
+[ ] r-10j  a faulty 'hwut.conf': play refuses the directory; run,
+         plan, accept go on. One law, or two?
+[ ] r-10c  0n r-3: with the procsitter tests green under their own
+         caps (O-20), is "cap a containment test at all" still open?
+[ ] r-10d  B-2 residue: '--format' on hwut.run (reached by
+         test-receiver.py alone) and hwut.plan's tree mode (reached by
+         no face) -- wanted, or dropped?
+[ ] r-10e  B-24: build the kpsewhich check, or strike?
+[ ] r-10k  'profiler' (R-73): validated, stored, never consumed.
+         Consume, or out of the vocabulary?
+[ ] r-10l  '--global-conf' (D-2, G-8): never built; the upward search
+         stands via R-69, R-73. Still wanted, or closed?
+[ ] r-10m  DOWN measures (todo-20): numeric deviation, matched pattern,
+         point-cloud distance, region parameters, constraint verdicts,
+         transpose partner. None carried; only the keyed viewer reads
+         DOWN since E-62. Still wanted?
+[ ] 'rich'  use it for trees and colours? (was ISSUES.txt line 2)
+[ ] gathered/0k  '--confs': the file's language; implicit reading. No
+         such flag anywhere.
+[ ] gathered/0v  the configuration specification's form. No file.
+[ ] gathered/0d  scenario kinds beyond the test run -- parked.
+[ ] gathered/0e  the empty-match report over the UNION of directories
+         (today one NOTE per directory, 36 of them, exit 3).
+[ ] gathered/0o  cadence needs a theory ('--cadence' off by default is
+         built; the theory is in no entry).
+[ ] gathered/02  the document-consistency session = goals (2), (3);
+         re-read against the four aggregates before struck or re-aimed.
+[ ] gathered/07, 09, 0f  provisional choices of scheduler, run, plan
+         (clock injectable, FRAME_CAPS 60 s, 'test-app-contained'):
+         as built, unruled -- rule or strike.
+[ ] gathered/0u  tree-walk laws 1, 2, 4: '.' names skipped; 'ignore'
+         child-wins (X-SILENT's COST doubts it -- the same fork twice).
+[ ] gathered/0r  B-7's two OPENs (see B-7).
+[ ] gathered/0s  B-11's two OPENs (see B-11).
+[ ] 'scratch()'  a runner helper handing a test its scratch directory
+         -- tidiness; wanted?
+[ ] coverage disc-5  counts in a merge: refuses today; moot at the
+         output (no counts, D-42), alive for a per-case record.
+[ ] coverage disc-9  HDL option (b), bin-keyed record -- awaits a real
+         artefact. Stands.
+[ ] coverage 'condition'  a measure beside mc/dc -- wanted at all?
+[ ] operations todo-17, 18  a second IDE, a browser client -- deferred;
+         their oracle files are gone from the tree.
+[ ] r-5b  split operations' DISCUSSIONS (8 entries, 381 lines) or let
+         it stand.
+[ ] display  the wallflower NOTE printed inside the DIRECTORIES block,
+         before its closing rule -- a formatting cut, if wanted; moves
+         every page with wallflowers.
+[ ] r-10a  B-25's entry and README: now, or in the building session?
+         (recommended: the building session)
+
+==============================================================================
+TIER 6  A MEASUREMENT ONLY THE USER'S MACHINE CAN GIVE
+==============================================================================
+
+[ ] D-4  THE DEVELOPMENT IMAGE HAS NEVER BEEN BUILT
+         'hwut.dev.podman.build' on a machine with an engine. Where it
+         fails, the Containerfile is wrong, not the faces.
+[ ] D-5  NO REAL READER HAS READ THE EXPORTED FORMATS
+         One tracefile through 'genhtml'; one Cobertura/JaCoCo report
+         into Jenkins or GitLab. 'to_pdf' alone is proven.
+[ ] D-6  THE FINAL FOLD WITH MEASURES, ON THE REAL TREE
+         One 'hwut.cov.run' with branches over the real tree: does
+         'output._measures_of' need saving? (synthetic: 12.5 s, 869 MB)
+[ ] D-7  THE JOBS COLUMN AT A DIRECTORY'S LAST TWO RUNS
+         Not reproducible at --jobs 2; wants more cores.
+[ ] D-8  '-l fail' SHOWED FIVE OK WITHOUT EVIDENCE
+         Correct here; wants the tree and label that showed it.
+[ ] A-6 / C-4c  MC/DC FROM A REAL TOOL
+         gcc 14 ('-fcondition-coverage', 'gcov --conditions'); then
+         lcov 2.2's MCDC line in 'to_lcov' and a converter rendering MC.
+
+==============================================================================
+TIER 7  HARMLESS WHILE IT WAITS
+==============================================================================
+
+[ ] F-5  '--unaccepted' WORKS AND STANDS IN NO FACE'S HELP
+         Parsed by hand in plan/wish.py:364; E-81's vocabulary lacks it.
+         DO: into the parser vocabulary; every help names it. PROBE.
+[ ] F-7  NO PAGE DRIVES 'hwut.accept.propose' / 'hwut.accept.apply'
+         Smoke-probed green. DO: choices in test-accept.sh.
+[ ] F-4  THE NINE HAND-PARSING FACES GAIN A PARSER (E-81)
+         execute, move, remove, sanitize, pype ... refuse correctly in
+         their own words; no completion table. A session of its own.
+[ ] F-1  'bin/README.txt' SAYS EVERY LAUNCHER RUNS 'vut.services.<n>'
+         Untrue for the 'lib/' faces. One pass with the launcher grid.
+[ ] F-3  'test-accept.py' RE-WIDENED TO TWO SUBJECTS
+         The file subject exists; the docstring says "not yet built".
+         A GOOD moves.
+[ ] F-2  'test-wishlist.sh' READS A FLOW IT PINS
+         Its awk expands one elision species; right only under
+         '--jobs=1 --deterministic'. Teach it both, or leave the pin.
+[ ] C-3  FURTHER PER-LANGUAGE READERS
+         Eleven built; julia named and absent. Each against a real
+         artefact, as wanted.
+[ ] C-7  README DEEP-SECTION POLISH AFTER THE SURGERY
+         operations/README.txt quotes '_core.py',
+         'feeder/html_feeder.py', 'provision/provider.py' -- gone or
+         moved. Goal (3) work; fold in, do not do twice.
+[ ] G-7  THE INTERVIEW HAS NO READER  -- closes with B-7's r-a, or
+         by removing the interview.
+[ ] G-8  '--global-conf' WAS NEVER BUILT  -- closes with r-10l.
+
+==============================================================================
+COUNTS
+==============================================================================
+
+     TIER 1   3   G-1, G-5, NEW-1
+     TIER 2   7   G-3, G-4, G-2, G-10, C-1, D-9  (G-10 rides the fixes)
+     TIER 3  16   B-7(+C-6), B-25, B-29, B-30, B-31, C-4a, C-4b, B-6,
+                  A-5(+G-6, A-4), B-3, B-4, B-11, B-13, B-24, D-2,
+                  B-14 (parked)
+     TIER 4   7   rulings owed, G-9, F-6, r-7a, r-10h, r-10n, r-10g
+     TIER 5  12 design + 29 one-word = 41 lines (TODO band E's 40, plus
+                  r-10a; the r-10x questions of review-r10 are folded
+                  in here, not listed twice)
+     TIER 6   6   D-4 .. D-8, A-6/C-4c
+     TIER 7  10   F-1 .. F-5, F-7, C-3, C-7, G-7, G-8
+
+     Every id of TODO.txt version 16 appears exactly once above except
+     G-6 (under A-5), C-6 (under B-7), C-4c (under A-6), and the E
+     lines named by their file. Nothing of TODO.txt is left out.
+
+WHAT A SESSION DOES WITH THIS FILE. Take the first unticked item of
+the lowest tier whose NEEDS are met. Build it; strike it in TODO.txt
+with the ruling that holds the residue; tick it here. When a ruling
+of tier 5 lands, the item it unblocks moves up in the next version of
+this file -- say so in a line under VERSION.

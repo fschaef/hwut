@@ -1,3 +1,11 @@
+NOTE -- the narrative, and scenario coverage (early notes)
+==========================================================
+
+Kept from 'doc/OLD/TODO.txt' (2026-08-27) on 2026-10-05, audit r10; the
+rest of that file -- an early 'hwut.info' syntax sketch -- was superseded
+by 'hwut.conf' and the '@hwut { }' block (R-28, R-69, R-72) and is gone.
+These lines are thoughts for the manual, not labour.
+
 NARRATIVE:
   -- terms 'structured execution narrative' --> hwut philosophy
   -- goal 'scenario coverage' not 'line coverage'
@@ -8,22 +16,3 @@ NARRATIVE:
   QUOTE: A test is good if a domain-knowledgeable reader can say
          “Yes — that is exactly what should happen”
          without running the code or reading the implementation.
-
-HWUT-app definition:
-
-All in a file 'hwut.info'. Syntax
-
-execution: *.py --> python3-coverage
-
-{
-    my_testfile.c/my_testfile: Title:Subtitle;
-    build:                     make;
-    choices:                   normal, good, bad;
-    stdin-control:             off;
-}
-
-on_entry {
-}
-
-on_exit {
-}
