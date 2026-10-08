@@ -20,6 +20,7 @@ tolerance {
     constraints = []              # default
     comment = ["##", "##"]        # default
     regions = true                # default
+    stderr_ignored = false        # default
 }
 
 --- pasted, read back ---

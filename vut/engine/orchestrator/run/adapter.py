@@ -21,7 +21,8 @@ import os
 import shlex
 from dataclasses import replace
 
-from ...bookkeeper.api  import NamingConfig, StoreConfig
+from ...bookkeeper.api  import StoreConfig
+from ..exploration.selection import naming_of           # noqa: F401
 from ...operations.build_action  import BuildConfig, E_BuildSystem
 from ...operations.configuration import (E_SourceKind,
                                          TestChoiceConfiguration,
@@ -55,19 +56,6 @@ def interpreter_of(language, language_setup):
     if setup is not None and setup.interpreter:
         return shlex.split(setup.interpreter)
     return [language]
-
-
-def naming_of(app):
-    """
-    RETURN: NamingConfig for that application -- 'same' stated means
-            ALL CHOICES SHARE ONE NOMINAL (the choice part is dropped
-            from the nominal's key; candidates keep their own names).
-
-    'same' stands at the ROOT only (exploration's law), so the root
-    choice's word is the application's word.
-    """
-    root = _root_of(app)
-    return NamingConfig(same_nominal_f=bool(root.same))
 
 
 def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
@@ -202,7 +190,11 @@ def _choice_of(parameters, caps):
     return TestChoiceConfiguration(canonicalisers = canonicalisers,
                                    compare        = _compare_of(parameters),
                                    output         = output,
-                                   caps           = caps)
+                                   caps           = caps,
+                                   stderr_ignored_f = bool(
+                                       parameters.tolerance is not None
+                                       and parameters.tolerance
+                                                     .stderr_ignored))
 
 
 def _compare_of(parameters):

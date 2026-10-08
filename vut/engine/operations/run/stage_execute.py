@@ -72,8 +72,13 @@ class StageExecute(I_ExecuteProvider):
         procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         error_link = Link()
-        c = chain([(procsitter,
-                    application_argv(configuration, self.choice_name),
+        argv = application_argv(configuration, self.choice_name)
+        #  THE RESOLUTION IS TAKEN NOW, with the call (todo-21): what
+        #  PATH answered when the call was made is what a diagnosis
+        #  must show, not what it answers at the time of reading.
+        from ..diagnosis import resolution_chain
+        self.resolution = tuple(resolution_chain(argv[0]))
+        c = chain([(procsitter, argv,
                     {"stderr_handler": error_link.feed})])
         #  The cadence is measured AT ARRIVAL, or not at all: a dict
         #  where this provider measured, None where it did not --

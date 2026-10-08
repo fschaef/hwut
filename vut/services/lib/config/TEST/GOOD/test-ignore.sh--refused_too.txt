@@ -1,5 +1,6 @@
---- the REFUSED block names it
-        test-x.sh.bak   backup-shaped name: not a source candidate
+--- the REFUSED block names it, under its reason
+    backup-shaped name: not a source candidate
+            test-x.sh.bak
 --- and the NOTE counts it
     NOTE: 5 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
           see: hwut.config.ignore --wallflowers

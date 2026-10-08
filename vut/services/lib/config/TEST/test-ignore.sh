@@ -104,8 +104,9 @@ refused_too)
     #  the wallflower list, where this face settles it with the rest.
     cp a/TEST/test-x.sh a/TEST/test-x.sh.bak
     $RUN --plain > run.txt 2>&1
-    echo "--- the REFUSED block names it"
-    sed -n '/^REFUSED -- not run/,/^====/p' run.txt | grep "bak" | sed 's/^/    /'
+    echo "--- the REFUSED block names it, under its reason"
+    sed -n '/^REFUSED -- not run/,/^====/p' run.txt \
+        | grep "bak\|backup-shaped" | sed 's/^/    /'
     echo "--- and the NOTE counts it"
     grep "wallflower" run.txt | sed 's/^/    /'
     echo "--- the list holds it"

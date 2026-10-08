@@ -193,6 +193,17 @@ Any cap hit terminates the supervised process. The result names the cap that
 triggered. A cap the running platform cannot enforce is REPORTED in
 '.unenforced' -- never silently dropped.
 
+THE CAPABILITY BOARD says the same BEFORE a call: 'capability_db()' on
+the door maps every cap to whether this platform watches it, and
+'platform_name()' is the platform's word. 'network',
+'file_handle_max_n' and 'write_directory_list' stand on the board as
+not watched, on every platform.
+
+'UTILITY_DB' is what the board is derived from: platform -> utility ->
+the caps it watches ('psutil': memory, pids; 'resource': cpu time, file
+size -- POSIX only). 'utility_of(cap, platform)' asks it; 'INSTALL_DB'
+says how a utility comes onto a machine.
+
 Default values can be examined in dataclass 'ProcsitterConfig'.
 
 5  THE SUPERVISED CALL

@@ -1,0 +1,24 @@
+'hwut.run' REFUSES 2 case(s) on this platform, for 1 set(s) of caps the
+procsitter cannot enforce here. The paragraphs below explain each once, say
+what is missing and how to heal it, and name the cases concerned.
+
+CONFINEMENT -- cap not enforceable
+
+    refused -- cap 'network' not enforceable on '<platform>'  [2 case(s)]
+    
+        Each case below is under this cap, stated in its header or standing
+        by default, and on this platform nothing enforces it. A cap that
+        does not cap is worse than no cap: the author believes the test
+        confined and it is not. So the case is not run.
+    
+        In order to heal, acknowledge in 'hwut-root.conf' that the tests run
+        without the cap on this platform -- knowingly, for the whole tree:
+    
+            procsitter { <platform> { network = false } }
+    
+        CONCERNED:
+            .
+                test-net.sh  a
+                :            b
+STATUS: 0
+<hwut-end>

@@ -70,7 +70,8 @@ FALLBACK_TEST_DIRECTORY = "TEST"
 
 #  The keys that flow down the tree; everything else is local.
 INHERITABLE_FIELD_TUPLE = ("app_defaults", "language_setup", "ignore",
-                           "test_directory", "variant_db")
+                           "test_directory", "variant_db",
+                           "procsitter_db")
 LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
                            "dependency", "target_db")
 
@@ -86,7 +87,8 @@ LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
 #  fault, because it is not local, and reached nothing, because it does
 #  not flow. It was swallowed in silence, which is the worst of the
 #  three answers.
-ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db", "language_setup")
+ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db", "language_setup",
+                              "procsitter_db")
 
 #  Field -> WHY it is the root's alone, for the fault that names it.
 ROOT_CONF_ONLY_REASON_DB = {
@@ -97,6 +99,9 @@ ROOT_CONF_ONLY_REASON_DB = {
                       "a file's language, its interpreter and its "
                       "coverage tools must not depend on where in the "
                       "tree it stands",
+    "procsitter_db":  "running a test with a cap unenforced is a "
+                      "responsibility taken ONCE, for the whole tree "
+                      "(R-48)",
 }
 
 
@@ -114,7 +119,8 @@ def root_only_fault(name, conf_name, position):
 #  field sends the reader looking for a word that is not in his file.
 KEY_OF_FIELD = {"variant_db":     "variant_group",
                 "target_db":      "target",
-                "language_setup": "language-setup"}
+                "language_setup": "language-setup",
+                "procsitter_db":  "procsitter"}
 
 #  THE BOUNDARY OF THE ASCENT, and the most dominant configuration
 #  there is. It plays BOTH ROLES: it is READ like any other conf --

@@ -45,7 +45,23 @@ writes into a temporary directory and touches nothing of the tree.
 TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
 ==============================================================================
 
-[ ] G-1  AN UNENFORCEABLE CAP IS IGNORED AND THE PAGE IS GREEN
+[x] G-1  AN UNENFORCEABLE CAP IS IGNORED AND THE PAGE IS GREEN
+         DONE 2026-10-07 on the plan road (run, cov.run, plan): R-48
+         stands, refused by cap name; way out 'procsitter { <platform>
+         { <cap> = false } }' in 'hwut-root.conf' (exploration R-80,
+         display D-46, services E-135: exit REFUSED, 'hwut.help'
+         names the missing utility). '--ignore=<cap>' struck. Pinned by
+         'services/TEST/test-run-uncapped.sh' (G-10's page for G-1).
+         OWED, as G-1b below.
+[x] G-1b THE GATE ON THE FACES THAT RUN WITHOUT A PLAN
+         DONE 2026-10-07 (exploration R-80 (7)); pinned by
+         'test-run-uncapped.sh doors'.
+         'hwut.accept', 'hwut.run.play', 'hwut.run.stability',
+         'hwut.report.details' build a 'TestConfiguration' and run it;
+         none asks 'plan/confinement.py'.
+         DO: one call of 'confinement.admit_of' at each door.
+         SEE: exploration R-80 OWED.
+     --- G-1 as audited:
          A page stating 'caps { network = false }' (likewise
          'file_handle_max_n', 'write_directory_list') is accepted, run
          unconfined and reported [OK]. R-48 says: refuse. Without
@@ -58,7 +74,14 @@ TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
          half: procsitter has no field for the three caps.
          SEE: TODO G-1, A-4; exploration R-48; review-r10 11.5.
 
-[ ] G-5  '--stderr-tol' MARKS TESTS 'IGNORE STDERR' NOBODY LOOKED AT,
+[x] G-5  '--stderr-tol' MARKS TESTS 'IGNORE STDERR' NOBODY LOOKED AT,
+         DONE 2026-10-07 (services E-136, bookkeeper B-29): the leaf is
+         'tolerance { stderr_ignored = true }'; the flag is gone; an
+         accept of an untolerated stderr refuses; stderr that spoke
+         untolerated is the stain 'stderr-untolerated'; 'hwut.run.diff'
+         and 'hwut.accept.interactive' mention it. The 'stderr' column
+         left 'book.csv'.
+     --- G-5 as audited:
          AND 'hwut.help' ADVISES A LINE THE VALIDATOR REFUSES
          E-110 ruled: the declaration lives in the test's own block,
          'tolerance { stderr = ignored }', and the flag goes. Not built.
@@ -70,7 +93,11 @@ TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
          NEEDS: nothing; ruled (E-110).
          SEE: TODO G-5; services E-110.
 
-[ ] NEW-1  THE CENSUS IS RED ON EVERY CLONE BUT ONE PATH
+[x] NEW-1  THE CENSUS IS RED ON EVERY CLONE BUT ONE PATH
+         DONE 2026-10-07: the mount is printed as an analogy
+         ('-v ((path)):((path))'); green at two tree paths. STILL
+         TRUE: under hwut the page's 'no root above' step shows a
+         call, not a refusal ('TMPDIR' lies below the tree).
          'services/TEST/test-dev_podman.py:117' masks the vut directory
          with '<root>' while the mount it prints is the PARENT; the
          GOOD file therefore carries a machine path. Baseline here:
@@ -87,7 +114,9 @@ TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
 TIER 2  BREAKS WHEN USED AS DOCUMENTED
 ==============================================================================
 
-[ ] G-3  A CONSTRAINT THE VALIDATOR ACCEPTS ENDS THE RUN IN A TRACEBACK
+[x] G-3  A CONSTRAINT THE VALIDATOR ACCEPTS ENDS THE RUN IN A TRACEBACK
+         DONE 2026-10-07 (exploration R-81); pinned by
+         'test-header-words.sh constraint, constraint_refused'.
          'constraints = ["glob(name, \"build-*.log\")"]' passes
          'hwut.config.show' and kills 'hwut.run.play' with an unhandled
          'ConstraintSpecError'. Cause: 'constraints.py' keeps its own
@@ -101,7 +130,9 @@ TIER 2  BREAKS WHEN USED AS DOCUMENTED
          NEEDS: nothing; ruled (R-66, gathered/0x).
          SEE: TODO G-3 (was B-27); gathered/0x.
 
-[ ] G-4  '$file', '$choice', '$filestem' IN 'execute' ARE NOT EXPANDED
+[x] G-4  '$file', '$choice', '$filestem' IN 'execute' ARE NOT EXPANDED
+         DONE 2026-10-07 (exploration R-82); pinned by
+         'test-header-words.sh execute'.
          The validator accepts the three words; the runner passes the
          call as written. 'execute = "bash $file"' runs a literal
          '$file' -> "EMPTY". R-74 closed the same hole for '%' in
@@ -111,7 +142,10 @@ TIER 2  BREAKS WHEN USED AS DOCUMENTED
          NEEDS: nothing; ruled (R-68).
          SEE: TODO G-4 (was B-26).
 
-[ ] G-2  'same = true': ACCEPT AND RUN DISAGREE ON THE NOMINAL'S NAME
+[x] G-2  'same = true': ACCEPT AND RUN DISAGREE ON THE NOMINAL'S NAME
+         DONE 2026-10-07 (bookkeeper B-30): one bookkeeper per
+         directory, told which tests share a nominal; pinned by
+         'test-header-words.sh same'.
          'hwut.accept' writes one GOOD per choice; 'hwut.run' looks for
          the shared one and fails every choice -- straight after a
          successful acceptance. Only 'run/dispatcher.py:88' hands the
@@ -122,7 +156,9 @@ TIER 2  BREAKS WHEN USED AS DOCUMENTED
          NEEDS: nothing; ruled (R-45).
          SEE: TODO G-2.
 
-[ ] G-10 ONE PAGE THROUGH THE FACE, FOR EACH OF G-1 .. G-4
+[x] G-10 ONE PAGE THROUGH THE FACE, FOR EACH OF G-1 .. G-4
+         DONE 2026-10-07: 'services/TEST/test-run-uncapped.sh' (G-1)
+         and 'test-header-words.sh' (G-2, G-3, G-4).
          Why they stayed green: the pinning page exercises a function
          and the face takes another road (test-configuration.py via
          'namespace_of'; test-execute.py prints what the validator read;
@@ -134,7 +170,11 @@ TIER 2  BREAKS WHEN USED AS DOCUMENTED
          NEEDS: the fixes.
          SEE: TODO G-10; doc/HOWTO-HWUT-BRAINSTORM.txt.
 
-[ ] C-1  'hwut.run.play' SAYS "EMPTY" AND NOT WHY
+[x] C-1  'hwut.run.play' SAYS "EMPTY" AND NOT WHY
+         DONE 2026-10-08 (operations O-35): play diagnoses an empty or
+         failed provision; the record carries the resolution chain.
+         OWED: the request flag installing 'DiagnosisObserver' on
+         'hwut.run'.
          A page whose call cannot start, or whose pype exits 3, gets
          only "EMPTY: the choice produced no output to read" -- no exit
          code, no containment, no stderr tail. 'diagnosis.py' can
@@ -423,7 +463,8 @@ TIER 5  WAITING ON A RULING
 
      ONE WORD EACH
 
-[ ] r-10o  G-1: refuse an unenforceable cap (R-48), or run and SAY so?
+[x] r-10o  G-1: refuse an unenforceable cap (R-48), or run and SAY so?
+         RULED 2026-10-07: REFUSE (exploration R-80).
 [ ] r-10i  G-6: freeze compare's configuration (R-56), or amend to
          'slotted' (C-8) and strike the face (R-57)?
 [ ] r-10j  a faulty 'hwut.conf': play refuses the directory; run,

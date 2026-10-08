@@ -739,3 +739,54 @@ COST      B-11's "it TRAVELS" is given up: a trace is local to the
           next run then orders by plan and makes them again.
           'test-traces.py place': the old code fails it in two claims.
 
+B-29  THE STDERR NOTE RETIRES; 'stderr-untolerated' IS A STAIN     (2026-10-07)
+
+PROBLEM   The book held a per-choice 'stderr' note (ignored /
+          forbidden) that ACCEPTANCE wrote and the run obeyed -- a
+          second witness beside the test's own block once services
+          E-110 gave the block the authority.
+DECISION  The note, its enum and its two doors are removed. Tolerance
+          is the block's word and is recorded nowhere in the book. THE
+          STAIN IS THE BAD MARK: 'stderr-untolerated'
+          ('STAIN_STDERR_WORD') -- stderr spoke while not tolerated --
+          through 'note_stain_keyword()' like 'constraint' (B-18).
+          Only 'N repeat' disqualifies.
+          THE 'stderr' COLUMN IS GONE: a stain needs no column of its
+          own. An older book's column is ignored like any unknown one
+          and gone at its next write; the tree's books were rewritten
+          once.
+COST      A book holding an old 'ignored' is dropped unread: the case
+          fails 'unexpected stderr' at its next
+          run, is stained, and HINTS names the line to write.
+
+B-30  THE NAMING LAW IS THE DIRECTORY'S AND NAMES THE TESTS         (2026-10-07)
+
+PROBLEM   'same = true' (exploration R-45) is ONE APPLICATION'S word:
+          all its choices share one nominal. 'NamingConfig' held it as
+          ONE FLAG for a whole bookkeeper, so the run's dispatcher made
+          a SECOND bookkeeper per such application -- and was the only
+          place that did. MEASURED (audit r10, G-2): 'hwut.accept'
+          wrote a nominal per choice, 'hwut.run' looked for the shared
+          one and failed every choice 'no GOOD file', straight after a
+          successful acceptance.
+DECISION  RULED (Frank-Rene, 2026-10-07): ONE bookkeeper per directory,
+          told ONCE which tests share a nominal.
+          'NamingConfig.same_nominal_set' names them; 'nominal_path()'
+          answers per test. The law is derived in ONE place,
+          'exploration/selection.naming_of(app_set)', and reaches the
+          bookkeeper where it is made: the selection (so accept, diff,
+          play, report and help name a nominal as the run does), the
+          run's dispatcher (its second bookkeeper is gone), and
+          'hwut.report.details'.
+          THE FACES THAT MOVE RECORDS READ WHAT LIES THERE, as they do
+          for every subject: 'hwut.rename' and 'hwut.remove' take the
+          test-keyed nominal along with the WHOLE test and leave it
+          for a single choice -- the others are judged by it.
+COST      A bookkeeper made WITHOUT the application set's word answers
+          per choice, silently, for a test that states 'same'. The
+          constructions that name no nominal ('roster', 'book',
+          'note_stain', 'divergence') are untold and need not be.
+GRAVEYARD The naming handed to every face separately (the audit's own
+          DO): twenty places to forget. A mark in the book: a second
+          witness beside the block (services E-110).
+PINNED    'services/TEST/test-header-words.sh same'.

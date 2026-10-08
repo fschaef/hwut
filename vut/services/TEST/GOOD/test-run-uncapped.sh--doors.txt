@@ -1,0 +1,18 @@
+== hwut.accept test-net.sh a
+REFUSED: test-net.sh a -- cap 'network' not enforceable on '<platform>'
+    => hwut-root.conf: procsitter { <platform> { network = false } }
+STATUS: 2
+== hwut.run.play test-net.sh a
+REFUSED: test-net.sh a -- cap 'network' not enforceable on '<platform>'
+    => hwut-root.conf: procsitter { <platform> { network = false } }
+STATUS: 2
+== hwut.accept.interactive test-net.sh a --console --all
+REFUSED: test-net.sh a -- cap 'network' not enforceable on '<platform>'
+    => hwut-root.conf: procsitter { <platform> { network = false } }
+nothing to accept: 0 case(s) judged, every candidate equivalent to its nominal
+STATUS: 0
+== hwut.report.details test-net.sh a
+provision:     not run -- cap 'network' not enforceable on '<platform>'
+== nothing ran: the candidates are the acceptance's own
+candidate files: 2
+<hwut-end>

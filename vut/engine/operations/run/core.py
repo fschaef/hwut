@@ -85,6 +85,7 @@ DESCRIPTION
        passes is decided above.
 ______________________________________________________________________________
 """
+import re
 from   dataclasses import dataclass
 from   pathlib     import Path
 
@@ -121,6 +122,48 @@ STDOUT = "stdout"
 STDERR = "stderr"
 
 
+_EXECUTE_VARIABLE = re.compile(r"\$(file|choice|filestem)\b")
+
+
+def _execute_argv(configuration, choice_name):
+    """
+    RETURN: list[str], the STATED call ('execute', R-68) with its
+            framework variables expanded word by word:
+
+                $file      the source file, as the configuration names it
+                $filestem  its base name without the extension
+                $choice    the choice; EMPTY for the choice-less call
+
+            A word that expands to nothing is no argument. WHERE THE
+            CALL NAMES '$choice' THE AUTHOR HAS PLACED IT, and it is
+            not appended a second time; where it does not, the choice
+            is the last argument, as for every other call.
+
+    MEASURED (audit r10, G-4): the validator admitted the three words
+    and the call was handed over as written -- 'bash $file' ran a
+    literal '$file'.
+    """
+    import os
+    value_db = {
+        "file":     str(configuration.source_file),
+        "filestem": os.path.splitext(
+                        os.path.basename(str(configuration.source_file)))[0],
+        "choice":   "" if choice_name is None else str(choice_name),
+    }
+    placed_f = False
+    argv     = []
+    for word in (str(x) for x in configuration.execute):
+        placed_f = placed_f or any(m.group(1) == "choice" for m in
+                                   _EXECUTE_VARIABLE.finditer(word))
+        expanded = _EXECUTE_VARIABLE.sub(lambda m: value_db[m.group(1)],
+                                         word)
+        if expanded or not _EXECUTE_VARIABLE.search(word):
+            argv.append(expanded)
+    if choice_name is not None and not placed_f:
+        argv.append(str(choice_name))
+    return argv
+
+
 def application_argv(configuration, choice_name):
     """
     RETURN: list[str], the command line of ONE call of the test
@@ -134,9 +177,7 @@ def application_argv(configuration, choice_name):
     nothing -- the author has said how the application is invoked.
     """
     if configuration.execute is not None:
-        argv = [str(x) for x in configuration.execute]
-        if choice_name is not None: argv.append(str(choice_name))
-        return argv
+        return _execute_argv(configuration, choice_name)
 
     kind = configuration.source_kind
     if   kind is E_SourceKind.INTERPRETED:
@@ -311,9 +352,11 @@ class Provision:
             """RETURN: Subjects, the empty delivery that ends provision
             with 'supply's token and everything attributed so far."""
             return Subjects({}, ProvisionRecord(
-                report  = supply.report,
-                records = tuple(record_list),
-                detail  = supply.detail))
+                report     = supply.report,
+                records    = tuple(record_list),
+                detail     = supply.detail,
+                resolution = getattr(self.stage_execute, "resolution",
+                                     ())))
 
         executed = await self.stage_execute.supply(stop_event=stop_event)
         record_list += executed.record_list
@@ -340,9 +383,12 @@ class Provision:
                  if executed.report is not E_TestRunResult.OK \
                  else canonicalised.detail
         return Subjects(canonicalised.product,
-                        ProvisionRecord(report  = report,
-                                        records = tuple(record_list),
-                                        detail  = detail),
+                        ProvisionRecord(report     = report,
+                                        records    = tuple(record_list),
+                                        detail     = detail,
+                                        resolution = getattr(
+                                            self.stage_execute,
+                                            "resolution", ())),
                         raw_db    = dict(raw_db) if self.keep_raw else None,
                         #  the cadence rides IN the delivery: a dict where
                         #  the provider measured, None where it could not

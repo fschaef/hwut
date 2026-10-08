@@ -9,7 +9,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-'services/lib/face.py' and the two faces cut to it, 'hwut.report.wishlist' and
+'services/lib/face.py' and the two faces cut to it, 'hwut.report.list' and
 'hwut.plan'. What is pinned here is the CONTRACT, not the pages: the
 pages are pinned where they always were, and that they did not move is
 the proof of the cut.
@@ -43,7 +43,7 @@ import tempfile
 
 from   config import HwutRunner                                  # noqa F401,E402
 from   vut.services import plan                                  # noqa: E402
-from   vut.services.lib.report import wishlist                   # noqa: E402
+from   vut.services.lib.report import list as report_list        # noqa: E402
 from   vut.services.lib.face import (record_check, Refused, Fault,  # noqa: E402
                                      Empty, answered)
 from   vut.services._exit import E_ExitCode                      # noqa: E402
@@ -80,13 +80,13 @@ def banner(label):
 
 def test_reuse():
     fixture()
-    banner("hwut.report.wishlist, called as a library")
-    result = wishlist.do(wishlist.Request(directory=TEST))
+    banner("hwut.report.list, called as a library")
+    result = report_list.do(report_list.Request(directory=TEST))
     for line in result.line_tuple: print("    %s" % line)
     print("    warnings: %s" % (list(result.warning_tuple) or "none"))
 
     banner("the same, narrowed by the wish -- no argv anywhere")
-    result = wishlist.do(wishlist.Request(directory=TEST,
+    result = report_list.do(report_list.Request(directory=TEST,
                                           wish=Wish(glob_tuple=("test-a.sh one",))))
     for line in result.line_tuple: print("    %s" % line)
 
@@ -107,8 +107,8 @@ def test_reuse():
 def test_plain():
     fixture()
     for name, record in (
-            ("wishlist.Request", wishlist.Request(directory=TEST)),
-            ("wishlist.Result",  wishlist.do(wishlist.Request(directory=TEST))),
+            ("list.Request", report_list.Request(directory=TEST)),
+            ("list.Result",      report_list.do(report_list.Request(directory=TEST))),
             ("plan.Request",     plan.Request(directory=TEST)),
             ("plan.Result",      plan.do(plan.Request(directory=TEST)))):
         fault_list = record_check(record)
@@ -125,20 +125,20 @@ def test_plain():
     for line in record_check(Bad()): print("    %s" % line)
 
     banner("a Wish is the engine's; the record states its keywords")
-    request = wishlist.Request(directory=TEST,
+    request = report_list.Request(directory=TEST,
                                wish=Wish(fail_f=True, since_spec="2h"))
-    wish = wishlist.wish_of(request)
+    wish = report_list.wish_of(request)
     print("    request -> wish: fail_f=%s since=%r"
           % (wish.fail_f, wish.since_spec))
     print("    wish -> request: %s"
-          % (wishlist.request_of(wish, TEST, []).wish.since_spec,))
+          % (report_list.request_of(wish, TEST, []).wish.since_spec,))
 
 
 def test_refuse():
     fixture()
     for label, call in (
         ("a directory that does not stand",
-         lambda: wishlist.do(wishlist.Request(directory=os.path.join(ROOT, "nope")))),
+         lambda: report_list.do(report_list.Request(directory=os.path.join(ROOT, "nope")))),
         ("no root conf above",
          lambda: plan.do(plan.Request(directory="/tmp"))),
     ):
@@ -152,19 +152,19 @@ def test_refuse():
 
     banner("'answered' is the one place an outcome becomes a page")
     line_list = []
-    code = answered(wishlist.do,
-                    wishlist.Request(directory=os.path.join(ROOT, "nope")),
-                    line_list.append, wishlist.printed, usage="usage: ...")
+    code = answered(report_list.do,
+                    report_list.Request(directory=os.path.join(ROOT, "nope")),
+                    line_list.append, report_list.printed, usage="usage: ...")
     print("    exit %s" % code.name)
     for line in line_list: print("    | %s" % masked(line))
 
     banner("an EMPTY selection is a Result, not a refusal: the warning stands")
-    result = wishlist.do(wishlist.Request(directory=TEST,
+    result = report_list.do(report_list.Request(directory=TEST,
                                           wish=Wish(glob_tuple=("no-such-test.sh",))))
     print("    lines %d, warnings %d" % (len(result.line_tuple),
                                          len(result.warning_tuple)))
     line_list = []
-    print("    printed -> exit %s" % wishlist.printed(result,
+    print("    printed -> exit %s" % report_list.printed(result,
                                                       line_list.append).name)
 
 

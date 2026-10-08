@@ -45,7 +45,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional
-from ...bookkeeper.api import E_StderrNote
+from ...bookkeeper.api import STAIN_STDERR_WORD
 
 from   ..result           import E_TestRunResult
 from   ..interaction.port import E_Intent, merge_session
@@ -82,13 +82,12 @@ class AcceptConfig:
     choice:     Optional[str]            = None
     groundwork: Optional[object]         = None
     compare:    Optional[object]          = None
-    stderr:     Optional[E_StderrNote]   = None
-                            # THE SECOND QUESTION: which NOTE to write
-                            # in the book for stderr. None means it was
-                            # not asked -- and acceptance REFUSES
-                            # rather than decide on the author's behalf
-                            # ('--stderr-nominal' / '--stderr-ignored'
-                            # / '--stderr-forbidden' at the face).
+    stderr_ignored_f: bool               = False
+                            # THE TEST'S OWN DECLARATION ('tolerance {
+                            # stderr_ignored = true }', services E-136).
+                            # False: an acceptance whose run spoke on
+                            # stderr is REFUSED -- nothing here decides
+                            # on the author's behalf.
 
 
 @dataclass(frozen=True)
@@ -146,17 +145,14 @@ class Accept:
             self.store.accept(config.name, config.choice, name, text)
             notify(self.observer, "verdict", name, True)
 
-        #  THE NOTE IS THE DECISION: written verbatim into the book.
-        #  STDERR IS NEVER SUBJECT TO TESTING (E-5) -- unlike every
-        #  other subject, its stream is never itself accepted; only
-        #  the note is.
-        match config.stderr:
-            case E_StderrNote.IGNORED | E_StderrNote.FORBIDDEN:
-                self.store.note_stderr(config.name, config.choice,
-                                       config.stderr)
-                notify(self.observer, "verdict", "stderr", True)
-            case _:
-                pass
+        #  AN ACCEPTANCE THAT STANDS TAKES THE STAIN AWAY (services
+        #  E-136): stderr was silent or is tolerated now, so the bad
+        #  mark of an earlier run no longer holds. A REFUSED one wrote
+        #  nothing, the stain included -- only a run of record marks.
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): its stream is
+        #  never itself accepted.
+        self.store.bookkeeper.note_stain_keyword(
+            config.name, config.choice, STAIN_STDERR_WORD, False)
 
         result = AcceptResult(config.name, E_TestRunResult.OK,
                               dict(text_db), provision)
@@ -177,26 +173,20 @@ class Accept:
 
     def _stderr_refusal(self, provided):
         """
-        RETURN: E_TestRunResult.STDERR_UNDECIDED where the run wrote on
-                stderr and NO note about it was ever taken -- neither
-                handed to this ceremony nor standing in the book;
+        RETURN: E_TestRunResult.UNEXPECTED_STDERR where the run wrote
+                on stderr and the test does not declare it ignored
+                ('tolerance { stderr_ignored = true }');
                 E_TestRunResult.OK otherwise.
 
-        REFUSE RATHER THAN GUESS, AT THE DOOR: the three notes say
-        different things about the same stream, and only the author
-        knows which is meant.
+        AN UNTOLERATED STDERR REFUSES THE ACCEPTANCE (services E-136),
+        before anything is written: accepting stdout while a stream
+        the test produced is passed over would bless a half-truth.
         """
-        config = self.config
-        if config.stderr is not None:            return E_TestRunResult.OK
-        #  STDERR IS NEVER A SUBJECT (E-5): 'config.subjects' can no
-        #  longer name it, so the earlier "asked for by name" escape
-        #  is gone -- there is no second way to have decided.
+        if self.config.stderr_ignored_f:
+            return E_TestRunResult.OK
         if not _has_words(self._stderr_text(provided)):
             return E_TestRunResult.OK
-        if self.store.stderr_note(config.name, config.choice) \
-                is not E_StderrNote.FORBIDDEN:
-            return E_TestRunResult.OK          # the book already says
-        return E_TestRunResult.STDERR_UNDECIDED
+        return E_TestRunResult.UNEXPECTED_STDERR
 
     async def _initiate(self, subject_name, step):
         """

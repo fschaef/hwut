@@ -49,6 +49,8 @@
     run.start                'blue'                       sgr '34'                   pt 'ansiblue'
     run.tag-fail             'bright-white bg256:196'     sgr '97;48;5;196'          pt 'ansiwhite bg:#ff0000'
     run.tag-ok               'bright-white bg-green'      sgr '97;42'                pt 'ansiwhite bg:ansigreen'
+    run.tag-refused          'bright-white bg256:196'     sgr '97;48;5;196'          pt 'ansiwhite bg:#ff0000'
+    run.tag-refused-bracket  'black bg256:196'            sgr '30;48;5;196'          pt 'ansiblack bg:#ff0000'
     run.warn                 'yellow'                     sgr '33'                   pt 'ansiyellow'
     verdict.nominal          'blue'                       sgr '34'                   pt 'ansiblue'
     verdict.subject          'red'                        sgr '31'                   pt 'ansired'

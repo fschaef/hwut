@@ -110,15 +110,6 @@ class Store:
         return self.config is not None
 
     # -- keys: THE NAMING IS THE BOOKKEEPER'S -------------------------
-    def stderr_note(self, test, choice):
-        """RETURN: E_StderrNote, what the book says about that choice's
-        stderr; FORBIDDEN where nothing is noted."""
-        return self.bookkeeper.stderr_note(test, choice)
-
-    def note_stderr(self, test, choice, note):
-        """RETURN: E_StderrNote, what now stands in the book."""
-        return self.bookkeeper.note_stderr(test, choice, note)
-
     def nominal_path(self, test, choice, subject):
         """RETURN: Path, where the ACCEPTED record of that key lives."""
         return self.bookkeeper.nominal_path(test, choice, subject)

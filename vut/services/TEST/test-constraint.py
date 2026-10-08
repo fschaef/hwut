@@ -217,7 +217,7 @@ def test_interactive():
                      "x ((load: 99))\n<hwut-end>\n",
                      "x 150\n<hwut-end>\n"):
             print("   %-22r -> %s" % (text.split("\n")[0],
-                                     refusal(store, Key, text, False, print)
+                                     refusal(store, Key, text, print)
                                      or "may become the GOOD"))
     finally:
         shutil.rmtree(root, ignore_errors=True)

@@ -1,0 +1,40 @@
+nothing stated
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    timeout_sec
+network = true
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    timeout_sec
+network = false
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    network
+    timeout_sec
+application: network = false; choice: network = true
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    timeout_sec
+application: nothing; choice: file_handle_max_n = 8
+    child_process_max_n
+    cpu_sec
+    file_handle_max_n
+    file_size_mb
+    memory_mb
+    timeout_sec
+write_directory_list = []
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    timeout_sec
+    write_directory_list
+<hwut-end>

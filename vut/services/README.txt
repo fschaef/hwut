@@ -124,8 +124,9 @@ The faces:
                  CHANGE and 'hwut.accept.interactive's business: detected, named,
                  left alone unless '--force' says otherwise.
                  STDERR IS NEVER SUBJECT TO TESTING: never promoted;
-                 where it spoke, refused until '--stderr-tol' notes
-                 it IGNORED. A stdout candidate whose last line is
+                 where it spoke, refused unless the test's own block
+                 declares 'tolerance { stderr_ignored = true }'
+                 (E-136). A stdout candidate whose last line is
                  not '<hwut-end>' is refused outright: an incomplete
                  stream is never promotable, and no flag bypasses.
                  THE UPDATE CHECK stands before every other: a
@@ -362,7 +363,7 @@ The faces:
                  (no '*', '?', '[') means: enter 'a/TEST', perform
                  'keep.sh' there, one directory explored -- '..' and
                  absolute paths included -- on every face that takes
-                 test words ('entered()': run, plan, wishlist, report,
+                 test words ('entered()': run, plan, report.list, report,
                  accept, play, show, remove, rename,
                  move, stability, cov.run). A directory
                  part carrying a glob metacharacter is a wish glob
@@ -480,7 +481,7 @@ The faces:
                  book's acceptance note -- 'hwut.accept's three
                  writes. Refused at commit in 'hwut.accept's words: a
                  stained choice, a text without the closing token,
-                 stderr that spoke ('--stderr-tol'). The candidate
+                 stderr that spoke undeclared (E-136). The candidate
                  STAYS as the run left it: a partial acceptance is
                  visible at the next run. E-51's NAME for the engine
                  above; 'hwut.accept' reaches the same loop. A case
@@ -634,7 +635,7 @@ face
 the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.
-'wishlist.py' faces the exploration alone: it selects and prints, and
+'list.py' faces the exploration alone: it selects and prints, and
 runs nothing. 'pype.py' faces 'test_writing_support/hwut_pype': the
 interpreter is test-writing support, and the face is the tool's door to
 it. 'play.py' runs ONE choice and renders the reading of

@@ -1,5 +1,14 @@
 STATUS: 3
 STDOUT {
     EMPTY: the choice produced no output to read
+    
+    EXPLAIN  test-mute.sh, choice None
+      REQUEST    ['<work>/suite/TEST/test-mute.sh']
+      RESOLVED   <work>/suite/TEST/test-mute.sh -> <path>
+      CWD        <work>/suite/TEST
+      call[0]    containment ok-completed   exit 0   wall <t>s
+      REPORT     ok
+      stderr          0 bytes
+      stdout          0 bytes
 }
 <hwut-end>

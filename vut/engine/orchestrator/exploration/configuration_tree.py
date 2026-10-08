@@ -80,7 +80,9 @@ class Caps(_Scope):
     Procsitter owns every default here; this record holds only what the
     author stated.
 
-    A cap procsitter cannot enforce refuses the test (R-48)."""
+    A cap procsitter cannot enforce refuses the test (R-48), unless
+    'hwut-root.conf' acknowledges it: 'procsitter { <platform> { <cap> =
+    false } }'."""
     timeout_sec:          float | None = None
     cpu_sec:              int   | None = None   # RLIMIT_CPU: whole seconds
     memory_mb:            int   | None = None
@@ -129,6 +131,11 @@ class Tolerance(_Scope):
                     empty tuple is the stated OFF
     'comment'       the marker PAIR of an ignored line, '("##", "##")';
                     the empty tuple is the stated OFF
+    'stderr_ignored' true: this test writes to stderr ON PURPOSE, and a
+                    word there is no error (services E-110, E-136).
+                    Unstated or false: a word on stderr fails the run
+                    and refuses the acceptance. The one leaf that is
+                    the RUNNER'S, not compare's.
 
     EVERY LEAF SPELLS ITSELF WITH UNDERSCORES (E-42): one scope, one
     convention, and both walks that read it -- the validator and
@@ -142,6 +149,7 @@ class Tolerance(_Scope):
     analogy:       tuple | None = None
     constraints:   tuple | None = None
     comment:       tuple | None = None
+    stderr_ignored: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,6 +314,8 @@ class DirectorySpec:
     app_defaults_file_db:     dict = None # key -> the conf that stated it
     variant_db:      dict       = None   # alternative name -> Variant
     language_setup:  dict       = None
+    procsitter_db:   dict       = None   # platform -> frozenset of caps
+                                         #  acknowledged unenforceable (R-48)
     position:        Position   = None
 
 

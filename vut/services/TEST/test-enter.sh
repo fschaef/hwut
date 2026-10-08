@@ -23,7 +23,7 @@
 # enter      the same test asked for by a path below, by a path with
 #            '..', by an absolute path, and relative to '--directory'
 #            -- four spellings, one selection,
-#            on 'hwut.report.wishlist' and 'hwut.run'; 'hwut.config.show' by path.
+#            on 'hwut.report.list' and 'hwut.run'; 'hwut.config.show' by path.
 #            A glob in the DIRECTORY part is not a path: it stays a
 #            wish over the tree below.
 # refused    two words naming two directories; an absolute path
@@ -33,7 +33,7 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-WISHLIST="python3 -m vut.services.lib.report.wishlist"
+WISHLIST="python3 -m vut.services.lib.report.list"
 RUN="python3 -m vut.services.run"
 SHOW="python3 -m vut.services.lib.config.show"
 unset NO_COLOR CI COLUMNS

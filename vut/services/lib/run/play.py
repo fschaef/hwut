@@ -93,6 +93,7 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
                                                    import RootConfMissing
 from   vut.engine.orchestrator.run.adapter         import (
                                                        test_configuration_of)
+from   vut.engine.orchestrator.plan                import confinement
 from   vut.engine.orchestrator.exploration.task_list \
                                                    import SelectionError
 from   vut.engine.orchestrator.exploration.task_list_query \
@@ -210,6 +211,17 @@ def main(argv=None, write=None):
                          directory, write)
     if case is _REFUSED: return E_ExitCode.REFUSED
     choice_name   = case.choice
+    #  AN UNENFORCEABLE CAP REFUSES THE PLAY (exploration R-80): a play
+    #  RUNS the application, as unconfined as a run would.
+    reason = confinement.refusal_of(result.app_set, case.source_file,
+                                    choice_name)
+    if reason is not None:
+        for line in confinement.refusal_line_list(
+                        case.source_file if choice_name is None
+                        else "%s %s" % (case.source_file, choice_name),
+                        reason):
+            write(line)
+        return E_ExitCode.REFUSED
     configuration = test_configuration_of(
                         result.app_set.app_db[case.source_file],
                         os.path.abspath(directory),
@@ -387,7 +399,7 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     if subjects is None:
         write("FAULT: nothing was provided -- the build failed, or "
               "the application would not launch")
-        _write_provision_report(provision, write)
+        _write_diagnosis(configuration, choice_name, provision, {}, write)
         return E_ExitCode.FAULT
 
     subject_db = {name: nominal.open().read()
@@ -396,7 +408,14 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
 
     text = subject_db.get(STDOUT, "")
     if not text.strip() and not raw_db.get(STDOUT, "").strip():
+        #  AN EMPTY ANSWER IS NEVER REPORTED EMPTY (operations todo-21,
+        #  law 1): with it, the call, what PATH resolved, the exit code,
+        #  the containment and the other channel.
         write("EMPTY: the choice produced no output to read")
+        _write_diagnosis(configuration, choice_name, provision,
+                         {STDOUT: raw_db.get(STDOUT, "") or text,
+                          STDERR: subject_db.get(STDERR, "")
+                                  or raw_db.get(STDERR, "")}, write)
         return E_ExitCode.EMPTY
 
     if live_f: write("")
@@ -462,20 +481,29 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
 
 
-def _write_provision_report(provision, write):
+def _write_diagnosis(configuration, choice_name, provision, channel_db,
+                     write):
     """
-    RETURN: None. What the provision said about its own failure --
-            the report it named, and every target it could not build.
+    RETURN: None. THE DIAGNOSIS of the provision that answered nothing
+            (operations todo-21, 'diagnosis.explain'): the call from the
+            one source, what PATH resolved when it was made, every
+            supervised call's containment, exit and stderr tail, the
+            report token, and -- where 'channel_db' holds them -- the
+            channels with the wrong-channel hint. A hint, never a
+            verdict.
 
-    Play holds no opinion about a failed build: in a run it is a
-    failing TEST; here it is simply the reason there is nothing to
-    play, and the provision's own words say why.
+    MEASURED (audit r10, C-1): this face said "EMPTY" and nothing else,
+    and its report helper read a field the delivery does not carry, so
+    even the token never reached the screen.
     """
-    record = getattr(provision, "last_provided", None)
-    report = getattr(record, "report", None) if record is not None \
-             else None
-    if report is not None:
-        write("    %s" % getattr(report, "value", report))
+    from vut.engine.operations.diagnosis import explain
+    delivered = getattr(provision, "last_provided", None)
+    record    = getattr(delivered, "provision", None)
+    if record is None: return
+    write("")
+    for line in explain(configuration, choice_name, record,
+                        channel_db or None).rstrip("\n").splitlines():
+        write(line)
 
 
 def _compare_options(configuration, choice_name):

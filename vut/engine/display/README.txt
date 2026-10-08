@@ -99,8 +99,13 @@ in every tier but SILENT:
     ==============================================================
     REFUSED -- not run
     --------------------------------------------------------------
-    <directory>
-        <node>        <reason>
+    <reason>
+    => <remedy>                 where the reason carries ' => '
+        <directory>
+            <application>  <choice>
+            :              <choice>
 
 Nothing is written where nothing was refused. A refused node is no node
-of the plan: it is never a flow line and never counted.
+of the plan; its flow line reads 'DONE ... [REFUSED]', the word bright
+white and the brackets black on red ('run.tag-refused',
+'run.tag-refused-bracket'; D-46).

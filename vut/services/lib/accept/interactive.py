@@ -11,7 +11,6 @@ PURPOSE
                                    [--directory=<path>] [--all] [--force]
                                    [--console] [-y] [--width N] [--plain]
                                    [--editor E] [--max-rounds N]
-                                   [--stderr-tol]
 
 DESCRIPTION
        'hwut.accept' refuses a case whose nominal stands ('merge
@@ -94,7 +93,8 @@ DESCRIPTION
        REFUSED AT 'q', with 'hwut.accept's own words: a stained
        choice (a test that switches results has no pole), a text
        without the closing token (never COMPLETED, R-70), a choice
-       whose stderr spoke and nothing tolerates it ('--stderr-tol').
+       whose stderr spoke and the test's block does not declare it
+       ignored ('tolerance { stderr_ignored = true }').
 
        UI ON STDERR, like every session face; stdout stays clean.
 
@@ -134,7 +134,7 @@ def keys_of(selected, write):
 
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
          "[--directory=<path>] [--all] [--force] [--console] [-y] "
-         "[--width N] [--plain] [--editor E] [--stderr-tol]")
+         "[--width N] [--plain] [--editor E]")
 
 
 #  What a value IS (E-81): True, a path follows; a tuple, the words.
@@ -181,9 +181,6 @@ def main(argv=None):
                         help="editor command (default: $VISUAL, $EDITOR, "
                              "'vi')")
     parser.add_argument("--max-rounds", type=int, default=MERGE_ROUND_MAX)
-    parser.add_argument("--stderr-tol", "--stderr-tolerated",
-                        dest="stderr_tol", action="store_true",
-                        help="accept although stderr spoke")
     add_setup_arguments(parser)
     arguments, completion_f = parse_or_refuse(parser, rest_list, err, ARG_DB)
     if completion_f:      return E_ExitCode.OK
@@ -234,8 +231,7 @@ def main(argv=None):
         accepted, refused, left = engine.run_sessions(
             [key], selected.store_of, adapter, err,
             setup=setup if setup_said_f else None,
-            max_round_n=arguments.max_rounds,
-            stderr_tol_f=arguments.stderr_tol)
+            max_round_n=arguments.max_rounds)
         accepted_list += accepted
         refused_list  += refused
         left_list     += left

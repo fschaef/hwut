@@ -116,8 +116,12 @@ def explain(configuration, choice_name, provision_record, raw_db=None):
     line_list = ["EXPLAIN  %s, choice %s"
                  % (configuration.key_name, choice_name)]
     line_list.append("  REQUEST    %r" % (argv,))
+    #  THE CHAIN THE CALL CARRIED, where it carried one (todo-21); a
+    #  provision that ran nothing carries none, and the chain is then
+    #  taken now, which is honest only for a live diagnosis.
+    carried = tuple(getattr(provision_record, "resolution", ()) or ())
     line_list += ["  RESOLVED   %s" % line
-                  for line in resolution_chain(argv[0])]
+                  for line in (carried or resolution_chain(argv[0]))]
     line_list.append("  CWD        %s" % configuration.test_directory)
     for i, record in enumerate(provision_record.records):
         line_list += ["  " + line

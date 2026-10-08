@@ -35,10 +35,18 @@ DESCRIPTION
        stand in 'engine/display/coverage_reason.py'. A directory no
        coverage run has visited says nothing.
 
+       WHAT THE NEXT RUN REFUSES, LAST (exploration R-80): every
+       selected case under a cap the procsitter cannot enforce on this
+       platform and the root conf does not acknowledge -- the caps, the
+       utility that is missing where one is ('psutil'), how it is
+       installed, and the 'hwut-root.conf' entry that acknowledges.
+       Judged now, by the gate the run asks; no book holds a refusal.
+
 EXIT STATUS (E-1, services/_exit.py):
     0  something was explained
     3  nothing to explain: no selected case failed for a subtle reason,
-       and none was left without a coverage record
+       none was left without a coverage record, none is refused for
+       want of an enforceable cap
     2  the command line cannot be read
 ______________________________________________________________________________
 """
@@ -65,6 +73,12 @@ from   vut.services.lib.face            import FaceError
 from   ._exit                           import E_ExitCode
 from   ._target                         import entered
 from   .report                          import do, request_of
+from   vut.engine.orchestrator.exploration import selection
+from   vut.engine.orchestrator.plan.confinement import (
+           acknowledgement_of, missing_utility_tuple, reason_of,
+           uncapped_of, ROOT_CONF_NAME)
+from   vut.engine.procsitter.api        import INSTALL_DB, platform_name
+from   vut.services.lib.labels          import view_at
 
 WRAP_WIDTH = 68          # a paragraph's text, eight blanks deep: 76 in all
 
@@ -215,6 +229,94 @@ def coverage_explanation_line_list(token, case_list):
     return line_list
 
 
+def uncapped_occurrence_db_of(root, wish):
+    """
+    RETURN: dict, tuple of cap names -> list of (directory, file,
+            choice): every selected case 'hwut.run' REFUSES because a
+            cap in force for it is neither enforceable on this platform
+            nor acknowledged in the root conf (exploration R-80).
+            Judged NOW, by the gate the run asks -- a refused case
+            leaves nothing in a book to read.
+    """
+    occurrence_db = {}
+    root = os.path.abspath(root)
+    for directory, result, _, selected_list in \
+            selection.of_tree_stream(root, wish, view_at(root), base_f=True):
+        for case in (entry.case for entry in selected_list):
+            uncapped = uncapped_of(result.app_set, case.source_file,
+                                   case.choice)
+            if not uncapped: continue
+            occurrence_db.setdefault(uncapped, []).append(
+                (directory or ".", case.source_file, case.choice))
+    return occurrence_db
+
+
+def uncapped_explanation_line_list(uncapped, case_list, platform):
+    """
+    RETURN: list of str, what 'hwut.help' says of one set of caps that
+            cannot be enforced: the head (the refusal's own words, how
+            many cases), what it means, the utility that is missing
+            where one is, the root conf entry that acknowledges, then
+            'CONCERNED:' and the cases.
+    """
+    #  THE PLATFORM'S WORD STANDS ON UNWRAPPED LINES ONLY -- the head
+    #  and the entry: inside a paragraph its length would decide where
+    #  the lines break, and the page would differ by machine.
+    utility_tuple = missing_utility_tuple(uncapped, platform)
+    head          = reason_of(uncapped, platform).split(" => ")[0]
+    paragraph_list = [
+        "Each case below is under %s, stated in its header or standing "
+        "by default, and on this platform nothing enforces %s. A cap "
+        "that does not cap is worse than no cap: the author believes "
+        "the test confined and it is not. So the case is not run."
+        % ("this cap" if len(uncapped) == 1 else "these caps",
+           "it" if len(uncapped) == 1 else "them")]
+    for utility in utility_tuple:
+        how = INSTALL_DB.get(utility)
+        paragraph_list.append(
+            "MISSING: '%s' -- the procsitter watches with it, and it is "
+            "not on this machine.%s"
+            % (utility, " Install: '%s'." % how if how else
+                        " It does not exist on this platform."))
+    paragraph_list.append(
+        HEAL_OPENER_STR + "%sacknowledge in '%s' that the tests run "
+        "without the cap on this platform -- knowingly, for the whole "
+        "tree:"
+        % ("install what is missing, or " if utility_tuple else "",
+           ROOT_CONF_NAME))
+    line_list = ["refused -- %s  [%i case(s)]" % (head, len(case_list))]
+    for paragraph in paragraph_list:
+        line_list.append("")
+        line_list.extend("    " + line for line in
+                         textwrap.wrap(paragraph, width=WRAP_WIDTH,
+                                       break_on_hyphens=False))
+    line_list.append("")
+    line_list.append("        " + acknowledgement_of(uncapped, platform))
+    line_list.append("")
+    line_list.append("    CONCERNED:")
+    line_list.extend("        " + line
+                     for line in concerned_line_list(case_list))
+    return line_list
+
+
+UNCAPPED_HEADING_STR = "CONFINEMENT -- cap not enforceable"
+
+
+def uncapped_introduction_line_list(case_n, reason_n):
+    """
+    RETURN: list of str, the opening of the confinement part: how many
+            cases 'hwut.run' refuses on this platform, for how many
+            sets of caps.
+    """
+    return textwrap.wrap(
+        "'hwut.run' REFUSES %i case(s) on this platform, for %i set(s) "
+        "of caps the procsitter cannot enforce here. The paragraphs "
+        "below explain each once, say what is missing and how to heal "
+        "it, and name the cases concerned."
+        % (case_n, reason_n),
+        width=WRAP_WIDTH + 8, break_on_hyphens=False)
+
+
 def coverage_introduction_line_list(case_n, reason_n):
     """
     RETURN: list of str, the opening of the coverage part: how many
@@ -285,7 +387,9 @@ def main(argv=None, write=None):
         return error.code
     occurrence_db = occurrence_db_of(block_list)
     coverage_db   = coverage_occurrence_db_of(block_list, directory)
-    if not occurrence_db and not coverage_db:
+    uncapped_db   = uncapped_occurrence_db_of(
+                        directory, with_targets(wish, word_list))
+    if not occurrence_db and not coverage_db and not uncapped_db:
         write("nothing to explain: no case below '%s' failed for a "
               "reason other than a plain difference from GOOD" % directory)
         return E_ExitCode.EMPTY
@@ -334,6 +438,22 @@ def main(argv=None, write=None):
                 for line in coverage_explanation_line_list(
                                 token, coverage_db[token]):
                     write("    " + line)
+    #  THE CONFINEMENT PART (exploration R-80), last: what the NEXT run
+    #  refuses, where the parts above read what the last one left.
+    if uncapped_db:
+        if occurrence_db or coverage_db: write("")
+        platform = platform_name()
+        for line in uncapped_introduction_line_list(
+                        sum(len(v) for v in uncapped_db.values()),
+                        len(uncapped_db)):
+            write(line)
+        write("")
+        write(UNCAPPED_HEADING_STR)
+        for uncapped in sorted(uncapped_db):
+            write("")
+            for line in uncapped_explanation_line_list(
+                            uncapped, uncapped_db[uncapped], platform):
+                write("    " + line)
     return E_ExitCode.OK
 
 

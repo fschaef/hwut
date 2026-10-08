@@ -1,0 +1,9 @@
+== hwut.run.play test-placed.sh one --raw
+    args: --stem=test-placed --pick one tail
+== hwut.run.play test-placed.sh two --raw
+    args: --stem=test-placed --pick two tail
+== hwut.run.play test-unplaced.sh one --raw
+    args: head one
+== hwut.run.play test-none.sh --raw
+    args: end
+<hwut-end>

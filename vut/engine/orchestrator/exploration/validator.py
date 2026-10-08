@@ -24,6 +24,7 @@ from vut.test_writing_support.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
                                                       ObjectNode)
 from vut.engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
+from vut.engine.compare.api    import constraint_fault_of
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
@@ -40,7 +41,7 @@ _CAP_POSITIVE_SET   = {"timeout_sec":         float,
 _EXECUTE_VARIABLE   = re.compile(r"\$(\w+)")
 _CONF_KEY_SET       = ("on_entry", "on_exit", "ignore", "collision",
                        "dependency", "app_defaults", "language-setup",
-                       "apps")
+                       "apps", "procsitter")
 
 
 #  THE BOOK'S NAME LAW (bookkeeper B-7, B-8), ASKED FOR AND NOT COPIED.
@@ -174,6 +175,9 @@ def validate_conf(hwut_node, file):
             field_db["app_defaults_file_db"] = {key: file for key in position_db}
         elif entry.key == "language-setup":
             language_setup = _language_setup(entry, file, fault_list)
+        elif entry.key == "procsitter":
+            value = _procsitter(entry, file, fault_list)
+            if value: field_db["procsitter_db"] = value
         elif entry.key == "variant_group":
             value = _variant_group(entry, file, fault_list)
             if value is not None: field_db["variant_db"] = value
@@ -442,7 +446,8 @@ def _unknown_key_text(key):
 
 
 TOLERANCE_KEYS = ("numeric_ratio, whitespace, regions, "
-                  "eq_pattern, nothing, analogy, constraints, comment")
+                  "eq_pattern, nothing, analogy, constraints, comment, "
+                  "stderr_ignored")
 
 
 def _tolerance(entry, file, fault_list):
@@ -485,7 +490,14 @@ def _tolerance(entry, file, fault_list):
                 "'slash' is retired: '/' and '\\' are equivalent by "
                 "eq_pattern = [\"[\\\\\\\\/]+\"]; 'hwut.renovate --apply' "
                 "rewrites it"))
-        elif inner.key in ("whitespace", "regions"):
+        elif inner.key == "stderr":
+            #  E-110's first spelling, and the word the HINTS advised
+            #  until E-136: named, with the leaf that replaced it.
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "'stderr' is not a tolerance: write "
+                "'stderr_ignored = true'"))
+        elif inner.key in ("whitespace", "regions", "stderr_ignored"):
             value = _bool(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
         elif inner.key in ("eq_pattern", "nothing"):
@@ -496,7 +508,19 @@ def _tolerance(entry, file, fault_list):
                 field_db["constraints"] = ()
             else:
                 value = _string_list(inner, file, fault_list)
-                if value is not None: field_db["constraints"] = value
+                if value is not None:
+                    #  WHAT IS ADMITTED HERE IS WHAT THE RUN CAN COMPILE
+                    #  (G-3): compare's own door judges each expression,
+                    #  and a refused one is a fault with its position.
+                    good_f = True
+                    for expression in value:
+                        reason = constraint_fault_of(expression)
+                        if reason is None: continue
+                        good_f = False
+                        fault_list.append(Fault(
+                            E_FaultKind.REFUSED, file, _position_of(inner.node, inner),
+                            "constraint %s" % reason))
+                    if good_f: field_db["constraints"] = value
         elif inner.key in _MARKER_PAIR_DB:
             _marker_pair(inner, field_db, file, fault_list)
         else:
@@ -818,6 +842,46 @@ def _target_map(entry, file, fault_list):
             continue
         value = _string(target, file, fault_list)
         if value is not None: result[target.key] = value
+    return result
+
+
+#  THE CAPS A TEST MAY STATE: the one vocabulary 'caps { }' and
+#  'procsitter { <platform> { } }' share.
+_CAP_NAME_SET = tuple(sorted(tuple(_CAP_POSITIVE_SET)
+                             + ("network", "write_directory_list")))
+
+
+def _procsitter(entry, file, fault_list):
+    """
+    RETURN: dict, platform name -> frozenset of the caps ACKNOWLEDGED
+            as unenforceable there: 'procsitter { linux { network =
+            false } }' (R-48). A cap stated 'true' acknowledges
+            nothing; a platform acknowledging nothing is left out.
+    """
+    if not isinstance(entry.node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, entry.key_position,
+            "'procsitter' is an object of platform names"))
+        return {}
+    result = {}
+    for platform in entry.node.entry_list:
+        if not isinstance(platform.node, ObjectNode):
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, platform.key_position,
+                "platform '%s' must carry an object of '<cap> = false'"
+                % platform.key))
+            continue
+        cap_set = set()
+        for inner in platform.node.entry_list:
+            if inner.key not in _CAP_NAME_SET:
+                fault_list.append(Fault(
+                    E_FaultKind.VOCABULARY, file, inner.key_position,
+                    "unknown cap '%s'; known: %s"
+                    % (inner.key, ", ".join(_CAP_NAME_SET))))
+                continue
+            value = _bool(inner, file, fault_list)
+            if value is False: cap_set.add(inner.key)
+        if cap_set: result[platform.key] = frozenset(cap_set)
     return result
 
 

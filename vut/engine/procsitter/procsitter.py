@@ -78,6 +78,7 @@ from   typing      import Awaitable, Callable, Optional, Sequence
 #  re-exported here, so 'from .procsitter import ProcsitterConfig'
 #  keeps standing wherever it is already written.
 from   .configuration import ProcsitterConfig        # noqa: F401
+from   .capability    import capability_db
 
 try:                import resource
 except ImportError: resource = None      # e.g. Windows
@@ -539,14 +540,15 @@ class Procsitter:
                 [1] tuple[str, ...], names of caps the platform cannot
                     enforce (honest-reporting; surfaces in ProcsitterResult).
         """
-        unenforced = []
-        if psutil is None:
-            # No watchdog: no RSS cap, and no process-count cap either
-            # (max_pids is the watchdog's group-member count).
-            unenforced += ["max_memory_mb", "max_pids"]
+        #  THE BOARD IS THE ONE SOURCE (capability.py): what is said
+        #  after a call is what was announced before it.
+        board      = capability_db(psutil is not None, resource is not None)
+        unenforced = tuple(name for name in ("max_memory_mb", "max_pids",
+                                             "max_cpu_time_sec",
+                                             "max_file_size_mb")
+                           if not board[name])
         if resource is None:
-            unenforced += ["max_cpu_time_sec", "max_file_size_mb"]
-            return None, tuple(unenforced)
+            return None, unenforced
 
         #  RLIMIT_CPU AND RLIMIT_FSIZE ARE INTEGERS by the kernel's
         #  definition. A cap stated as '1.0' must not kill the child
@@ -571,7 +573,7 @@ class Procsitter:
                 resource.setrlimit(resource.RLIMIT_FSIZE,
                                    (fsize_byte, fsize_byte))
 
-        return preexec, tuple(unenforced)
+        return preexec, unenforced
 
     # ------------------------------------------------------------- watchdog
 

@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The hwut.report.wishlist face: the list, printed and spent."
+#     title      = "The hwut.report.list face: the list, printed and spent."
 #     choices    = ["dirs", "elided", "empty", "labels", "print", "refused",
 #                   "roundtrip", "select", "short-form", "spent",
 #                   "travels"]
@@ -10,7 +10,7 @@
 #
 # ---------------------------------------------------------------------------
 #
-# THE 'hwut.report.wishlist' FACE AND THE '--wishlist' KEYWORD -- the list,
+# THE 'hwut.report.list' FACE AND THE '--wishlist' KEYWORD -- the list,
 # printed and spent.
 #
 # print       every case the wish selects, one wishlist line each, in
@@ -19,7 +19,7 @@
 #             the first naming files, each further one a choice --
 #             sugar for '--glob', so the two spell one selection.
 # labels      the silence is THE WISH'S (disc-8): a bare
-#             'hwut.report.wishlist' does not print what the standard label
+#             'hwut.report.list' does not print what the standard label
 #             silences, so its output and 'hwut.run --wishlist' of it
 #             select ONE set and the disc-5 round trip closes over
 #             labels too; '--label' lifts and composes.
@@ -45,13 +45,13 @@
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
-FACE="python3 -m vut.services.lib.report.wishlist"
+FACE="python3 -m vut.services.lib.report.list"
 RUN="python3 -m vut.services.run"
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.report.wishlist face: the list, printed and spent.;"
+        echo "The hwut.report.list face: the list, printed and spent.;"
         echo "CHOICES: dirs, print, select, roundtrip, travels, spent, empty, elided, labels, short-form, refused;"
         exit 0 ;;
 esac
@@ -229,7 +229,7 @@ labels)
 
 elided)
     #  The reader takes the elided forms; only a SORTED writer emits
-    #  them, which 'hwut.report.wishlist' is not: its walk order would make
+    #  them, which 'hwut.report.list' is not: its walk order would make
     #  the ditto fire almost never and suggest an adjacency the file
     #  does not have.
     fixture

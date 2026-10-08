@@ -397,12 +397,13 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "The application wrote to stderr, and the choice does not "
              "tolerate it (E-5).",
              "Stop the writing; or declare it in the header: "
-             "'tolerance { stderr = ignored }'."),
+             "'tolerance { stderr_ignored = true }'."),
     _failure(_F.STDERR_UNDECIDED, "stderr undecided",
              "The application wrote to stderr and nobody has decided what "
              "that means for this choice.",
-             "Decide it at acceptance ('hwut.accept' asks), or in the "
-             "header: 'tolerance { stderr = ignored }' or 'forbidden'."),
+             "A result of an earlier hwut: run the case again. Where "
+             "it writes on purpose, declare it in the header: "
+             "'tolerance { stderr_ignored = true }'."),
     _failure(_F.TERMINATED_WITHOUT_END, "output cut short; no <hwut-end>",
              "GOOD ends in '<hwut-end>' and the output does not: the "
              "application stopped before its end -- a crash, an early "

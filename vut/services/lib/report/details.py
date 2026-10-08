@@ -113,7 +113,18 @@ def bookkeeper_of(directory):
     as by module, and the import must follow the '_config' adoption.
     """
     from vut.engine.bookkeeper.api import Bookkeeper
-    return Bookkeeper(directory)
+    #  TOLD WHICH TESTS SHARE A NOMINAL (bookkeeper B-30), from the
+    #  directory's own applications; untold where it cannot be read.
+    try:
+        from vut.engine.orchestrator.exploration import selection
+        from vut.engine.orchestrator.exploration.explorer import explore
+        from vut.engine.orchestrator.exploration.tree_explorer import \
+                                                             ascended_spec
+        inherited, _ = ascended_spec(directory)
+        return Bookkeeper(directory, selection.naming_of(
+                   explore(directory, inherited=inherited).app_set))
+    except Exception:                                      # noqa: BLE001
+        return Bookkeeper(directory)
 
 
 def subject_tuple_of(bookkeeper, test, choice):
@@ -402,7 +413,14 @@ def refresh(directory, application, choice):
         because = decision.because.replace(
                       os.path.abspath(directory) + os.sep, "")
         word = decision.what
-        if word is subject_provision.E_Decision.PROVIDE:
+        #  AN UNENFORCEABLE CAP REFUSES THE RUN (exploration R-80).
+        from vut.engine.orchestrator.plan import confinement
+        reason = confinement.refusal_of(result.app_set, application,
+                                        case.choice)
+        if word is subject_provision.E_Decision.PROVIDE \
+           and reason is not None:
+            said.append("not run -- %s" % reason.split(" => ")[0])
+        elif word is subject_provision.E_Decision.PROVIDE:
             try:
                 asyncio.run(run_test(configuration,
                                      Request(choice=case.choice, record=True),

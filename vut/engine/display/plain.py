@@ -114,6 +114,10 @@ CHOICE_GAP = 2
 #  wants to be seen as one.
 BRIEF_GAP = 3
 
+#  A REFUSAL THAT KNOWS ITS REMEDY carries it behind this mark, on its
+#  one line: '<what is refused> => <what lifts it>' (D-42).
+REMEDY_MARK = " => "
+
 #  THE DIRECTORIES TREE. Indented off the left margin so the block
 #  reads as a figure rather than as more lines of report; the tag
 #  right-aligned in its own width, the count beyond it in its own.
@@ -973,7 +977,7 @@ class CPlainFlow(CRunReportReceiver):
         tier but SILENT, before any run: it stands where it always
         stood on the page, ahead of the flow (O-26). The text carries
         its own 'WARNING:' -- determination's word, the same line
-        'hwut.report.wishlist' prints -- and this renderer adds nothing."""
+        'hwut.report.list' prints -- and this renderer adds nothing."""
         if self.tier is E_Tier.SILENT: return
         self._flow(text, text)
 
@@ -988,7 +992,7 @@ class CPlainFlow(CRunReportReceiver):
         self.refused_db.setdefault(directory, []).append((node, text))
         if self.tier is E_Tier.SILENT: return
         tag        = "[REFUSED]"
-        ink_tag    = self.ink.tag_fail(tag)
+        ink_tag    = self.ink.tag_refused(tag)
         body, body_ink = self._run_body(directory, node)
         self._line(when, "DONE ", "DONE ", body, body_ink, tag, ink_tag)
 
@@ -1492,24 +1496,53 @@ class CPlainFlow(CRunReportReceiver):
 
     def _write_refused(self, write, w):
         """
-        RETURN: None. The REFUSED block (E-41): everything not run, by
-                directory, name and reason -- one block at the end,
-                never a line in the flow. Nothing where nothing was
+        RETURN: None. The REFUSED block (E-41): everything not run --
+                one block at the end. Nothing where nothing was
                 refused.
+
+        GROUPED AS HINTS IS, AND NOTHING SAID TWICE (D-42): the REASON
+        first, as the heading; the DIRECTORY once within it; the
+        APPLICATION once within that, ':' beneath where its choices
+        repeat it. A reason carrying ' => ' names its remedy, which
+        stands on a line of its own under the heading.
         """
         if not self.refused_db: return
         write("")
         write("=" * w)
         write("REFUSED -- not run")
         write("-" * w)
-        column = max(len(node) for pair_list in self.refused_db.values()
-                     for node, _ in pair_list) + BRIEF_GAP
+        group_db = {}                     # reason -> directory -> [node]
         for directory in self.dir_order:
-            pair_list = self.refused_db.get(directory)
-            if not pair_list: continue
-            write(self._ink_dir(directory))
-            for node, reason in pair_list:
-                write("    %-*s%s" % (column, node, reason))
+            for node, reason in self.refused_db.get(directory, ()):
+                group_db.setdefault(reason, {}) \
+                        .setdefault(directory, []).append(node)
+        first_f = True
+        for reason, directory_db in group_db.items():
+            if not first_f: write("")
+            first_f = False
+            head, arrow, remedy = reason.partition(REMEDY_MARK)
+            write(head)
+            if arrow: write("%s%s" % (REMEDY_MARK.lstrip(), remedy))
+            for directory, node_list in directory_db.items():
+                write("    " + self._ink_dir(directory))
+                last_file     = None
+                choice_column = 0
+                for node in node_list:
+                    file, _, rest = _display_name(node).partition(" ")
+                    choice   = rest.strip() or None
+                    repeat_f = (last_file == file)
+                    if not repeat_f: choice_column = len(file) + CHOICE_GAP
+                    last_file = file
+                    shown     = ":" if repeat_f else file
+                    write("        " + ("%-*s%s" % (choice_column, shown,
+                                                    choice)
+                                        if choice else shown))
+        #  THE POINTER TO 'hwut.help' (D-34, D-46): once, where a
+        #  refusal names a remedy -- there is then something to explain.
+        if self.vocabulary.help_hint is not None \
+           and any(REMEDY_MARK in reason for reason in group_db):
+            write("")
+            write(self.vocabulary.help_hint)
 
 
 def results_line_list(ok_n, fail_n, w, ink, skip_n=0,

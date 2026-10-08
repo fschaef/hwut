@@ -771,6 +771,8 @@ NOTE      The documentation states the way out: '--ignore=<cap>' runs
           the test with that cap unenforced, knowingly. The switch
           belongs to the runner and is named here so it is not
           forgotten.
+AMENDED   R-80 (2026-10-07): the way out is an entry in
+          'hwut-root.conf', not a switch.
 
 R-49  A STRING VALUE IS WRITTEN IN DOUBLE QUOTES
 ______________________________________________________________________________
@@ -1578,6 +1580,120 @@ CHECKED   Every differing line was attributed to one of TWO ruled
 
 COST      None. Exploration answers 66 ok, 0 fail, where it answered
           60 ok, 6 fail before and had done since R-78.
+
+R-80  THE REFUSAL OF R-48 IS LIFTED BY THE ROOT CONF, PER PLATFORM  (2026-10-07)
+
+PROBLEM   R-48 ruled the refusal and named a way out, '--ignore=<cap>',
+          on the runner. NEITHER WAS BUILT (audit r10, G-1). MEASURED:
+          a page stating 'caps { network = false }' was accepted, run
+          unconfined and reported [OK]; 'adapter._caps_of' dropped the
+          three caps the procsitter has no field for, and nothing on
+          the run road read 'ProcsitterResult.unenforced'. And a switch
+          on the command line is the wrong carrier: it is typed per
+          run, by whoever runs, and leaves no trace of who agreed.
+
+DECISION  R-48 STANDS: an unenforceable cap REFUSES the case. Built as:
+
+            procsitter's board ----.
+            ('capability_db')      +--> 'plan/confinement.py' --> REFUSED
+            the case's caps -------'     at the plan's gate       by cap name
+
+          (1) THE PROCSITTER ANNOUNCES. 'capability_db()' on its door:
+              cap -> whether it is watched on this platform, readable
+              BEFORE any call. The three unfielded caps stand on it as
+              'not watched', everywhere. What a call reports afterwards
+              ('.unenforced') is read from the same board.
+          (2) THE GATE COMPARES, before the run, per case, where the
+              nominal gate stands ('plan/tree.admit_of'): 'hwut.run',
+              'hwut.cov.run' and 'hwut.plan' ask it. In force for a
+              case: every cap carrying a default, stated or not; an
+              unfielded cap only where stated to confine ('network =
+              false', a 'file_handle_max_n', a 'write_directory_list').
+          (3) THE CASE IS 'REFUSED', not failed: named in the flow, in
+              the closing REFUSED block under its reason, counted in
+              the last line. The other cases run.
+          (4) THE WAY OUT IS AN ACKNOWLEDGEMENT in 'hwut-root.conf':
+
+                  procsitter { <platform> { <cap> = false } }
+
+              the root's alone, by platform, by the author's own cap
+              word, a BOOLEAN -- a word could be misspelt and read as
+              consent. The refusal prints the very line. An unknown
+              cap is a fault naming the known ones.
+          (5) WHAT IS MISSING IS NAMED. The procsitter holds
+              'UTILITY_DB' -- platform -> utility -> the caps it
+              watches -- and the board is derived from it. Where a cap
+              stands unwatched for want of a utility, the refusal says
+              so and how it is installed: "'psutil' missing => pip
+              install psutil, or hwut-root.conf: ...". 'hwut.help'
+              explains the same, per set of caps, with the cases
+              concerned -- judged by the gate, since no book holds a
+              refusal. The run's REFUSED block points there.
+          (6) THE RUN EXITS 'REFUSED' where a case was refused HERE,
+              whatever else passed (services E-135): a suite does not
+              read green while tests its author confined did not run.
+
+COST      A tree whose pages deny the network runs nowhere until its
+          root conf says so -- which is the point. Without 'psutil'
+          EVERY case is refused (the default memory cap is a cap).
+
+GRAVEYARD '--ignore=<cap>' (R-48's NOTE): struck, see PROBLEM.
+          Run-and-warn (proposed 2026-10-07, withdrawn the same day):
+          a warning above a green result is still a green result.
+          'network = "ignore"': a word where a boolean serves.
+
+          (7) THE FACES THAT RUN WITHOUT A PLAN ASK THE SAME GATE
+              ('confinement.refusal_of'), before they run: 'hwut.accept'
+              (the directory's acceptance is refused, by case, before
+              anything is refreshed), 'hwut.accept.interactive' and
+              'hwut.run.diff' (the case is passed over, said),
+              'hwut.run.play' (REFUSED), 'hwut.report.details'
+              ('provision: not run -- ...'). 'hwut.run.stability' runs
+              through 'hwut.run' and is gated there.
+
+R-81  THE CONSTRAINT DOOR READS THE RULED NAMESPACE                (2026-10-07)
+
+PROBLEM   R-66 ruled what a constraint may call and name
+          ('constraint_namespace.py'). MEASURED (audit r10, G-3):
+          'compare/engine/constraints.py' kept tables of its own and
+          its AST door read those. 'constraints = ["glob(name,
+          \"build-*.log\")"]' passed the validator and ended
+          'hwut.run.play' in an unhandled 'ConstraintSpecError'; 26
+          functions and 2 constants of the ruled namespace were
+          refused at the door, and 3 string methods ('rfind',
+          'islower', 'isupper') were allowed that it does not hold.
+DECISION  ONE LIST: the door's three tables ARE the namespace's, and
+          an expression is evaluated in 'namespace_of(bindings)'.
+          WHAT THE VALIDATOR ADMITS IS WHAT THE RUN CAN COMPILE: it
+          asks compare's door ('constraint_fault_of') for every stated
+          expression, and a refused one is a fault with file, line and
+          column -- 'REFUSED: constraint ...' -- at validation.
+COST      'rfind', 'islower', 'isupper' are no longer callable in a
+          constraint. The fault's position is the list's, not the
+          single expression's.
+PINNED    'services/TEST/test-header-words.sh constraint,
+          constraint_refused' -- the word in a header, the face called.
+
+R-82  'execute' EXPANDS '$file', '$filestem', '$choice'              (2026-10-07)
+
+PROBLEM   R-68 named the three framework variables and the validator
+          admitted them. MEASURED (audit r10, G-4): the call was handed
+          over as written -- 'execute = "bash $file"' ran a literal
+          '$file' and the answer was EMPTY.
+DECISION  Expanded where the call is assembled ('operations/run/core.
+          application_argv'), word by word:
+              $file      the source file
+              $filestem  its base name without the extension
+              $choice    the choice; empty for the choice-less call
+          A word that expands to nothing is no argument. WHERE THE CALL
+          NAMES '$choice' THE AUTHOR HAS PLACED IT and it is not
+          appended again; where it does not, the choice is the last
+          argument, as for every other call.
+COST      THE COVERAGE ROAD hands a tool the call with '$choice'
+          expanded EMPTY: the tool's call scheme places the choice
+          itself, at the end. A stated call that needs its choice in
+          the middle cannot be measured for coverage as it stands.
+PINNED    'services/TEST/test-header-words.sh execute'.
 
 X-HEAD  THE MARKER STANDS IN THE HEAD                             (2026-09-17)
 ----------------------------------------------------------------------------

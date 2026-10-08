@@ -23,6 +23,7 @@ gen.c {
                 constraints = []              # default
                 comment = ["//", "//"]        # hwut.conf:5
                 regions = true                # default
+                stderr_ignored = false        # default
             }
             diff_display_parameters {
                 search_budget = 20000         # default
@@ -58,6 +59,7 @@ legacy.bas {
                 constraints = []              # default
                 comment = ["##", "##"]        # default
                 regions = true                # default
+                stderr_ignored = false        # default
             }
             diff_display_parameters {
                 search_budget = 20000         # default
@@ -93,6 +95,7 @@ test-own.py {
                 constraints = []              # default
                 comment = ["##", "##"]        # default
                 regions = true                # default
+                stderr_ignored = false        # default
             }
             diff_display_parameters {
                 search_budget = 20000         # default

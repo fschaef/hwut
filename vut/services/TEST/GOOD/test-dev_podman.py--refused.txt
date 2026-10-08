@@ -16,7 +16,7 @@ $ hwut.dev.podman.build
     image 'hwut-dev' stands; '--rebuild' builds it anew
     [status 0]
 $ hwut.dev.podman.enter 
-    $ podman run --rm --userns=keep-id -v /home/claude/hwut:/home/claude/hwut -w <root> -e HOME=/tmp hwut-dev bash
+    $ podman run --rm --userns=keep-id -v ((<path>)):((<path>)) -w <root> -e HOME=/tmp hwut-dev bash
     [status 0]
 SUCCESS: refused by name: the word, the engine, the root.
 <hwut-end>

@@ -59,7 +59,9 @@ ________________________________________________________________________________
 """
 import ast
 import contextvars
-import math
+
+from .constraint_namespace import (CONSTANT_DB, FUNCTION_DB,
+                                   STR_METHOD_SET, namespace_of)
 
 
 class ConstraintSpecError(Exception):
@@ -78,28 +80,15 @@ class ConstraintSpecError(Exception):
 # SAFE EVALUATION (AST whitelist; strings included)
 # ------------------------------------------------------------------------------
 
-SAFE_FUNCTION_DB = {
-    "abs":   abs,       "min":   min,       "max":   max,
-    "sqrt":  math.sqrt, "exp":   math.exp,  "log":   math.log,
-    "sin":   math.sin,  "cos":   math.cos,  "tan":   math.tan,
-    "asin":  math.asin, "acos":  math.acos, "atan":  math.atan,
-    "atan2": math.atan2,"floor": math.floor,"ceil":  math.ceil,
-    "round": round,     "hypot": math.hypot,
-    # string-capable additions:
-    "len":   len,       "str":   str,       "int":   int,
-    "float": float,
-}
-
-SAFE_CONSTANT_DB = {
-    "pi": math.pi, "e": math.e, "inf": math.inf,
-}
-
-# Python string methods callable on values in a constraint ("s.lower()"):
-SAFE_STR_METHOD_SET = frozenset((
-    "startswith", "endswith", "lower", "upper", "strip", "lstrip", "rstrip",
-    "replace", "find", "rfind", "count", "split",
-    "isdigit", "isalpha", "isalnum", "isspace", "islower", "isupper",
-))
+#  THE TABLES ARE THE NAMESPACE'S (exploration R-66), NOT A SECOND COPY.
+#  MEASURED (audit r10, G-3): this module kept tables of its own, and
+#  its door read those -- 'glob(...)' passed the validator, which reads
+#  'constraint_namespace', and ended the run here in a traceback; 26
+#  functions and 2 constants of the ruled namespace were refused, 3
+#  string methods allowed that it does not hold. One list, three names.
+SAFE_FUNCTION_DB    = FUNCTION_DB
+SAFE_CONSTANT_DB    = CONSTANT_DB
+SAFE_STR_METHOD_SET = STR_METHOD_SET
 
 _SAFE_NODE_TYPES = (
     ast.Expression, ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare,
@@ -190,11 +179,9 @@ class ConstraintExpression:
         Called only once every variable of 'depend_set' is in 'value_db'
         (C-19: 'ConstraintSpace.enter' decides).
         """
-        scope = dict(SAFE_FUNCTION_DB)
-        scope.update(SAFE_CONSTANT_DB)
-        for name in self.depend_set:
-            if name in value_db:
-                scope[name] = value_db[name]
+        scope = namespace_of({name: value_db[name]
+                              for name in self.depend_set
+                              if name in value_db})
         return eval(self._code, {"__builtins__": {}}, scope)  # noqa: S307
         # 'eval' runs a WHITELIST-VALIDATED, freshly compiled expression
         # with empty builtins -- see module purpose.
@@ -480,3 +467,22 @@ def check_no_bindings_nominal(line_list, scope_name):
                 "constraint binding '((%s: %s))' in an order-free scope "
                 "(%s) -- constraints require line sequentiality"
                 % (name, value, scope_name))
+
+
+def spec_fault_of(expression):
+    """
+    RETURN: str, why 'expression' cannot stand as a constraint -- it
+                 does not parse, or reaches outside the namespace;
+            None, where it can.
+
+    THE DOOR'S OWN JUDGEMENT, ASKED BEFORE A RUN (G-3): whoever reads a
+    constraint out of a specification asks here, so that what the
+    validator admits is what the run can compile.
+    """
+    try:
+        ConstraintExpression("?", expression)
+    except ConstraintSpecError as error:
+        text = str(error)
+        prefix = "constraint for '?': "
+        return text[len(prefix):] if text.startswith(prefix) else text
+    return None

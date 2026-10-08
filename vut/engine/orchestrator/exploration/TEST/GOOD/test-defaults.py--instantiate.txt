@@ -1,6 +1,6 @@
 
 --- a case stating two things, and what it yields ---
-record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)
+record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)
 
 ConfigBuild:
     framework                      None
@@ -42,6 +42,11 @@ ConfigCompare:
     analogy_begin_marker           '(('
     analogy_end_marker             '))'
     constraint_db                  None
+ConfigRunner:
+    interactive_f                  False
+    stderr_ignored_f               False
+    output                         ('<stdout>',)
+    execute                        None
 ConfigurationDiffDisplayParameters:
     search_budget                  20000
     margin                         0.1
@@ -49,8 +54,4 @@ ConfigurationDiffDisplayParameters:
     context_k                      1
 ConfigStore:
     same_nominal_f                 False
-ConfigRunner:
-    interactive_f                  False
-    output                         ('<stdout>',)
-    execute                        None
 <hwut-end>

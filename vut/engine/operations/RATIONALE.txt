@@ -110,3 +110,31 @@ CITED BY  E-6 and E-39 (services): acceptance refuses a candidate
           (coverage/RATIONALE): "covered" means executed by a test
           that testified, and an ending without the token is not
           testimony.
+
+O-35  AN EMPTY ANSWER SAYS WHY; THE CALL CARRIES ITS RESOLUTION     (2026-10-08)
+
+PROBLEM   todo-21's first law -- an empty answer is never reported
+          empty -- stood in 'diagnosis.py' and was wired to no face.
+          MEASURED (audit r10, C-1): 'hwut.run.play' answered a page
+          whose call could not start, or that said everything on
+          stderr, with "EMPTY: the choice produced no output to read"
+          and nothing else; its report helper read a field the
+          delivery does not carry, so not even the token reached the
+          screen. And the resolution chain was recomputed at render:
+          honest for a live diagnosis, not for a recorded one.
+DECISION  (1) THE CALL CARRIES ITS RESOLUTION: the execute stage takes
+              'resolution_chain(argv[0])' when it makes the call, and
+              the provision record ('Provision.resolution') carries it;
+              'explain' shows the carried chain and recomputes only
+              where nothing ran.
+          (2) 'hwut.run.play' DIAGNOSES what answered nothing -- the
+              EMPTY answer and the FAULT of a provision that delivered
+              nothing: 'explain' beneath the word -- the call, what
+              PATH resolved, every call's containment, exit and stderr
+              tail, the report, the channels with the wrong-channel
+              hint.
+COST      A play's empty answer is now a dozen lines, not one.
+OWED      The session-level switch that installs 'DiagnosisObserver'
+          on 'hwut.run' (todo-21's "request flag"): not built; a run's
+          empty case is diagnosed by playing it.
+PINNED    'services/TEST/test-play.sh silent, why'.

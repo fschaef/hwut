@@ -39,7 +39,7 @@ STATUS: 0
             (E-5).
         
             In order to heal, stop the writing; or declare it in the header:
-            'tolerance { stderr = ignored }'.
+            'tolerance { stderr_ignored = true }'.
         
             CONCERNED:
                 TEST

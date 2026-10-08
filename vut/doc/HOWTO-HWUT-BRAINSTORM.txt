@@ -623,3 +623,36 @@ BIN DISCIPLINE
       still fails (control: the name altered in a scratch GOOD, red).
       Better still, print the exception's TYPE and the name, not its
       text
+    - A FAULT NAMES ITS COLUMN, AND A MACHINE'S WORD ON THE SAME LINE
+      MOVES IT. 'test-run-uncapped.sh misspelt' wrote 'procsitter {
+      <platform> { netwerk = false } }' on one line; the fault read
+      'hwut-root.conf:3:26' -- 26 because 'linux' has five letters.
+      Replacing the word in the OUTPUT does not heal a NUMBER derived
+      from its length. Healed in the fixture: one entry per line,
+      nothing machine-chosen to the left of what a fault points at
+    - A REFUSED CASE CANNOT BE ACCEPTED THROUGH THE RUN, so a page that
+      shows a refusal records its fixture's nominals FIRST, under the
+      condition that lets them run, and only then takes it away
+    - THE SAME, IN PROSE: A WRAPPED PARAGRAPH BREAKS WHERE ITS WORDS'
+      LENGTHS SAY. 'hwut.help' wrote the platform's word inside a
+      paragraph; 'linux' and 'windows' break the lines differently.
+      Healed in the SUBJECT: a machine's word stands on unwrapped
+      lines only
+    - 'TMPDIR' UNDER hwut IS BELOW THE TREE. 'test-dev_podman.py
+      refused' made "a directory with no root above it" with
+      'tempfile.mkdtemp()'; run by hwut, the procsitter's scratch
+      ground is 'TEST/TMP/...', a root IS above it, the face found the
+      machine's own tree and printed its path -- '/home/claude/hwut'
+      in the nominal, red on every other checkout. Healed as ruled: the
+      page marks a mount that is not the fixture's as an ANALOGY
+      ('-v ((path)):((path))'), the nominal says 'the same path twice'.
+      NOT HEALED: under hwut that step shows a call, not the refusal
+      its description names
+    - AN ANALOGY IS WRITTEN ON BOTH SIDES. '((x))' in the nominal alone
+      matches nothing: the SUBJECT marks the token too, and compare
+      pairs the marked tokens
+    - A STRING BINDING IS QUOTED: '((name: "build-7.log"))'. Unquoted,
+      '((name: build-7.log))' is an ANALOGY and binds nothing; a
+      constraint over 'name' then never fires, and 'hwut.accept' says
+      "'name' never bound". MEASURED while writing the page for G-3:
+      the fixture looked broken by the constraint and was read green

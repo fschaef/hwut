@@ -10,6 +10,12 @@ PURPOSE: THE ONE DOOR into 'engine/procsitter'. Everything outside the
     ProcsitterResult    what it answers: containment, exit code, the
                         telemetry, what the call created and left
     E_Containment       the verdict of the supervision, by name
+    capability_db       THE BOARD: cap -> whether it can be watched on
+                        this platform, readable before any call
+    platform_name       the platform's word, as a configuration names it
+    UTILITY_DB          platform -> utility -> the caps it watches;
+                        'utility_of' asks it, 'INSTALL_DB' says how a
+                        utility comes onto a machine
     Link, chain, tee    the plumbing of a supervised pipeline: a stage
                         feeds the next, and the caller holds the ends
     spawn               ONE supervised call, synchronously, in
@@ -41,11 +47,14 @@ wall and reach whatever they test directly -- a door is for callers,
 and a test of the watchdog is not a caller.
 ______________________________________________________________________________
 """
+from .capability   import (INSTALL_DB, UTILITY_DB, capability_db,
+                           platform_name, utility_of)
 from .construction import Link, chain, tee
 from .procsitter   import (E_Containment, Procsitter, ProcsitterConfig,
                            ProcsitterResult)
 from .spawn        import CSpawned, spawn
 
-__all__ = ("CSpawned", "E_Containment", "Link", "Procsitter",
-           "ProcsitterConfig", "ProcsitterResult", "chain", "spawn",
-           "tee")
+__all__ = ("CSpawned", "E_Containment", "INSTALL_DB", "Link",
+           "Procsitter", "ProcsitterConfig", "ProcsitterResult",
+           "UTILITY_DB", "capability_db", "chain", "platform_name",
+           "spawn", "tee", "utility_of")

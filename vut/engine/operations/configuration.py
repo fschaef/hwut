@@ -79,6 +79,10 @@ class TestChoiceConfiguration:
     #  none -- then the application's ('TestConfiguration.caps') is
     #  the answer, and 'caps_of()' is the one place that says so.
     caps:           object                     = None
+    #  THE TEST WRITES TO STDERR ON PURPOSE ('tolerance { stderr_ignored
+    #  = true }', services E-136). False: a word there fails the run
+    #  ('unexpected-stderr') and refuses an acceptance.
+    stderr_ignored_f: bool                     = False
 
 
 def caps_of(configuration, choice_name):

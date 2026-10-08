@@ -10,7 +10,10 @@ PURPOSE: THE EXIT STATUS LAW (E-1) -- one enum, every service face
               printed what stands
     REFUSED   the command line cannot be READ: an unknown option, a
               malformed wish, a directory that does not exist --
-              refused at the door, by name, with the usage line
+              refused at the door, by name, with the usage line;
+              or A CASE MAY NOT RUN: a cap in force for it cannot be
+              enforced here and the root conf does not acknowledge it
+              (E-135) -- whatever else passed
     EMPTY     the command line reads, and asks for NOTHING: a wish
               that selects no test, a directory holding no test
               application

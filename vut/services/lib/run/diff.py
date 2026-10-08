@@ -289,6 +289,20 @@ def _main(argv):
         if key is None: break
         shown_n += 1
         options = key.setup if not _setup_said_f(arguments) else setup
+        #  THE STDERR STAIN IS MENTIONED (E-136): in words, and on the
+        #  screen's foot where there is one.
+        from vut.services.accept          import stderr_spoke_db
+        from vut.services._accept_common  import stderr_mention_of
+        class _Case:
+            source_file = key.test
+            choice      = key.choice
+        spoke_f = bool(stderr_spoke_db(selected.store_of(key.where),
+                                       [_Case()]))
+        mention = stderr_mention_of(key.label, spoke_f,
+                                    key.stderr_ignored_f)
+        if mention is not None: err(mention)
+        note = getattr(adapter, "note_stderr", None)
+        if note is not None: note(spoke_f, key.stderr_ignored_f)
         asyncio.run(compare_view(key.subject_text, key.nominal_text,
                                  adapter, subject_name=key.label,
                                  compare_options=options))

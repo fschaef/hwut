@@ -2,7 +2,7 @@
 --- choice-less: root parameters are the one call's ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 <hwut-end>

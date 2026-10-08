@@ -1258,23 +1258,21 @@ stderr never carries a token.
 STDERR  (S-1)
 ______________________________________________________________________________
 
-THE BOOK HOLDS ONE NOTE per (test, choice), with three readings:
+THE TEST DECLARES IT (services E-110, E-136): 'tolerance {
+stderr_ignored = true }' in its own block reaches an operation as
+'TestChoiceConfiguration.stderr_ignored_f'.
 
-    nominal    a stderr stream was RECORDED: compared like any other
-               subject
-    ignored    whatever happens there, do not worry: never read,
-               never compared
-    forbidden  a word there is an ERROR -- 'unexpected-stderr', by
+    declared   whatever happens there: never read, never compared
+    otherwise  a word there is an ERROR -- 'unexpected-stderr', by
                name, never a line difference
 
-An UNNOTED choice reads 'forbidden'. 'Bookkeeper.stderr_note()' reads
-it, 'note_stderr()' writes it, and ACCEPTANCE is the only place it is
-written: 'Request.stderr' carries an 'E_StderrNote' at a NOMINAL goal.
-Noting anything but 'nominal' removes a recorded stderr, since a
-stream cannot be both compared and disregarded.
+THE STAIN is the bad mark: 'stderr-untolerated' in the book's stain
+cell, set by the run that fails 'unexpected-stderr', taken away by a
+run that finds stderr tolerated or passes, and by an acceptance that
+stands. Tolerance itself is recorded nowhere but the block. A stderr
+stream is never recorded as a nominal.
 
-THE SECOND QUESTION: where a run wrote on stderr and no note was ever
-taken, the accept ceremony REFUSES -- 'stderr-undecided' -- and writes
-nothing at all, not even the stdout that was fine. A caller that NAMES
-'stderr' among the subjects to accept has decided by naming it.
+THE SECOND QUESTION: where a run wrote on stderr and the test does not
+declare it, the accept ceremony REFUSES -- 'unexpected-stderr' -- and
+writes nothing at all, not even the stdout that was fine.
 Whitespace is silence.

@@ -45,10 +45,11 @@ ______________________________________________________________________________
 """
 from .configuration        import Configuration, ConfigurationDiffDisplayParameters
 from .contract.enums       import RegionSyntaxError, BAD_REGION_NAME_TUPLE
-from .engine.constraints   import ConstraintFinding, ConstraintSpecError
+from .engine.constraints   import (ConstraintFinding, ConstraintSpecError,
+                                   spec_fault_of as constraint_fault_of)
 from .feeder               import ui as feeder_ui
 from .main                 import associate, is_equivalent
 
 __all__ = ("Configuration", "ConfigurationDiffDisplayParameters", "RegionSyntaxError", "associate",
-           "ConstraintFinding", "ConstraintSpecError", "BAD_REGION_NAME_TUPLE",
+           "ConstraintFinding", "ConstraintSpecError", "constraint_fault_of", "BAD_REGION_NAME_TUPLE",
            "feeder_ui", "is_equivalent")

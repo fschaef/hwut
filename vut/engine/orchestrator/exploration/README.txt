@@ -207,6 +207,9 @@ cannot make.
                                        "abs(sin(z) - x) < epsilon"]
         comment     the marker PAIR of an ignored line, read like
                     'analogy':  comment = ["##", "##"]
+        stderr_ignored  true: the test writes to stderr on purpose; a
+                    word there is no error. Unstated or false: it fails
+                    the run 'unexpected stderr' and refuses an accept.
         slash_eqv       '/' and '\\' are the same character: the dos and
                         the unix spelling of one path. On by default.
         whitespace_eqv  whitespace of any kind and any extent is the
@@ -515,6 +518,7 @@ ______________________________________________________________________________
 
     variant_group                  -        -          x
     language-setup                 -        -          x
+    procsitter                     -        -          x
 
 'on_entry', 'on_exit', 'ignore', 'collision' and 'dependency' are properties
 of the directory; no file owns them. A file cannot state what it collides
@@ -531,6 +535,12 @@ a language's tooling and a run's dimensions are read in one place, and a
 nearer 'hwut.conf' stating either is refused by name. 'apps' is the
 carrier for header-less files; a header describes one file and needs no
 such key.
+
+'procsitter { <platform> { <cap> = false } }' ACKNOWLEDGES a cap the
+procsitter does not enforce on '<platform>' ('linux', 'darwin',
+'windows', ...), in the words 'caps { }' uses (R-48, R-80). A case
+requiring such a cap is REFUSED without it. 'true' acknowledges
+nothing. The root's alone.
 
 The root of 'hwut.conf' carries directory keys only. It carries no test
 parameters for the directory at large.

@@ -74,3 +74,37 @@ def read_text(path):
     except (OSError, UnicodeDecodeError):
         return None
 
+
+#  THE LINE A TEST STATES TO HAVE ITS STDERR DISREGARDED (E-110, E-136):
+#  one spelling, quoted by every refusal and every mention.
+STDERR_IGNORED_LINE = "tolerance { stderr_ignored = true }"
+
+
+def stderr_ignored_f_of(configuration, choice):
+    """
+    RETURN: bool, True where the test's own block declares that it
+            writes to stderr on purpose ('tolerance { stderr_ignored =
+            true }') for 'choice'; False where it does not -- or no
+            configuration stands to say so.
+    """
+    if configuration is None: return False
+    try:
+        return bool(configuration.choice_configuration(choice)
+                                 .stderr_ignored_f)
+    except (KeyError, AttributeError):
+        return False
+
+
+def stderr_mention_of(label, spoke_f, ignored_f):
+    """
+    RETURN: str, the one line a face shows about the case 'label'
+            before it is viewed (E-136): THE STAIN -- its stderr SPOKE
+            and the test's block does not tolerate it.
+            None, where there is no stain to mention: stderr was
+            silent, or the block tolerates it. Tolerance is no stain.
+    """
+    if spoke_f and not ignored_f:
+        return "NOTE: %s -- STAIN: stderr SPOKE and nothing tolerates " \
+               "it; an accept is refused ('%s' declares it)" \
+               % (label, STDERR_IGNORED_LINE)
+    return None

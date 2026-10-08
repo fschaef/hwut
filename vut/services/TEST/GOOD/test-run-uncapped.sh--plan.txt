@@ -1,0 +1,12 @@
+WISH: (all)
+REFUSED: test-net.sh a -- cap 'network' not enforceable on '<platform>' => hwut-root.conf: procsitter { <platform> { network = false } }
+REFUSED: test-net.sh b -- cap 'network' not enforceable on '<platform>' => hwut-root.conf: procsitter { <platform> { network = false } }
+TEST PLAN: 1 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    test-free.sh  TEST
+LINKS
+    (none)
+EXCLUSIONS
+    (none)
+STATUS: 0
+<hwut-end>

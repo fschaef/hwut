@@ -1112,3 +1112,34 @@ COST      No page of 'hwut.run' moved: the display suite and the
           The '||n' column counts what the scheduler started; under
           coverage the runs of one directory still proceed one at a
           time (coverage D-22).
+
+D-46  THE REFUSED BLOCK IS GROUPED AS HINTS IS; '[REFUSED]' WEARS ITS OWN INK
+                                                                  (2026-10-07)
+PROBLEM   The REFUSED block said '<directory> / <node> <reason>': the
+          reason once per case. A refusal that names its remedy
+          (exploration R-80) is a hundred characters wide, and a
+          directory of twenty such cases said it twenty times. In the
+          flow, '[REFUSED]' wore '[FAIL]''s ink and read as one.
+
+DECISION  THE REASON IS THE HEADING, once; the directory once within
+          it; the application once within that, ':' beneath where its
+          choices repeat it -- D-35's shape. A reason carrying ' => '
+          names its remedy, which stands on its own line under the
+          heading:
+
+              cap 'network' not enforceable on 'linux'
+              => hwut-root.conf: procsitter { linux { network = false } }
+                  services/TEST
+                      test-net.sh  a
+                      :            b
+
+          THE POINTER TO 'hwut.help' (D-34) closes the block where a
+          refusal names a remedy.
+
+          THE TAG: the word bright white, the BRACKETS black, on the
+          failure's red ground -- roles 'run.tag-refused' and
+          'run.tag-refused-bracket'. Found as a failure is found, told
+          from it by the brackets.
+
+COST      Red is no longer '[FAIL]''s alone (the note in 'word.py').
+          One nominal moved: 'test-ignore.sh refused_too'.

@@ -180,7 +180,8 @@ def do(request):
     result = found.result_db["."]
     try:
         plan, report_list, refused_list = determine(
-            result.app_set, found.query_db["."], admit=admit_of(directory))
+            result.app_set, found.query_db["."],
+            admit=admit_of(directory, result.app_set))
     except (RootConfMissing, SelectionError) as error:
         raise Refused("REFUSED: %s" % error) from error
     fault_tuple = tuple(str(f) for f in ascent_fault_list) \

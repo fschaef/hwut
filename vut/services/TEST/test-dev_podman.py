@@ -99,7 +99,13 @@ def call(face, argument_list, engine, root, **kw):
     status = main(argument_list, line_list.append, run=engine, **kw)
     for line in line_list:
         line = re.sub(r"--user=\d+:\d+", "--user=<uid>:<gid>", line)
-        print("    %s" % (line.replace(root, "<root>") if root else line))
+        line = line.replace(root, "<root>") if root else line
+        #  A MOUNT THAT IS NOT THE FIXTURE'S IS THE MACHINE'S OWN TREE --
+        #  where 'TMPDIR' lies below one, the face finds it. Marked as
+        #  an ANALOGY: the nominal says 'the same path twice', never
+        #  which path.
+        line = re.sub(r"-v (/[^\s:]+):(/\S+)", r"-v ((\1)):((\2))", line)
+        print("    %s" % line)
     print("    [status %d]" % status)
     return status
 

@@ -31,7 +31,8 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
-from ..bookkeeper.api import E_StderrNote
+from ..bookkeeper.api import STAIN_STDERR_WORD
+from .result          import E_TestRunResult
 
 from .consume.accept             import (Accept, AcceptConfig,
                                               AcceptStep)
@@ -94,10 +95,6 @@ class Request:
                                             # execute regardless
     display:     Display           = field(default_factory=Display)
     observer:    Optional[object]  = None
-    stderr:      Optional[object]  = None   # E_StderrNote to WRITE at
-                                            # an acceptance goal; None:
-                                            # not asked -- acceptance
-                                            # refuses rather than guess
     record:      Optional[bool]    = None   # None: follow the store config
     stop_event:  Optional[object]  = None   # how the caller stops it
 
@@ -300,6 +297,8 @@ async def run_test_held(configuration, request=None, store=None,
                                                    if "stderr" not in
                                                       subject_name_list
                                                    else ()))
+    stderr_ignored_f = configuration.choice_configuration(choice_name) \
+                                    .stderr_ignored_f
     if goal is E_Goal.NOMINAL:
         result = await Accept(
             AcceptConfig(name       = test_name,
@@ -307,15 +306,14 @@ async def run_test_held(configuration, request=None, store=None,
                                        for n in subject_name_list},
                          choice     = choice_name,
                          groundwork = groundwork,
-                         stderr     = request.stderr),
+                         stderr_ignored_f = stderr_ignored_f),
             store, observer=observer).run(stop_event=stop_event)
         recorded_db = None
     else:
-        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): the note governs
-        #  only whether a spoken word is an ERROR ('forbidden') or
-        #  disregarded ('ignored'); it is never compared like a
-        #  subject, so it never enters 'judged_list'.
-        note        = store.stderr_note(test_name, choice_name)
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): the test's own
+        #  declaration governs only whether a spoken word is an ERROR
+        #  or disregarded; it is never compared like a subject, so it
+        #  never enters 'judged_list'.
         judged_list = list(subject_name_list)
         if "stderr" in judged_list: judged_list.remove("stderr")
         nominal_db = _nominal_db(store, test_name, choice_name,
@@ -336,7 +334,7 @@ async def run_test_held(configuration, request=None, store=None,
                     name          = test_name,
                     groundwork    = groundwork,
                     subjects      = nominal_db,
-                    stderr_forbidden_f = (note is E_StderrNote.FORBIDDEN),
+                    stderr_forbidden_f = not stderr_ignored_f,
                     compare    = _compare_options(configuration,
                                                   choice_name)),
                 observer=observer)
@@ -353,7 +351,27 @@ async def run_test_held(configuration, request=None, store=None,
                                         choice_name)
         _noted_constraint(store, test_name, choice_name, result,
                           recorded_db)
+        if goal is not E_Goal.NOMINAL:
+            _noted_stderr(store, test_name, choice_name, result,
+                          stderr_ignored_f)
     return Outcome(result=result, recorded_db=recorded_db, entry=entry)
+
+
+def _noted_stderr(store, test, choice, result, ignored_f):
+    """
+    RETURN: None. THE STAIN 'stderr-untolerated' (services E-136): set
+            where this run failed because the test spoke on stderr and
+            its block does not tolerate it; taken away where the block
+            tolerates it now ('ignored_f') or the run PASSED. A run that
+            failed for another reason, untolerated, says nothing about
+            stderr and leaves the cell as it stands.
+    """
+    if result.report is E_TestRunResult.UNEXPECTED_STDERR:
+        store.bookkeeper.note_stain_keyword(test, choice,
+                                            STAIN_STDERR_WORD, True)
+    elif ignored_f or result.verdict:
+        store.bookkeeper.note_stain_keyword(test, choice,
+                                            STAIN_STDERR_WORD, False)
 
 
 def _noted_constraint(store, test, choice, result, recorded_db=None):

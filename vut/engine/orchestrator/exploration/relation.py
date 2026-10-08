@@ -156,6 +156,9 @@ RELATION = {
     #  (C-4). 'tolerance.regions = false': '##!' and '####' are
     #  ordinary content -- what a text that TALKS ABOUT framing needs.
     "tolerance.regions":       (ConfigCompare, "regions_f"),
+    #  THE ONE LEAF THAT IS NOT COMPARE'S (services E-110, E-136): what
+    #  a word on stderr means is the runner's to judge.
+    "tolerance.stderr_ignored": (ConfigRunner, "stderr_ignored_f"),
 
     #  THE LINE LEVEL'S NUMBERS (compare C-16), answered by compare's OWN
     #  declaration -- no mirror to keep in step.

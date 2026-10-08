@@ -49,7 +49,7 @@ from   vut.services.lib.cmdline import (did_you_mean,            # noqa: E402
 
 FACE_TUPLE = ("accept", "plan", "lib.run.play", "rename", "report", "run",
               "lib.sanitize.propose", "lib.run.stability",
-              "lib.report.wishlist")
+              "lib.report.list")
 #  The wish words each wish-taking face also accepts are the wish's,
 #  and are not in its own table: 'parse_wish' reads them first.
 

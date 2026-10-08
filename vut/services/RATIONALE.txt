@@ -5378,3 +5378,98 @@ COST      The copy-in census of the day before ('adm/container/entry.sh',
           the image was never built here: the first 'podman build' on
           a real machine is the proof still owed ('adm/WORK/TODO.txt'
           D-4).
+
+E-135  A CAP THAT CANNOT BE ENFORCED EXITS 'REFUSED'; 'hwut.help' SAYS WHAT
+       IS MISSING                                                 (2026-10-07)
+
+PROBLEM   Exploration R-80 refuses a case whose cap the procsitter
+          cannot enforce. E-1 let a run that refused some cases and
+          passed the rest exit 0: a CI step stayed green over tests
+          that never ran. And the cause is often one missing module
+          ('psutil'), which nothing named.
+
+DECISION  'hwut.run' and 'hwut.cov.run' exit REFUSED (2) where at least
+          one case was refused for want of an enforceable cap -- after
+          FAULT, which a failed case keeps, before OK. The other
+          refusals (a backup-shaped name) stay as E-1 has them: they
+          are files nobody asked to run.
+          'hwut.help' gains a last part, 'CONFINEMENT -- cap not
+          enforceable': per set of caps the refusal's head, what it
+          means, 'MISSING: <utility>' with its install where the
+          procsitter's 'UTILITY_DB' names one, the 'hwut-root.conf'
+          entry, 'CONCERNED:'. It is judged NOW, by the gate the run
+          asks -- a refused case leaves nothing in a book.
+
+COST      REFUSED now also means 'the tree may not be run as it
+          stands', beside 'the command line cannot be read'. The
+          platform's word stands on unwrapped lines only, so the page
+          does not break differently by machine.
+
+E-136  E-110 BUILT: 'stderr_ignored = true'; THE BOOK'S NOTE IS A STAIN
+                                                                  (2026-10-07)
+PROBLEM   E-110 ruled the declaration into the test's block and was not
+          built (audit r10, G-5): '--stderr-tol' still marked every
+          case of a wish IGNORED, and HINTS and 'hwut.help' advised
+          'tolerance { stderr = ignored }' -- a SYNTAX fault unquoted
+          (exploration R-49), an unknown tolerance quoted. Two things
+          E-110 left open: how the leaf is spelt, and what becomes of
+          the book's 'stderr' cell once the block has the authority.
+
+DECISION  RULED (Frank-Rene, 2026-10-07):
+          (1) THE LEAF IS A BOOLEAN: 'tolerance { stderr_ignored =
+              true }'. A word may be misspelt; and 'forbidden' is the
+              default, so one fact is all that ever needs stating.
+              'stderr = ...' is refused by name, with the leaf.
+          (2) THE RUN READS THE BLOCK. Declared: stderr is never read.
+              Not declared: a word there fails 'unexpected stderr'.
+          (3) AN ACCEPT ASKED TO ACCEPT AN UNTOLERATED STDERR REFUSES
+              -- 'hwut.accept', the interactive session's commit, and
+              the engine's own ceremony ('unexpected-stderr', nothing
+              written). No switch of any face tolerates.
+              '--stderr-tol' is gone from 'hwut.accept',
+              'hwut.accept.interactive' and the keyed foot.
+          (4) A STAIN IS A BAD MARK, and tolerance is none. The stain
+              is 'stderr-untolerated', beside the others in the stain
+              cell (bookkeeper B-18): stderr SPOKE while the block
+              does not tolerate it. Set by the run that fails
+              'unexpected stderr'; taken away by the first run that
+              finds the block tolerating it or passes, and by an
+              acceptance that stands. A refused acceptance writes
+              nothing, the stain included. No disqualification; never
+              read to form a verdict. That a test tolerates its stderr
+              is stated in its block and recorded NOWHERE else.
+              'E_StderrNote', 'stderr_note()', 'note_stderr()' are
+              REMOVED, and the book's 'stderr' column with them.
+          (5) THE FACES THAT VIEW A CASE MENTION THE STAIN:
+              'hwut.run.diff' and 'hwut.accept.interactive' say one
+              line before the case -- 'STAIN: stderr SPOKE and nothing
+              tolerates it; an accept is refused' with the line that
+              declares it -- and the keyed screen carries it in its
+              foot. Tolerated stderr is not mentioned.
+
+MEASURED  The engine called 'adapter.note_stderr()' and NO viewer
+          defined it: the keyed foot's 'STDERR SPOKE' warning could
+          never show. No book in the tree held an 'ignored' note; one
+          page used the flag ('test-accept.sh stderr').
+
+COST      THE 'stderr' COLUMN LEAVES 'book.csv' (ruled the same day: a
+          stain needs no column of its own; bookkeeper B-29). Every
+          versioned book in the tree was rewritten once, through the
+          bookkeeper, by that one column.
+          'stderr-undecided' stays in the vocabulary for books that
+          hold it; nothing produces it.
+
+GRAVEYARD 'stderr-ignored' as the stain, standing while the block
+          declares tolerance (built and withdrawn the same day): it
+          marked the tests that had done what they said.
+
+E-137  'hwut.report.wishlist' IS 'hwut.report.list'                 (2026-10-08)
+
+DECISION  RULED (Frank-Rene): the face that prints, one per line, every
+          case a wish selects is 'hwut.report.list'
+          ('services/lib/report/list.py', 'bin/hwut.report.list'), as
+          'hwut.labels.list' lists labels. A face is a spelling (E-50):
+          nothing else moves. The wish word '--wishlist <file>' keeps
+          its name -- it reads a list, and this face writes one.
+COST      The old name is gone, not aliased, as 'hwut.compare' went
+          (E-50); a script that calls it is refused by the shell.

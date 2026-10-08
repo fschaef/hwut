@@ -111,7 +111,9 @@ def colour_decision(environ, tty_f, force_f=False, veto_f=False):
 #  ORANGE IS THE DIRECTORY'S COLOUR, wherever a directory is named:
 #  the DIR band's ground, and the name at the head of a HINTS block.
 #  ONE NOUN, ONE COLOUR. 256-colour 208; there is no orange in the base
-#  16, and red and green stay reserved for [FAIL] and [OK].
+#  16, and red and green stay reserved for [FAIL] and [OK] -- and
+#  '[REFUSED]', which shares the red ground and is told apart by its
+#  black brackets (D-46).
 #
 #  RED IS PINNED, NOT ASKED FOR BY NAME. The base-16 codes 31/41 name
 #  PALETTE SLOT 1, and a theme is free to render that slot as it
@@ -123,6 +125,8 @@ ROLE_DEFAULT_DB = {
     "run.fail":          "c256:196",
     "run.tag-ok":        "bright-white bg-green",
     "run.tag-fail":      "bright-white bg256:196",
+    "run.tag-refused":         "bright-white bg256:196",
+    "run.tag-refused-bracket": "black bg256:196",
     "run.warn":          "yellow",
     "run.start":         "blue",
     "run.dim":           "dim",
@@ -191,6 +195,19 @@ class CInk:
     #  the bright foreground, 42 and 41 the grounds.
     def tag_ok(self, text):   return self.role(text, "run.tag-ok")
     def tag_fail(self, text): return self.role(text, "run.tag-fail")
+
+    def tag_refused(self, text):
+        """
+        RETURN: str, the '[REFUSED]' tag: the WORD bright white, its
+                BRACKETS black, both on the failure's red ground
+                (D-42) -- a block found as '[FAIL]' is found, and told
+                from it by the brackets. 'text' is the tag, brackets
+                included.
+        """
+        return self.role(text[:1],   "run.tag-refused-bracket") \
+             + self.role(text[1:-1], "run.tag-refused") \
+             + self.role(text[-1:],  "run.tag-refused-bracket")
+
     def warn(self, text):    return self.role(text, "run.warn")
     def start(self, text):   return self.role(text, "run.start")
     def dim(self, text):     return self.role(text, "run.dim")

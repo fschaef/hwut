@@ -360,7 +360,7 @@ def long_of(action):
 def shown_of(action):
     """RETURN: str, the spelling a usage line shows -- the longest; and
                where a shorter '--' spelling is a PREFIX of it, both at
-               once: '--stderr-tol[erated]'."""
+               once: '--opt[ion]'."""
     long_name = long_of(action)
     for other in action.option_strings:
         if other != long_name and other.startswith("--") \

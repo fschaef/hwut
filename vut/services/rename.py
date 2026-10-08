@@ -220,6 +220,14 @@ class Rename:
             if Path(a).exists():
                 found.append((a, str(target.bookkeeper.coverage_path(
                                          self.fresh_test, new_choice))))
+        #  THE SHARED NOMINAL OF A 'same' TEST (bookkeeper B-30) is
+        #  keyed by the test alone and follows the TEST's rename -- read
+        #  from what lies there, like every subject. A choice's rename
+        #  leaves it: the other choices are judged by it still.
+        if self.whole_test_f:
+            a = str(source.nominal_path(self.test, None, "stdout"))
+            b = str(target.nominal_path(self.fresh_test, None, "stdout"))
+            if Path(a).exists(): found.append((a, b))
         return tuple(sorted(set(found)))
 
     def _choice_pair_list(self) -> list[tuple[str, str]]:

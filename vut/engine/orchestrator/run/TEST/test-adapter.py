@@ -172,7 +172,7 @@ def _arrivals(parameters):
         arrival.append("compare")
     if plain_choice.output != carried_choice.output:
         arrival.append("output")
-    if naming_of(_app(parameters)) != naming_of(_app(TestParameters())):
+    if naming_of([_app(parameters)]) != naming_of([_app(TestParameters())]):
         arrival.append("naming")
     return arrival
 
@@ -339,14 +339,17 @@ def test_caps_inherit():
 
 def test_naming():
     """RETURN: None. 'same' into the bookkeeper's naming law."""
-    plain = naming_of(_app(TestParameters()))
-    same  = naming_of(_app(TestParameters(same=True)))
-    print("INSPECT: unstated -> same_nominal_f %s" % plain.same_nominal_f)
-    print("         same=yes -> same_nominal_f %s" % same.same_nominal_f)
+    #  THE LAW IS THE DIRECTORY'S AND NAMES THE TESTS (bookkeeper B-30).
+    plain_app = _app(TestParameters())
+    same_app  = _app(TestParameters(same=True))
+    plain = naming_of([plain_app]).shared_f(plain_app.source_file)
+    same  = naming_of([same_app]).shared_f(same_app.source_file)
+    print("INSPECT: unstated -> same_nominal_f %s" % plain)
+    print("         same=yes -> same_nominal_f %s" % same)
     ok = _check([
-        (plain.same_nominal_f is False,
+        (plain is False,
          "unstated: a nominal per choice"),
-        (same.same_nominal_f is True,
+        (same is True,
          "'same' reaches the bookkeeper's naming law"),
     ])
     _verdict(ok, "'same' is a NAMING law, and arrives as one.")

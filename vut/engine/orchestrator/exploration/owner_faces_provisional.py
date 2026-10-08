@@ -108,7 +108,12 @@ class ConfigRunner:
     'output' -- WHAT THE TEST PRODUCES, declared (todo-1): the subjects
     in order. '<stdout>' names the one channel; every other entry is a
     FILE, read after the run has ended and then removed. The default is
-    the channel alone. stderr is NEVER here (E-5)."""
+    the channel alone. stderr is NEVER here (E-5).
+
+    'stderr_ignored_f' -- the test writes to stderr on purpose
+    ('tolerance { stderr_ignored = true }', services E-136); false: a
+    word there is an error."""
     interactive_f: bool = False
+    stderr_ignored_f: bool = False
     output:        tuple = ("<stdout>",)
     execute:       str | None = None

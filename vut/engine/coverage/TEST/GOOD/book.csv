@@ -1,11 +1,11 @@
 # vut-register 5 generation:11 apps:2 marks:0=6,1=3
-test;choice;verdict;report;stderr;stain;test_id;choice_id
-test-affected.py;answer;true;ok;;;0;0
-;bare;true;ok;;;0;1
-;diff;true;ok;;;0;2
-;empty;true;ok;;;0;3
-;help;true;ok;;;0;4
-;refused;true;ok;;;0;5
-test-output.py;carry;true;ok;;;1;0
-;rebased;true;ok;;;1;1
-;refused;true;ok;;;1;2
+test;choice;verdict;report;stain;test_id;choice_id
+test-affected.py;answer;true;ok;;0;0
+;bare;true;ok;;0;1
+;diff;true;ok;;0;2
+;empty;true;ok;;0;3
+;help;true;ok;;0;4
+;refused;true;ok;;0;5
+test-output.py;carry;true;ok;;1;0
+;rebased;true;ok;;1;1
+;refused;true;ok;;1;2

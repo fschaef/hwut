@@ -3,7 +3,8 @@
 #
 # @hwut {
 #     title      = "The diff service face: the diff convention, on stdout."
-#     choices    = ["differing", "reading", "tolerated", "side-by-side", "store"]
+#     choices    = ["differing", "reading", "tolerated", "side-by-side", "stderr",
+#                   "store"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
@@ -35,7 +36,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The diff service face: the diff convention, on stdout.;"
-        echo "CHOICES: differing, tolerated, reading, side-by-side, store;"
+        echo "CHOICES: differing, tolerated, reading, side-by-side, store, stderr;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -168,6 +169,51 @@ store)
     echo "The store answers the wish; compare's engine says what differs,"
     echo "now; the checklist lets the author pick; the view is the same."
     echo "SUCCESS: one selection language on the diff face too."
+    ;;
+
+stderr)
+    #  THE STDERR STAIN IS MENTIONED (E-136) by the faces that VIEW a
+    #  case: stderr spoke and nothing tolerates it -- said, with the
+    #  line that declares it, in the same words by 'hwut.run.diff' and
+    #  'hwut.accept.interactive'; the book's stain cell holds
+    #  'stderr-untolerated'. TOLERATED STDERR IS NO STAIN: nothing is
+    #  said and the cell is clean.
+    mkdir -p tree/suite/TEST/GOOD
+    noisy() {           # <stdout line> <tolerance line or ''>
+        printf '#!/bin/bash\n# @hwut {\n#     title = "Noisy"\n%b# }\necho "%s"\necho "a diagnostic" >&2\necho "<hwut-end>"\n' \
+               "$2" "$1" > tree/suite/TEST/test-noisy.sh
+        chmod +x tree/suite/TEST/test-noisy.sh
+    }
+    DECLARED='#     tolerance { stderr_ignored = true }\n'
+    noisy "first line" "$DECLARED"
+    ( cd tree/suite/TEST && python3 -m vut.services.accept --force > /dev/null 2>&1 )
+    noisy "changed line" "$DECLARED"
+    python3 -m vut.services.run --directory=tree --silent
+    stain() { echo "          the book's stain: '$(grep '^test-noisy.sh' tree/suite/TEST/GOOD/book.csv | cut -d';' -f5)'"; }
+    echo "STIMULUS  stderr tolerated, stdout changed: hwut.run.diff"
+    $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
+    echo "          exit code : $?"
+    echo "          NOTE lines: $(grep -c '^NOTE' err.txt)"
+    stain
+    echo
+    noisy "changed line" ""
+    python3 -m vut.services.run --directory=tree --silent
+    echo "STIMULUS  the tolerance withdrawn, run: hwut.run.diff"
+    $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
+    echo "          exit code : $?"
+    grep "^NOTE" err.txt | sed 's/^/          /'
+    echo "STIMULUS  the same case: hwut.accept.interactive --console --all"
+    python3 -m vut.services.lib.accept.interactive tree/suite/TEST/test-noisy.sh \
+            --console --all --plain < /dev/null > out.txt 2> err.txt
+    grep "^NOTE" err.txt | sed 's/^/          /'
+    stain
+    echo
+    noisy "changed line" "$DECLARED"
+    python3 -m vut.services.run --directory=tree --silent
+    echo "STIMULUS  tolerated again, run: the stain is gone"
+    stain
+    echo
+    echo "SUCCESS: the stain is said where the case is viewed."
     ;;
 
 *)

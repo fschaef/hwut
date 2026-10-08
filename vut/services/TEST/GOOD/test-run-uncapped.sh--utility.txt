@@ -1,0 +1,77 @@
+DONE  test-free.sh ............................................ [REFUSED]  ||0
+      test-net.sh  a .......................................... [REFUSED]  ||0
+      :            b .......................................... [REFUSED]  ||0
+
+==============================================================================
+DIRECTORIES                                             0 ok, 0 fail, <t>
+------------------------------------------------------------------------------
+   . . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
+
+==============================================================================
+REFUSED -- not run
+------------------------------------------------------------------------------
+caps 'child_process_max_n', 'memory_mb' not enforceable on '<platform>': 'psutil' missing
+=> pip install psutil, or hwut-root.conf: procsitter { <platform> { child_process_max_n = false  memory_mb = false } }
+    .
+        test-free.sh
+
+caps 'child_process_max_n', 'memory_mb', 'network' not enforceable on '<platform>': 'psutil' missing
+=> pip install psutil, or hwut-root.conf: procsitter { <platform> { child_process_max_n = false  memory_mb = false  network = false } }
+    .
+        test-net.sh  a
+        :            b
+
+HINT: use 'hwut.help' for explanation of subtle issues.
+==============================================================================
+
+RESULTS: 0 ok, 0 fail, 3 refused, <t> [sec], <t> [sec] total
+STATUS: 2
+--- hwut.help
+'hwut.run' REFUSES 3 case(s) on this platform, for 2 set(s) of caps the
+procsitter cannot enforce here. The paragraphs below explain each once, say
+what is missing and how to heal it, and name the cases concerned.
+
+CONFINEMENT -- cap not enforceable
+
+    refused -- caps 'child_process_max_n', 'memory_mb' not enforceable on '<platform>': 'psutil' missing  [1 case(s)]
+    
+        Each case below is under these caps, stated in its header or
+        standing by default, and on this platform nothing enforces them. A
+        cap that does not cap is worse than no cap: the author believes the
+        test confined and it is not. So the case is not run.
+    
+        MISSING: 'psutil' -- the procsitter watches with it, and it is not
+        on this machine. Install: 'pip install psutil'.
+    
+        In order to heal, install what is missing, or acknowledge in
+        'hwut-root.conf' that the tests run without the cap on this platform
+        -- knowingly, for the whole tree:
+    
+            procsitter { <platform> { child_process_max_n = false  memory_mb = false } }
+    
+        CONCERNED:
+            .
+                test-free.sh
+
+    refused -- caps 'child_process_max_n', 'memory_mb', 'network' not enforceable on '<platform>': 'psutil' missing  [2 case(s)]
+    
+        Each case below is under these caps, stated in its header or
+        standing by default, and on this platform nothing enforces them. A
+        cap that does not cap is worse than no cap: the author believes the
+        test confined and it is not. So the case is not run.
+    
+        MISSING: 'psutil' -- the procsitter watches with it, and it is not
+        on this machine. Install: 'pip install psutil'.
+    
+        In order to heal, install what is missing, or acknowledge in
+        'hwut-root.conf' that the tests run without the cap on this platform
+        -- knowingly, for the whole tree:
+    
+            procsitter { <platform> { child_process_max_n = false  memory_mb = false  network = false } }
+    
+        CONCERNED:
+            .
+                test-net.sh  a
+                :            b
+STATUS: 0
+<hwut-end>

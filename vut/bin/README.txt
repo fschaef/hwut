@@ -26,7 +26,7 @@ by PATH and by path alike.
                         hwut.cov.conv.to_tex  hwut.cov.conv.to_pdf
                         hwut.dev.podman.build  hwut.dev.podman.enter
                         hwut.run.diff     hwut.report.details
-                        hwut.run.stability  hwut.report.wishlist  hwut.report
+                        hwut.run.stability  hwut.report.list  hwut.report
                         hwut.help
                         hwut.remove
                         hwut.rename   hwut.move

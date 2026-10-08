@@ -3,21 +3,21 @@
 title    'T'  language None  origin HEADER  at 1:8
 root:
     build = Build(framework='make', executable=None, caps=None)
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=(), constraints=(), comment=None)
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=(), constraints=(), comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 
 --- the other spellings of off, and absence beside them ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=(), constraints=(), comment=None)
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=(), constraints=(), comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 
 --- 'analogy = true' says nothing and is refused ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 FAULT f.py:3:27: TYPE: 'analogy = true' says nothing: leave 'analogy' unstated for the analogy markers, or name the pair
@@ -25,15 +25,15 @@ FAULT f.py:3:27: TYPE: 'analogy = true' says nothing: leave 'analogy' unstated f
 --- 'comment' is a marker pair, and reads alike ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=('/*', '*/'))
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=('/*', '*/'), stderr_ignored=None)
 choice -:
     (nothing stated)
 
 --- 'comment' switched off, and one of three markers ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=())
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=(), stderr_ignored=None)
 choice 'one':
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 FAULT f.py:4:43: TYPE: 'comment' names two markers, the opening and the closing; 3 given
 <hwut-end>

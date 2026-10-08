@@ -6,7 +6,7 @@ hwut.accept        exit 0: hwut.accept -- PROMOTION: a candidate becomes the nom
 hwut.accept.propose exit 0: hwut.accept.propose -- the differences, as a file to read and hand back.
 hwut.accept.apply  exit 0: hwut.accept.apply -- bless what a file names, and nothing else.
 hwut.renovate      exit 0: usage: hwut.renovate [--directory=<path>] [--apply]
-hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [-f] [--plain] [--console] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--stderr-tol] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
+hwut.accept.interactive exit 0: usage: hwut.accept.interactive [-h] [--directory DIRECTORY] [--all] [-f] [--plain] [--console] [-y] [--width WIDTH] [--editor EDITOR] [--max-rounds MAX_ROUNDS] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.execute       exit 0: hwut.execute -- run one user-defined target over the tree
 hwut.cov.run       exit 0: PURPOSE: 'hwut.cov.run', THE COVERAGE RUN (coverage D-38) -- every
 hwut.cov.formats   exit 0: PURPOSE: 'hwut.cov.formats' -- the table of coverage tools, formats and
@@ -23,7 +23,7 @@ hwut.dev.podman.enter exit 0: PURPOSE: 'hwut.dev.podman.enter' -- a shell, or on
 hwut.run.diff      exit 0: usage: hwut.run.diff [-h] [--reading] [--plain] [--console] [-y] [--width WIDTH] [--directory DIRECTORY] [--all] [--numeric RATIO] [--pattern REGEX] [--nothing PATTERN] [word ...]
 hwut.report.details exit 0: usage: hwut.report.details [-h] [--directory DIRECTORY] [-r] [--no-coverage] [--cov-dir directory] [word ...]
 hwut.run.stability exit 0: PURPOSE: THE 'hwut.run.stability' COMMAND LINE -- run the same wish SEVERAL
-hwut.report.wishlist exit 0: PURPOSE: THE 'hwut.report.wishlist' COMMAND LINE -- print, one per line, every
+hwut.report.list   exit 0: PURPOSE: THE 'hwut.report.list' COMMAND LINE -- print, one per line, every
 hwut.report        exit 0: PURPOSE: THE 'hwut.report' COMMAND LINE -- what the RESULT DATABASES
 hwut.help          exit 0: PURPOSE: THE 'hwut.help' COMMAND LINE -- what failed below here for a
 hwut.remove        exit 0: PURPOSE: THE 'hwut.remove' COMMAND LINE -- a test, or one choice of it,

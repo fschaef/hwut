@@ -1,0 +1,11 @@
+cap 'network' not enforceable on 'linux'
+    => hwut-root.conf: procsitter { linux { network = false } }
+caps 'child_process_max_n', 'memory_mb' not enforceable on 'linux': 'psutil' missing
+    => pip install psutil, or hwut-root.conf: procsitter { linux { child_process_max_n = false  memory_mb = false } }
+caps 'memory_mb', 'network' not enforceable on 'windows': 'psutil' missing
+    => pip install psutil, or hwut-root.conf: procsitter { windows { memory_mb = false  network = false } }
+caps 'cpu_sec', 'file_size_mb' not enforceable on 'linux': 'resource' missing
+    => hwut-root.conf: procsitter { linux { cpu_sec = false  file_size_mb = false } }
+cap 'cpu_sec' not enforceable on 'windows'
+    => hwut-root.conf: procsitter { windows { cpu_sec = false } }
+<hwut-end>

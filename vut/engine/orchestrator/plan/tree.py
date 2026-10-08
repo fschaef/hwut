@@ -12,6 +12,7 @@ ______________________________________________________________________________
 """
 from ..exploration.task_list_query import CTestTaskListQuery
 from .determine                    import determine
+from .                             import confinement
 from ...bookkeeper.test_run_info   import of_case, E_MemberState
 from .label     import swallowed_warning_tuple
 from .printer   import print_plan
@@ -27,7 +28,7 @@ UNACCEPTED_REASON   = ("the nominal carries lines nobody has accepted: "
 NOT_ACCEPTED_REASON = "no nominal stands in GOOD/: not accepted, not run"
 
 
-def admit_of(directory):
+def admit_of(directory, app_set=None):
     """
     RETURN: callable, 'admit(test, choice)': None where the case may be
             RUN, a refusal reason else. THE GATE, in one place, for the
@@ -48,10 +49,17 @@ def admit_of(directory):
     THE ASPIRANT IS REFUSED HERE, at the door. It used to be selected,
     run, and refused inside the comparison, which spent a process on a
     case no verdict could be formed about and then booked it FAIL.
+
+    A THIRD, WHERE 'app_set' IS GIVEN (exploration R-48, R-80): a case
+    that could run but states a cap the procsitter cannot enforce on
+    this platform, unacknowledged in 'hwut-root.conf' -- 'confinement'.
     """
+    confined = None if app_set is None else confinement.admit_of(app_set)
+
     def admit(test, choice):
         info = of_case(directory, test, choice)
-        if info.is_runnable():                    return None
+        if info.is_runnable():
+            return None if confined is None else confined(test, choice)
         if info.member_state.state is E_MemberState.ASPIRANT:
             return UNACCEPTED_REASON
         return NOT_ACCEPTED_REASON
@@ -142,7 +150,8 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         #  names, finder.py) stand in the block.
         plan, report_list, refused_list = determine(
             result.app_set, task_list,
-            admit=admit_of(os.path.join(tree_exploration.root, directory)))
+            admit=admit_of(os.path.join(tree_exploration.root, directory),
+                           result.app_set))
         refused_list = list(result.refused_tuple) + refused_list
         if label_view is not None and wish.glob_tuple:
             met, visible = task_list.glob_reach(result.app_set)

@@ -126,6 +126,11 @@ class Provision:
     records: Sequence[object]     = field(default_factory=tuple)
     detail:  Optional[str]        = None   # the report's numbers (O-19);
                                            # spoken, never booked
+    #  THE CALL'S RESOLUTION, CARRIED (operations todo-21): what PATH
+    #  answered for the call's first word, hop by hop, AT THE TIME OF
+    #  THE CALL -- so a diagnosis read later shows what was run, not
+    #  what PATH says today. Empty where nothing was called.
+    resolution: Sequence[str]     = field(default_factory=tuple)
     #  'records' is empty when provision was by stored data: nothing ran,
     #  so nothing was contained, and there is no attribution to make.
 

@@ -30,6 +30,8 @@ from   vut.engine.orchestrator.plan.wish               import with_targets
 from   vut.engine.orchestrator.run.adapter             import \
                                                        test_configuration_of
 from   vut.engine.bookkeeper.api                      import Store
+from   vut.engine.orchestrator.plan                   import confinement
+from   vut.services._accept_common                    import stderr_ignored_f_of
 from   vut.services.lib.labels                        import view_at
 from   vut.services.lib.labels._file                  import LabelFileError
 from   ._target                                       import entered
@@ -126,15 +128,19 @@ class DifferingKey:
     """
     __slots__ = ("where", "test", "choice", "subject_text",
                  "nominal_text", "setup", "candidate_path",
-                 "nominal_path", "aspirant_f")
+                 "nominal_path", "aspirant_f", "stderr_ignored_f")
 
     def __init__(self, where, test, choice, subject_text, nominal_text,
-                 setup, candidate_path, nominal_path, aspirant_f=False):
+                 setup, candidate_path, nominal_path, aspirant_f=False,
+                 stderr_ignored_f=False):
         self.where = where;               self.test = test
         self.choice = choice;             self.subject_text = subject_text
         self.nominal_text = nominal_text; self.setup = setup
         self.candidate_path = candidate_path
         self.nominal_path   = nominal_path
+        #  THE TEST'S OWN DECLARATION (E-136): shown by the faces that
+        #  view the case, and what an accept's refusal is decided by.
+        self.stderr_ignored_f = stderr_ignored_f
         self.aspirant_f     = aspirant_f
 
     @property
@@ -207,6 +213,16 @@ def differing_keys(selected, write, refresh_f=False):
                 #  THE STEPS are 'session.refresh''s, shared with accept:
                 #  build where built, run where not current.
                 configuration = config_db.get(test)
+                #  AN UNENFORCEABLE CAP REFUSES THE RUN (exploration
+                #  R-80), through this door as through the plan's.
+                reason = confinement.refusal_of(result.app_set, test,
+                                                choice)
+                if reason is not None:
+                    for line in confinement.refusal_line_list(
+                                    test if choice is None
+                                    else "%s %s" % (test, choice), reason):
+                        write(line)
+                    continue
                 if configuration is not None:
                     from vut.engine.operations.session import refresh
                     had_f = out_path.exists()
@@ -260,7 +276,10 @@ def differing_keys(selected, write, refresh_f=False):
             key_list.append(DifferingKey(where, test, choice, subject_text,
                                          nominal_text, setup,
                                          str(out_path), str(good_path),
-                                         aspirant_f=aspirant_f))
+                                         aspirant_f=aspirant_f,
+                                         stderr_ignored_f=
+                                             stderr_ignored_f_of(
+                                                 configuration, choice)))
     #  ASPIRANTS FIRST (B-14). A test the book knows and nobody has
     #  accepted is playable, not runnable; its accept is the act that
     #  makes it a member, and a person working a list wants the

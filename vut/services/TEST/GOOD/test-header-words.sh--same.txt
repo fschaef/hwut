@@ -1,0 +1,15 @@
+== hwut.accept --whole
+    blessed        test-same.sh a .stdout
+    blessed        test-same.sh b .stdout
+    GOOD: test-same.sh.txt
+== hwut.run
+RESULTS: 2 ok, 0 fail
+== hwut.report.details test-same.sh a
+status report: run and accepted -- both records stand (stdout)
+== hwut.remove test-same.sh b
+    GOOD: test-same.sh.txt
+== hwut.rename test-same.sh -to test-other.sh
+    GOOD: test-other.sh.txt
+== hwut.remove test-other.sh
+    (GOOD holds no nominal)
+<hwut-end>

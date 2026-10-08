@@ -59,7 +59,7 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         previous line's directory, ':/:' its directory
                         and file, a choice following (disc-8). The
                         lines join the '--glob' targets and are OR'ed
-                        with them. 'hwut.report.wishlist' PRINTS this form,
+                        with them. 'hwut.report.list' PRINTS this form,
                         so the round trip closes.
 THE SHORT FORM OF HWUT 1.0 lives here too ('desugar_positional',
 'with_targets'): a face may take BARE WORDS -- 'hwut.run test-app.sh

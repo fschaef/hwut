@@ -11,7 +11,7 @@ FAULT f.py:5:15: VOCABULARY: unknown key 'pyep' in choice 'one'
 --- a key bound to nothing, where something is required ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=())
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=(), stderr_ignored=None)
 choice -:
     (nothing stated)
 FAULT f.py:4:24: TYPE: 'numeric_ratio' is bound to nothing; leave it unstated for the default, or name a value
@@ -19,7 +19,7 @@ FAULT f.py:4:24: TYPE: 'numeric_ratio' is bound to nothing; leave it unstated fo
 --- a retired key: 'slash' (compare C-18), refused with its successor ---
 title    'T'  language None  origin HEADER  at 1:10
 root:
-    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 FAULT f.py:3:19: VOCABULARY: 'slash' is retired: '/' and '\' are equivalent by eq_pattern = ["[\\\\/]+"]; 'hwut.renovate --apply' rewrites it
@@ -27,7 +27,7 @@ FAULT f.py:3:19: VOCABULARY: 'slash' is retired: '/' and '\' are equivalent by e
 --- 'title' absent ---
 title    'f.py <title unspecified>'  language None  origin HEADER  at 1:8
 root:
-    tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
 <hwut-end>

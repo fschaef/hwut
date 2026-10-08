@@ -165,19 +165,25 @@ def _expanded(line_list):
 
 
 def _refused_block(line_list):
-    """RETURN: list[str], the lines of the REFUSED block, stripped;
-    empty where none stands."""
+    """RETURN: list[str], one '<node>   <reason>' per entry of the
+    REFUSED block; empty where none stands.
+
+    THE BLOCK IS GROUPED (display D-46): the reason as a heading at the
+    margin, the directory beneath it, the nodes beneath that. An entry
+    is given back with the reason it stands under."""
     result = []
     in_f   = False
+    reason = None
     for line in line_list:
         if line.startswith("REFUSED -- not run"): in_f = True; continue
-        #  THE BLOCK ENDS AT THE RULE -- or at the blank line before
-        #  the wallflower NOTE, which stands inside the same rules and
-        #  is indented like an entry (X-SILENT: a refused file is a
-        #  wallflower too, so the NOTE now follows every REFUSED block
-        #  of a backup-shaped name).
-        if in_f and (line.startswith("=") or not line.strip()): break
-        if in_f and line.startswith("    "):        result.append(line.strip())
+        if not in_f:                               continue
+        #  THE BLOCK ENDS AT THE RULE -- or at the wallflower NOTE,
+        #  which stands inside the same rules (X-SILENT).
+        if line.startswith(("=", "NOTE")):         break
+        if not line.strip() or line.startswith(("-", "=>")): continue
+        if not line.startswith(" "):               reason = line.strip()
+        elif line.startswith("        "):
+            result.append("%s   %s" % (line.strip(), reason))
     return result
 
 

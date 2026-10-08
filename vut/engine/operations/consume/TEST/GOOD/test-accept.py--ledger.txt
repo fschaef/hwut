@@ -1,6 +1,6 @@
 INSPECT: after the FIRST accept : ['report', 'verdict']
          after a RE-ACCEPT      : ['report', 'verdict']
-         book header            : test;choice;verdict;report;stderr;stain;test_id;choice_id
+         book header            : test;choice;verdict;report;stain;test_id;choice_id
   OK  : an acceptance writes the decision and nothing else
   OK  : a re-accept writes the same entry: nothing in it depends on WHEN
   OK  : the book has no column of acceptance instants: git dates each one (B-25)

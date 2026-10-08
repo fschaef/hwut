@@ -97,6 +97,7 @@ from   vut.engine.orchestrator.run.strategy          import (
            E_SchedulerTestRun_Strategy, E_SchedulerTestRun_SelectionOrder,
            strategy_of, words_of, DETERMINISTIC_SPEC)
 from   vut.engine.protocol.summary                   import fold
+from   vut.engine.orchestrator.plan.confinement      import uncapped_refusal_f
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
 from   vut.services.lib.face                         import Refused, Fault, FaceError
@@ -257,6 +258,10 @@ class Tally:
     #  never EMPTY -- 'nothing answered the wish' and 'what answered it
     #  may not run' are different news.
     refused_n:   int = 0
+    #  OF THOSE, FOR WANT OF AN ENFORCEABLE CAP (exploration R-80): the
+    #  run is REFUSED whatever else passed -- a suite may not read green
+    #  while tests the author confined did not run.
+    uncapped_n:  int = 0
 
 
 class _NoFlow:
@@ -408,7 +413,9 @@ def do(request: Request, sink=None, flow=None, write=None):
                  fault_tuple = tuple(str(f) for f in summary.fault_tuple),
                  good_f      = summary.good_f,
                  empty_f     = not summary.verdict_db,
-                 refused_n   = len(summary.refused_db))
+                 refused_n   = len(summary.refused_db),
+                 uncapped_n  = sum(1 for text in summary.refused_db.values()
+                                   if uncapped_refusal_f(text)))
 
 
 def exit_code_of(tally):
@@ -421,6 +428,9 @@ def exit_code_of(tally):
     #  every case it selected may not run was ASKED for something and
     #  said no. 'EMPTY' is for a wish nothing answered at all.
     if tally.empty_f and tally.refused_n: return E_ExitCode.REFUSED
+    #  AN UNENFORCEABLE CAP REFUSES THE RUN'S GREEN TOO (R-80, E-129):
+    #  after FAULT, which a failed case keeps; before OK, always.
+    if tally.uncapped_n: return E_ExitCode.REFUSED
     if tally.empty_f: return E_ExitCode.EMPTY
     return E_ExitCode.OK
 

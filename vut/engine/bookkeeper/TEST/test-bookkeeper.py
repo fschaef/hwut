@@ -329,7 +329,7 @@ def test_reproduce():
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
          == "test;choice;verdict;report;"
-            "stderr;stain;test_id;choice_id",
+            "stain;test_id;choice_id",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
          "every column a decision -- and since B-13 the REGISTER'S two "
          "id columns, last so that every older column keeps its place. "

@@ -1,0 +1,8 @@
+linux      -> linux
+darwin     -> darwin
+win32      -> windows
+cygwin     -> windows
+freebsd13  -> freebsd
+sunos5     -> sunos
+aix        -> aix
+<hwut-end>

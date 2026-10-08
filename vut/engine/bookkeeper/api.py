@@ -11,8 +11,8 @@ BELONGS ON ITS DOOR:
     StoreConfig         what a store is told: where it writes and
                         under what naming
     NamingConfig        how a record is named from test and choice
-    E_StderrNote        the note a choice's stderr carries: nominal,
-                        ignored, forbidden
+    STAIN_STDERR_WORD   the stain keyword of a test that spoke on
+                        stderr untolerated (services E-136)
     E_TestVerdict       what the book says of a choice's standing:
                         pass, fail, aspirant (B-14)
     CAPS_FIELD_DB       the author's caps vocabulary against the
@@ -75,8 +75,9 @@ from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             SIDECAR_SUFFIX_TUPLE, compare_setup_delta,
                             error_witness_name, key_parts_of,
                             nominal_stands_f, STAIN_CONSTRAINT_WORD,
+                            STAIN_STDERR_WORD,
                             stain_text, unstable_f)
-from .configuration import (CAPS_FIELD_DB, E_StderrNote, E_TestVerdict,
+from .configuration import (CAPS_FIELD_DB, E_TestVerdict,
                             NamingConfig, StoreConfig)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
                             GroupTable, parse_group_table)
@@ -91,7 +92,7 @@ from .test_run_info.of_disk import (carries_unaccepted_f,
                                     carries_unaccepted_text_f)
 
 __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
-           "DirectoryLock", "E_StderrNote", "E_TestVerdict", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
+           "DirectoryLock", "E_TestVerdict", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
            "NOMINAL_SUFFIX_DB", "NamingConfig", "Observation",
            "ObservationDb", "ObservationFault", "RunIdFault",
            "STORE_DIRECTORY_NAME", "SUBJECT_BY_SUFFIX_DB",
@@ -100,6 +101,7 @@ __all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "carries_unaccepted_text_f",
            "compare_setup_delta",
            "error_witness_name", "key_parts_of", "nominal_stands_f",
-           "observation_of", "STAIN_CONSTRAINT_WORD", "stain_text",
+           "observation_of", "STAIN_CONSTRAINT_WORD", "STAIN_STDERR_WORD",
+           "stain_text",
            "unstable_f",
            "parse_group_table", "run_id_of_text", "source_digest_of")

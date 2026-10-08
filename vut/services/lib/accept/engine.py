@@ -26,7 +26,9 @@ DESCRIPTION
        all: a cancelled merge leaves no half-decided nominal behind.
 ______________________________________________________________________________
 """
-from vut.services._accept_common          import token_terminated_f
+from vut.services._accept_common          import (token_terminated_f,
+                                                 STDERR_IGNORED_LINE,
+                                                 stderr_mention_of)
 from vut.services._exit                   import E_ExitCode
 from vut.services.lib.viewers             import (driver_for, E_DisplayTarget,
                                                   keyed_absent_reason,
@@ -103,7 +105,7 @@ def adapter_for(editor_argv=None, plain_f=False, side_by_side_f=False,
 
 
 def run_sessions(key_list, store_of, adapter, err, setup=None,
-                 max_round_n=None, stderr_tol_f=False, ask=None):
+                 max_round_n=None, ask=None):
     """
     RETURN: (accepted_list, refused_list, left_list) -- the keys that
             became nominals, the (key, reason) pairs refused after a
@@ -137,8 +139,14 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         class _Case:
             source_file = key.test
             choice      = key.choice
+        spoke_f   = bool(stderr_spoke_db(store, [_Case()]))
+        ignored_f = getattr(key, "stderr_ignored_f", False)
         note = getattr(adapter, "note_stderr", None)
-        if note is not None: note(bool(stderr_spoke_db(store, [_Case()])))
+        if note is not None: note(spoke_f, ignored_f)
+        #  SAID IN WORDS TOO (E-136): the stain is mentioned on every
+        #  tier, not only where a screen has a foot to carry it.
+        mention = stderr_mention_of(key.label, spoke_f, ignored_f)
+        if mention is not None: err(mention)
         #  None MEANS THE DEFAULT, not 'no bound': 'hwut.accept' states
         #  none, and the second round -- after 'e' or 'g' -- was MEASURED
         #  to die comparing round_n against None (E-90).
@@ -149,7 +157,7 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         if intent is not E_Intent.COMMIT or text is None:
             left_list.append(key)
         else:
-            reason = refusal(store, key, text, stderr_tol_f, err)
+            reason = refusal(store, key, text, err)
             if reason is not None:
                 refused_list.append((key, reason))
             else:
@@ -184,7 +192,7 @@ def _terminal_ask(prompt):
     return line
 
 
-def refusal(store, key, text, stderr_tol_f, err):
+def refusal(store, key, text, err):
     """
     RETURN: str, why this text may NOT become the nominal -- in
             'hwut.accept's words.
@@ -211,10 +219,11 @@ def refusal(store, key, text, stderr_tol_f, err):
         choice      = key.choice
 
     spoke_db = stderr_spoke_db(store, [_Case()])
-    if spoke_db:
-        refused = stderr_decision(store, spoke_db, stderr_tol_f, err)
-        if refused:
-            return "stderr spoke and nothing tolerates it ('--stderr-tol')"
+    if stderr_decision(spoke_db,
+                       lambda test, choice:
+                           getattr(key, "stderr_ignored_f", False)):
+        return "stderr spoke and nothing tolerates it ('%s' in the " \
+               "test's block declares it)" % STDERR_IGNORED_LINE
     return None
 
 

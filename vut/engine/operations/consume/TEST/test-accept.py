@@ -57,8 +57,8 @@ from   vut.engine.operations.run.core  import Run            # noqa E402
 from   vut.engine.bookkeeper.api import (    # noqa E402
                                                    Bookkeeper)
 from   vut.engine.bookkeeper.api           import Store          # noqa E402
-from   vut.engine.bookkeeper.api import (  # noqa E402
-                                              E_StderrNote)
+from   vut.engine.bookkeeper.api import (STAIN_STDERR_WORD,  # noqa E402
+                                         stain_text)
 
 
 def _check(pair_list):
@@ -322,67 +322,80 @@ def test_ledger():
 
 
 def test_stderr():
-    """THE SECOND QUESTION (S-1). The book holds ONE NOTE about a
-    choice's stderr, with three readings -- 'nominal' (recorded and
-    compared), 'ignored' (whatever happens, do not worry), 'forbidden'
-    (a word there is an error) -- and ACCEPTANCE is where it is
-    written. A stream that appears with NO note ever taken stops the
-    ceremony: 'stderr-undecided', nothing written at all, because only
-    the author knows which of the three is meant.
+    """THE SECOND QUESTION (services E-110, E-136). Whether a word on
+    stderr is an error is the TEST'S OWN declaration, 'tolerance {
+    stderr_ignored = true }', handed to the ceremony as
+    'stderr_ignored_f'. A stream with words and NO declaration stops
+    the ceremony: 'unexpected-stderr', nothing written at all -- the
+    book's stain cell included.
 
-    An UNNOTED choice reads 'forbidden': a test nobody was asked about
-    has never spoken there, and its first word is news."""
-    def accepted(note):
-        """RETURN: (AcceptResult, note in the book, nominal exists)."""
+    THE STAIN 'stderr-untolerated' IS A RUN'S MARK. An acceptance that
+    STANDS takes it away; a refused one leaves it; tolerance itself is
+    no stain and leaves no trace.
+
+    STDERR IS NEVER SUBJECT TO TESTING (E-5): no reading ever records
+    the stream itself."""
+    def accepted(ignored_f, stderr_text, stained_f=False):
+        """RETURN: (AcceptResult, the book's stain cell afterwards,
+        stderr nominal exists)."""
         directory  = tempfile.mkdtemp(prefix="vut_acc_")
         bookkeeper = Bookkeeper(directory)
         store      = Store(bookkeeper)
+        if stained_f:
+            bookkeeper.note_stain_keyword("demo", None, STAIN_STDERR_WORD,
+                                          True)
         result     = asyncio.run(Accept(
             AcceptConfig(
                 name       = "demo",
                 subjects   = {"stdout": AcceptStep()},
                 groundwork = _Provided({
                     "stdout": BytesNominal("the behaviour\n"),
-                    "stderr": BytesNominal("a warning nobody blessed\n")}),
-                stderr     = note),
+                    "stderr": BytesNominal(stderr_text)}),
+                stderr_ignored_f = ignored_f),
             store).run())
-        state = (result, bookkeeper.stderr_note("demo", None),
+        state = (result, stain_text(bookkeeper.stain("demo", None)),
                  store.nominal_path("demo", None, "stderr").exists())
         shutil.rmtree(directory, ignore_errors=True)
         return state
 
-    print("INSPECT: an unnoted choice reads %s"
-          % Bookkeeper(tempfile.mkdtemp()).stderr_note("demo", None))
-    print("         %-12s %-22s %-11s %s"
-          % ("asked for", "report", "book note", "nominal file"))
+    print("         %-10s %-8s %-9s %-20s %-20s %s"
+          % ("tolerated", "stderr", "stained", "report", "stain after",
+             "nominal file"))
     outcome_db = {}
-    for note in (None, E_StderrNote.IGNORED, E_StderrNote.FORBIDDEN):
-        result, written, nominal_f = accepted(note)
-        outcome_db[note] = (result, written, nominal_f)
-        print("         %-12s %-22s %-11s %s"
-              % ("(nothing)" if note is None else note.value,
-                 result.report.value, written.value, nominal_f))
+    for ignored_f in (False, True):
+        for label, text in (("silent", ""),
+                            ("spoke",  "a warning nobody blessed\n")):
+            for stained_f in (False, True):
+                result, stain, nominal_f = accepted(ignored_f, text,
+                                                    stained_f)
+                outcome_db[(ignored_f, label, stained_f)] = \
+                    (result, stain, nominal_f)
+                print("         %-10s %-8s %-9s %-20s %-20s %s"
+                      % ("yes" if ignored_f else "no", label,
+                         "yes" if stained_f else "no",
+                         result.report.value, stain or "(clean)",
+                         nominal_f))
 
-    refused = outcome_db[None][0]
+    refused = outcome_db[(False, "spoke", False)][0]
     ok = _check([
-        (refused.report is E_TestRunResult.STDERR_UNDECIDED,
-         "a stream with words and no note REFUSES the ceremony"),
+        (refused.report is E_TestRunResult.UNEXPECTED_STDERR,
+         "a stream with words and no tolerance REFUSES the ceremony"),
         (not refused.accepted_db,
          "and nothing at all is written -- not even the stdout that "
          "was fine"),
-        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): there is no
-        #  reading that records the stream itself -- only the note.
-        (not hasattr(E_StderrNote, "NOMINAL"),
-         "'nominal' is RETIRED: no reading ever records the stream"),
-        (outcome_db[E_StderrNote.IGNORED][1] is E_StderrNote.IGNORED
-         and not outcome_db[E_StderrNote.IGNORED][2],
-         "'ignored' notes the book and records nothing"),
-        (outcome_db[E_StderrNote.FORBIDDEN][1] is E_StderrNote.FORBIDDEN
-         and not outcome_db[E_StderrNote.FORBIDDEN][2],
-         "'forbidden' notes the book and records nothing"),
+        (not outcome_db[(False, "spoke", False)][1]
+         and outcome_db[(False, "spoke", True)][1] == STAIN_STDERR_WORD,
+         "a refused acceptance neither sets the stain nor clears it"),
+        (all(outcome_db[key][0].verdict and not outcome_db[key][1]
+             for key in outcome_db if key[:2] != (False, "spoke")),
+         "every acceptance that stands leaves the cell clean"),
+        (not outcome_db[(True, "spoke", False)][1],
+         "tolerated stderr is no stain"),
+        (not any(nominal_f for _, _, nominal_f in outcome_db.values()),
+         "no reading ever records the stream"),
     ])
-    _verdict(ok, "two readings, never the stream, and the author "
-                "writes it.")
+    _verdict(ok, "the test declares; the ceremony refuses, or stands "
+                "and clears.")
 
 
 class _Provided:

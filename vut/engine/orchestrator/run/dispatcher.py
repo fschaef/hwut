@@ -77,18 +77,13 @@ class TestRunDispatcher(I_Dispatcher):
         """
         self.directory  = directory
         self.record     = True if record is None else record
-        #  ONE bookkeeper per NAMING LAW: 'same' (all choices share one
-        #  nominal) is an application's word, so an application that
-        #  states it gets its own book; the directory's default book
-        #  serves the rest. The LOCK is the directory's, taken once.
-        self.bookkeeper = Bookkeeper(directory)
+        #  ONE BOOKKEEPER FOR THE DIRECTORY (B-30): 'same' -- all
+        #  choices share one nominal -- is an application's word, and
+        #  the naming law names the applications that state it. There
+        #  was a second bookkeeper per such application, made here and
+        #  nowhere else; every other face named a nominal per choice.
+        self.bookkeeper = Bookkeeper(directory, naming_of(entry.app_set))
         self.store      = Store(self.bookkeeper)
-        self.store_db   = {}
-        for app in entry.app_set:
-            naming = naming_of(app)
-            if not naming.same_nominal_f: continue
-            self.store_db[app.source_file] = Store(
-                                    Bookkeeper(directory, naming))
         #  THE DIRECTORY IS HELD THROUGH THE BOOKKEEPER (B-9): it is
         #  the locking proxy; every write it makes inside the session
         #  sees the lock held and does not take it again.
@@ -244,7 +239,7 @@ class TestRunDispatcher(I_Dispatcher):
             configuration,
             Request(choice=node.choice, record=self.record,
                     force_run=self.force_run_f),
-            store=self.store_db.get(node.file, self.store),
+            store=self.store,
             provision=provision)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value

@@ -88,6 +88,7 @@ from   vut.engine.orchestrator.run.coverage_dispatcher \
 from   vut.engine.orchestrator.run.orchestrate       import orchestrator
 from   vut.services.run                              import optional_log_writer
 from   vut.services._exit                            import E_ExitCode
+from   vut.engine.orchestrator.plan.confinement import uncapped_refusal_f
 from   vut.services._target                          import entered
 from   vut.services.lib.cmdline                      import (face_parser,
                                                              usage_of,
@@ -133,12 +134,17 @@ def exit_code_of(summary):
     """
     RETURN: E_ExitCode of a coverage run whose event stream folded to
             'summary' (E-1): FAULT where a fault was met or a case is
-            without a record, EMPTY where no case was selected, OK
-            else.
+            without a record, REFUSED where a case was not run for
+            want of an enforceable cap, EMPTY where no case was
+            selected, OK else.
     """
     if summary.fault_tuple or summary.fail_n \
        or summary.good_f is False:
         return E_ExitCode.FAULT
+    #  AN UNENFORCEABLE CAP REFUSES (exploration R-80), as on the run.
+    if any(uncapped_refusal_f(text)
+           for text in summary.refused_db.values()):
+        return E_ExitCode.REFUSED
     if not summary.verdict_db: return E_ExitCode.EMPTY
     return E_ExitCode.OK
 

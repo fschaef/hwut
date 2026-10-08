@@ -1,0 +1,17 @@
+acknowledged: (nothing)
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+    network
+acknowledged: network
+    child_process_max_n
+    cpu_sec
+    file_size_mb
+    memory_mb
+acknowledged: network, memory_mb, child_process_max_n
+    cpu_sec
+    file_size_mb
+acknowledged: network, memory_mb, child_process_max_n, cpu_sec, file_size_mb
+    (runs)
+<hwut-end>

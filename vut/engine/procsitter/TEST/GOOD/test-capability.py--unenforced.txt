@@ -1,0 +1,3 @@
+memory and pid caps reported: True
+agrees with the board: True
+<hwut-end>

@@ -1,0 +1,19 @@
+no acknowledgement
+    test-free.sh  -     admitted
+    test-net.sh   a     cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+    test-net.sh   b     cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+    test-one.sh   open  admitted
+    test-one.sh   shut  cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+acknowledged for 'linux'
+    test-free.sh  -     admitted
+    test-net.sh   a     admitted
+    test-net.sh   b     admitted
+    test-one.sh   open  admitted
+    test-one.sh   shut  admitted
+acknowledged for 'windows' only
+    test-free.sh  -     admitted
+    test-net.sh   a     cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+    test-net.sh   b     cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+    test-one.sh   open  admitted
+    test-one.sh   shut  cap 'network' not enforceable on 'linux' => hwut-root.conf: procsitter { linux { network = false } }
+<hwut-end>

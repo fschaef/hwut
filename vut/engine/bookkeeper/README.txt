@@ -46,7 +46,7 @@ THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is
 refused at the specification's door.
 
-    test;choice;verdict;report;stderr;stain
+    test;choice;verdict;report;stain
 
     test            the application's file name; EMPTY means "the
                     same as the row above" -- an empty name means
@@ -55,13 +55,13 @@ refused at the specification's door.
     verdict         true / false -- of the last run
     report          the run's report token (word.py phrases it)
     coverage        the coverage step's token; empty where not asked
-    stderr          the stderr note ('ignored', 'forbidden'); empty
-                    where none
-    stain           the disqualifications, '|'-separated (B-18):
-                    'N repeat' -- unstable over N repeats, the count a
-                    proof must repeat to clear it; 'constraint' -- the
-                    GOOD contradicts its own constraints. Empty where
-                    the choice is clean
+    stain           the bad marks, '|'-separated (B-18): 'N repeat'
+                    -- unstable over N repeats, the count a proof must
+                    repeat to clear it, and the one that disqualifies;
+                    'constraint' -- the GOOD contradicts its own
+                    constraints; 'stderr-untolerated' -- stderr spoke
+                    and the test's block does not tolerate it (B-29).
+                    Empty where the choice is clean
 
 An empty cell is ABSENCE. No row carries a configuration, an
 instant of acceptance, an operation name, a host, a duration or an
@@ -69,7 +69,7 @@ attribution: the first two are git's (B-6, B-25), the last three the
 local database's, and an operation is not a dimension of a decision.
 
 READ THROUGH THE DOOR: 'tests()', 'choices()', 'result()', 'stain()',
-'stderr_note()', 'divergence()'. The model these answer from is
+'divergence()'. The model these answer from is
 private; the file's shape may change under a face without it
 noticing (E-37).
 

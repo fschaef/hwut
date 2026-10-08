@@ -54,7 +54,7 @@ from   dataclasses import fields, is_dataclass
 from   enum        import Enum
 from   pathlib     import Path
 from   contextlib  import contextmanager
-from .configuration import E_StderrNote, E_TestVerdict, NamingConfig
+from .configuration import E_TestVerdict, NamingConfig
 from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
 from .test_id_db import TestIdDb
 
@@ -102,8 +102,10 @@ GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
 #  NO COVERAGE TOKEN (B-27): a coverage run books nothing (coverage
 #  D-38); its record is its whole product. An older book's 'coverage'
 #  column is ignored like any unknown one.
-_COLUMN_TUPLE  = ("test", "choice", "verdict", "report",
-                  "stderr", "stain",
+#  NO STDERR COLUMN (B-29): what stderr leaves in the book is a STAIN,
+#  and a stain needs no column of its own. An older book's 'stderr'
+#  column is ignored like any unknown one, and gone at its next write.
+_COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "stain",
                   "test_id", "choice_id")
 
 NO_CHOICE_KEY       = "<none>"
@@ -200,7 +202,6 @@ def _rows_of_model(content):
                    "choice": "" if key == NO_CHOICE_KEY else key,
                    "verdict":        _verdict_text(book.get("verdict")),
                    "report":         book.get("report") or "",
-                   "stderr":         book.get("stderr") or "",
                    "stain":          stain_text(book.get("stain")),
                    #  THE REGISTER'S COLUMNS (B-13): the id of the
                    #  application and the id of the choice. The MARKS
@@ -239,7 +240,7 @@ def _model_of_rows(row_iterable):
         if row.get("verdict"):
             book["verdict"] = E_TestVerdict.of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
-        for name in ("stderr", "test_id", "choice_id"):
+        for name in ("test_id", "choice_id"):
             if row.get(name): book[name] = row[name]
         stain = stain_of_text(row.get("stain") or "")
         if stain is not None: book["stain"] = stain
@@ -262,7 +263,6 @@ def _model_of_legacy(content):
             if not isinstance(choice_book, dict): continue
             out = model.setdefault(test, {}).setdefault("choices", {}) \
                        .setdefault(key, {})
-            if "stderr" in choice_book: out["stderr"] = choice_book["stderr"]
             stain = choice_book.get("stain")
             if isinstance(stain, dict) and "repeat_n" in stain:
                 out["stain"] = {"repeat_n": int(stain["repeat_n"]),
@@ -341,8 +341,14 @@ def _bool_of_text(text):
 #  the repetition instability that 'hwut.run.stability' convicted over N
 #  repeats; every other keyword names a disqualification of its own --
 #  'constraint': the GOOD contradicts its own constraints.
+#  'stderr-untolerated': a run found the test SPEAKING ON STDERR while
+#  its block does not tolerate it (services E-136). A stain is a BAD
+#  MARK: that stderr is tolerated is no stain, and leaves no trace here.
+#  Set by the run that fails 'unexpected-stderr', taken away by the
+#  first run or acceptance that passes.
 STAIN_REPEAT_WORD     = "repeat"
 STAIN_CONSTRAINT_WORD = "constraint"
+STAIN_STDERR_WORD     = "stderr-untolerated"
 
 
 def stain_of_text(text):
@@ -557,8 +563,9 @@ class Bookkeeper:
     """ONE test directory's book: the naming, the entries, the
     reproducible configurations, and the divergence verdicts.
 
-    THE NAMING LAW lives in 'configuration.py' (NamingConfig):
-    'same_nominal_f' drops the choice part from a NOMINAL's key, so
+    THE NAMING LAW lives in 'configuration.py' (NamingConfig): for a
+    test in 'same_nominal_set' the choice part is dropped from a
+    NOMINAL's key, so
     every choice is held against one blessed file; candidates keep
     their own names, so a diff still names which choice diverged.
 
@@ -571,9 +578,13 @@ class Bookkeeper:
         """
         RETURN: Bookkeeper over 'directory'.
 
-        'naming' is the NamingConfig in force; None takes the default
-        (a nominal per choice). It reaches the NOMINAL's name only --
-        candidates are always named per choice.
+        'naming' is the NamingConfig in force -- which tests of the
+        directory share one nominal across their choices (B-30); None
+        takes the default (a nominal per choice, for every test). It
+        reaches the NOMINAL's name only -- candidates are always named
+        per choice. WHOEVER NAMES A NOMINAL TELLS IT: a bookkeeper made
+        without the application set's word answers per choice for a
+        test that states 'same'.
         """
         self.directory = Path(directory)
         self.naming    = naming if naming is not None else NamingConfig()
@@ -820,8 +831,9 @@ class Bookkeeper:
         """
         RETURN: Path, where the ACCEPTED record of that key lives.
 
-        Under 'same_nominal_f' the CHOICE PART IS DROPPED: every choice
-        of the test is held against one blessed file. Candidates keep
+        For a test the naming holds as SHARED ('same', B-30) the CHOICE
+        PART IS DROPPED: every choice of it is held against one blessed
+        file. Candidates keep
         their own names regardless, or the choices would overwrite one
         another (configuration.py, NamingConfig).
 
@@ -839,7 +851,7 @@ class Bookkeeper:
         CANDIDATES ARE UNAFFECTED. The store is 2.0's own ground, no
         other framework reads it, and there the subject names itself.
         """
-        nominal_choice = None if self.naming.same_nominal_f else choice
+        nominal_choice = None if self.naming.shared_f(test) else choice
         return self.directory / "GOOD" \
                / self.key(test, nominal_choice, NOMINAL_SUFFIX_DB
                                                 .get(subject, subject))
@@ -1028,13 +1040,14 @@ class Bookkeeper:
         """
         RETURN: dict, the whole base as the MODEL every accessor answers
                 from: test -> {'choices': {key -> {'operations': {op ->
-                {'verdict', 'report', ...}}, 'stderr'?, 'stain'?}}}.
+                {'verdict', 'report', ...}}, 'stain'?}}}.
                 Empty when nothing was recorded.
 
         THE MODEL IS PRIVATE (B-6, E-37): its shape is answered
-        through 'tests()', 'choices()', 'result()', 'stain()',
-        'stderr_note()'; a reader that indexes it directly is reading
-        past the door.
+        through 'tests()', 'choices()', 'result()', 'stain()'; a reader
+        that indexes it directly is reading past the door. There is
+        no 'stderr' cell (B-29): tolerance stands in the test's block
+        alone, and what an untolerated word leaves here is a stain.
 
         A missing or unreadable base reads as empty: the base is a
         record, and its loss must never fail a run. A book written
@@ -1257,63 +1270,6 @@ class Bookkeeper:
         return sorted((None if key == NO_CHOICE_KEY else key
                        for key in recorded),
                       key=lambda name: (name is not None, name))
-
-    def stderr_note(self, test, choice):
-        """
-        RETURN: E_StderrNote, what the book says about that choice's
-                stderr:
-
-                    IGNORED    whatever happens there, do not worry
-                    FORBIDDEN  a word there is an ERROR
-
-                An unnoted choice reads FORBIDDEN: a test that was
-                never asked about stderr is one that has never spoken
-                there, and the first word it says is news. A book
-                written before E-5 may still hold 'nominal' -- unknown
-                to this enum, so it reads FORBIDDEN too: the migration
-                is silent, and a speaking choice is caught at its next
-                run rather than trusted on old say-so.
-        """
-        key   = NO_CHOICE_KEY if choice is None else choice
-        noted = self.book().get(test, {}).get("choices", {}) \
-                           .get(key, {}).get("stderr")
-        try:
-            return E_StderrNote(noted)
-        except ValueError:
-            return E_StderrNote.FORBIDDEN
-
-    def note_stderr(self, test, choice, note):
-        """RETURN: what '_note_stderr_unlocked' returns -- the same act, under
-        the directory's lock (B-9).
-        """
-        with self._act():
-            return self._note_stderr_unlocked(
-                       test=test, choice=choice, note=note)
-
-    def _note_stderr_unlocked(self, test, choice, note):
-        """
-        RETURN: E_StderrNote, what now stands in the book for that
-                choice -- written verbatim, replacing any earlier note.
-
-        THE NOTE IS THE DECISION, and acceptance is where it is taken.
-        STDERR IS NEVER SUBJECT TO TESTING (E-5): noting IGNORED or
-        FORBIDDEN removes any nominal stderr that lingers from before
-        this ruling, since a stream cannot be both compared and
-        disregarded.
-        """
-        note       = E_StderrNote(note)
-        content    = self.book()
-        test_book  = content.setdefault(test, {})
-        choice_db  = test_book.setdefault("choices", {})
-        key        = NO_CHOICE_KEY if choice is None else choice
-        choice_db.setdefault(key, {})["stderr"] = note.value
-        self._write_book(content)
-        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): every remaining
-        #  note -- IGNORED or FORBIDDEN -- means no nominal stderr can
-        #  stand, so any that lingers is removed, unconditionally.
-        path = self.nominal_path(test, choice, "stderr")
-        if path.exists(): path.unlink()
-        return note
 
     def note_accept(self, test, choice, aspirant_f=False):
         """RETURN: what '_note_accept_unlocked' returns -- the same act, under

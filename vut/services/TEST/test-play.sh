@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The hwut.run.play face: run one test, show the reading"
 #     choices    = ["build", "pyped", "reading", "refused", "silent",
-#                   "solo", "stderr"]
+#                   "solo", "stderr", "why"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -29,7 +29,12 @@
 #           (E-5): seeing is not judging.
 # build     a build that fails is the reason there is nothing to play;
 #           its log is shown plainly and the face stops.
-# silent    a choice producing nothing to read answers EMPTY.
+# silent    a choice producing nothing to read answers EMPTY -- and
+#           says why (operations todo-21, C-1): the call, what PATH
+#           resolved, containment, exit, the report, the channels.
+# why       the two empties a person cannot tell apart from the word
+#           alone: everything said on STDERR, exit 3 (the wrong-channel
+#           hint), and a call whose first word PATH does not know.
 # refused   by name: no such application, no such choice, an option
 #           the face does not take, two words too many.
 #
@@ -59,7 +64,12 @@ printf 'hwut {\n}\n' > hwut-root.conf
 face() {                # <args...> -- status, stdout, stderr
     $FACE "$@" --plain > out.txt 2> err.txt
     echo "STATUS: $?"
+    #  THE MACHINE'S WORDS LEAVE THE PAGE: the work directory, a
+    #  call's wall clock, and where PATH found an interpreter.
     echo "STDOUT {"; sed "s|$WORK|<work>|g" < out.txt \
+                     | sed -E 's/wall [0-9.]+s/wall <t>s/;
+                               s/^(  RESOLVED   [^ ]+ -> ).*/\1<path>/;
+                               /^ +-> /d' \
                      | sed 's/^/    /'; echo "}"
     if [ -s err.txt ]; then
         echo "STDERR {"; sed "s|$WORK|<work>|g" < err.txt \
@@ -171,6 +181,17 @@ silent)
         > suite/TEST/test-mute.sh
     chmod +x suite/TEST/test-mute.sh
     face --directory=suite/TEST test-mute.sh
+    ;;
+
+why)
+    fixture
+    printf '#! /bin/bash\n# @hwut { title = "W" }\necho "all of it on stderr" >&2\nexit 3\n' \
+        > suite/TEST/test-wrong.sh
+    printf '# @hwut {\n#     title   = "G"\n#     execute = "no-such-tool-xyz $file"\n# }\necho hi\n' \
+        > suite/TEST/test-gone.sh
+    chmod +x suite/TEST/test-wrong.sh
+    face --directory=suite/TEST test-wrong.sh
+    face --directory=suite/TEST test-gone.sh
     ;;
 
 refused)

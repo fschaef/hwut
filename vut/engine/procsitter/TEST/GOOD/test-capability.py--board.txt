@@ -1,0 +1,49 @@
+psutil present, resource present
+    file_handle_max_n      NOT
+    max_cpu_time_sec       watched
+    max_disk_mb            watched
+    max_file_size_mb       watched
+    max_memory_mb          watched
+    max_output_gap_sec     watched
+    max_pids               watched
+    max_wall_clock_sec     watched
+    min_free_disk_mb       watched
+    network                NOT
+    write_directory_list   NOT
+psutil present, resource absent
+    file_handle_max_n      NOT
+    max_cpu_time_sec       NOT
+    max_disk_mb            watched
+    max_file_size_mb       NOT
+    max_memory_mb          watched
+    max_output_gap_sec     watched
+    max_pids               watched
+    max_wall_clock_sec     watched
+    min_free_disk_mb       watched
+    network                NOT
+    write_directory_list   NOT
+psutil absent, resource present
+    file_handle_max_n      NOT
+    max_cpu_time_sec       watched
+    max_disk_mb            watched
+    max_file_size_mb       watched
+    max_memory_mb          NOT
+    max_output_gap_sec     watched
+    max_pids               NOT
+    max_wall_clock_sec     watched
+    min_free_disk_mb       watched
+    network                NOT
+    write_directory_list   NOT
+psutil absent, resource absent
+    file_handle_max_n      NOT
+    max_cpu_time_sec       NOT
+    max_disk_mb            watched
+    max_file_size_mb       NOT
+    max_memory_mb          NOT
+    max_output_gap_sec     watched
+    max_pids               NOT
+    max_wall_clock_sec     watched
+    min_free_disk_mb       watched
+    network                NOT
+    write_directory_list   NOT
+<hwut-end>

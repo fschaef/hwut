@@ -57,7 +57,6 @@ from   vut.engine.orchestrator.exploration.tree_explorer \
 from   vut.engine.display.word                  import CInk
 from   vut.engine.display.console               import colour_decision
 from   vut.engine.operations.result             import E_TestRunResult
-from   vut.engine.bookkeeper.api             import E_StderrNote
 from   vut.engine.bookkeeper.api import carries_unaccepted_text_f
 from   vut.engine.bookkeeper.api              import Store, unstable_f
 from   vut.engine.orchestrator.exploration.task_list   import SelectionError
@@ -72,6 +71,7 @@ from   vut.engine.compare.api                          import Configuration
 from   vut.engine.operations.session                   import refresh
 from   vut.engine.orchestrator.run.adapter             import \
                                                        test_configuration_of
+from   vut.engine.orchestrator.plan                    import confinement
 from   vut.auxiliary.directory_mutex                   import DirectoryBusy
 from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
@@ -89,8 +89,6 @@ PARSER.add_argument("--dont-ask", action="store_true")
 PARSER.add_argument("-f", "--force", action="store_true")
 PARSER.add_argument("--whole", "--as-is", dest="force", action="store_true")
 PARSER.add_argument("--force-run", action="store_true")
-PARSER.add_argument("--stderr-tol", "--stderr-tolerated", dest="stderr_tol",
-                    action="store_true")
 PARSER.add_argument("--directory", default=None)
 ARG_DB = {"--directory": True}
 USAGE  = usage_of(PARSER, ARG_DB)
@@ -143,11 +141,6 @@ PROMOTION
                         runs ON NECESSITY: a case whose recording is
                         older than its source is run; a current one
                         is blessed as it stands
-    --stderr-tol[erated]
-                        note the choice's stderr IGNORED. Required
-                        where stderr SPOKE: there is no default there,
-                        because a default leaves the user clueless in
-                        front of output that deviates
     --directory=<path>  where to read; the current one else
 
 STDERR IS NEVER SUBJECT TO TESTING
@@ -274,11 +267,9 @@ def key_list_of(store, case_sequence):
             actually recorded.
 
     'shared_f' marks a key whose nominal is shared by every choice of
-    the test ('same_nominal_f'): blessing one choice there rewrites
+    the test ('same', B-30): blessing one choice there rewrites
     the pole the others are judged by.
     """
-    shared_f = bool(getattr(store.bookkeeper.naming, "same_nominal_f",
-                            False))
     key_list = []
     for case in case_sequence:
         #  RECORDING keys by the STEM, so acceptance must too, or it
@@ -296,7 +287,7 @@ def key_list_of(store, case_sequence):
                 test, case.source_file, choice, subject,
                 store.bookkeeper.candidate_path(test, choice, subject),
                 store.bookkeeper.nominal_path(test, choice, subject),
-                shared_f))
+                store.bookkeeper.naming.shared_f(test)))
     return key_list
 
 
@@ -859,38 +850,31 @@ def stderr_spoke_db(store, case_sequence):
     return spoke_db
 
 
-def stderr_decision(store, spoke_db, tolerate_f, write):
+def stderr_decision(spoke_db, ignored_f_of):
     """
     RETURN: list, the (test, choice, size) triples REFUSED -- stderr
-            spoke, no note tolerates it, '--stderr-tol' not said.
-            Empty where nothing stands in the way.
+            spoke and the test does not declare it ignored. Empty where
+            nothing stands in the way.
 
-    THERE IS NO DEFAULT where stderr speaks: a default would leave the
-    user clueless in front of output that deviates. With
-    '--stderr-tol' the note IGNORED is written; without it the choice
-    is refused BY NAME, with both remedies.
+    'ignored_f_of(test, choice)' answers the test's OWN declaration,
+    'tolerance { stderr_ignored = true }' (E-110, E-136). NOTHING HERE
+    DECIDES: no switch of this face tolerates on a wish's say-so, and
+    nothing is written. A choice whose stderr spoke undeclared is
+    refused BY NAME, with both remedies.
     """
-    refused_list = []
-    for (test, choice), size in sorted(
-            spoke_db.items(),
-            key=lambda item: (item[0][0], item[0][1] or "")):
-        note = store.stderr_note(test, choice)
-        if note is E_StderrNote.IGNORED: continue
-        if tolerate_f:
-            store.note_stderr(test, choice, E_StderrNote.IGNORED)
-            write("NOTE: stderr of '%s%s' is now IGNORED (%d bytes "
-                  "spoke)" % (test,
-                              "" if choice is None else " " + choice,
-                              size))
-            continue
-        refused_list.append((test, choice, size))
-    return refused_list
+    return [(test, choice, size)
+            for (test, choice), size in sorted(
+                spoke_db.items(),
+                key=lambda item: (item[0][0], item[0][1] or ""))
+            if not ignored_f_of(test, choice)]
 
 
 #  'token_terminated_f' and 'classify' live in '_accept_common.py' now:
 #  they are what BOTH kinds of acceptance rely on, and a refusal rule
 #  must not be able to apply to one kind and not the other.
-from vut.services._accept_common import token_terminated_f, classify  # noqa: E402
+from vut.services._accept_common import (token_terminated_f, classify,  # noqa: E402
+                                         STDERR_IGNORED_LINE,
+                                         stderr_ignored_f_of)
 from vut.services              import accept_first                   # noqa: E402
 
 
@@ -1026,7 +1010,6 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     directory    = arguments.directory or "."
     force_f      = arguments.force
     dont_ask_f   = arguments.dont_ask
-    stderr_tol_f = arguments.stderr_tol
     force_run_f  = arguments.force_run
     word_list    = arguments.word
     #  '--force' IMPLIES '--dont-ask' (E-70). The two words say
@@ -1152,7 +1135,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
             write("")
             write("== %s" % os.path.relpath(whole, os.getcwd()))
         code = accept_one(whole, result, bookkeeper, case_db[where],
-                          force_f, force_run_f, stderr_tol_f,
+                          force_f, force_run_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list,
                           interactive_f=interactive_f,
@@ -1195,7 +1178,9 @@ def refresh_cases(directory, result, bookkeeper, case_sequence,
     """
     RETURN: None, every case's candidate is current -- refreshed where
                   it was not.
-            E_ExitCode.REFUSED, the directory is held by another run.
+            E_ExitCode.REFUSED, the directory is held by another run,
+                  or a case is under a cap that cannot be enforced
+                  here (exploration R-80) -- said by name.
 
     ACCEPT'S ENGINE FOR PROVISION: 'session.refresh' per case (E-40,
     E-122) -- build where the application is built, run where the
@@ -1205,6 +1190,22 @@ def refresh_cases(directory, result, bookkeeper, case_sequence,
     '--force-run' ('force_run_f') runs every case regardless.
     """
     language_setup = result.app_set.directory_spec.language_setup
+    #  AN UNENFORCEABLE CAP REFUSES HERE TOO (exploration R-80): this
+    #  face runs what it accepts, and a case 'hwut.run' would refuse is
+    #  not run through another door. Judged for EVERY case before the
+    #  first is run: nothing is refreshed where something is refused.
+    uncapped_list = [(case, reason) for case, reason in
+                     ((case, confinement.refusal_of(result.app_set,
+                                                    case.source_file,
+                                                    case.choice))
+                      for case in case_sequence) if reason is not None]
+    for case, reason in uncapped_list:
+        for line in confinement.refusal_line_list(
+                        case.source_file if case.choice is None
+                        else "%s %s" % (case.source_file, case.choice),
+                        reason):
+            write(line)
+    if uncapped_list: return E_ExitCode.REFUSED
     for case in case_sequence:
         configuration = test_configuration_of(
                             result.app_set.app_db[case.source_file],
@@ -1224,7 +1225,7 @@ def refresh_cases(directory, result, bookkeeper, case_sequence,
 
 
 def accept_one(directory, result, bookkeeper, case_sequence,
-               force_f, force_run_f, stderr_tol_f, propose_n,
+               force_f, force_run_f, propose_n,
                write, read_line, put=None, brief_list=None,
                interactive_f=False, dont_ask_f=False):
     """
@@ -1265,19 +1266,26 @@ def accept_one(directory, result, bookkeeper, case_sequence,
 
     #  STDERR FIRST: where it spoke and nothing tolerates it, the
     #  whole choice is refused before any pole is touched.
-    refused_list = stderr_decision(store,
-                                   stderr_spoke_db(store, case_sequence),
-                                   stderr_tol_f, write)
+    def ignored_f_of(test, choice):
+        """RETURN: bool, the test's own 'stderr_ignored' for the case."""
+        app = result.app_set.app_db.get(test)
+        parameters = None if app is None else app.choice_db.get(choice)
+        tolerance  = getattr(parameters, "tolerance", None)
+        return bool(tolerance is not None and tolerance.stderr_ignored)
+
+    refused_list = stderr_decision(stderr_spoke_db(store, case_sequence),
+                                   ignored_f_of)
     if refused_list:
-        write("REFUSED: stderr SPOKE and no note tolerates it --")
+        write("REFUSED: stderr SPOKE and nothing tolerates it --")
         for test, choice, size in refused_list:
             write("    %s%s   (%d bytes)"
                   % (test, "" if choice is None else " " + choice,
                      size))
         write("stderr is for ERROR REPORTING and is never subject to")
-        write("testing. Either state '--stderr-tol' to note it IGNORED,")
-        write("or -- where the reporting is itself under test -- flush")
-        write("it to a FILE and name that file in 'output'.")
+        write("testing. Either declare it in the test's own block,")
+        write("'%s', or -- where the" % STDERR_IGNORED_LINE)
+        write("reporting is itself under test -- flush it to a FILE and")
+        write("name that file in 'output'.")
         return E_ExitCode.FAULT
 
     #  A STAINED CHOICE IS NEVER PROMOTED, and never silently: the
@@ -1436,8 +1444,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     uncommitted_list = []
     if merge_list and interactive_f and not force_f:
         merged_list, merge_refused_list, merge_left_list, sat_f = \
-            _merge_through_engine(merge_list, store, write, stderr_tol_f,
-                                  config_db)
+            _merge_through_engine(merge_list, store, write, config_db)
         blessed_list.extend(merged_list)
         #  LEFT AT A TERMINAL IS NOT 'MERGE REQUIRED' (E-88): the screen
         #  was there, and the author left it with Ctrl-C (E-89). The
@@ -1545,7 +1552,7 @@ def report_written(outcome_tuple, key_n, write):
     write("=" * 78)
 
 
-def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
+def _merge_through_engine(key_list, store, write, config_db):
     """
     RETURN: (accepted_list, refused_list, left_list) for the keys a
             nominal already stands for -- run through the SAME engine
@@ -1567,6 +1574,8 @@ def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
             self.choice       = key.choice
             self.label        = key.name
             self.setup        = setup
+            self.stderr_ignored_f = stderr_ignored_f_of(
+                                        config_db.get(key.test), key.choice)
             self.subject_text = read_text(key.candidate_path)
             self.nominal_text = read_text(key.nominal_path)
 
@@ -1589,8 +1598,7 @@ def _merge_through_engine(key_list, store, write, stderr_tol_f, config_db):
     #  the adapter's place and no 'err' -- every merge through this door
     #  died in a TypeError, and no suite reached the door (E-88).
     accepted, refused, left = engine.run_sessions(
-        [m for _, m in wanted_list], lambda _: store, adapter, write,
-        stderr_tol_f=stderr_tol_f)
+        [m for _, m in wanted_list], lambda _: store, adapter, write)
     return ([origin_db[id(m)] for m in accepted],
             [(origin_db[id(m)], reason) for m, reason in refused],
             [origin_db[id(m)] for m in left],

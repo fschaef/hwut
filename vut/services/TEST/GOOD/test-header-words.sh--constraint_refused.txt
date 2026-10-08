@@ -1,0 +1,9 @@
+== hwut.run
+ERROR test-typo.sh:4:33: REFUSED: constraint 'globb(name, "x")': only call
+ERROR test-typo.sh:4:33: REFUSED: constraint 'globb(name, "x")': only call
+STATUS: 1
+== hwut.run.play test-typo.sh
+FAULT: test-typo.sh:4:33: REFUSED: constraint 'globb(name, "x")': only cal
+nothing played: a directory that cannot be fully read cannot say what it o
+STATUS: 1
+<hwut-end>

@@ -370,7 +370,7 @@ class CTestTaskListQuery(CTestTaskList):
 
         THE SILENCE IS THE WISH'S, not one face's: a wish that asks no
         label does not want what 'meta' labels, and every face that
-        selects through a wish is silent alike -- else 'hwut.report.wishlist'
+        selects through a wish is silent alike -- else 'hwut.report.list'
         and 'hwut.run --wishlist' would select different sets and the
         disc-5 round trip would no longer close.
         """

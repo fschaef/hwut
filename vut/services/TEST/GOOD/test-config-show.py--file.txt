@@ -24,6 +24,7 @@ $ hwut.config.show test-a.py
                     constraints = []              # default
                     comment = ["##", "##"]        # default
                     regions = true                # default
+                    stderr_ignored = false        # default
                 }
                 diff_display_parameters {
                     search_budget = 20000         # default
@@ -51,6 +52,7 @@ $ hwut.config.show test-a.py
                     constraints = []              # default
                     comment = ["##", "##"]        # default
                     regions = true                # default
+                    stderr_ignored = false        # default
                 }
                 diff_display_parameters {
                     search_budget = 20000         # default

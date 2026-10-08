@@ -16,47 +16,6 @@ from dataclasses import dataclass
 from enum        import Enum
 
 
-class E_StderrNote(Enum):
-    """WHAT THE BOOK SAYS about a choice's stderr -- and acceptance is
-    where it is written.
-
-    ===================================================================
-    STDERR IS NEVER SUBJECT TO TESTING.
-    ===================================================================
-    stderr is for ERROR REPORTING. That is its whole job. A test
-    application's stderr is never a nominal, never compared, never
-    pype-d.
-
-    Where error reporting is itself the thing under test, the
-    application FLUSHES IT INTO A FILE and names that file in the
-    'output' parameter. A file is a subject; stderr is not.
-
-    WHY: a stream that both carries diagnostics and is held to a
-    blessed text cannot do either job. Every diagnostic an author adds
-    while debugging would fail the test, so the author learns to stay
-    silent -- and the framework has then taught them to remove the
-    reporting it wanted.
-
-    NOMINAL is RETIRED and REMOVED. It is never written by anything --
-    'services/accept.py' promotes every subject EXCEPT
-    stderr, and refuses by name where stderr spoke and no note
-    tolerates it (E-5, services/RATIONALE.txt).
-
-    IGNORED    whatever happens on stderr, DO NOT WORRY: it is never
-               read, never compared, never reported.
-    FORBIDDEN  a word there is an ERROR ('unexpected-stderr'). An
-               UNNOTED choice reads FORBIDDEN: a test nobody was asked
-               about has never spoken there, and its first word is
-               news.
-    """
-    IGNORED   = "ignored"
-    FORBIDDEN = "forbidden"
-
-    def __str__(self):
-        """RETURN: str, the note's token, as the book holds it."""
-        return self.value
-
-
 class E_TestVerdict(Enum):
     """WHAT THE BOOK SAYS of a choice's STANDING -- the 'verdict' column.
 
@@ -143,22 +102,33 @@ class StoreConfig:
 
 @dataclass
 class NamingConfig:
-    """THE LAW BY WHICH A RECORD IS NAMED.
+    """THE LAW BY WHICH A RECORD IS NAMED, for ONE TEST DIRECTORY.
 
-    same_nominal_f  ALL CHOICES SHARE ONE NOMINAL: the choice part is
-                    dropped from the nominal's key, so 'demo--a.stdout'
-                    and 'demo--b.stdout' are both held against
-                    'demo.stdout'. Stated by the author as 'same' in
-                    the header (exploration's TestParameters, root
-                    only), it saves one blessed file per choice where
-                    every choice must produce the same behaviour.
+    same_nominal_set  THE TESTS WHOSE CHOICES SHARE ONE NOMINAL: for
+                    each, the choice part is dropped from the nominal's
+                    key, so 'demo--a' and 'demo--b' are both held
+                    against 'demo.txt'. Stated by the author as 'same'
+                    in the header (root only); it saves one blessed
+                    file per choice where every choice must produce the
+                    same behaviour.
+
+                    'same' IS ONE APPLICATION'S WORD, AND THE BOOK IS
+                    THE DIRECTORY'S (B-30): the law names the tests, so
+                    ONE bookkeeper answers for all of them. It is told
+                    once, from the application set, by whoever makes
+                    it.
 
                     CANDIDATES ARE UNAFFECTED: each choice's own run is
                     still recorded under its own name, or the choices
                     would overwrite one another and no diff could name
                     which choice diverged.
     """
-    same_nominal_f: bool = False
+    same_nominal_set: frozenset = frozenset()
+
+    def shared_f(self, test):
+        """RETURN: bool, True where every choice of 'test' is held
+                   against ONE nominal."""
+        return test in self.same_nominal_set
 
 
 #  THE AUTHOR'S CAPS VOCABULARY -- what a test header may STATE --

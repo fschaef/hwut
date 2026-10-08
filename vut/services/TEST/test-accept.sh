@@ -20,8 +20,10 @@
 #     merge      a standing nominal is DETECTED and left alone;
 #                '--force' overwrites it, said out loud
 #     stderr     STDERR IS NEVER SUBJECT TO TESTING: it is never
-#                promoted; where it SPOKE there is NO DEFAULT -- the
-#                choice is refused until '--stderr-tol' notes IGNORED
+#                promoted; where it SPOKE the accept is REFUSED until
+#                the test's own block declares 'tolerance {
+#                stderr_ignored = true }' (E-110, E-136) -- no switch
+#                of this face tolerates it
 #     sugar      the short form desugars into the wish's own '--glob'
 #     ask        the interactive question shows the CANDIDATE and
 #                anything but 'y' leaves the pole alone
@@ -35,7 +37,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 RUN="python3 -m vut.services.run"
 ACCEPT="python3 -m vut.services.accept"
-WISHLIST="python3 -m vut.services.lib.report.wishlist"
+WISHLIST="python3 -m vut.services.lib.report.list"
 export PYTHONPATH="$ROOT"
 
 case "$1" in
@@ -110,8 +112,10 @@ merge)
 
 stderr)
     #  STDERR IS NEVER SUBJECT TO TESTING. Where it SPOKE there is no
-    #  default: refused by name with both remedies; '--stderr-tol'
-    #  notes IGNORED, and the note GOVERNS -- the re-run is green.
+    #  default: refused by name with both remedies. THE TEST DECLARES
+    #  IT ('tolerance { stderr_ignored = true }'), the retired flag is
+    #  refused by name, and the re-run is green -- with a clean stain
+    #  cell: tolerated stderr is no stain.
     fixture
     printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-ok.sh
@@ -119,13 +123,17 @@ stderr)
     $RUN --directory=tree --silent 2> /dev/null
     echo "== stderr spoke, no flag =="
     face --directory=tree/suite/TEST --force
-    echo "== --stderr-tol =="
-    face --directory=tree/suite/TEST --force --stderr-tol
-    echo "== the note governs: the suite re-runs green =="
+    echo "== --stderr-tol: the flag is gone =="
+    face --directory=tree/suite/TEST --force --stderr-tol | head -4
+    echo "== the test declares it =="
+    printf '#!/bin/bash\n# @hwut {\n#     title = "Ok"\n#     tolerance { stderr_ignored = true }\n# }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
+        > tree/suite/TEST/test-ok.sh
+    face --directory=tree/suite/TEST --force \
+        | sed "s|'[^']*/test-ok.sh'|'<tree>/test-ok.sh'|"
+    echo "== the declaration governs: the suite re-runs green =="
     $RUN --directory=tree --silent 2> /dev/null
     echo "run status: $?"
-    echo "GOOD holds (no stderr nominal):"
-    good | sed 's/^/    /'
+    echo "the book's stain cell: '$(grep "^test-ok.sh" tree/suite/TEST/GOOD/book.csv | cut -d';' -f5)'"
     ;;
 
 labels)

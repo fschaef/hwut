@@ -11,7 +11,7 @@ Six faces wrote these four lines apiece:
     CTestTaskListQuery(...)     the selection
     .get_test_cases(app_set)    the runs
 
-'plan', 'report.wishlist', 'accept', 'report', 'run.play' and the label
+'plan', 'report.list', 'accept', 'report', 'run.play' and the label
 faces each assembled them, differing only in whether they walk ONE
 DIRECTORY or A TREE. That is not six faces using a component -- it is ONE
 ACTION IMPLEMENTED SIX TIMES, and the sixth copy is where they start to
@@ -47,7 +47,7 @@ from   .tree_explorer    import (explore_tree, explore_tree_stream,
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery
 from   ..plan.label      import swallowed_warning_tuple
-from   ...bookkeeper.api import Bookkeeper
+from   ...bookkeeper.api import Bookkeeper, NamingConfig
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,7 +121,8 @@ def of_directory(directory, wish, label_view=None, inherited=None,
     #  needs the book whatever the wish asked: 'hwut.accept' reads
     #  candidates, and a bare wish asks no base.
     want_f     = wish.asks_base_f() if base_f is None else base_f
-    bookkeeper = Bookkeeper(directory) if want_f else None
+    bookkeeper = Bookkeeper(directory, naming_of(result.app_set)) \
+                 if want_f else None
     query      = CTestTaskListQuery(wish, bookkeeper, directory=".",
                                     root=os.path.abspath(directory),
                                     label_view=label_view)
@@ -159,7 +160,8 @@ def of_tree(root, wish, label_view=None, base_f=None):
     want_f        = wish.asks_base_f() if base_f is None else base_f
     for directory, result in exploration:
         result_db[directory] = result
-        bookkeeper = Bookkeeper(os.path.join(root, directory)) \
+        bookkeeper = Bookkeeper(os.path.join(root, directory),
+                                naming_of(result.app_set)) \
                      if want_f else None
         bookkeeper_db[directory] = bookkeeper
         query = CTestTaskListQuery(wish, bookkeeper,
@@ -207,7 +209,8 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
     want_f = wish.asks_base_f() if base_f is None else base_f
     for directory, result in explore_tree_stream(root,
                                                  fault_list=fault_list):
-        bookkeeper = Bookkeeper(os.path.join(root, directory)) \
+        bookkeeper = Bookkeeper(os.path.join(root, directory),
+                                naming_of(result.app_set)) \
                      if want_f else None
         query = CTestTaskListQuery(wish, bookkeeper,
                                    directory=directory, root=root,
@@ -292,3 +295,23 @@ def _warning_tuple(query, wish, app_set):
     if not wish.glob_tuple or query.label_view is None: return ()
     met, visible = query.glob_reach(app_set)
     return swallowed_warning_tuple(met, visible)
+
+
+def naming_of(app_set):
+    """
+    RETURN: NamingConfig for ONE TEST DIRECTORY: the applications of
+            'app_set' that state 'same' share one nominal across their
+            choices (bookkeeper B-30).
+
+    THE BOOKKEEPER A SELECTION MAKES IS TOLD HERE, so every face that
+    takes its book from the selection -- accept, diff, play, report,
+    help -- names a nominal as the run does. 'same' stands at the root
+    only; the root choice's word is the application's.
+    """
+    def root_of(app):
+        """RETURN: TestParameters of the application's root choice."""
+        return app.choice_db.get(None) or \
+               app.choice_db[sorted(app.choice_db,
+                                    key=lambda c: c or "")[0]]
+    return NamingConfig(same_nominal_set=frozenset(
+               app.source_file for app in app_set if root_of(app).same))

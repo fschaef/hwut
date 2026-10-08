@@ -7,7 +7,7 @@ root:
 choice 'one':
     (nothing stated)
 choice 'two':
-    tolerance = Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None)
+    tolerance = Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 
 --- inside a choice: refused, by name ---
 title    'T'  language None  origin HEADER  at 1:8

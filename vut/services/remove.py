@@ -135,6 +135,12 @@ def victim_tuple(store, test, choice, whole_test_f):
             if os.path.exists(nominal): found.add(nominal)
         coverage = store.bookkeeper.coverage_path(test, one)
         if os.path.exists(coverage): found.add(str(coverage))
+    #  THE SHARED NOMINAL OF A 'same' TEST (bookkeeper B-30) goes with
+    #  the WHOLE test, never with one choice of it -- the others are
+    #  judged by it. Read from what lies there.
+    if choice is None:
+        shared = str(store.nominal_path(test, None, "stdout"))
+        if os.path.exists(shared): found.add(shared)
     return tuple(sorted(found))
 
 

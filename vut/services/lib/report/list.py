@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.report.wishlist' COMMAND LINE -- print, one per line, every
+PURPOSE: THE 'hwut.report.list' COMMAND LINE -- print, one per line, every
          test application and choice the given wish selects.
 
 prints
@@ -12,7 +12,7 @@ THE ROUND TRIP CLOSES. What this face PRINTS is what '--wishlist'
 READS, so an author asks once, prunes and comments the file, and keeps
 it as text:
 
-    hwut.report.wishlist --fail > messaging.txt     ask
+    hwut.report.list --fail > messaging.txt     ask
     $EDITOR messaging.txt                    prune, comment
     hwut.run --wishlist messaging.txt        spend
 
@@ -63,7 +63,7 @@ from   vut.services.lib.face                         import Refused, Fault, answ
 
 #  THE STANDARD READER (E-84): the parser IS the vocabulary and the
 #  usage line is generated from it.
-PARSER = face_parser("hwut.report.wishlist",
+PARSER = face_parser("hwut.report.list",
                      "Print every case the wish selects as a wishlist "
                      "line, fit to redirect into a file.",
                      word_help="a test, a test and a choice, a file glob "
@@ -116,7 +116,7 @@ def line_tuple_of(root, wish, warning_list=None):
 
 @dataclass(frozen=True)
 class Request:
-    """WHAT WAS ASKED of 'hwut.report.wishlist' (E-101): the directory and the wish."""
+    """WHAT WAS ASKED of 'hwut.report.list' (E-101): the directory and the wish."""
     directory: str  = "."
     wish:      Wish = field(default_factory=Wish)
 
@@ -177,7 +177,7 @@ def do(request):
 
 def printed(result, write):
     """RETURN: E_ExitCode, OK where a line stands, EMPTY else. The
-               warnings, then the lines -- the page 'hwut.report.wishlist' has
+               warnings, then the lines -- the page 'hwut.report.list' has
                always written."""
     for text in result.warning_tuple: write(text)
     for line in result.line_tuple:    write(line)
@@ -232,5 +232,5 @@ def main(argv=None, write=None):
 if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
     from   vut.services._exit import guarded
-    sys.exit(guarded("hwut.report.wishlist", main))
+    sys.exit(guarded("hwut.report.list", main))
 

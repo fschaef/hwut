@@ -116,10 +116,12 @@ def test_app_of(configuration):
             interpreted test -- WITHOUT its interpreter, which is the
             tool's to choose -- the built target of a compiled one, the
             file itself of an executable one. A STATED CALL (R-68) is
-            handed over as stated.
+            handed over as stated, '$file' and '$filestem' expanded
+            (G-4); '$choice' expands EMPTY here -- the tool's call
+            scheme places the choice itself.
     """
     if configuration.execute is not None:
-        return shlex.join(str(word) for word in configuration.execute)
+        return shlex.join(application_argv(configuration, None))
     if configuration.source_kind is E_SourceKind.INTERPRETED:
         return str(configuration.source_file)
     return application_argv(configuration, None)[0]
@@ -260,7 +262,7 @@ class CoverageRunDispatcher(TestRunDispatcher):
         return await measured(setup,
                               run_configuration_of(configuration, setup,
                                                    node.choice),
-                              self.store_db.get(node.file, self.store),
+                              self.store,
                               node.choice, run_id)
 
 

@@ -1,0 +1,28 @@
+== hwut.run.play test-holds.sh
+===== OUTPUT =================================================
+=[ test-holds.sh ]================================== round 1
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     1 | file !((name: "build-7.log"))!
+       | ^ constraint binding ((name: "build-7.log")) -- the value enters the constraint space
+--[ CLOSING-TOKEN ]--
+     2 | <hwut-end>
+STATUS: 0
+== hwut.accept --whole test-holds.sh
+    blessed        test-holds.sh .stdout
+== hwut.run.play test-breaks.sh
+===== OUTPUT =================================================
+=[ test-breaks.sh ]================================= round 1
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     1 | file !((name: "debug-7.log"))!
+       | ^ constraint binding ((name: "debug-7.log")) -- the value enters the constraint space
+--[ CLOSING-TOKEN ]--
+     2 | <hwut-end>
+STATUS: 0
+== hwut.accept --whole test-breaks.sh
+REFUSED constraint: 'test-breaks.sh .stdout' -- the candidate breaks its constraints:
+    constraint "glob(name, "build-*.log")": broken by ((name: "debug-7.log")), line 1
+<hwut-end>

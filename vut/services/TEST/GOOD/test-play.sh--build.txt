@@ -1,5 +1,14 @@
 STATUS: 3
 STDOUT {
     EMPTY: the choice produced no output to read
+    
+    EXPLAIN  test-built.sh, choice None
+      REQUEST    ['<work>/suite/TEST/BUILD/test-built.sh/app']
+      RESOLVED   <work>/suite/TEST/BUILD/test-built.sh/app: NOT FOUND on PATH
+      CWD        <work>/suite/TEST
+      call[0]    containment fail-launch   exit None   wall <t>s
+      REPORT     test-app-launch-failed
+      stderr          0 bytes
+      stdout          0 bytes
 }
 <hwut-end>

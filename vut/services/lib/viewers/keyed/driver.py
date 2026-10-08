@@ -151,7 +151,8 @@ class KeyedDisplay(DisplayAdapter):
         self.element_db   = {}          # (side, stripped text) -> [Piece]
         self.numeric_ratio = 0          # compare's, from its ConfigInst
         self.element_i    = None        # the element cursor, or None
-        self.stderr_spoke_f = False
+        self.stderr_spoke_f   = False
+        self.stderr_ignored_f = False
         self.pair_db      = []          # report.Pair per delivered pair (E-91)
         self.reporting_f  = False       # the 't' window is up
         self.report_row   = None        # the scroll cursor in that window; None: nothing to rest on
@@ -182,6 +183,15 @@ class KeyedDisplay(DisplayAdapter):
         self.subject_ctl   = None
 
     #  ---------------------------------------------------- the hub's calls
+
+    def note_stderr(self, spoke_f, ignored_f=False):
+        """RETURN: None. What the foot says of the case's stderr (E-136):
+        'spoke_f' -- its last run wrote there; 'ignored_f' -- the test's
+        block declares 'tolerance { stderr_ignored = true }'. MEASURED:
+        the engine called this and no viewer defined it, so the foot's
+        warning never showed."""
+        self.stderr_spoke_f   = bool(spoke_f)
+        self.stderr_ignored_f = bool(ignored_f)
 
     def note_standing(self, aspirant_f):
         """RETURN: None. The choice's STANDING (B-14), told by the face
@@ -1111,9 +1121,18 @@ class KeyedDisplay(DisplayAdapter):
                              piece_list[self.element_i], side,
                              self.numeric_ratio))]
         item_list = self._foot_item_list()
-        if self.stderr_spoke_f and not self.view_only_f and self.editing is None:
-            item_list = [("STDERR SPOKE: 'q' will be refused without "
-                          "--stderr-tol ", None)] + item_list
+        #  THE STAIN IS MENTIONED (E-136), in the view as in the merge:
+        #  stderr spoke and the block does not tolerate it. Tolerated
+        #  stderr is no stain and takes no room here. The refusal is
+        #  named only where a 'q' could meet it.
+        if self.editing is None and not self.stderr_ignored_f:
+            if self.stderr_spoke_f and not self.view_only_f:
+                item_list = [("STDERR SPOKE: 'q' will be refused -- "
+                              "declare 'stderr_ignored = true' ", None)] \
+                            + item_list
+            elif self.stderr_spoke_f:
+                item_list = [("STDERR SPOKE, untolerated ", None)] \
+                            + item_list
         return self._fragments_of(item_list, width)
 
     def _foot_item_list(self):

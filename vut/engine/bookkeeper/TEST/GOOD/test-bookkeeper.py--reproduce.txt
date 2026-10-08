@@ -1,5 +1,5 @@
 INSPECT: entry           = {'verdict': <E_TestVerdict.PASS: 'true'>, 'report': 'ok'}
-         table header    = test;choice;verdict;report;stderr;stain;test_id;choice_id
+         table header    = test;choice;verdict;report;stain;test_id;choice_id
          rows            = 1
          any 'caps' word = False
   OK  : the entry is the decision and nothing else

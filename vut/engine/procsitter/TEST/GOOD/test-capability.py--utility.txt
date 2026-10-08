@@ -1,0 +1,26 @@
+linux  (the common row)
+    max_cpu_time_sec   resource  (standard library)
+    max_file_size_mb   resource  (standard library)
+    max_memory_mb      psutil    pip install psutil
+    max_pids           psutil    pip install psutil
+darwin  (the common row)
+    max_cpu_time_sec   resource  (standard library)
+    max_file_size_mb   resource  (standard library)
+    max_memory_mb      psutil    pip install psutil
+    max_pids           psutil    pip install psutil
+windows
+    max_memory_mb      psutil    pip install psutil
+    max_pids           psutil    pip install psutil
+windows, psutil present -- 'resource' does not exist there
+    file_handle_max_n      NOT
+    max_cpu_time_sec       NOT
+    max_disk_mb            watched
+    max_file_size_mb       NOT
+    max_memory_mb          watched
+    max_output_gap_sec     watched
+    max_pids               watched
+    max_wall_clock_sec     watched
+    min_free_disk_mb       watched
+    network                NOT
+    write_directory_list   NOT
+<hwut-end>

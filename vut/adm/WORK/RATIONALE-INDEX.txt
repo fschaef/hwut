@@ -179,6 +179,9 @@ engine/orchestrator/exploration/RATIONALE.txt   [80]
   R-77   THE TOLERANCES ARE ONE SCOPE                             2026-09-01
   R-78   THE CAPS READ THEIR DEFAULTS FROM THE SUPERVISOR'S DOOR  2026-09-01
   R-79   THE SIX GOODS R-78 LEFT BEHIND                           2026-09-02
+  R-80   THE REFUSAL OF R-48 IS LIFTED BY THE ROOT CONF, PER PLATFORM 2026-10-07
+  R-81   THE CONSTRAINT DOOR READS THE RULED NAMESPACE              2026-10-07
+  R-82   'execute' EXPANDS '$file', '$filestem', '$choice'            2026-10-07
 
 ==============================================================================
 services/RATIONALE.txt   [43]

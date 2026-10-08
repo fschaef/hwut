@@ -1,5 +1,5 @@
-    wishlist.Request   plain: yes
-    wishlist.Result    plain: yes
+    list.Request       plain: yes
+    list.Result        plain: yes
     plan.Request       plain: yes
     plan.Result        plain: yes
 
