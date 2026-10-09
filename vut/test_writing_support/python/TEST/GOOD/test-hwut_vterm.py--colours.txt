@@ -1,0 +1,6 @@
+    default            'd'  fg None  bg None
+    indexed 31         'r'  fg mostly red: True
+    palette 196        'p'  fg (255, 0, 0)  bg None
+    direct 10;20;30    't'  fg (10, 20, 30)  bg None
+    background 1;2;3   'b'  fg None  bg (1, 2, 3)
+<hwut-end>

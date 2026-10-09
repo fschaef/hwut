@@ -1,0 +1,86 @@
+-- hwut.about
+   $ hwut.about --version
+     exit 0
+-- hwut.accept
+   $ hwut.accept test-parse.sh
+     exit 1
+     |     merge required test-parse.sh .stdout
+-- hwut.accept.apply
+   $ hwut.accept.propose -o changes.txt
+     exit 3
+   $ hwut.accept.apply changes.txt
+     exit 0
+-- hwut.accept.propose
+   $ hwut.accept.propose -o changes.txt
+     exit 3
+   $ $EDITOR changes.txt
+     (a person's step)
+   $ hwut.accept.apply changes.txt
+     exit 0
+-- hwut.labels.create
+   $ hwut.labels.create nightly --glob 'test-net*'
+     exit 0
+-- hwut.labels.query
+   $ hwut.labels.create nightly --glob 'test-net*'
+     exit 0
+   $ hwut.labels.query nightly
+     exit 0
+   $ hwut.run --label nightly
+     exit 0
+-- hwut.move
+   $ hwut.move test-old.sh test-new.sh
+     exit 0
+-- hwut.remove
+   $ hwut.remove test-gone.sh
+     exit 0
+-- hwut.remove.apply
+   $ hwut.remove.propose -o gone.txt
+     exit 3
+   $ hwut.remove.apply gone.txt
+     exit 3
+-- hwut.remove.propose
+   $ hwut.remove.propose -o gone.txt
+     exit 3
+   $ hwut.remove.apply gone.txt
+     exit 3
+-- hwut.rename
+   $ hwut.rename test-old.sh -to test-new.sh
+     exit 0
+   $ hwut.rename test-io.sh small -to tiny
+     exit 0
+-- hwut.report
+   $ hwut.report --fail
+     exit 3
+   $ hwut.report --format=junit --out=result.xml
+     exit 0
+-- hwut.run
+   $ hwut.run
+     exit 0
+   $ hwut.run --fail
+     exit 3
+   $ hwut.run 'test-parse*' --jobs=4
+     exit 0
+-- hwut.run.play
+   $ hwut.run.play test-parse.sh
+     exit 0
+-- hwut.run.stability
+   $ hwut.run.stability 'test-*' --repeat=5
+     exit 0
+-- hwut.sanitize
+   $ hwut.sanitize root
+     (asks at a terminal)
+   $ hwut.sanitize remove TMP
+     exit 0
+-- hwut.sanitize.apply
+   $ hwut.sanitize.propose -o heal.txt
+     exit 0
+   $ hwut.sanitize.apply heal.txt
+     exit 0
+-- hwut.sanitize.propose
+   $ hwut.sanitize.propose -o heal.txt
+     exit 0
+   $ $EDITOR heal.txt
+     (a person's step)
+   $ hwut.sanitize.apply heal.txt
+     exit 0
+<hwut-end>

@@ -1,0 +1,12 @@
+language = bash                                      => test-w.sh:4:18: SYNTAX: a string is written in double quotes: "bash"
+caps { timeout_sec = 16 }                            => timeout_sec = 16.0 # app
+caps { timeout_sec = 0x10 }                          => timeout_sec = 16.0 # app
+caps { timeout_sec = 0b1_0000 }                      => timeout_sec = 16.0 # app
+caps { timeout_sec = 0o20 }                          => timeout_sec = 16.0 # app
+caps { timeout_sec = 0rXVI }                         => timeout_sec = 16.0 # app
+caps { timeout_sec = 1_6 }                           => timeout_sec = 16.0 # app
+caps { timeout_sec = 1__6 }                          => test-w.sh:4:28: SYNTAX: a string is written in double quotes: "1__6"
+caps { timeout_sec = _16 }                           => test-w.sh:4:28: SYNTAX: a string is written in double quotes: "_16"
+tolerance { numeric_ratio = - 0.12 }                 => test-w.sh:4:35: TYPE: 'numeric_ratio' is a relative ratio in [0..1]
+tolerance { numeric_ratio = + 0.12 }                 => numeric_ratio = 0.12 # app
+<hwut-end>

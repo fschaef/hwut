@@ -32,6 +32,8 @@ COST      Drift in an application that does not answer surfaces only at
           run time.
 GRAVEYARD Imposing the protocol: reintroduces execution as a
           precondition of exploration.
+SUPERSEDED 2026-10-08 (audit D-9; TODO G-7, G-9): by R-44, and
+          R-44 by X-SILENT. No face asks an application '--hwut-info'.
 
 
 R-3  HOCON
@@ -61,6 +63,9 @@ NOTE      Case distinction is not a property of every writing system, so
           everywhere.
 GRAVEYARD Case as the fence: reads as shouting, and rests on an
           ethnocentric premise about alphabets.
+AMENDED   2026-10-08 (audit D-9): 'title' is no longer required --
+          X-TITLE (2026-09-23): a lacking title stands in. The rest
+          holds.
 
 
 R-5  THE ROOT IS THE DEFAULT; A CHOICE OVERWRITES
@@ -186,6 +191,9 @@ DECISION  'eq-pattern'. 'happy' is dropped.
 NOTE      The name states what it does: two elements matching one
           pattern are equivalent, so 'bonjour|hello' accepts either as
           the greeting.
+AMENDED   2026-10-08 (audit D-9): the word is 'eq_pattern', a list,
+          in 'tolerance { }' (services E-42); 'eq-pattern' and 'happy'
+          are unknown keys.
 
 
 R-13  POSITIONS ARE FILE-RELATIVE FROM THE START
@@ -375,6 +383,9 @@ RATIONALE Absence is data. A key not written must reach the owner's
           default; only a written key may switch a feature off.
 NOTE      The friendly spellings cost one predicate and spare an author
           the memory of which one this language chose.
+AMENDED   2026-10-08 (audit D-9): the key stands in 'tolerance { }'
+          since services E-42; at the root it is an unknown key. The
+          five spellings of OFF and the refusal of 'true' hold there.
 
 
 R-25  'constraints', PLURAL, IS A LIST OF EXPRESSIONS
@@ -387,6 +398,8 @@ COST      An expression can no longer be referred to by name in a
           message; the expression itself is the name.
 GRAVEYARD The named map: a name nothing consumes is a field an author
           must invent and a reader must ignore.
+AMENDED   2026-10-08 (audit D-9): the key stands in 'tolerance { }'
+          since services E-42; at the root it is an unknown key.
 
 
 R-26  A SCOPE MERGES FIELD BY FIELD
@@ -454,6 +467,10 @@ RATIONALE Every fault this component reports carries a position; this
           service is where an author looks when the position is not
           enough. Resolution and default-filling are exactly the steps
           an author cannot see by reading the file.
+AMENDED   2026-10-08 (audit D-9; TODO G-9): the face is
+          'hwut.config.show' (plan P-16: 'hwut.show'; services
+          E-54: 'hwut.config.show'). Both forms hold through
+          it: a source file's specification, and the directory's.
 
 
 R-30  'CTestAppSet' IS THE RESULT OF PARSING; NOTHING ELSE PRODUCES IT
@@ -506,6 +523,29 @@ DECISION  'dependency' names what must have run first. A dependency may
 COST      An author who wants a plain order writes it as a chain.
 RATIONALE An order is a consequence of dependencies, not a fact of its
           own. Stating the dependency states the reason with it.
+AMENDED   2026-10-08 (audit D-9, TODO G-18): MEASURED OTHERWISE, AND
+          BUILT. 'Circularity is a DIRECTORY error' held in the
+          explorer and in 'hwut.config.show'; 'hwut.run' and
+          'hwut.plan' over ACCEPTED cases of a cycle died in an
+          AssertionError of the plan's form ("ordering links carry a
+          cycle ... resolved before the plan exists"). Nobody resolved
+          it: determination offered the cycle's own links. Now a link
+          standing INSIDE a cycle is not offered ('plan/determine.py
+          _without_cycle_links') -- its ends are [MISDEP], never
+          dispatched (P-6), and it orders nothing. The directory's
+          failure names the cycle, its members and their dependants
+          read 'no-dep [FAIL]' (R-35), the rest of the directory runs.
+PINNED    'services/TEST/test-header-words.sh cycle, directory'.
+
+AMENDED   2026-10-09 (ruled): "LINKS should show them and marked as
+          cycle ... [CYCLE] following, [MISDEP] same coloring." The
+          links a cycle holds are still taken out of the plan (the form
+          refuses them, nobody dispatches them) and now ride BESIDE it
+          ('CTestPlan.cycle_link_tuple'): 'hwut.plan' lists them under
+          LINKS, each followed by '[CYCLE]', and counts them. On a
+          terminal '[CYCLE]' and '[MISDEP]' stand on the failure's red
+          ('run.tag-fail'); 'hwut.plan' wrote no colour before.
+          PINNED    'services/TEST/test-header-words.sh cycle'.
 
 
 R-34  A TARGET IS THE CALL
@@ -710,6 +750,11 @@ GRAVEYARD Interviewing every file, and comparing the answer against the
           answer authoritative where it disagrees with a written
           specification: the written word is the specification (R-1);
           the interview speaks only where nothing was written.
+SUPERSEDED 2026-10-08 (audit D-9; TODO G-7, G-9): by X-SILENT
+          (2026-09-23) -- "a file without an 'hwut { }' section is
+          never considered ... nothing is asked". MEASURED: a header-
+          less executable answering '--hwut-info' with 'CHOICES:' is
+          a wallflower; no face interviews it.
 
 R-45  'same': ONE NOMINAL FILE FOR ALL CHOICES
 ______________________________________________________________________________
@@ -870,6 +915,9 @@ RATIONALE Each says that a class of difference is no difference, and
 NOTE      'slash_eqv' relates to compare's 'backslash_f': the dos and
           unix spelling of one path. 'whitespace_eqv' relates to
           'whitespace_f'.
+AMENDED   2026-10-08 (audit D-9): OVERTAKEN by R-77 and services
+          E-42 -- 'tolerance { whitespace }'; 'slash' retired. Both old
+          keys are unknown at the root, not aliased.
 
 
 R-55  'constraints' IS A LIST; COMPARE BUILDS THE DATABASE
@@ -1073,6 +1121,8 @@ RATIONALE Two parameters of one kind read alike, and one reader of a
 NOTE      Compare needs an 'ignored_line_f' beside its two markers, as
           it has 'analogy_f' beside those two -- otherwise OFF has no
           way to be said. It is one field (todo-1).
+AMENDED   2026-10-08 (audit D-9): the key stands in 'tolerance { }'
+          since services E-42; at the root it is an unknown key.
 
 
 R-65  'whitespace_eqv' IS THE WHITESPACE PARAMETER; 'strip' IS NOT ONE
@@ -1519,6 +1569,10 @@ COST      'configuration_tree', 'relation', 'validator', 'printer',
 GRAVEYARD 'numeric_tol_ratio' as a flat rename: the least change, and
           it leaves the other two tolerances scattered.
           Aliases for the old keys: see DECISION.
+AMENDED   2026-10-08 (audit D-9): probed through 'hwut.config.show';
+          holds. 'slash' has since been retired by name (the validator
+          says so and names 'eq_pattern').
+PINNED    'services/TEST/test-header-words.sh tolerance'.
 
 
 R-78  THE CAPS READ THEIR DEFAULTS FROM THE SUPERVISOR'S DOOR     (2026-09-01)

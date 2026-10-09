@@ -512,6 +512,8 @@ GRAVEYARD Rewriting the output in the harness so a pattern need not
           tool's own words, and every later author meets the same trap.
           A numeric ratio on the page -- rejected: a ratio wide enough
           for 9 against 186 tolerates every number on it.
+PINNED    2026-10-08 (audit D-9): through the face,
+          'services/TEST/test-header-words.sh pattern_first'.
 
 C-15  THE LINE LEVEL IS ANCHORED FIRST                            (2026-09-25)
 ----------------------------------------------------------------------------
@@ -594,6 +596,18 @@ GRAVEYARD The ELEMENT cost as phase two's measure: 3.6 ms a pair against
           total 214 -> 301. A W threshold predicted from structure: the
           counted budget takes exactly the sections the search cannot
           finish, whatever makes them hard.
+AMENDED   2026-10-08 (audit D-9, TODO G-20): MEASURED OTHERWISE, AND
+          BUILT. "A pair whose own element alignment spends a budget
+          shows as DELETE + INSERT" -- it was EMITTED so, and the
+          separator adaptor folds an adjacent DELETE + INSERT into one
+          SUBSTITUTE without an element list; a pair without one
+          expanded to NOTHING and 'hwut.run.diff' drew an empty row,
+          read as two blank, equal lines. Now such a pair shows both
+          lines WHOLE, the one gone and the one come
+          ('core/line_pair.py'). The verdict was never touched.
+          MEASURED with 'search_budget = 3'; no page of this component
+          moved (147 before and after).
+PINNED    'services/TEST/test-header-words.sh budget_spent'.
 
 
 ----------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+-- one cell per attribute, set by its own code
+    'b'  bold
+    'i'  italic
+    'u'  underline
+    'b'  blink
+    'r'  reverse
+    'c'  conceal, or (none) on libvterm 0.1
+    's'  strike
+-- bold, underline and reverse at once; then reset
+    'A'  bold underline reverse
+    'B'  (none)
+-- double underline (SGR 21) is underlined
+    'D'  underline
+<hwut-end>

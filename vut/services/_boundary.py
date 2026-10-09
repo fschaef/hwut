@@ -1,62 +1,52 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE BOUNDARY, OR AN OFFER TO PLACE ONE.
+PURPOSE: THE BOUNDARY -- WHAT IS WRITTEN, AND WHERE IT MAY GO.
 
 Every face of this framework works inside a TREE, and a tree is what
 'hwut-root.conf' bounds. Without it there is no root to make a path
 relative to, no place for 'hwut-root.labels', and no answer to 'which
-directories are mine'. A face that proceeds without one is guessing.
+directories are mine'. A face that proceeds without one is guessing,
+so every face refuses -- and HINTS at the way out
+('tree_explorer.ROOT_CONF_HINT_STR').
 
-WHAT A MISSING BOUNDARY USED TO GET: a refusal naming the file. True,
-and useless to somebody who has just arrived in a tree they did not
-build -- they now know a file is missing and not WHERE IT GOES.
+PLACING ONE IS 'hwut.sanitize's (services E-25, amended 2026-10-08):
+'hwut.sanitize.propose' proposes 'root <directory>' and
+'hwut.sanitize.apply' -- or 'hwut.sanitize root <directory>' -- writes
+it. This module holds the TEXT that is written and the CANDIDATES;
+the asking is the sanitize face's.
 
-WHAT IT GETS NOW: the refusal, the reason, and AN OFFER. The
-candidates are the directory and its parents, up to the home
-directory or the file system's root, LETTERED:
-
-    no 'hwut-root.conf' stands in or above 'engine/compare/TEST'.
-    A tree needs a boundary: it is the root every path is relative
-    to, and the place 'hwut-root.labels' and the register stand.
-
-    Where shall it go?
-        A   engine/compare/TEST
-        B   engine/compare
-        C   engine
-        D   .                        <- usually this one
-        anything else  --  nothing is written
-
-    choice:
-
-THE LETTERS ADAPT. Eight is the ceiling, not the shape: a directory
-three deep offers three. THE COUNT IS WHAT STANDS, never padded to a
-number.
-
-ANY OTHER KEY ABORTS, and abort means NOTHING IS WRITTEN. A person who
-typed by accident, or who meant a directory not on the list, must be
-able to leave without having changed the tree -- and a bare RETURN is
-the commonest accident there is.
-
-NOT ASKED WHERE NOBODY CAN ANSWER. Where the input is not a terminal
--- a script, a pipe, a suite -- the offer is not made: a question
-nobody can hear is a hang, not a courtesy. The face refuses as before
-and says what would have been offered.
+THE CANDIDATES (ruled 2026-10-08) are the REPOSITORY ROOTS at or above
+the directory -- of the open-source version control tools, each by
+the marker it leaves ('REPOSITORY_MARK_TUPLE') -- and THE CURRENT
+DIRECTORY.
+'hwut.sanitize root' with no directory puts them before a person as a
+menu; 'hwut.sanitize.propose' writes them as commands.
 
 WHAT IS WRITTEN IS NOT AN EMPTY BLOCK (E-25). The file carries the
 whole 'language-setup' table: every language with its coverage
 candidates in preference order, its 'extensions' -- every one owned
-by a single entry -- its 'interpreter' where a launcher takes a source file, and
-'coverage_target = "%.cov.exe"' for the gcc family. A root conf placed
-by hand, or
-before this, carries no table and runs only what a she-bang can run;
-'hwut.config.show --root-conf-template' prints the template for pasting.
+by a single entry -- its 'interpreter' where a launcher takes a source
+file, and 'coverage_target = "%.cov.exe"' for the gcc family.
+'hwut.config.show --root-conf-template' prints the same text.
 ______________________________________________________________________________
 """
 import os
-import sys
 
-LETTER_TUPLE = ("A", "B", "C", "D", "E", "F", "G", "H")
+CANDIDATE_MAX_N = 8
+
+#  THE MARKER OF A REPOSITORY'S ROOT, and the system's name. OPEN-SOURCE
+#  TOOLS ONLY (ruled 2026-10-08), each known by a directory or file it
+#  leaves at the root -- nothing is run to find one.
+REPOSITORY_MARK_TUPLE = ((".git",      "git"),
+                         (".hg",       "mercurial"),
+                         (".svn",      "svn"),
+                         (".jj",       "jujutsu"),
+                         (".bzr",      "bazaar"),
+                         ("_darcs",    "darcs"),
+                         (".pijul",    "pijul"),
+                         (".fslckout", "fossil"),
+                         ("_FOSSIL_",  "fossil"))
 
 ROOT_CONF_NAME = "hwut-root.conf"
 
@@ -289,38 +279,57 @@ hwut {
 """
 
 
-def candidate_tuple(directory):
+def _repository_of(path):
     """
-    RETURN: tuple[str], the directories a boundary could be placed in
-            -- this one and its parents, NEAREST FIRST, stopping at
-            the home directory or the file system's root, and at
-            'LETTER_TUPLE' many.
+    RETURN: str, the version control system whose repository ROOT 'path'
+                 is -- 'git', 'mercurial', 'svn', ... as its marker
+                 says
+            None, where it is the root of none
 
-    EVERY DIRECTORY OF THE CLIMB IS OFFERED, '/' and '/tmp' included:
-    what is unusual is not what is forbidden, and a person who means
-    to root a tree at '/tmp' knows better than this code does.
-
-    A DIRECTORY THE PERSON CANNOT WRITE IS STILL OFFERED, and SAID TO
-    BE UNWRITEABLE. Leaving it out would make the letters skip, and a
-    person counting down the list would wonder what they had missed;
-    naming the reason answers that before it is asked.
-
-    THE CLIMB STOPS AT A PROJECT'S TOP where it meets one -- a
-    directory holding '.git', 'setup.py', 'pyproject.toml' or
-    'Makefile'. That is where a boundary usually belongs, and past it
-    lies somebody else's tree.
+    Subversion before 1.7 kept a '.svn' in EVERY directory: the root is
+    the one whose parent holds none.
     """
-    TOP_MARK = (".git", "setup.py", "pyproject.toml", "Makefile")
-    here     = os.path.abspath(directory)
-    found    = []
-    while len(found) < len(LETTER_TUPLE):
-        found.append(here)
-        if any(os.path.exists(os.path.join(here, mark))
-               for mark in TOP_MARK):     break
+    for mark, name in REPOSITORY_MARK_TUPLE:
+        if not os.path.exists(os.path.join(path, mark)): continue
+        if mark == ".svn" and os.path.exists(
+               os.path.join(os.path.dirname(path), mark)): continue
+        return name
+    return None
+
+
+def candidate_list(directory):
+    """
+    RETURN: list[(str, str)], (absolute directory, what it is) for every
+            place a boundary is offered at, in the order offered: each
+            REPOSITORY ROOT at or above 'directory', nearest first --
+            'the git repository's root', ... -- and then 'the current
+            directory', unless it is one of those already.
+
+    THAT IS THE WHOLE LIST (ruled 2026-10-08): where a project is under
+    version control its root is where a boundary belongs, and where it
+    is not, the person stands where they mean. Any other directory is
+    named in words: 'hwut.sanitize root <dir>'.
+
+    THE CLIMB ENDS WHERE THE CONFIGURATION CLIMB ENDS (exploration
+    R-76): a test directory's transient ground 'TEST/TMP' is not
+    looked at, nor anything above it -- a fixture built there must not
+    be handed the enclosing project as the place for its boundary.
+    """
+    from vut.engine.orchestrator.exploration.tree_explorer \
+                                               import transient_ground_f
+    start     = os.path.abspath(directory)
+    found     = []
+    here      = start
+    while len(found) < CANDIDATE_MAX_N:
+        name = _repository_of(here)
+        if name is not None:
+            found.append((here, "the %s repository's root" % name))
         parent = os.path.dirname(here)
-        if parent == here:                break
+        if parent == here or transient_ground_f(parent): break
         here = parent
-    return tuple(found)
+    if start not in [path for path, _ in found]:
+        found.append((start, "the current directory"))
+    return found
 
 
 def writeable_f(path):
@@ -331,113 +340,13 @@ def writeable_f(path):
     return os.access(path, os.W_OK | os.X_OK)
 
 
-def shown(path, start):
+def written(directory):
     """
-    RETURN: str, the candidate as a person reads it: relative to
-            'start' where that is shorter, '.' for 'start' itself, the
-            absolute path where relative would climb further than it
-            explains.
+    RETURN: str, the path of the 'hwut-root.conf' written into
+                 'directory' -- the template, whole
+            raises OSError, where the file cannot be written
     """
-    relative = os.path.relpath(path, os.path.abspath(start))
-    if relative == ".":                    return "."
-    if not relative.startswith(".."):      return relative
-    #  A CLIMB READS BADLY as '../../..': the absolute path says more,
-    #  and a person choosing a directory must SEE which one.
+    path = os.path.join(directory, ROOT_CONF_NAME)
+    with open(path, "w", encoding="utf-8") as file_handle:
+        file_handle.write(ROOT_CONF_TEXT)
     return path
-
-
-def _top_f(path):
-    """
-    RETURN: bool, True where the directory looks like a project's top
-            -- it holds '.git', 'setup.py', 'pyproject.toml' or
-            'Makefile'. That is where a boundary usually belongs, and
-            saying so saves a person from counting letters.
-    """
-    return any(os.path.exists(os.path.join(path, mark))
-               for mark in (".git", "setup.py", "pyproject.toml",
-                            "Makefile"))
-
-
-def offer_text_tuple(directory):
-    """
-    RETURN: tuple[str], the lines of the offer -- the problem, the
-            reason, and the lettered candidates.
-
-    THE REASON IS GIVEN, not merely the fact: a person who has just
-    arrived needs to know what a boundary IS before choosing where to
-    put one.
-    """
-    candidate = candidate_tuple(directory)
-    line_list = [
-        "REFUSED: no '%s' stands in or above '%s'."
-        % (ROOT_CONF_NAME, shown(os.path.abspath(directory), ".")),
-        "    A tree needs a boundary: it is the root every path is",
-        "    relative to, and the place 'hwut-root.labels' and the",
-        "    register stand.",
-        ""]
-    line_list.append("Where shall it go?")
-    for letter, path in zip(LETTER_TUPLE, candidate):
-        if not writeable_f(path):
-            mark = "   (no write access by user)"
-        elif _top_f(path):
-            mark = "   <- the project's top"
-        else:
-            mark = ""
-        line_list.append("    %s   %-28s%s"
-                         % (letter, shown(path, directory), mark))
-    line_list.append("    anything else  --  nothing is written")
-    return tuple(line_list)
-
-
-def placed(directory, write, ask=None):
-    """
-    RETURN: str, the directory a boundary was written into.
-            None where none was -- because nobody could be asked,
-            because the answer named no candidate, or because the
-            write failed. THE REASON IS ALREADY WRITTEN.
-
-    'ask' takes a prompt and answers a line; 'input' where None, and
-    NOT CALLED AT ALL where the input is no terminal.
-
-    NOTHING IS WRITTEN ON ANY ANSWER BUT A LETTER THAT STANDS. A bare
-    RETURN is the commonest accident there is, and it must leave the
-    tree as it was.
-    """
-    for text in offer_text_tuple(directory): write(text)
-
-    if ask is None:
-        if not sys.stdin.isatty():
-            #  A QUESTION NOBODY CAN HEAR IS A HANG, not a courtesy.
-            write("")
-            write("    (no terminal: nothing is written. Place the "
-                  "file yourself,")
-            write("     or run this again where a person can answer.)")
-            return None
-        ask = input
-
-    try:    answer = ask("choice: ").strip().upper()
-    except (EOFError, KeyboardInterrupt):
-        write("")
-        return None
-
-    candidate = candidate_tuple(directory)
-    if len(answer) != 1 or answer not in LETTER_TUPLE[:len(candidate)]:
-        write("nothing written.")
-        return None
-
-    where = candidate[LETTER_TUPLE.index(answer)]
-    if not writeable_f(where):
-        #  THE OFFER SAID SO, and the person chose it anyway. Refuse
-        #  by name rather than letting the write fail with an errno.
-        write("REFUSED: '%s' cannot be written in -- the offer said "
-              "so, and nothing is written." % shown(where, directory))
-        return None
-    path  = os.path.join(where, ROOT_CONF_NAME)
-    try:
-        with open(path, "w", encoding="utf-8") as file_handle:
-            file_handle.write(ROOT_CONF_TEXT)
-    except OSError as error:
-        write("FAULT: '%s' cannot be written -- %s" % (path, error))
-        return None
-    write("written: %s" % path)
-    return where

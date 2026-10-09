@@ -246,7 +246,8 @@ def main(argv=None, write=None, read_line=None):
     if read_line is None: read_line = sys.stdin.readline
     if argv is None:      argv      = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.remove", HELP))
         return E_ExitCode.OK
 
     name        = "hwut.remove"

@@ -473,6 +473,11 @@ file, not by remembering.
 
 THE DEVELOPMENT CONTAINER
 
+WHAT IS REQUIRED is listed in 'adm/requirement-list.txt' -- every program,
+Python package and library, with the Debian package that brings it and
+whether the census is red without it. 'sh adm/requirement-check.sh' reads
+that list and says what this machine lacks.
+
 Every requirement of working on hwut stands in one image
 ('adm/container/Containerfile'): python 3.13 and the packages the tree
 imports, coverage.py, ruff, gcc for gcov, git, and the TeX engine with

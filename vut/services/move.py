@@ -6,7 +6,7 @@ PURPOSE: THE 'hwut.move' COMMAND LINE -- the shorthand of
 
     hwut.move <app> <app'> [--dont-ask] [--directory=<path>]
 
-is, word for word,
+THAT LINE IS, word for word,
 
     hwut.rename <app> -to <app'> [--dont-ask] [--directory=<path>]
 
@@ -37,7 +37,11 @@ def main(argv=None, write=None, read_line=None):
     """
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
-        (write or print)(HELP)
+        from vut.services._core import man_page
+        (write or print)(man_page(
+            "hwut.move", HELP,
+            usage="usage: hwut.move <app> <app'> [--dont-ask] "
+                  "[--directory=<path>]"))
         return E_ExitCode.OK
     word_list   = [a for a in argv if not a.startswith("-")]
     option_list = [a for a in argv if a.startswith("-")]

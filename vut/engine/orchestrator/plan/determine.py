@@ -113,13 +113,17 @@ def determine(app_set, task_list, build_interview=None, admit=None):
     session_node_list, session_link_list = \
         session_nodes(case_list, app_set, name_of)
 
-    ordering_link_list = _ordering_links(app_set, name_of, case_list)
+    ordering_link_list, cycle_link_list = \
+        _ordering_links(app_set, name_of, case_list)
     exclusion_list     = _exclusion_sets(app_set, test_node_list)
 
     plan = CTestPlan(build_node_list + session_node_list + test_node_list,
                      ordering_link_list + build_link_list
                                         + session_link_list,
                      exclusion_list)
+    #  THE LINKS OF A CYCLE order nothing and the form refuses them
+    #  (R-35): they ride BESIDE the plan, for the page that shows it.
+    plan.cycle_link_tuple = tuple(cycle_link_list)
     return plan, report_list, refused_list
 
 
@@ -207,8 +211,10 @@ def _sorted_choices(app):
 
 def _ordering_links(app_set, name_of, case_list):
     """
-    RETURN: list[CPlanLink], one ORDERING link per (required, requiring)
-            pair standing in the plan, in plan order.
+    RETURN: [0] list[CPlanLink], one ORDERING link per (required,
+                requiring) pair standing in the plan, in plan order.
+            [1] list[CPlanLink], the links left out of [0] because they
+                stand inside a dependency cycle.
 
     A link out of a [MISDEP] node stands only towards another: the
     dependant of an unsatisfiable case is itself unsatisfiable (R-35),
@@ -232,7 +238,40 @@ def _ordering_links(app_set, name_of, case_list):
                 link = CPlanLink(E_LinkKind.ORDERING,
                                  source_name, target_name)
                 if link not in link_list: link_list.append(link)
-    return link_list
+    kept_list = _without_cycle_links(link_list)
+    return kept_list, [link for link in link_list if link not in kept_list]
+
+
+def _without_cycle_links(link_list):
+    """
+    RETURN: list[CPlanLink], 'link_list' without the links that stand
+            INSIDE a cycle -- both ends reach each other -- in the
+            order given
+            the list itself, where no cycle stands
+
+    A CYCLE IS RESOLVED BEFORE THE PLAN EXISTS (R-35, R-33): its members
+    are [MISDEP], none of them is ever dispatched (P-6), and a link
+    between two of them orders nothing -- while the form refuses a plan
+    that carries the cycle. The directory's failure names the cycle;
+    the plan carries its members, marked, and what hangs on them.
+    """
+    after_db = {}
+    for link in link_list:
+        after_db.setdefault(link.source, set()).add(link.target)
+
+    def reached_set(name):
+        """RETURN: set[str], every node an ordering path leads to from 'name'."""
+        seen, todo = set(), [name]
+        while todo:
+            for follower in after_db.get(todo.pop(), ()):
+                if follower not in seen:
+                    seen.add(follower)
+                    todo.append(follower)
+        return seen
+
+    reach_db = {name: reached_set(name) for name in after_db}
+    return [link for link in link_list
+            if link.source not in reach_db.get(link.target, ())]
 
 
 def _exclusion_sets(app_set, test_node_list):

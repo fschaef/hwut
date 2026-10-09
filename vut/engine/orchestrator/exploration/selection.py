@@ -186,8 +186,24 @@ def of_tree(root, wish, label_view=None, base_f=None):
         met_set       = frozenset(met_set))
 
 
+class CGlobReach:
+    """WHAT THE GLOBS OF A STREAMED SELECTION MET, accumulated over the
+    walk: 'of_tree' holds the two sets as locals; a stream hands them
+    to whoever asked."""
+    __slots__ = ("met_set", "visible_set")
+
+    def __init__(self):
+        self.met_set, self.visible_set = set(), set()
+
+    def warning_tuple(self):
+        """RETURN: tuple[str], one WARNING per glob whose every match the
+                   standard label silences; () where none is, or where
+                   the walk has not ended."""
+        return swallowed_warning_tuple(self.met_set, self.visible_set)
+
+
 def of_tree_stream(root, wish, label_view=None, base_f=None,
-                   fault_list=None):
+                   fault_list=None, reach=None):
     """
     YIELD: [0] str            one directory, RELATIVE to 'root', walk
                               order.
@@ -205,6 +221,11 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
     invisible because of another), and so are the walk's faults; a face
     that needs either asks 'of_tree'. 'fault_list' is the caller's
     accumulator and is complete only when this generator is exhausted.
+
+    'reach', where given, is the caller's accumulator too: a CGlobReach
+    whose 'warning_tuple()' is the swallowed-glob finding of the WHOLE
+    selection (services E-21) -- true only once the generator is
+    exhausted, for the reason stated above.
     """
     want_f = wish.asks_base_f() if base_f is None else base_f
     for directory, result in explore_tree_stream(root,
@@ -215,7 +236,13 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
         query = CTestTaskListQuery(wish, bookkeeper,
                                    directory=directory, root=root,
                                    label_view=label_view)
-        if wish.glob_tuple: query.glob_reach(result.app_set)
+        if wish.glob_tuple:
+            met, visible = query.glob_reach(result.app_set)
+            if reach is not None:
+                reach.met_set.update(met)
+                #  THE SILENCE CAN ONLY SWALLOW where a view reaches.
+                reach.visible_set.update(met if label_view is None
+                                         else visible)
         case_list = [CSelectedCase(directory, case)
                      for case in query.get_test_cases(result.app_set)]
         yield directory, result, bookkeeper, case_list

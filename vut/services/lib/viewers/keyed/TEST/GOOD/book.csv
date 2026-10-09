@@ -1,4 +1,4 @@
-# vut-register 5 generation:44 apps:3 marks:0=18,1=14,2=9
+# vut-register 5 generation:49 apps:4 marks:0=18,1=15,2=9,3=3
 test;choice;verdict;report;stain;test_id;choice_id
 test-editing.py;discard;true;ok;;1;11
 ;f6;true;ok;;1;12
@@ -10,6 +10,7 @@ test-editing.py;discard;true;ok;;1;11
 ;good-type;true;ok;;1;4
 ;good-unchanged;true;ok;;1;5
 ;good-undo;true;ok;;1;6
+;leave;true;ok;;1;14
 ;main-keys;true;ok;;1;7
 ;pane;true;ok;;1;8
 ;try;true;ok;;1;9
@@ -41,3 +42,6 @@ test-proposal.py;applied;true;ok;;2;0
 ;none;true;ok;;2;5
 ;nothing;true;ok;;2;6
 ;numeric;true;ok;;2;7
+test-screen.py;asking;true;ok;;3;0
+;open;true;ok;;3;1
+;quit;true;ok;;3;2

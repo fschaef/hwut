@@ -1,0 +1,20 @@
+-- plain, then carriage return and line feed
+    0 |hello|
+    1 |world|
+    cursor (1, 5)
+-- UTF-8: two bytes, one cell; a wide character, two
+    0 |ä日x|
+    cursor (0, 4)
+    column 0: 'ä'    width 1
+    column 1: '日'    width 2
+    column 2: ''     width 1
+    column 3: 'x'    width 1
+-- seven characters on five columns: the line wraps
+    0 |abcde|
+    1 |fg|
+    cursor (1, 2)
+-- a str is sent as UTF-8; the bytes taken are counted
+    taken: 3
+-- a place off the screen
+    IndexError: (2, 0) is not on a screen of 2 x 4
+<hwut-end>

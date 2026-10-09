@@ -355,7 +355,8 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.help", HELP))
         return E_ExitCode.OK
     try:
         wish, rest_list = parse_wish(argv)

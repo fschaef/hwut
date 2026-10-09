@@ -1,0 +1,6 @@
+a.sql  =>  title = "two dashes"
+b.c    =>  title = "two slashes"
+c.c    =>  title = "a star block"
+d.txt  =>  title = "one line, deep"
+e.sh   => 
+<hwut-end>

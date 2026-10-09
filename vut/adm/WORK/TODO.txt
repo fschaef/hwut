@@ -2,7 +2,7 @@
 TODO -- ALL OUTSTANDING LABOUR, IN ONE PLACE
 ==============================================================================
 
-VERSION: 15 (2026-10-05)
+VERSION: 15 (2026-10-05), with D-9 and band G-11.. entered 2026-10-08
 
 THIS IS THE ONE LIST. Every piece of LABOUR OWED anywhere in the tree
 stands here and nowhere else as labour: a RATIONALE entry may say
@@ -471,6 +471,33 @@ D-8  '-l fail' SHOWED FIVE OK WITHOUT EVIDENCE
        (Note: 'hwut-root.labels' is not tracked in this tree; the
        measurement created and removed it.) 2026-10-05.
 
+D-9  THE RULINGS THAT STAND BY NAME AND BY NO PAGE
+     review-r10 section 11; 'TODO-by-priority.txt' D-9. (The item and
+     band G were written in TODO version 16, which travelled in bundle
+     83 and never reached this branch; they are entered here from the
+     session of 2026-10-08, which regenerated the list.)
+     A ruling counts as built only when a page states the ruled word
+     the way an author writes it, calls the face a person types, and
+     reads what happens. THE LIST, regenerated: 398 entries -- 125
+     name a green page, 78 are cited by a page, 128 resolve by name
+     only, 67 are doctrine. The 128 are probed component by component:
+         [x] services      41: 32 hold, 8 fail (G-11 .. G-16), 1 not
+                               reached (E-64)
+         [x] exploration   38 (37 and 'X-TITLE', see review-r10 11.9):
+                               31 hold, 2 fail (G-18, G-13), 5 overtaken
+                               on record -- each amended
+         [x] compare        2: 1 holds, 1 fails (G-20)
+         [x] bookkeeper     5: 5 hold
+         [x] display        9: 8 hold, 1 overtaken on record
+         [x] coverage      11: 9 hold, 1 overtaken, 1 cannot (D-12:
+                               verilator)
+         [x] run 6, plan 11, scheduler 1, orchestrator 5: 18 hold,
+                               4 overtaken, 1 doctrine after all (O-2)
+     LEFT: E-64 not reached; D-12 wants verilator; G-19 waits on A-5.
+     G-16 ruled stale, G-17 built (2026-10-09). Totals: review-r10 11.11.
+     EVIDENCE: the sweep and every probe command stand in review-r10
+       11.1 .. 11.7; census 935 -> 943 ok / 1 fail (11.8). 2026-10-08.
+
 ==============================================================================
 E  WAITING ON A RULING -- no labour can start
 ==============================================================================
@@ -478,6 +505,24 @@ E  WAITING ON A RULING -- no labour can start
      Each line: the fork, then what the tree measures today (v14).
 
      gathered/0k   --confs: the file's language; implicit reading.
+
+     THINK ABOUT (Frank-Rene, 2026-10-09): "a move might
+     propose/perform a configuration management based move too, if
+     the according system was detected."
+         TODAY: 'hwut.rename' / 'hwut.move' FOLLOW the author's move
+         and touch no source (services E-16, E-48): they print
+         "NOTE application '<x>' stands under the OLD name -- git mv
+         <old> <new>" -- 'git' in words, whatever the tree is under.
+         THE MEANS STAND since 2026-10-08: 'services/_boundary.py
+         REPOSITORY_MARK_TUPLE' and '_repository_of' know git,
+         mercurial, svn, jujutsu, bazaar, darcs, pijul, fossil by
+         their markers.
+         OPEN, each a fork: propose only (the NOTE names the detected
+         system's own verb) or perform; whether the GOOD files and
+         the book move through the system too or stay hwut's own
+         files moves; what a system refuses (an untracked file, a
+         dirty index) becomes. E-16's "the source file is not moved
+         ... this face follows it" would be amended.
                    MEASURED: grep confs services -> 0; the flag
                    does not exist on any face.
      gathered/0v   the configuration specification's form.
@@ -666,6 +711,117 @@ F-4  THE HAND-PARSING FACES GAIN A PARSER (E-81)
        11 parser-bearing modules; services/execute.py, move.py,
        remove.py, sanitize.py, pype.py parse by hand (no argparse,
        no cmdline import). 2026-10-05.
+
+==============================================================================
+G  FALSE DONE CLAIMS -- a ruling says it stands, the tree does otherwise
+==============================================================================
+
+     G-1 .. G-10 are the audit's (2026-10-05); their text travelled in
+     TODO version 16 (bundle 83) and stands in 'TODO-by-priority.txt'.
+     G-11 onward are the D-9 probe's, component by component. BUILT
+     means: the fix, a page through the face, and the entry's AMENDED
+     line, in one bundle.
+
+G-11 A STAIN WHOSE LAST REPEAT PASSED READ '[OK]'      ** BUILT (91) **
+     services E-17: "THE STAIN IS A FAILURE IN EVERY FORMAT".
+     EVIDENCE: flip fixture, hwut.accept --whole --dont-ask;
+       hwut.run.stability --repeat=2; hwut.report --format=junit ->
+       failures="0", exit 0 (hwut.run: 'UNSTABLE -- not run [FAIL]').
+       After: failures="1", type="unstable", exit 1. Pinned by
+       'services/TEST/test-report.sh stain_last_ok'. 2026-10-08.
+
+G-12 NO FACE PLACES 'hwut-root.conf'                   ** BUILT (93) **
+     services E-25: "THE BOUNDARY FACE WRITES THE LANGUAGE TABLE".
+     EVIDENCE: grep -rn "placed(\|view_at_or_offer" services ->
+       definitions only, no caller; hwut.labels.list (piped, and on a
+       pty) in a tree without a root conf -> one line "REFUSED: no
+       'hwut-root.conf' stands in or above '.' -- the tree has no
+       boundary", exit 2. 'hwut.config.show --root-conf-template'
+       prints the 219-line template: that half holds. 2026-10-08.
+     RULED the same day (services E-25 AMENDED): placing is the
+       sanitize command 'root [<dir>]' -- alone it asks: the
+       repository's root, the current directory, 'q'; every refusal
+       carries "HINT: use 'hwut.sanitize root [dir]' to place one.".
+       Pinned by 'services/TEST/
+       test-face-words.sh boundary'.
+
+G-13 AN UNKNOWN LABEL OR LANGUAGE AT THREE FACES       ** BUILT (91) **
+     services E-19, E-26; exploration R-75: "refused by name".
+     EVIDENCE: hwut.plan --label nosuch -> Traceback (SelectionError,
+       plan.py:178); hwut.run.stability --label nosuch -> "EMPTY: the
+       wish selects no test", exit 3; hwut.sanitize.propose --label
+       nosuch -> a proposal, exit 0; the same three with
+       '--language=cobol'. After: REFUSED, exit 2, at all ten faces
+       that take a wish. Pinned by 'services/TEST/test-face-words.sh
+       label_unknown, language_unknown'. 2026-10-08.
+
+G-14 A SWALLOWED GLOB DREW NO WARNING AT THREE FACES   ** BUILT (91) **
+     services E-21: "a WARNING naming the remedy, in EVERY face".
+     EVIDENCE: test-m.sh labelled 'meta'; hwut.report|hwut.plan|
+       hwut.run.stability --glob "test-m*" -> no WARNING line. After:
+       the line at all six. Pinned by 'services/TEST/
+       test-face-words.sh glob_silenced'. 2026-10-08.
+
+G-15 THE LABEL FACES' USAGE WITHOUT 'usage:'           ** BUILT (91) **
+     services E-32. EVIDENCE: hwut.labels.list --no-such-option ->
+       second line "hwut.labels.list [--directory=<path>]". After:
+       "usage: hwut.labels.list ...". Five nominals moved, token-equal
+       under the one cause (review-r10 11.5). OPEN stands: 27 of 46
+       faces end '--help' without a usage line (r-11b). 2026-10-08.
+     RULED 2026-10-09 (r-11b), built (95): every '--help' is a manual
+       page -- NAME, USAGE, DESCRIPTION, EXAMPLE where one helps
+       ('_core.man_page'; services E-32 AMENDED, its OPEN closed).
+
+G-16 TWO RULED WORDS THE TREE DOES NOT PRINT        ** RULED STALE (95) **
+     services E-33 ("'---->'"), E-76 ("grey-green").
+     EVIDENCE: grep -n "BADGE_REPEAT *=" engine/display/plain.py:199
+       -> five blanks; hwut.accept.interactive on a pty, a line taken
+       (' ', Enter), rendered by a terminal emulator -> the spent line
+       'afafaf' on '303030', italic. 2026-10-08.
+     RULED 2026-10-09 (r-11a): "forget, that was a stale requirement.
+       Do nothing." Nothing built; one AMENDED line on E-33 and E-76.
+
+G-17 'q' BOOKS 'ok' OVER DIFFERENCES LEFT                  ** BUILT (95) **
+     Found beside E-61/E-117; no entry rules it either way.
+     EVIDENCE: nominal accepted, the page changed, hwut.run -> book
+       "false;not-equivalent-with-nominal"; hwut.accept.interactive on
+       a pty, key 'q' -> "ACCEPTED 1 of 1 / accepted", GOOD
+       byte-identical (md5 85c8fd78 before and after), book
+       "true;ok"; hwut.report -> [OK]; hwut.run -> 0 ok, 1 fail.
+       2026-10-08.
+     RULED 2026-10-09 (r-11c), built: 's' saves and 'q' leaves without
+       saving, each asked; 'S' and 'Q' unasked; the book entry follows a
+       check of OUT against the nominal written (services E-89 AMENDED).
+       After: 'S' with nothing taken -> book "false / not-equivalent-
+       with-nominal" ('test-accept-door.py short').
+     f-8, RULED 2026-10-09 and built (96): that case is reported
+       'saved [FAIL]', exit FAULT, not "blessed" (review-r10 11.12).
+
+G-18 A DEPENDENCY CYCLE ENDS THE RUN IN A TRACEBACK     ** BUILT (93) **
+     exploration R-33, R-35: "Circularity is a DIRECTORY error";
+     "each affected case reports individually: [MISDEP]".
+     EVIDENCE: five accepted pages, a two-member cycle in hwut.conf;
+       hwut.run, hwut.plan -> AssertionError out of plan/form.py:246.
+       After: 'DIRECTORY: dependency cycle: ...', three 'no-dep
+       [FAIL]', two [OK], exit 1. Pinned by 'services/TEST/
+       test-header-words.sh cycle'. 2026-10-08.
+
+G-19 'build { caps }' IS ACCEPTED AND GOES NOWHERE      ** OWED, with A-5 **
+     exploration R-22: caps "inside 'build', capping the BUILD
+     process".
+     EVIDENCE: build { framework = "make" caps { timeout_sec = 4 } }
+       -> hwut.config.show prints 'framework' alone; grep "build\."
+       exploration/relation.py -> 'build.framework',
+       'build.executable'; no reader of 'Build.caps' outside the
+       record. 2026-10-08.
+
+G-20 A PAIR THAT SPENT THE SEARCH BUDGET DREW AN EMPTY ROW  ** BUILT (94) **
+     compare C-16: "shows as DELETE + INSERT".
+     EVIDENCE: app_defaults { diff_display_parameters { search_budget
+       = 3 } }; two differing lines; hwut.run.diff t --console ->
+       "     1    1 | " (empty). After: "S 1 | [line 1 of the new
+       text]" / "N 1 | [line 1 of the old text]". Pinned by
+       'services/TEST/test-header-words.sh budget_spent'. 2026-10-08.
 
 ==============================================================================
 COUNTS (version 14)

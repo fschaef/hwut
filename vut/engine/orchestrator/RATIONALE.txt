@@ -23,6 +23,10 @@ COST      GOOD is written by every Run. Mitigated: the adapter owns
 GRAVEYARD Two files (structure in GOOD, volatile footprint outside):
           rejected -- it recreates, inside our own tree, the divergence
           problem the discussion exists to abolish.
+AMENDED   2026-10-08 (audit D-9): the base is 'GOOD/book.csv'
+          (bookkeeper B-6, B-10); 'result_db.json' and 'result_db.csv'
+          are read once and removed at the first write. MEASURED
+          through 'hwut.run' ('test-face-words.sh book').
 
 ----------------------------------------------------------------------------
 D-2  PROTECTION IS A GUARD, NOT A BLESSING

@@ -190,7 +190,10 @@ def main(argv=None):
                line itself is not understood."""
     argv = list(sys.argv if argv is None else argv)[1:]
     if "--help" in argv:
-        print(__doc__.split("PURPOSE", 1)[1].rstrip())
+        from vut.services._core import man_page
+        print(man_page("hwut.report.timings",
+                       __doc__.split("PURPOSE", 1)[1].rstrip(),
+                       usage=USAGE))
         return E_ExitCode.OK
     directory, out_path = ".", None
     table_f = recursive_f = False

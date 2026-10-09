@@ -1,0 +1,14 @@
+-- three lines, then '<esc>[2;4H' (it counts from 1) and 'X'
+    0 |first line|
+    1 |secXnd line|
+    2 |third line|
+    cursor (1, 4)
+-- erase to the end of that line
+    0 |first line|
+    1 |secX|
+    2 |third line|
+    cursor (1, 4)
+-- clear the screen, home, one word
+    0 |clean|
+    cursor (0, 5)
+<hwut-end>

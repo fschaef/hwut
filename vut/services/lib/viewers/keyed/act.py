@@ -55,8 +55,14 @@ class E_Act(Enum):
     DISCARD      = auto()   # an editing pane closes: <Esc>, nothing changed
     TYPE         = auto()   # SCRIPT ONLY: the editing pane's text becomes
                             #   the argument -- a keyboard types instead
-    DONE         = auto()   # 'q': what stands is written (E-89)
-    CANCEL       = auto()
+    DONE         = auto()   # 'S': what stands is written, unasked (E-89)
+    CANCEL       = auto()   # 'Q': nothing is written, unasked
+    #  THE ASKING PAIR (E-89, AMENDED r-11c): the lower-case key asks
+    #  first and the answer decides; only YES lets the session end.
+    ASK_SAVE     = auto()   # 's': "save and leave?"
+    ASK_QUIT     = auto()   # 'q': "leave without saving?"
+    YES          = auto()   # 'y': the answer that lets the asked act run
+    NO           = auto()   # 'n': the answer that drops the question
 
     def takes_f(self):
         """RETURN: bool, True where this act moves subject lines into the

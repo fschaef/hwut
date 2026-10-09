@@ -172,6 +172,9 @@ GRAVEYARD Pseudo-choices (test machinery to disable). Own file
           (second carrier). String-or-scope (scope members
           unnamed -- design on spec; string-to-scope remains the
           compatible direction).
+SUPERSEDED 2026-10-08 (audit D-9; TODO G-9): by services E-7 --
+          the key is 'target', the face 'hwut.execute <target>';
+          'special' and 'hwut.special' stand under no name.
 
 ----------------------------------------------------------------------------
 P-12 PRINT ORDER
@@ -233,6 +236,8 @@ COST      Two entry points; the common laws (exit status,
 GRAVEYARD 'hwut.parse' (names machinery). 'hwut.check' (promises
           a verdict, delivers a tree). One face with a mode switch
           (each face one job).
+AMENDED   2026-10-08 (audit D-9): 'hwut.show' is 'hwut.config.show'
+          (services E-54); both faces answer '--help'.
 
 ----------------------------------------------------------------------------
 P-17 THE TREE PLAN

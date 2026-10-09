@@ -77,6 +77,13 @@ candidates.
                 nominal where it was made and stains the book
                 'constraint'; nothing is removed. A finding already
                 written is not proposed again.
+    (no option) A TREE WITHOUT A BOUNDARY (E-25): where no
+                'hwut-root.conf' stands in or above the directory, the
+                proposal is 'root <dir>' and nothing else -- nothing
+                else can be judged without one. The repository's root
+                stands uncommented, the current directory as a
+                commented alternative. Healed by 'root', which writes
+                the file; 'hwut.sanitize root' alone asks instead.
     --transient THE TWO TRANSIENT ROOTS WHOLE, 'OUT/' and 'TMP/' (E-24),
                 candidates included. Asked for by name only; it takes
                 '--session', '--lock' and '--out' with it. A directory
@@ -159,7 +166,7 @@ def head_list_of(directory, aspect_set):
     return ["# hwut.sanitize.propose -- in '%s': %s"
             % (directory, ", ".join(a for a in sanitize.ASPECT_TUPLE
                                             + sanitize.EXPLICIT_ASPECT_TUPLE
-                                            + ("target",)
+                                            + ("target", "root")
                                     if a in aspect_set)),
             "#",
             "# One command per line, '<command> <concerned entity>', the entity",
@@ -184,7 +191,8 @@ def main(argv=None, write=None, err=None):
     if write is None: write = sys.stdout.write
     if err is None:   err   = _stderr_line
     if "--help" in argv:
-        print(HELP)
+        from vut.services._core import man_page
+        print(man_page("hwut.sanitize.propose", HELP))
         return E_ExitCode.OK
 
     try:
@@ -217,9 +225,13 @@ def main(argv=None, write=None, err=None):
     root = os.path.abspath(directory)
     try:
         exploration = explore_tree(root)
-    except RootConfMissing as error:
-        err("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
+    except RootConfMissing:
+        #  THE ONE STATE THIS FACE MUST ENTER (E-25, amended 2026-10-08):
+        #  a tree without a boundary. It proposes the boundary and
+        #  nothing else -- nothing else can be judged without one.
+        text = proposal_text(sanitize.root_issue_list(root), os.getcwd(),
+                             head_list_of(directory, {"root"}))
+        return _delivered(text, arguments.output, write, err, E_ExitCode.OK)
 
     issue_list, note_list = [], []
     bound_set = set()
@@ -238,8 +250,13 @@ def main(argv=None, write=None, err=None):
             query = CTestTaskListQuery(wish, Bookkeeper(whole),
                                        directory=where, root=root)
             wanted_f = bool(query.get_test_cases(result.app_set))
-        except SelectionError:
-            wanted_f = False
+        except SelectionError as error:
+            #  A WISH THAT NAMES WHAT THE TREE DOES NOT HOLD IS REFUSED
+            #  BY NAME (E-19, R-75), here as at every face: read as
+            #  'not wanted' it would propose over a selection nobody
+            #  could have meant.
+            err("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
         found, noted = sanitize.directory_issue_list(root, whole, result,
                                                      aspect_set, wanted_f)
         for issue in found:
@@ -266,16 +283,26 @@ def main(argv=None, write=None, err=None):
 
     text = proposal_text(issue_list, os.getcwd(),
                          head_list_of(directory, aspect_set))
-    if arguments.output is None:
+    return _delivered(text, arguments.output, write, err,
+                      E_ExitCode.OK if issue_list else E_ExitCode.EMPTY)
+
+
+def _delivered(text, output, write, err, status):
+    """
+    RETURN: E_ExitCode, 'status' where the proposal reached its sink --
+                        stdout, or the file '-o' names
+            E_ExitCode.REFUSED, where that file cannot be written
+    """
+    if output is None:
         write(text)
-    else:
-        try:
-            with open(arguments.output, "w", encoding="utf-8") as fh:
-                fh.write(text)
-        except OSError as error:
-            err("REFUSED: cannot write '%s': %s" % (arguments.output, error))
-            return E_ExitCode.REFUSED
-    return E_ExitCode.OK if issue_list else E_ExitCode.EMPTY
+        return status
+    try:
+        with open(output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+    except OSError as error:
+        err("REFUSED: cannot write '%s': %s" % (output, error))
+        return E_ExitCode.REFUSED
+    return status
 
 
 if __name__ == "__main__":

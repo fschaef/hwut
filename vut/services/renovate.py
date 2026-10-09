@@ -194,11 +194,11 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(USAGE)
-        write("")
+        from vut.services._core import man_page
         body = __doc__.split("\n")
         body = [l for l in body if not l.startswith("SPDX") and not l.startswith("_")]
-        write("\n".join(body).strip("\n"))
+        write(man_page("hwut.renovate", "\n".join(body).strip("\n"),
+                       usage=USAGE))
         return E_ExitCode.OK
     arguments, completion_f = parse_or_refuse(PARSER, argv, write, ARG_DB)
     if completion_f:      return E_ExitCode.OK

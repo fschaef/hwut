@@ -183,7 +183,8 @@ def _read_command_line(argv, write):
     while i < len(argv):
         argument = argv[i]
         if   argument == "--help":
-            write(HELP)
+            from vut.services._core import man_page
+            write(man_page("hwut.execute", HELP, usage=USAGE))
             return "help"
         elif argument in ("-i", "--ignore"):  result["ignore_f"] = True
         elif argument in ("-q", "--quiet"):   result["quiet_f"]  = True

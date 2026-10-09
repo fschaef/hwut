@@ -514,6 +514,12 @@ The faces:
                  D-45). EVERY CONVERTER IS A VISITOR over the one fold
                  ('lib/cov/summary.py', 'lib/cov/visitor.py'); one
                  command line for all ('lib/cov/conv/_face.py').
+    hwut.about         (about.py)
+                 the version ('adm/version.py', the one place it
+                 stands), the licence and the home; then where this
+                 installation stands, its Python and its platform.
+                 '--version' is the version alone, one bare line. It
+                 needs no tree (E-138).
     hwut.cov.formats   (lib/cov/formats.py)
                  the table of tools and formats this build reads,
                  generated from the registry (coverage D-13).

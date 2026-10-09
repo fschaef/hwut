@@ -4,8 +4,8 @@
 # @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
 #     choices    = ["color", "json", "junit", "never_run", "not_in_book",
-#                   "refused", "stain", "tap", "traditional", "width",
-#                   "run_agrees", "run_width"]
+#                   "refused", "stain", "stain_last_ok", "tap",
+#                   "traditional", "width", "run_agrees", "run_width"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -28,6 +28,10 @@
 # json         the document, its verdicts true/false/null.
 # stain        A STAIN IS A FAILURE IN EVERY FORMAT, never a 'skipped':
 #              JUnit goes red and the message names it.
+# stain_last_ok  THE SAME WHERE THE LAST REPEAT HAPPENED TO PASS (E-17,
+#              amended 2026-10-08): three repeats, ok / failed / ok, so
+#              the book's own verdict reads 'true' -- and every format
+#              still fails it, JSON's 'verdict' included.
 # never_run    a case with no GOOD file, which the books never saw:
 #              'no GOOD file [FAIL]', a failure in every format (display
 #              D-32), and the page counts it.
@@ -60,7 +64,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.report face: the databases, rendered.;"
-        echo "CHOICES: traditional, width, junit, tap, json, stain, never_run, not_in_book, refused, color, run_agrees, run_width;"
+        echo "CHOICES: traditional, width, junit, tap, json, stain, stain_last_ok, never_run, not_in_book, refused, color, run_agrees, run_width;"
         exit 0 ;;
 esac
 
@@ -174,6 +178,23 @@ stain)
     masked --directory=tree --format=junit
     echo "--- tap"
     masked --directory=tree --format=tap
+    ;;
+
+stain_last_ok)
+    #  THE LIAR'S LAST WORD WAS 'ok': the book says 'true', the stain
+    #  stands, and the report fails the choice in every format.
+    flipping
+    $STABILITY --directory=tree --repeat=3 > /dev/null 2>&1
+    echo "--- the book"
+    cut -d';' -f1-5 tree/suite/TEST/GOOD/book.csv | tail -n +2
+    echo "--- traditional"
+    masked --directory=tree --width=70
+    echo "--- junit"
+    masked --directory=tree --format=junit
+    echo "--- tap"
+    masked --directory=tree --format=tap
+    echo "--- json"
+    masked --directory=tree --format=json
     ;;
 
 never_run)

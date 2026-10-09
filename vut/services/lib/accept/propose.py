@@ -178,7 +178,8 @@ def main(argv=None, write=None):
     if argv is None:  argv  = sys.argv[1:]
     if write is None: write = print
     if "--help" in argv:
-        write(__doc__.strip())
+        from vut.services._core import man_page
+        write(man_page("hwut.accept.propose", __doc__.strip()))
         return E_ExitCode.OK
 
     #  A BARE NUMBER IS THE LINE COUNT -- 'hwut.accept.propose -o p 8'.

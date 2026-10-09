@@ -1,8 +1,18 @@
 
 --- --help ---
 $ hwut.plan --help
-    hwut.plan -- the TEST PLAN the framework intends
+    NAME
+        hwut.plan -- the TEST PLAN the framework intends
 
+    USAGE
+        hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
+                  [--glob <target>]... [--exclude <target>]...
+                  [--dir <glob>]... [--exclude-dir <glob>]...
+                  [--wishlist <file>]... [-l|--label <expr>]
+                  [--language=<name>]... [--faster-than=<sec>]
+                  [<file-glob> [choice-glob]...] [--directory=<path>]
+
+    DESCRIPTION
         hwut.plan           the plan of everything the directory offers:
                             the nodes (TEST, BUILD, SESSION), the links
                             ('x -> y' ordering, 'w ==> t' supports), and
@@ -81,7 +91,9 @@ $ hwut.plan --help
     and determination is deterministic. Cases required by a selected case
     enter by implication, marked '<= required by <target>'. A case whose
     dependencies cannot be met carries '[MISDEP]': it is selected,
-    reported as failure, and does not run.
+    reported as failure, and does not run. A link that stands inside a
+    dependency cycle is listed and carries '[CYCLE]': it orders nothing.
+    On a terminal both tags stand on the failure's red.
 
     The configuration the framework READ is the service 'hwut.config.show'.
 

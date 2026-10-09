@@ -1,0 +1,12 @@
+[]                 exit 1  stdout 14 line(s)  flow 6  roll-call 1  stderr 0
+[--plain]          exit 1  stdout 14 line(s)  flow 6  roll-call 1  stderr 0
+[--verbose]        exit 1  stdout 17 line(s)  flow 6  roll-call 1  stderr 0
+[--quiet]          exit 1  stdout  7 line(s)  flow 0  roll-call 1  stderr 0
+[--silent]         exit 1  stdout  0 line(s)  flow 0  roll-call 0  stderr 0
+[--plain --quiet]  exit 2  stdout 11 line(s)  flow 0  roll-call 0  stderr 0
+[--quiet --silent] exit 2  stdout 11 line(s)  flow 0  roll-call 0  stderr 0
+bare is '--plain'
+REFUSED: '--plain' beside '--quiet' can want nothing
+== a fault under '--silent'
+stdout 0 line(s); stderr: ERROR hwut.conf:2:5: VOCABULARY: unknown key 'oops'
+<hwut-end>

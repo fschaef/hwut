@@ -1,0 +1,23 @@
+-- fed: 'ab'
+    cursor    (0, 2)
+    damage    rows 0..1  columns 0..2
+-- fed: a line feed and 'c'
+    cursor    (0, 0)
+    cursor    (1, 0)
+    cursor    (1, 1)
+    damage    rows 1..2  columns 0..1
+-- fed: the cursor to row 4, hidden
+    cursor    (3, 0)
+    property  cursor-visible = 0
+-- fed: the alternate screen
+    property  alternate-screen = 1
+    damage    rows 0..4  columns 0..20
+-- fed: the bell
+    bell
+-- fed: nothing that draws: a reset of attributes
+-- asked where the cursor is, nobody running: the answer waits
+    cursor    (1, 4)  hidden
+    answer() = b'\x1b[2;5R'
+-- a key pressed with nobody running
+    answer() = b'\x1bOP'
+<hwut-end>

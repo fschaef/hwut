@@ -482,7 +482,8 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
     if argv is None:
         argv = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.run", HELP, usage=USAGE))
         return E_ExitCode.OK
 
     try:

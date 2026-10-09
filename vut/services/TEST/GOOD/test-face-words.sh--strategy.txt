@@ -1,0 +1,7 @@
+linear,longest-first     slow/TEST mid/TEST quick/TEST DIRECTORIES                                      
+linear,shortest-first    quick/TEST mid/TEST slow/TEST DIRECTORIES                                      
+linear,name-sorted       mid/TEST quick/TEST slow/TEST DIRECTORIES                                      
+bundled,longest-first    slow/TEST mid/TEST quick/TEST DIRECTORIES                                      
+linear,parallel          REFUSED: '--strategy=linear,parallel': 'linear'  
+nosuch                   REFUSED: '--strategy=nosuch': 'nosuch' names nei 
+<hwut-end>

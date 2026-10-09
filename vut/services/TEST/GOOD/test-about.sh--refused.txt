@@ -1,0 +1,13 @@
+== hwut.about --verson
+REFUSED: 'hwut.about' does not take: --verson
+usage: hwut.about [--version] | --help
+STATUS: 2
+== hwut.about --version --all
+REFUSED: 'hwut.about' does not take: --version --all
+usage: hwut.about [--version] | --help
+STATUS: 2
+== hwut.about now
+REFUSED: 'hwut.about' does not take: now
+usage: hwut.about [--version] | --help
+STATUS: 2
+<hwut-end>

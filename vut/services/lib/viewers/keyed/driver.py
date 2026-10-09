@@ -160,6 +160,7 @@ class KeyedDisplay(DisplayAdapter):
         self.element_at   = None        # (pane, line) it belongs to
         self.state        = MergeState()
         self.leaving_act  = None
+        self.asking       = None        # the act a 'y' lets run: DONE | CANCEL
         self.search_term  = None
         self.column_i     = 0
         self.help_f       = False
@@ -285,6 +286,7 @@ class KeyedDisplay(DisplayAdapter):
         self.state = self._opening_state(subject_text, nominal_text)
         while True:
             self.leaving_act = None
+            self.asking      = None
             if self.act_script is not None:
                 #  CONSUMED, not replayed: a script spans rounds the way a
                 #  person's keystrokes do, so what is left after a REALIGN
@@ -323,7 +325,7 @@ class KeyedDisplay(DisplayAdapter):
 
     async def view(self, subject_name, subject_text, nominal_text):
         """RETURN: None. The screen, opened on the pairs delivered since
-                   'open', for looking only; it ends on 'q'.
+                   'open', for looking only; it ends on 'q', unasked.
 
         'act_script' stands in for the keys here as in 'resolve'.
         """
@@ -372,6 +374,17 @@ class KeyedDisplay(DisplayAdapter):
                    scroll and the help screen -- are answered here,
                    since no ruling of the merge depends on them.
         """
+        #  A QUESTION AT THE FOOT TAKES THE NEXT KEY (r-11c): 'y' lets the
+        #  asked act run, every other key drops the question and does
+        #  nothing else -- a key pressed at a question is an answer.
+        if self.asking is not None:
+            asked, self.asking = self.asking, None
+            if act is not E_Act.YES:
+                self._redraw()
+                return
+            act = asked
+        elif act in (E_Act.YES, E_Act.NO):
+            return
         if act is E_Act.HELP:
             self.help_f = not self.help_f
             self._redraw()
@@ -434,6 +447,15 @@ class KeyedDisplay(DisplayAdapter):
             return
         if self.view_only_f and act not in keymap.VIEW_ACT_SET:
             return
+        if act in (E_Act.ASK_SAVE, E_Act.ASK_QUIT):
+            #  A VIEW HAS NOTHING TO SAVE, so nothing to ask about.
+            if self.view_only_f:
+                act = E_Act.CANCEL
+            else:
+                self.asking = E_Act.DONE if act is E_Act.ASK_SAVE \
+                              else E_Act.CANCEL
+                self._redraw()
+                return
         if act.leaves_session_f():
             self.leaving_act = act
             if self.application is not None: self.application.exit()
@@ -1107,6 +1129,12 @@ class KeyedDisplay(DisplayAdapter):
         the panes, the text's own in an editing pane.
         """
         width = self._screen_width()
+        if self.asking is not None:
+            return [("class:status",
+                     " %s   y=yes  any other key=no"
+                     % ("SAVE GOOD AS IT STANDS AND LEAVE?"
+                        if self.asking is E_Act.DONE
+                        else "LEAVE WITHOUT SAVING?"))]
         if self.editing is not None and self.edit_fault is not None:
             return [("class:status",
                      " NOT READ -- %s   <F5>=try again  <Esc>=discard"
@@ -1124,10 +1152,10 @@ class KeyedDisplay(DisplayAdapter):
         #  THE STAIN IS MENTIONED (E-136), in the view as in the merge:
         #  stderr spoke and the block does not tolerate it. Tolerated
         #  stderr is no stain and takes no room here. The refusal is
-        #  named only where a 'q' could meet it.
+        #  named only where an 's' could meet it.
         if self.editing is None and not self.stderr_ignored_f:
             if self.stderr_spoke_f and not self.view_only_f:
-                item_list = [("STDERR SPOKE: 'q' will be refused -- "
+                item_list = [("STDERR SPOKE: 's' will be refused -- "
                               "declare 'stderr_ignored = true' ", None)] \
                             + item_list
             elif self.stderr_spoke_f:
@@ -1159,7 +1187,7 @@ class KeyedDisplay(DisplayAdapter):
         #  WHAT MUST NOT FALL OFF THE RIGHT EDGE COMES FIRST: undo and
         #  redo (lit or grey), and done -- MEASURED at 110 columns: in the
         #  header's order they were the hints dropped.
-        first = (E_Act.UNDO, E_Act.REDO, E_Act.DONE)
+        first = (E_Act.UNDO, E_Act.REDO, E_Act.ASK_SAVE, E_Act.ASK_QUIT)
         basic = keymap.item_list_of(keymap.BASIC_TUPLE, self.keymap)
         return keymap.item_list_of(keymap.FUNCTION_TUPLE, self.keymap) \
                + [item for act in first for item in basic if item[1] is act] \

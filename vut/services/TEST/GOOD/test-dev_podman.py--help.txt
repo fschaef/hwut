@@ -1,8 +1,12 @@
 $ hwut.dev.podman.build --help
-    
-PURPOSE: 'hwut.dev.podman.build' -- the development container's image,
-         built from 'vut/adm/container/Containerfile'.
+    NAME
+    hwut.dev.podman.build -- the development container's image, built from
+    'vut/adm/container/Containerfile'.
 
+USAGE
+    hwut.dev.podman.build [--rebuild] [--directory=<path>] | --help
+
+DESCRIPTION
     hwut.dev.podman.build [--rebuild] [--directory=<path>]
                                 builds the image 'hwut-dev' where none
                                 stands; '--rebuild' builds it anew (after
@@ -16,13 +20,16 @@ PURPOSE: 'hwut.dev.podman.build' -- the development container's image,
 The engine is 'podman', or 'docker' where podman does not stand; neither
 is a FAULT by name. The engine's call is printed before it runs, and its
 exit status is the face's (E-1).
-____________________________________________________________________
     [status 0]
 $ hwut.dev.podman.enter --help
-    
-PURPOSE: 'hwut.dev.podman.enter' -- a shell, or one command, inside the
-         development container, over the tree ON THE HOST'S DISK.
+    NAME
+    hwut.dev.podman.enter -- a shell, or one command, inside the development
+    container, over the tree ON THE HOST'S DISK.
 
+USAGE
+    hwut.dev.podman.enter [--directory=<path>] [-- <command>...] | --help
+
+DESCRIPTION
     hwut.dev.podman.enter [--directory=<path>] [-- <command>...]
                                 enters the container 'hwut-dev' with the
                                 tree's root -- the directory holding
@@ -50,7 +57,6 @@ away on exit ('--rm').
 Where the image does not stand, the face says so and names
 'hwut.dev.podman.build'; it does not build unasked. Where no engine
 stands, FAULT by name.
-____________________________________________________________________
     [status 0]
 SUCCESS: help on request.
 <hwut-end>

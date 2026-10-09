@@ -1,0 +1,9 @@
+    foot: <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo  r=redo  s=save  q=quit  <space>=range
+-- key 'A'
+-- key 'Q'
+    foot: (blank)
+-- the face left: exit status 0
+    | ACCEPTED  0 of 1
+    |     left alone     test-a.sh
+-- GOOD: ['one', 'two', '<hwut-end>']
+<hwut-end>

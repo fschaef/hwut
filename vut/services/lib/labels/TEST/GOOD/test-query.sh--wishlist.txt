@@ -1,9 +1,9 @@
 --- sorted, elided, ready to be read back
 STATUS: 0
 STDOUT {
-    ./tree/messaging/net/TEST/test-b.sh
-    ./tree/messaging/queue/TEST/test-b.sh
-    ./tree/storage/TEST/test-b.sh
+    tree/messaging/net/TEST/test-b.sh
+    tree/messaging/queue/TEST/test-b.sh
+    tree/storage/TEST/test-b.sh
 }
 --- and it PIPES BACK: the round trip closes
 STATUS: 0

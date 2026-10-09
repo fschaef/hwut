@@ -36,7 +36,7 @@ from   .                                     import _file
 from   .                                     import _faces
 from   ._faces                               import split_directory
 
-USAGE = usage_line("hwut.labels.list", ("[--directory=<path>]",))
+USAGE = usage_line("usage: hwut.labels.list", ("[--directory=<path>]",))
 
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n" + USAGE
@@ -49,7 +49,8 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.labels.list", HELP))
         return E_ExitCode.OK
 
     directory, rest_list = split_directory(argv)

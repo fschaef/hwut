@@ -1,8 +1,13 @@
-hwut.execute -- run one user-defined target over the tree
+NAME
+    hwut.execute -- run one user-defined target over the tree
 
-    hwut.execute <option-list> <target> <passed-through>
-    hwut.execute <option-list> -c "<commands>"
+USAGE
+    hwut.execute [-i] [--default=<script>] [-q] [+x]
+                 [--directory=<path>] <target> [<argument> ...]
+    hwut.execute [-q] [--dir|--exclude-dir <glob>]...
+                 [--directory=<path>] -c "<commands>"
 
+DESCRIPTION
 OPTIONS STAND BEFORE THE TARGET NAME. Everything after the target
 belongs to each directory's script, argv-style and untouched -- so
 '--dir' names directories where it stands first, and is a word for

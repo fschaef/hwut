@@ -1,0 +1,15 @@
+    foot: <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo  r=redo  s=save  q=quit  <space>=range
+-- key 'q'
+    foot: LEAVE WITHOUT SAVING?   y=yes  any other key=no
+-- key 'n'
+    foot: <F1>=help  <F5>=tolerance  <F6>=$EDITOR  u=undo  r=redo  s=save  q=quit  <space>=range
+-- key 'A'
+-- key 's'
+    foot: SAVE GOOD AS IT STANDS AND LEAVE?   y=yes  any other key=no
+-- key 'y'
+    foot: (blank)
+-- the face left: exit status 0
+    | ACCEPTED  1 of 1
+    |     accepted       test-a.sh
+-- GOOD: ['one', 'TWO', 'three', '<hwut-end>']
+<hwut-end>

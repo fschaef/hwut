@@ -1,0 +1,32 @@
+== hwut.plan
+hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.sh -> test-c.sh -> test-a.sh
+WISH: (all)
+TEST PLAN: 5 node(s), 4 link(s), 0 exclusion set(s)
+NODES
+    test-a.sh  TEST     [MISDEP]
+    test-b.sh  TEST
+    test-c.sh  TEST     [MISDEP]
+    test-d.sh  TEST     [MISDEP]
+    test-e.sh  TEST
+LINKS
+    test-a.sh -> test-d.sh
+    test-b.sh -> test-e.sh
+    test-c.sh -> test-a.sh  [CYCLE]
+    test-a.sh -> test-c.sh  [CYCLE]
+EXCLUSIONS
+    (none)
+STATUS: 1
+== hwut.run
+ERROR hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.sh -> test-c.sh -> test-a.sh
+SKIP  test-a.sh ........................................... no-dep [FAIL]  ||0
+      test-c.sh ........................................... no-dep [FAIL]  ||0
+      test-d.sh ........................................... no-dep [FAIL]  ||0
+END   test-b.sh .................................................... [OK]  ||0
+END   test-e.sh .................................................... [OK]  ||0
+== hwut.report
+        test-a.sh .......................... no-dep [FAIL]
+        test-b.sh ....................................[OK]
+        test-c.sh .......................... no-dep [FAIL]
+        test-d.sh .......................... no-dep [FAIL]
+        test-e.sh ....................................[OK]
+<hwut-end>

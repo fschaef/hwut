@@ -37,6 +37,14 @@ relative to '--directory' (the current directory where none is given):
                                  is stained 'constraint'
     run    <dir> <target>        the project's own verb (E-7), through
                                  'hwut.execute', in <dir> and below
+    root   [<dir>]               no 'hwut-root.conf' stands in or above
+                                 <dir>: the file is written there, with
+                                 its 'language-setup' table (E-25).
+                                 WITH NO <dir> IT ASKS: a menu of the
+                                 repository roots at or above (git,
+                                 mercurial, svn, jujutsu, bazaar, darcs,
+                                 pijul, fossil), the current directory,
+                                 and 'q' to quit
 
 EVERY COMMAND JUDGES AGAIN BEFORE IT ACTS. The entity says WHAT; the
 tree at this moment says WHETHER. A command whose entity sanitize would
@@ -161,6 +169,13 @@ ISSUE_KIND_TUPLE = (
         "TARGET: the project's own verb, asked for by '--target' (E-7).",
         "'run' calls it through 'hwut.execute' in the directory and every",
         "directory below that binds it.")),
+    CIssueKind("root", "root", (
+        "NO BOUNDARY: no 'hwut-root.conf' stands in or above this directory.",
+        "A tree needs one: it is the root every path is relative to, and",
+        "the place 'hwut-root.labels' stands (E-25).",
+        "'root' writes the file, with its 'language-setup' table, into the",
+        "directory named. ONE line stands; to place it elsewhere, comment",
+        "that line and uncomment another -- or name any directory.")),
 )
 ISSUE_KIND_DB = {kind.name: kind for kind in ISSUE_KIND_TUPLE}
 
@@ -185,6 +200,10 @@ class CIssue:
     word_tuple: tuple
     payload:   object = field(default=None, compare=False)
     note:      object = field(default=None, compare=False)
+    #  AN ALTERNATIVE, NOT THE PROPOSAL: written with '#' before it, so
+    #  it is not done unless the reader uncomments it (the 'root'
+    #  candidates).
+    commented_f: bool = field(default=False, compare=False)
 
     def verb(self):
         """RETURN: str, the command that heals this issue."""
@@ -198,8 +217,11 @@ class CIssue:
                     forget  <dir>/<test> [<choice>]
                     move    <dir>/<test> <new-dir>
                     run     <dir> <target>
+                    root    <dir>
         """
         where = shown(base, self.directory).replace(os.sep, "/")
+        if self.verb() == "root":
+            return where
         if self.verb() == "run":
             return "%s %s" % (where, self.word_tuple[0])
         if self.verb() == "move":
@@ -216,7 +238,67 @@ class CIssue:
                    '  # <note>' after it where the issue carries one."""
         text = "%s %s" % (self.verb(), self.entity(base))
         if self.note: text += "  # %s" % self.note
+        if self.commented_f: text = "# " + text
         return text
+
+
+def root_issue_list(directory):
+    """
+    RETURN: list[CIssue], one 'root' issue per place a boundary is
+            offered at ('_boundary.candidate_list'): the repository
+            roots at or above 'directory', then 'directory' itself.
+            THE FIRST THAT CAN BE WRITTEN IN is the proposal; the
+            others are COMMENTED alternatives, and one that cannot be
+            written in says so.
+    """
+    from vut.services._boundary import candidate_list, writeable_f
+    candidate = candidate_list(directory)
+    chosen    = next((path for path, _ in candidate if writeable_f(path)),
+                     None)
+    return [CIssue("root", path, (),
+                   note=what if writeable_f(path)
+                        else "%s; no write access" % what,
+                   commented_f=(path != chosen))
+            for path, what in candidate]
+
+
+def root_asked(directory, write, ask):
+    """
+    RETURN: str, the directory the person chose for the boundary, as
+                 the command 'root <dir>' takes it -- relative to
+                 'directory'
+            None, where they quit: nothing is to be written
+
+    THE MENU OF 'hwut.sanitize root' WITH NO DIRECTORY (ruled
+    2026-10-08): the repository roots at or above, the current
+    directory, and 'q'. It speaks the checklist's idiom: a number in
+    brackets picks, the prompt is '> ', an answer that picks nothing is
+    said and asked again. 'ask' reads one answer after a prompt and
+    raises EOFError where nobody can answer -- which quits.
+    """
+    from vut.services._boundary import (candidate_list, writeable_f,
+                                        ROOT_CONF_NAME)
+    candidate = candidate_list(directory)
+    write("no '%s' stands in or above '%s'. Where shall it go?"
+          % (ROOT_CONF_NAME, directory))
+    width = max(len(shown(directory, path)) for path, _ in candidate)
+    for n, (path, what) in enumerate(candidate, 1):
+        write("  [%d]  %-*s  %s%s"
+              % (n, width, shown(directory, path), what,
+                 "" if writeable_f(path) else " -- no write access"))
+    write("  [q]  quit -- nothing is written")
+    allowed = [str(n) for n in range(1, len(candidate) + 1)] + ["q"]
+    while True:
+        try:
+            answer = ask("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            write("")
+            return None
+        if answer in allowed: break
+        write("  (not one of %s: '%s')"
+              % (", ".join("[%s]" % a for a in allowed), answer))
+    if answer == "q": return None
+    return shown(directory, candidate[int(answer) - 1][0])
 
 
 class DirectoryLive(Exception):
@@ -653,12 +735,16 @@ USAGE = "usage: hwut.sanitize <command> <concerned entity> " \
         % ", ".join(VERB_TUPLE)
 
 
-def main(argv=None, write=None):
+def main(argv=None, write=None, ask=None):
     """
     RETURN: E_ExitCode, the exit status (E-1): OK where the command was
             done or had nothing to do, FAULT where the tree refused it
             or acting failed, REFUSED where the command line cannot be
             read.
+
+    'ask' reads one answer after a prompt -- only 'root' with no
+    directory asks; 'input' where none is given, and NOT CALLED where
+    the input is no terminal: a question nobody can hear is a hang.
 
     THE FACE IS A SPELLING of one line of a proposal: the words are
     read by the same reader 'hwut.sanitize.apply' reads a file with,
@@ -669,9 +755,9 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
-        write("")
-        write(USAGE)
+        from vut.services._core import man_page
+        write(man_page("hwut.sanitize", HELP,
+                       usage=USAGE.split("\n")[0]))
         return E_ExitCode.OK
 
     base, word_list = ".", []
@@ -688,6 +774,32 @@ def main(argv=None, write=None):
         write("REFUSED: the directory '%s' does not exist" % base)
         write(USAGE)
         return E_ExitCode.REFUSED
+    if word_list == ["root"]:
+        #  'root' ALONE ASKS WHERE (ruled 2026-10-08). A boundary that
+        #  stands is said before anything is asked.
+        from vut.services._boundary import ROOT_CONF_NAME
+        from vut.engine.orchestrator.exploration.tree_explorer \
+                               import RootConfMissing, root_conf_directory
+        try:
+            standing = root_conf_directory(base)
+        except RootConfMissing:
+            standing = None
+        if standing is not None:
+            write("nothing to do: a boundary stands: '%s'"
+                  % os.path.join(shown(base, standing), ROOT_CONF_NAME))
+            return E_ExitCode.OK
+        if ask is None:
+            if not sys.stdin.isatty():
+                write("REFUSED: 'root' with no directory asks where, and "
+                      "nobody can answer -- name it: 'hwut.sanitize root "
+                      "<dir>'")
+                return E_ExitCode.REFUSED
+            ask = input
+        chosen = root_asked(base, write, ask)
+        if chosen is None:
+            write("nothing written.")
+            return E_ExitCode.OK
+        word_list = ["root", chosen]
     command = line_of_words(word_list)
     if isinstance(command, str):
         write("REFUSED: %s" % command)

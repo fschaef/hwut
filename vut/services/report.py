@@ -174,7 +174,16 @@ class CRow:
 
     @property
     def good_f(self):
-        """RETURN: bool, True where the book says it stood."""
+        """
+        RETURN: bool, True where the book says it stood and no repetition
+                      stain stands on it
+                False, else
+
+        A STAIN IS A FAILURE WHATEVER THE LAST REPEAT SAID (E-17, E-11):
+        the book keeps the verdict of the repeat that happened to come
+        last, and a liar's last word may be 'ok'.
+        """
+        if self.stain_repeat_n is not None: return False
         return self.verdict is not None and self.verdict.passed_f
 
     @property
@@ -380,7 +389,7 @@ def _tallied(entry_stream, fail_box):
         yield entry
 
 
-def entry_stream_of(root, wish, silent_db=None):
+def entry_stream_of(root, wish, silent_db=None, reach=None):
     """
     YIELD: [0] str            one directory, relative to 'root', walk
                               order.
@@ -407,7 +416,7 @@ def entry_stream_of(root, wish, silent_db=None):
     #  to one question.
     for directory, result, bookkeeper, selected_list in \
             selection.of_tree_stream(root, wish, view_at(root),
-                                     base_f=True):
+                                     base_f=True, reach=reach):
         whole      = os.path.join(root, directory)
         app_db     = {app.source_file: app for app in result.app_set}
         if silent_db is not None:
@@ -778,7 +787,10 @@ def json_text_of(entry_list):
                            #  fail -- consumers exist -- and says
                            #  "aspirant" only where neither is true
                            #  (B-14).
-                           "verdict": _json_verdict(row.verdict),
+                           #  A STAIN IS FALSE, as the run says it
+                           #  (E-11), whatever the book's last word.
+                           "verdict": False if row.stain_repeat_n is not None
+                                      else _json_verdict(row.verdict),
                            "reason":  None if row.good_f else row.word,
                            "stained": row.stain is not None,
                            "when":    row.when or None}
@@ -854,6 +866,7 @@ class Tally:
     empty_f:  bool = False
     silent_db:    dict  = None   # X-SILENT: explored directory, as seen
                                  # from the call directory -> [name, ...]
+    warning_tuple: tuple = ()    # E-21: a glob the silence swallowed whole
 
 
 def _row_of(crow):
@@ -966,8 +979,11 @@ def do(request, sink):
         raise Refused("REFUSED: the directory '%s' does not exist" % directory)
     try:
         silent_db = {}
+        #  A GLOB THE SILENCE SWALLOWED WHOLE IS SAID (E-21): the reach
+        #  is complete when the stream is exhausted, and read then.
+        reach     = selection.CGlobReach()
         stream    = entry_stream_of(os.path.abspath(directory),
-                                    wish_of(request), silent_db)
+                                    wish_of(request), silent_db, reach)
         #  HELD ONLY UNTIL THE FIRST CASE: 'empty' is a fact about the
         #  WHOLE selection, and a stream cannot know it before the end
         #  -- but it CAN know the moment it stops being true.
@@ -977,7 +993,8 @@ def do(request, sink):
             if entry[2]: break
         else:
             return Tally(empty_f=True,
-                         silent_db=silent_db)
+                         silent_db=silent_db,
+                         warning_tuple=reach.warning_tuple())
         block_n = row_n = fail_n = subtle_n = 0
         for where, title, row_list in itertools.chain(held_list, stream):
             block = Block(where, title,
@@ -990,7 +1007,8 @@ def do(request, sink):
                             and reason_word_of(row) is not None)
             sink(block)
         return Tally(block_n=block_n, row_n=row_n, fail_n=fail_n,
-                     subtle_n=subtle_n, silent_db=silent_db)
+                     subtle_n=subtle_n, silent_db=silent_db,
+                     warning_tuple=reach.warning_tuple())
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     except SelectionError as error:
@@ -1013,7 +1031,8 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.report", HELP))
         return E_ExitCode.OK
 
     try:
@@ -1120,12 +1139,20 @@ def main(argv=None, write=None):
         if not line_list: return
         write("")
         for line in line_list: write(line)
+    def warn():
+        """RETURN: None. THE SWALLOWED GLOB (E-21), under the
+        wallflowers' own rule: never inside a machine format on stdout."""
+        if format_name == "traditional" or out_name is not None:
+            for text in tally.warning_tuple: write(text)
     if tally.empty_f:
+        #  BEFORE THE VERDICT ON THE SELECTION: it is the reason for it.
+        warn()
         write("EMPTY: the wish selects no case in '%s'" % directory)
         remind()
         return E_ExitCode.EMPTY
     if writer is not None:
         writer(None)                     # the page's tail
+        warn()                           # a stream knows it only now
         remind()
     else:
         line_tuple = line_tuple_of(entry_list, format_name,
@@ -1142,6 +1169,7 @@ def main(argv=None, write=None):
                 return E_ExitCode.FAULT
             write("written: %s (%s, %d line(s))"
                   % (out_name, format_name, len(line_list)))
+            warn()
             remind()
     return E_ExitCode.FAULT if tally.fail_n else E_ExitCode.OK
 

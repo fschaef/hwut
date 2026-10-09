@@ -1,0 +1,20 @@
+== the book: the run says 'differs', and no more
+test;choice;verdict;report
+test-g.sh;diverged;false;not-equivalent-with-nominal
+;grew;false;not-equivalent-with-nominal
+;same;true;ok
+;shrank;false;not-equivalent-with-nominal
+== hwut.report --format=tap: the shape is the reason
+not ok 1 - .: test-g.sh diverged
+  reason: not-equivalent-diverged
+not ok 2 - .: test-g.sh grew
+  reason: not-equivalent-grew
+ok 3 - .: test-g.sh same
+not ok 4 - .: test-g.sh shrank
+  reason: not-equivalent-shrank
+== hwut.report: no word beside a plain difference (display D-31)
+        test-g.sh diverged .........................[FAIL]
+                  grew .............................[FAIL]
+                  same ...............................[OK]
+                  shrank ...........................[FAIL]
+<hwut-end>

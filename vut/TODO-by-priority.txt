@@ -93,6 +93,28 @@ TIER 1  A GREEN RESULT OR AN ACCEPTANCE CAN LIE
          NEEDS: nothing; ruled (E-110).
          SEE: TODO G-5; services E-110.
 
+[x] G-11 A STAIN WHOSE LAST REPEAT PASSED READ '[OK]' IN 'hwut.report'
+         DONE 2026-10-08 (audit D-9; services E-17 AMENDED): the row is
+         a failure under a repetition stain whatever the book's last
+         verdict; JSON's 'verdict' false with it. Pinned by
+         'services/TEST/test-report.sh stain_last_ok'.
+         SEE: TODO G-11; review-r10 11.4.
+
+[x] G-17 'q' IN THE KEYED SESSION BOOKS 'ok' OVER DIFFERENCES LEFT
+         DONE 2026-10-09 (ruled r-11c; services E-89 AMENDED): 's'
+         saves, 'q' leaves without saving, each asked; 'S'/'Q' unasked;
+         the book entry follows a check of OUT against the nominal.
+         --- as audited:
+         'hwut.accept.interactive', 'q' with nothing or not everything
+         taken: GOOD is written as it stands, the report says
+         'accepted', and the book row flips from 'false; not-
+         equivalent' to 'true; ok' while the candidate still differs.
+         'hwut.report' then says '[OK]'; the next 'hwut.run' fails.
+         DO: nothing before a word -- is a 'done' that leaves
+         differences an acceptance the book spells 'ok'?
+         NEEDS: a ruling (r-11c).
+         SEE: TODO G-17; review-r10 11.6.
+
 [x] NEW-1  THE CENSUS IS RED ON EVERY CLONE BUT ONE PATH
          DONE 2026-10-07: the mount is printed as an analogy
          ('-v ((path)):((path))'); green at two tree paths. STILL
@@ -186,7 +208,54 @@ TIER 2  BREAKS WHEN USED AS DOCUMENTED
          NEEDS: nothing; ruled (operations todo-21's three laws).
          SEE: TODO C-1; operations/diagnosis.py.
 
+[x] G-20 A PAIR THAT SPENT THE SEARCH BUDGET IS DRAWN AS AN EMPTY ROW
+         DONE 2026-10-08 (audit D-9; compare C-16 AMENDED): both lines
+         shown whole. Pinned by 'services/TEST/test-header-words.sh
+         budget_spent'.
+         SEE: TODO G-20; review-r10 11.10.
+
+[x] G-18 A DEPENDENCY CYCLE ENDS 'hwut.run' AND 'hwut.plan' IN A TRACEBACK
+         DONE 2026-10-08 (audit D-9; exploration R-33 AMENDED): links
+         inside a cycle are not offered to the plan; members and
+         dependants read 'no-dep [FAIL]', the rest runs. Pinned by
+         'services/TEST/test-header-words.sh cycle'.
+         SEE: TODO G-18; review-r10 11.9.
+
+[x] G-13 AN UNKNOWN LABEL OR LANGUAGE: TRACEBACK, 'EMPTY', OR NOTHING
+         DONE 2026-10-08 (audit D-9; services E-19, E-26 AMENDED):
+         'hwut.plan', 'hwut.run.stability' and 'hwut.sanitize.propose'
+         refuse by name, exit 2, as the other faces did. Pinned by
+         'services/TEST/test-face-words.sh label_unknown,
+         language_unknown'.
+         SEE: TODO G-13; review-r10 11.4.
+
+[x] G-14 A GLOB THE SILENCE SWALLOWED WHOLE DREW NO WARNING AT THREE FACES
+         DONE 2026-10-08 (audit D-9; services E-21 AMENDED):
+         'hwut.report', 'hwut.plan', 'hwut.run.stability' warn. Pinned
+         by 'services/TEST/test-face-words.sh glob_silenced'.
+         SEE: TODO G-14; review-r10 11.4.
+
+[x] G-15 THE FIVE LABEL FACES PRINT THEIR USAGE WITHOUT 'usage:'
+         DONE 2026-10-08 (audit D-9; services E-32 AMENDED). Five
+         nominals moved, token-equal under the one cause. OPEN, and
+         grown: 27 of 46 faces end '--help' with no usage line (r-11b).
+         SEE: TODO G-15; review-r10 11.4.
+
 [ ] D-9  169 RULINGS STAND BY NAME AND BY NO PAGE
+         PROGRESS 2026-10-08, by the regenerated sweep (398 entries:
+         125 name a green page, 78 cited, 128 name only, 67 doctrine):
+             [x] services      41 probed: 32 hold, 8 fail, 1 not reached
+             [x] exploration   38: 31 hold, 2 fail, 5 overtaken on
+                               record (amended)
+             [x] compare        2: 1 holds, 1 fails (G-20)
+             [x] bookkeeper     5 hold
+             [x] display        9: 8 hold, 1 overtaken on record
+             [x] coverage      11: 9 hold, 1 overtaken, 1 cannot (D-12)
+             [x] the rest      23: 18 hold, 4 overtaken, 1 doctrine
+         LEFT: E-64 not reached; coverage D-12 wants verilator; G-19
+         waits on A-5 (G-16 ruled stale, G-17 built, 2026-10-09). Then this item is
+         struck.
+         --- as audited:
          Of 398 RATIONALE entries, 169 name artefacts that resolve and
          no page pins what they say. About thirty were probed by
          behaviour in a scratch tree; seven failed (G-1 .. G-6). Expect
@@ -287,7 +356,7 @@ TIER 3  BLOCKS REAL USE, OR DECIDED AND UNBUILT
          NEEDS: nothing.
          SEE: TODO B-6; coverage D-42, D-43.
 
-[ ] A-5  'RELATION' NAMES SIX STAND-IN CLASSES  (with G-6, A-4)
+[ ] A-5  'RELATION' NAMES SIX STAND-IN CLASSES  (with G-6, A-4, G-19)
          18 of 27 rows of 'exploration/relation.py' point at
          'owner_faces_provisional.py' (ConfigBuild 2, ConfigCaps 3,
          ConfigCanonicalise 1, ConfigCompare 8, ConfigRunner 3,
@@ -362,6 +431,18 @@ TIER 4  THE RECORD IS WRONG
          plan/18 step 6 and todo-23 are struck on the record.
          NEEDS: r-10b (yes, write them).
          SEE: TODO band E 'rulings owed'; review-r10 7.3.
+
+[x] G-16 TWO WORDS OF THE FLOW AND THE KEYED SCREEN ARE NOT THE RULED ONES
+         CLOSED 2026-10-09 (ruled r-11a): "forget, that was a stale
+         requirement. Do nothing." E-33 and E-76 carry an AMENDED line.
+         --- as audited:
+         E-33: a repeated badge is "'---->'"; the tree prints five
+         blanks ('display/plain.py' BADGE_REPEAT; its docstring still
+         says the arrow). E-76: the spent line's band is "grey-green";
+         measured light grey on '#303030', italic.
+         DO: one AMENDED line each -- or the ruled word back.
+         NEEDS: a word (r-11a).
+         SEE: TODO G-16; review-r10 11.4.
 
 [ ] G-9  RULINGS OVERTAKEN WITHOUT A WORD
          R-8 (no upward walk; R-69 folds hwut.conf down), P-11
@@ -516,6 +597,41 @@ TIER 5  WAITING ON A RULING
          before its closing rule -- a formatting cut, if wanted; moves
          every page with wallflowers.
 [ ] r-10a  B-25's entry and README: now, or in the building session?
+[x] r-11  G-12: WHO PLACES 'hwut-root.conf' -- RULED 2026-10-08: the
+         sanitize command 'root [<dir>]' -- alone, a menu of the
+         repository's root, the current directory and 'q' -- and a
+         hint on every refusal (services E-25 AMENDED). Built.
+[ ] think  A MOVE THROUGH THE VERSION CONTROL SYSTEM, where one is
+         detected ('hwut.rename', 'hwut.move'): propose its verb, or
+         perform it (asked 2026-10-09; TODO band E, THINK ABOUT).
+         Today the faces follow the author's own move (E-16) and say
+         'git mv' in words.
+[x] f-7  'hwut.labels.query' prints from the current directory (ruled
+         2026-10-09; built, services E-106 AMENDED).
+[x] f-8  a save short of the output is 'saved [FAIL]', exit FAULT, at
+         both accept doors (ruled 2026-10-09; built, E-89 AMENDED).
+[x] 'hwut.about' prints a checksum of the source files (ruled
+         2026-10-09; built, E-138 AMENDED).
+[x] r-11a G-16 (RULED 2026-10-09: stale, nothing done): the repeat badge blank or '---->' (E-33); the spent
+         band grey or grey-green (E-76).
+[x] r-11b E-32's OPEN (RULED 2026-10-09: manual pages, USAGE at the
+         top, an EXAMPLE where one helps; built): a usage line at the end of every '--help', or of
+         none (14 have one, 27 have none).
+[x] r-11c G-17 (RULED 2026-10-09: 'q'/'s' ask, 'Q'/'S' do not, the
+         book follows a check; built): 'q' with differences left -- 'accepted' and 'ok' in the
+         book, or what the last run found?
+[ ] r-11d the keyed screen has no page through a terminal. RULED
+         2026-10-09: libvterm, not pyte. No Python module binding it
+         was found; the library stands in the container recipe.
+         2026-10-09: the binding is written -- 'test_writing_support/
+         python/hwut_vterm.py', a ctypes wrapper, with its page; then
+         'Terminal' (an application run in it, observed by callbacks)
+         and 'keyed/TEST/test-screen.py', the merge screen as drawn.
+         LEFT: E-64 by a page.
+         (was: a pty page needs a terminal emulator the tree does not
+         carry.)
+         E-61, E-63, E-117, E-118, E-119, E-121 were probed by hand on
+         a pty and hold; E-64 was not reached.
          (recommended: the building session)
 
 ==============================================================================
@@ -546,8 +662,10 @@ TIER 7  HARMLESS WHILE IT WAITS
 [ ] F-5  '--unaccepted' WORKS AND STANDS IN NO FACE'S HELP
          Parsed by hand in plan/wish.py:364; E-81's vocabulary lacks it.
          DO: into the parser vocabulary; every help names it. PROBE.
-[ ] F-7  NO PAGE DRIVES 'hwut.accept.propose' / 'hwut.accept.apply'
-         Smoke-probed green. DO: choices in test-accept.sh.
+[x] F-7  NO PAGE DRIVES 'hwut.accept.propose' / 'hwut.accept.apply'
+         DONE 2026-10-08 (audit D-9, services E-44): 'services/TEST/
+         test-face-words.sh propose' -- the proposal, the veto, the
+         apply, the bound.
 [ ] F-4  THE NINE HAND-PARSING FACES GAIN A PARSER (E-81)
          execute, move, remove, sanitize, pype ... refuse correctly in
          their own words; no completion table. A session of its own.
@@ -574,15 +692,19 @@ TIER 7  HARMLESS WHILE IT WAITS
 COUNTS
 ==============================================================================
 
-     TIER 1   3   G-1, G-5, NEW-1
-     TIER 2   7   G-3, G-4, G-2, G-10, C-1, D-9  (G-10 rides the fixes)
+     TIER 1   5   G-1, G-5, G-11, G-17, NEW-1
+     TIER 2  12   G-3, G-4, G-2, G-10, C-1, G-20, G-18, G-13, G-14, G-15,
+                  D-9
+                  (G-10 rides the fixes)
      TIER 3  16   B-7(+C-6), B-25, B-29, B-30, B-31, C-4a, C-4b, B-6,
                   A-5(+G-6, A-4), B-3, B-4, B-11, B-13, B-24, D-2,
                   B-14 (parked)
-     TIER 4   7   rulings owed, G-9, F-6, r-7a, r-10h, r-10n, r-10g
-     TIER 5  12 design + 29 one-word = 41 lines (TODO band E's 40, plus
-                  r-10a; the r-10x questions of review-r10 are folded
-                  in here, not listed twice)
+     TIER 4   8   rulings owed, G-16, G-9, F-6, r-7a, r-10h, r-10n,
+                  r-10g
+     TIER 5  12 design + 34 one-word = 46 lines (TODO band E's 40, plus
+                  r-10a and r-11 .. r-11d of the D-9 probe; the r-10x
+                  questions of review-r10 are folded in here, not
+                  listed twice)
      TIER 6   6   D-4 .. D-8, A-6/C-4c
      TIER 7  10   F-1 .. F-5, F-7, C-3, C-7, G-7, G-8
 

@@ -57,7 +57,9 @@ def opened(argv, write, help_text, usage_text):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(help_text)
+        from vut.services._core import man_page
+        #  THE FACE'S NAME is the second word of its own usage line.
+        write(man_page(usage_text.split()[1], help_text))
         raise Refused(E_ExitCode.OK)
 
     try:

@@ -1,0 +1,19 @@
+== in TEST
+   test-a.sh one
+   test-a.sh two
+   ../other/TEST/test-b.sh one
+   ../other/TEST/test-b.sh two
+   RESULTS: 2 ok, 0 fail
+== in the root
+   TEST/test-a.sh one
+   TEST/test-a.sh two
+   other/TEST/test-b.sh one
+   other/TEST/test-b.sh two
+   RESULTS: 4 ok, 0 fail
+== in other/TEST
+   ../../TEST/test-a.sh one
+   ../../TEST/test-a.sh two
+   test-b.sh one
+   test-b.sh two
+   RESULTS: 2 ok, 0 fail
+<hwut-end>

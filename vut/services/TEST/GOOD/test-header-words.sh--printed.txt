@@ -1,0 +1,48 @@
+== hwut.config.show test-p.sh
+            caps {
+                timeout_sec = 7.0             # app
+                cpu_sec = 300                 # default
+                memory_mb = 512               # default
+                file_size_mb = 10             # default
+                child_process_max_n = 32      # default
+                network = true                # default
+            }
+== hwut.config.show test-p.sh --no-default
+test-p.sh {
+    title = "p"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        a {
+            caps {
+                timeout_sec = 7.0             # app
+            }
+        }
+    }
+}
+== hwut.config.show test-p.sh --no-default --provenance
+test-p.sh {
+    title = "p"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        a {
+            caps {
+                timeout_sec = 7.0             # test-p.sh:4
+            }
+        }
+    }
+}
+== hwut.config.show test-p.sh --no-default --gnu
+test-p.sh:2:10: test-p.sh {
+test-p.sh:2:10:     title = "p"
+test-p.sh:2:10:     language = "bash"                         # derived: extension -> 'language-setup'
+test-p.sh:2:10:     choices {
+test-p.sh:2:10:         a {
+test-p.sh:4:14:             caps {
+test-p.sh:4:14:                 timeout_sec = 7.0
+test-p.sh:4:14:             }
+test-p.sh:2:10:         }
+test-p.sh:2:10:     }
+test-p.sh:2:10: }
+== what was printed, written as a header, reads back
+the same specification
+<hwut-end>

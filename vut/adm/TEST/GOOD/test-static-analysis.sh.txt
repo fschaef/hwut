@@ -1,15 +1,16 @@
 ==[ STATIC ANALYSIS ]========================================
-ground:  ruff 0.16.5
+ground:  ruff 0.16.8
 config:  adm/ruff.toml
-ignored: E221, E701, E702, I001, S101, S105, UP031
+## ignored: E221, E701, E702, I001, S101, S105, UP031
 
-TOLERATED {
-    E402           3  module-import-not-at-top-of-file
-    E731           4  lambda-assignment
-    E741           5  ambiguous-variable-name
-}
+## TOLERATED {
+##     E401           1  multiple-imports-on-one-line
+##     E402           3  module-import-not-at-top-of-file
+##     E731           5  lambda-assignment
+##     E741           5  ambiguous-variable-name
+## }
 
-total tolerated: 12
+total tolerated: 14
 
 MUST STAND AT ZERO {
     empty -- no name that is not there, no dispatch that

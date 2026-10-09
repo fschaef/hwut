@@ -160,7 +160,10 @@ def main(argv):
     """
     if "--help" in argv:
         write = print
-        write(__doc__.split("PURPOSE:", 1)[1].rstrip())
+        from vut.services._core import man_page
+        write(man_page("hwut.config.ignore",
+                       __doc__.split("PURPOSE:", 1)[1].rstrip(),
+                       usage=USAGE))
         return E_ExitCode.OK
     ask_f         = True
     wallflowers_f = False

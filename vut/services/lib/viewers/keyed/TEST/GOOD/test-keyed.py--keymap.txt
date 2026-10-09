@@ -30,8 +30,12 @@ P-20/P-21/P-22: the table is the keymap
        <F6>, <c-e>   edit the GOOD in $EDITOR
        <F5>          the tolerance in memory, editable; <F5> tries it
        <F1>          this table
-       q             done: GOOD as it stands is written
-       <c-c>         cancel: nothing is written
+       s             save GOOD as it stands and leave; asks first
+       S             save and leave, unasked
+       q             leave without saving; asks first
+       Q, <c-c>      leave without saving, unasked
+       y             yes, to the question at the foot
+       n             no; any other key means the same
 
 -- the editing table (intend 21): letters type there
        <F5>          done: close the pane; what changed is re-aligned

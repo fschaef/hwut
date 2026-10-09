@@ -1,0 +1,16 @@
+HWUT <version> -- tolerant golden-master testing
+
+    version    <version>
+    licence    MIT
+    author     (C) Frank-Rene Schaefer
+    home       https://github.com/fschaef/hwut
+
+THIS INSTALLATION
+
+    package    <package>
+    python     <python>
+    run by     <interpreter>
+    platform   <platform>
+    sources    <files and checksum>
+STATUS: 0
+<hwut-end>

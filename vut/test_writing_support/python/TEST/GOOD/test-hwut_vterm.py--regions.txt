@@ -1,0 +1,17 @@
+-- run
+    changed  head  [' the head']
+    changed  body  ['count: 0', '(press n)']
+    changed  foot  ['q=quit']
+-- 'n'
+    changed  body  ['count: 1', '(press n)']
+-- 'n'
+    changed  body  ['count: 2', '(press n)']
+-- 'r': a redraw, nothing new
+-- 'f'
+    changed  foot  ['q=quit  f=pressed']
+-- 'nnn', typed at once
+    changed  body  ['count: 5', '(press n)']
+-- 'q'
+-- exit status 0; a region asked by name: ['count: 5', '(press n)']
+-- no such region: KeyError 'nosuch'
+<hwut-end>

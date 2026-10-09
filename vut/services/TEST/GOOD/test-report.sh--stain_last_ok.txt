@@ -1,0 +1,82 @@
+--- the book
+test;choice;verdict;report;stain
+test-app.sh;;true;ok;3 repeat
+--- traditional
+STATUS: 1
+STDOUT {
+    ======================================================================
+    
+    suite/TEST                                           YYYYyMMmDDd hhhmm
+    ----------------------------------------------------------------------
+    
+     * The flip:
+    
+            test-app.sh ................................ unstable [FAIL]
+    
+    ======================================================================
+    
+    SUMMARY:
+    
+        Fails: N: Verdict:          Directory:
+    
+             1 1    [FAIL]   suite/TEST
+    
+    ----------------------------------------------------------------------
+                                                                  (1 test)
+    
+    ======================================================================
+    
+    HINT: use 'hwut.help' for explanation of subtle issues.
+    
+    RESULTS: 0 ok, 1 fail
+    |                                fail                                |
+}
+--- junit
+STATUS: 1
+STDOUT {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <testsuites tests="1" failures="1">
+      <testsuite name="suite/TEST" tests="1" failures="1">
+        <testcase classname="suite/TEST" name="test-app.sh">
+          <failure type="unstable" message="the choice bears a STAIN: it switched results over 3 repeat(s) and is not run until proven steady"/>
+        </testcase>
+      </testsuite>
+    </testsuites>
+}
+--- tap
+STATUS: 1
+STDOUT {
+    TAP version 13
+    1..1
+    not ok 1 - suite/TEST: test-app.sh
+      ---
+      reason: unstable
+      message: the choice bears a STAIN: it switched results over 3 repeat(s) and is not run until proven steady
+      ...
+}
+--- json
+STATUS: 1
+STDOUT {
+    {
+      "directory_list": [
+        {
+          "case_list": [
+            {
+              "choice": null,
+              "file": "test-app.sh",
+              "name": "test-app.sh",
+              "reason": "unstable",
+              "stained": true,
+              "verdict": false,
+              "when": "<instant>"
+            }
+          ],
+          "directory": "suite/TEST",
+          "title": ""
+        }
+      ],
+      "fail_n": 1,
+      "test_n": 1
+    }
+}
+<hwut-end>

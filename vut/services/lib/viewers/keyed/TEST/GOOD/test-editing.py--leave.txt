@@ -1,0 +1,20 @@
+-- 'A', 'q', 'y': asked, yes -- left, nothing written
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> CANCEL None
+     tolerance changed in memory: False
+-- 'A', 'q', 'j' (any key but 'y' is no), 's', 'y': saved
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.51 ms  id=ab12;', 'b', '<hwut-end>', '']
+     tolerance changed in memory: False
+-- 'A', 's', 'n', 'Q': not saved, then left unasked
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> CANCEL None
+     tolerance changed in memory: False
+-- 'A', 'S': saved unasked
+     round 1: 2 pair(s) differ, numeric ratio 0
+     -> COMMIT ['head', 'time: 12.51 ms  id=ab12;', 'b', '<hwut-end>', '']
+     tolerance changed in memory: False
+-- the question at the foot
+     ASK_QUIT  LEAVE WITHOUT SAVING?   y=yes  any other key=no
+     ASK_SAVE  SAVE GOOD AS IT STANDS AND LEAVE?   y=yes  any other key=no
+<hwut-end>

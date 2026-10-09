@@ -22,8 +22,8 @@
     first blessing. At a TERMINAL this face merges them itself (E-59); here
     there is none, so: run it on a terminal, or '--force' to overwrite the pole.
     
-    The screen was left with Ctrl-C: nothing was written. 'q' is done, and
-    writes GOOD as it stands.
+    The screen was left without saving: nothing was written. 's' saves GOOD
+    as it stands and leaves.
     ==============================================================================
 
 --- the brief column, made from the same ---

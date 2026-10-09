@@ -1,0 +1,12 @@
+WISH: (all)
+TEST PLAN: 3 node(s), 2 link(s), 0 exclusion set(s)
+NODES
+    session[test-i.sh]  SESSION
+    test-i.sh a         TEST
+    test-i.sh b         TEST
+LINKS
+    session[test-i.sh] ==> test-i.sh a
+    session[test-i.sh] ==> test-i.sh b
+EXCLUSIONS
+    (none)
+<hwut-end>

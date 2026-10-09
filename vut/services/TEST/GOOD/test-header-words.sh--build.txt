@@ -1,0 +1,15 @@
+build = "make"                                       => framework = "make" # app
+app = "x.exe"                                        => test-w.sh:4:7: VOCABULARY: unknown key 'app'
+test-s.sh {
+    title = "s"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        - {
+            build {
+                framework = "make"            # app
+                executable = "s.exe"          # app
+            }
+        }
+    }
+}
+<hwut-end>

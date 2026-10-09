@@ -63,8 +63,9 @@ DESCRIPTION
        removes from GOOD (the marked lines, or the whole region the
        cursor stands in -- '##! unaccepted' and its '####' with it), 'u'
        undoes, 'r' redoes, 'R' resets to how GOOD stood when the screen
-       opened, '<tab>' changes pane, 'q' is DONE and writes GOOD as it
-       stands; Ctrl-C writes nothing; 'z' asks compare to re-align;
+       opened, '<tab>' changes pane, 's' SAVES GOOD as it stands and
+       leaves, 'q' leaves WITHOUT saving -- each asks first, and 'S' and
+       'Q' do the same unasked; Ctrl-C is 'Q'; 'z' asks compare to re-align;
        'e' makes GOOD an editable text and <F6> ('c-e') opens it in
        $EDITOR; <F5> opens the TOLERANCE PANE -- the tolerance in memory,
        with proposals under each key, tried on <F5>, <Esc> discards
@@ -90,7 +91,7 @@ DESCRIPTION
        reaches it and no range intersects it (E-63). '--plain' reaches
        this tier too.
 
-       REFUSED AT 'q', with 'hwut.accept's own words: a stained
+       REFUSED AT 's', with 'hwut.accept's own words: a stained
        choice (a test that switches results has no pole), a text
        without the closing token (never COMPLETED, R-70), a choice
        whose stderr spoke and the test's block does not declare it
@@ -182,6 +183,10 @@ def main(argv=None):
                              "'vi')")
     parser.add_argument("--max-rounds", type=int, default=MERGE_ROUND_MAX)
     add_setup_arguments(parser)
+    if "--help" in argv or "-h" in argv:
+        from vut.services._core import man_page
+        print(man_page(parser.prog, parser.format_help(), usage=USAGE))
+        return E_ExitCode.OK
     arguments, completion_f = parse_or_refuse(parser, rest_list, err, ARG_DB)
     if completion_f:      return E_ExitCode.OK
     if arguments is None: return E_ExitCode.REFUSED

@@ -1,0 +1,77 @@
+== hwut.run
+REFUSED: no 'hwut-root.conf' stands in or above '$WORK/proj/sub/TEST' -- the tree has no boundary (t
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.accept
+REFUSED: no 'hwut-root.conf' stands above '.' -- a tree states its own boundary, and the global conf
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.plan
+REFUSED: no 'hwut-root.conf' stands above '.' -- a tree states its own boundary, and the global conf
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.report
+REFUSED: no 'hwut-root.conf' stands in or above '$WORK/proj/sub/TEST' -- the tree has no boundary (t
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.report.list
+REFUSED: no 'hwut-root.conf' stands in or above '$WORK/proj/sub/TEST' -- the tree has no boundary (t
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.run.stability
+REFUSED: no 'hwut-root.conf' stands in or above '$WORK/proj/sub/TEST' -- the tree has no boundary (t
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.labels.list
+REFUSED: no 'hwut-root.conf' stands in or above '.' -- the tree has no boundary (the climb ends at t
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+== hwut.sanitize root -- nobody to answer
+REFUSED: 'root' with no directory asks where, and nobody can answer -- name it: 'hwut.sanitize root <dir>'
+STATUS: 2
+== hwut.sanitize root -- a wrong answer, then 'q'
+no 'hwut-root.conf' stands in or above '.'. Where shall it go?
+  [1]  ../..  the git repository's root
+  [2]  .      the current directory
+  [q]  quit -- nothing is written
+> x
+  (not one of [1], [2], [q]: 'x')
+> q
+nothing written.
+STATUS: 0
+    stands: sub
+== hwut.sanitize.propose -o proposal.txt
+STATUS: 0
+    # NO BOUNDARY: no 'hwut-root.conf' stands in or above this directory.
+    # A tree needs one: it is the root every path is relative to, and
+    # the place 'hwut-root.labels' stands (E-25).
+    # 'root' writes the file, with its 'language-setup' table, into the
+    # directory named. ONE line stands; to place it elsewhere, comment
+    # that line and uncomment another -- or name any directory.
+    root ../..  # the git repository's root
+    # root .  # the current directory
+== hwut.sanitize.apply proposal.txt
+ root ../.. ........................................................... [DONE]
+Done 1/1
+    written: hwut-root.conf, 54 'extensions' lines
+== a face, now
+./test-a.sh
+STATUS: 0
+== hwut.sanitize root . -- a boundary stands above
+nothing to do: root . -- a boundary stands: '../../hwut-root.conf'
+STATUS: 0
+== hwut.sanitize root -- asks nothing where one stands
+nothing to do: a boundary stands: '../../hwut-root.conf'
+STATUS: 0
+== hwut.sanitize root -- no repository above: [1] the current directory
+no 'hwut-root.conf' stands in or above '.'. Where shall it go?
+  [1]  .  the current directory
+  [q]  quit -- nothing is written
+> 1
+done: root .
+STATUS: 0
+    stands: hwut-root.conf
+== hwut.sanitize root nosuch
+REFUSED: root nosuch -- no such directory
+STATUS: 1
+<hwut-end>

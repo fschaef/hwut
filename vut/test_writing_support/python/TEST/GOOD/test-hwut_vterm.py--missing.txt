@@ -1,0 +1,9 @@
+LibraryMissing: libvterm cannot be loaded from '/nowhere/libvterm.so'
+HINT: install the library, or name its file:
+    Debian, Ubuntu   apt install libvterm0
+    Fedora           dnf install libvterm
+    Arch             pacman -S libvterm
+    macOS            brew install libvterm
+    elsewhere        export HWUT_LIBVTERM=<path>/libvterm.so
+    or work inside   hwut.dev.podman.enter   (the image holds it)
+<hwut-end>

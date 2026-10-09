@@ -234,6 +234,10 @@ def _main(argv):
     #  THE VOCABULARY IS THE PARSER'S (E-81): the refusal's suggestion
     #  and the completion table are read off it; 'ARG_DB' says what a
     #  value is.
+    if "--help" in argv or "-h" in argv:
+        from vut.services._core import man_page
+        print(man_page(parser.prog, parser.format_help(), usage=USAGE))
+        return E_ExitCode.OK
     arguments, completion_f = parse_or_refuse(
         parser, rest_list, lambda t: sys.stderr.write(t + "\n"), ARG_DB)
     if completion_f:      return E_ExitCode.OK

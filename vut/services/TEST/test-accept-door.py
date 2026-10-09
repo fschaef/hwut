@@ -2,7 +2,8 @@
 #
 # @hwut {
 #     title      = "'hwut.accept' at a terminal: the merge door (E-88)"
-#     choices    = ["cancel", "done", "realign", "unbuilt"]
+#     choices    = ["ask_no", "ask_quit", "ask_save", "cancel", "done",
+#                   "realign", "short", "unbuilt"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -17,11 +18,19 @@ The terminal is stood in for: the face's 'adapter_for' returns the keyed
 display with its keys scripted, and the face is told it sits at a
 terminal. Everything else is the real face on a real tree.
 
-    done     'A' takes the whole subject, 'q' is done: GOOD is written,
-             the report says 'blessed' (E-89: no separate commit)
-    cancel   'A', then Ctrl-C: NOTHING is written, and the report says
-             the screen was left -- not that there was none
-    realign  a take, 'g' (realign), then 'q': a SECOND round of the
+    done     'A' takes the whole subject, 'S' saves unasked: GOOD is
+             written, the report says 'blessed' (E-89: no separate commit)
+    cancel   'A', then 'Q' (or Ctrl-C): NOTHING is written, and the
+             report says the screen was left -- not that there was none
+    ask_save 'A', 's', 'y': asked, answered yes -- as 'done'
+    ask_quit 'A', 'q', 'y': asked, answered yes -- as 'cancel'
+    ask_no   'A', 'q' answered no, 's' answered no: the session goes on,
+             and what ends it is the 'S' that follows
+    short    'S' with nothing taken: GOOD stands as it stood, OUT differs
+             from it, and THE BOOK SAYS SO -- the entry follows a check of
+             OUT against the nominal, not the key (r-11c). THE REPORT SAYS
+             SO TOO: 'saved [FAIL]', exit FAULT, not 'blessed' (f-8)
+    realign  a take, 'g' (realign), then 'S': a SECOND round of the
              session -- MEASURED (E-90) to die in 'hwut.accept' comparing
              the round against a bound it never stated
     unbuilt  no session can be built at all: 'merge required', and the
@@ -102,6 +111,10 @@ def door(act_list):
         sys.stdin, sys.stderr = real_stdin, real_stderr
     print("  exit        : %s" % code.name)
     print("  GOOD after  : %s" % open(good).read().splitlines()[0])
+    with open(os.path.join(os.path.dirname(good), "book.csv")) as fh:
+        for row in fh:
+            if row.startswith("test-v.sh;"):
+                print("  book        : %s" % " / ".join(row.split(";")[2:4]))
     for line in line_list:
         if line.startswith(("    ", "The screen", "'<enter>'", "A nominal")):
             print("  | %s" % line)
@@ -118,6 +131,14 @@ if __name__ == "__main__":
                 "cancel":  lambda: door([E_Act.TAKE_ALL, E_Act.CANCEL]),
                 "realign": lambda: door([E_Act.TAKE_ALL, E_Act.REALIGN,
                                          E_Act.DONE]),
+                "ask_save": lambda: door([E_Act.TAKE_ALL, E_Act.ASK_SAVE,
+                                          E_Act.YES]),
+                "ask_quit": lambda: door([E_Act.TAKE_ALL, E_Act.ASK_QUIT,
+                                          E_Act.YES]),
+                "ask_no":   lambda: door([E_Act.TAKE_ALL, E_Act.ASK_QUIT,
+                                          E_Act.NO, E_Act.ASK_SAVE,
+                                          E_Act.MOVE_DOWN, E_Act.DONE]),
+                "short":    lambda: door([E_Act.DONE]),
                 "unbuilt": lambda: door(None),
             }).run()
     finally:

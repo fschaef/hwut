@@ -656,3 +656,109 @@ BIN DISCIPLINE
       constraint over 'name' then never fires, and 'hwut.accept' says
       "'name' never bound". MEASURED while writing the page for G-3:
       the fixture looked broken by the constraint and was read green
+    - A FIXTURE CAN PROVE THE RULE BY ITS OWN ACCIDENT. 'test-report.sh
+      stain' showed 'a stain is a failure in every format' over a
+      fixture that flips ok/failed and is repeated FOUR times: the
+      fourth run fails, so the book's own verdict was already false and
+      the page was green whether the report read the stain or not.
+      MEASURED (audit D-9, G-11): repeated twice or three times -- the
+      last repeat passing -- 'hwut.report' said '[OK]', exit 0. A page
+      that pins "X fails WHATEVER Y says" needs the fixture where Y
+      says the opposite; here, 'stain_last_ok'
+    - "IN EVERY FACE" IS PINNED BY A PAGE THAT WALKS THE FACES. A ruling
+      built in the one parser was green at the parser's page and at
+      the faces somebody happened to try. MEASURED (G-13, G-14): one
+      loop, 'for name in <the faces that take a wish>; <face> --label
+      nosuch', one line per face -- a traceback, an 'EMPTY' and a
+      silent success in ten lines. The table is the page
+      ('test-face-words.sh'): one line per face, the first telling
+      line of its answer and its exit status
+    - A FACE THAT FORWARDS AND SWALLOWS THE OUTPUT SWALLOWS THE
+      REFUSAL. 'hwut.run.stability' runs 'hwut.run' with both writers
+      shut and read only the events: a refused wish left no event, and
+      the face said 'EMPTY'. Probe a forwarding face with the word its
+      target REFUSES, not only with one it runs
+    - A SCREEN IS PROBED ON A PTY, AND THROUGH A TERMINAL EMULATOR. The
+      keyed session writes deltas; stripping escape codes from the raw
+      stream gives fragments ('l1 / NEW'), not a screen. With 'pyte'
+      fed from the pty the page reads as a person reads it, attributes
+      included -- that is how 'the cursor skips a spent line' (E-63)
+      was read. 'pyte' is NOT a dependency of this tree: such a probe
+      is a hand's work until one is ruled in
+    - A PROBE THAT ASKS MUST HAVE ITS STDIN SHUT. 'hwut.accept' without
+      '--dont-ask' waits at '[y/N]'; a probe script hung for its whole
+      120 s. Every probed face gets '< /dev/null' and a 'timeout'
+    - AN ID IS A FACT OF THE ORDER THINGS ENDED IN. 'test-face-words.sh
+      book' ran 'hwut.run' over a book that numbered nothing and
+      printed the book: the run registers each choice as it ENDS, so
+      under two jobs 'two' sometimes took id 0. MEASURED: green on
+      every single run and in the glob pass, red in the census --
+      'a:b.sh;one;...;0;1'. Healed in the page: '--jobs=1
+      --deterministic' on the run whose book is printed. The species is
+      2.6/2.7's; the new case is that a REGISTER shows it, not a flow
+    - A FIXTURE FROM ANOTHER TIME MUST BE SHAPED AS THAT TIME WROTE IT.
+      An "old" book made by renaming today's 'book.csv' carries
+      today's id columns under a name whose reader drops the
+      '# vut-register' line: the next run says 'TestIdFault'. That
+      state is the fixture's invention. The old book had four columns;
+      the probe that cut today's book down to them read and migrated
+      cleanly (B-10, B-27)
+    - A KEYWORD ARGUMENT ADDED AT THE TOP MUST BE FOLLOWED TO THE ROW.
+      'note_accept(..., equivalent_f=)' was given the parameter and its
+      inner call was not: the page 'short' said 'true / ok' and the
+      check looked broken. It was not -- the flag stopped one call
+      short. A page that prints the BOOK ROW, not the function's
+      return, is what showed it
+    - AN EXAMPLE IN A HELP PAGE IS A CLAIM, AND A CLAIM IS TYPED. The
+      first draft's 'hwut.labels.create nightly 'test-net*'' was
+      REFUSED by its own face (one label, two words), and 'hwut.run
+      --wishlist <(hwut.labels.query ...)' selected nothing from a test
+      directory. Both read plausibly. 'test-help-pages.sh examples'
+      types every example line on a fresh tree; write the example
+      table and that page in the same turn
+    - A FRAME, NOT A REWRITE, when forty texts must take one shape:
+      one function that finds what every text already has (a 'usage:'
+      block, a first paragraph, a synopsis) and places it. The texts
+      stay their authors'; the moved nominals have ONE cause
+    - WHAT A SESSION LEARNS OF A KEY IS NOT WRITTEN ONTO THE KEY. A key
+      is another module's record -- slotted in 'hwut.accept', and
+      something else again at 'hwut.accept.interactive'. 'key.short_f =
+      ...' passed the page of the one door and died in a traceback at
+      the other, found only by the census ('test-accept.sh opening').
+      Kept beside the key, by identity, and asked through a function
+    - A C STRUCTURE BOUND BY HAND IS MEASURED, NOT COPIED, where the
+      library's versions differ. 'libvterm' moved its attribute bits
+      between 0.1 and 0.2; a ctypes structure copied from one header
+      reads the other's cells wrongly and says nothing. 'hwut_vterm'
+      feeds a scratch terminal one attribute at a time and takes the
+      bit that changed. Proved by building three versions from source
+      and diffing the page's output across them -- the probe that
+      would have been skipped had the first version simply worked
+    - WHAT A SCREEN TEST RECORDS IS A REGION'S TEXT AFTER A PAUSE, not
+      the terminal's events. How many 'damage' events a redraw makes
+      depends on where the kernel cut the application's writes; a
+      region ("foot", the last row) told only when its text changed and
+      the application went quiet is the same on every run. 'nnn' typed
+      at once is ONE report. Where quiet is not enough (a slow start),
+      wait for a text ('expect'), never for a time
+    - libvterm DOES NOT SWITCH TO THE ALTERNATE SCREEN UNLESS TOLD
+      ('vterm_screen_enable_altscreen'). Without it a full-screen
+      program draws over the lines printed before it, and the page
+      looks almost right
+    - LINES AND COLUMNS IN THE ENVIRONMENT OVERRULE THE TERMINAL'S SIZE
+      for most programs. The container sets COLUMNS=300; an application
+      started on a pseudo-terminal of 80 columns would have drawn for
+      300. They are taken out of the child's environment
+    - A REQUIREMENT ADDED IS ENTERED IN 'adm/requirement-list.txt' IN THE
+      SAME CHANGE. Bundle 100 brought two pages that want libvterm and
+      said so only in their own headers: on the first machine without
+      the library eleven rows were red, and nothing outside those pages
+      said why. 'sh adm/requirement-check.sh' reads the list
+    - A RED THAT IS "KNOWN" HIDES THE NEXT ONE BEHIND IT. The static-
+      analysis page was red for a cause left alone as ordered; a new
+      finding of mine ('for l in' in 'services/plan.py', E741 5 -> 6)
+      went into three bundles under it, reported each time as "the one
+      known red". Frank-Rene's own run showed the count. A page left
+      red is still READ after every change: its difference against
+      GOOD is compared with the difference it had before
+

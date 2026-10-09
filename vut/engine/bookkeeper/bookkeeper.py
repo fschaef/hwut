@@ -1271,17 +1271,22 @@ class Bookkeeper:
                        for key in recorded),
                       key=lambda name: (name is not None, name))
 
-    def note_accept(self, test, choice, aspirant_f=False):
+    def note_accept(self, test, choice, aspirant_f=False, equivalent_f=True):
         """RETURN: what '_note_accept_unlocked' returns -- the same act, under
         the directory's lock (B-9).
 
         'aspirant_f' says the nominal just written carries at least one
         '##! unaccepted' region: the acceptance STANDS AND IS
         INCOMPLETE, and the row must say so rather than 'true' (B-16).
+
+        'equivalent_f' False says the caller HELD THE OUTPUT AGAINST THE
+        NOMINAL IT WROTE and the two differ -- a GOOD saved short of
+        what ran: the row says FAIL, as the next run would (r-11c).
         """
         with self._act():
             result = self._note_accept_unlocked(
-                         test=test, choice=choice, aspirant_f=aspirant_f)
+                         test=test, choice=choice, aspirant_f=aspirant_f,
+                         equivalent_f=equivalent_f)
             #  AN ID IS BORN AT THE FIRST ACCEPT (README 4): issued
             #  here, in the acceptance's own act (E-41).
             register = self._register()
@@ -1289,11 +1294,14 @@ class Bookkeeper:
             self._register_write(register)
             return result
 
-    def _note_accept_unlocked(self, test, choice, aspirant_f=False):
+    def _note_accept_unlocked(self, test, choice, aspirant_f=False,
+                              equivalent_f=True):
         """
         RETURN: dict, the choice's row as now written -- 'verdict' PASS
-                and 'report' 'ok', or ASPIRANT and 'unaccepted'; the row
-                is created where none stood.
+                and 'report' 'ok'; ASPIRANT and 'unaccepted'; or FAIL
+                and 'not-equivalent-with-nominal' where the caller's
+                check found the output differing from what it wrote.
+                The row is created where none stood.
 
         ACCEPTANCE IS A DECISION AND THE BOOK HOLDS DECISIONS (E-20):
         whoever makes a nominal stand enters it here, or the
@@ -1312,9 +1320,12 @@ class Bookkeeper:
         choice_db = test_book.setdefault("choices", {})
         key       = NO_CHOICE_KEY if choice is None else choice
         row       = choice_db.setdefault(key, {})
-        row["verdict"] = (E_TestVerdict.ASPIRANT if aspirant_f
-                          else E_TestVerdict.PASS)
-        row["report"]  = "unaccepted" if aspirant_f else "ok"
+        if   aspirant_f:       verdict, report = E_TestVerdict.ASPIRANT, "unaccepted"
+        elif not equivalent_f: verdict, report = E_TestVerdict.FAIL, \
+                                                 "not-equivalent-with-nominal"
+        else:                  verdict, report = E_TestVerdict.PASS, "ok"
+        row["verdict"] = verdict
+        row["report"]  = report
         self._write_book(content)
         return row
 

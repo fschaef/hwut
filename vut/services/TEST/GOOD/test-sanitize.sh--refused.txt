@@ -56,6 +56,6 @@ STATUS: 2
 STDOUT {
     REFUSED: 'hwut.sanitize' does not take: --sideways
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, run; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

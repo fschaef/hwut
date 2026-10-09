@@ -148,13 +148,26 @@ class LinePairRaw:
         return subject_list, nominal_list
 
     def _handle_missing_side(self):
+        """
+        RETURN: [0] list[SubjectCell], [1] list[NominalCell] -- every
+                element of a side that stands, marked as lacking its
+                counterpart.
+
+        A PAIR WITHOUT AN ELEMENT ALIGNMENT SHOWS BOTH LINES WHOLE
+        (compare C-16, amended 2026-10-08): where the search spent its
+        budget on one pair, phase two emits DELETE + INSERT and the
+        separator adaptor folds the two into one SUBSTITUTE that carries
+        no edit list. Both sides stand then, and each is shown entire --
+        the line gone and the line come. Returning nothing for it drew
+        an EMPTY row that read as two blank, equal lines.
+        """
         subject_list, nominal_list = [], []
-        if self.subject and not self.nominal:
+        if self.subject:
             subject_list = [
                 SubjectCell(E_SubjectRelationId.BAD_NOMINAL_HAS_NOT, el.tolerance_id, el._string, -1)
                 for el in self.subject.sequence
             ]
-        elif self.nominal and not self.subject:
+        if self.nominal:
             nominal_list = [
                 NominalCell(E_NominalRelationId.BAD_SUBJECT_HAS, el.tolerance_id, el._string, -1)
                 for el in self.nominal.sequence

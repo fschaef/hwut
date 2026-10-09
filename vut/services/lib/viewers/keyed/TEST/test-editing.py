@@ -4,7 +4,7 @@
 #     title      = "The keyed merge's editing panes: GOOD typed into, the tolerance tried."
 #     choices    = ["discard", "f6", "fault", "foot", "from-report",
 #                   "good-cc", "good-editor", "good-type", "good-unchanged",
-#                   "good-undo", "main-keys", "pane", "try", "view"]
+#                   "good-undo", "leave", "main-keys", "pane", "try", "view"]
 #     tolerance { comment = []  analogy = [] }
 # }
 #
@@ -19,6 +19,8 @@ PURPOSE: THE EDITING PANES (intend 21) driven by REAL KEYS: the screen runs
     good-type       'e', the cursor down, a character replaced, <F5>: the
                     edit becomes the nominal, and a round realigns
     good-undo       the same, undone with 'c-z' before <F5>: no round
+    leave           'q' and 's' ask at the foot and only 'y' lets them act;
+                    'Q' and 'S' do the same unasked (r-11c)
     good-unchanged  'e' then <F5>: no round, the merge goes on
     good-editor     'e', then 'c-e': $EDITOR's exit ends the edit
     good-cc         'c-c' inside the edit means nothing; outside it cancels
@@ -112,23 +114,23 @@ def session(key_list, editor_argv=None):
 
 
 def test_good_type():
-    print("-- 'e', down, end, backspace, 'b', <F5>, 'q'")
-    session(["e", DOWN, DOWN, END, BACKSPACE, "b", F5, "q"])
+    print("-- 'e', down, end, backspace, 'b', <F5>, 'S'")
+    session(["e", DOWN, DOWN, END, BACKSPACE, "b", F5, "S"])
 
 
 def test_good_undo():
     print("-- the same, 'c-z' twice before <F5>: nothing changed, no round")
-    session(["e", DOWN, DOWN, END, BACKSPACE, "b", C_Z, C_Z, F5, "q"])
+    session(["e", DOWN, DOWN, END, BACKSPACE, "b", C_Z, C_Z, F5, "S"])
 
 
 def test_good_unchanged():
-    print("-- 'e', <F5>, 'q'")
-    session(["e", F5, "q"])
+    print("-- 'e', <F5>, 'S'")
+    session(["e", F5, "S"])
 
 
 def test_good_editor():
-    print("-- 'e', 'c-e' under an editor replacing 'c' by 'b', 'q'")
-    session(["e", C_E, "q"], editor_argv=["sed", "-i", "s/^c$/b/"])
+    print("-- 'e', 'c-e' under an editor replacing 'c' by 'b', 'S'")
+    session(["e", C_E, "S"], editor_argv=["sed", "-i", "s/^c$/b/"])
 
 
 def test_good_cc():
@@ -138,7 +140,7 @@ def test_good_cc():
 
 def test_pane():
     print("-- <F5>: the pane as it opens")
-    display = session([F5, "\x1b[B", F5, "q"])
+    display = session([F5, "\x1b[B", F5, "S"])
     print("\n   the text it showed:")
     display.editing = None
     for line in display._tolerance_pane_text().splitlines():
@@ -146,13 +148,13 @@ def test_pane():
 
 
 def test_try():
-    print("-- <F5>, 'c-e' uncommenting the numeric proposal, 'q'")
-    display = session([F5, C_E, "q"], editor_argv=[
+    print("-- <F5>, 'c-e' uncommenting the numeric proposal, 'S'")
+    display = session([F5, C_E, "S"], editor_argv=[
                           "sed", "-i", "s/# numeric_ratio = /numeric_ratio = /"])
     print("     in memory: numeric ratio %s"
           % display.tolerance_options.pattern_finder.numeric_tolerance_ratio)
-    print("\n-- <F5>, 'c-e' uncommenting every proposal, 'q'")
-    display = session([F5, C_E, "q"], editor_argv=[
+    print("\n-- <F5>, 'c-e' uncommenting every proposal, 'S'")
+    display = session([F5, C_E, "S"], editor_argv=[
                           "sed", "-i", "-E",
                           "s/# (numeric_ratio|eq_pattern) *= /\\1 = /"])
     print("     in memory: numeric ratio %s"
@@ -160,15 +162,15 @@ def test_try():
 
 
 def test_fault():
-    print("-- <F5>, 'c-e' writing an unknown key, 'c-e' taking it out, 'q'")
+    print("-- <F5>, 'c-e' writing an unknown key, 'c-e' taking it out, 'S'")
     editor = ["sh", "-c",
               "if grep -q bogus \"$0\"; then sed -i '/bogus/d' \"$0\"; "
               "else sed -i 's/^tolerance {/tolerance {\\n    bogus = 1/' \"$0\"; fi"]
-    session([F5, C_E, C_E, "q"], editor_argv=editor)
+    session([F5, C_E, C_E, "S"], editor_argv=editor)
 
 
 def test_from_report():
-    print("-- 't', <F5>: the report closes, the pane opens; <F5>, 'q'")
+    print("-- 't', <F5>: the report closes, the pane opens; <F5>, 'S'")
     display = Watched(act_script=[E_Act.REPORT, E_Act.TOLERANCE])
     display.pair_db = []
     for act in display.act_script: display._apply(act)
@@ -176,10 +178,10 @@ def test_from_report():
 
 
 def test_main_keys():
-    print("-- 'A' takes all; 'c-z' undoes it, 'c-y' redoes it; 'q'")
-    session(["A", C_Z, C_Y, "q"])
-    print("-- 'A', 'c-z', 'q'")
-    session(["A", C_Z, "q"])
+    print("-- 'A' takes all; 'c-z' undoes it, 'c-y' redoes it; 'S'")
+    session(["A", C_Z, C_Y, "S"])
+    print("-- 'A', 'c-z', 'S'")
+    session(["A", C_Z, "S"])
 
 
 def test_view():
@@ -193,19 +195,36 @@ def test_view():
     print("     scripted 'e' and <F5> in a view: editing = %s" % display.editing)
 
 
+def test_leave():
+    print("-- 'A', 'q', 'y': asked, yes -- left, nothing written")
+    session(["A", "q", "y"])
+    print("-- 'A', 'q', 'j' (any key but 'y' is no), 's', 'y': saved")
+    session(["A", "q", "j", "s", "y"])
+    print("-- 'A', 's', 'n', 'Q': not saved, then left unasked")
+    session(["A", "s", "n", "Q"])
+    print("-- 'A', 'S': saved unasked")
+    session(["A", "S"])
+    print("-- the question at the foot")
+    display = KeyedDisplay(act_script=[])
+    for act in (E_Act.ASK_QUIT, E_Act.ASK_SAVE):
+        display._apply(act)
+        print("     %-9s %s" % (act.name, display._status()[0][1].strip()))
+        display._apply(E_Act.NO)
+
+
 def test_discard():
-    print("-- 'e', a character typed, <Esc>, 'q': GOOD as it stood")
-    session(["e", "x", ESC, "q"])
-    print("-- <F5>, a character typed into the pane, <Esc>, 'q': the memory")
+    print("-- 'e', a character typed, <Esc>, 'S': GOOD as it stood")
+    session(["e", "x", ESC, "S"])
+    print("-- <F5>, a character typed into the pane, <Esc>, 'S': the memory")
     print("   as it was -- the text would not even have read")
-    session([F5, "x", ESC, "q"])
+    session([F5, "x", ESC, "S"])
 
 
 def test_f6():
-    print("-- <F6> on GOOD: an editor replacing 'c' by 'b', 'q'")
-    session([F6, "q"], editor_argv=["sed", "-i", "s/^c$/b/"])
-    print("-- <F5>, <F6> on the pane: the numeric proposal uncommented, 'q'")
-    display = session([F5, F6, "q"], editor_argv=[
+    print("-- <F6> on GOOD: an editor replacing 'c' by 'b', 'S'")
+    session([F6, "S"], editor_argv=["sed", "-i", "s/^c$/b/"])
+    print("-- <F5>, <F6> on the pane: the numeric proposal uncommented, 'S'")
+    display = session([F5, F6, "S"], editor_argv=[
                           "sed", "-i", "s/# numeric_ratio = /numeric_ratio = /"])
     print("     in memory: numeric ratio %s"
           % display.tolerance_options.pattern_finder.numeric_tolerance_ratio)
@@ -245,6 +264,7 @@ CHOICE_DB = {
     "foot":           test_foot,
     "good-type":      test_good_type,
     "good-undo":      test_good_undo,
+    "leave":          test_leave,
     "good-unchanged": test_good_unchanged,
     "good-editor":    test_good_editor,
     "good-cc":        test_good_cc,

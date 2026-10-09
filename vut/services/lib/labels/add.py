@@ -42,7 +42,7 @@ from   .                                     import _faces
 from   .                                    import _editing
 from   ._faces                               import Refused, opened
 
-USAGE = usage_line("hwut.labels.add",
+USAGE = usage_line("usage: hwut.labels.add",
                    ("<label>",) + USAGE_TOKEN_TUPLE
                    + ("[--directory=<path>]",))
 

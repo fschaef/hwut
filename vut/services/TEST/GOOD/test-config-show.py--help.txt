@@ -1,8 +1,15 @@
 
 --- --help ---
 $ hwut.config.show --help
-    hwut.config.show -- the configuration the framework READ
+    NAME
+        hwut.config.show -- the configuration the framework READ
 
+    USAGE
+        hwut.config.show [<source file>] [--no-default] [--provenance] [--gnu]
+                         [-v|--verbose]
+                         [--directory=<path>] | hwut.config.show --root-conf-template
+
+    DESCRIPTION
         hwut.config.show                   the whole directory: 'hwut.conf' first,
                                     then every test application as a tree
         hwut.config.show <source file>     one file's specification

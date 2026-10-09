@@ -1,0 +1,27 @@
+== the book
+# vut-register 5 generation:4 apps:2 marks:0=2,1=0
+test;choice;verdict;report;stain;test_id;choice_id
+a:b.sh;one;true;ok;;0;0
+;two;true;ok;;0;1
+t.sh;;true;ok;;1
+== under an old name, as that time wrote it: no ids, a 'coverage' column
+test;choice;verdict;report;coverage
+a:b.sh;one;true;ok;tok
+;two;true;ok;tok
+t.sh;;true;ok;tok
+== hwut.report reads it
+        a:b.sh one ...................................[OK]
+               two ...................................[OK]
+        t.sh .........................................[OK]
+== hwut.run writes: the name and the column
+book.csv
+test;choice;verdict;report;stain;test_id;choice_id
+a:b.sh;one;true;ok;;0;0
+;two;true;ok;;0;1
+t.sh;;true;ok;;1
+== an acceptance refused takes no id
+    refused: 1
+t.sh;;true;ok;;1
+u.sh;;false;nominal-file-not-found
+v.sh;;true;ok;;2
+<hwut-end>

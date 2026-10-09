@@ -18,13 +18,13 @@ E-79: the screen for LOOKING -- 'hwut.run.diff'
        t             the tolerance report: analogies, patterns, constraints
        <F1>          this table
        q             quit
-       <c-c>         quit
+       Q, <c-c>      quit
 
 -- a take, an undo, a commit: ignored; 'q' ends the view
      nominal        ('omega', 'beta')
      spent          []
      cursor_s       1  (one move before 'q', none after)
-     left by        DONE
+     left by        CANCEL
      differing      1
-     hints          <F1>=help   <tab>=pane  /=search  q=quit
+     hints          <F1>=help  <tab>=pane  /=search  q=quit
 <hwut-end>

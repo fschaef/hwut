@@ -131,7 +131,8 @@ def main(argv=None, write=None, read_line=None):
     if argv is None:  argv  = sys.argv[1:]
     if write is None: write = print
     if "--help" in argv:
-        write(__doc__.strip())
+        from vut.services._core import man_page
+        write(man_page("hwut.accept.apply", __doc__.strip()))
         return E_ExitCode.OK
 
     #  THE FIRST WORD THAT IS NOT AN OPTION IS THE FILE.

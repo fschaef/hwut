@@ -1,0 +1,44 @@
+== app_defaults, and who said what
+bare.sh {
+    title = "conf only"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # hwut.conf
+        - {
+            caps {
+                timeout_sec = 11.0            # hwut.conf:3
+                memory_mb = 99                # hwut.conf:3
+            }
+        }
+    }
+}
+test-a.sh {
+    title = "a"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        - {
+            caps {
+                timeout_sec = 3.0             # test-a.sh:4
+                memory_mb = 99                # hwut.conf:3
+            }
+        }
+    }
+}
+test-b.sh {
+    title = "b"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        - {
+            caps {
+                timeout_sec = 11.0            # hwut.conf:3
+                memory_mb = 99                # hwut.conf:3
+            }
+        }
+    }
+}
+== a header AND an 'apps' entry
+hwut.conf:3:22: DIRECTORY: 'test-a.sh' carries a header AND is named under 'apps': one file, one carrier
+== a test parameter at the conf's root
+hwut.conf:2:5: VOCABULARY: 'caps' at the root of hwut.conf: the root carries
+== only 'hwut.conf' is read
+0
+<hwut-end>

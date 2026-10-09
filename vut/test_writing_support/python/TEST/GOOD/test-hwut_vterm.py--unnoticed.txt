@@ -1,0 +1,16 @@
+-- still running after its first screen: True
+    0 |streams are terminals: True True True|
+    1 |controlling terminal: yes|
+    2 |size: 44 columns, 10 rows|
+    3 |TERM=xterm-256color COLUMNS=None|
+    6 |the terminal answered: b'\x1b[6;9R'|
+    cursor (6, 35)
+-- after 'q': exit status 3
+    0 |controlling terminal: yes|
+    1 |size: 44 columns, 10 rows|
+    2 |TERM=xterm-256color COLUMNS=None|
+    5 |the terminal answered: b'\x1b[6;9R'|
+    7 |read: b'q'|
+    8 |leaving|
+    cursor (9, 0)
+<hwut-end>

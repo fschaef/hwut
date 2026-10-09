@@ -253,9 +253,20 @@ def inherited_spec(parent, child):
     return replace(child, **field_db)
 
 
+#  THE WAY OUT, SAID WITH THE REFUSAL (services E-25, amended
+#  2026-10-08): a hint like the run's own towards 'hwut.help', on a line
+#  of its own under whatever the face says.
+ROOT_CONF_HINT_STR = "HINT: use 'hwut.sanitize root [dir]' to place one."
+
+
 class RootConfMissing(Exception):
-    """No 'hwut-root.conf' stands above the named directory."""
-    pass
+    """No 'hwut-root.conf' stands above the named directory. Its text is
+    the refusal's line and, under it, 'ROOT_CONF_HINT_STR' -- so every
+    face that writes the one writes the other."""
+
+    def __init__(self, text):
+        """RETURN: None. 'text' is the refusal; the hint is appended."""
+        super().__init__("%s\n%s" % (text, ROOT_CONF_HINT_STR))
 
 
 TRANSIENT_ROOT_NAME = "TMP"

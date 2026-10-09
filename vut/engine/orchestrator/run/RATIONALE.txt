@@ -163,6 +163,12 @@ COST      Two blessed suites re-worded to the new ground (audited:
           the rename alone).
 GRAVEYARD Filtering store keys out of the subject scan (guessing at
           the door). Snapshot-diff of 'OUT/' (statefulness, races).
+AMENDED   2026-10-08 (audit D-9): MEASURED -- the store's ground is
+          '<directory>/TMP/store/' ('ls TMP/store' after a run:
+          'observations.bin', '<key>.stdout.when', '.times'); nothing
+          in the tree writes '.hwut-store/'. NO RULING RECORDS THE
+          MOVE; the transient ground 'TMP/' is cited in code as
+          'services E-24', an id that entry does not bear.
 
 ----------------------------------------------------------------------------
 O-9  THE TRANSLATION: WHAT AN AUTHOR STATES, A COMPONENT RECEIVES

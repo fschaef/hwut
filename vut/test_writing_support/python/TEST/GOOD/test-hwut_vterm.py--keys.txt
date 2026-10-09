@@ -1,0 +1,12 @@
+    up                     read: b'\x1b[A'
+    enter                  read: b'\r'
+    tab                    read: b'\t'
+    escape                 read: b'\x1b'
+    f5                     read: b'\x1b[15~'
+    delete                 read: b'\x1b[3~'
+    ctrl c                 read: b'\x03'
+    alt x                  read: b'\x1bx'
+    shift up               read: b'\x1b[1;2A'
+    send 'ä'               read: b'\xc3\xa4'
+    send 'q'               leaving
+<hwut-end>

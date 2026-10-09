@@ -1,6 +1,7 @@
   GOOD before : value old
   exit        : FAULT
   GOOD after  : value old
+  book        : false / not-equivalent-with-nominal
   |     merge required test-v.sh .stdout
   | A nominal already stands for the keys above. That is a CHANGE, not a
 <hwut-end>

@@ -410,7 +410,8 @@ def main(argv=None, write=None, write_error=None):
     if argv is None:
         argv = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.run.stability", HELP))
         return E_ExitCode.OK
 
     try:
@@ -568,19 +569,21 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
                  and a not in ("--verbose", "--cadence",
                                "--byte-pedantic")]
     snapshot_list = []
-    for _ in range(repeat_n):
+    for repeat_i in range(repeat_n):
         event_list = []
+        said_list  = []
         #  ABSENT MEANS ABSENT (O-27): where the person named no
         #  strategy, none is passed on, and 'hwut.run' applies its own
         #  defaults. Spelling one here would pin a default in a second
         #  place.
         strategy_argv = [] if strategy is None \
                         else ["--strategy=%s" % strategy]
-        run_service.main(wish_argv + strategy_argv + ["--timing",
+        status = run_service.main(
+                         wish_argv + strategy_argv + ["--timing",
                                       "--directory=%s" % root,
                                       "--silent"],
-                         write=lambda line: None,
-                         write_error=lambda line: None,
+                         write=said_list.append,
+                         write_error=said_list.append,
                          event_sink=event_list.append,
                          despite_stain_f=True,
                          #  EVERY REPEAT MUST EXECUTE: subject
@@ -589,6 +592,21 @@ def _repeat(root, argv, repeat_n, strategy, subject_tuple, write_error):
                          #  recording, and five readings of one file
                          #  agree about anything.
                          force_run_f=True)
+        #  WHAT THE RUN REFUSED, THIS FACE REFUSES (E-19, R-75): a
+        #  label or a language nobody declared is said by name, not
+        #  folded into 'EMPTY'. AND WHAT IT WARNED OF IS SAID ONCE
+        #  (E-21): a glob the silence swallowed whole.
+        if status == E_ExitCode.REFUSED:
+            refusal_list = [text[len("REFUSED: "):] for text in said_list
+                            if str(text).startswith("REFUSED: ")]
+            raise SelectionError("; ".join(refusal_list)
+                                 or "the run refused the wish")
+        if repeat_i == 0:
+            #  THE STREAM CARRIES IT (O-26): the silent tier writes no
+            #  warning, the 'warning' event stands all the same.
+            for event in event_list:
+                if event.get("kind") == "warning":
+                    write_error(event["text"])
         snapshot_list.append(
             snapshot_of(root, fold(event_list).verdict_db, subject_tuple))
     return snapshot_list

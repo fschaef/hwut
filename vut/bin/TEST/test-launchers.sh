@@ -13,8 +13,11 @@
 # location wrongly, or loses PYTHONPATH, shows as a divergent cell.
 #
 # answer   every launcher called by path: the exit code and the first
-#          non-empty line of what it said. The faces answer '--help'
-#          with 0; 'hwut.pype' answers a bare call with its usage, 2.
+#          non-empty line of what it said BELOW THE PAGE'S 'NAME' -- a
+#          help page opens with that heading on every face (services
+#          E-32 AMENDED), and a line all faces share tells no two apart.
+#          The faces answer '--help' with 0; 'hwut.pype' answers a bare
+#          call with its usage, 2.
 #
 # path     the PATH form and the by-path form must agree byte-for-byte;
 #          a '#! /usr/bin/env hwut.pype' she-bang script must run when
@@ -43,9 +46,9 @@ FACE_LIST="config.show plan run run.play accept accept.propose accept.apply reno
            accept.interactive execute cov.run cov.formats cov.conv.to_humans cov.conv.to_lcov cov.conv.to_html cov.conv.to_cobertura cov.conv.to_jacoco cov.conv.to_json cov.conv.to_tex cov.conv.to_pdf dev.podman.build dev.podman.enter run.diff report.details run.stability report.list
            report help remove remove.propose remove.apply
            rename move sanitize sanitize.propose sanitize.apply pype
-           labels.create labels.add labels.remove labels.list labels.query"
+           labels.create labels.add labels.remove labels.list labels.query about"
 
-first_line() { grep -m1 -v '^[[:space:]]*$'; }
+first_line() { grep -v '^NAME$' | grep -m1 -v '^[[:space:]]*$' | sed 's/^    //'; }
 
 # ---------------------------------------------------------------------------
 if [ "$1" == "answer" ]; then

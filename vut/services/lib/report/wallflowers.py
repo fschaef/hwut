@@ -45,8 +45,11 @@ def main(argv=None, write=None):
     directory = "."
     for word in argv:
         if word == "--help":
-            write(__doc__.split("PURPOSE:", 1)[1].rsplit("_" * 10, 1)[0]
-                  .rstrip())
+            from vut.services._core import man_page
+            write(man_page("hwut.report.wallflowers",
+                           __doc__.split("PURPOSE:", 1)[1]
+                           .rsplit("_" * 10, 1)[0].rstrip(),
+                           usage=USAGE))
             return E_ExitCode.OK
         elif word.startswith("--directory="):
             directory = word[len("--directory="):]

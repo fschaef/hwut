@@ -1,0 +1,28 @@
+Title = "x"                                          => test-w.sh:4:7: VOCABULARY: unknown key 'Title'
+timeout = 3                                          => test-w.sh:4:7: VOCABULARY: unknown key 'timeout'
+caps { timeout_sec = 3 }                             => timeout_sec = 3.0 # app
+caps { timeout_sec = 3 nosuch_cap = 1 }              => test-w.sh:4:30: VOCABULARY: unknown cap 'nosuch_cap'
+interactive = true                                   => interactive = true # app
+choices { a { interactive = true } }                 => test-w.sh:4:21: VOCABULARY: 'interactive' cannot be a choice attribute
+choices { a { args = "x y" } }                       => test-w.sh:4:21: VOCABULARY: unknown key 'args' in choice 'a'
+== a user's name stands inside 'choices', whatever it is
+test-n.sh {
+    title = "n"
+    language = "bash"                         # derived: extension -> 'language-setup'
+    choices {                                 # app
+        Upper {
+            caps {
+                timeout_sec = 7.0             # app
+            }
+        }
+        title {
+            caps {
+                timeout_sec = 9.0
+            }
+        }
+    }
+}
+== no title
+    title = "test-t.sh <title unspecified>"
+STATUS: 0
+<hwut-end>

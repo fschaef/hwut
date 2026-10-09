@@ -101,7 +101,8 @@ def one_file_main(name, usage, help_text, build, argv=None, write=None,
     if write_bytes is None: write_bytes = sys.stdout.buffer.write
     if argv is None:        argv = sys.argv[1:]
     if "--help" in argv or "-h" in argv:
-        write(help_text)
+        from vut.services._core import man_page
+        write(man_page(name, help_text, usage=usage))
         return E_ExitCode.OK
     parsed = parse(name, usage, argv, write, option_db, flag_set)
     if parsed is None: return E_ExitCode.REFUSED
@@ -141,7 +142,8 @@ def many_files_main(name, usage, help_text, build, default_name, argv=None,
     if write is None: write = print
     if argv is None:  argv = sys.argv[1:]
     if "--help" in argv or "-h" in argv:
-        write(help_text)
+        from vut.services._core import man_page
+        write(man_page(name, help_text, usage=usage))
         return E_ExitCode.OK
     parsed = parse(name, usage, argv, write, option_db, flag_set)
     if parsed is None: return E_ExitCode.REFUSED

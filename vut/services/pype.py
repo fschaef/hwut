@@ -55,7 +55,16 @@ def main(argv, write=print):
     the door is a FAULT here, since this face does not read it twice.
     """
     if any(arg in ("-h", "--help") for arg in argv):
-        for line in USAGE.split("\n"):
+        from vut.services._core import man_page
+        #  THE INTERPRETER'S OWN TEXT: its three 'usage' lines are the
+        #  USAGE, what follows them the DESCRIPTION.
+        line_list = USAGE.split("\n")
+        text = "run a pype SCRIPT over its input\n\n" \
+               + "\n".join(each.strip() if each.lstrip().startswith("--")
+                                         or each.lstrip().startswith("SCRIPT")
+                           else "    " + each.strip() for each in line_list[3:])
+        for line in man_page(PROGRAM_NAME, text,
+                             usage="\n".join(line_list[:3])).split("\n"):
             write(line)
         return E_ExitCode.OK
 

@@ -87,6 +87,7 @@ ARITY_DB = {
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "run":    (2, 2, "<dir> <target>"),
+    "root":   (1, 1, "<dir>"),
 }
 assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
 
@@ -195,6 +196,32 @@ class CContext:
         except Exception as error:                         # noqa: BLE001
             return CDone(E_Done.FAULT, "%s: %s" % (type(error).__name__,
                                                    error))
+
+    def _do_root(self, word_tuple):
+        """RETURN: CDone -- 'hwut-root.conf' written into the directory
+                   named; NOTHING where a boundary already stands in or
+                   above it, REFUSED where it is no directory or cannot
+                   be written in."""
+        from vut.services import _boundary
+        directory = self.path_of(word_tuple[0])
+        if not os.path.isdir(directory):
+            return CDone(E_Done.REFUSED, "no such directory")
+        try:
+            standing = root_conf_directory(directory)
+        except RootConfMissing:
+            standing = None
+        if standing is not None:
+            return CDone(E_Done.NOTHING,
+                         "a boundary stands: '%s'"
+                         % os.path.join(sanitize.shown(self.base, standing),
+                                        _boundary.ROOT_CONF_NAME))
+        if not _boundary.writeable_f(directory):
+            return CDone(E_Done.REFUSED, "no write access")
+        try:
+            _boundary.written(directory)
+        except OSError as error:
+            return CDone(E_Done.FAULT, str(error))
+        return CDone(E_Done.DONE)
 
     def _do_remove(self, word_tuple):
         """RETURN: CDone -- a session, a dead lock, 'OUT/' or 'TMP/' gone."""

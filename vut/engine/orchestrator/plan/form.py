@@ -194,6 +194,10 @@ class CTestPlan:
         self.node_tuple      = tuple(node_list)
         self.link_tuple      = tuple(link_list)
         self.exclusion_tuple = tuple(exclusion_list)
+        #  NOT OF THE PLAN, BESIDE IT: the ordering links a dependency
+        #  cycle held, which 'determine' takes out before the laws below
+        #  are asked. Shown by 'hwut.plan', dispatched by nobody.
+        self.cycle_link_tuple = ()
 
         self.node_db = {}
         for node in self.node_tuple:

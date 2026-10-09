@@ -1,0 +1,28 @@
+== hwut.accept.propose 5 -o proposal.txt
+STATUS: 0
+    #  proposal -- delete or '#' out what you do not want, then hand it back:
+    #      hwut.accept.apply <this file>
+    
+    # TEST RUN: ./test-a.sh one
+    # -- [2] OUT:  "SECOND  one"
+    # => [2] GOOD: "second one"
+    ./test-a.sh one
+    
+    # TEST RUN: ./test-a.sh two
+    # -- [2] OUT:  "SECOND  two"
+    # => [2] GOOD: "second two"
+    ./test-a.sh two
+    
+== the nominals stand untouched
+    second one
+    second two
+== one target vetoed, the file handed back
+    test-a.sh one ..................................................... [DONE]
+Accepted 1/1
+    SECOND  one
+    second two
+== hwut.accept.propose 0 -o over.txt: over the bound
+DIFF(./test-a.sh two) > 0 lines
+STATUS: 3
+    targets in the file: 0
+<hwut-end>

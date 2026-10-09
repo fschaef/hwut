@@ -7,18 +7,18 @@ STDOUT {
 STATUS: 2
 STDOUT {
     REFUSED: 'concern AND' cannot be read -- the expression ends where a label must stand
-    hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
+    usage: hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
 }
 --- two expressions
 STATUS: 2
 STDOUT {
     REFUSED: ONE expression holds the whole question; quote it: 'concern meta'
-    hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
+    usage: hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
 }
 --- an option the face does not take
 STATUS: 2
 STDOUT {
     REFUSED: 'hwut.labels.query' does not take: --sideways
-    hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
+    usage: hwut.labels.query [<expr>] [--expand] [--labels] [--directory=<path>]
 }
 <hwut-end>

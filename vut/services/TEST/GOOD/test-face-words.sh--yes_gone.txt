@@ -1,0 +1,6 @@
+hwut.accept            exit 2  REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is the one word for 'do not 
+hwut.run.diff          exit 2  REFUSED: '--yes' is gone (E-57) -- '--all' is the one word for 'no checklist
+hwut.rename            exit 2  REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is the one word for 'do not 
+hwut.move              exit 2  REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is the one word for 'do not 
+hwut.remove            exit 2  REFUSED: '--yes' is gone (E-68) -- '--dont-ask' is the one word for 'do not 
+<hwut-end>

@@ -984,7 +984,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     interactive_f = (propose_n is None and not brief_f
                      and sys.stdin.isatty() and sys.stderr.isatty())
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.accept", HELP, usage=USAGE))
         return E_ExitCode.OK
 
     try:
@@ -1441,9 +1442,10 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     #  THE MERGE, THROUGH THE SHARED ENGINE. The keys a nominal stands
     #  for are handed to the same loop as E-51's face, so the three
     #  writes and every refusal are one implementation (E-59).
-    uncommitted_list = []
+    uncommitted_list, short_list = [], []
     if merge_list and interactive_f and not force_f:
-        merged_list, merge_refused_list, merge_left_list, sat_f = \
+        merged_list, merge_refused_list, merge_left_list, sat_f, \
+            short_list = \
             _merge_through_engine(merge_list, store, write, config_db)
         blessed_list.extend(merged_list)
         #  LEFT AT A TERMINAL IS NOT 'MERGE REQUIRED' (E-88): the screen
@@ -1463,13 +1465,14 @@ def accept_one(directory, result, bookkeeper, case_sequence,
     #  the screen that resolves a merge) reads the same record.
     outcome_tuple = outcome_tuple_of(directory, blessed_list, undecided_list,
                                      merge_list, uncommitted_list,
-                                     skipped_list)
+                                     skipped_list, short_list)
     if brief_list is not None:
         brief_list.extend(brief_row_of(outcome) for outcome in outcome_tuple)
     else:
         report_written(outcome_tuple, len(key_list), write)
 
-    if result.fault_list or merge_list or uncommitted_list or conflict_db:
+    if result.fault_list or merge_list or uncommitted_list or conflict_db \
+       or short_list:
         return E_ExitCode.FAULT
     return E_ExitCode.OK
 
@@ -1479,8 +1482,9 @@ class Outcome:
     """WHAT BECAME OF ONE KEY (E-105): plain fields, so a caller that is
     not a page can read what accept decided.
 
-    'kind' is one of 'blessed', 'undecided', 'needs-merge', 'cancelled',
-    'left-alone'; 'name' is the key as a page names it, 'label' the
+    'kind' is one of 'blessed', 'undecided', 'saved-short' (the screen
+    saved a GOOD the output still differs from), 'needs-merge',
+    'cancelled', 'left-alone'; 'name' is the key as a page names it, 'label' the
     same with its directory where the selection spans more than one."""
     name:   str
     label:  str
@@ -1492,6 +1496,8 @@ _OUTCOME_DB = {
     "blessed":     ("blessed       ", None),
     "undecided":   ("undecided     ", "recorded undecided: the shape stands, "
                                       "nothing is accepted yet"),
+    "saved-short": ("saved [FAIL]  ", "GOOD is saved; OUT still differs "
+                                      "from it"),
     "needs-merge": ("merge required", "a nominal stands: this is a change, "
                                       "not a first blessing"),
     "cancelled":   ("cancelled     ", "left alone -- the screen was cancelled"),
@@ -1501,13 +1507,14 @@ _OUTCOME_DB = {
 
 
 def outcome_tuple_of(directory, blessed_list, undecided_list, merge_list,
-                     uncommitted_list, skipped_list):
+                     uncommitted_list, skipped_list, short_list=()):
     """RETURN: tuple[Outcome], one per key, in the order a page says
                them."""
     return tuple(
         Outcome(key.name, _brief_label(directory, key), kind)
         for kind, key_list in (("blessed", blessed_list),
                                ("undecided", undecided_list),
+                               ("saved-short", short_list),
                                ("needs-merge", merge_list),
                                ("cancelled", uncommitted_list),
                                ("left-alone", skipped_list))
@@ -1531,8 +1538,8 @@ def report_written(outcome_tuple, key_n, write):
     write("=" * 78)
     write("ACCEPTED  %d of %d" % (stood_n, key_n))
     write("-" * 78)
-    for kind in ("blessed", "undecided", "needs-merge", "cancelled",
-                 "left-alone"):
+    for kind in ("blessed", "undecided", "saved-short", "needs-merge",
+                 "cancelled", "left-alone"):
         for outcome in outcome_tuple:
             if outcome.kind == kind:
                 write("    %s %s" % (_OUTCOME_DB[kind][0], outcome.name))
@@ -1546,15 +1553,15 @@ def report_written(outcome_tuple, key_n, write):
               "to overwrite the pole.")
     if any(o.kind == "cancelled" for o in outcome_tuple):
         write("")
-        write("The screen was left with Ctrl-C: nothing was written. "
-              "'q' is done, and")
-        write("writes GOOD as it stands.")
+        write("The screen was left without saving: nothing was written. "
+              "'s' saves GOOD")
+        write("as it stands and leaves.")
     write("=" * 78)
 
 
 def _merge_through_engine(key_list, store, write, config_db):
     """
-    RETURN: (accepted_list, refused_list, left_list) for the keys a
+    RETURN: [0..2] accepted_list, refused_list, left_list for the keys a
             nominal already stands for -- run through the SAME engine
             'hwut.accept.interactive' uses, so the three writes of E-41
             and every refusal have one implementation.
@@ -1563,6 +1570,10 @@ def _merge_through_engine(key_list, store, write, config_db):
             by the author, with Ctrl-C. False where no session could
             be built at all -- every key then left alone: a face that
             cannot ask must not decide.
+
+            [4] list, the keys the screen SAVED SHORT of their output:
+            a GOOD stands, the output still differs from it (f-8). They
+            are not among [0].
     """
     from vut.services.lib.accept import engine
 
@@ -1586,12 +1597,12 @@ def _merge_through_engine(key_list, store, write, config_db):
         if merge_key.subject_text is None or merge_key.nominal_text is None:
             continue
         wanted_list.append((key, merge_key))
-    if not wanted_list: return ([], [], list(key_list), False)
+    if not wanted_list: return ([], [], list(key_list), False, [])
 
     try:
         adapter = engine.adapter_for(err=write)
     except Exception:                                          # noqa: BLE001
-        return ([], [], list(key_list), False)
+        return ([], [], list(key_list), False, [])
 
     origin_db = {id(m): k for k, m in wanted_list}
     #  THE ADAPTER IS HANDED OVER. MEASURED: the call passed 'write' in
@@ -1599,10 +1610,14 @@ def _merge_through_engine(key_list, store, write, config_db):
     #  died in a TypeError, and no suite reached the door (E-88).
     accepted, refused, left = engine.run_sessions(
         [m for _, m in wanted_list], lambda _: store, adapter, write)
-    return ([origin_db[id(m)] for m in accepted],
+    #  SAVED SHORT OF THE OUTPUT (f-8): not among the accepted.
+    return ([origin_db[id(m)] for m in accepted
+             if not engine.short_f(m)],
             [(origin_db[id(m)], reason) for m, reason in refused],
             [origin_db[id(m)] for m in left],
-            True)
+            True,
+            [origin_db[id(m)] for m in accepted
+             if engine.short_f(m)])
 
 
 if __name__ == "__main__":

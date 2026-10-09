@@ -38,6 +38,7 @@ from vut.engine.operations.interaction.port import (E_Intent, merge_session,
 
 import asyncio
 import io
+from   vut.engine.bookkeeper.api            import carries_unaccepted_text_f
 import sys
 
 
@@ -104,6 +105,22 @@ def adapter_for(editor_argv=None, plain_f=False, side_by_side_f=False,
                       width          = width)
 
 
+#  WHAT A SAVE SHORT OF THE OUTPUT IS CALLED, at both doors (f-8).
+SHORT_WORD = "saved [FAIL]"
+SHORT_NOTE = "GOOD is saved; OUT still differs from it"
+#  A KEY IS ANOTHER MODULE'S RECORD, frozen or slotted: what a session
+#  learned of it is kept beside it, by identity, while the keys live.
+_SHORT_ID_SET = set()
+
+
+def short_f(key):
+    """RETURN: True, a bool saying 'run_sessions' saved a GOOD for 'key'
+                     that its output still differs from
+               False, else
+    """
+    return id(key) in _SHORT_ID_SET
+
+
 def run_sessions(key_list, store_of, adapter, err, setup=None,
                  max_round_n=None, ask=None):
     """
@@ -134,7 +151,7 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         #  contract, so this call is the same on every tier.
         adapter.note_standing(getattr(key, "aspirant_f", False))
         #  STDERR SPOKE (E-91): told BEFORE the session, so the screen can
-        #  warn before the author merges what 'q' will refuse.
+        #  warn before the author merges what 's' will refuse.
         from vut.services.accept import stderr_spoke_db
         class _Case:
             source_file = key.test
@@ -163,14 +180,44 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
             else:
                 #  THE THREE WRITES OF AN ACCEPTANCE, as 'hwut.accept'
                 #  makes them (E-41): the nominal, the register, the book.
+                #  THE BOOK SAYS WHAT A CHECK FOUND, NOT WHAT THE KEY
+                #  HOPED (r-11c): OUT is held against the nominal just
+                #  written BEFORE the entry is made. A GOOD saved short of
+                #  OUT stands -- and is booked as the failure a run would
+                #  find, not as 'ok'.
                 store.accept(key.test, key.choice, "stdout", text)
-                store.bookkeeper.note_accept(key.test, key.choice)
+                same_f = equivalent_f(options, key.subject_text, text)
+                store.bookkeeper.note_accept(
+                    key.test, key.choice,
+                    aspirant_f   = carries_unaccepted_text_f(text),
+                    equivalent_f = same_f)
+                #  A SAVE THAT LEAVES A DIFFERENCE IS SAID AS THE FAILURE
+                #  IT IS (ruled 2026-10-09, f-8): the report marks it.
+                if not same_f: _SHORT_ID_SET.add(id(key))
                 accepted_list.append(key)
                 accepted_f = True
         from .keep import keep_question
         keep_question(adapter, key, _directory_of(store, key), accepted_f,
                       err, ask or _terminal_ask)
     return (accepted_list, refused_list, left_list)
+
+
+def equivalent_f(options, subject_text, nominal_text):
+    """RETURN: True, a bool saying compare finds 'subject_text' equivalent
+                     to 'nominal_text' under 'options' -- the verdict a
+                     run of this OUT against this GOOD would book.
+               False, where it does not, or where the nominal's regions
+                      cannot be read.
+    """
+    from vut.engine.compare.api import (Configuration, ConstraintSpecError,
+                                        RegionSyntaxError, is_equivalent)
+    setup = options if options is not None else Configuration()
+    try:
+        return bool(asyncio.run(is_equivalent(setup,
+                                              io.StringIO(subject_text),
+                                              io.StringIO(nominal_text))))
+    except (ConstraintSpecError, RegionSyntaxError):
+        return False
 
 
 def _directory_of(store, key):
@@ -229,7 +276,8 @@ def refusal(store, key, text, err):
 
 def report(accepted_list, refused_list, left_list, key_n, err):
     """
-    RETURN: E_ExitCode, FAULT where anything was refused, OK otherwise.
+    RETURN: E_ExitCode, FAULT where anything was refused or saved short
+            of its output, OK otherwise.
 
     The same block both doors print, so a script reading it need not
     know which face ran.
@@ -242,10 +290,14 @@ def report(accepted_list, refused_list, left_list, key_n, err):
         #  A FIRST BLESSING IS NOT A MERGE (B-14, E-51/E-59): an
         #  aspirant had no pole to reconcile with, so the word for what
         #  happened to it is 'hwut.accept's own.
+        if short_f(key):
+            err("    %-14s %s -- %s" % (SHORT_WORD, key.label, SHORT_NOTE))
+            continue
         err("    %-14s %s" % ("blessed" if getattr(key, "aspirant_f", False)
                               else "accepted", key.label))
     for key, reason in refused_list: err("    refused        %s -- %s"
                                          % (key.label, reason))
     for key in left_list:            err("    left alone     %s" % key.label)
     err("=" * 78)
-    return E_ExitCode.FAULT if refused_list else E_ExitCode.OK
+    any_short_f = any(short_f(key) for key in accepted_list)
+    return E_ExitCode.FAULT if refused_list or any_short_f else E_ExitCode.OK

@@ -9,6 +9,10 @@
 #                                            mounted read-write at its path
 #     hwut.dev.podman.enter bin/hwut.run     the census, in it
 #
+# THE LIST OF RECORD is 'adm/requirement-list.txt'; this recipe installs
+# what it names, and 'sh adm/requirement-check.sh' inside the image says
+# whether it did.
+#
 # WHAT STANDS IN IT, and why:
 #     python 3.13            the interpreter the tree is written for
 #                            ('match' statements: 3.10 at least)
@@ -16,16 +20,39 @@
 #                            the packages the tree imports
 #     coverage               coverage.py: 'hwut.cov.run' over python
 #     ruff                   'adm/TEST/test-static-analysis.sh'
-#     gcc                    gcov, the C road of 'hwut.cov.run'
-#     git                    'adm/bundle.sh', 'hwut.affected'
+#     gcc, g++, make         gcov, the C road of 'hwut.cov.run'; a
+#                            verilated model is C++ built by make
+#     lcov, gcovr            the lcov tracefile road
+#     verilator              'verilator --coverage': coverage D-12 is
+#                            probed against the tool itself here
+#     ghdl                   the PSL coverage road
+#     golang-go              'go test -coverprofile'
+#     lua5.4, luarocks, luacov
+#     default-jdk-headless   the JaCoCo road's virtual machine
+#     git, mercurial, subversion, breezy, darcs, fossil
+#                            'adm/bundle.sh', 'hwut.affected'; and the
+#                            repositories 'hwut.sanitize root' offers as
+#                            a boundary ('services/_boundary.py
+#                            REPOSITORY_MARK_TUPLE') -- each made by its
+#                            own tool, not by a marker directory
+#     libvterm0, libvterm-dev
+#                            the terminal a page of the keyed screen is
+#                            read through ('test_writing_support/python/
+#                            hwut_vterm.py' binds it) (ruled 2026-10-09, r-11d: "use
+#                            libvterm ... do not use pyte")
 #     texlive-latex-base, texlive-latex-recommended, latexmk
 #                            'hwut.cov.conv.to_pdf' (geometry, xcolor,
 #                            colortbl, longtable, array)
 #     COLUMNS=300, no colour  the pages are recorded at one width
 #
-# NOT IN IT: verilator, ghdl, go, lua, java. Their readers are tested on
-# WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT'), so the census
-# does not call them; a coverage run over such a tree does.
+# NOT IN IT: jujutsu and pijul -- bookworm packages neither; their
+# marker directories are still recognised. The coverage readers stay
+# tested on WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT'): the
+# census calls no tool of the list above but gcc, git and ruff.
+#
+# WRITTEN 2026-10-09 WHERE NO CONTAINER ENGINE STANDS: this recipe was
+# NOT BUILT by its author. The first 'hwut.dev.podman.build --rebuild'
+# is its test; a package name bookworm does not know fails it by name.
 #
 # NOTHING OF THE TREE IS IN THE IMAGE: the tree is the host's, mounted
 # by 'hwut.dev.podman.enter'; the image holds the requirements alone.
@@ -34,9 +61,15 @@ FROM docker.io/library/python:3.13-slim-bookworm
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        gcc libc6-dev git \
+        gcc g++ libc6-dev make lcov gcovr \
+        verilator ghdl golang-go \
+        lua5.4 luarocks default-jdk-headless \
+        git mercurial subversion breezy darcs fossil \
+        libvterm0 libvterm-dev \
         texlive-latex-base texlive-latex-recommended latexmk \
  && rm -rf /var/lib/apt/lists/*
+
+RUN luarocks install luacov
 
 RUN pip install --no-cache-dir \
         bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil \

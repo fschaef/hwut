@@ -1,0 +1,4 @@
+REFUSED: no 'hwut-root.conf' stands in or above '$WORK/TEST/TMP/deep' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
+HINT: use 'hwut.sanitize root [dir]' to place one.
+STATUS: 2
+<hwut-end>

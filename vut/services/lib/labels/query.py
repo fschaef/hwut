@@ -15,7 +15,7 @@ believe a set is empty. Bare, the expression is 'all AND NOT meta' --
 what a bare run would take.
 
 THE DEFAULT OUTPUT IS A WISHLIST, ready to be read back: target lines,
-sorted, ELIDED (':/' the previous line's directory, ':/:' its file),
+their paths written FROM THE DIRECTORY YOU STAND IN, sorted, ELIDED (':/' the previous line's directory, ':/:' its file),
 and nothing else -- it pipes into '--wishlist', 'hwut.labels.add' and
 'hwut.labels.remove'. Never a glob: the file it answers from holds
 literal targets only.
@@ -56,7 +56,7 @@ from   ..._exit                               import E_ExitCode
 from   .                                     import _file
 from   .                                     import _faces
 
-USAGE = usage_line("hwut.labels.query",
+USAGE = usage_line("usage: hwut.labels.query",
                    ("[<expr>]", "[--expand]", "[--labels]",
                     "[--directory=<path>]"))
 
@@ -103,7 +103,8 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.labels.query", HELP))
         return E_ExitCode.OK
 
     expand_f  = False
@@ -159,19 +160,38 @@ def main(argv=None, write=None):
 
     #  WHAT WAS ASKED, ANSWERED (E-106): the targets and their labels,
     #  said three ways; the page picks one.
+    #  SAID FROM WHERE THE CALLER STANDS (ruled 2026-10-09, f-7): the
+    #  label file names a run from the boundary; a line printed here is
+    #  typed, or piped into '--wishlist', from the current directory.
+    here = lambda target: from_here(target, view.boundary)   # noqa: E731
     answer = _faces.Answer(
         target_tuple = tuple(
-            (_file.target_text(key),
+            (here(_file.target_text(key)),
              " ".join(sorted(view.label_set_of(
                  os.path.join(view.boundary, key[0]), key[1]))) or "-")
             for key in key_tuple),
-        elided_tuple = tuple(_file.elided_target_tuple(key_tuple)),
+        elided_tuple = tuple(here(target) for target
+                             in _file.elided_target_tuple(key_tuple)),
         fault_tuple  = tuple(str(f) for f in fault_tuple))
     printed(answer, labels_f, expand_f, write)
 
     if answer.fault_tuple: return E_ExitCode.FAULT
     if answer.empty_f:     return E_ExitCode.EMPTY
     return E_ExitCode.OK
+
+
+def from_here(target, boundary):
+    """RETURN: str, 'target' -- '<path> [<choice>]', its path written
+               from the boundary -- with the path written from the
+               current directory instead: 'test-a.sh' for a run of the
+               directory the caller stands in, '../x/TEST/test-a.sh'
+               for one beside it.
+    """
+    path, _, rest = target.partition(" ")
+    #  A DITTO (':/:', the line above's path again) names no path.
+    if path.startswith(":"): return target
+    path = os.path.relpath(os.path.join(boundary, path))
+    return path + (" " + rest if rest else "")
 
 
 def printed(answer, labels_f, expand_f, write):

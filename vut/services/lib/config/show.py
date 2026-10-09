@@ -183,7 +183,8 @@ def main(argv=None, write=None):
 
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.config.show", HELP, usage=USAGE))
         return E_ExitCode.OK
     if "--root-conf-template" in argv:
         from vut.services._boundary import ROOT_CONF_TEXT

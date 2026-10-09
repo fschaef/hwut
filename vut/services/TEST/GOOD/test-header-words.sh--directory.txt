@@ -1,0 +1,32 @@
+== hwut.plan
+WISH: (all)
+TEST PLAN: 4 node(s), 3 link(s), 1 exclusion set(s)
+NODES
+    test-a.sh      TEST
+    test-b.sh one  TEST
+    test-b.sh two  TEST
+    test-c.sh      TEST
+LINKS
+    test-c.sh -> test-a.sh
+    test-a.sh -> test-b.sh one
+    test-b.sh two -> test-b.sh one
+EXCLUSIONS
+    { test-a.sh, test-b.sh two }
+== hwut.plan test-b.sh one: what it requires enters, marked
+NODES
+    test-b.sh one  TEST
+    test-a.sh      TEST     <= required by test-b.sh one
+    test-b.sh two  TEST     <= required by test-b.sh one
+    test-c.sh      TEST     <= required by test-a.sh
+LINKS
+== hwut.run, 'test-a.sh' made to fail: order, not success
+RESULTS: 3 ok, 1 fail
+first:  ENTRY
+last:   EXIT
+c before a
+a before b one
+b two before b one
+== on_entry fails: nothing is dispatched
+FRAME .:on_entry ................................................ frame [FAIL]
+EXIT
+<hwut-end>

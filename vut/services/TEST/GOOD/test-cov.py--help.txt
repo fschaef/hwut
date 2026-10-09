@@ -1,8 +1,13 @@
 $ hwut.cov.conv.to_humans --help
+    NAME
+        hwut.cov.conv.to_humans -- a coverage file in its TEXT spelling, on stdout
+        (coverage RATIONALE D-20, D-43).
 
-    PURPOSE: 'hwut.cov.conv.to_humans' -- a coverage file in its TEXT
-             spelling, on stdout (coverage RATIONALE D-20, D-43).
+    USAGE
+        hwut.cov.conv.to_humans [--from binary|text]
+                                [--to binary|text] FILE | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_humans [--from <form>] [--to <form>] FILE
                                     the record in another spelling. Forms:
                                     'binary' (what the store and the output
@@ -20,14 +25,17 @@ $ hwut.cov.conv.to_humans --help
 
     A record that cannot be read is refused by name and nothing is
     written; the exit status says so (E-1).
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_lcov --help
+    NAME
+        hwut.cov.conv.to_lcov -- the output directory of a coverage run as ONE
+        lcov tracefile (coverage RATIONALE D-6, D-43, D-44), for 'genhtml' and
+        every other tool that reads lcov.
 
-    PURPOSE: 'hwut.cov.conv.to_lcov' -- the output directory of a coverage
-             run as ONE lcov tracefile (coverage RATIONALE D-6, D-43, D-44),
-             for 'genhtml' and every other tool that reads lcov.
+    USAGE
+        hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_lcov [DIRECTORY] [-o FILE]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -62,15 +70,18 @@ $ hwut.cov.conv.to_lcov --help
 
     The exit status (E-1): OK with the tracefile written, FAULT where the
     directory cannot be read, REFUSED where the command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_html --help
+    NAME
+        hwut.cov.conv.to_html -- the output directory of a coverage run as HTML
+        pages for people (coverage RATIONALE D-44): what was covered, what was
+        not, and WHO ran what -- the one thing every other coverage format cannot
+        say.
 
-    PURPOSE: 'hwut.cov.conv.to_html' -- the output directory of a coverage
-             run as HTML pages for people (coverage RATIONALE D-44): what
-             was covered, what was not, and WHO ran what -- the one thing
-             every other coverage format cannot say.
+    USAGE
+        hwut.cov.conv.to_html [DIRECTORY] [-o OUTDIR] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_html [DIRECTORY] [-o OUTDIR]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -112,15 +123,17 @@ $ hwut.cov.conv.to_html --help
     The exit status (E-1): OK with the pages written, FAULT where the
     directory cannot be read or OUTDIR not written, REFUSED where the
     command line cannot be read.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_cobertura --help
+    NAME
+        hwut.cov.conv.to_cobertura -- the output directory of a coverage run as
+        ONE Cobertura XML report (coverage RATIONALE D-44), the format the CI
+        dashboards read (Jenkins, GitLab, Azure, Codecov).
 
-    PURPOSE: 'hwut.cov.conv.to_cobertura' -- the output directory of a
-             coverage run as ONE Cobertura XML report (coverage RATIONALE
-             D-44), the format the CI dashboards read (Jenkins, GitLab,
-             Azure, Codecov).
+    USAGE
+        hwut.cov.conv.to_cobertura [DIRECTORY] [-o FILE] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_cobertura [DIRECTORY] [-o FILE]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -155,14 +168,17 @@ $ hwut.cov.conv.to_cobertura --help
 
     The exit status (E-1): OK with the report written, FAULT where the
     directory cannot be read, REFUSED where the command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_jacoco --help
+    NAME
+        hwut.cov.conv.to_jacoco -- the output directory of a coverage run as ONE
+        JaCoCo XML report (coverage RATIONALE D-44), for the tools that read
+        JaCoCo (SonarQube, Jenkins' JaCoCo plugin).
 
-    PURPOSE: 'hwut.cov.conv.to_jacoco' -- the output directory of a coverage
-             run as ONE JaCoCo XML report (coverage RATIONALE D-44), for the
-             tools that read JaCoCo (SonarQube, Jenkins' JaCoCo plugin).
+    USAGE
+        hwut.cov.conv.to_jacoco [DIRECTORY] [-o FILE] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_jacoco [DIRECTORY] [-o FILE]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -195,15 +211,18 @@ $ hwut.cov.conv.to_jacoco --help
 
     The exit status (E-1): OK with the report written, FAULT where the
     directory cannot be read, REFUSED where the command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_json --help
+    NAME
+        hwut.cov.conv.to_json -- the output directory of a coverage run as ONE
+        JSON document, LOSSLESS (coverage RATIONALE D-44): everything the
+        directory says, for a script that wants it without reading the binary
+        files.
 
-    PURPOSE: 'hwut.cov.conv.to_json' -- the output directory of a coverage
-             run as ONE JSON document, LOSSLESS (coverage RATIONALE D-44):
-             everything the directory says, for a script that wants it
-             without reading the binary files.
+    USAGE
+        hwut.cov.conv.to_json [DIRECTORY] [-o FILE] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_json [DIRECTORY] [-o FILE]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -234,16 +253,19 @@ $ hwut.cov.conv.to_json --help
 
     The exit status (E-1): OK with the document written, FAULT where the
     directory cannot be read, REFUSED where the command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_tex --help
+    NAME
+        hwut.cov.conv.to_tex -- the output directory of a coverage run as a LaTeX
+        document (coverage RATIONALE D-44): the index over the sources, then every
+        source listed with its lines coloured, its points and the test runs that
+        executed them -- for a report, an appendix, a print-out.
 
-    PURPOSE: 'hwut.cov.conv.to_tex' -- the output directory of a coverage
-             run as a LaTeX document (coverage RATIONALE D-44): the index
-             over the sources, then every source listed with its lines
-             coloured, its points and the test runs that executed them --
-             for a report, an appendix, a print-out.
+    USAGE
+        hwut.cov.conv.to_tex [DIRECTORY] [-o FILE] [--style FILE]
+                             [--body-only] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_tex [DIRECTORY] [-o FILE] [--style FILE]
                              [--body-only]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
@@ -280,13 +302,16 @@ $ hwut.cov.conv.to_tex --help
     The exit status (E-1): OK with the document written, FAULT where the
     directory cannot be read or the files not written, REFUSED where the
     command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.conv.to_pdf --help
+    NAME
+        hwut.cov.conv.to_pdf -- the document of 'hwut.cov.conv.to_tex' compiled to
+        PDF (coverage RATIONALE D-44).
 
-    PURPOSE: 'hwut.cov.conv.to_pdf' -- the document of 'hwut.cov.conv.to_tex'
-             compiled to PDF (coverage RATIONALE D-44).
+    USAGE
+        hwut.cov.conv.to_pdf [DIRECTORY] [-o FILE] [--style FILE] | --help
 
+    DESCRIPTION
         hwut.cov.conv.to_pdf [DIRECTORY] [-o FILE] [--style FILE]
                                     DIRECTORY is the '-o' of 'hwut.cov.run'
                                     ('./hwut.coverage' where none is
@@ -306,14 +331,16 @@ $ hwut.cov.conv.to_pdf --help
     The exit status (E-1): OK with the PDF written, FAULT where the
     directory cannot be read, no engine stands, or the engine failed (its
     last lines are shown), REFUSED where the command line cannot be.
-    ____________________________________________________________________
     [status 0]
 $ hwut.cov.formats --help
+    NAME
+        hwut.cov.formats -- the table of coverage tools, formats and aliases this
+        build READS, generated from the registry (coverage RATIONALE D-13, D-26).
 
-    PURPOSE: 'hwut.cov.formats' -- the table of coverage tools, formats and
-             aliases this build READS, generated from the registry
-             (coverage RATIONALE D-13, D-26).
+    USAGE
+        hwut.cov.formats | --help
 
+    DESCRIPTION
         hwut.cov.formats            the table. Which tool serves a language
                                     is not the registry's to say: it stands
                                     in 'language-setup' of 'hwut-root.conf'
@@ -321,7 +348,6 @@ $ hwut.cov.formats --help
 
     The registry is the ONE author of the table; a machine that lacks a
     tool is refused BY NAME against this list.
-    ____________________________________________________________________
     [status 0]
 SUCCESS: help on request.
 <hwut-end>

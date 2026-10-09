@@ -1,4 +1,4 @@
-# vut-register 5 generation:30 apps:3 marks:0=7,1=9,2=11
+# vut-register 5 generation:40 apps:4 marks:0=7,1=9,2=11,3=9
 test;choice;verdict;report;stain;test_id;choice_id
 test-deterministic-random.py;gauss;true;ok;;0;0
 ;primitives;true;ok;;0;1
@@ -27,3 +27,12 @@ test-hwut_hocon.py;comments;true;ok;;2;0
 ;scalars;true;ok;;2;7
 ;structure;true;ok;;2;8
 ;unclosed;true;ok;;2;10
+test-hwut_vterm.py;attributes;true;ok;;3;0
+;colours;true;ok;;3;1
+;events;true;ok;;3;5
+;keys;true;ok;;3;6
+;missing;true;ok;;3;2
+;regions;true;ok;;3;7
+;screen;true;ok;;3;3
+;text;true;ok;;3;4
+;unnoticed;true;ok;;3;8

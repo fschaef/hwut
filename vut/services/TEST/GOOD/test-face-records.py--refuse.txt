@@ -4,6 +4,7 @@
 
 --- no root conf above ---
     Refused  REFUSED  REFUSED: no 'hwut-root.conf' stands above '/tmp' -- a tree states its own boundary, and the global configuration that applies to it, in that file
+HINT: use 'hwut.sanitize root [dir]' to place one.
 
 --- 'answered' is the one place an outcome becomes a page ---
     exit REFUSED

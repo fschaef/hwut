@@ -1,0 +1,15 @@
+== the budget, as the configuration shows it
+ search_budget = 3 # hwut-root.conf:3
+== hwut.run.diff test-d.sh --console
+S    1      | [line 1 of the new text]
+N         1 | [line 1 of the old text]
+S    2      | [line 2 of the new text]
+N         2 | [line 2 of the old text]
+S    3      | [line 3 of the new text]
+     4    3 | <hwut-end>
+== hwut.run.diff test-d.sh -y --width 70
+   1 [line 1 of the new text]      |    1 [line 1 of the old text]
+   2 [line 2 of the new text]      |    2 [line 2 of the old text]
+   3 [line 3 of the new text]      >
+   4 <hwut-end>                         3 <hwut-end>
+<hwut-end>

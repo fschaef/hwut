@@ -93,7 +93,8 @@ def main(argv=None, write=None, write_bytes=None):
     if argv is None:        argv = sys.argv[1:]
 
     if "--help" in argv or "-h" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page(NAME, HELP, usage=USAGE))
         return E_ExitCode.OK
 
     source_form = target_form = None

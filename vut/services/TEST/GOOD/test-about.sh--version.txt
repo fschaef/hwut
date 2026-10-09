@@ -1,0 +1,4 @@
+STATUS: 0
+lines: 1
+the line is the string of adm/version.py
+<hwut-end>

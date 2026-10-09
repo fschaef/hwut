@@ -1,0 +1,20 @@
+happy = "a|b"                                        => test-w.sh:4:7: VOCABULARY: unknown key 'happy'
+eq-pattern = ["a|b"]                                 => test-w.sh:4:7: VOCABULARY: unknown key 'eq-pattern'
+analogy = ["<<", ">>"]                               => test-w.sh:4:7: VOCABULARY: unknown key 'analogy'
+whitespace_eqv = false                               => test-w.sh:4:7: VOCABULARY: unknown key 'whitespace_eqv'
+tolerance { eq_pattern = ["a|b"] }                   => eq_pattern = ["a|b"] # app
+tolerance { analogy = ["<<", ">>"] }                 => analogy = ["<<", ">>"] # app
+tolerance { analogy = [] }                           => analogy = [] # app
+tolerance { analogy = false }                        => analogy = [] # app
+tolerance { analogy = no }                           => analogy = [] # app
+tolerance { analogy = null }                         => analogy = [] # app
+tolerance { analogy =  }                             => analogy = [] # app
+tolerance { analogy = true }                         => test-w.sh:4:29: TYPE: 'analogy = true' says nothing: leave 'analogy' u
+tolerance { analogy = ["(("] }                       => test-w.sh:4:29: TYPE: 'analogy' names two markers, the opening and the
+tolerance { constraints = ["x < y + 2"] }            => constraints = ["x < y + 2"] # app
+tolerance { constraints = false }                    => constraints = [] # app
+tolerance { comment = ["%%", "%%"] }                 => comment = ["%%", "%%"] # app
+tolerance { comment = [] }                           => comment = [] # app
+tolerance { whitespace = false }                     => whitespace = false # app
+tolerance { strip = false }                          => test-w.sh:4:19: VOCABULARY: unknown tolerance 'strip'; known: numeric_
+<hwut-end>

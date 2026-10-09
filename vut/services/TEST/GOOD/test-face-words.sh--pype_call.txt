@@ -1,0 +1,9 @@
+she-bang: #! /usr/bin/env no-such-interpreter
+execute bit: none
+== hwut.run.play test-p.sh --pyped
+    l1 x
+    l3 x
+     1 | l1 x
+     2 | l3 x
+STATUS: 0
+<hwut-end>

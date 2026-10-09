@@ -531,6 +531,9 @@ GRAVEYARD A second matcher for wishlist lines alone -- rejected: two
 
               a path is legal where a target SELECTS ACROSS A TREE,
               illegal where a target NAMES A NEIGHBOUR.
+AMENDED   2026-10-08 (audit D-9): the printing face is
+          'hwut.report.list' (E-137); probed through it, the round
+          trip closes.
 
 ----------------------------------------------------------------------------
 E-14  'hwut.tell' TELLS ABOUT ONE TEST; 'hwut.report' REPORTS ON A RUN
@@ -694,6 +697,18 @@ GRAVEYARD '--format' on 'hwut.run' -- rejected with E-14: the run's
           run was fine.
           Failures shown only in place -- rejected by ruling: a list
           at the end is what a reader scrolls to.
+AMENDED   2026-10-08 (audit D-9, TODO G-11): MEASURED OTHERWISE, AND
+          BUILT. A stained choice whose LAST repeat happened to pass
+          stood in the book as 'true', and 'hwut.report' read the
+          book's verdict alone: '[OK]', JUnit 'failures="0"', TAP
+          'ok', JSON '"verdict": true', exit 0 -- on a tree where
+          'hwut.run' said 'UNSTABLE -- not run [FAIL]'. The standing
+          page repeated four times over a fixture whose fourth run
+          fails, so the book's verdict was false by accident. Now
+          'CRow.good_f' is False under a repetition stain whatever
+          the book says, and JSON's 'verdict' is false with it (E-11:
+          the run's verdict for a stained choice is False).
+PINNED    'services/TEST/test-report.sh stain_last_ok'.
 
 ----------------------------------------------------------------------------
 E-18  'hwut.sanitize' -- PROPOSES; NEVER GUESSES AT BLESSED WORK
@@ -827,6 +842,19 @@ GRAVEYARD SELF-LABELLING IN THE TEST HEADER -- rejected: no set from
           '--group' -- rejected: the file is 'hwut-root.labels';
           two words for one thing is what terminological invariance
           forbids.
+AMENDED   2026-10-08 (audit D-9, TODO G-13): MEASURED OTHERWISE AT THREE
+          FACES, AND BUILT. 'one parser for every face' held at the
+          parser. A label nobody declared was a TRACEBACK at
+          'hwut.plan' (the selection raised before the handler that
+          catches it), 'EMPTY' at 'hwut.run.stability' (the forwarded
+          run's refusal was swallowed with its output) and NOTHING at
+          'hwut.sanitize.propose', which read the error as 'not
+          wanted' and proposed. All three now refuse by name, exit 2.
+          'hwut.sanitize.propose' hands no label view down, so its
+          word is the query's own: "'--label <x>' asks
+          'hwut-root.labels', and no label view reaches this
+          selection" -- the refusal this entry rules for such a face.
+PINNED    'services/TEST/test-face-words.sh label_unknown'.
 
 E-20  THE LABELS GO LIVE -- THE VIEW IN EVERY WISH; NAMES FOLLOWED
 
@@ -921,6 +949,19 @@ GRAVEYARD '--force-also-meta' -- rejected: '--label meta', '--label
           '--glob "*"' would then run what a bare wish does not.
           THE SUGAR INSIDE 'parse_wish' -- rejected: it would swallow
           the words of every face that has its own.
+AMENDED   2026-10-08 (audit D-9, TODO G-14): 'IN EVERY FACE' WAS THREE
+          FACES SHORT, AND IS BUILT. 'hwut.report', 'hwut.plan' and
+          'hwut.run.stability' met a glob the silence swallowed whole
+          and said nothing. 'hwut.plan' writes what its selection
+          already carried. 'hwut.run.stability' reads the 'warning'
+          event of the first repeat (the silent tier writes none; the
+          stream holds it, O-26). 'hwut.report' walks a STREAM, and the
+          finding is a fact about the whole selection: the stream
+          takes an accumulator ('selection.CGlobReach'), complete when
+          it is exhausted, and the page says it BEFORE 'EMPTY' and
+          AFTER a page's tail -- under the wallflowers' rule, never
+          inside a machine format on stdout.
+PINNED    'services/TEST/test-face-words.sh glob_silenced'.
 
 
 E-22  'hwut.run.play' -- THE COMMAND LINE'S WAY TO STAND INSIDE A TEST
@@ -1074,12 +1115,67 @@ COST      A new root conf is ~200 lines instead of two. The two-line
           form is still valid HOCON and still a boundary. A launcher
           named here that is not installed refuses by name when a test
           of that language runs; nothing is guessed.
+AMENDED   2026-10-08 (audit D-9, TODO G-12). MEASURED: the template
+          printed; NO FACE WROTE IT -- '_boundary.placed', a lettered
+          question, had no caller, and every face said one line and
+          named no way out.
+          RULED (Frank-Rene, 2026-10-08): "we have a furnished
+          something somewhere, that generates hwut-root.conf; may be
+          migrate this functionality to hwut.sanitize; then hint
+          towards that whenever it pops up as missing; hints like the
+          other hints, e.g. hints towards hwut.help". AND: "Hint:
+          hwut.sanitize root [dir]; if dir is not specified, the
+          command becomes interactive [...] git/svn/clearcase, ...
+          repo root, the current directory, and 'q' for quit."
+          BUILT. PLACING A BOUNDARY IS THE SANITIZE COMMAND 'root'.
+          'hwut.sanitize root <dir>' writes the template into <dir>;
+          where a boundary stands in or above, it has nothing to do.
+          'hwut.sanitize root' ALONE ASKS, in the checklist's idiom:
+              [1]  ../..  the git repository's root
+              [2]  .      the current directory
+              [q]  quit -- nothing is written
+          THE CANDIDATES ARE THOSE AND NO OTHERS: every repository
+          root at or above and the current directory. Any other place
+          is named in words.
+          OPEN-SOURCE TOOLS ONLY (ruled the same day: "Forget
+          clearcase, include only opensource tools"): git, mercurial,
+          svn, jujutsu, bazaar, darcs, pijul, fossil -- each known by
+          the marker it leaves at its root; nothing is run to find one.
+          Where nobody can answer -- a pipe, a script -- it refuses
+          and says to name the directory; a question nobody hears is
+          a hang.
+          'hwut.sanitize.propose' in a tree without a boundary
+          proposes the same candidates as commands, the first
+          uncommented, and nothing else -- nothing else can be judged
+          there.
+          THE HINT RIDES ON THE REFUSAL: 'RootConfMissing' carries
+          "HINT: use 'hwut.sanitize root [dir]' to place one." as a
+          second line, so every face that writes the one writes the
+          other. The exit status stays 2.
+          THE CANDIDATES END WHERE THE CLIMB ENDS (exploration R-76):
+          nothing at or above a test directory's 'TMP/' is looked at.
+          The lettered offer and its caller are deleted.
+COST      The verb list of two sanitize pages moved by ', root'; two
+          pages holding the refusal moved by the hint line. The menu
+          is pinned with the terminal stood in for (the answers handed
+          to the face's 'main'); on a pty it was driven by hand.
+PINNED    'services/TEST/test-face-words.sh boundary'.
+
+AMENDED   2026-10-09 (ruled): "if hwut-root.conf is the problem,
+          hwut.sanitize.propose should only propose root as a command."
+          HOLDS as built on 2026-10-08: without a boundary the proposal
+          is the one 'root' block and nothing else
+          ('test-face-words.sh propose').
 
 E-26  '--language' STANDS IN THE WISH, FOR EVERY FACE            (2026-08-30)
 ______________________________________________________________________________
 DECISION  Exploration R-75, adopted: parsed by 'parse_wish', printed
           by 'Wish.__str__', settled by 'CTestTaskListQuery' at the one
           door every face guards. No face parses it itself.
+AMENDED   2026-10-08 (audit D-9, TODO G-13): the same three faces that
+          lost an unknown label lost an undeclared language; built
+          with E-19's amendment.
+PINNED    'services/TEST/test-face-words.sh language_unknown'.
 
 
 E-27  THE PROCSITTER NAMES WHAT A CALL MADE AND LEFT            (2026-08-30)
@@ -1241,6 +1337,33 @@ OPEN      'hwut.accept', 'hwut.run' and 'hwut.plan' hold a hand-written
           printed only on a refusal. Their help therefore ends without
           a usage line while the others end with one. One shape or the
           other; not decided here.
+AMENDED   2026-10-08 (audit D-9, TODO G-15): THE FIVE LABEL FACES SAID
+          'hwut.labels.<x> ...' AND NO 'usage:' -- the defect this
+          entry names, on the five faces E-19 added. Built: their
+          'usage_line' prefix reads 'usage: hwut.labels.<x>'. Five
+          nominals moved ('test-{add,create,query,remove}.sh doors',
+          'test-list.sh refused'); token-equal under that one cause.
+          THE 'OPEN' ABOVE HAS GROWN AND STANDS: of 46 launchers, 14
+          end '--help' with a usage line and 27 with none ('hwut.run',
+          'hwut.accept', 'hwut.plan', the 'hwut.cov.*' family, the
+          '.apply' and '.propose' faces, ...). Not decided here.
+
+AMENDED   2026-10-09 (ruled, r-11b): "help should be in the style of man
+          pages, usage in capitals very much up wards. At the end a usage
+          example may make sense, if it does not don't." THE OPEN ABOVE
+          IS CLOSED: every '--help' is framed by '_core.man_page' -- NAME
+          (the face, its first paragraph), USAGE (the face's own usage
+          block, moved up from the foot; its synopsis lines where it
+          stated none), DESCRIPTION (the face's text, untouched), EXAMPLE
+          (the face's entry in '_core.EXAMPLE_DB'; 18 faces have one, 31
+          have none). The three argparse faces answer '--help' through
+          the same frame with their stated USAGE, not argparse's. A
+          synopsis a face repeated below its first paragraph is dropped
+          where the USAGE says it. NO TEXT WAS REWRITTEN: this is a
+          frame, and a face's prose is still its own. A REFUSAL STILL
+          ENDS IN 'usage: ...', lower case, one line: that is a hint,
+          not a page.
+          PINNED    'services/TEST/test-help-pages.sh' shape, examples.
 
 
 E-33  THE FLOW SAYS ONLY WHAT CHANGED                          (2026-08-30)
@@ -1264,6 +1387,9 @@ DECISION  ONE DIRECTORY, NO DIRECTORY COLUMN. Where 'tree-begun' names
           run.
 COST      Thirteen GOODs re-recorded, all of them the columns
           themselves.
+
+AMENDED   2026-10-09 (ruled, r-11a; TODO G-16): "forget, that was a stale
+          requirement. Do nothing." The tree's word stands: the repeated badge is five blanks, not '---->'.
 
 
 E-34  THE LOCAL OBSERVATION DATABASE IS BUILT                 (2026-08-30)
@@ -3410,6 +3536,9 @@ DECISION  A grey-green background with light text, italic kept.
 
 COST      None recorded: no page records the keyed screen's colours.
 
+AMENDED   2026-10-09 (ruled, r-11a; TODO G-16): "forget, that was a stale
+          requirement. Do nothing." The tree's word stands: the spent band is light grey on '#303030', italic, not grey-green.
+
 
 E-77  '<hwut-end>' IS TAKEABLE, AND IT ENDS THE NOMINAL           (2026-09-15)
 ----------------------------------------------------------------------------
@@ -3855,6 +3984,37 @@ COST      'test-keyed.py': 'undo' gained the redo/fork/reset laws (L-9),
           take-all, undo, q writes the nominal unchanged; Ctrl-C writes
           nothing. Twenty thousand fuzz runs with REDO and RESET among
           the acts clean.
+
+AMENDED   2026-10-09 (ruled, r-11c; TODO G-17): "q shall ask: do you want
+          to leave without saving; then leave accordingly; s shall save
+          and ask do you want to save. The capitalized version of s and q
+          don't ask. Upon leaving a check must be performed between the
+          current out and the nominal before making an entry in the
+          books." 'q' IS NO LONGER DONE. 's' asks "SAVE GOOD AS IT STANDS
+          AND LEAVE?", 'q' asks "LEAVE WITHOUT SAVING?"; 'y' lets the
+          asked act run and every other key drops the question; 'S' and
+          'Q' (and Ctrl-C) do the same unasked. A VIEW ('hwut.run.diff')
+          has nothing to save: its 'q' leaves unasked. THE BOOK ENTRY
+          FOLLOWS A CHECK: 'run_sessions' holds OUT against the nominal
+          it wrote, under the test's own tolerance, and hands the result
+          to 'note_accept' -- equivalent: PASS 'ok'; not: FAIL
+          'not-equivalent-with-nominal'; an '##! unaccepted' region left:
+          ASPIRANT 'unaccepted' (B-16, which this door did not book
+          either). MEASURED before: 'q' with nothing taken booked
+          'true; ok' over a GOOD that differed, and 'hwut.report' said
+          [OK] until the next run. READ, NOT RULED: 's' answered yes
+          LEAVES the session (the ruling says save; a save that stays is
+          a second key nobody asked for). The line-based fallback keeps
+          '[c]ommit' / '[q]uit': each answer there is typed and entered.
+          PINNED    'services/TEST/test-accept-door.py' ask_no, ask_quit,
+          ask_save, short; 'keyed/TEST/test-editing.py' leave.
+
+AMENDED   2026-10-09 (ruled, f-8): "the output of hwut.accept should
+          report a failure as [FAIL]." A GOOD saved short of its output
+          was booked FAIL and REPORTED 'blessed', exit OK. Both doors now
+          say 'saved [FAIL]' for it -- "GOOD is saved; OUT still differs
+          from it" -- count it out of ACCEPTED, and leave with FAULT.
+          PINNED    'services/TEST/test-accept-door.py short'.
 
 
 E-90  THE SCREEN'S FINAL SHAPE; THE SECOND ROUND                   (2026-09-17)
@@ -4363,6 +4523,15 @@ COST      No page moved: every choice of the five label suites.
           which stands in neither the dump nor bundle 43 -- a fragment
           of an edit that never completed. The file was restored from
           the proved state before the pages were measured.
+
+AMENDED   2026-10-09 (ruled, f-7): "hwut.labels.query should print
+          relative to the current directory." It printed the label
+          file's own form, './<path from the boundary>', and '--wishlist'
+          reads './' as the list file's directory: the pipe the help
+          names selected NOTHING from a test directory. The lines are
+          now written from where the caller stands ('test-a.sh one',
+          '../other/TEST/test-b.sh'); the file's form is untouched.
+          PINNED    'services/TEST/test-face-words.sh query_here'.
 
 
 E-107  'hwut.remove': THE PROPOSAL AND THE FORGETTING AS RECORDS   (2026-09-19)
@@ -5473,3 +5642,40 @@ DECISION  RULED (Frank-Rene): the face that prints, one per line, every
           its name -- it reads a list, and this face writes one.
 COST      The old name is gone, not aliased, as 'hwut.compare' went
           (E-50); a script that calls it is refused by the shell.
+
+E-138  'hwut.about' SAYS THE VERSION, AND WHERE THIS INSTALLATION STANDS  (2026-10-08)
+
+PROBLEM   No face said which hwut this is. The version stood in
+          'adm/version.py' and was read by one protocol header; a
+          person could not ask for it, and a bug report could not
+          state it.
+DECISION  RULED (Frank-Rene, 2026-10-08): "hwut.about informs about
+          the version may be other information too."
+          'hwut.about' ('services/about.py', 'bin/hwut.about') prints
+          the version, the licence, the author and the home; then,
+          under 'THIS INSTALLATION', where the package stands, the
+          Python that runs it, its interpreter and the platform --
+          what a bug report needs and nobody remembers to give.
+          'hwut.about --version' is the version ALONE, one bare line:
+          the form a script reads.
+          THE VERSION STANDS IN ONE PLACE, 'adm/version.py'; the face
+          reads it and states none.
+          IT NEEDS NO TREE: no 'hwut-root.conf' is looked for.
+          A MACHINE'S WORD STANDS LAST ON A LINE OF ITS OWN.
+COST      A 47th launcher. The "other information" is the builder's
+          reading of "may be": struck or grown by a word.
+GRAVEYARD '--version' on every face -- not built: forty-six places for
+          one fact, and 'hwut --version' would read as a wish.
+          The git hash of the checkout -- not built: an installation
+          need not be a checkout, and asking git is a second process
+          for a line most readers do not want.
+PINNED    'services/TEST/test-about.sh page, version, refused';
+          'bin/TEST/test-launchers.sh answer'.
+
+AMENDED   2026-10-09 (ruled): "hwut.about may be write a checksum of the
+          source code files as a reference." THIS INSTALLATION gained
+          'sources  <n> files, sha256 <16 hex>': every '*.py' of the
+          package and every launcher in 'bin/', test directories left
+          out, path and bytes, sorted. Two installations printing the
+          same line run the same source. The page masks it like every
+          machine word.

@@ -69,8 +69,15 @@ KEYMAP = (
     (("f6", "c-e"),     E_Act.EDIT,         BOTH, "edit the GOOD in $EDITOR"),
     (("f5",),           E_Act.TOLERANCE,    BOTH, "the tolerance in memory, editable; <F5> tries it"),
     (("f1",),           E_Act.HELP,         BOTH, "this table"),
-    (("q",),            E_Act.DONE,         BOTH, "done: GOOD as it stands is written"),
-    (("c-c",),          E_Act.CANCEL,       BOTH, "cancel: nothing is written"),
+    #  LEAVING (E-89, AMENDED r-11c): the lower-case key asks, the
+    #  capital does not. 's' and 'S' write GOOD as it stands; 'q' and 'Q'
+    #  write nothing.
+    (("s",),            E_Act.ASK_SAVE,     BOTH, "save GOOD as it stands and leave; asks first"),
+    (("S",),            E_Act.DONE,         BOTH, "save and leave, unasked"),
+    (("q",),            E_Act.ASK_QUIT,     BOTH, "leave without saving; asks first"),
+    (("Q", "c-c"),      E_Act.CANCEL,       BOTH, "leave without saving, unasked"),
+    (("y",),            E_Act.YES,          BOTH, "yes, to the question at the foot"),
+    (("n",),            E_Act.NO,           BOTH, "no; any other key means the same"),
 )
 
 #  THE EDITING TABLE (intend 21): while GOOD or the tolerance is edited
@@ -90,10 +97,10 @@ EDIT_KEYMAP = (
 VIEW_ACT_SET = {E_Act.SWAP_PANE, E_Act.MOVE_DOWN, E_Act.MOVE_UP,
                 E_Act.PAGE_DOWN, E_Act.PAGE_UP, E_Act.SCROLL_LEFT,
                 E_Act.SCROLL_RIGHT, E_Act.SEARCH_DOWN, E_Act.SEARCH_UP,
-                E_Act.HELP, E_Act.CANCEL, E_Act.DONE, E_Act.REPORT,
+                E_Act.HELP, E_Act.CANCEL, E_Act.ASK_QUIT, E_Act.REPORT,
                 E_Act.ELEMENT_NEXT, E_Act.ELEMENT_PREV}
 VIEW_KEYMAP = tuple((key_tuple, act, scope,
-                     "quit" if act in (E_Act.CANCEL, E_Act.DONE) else text)
+                     "quit" if act in (E_Act.CANCEL, E_Act.ASK_QUIT) else text)
                     for key_tuple, act, scope, text in KEYMAP
                     if act in VIEW_ACT_SET)
 
@@ -162,10 +169,11 @@ BASIC_TUPLE = ((E_Act.ANCHOR,     "range"),
                (E_Act.UNDO,       "undo"),
                (E_Act.REDO,       "redo"),
                (E_Act.SWAP_PANE,  "pane"),
-               (E_Act.DONE,       "done"))
+               (E_Act.ASK_SAVE,   "save"),
+               (E_Act.ASK_QUIT,   "quit"))
 VIEW_BASIC_TUPLE = ((E_Act.SWAP_PANE,   "pane"),
                     (E_Act.SEARCH_DOWN, "search"),
-                    (E_Act.DONE,        "quit"))
+                    (E_Act.ASK_QUIT,    "quit"))
 
 
 def basic_text(basic_tuple=BASIC_TUPLE, keymap=KEYMAP):

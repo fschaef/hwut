@@ -75,7 +75,8 @@ def main(argv=None, write=None, run=None, tty_f=None):
     if write is None: write = print
     if argv is None:  argv = sys.argv[1:]
     if argv and argv[0] in ("--help", "-h"):
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page(NAME, HELP, usage=USAGE))
         return E_ExitCode.OK
     directory, command = None, []
     i = 0

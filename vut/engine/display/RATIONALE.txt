@@ -31,6 +31,10 @@ COST      One line per event means a long run produces a long log; the
 
 GRAVEYARD Per-directory dotted progress block (HWUT 1.0) -- retired in
           favour of the linear flow + closing roll-call.
+SUPERSEDED 2026-10-08 (audit D-9): by D-9 -- the badges lost their
+          brackets, the time and the count are columns asked for, the
+          width is the terminal's (D-20), and the reason word stands
+          before the badge (D-31).
 
 ----------------------------------------------------------------------------
 D-2  THE COLOUR DECISION
@@ -262,6 +266,10 @@ VERIFIED  337 declared choices green across ten suite families.
 GRAVEYARD A FIXED 2-SECOND DELAY, unstatable -- rejected: whether a
           line EXISTS would depend on the speed of the machine, which
           is the one thing a GOOD file may never hold.
+AMENDED   2026-10-08 (audit D-9): '--start-delay' and the held START
+          are OVERTAKEN by D-15 -- "nothing is held any more"
+          ('plain.py on_tick'); 'hwut.run' takes no such option. The
+          rest holds: the columns asked for, the elision, the width.
 
 
 D-10  THE RUN'S GOOD IS A DIGEST, AND THE DIGEST IS PART OF THE ORACLE

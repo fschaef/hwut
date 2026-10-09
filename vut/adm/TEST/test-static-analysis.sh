@@ -3,7 +3,8 @@
 #
 # @hwut {
 #     title      = "Static analysis: what this tree tolerates"
-#     tolerance { eq_pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+"] }
+#     tolerance { eq_pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+",
+#                               "total tolerated: [0-9]+"] }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -21,15 +22,24 @@
 # about the code base's SHAPE rather than its BEHAVIOUR -- every other
 # suite runs the product and reads what came out.
 #
-# IT IS A RATCHET. 'ruff' is run over the tree with the tree's own
-# configuration ('adm/ruff.toml'), and every kind of finding that
-# still stands is printed, SORTED -- what this tree TOLERATES today.
+# IT IS A STATUS REPORT WITH ONE TESTED BLOCK (ruled 2026-10-09: "it is
+# not a test at all. it is a status report ... MUST STAND AT ZERO is
+# probably the 'real issue block', which is left as is and must be
+# empty").
 #
-# IT IS NOT A TEST THAT THE TREE IS CLEAN. It is a test that the tree
-# is NO LESS CLEAN THAN IT WAS. A finding of a new kind, or one more
-# instance of a kind already tolerated, moves the GOOD and the suite
-# says so. A finding REMOVED moves it too, and that re-blessing is the
-# record of an improvement.
+#     ##-lines            WHAT THE TREE TOLERATES TODAY: the rules ignored
+#                         by name, and every kind of finding that still
+#                         stands, sorted. They are COMMENTS to compare --
+#                         printed for the reader, moving no verdict. A
+#                         finding more or fewer is read here, not failed.
+#     total tolerated: N  a HAPPY PATTERN: any count is equivalent.
+#     MUST STAND AT ZERO  THE TEST. Compared as it stands, and it must
+#                         stay empty.
+#
+# IT WAS A RATCHET until that ruling: every tolerated finding was
+# compared, so one more instance of a style rule anywhere turned the
+# page red -- and a page that is red for a reason nobody acts on hides
+# the next reason behind it (MEASURED: it did, for four bundles).
 #
 # WHAT IS NOT LISTED HERE IS IN 'adm/ruff.toml', ignored BY NAME with
 # its reason: house style ('%' formatting, hand-aligned imports,
@@ -60,6 +70,7 @@ case "$1" in
     --hwut-info)
         echo "Static analysis: what this tree tolerates;"
         echo "HAPPY: ruff [0-9]+\\.[0-9]+\\.[0-9]+;"
+        echo "HAPPY: total tolerated: [0-9]+;"
         exit 0 ;;
 esac
 
@@ -76,7 +87,7 @@ cd "$ROOT"
 echo "==[ STATIC ANALYSIS ]========================================"
 echo "ground:  $(ruff --version)"
 echo "config:  adm/ruff.toml"
-echo "ignored: $(python3 - <<'PYEOF'
+echo "## ignored: $(python3 - <<'PYEOF'
 import re, io
 text = io.open("adm/ruff.toml", encoding="utf-8").read()
 match = re.search(r"lint\.ignore\s*=\s*\[(.*?)\]", text, re.S)
@@ -89,13 +100,13 @@ echo
 #  SORTED BY RULE, never by count: a count that ties would order two
 #  lines by whichever the tool named first, and a GOOD file may hold
 #  no such coin-toss.
-echo "TOLERATED {"
+echo "## TOLERATED {"
 ruff check --config "$CONFIG" . --statistics 2>/dev/null \
     | grep -E '^ *[0-9]+\s+[A-Z]+[0-9]+' \
     | sed -E 's/^ *([0-9]+)[[:space:]]+([A-Z]+[0-9]+)[[:space:]]*(\[.\])?[[:space:]]*/\2|\1|/' \
     | sort \
-    | awk -F'|' '{ printf "    %-10s %5d  %s\n", $1, $2, $3 }'
-echo "}"
+    | awk -F'|' '{ printf "##     %-10s %5d  %s\n", $1, $2, $3 }'
+echo "## }"
 echo
 
 TOTAL=$(ruff check --config "$CONFIG" . --statistics 2>/dev/null \

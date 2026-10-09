@@ -120,7 +120,8 @@ def main(argv=None, write=None):
     if argv is None:  argv  = sys.argv[1:]
     if write is None: write = print
     if "--help" in argv:
-        write(__doc__.strip())
+        from vut.services._core import man_page
+        write(man_page("hwut.sanitize.apply", __doc__.strip()))
         return E_ExitCode.OK
 
     file_name, base = None, "."

@@ -634,6 +634,10 @@ def _main(argv):
                              "'hwut.cov.run' (default: the nearest "
                              "'hwut.coverage/' from the test directory "
                              "upward)")
+    if "--help" in argv or "-h" in argv:
+        from vut.services._core import man_page
+        print(man_page(parser.prog, parser.format_help(), usage=USAGE))
+        return E_ExitCode.OK
     arguments = parser.parse_args(rest_list)
 
     selected, code = select(wish, arguments.word,

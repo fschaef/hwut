@@ -89,7 +89,9 @@ The plan is printed, never read back: to replay is to re-determine,
 and determination is deterministic. Cases required by a selected case
 enter by implication, marked '<= required by <target>'. A case whose
 dependencies cannot be met carries '[MISDEP]': it is selected,
-reported as failure, and does not run.
+reported as failure, and does not run. A link that stands inside a
+dependency cycle is listed and carries '[CYCLE]': it orders nothing.
+On a terminal both tags stand on the failure's red.
 
 The configuration the framework READ is the service 'hwut.config.show'.
 
@@ -117,6 +119,7 @@ class Link:
     source: str
     arrow:  str
     target: str
+    cycle_f: bool = False       # stands inside a dependency cycle
 
 
 @dataclass(frozen=True)
@@ -137,6 +140,7 @@ class Result:
     report_tuple:   tuple = ()
     refused_tuple:  tuple = ()      # (name, reason)
     fault_tuple:    tuple = ()      # the faults, as text
+    warning_tuple:  tuple = ()      # E-21: a glob the silence swallowed
     node_tuple:     tuple = ()      # of Node
     link_tuple:     tuple = ()      # of Link
     exclusion_tuple:tuple = ()      # of tuple[str]
@@ -175,8 +179,13 @@ def do(request):
         label_view = view_at(directory)
     except LabelFileError as error:
         raise Fault("FAULT: %s" % error) from error
-    found  = selection.of_directory(directory, wish, label_view,
-                                    inherited=inherited)
+    #  A LABEL OR A LANGUAGE NOBODY DECLARED IS REFUSED BY NAME (E-19,
+    #  R-75) -- the selection raises it, before the determination does.
+    try:
+        found = selection.of_directory(directory, wish, label_view,
+                                       inherited=inherited)
+    except SelectionError as error:
+        raise Refused("REFUSED: %s" % error) from error
     result = found.result_db["."]
     try:
         plan, report_list, refused_list = determine(
@@ -192,6 +201,7 @@ def do(request):
         refused_tuple  = tuple((str(n), str(r)) for n, r in
                                tuple(result.refused_tuple) + tuple(refused_list)),
         fault_tuple    = fault_tuple,
+        warning_tuple  = tuple(found.warning_tuple),
         node_tuple     = tuple(Node(node.name(), node.kind.name,
                                     bool(node.misdep_f),
                                     node.implied_by
@@ -200,16 +210,26 @@ def do(request):
                                for node in plan.node_tuple),
         link_tuple     = tuple(Link(str(l.source),
                                     "->" if l.kind is E_LinkKind.ORDERING else "==>",
-                                    str(l.target)) for l in plan.link_tuple),
+                                    str(l.target)) for l in plan.link_tuple)
+                         + tuple(Link(str(link.source), "->",
+                                      str(link.target), cycle_f=True)
+                                 for link in getattr(plan, "cycle_link_tuple",
+                                                     ())),
         exclusion_tuple= tuple(tuple(e.member_tuple) for e in plan.exclusion_tuple),
         fault_f        = bool(result.fault_list))
 
 
-def printed(result, write):
+def printed(result, write, ink=None):
     """RETURN: E_ExitCode. The page 'hwut.plan' has always written, out
                of the record: the faults, the wish, the reports, the
-               refusals, then the plan."""
+               refusals, then the plan.
+
+    'ink' paints the two failure tags, '[MISDEP]' and '[CYCLE]', as the
+    run paints a failure's tag; None writes them plain.
+    """
+    tag = (lambda text: text) if ink is None else ink.tag_fail   # noqa: E731
     for text in result.fault_tuple:  write(text)
+    for text in result.warning_tuple: write(text)
     write("WISH: %s" % result.wish_text)
     for report in result.report_tuple: write("REPORT: %s" % report)
     for name, reason in result.refused_tuple:
@@ -223,7 +243,7 @@ def printed(result, write):
         width = max(len(node.name) for node in result.node_tuple)
         for node in result.node_tuple:
             text = "%-*s  %-7s" % (width, node.name, node.kind)
-            if node.misdep_f:             text += "  [MISDEP]"
+            if node.misdep_f:             text += "  " + tag("[MISDEP]")
             if node.implied_by is not None:
                 text += "  <= required by %s" % node.implied_by
             write("    %s" % text.rstrip())
@@ -231,7 +251,12 @@ def printed(result, write):
     if not result.link_tuple: write("    (none)")
     else:
         for link in result.link_tuple:
-            write("    %s %s %s" % (link.source, link.arrow, link.target))
+            #  A LINK INSIDE A CYCLE IS SHOWN AND MARKED (ruled
+            #  2026-10-09): it orders nothing, and the reader must see
+            #  why its ends are [MISDEP].
+            write("    %s %s %s%s" % (link.source, link.arrow, link.target,
+                                      "  " + tag("[CYCLE]") if link.cycle_f
+                                      else ""))
     write("EXCLUSIONS")
     if not result.exclusion_tuple: write("    (none)")
     else:
@@ -256,7 +281,8 @@ def main(argv=None, write=None):
 
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
-        write(HELP)
+        from vut.services._core import man_page
+        write(man_page("hwut.plan", HELP, usage=USAGE))
         return E_ExitCode.OK
 
     try:
@@ -279,8 +305,14 @@ def main(argv=None, write=None):
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
     directory, word_list = found
+    #  THE COLOUR IS DECIDED ONCE, AT THE DOOR, by the gates every face
+    #  asks ('word.colour_decision'): a terminal, and nothing against it.
+    import os
+    from vut.engine.display.word import CInk, colour_decision
+    ink = CInk(colour_decision(os.environ, write is print
+                                           and sys.stdout.isatty()))
     return answered(do, request_of(with_targets(wish, word_list), directory),
-                    write, printed)
+                    write, lambda result, out: printed(result, out, ink))
 
 
 if __name__ == "__main__":

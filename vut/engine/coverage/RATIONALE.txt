@@ -709,6 +709,11 @@ COST      Version 1 records do not read; none exist outside GOODs.
 GRAVEYARD Keeping names beside the ids 'for readability': two truths,
           and the rename problem back in full.
           A group id in the header: a record that cannot be read alone.
+AMENDED   2026-10-08 (audit D-9): the format is version 3 since D-42
+          and D-43 -- one record per SOURCE file in the output
+          directory, every range tagged with who reached it
+          ('CV@01:', 'CV@10:'); the '##run:' line is gone. MEASURED
+          through 'hwut.cov.conv.to_humans'.
 
 
 D-19  THE DEMAND SHAPES THE RUN: THE PROVISION CHAIN            (2026-08-25)
