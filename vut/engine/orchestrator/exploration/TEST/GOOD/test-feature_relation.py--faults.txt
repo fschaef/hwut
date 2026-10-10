@@ -1,0 +1,50 @@
+
+--- the outer node is another ---
+  hwut-features.conf:1:1: VOCABULARY: the outer node is 'features { }'; not 'hwut'
+
+--- nothing stands ---
+  hwut-features.conf: VOCABULARY: no 'features { }' stands
+
+--- a number standing twice ---
+  hwut-features.conf:4:3: SYNTAX: duplicate key '1'; the first stands, this one is refused
+  kept: 1=a
+
+--- a name standing twice ---
+  hwut-features.conf:4:3: VOCABULARY: feature name 'a' stands twice; the first stands
+  kept: 1=a
+
+--- number 0 ---
+  hwut-features.conf:2:3: TYPE: feature number '0': numbers count from 1
+
+--- 'issued' that spells no mark ---
+  hwut-features.conf:2:3: TYPE: 'issued' is the highest feature number issued: a number, 0 at least and below 4294967296
+
+--- 'issued' below zero ---
+  hwut-features.conf:2:3: TYPE: 'issued' is the highest feature number issued: a number, 0 at least and below 4294967296
+
+--- an unknown key, and one inside a feature ---
+  hwut-features.conf:2:3: VOCABULARY: unknown key 'owner' in 'features': 'id', 'parent', 'issued', or a feature '<number> { }'
+  hwut-features.conf:3:19: VOCABULARY: unknown key 'since' in feature '1': 'name', 'title', 'explanation'
+  kept: 1=a
+
+--- 'parent' that names no id, an empty 'id', 'childs' in a feature file ---
+  hwut-features.conf:2:3: TYPE: 'id' is a text, and not an empty one
+  hwut-features.conf:3:3: TYPE: 'parent' names ONE id: parent = "<id>", or parent { <id> = "<how this serves it>" }
+  hwut-features.conf:4:3: VOCABULARY: a feature file has no 'childs': its features are its numbered entries
+
+--- 'parent' naming two ids ---
+  hwut-composition.conf:2:3: TYPE: 'parent' names ONE id: parent = "<id>", or parent { <id> = "<how this serves it>" }
+
+--- a child id standing twice ---
+  hwut-composition.conf:2:3: VOCABULARY: child id 'a' stands twice; the first stands
+
+--- composition: the outer node is another ---
+  hwut-composition.conf:1:1: VOCABULARY: the outer node is 'component { }'; not 'features'
+
+--- composition: an unknown key, a child that is no text ---
+  hwut-composition.conf:2:3: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+  hwut-composition.conf:3:12: TYPE: 'core' must be a text
+
+--- composition: 'childs' that is neither scope nor list ---
+  hwut-composition.conf:2:3: TYPE: 'childs' lists ids: childs { <id> = "<what it contributes>" }, or childs = ["<id>", ...]
+<hwut-end>

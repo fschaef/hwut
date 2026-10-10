@@ -44,7 +44,8 @@ from ...compare.api                import ConfigurationDiffDisplayParameters
 from ...bookkeeper.api             import CAPS_FIELD_DB
 from .owner_faces_provisional import (ConfigBuild, ConfigCaps,
                                       ConfigCanonicalise, ConfigCompare,
-                                      ConfigRunner, ConfigStore)
+                                      ConfigFeatures, ConfigRunner,
+                                      ConfigStore)
 
 
 @dataclass(frozen=True)
@@ -171,6 +172,10 @@ RELATION = {
     "interactive":     (ConfigRunner, "interactive_f"),
     "execute":         (ConfigRunner, "execute"),
     "output":          (ConfigRunner, "output"),
+
+    #  WHICH FEATURES THE RUN PROVES. Read by the faces that report and
+    #  sanitize the feature relation; 'hwut.run' does not read it.
+    "features":        (ConfigFeatures, "feature_name_tuple"),
 }
 
 

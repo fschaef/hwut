@@ -1,0 +1,38 @@
+==============================================================================
+intend/23-features -- FEATURES: from a feature to the test that proves it
+==============================================================================
+
+COMPONENTS CONCERNED: engine/bookkeeper, engine/orchestrator/exploration,
+                      engine/coverage, services.
+SPEC:                 adm/WORK/spec/23-features.txt
+
+WHAT IS NOT TESTED IS NOT IMPLEMENTED, DOES NOT WORK. A tree's claims
+are worth what its test runs prove, so the claims must be written where
+the proof can be found from them: a quick way from a feature to the test
+runs that show it exists, and from a component to what its parts
+contribute.
+
+DONE CHANGES THIS: an author asks one face what the tree below him
+claims, and reads for every claim whether it is PROVEN, FAILING or
+UNPROVEN -- and what stands outside the relation altogether.
+
+THE DESIGN MUST SURVIVE A MOVE BY HAND. A test moved, a directory moved
+or renamed: nothing global may break, and what no longer matches is a
+finding with a proposed edit. So no id is global; an id means something
+inside its own file, and the address across the tree is composed at the
+moment of reporting and stored nowhere (as coverage D-14 rules for test
+run ids). Every relation is stated from both ends, which is what lets
+sanitization see a mismatch and propose its repair.
+
+THE FILES NAME THEMSELVES. A statement file gives itself an id and names
+its parent's and its childs' by theirs, so that a file found in a new
+place can be recognised as the one that left an old place: that is what
+makes a move DETECTABLE and its correction a proposal instead of a
+guess. And because the correction is one piece of work whoever asks for
+it -- sanitize after a move by hand, 'hwut.move' while it moves -- there
+is ONE adaption, and every face relies on it.
+
+ONE ALLOCATION LAW. Feature ids are issued the way app, choice and group
+ids are; the law stands in one module.
+
+OPEN: see the spec, section 9.

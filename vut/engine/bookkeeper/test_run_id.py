@@ -35,12 +35,7 @@ ______________________________________________________________________________
 from dataclasses import dataclass
 
 
-#  THE CEILING OF EVERY ID SCOPE (bookkeeper RATIONALE B-2): app ids,
-#  choice ids, group ids each count from 0 and never reach this. A scope
-#  that would issue it refuses by name. Ids are never re-issued, so a
-#  scope's count only grows; 2**32 is more tests, choices or groups than
-#  one directory will ever hold.
-ID_LIMIT = 2 ** 32
+from .id_scope   import ID_LIMIT, decimal_parts, decimal_text    # noqa: F401
 
 
 class RunIdFault(ValueError):
@@ -62,8 +57,7 @@ class TestRunId:
 
     def __str__(self):
         """RETURN: str, 'app_id', or 'app_id.choice_id' with a choice."""
-        return "%i" % self.app_id if self.choice_id is None \
-               else "%i.%i" % (self.app_id, self.choice_id)
+        return decimal_text(self.app_id, self.choice_id)
 
 
 def run_id_of_text(text):
@@ -72,11 +66,6 @@ def run_id_of_text(text):
 
     Raises RunIdFault where it spells neither.
     """
-    part_list = text.strip().split(".")
-    try:
-        if len(part_list) == 1: return TestRunId(int(part_list[0]))
-        if len(part_list) == 2:
-            return TestRunId(int(part_list[0]), int(part_list[1]))
-    except ValueError:
-        pass
-    raise RunIdFault("'%s' spells no run id" % text)
+    parts = decimal_parts(text)
+    if parts is None: raise RunIdFault("'%s' spells no run id" % text)
+    return TestRunId(*parts)

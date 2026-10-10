@@ -13,32 +13,10 @@ stands at the same width, and none of the formats' own signs (',', ';',
 ______________________________________________________________________________
 """
 
-DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
-BASE   = len(DIGITS)
-
-
-def id_text(number, width):
-    """
-    RETURN: str, 'number' in base 64, padded with '0' to 'width' digits.
-    """
-    digit_list = []
-    while True:
-        number, rest = divmod(number, BASE)
-        digit_list.append(DIGITS[rest])
-        if number == 0: break
-    return "".join(reversed(digit_list)).rjust(width, DIGITS[0])
-
-
-def id_number(text):
-    """
-    RETURN: int, the number the base-64 identifier 'text' spells.
-
-    Raises ValueError where a character is no digit of the alphabet.
-    """
-    number = 0
-    for character in text:
-        number = number * BASE + DIGITS.index(character)
-    return number
+#  THE SPELLING IS THE ID MODULE'S ('engine/bookkeeper/id_scope.py'),
+#  shared with every other id of the tree; what stays here is the
+#  layout of ONE coverage output: where its group ids begin.
+from ...bookkeeper.api import BASE, DIGITS, id_number, id_text  # noqa: F401
 
 
 def group_id_start(run_n):

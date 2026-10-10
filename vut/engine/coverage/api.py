@@ -62,10 +62,11 @@ from .readers.api   import (CCoverageFormat, CCoverageFramework,
                             record_of, register, registered_tuple)
 from .trace         import OUTCOME_OK, CoverageTraceDb
 from .affected      import main as affected_main
-from .output        import (DEFAULT_DIRECTORY_NAME, Output,
+from .output        import (DEFAULT_DIRECTORY_NAME, MARKER_FILE, Output,
                             OutputRefused, gather, prepared, root_of)
 
-__all__ = ("affected_main", "DEFAULT_DIRECTORY_NAME", "GatheredFile", "Output",
+__all__ = ("affected_main", "DEFAULT_DIRECTORY_NAME", "GatheredFile",
+           "MARKER_FILE", "Output",
            "OutputRefused", "binary_version", "format_gathered",
            "pack_gathered", "parse_gathered", "unpack_gathered",
            "id_text", "measure_db_of", "measure_of", "name_tuple",

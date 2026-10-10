@@ -1,0 +1,35 @@
+
+--- for the whole test ---
+    features = ["line-pairing", "missing-side"]
+  -        -> ('line-pairing', 'missing-side')
+
+--- one name, written without the list ---
+    features = "line-pairing"
+  -        -> ('line-pairing',)
+
+--- no word of features ---
+    choices = ["a", "b"]
+  a        -> None
+  b        -> None
+
+--- for one choice: the choice's list replaces the root's ---
+    features = ["line-pairing"]
+    choices {
+        plain { }
+        gap   { features = ["missing-side"] }
+        none  { features = [] }
+    }
+  plain    -> ('line-pairing',)
+  gap      -> ('missing-side',)
+  none     -> ()
+
+--- refused ---
+    features = ["a", "a"]
+  FAULT test-x.sh:3:18: TYPE: 'features' names every feature once
+    features = ["a", ""]
+  FAULT test-x.sh:3:18: TYPE: 'features' holds no empty name
+    features = 3
+  FAULT test-x.sh:3:18: TYPE: 'features' must be a string or a list of strings
+    features = ["a", 3]
+  FAULT test-x.sh:3:24: TYPE: 'features' carries strings only
+<hwut-end>

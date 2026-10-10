@@ -1,0 +1,22 @@
+          the book: 2 row(s) hold '4 repeat'
+STIMULUS  an equivalent case, stained: hwut.run.diff
+          exit code : 1
+          STAIN: test-b.sh -- stdout equivalent; '4 repeat': verdict switched within 4 repeat(s); not run until proven steady ('hwut.run.stability test-b.sh --repeat=4')
+          no stdout differs: 1 case(s) judged; 1 stained
+STIMULUS  the same: hwut.accept.interactive
+          exit code : 1
+          STAIN: test-b.sh -- stdout equivalent; '4 repeat': verdict switched within 4 repeat(s); not run until proven steady ('hwut.run.stability test-b.sh --repeat=4')
+          nothing to accept: 1 case(s) judged; 1 stained -- an accept does not lift a stain
+
+STIMULUS  a differing case, stained: hwut.run.diff
+          exit code : 1
+          NOTE: test-app.sh one -- STAIN: '4 repeat': verdict switched within 4 repeat(s); not run until proven steady ('hwut.run.stability test-app.sh one --repeat=4')
+STIMULUS  the same: hwut.accept.interactive
+          NOTE: test-app.sh one -- STAIN: '4 repeat': verdict switched within 4 repeat(s); not run until proven steady ('hwut.run.stability test-app.sh one --repeat=4')
+
+STIMULUS  a differing case that is clean: hwut.run.diff
+          exit code : 1
+          STAIN or NOTE lines: 0
+
+SUCCESS: a stain is said by every face that views the case.
+<hwut-end>

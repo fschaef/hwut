@@ -62,6 +62,7 @@ import os
 from vut.engine.orchestrator.run.tolerance_text import (leaf_db_of, text_of,
                                                          value_text)
 from vut.engine.orchestrator.exploration        import amend
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 QUESTION_HEAD = "tolerances were changed in memory for '%s' -- to copy:"
 
@@ -122,7 +123,7 @@ def tmp_path(test, choice):
     """RETURN: str, the TMP file's path relative to the test's directory
                -- named as the test's nominal is, '<test>--<choice>'."""
     name = test if choice is None else "%s--%s" % (test, choice)
-    return os.path.join("TMP", name + ".tolerance.conf")
+    return os.path.join(TRANSIENT_DIRECTORY_NAME, name + ".tolerance.conf")
 
 
 def stated_pair_list(options, page):

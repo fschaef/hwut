@@ -40,8 +40,14 @@ ROOT_CONF_NAME     = "hwut-root.conf"
 #  and the traces stand in every TEST directory (X-INTERVIEW): they were
 #  MEASURED interviewed on every walk, two programs run per directory
 #  to answer nothing.
+#  THE FEATURE RELATION'S TWO FILES ('feature_relation.py'): what a
+#  TEST directory proves, and what a component is made of.
+FEATURE_FILE_NAME     = "hwut-features.conf"
+COMPOSITION_FILE_NAME = "hwut-composition.conf"
+
 OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
-                      "hwut-traces.csv", "hwut-root.labels")
+                      "hwut-traces.csv", "hwut-root.labels",
+                      FEATURE_FILE_NAME, COMPOSITION_FILE_NAME)
 #  A PYPE IS A CANONICALISER, NOT A TEST. It stands beside the test
 #  that names it ('pype = "strip.pype"') and filters that test's
 #  output; it is never a candidate and the nominal gate (E-41) never

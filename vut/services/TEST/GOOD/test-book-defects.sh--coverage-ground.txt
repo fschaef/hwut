@@ -1,0 +1,22 @@
+--- the outputs mirror the tree
+hwut.coverage/a/TEST
+measured/a/TEST
+--- hwut.run at the root
+DIR  a/TEST                                                                   
+END   :          one ............................................... [OK]  ||0
+--- hwut.report.list at the root
+./a/TEST/test-m.py one
+--- hwut.run inside the mirror
+    (no directory ran)
+--- nothing was made there
+--- the marker that keeps a walk out: empty
+hwut.coverage/hwut.no-entry-here.marker: 0 byte(s)
+measured/hwut.no-entry-here.marker: 0 byte(s)
+--- a person's own directory, entered; then marked
+./a/TEST/test-m.py one
+./vendor/lib/TEST/test-v.py one
+marked:
+./a/TEST/test-m.py one
+--- 'TMP' and 'OUT' of a test directory: a tree left there is not entered
+hwut.execute say: said 1 time(s)
+<hwut-end>

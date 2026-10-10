@@ -5679,3 +5679,129 @@ AMENDED   2026-10-09 (ruled): "hwut.about may be write a checksum of the
           out, path and bytes, sorted. Two installations printing the
           same line run the same source. The page masks it like every
           machine word.
+
+E-139  'hwut.report.features' PRINTS THE FEATURE RELATION            (2026-10-10)
+
+PROBLEM   "What is not tested is not implemented": no face answered
+          which features a tree claims and which test runs prove them.
+DECISION  'hwut.report.features [--directory=<path>]'
+          ('services/lib/report/features.py', a mode of the report,
+          E-116) prints component -> part -> feature -> linked runs
+          with their verdicts from 'GOOD/book.csv', the counts per
+          component, and below the tree what stands OUTSIDE THE
+          RELATION. Request/do/Result (E-101); nothing is run.
+          A LINK-LESS RUN IS NAMED ONLY WHERE ITS TEST DIRECTORY
+          CARRIES A FEATURE FILE: where none stands the directory is
+          named once.
+          A LINK TO AN UNDEFINED NAME IS NAMED, never dropped.
+COST      EXIT 0 whatever the states (spec o-3 is open): the page
+          reports, it does not judge.
+PINNED    'services/TEST/test-report-features.py tree, test_directory,
+          outside, empty, refused'.
+
+E-140  SANITIZE RELATES; MOVE AND REMOVE FOLLOW THE FEATURES          (2026-10-10)
+
+PROBLEM   A directory moved by hand left 'parent' and 'childs' saying
+          where it had been (exploration R-84), and a test carried into
+          another TEST directory left its features behind.
+DECISION  A SEVENTH ASPECT, '--relations', asked by a bare
+          'hwut.sanitize.propose' like the others, and TWO VERBS:
+              relate <dir>          the statement file of <dir> adapted
+                                    to where the directory stands; a
+                                    DETECTED MOVE noted 'moved from <dir>'
+              unrelate <dir> <id>   a 'childs' entry nothing carries,
+                                    removed
+          Both judge again and act through
+          'exploration/feature_adapt.py' -- the one adaption.
+          'hwut.move' ACROSS TEST DIRECTORIES CARRIES THE FEATURES the
+          test links to into the target's feature file, each step
+          announced; 'hwut.remove' NAMES the features it leaves without
+          a linked run. Sanitize's own 'move' (E-131) goes through
+          'hwut.move' and inherits it. A rename within a directory has
+          nothing to adapt.
+          THE BLOCK STAYS THE AUTHOR'S (E-48): no face edits
+          'features = [...]'.
+          'hwut.report.features' prints each id, the sentences the ids
+          bear, and every disagreement, pointing at the proposal.
+COST      Two verbs where spec o-4 weighed one: 'unrelate' acts on the
+          PARENT's file and takes an id, which no entity of 'relate'
+          can say.
+          A proposal's head and the usage line name the aspect and the
+          verbs: nominals that print them moved by those words.
+PINNED    'services/TEST/test-sanitize-relations.py propose, apply,
+          command, move, remove'; 'test-report-features.py'.
+
+E-141  THE VIEWING FACES EXPOSE EVERY STAIN                          (2026-10-10)
+
+PROBLEM   RULED 2026-10-07 (E-136): the stain 'stderr-untolerated' is
+          mentioned by the diff and by the interactive accept. BUILT
+          for a case that ALSO differs on stdout -- the mention hung on
+          the differing key. MEASURED 2026-10-10: a case whose stdout
+          is equivalent and whose stderr spoke fails the run
+          ('stderr [FAIL]'), and 'hwut.run.diff' answered 'nothing
+          differs: ... every candidate equivalent to its nominal',
+          exit 0; 'hwut.accept.interactive' 'nothing to accept'. The
+          failure could be seen in the run's HINTS and in
+          'hwut.report.details', and not where a person looks for a
+          difference.
+DECISION  RULED 2026-10-10: "hwut.accept.interactive and hwut.run.diff
+          should both expose stains clearly." EVERY STAIN OF THE BOOK
+          -- 'N repeat', 'constraint', 'stderr-untolerated' -- is said
+          by both faces, in one wording ('_accept_common'):
+          A CASE THAT IS EQUIVALENT AND STAINED is handed out by
+          'differing_keys()' beside the keys ('stained_list') and said:
+              STAIN: <case> -- stdout equivalent; '4 repeat': verdict switched within 4 repeat(s); not run until proven steady ('hwut.run.stability <case> --repeat=4')
+              STAIN: <case> -- stdout equivalent; stderr SPOKE, untolerated: '<OUT/...err>'
+                  | <the stderr text, ten lines at most>
+                  : <n> more line(s)
+                  heal: stop the writing, or declare 'tolerance { stderr_ignored = true }'
+          With no stdout difference beside it the face closes 'no
+          stdout differs: <n> case(s) judged; <m> stained' and EXITS 1:
+          the diff convention's 0 says 'equivalent', and a stained case
+          is not that.
+          A CASE THAT DIFFERS AND IS STAINED is said before its view:
+          E-136's line for stderr, and 'NOTE: <case> -- STAIN: ...' in
+          the same clauses for every other stain.
+          MEASURED before: a case convicted over 4 repeats ('UNSTABLE
+          -- not run') read 'nothing differs', exit 0, on both faces.
+COST      A script reading 'hwut.run.diff's exit as 'stdout equal'
+          reads 1 here.
+PINNED    'services/TEST/test-diff.sh stderr-alone, stains'.
+
+E-142  A LINE WITHOUT A PARTNER IS SAID ON BOTH SIDES OF ITS ROW      (2026-10-10)
+
+PROBLEM   A line that OUTPUT holds and GOOD does not stood on a row of
+          its own -- 'S  2 | [extra]' and nothing beneath it in the text
+          view, an empty cell in the keyed one, and in its normal
+          colours there (E-93). MEASURED on a real failure
+          ('test-book-defects.sh affected'): the one line that made the
+          case fail was not found by looking.
+DECISION  RULED (Frank-Rene, 2026-10-10): OUTPUT's side of such a row
+          stands whole on a RED GROUND, and the side that holds no line
+          says so in a '##' comment:
+              OUTPUT holds a line, GOOD none
+                  OUTPUT   the line, whole, red ground
+                  GOOD     ## <no line in GOOD here>
+              GOOD holds a line, OUTPUT none
+                  OUTPUT   ## <no line in OUTPUT here>, red ground
+                  GOOD     the line, as it stands
+          The two texts are defined once ('lib/viewers/__init__.py',
+          'NO_LINE_IN_GOOD_TEXT', 'NO_LINE_IN_OUTPUT_TEXT') and read by
+          every viewer: the text view stacked and side by side
+          ('tui.py'), and the keyed screen ('keyed/driver.py').
+          THE COLOURS ARE PREFERENCES: 'verdict.unpaired' and
+          'keyed.unpaired', 'keyed.absent-good' ('bin/.hwut.conf').
+          WITHOUT COLOURS the text view keeps its marks ('[line]') and
+          gains the note row; the keyed screen draws the ground as
+          'reverse'.
+          ONLY AGAINST A REAL LINE: a marker's, a filler's, the
+          token's and a spent line's rows keep their empty side.
+          SUPERSEDES E-93 for a line that has NO partner: it no longer
+          wears its normal colours. Against a FILLER E-93 stands.
+COST      Every recorded text view that holds an unpaired line gained
+          one row per such line.
+          A CROSSING PAIR's nominal line (keyed, E-61) stands alone on
+          its row and reads '## <no line in OUTPUT here>' though its
+          partner stands higher up; 'g' realigns.
+PINNED    'services/TEST/test-diff.sh differing, side-by-side';
+          'lib/viewers/keyed/TEST/test-keyed.py unpaired'.

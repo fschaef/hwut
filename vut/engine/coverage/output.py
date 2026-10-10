@@ -77,6 +77,7 @@ from .database.api import (GatheredFile, MeasureFault, RecordFault,
                            pack_gathered, rebased, subtract,
                            unpack_gathered, unpack_record, union)
 from .database.api import index_of
+from vut.auxiliary.no_entry import marked_no_entry
 
 DEFAULT_DIRECTORY_NAME = "hwut.coverage"
 MARKER_FILE            = "hwut-coverage.marker"
@@ -100,9 +101,10 @@ class OutputRefused(ValueError):
 def prepared(output_directory, root):
     """
     RETURN: str, the absolute path of 'output_directory', standing
-            EMPTY but for the marker, which names 'root' -- the
-            directory the coverage run walks. What stood in it is
-            removed.
+            EMPTY but for two markers: 'hwut-coverage.marker', which
+            names 'root' -- the directory the coverage run walks -- and
+            the empty 'hwut.no-entry-here.marker', which keeps every
+            walk out. What stood in it is removed.
 
     Raises OutputRefused where the path is no directory, or is a
     directory holding files and no marker of hwut's.
@@ -119,6 +121,9 @@ def prepared(output_directory, root):
                 % (path, MARKER_FILE))
         shutil.rmtree(path)
     os.makedirs(path)
+    #  NO WALK ENTERS IT (exploration R-85): what stands below mirrors
+    #  the tree it measured, 'TEST' directories and all.
+    marked_no_entry(path)
     with open(os.path.join(path, MARKER_FILE), "w",
               encoding="utf-8") as handle:
         handle.write("coverage data of 'hwut.cov.run'; removed at the "

@@ -1,0 +1,17 @@
+
+--- a directory that does not stand ---
+    REFUSED: the directory 'nowhere' does not exist
+    usage: hwut.report.features [--directory=<path>] [--help]
+status: REFUSED
+
+--- an unknown word ---
+    REFUSED: 'hwut.report.features' does not take '--verbose'
+    usage: hwut.report.features [--directory=<path>] [--help]
+status: REFUSED
+
+--- a tree no 'hwut-root.conf' bounds ---
+    REFUSED: no 'hwut-root.conf' stands above '<tree>' -- a tree states its own boundary, and the global configuration that applies to it, in that file (the climb ends at the transient ground 'TMP/', E-24)
+HINT: use 'hwut.sanitize root [dir]' to place one.
+    usage: hwut.report.features [--directory=<path>] [--help]
+status: REFUSED
+<hwut-end>

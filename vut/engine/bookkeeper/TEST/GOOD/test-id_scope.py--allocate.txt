@@ -1,0 +1,21 @@
+
+--- a scope counting from 0 ---
+INSPECT: fresh             -> mark=-1 next=0
+INSPECT: three allocations -> [0, 1, 2]   mark=2 next=3
+
+--- a scope counting from 1 ---
+INSPECT: fresh             -> mark=0 next=1
+INSPECT: three allocations -> [1, 2, 3]   mark=3 next=4
+
+--- a scope taken up where a file left it ---
+INSPECT: next_id=7         -> mark=6 next=7, issues 7
+
+--- raise_to ---
+INSPECT: raise_to(9) -> True   raise_to(4) -> False   mark=9 next=10
+INSPECT: issued_f: 0 -> False, 1 -> True, 9 -> True, 10 -> False
+  OK  : from 0: the first id is 0
+  OK  : from 1: the first id is 1
+  OK  : the mark is lifted, never lowered
+  OK  : allocation goes on above a lifted mark
+SUCCESS: the next id lies above the highest ever issued.
+<hwut-end>

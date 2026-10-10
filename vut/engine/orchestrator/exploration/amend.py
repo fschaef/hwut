@@ -92,6 +92,34 @@ def conf_container(text):
     return Container(i_open, i_close, "", "    ")
 
 
+def named_container(text, name):
+    """
+    RETURN: Container, the '<name> { }' block that opens a line of
+            'text' -- 'component { }', 'features { }'
+            None, the text holds none
+    """
+    match = re.compile(r"^[ \t]*%s\s*\{" % re.escape(name), re.M).search(text)
+    if match is None: return None
+    i_open  = match.end() - 1
+    i_close = _matching(text, i_open, "")
+    if i_close is None: return None
+    return Container(i_open, i_close, "",
+                     _lead_of(text, i_open, i_close, ""))
+
+
+def scope_container(text, scope, outer):
+    """RETURN: Container, the braces of 'scope' (an object Entry inside
+    'outer') as a container of its own: entries are added and removed
+    INSIDE it, its layout and comments kept. A new line inside takes
+    the lead its first entry shows; one level below 'outer' where it
+    holds none."""
+    i_open, i_close = scope.i_value, scope.i_end - 1
+    lead = _lead_of(text, i_open, i_close, "")
+    if not entry_list(text, i_open, i_close):
+        lead = outer.lead + "    "
+    return Container(i_open, i_close, "", lead)
+
+
 def _lead_of(text, i_open, i_close, decoration):
     """RETURN: str, what heads the container's first line with an entry
                -- its decoration and indentation, read the way the
@@ -120,7 +148,9 @@ def _lead_of(text, i_open, i_close, decoration):
 
 # -------------------------------------------------------------------- reading
 
-_KEY_RE = re.compile(r"[A-Za-z_][\w.+\-]*")
+#  A key may begin with a DIGIT: a feature file numbers its features
+#  ('1 { name = ... }').
+_KEY_RE = re.compile(r"[A-Za-z_0-9][\w.+\-]*")
 
 
 def entry_list(text, i_open, i_close, decoration=""):

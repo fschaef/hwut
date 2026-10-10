@@ -1,0 +1,12 @@
+
+--- one id below the ceiling ---
+INSPECT: next = ID_LIMIT - 1 -> issued: True
+
+--- at the ceiling ---
+INSPECT: next = ID_LIMIT -> None
+INSPECT: the choice scope of app 3 has issued 4294967296 ids; no more are issued
+  OK  : the last id is ID_LIMIT - 1
+  OK  : ID_LIMIT itself is never issued; the mark stands
+  OK  : the refusal names the scope
+SUCCESS: a scope at its ceiling refuses by name.
+<hwut-end>

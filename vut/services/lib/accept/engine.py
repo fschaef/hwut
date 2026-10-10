@@ -164,6 +164,12 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
         #  tier, not only where a screen has a foot to carry it.
         mention = stderr_mention_of(key.label, spoke_f, ignored_f)
         if mention is not None: err(mention)
+        #  EVERY OTHER STAIN OF THE BOOK, in the same words as the diff
+        #  says them (E-141).
+        from vut.services._accept_common import stain_mention_list
+        for line in stain_mention_list(key.label,
+                                       getattr(key, "stain", None)):
+            err(line)
         #  None MEANS THE DEFAULT, not 'no bound': 'hwut.accept' states
         #  none, and the second round -- after 'e' or 'g' -- was MEASURED
         #  to die comparing round_n against None (E-90).

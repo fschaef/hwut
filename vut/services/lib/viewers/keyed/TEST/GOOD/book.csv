@@ -1,4 +1,4 @@
-# vut-register 5 generation:49 apps:4 marks:0=18,1=15,2=9,3=3
+# vut-register 5 generation:50 apps:4 marks:0=19,1=15,2=9,3=3
 test;choice;verdict;report;stain;test_id;choice_id
 test-editing.py;discard;true;ok;;1;11
 ;f6;true;ok;;1;12
@@ -32,6 +32,7 @@ test-keyed.py;crossing;true;ok;;0;0
 ;take;true;ok;;0;12
 ;token;true;ok;;0;13
 ;undo;true;ok;;0;14
+;unpaired;true;ok;;0;18
 ;view;true;ok;;0;15
 test-proposal.py;applied;true;ok;;2;0
 ;blanks;true;ok;;2;1

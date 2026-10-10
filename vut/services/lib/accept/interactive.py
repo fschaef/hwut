@@ -118,7 +118,7 @@ from   vut.services._core                     import (add_setup_arguments,
                                                       setup_from_arguments)
 from   vut.services._exit                     import E_ExitCode
 
-def keys_of(selected, write):
+def keys_of(selected, write, stained_list=None):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
             'differing_keys' with the candidates REFRESHED first -- built
@@ -129,8 +129,12 @@ def keys_of(selected, write):
     A face that shows or merges a candidate works on it, so it must hold
     a current one: a stale candidate shown as the run's is the lie E-40
     forbids.
+
+    'stained_list' receives the cases that are equivalent and whose
+    stderr spoke untolerated ('differing_keys').
     """
-    return differing_keys(selected, write, refresh_f=True)
+    return differing_keys(selected, write, refresh_f=True,
+                          stained_list=stained_list)
 
 
 USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
@@ -202,8 +206,19 @@ def main(argv=None):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n, unread_n = keys_of(selected, err)
+    stained_list = []
+    key_list, judged_n, unread_n = keys_of(selected, err, stained_list)
+    #  A CASE THAT FAILS ON STDERR ALONE (E-141): nothing of it can be
+    #  accepted, and it is said rather than passed over.
+    from vut.services._accept_common import stain_line_list
+    for label, stain, witness, shown in stained_list:
+        for line in stain_line_list(label, stain, witness, shown): err(line)
     if not key_list and unread_n:
+        return E_ExitCode.FAULT
+    if not key_list and stained_list:
+        err("nothing to accept: %d case(s) judged; %d stained -- an "
+            "accept does not lift a stain"
+            % (judged_n, len(stained_list)))
         return E_ExitCode.FAULT
     if not key_list:
         err("nothing to accept: %d case(s) judged, every candidate "

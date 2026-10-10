@@ -31,6 +31,7 @@ import os
 from .configuration_tree import (TestParameters, TestAppSpec, Caps, E_Origin,
                                  Tolerance)
 from .fault         import Position
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 #  Caps of the interview itself. An interview is a question, not a test:
 #  it may not spend, and it may not reach.
@@ -47,7 +48,7 @@ INTERVIEW_CAPS = Caps(timeout_sec         = 10.0,
 #  under 'TMP/' with every other transient (ruled: 'any deletable lands
 #  in TMP'); the traces stay beside the tests because they TRAVEL.
 MEMO_FILE_NAME = "hwut-interview.dat"
-MEMO_DIRECTORY = "TMP"
+MEMO_DIRECTORY = TRANSIENT_DIRECTORY_NAME
 
 
 def interview(directory, name, runner=None):

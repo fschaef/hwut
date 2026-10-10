@@ -95,6 +95,76 @@ def stderr_ignored_f_of(configuration, choice):
         return False
 
 
+#  How many lines of a stderr text a face prints before it points at
+#  the file.
+STDERR_SHOWN_LINE_N = 10
+
+
+def _other_stain_list(label, stain):
+    """RETURN: list[str], what every stain of 'stain' (the book's, a
+    dict or None) but the stderr one says, one clause each:
+    "'<N> repeat': ..." and "'<keyword>': ..."."""
+    from vut.engine.bookkeeper.api import (STAIN_CONSTRAINT_WORD,
+                                           STAIN_STDERR_WORD)
+    if not stain: return []
+    result = []
+    if stain.get("repeat_n") is not None:
+        n = stain["repeat_n"]
+        result.append("'%i repeat': verdict switched within %i repeat(s); "
+                      "not run until proven steady ('hwut.run.stability "
+                      "%s --repeat=%i')" % (n, n, label, n))
+    for keyword in stain.get("keyword_list") or ():
+        if keyword == STAIN_STDERR_WORD: continue
+        if keyword == STAIN_CONSTRAINT_WORD:
+            result.append("'%s': the nominal breaks its own constraints; "
+                          "mend the nominal" % keyword)
+        else:
+            result.append("'%s'" % keyword)
+    return result
+
+
+def stain_line_list(label, stain, witness_path=None, shown_path=None):
+    """
+    RETURN: list[str], what a face says of a case whose stdout IS
+            equivalent to its nominal and which is STAINED -- it fails,
+            or is not run, and no difference can show why (E-141):
+
+                STAIN: <label> -- stdout equivalent; '<N> repeat': ...
+                STAIN: <label> -- stdout equivalent; stderr SPOKE, untolerated: '<shown_path>'
+                    | <the stderr text, STDERR_SHOWN_LINE_N lines at most>
+                    : <n> more line(s)
+                    heal: stop the writing, or declare 'tolerance { stderr_ignored = true }'
+
+            one 'STAIN:' line per stain. 'stain' is the book's (a dict,
+            or None); 'witness_path' is where an untolerated stderr
+            text is read (None: stderr is not the matter), 'shown_path'
+            how that file is named to the reader.
+    """
+    result = ["STAIN: %s -- stdout equivalent; %s" % (label, clause)
+              for clause in _other_stain_list(label, stain)]
+    if witness_path is None: return result
+    text      = read_text(witness_path) or ""
+    line_list = text.splitlines()
+    result.append("STAIN: %s -- stdout equivalent; stderr SPOKE, "
+                  "untolerated: '%s'" % (label, shown_path))
+    result   += ["    | %s" % line for line in line_list[:STDERR_SHOWN_LINE_N]]
+    if len(line_list) > STDERR_SHOWN_LINE_N:
+        result.append("    : %i more line(s)"
+                      % (len(line_list) - STDERR_SHOWN_LINE_N))
+    result.append("    heal: stop the writing, or declare '%s'"
+                  % STDERR_IGNORED_LINE)
+    return result
+
+
+def stain_mention_list(label, stain):
+    """RETURN: list[str], the lines a face shows about a case that
+    DIFFERS, before it is viewed, for every stain but the stderr one
+    (which 'stderr_mention_of' says): 'NOTE: <label> -- STAIN: ...'.
+    Empty where the case carries none."""
+    return ["NOTE: %s -- STAIN: %s" % (label, clause)
+            for clause in _other_stain_list(label, stain)]
+
+
 def stderr_mention_of(label, spoke_f, ignored_f):
     """
     RETURN: str, the one line a face shows about the case 'label'

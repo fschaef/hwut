@@ -4,7 +4,7 @@
 # @hwut {
 #     title      = "The diff service face: the diff convention, on stdout."
 #     choices    = ["differing", "reading", "tolerated", "side-by-side", "stderr",
-#                   "store"]
+#                   "stderr-alone", "stains", "store"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #
@@ -36,7 +36,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The diff service face: the diff convention, on stdout.;"
-        echo "CHOICES: differing, tolerated, reading, side-by-side, store, stderr;"
+        echo "CHOICES: differing, tolerated, reading, side-by-side, store, stderr, stderr-alone, stains;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -214,6 +214,94 @@ stderr)
     stain
     echo
     echo "SUCCESS: the stain is said where the case is viewed."
+    ;;
+
+stderr-alone)
+    #  A CASE THAT FAILS ON STDERR ALONE (E-141): its stdout is
+    #  equivalent to its nominal, so there is no difference to show --
+    #  and the run calls it failed. The viewing faces SAY it, with the
+    #  text and the file, and do not answer 'nothing differs'.
+    mkdir -p tree/suite/TEST/GOOD
+    noisy() {           # <tolerance line or ''> <lines on stderr>
+        printf '#!/bin/bash\n# @hwut {\n#     title = "Noisy"\n%b# }\necho "steady"\nfor i in $(seq %s); do echo "diagnostic $i" >&2; done\necho "<hwut-end>"\n' \
+               "$1" "$2" > tree/suite/TEST/test-noisy.sh
+        chmod +x tree/suite/TEST/test-noisy.sh
+    }
+    DECLARED='#     tolerance { stderr_ignored = true }\n'
+    said() { sed 's/^/          /' err.txt; }
+    noisy "$DECLARED" 2
+    ( cd tree/suite/TEST && python3 -m vut.services.accept --force > /dev/null 2>&1 )
+    echo "STIMULUS  stderr tolerated, stdout as accepted: hwut.run.diff"
+    $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
+    echo "          exit code : $?"
+    said
+    echo
+    noisy "" 2
+    python3 -m vut.services.run --directory=tree --silent
+    echo "STIMULUS  the tolerance withdrawn, stdout as accepted: hwut.run"
+    python3 -m vut.services.run --directory=tree --plain --no-colour --jobs=1 --deterministic \
+        | grep -E '^(END|      :)' | sed 's/^/          /'
+    echo "STIMULUS  hwut.run.diff"
+    $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
+    echo "          exit code : $?"
+    said
+    echo "STIMULUS  hwut.accept.interactive --console --all"
+    python3 -m vut.services.lib.accept.interactive tree/suite/TEST/test-noisy.sh \
+            --console --all --plain < /dev/null > out.txt 2> err.txt
+    echo "          exit code : $?"
+    said
+    echo
+    noisy "" 13
+    python3 -m vut.services.run --directory=tree --silent
+    echo "STIMULUS  thirteen lines on stderr: hwut.run.diff"
+    $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
+    echo "          exit code : $?"
+    said
+    echo
+    echo "SUCCESS: a case that fails on stderr alone is said, never 'nothing differs'."
+    ;;
+
+stains)
+    #  EVERY STAIN OF THE BOOK IS EXPOSED by the two faces that view a
+    #  case (E-141). The repetition stain keeps a case from being run
+    #  at all: equivalent, it is said in a 'STAIN:' line and the face
+    #  exits 1; differing, it is said in a 'NOTE:' before the view.
+    store_fixture
+    stained() {         # <test> <choice or ''> -- convicted over 4 repeats
+        python3 -c "
+import sys
+from vut.engine.bookkeeper.api import Bookkeeper
+Bookkeeper('tree/suite/TEST').note_stain(sys.argv[1], sys.argv[2] or None, 4, [True, False, True, False])" "$1" "$2"
+    }
+    said() { grep -E '^(STAIN|NOTE: test|no stdout|nothing)' err.txt | sed 's/^/          /'; }
+    stained test-b.sh ""
+    stained test-app.sh one
+    echo "          the book: $(grep -c ';4 repeat;' tree/suite/TEST/GOOD/book.csv) row(s) hold '4 repeat'"
+    echo "STIMULUS  an equivalent case, stained: hwut.run.diff"
+    ( cd tree/suite/TEST && $DIFF test-b.sh --plain > ../../../out.txt 2> ../../../err.txt
+      echo "          exit code : $?" )
+    said
+    echo "STIMULUS  the same: hwut.accept.interactive"
+    ( cd tree/suite/TEST && python3 -m vut.services.lib.accept.interactive test-b.sh \
+            --console --all --plain < /dev/null > ../../../out.txt 2> ../../../err.txt
+      echo "          exit code : $?" )
+    said
+    echo
+    echo "STIMULUS  a differing case, stained: hwut.run.diff"
+    ( cd tree/suite/TEST && $DIFF test-app.sh one --plain > ../../../out.txt 2> ../../../err.txt
+      echo "          exit code : $?" )
+    said
+    echo "STIMULUS  the same: hwut.accept.interactive"
+    ( cd tree/suite/TEST && python3 -m vut.services.lib.accept.interactive test-app.sh one \
+            --console --all --plain < /dev/null > ../../../out.txt 2> ../../../err.txt )
+    said
+    echo
+    echo "STIMULUS  a differing case that is clean: hwut.run.diff"
+    ( cd tree/suite/TEST && $DIFF test-app.sh two --plain > ../../../out.txt 2> ../../../err.txt
+      echo "          exit code : $?" )
+    echo "          STAIN or NOTE lines: $(grep -cE '^(STAIN|NOTE: test)' err.txt)"
+    echo
+    echo "SUCCESS: a stain is said by every face that views the case."
     ;;
 
 *)

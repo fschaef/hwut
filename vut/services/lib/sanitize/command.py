@@ -87,6 +87,8 @@ ARITY_DB = {
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "run":    (2, 2, "<dir> <target>"),
+    "relate":   (1, 1, "<dir>"),
+    "unrelate": (2, 2, "<dir> <id>"),
     "root":   (1, 1, "<dir>"),
 }
 assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
@@ -222,6 +224,55 @@ class CContext:
         except OSError as error:
             return CDone(E_Done.FAULT, str(error))
         return CDone(E_Done.DONE)
+
+    def _relation_root(self, directory):
+        """
+        RETURN: [0] str, the root of the tree 'directory' stands in --
+                    where a detected move is looked for
+                [1] CDone, the refusal where no tree bounds it, or it
+                    is no directory; None else
+        """
+        if not os.path.isdir(directory):
+            return None, CDone(E_Done.NOTHING, "nothing stands there")
+        try:
+            return root_conf_directory(directory), None
+        except RootConfMissing:
+            return None, CDone(E_Done.REFUSED,
+                               "no 'hwut-root.conf' stands in or above it: "
+                               "not a tree of hwut's")
+
+    def _do_relate(self, word_tuple):
+        """RETURN: CDone -- the statement file of the directory adapted
+                   to where the directory stands
+                   ('feature_adapt.adapt_directory'); NOTHING where it
+                   agrees already, REFUSED where it carries no statement
+                   file or the directory above gives itself no id."""
+        from vut.engine.orchestrator.exploration import feature_adapt
+        directory     = self.path_of(word_tuple[0])
+        root, refusal = self._relation_root(directory)
+        if refusal is not None: return refusal
+        adapted = feature_adapt.adapt_directory(root, directory)
+        if adapted.changed_f():
+            return CDone(E_Done.DONE, adapted.reason,
+                         tuple(adapted.said_tuple))
+        if adapted.reason: return CDone(E_Done.REFUSED, adapted.reason)
+        return CDone(E_Done.NOTHING, "the statements agree with the "
+                                     "directories")
+
+    def _do_unrelate(self, word_tuple):
+        """RETURN: CDone -- a 'childs' entry nothing carries, removed
+                   ('feature_adapt.child_dropped'); NOTHING where the id
+                   is not listed, REFUSED where a directory carries it."""
+        from vut.engine.orchestrator.exploration import feature_adapt
+        directory     = self.path_of(word_tuple[0])
+        root, refusal = self._relation_root(directory)
+        if refusal is not None: return refusal
+        adapted = feature_adapt.child_dropped(root, directory, word_tuple[1])
+        if adapted.changed_f():
+            return CDone(E_Done.DONE, "", tuple(adapted.said_tuple))
+        if adapted.reason: return CDone(E_Done.REFUSED, adapted.reason)
+        return CDone(E_Done.NOTHING, "'%s' is not listed there"
+                                     % word_tuple[1])
 
     def _do_remove(self, word_tuple):
         """RETURN: CDone -- a session, a dead lock, 'OUT/' or 'TMP/' gone."""

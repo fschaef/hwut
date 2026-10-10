@@ -53,6 +53,7 @@ from   vut.engine.orchestrator.exploration.task_list_query \
                                             import dir_ruled_out_f
 from   vut.engine.orchestrator.exploration.tree_explorer \
                                             import explore_tree_stream
+from   vut.auxiliary.no_entry               import entered
 from   vut.services._exit                   import E_ExitCode
 
 
@@ -411,8 +412,9 @@ def _walk(root):
     """
     yield "."
     for here, directory_list, _file_list in os.walk(root):
-        directory_list[:] = sorted(name for name in directory_list
-                                   if not name.startswith("."))
+        #  WHERE hwut DOES NOT ITERATE (exploration R-85): a marked
+        #  directory, a test directory's 'TMP' and 'OUT'.
+        directory_list[:] = entered(here, directory_list)
         for name in directory_list:
             relative = os.path.relpath(os.path.join(here, name), root)
             yield relative.replace(os.sep, "/")

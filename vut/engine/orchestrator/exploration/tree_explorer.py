@@ -64,6 +64,9 @@ from .          import reader
 from .explorer  import explore
 from .fault     import Fault, E_FaultKind
 from .configuration_tree import DirectorySpec
+from vut.auxiliary.no_entry import (TRANSIENT_DIRECTORY_NAME,
+                                    below_no_entry_f, no_entry_f,
+                                    own_ground_f)
 
 
 FALLBACK_TEST_DIRECTORY = "TEST"
@@ -171,6 +174,11 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None):
     if fault_list is None: fault_list = []
     inherited, ascent_fault_list = ascended_spec(root)
     fault_list.extend(ascent_fault_list)
+    #  ASKED INSIDE A DIRECTORY NO WALK ENTERS -- a coverage output, a
+    #  marked directory, 'TMP', 'OUT': nothing there is a test (R-85).
+    if below_no_entry_f(root, lambda here: os.path.isfile(
+                                  os.path.join(here, ROOT_CONF_NAME))):
+        return
     if test_directory_f(root, inherited):
         yield (".", explore(root, interview_runner=interview_runner,
                             inherited=inherited))
@@ -236,6 +244,7 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list):
         if name.startswith("."):                          continue
         path = os.path.join(directory, name)
         if not os.path.isdir(path):                       continue
+        if no_entry_f(path):                              continue
         child_relative = _joined(relative, name)
         if name == marker:
             yield (child_relative,
@@ -287,7 +296,7 @@ class RootConfMissing(Exception):
         super().__init__("%s\n%s" % (text, ROOT_CONF_HINT_STR))
 
 
-TRANSIENT_ROOT_NAME = "TMP"
+TRANSIENT_ROOT_NAME = TRANSIENT_DIRECTORY_NAME
 
 
 def transient_ground_f(path):
@@ -299,8 +308,7 @@ def transient_ground_f(path):
             fixture built there must not read the enclosing project's
             root conf as its own.
     """
-    return os.path.basename(path) == TRANSIENT_ROOT_NAME \
-           and os.path.isdir(os.path.join(os.path.dirname(path), "GOOD"))
+    return own_ground_f(path, (TRANSIENT_ROOT_NAME,))
 
 
 def root_conf_directory(start):
@@ -433,6 +441,7 @@ def _walk(root, relative, effective, interview_runner,
         if name.startswith("."):                          continue
         path = os.path.join(directory, name)
         if not os.path.isdir(path):                       continue
+        if no_entry_f(path):                              continue
         child_relative = _joined(relative, name)
         if name == marker:
             result = explore(path, interview_runner=interview_runner,

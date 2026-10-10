@@ -1,4 +1,4 @@
-# vut-register 5 generation:80 apps:13 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4
+# vut-register 5 generation:94 apps:15 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=5,14=7
 test;choice;verdict;report;stain;test_id;choice_id
 test-amend.py;conf;true;ok;;12;0
 ;languages;true;ok;;12;1
@@ -26,6 +26,18 @@ test-explorer.py;carriers;true;ok;;3;0
 ;faults;true;ok;;3;3
 ;graph;true;ok;;3;4
 ;resolve;true;ok;;3;5
+test-feature_adapt.py;judged;true;ok;;14;0
+;moved;true;ok;;14;1
+;relate;true;ok;;14;2
+;removed;true;ok;;14;3
+;surgery;true;ok;;14;4
+;test_moved;true;ok;;14;5
+;unrelate;true;ok;;14;6
+test-feature_relation.py;block;true;ok;;13;0
+;composition;true;ok;;13;1
+;faults;true;ok;;13;2
+;feature_file;true;ok;;13;3
+;tree;true;ok;;13;4
 test-interview.py;block;true;ok;;4;0
 ;directory;true;ok;;4;1
 ;memo;true;ok;;4;2

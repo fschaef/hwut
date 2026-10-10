@@ -1,6 +1,6 @@
 $ hwut.cov.run -o <out> --silent
     [status 1]
-    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+    <out> { hwut-coverage.marker, hwut.no-entry-here.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
       -- suite/TEST/py.py.cover
       | ##VUT-COVERAGE 3
       | ##source:   suite/TEST/py.py
@@ -26,7 +26,7 @@ $ hwut.cov.run -o <out> --silent
     per-case records: none
 $ hwut.cov.run test-py.py a -o <out> --silent
     [status 0]
-    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+    <out> { hwut-coverage.marker, hwut.no-entry-here.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
       -- suite/TEST/py.py.cover
       | ##VUT-COVERAGE 3
       | ##source:   suite/TEST/py.py
@@ -73,7 +73,7 @@ $ hwut.cov.run --silent
     |                     [--show-details] [--no-failure-summary] [--brief]
     |                     [--log <file>] [--directory=<path>]
     [status 2]
-  OK  : the two tables, one coverage file per source file, and the marker
+  OK  : the two tables, one coverage file per source file, and the two markers
   OK  : every test run that left a record has its id
   OK  : a range one run executed carries that run's id; the range both executed carries a GROUP id, and the group names both
   OK  : no per-case record is left behind

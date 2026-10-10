@@ -1,0 +1,44 @@
+
+--- the components, their parts and their own TEST directory ---
+.                        composition=False TEST=None
+    part engine
+engine                   composition=False TEST=None
+    part engine/compare
+    part engine/empty
+engine/compare           composition=True  TEST=engine/compare/TEST
+    part engine/compare/core
+    part engine/compare/patterns
+engine/compare/core      composition=True  TEST=engine/compare/core/TEST
+engine/compare/patterns  composition=False TEST=engine/compare/patterns/TEST
+engine/empty             composition=True  TEST=None
+
+--- the TEST directories: features, runs, verdicts ---
+engine/compare/TEST   feature file: True
+    PROVEN   #1 whole-page
+        PASS       test-pages.sh small
+        PASS       test-pages.sh large
+engine/compare/core/TEST   feature file: True
+    FAILING  #1 line-pairing
+        PASS       test-pair.sh plain
+        FAIL       test-pair.sh gap
+    FAILING  #2 missing-side
+        FAIL       test-pair.sh gap
+    FAILING  #4 untested
+        ASPIRANT   test-stray.sh None
+    UNPROVEN #None not-numbered
+    unlinked   test-pair.sh odd
+    undefined  test-stray.sh None 'no-such'
+engine/compare/patterns/TEST   feature file: False
+    undefined  test-pat.sh None 'glob'
+
+--- the counts, summed over the parts ---
+.                            PROVEN=1  FAILING=3  UNPROVEN=1
+engine                       PROVEN=1  FAILING=3  UNPROVEN=1
+engine/compare               PROVEN=1  FAILING=3  UNPROVEN=1
+engine/compare/core          PROVEN=0  FAILING=3  UNPROVEN=1
+engine/compare/patterns      PROVEN=0  FAILING=0  UNPROVEN=0
+engine/empty                 PROVEN=0  FAILING=0  UNPROVEN=0
+engine/compare/TEST          PROVEN=1  FAILING=0  UNPROVEN=0
+engine/compare/core/TEST     PROVEN=0  FAILING=3  UNPROVEN=1
+engine/compare/patterns/TEST PROVEN=0  FAILING=0  UNPROVEN=0
+<hwut-end>

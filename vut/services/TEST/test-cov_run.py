@@ -76,6 +76,8 @@ import config                                                    # noqa F401
 from vut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
+from   vut.auxiliary.no_entry          import NO_ENTRY_MARKER_FILE   # noqa E402
+from   vut.engine.coverage.api         import MARKER_FILE            # noqa E402
 from   vut.services.lib.cov.run import main as cov_main   # noqa E402
 from   vut.services.lib.cov.conv.to_humans import main as humans_main  # noqa E402
 from   vut.services.run import main as run_main   # noqa E402
@@ -296,7 +298,7 @@ def show_output(root):
                    for name in name_list)
     print("    <out> { %s }" % ", ".join(found))
     for name in found:
-        if name == "hwut-coverage.marker": continue
+        if name in (MARKER_FILE, NO_ENTRY_MARKER_FILE): continue
         print("      -- %s" % name)
         for line in shown(os.path.join(out, name)).splitlines():
             print("      | %s" % line)
@@ -545,10 +547,11 @@ def test_output():
     shutil.rmtree(root)
 
     ok = check([
-        (first == ["hwut-coverage.marker", "suite/TEST/py.py.cover",
+        (first == [MARKER_FILE, NO_ENTRY_MARKER_FILE,
+                   "suite/TEST/py.py.cover",
                    "test_run_group_id_db.csv", "test_run_id_db.csv"],
          "the two tables, one coverage file per source file, and the "
-         "marker"),
+         "two markers"),
         (output is not None
          and output.run_db == {("suite/TEST", "test-py.py", "a"): "00",
                                ("suite/TEST", "test-py.py", "b"): "01"},

@@ -27,6 +27,7 @@ by PATH and by path alike.
                         hwut.dev.podman.build  hwut.dev.podman.enter
                         hwut.run.diff     hwut.report.details
                         hwut.run.stability  hwut.report.list  hwut.report
+                        hwut.report.features
                         hwut.help     hwut.about    hwut.affected
                         hwut.remove
                         hwut.rename   hwut.move

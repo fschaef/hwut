@@ -52,6 +52,11 @@ WHAT A CALLER ASKS:
     source_digest_of    the digest that says whether a source moved
     LOCK_DIRECTORY_NAME the lock's place under 'TMP/'
     RunIdFault          a run id that does not read
+    IdScope, ID_LIMIT   one id scope: the allocation law every numbered
+                        thing shares, and its ceiling
+    decimal_text, decimal_parts, number_of_decimal, id_text, id_number,
+    DIGITS, BASE        the spellings of an id: decimal, and base 64 at
+                        one width
 
 TWO DATABASES, ONE DOOR. The book holds DECISIONS and the observation
 database holds WHAT THIS MACHINE SAW (E-36); they are different files,
@@ -81,6 +86,9 @@ from .configuration import (CAPS_FIELD_DB, E_TestVerdict,
                             NamingConfig, StoreConfig)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
                             GroupTable, parse_group_table)
+from .id_scope      import (BASE, DIGITS, ID_LIMIT, IdScope,
+                            decimal_parts, decimal_text, id_number,
+                            id_text, number_of_decimal)
 from .observation   import (Observation, ObservationDb, ObservationFault,
                             observation_of)
 from .stream_store  import (DirectoryBusy, DirectoryLock,
@@ -91,7 +99,9 @@ from .test_run_id   import RunIdFault, TestRunId, run_id_of_text
 from .test_run_info.of_disk import (carries_unaccepted_f,
                                     carries_unaccepted_text_f)
 
-__all__ = ("Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
+__all__ = ("BASE", "DIGITS", "ID_LIMIT", "IdScope", "decimal_parts",
+           "decimal_text", "id_number", "id_text", "number_of_decimal",
+           "Bookkeeper", "CAPS_FIELD_DB", "DirectoryBusy",
            "DirectoryLock", "E_TestVerdict", "EMPTY_GROUP", "GroupDb", "GroupFault", "GroupTable", "BOOK_FORBIDDEN_IN_NAME", "GOOD_OWNED_FILE_TUPLE", "LOCK_DIRECTORY_NAME",
            "NOMINAL_SUFFIX_DB", "NamingConfig", "Observation",
            "ObservationDb", "ObservationFault", "RunIdFault",

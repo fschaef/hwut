@@ -1,0 +1,75 @@
+
+--- before ---
+    no-id     .                        id=None       from=None
+    unjudged  engine                   id=eng        from=None
+    twin      engine                   id=cmp        from=None
+    gone      engine                   id=old        from=None
+    no-id     engine/compare/TEST      id=None       from=None
+    parent    engine/compare/core      id=core       from=None
+    unlisted  engine/plain             id=plain      from=None
+
+--- adapted, parents first ---
+adapt_directory(.)
+    .: id = "tree"
+adapt_directory(engine)
+    engine: parent = "tree"
+adapt_directory(engine/plain)
+    engine: childs, 'plain' entered, its sentence empty
+adapt_directory(engine/compare/core)
+    engine/compare/core: parent = "cmp"
+adapt_directory(engine/compare/TEST)
+    engine/compare/TEST: id = "cmp-proof"
+adapt_directory(engine/compare)
+    nothing to do
+
+--- after: what no adaption heals stays ---
+    twin      engine                   id=cmp        from=None
+    gone      engine                   id=old        from=None
+
+--- the files ---
+hwut-composition.conf:
+    | component {
+    |     id = "tree"
+    |     title  = "All"
+    |     childs = ["eng"]
+    | }
+engine/hwut-composition.conf:
+    | component {
+    |     id    = "eng"
+    |     title = "Engine"
+    |     parent = "tree"
+    |     childs {
+    |         cmp = "Gives the verdict."   # the heart
+    |         old = "Was here once."
+    |         plain = ""
+    |     }
+    | }
+engine/compare/hwut-composition.conf:
+    | component {
+    |     id     = "cmp"
+    |     title  = "Compare"
+    |     parent { eng = "The engine's verdict rests on it." }
+    |     childs {
+    |         core      = "Aligns two streams line by line."
+    |         cmp-proof = "Proves the whole comparison on real pages."
+    |     }
+    | }
+engine/compare/core/hwut-composition.conf:
+    | component {
+    |     id     = "core"
+    |     title  = "Core"
+    |     parent { cmp = "Alignment is what compare shows." }
+    |     childs { core-proof = "The proof of pairing." }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     id = "cmp-proof"
+    |     parent = "cmp"
+    |     issued = 1
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    | }
+
+--- a directory without a statement file ---
+adapt_directory(engine/twin/TEST)
+    REASON no statement file stands in 'engine/twin/TEST'
+<hwut-end>

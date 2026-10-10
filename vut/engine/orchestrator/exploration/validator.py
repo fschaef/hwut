@@ -329,6 +329,10 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
         value = _string_list(entry, file, fault_list)
         if value is not None:
             _output(entry, value, parameter_db, file, fault_list)
+    elif key == "features":
+        value = _string_list_or_empty(entry, file, fault_list)
+        if value is not None:
+            _features(entry, value, parameter_db, file, fault_list)
     elif key in ("same", "interactive"):
         value = _bool(entry, file, fault_list)
         if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
@@ -392,6 +396,30 @@ def _output(entry, value, parameter_db, file, fault_list):
             "'output' names every subject once"))
         return
     parameter_db["output"] = value
+
+
+def _features(entry, value, parameter_db, file, fault_list):
+    """RETURN: None. The feature names into 'parameter_db', or a fault
+    by name: an empty name, or a name standing twice.
+
+    AN EMPTY LIST IS AN ANSWER: a choice that states 'features = []'
+    proves none of the features its application's root names.
+
+    Whether the TEST directory DEFINES a name is not asked here: a test
+    runs and is judged whether or not its links resolve.
+    """
+    position = _position_of(entry.node, entry)
+    if any(not name.strip() for name in value):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, position,
+            "'features' holds no empty name"))
+        return
+    if len(set(value)) != len(value):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, position,
+            "'features' names every feature once"))
+        return
+    parameter_db["features"] = value
 
 
 def _build(entry, file, fault_list):

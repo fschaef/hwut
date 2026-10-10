@@ -26,7 +26,7 @@ $ hwut.cov.run --glob test-py* -o <out>
     | |       rec        |                 skip                 |      no rec      |
     | COVERAGE DATA: <root>/out -- 1 test run(s), 1 source file(s)
     [status 1]
-    <out> { hwut-coverage.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+    <out> { hwut-coverage.marker, hwut.no-entry-here.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
       -- suite/TEST/py.py.cover
       | ##VUT-COVERAGE 3
       | ##source:   suite/TEST/py.py

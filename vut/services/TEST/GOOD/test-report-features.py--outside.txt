@@ -1,0 +1,20 @@
+
+--- no feature file, no composition file ---
+    COMPONENT .                                    0 proven, 0 failing, 0 unproven
+        COMPONENT a                                0 proven, 0 failing, 0 unproven
+            FEATURES a/TEST                        0 proven, 0 failing, 0 unproven
+            COMPONENT a/b                          0 proven, 0 failing, 0 unproven
+                FEATURES a/b/TEST                  0 proven, 0 failing, 0 unproven
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            a/b/TEST/test-b.sh   'wanted'
+        TEST directory, no 'hwut-features.conf'
+            a/TEST
+            a/b/TEST
+        component, no 'hwut-composition.conf'
+            .
+            a
+            a/b
+status: OK
+<hwut-end>

@@ -1,0 +1,73 @@
+
+--- a directory moved by hand, a missing id, a dead entry ---
+    # hwut.sanitize.propose -- in '.': relations
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives
+    # itself no 'id'; nothing can name it as parent or child.
+    # 'relate' writes 'id = "<the directory's name>"' -- rename it
+    # afterwards, here and where it is listed -- and relates it to the
+    # directory above.
+    relate engine/compare/TEST
+    
+    # DETECTED MOVE: a directory stands below one component, and its
+    # statement file and the 'childs' it came from still say another.
+    # 'relate' sets 'parent' to the id of the directory above and
+    # carries the 'childs' entry, with its sentence, from the old
+    # parent's file to the new one's.
+    relate engine/plain/core  # moved from engine/compare
+    
+    # CHILD GONE: 'childs' lists an id that nothing directly below
+    # carries, and that no moved directory took with it.
+    # 'unrelate' removes the entry, its sentence with it.
+    unrelate engine old
+status: OK
+
+--- two childs under one id, and a parent without an id ---
+    stderr: NOTE: engine: two childs carry the id 'cmp' -- rename one
+    stderr: NOTE: engine/plain/core: not related -- the directory above gives itself no id
+    # hwut.sanitize.propose -- in '.': relations
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives
+    # itself no 'id'; nothing can name it as parent or child.
+    # 'relate' writes 'id = "<the directory's name>"' -- rename it
+    # afterwards, here and where it is listed -- and relates it to the
+    # directory above.
+    relate engine/compare/TEST
+    relate engine/plain
+    
+    # CHILD GONE: 'childs' lists an id that nothing directly below
+    # carries, and that no moved directory took with it.
+    # 'unrelate' removes the entry, its sentence with it.
+    unrelate engine old
+status: OK
+
+--- a tree whose statements agree with its directories ---
+    # hwut.sanitize.propose -- in '.': relations
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # nothing to sanitize
+status: EMPTY
+<hwut-end>

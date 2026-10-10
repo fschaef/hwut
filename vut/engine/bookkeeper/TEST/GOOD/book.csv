@@ -1,4 +1,4 @@
-# vut-register 5 generation:62 apps:10 marks:0=10,1=5,2=4,3=21,8=4,9=2
+# vut-register 5 generation:68 apps:11 marks:0=10,1=5,2=4,3=21,8=4,9=2,10=5
 test;choice;verdict;report;stain;test_id;choice_id
 test-bookkeeper.py;damage;true;ok;;0;0
 ;divergence;true;ok;;0;1
@@ -14,6 +14,11 @@ test-group_table.py;faults;true;ok;;2;0
 ;groups;true;ok;;2;1
 ;persisted;true;ok;;2;2
 ;tables;true;ok;;2;3
+test-id_scope.py;allocate;true;ok;;10;0
+;ceiling;true;ok;;10;1
+;give_back;true;ok;;10;2
+;mark_line;true;ok;;10;3
+;spellings;true;ok;;10;4
 test-stream_store.py;keys;true;ok;;1;0
 ;lock_dead;true;ok;;1;1
 ;lock_live;true;ok;;1;2

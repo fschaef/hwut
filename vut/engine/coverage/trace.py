@@ -25,6 +25,7 @@ ______________________________________________________________________________
 """
 import csv
 import os
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 FILE_NAME    = "hwut-traces-coverage.csv"
 SEPARATOR    = ";"
@@ -38,7 +39,8 @@ class CoverageTraceDb:
 
     def __init__(self, directory):
         """RETURN: CoverageTraceDb over the trace file of 'directory'."""
-        self.path = os.path.join(str(directory), "TMP", FILE_NAME)
+        self.path = os.path.join(str(directory), TRANSIENT_DIRECTORY_NAME,
+                                 FILE_NAME)
 
     def read(self):
         """

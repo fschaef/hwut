@@ -1,0 +1,21 @@
+
+--- one mark, two writings ---
+INSPECT: 'N:3'   'issued = 2'
+
+--- mark_of_text, on a scope counting from 1 ---
+         '5'          -> True  mark=5 next=6
+         ' 7 '        -> True  mark=7 next=8
+         '0'          -> True  mark=0 next=1
+         '-1'         -> False mark=0 next=1
+         ''           -> False mark=0 next=1
+         'x'          -> False mark=0 next=1
+         '1.5'        -> False mark=0 next=1
+         '4294967295' -> True  mark=4294967295 next=4294967296
+         '4294967296' -> False mark=0 next=1
+  OK  : 'N:' carries the next id, 'issued =' the highest issued
+  OK  : a decimal number is taken
+  OK  : 'issued = 0' is the fresh scope
+  OK  : what spells no mark leaves the mark standing
+  OK  : a mark at ID_LIMIT is not taken
+SUCCESS: the mark is read back as it was written.
+<hwut-end>

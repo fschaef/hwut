@@ -141,7 +141,7 @@ def test_groups():
 
     banner("the ceiling")
     full = GroupTable()
-    full._next = ID_LIMIT
+    full._scope.next = ID_LIMIT
     ceiling = raised(lambda: full.group_of({A}))
     print("INSPECT: a scope at ID_LIMIT asked to issue -> %s" % ceiling)
 

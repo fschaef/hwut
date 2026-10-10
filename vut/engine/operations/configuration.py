@@ -31,6 +31,7 @@ from   pathlib     import Path
 from   typing      import Mapping, Optional, Sequence
 
 from   ..procsitter.api import ProcsitterConfig
+from vut.auxiliary.no_entry import OUT_DIRECTORY_NAME
 
 
 class E_SourceKind(Enum):
@@ -185,7 +186,7 @@ class TestConfiguration:
         RETURN: Path, 'OUT/' under the test directory -- where the
                 application's output files land.
         """
-        return Path(self.test_directory) / "OUT"
+        return Path(self.test_directory) / OUT_DIRECTORY_NAME
 
     @property
     def has_choices(self):

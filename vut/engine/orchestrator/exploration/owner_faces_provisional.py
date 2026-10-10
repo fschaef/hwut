@@ -117,3 +117,13 @@ class ConfigRunner:
     stderr_ignored_f: bool = False
     output:        tuple = ("<stdout>",)
     execute:       str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigFeatures:
+    """OWED TO: the feature relation ('feature_relation.py').
+
+    'feature_name_tuple' -- the features a test run PROVES, by the names
+    its TEST directory's 'hwut-features.conf' gives them. None: the run
+    links to no feature."""
+    feature_name_tuple: tuple | None = None

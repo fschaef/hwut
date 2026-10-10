@@ -1,0 +1,16 @@
+
+--- the last id issued ---
+INSPECT: give_back(2) -> True   mark=1 next=2
+INSPECT: the next allocation -> 2
+
+--- an id that is not the last ---
+INSPECT: give_back(0) -> False   mark=2 next=3
+INSPECT: the next allocation -> 3
+
+--- the only id of a scope counting from 1 ---
+INSPECT: give_back(1) -> True   mark=0 next=1
+  OK  : the last id issued is issued again
+  OK  : an earlier id is retired: the mark stands
+  OK  : a scope given back whole starts at its first id
+SUCCESS: no id is issued twice while it stands.
+<hwut-end>

@@ -243,7 +243,7 @@ def test_retire():
 
     print("--- the ceiling ---")
     full = TestIdDb(_place())
-    full._next_app = ID_LIMIT
+    full._app_scope.next = ID_LIMIT
     ceiling = _raised(lambda: full.run_id_of("q.py", allocate_f=True))
     print("INSPECT: a scope at ID_LIMIT asked to issue -> %s" % ceiling)
 

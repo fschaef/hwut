@@ -65,6 +65,8 @@ from vut.services.lib.viewers.keyed         import element
 from vut.services.lib.viewers.keyed         import report
 
 from vut.services.lib                      import preferences
+from vut.services.lib.viewers              import (NO_LINE_IN_GOOD_TEXT,
+                                                   NO_LINE_IN_OUTPUT_TEXT)
 from vut.engine.display.colour             import ELEMENT_ROLE_DB
 
 import asyncio
@@ -101,6 +103,10 @@ STYLE_ROLE_DB = {
     "filler":         "keyed.filler",
     "token":          "keyed.token",
     "copied":         "keyed.spent",
+    #  A LINE WITHOUT A PARTNER (E-142): OUTPUT's side of the row on the
+    #  red ground, GOOD's side a dim note.
+    "unpaired":       "keyed.unpaired",
+    "absent.good":    "keyed.absent-good",
 }
 
 COLUMN_STEP_N = 8       # how far one 'h' or 'l' moves the view sideways
@@ -839,6 +845,8 @@ class KeyedDisplay(DisplayAdapter):
                 "token":          "bold",
                 "copied":         "italic",
                 "absent":         "",
+                "unpaired":       "reverse",
+                "absent.good":    "",
             })
         prefs    = preferences.load()
         style_db = {name: preferences.toolkit_style(prefs.color(role))
@@ -959,9 +967,37 @@ class KeyedDisplay(DisplayAdapter):
                 #  aligned, so one gutter tells where both stand.
                 result.append(("class:lineno", "%4s " % (cell.index + 1)
                                                if cell.index >= 0 else "     "))
-            result.extend(self._cut(self._pieces_of(cell, pane)))
+            other = row.nominal if pane is E_Pane.SUBJECT else row.subject
+            result.extend(self._cut(self._unpaired_pieces_of(cell, other, pane)
+                                    or self._pieces_of(cell, pane)))
             result.append(("", "\n"))
         return result
+
+    def _unpaired_pieces_of(self, cell, other, pane):
+        """
+        RETURN: list[(style, text)], one cell of a row where a LINE
+                STANDS WITHOUT A PARTNER (E-142):
+                    OUTPUT's line GOOD holds none for -- the line whole
+                        on the red ground ('unpaired');
+                    the side that holds no line -- the note that says
+                        so: '## <no line in OUTPUT here>' on the red
+                        ground, '## <no line in GOOD here>' dim.
+                None, else: the cell is drawn as every other.
+
+        ONLY AGAINST A REAL LINE. A marker, a filler, the closing token
+        and a spent line stand on rows of their own for other reasons,
+        and their empty side stays empty.
+        """
+        if cell.kind is E_Kind.ABSENT and other.kind is E_Kind.PLAIN:
+            if pane is E_Pane.SUBJECT:
+                return [("class:unpaired", NO_LINE_IN_OUTPUT_TEXT)]
+            return [("class:absent.good", NO_LINE_IN_GOOD_TEXT)]
+        if pane is E_Pane.SUBJECT and cell.kind is E_Kind.PLAIN \
+           and other.kind is E_Kind.ABSENT:
+            style = self._style_of(cell, pane)
+            return [((style + " " if style else "") + "class:unpaired",
+                     cell.text.expandtabs(TAB_N))]
+        return None
 
     def _placed_of(self, text, pane):
         """RETURN: list[Piece], the elements of 'text' as compare read it

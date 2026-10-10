@@ -1,0 +1,265 @@
+==============================================================================
+spec/23-features -- FEATURES: what a tree claims to do, and which test
+                    runs prove it
+==============================================================================
+
+VERSION: 3
+
+COMPONENTS: engine/bookkeeper, engine/orchestrator/exploration,
+            engine/coverage, services.
+INTEND:     adm/WORK/intend/23-features.txt
+
+VERSION 1 was the concept of 2026-10-10. VERSION 2 said what of it stood.
+VERSION 3 takes the ruling of the same day: THE STATEMENT FILES GIVE
+THEMSELVES IDS AND RELATE BY THEM -- 'id', 'parent', 'childs' -- sanitize
+investigates the relation and proposes detected move corrections, and
+every face that moves, renames or removes relies on ONE adaption.
+'to-parent' and 'parts' of version 1 are gone.
+
+    section                                   stands / OWED
+    ---------------------------------------------------------------------
+    1  the feature file                       stands  (exploration R-83, R-84)
+    2  the link, 'features' in the block      stands  (R-83)
+    3  the composition file                   stands  (R-83, R-84)
+    4  ids, 'parent' and 'childs'             stands  (R-84)
+    5  hwut.report.features                   stands  (services E-139)
+    6  the judgement, and what sanitize       stands  (R-84, services E-140)
+       proposes
+    7  the one adaption; move, rename,        stands  (R-84, E-140)
+       remove
+    8  engine/bookkeeper/id_scope.py          stands  (bookkeeper B-31)
+    9  open
+
+A FEATURE is one thing a piece of software does, stated by its author in a
+sentence. A feature is PROVEN where at least one test run is linked to it
+and every linked test run passes. A feature with no linked test run is
+UNPROVEN, and an unproven feature counts as not implemented.
+
+A COMPONENT is a directory that is not a TEST directory.
+
+    <component>/hwut-composition.conf     what the component does; its id,
+                                          its parent's, its childs'
+    <component>/TEST/hwut-features.conf   the features proven in this TEST
+                                          directory; its id, its parent's
+    a test's '@hwut { }' block            the features this test proves
+
+
+1  THE FEATURE FILE
+______________________________________________________________________________
+
+    features {
+        id     = "core-proof"
+        parent { core = "What 'core' promises, proven." }
+        issued = 2
+        1 { name        = "line-pairing"
+            title       = "Two streams are aligned line by line."
+            explanation = "..." }
+        2 { name        = "missing-side"
+            title       = "A line present on one side only is shown whole." }
+    }
+
+    id            the file's own id (section 4).
+    parent        the id of the composition file of the directory above,
+                  and how these features serve it (section 4).
+    issued        the highest feature number this file ever issued.
+    <number>      a feature; the number is its ID inside this file, issued
+                  once and never again: the next feature receives
+                  'issued + 1'. A feature removed leaves its number unused.
+    name          what a test writes to link to the feature. Unique in this
+                  file. A name may change; the number stays.
+    title         one sentence: what the software does.
+    explanation   free text.
+
+A feature number means something inside its own file only. Across the tree
+a feature is addressed as '<path>#<number> <name>', composed by whoever
+reports, at the moment it reports, and stored nowhere (as coverage D-14
+rules for test run ids).
+
+An object under a key that is neither a number nor 'parent' is a feature
+WITHOUT a number. A number standing twice is refused by the parser; the
+first stands.
+
+
+2  THE LINK
+______________________________________________________________________________
+
+    # @hwut {
+    #     title    = "Pairing"
+    #     features = ["line-pairing"]
+    #     choices { gap { features = ["line-pairing", "missing-side"] } }
+    # }
+
+'features' is a test parameter like every other: at the root for the whole
+test, in a choice for that choice (the choice's list REPLACES the root's,
+'[]' links nothing), in 'app_defaults'. A name is looked up in the feature
+file of the test's own TEST directory and nowhere else. The link exists in
+the test's block only.
+
+
+3  THE COMPOSITION FILE
+______________________________________________________________________________
+
+    component {
+        id     = "cmp"
+        title  = "Compare"
+        does   = "Decides whether an output is equivalent to its nominal."
+        parent { eng = "The engine's verdict rests on it." }
+        childs {
+            core      = "Aligns two streams line by line."
+            cmp-proof = "Proves the whole comparison on real pages."
+        }
+    }
+
+    id            the file's own id (section 4).
+    title, does   what the component is and does.
+    parent        the id of the composition file of the directory above,
+                  and how this component serves it.
+    childs        the ids of the statement files directly below -- the
+                  components and the TEST directory's feature file -- and
+                  what each contributes.
+
+
+4  IDS, 'parent' AND 'childs'
+______________________________________________________________________________
+
+Each statement file gives ITSELF an 'id': a freely chosen string ("cmp"),
+unique among the childs of its parent. The files relate to each other by
+these ids and by nothing else. No path and no directory name is written.
+
+    parent { <id> = "<how this serves it>" }      or    parent = "<id>"
+    childs { <id> = "<what it contributes>" ... } or    childs = ["<id>", ...]
+
+Every relation is stated twice -- the child names its parent, the parent
+lists its child -- and the DIRECTORIES state it a third time by where they
+stand. The directories are the fact; the two statements are held against
+them. The top of a tree (where 'hwut-root.conf' stands) states no parent.
+
+
+5  THE REPORT
+______________________________________________________________________________
+
+'hwut.report.features [--directory=<path>]' walks the tree below the
+directory it is called in and prints component -> part -> feature -> test
+runs and their verdicts, each component with its id and its counts.
+
+    state of a feature
+        PROVEN     one linked test run or more; all of them pass
+        FAILING    one linked test run or more; one of them does not pass,
+                   or has no verdict in 'GOOD/book.csv'
+        UNPROVEN   no linked test run
+
+    'serves'      the directory's own 'parent' sentence
+    'as child'    what the 'childs' of the directory above says of its id
+
+OUTSIDE THE RELATION, named below the tree: a test run naming a feature its
+TEST directory does not define; a test run linking to no feature (where the
+directory carries a feature file); a TEST directory without a feature file;
+a component without a composition file; a statement that is not read; and
+every disagreement of section 6.
+
+
+6  THE JUDGEMENT, AND WHAT SANITIZATION PROPOSES
+______________________________________________________________________________
+
+'feature_relation.mismatch_list' holds 'parent' and 'childs' against the
+directories, for every directory that carries a statement file:
+
+    kind       what disagrees                             healed by
+    ---------------------------------------------------------------------
+    no-id      the file gives itself no 'id'              relate <dir>
+    moved      it stands below one parent; its 'parent',  relate <dir>
+               or the 'childs' above, say otherwise --
+               and ANOTHER component still lists its id
+               while nothing below that one carries it
+    parent     'parent' is not the id of the directory    relate <dir>
+               above
+    unlisted   the directory above does not list the id   relate <dir>
+    gone       'childs' lists an id nothing directly      unrelate <dir> <id>
+               below carries, and no moved directory
+               took with it
+    twin       two childs of one parent carry one id      said; the author
+                                                          renames one
+    unjudged   the directory above gives itself no id     said; its own
+                                                          'relate' comes first
+
+'hwut.sanitize.propose --relations' (one of the aspects a bare call asks)
+writes one 'relate' per directory -- noted 'moved from <dir>' where the move
+was detected -- and one 'unrelate' per dead entry, parents before childs.
+'hwut.sanitize.apply' and 'hwut.sanitize relate|unrelate' judge again and
+act.
+
+'hwut.run' is not affected by any of it: a test runs and is judged whether
+or not its links resolve.
+
+
+7  THE ONE ADAPTION
+______________________________________________________________________________
+
+'engine/orchestrator/exploration/feature_adapt.py' is the one
+implementation behind 'relate', 'unrelate', 'hwut.move', 'hwut.rename' and
+'hwut.remove'. Text is MOVED, never composed; every edit is text surgery
+('amend.py'), so what is not adapted stays byte for byte.
+
+    relate <dir>          1  no 'id': the ONE id the 'childs' above lists
+                             that nothing carries, where this is its only
+                             child without an id; the directory's name else
+                          2  'parent' rewritten to the id above; its
+                             sentence stays
+                          3  the id entered in the 'childs' above -- CARRIED
+                             there with its sentence from the component
+                             that still lists it (a detected move), with an
+                             empty sentence else
+    unrelate <dir> <id>   the entry removed
+    hwut.move, across     each feature the test links to that the source's
+    TEST directories      feature file defines and the target's does not is
+                          written into the target's under the target's next
+                          number, and taken out of the source's unless a
+                          test that stays still links to it. Defined alike
+                          in both: taken out of the source with its last
+                          link. Defined differently: both stand, and said.
+                          No feature file in the target: nothing carried,
+                          and said.
+    hwut.rename, within   nothing to adapt: the link is the block's, and
+    a directory           the block is the author's (services E-48)
+    hwut.remove           the features left without a linked run are named
+    a directory moved     nothing global breaks: below it every id still
+    or renamed BY HAND    resolves; what no longer agrees is 'moved', and
+                          'relate' carries the entry
+    sanitize 'move'       an orphan's records carried after its application
+                          go through 'hwut.move' (E-131) and so through the
+                          same adaption
+
+
+8  IDS: ONE MODULE FOR EVERY SCOPE
+______________________________________________________________________________
+
+    scope                     one per               kept in
+    ---------------------------------------------------------------------
+    test applications         TEST directory        GOOD/book.csv (register)
+    choices                   test application      GOOD/book.csv (register)
+    test run groups           TEST directory        GOOD/group_ids.dat
+    features                  TEST directory        hwut-features.conf
+
+'engine/bookkeeper/id_scope.py' (B-31): 'IdScope' -- mark, 'allocate()',
+'give_back(n)', 'raise_to(n)', the ceiling 2**32 -- and the spellings of an
+id, decimal and base 64 at one width. The string ids of section 4 are the
+author's and are issued by nobody.
+
+
+9  OPEN
+______________________________________________________________________________
+
+    o-3  Whether test runs that link to no feature make the report exit
+         with a failure. BUILT: listed only, exit 0.
+    o-5  Whether 'hwut.run' prints a one-line count of unresolved links at
+         its end, as it does for other hints.
+    o-6  A feature without a number ('fresh { name = "..." }') is read and
+         reported '#-'; nothing numbers it yet (version 1's F-4).
+    o-8  NEW: 'hwut.move' carries a feature only where the target TEST
+         directory carries a feature file. Whether it shall WRITE one
+         (id, parent, issued) where none stands.
+    o-9  NEW: the sentence forms  parent { <id> = "..." }  and
+         childs { <id> = "..." }  keep version 1's 'to-parent' and 'parts'
+         sentences under the ruled attribute names; the bare forms
+         parent = "<id>"  and  childs = [...]  are read alike. Whether the
+         sentences belong there.

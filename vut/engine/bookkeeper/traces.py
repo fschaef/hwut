@@ -58,10 +58,11 @@ import platform
 import re
 import subprocess
 from   datetime import date
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 FILE_NAME    = "hwut-traces.csv"
 #  EVERY TRACE STANDS UNDER 'TMP/' (B-28).
-TRACE_DIRECTORY_NAME = "TMP"
+TRACE_DIRECTORY_NAME = TRANSIENT_DIRECTORY_NAME
 
 
 def trace_path(directory, file_name):

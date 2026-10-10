@@ -73,7 +73,8 @@ ______________________________________________________________________________
 """
 from   pathlib     import Path
 
-from   .test_run_id import TestRunId, ID_LIMIT
+from   .id_scope    import IdScope, ID_LIMIT
+from   .test_run_id import TestRunId
 
 
 FILE_NAME      = "test_ids.dat"
@@ -86,18 +87,28 @@ class TestIdFault(ValueError):
     pass
 
 
-def next_id_of(mark, scope_name):
-    """
-    RETURN: int, 'mark' itself -- the id a scope issues next, where it
-            lies below ID_LIMIT.
+def _app_scope(next_id=0):
+    """RETURN: IdScope, the application scope of one directory, issuing
+    'next_id' next."""
+    return IdScope("the app scope", next_id=next_id)
 
-    Raises TestIdFault where it does not: the scope has issued 2**32
-    ids and issues no more.
+
+def _choice_scope(app_id, next_id=0):
+    """RETURN: IdScope, the choice scope of application 'app_id',
+    issuing 'next_id' next."""
+    return IdScope("the choice scope of app %i" % app_id, next_id=next_id)
+
+
+def _issued(scope):
     """
-    if mark >= ID_LIMIT:
-        raise TestIdFault("%s has issued %i ids; no more are issued"
-                          % (scope_name, ID_LIMIT))
-    return mark
+    RETURN: int, the id 'scope' has just issued.
+
+    Raises TestIdFault where it does not issue: the scope has issued
+    2**32 ids and issues no more.
+    """
+    number = scope.allocate()
+    if number is None: raise TestIdFault(scope.refusal_text())
+    return number
 
 
 class TestIdDb:
@@ -119,8 +130,8 @@ class TestIdDb:
         self._app_db     = {}     # app_id -> name
         self._app_id_db  = {}     # name   -> app_id
         self._choice_db  = {}     # app_id -> {choice_id: name}
-        self._next_app   = 0      # high-water mark of the app scope
-        self._next_choice_db = {} # app_id -> high-water mark of its choices
+        self._app_scope  = _app_scope()   # the app ids of the directory
+        self._choice_scope_db = {}        # app_id -> IdScope of its choices
         self.generation      = 0  # bumped on every mutation (coverage D-25)
         try:
             text = self.path.read_text(encoding="utf-8")
@@ -156,12 +167,11 @@ class TestIdDb:
         app_id = self._app_id_db.get(app)
         if app_id is None:
             if not allocate_f: return None
-            app_id = next_id_of(self._next_app, "the app scope")
-            self._next_app          = app_id + 1
+            app_id = _issued(self._app_scope)
             self._app_db[app_id]    = app
             self._app_id_db[app]    = app_id
             self._choice_db[app_id] = {}
-            self._next_choice_db[app_id] = 0
+            self._choice_scope_db[app_id] = _choice_scope(app_id)
             self._mutated()
         if choice is None:
             return TestRunId(app_id, None)
@@ -170,9 +180,7 @@ class TestIdDb:
         for choice_id, name in choice_db.items():
             if name == choice: return TestRunId(app_id, choice_id)
         if not allocate_f: return None
-        choice_id = next_id_of(self._next_choice_db[app_id],
-                               "the choice scope of app %i" % app_id)
-        self._next_choice_db[app_id] = choice_id + 1
+        choice_id = _issued(self._choice_scope_db[app_id])
         choice_db[choice_id] = choice
         self._mutated()
         return TestRunId(app_id, choice_id)
@@ -291,15 +299,13 @@ class TestIdDb:
                     "first" % (run_id.app_id,
                                len(self._choice_db[run_id.app_id])))
             self.remove_app(run_id.app_id)
-            if run_id.app_id + 1 != self._next_app: return False
-            self._next_app = run_id.app_id
+            if not self._app_scope.give_back(run_id.app_id): return False
             self._mutated()
             return True
 
         self.remove_choice(run_id.app_id, run_id.choice_id)
-        mark = self._next_choice_db[run_id.app_id]
-        if run_id.choice_id + 1 != mark: return False
-        self._next_choice_db[run_id.app_id] = run_id.choice_id
+        scope = self._choice_scope_db[run_id.app_id]
+        if not scope.give_back(run_id.choice_id): return False
         self._mutated()
         return True
 
@@ -317,7 +323,7 @@ class TestIdDb:
         del self._app_db[app_id]
         del self._app_id_db[standing]
         del self._choice_db[app_id]
-        del self._next_choice_db[app_id]
+        del self._choice_scope_db[app_id]
         self._mutated()
         return standing
 
@@ -352,11 +358,11 @@ class TestIdDb:
         """
         line_list = ["##VUT-TEST-IDS " + FORMAT_VERSION,
                      "G:%i" % self.generation,
-                     "N:%i" % self._next_app]
+                     "N:" + self._app_scope.next_text()]
         for app_id, name, choice_tuple in self.app_iterable():
             line_list.append("A:%i %s" % (app_id, name))
-            line_list.append("N:%i.%i" % (app_id,
-                                          self._next_choice_db[app_id]))
+            line_list.append("N:%i.%s" % (
+                app_id, self._choice_scope_db[app_id].next_text()))
             line_list += ["C:%i.%i %s" % (app_id, choice_id, choice)
                           for choice_id, choice in choice_tuple]
         return "\n".join(line_list) + "\n"
@@ -389,10 +395,11 @@ class TestIdDb:
         this one may not. A book whose block is missing where ids stand
         in its rows is REFUSED BY NAME -- see 'register_of_book'.
         """
-        mark_text = ",".join("%i=%i" % (app_id, mark) for app_id, mark
-                             in sorted(self._next_choice_db.items()))
+        mark_text = ",".join("%i=%s" % (app_id, scope.next_text())
+                             for app_id, scope
+                             in sorted(self._choice_scope_db.items()))
         return ["# vut-register %s generation:%i apps:%i marks:%s"
-                % (FORMAT_VERSION, self.generation, self._next_app,
+                % (FORMAT_VERSION, self.generation, self._app_scope.next,
                    mark_text or "-")]
 
     def book_row_db(self):
@@ -447,13 +454,14 @@ class TestIdDb:
 
         register = _empty_register(directory)
         register.generation = generation
-        register._next_app  = next_app
+        register._app_scope.next = next_app
         for row in bearing:
             app_id = int(row["test_id"])
             name   = row["test"]
             register._app_db.setdefault(app_id, name)
             register._app_id_db.setdefault(name, app_id)
-            register._next_choice_db[app_id] = mark_db.get(app_id, 0)
+            register._choice_scope_db[app_id] = \
+                _choice_scope(app_id, mark_db.get(app_id, 0))
             register._choice_db.setdefault(app_id, {})
             if row.get("choice_id") in (None, ""): continue
             register._choice_db.setdefault(app_id, {})[int(row["choice_id"])] \
@@ -544,10 +552,11 @@ class TestIdDb:
         if not self._app_mark_seen:
             raise TestIdFault("the register carries no app mark 'N:'")
         for app_id in self._app_db:
-            if app_id >= self._next_app:
+            if app_id >= self._app_scope.next:
                 raise TestIdFault("app id %i lies at or above the mark %i"
-                                  % (app_id, self._next_app))
-            mark = self._next_choice_db.get(app_id)
+                                  % (app_id, self._app_scope.next))
+            scope = self._choice_scope_db.get(app_id)
+            mark  = None if scope is None else scope.next
             if mark is None:
                 raise TestIdFault("app %i carries no choice mark 'N:%i.'"
                                   % (app_id, app_id))
@@ -556,7 +565,7 @@ class TestIdDb:
                     raise TestIdFault(
                         "run id %i.%i lies at or above the mark %i"
                         % (app_id, choice_id, mark))
-        for app_id in self._next_choice_db:
+        for app_id in self._choice_scope_db:
             if app_id not in self._app_db:
                 raise TestIdFault("choice mark 'N:%i.' names an app id "
                                   "that is not registered" % app_id)
@@ -581,12 +590,12 @@ class TestIdDb:
                 if self._app_mark_seen:
                     raise TestIdFault("the app mark stands twice")
                 self._app_mark_seen = True
-                self._next_app      = mark
+                self._app_scope.next = mark
             case [app_id, mark]:
-                if app_id in self._next_choice_db:
+                if app_id in self._choice_scope_db:
                     raise TestIdFault("the choice mark of app %i stands "
                                       "twice" % app_id)
-                self._next_choice_db[app_id] = mark
+                self._choice_scope_db[app_id] = _choice_scope(app_id, mark)
             case _:
                 raise TestIdFault("'%s' spells no mark" % line)
 
@@ -620,8 +629,8 @@ def _empty_register(directory):
     register._app_db         = {}
     register._app_id_db      = {}
     register._choice_db      = {}
-    register._next_app       = 0
-    register._next_choice_db = {}
+    register._app_scope       = _app_scope()
+    register._choice_scope_db = {}
     register.generation      = 0
     return register
 

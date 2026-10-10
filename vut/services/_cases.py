@@ -128,11 +128,11 @@ class DifferingKey:
     """
     __slots__ = ("where", "test", "choice", "subject_text",
                  "nominal_text", "setup", "candidate_path",
-                 "nominal_path", "aspirant_f", "stderr_ignored_f")
+                 "nominal_path", "aspirant_f", "stderr_ignored_f", "stain")
 
     def __init__(self, where, test, choice, subject_text, nominal_text,
                  setup, candidate_path, nominal_path, aspirant_f=False,
-                 stderr_ignored_f=False):
+                 stderr_ignored_f=False, stain=None):
         self.where = where;               self.test = test
         self.choice = choice;             self.subject_text = subject_text
         self.nominal_text = nominal_text; self.setup = setup
@@ -141,6 +141,9 @@ class DifferingKey:
         #  THE TEST'S OWN DECLARATION (E-136): shown by the faces that
         #  view the case, and what an accept's refusal is decided by.
         self.stderr_ignored_f = stderr_ignored_f
+        #  THE BOOK'S STAIN on the case (a dict, or None): mentioned by
+        #  the faces that view it (E-141).
+        self.stain          = stain
         self.aspirant_f     = aspirant_f
 
     @property
@@ -157,7 +160,7 @@ class DifferingKey:
                else "%s/%s" % (self.where, self.name)
 
 
-def differing_keys(selected, write, refresh_f=False):
+def differing_keys(selected, write, refresh_f=False, stained_list=None):
     """
     RETURN: [0] list[DifferingKey], every selected (test, choice) whose
                 stdout candidate stands, whose nominal stands, and
@@ -175,6 +178,13 @@ def differing_keys(selected, write, refresh_f=False):
     A case without a candidate (never run) or without a nominal
     (never accepted) is not a difference to show; it is skipped, and
     the skip is said once per kind.
+
+    'stained_list': where a list is given, it receives one
+    (label, stain, witness path, path as shown) for every judged case
+    that IS equivalent and STAINED -- the book holds a stain, or its
+    stderr spoke untolerated (then the witness path is given, None
+    else): a case that fails or is not run, and has no difference to
+    show (E-141). Such a case is no key.
 
     'refresh_f': the caller WORKS on the candidate -- the merge accepts
     what it shows -- so it REFRESHES as 'hwut.accept' does (E-40's
@@ -288,14 +298,34 @@ def differing_keys(selected, write, refresh_f=False):
                           else "%s %s" % (test, choice), error,
                           str(out_path), str(good_path)))
                 continue
-            if equivalent_f: continue
+            stain = store.bookkeeper.stain(test, choice)
+            if equivalent_f:
+                if stained_list is not None:
+                    witness = None
+                    if not stderr_ignored_f_of(configuration, choice):
+                        witness = store.bookkeeper.error_witness_path(
+                                      test, choice)
+                        try:               size = os.path.getsize(witness)
+                        except OSError:    size = 0
+                        if size == 0: witness = None
+                    if stain or witness is not None:
+                        name = test if choice is None \
+                               else "%s %s" % (test, choice)
+                        stained_list.append((
+                            name if where in (".", "")
+                            else "%s/%s" % (where, name), stain,
+                            None if witness is None else str(witness),
+                            None if witness is None
+                            else os.path.relpath(str(witness))))
+                continue
             key_list.append(DifferingKey(where, test, choice, subject_text,
                                          nominal_text, setup,
                                          str(out_path), str(good_path),
                                          aspirant_f=aspirant_f,
                                          stderr_ignored_f=
                                              stderr_ignored_f_of(
-                                                 configuration, choice)))
+                                                 configuration, choice),
+                                         stain=stain))
     #  ASPIRANTS FIRST (B-14). A test the book knows and nobody has
     #  accepted is playable, not runnable; its accept is the act that
     #  makes it a member, and a person working a list wants the

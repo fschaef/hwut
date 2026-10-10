@@ -286,8 +286,19 @@ def _main(argv):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n, unread_n = keys_of(selected, err)
+    stained_list = []
+    key_list, judged_n, unread_n = keys_of(selected, err, stained_list)
+    #  A CASE THAT FAILS ON STDERR ALONE HAS NO DIFFERENCE TO SHOW
+    #  (E-141): it is said, with the text, and the face does not
+    #  answer 'nothing differs' over a case the run calls failed.
+    from vut.services._accept_common import stain_line_list
+    for label, stain, witness, shown in stained_list:
+        for line in stain_line_list(label, stain, witness, shown): err(line)
     if not key_list and unread_n:
+        return E_ExitCode.FAULT
+    if not key_list and stained_list:
+        err("no stdout differs: %d case(s) judged; %d stained"
+            % (judged_n, len(stained_list)))
         return E_ExitCode.FAULT
     if not key_list:
         err("nothing differs: %d case(s) judged, every candidate "
@@ -317,6 +328,8 @@ def _main(argv):
         mention = stderr_mention_of(key.label, spoke_f,
                                     key.stderr_ignored_f)
         if mention is not None: err(mention)
+        from vut.services._accept_common  import stain_mention_list
+        for line in stain_mention_list(key.label, key.stain): err(line)
         note = getattr(adapter, "note_stderr", None)
         if note is not None: note(spoke_f, key.stderr_ignored_f)
         asyncio.run(compare_view(key.subject_text, key.nominal_text,
@@ -328,7 +341,7 @@ def _main(argv):
     return E_ExitCode.FAULT
 
 
-def keys_of(selected, write):
+def keys_of(selected, write, stained_list=None):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
             'differing_keys' with the candidates REFRESHED first -- built
@@ -339,8 +352,12 @@ def keys_of(selected, write):
     A face that shows or merges a candidate works on it, so it must hold
     a current one: a stale candidate shown as the run's is the lie E-40
     forbids.
+
+    'stained_list' receives the cases that are equivalent and whose
+    stderr spoke untolerated ('differing_keys').
     """
-    return differing_keys(selected, write, refresh_f=True)
+    return differing_keys(selected, write, refresh_f=True,
+                          stained_list=stained_list)
 
 
 USAGE = ("usage: hwut.run.diff SUBJECT NOMINAL | FILE | [<wish>] "

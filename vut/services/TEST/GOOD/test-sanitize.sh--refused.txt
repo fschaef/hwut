@@ -11,7 +11,7 @@ STDERR {
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
-                                 [--transient] [--directory=<path>]
+                                 [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -26,7 +26,7 @@ STDERR {
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
-                                 [--transient] [--directory=<path>]
+                                 [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -41,7 +41,7 @@ STDERR {
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
-                                 [--transient] [--directory=<path>]
+                                 [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -56,6 +56,6 @@ STATUS: 2
 STDOUT {
     REFUSED: 'hwut.sanitize' does not take: --sideways
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, relate, unrelate, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

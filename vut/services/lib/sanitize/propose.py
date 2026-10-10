@@ -77,6 +77,18 @@ candidates.
                 nominal where it was made and stains the book
                 'constraint'; nothing is removed. A finding already
                 written is not proposed again.
+    --relations 'parent' AND 'childs' AGAINST THE DIRECTORIES: every
+                'hwut-composition.conf' and 'hwut-features.conf' gives
+                itself an 'id', names its parent's and lists its
+                childs'. A file without an id, a 'parent' that is not
+                the id of the directory above, an id the directory
+                above does not list: healed by 'relate', which adapts
+                the statements. Where another component still lists
+                the id and nothing below it carries it, the directory
+                was MOVED: 'relate' carries the entry, noted 'moved
+                from <dir>'. A listed id nothing carries is healed by
+                'unrelate'. Two childs under one id, and a directory
+                whose parent has no id, are said on stderr.
     (no option) A TREE WITHOUT A BOUNDARY (E-25): where no
                 'hwut-root.conf' stands in or above the directory, the
                 proposal is 'root <dir>' and nothing else -- nothing
@@ -269,6 +281,14 @@ def main(argv=None, write=None, err=None):
                                    if d != whole),
                             root)
             issue_list.append(issue)
+        note_list.extend(noted)
+
+    if "relations" in aspect_set:
+        from vut.engine.orchestrator.exploration.feature_relation \
+                                              import relation_of_exploration
+        found, noted = sanitize.relation_issue_list(
+            root, relation_of_exploration(root, exploration))
+        issue_list.extend(found)
         note_list.extend(noted)
 
     unbound_list = [name for name in arguments.target if name not in bound_set]

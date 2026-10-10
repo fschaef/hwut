@@ -37,6 +37,20 @@ relative to '--directory' (the current directory where none is given):
                                  is stained 'constraint'
     run    <dir> <target>        the project's own verb (E-7), through
                                  'hwut.execute', in <dir> and below
+    relate <dir>                 the statement file of <dir> --
+                                 'hwut-composition.conf', or the
+                                 'hwut-features.conf' of a TEST
+                                 directory -- disagrees with where the
+                                 directory stands: it is ADAPTED. An
+                                 'id' where it gives itself none (the
+                                 directory's name); 'parent' set to the
+                                 id of the directory above; its id
+                                 entered in the 'childs' above -- CARRIED
+                                 there, sentence and all, from the
+                                 'childs' that still lists it where the
+                                 directory was MOVED
+    unrelate <dir> <id>          'childs' of <dir> lists an id nothing
+                                 below it carries: the entry is removed
     root   [<dir>]               no 'hwut-root.conf' stands in or above
                                  <dir>: the file is written there, with
                                  its 'language-setup' table (E-25).
@@ -91,13 +105,16 @@ SOURCE_EXTENSION_SET   = frozenset((
     "py", "sh", "bash", "lua", "pl", "rb", "c", "cpp", "cc", "bas",
     "exe", "bat", "ps1", "js", "ts", "vhd", "v", "sv"))
 
-OUT_DIRECTORY_NAME     = "OUT"
-TRANSIENT_DIRECTORY_NAME = "TMP"
-TRANSIENT_ROOT_TUPLE   = ("OUT", "TMP")           # services E-24
+#  THE TWO GROUNDS' NAMES ARE 'auxiliary/no_entry.py's, referred to.
+from   vut.auxiliary.no_entry import (OUT_DIRECTORY_NAME,       # noqa: E402,F401
+                                      TRANSIENT_DIRECTORY_NAME,
+                                      OWN_GROUND_NAME_TUPLE)
+TRANSIENT_ROOT_TUPLE   = OWN_GROUND_NAME_TUPLE    # services E-24
 
 #  What a bare proposal asks about. Not the targets: running somebody's
 #  script is never implied.
-ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books", "constraints")
+ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books", "constraints",
+                "relations")
 #  Asked for by name only; a bare proposal never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
@@ -165,6 +182,28 @@ ISSUE_KIND_TUPLE = (
         "'remark' writes each finding into the nominal after the line that",
         "caused it -- a variable never bound at the head -- and stains the",
         "book 'constraint'. Nothing is removed; mend the nominal.")),
+    CIssueKind("relation-id", "relate", (
+        "NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives",
+        "itself no 'id'; nothing can name it as parent or child.",
+        "'relate' writes 'id = \"<the directory's name>\"' -- rename it",
+        "afterwards, here and where it is listed -- and relates it to the",
+        "directory above.")),
+    CIssueKind("relation-moved", "relate", (
+        "DETECTED MOVE: a directory stands below one component, and its",
+        "statement file and the 'childs' it came from still say another.",
+        "'relate' sets 'parent' to the id of the directory above and",
+        "carries the 'childs' entry, with its sentence, from the old",
+        "parent's file to the new one's.")),
+    CIssueKind("relation-parent", "relate", (
+        "PARENT AND CHILDS DISAGREE WITH THE DIRECTORIES: 'parent' is not",
+        "the id of the directory above, or the directory above does not",
+        "list the id in its 'childs'.",
+        "'relate' sets 'parent', and enters the id in the 'childs' above",
+        "with an EMPTY sentence -- write it.")),
+    CIssueKind("relation-gone", "unrelate", (
+        "CHILD GONE: 'childs' lists an id that nothing directly below",
+        "carries, and that no moved directory took with it.",
+        "'unrelate' removes the entry, its sentence with it.")),
     CIssueKind("target", "run", (
         "TARGET: the project's own verb, asked for by '--target' (E-7).",
         "'run' calls it through 'hwut.execute' in the directory and every",
@@ -217,12 +256,14 @@ class CIssue:
                     forget  <dir>/<test> [<choice>]
                     move    <dir>/<test> <new-dir>
                     run     <dir> <target>
+                    relate  <dir>
+                    unrelate <dir> <id>
                     root    <dir>
         """
         where = shown(base, self.directory).replace(os.sep, "/")
-        if self.verb() == "root":
+        if self.verb() in ("root", "relate"):
             return where
-        if self.verb() == "run":
+        if self.verb() in ("run", "unrelate"):
             return "%s %s" % (where, self.word_tuple[0])
         if self.verb() == "move":
             head = self.word_tuple[0] if where == "." \
@@ -574,6 +615,52 @@ def moved_issue_of(issue, home_list, root):
                    shown(root, d).replace(os.sep, "/") for d in home_list)
     return CIssue(issue.kind, issue.directory, issue.word_tuple,
                   payload=issue.payload, note=note)
+
+
+def relation_issue_list(root, relation):
+    """
+    RETURN: [0] list[CIssue], one 'relate' per directory whose statement
+                file disagrees with where it stands -- noted 'moved
+                from <dir>' where the move was detected -- and one
+                'unrelate' per 'childs' entry nothing carries; parents
+                before their childs.
+            [1] list[str], what is found and NOT proposed: two childs
+                of one parent carrying one id, and a directory that
+                cannot be related because the directory above gives
+                itself no id.
+
+    'relation' is the feature relation of the tree below 'root'
+    ('feature_relation.relation_of_exploration').
+    """
+    from vut.engine.orchestrator.exploration import feature_relation as fr
+    kind_db   = {fr.MOVED: "relation-moved", fr.NO_ID: "relation-id",
+                 fr.PARENT: "relation-parent", fr.UNLISTED: "relation-parent"}
+    rank_list = [fr.MOVED, fr.NO_ID, fr.PARENT, fr.UNLISTED]
+    issue_list, note_list, chosen_db = [], [], {}
+    for mismatch in fr.mismatch_list(relation):
+        directory = os.path.normpath(os.path.join(root, mismatch.path))
+        if mismatch.kind == fr.TWIN:
+            note_list.append("%s: two childs carry the id '%s' -- rename one"
+                             % (mismatch.path, mismatch.id))
+        elif mismatch.kind == fr.UNJUDGED:
+            note_list.append("%s: not related -- the directory above gives "
+                             "itself no id" % mismatch.path)
+        elif mismatch.kind == fr.GONE:
+            issue_list.append(CIssue("relation-gone", directory,
+                                     (mismatch.id,)))
+        else:
+            standing = chosen_db.get(directory)
+            if standing is not None and rank_list.index(standing.kind) \
+                                        <= rank_list.index(mismatch.kind):
+                continue
+            chosen_db[directory] = mismatch
+    relate_list = []
+    for directory, mismatch in chosen_db.items():
+        note = None if mismatch.from_path is None \
+               else "moved from %s" % mismatch.from_path
+        relate_list.append(CIssue(kind_db[mismatch.kind], directory, (),
+                                  note=note))
+    return relate_list + issue_list, note_list
 
 
 def books_issue_list(directory, app_set):

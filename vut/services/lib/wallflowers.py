@@ -21,8 +21,9 @@ explored directory with none has its list removed.
 ______________________________________________________________________________
 """
 import os
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME, entered
 
-WALLFLOWERS_PATH = os.path.join("TMP", "wallflowers.txt")
+WALLFLOWERS_PATH = os.path.join(TRANSIENT_DIRECTORY_NAME, "wallflowers.txt")
 WALLFLOWERS_GLOB = "**/TMP/wallflowers.txt"
 
 HEADER = """\
@@ -81,7 +82,16 @@ def wallflower_list_paths(root):
                      order sorted -- '<directory>/TMP/wallflowers.txt'.
     """
     for directory, dir_list, file_list in os.walk(root):
-        dir_list.sort()
-        if os.path.basename(directory) == "TMP" \
+        #  THE LIST STANDS IN 'TMP' ITSELF: the walk looks into one and
+        #  goes no further down, and enters nothing else hwut does not
+        #  iterate in (exploration R-85).
+        if os.path.basename(directory) == TRANSIENT_DIRECTORY_NAME:
+            dir_list[:] = []
+        else:
+            dir_list[:] = sorted(
+                name for name in dir_list
+                if name == TRANSIENT_DIRECTORY_NAME
+                or name in entered(directory, [name]))
+        if os.path.basename(directory) == TRANSIENT_DIRECTORY_NAME \
            and "wallflowers.txt" in file_list:
             yield os.path.join(directory, "wallflowers.txt")

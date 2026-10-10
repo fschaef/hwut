@@ -1,6 +1,6 @@
 STATUS: 0
 STDOUT {
-    # hwut.sanitize.propose -- in 'tree': session, lock, out, orphans, books, constraints
+    # hwut.sanitize.propose -- in 'tree': session, lock, out, orphans, books, constraints, relations
     #
     # One command per line, '<command> <concerned entity>', the entity
     # relative to the directory this was written in. Put '#' before a

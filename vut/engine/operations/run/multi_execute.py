@@ -112,10 +112,11 @@ from   .core                      import (Supply, STDOUT, STDERR,
 from   .provider                  import (I_ExecuteProvider,
                                           I_ProxyProvider,
                                           I_MultiProvider)
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 
 #  UNDER THE TRANSIENT ROOT 'TMP/' (services E-24).
-SESSION_DIRECTORY_NAME = "TMP/session"
+SESSION_DIRECTORY_NAME = TRANSIENT_DIRECTORY_NAME + "/session"
 
 
 class MultiExecute(I_MultiProvider):

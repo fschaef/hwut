@@ -1,0 +1,35 @@
+
+--- the file's own keys ---
+id:        core-proof
+parent:    core -- What 'core' promises, proven.
+issued:    4
+
+--- the features, file order ---
+number=1    key=1      name=line-pairing  line=5
+    title:       Two streams are aligned line by line.
+    explanation: Each line of the subject meets one of the nominal.
+number=2    key=2      name=missing-side  line=8
+    title:       A line present on one side only is shown whole.
+    explanation: None
+number=4    key=4      name=untested      line=10
+    title:       None
+    explanation: None
+number=None key=fresh  name=not-numbered  line=11
+    title:       Written today.
+    explanation: None
+
+--- asked by name ---
+missing-side  -> number 2
+not-numbered  -> number None
+nobody        -> None
+names: line-pairing, missing-side, untested, not-numbered
+
+--- the scope: 'issued' is the mark ---
+mark=4, the next feature receives 5
+
+--- the scope where 'issued' lags behind a number in the file ---
+issued=1, mark=4, the next feature receives 5
+
+--- faults ---
+0
+<hwut-end>

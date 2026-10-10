@@ -1,0 +1,46 @@
+
+--- 'engine/compare/core' moved by hand to 'engine/plain/core' ---
+    moved     engine/plain/core        id=core       from=engine/compare
+
+--- adapted ---
+adapt_directory(engine/plain/core)
+    engine/plain/core: parent = "plain"
+    engine/compare: childs, 'core' taken out
+    engine/plain: childs, 'core' entered
+    none
+
+--- the three files: where it came from, where it stands, itself ---
+engine/compare/hwut-composition.conf:
+    | component {
+    |     id     = "cmp"
+    |     title  = "Compare"
+    |     parent { eng = "The engine's verdict rests on it." }
+    |     childs {
+    |         cmp-proof = "Proves the whole comparison on real pages."
+    |     }
+    | }
+engine/plain/hwut-composition.conf:
+    | component { id = "plain"  parent = "eng"  childs { core = "Aligns two streams line by line." } }
+engine/plain/core/hwut-composition.conf:
+    | component {
+    |     id     = "core"
+    |     title  = "Core"
+    |     parent { plain = "Alignment is what compare shows." }
+    |     childs { core-proof = "The proof of pairing." }
+    | }
+
+--- what stood below it travelled with it and still agrees ---
+engine/plain/core/TEST/hwut-features.conf:
+    | features {
+    |     id     = "core-proof"
+    |     parent { core = "What 'core' promises, proven." }
+    |     issued = 2
+    |     1 { name  = "line-pairing"
+    |         title = "Two streams are aligned line by line." }
+    |     2 { name = "missing-side" }
+    | }
+
+--- adapted again ---
+adapt_directory(engine/plain/core)
+    nothing to do
+<hwut-end>

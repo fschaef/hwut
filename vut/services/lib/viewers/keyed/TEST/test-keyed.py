@@ -5,7 +5,7 @@
 #     choices    = ["crossing", "cut", "element", "filler", "header",
 #                   "keymap", "latch", "merge-colour", "reindex", "remove",
 #                   "report", "rounds", "split", "stay", "take", "token",
-#                   "undo", "view"]
+#                   "undo", "unpaired", "view"]
 #     tolerance { regions = false }
 # }
 #
@@ -683,7 +683,64 @@ def test_rounds():
     print("     -> %s %s" % (intent.name, text.split()))
 
 
+def test_unpaired():
+    """A line without a partner (services E-142): OUTPUT's side of its
+    row stands on the 'unpaired' ground -- the line GOOD holds none
+    for, or the note that OUTPUT holds none -- and GOOD's empty side
+    says so. A marker's, a filler's and the token's rows are left."""
+    import asyncio
+    from vut.services.lib.accept.engine        import merge_text
+    from vut.services.lib.viewers.keyed.driver import KeyedDisplay
+    from vut.services.lib.viewers.keyed.act    import E_Act, E_Pane
+
+    class Watched(KeyedDisplay):
+        """Prints both panes' fragments once, before the first act --
+        or, with 'count_f', only how many rows carry a mark: a marker
+        line printed here would make this page's own nominal read as
+        unaccepted (bookkeeper B-26)."""
+        count_f = False
+        def _apply(self, act, *argument):
+            if not getattr(self, "shown_f", False):
+                self.shown_f = True
+                for pane in (E_Pane.SUBJECT, E_Pane.NOMINAL):
+                    print("     -- %s" % pane.name)
+                    row = []
+                    for style, text in self._fragments(pane):
+                        if text != "\n":
+                            row.append((style, text))
+                            continue
+                        body = "".join(text for style, text in row
+                                       if style != "class:lineno")
+                        mark = sorted(set(
+                            word for style, _ in row
+                            for word in style.split()
+                            if word in ("class:unpaired",
+                                        "class:absent.good")))
+                        self.mark_n = getattr(self, "mark_n", 0) + len(mark)
+                        if not self.count_f:
+                            print(("        %-32s %s"
+                                   % (body, " ".join(mark))).rstrip())
+                        row = []
+                    if self.count_f:
+                        print("        rows marked: %i" % self.mark_n)
+            return super()._apply(act, *argument)
+
+    print("E-142: a line in OUTPUT only, a line in GOOD only")
+    asyncio.run(merge_text(
+        "alpha\nextra in output\nbeta\ngamma\n<hwut-end>\n",
+        "alpha\nbeta\nonly in good\ngamma\n<hwut-end>\n",
+        Watched(act_script=[E_Act.CANCEL], color_f=None), "x", None))
+    print("E-142: a first accept -- fillers and markers, no line unpaired")
+    counting = Watched(act_script=[E_Act.CANCEL], color_f=None)
+    counting.count_f = True
+    asyncio.run(merge_text(
+        "alpha\nbeta\n<hwut-end>\n",
+        "##! unaccepted\n--?--\n--?--\n####\n<hwut-end>\n",
+        counting, "x", None))
+
+
 CHOICE_DB = {
+    "unpaired": test_unpaired,
     "rounds":   test_rounds,
     "stay":     test_stay,
     "report":   test_report,

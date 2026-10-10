@@ -1,0 +1,72 @@
+
+--- hwut.sanitize.propose --relations -o proposal.txt ---
+status: OK
+
+--- hwut.sanitize.apply proposal.txt ---
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     relate engine/compare/TEST ........................................... [DONE]
+          engine/compare/TEST: id = "cmp-proof"
+     relate engine/plain/core ............................................. [DONE]
+          engine/plain/core: parent = "plain"
+          engine/compare: childs, 'core' taken out
+          engine/plain: childs, 'core' entered
+     unrelate engine old .................................................. [DONE]
+          engine: childs, 'old' taken out
+    ==============================================================================
+    Done 3/3
+status: OK
+
+--- the files ---
+engine/hwut-composition.conf:
+    | component {
+    |     id     = "eng"
+    |     parent = "all"
+    |     childs {
+    |         cmp   = "Gives the verdict."
+    |         plain = "Plain things."
+    |     }
+    | }
+engine/compare/hwut-composition.conf:
+    | component {
+    |     id     = "cmp"
+    |     parent { eng = "The engine's verdict rests on it." }
+    |     childs {
+    |         cmp-proof = "Proves the whole comparison."
+    |     }
+    | }
+engine/plain/hwut-composition.conf:
+    | component {
+    |     id     = "plain"
+    |     parent = "eng"
+    |     childs { core = "Aligns two streams line by line." }
+    | }
+engine/plain/core/hwut-composition.conf:
+    | component {
+    |     id     = "core"
+    |     parent { plain = "Alignment is what compare shows." }
+    |     childs { core-proof = "The proof of pairing." }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     id = "cmp-proof"
+    |     parent = "cmp"
+    |     issued = 1
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    | }
+
+--- proposed again ---
+    # hwut.sanitize.propose -- in '.': relations
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    
+    # nothing to sanitize
+status: EMPTY
+<hwut-end>

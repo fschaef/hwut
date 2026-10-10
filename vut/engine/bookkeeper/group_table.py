@@ -52,8 +52,8 @@ import os
 import stat
 from   pathlib import Path
 
-from   .test_run_id import (TestRunId, RunIdFault, run_id_of_text,
-                            ID_LIMIT)
+from   .id_scope    import IdScope, ID_LIMIT
+from   .test_run_id import TestRunId, RunIdFault, run_id_of_text
 
 
 FILE_NAME      = "group_ids.dat"
@@ -82,7 +82,8 @@ class GroupTable:
         group id is 1."""
         self._set_db    = {frozenset(): EMPTY_GROUP}
         self._group_db  = {EMPTY_GROUP: frozenset()}
-        self._next      = EMPTY_GROUP + 1
+        self._scope     = IdScope("the group scope",
+                                  next_id=EMPTY_GROUP + 1)
         self.generation = 0        # bumped per write (coverage D-25)
 
     def __len__(self):
@@ -105,11 +106,9 @@ class GroupTable:
         if standing is not None:   return standing
         if not allocate_f:         return None
 
-        if self._next >= ID_LIMIT:
-            raise GroupFault("the group scope has issued %i ids; no "
-                             "more are issued" % ID_LIMIT)
-        group_id = self._next
-        self._next += 1
+        group_id = self._scope.allocate()
+        if group_id is None:
+            raise GroupFault(self._scope.refusal_text())
         self._set_db[key]        = group_id
         self._group_db[group_id] = key
         self._allocated()
@@ -164,7 +163,7 @@ class GroupTable:
         """
         line_list = ["##VUT-TEST-GROUPS " + FORMAT_VERSION,
                      "R:%i" % self.generation,
-                     "N:%i" % self._next]
+                     "N:" + self._scope.next_text()]
         for group_id, key_tuple in self.item_iterable():
             for key in key_tuple:
                 if not isinstance(key, TestRunId):
@@ -218,7 +217,7 @@ class GroupTable:
                     raise GroupFault("mark '%s' lies beyond ID_LIMIT"
                                      % line)
                 mark_seen  = True
-                self._next = mark
+                self._scope.next = mark
                 continue
             if not head.startswith("G:"):
                 raise GroupFault("unknown group-table line '%s'" % line)
@@ -242,9 +241,9 @@ class GroupTable:
         if not mark_seen:
             raise GroupFault("the table carries no mark 'N:'")
         for group_id in self._group_db:
-            if group_id != EMPTY_GROUP and group_id >= self._next:
+            if group_id != EMPTY_GROUP and group_id >= self._scope.next:
                 raise GroupFault("group %i lies at or above the mark %i"
-                                 % (group_id, self._next))
+                                 % (group_id, self._scope.next))
 
 
 def parse_group_table(text):

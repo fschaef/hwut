@@ -53,6 +53,7 @@ VALUE_DB = {
     "interactive":             "interactive = true",
     "execute":                 'execute = "./$file"',
     "output":                  'output = ["<stdout>"]',
+    "features":                'features = ["f"]',
     #  a specification's structure
     "title":                   'title = "T"',
     "language":                'language = "bash"',

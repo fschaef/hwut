@@ -1,0 +1,59 @@
+
+--- the text ---
+    | # What compare is made of.
+    | component {
+    |     title  = "Compare"            # shown in the report
+    |     parent { eng = "The engine's verdict rests on it." }
+    | 
+    |     childs {
+    |         # the alignment
+    |         core = "Aligns two streams."
+    |         "odd id" = "Quoted, with \"quotes\" inside."   # stays
+    |     }
+    | }
+
+--- id set, parent renamed (its sentence kept), a child added ---
+    | # What compare is made of.
+    | component {
+    |     id = "cmp"
+    |     title  = "Compare"            # shown in the report
+    |     parent { "engine 2" = "The engine's verdict rests on it." }
+    | 
+    |     childs {
+    |         # the alignment
+    |         core = "Aligns two streams."
+    |         "odd id" = "Quoted, with \"quotes\" inside."   # stays
+    |         cmp-proof = "Proves it."
+    |         "no sentence" = ""
+    |     }
+    | }
+
+--- two childs removed; what each carried ---
+    carried: "Aligns two streams." | "Quoted, with \"quotes\" inside." | None
+    | # What compare is made of.
+    | component {
+    |     id = "cmp"
+    |     title  = "Compare"            # shown in the report
+    |     parent { "engine 2" = "The engine's verdict rests on it." }
+    | 
+    |     childs {
+    |         # the alignment
+    |    # stays
+    |         cmp-proof = "Proves it."
+    |         "no sentence" = ""
+    |     }
+    | }
+
+--- the forms without sentences, on one line ---
+    | component { id = "cmp"  parent = "eng"  childs = ["core"] }
+    carried: None
+    | component { id = "cmp"  parent = "all"  childs = ["pat"] }
+
+--- nothing stated yet ---
+    | component {
+    |     id = "new"
+    |     title = "New"
+    |     parent = "all"
+    |     childs { first = "" }
+    | }
+<hwut-end>

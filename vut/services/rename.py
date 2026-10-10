@@ -45,7 +45,13 @@ WHAT MOVES, each step announced:
                  the source's book, adopted by the target's
     THE REGISTER within the directory the name follows and the id
                  stands; across, retired here and issued there
-    THE LABELS   the boundary records, last ('services/_follow.py')
+    THE LABELS   the boundary records ('services/_follow.py')
+    THE FEATURES across a directory: each feature the test links to
+                 that the source's 'hwut-features.conf' defines and the
+                 target's does not is CARRIED into the target's, under
+                 the target's next number -- and taken out of the
+                 source's unless a test that stays still links to it
+                 ('exploration/feature_adapt.py', the one adaption)
 
 WHAT IS NOT TOUCHED: the test application file, its '@hwut' block,
 and any 'hwut.conf' 'apps' section naming it. Renaming or moving the
@@ -270,7 +276,34 @@ class Rename:
                               write,
                               target_directory=str(self.target.directory)):
             good_f = False
+        if self.across_f and self.whole_test_f:
+            self._features_followed()
         return good_f
+
+    def _features_followed(self) -> None:
+        """RETURN: None. The features the test links to, carried into
+        the target directory's feature file ('feature_adapt.test_moved')
+        -- each edit announced; a NOTE where the target carries no
+        feature file to carry them into; nothing where the test links
+        to no feature the source defines."""
+        from vut.engine.orchestrator.exploration import feature_adapt
+        source_dir = str(self.source.directory)
+        target_dir = str(self.target.directory)
+        #  THE APPLICATION IS READ WHERE IT STANDS: the author's 'git mv'
+        #  may have been made, or not yet.
+        if (Path(target_dir) / self.fresh_test).is_file():
+            name_set = feature_adapt.linked_name_set(target_dir,
+                                                     test=self.fresh_test)
+        else:
+            name_set = feature_adapt.linked_name_set(source_dir,
+                                                     test=self.test)
+        adapted = feature_adapt.test_moved(
+            source_dir, target_dir, name_set,
+            feature_adapt.linked_name_set(source_dir, without=self.test))
+        for line in adapted.said_tuple:
+            self.write(f"    {line}")
+        if adapted.reason:
+            self.write(f"    NOTE  {adapted.reason}")
 
     def _files_followed(self) -> bool:
         """RETURN: bool, True where every artefact moved."""

@@ -43,6 +43,8 @@ import sys
 
 from   ....engine.bookkeeper.traces import TraceDb, system_key
 from   ..._exit                     import E_ExitCode, guarded
+from vut.auxiliary.no_entry import (OUT_DIRECTORY_NAME,
+                                    TRANSIENT_DIRECTORY_NAME, no_entry_f)
 
 
 USAGE = ("usage: hwut.report.timings [--table] [-o <file>]\n"
@@ -61,8 +63,13 @@ def directory_list_of(root, recursive_f):
     if not recursive_f: return [root]
     found = []
     for directory, sub_list, file_list in os.walk(root):
+        #  A TRACES FILE STANDS IN 'TMP': the name is kept here, and
+        #  everything else hwut does not iterate in is passed over.
         sub_list[:] = [name for name in sub_list
-                       if name not in ("OUT", "TMP", "__pycache__", ".git")]
+                       if name not in (OUT_DIRECTORY_NAME,
+                                       TRANSIENT_DIRECTORY_NAME,
+                                       "__pycache__", ".git")
+                       and not no_entry_f(os.path.join(directory, name))]
         if os.path.isfile(TraceDb(directory).path) \
            or "hwut-traces.csv" in file_list:
             found.append(directory)

@@ -2119,3 +2119,113 @@ DECISION  The page reads through the readers a file takes:
           'read_conf').
 
 COST      None in behaviour; the validator was not touched.
+
+R-83  THE FEATURE RELATION IS READ HERE; 'features' IS A TEST PARAMETER  (2026-10-10)
+
+PROBLEM   Nothing related what a tree claims to do to the test runs
+          that prove it ('adm/WORK/spec/23-features.txt').
+DECISION  'feature_relation.py' reads the three statements:
+          'hwut-features.conf' in a TEST directory, 'hwut-composition.conf'
+          in a component, and 'features = [...]' in a test's block --
+          and composes the relation over a tree ('relation_of_tree'),
+          verdicts asked of each TEST directory's book.
+          'features' IS A TEST PARAMETER LIKE EVERY OTHER (R-26): at
+          the root for the whole test, in a choice for that choice,
+          and in 'app_defaults'. A choice's list REPLACES the root's;
+          the empty list is an answer. 'hwut.config.show' prints it
+          through the one printer. This is spec o-1, answered by the
+          standing law.
+          THE TWO FILES ARE THE FRAMEWORK'S OWN ('finder.OWN_FILE_TUPLE'):
+          MEASURED, a feature file in a TEST directory was a wallflower
+          before it stood there.
+          THE VALIDATOR DOES NOT ASK WHETHER A NAME IS DEFINED: a test
+          runs and is judged whether or not its links resolve.
+          A FEATURE WITHOUT A NUMBER is an object under a key that is
+          no number. A NUMBER STANDING TWICE never reaches this reader:
+          the parser refuses the second key ('duplicate key', SYNTAX)
+          and the first stands -- MEASURED; spec F-5's duplicate is
+          therefore a parser fault with a line, not two entries.
+COST      The relation reads every TEST directory's book and explores
+          the tree: as slow as a report.
+PINNED    'TEST/test-feature_relation.py feature_file, composition,
+          block, faults, tree'; 'test-namespace.py' (where the key may
+          stand); 'test-defaults.py declared, instantiate'.
+
+R-84  STATEMENT FILES RELATE BY THEIR OWN IDS; ONE ADAPTION            (2026-10-10)
+
+PROBLEM   R-83 related a component to its parts by DIRECTORY NAME
+          ('parts { core = ... }') and to its parent by position alone.
+          A directory moved or renamed left nothing to recognise it by.
+DECISION  RULED (Frank-Rene, 2026-10-10): the feature file gives itself
+          a string id and a component does so too; components and
+          features relate to each other by ids; the attributes are
+          'parent' and 'childs'; the id is called 'id'. Sanitize
+          investigates the relation and may propose detected move
+          corrections; move, rename and the like rely on one adaption.
+          THE DIRECTORIES ARE THE FACT. 'mismatch_list()' holds the two
+          statements against where the directories stand: no-id, moved,
+          parent, unlisted, gone, twin, unjudged.
+          A MOVE IS DETECTED from the statement left behind: another
+          component still lists the id and nothing below it carries it.
+          'feature_adapt.py' IS THE ONE ADAPTION: 'adapt_directory',
+          'child_dropped', 'test_moved', 'unproven_by_removal'. It moves
+          the author's text through 'amend.py' and composes none; an
+          entry it cannot fill is written with an empty sentence.
+          AN ID-LESS CHILD RECEIVES THE ID ITS PARENT ALREADY LISTS,
+          where that is the parent's one unclaimed id and its one
+          id-less child; the directory's name else.
+          'amend.py' reads a key that begins with a digit (a feature's
+          number) and offers 'named_container' and 'scope_container'.
+          'to-parent' and 'parts' are gone; the sentences stand as
+          parent { <id> = "..." }  and  childs { <id> = "..." }.
+COST      A carried feature is written on ONE line in the target
+          ('amend.value_text'); its number there is the target's next,
+          and the source's number is retired.
+          'hwut.move' carries nothing into a TEST directory without a
+          feature file (spec o-8).
+GRAVEYARD A directory-id database at the root (considered and dropped
+          before R-83): a second witness to where a directory stands.
+          Relating by directory name (R-83): a rename read as a removal
+          plus an addition, its sentence lost.
+PINNED    'TEST/test-feature_adapt.py judged, relate, moved, unrelate,
+          test_moved, removed, surgery'; 'test-feature_relation.py'.
+
+R-85  NO WALK ENTERS A COVERAGE OUTPUT                                (2026-10-10)
+
+PROBLEM   'hwut.cov.run' writes its output INTO the tree and the output
+          MIRRORS the tree it measured -- 'hwut.coverage/a/TEST/
+          test-m.py.cover'. MEASURED: the next 'hwut.run' explored
+          'hwut.coverage/a/TEST' as a test directory ('DIR
+          hwut.coverage/a/TEST', '0/0' in the summary), left a 'TMP/'
+          there, and sanitize noted it.
+DECISION  RULED (Frank-Rene, 2026-10-10): "never run into" it. THE MARK
+          IS 'hwut.no-entry-here.marker': EMPTY, saying only that hwut
+          does not iterate in there; DEFINED ONCE, as
+          'auxiliary/no_entry.NO_ENTRY_MARKER_FILE', and referred to by
+          that constant everywhere. "The TMP directory is a similar
+          case, the OUT directory, too."
+          'no_entry.no_entry_f(path)' IS THE ONE QUESTION every walk
+          asks -- both tree walks, the feature relation's,
+          'hwut.execute's, the timings' and the wallflower lists': the
+          directory carries the marker, or it is the 'TMP' or 'OUT' of
+          a test directory (beside a 'GOOD'). A face CALLED INSIDE such
+          a directory explores nothing.
+          'hwut.cov.run' PLACES THE MARKER in its output, beside
+          'hwut-coverage.marker' -- which keeps its own two duties:
+          naming the root, and licensing the emptying. ANYBODY MAY
+          PLACE ONE: a person's vendored tree is passed over alike.
+          'TMP' AND 'OUT' ARE KNOWN BY NAME, the names defined once in
+          the same module ('TRANSIENT_DIRECTORY_NAME',
+          'OUT_DIRECTORY_NAME') and every path built from them
+          ('TMP/store', 'TMP/lock', 'TMP/session', 'OUT/<key>.err');
+          the literals that spelt them in eleven modules are gone.
+COST      A real test directory placed below a marked directory is not
+          seen. NO MARKER IS WRITTEN INTO 'TMP' AND 'OUT': they are made
+          by many hands and removed whole by sanitize; a 'TMP' or 'OUT'
+          that stands beside no 'GOOD' is entered like any directory.
+          A coverage output written before this entry carries no
+          marker and is entered until the next coverage run.
+GRAVEYARD 'hwut-coverage.marker' as the mark (this entry's first
+          form, the same day): a coverage word for a thing that is not
+          about coverage.
+PINNED    'services/TEST/test-book-defects.sh coverage-ground'.

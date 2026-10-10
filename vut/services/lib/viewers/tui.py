@@ -72,6 +72,8 @@ import re
 import sys
 
 from vut.services.lib import preferences
+from vut.services.lib.viewers       import (NO_LINE_IN_GOOD_TEXT,
+                                            NO_LINE_IN_OUTPUT_TEXT)
 from vut.engine.display.colour      import ELEMENT_ROLE_DB
 import shutil
 import asyncio
@@ -425,16 +427,37 @@ class TuiDisplay(DisplayAdapter):
                 self._write("  %4s | %s\n" % (s_n, text))
             else:
                 self._write("  %4s %4s | %s\n" % (s_n, n_n, text))
+        elif s_n and not n_n:
+            #  OUTPUT HOLDS A LINE GOOD DOES NOT (E-142): the line whole
+            #  on the unpaired ground, and GOOD's row says it holds none.
+            self.bad_pair_n += 1
+            self._write("S %4s %4s | %s\n"
+                        % (s_n, "", self._unpaired_text(
+                               self._side_text(item.cells_s, "subject"),
+                               "".join(cell.subject or ""
+                                       for cell in item.cells_s))))
+            self._write("N %4s %4s | %s\n" % ("", "", NO_LINE_IN_GOOD_TEXT))
+        elif n_n and not s_n:
+            #  GOOD HOLDS A LINE OUTPUT DOES NOT: OUTPUT's row says so,
+            #  on the unpaired ground; GOOD's line stands as it is.
+            self.bad_pair_n += 1
+            self._write("S %4s %4s | %s\n"
+                        % ("", "", self._unpaired_text(
+                               NO_LINE_IN_OUTPUT_TEXT,
+                               NO_LINE_IN_OUTPUT_TEXT)))
+            self._write("N %4s %4s | %s\n"
+                        % ("", n_n, self._side_text(item.cells_n, "nominal")
+                                    if not self.color_f
+                                    else "".join(cell.nominal or ""
+                                                 for cell in item.cells_n)))
         else:
             self.bad_pair_n += 1
-            if s_n:
-                self._write("S %4s %4s | %s\n"
-                            % (s_n, "", self._side_text(item.cells_s,
-                                                        "subject")))
-            if n_n:
-                self._write("N %4s %4s | %s\n"
-                            % ("", n_n, self._side_text(item.cells_n,
-                                                        "nominal")))
+            self._write("S %4s %4s | %s\n"
+                        % (s_n, "", self._side_text(item.cells_s,
+                                                    "subject")))
+            self._write("N %4s %4s | %s\n"
+                        % ("", n_n, self._side_text(item.cells_n,
+                                                    "nominal")))
         for note in self._note_list(item):
             #  ONE STREAM, ONE PLACE (E-56): 'S:2/N:2' is the same
             #  line said twice where the reading fed a stream against
@@ -445,6 +468,15 @@ class TuiDisplay(DisplayAdapter):
                 self._write("  %4s | ^ %s\n" % ("", note))
             else:
                 self._write("  %4s %4s | ^ %s\n" % ("", "", note))
+
+    def _unpaired_text(self, marked_text, raw_text):
+        """RETURN: str, OUTPUT's side of a line without a partner: with
+        colours, 'raw_text' whole in the role 'verdict.unpaired' (a red
+        ground); without, 'marked_text' -- the line as the plain marks
+        already draw it."""
+        if not self.color_f: return marked_text
+        return preferences.paint(
+            raw_text, preferences.load().color("verdict.unpaired"))
 
     def _render_two_columns(self, item, s_n, n_n):
         """RETURN: None. One aligned pair as ONE row of two columns --
@@ -464,10 +496,13 @@ class TuiDisplay(DisplayAdapter):
                                         + tuple(item.cells_n)) else " "
         else:         gutter = "|"
         column = self._column_width()
+        #  THE SIDE THAT HOLDS NO LINE SAYS SO (E-142), cut to the column.
         left   = self._side_rows(item.cells_s, "subject", column) \
-                 if s_n else [" " * column]
+                 if s_n else [self._unpaired_text(
+                                  NO_LINE_IN_OUTPUT_TEXT[:column].ljust(column),
+                                  NO_LINE_IN_OUTPUT_TEXT[:column].ljust(column))]
         right  = self._side_rows(item.cells_n, "nominal", column) \
-                 if n_n else [" " * column]
+                 if n_n else [NO_LINE_IN_GOOD_TEXT[:column].ljust(column)]
         for k in range(max(len(left), len(right))):
             l = left[k]  if k < len(left)  else " " * column
             r = right[k] if k < len(right) else " " * column

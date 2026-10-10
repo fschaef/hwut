@@ -1,0 +1,23 @@
+
+--- the component ---
+id:        cmp
+title:     Compare
+does:      Decides whether an output is equivalent to its nominal.
+parent:    eng -- The engine's verdict rests on it.
+
+--- the childs, file order ---
+core      Aligns two streams line by line.
+pat       Lets declared variation pass.
+cmp-proof Proves the whole comparison on real pages.
+
+--- asked by id ---
+core      -> Aligns two streams line by line.
+cmp-proof -> Proves the whole comparison on real pages.
+gone      -> None
+
+--- the forms without sentences ---
+parent: eng -- None   childs: (('core', None), ('pat', None))   faults: 0
+
+--- a component that states no id, no parent, no childs ---
+id: None   parent: None   childs: 0   faults: 0
+<hwut-end>

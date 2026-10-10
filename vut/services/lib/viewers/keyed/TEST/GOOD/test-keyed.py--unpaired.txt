@@ -1,0 +1,21 @@
+E-142: a line in OUTPUT only, a line in GOOD only
+     -- SUBJECT
+        alpha
+        extra in output                  class:unpaired
+        beta
+        ## <no line in OUTPUT here>      class:unpaired
+        gamma
+        <hwut-end>
+     -- NOMINAL
+        alpha
+        ## <no line in GOOD here>        class:absent.good
+        beta
+        only in good
+        gamma
+        <hwut-end>
+E-142: a first accept -- fillers and markers, no line unpaired
+     -- SUBJECT
+        rows marked: 0
+     -- NOMINAL
+        rows marked: 0
+<hwut-end>

@@ -217,6 +217,14 @@ def forget(store, test, choice, whole_test_f, write):
 
     THE PAGE, MADE FROM 'forgotten' (E-107): the sentences unchanged.
     """
+    #  THE FEATURES THE REMOVAL LEAVES UNPROVEN, read while the test's
+    #  links can still be read ('exploration/feature_adapt.py').
+    from vut.engine.orchestrator.exploration import feature_adapt
+    try:
+        unproven_tuple = feature_adapt.unproven_by_removal(
+            str(store.directory), test, None if whole_test_f else choice)
+    except OSError:
+        unproven_tuple = ()
     record, note_tuple = forgotten(store, test, choice, whole_test_f)
     for shown in record.gone_tuple:
         write("    forgotten: %s" % shown)
@@ -228,6 +236,9 @@ def forget(store, test, choice, whole_test_f, write):
                                  else "choice id retired")
                                 if record.registered_f else "not registered"))
     for line in note_tuple: write(line)
+    for name in unproven_tuple:
+        write("    NOTE  feature '%s' is left without a linked test run"
+              % name)
     return not record.fault_tuple and record.labels_ok_f
 
 

@@ -1,4 +1,4 @@
-# vut-register 5 generation:333 apps:42 marks:0=7,1=8,2=13,3=5,4=8,5=6,6=12,7=5,8=6,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=6
+# vut-register 5 generation:348 apps:44 marks:0=7,1=8,2=13,3=5,4=8,5=6,6=12,7=5,8=8,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=7,42=5,43=5
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -31,6 +31,7 @@ test-base-questions.py;asked;true;ok;;3;0
 ;until;true;ok;;3;4
 test-book-defects.sh;affected;true;ok;;41;5
 ;constraint-name;true;ok;;41;1
+;coverage-ground;true;ok;;41;6
 ;frame-side;true;ok;;41;0
 ;refused-band;true;ok;;41;4
 ;table-sep;true;ok;;41;2
@@ -83,7 +84,9 @@ test-dev_podman.py;build;true;ok;;35;0
 test-diff.sh;differing;true;ok;;8;0
 ;reading;true;ok;;8;1
 ;side-by-side;true;ok;;8;2
+;stains;true;ok;;8;7
 ;stderr;true;ok;;8;5
+;stderr-alone;true;ok;;8;6
 ;store;true;ok;;8;3
 ;tolerated;true;ok;;8;4
 test-enter.sh;enter;true;ok;;9;0
@@ -221,6 +224,11 @@ test-report-details.sh;bare;true;ok;;20;0
 ;pack;true;ok;;20;4
 ;raw;true;ok;;20;5
 ;wish;true;ok;;20;6
+test-report-features.py;empty;true;ok;;42;0
+;outside;true;ok;;42;1
+;refused;true;ok;;42;2
+;test_directory;true;ok;;42;3
+;tree;true;ok;;42;4
 test-report-timings.py;empty;true;ok;;26;0
 ;file;true;ok;;26;1
 ;refused;true;ok;;26;2
@@ -250,6 +258,11 @@ test-run-uncapped.sh;acknowledged;true;ok;;36;0
 test-sanitize-books.py;agree;true;ok;;22;0
 ;apply_books;true;ok;;22;3
 ;disagree;true;ok;;22;2
+test-sanitize-relations.py;apply;true;ok;;43;0
+;command;true;ok;;43;1
+;move;true;ok;;43;2
+;propose;true;ok;;43;3
+;remove;true;ok;;43;4
 test-sanitize-scenarios.sh;catalogue;true;ok;;32;0
 test-sanitize.sh;apply;true;ok;;23;0
 ;command;true;ok;;23;11

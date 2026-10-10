@@ -790,3 +790,36 @@ GRAVEYARD The naming handed to every face separately (the audit's own
           DO): twenty places to forget. A mark in the book: a second
           witness beside the block (services E-110).
 PINNED    'services/TEST/test-header-words.sh same'.
+
+B-31  ONE MODULE FOR EVERY ID SCOPE                                 (2026-10-10)
+
+PROBLEM   The tree issued numbers in three places and wrote the law
+          out in each: 'test_id_db.py' (applications, choices) and
+          'group_table.py' (groups) each kept a next-id counter, the
+          ceiling check and the step-back of a given-back id; the
+          base-64 spelling stood in 'coverage/database/identifier.py'.
+          A fourth scope arrives with the feature file
+          ('adm/WORK/spec/23-features.txt').
+DECISION  'id_scope.py': 'IdScope' -- mark, 'allocate()',
+          'give_back(n)', 'raise_to(n)', the ceiling ID_LIMIT and the
+          refusal that names the scope -- and the spellings of an id:
+          decimal ('47', '47.66') and base 64 at one width. The
+          register, the group table and the feature file keep their
+          own names, files, mutations and fault wording; allocation
+          and spelling are the module's. NO ID, FILE OR FORMAT MOVED:
+          the bookkeeper's and the coverage component's nominals stand
+          byte for byte.
+          'allocate()' ANSWERS None AT THE CEILING and the owner
+          raises its own fault with 'refusal_text()': the fault types
+          ('TestIdFault', 'GroupFault') are the owners'.
+          THE MARK HAS TWO WRITINGS: 'N:<next>' (register, group
+          table) and 'issued = <mark>' (feature file) -- one number,
+          'next' = 'mark' + 1.
+COST      The 'N:' lines are still parsed by their owners, whose fault
+          wording they carry; only 'issued =' is read by the module
+          ('mark_of_text').
+GRAVEYARD 'allocate()' raising a fault of the module's own: every
+          owner's refusal would have changed its name in a nominal.
+PINNED    'engine/bookkeeper/TEST/test-id_scope.py allocate, give_back,
+          ceiling, mark_line, spellings'; the ceiling choices of
+          'test-test_id_db.py' and 'test-group_table.py'.

@@ -54,4 +54,6 @@ ConfigurationDiffDisplayParameters:
     context_k                      1
 ConfigStore:
     same_nominal_f                 False
+ConfigFeatures:
+    feature_name_tuple             None
 <hwut-end>

@@ -916,3 +916,72 @@ given page is, is settled by DATING: find the ruling that changed
 the behaviour and check that the nominal predates it. Where no such
 ruling stands, the page is evidence of a defect and must not be
 blessed.
+
+
+13  THE FEATURE RELATION -- 'feature_relation.py', 'feature_adapt.py'
+______________________________________________________________________________
+
+Three statements say what a tree claims to do and which test runs prove
+it (R-83, R-84):
+
+    <component>/hwut-composition.conf     component { id  title  does
+                                          parent { <id> = "..." }
+                                          childs { <id> = "..." } }
+    <component>/TEST/hwut-features.conf   features { id
+                                          parent { <id> = "..." }  issued
+                                          <number> { name  title
+                                          explanation } }
+    a test's '@hwut { }' block            features = ["<name>", ...]
+
+    read_feature_file(directory)   CFeatureFile, or None where no file
+    read_composition(directory)    CComposition, or None where no file
+    relation_of_tree(root)         CRelation: components and TEST
+                                   directories by path relative to root
+    mismatch_list(relation)        'parent' and 'childs' against where
+                                   the directories stand
+
+'features' is a test parameter: at the root, in a choice, in
+'app_defaults'. A choice's list replaces the root's; '[]' links the
+choice to nothing. A name is looked up in the feature file of the test's
+own TEST directory.
+
+A feature's number is its id inside its file; 'issued' is the highest
+number the file issued; 'CFeatureFile.scope()' is the IdScope that
+issues the next one.
+
+Each statement file gives itself an 'id', a freely chosen string unique
+among the childs of its parent. 'parent' names the id of the composition
+file of the directory above; 'childs' lists the ids of the statement
+files directly below. 'parent = "<id>"' and 'childs = ["<id>", ...]' are
+the forms without sentences. The top of the tree states no parent.
+
+    kind       what disagrees with the directories
+    no-id      the file gives itself no id
+    moved      another component still lists the id; nothing below it
+               carries it
+    parent     'parent' is not the id of the directory above
+    unlisted   the directory above does not list the id
+    gone       'childs' lists an id nothing below carries
+    twin       two childs of one parent carry one id
+    unjudged   the directory above gives itself no id
+
+    state of a feature
+        PROVEN     one linked test run or more; all of them pass
+        FAILING    one linked test run or more; one of them does not
+                   pass, or has no verdict in 'GOOD/book.csv'
+        UNPROVEN   no linked test run
+
+'feature_adapt.py' edits the statement files:
+
+    adapt_directory(root, directory)    id, 'parent' and the entry in the
+                                        'childs' above, for one directory
+    child_dropped(root, directory, id)  a 'childs' entry nothing carries
+    test_moved(source, target, names, staying)
+                                        features carried into the target
+                                        TEST directory's feature file
+    unproven_by_removal(directory, test, choice)
+                                        features a removal leaves unlinked
+
+'hwut.report.features' prints the relation; 'hwut.sanitize.propose
+--relations' proposes 'relate' and 'unrelate'; 'hwut.move' and
+'hwut.remove' call the adaption for the test they act on.

@@ -1,0 +1,21 @@
+
+--- called inside engine/compare/core/TEST ---
+    FEATURES .                                     0 proven, 2 failing, 2 unproven
+        serves     What 'core' promises, proven.
+        [FAILING]  .#1 line-pairing -- Two streams are aligned line by line.
+            [PASS] test-pair.sh [plain]
+            [FAIL] test-pair.sh [gap]
+        [FAILING]  .#2 missing-side -- A line present on one side only is shown whole.
+            [FAIL] test-pair.sh [gap]
+        [UNPROVEN] .#3 untested
+        [UNPROVEN] .#- not-numbered
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            test-stray.sh   'no-such'
+        test run, links to no feature
+            test-pair.sh [odd]
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            .   no 'id'
+status: OK
+<hwut-end>

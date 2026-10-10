@@ -1,0 +1,60 @@
+
+--- a test whose features another test here still links to, or alone ---
+test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-pair.sh)   links ['line-pairing', 'missing-side']
+    feature 'line-pairing' -> #2
+    feature 'missing-side' -> #3, kept in the source: still linked there
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     id     = "core-proof"
+    |     parent { core = "What 'core' promises, proven." }
+    |     issued = 2
+    |     2 { name = "missing-side" }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     id     = "cmp-proof"
+    |     parent = "cmp"
+    |     issued = 3
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    |     2 { name  = "line-pairing" title = "Two streams are aligned line by line." }
+    |     3 { name = "missing-side" }
+    | }
+
+--- the last test linking to a feature follows ---
+test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-side.sh)   links ['missing-side']
+    feature 'missing-side' stands in the target alike: taken out of the source
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     id     = "core-proof"
+    |     parent { core = "What 'core' promises, proven." }
+    |     issued = 2
+    | }
+
+--- moved back: the feature receives a NEW number there ---
+test_moved(engine/compare/TEST -> engine/compare/core/TEST, test-side.sh)   links ['missing-side']
+    feature 'missing-side' -> #3, kept in the source: still linked there
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     id     = "core-proof"
+    |     parent { core = "What 'core' promises, proven." }
+    |     issued = 3
+    |     3 { name = "missing-side" }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     id     = "cmp-proof"
+    |     parent = "cmp"
+    |     issued = 3
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    |     2 { name  = "line-pairing" title = "Two streams are aligned line by line." }
+    |     3 { name = "missing-side" }
+    | }
+
+--- into a directory without a feature file ---
+test_moved(engine/compare/TEST -> engine/plain/TEST, test-pages.sh)   links ['whole-page']
+    REASON no 'hwut-features.conf' stands in the target directory: 'whole-page' stay(s) defined in the source
+
+--- a test that links to nothing ---
+test_moved(engine/plain/TEST -> engine/compare/core/TEST, test-plain.sh)   links []
+    nothing to do
+<hwut-end>

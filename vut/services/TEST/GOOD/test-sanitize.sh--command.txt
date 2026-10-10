@@ -39,18 +39,18 @@ STATUS: 2
 STDOUT {
     REFUSED: unknown command 'frget' -- did you mean 'forget'?
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, relate, unrelate, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 STATUS: 2
 STDOUT {
     REFUSED: 'run' takes <dir> <target>
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, relate, unrelate, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 STATUS: 2
 STDOUT {
-    REFUSED: no command -- one of remove, move, forget, book, remark, run, root
+    REFUSED: no command -- one of remove, move, forget, book, remark, relate, unrelate, run, root
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, relate, unrelate, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

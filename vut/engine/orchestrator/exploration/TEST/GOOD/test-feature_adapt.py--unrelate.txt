@@ -1,0 +1,28 @@
+
+--- an id nothing carries ---
+child_dropped(engine, 'old')
+    engine: childs, 'old' taken out
+
+--- an id a directory carries ---
+child_dropped(engine, 'cmp')
+    REASON 'cmp' is carried below 'engine', or was moved and is carried elsewhere
+
+--- an id that is not listed ---
+child_dropped(engine, 'nobody')
+    nothing to do
+
+--- a directory with a feature file ---
+child_dropped(engine/compare/TEST, 'x')
+    nothing to do
+
+--- the file ---
+engine/hwut-composition.conf:
+    | component {
+    |     id    = "eng"
+    |     title = "Engine"
+    |     parent = "all"
+    |     childs {
+    |         cmp = "Gives the verdict."   # the heart
+    |     }
+    | }
+<hwut-end>

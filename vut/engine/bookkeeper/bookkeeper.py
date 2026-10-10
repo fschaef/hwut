@@ -57,10 +57,12 @@ from   contextlib  import contextmanager
 from .configuration import E_TestVerdict, NamingConfig
 from .test_id_db import FILE_NAME as _REGISTER_FILE_NAME
 from .test_id_db import TestIdDb
+from vut.auxiliary.no_entry import (OUT_DIRECTORY_NAME,
+                                    TRANSIENT_DIRECTORY_NAME)
 
 #  THE STORE'S GROUND, under the transient root 'TMP/' (services E-24).
 #  Re-exported by 'stream_store'.
-STORE_DIRECTORY_NAME = "TMP/store"
+STORE_DIRECTORY_NAME = TRANSIENT_DIRECTORY_NAME + "/store"
 
 #  THE BOOK IS A TABLE (B-6): one row per (test, choice, operation), and
 #  one row per choice with 'operation' empty for the choice's own facts.
@@ -878,7 +880,7 @@ class Bookkeeper:
         discovery -- subjects are DECLARED -- and the reason went with
         it. What O-8 keeps: the sidecars, and 'OUT/' being the test's
         space rather than the framework's scratch."""
-        return self.directory / "OUT" \
+        return self.directory / OUT_DIRECTORY_NAME \
                               / self.key(test, choice, NOMINAL_SUFFIX_DB
                                                        .get(subject, subject))
 
@@ -892,7 +894,7 @@ class Bookkeeper:
         its PRESENCE is the statement. This is the ONE place its name
         is spelt; 'error_witness_name' is the same spelling for a
         caller that has no Bookkeeper in hand."""
-        return self.directory / "OUT" / error_witness_name(test, choice)
+        return self.directory / OUT_DIRECTORY_NAME / error_witness_name(test, choice)
 
     def _store_path(self, test, choice, subject):
         """RETURN: Path, the STORE'S ground for the sidecars of that

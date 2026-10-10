@@ -66,6 +66,8 @@ from vut.engine.orchestrator.exploration.configuration_tree import (
                                                   Position,
                                                   TestParameters, Tolerance,
                                                   DiffDisplayParameters)
+from vut.engine.orchestrator.exploration.feature_relation import (
+                                                  linked_name_tuple)
 from vut.engine.orchestrator.run.adapter import (naming_of,
                                                  test_configuration_of,
                                                  _compare_of)
@@ -140,6 +142,7 @@ def _stated_value(member):
         case "interactive": return True
         case "execute":     return "./run-me --now"
         case "output":      return ("<stdout>", "extra.log")
+        case "features":    return ("line-pairing",)
         case _:
             assert False, ("the sweep does not know how to state '%s'"
                            % member.name)
@@ -148,8 +151,8 @@ def _stated_value(member):
 def _arrivals(parameters):
     """
     RETURN: list[str], the names of the places a stated parameter
-            REACHED -- 'compare', 'caps', 'naming', or the
-            TestConfiguration member it became.
+            REACHED -- 'compare', 'caps', 'naming', 'feature relation',
+            or the TestConfiguration member it became.
 
     The comparison is against an application stating NOTHING: what
     differs, arrived.
@@ -174,6 +177,10 @@ def _arrivals(parameters):
         arrival.append("output")
     if naming_of([_app(parameters)]) != naming_of([_app(TestParameters())]):
         arrival.append("naming")
+    #  'features' IS NOT THE RUN'S: a test runs and is judged whether or
+    #  not its links resolve. Its receiver is the feature relation.
+    if linked_name_tuple(parameters) != linked_name_tuple(TestParameters()):
+        arrival.append("feature relation")
     return arrival
 
 

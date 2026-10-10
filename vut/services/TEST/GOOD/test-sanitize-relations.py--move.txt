@@ -1,0 +1,40 @@
+
+--- the author moves the application; hwut.move follows ---
+    TO FOLLOW THE NEW NAME, in 'engine/compare/core/TEST':
+      test-side.sh -> engine/compare/TEST/test-side.sh -- 0 file(s), the book entry, the register id, the coverage seats
+      (no recorded artefact stands; the book and the register are still asked)
+    test-side.sh -> engine/compare/TEST/test-side.sh:
+        book entry: adopted by 'engine/compare/TEST'
+        register: retired here; issued 0 there
+        feature 'line-pairing' -> #2, kept in the source: still linked there
+        feature 'missing-side' -> #3
+status: OK
+
+--- the two feature files ---
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     id     = "core-proof"
+    |     parent = "core"
+    |     issued = 2
+    |     1 { name = "line-pairing"  title = "Lines are paired." }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     id     = "cmp-proof"
+    |     parent = "cmp"
+    |     issued = 3
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    |     2 { name = "line-pairing"  title = "Lines are paired." }
+    |     3 { name = "missing-side"  title = "A lone line is shown." }
+    | }
+
+--- into a directory without a feature file ---
+    TO FOLLOW THE NEW NAME, in 'engine/compare/TEST':
+      test-pages.sh -> engine/plain/TEST/test-pages.sh -- 0 file(s), the book entry, the register id, the coverage seats
+      (no recorded artefact stands; the book and the register are still asked)
+    test-pages.sh -> engine/plain/TEST/test-pages.sh:
+        book entry: adopted by 'engine/plain/TEST'
+        register: retired here; issued 0 there
+        NOTE  no 'hwut-features.conf' stands in the target directory: 'whole-page' stay(s) defined in the source
+status: OK
+<hwut-end>

@@ -5,6 +5,7 @@
                | ^ constraint binding ((load: 50)) -- the value enters the constraint space
    --[ CONSTRAINT_VIOLATION/NONE ]--
    S    3      | [## error: "load <= 100" with: load=150]
+   N           | ## <no line in GOOD here>
    --[ CLOSING-TOKEN ]--
         5    2 | <hwut-end>
 <hwut-end>

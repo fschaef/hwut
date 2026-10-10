@@ -820,6 +820,18 @@ while read -r path; do
 done < "$S/deletes"
 echo "== $NEW new, $SAME identical, $CHANGED changed, $DEL to delete"
 
+#  A CHANGED FILE THAT IS WRITE-PROTECTED (a 'GOOD/book.csv' is left so
+#  by its bookkeeper) is NAMED BEFORE ANYTHING IS TOUCHED: an overwrite
+#  that fails half way leaves half a bundle standing.
+PROT=0
+: > "$S/protected"
+while read -r kind path; do
+    if [ "$kind" = C ] && [ ! -w "$path" ]; then
+        printf '  WRITE-PROTECTED        %s\n' "$path"; PROT=$((PROT+1)); echo "$path" >> "$S/protected"
+    fi
+done < "$S/plan"
+[ $PROT = 0 ] || echo "== $PROT changed file(s) write-protected: '--force' opens each for its overwrite and closes it again"
+
 if [ $CHANGED -gt 0 ] && [ $FORCE = 0 ]; then
     [ $CHECK = 0 ] && W="REFUSED; nothing applied." || W="would be REFUSED."
     echo "!! $CHANGED file(s) stand here with OTHER content -- $W"
@@ -836,6 +848,14 @@ if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ] && [ ! -f hwut-root.conf ] 
 fi
 [ $CHECK = 0 ] || { echo "== --check: nothing applied"; exit 0; }
 
+#  EVERY PROTECTED FILE IS OPENED FIRST: where one cannot be, nothing
+#  has been applied yet.
+while read -r path; do
+    [ -n "$path" ] || continue
+    chmod u+w "$path" 2>/dev/null && [ -w "$path" ] || {
+        while read -r opened; do [ "$opened" = "$path" ] && break; chmod u-w "$opened"; done < "$S/protected"
+        echo "!! '$path' is write-protected and cannot be opened -- REFUSED; nothing applied."; exit 2; }
+done < "$S/protected"
 echo "== applying"
 while read -r kind path; do
     case "$kind" in
@@ -847,6 +867,7 @@ while read -r kind path; do
     esac
 done < "$S/plan"
 while read -r path; do [ -n "$path" ] && [ -e "$path" ] && chmod a+x "$path"; done < "$S/modes"
+while read -r path; do [ -n "$path" ] && chmod u-w "$path"; done < "$S/protected"
 echo "== verifying"
 BAD=0
 while read -r hash path; do

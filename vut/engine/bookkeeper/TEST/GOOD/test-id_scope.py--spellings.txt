@@ -1,0 +1,33 @@
+
+--- decimal ---
+INSPECT: (47, None) -> '47' -> (47, None)
+INSPECT: (47, 66)   -> '47.66' -> (47, 66)
+INSPECT: (0, 0)     -> '0.0' -> (0, 0)
+INSPECT: decimal_parts('47.'  ) -> None
+INSPECT: decimal_parts('4.7.1') -> None
+INSPECT: decimal_parts('a'    ) -> None
+INSPECT: decimal_parts(''     ) -> None
+INSPECT: number_of_decimal('12'  ) -> 12
+INSPECT: number_of_decimal(' 12 ') -> 12
+INSPECT: number_of_decimal('-12' ) -> None
+INSPECT: number_of_decimal('1 2' ) -> None
+INSPECT: number_of_decimal('+3'  ) -> None
+
+--- base 64 at one width ---
+INSPECT:     0 -> '000' -> 0
+INSPECT:     9 -> '009' -> 9
+INSPECT:    10 -> '00A' -> 10
+INSPECT:    35 -> '00Z' -> 35
+INSPECT:    36 -> '00_' -> 36
+INSPECT:    37 -> '00a' -> 37
+INSPECT:    63 -> '00~' -> 63
+INSPECT:    64 -> '010' -> 64
+INSPECT:  4095 -> '0~~' -> 4095
+INSPECT:  4096 -> '100' -> 4096
+INSPECT: id_number('a-b') -> ValueError
+  OK  : a decimal id reads back, with and without a number below it
+  OK  : a base-64 id reads back
+  OK  : at one width, sorting the text sorts the numbers
+  OK  : a character outside the alphabet is refused
+SUCCESS: every spelling reads back to its number.
+<hwut-end>

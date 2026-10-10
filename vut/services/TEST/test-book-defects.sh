@@ -3,8 +3,8 @@
 #
 # @hwut {
 #     title   = "Defects found by a reader: each one, on the road the reader took."
-#     choices = ["affected", "constraint-name", "frame-side", "refused-band",
-#                "table-sep", "test-directory"]
+#     choices = ["affected", "constraint-name", "coverage-ground",
+#                "frame-side", "refused-band", "table-sep", "test-directory"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -32,6 +32,13 @@
 #                  that executed a changed line, as wishlist lines that
 #                  'hwut.run --wishlist' takes; an empty directory is
 #                  refused by name, never answered 'NONE'.
+# coverage-ground  the output of 'hwut.cov.run' MIRRORS the tree, its
+#                  'TEST' directories with it: no walk enters it --
+#                  under the default name, under a name '-o' gave, and
+#                  when called inside it (exploration R-85). What keeps
+#                  a walk out is the EMPTY 'hwut.no-entry-here.marker';
+#                  a person's own directory carrying it is passed over
+#                  alike, and so are a test directory's 'TMP' and 'OUT'.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 BIN=$(cd "$HERE/../../bin" && pwd)
@@ -42,7 +49,7 @@ RUN="hwut.run --jobs=1 --deterministic --no-colour --plain"
 case "$1" in
     --hwut-info)
         echo "Defects found by a reader: each one, on the road the reader took.;"
-        echo "CHOICES: frame-side, constraint-name, table-sep, test-directory, refused-band, affected;"
+        echo "CHOICES: frame-side, constraint-name, table-sep, test-directory, refused-band, affected, coverage-ground;"
         exit 0 ;;
 esac
 
@@ -127,6 +134,48 @@ EOF
       $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory' )
     echo "--- standing at the root"
     $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory'
+    ;;
+
+coverage-ground)
+    cp "$BIN/../hwut-root.conf" hwut-root.conf
+    page a/TEST/test-m.py 'one { }' <<'EOF'
+print("hello")
+EOF
+    ( cd a/TEST; hwut.accept --force test-m.py one > /dev/null 2>&1 )
+    hwut.cov.run --dont-ask --plain --jobs=1 > /dev/null 2>&1
+    hwut.cov.run -o measured --dont-ask --plain --jobs=1 > /dev/null 2>&1
+    echo "--- the outputs mirror the tree"
+    find hwut.coverage measured -type d -name TEST | sort
+    echo "--- hwut.run at the root"
+    $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory|TEST \\.'
+    echo "--- hwut.report.list at the root"
+    hwut.report.list
+    echo "--- hwut.run inside the mirror"
+    ( cd hwut.coverage/a/TEST; $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory' )
+    echo "--- nothing was made there"
+    find hwut.coverage measured -name TMP -o -name OUT -o -name GOOD | sort
+    echo "--- the marker that keeps a walk out: empty"
+    for d in hwut.coverage measured; do
+        echo "$d/hwut.no-entry-here.marker: $(wc -c < $d/hwut.no-entry-here.marker) byte(s)"
+    done
+    echo "--- a person's own directory, entered; then marked"
+    page vendor/lib/TEST/test-v.py 'one { }' <<'EOF'
+print("vendor")
+EOF
+    hwut.report.list
+    : > vendor/hwut.no-entry-here.marker
+    echo "marked:"
+    hwut.report.list
+    echo "--- 'TMP' and 'OUT' of a test directory: a tree left there is not entered"
+    mkdir -p a/TEST/TMP/left/TEST a/TEST/OUT/left/TEST
+    cp a/TEST/test-m.py a/TEST/TMP/left/TEST/
+    cp a/TEST/test-m.py a/TEST/OUT/left/TEST/
+    printf 'hwut {\n    target { say = "./say.sh" }\n}\n' > a/TEST/hwut.conf
+    printf '#! /bin/sh\necho "said here"\n' > a/TEST/say.sh; chmod +x a/TEST/say.sh
+    for d in a/TEST/TMP/left/TEST a/TEST/OUT/left/TEST; do
+        cp a/TEST/hwut.conf a/TEST/say.sh $d/
+    done
+    echo "hwut.execute say: said $(hwut.execute say 2>&1 | grep -c 'said here') time(s)"
     ;;
 
 refused-band)

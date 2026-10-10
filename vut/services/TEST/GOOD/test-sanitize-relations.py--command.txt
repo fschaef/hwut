@@ -1,0 +1,47 @@
+
+--- relate: a moved directory ---
+hwut.sanitize relate engine/plain/core
+    done: relate engine/plain/core
+        engine/plain/core: parent = "plain"
+        engine/compare: childs, 'core' taken out
+        engine/plain: childs, 'core' entered
+status: OK
+
+--- relate: again ---
+hwut.sanitize relate engine/plain/core
+    nothing to do: relate engine/plain/core -- the statements agree with the directories
+status: OK
+
+--- relate: no statement file ---
+hwut.sanitize relate engine/plain/TEST
+    REFUSED: relate engine/plain/TEST -- no statement file stands in 'engine/plain/TEST'
+status: FAULT
+
+--- relate: no such directory ---
+hwut.sanitize relate engine/nowhere
+    nothing to do: relate engine/nowhere -- nothing stands there
+status: OK
+
+--- unrelate: a dead entry ---
+hwut.sanitize unrelate engine old
+    done: unrelate engine old
+        engine: childs, 'old' taken out
+status: OK
+
+--- unrelate: again ---
+hwut.sanitize unrelate engine old
+    nothing to do: unrelate engine old -- 'old' is not listed there
+status: OK
+
+--- unrelate: an id a directory carries ---
+hwut.sanitize unrelate engine cmp
+    REFUSED: unrelate engine cmp -- 'cmp' is carried below 'engine', or was moved and is carried elsewhere
+status: FAULT
+
+--- unrelate: without the id ---
+hwut.sanitize unrelate engine
+    REFUSED: 'unrelate' takes <dir> <id>
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, move, forget, book, remark, relate, unrelate, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+status: REFUSED
+<hwut-end>

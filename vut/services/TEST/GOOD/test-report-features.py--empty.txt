@@ -1,0 +1,5 @@
+
+--- no TEST directory below ---
+    EMPTY: no TEST directory below '.'
+status: EMPTY
+<hwut-end>

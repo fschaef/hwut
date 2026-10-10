@@ -6,10 +6,10 @@ REACTION  stdout {
               --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
                  1 alpha                                   1 alpha
                  2 value [3.140]                      |    2 value [3.141]
-                 3 [only in subject]                  >
+                 3 [only in subject]                  >      ## <no line in GOOD here>
                  4 same ~((token))~ here              ~    3 same ~((other))~ here
                    ^ analogy '((token))' ~ '((other))' -- established at S:4/N:3
-                                                      <    4 [inserted in nominal]
+                   ## <no line in OUTPUT here>        <    4 [inserted in nominal]
                  5 a line wide enough to wrap around       5 a line wide enough to wrap around
                    the column it is given, so the con        the column it is given, so the con
                    tinuation rows show                       tinuation rows show
@@ -21,10 +21,10 @@ STIMULUS  the same, --numeric 0.01: the pair is tolerated, gutter '~'
               --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
                  1 alpha                                   1 alpha
                  2 value ~3.140~                      ~    2 value ~3.141~
-                 3 [only in subject]                  >
+                 3 [only in subject]                  >      ## <no line in GOOD here>
                  4 same ~((token))~ here              ~    3 same ~((other))~ here
                    ^ analogy '((token))' ~ '((other))' -- established at S:4/N:3
-                                                      <    4 [inserted in nominal]
+                   ## <no line in OUTPUT here>        <    4 [inserted in nominal]
                  5 a line wide enough to wrap around       5 a line wide enough to wrap around
                    the column it is given, so the con        the column it is given, so the con
                    tinuation rows show                       tinuation rows show

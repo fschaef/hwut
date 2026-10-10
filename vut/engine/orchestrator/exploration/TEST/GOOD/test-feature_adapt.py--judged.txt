@@ -1,0 +1,13 @@
+
+--- a tree whose statements agree with its directories ---
+    none
+
+--- one disagreement of every kind ---
+    no-id     .                        id=None       from=None
+    unjudged  engine                   id=eng        from=None
+    twin      engine                   id=cmp        from=None
+    gone      engine                   id=old        from=None
+    no-id     engine/compare/TEST      id=None       from=None
+    parent    engine/compare/core      id=core       from=None
+    unlisted  engine/plain             id=plain      from=None
+<hwut-end>

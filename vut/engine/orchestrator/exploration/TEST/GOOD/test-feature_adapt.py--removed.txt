@@ -1,0 +1,12 @@
+test-pair.sh   None  leaves unproven: []
+test-side.sh   None  leaves unproven: []
+test-many.sh   a     leaves unproven: []
+test-many.sh   None  leaves unproven: []
+test-nobody.sh None  leaves unproven: []
+
+--- with 'test-side.sh' and 'test-many.sh' gone first ---
+test-pair.sh   None  leaves unproven: ['line-pairing', 'missing-side']
+
+--- a directory without a feature file ---
+[]
+<hwut-end>

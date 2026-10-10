@@ -36,6 +36,7 @@ hwut.rename                  EXAMPLE    ok
 hwut.renovate                -          ok
 hwut.report                  EXAMPLE    ok
 hwut.report.details          -          ok
+hwut.report.features         -          ok
 hwut.report.list             -          ok
 hwut.report.timings          -          ok
 hwut.report.wallflowers      -          ok

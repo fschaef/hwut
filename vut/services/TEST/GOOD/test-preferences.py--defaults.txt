@@ -6,6 +6,7 @@
     element.pattern          'green'                      sgr '32'                   pt 'ansigreen'
     element.separator        'none'                       sgr ''                     pt ''
     element.string           'none'                       sgr ''                     pt ''
+    keyed.absent-good        '#666666'                    sgr '38;2;102;102;102'     pt '#666666'
     keyed.cursor-active      'reverse bold'               sgr '7;1'                  pt 'reverse bold'
     keyed.cursor-other       'underline'                  sgr '4'                    pt 'underline'
     keyed.element-cursor     'underline bold'             sgr '4;1'                  pt 'underline bold'
@@ -29,6 +30,7 @@
     keyed.title-output       'bright-white bg256:25'      sgr '97;48;5;25'           pt 'ansiwhite bg:#005faf'
     keyed.title-output-active 'bold bright-white bg256:33' sgr '1;97;48;5;33'         pt 'bold ansiwhite bg:#0087ff'
     keyed.token              '#00aa00 bold'               sgr '38;2;0;170;0;1'       pt '#00aa00 bold'
+    keyed.unpaired           'bright-white bg256:124'     sgr '97;48;5;124'          pt 'ansiwhite bg:#af0000'
     report.fail              'bright-white bg256:160'     sgr '97;48;5;160'          pt 'ansiwhite bg:#d70000'
     report.ok                'black bg256:40'             sgr '30;48;5;40'           pt 'ansiblack bg:#00d700'
     report.title             'black bg256:208'            sgr '30;48;5;208'          pt 'ansiblack bg:#ff8700'
@@ -55,6 +57,7 @@
     verdict.nominal          'blue'                       sgr '34'                   pt 'ansiblue'
     verdict.subject          'red'                        sgr '31'                   pt 'ansired'
     verdict.tolerated        'yellow'                     sgr '33'                   pt 'ansiyellow'
+    verdict.unpaired         'bright-white bg-red'        sgr '97;41'                pt 'ansiwhite bg:ansired'
 
 --- every 'prompt_toolkit' form is one it accepts ---
     refused: none

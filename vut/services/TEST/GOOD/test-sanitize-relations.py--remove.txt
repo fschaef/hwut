@@ -1,0 +1,20 @@
+
+--- a test whose features another test still proves ---
+    TO BE FORGOTTEN, in 'engine/compare/core/TEST':
+      test-pair.sh -- 0 file(s), the book entry, the register id
+      (no recorded artefact stands; the book and the register are still asked)
+    test-pair.sh:
+        book entry: removed
+        register: id retired
+status: OK
+
+--- the last test proving them ---
+    TO BE FORGOTTEN, in 'engine/compare/core/TEST':
+      test-side.sh -- 0 file(s), the book entry, the register id
+      (no recorded artefact stands; the book and the register are still asked)
+    test-side.sh:
+        book entry: removed
+        register: id retired
+        NOTE  feature 'missing-side' is left without a linked test run
+status: OK
+<hwut-end>

@@ -15,7 +15,7 @@ $ hwut.cov.run -o <out>
     | |                                    rec                                     |
     | COVERAGE DATA: <root>/out -- 2 test run(s), 1 source file(s)
     [status 0]
-    <out> { hwut-coverage.marker, suite/TEST/test-real.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+    <out> { hwut-coverage.marker, hwut.no-entry-here.marker, suite/TEST/test-real.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
       -- suite/TEST/test-real.py.cover
       | ##VUT-COVERAGE 3
       | ##source:   suite/TEST/test-real.py

@@ -12,6 +12,10 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
     test_run_id.py    THE SHAPE OF A RUN: 'TestRunId(app_id,
                       choice_id)', spelled '47' / '47.66'. Carries no
                       name.
+    id_scope.py       ONE ID SCOPE: the counter behind app, choice,
+                      group and feature ids -- 'allocate()',
+                      'give_back(n)', the ceiling -- and the spellings
+                      of an id, decimal and base 64 (B-31).
     test_id_db.py     THE REGISTER of one directory: which names those
                       numbers stand for, in 'GOOD/test_ids.dat'.
     group_table.py    THE GROUP TABLE of one directory: a SET of runs
@@ -159,3 +163,5 @@ file any more ('vanished()').
     test-test_id_db.py    allocation, healing, retire, tables, faults,
                           vanished, face
     test-group_table.py   groups, tables, persisted, faults
+    test-id_scope.py      allocate, give_back, ceiling, mark_line,
+                          spellings

@@ -27,6 +27,13 @@ from vut.engine.operations.interaction.port import (NullDisplay,
                                                     RemoteDisplay)
 
 
+#  A LINE WITHOUT A PARTNER (services E-142): what stands on the side
+#  that holds no line, in every viewer. A '##' comment in hwut's own
+#  spelling, so it never reads as content of either stream.
+NO_LINE_IN_GOOD_TEXT   = "## <no line in GOOD here>"
+NO_LINE_IN_OUTPUT_TEXT = "## <no line in OUTPUT here>"
+
+
 class E_DisplayTarget(Enum):
     """Which driver carries the session."""
     NONE     = "none"       # collect nothing; the verdict is enough

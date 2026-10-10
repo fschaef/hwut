@@ -50,6 +50,7 @@ import json
 import os
 import time
 from   pathlib import Path
+from vut.auxiliary.no_entry import TRANSIENT_DIRECTORY_NAME
 
 try:
     import psutil
@@ -59,7 +60,7 @@ except ImportError:
 
 #  UNDER THE TRANSIENT ROOT 'TMP/' (services E-24): 'rm -rf TMP/' is
 #  always safe to type, the lock included.
-LOCK_DIRECTORY_NAME = "TMP/lock"
+LOCK_DIRECTORY_NAME = TRANSIENT_DIRECTORY_NAME + "/lock"
 _HOLDER_FILE_NAME   = "holder.json"
 
 
