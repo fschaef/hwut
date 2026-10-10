@@ -1,0 +1,51 @@
+--- the OUTPUT opens '##! tabel'; GOOD is intact
+DIR  .                                                                        
+START test-t.py  table                                                     ||1
+END   :          table .................................... region [FAIL]  ||0
+
+==============================================================================
+DIRECTORIES                                             0 ok, 1 fail
+------------------------------------------------------------------------------
+   . . . . . . . . . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/1
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+EXECUTION -- application invocation error
+    .
+        test-t.py  table   broken region framing in output
+
+HINT: use 'hwut.help' for explanation of subtle issues.
+==============================================================================
+
+|                                    fail                                    |
+--- hwut.run.diff
+NOTE: no terminal -- the text display is used ('--console' asks for it outright)
+FAULT: 'test-t.py table' -- broken region framing in 'OUT/test-t.py--table.txt': line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim
+exit 1
+--- GOOD opens '##! tabel'; the output is intact
+DIR  .                                                                        
+START test-t.py  table                                                     ||1
+END   :          table .................................... region [FAIL]  ||0
+
+==============================================================================
+DIRECTORIES                                             0 ok, 1 fail
+------------------------------------------------------------------------------
+   . . . . . . . . . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/1
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+NOMINAL -- error in GOOD file
+    .
+        test-t.py  table   broken region framing
+
+HINT: use 'hwut.help' for explanation of subtle issues.
+==============================================================================
+
+|                                    fail                                    |
+--- hwut.run.diff
+NOTE: no terminal -- the text display is used ('--console' asks for it outright)
+FAULT: 'test-t.py table' -- broken region framing in 'GOOD/test-t.py--table.txt': line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim
+exit 1
+<hwut-end>

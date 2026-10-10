@@ -1,0 +1,7 @@
+--- the output opens '##! table', no 'sep'
+END   :          run ............................................... [OK]  ||0
+--- the output opens '##! table sep={,}'
+END   :          run ............................................... [OK]  ||0
+--- a row differs: still a failure
+END   :          run ............................................. [FAIL]  ||0
+<hwut-end>

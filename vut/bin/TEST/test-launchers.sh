@@ -46,7 +46,7 @@ FACE_LIST="config.show plan run run.play accept accept.propose accept.apply reno
            accept.interactive execute cov.run cov.formats cov.conv.to_humans cov.conv.to_lcov cov.conv.to_html cov.conv.to_cobertura cov.conv.to_jacoco cov.conv.to_json cov.conv.to_tex cov.conv.to_pdf dev.podman.build dev.podman.enter run.diff report.details run.stability report.list
            report help remove remove.propose remove.apply
            rename move sanitize sanitize.propose sanitize.apply pype
-           labels.create labels.add labels.remove labels.list labels.query about"
+           labels.create labels.add labels.remove labels.list labels.query about affected"
 
 first_line() { grep -v '^NAME$' | grep -m1 -v '^[[:space:]]*$' | sed 's/^    //'; }
 

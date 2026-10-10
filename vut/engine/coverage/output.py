@@ -478,6 +478,38 @@ class Output:
                                subtract(executable, reached)))
         return result
 
+    def runs_of_change(self, change_db):
+        """
+        RETURN: [0] tuple of (directory, test, choice|None), the test
+                    runs that executed any line of 'change_db' (source
+                    path from the run's root -> tuple of half-open
+                    (begin, end) line ranges); sorted.
+                [1] int, how many of the changed files the output holds
+                    coverage of -- 0 says the change and the output do
+                    not speak of the same files, which is no answer.
+                [2] int, how many source files the output holds.
+
+        THE OTHER DIRECTION OF 'of_run' (D-42): a coverage file carries
+        who executed every range, which is exactly this question.
+
+        Raises OutputRefused where a coverage file cannot be read.
+        """
+        run_id_set = set()
+        known_n    = 0
+        source_n   = 0
+        for source, _, covered in self.source_iterable():
+            source_n += 1
+            asked = change_db.get(source)
+            if asked is None: continue
+            known_n += 1
+            for reference, span_tuple in covered:
+                if any(begin < asked_end and asked_begin < end
+                       for begin, end in span_tuple
+                       for asked_begin, asked_end in asked):
+                    run_id_set |= self.run_set_of(reference)
+        return (tuple(sorted((self.name_db[run_id] for run_id in run_id_set),
+                             key=lambda key: (key[0], key[1], key[2] or ""))),
+                known_n, source_n)
 
     def measures_of_run(self, directory, test, choice):
         """

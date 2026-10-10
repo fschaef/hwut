@@ -1,0 +1,9 @@
+--- standing in 'lib/alpha/checks'
+ACCEPTED  1 of 1
+    blessed        test-x.py one .stdout
+DIR  .                                                                        
+END   :          one ............................................... [OK]  ||0
+--- standing at the root
+DIR  lib/alpha/checks                                                         
+END   :          one ............................................... [OK]  ||0
+<hwut-end>

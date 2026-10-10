@@ -23,7 +23,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-from   ..result                 import E_TestRunResult
+from   ..result                 import E_TestRunResult, region_fault_of
 from   ...compare.api           import (Configuration, is_equivalent,
                                         RegionSyntaxError,
                                         feeder_ui as compare_feeder)
@@ -123,7 +123,7 @@ class DifferenceDisplay:
                                                        nominal_reader))
         except RegionSyntaxError as error:
             notify(self.observer, "diagnosis", name, str(error))
-            return False, E_TestRunResult.REGION_SYNTAX_ERROR
+            return False, region_fault_of(error)
         finally:
             for reader in (subject_reader, nominal_reader):
                 close = getattr(reader, "close", None)
@@ -152,5 +152,5 @@ class DifferenceDisplay:
             #  dies in the scheduler and the display shows nothing at
             #  all rather than the one line that explains itself.
             notify(self.observer, "diagnosis", name, str(error))
-            return False, E_TestRunResult.REGION_SYNTAX_ERROR
+            return False, region_fault_of(error)
         return ok, E_TestRunResult.OK

@@ -78,6 +78,7 @@ _PRECEDENCE = (
     #     framing is broken cannot be read at all, so nothing that
     #     follows -- terminal, stderr, verdict -- has been established
     E_TestRunResult.REGION_SYNTAX_ERROR,
+    E_TestRunResult.OUTPUT_REGION_SYNTAX_ERROR,
     # -- completeness precedes judgement: an incomplete stream must
     #    never masquerade as an ordinary mismatch (R-70) -- the
     #    nominal's first, since it is the pole the subject is held to

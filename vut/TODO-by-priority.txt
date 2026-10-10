@@ -345,17 +345,6 @@ TIER 3  BLOCKS REAL USE, OR DECIDED AND UNBUILT
          NEEDS: nothing.
          SEE: TODO C-4b; readers/lcov.py:19-20.
 
-[ ] B-6  'hwut.affected' READS WHAT THE COVERAGE RUN DELETES
-         Built over the per-case records; 'hwut.cov.run' removes them
-         after gathering (D-42). No launcher, so no user is misled yet;
-         as a module it answers 'nobody'.
-         DO: the face over the OUTPUT DIRECTORY (the gathered files say
-         who executed every range); 'services/affected.py' and
-         'bin/hwut.affected'; the suffix spelt at 'affected.py:49' and
-         'database/index.py:360' asked of the bookkeeper instead.
-         NEEDS: nothing.
-         SEE: TODO B-6; coverage D-42, D-43.
-
 [ ] A-5  'RELATION' NAMES SIX STAND-IN CLASSES  (with G-6, A-4, G-19)
          18 of 27 rows of 'exploration/relation.py' point at
          'owner_faces_provisional.py' (ConfigBuild 2, ConfigCaps 3,
@@ -696,7 +685,7 @@ COUNTS
      TIER 2  12   G-3, G-4, G-2, G-10, C-1, G-20, G-18, G-13, G-14, G-15,
                   D-9
                   (G-10 rides the fixes)
-     TIER 3  16   B-7(+C-6), B-25, B-29, B-30, B-31, C-4a, C-4b, B-6,
+     TIER 3  15   B-7(+C-6), B-25, B-29, B-30, B-31, C-4a, C-4b,
                   A-5(+G-6, A-4), B-3, B-4, B-11, B-13, B-24, D-2,
                   B-14 (parked)
      TIER 4   8   rulings owed, G-16, G-9, F-6, r-7a, r-10h, r-10n,

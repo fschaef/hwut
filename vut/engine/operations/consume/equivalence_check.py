@@ -27,7 +27,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-from   ..result                 import E_TestRunResult
+from   ..result                 import E_TestRunResult, region_fault_of
 from   ...compare.api           import (Configuration, ConstraintSpecError,
                                         RegionSyntaxError,
                                         is_equivalent)
@@ -197,7 +197,7 @@ class EquivalenceCheck:
                 #  exception was never retrieved' and the run loses the
                 #  one thing it is for.
                 ok     = False
-                report = E_TestRunResult.REGION_SYNTAX_ERROR
+                report = region_fault_of(error)
                 notify(self.observer, "diagnosis", name, str(error))
             finally:
                 for reader in (subject_reader, nominal_reader):

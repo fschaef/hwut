@@ -54,11 +54,11 @@ END   test-24.sh .......................................... stderr [FAIL]  ||0
 START test-25.sh                                                           ||1
 END   test-25.sh .......................................... region [FAIL]  ||0
 START test-26.sh                                                           ||1
-END   test-26.sh ...................................... constraint [FAIL]  ||0
+END   test-26.sh .......................................... region [FAIL]  ||0
 START test-27.sh                                                           ||1
-END   test-27.sh .......................................... stderr [FAIL]  ||0
+END   test-27.sh ...................................... constraint [FAIL]  ||0
 START test-28.sh                                                           ||1
-END   test-28.sh ............................................ pype [FAIL]  ||0
+END   test-28.sh .......................................... stderr [FAIL]  ||0
 START test-29.sh                                                           ||1
 END   test-29.sh ............................................ pype [FAIL]  ||0
 START test-30.sh                                                           ||1
@@ -68,7 +68,7 @@ END   test-31.sh ............................................ pype [FAIL]  ||0
 START test-32.sh                                                           ||1
 END   test-32.sh ............................................ pype [FAIL]  ||0
 START test-33.sh                                                           ||1
-END   test-33.sh ........................................ no-build [FAIL]  ||0
+END   test-33.sh ............................................ pype [FAIL]  ||0
 START test-34.sh                                                           ||1
 END   test-34.sh ........................................ no-build [FAIL]  ||0
 START test-35.sh                                                           ||1
@@ -76,16 +76,18 @@ END   test-35.sh ........................................ no-build [FAIL]  ||0
 START test-36.sh                                                           ||1
 END   test-36.sh ........................................ no-build [FAIL]  ||0
 START test-37.sh                                                           ||1
-END   test-37.sh .......................................... no-dep [FAIL]  ||0
+END   test-37.sh ........................................ no-build [FAIL]  ||0
 START test-38.sh                                                           ||1
-END   test-38.sh ...................................... no-display [FAIL]  ||0
+END   test-38.sh .......................................... no-dep [FAIL]  ||0
 START test-39.sh                                                           ||1
-END   test-39.sh .......................................... failed [FAIL]  ||0
+END   test-39.sh ...................................... no-display [FAIL]  ||0
+START test-40.sh                                                           ||1
+END   test-40.sh .......................................... failed [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 40 fail, 00:00:40
+DIRECTORIES                                            0 ok, 41 fail, 00:00:41
 ------------------------------------------------------------------------------
-   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/40
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/41
 
 ==============================================================================
 HINTS
@@ -96,17 +98,17 @@ NOMINAL -- error in GOOD file
         test-21.sh   GOOD missing
         test-23.sh   GOOD file does not end in <hwut-end>
         test-25.sh   broken region framing
-        test-26.sh   constraint violated
+        test-27.sh   constraint violated
 
 BUILD -- build or launch error
     suite/TEST
         test-00.sh   source file missing
         test-01.sh   interpreter missing
         test-08.sh   application launch failed
-        test-33.sh   build tool missing
-        test-34.sh   build killed by supervisor
-        test-35.sh   build failed
-        test-36.sh   target not built
+        test-34.sh   build tool missing
+        test-35.sh   build killed by supervisor
+        test-36.sh   build failed
+        test-37.sh   target not built
 
 BOOK -- book and tree disagree
     suite/TEST
@@ -128,23 +130,24 @@ EXECUTION -- application invocation error
         test-20.sh   output file missing
         test-22.sh   output cut short; no <hwut-end>
         test-24.sh   unexpected stderr
-        test-27.sh   stderr undecided
-        test-28.sh   pype interpreter missing
-        test-29.sh   pype script missing
-        test-30.sh   pype script syntax error
-        test-31.sh   pype killed by supervisor
-        test-32.sh   pype failed
+        test-26.sh   broken region framing in output
+        test-28.sh   stderr undecided
+        test-29.sh   pype interpreter missing
+        test-30.sh   pype script missing
+        test-31.sh   pype script syntax error
+        test-32.sh   pype killed by supervisor
+        test-33.sh   pype failed
 
 ENVIRONMENT -- error around the test
     suite/TEST
-        test-37.sh   dependency not acquired
-        test-38.sh   display target unreachable
-        test-39.sh   a token nobody taught
+        test-38.sh   dependency not acquired
+        test-39.sh   display target unreachable
+        test-40.sh   a token nobody taught
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 0 ok, 40 fail, 40.00 [sec]
+RESULTS: 0 ok, 41 fail, 41.00 [sec]
 |                                    fail                                    |
-[fold: good_f=False fail_n=40 verdict_n=40 fault_n=0]
+[fold: good_f=False fail_n=41 verdict_n=41 fault_n=0]
 <hwut-end>

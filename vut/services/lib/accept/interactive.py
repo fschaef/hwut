@@ -202,7 +202,9 @@ def main(argv=None):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n = keys_of(selected, err)
+    key_list, judged_n, unread_n = keys_of(selected, err)
+    if not key_list and unread_n:
+        return E_ExitCode.FAULT
     if not key_list:
         err("nothing to accept: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)

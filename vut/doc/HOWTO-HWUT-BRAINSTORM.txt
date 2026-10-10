@@ -762,3 +762,16 @@ BIN DISCIPLINE
       red is still READ after every change: its difference against
       GOOD is compared with the difference it had before
 
+    - A TOLERANCE MUST NOT COVER THE PAGE'S SUBJECT. 'test-exit.sh' is
+      a table of exit statuses and stated 'eq_pattern = ["[0-9]+"]' for
+      the whole page: any status equalled any other. Its GOOD read
+      'hwut.run 1 1 2 1' under a law printed three lines above as
+      0 1 2 3 -- three stimuli had gone stale (a conf opening '@hwut {',
+      a test without '<hwut-end>', a bare 'hwut.run.diff' that had
+      become a valid request) and the page stayed green for weeks. A
+      reader of the book found it by reading the GOOD file. Ask of
+      every tolerance: could the page still fail for the thing in its
+      title?
+    - A STIMULUS IS CHECKED BY WHAT THE FACE SAID, not by its status
+      alone: all three stale stimuli above produced '1' for a reason
+      other than the one the column names

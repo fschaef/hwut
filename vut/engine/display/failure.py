@@ -46,6 +46,7 @@ class E_Failure(Enum):
     NOT_EQUIVALENT_SHRANK       = "not-equivalent-shrank"
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
     OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
+    OUTPUT_REGION_SYNTAX_ERROR  = "output-region-syntax-error"
     PYPE_CONTAINED              = "pype-contained"
     PYPE_FAILED                 = "pype-failed"
     PYPE_FILE_NOT_FOUND         = "pype-file-not-found"
@@ -213,6 +214,7 @@ _brief_failure_db = {
     _F.UNEXPECTED_STDERR:           (_C.EXECUTION,  "stderr"),
     _F.STDERR_UNDECIDED:            (_C.EXECUTION,  "stderr"),
     _F.TERMINATED_WITHOUT_END:      (_C.EXECUTION,  "cut-short"),
+    _F.OUTPUT_REGION_SYNTAX_ERROR:  (_C.EXECUTION,  "region"),
     _F.TEST_APP_NO_OUTPUT:          (_C.EXECUTION,  "no-output"),
     _F.TEST_APP_STALLED:            (_C.EXECUTION,  "no-output"),
     _F.RECORDING_MISSING:           (_C.EXECUTION,  "no-output"),
@@ -291,11 +293,16 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "Finish it: 'hwut.accept.interactive <test> [<choice>]'; or "
              "take the output whole, 'hwut.accept --force'."),
     _failure(_F.REGION_SYNTAX_ERROR, "broken region framing",
-             "A '##!' region in GOOD or in the output cannot be read: an "
-             "unknown handler, a bad parameter, an unclosed region. The "
-             "HINTS line names the line.",
-             "Mend the framing in the file the line names; where it is "
-             "GOOD, accept anew."),
+             "A '##!' region in GOOD cannot be read: an unknown handler, "
+             "a bad parameter, an unclosed region. 'hwut.run.diff' names "
+             "the line.",
+             "Mend the framing in the GOOD file, or accept anew."),
+    _failure(_F.OUTPUT_REGION_SYNTAX_ERROR,
+             "broken region framing in output",
+             "A '##!' region the test printed cannot be read: an unknown "
+             "handler, a bad parameter, an unclosed region. GOOD is not "
+             "at fault. 'hwut.run.diff' names the line.",
+             "Mend the framing the test prints."),
     _failure(_F.CONSTRAINT, "constraint violated",
              "A constraint of the choice is broken, in the output or in "
              "GOOD, or names a variable the text never binds (E-123). The "

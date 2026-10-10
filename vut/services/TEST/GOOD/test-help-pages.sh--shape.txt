@@ -4,6 +4,7 @@ hwut.accept                  EXAMPLE    ok
 hwut.accept.apply            EXAMPLE    ok
 hwut.accept.interactive      -          ok
 hwut.accept.propose          EXAMPLE    ok
+hwut.affected                -          ok
 hwut.config.ignore           -          ok
 hwut.config.show             -          ok
 hwut.cov.conv.to_cobertura   -          ok

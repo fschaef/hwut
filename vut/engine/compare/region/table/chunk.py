@@ -72,14 +72,26 @@ class InputChunkTable(AssociationRelatedInputChunk,
 
         # Parse rows: [(Line, tuple-of-cells)] -- structural validity
         # (column count) is judged against the NOMINAL's width in the face.
-        self.row_list = []
-        for line in line_list:
+        self.row_list = self.row_list_split_by(self.separator)
+
+    def row_list_split_by(self, separator):
+        """RETURNS: list of (Line, tuple of str), this region's rows with
+                    their cells -- split on the literal 'separator' (cells
+                    stripped), or on whitespace where it is None.
+
+        THE NOMINAL'S SEPARATOR GOVERNS (MANUAL 'Parameters are read from
+        the GOOD file'): a subject's rows are split by the nominal's
+        'sep', whatever the subject's own shebang says.
+        """
+        result = []
+        for line in self.line_list:
             raw = line._string.rstrip("\n")
-            if self.separator is not None:
-                cells = tuple(c.strip() for c in raw.split(self.separator))
+            if separator is not None:
+                cells = tuple(c.strip() for c in raw.split(separator))
             else:
                 cells = tuple(raw.split())
-            self.row_list.append((line, cells))
+            result.append((line, cells))
+        return result
 
     def width(self):
         """RETURNS: int, the column count of the first row. None, if the

@@ -32,7 +32,8 @@ class Judgment:
 
         width  = nominal.width()
         s_rows = [cells if (width is None or len(cells) == width) else None
-                  for _, cells in subject.row_list]
+                  for _, cells
+                  in subject.row_list_split_by(nominal.separator)]
         n_rows = [cells for _, cells in nominal.row_list]
 
         if width is None:

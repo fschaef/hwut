@@ -171,12 +171,30 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None):
     if fault_list is None: fault_list = []
     inherited, ascent_fault_list = ascended_spec(root)
     fault_list.extend(ascent_fault_list)
-    if os.path.basename(os.path.normpath(root)) == FALLBACK_TEST_DIRECTORY:
+    if test_directory_f(root, inherited):
         yield (".", explore(root, interview_runner=interview_runner,
                             inherited=inherited))
     else:
         yield from _walk_stream(root, ".", inherited, interview_runner,
                                 fault_list)
+
+
+def test_directory_f(directory, inherited):
+    """
+    RETURN: True,  'directory' is itself a test directory: its name is
+                   the name the configuration ABOVE it gives to test
+                   directories -- 'inherited.test_directory', 'TEST'
+                   where nobody states one;
+            False, else.
+
+    THE SAME QUESTION THE WALK ASKS ON ITS WAY DOWN, asked of the place
+    a face stands in -- so a directory is a test directory from inside
+    exactly where it is one from above. MEASURED: asked with the fixed
+    name 'TEST', a 'test_directory = "checks"' tree ran from the root
+    and said '(no directory ran)' from inside 'checks'.
+    """
+    marker = inherited.test_directory or FALLBACK_TEST_DIRECTORY
+    return os.path.basename(os.path.abspath(directory)) == marker
 
 
 def explore_tree(root, interview_runner=None):

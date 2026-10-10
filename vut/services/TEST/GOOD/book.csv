@@ -1,4 +1,4 @@
-# vut-register 5 generation:326 apps:41 marks:0=7,1=8,2=13,3=5,4=8,5=6,6=12,7=5,8=6,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4,36=8,37=18,38=13,39=3,40=2
+# vut-register 5 generation:333 apps:42 marks:0=7,1=8,2=13,3=5,4=8,5=6,6=12,7=5,8=6,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=6
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -29,6 +29,12 @@ test-base-questions.py;asked;true;ok;;3;0
 ;never_run;true;ok;;3;2
 ;pass;true;ok;;3;3
 ;until;true;ok;;3;4
+test-book-defects.sh;affected;true;ok;;41;5
+;constraint-name;true;ok;;41;1
+;frame-side;true;ok;;41;0
+;refused-band;true;ok;;41;4
+;table-sep;true;ok;;41;2
+;test-directory;true;ok;;41;3
 test-cmdline.py;case;true;ok;;4;0
 ;completion;true;ok;;4;1
 ;faces;true;ok;;4;2

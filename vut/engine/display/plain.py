@@ -991,6 +991,10 @@ class CPlainFlow(CRunReportReceiver):
         (O-25)."""
         self.refused_db.setdefault(directory, []).append((node, text))
         if self.tier is E_Tier.SILENT: return
+        #  UNDER ITS OWN DIRECTORY'S BAND: a refusal arrives before the
+        #  directory's first run does, and without the band it stood
+        #  under the directory above.
+        self._band(when, directory)
         tag        = "[REFUSED]"
         ink_tag    = self.ink.tag_refused(tag)
         body, body_ink = self._run_body(directory, node)

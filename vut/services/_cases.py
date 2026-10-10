@@ -165,6 +165,10 @@ def differing_keys(selected, write, refresh_f=False):
                 choice's setup; walk order.
             [1] int, how many selected cases had BOTH streams and were
                 judged -- so a caller can say 'n of m differ'.
+            [2] int, how many of the judged could NOT BE READ: a broken
+                region framing, said per case in one 'FAULT:' line that
+                names the side and the line. Such a case is no key --
+                there is nothing to show -- and it is not equivalent.
 
     ASPIRANTS STAND FIRST in [0] (B-14), walk order within the group.
 
@@ -179,9 +183,11 @@ def differing_keys(selected, write, refresh_f=False):
     says so. Without it, only a first acceptance's missing candidate is
     made.
     """
-    from vut.engine.compare.api import is_equivalent, Configuration
+    from vut.engine.compare.api import (is_equivalent, Configuration,
+                                        RegionSyntaxError)
     key_list  = []
     judged_n  = 0
+    unread_n  = 0
     no_run_n  = 0
     no_nom_n  = 0
     for where in selected.where_list:
@@ -269,9 +275,19 @@ def differing_keys(selected, write, refresh_f=False):
                 nominal_text = opening_nominal(setup, subject_text, force_f=False)
                 if nominal_text is None: no_nom_n += 1; continue
             judged_n += 1
-            equivalent_f = asyncio.run(is_equivalent(
-                               setup, io.StringIO(subject_text),
-                               io.StringIO(nominal_text)))
+            try:
+                equivalent_f = asyncio.run(is_equivalent(
+                                   setup, io.StringIO(subject_text),
+                                   io.StringIO(nominal_text)))
+            except RegionSyntaxError as error:
+                #  THE ONE FAULT A CALLER MUST CATCH (compare C-5): a
+                #  finding of this case, never the end of the face.
+                unread_n += 1
+                write(region_fault_line(
+                          test if choice is None
+                          else "%s %s" % (test, choice), error,
+                          str(out_path), str(good_path)))
+                continue
             if equivalent_f: continue
             key_list.append(DifferingKey(where, test, choice, subject_text,
                                          nominal_text, setup,
@@ -291,7 +307,19 @@ def differing_keys(selected, write, refresh_f=False):
                        "candidate stands" % no_run_n)
     if no_nom_n: write("NOTE: %d selected case(s) never COMPLETED -- no "
                        "'<hwut-end>' -- and cannot be accepted" % no_nom_n)
-    return key_list, judged_n
+    return key_list, judged_n, unread_n
+
+
+def region_fault_line(name, error, out_path="output", good_path="GOOD file"):
+    """RETURN: str, the one line saying that a case's region framing
+               cannot be read: the case, the FILE AT FAULT -- the output's
+               where the error's side is "subject", the GOOD file's else
+               -- and compare's own message with its line number."""
+    path = out_path if getattr(error, "side", None) == "subject" \
+           else good_path
+    if os.path.isabs(path): path = os.path.relpath(path)
+    return "FAULT: '%s' -- broken region framing in '%s': %s" \
+           % (name, path, error)
 
 
 #  'choose' moved to 'services/lib/checklist.py' (E-67): one menu,

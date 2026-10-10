@@ -45,7 +45,23 @@ DESCRIPTION
        aggregator (disc-4 (a)) rather than from the record: the record
        cannot know where it will be read from, and must not.
 
-       WHERE THE RECORDS COME FROM. This face WALKS a root for record
+       WHERE THE COVERAGE COMES FROM. THE OUTPUT DIRECTORY of
+       'hwut.cov.run' (D-42): its coverage files carry who executed every
+       range, its two tables name the runs. '--cov-dir DIR' states it;
+       unstated, './hwut.coverage' is read where it stands. A source's
+       path there is from the run's ROOT, which is what a diff made at
+       that root calls it -- no rebasing. The answer is spelled as
+       WISHLIST LINES ('./<directory>/<test> <choice>'), so '--bare'
+       feeds 'hwut.run --wishlist'.
+
+       A DIRECTORY THAT HOLDS NO COVERAGE IS REFUSED BY NAME. Measured
+       2026-10-10: over a measured tree this face indexed '0 run(s)'
+       and answered 'NONE executed the changed lines' -- a wrong
+       answer dressed as an empty one.
+
+       THE PER-CASE RECORDS ('--records DIR') are the older input: the
+       coverage run removes them once gathered, so they stand only
+       where somebody kept them. This face WALKS a root for record
        files. That is a stand-in: the store's naming is the BOOKKEEPER'S
        (operations README 6), and the real face asks it for the paths
        rather than spelling a pattern. The seam is 'record_iterable',
@@ -56,6 +72,8 @@ import os
 import sys
 
 from .database.api import (ranges_of, index_of)
+from .output       import (DEFAULT_DIRECTORY_NAME, RUN_ID_FILE, Output,
+                           OutputRefused)
 
 
 class E_ExitCode:
@@ -175,13 +193,52 @@ def render(key_tuple, change_db, index, bare_f):
     return "\n".join(line_list) + "\n"
 
 
+def render_output(run_tuple, change_db, output, known_n, source_n, bare_f):
+    """
+    RETURN: str, what the face prints over a coverage OUTPUT DIRECTORY:
+            the runs as wishlist lines where 'bare_f', else the framed
+            answer -- what was asked, how much of it the output has
+            measured, what the output holds, and the runs.
+
+    MACHINE-FREE, as 'render'.
+    """
+    name_list = ["./%s%s%s" % ("" if directory in (".", "")
+                                  else directory + "/", test,
+                               "" if choice is None else " " + choice)
+                 for directory, test, choice in run_tuple]
+    if bare_f:
+        return "".join("%s\n" % name for name in name_list)
+
+    range_n = sum(len(r) for r in change_db.values())
+    line_list = ["==[ HWUT AFFECTED ]%s" % ("=" * 58),
+                 "change:  %i file(s), %i range(s); %i file(s) measured"
+                 % (len(change_db), range_n, known_n),
+                 "index:   %i run(s), %i source file(s)"
+                 % (len(output.name_db), source_n),
+                 "groups:  %i distinct" % len(output.group_db),
+                 ""]
+    if name_list:
+        line_list.append("runs to perform:")
+        line_list += ["  %s" % name for name in name_list]
+    else:
+        line_list.append("runs to perform: NONE executed the changed lines.")
+    line_list.append("")
+    line_list += list(NOTE_LINE_TUPLE)
+    return "\n".join(line_list) + "\n"
+
+
+USAGE_STR = ("hwut.affected [--cov-dir DIR | --records DIR] "
+             "[--diff FILE|-] [-p N] [-b|--bare]")
+
+
 def main(argv, write=None, error=None):
     """
     RETURN: int, the exit code -- 'E_ExitCode.OK' with a selection,
             'EMPTY' where nothing executed the change, 'REFUSED' where
             the command line cannot mean anything.
 
-        hwut.affected --records DIR [--diff FILE|-] [-p N] [-b|--bare]
+        hwut.affected [--cov-dir DIR | --records DIR] [--diff FILE|-]
+                      [-p N] [-b|--bare]
 
     'write' and 'error' take the two streams so that the face can be
     driven directly, no process between it and its test.
@@ -200,10 +257,9 @@ def main(argv, write=None, error=None):
         if   word in ("-b", "--bare"):  bare_f = True
         elif word in ("-h", "--help"):
             write(__doc__.split("DESCRIPTION")[0].strip() + "\n")
-            write("\n    hwut.affected --records DIR [--diff FILE|-] "
-                  "[-p N] [-b|--bare]\n")
+            write("\n    %s\n" % USAGE_STR)
             return E_ExitCode.OK
-        elif word == "--records" and i + 1 < len(argv):
+        elif word in ("--records", "--cov-dir") and i + 1 < len(argv):
             i += 1; root = argv[i]
         elif word == "--diff" and i + 1 < len(argv):
             i += 1; diff_arg = argv[i]
@@ -219,9 +275,12 @@ def main(argv, write=None, error=None):
             return E_ExitCode.REFUSED
         i += 1
 
+    if root is None and os.path.isdir(DEFAULT_DIRECTORY_NAME):
+        root = DEFAULT_DIRECTORY_NAME
     if root is None:
-        error("REFUSED: '--records DIR' is required: this face reads "
-              "coverage records, it does not run tests.\n")
+        error("REFUSED: no './%s' here and no '--cov-dir DIR': this face "
+              "reads the output of 'hwut.cov.run', it does not run "
+              "tests.\n" % DEFAULT_DIRECTORY_NAME)
         return E_ExitCode.REFUSED
     if not os.path.isdir(root):
         error("REFUSED: '%s' is no directory\n" % root)
@@ -239,9 +298,29 @@ def main(argv, write=None, error=None):
         error("REFUSED: the diff touches no line this face can read\n")
         return E_ExitCode.REFUSED
 
-    index     = index_of(record_iterable(root))
-    key_tuple = index.of_change(change_db)
-    write(render(key_tuple, change_db, index, bare_f))
+    if os.path.isfile(os.path.join(root, RUN_ID_FILE)):
+        #  THE OUTPUT DIRECTORY OF A COVERAGE RUN.
+        try:
+            output = Output(root)
+            key_tuple, known_n, source_n = output.runs_of_change(change_db)
+        except OutputRefused as fault:
+            error("REFUSED: %s\n" % fault)
+            return E_ExitCode.REFUSED
+        if not output.name_db:
+            error("REFUSED: '%s' names no test run -- no coverage was "
+                  "recorded there\n" % root)
+            return E_ExitCode.REFUSED
+        write(render_output(key_tuple, change_db, output, known_n,
+                            source_n, bare_f))
+    else:
+        index     = index_of(record_iterable(root))
+        if not index.run_key_set:
+            error("REFUSED: '%s' holds no coverage -- neither the output "
+                  "of 'hwut.cov.run' ('%s') nor a per-case record\n"
+                  % (root, RUN_ID_FILE))
+            return E_ExitCode.REFUSED
+        key_tuple = index.of_change(change_db)
+        write(render(key_tuple, change_db, index, bare_f))
     if bare_f:
         for line in NOTE_LINE_TUPLE: error("%s\n" % line)
 

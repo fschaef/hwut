@@ -69,7 +69,13 @@ class RegionSyntaxError(Exception):
     IN THE CONTRACT because THE CALLER CATCHES IT: it crosses the
     component's wall, and what crosses is vocabulary, not private
     matter.
+
+    'side' names the stream at fault: "subject" (the output), "nominal"
+    (the GOOD file), or None where the raiser cannot tell. THE ZIP STAGE
+    SETS IT, since it alone holds one pipe per stream; a fault found
+    while comparing is the nominal's by the handlers' own law.
     """
     def __init__(self, line_n, message):
         self.line_n = line_n
+        self.side   = None
         super().__init__("line %s: %s" % (line_n, message))

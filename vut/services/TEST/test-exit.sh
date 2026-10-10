@@ -4,8 +4,12 @@
 # @hwut {
 #     title      = "The exit status law: one enum, every face relates."
 #     choices    = ["law", "signal"]
-#     tolerance { eq_pattern = ["[0-9]+"] }
 # }
+#
+# NO TOLERANCE ON NUMBERS: the numbers are the subject. (Measured
+# 2026-10-10: 'eq_pattern = ["[0-9]+"]' stood here, any status equalled
+# any other, and the page's GOOD recorded 'hwut.run 1 1 2 1' under a
+# law that says 0 1 2 3 -- three stale stimuli, hidden for weeks.)
 #
 # ---------------------------------------------------------------------------
 #
@@ -23,7 +27,6 @@ case "$1" in
     --hwut-info)
         echo "The exit status law: one enum, every face relates.;"
         echo "CHOICES: law, signal;"
-        echo "HAPPY: [0-9]+;"
         exit 0 ;;
 esac
 
@@ -53,10 +56,10 @@ PYEOF
 
 #  The stimuli, one directory each. ---------------------------------------
 mkdir -p ok_dir/GOOD
-printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\n' \
+printf '#!/bin/bash\n# @hwut { title = "Ok" }\necho "steady line"\necho "<hwut-end>"\n' \
     > ok_dir/test-ok.sh
 chmod +x ok_dir/test-ok.sh
-printf 'steady line\n' > ok_dir/GOOD/test-ok.sh.txt
+printf 'steady line\n<hwut-end>\n' > ok_dir/GOOD/test-ok.sh.txt
 
 #  A REAL FAULT: a dependency CYCLE, which the plan cannot satisfy.
 #  (It was a test with an unterminated header, which the reader passes
@@ -75,8 +78,8 @@ done
 mkdir -p run_ok/suite/TEST run_fault/suite/TEST
 cp -r ok_dir/.    run_ok/suite/TEST/
 cp -r fault_dir/. run_fault/suite/TEST/
-printf '@hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
-    | tee run_ok/suite/TEST/hwut.conf > run_fault/suite/TEST/hwut.conf
+printf 'hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
+    > run_ok/suite/TEST/hwut.conf
 
 status() { "$@" > /dev/null 2>&1; echo -n "$?"; }
 
@@ -120,7 +123,7 @@ printf 'hwut.run.diff           %s      %s        %s      -\n' \
               a.txt a.txt)" \
     "$(status python3 -m vut.services.lib.run.diff \
               a.txt b.txt)" \
-    "$(status python3 -m vut.services.lib.run.diff)"
+    "$(status python3 -m vut.services.lib.run.diff --bogus)"
 
     ;;
 

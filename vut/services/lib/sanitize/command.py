@@ -36,7 +36,7 @@ from   vut.engine.bookkeeper.api       import (Bookkeeper,
 from   vut.engine.operations.run.multi_execute \
                                        import SESSION_DIRECTORY_NAME
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                       import (FALLBACK_TEST_DIRECTORY,
+                                       import (test_directory_f, ascended_spec,
                                                RootConfMissing,
                                                explore_tree_stream,
                                                root_conf_directory)
@@ -160,7 +160,7 @@ class CContext:
         if directory in self._result_db: return self._result_db[directory]
         found = None
         try:
-            if os.path.basename(directory) == FALLBACK_TEST_DIRECTORY:
+            if test_directory_f(directory, ascended_spec(directory)[0]):
                 found = next((r for w, r in explore_tree_stream(directory)
                               if w == "."), None)
             else:

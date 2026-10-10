@@ -520,6 +520,11 @@ The faces:
                  installation stands, its Python and its platform.
                  '--version' is the version alone, one bare line. It
                  needs no tree (E-138).
+    hwut.affected      (affected.py)
+                 a change (a unified diff) in, the test runs that
+                 executed it out, as wishlist lines: read from the
+                 output directory of 'hwut.cov.run'. Shallow wiring over
+                 the coverage component's face ('coverage/affected.py').
     hwut.cov.formats   (lib/cov/formats.py)
                  the table of tools and formats this build reads,
                  generated from the registry (coverage D-13).

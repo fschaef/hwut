@@ -41,6 +41,7 @@ hwut.labels.remove exit 0: hwut.labels.remove -- take a label off what a wish se
 hwut.labels.list   exit 0: hwut.labels.list -- every label that stands, with the number of its
 hwut.labels.query  exit 0: hwut.labels.query -- the runs a label expression names (disc-8).
 hwut.about         exit 0: hwut.about -- what this is, which version, and where it stands on this
+hwut.affected      exit 0: hwut.affected -- a change goes in, the test runs that executed it come
 hwut              exit 0: hwut.run -- the tree run, rendered live
 hwut.pype          exit 2: usage: hwut.pype [--trace] SCRIPT < input
 <hwut-end>

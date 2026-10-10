@@ -1,7 +1,7 @@
 
 --- no '--records' ---
 REACTION  status 2   stderr 1 line(s)
-          ! REFUSED: '--records DIR' is required: this face reads coverage records, it does not run tests.
+          ! REFUSED: no './hwut.coverage' here and no '--cov-dir DIR': this face reads the output of 'hwut.cov.run', it does not run tests.
 
 --- a root that is no directory ---
 REACTION  status 2   stderr 1 line(s)

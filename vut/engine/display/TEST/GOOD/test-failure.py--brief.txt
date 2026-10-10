@@ -17,6 +17,7 @@ not-equivalent-shrank          deviation    -
 not-equivalent-with-nominal    deviation    -
 not-in-book                    nominal      not in book
 output-file-not-found          execution    no-output
+output-region-syntax-error     execution    region
 pype-contained                 execution    pype
 pype-failed                    execution    pype
 pype-file-not-found            execution    pype

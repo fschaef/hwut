@@ -54,8 +54,10 @@ async def generate_chunk_pairs(config:        Configuration,
 
             # A producer-side error (e.g. RegionSyntaxError) must surface
             # HERE, in the consumer's context -- never look like EOF.
-            if s_item.is_error(): raise s_item.error
-            if n_item.is_error(): raise n_item.error
+            #  THE SIDE AT FAULT IS NAMED HERE; the nominal first -- a
+            #  GOOD file that cannot be read judges nothing.
+            if n_item.is_error(): raise _sided(n_item.error, "nominal")
+            if s_item.is_error(): raise _sided(s_item.error, "subject")
 
             # Termination Check
             if s_item.is_terminal() and n_item.is_terminal(): break
@@ -86,7 +88,8 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
         # A producer-side error (e.g. RegionSyntaxError) must surface HERE,
         # in the consumer's context -- never look like EOF.
         item = await q.get()
-        if item.is_error(): raise item.error
+        if item.is_error():
+            raise _sided(item.error, "subject" if q is q_s else "nominal")
         return item
 
     #  ONE CHUNK OF NOMINAL LOOK-AHEAD, for the content-anchored split
@@ -177,6 +180,13 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
         for t in tasks:
             if not t.done(): t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+
+
+def _sided(error, side):
+    """RETURN: the error itself, its 'side' set to the stream ("subject",
+               "nominal") whose pipe produced it."""
+    error.side = side
+    return error
 
 
 def _pairs_f(subject_chunk, nominal_chunk):

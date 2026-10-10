@@ -300,12 +300,3 @@ todo-5  '--global-conf [<file>]' ON THE SERVICES
         LABOUR: 'adm/WORK/TODO.txt' B-9.
         Plus the UPWARD search: nearest enclosing 'hwut.conf' wins,
         layered over what stands further out (D-2).
-
-todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [part]
-        LABOUR: 'adm/WORK/TODO.txt' B-6.
-        Built as 'coverage/affected.py' with 'main(argv, write)'. The
-        shared 'E_ExitCode' is BUILT too ('services/_exit.py'). The
-        thin service shim under 'services/' is STILL OWED: there is no
-        'services/affected.py'. The marker read [BUILT] and was
-        corrected to [part] on 2026-09-04, when the entry was measured
-        against the tree rather than read off its own marker.

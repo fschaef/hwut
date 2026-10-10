@@ -203,6 +203,24 @@ COST      'reading_view' answers a bool where it answered None, and
           return FAULT where the reading could not be shown, rather
           than OK with a refusal printed in the middle.
 
+AMENDED   2026-10-10. A FOURTH ROAD was open: the STORE form's judge
+          ('services/_cases.differing_keys', behind 'hwut.run.diff
+          <test> <choice>' and 'hwut.accept.interactive') called
+          'is_equivalent' bare and ended in a traceback. It catches
+          now, and says one 'FAULT:' line naming the case, THE FILE AT
+          FAULT and the line; the face exits FAULT. The file form of
+          'hwut.run.diff' (two words) catches likewise.
+          THE ERROR CARRIES ITS SIDE. 'RegionSyntaxError.side' is
+          "subject" or "nominal", set by the zip stage, which alone
+          holds one pipe per stream. The verdict road reported every
+          broken frame as 'NOMINAL -- error in GOOD file', also where
+          GOOD was intact and the OUTPUT opened '##! tabel'. The
+          output's defect is now its own report,
+          'output-region-syntax-error' (EXECUTION, 'region [FAIL]',
+          "broken region framing in output"). Where both are broken
+          the nominal is named: a GOOD file that cannot be read judges
+          nothing.
+
 C-6   A STRESS TEST SAYS WHAT IT COSTS                          (2026-09-02)
 
 PROBLEM   'solver/TEST/test-csp_backtracking_mrv.py' was killed on two

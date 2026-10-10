@@ -20,6 +20,16 @@ ______________________________________________________________________________
 from enum import Enum
 
 
+def region_fault_of(error):
+    """RETURN: E_TestRunResult, the verdict of a broken region framing:
+               OUTPUT_REGION_SYNTAX_ERROR, where the test's output is at
+               fault ('error.side' is "subject");
+               REGION_SYNTAX_ERROR, else -- the GOOD file."""
+    if getattr(error, "side", None) == "subject":
+        return E_TestRunResult.OUTPUT_REGION_SYNTAX_ERROR
+    return E_TestRunResult.REGION_SYNTAX_ERROR
+
+
 class E_TestRunResult(Enum):
     OK                          = "ok"
 
@@ -88,6 +98,10 @@ class E_TestRunResult(Enum):
     #  'Task exception was never retrieved' and the run loses the one
     #  thing it is for.
     REGION_SYNTAX_ERROR         = "region-syntax-error"
+    #  THE SAME DEFECT IN THE OUTPUT. The GOOD file reads; what the test
+    #  printed does not. The side at fault decides who mends: the test's
+    #  author here, the GOOD file's keeper above.
+    OUTPUT_REGION_SYNTAX_ERROR  = "output-region-syntax-error"
     #  THE CONSTRAINTS found something (compare C-20, services E-123): a
     #  binding broke its law, or a variable a constraint names was never
     #  bound -- on the OUTPUT's side or on the GOOD's. The sentence naming

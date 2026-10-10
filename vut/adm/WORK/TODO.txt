@@ -113,24 +113,6 @@ B-5  THE 'special' KEY AND 'hwut.special'
        exploration/validator.py exploration/relation.py services/*.py
        -> no key, no face (one unrelated prose hit). 2026-10-04.
 
-B-6  'hwut.affected' READS WHAT NO LONGER STANDS
-     coverage/DISCUSSIONS.txt todo-6      [part]
-     'coverage/affected.py' is built over the PER-CASE RECORDS, and
-     the coverage run REMOVES them when it has gathered (coverage
-     D-42): on a tree that has been measured the face has no input.
-     Owed: the face over the OUTPUT DIRECTORY -- the gathered files
-     carry who executed every range (D-42, D-43), which is exactly the
-     question -- and 'services/affected.py' with 'bin/hwut.affected'
-     as its shim. UNREACHABLE TODAY rather than wrong: no launcher
-     exists, so no user can be misled; called as a module it answers
-     'nobody'. The record walk is a stand-in twice over
-     ('affected.py:49', 'database/index.py:360': it spells a suffix
-     where it should ask the bookkeeper).
-     EVIDENCE: ls bin services | grep affected -> none;
-       coverage/affected.py:242 index_of(record_iterable(root));
-       services/lib/cov/run.py:269-272 'for ... in run_list:
-       os.remove(path)' after gather(). 2026-10-04.
-
 B-7  'hwut.renovate'
      gathered/0r todo-1
      INITIAL VERSION BUILT (services E-99): title and '--not' from
@@ -845,8 +827,7 @@ COUNTS (version 14)
      section 9 and the STRUCK block below.
      SILENTLY WRONG TODAY, as opposed to missing: B-16 ('hwut.help'
      advises a line the validator refuses), B-26 ('execute' runs a
-     literal '$file'), B-27 (R-66's glob refused at the door). B-6 is
-     unreachable, not wrong.
+     literal '$file'), B-27 (R-66's glob refused at the door).
 
 ==============================================================================
 STRUCK -- version 14 to 15 (2026-10-05); the cleaning, ruled: "work that

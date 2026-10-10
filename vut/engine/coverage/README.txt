@@ -207,7 +207,14 @@ says so.
 4c  'hwut.affected' -- THE FACE
 ------------------------------------------------------------------------------
 
-    hwut.affected --records DIR [--diff FILE|-] [-p N] [-b|--bare]
+    hwut.affected [--cov-dir DIR | --records DIR] [--diff FILE|-]
+                  [-p N] [-b|--bare]
+
+    --cov-dir DIR   the output directory of 'hwut.cov.run'; unstated,
+                    './hwut.coverage'. The runs are spelled as wishlist
+                    lines. A directory naming no test run is REFUSED.
+    --records DIR   a directory of kept per-case records (the coverage
+                    run removes its own once gathered)
 
     default   the framed answer: what was asked, what was indexed, the
               runs to perform, and the LIMIT under it

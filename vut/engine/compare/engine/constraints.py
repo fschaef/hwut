@@ -128,6 +128,13 @@ class ConstraintExpression:
                     any construct outside the whitelist.
         """
         depend_set = set()
+        #  A FUNCTION'S NAME STANDS ONLY WHERE IT IS CALLED. Anywhere
+        #  else it is meant as a VARIABLE, and a variable may not carry a
+        #  name of the namespace ('README-constraint_namespace.txt', 4).
+        #  MEASURED: "min > 5" named no variable, was filed under none,
+        #  and was never checked -- '((min: 1))' passed.
+        called_set = {id(node.func) for node in ast.walk(tree)
+                      if isinstance(node, ast.Call)}
         for node in ast.walk(tree):
             if not isinstance(node, _SAFE_NODE_TYPES):
                 raise ConstraintSpecError(
@@ -156,6 +163,13 @@ class ConstraintExpression:
                         % (self.variable, self.text, node.attr,
                            ", ".join(sorted(SAFE_STR_METHOD_SET))))
             elif isinstance(node, ast.Name):
+                if (node.id in SAFE_FUNCTION_DB
+                        and id(node) not in called_set):
+                    raise ConstraintSpecError(
+                        "constraint for '%s': %r: '%s' is a function of "
+                        "the constraint namespace -- a variable cannot "
+                        "carry that name"
+                        % (self.variable, self.text, node.id))
                 if (node.id not in SAFE_FUNCTION_DB
                         and node.id not in SAFE_CONSTANT_DB):
                     # ANY other name is a VARIABLE of the constraint space.
@@ -168,6 +182,10 @@ class ConstraintExpression:
                     raise ConstraintSpecError(
                         "constraint for '%s': %r: only numeric and string "
                         "constants are allowed" % (self.variable, self.text))
+        if not depend_set:
+            raise ConstraintSpecError(
+                "constraint for '%s': %r names no variable -- it "
+                "constrains nothing" % (self.variable, self.text))
         return frozenset(depend_set)
 
     def __call__(self, value_db):

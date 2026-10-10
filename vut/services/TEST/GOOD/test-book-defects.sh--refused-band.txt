@@ -1,0 +1,8 @@
+DIR  most/TEST                                                                
+START test-r.py  one                                                       ||1
+END   :          one ............................................... [OK]  ||0
+DIR  router/TEST                                                              
+DONE  test-r.py.orig .......................................... [REFUSED]  ||0
+START test-r.py  one                                                       ||1
+END   :          one ............................................... [OK]  ||0
+<hwut-end>

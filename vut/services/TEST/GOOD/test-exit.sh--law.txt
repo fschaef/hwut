@@ -10,7 +10,7 @@ THE ENUM (services/_exit.py):
 FACE                OK  FAULT  REFUSED  EMPTY
 hwut.config.show    0      1        2      -
 hwut.plan           0      1        2      3
-hwut.run            1      1        2      1
+hwut.run            0      1        2      3
 hwut.pype           0      1        2      -
-hwut.run.diff           0      1        0      -
+hwut.run.diff           0      1        2      -
 <hwut-end>

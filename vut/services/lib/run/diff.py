@@ -260,9 +260,19 @@ def _main(argv):
                              compare_options=setup,
                              write=lambda line: sys.stderr.write(line + "\n")))
             return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
-        bad_pair_n = asyncio.run(compare_view(
-            read_source(word_list[0]), read_source(word_list[1]),
-            adapter, subject_name=word_list[0], compare_options=setup))
+        from vut.engine.compare.api import RegionSyntaxError
+        from vut.services._cases    import region_fault_line
+        try:
+            bad_pair_n = asyncio.run(compare_view(
+                read_source(word_list[0]), read_source(word_list[1]),
+                adapter, subject_name=word_list[0], compare_options=setup))
+        except RegionSyntaxError as error:
+            #  THE FILE FORM'S TWO STREAMS: the first word is the
+            #  subject, the second the nominal.
+            sys.stderr.write(region_fault_line(
+                "%s %s" % (word_list[0], word_list[1]), error,
+                word_list[0], word_list[1]) + "\n")
+            return E_ExitCode.FAULT
         return E_ExitCode.OK if bad_pair_n == 0 else E_ExitCode.FAULT
 
     #  THE STORE FORM. The selection is the same block every
@@ -276,7 +286,9 @@ def _main(argv):
     if not selected.where_list:
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
-    key_list, judged_n = keys_of(selected, err)
+    key_list, judged_n, unread_n = keys_of(selected, err)
+    if not key_list and unread_n:
+        return E_ExitCode.FAULT
     if not key_list:
         err("nothing differs: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)
@@ -312,7 +324,7 @@ def _main(argv):
                                  compare_options=options))
     if not shown_n:
         err("NOTE: nothing shown")
-        return E_ExitCode.OK
+        return E_ExitCode.FAULT if unread_n else E_ExitCode.OK
     return E_ExitCode.FAULT
 
 
