@@ -1,0 +1,62 @@
+==============================================================================
+WHAT WORKING ON hwut REQUIRES -- every tool, package and library
+==============================================================================
+
+ONE LIST, READ BY PEOPLE AND BY 'adm/requirement-check.sh'. A tool the
+tree comes to need is entered HERE in the same change that needs it; the
+development container ('adm/container/Containerfile') installs what this
+list names.
+
+    sh adm/requirement-check.sh         what stands on this machine, what
+                                        is missing, and what goes red
+                                        without it; exit 1 where a CENSUS
+                                        requirement is missing
+
+THE COLUMNS, separated by blanks; '#' opens a comment:
+
+    kind      program   found on PATH
+              python    a module Python imports
+              library   a shared library the system's loader finds
+    name      what is looked for
+    need      census    'bin/hwut.run' over the tree is red without it
+              road      one road of hwut wants it; the census does not
+    debian    the Debian/Ubuntu package ('pip:<name>' for a Python one)
+    for       who needs it
+
+------------------------------------------------------------------------------
+kind     name            need    debian                 for
+------------------------------------------------------------------------------
+program  python3         census  python3                everything; 3.10 at least ('match')
+program  bash            census  bash                   every shell page; 'adm/bundle.sh'
+program  git             census  git                    'adm/bundle.sh', 'hwut.affected'
+program  gcc             census  gcc                    gcov, the C road of 'hwut.cov.run'
+program  gcov            census  gcc                    the same
+program  ruff            census  pip:ruff               'adm/TEST/test-static-analysis.sh'
+program  coverage        census  pip:coverage           'hwut.cov.run' over python
+
+python   bidict          census  pip:bidict             the tree imports it
+python   rapidfuzz       census  pip:rapidfuzz          the tree imports it
+python   regex           census  pip:regex              the tree imports it
+python   typeguard       census  pip:typeguard          the tree imports it
+python   pyrsistent      census  pip:pyrsistent         the tree imports it
+python   prompt_toolkit  census  pip:prompt_toolkit     the keyed merge screen
+python   psutil          census  pip:psutil             the tree imports it
+
+library  vterm           census  libvterm0              'test_writing_support/python/hwut_vterm.py':
+                                                        'test-hwut_vterm.py', 'keyed/TEST/test-screen.py'
+
+program  pdflatex        road    texlive-latex-base     'hwut.cov.conv.to_pdf'
+program  latexmk         road    latexmk                the same
+program  podman          road    podman                 'hwut.dev.podman.*' (or docker)
+program  verilator       road    verilator              coverage of Verilog models (D-12)
+program  ghdl            road    ghdl                   the PSL coverage road
+program  go              road    golang-go              'go test -coverprofile'
+program  lua5.4          road    lua5.4                 luacov
+program  java            road    default-jdk-headless   JaCoCo
+program  lcov            road    lcov                   the lcov tracefile road
+program  gcovr           road    gcovr                  the same
+program  hg              road    mercurial              a repository root 'hwut.sanitize root' offers
+program  svn             road    subversion             the same
+program  brz             road    breezy                 the same
+program  darcs           road    darcs                  the same
+program  fossil          road    fossil                 the same
