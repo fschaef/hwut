@@ -1,12 +1,12 @@
 --- hwut.cov.run
 COVERAGE DATA: <dir>/hwut.coverage -- 2 test run(s), 1 source file(s)
 --- a change in 'one': the first run alone
-./test-m.py first
 NOTE: these are the runs that CERTAINLY executed the changed lines.
       A run ABSENT here may still be affected -- by a branch that was
       deleted, by a data file, by a dynamic dispatch, by an absence.
       This is a SUGGESTION, never a clearance: running only these and
       calling the suite green is a false green.
+./test-m.py first
 exit 0
 --- a change in 'both': both runs, framed
 ==[ HWUT AFFECTED ]==========================================================
