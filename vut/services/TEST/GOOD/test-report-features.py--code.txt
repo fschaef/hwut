@@ -1,0 +1,185 @@
+
+--- --code, and no coverage output anywhere ---
+    NOTE: no coverage output found -- 'hwut.cov.run' writes one, '--cov-dir=<dir>' names one; no code shown
+    COMPONENT . (core) -- Core                     0 proven, 2 failing, 2 unproven
+        does       Pairs lines.
+        serves     Alignment is what compare shows.
+        FEATURES TEST                              0 proven, 2 failing, 2 unproven
+            serves     What 'core' promises, proven.
+            [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
+                [PASS] TEST/test-pair.sh [plain]
+                [FAIL] TEST/test-pair.sh [gap]
+            [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
+                [FAIL] TEST/test-pair.sh [gap]
+            [UNPROVEN] TEST#3 untested
+            [UNPROVEN] TEST#- not-numbered
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            TEST/test-stray.sh   'no-such'
+        test run, links to no feature
+            TEST/test-pair.sh [odd]
+        statement, not read
+            hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            TEST   no 'id'
+status: OK
+
+--- --code, 'hwut.coverage/' at the root ---
+    COMPONENT . (all) -- All                       1 proven, 3 failing, 2 unproven
+        COMPONENT engine (eng) -- Engine           1 proven, 3 failing, 2 unproven
+            does       Runs tests and judges them.
+            as child   Runs and judges.
+            COMPONENT engine/compare (cmp) -- Compare 1 proven, 3 failing, 2 unproven
+                does       Decides whether an output is equivalent to its nominal.
+                serves     The engine's verdict rests on it.
+                as child   Gives the verdict.
+                FEATURES engine/compare/TEST (cmp-proof) 1 proven, 1 failing, 0 unproven
+                    as child   Proves the whole comparison on real pages.
+                    [PROVEN]   engine/compare/TEST#1 whole-page -- A whole page is judged.
+                        [PASS] engine/compare/TEST/test-pages.sh [small]
+                        [PASS] engine/compare/TEST/test-pages.sh [large]
+                        code only    engine/compare/page.c: 1..7
+                        code shared  2 line(s) in 1 file(s)
+                        code         1 of 2 linked run(s) not measured
+                    [FAILING]  engine/compare/TEST#2 never-run -- Linked, and not in the book.
+                        [NO VERDICT] engine/compare/TEST/test-fresh.sh
+                        code         1 of 1 linked run(s) not measured
+                COMPONENT engine/compare/core (core) -- Core 0 proven, 2 failing, 2 unproven
+                    does       Pairs lines.
+                    serves     Alignment is what compare shows.
+                    as child   Aligns two streams line by line.
+                    FEATURES engine/compare/core/TEST 0 proven, 2 failing, 2 unproven
+                        serves     What 'core' promises, proven.
+                        [FAILING]  engine/compare/core/TEST#1 line-pairing -- Two streams are aligned line by line.
+                            [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                            [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                            code only    engine/compare/core/pair.c: 3..4, 10..13
+                            code shared  2 line(s) in 1 file(s)
+                        [FAILING]  engine/compare/core/TEST#2 missing-side -- A line present on one side only is shown whole.
+                            [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                            code only    engine/compare/core/pair.c: 10..13
+                            code shared  4 line(s) in 1 file(s)
+                        [UNPROVEN] engine/compare/core/TEST#3 untested
+                        [UNPROVEN] engine/compare/core/TEST#- not-numbered
+            COMPONENT engine/plain                 0 proven, 0 failing, 0 unproven
+                FEATURES engine/plain/TEST         0 proven, 0 failing, 0 unproven
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            engine/compare/core/TEST/test-stray.sh   'no-such'
+        test run, links to no feature
+            engine/compare/core/TEST/test-pair.sh [odd]
+        TEST directory, no 'hwut-features.conf'
+            engine/plain/TEST
+        component, no 'hwut-composition.conf'
+            engine/plain
+        statement, not read
+            engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            .   'childs' lists 'old'; nothing below carries it
+            engine/compare/core/TEST   no 'id'
+status: OK
+
+--- --code inside engine/compare/core/TEST: the nearest output ---
+    FEATURES .                                     0 proven, 2 failing, 2 unproven
+        serves     What 'core' promises, proven.
+        [FAILING]  .#1 line-pairing -- Two streams are aligned line by line.
+            [PASS] test-pair.sh [plain]
+            [FAIL] test-pair.sh [gap]
+            code only    ../pair.c: 3..4, 10..13
+            code shared  2 line(s) in 1 file(s)
+        [FAILING]  .#2 missing-side -- A line present on one side only is shown whole.
+            [FAIL] test-pair.sh [gap]
+            code only    ../pair.c: 10..13
+            code shared  4 line(s) in 1 file(s)
+        [UNPROVEN] .#3 untested
+        [UNPROVEN] .#- not-numbered
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            test-stray.sh   'no-such'
+        test run, links to no feature
+            test-pair.sh [odd]
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            .   no 'id'
+status: OK
+
+--- --matrix --code: the table has no place for code ---
+    TEST                  #1    #2    #3    #-
+    test-pair.sh [plain]  PASS  .     .     .
+    test-pair.sh [gap]    FAIL  FAIL  .     .
+    test-pair.sh [odd]    .     .     .     .     <- no feature
+    test-stray.sh         .     .     .     .     <- no feature defined
+                                      ^     ^     no test run
+      #1 line-pairing  FAILING
+      #2 missing-side  FAILING
+      #3 untested      UNPROVEN
+      #- not-numbered  UNPROVEN
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            TEST/test-stray.sh   'no-such'
+        test run, links to no feature
+            TEST/test-pair.sh [odd]
+        statement, not read
+            hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            TEST   no 'id'
+status: OK
+
+--- --cov-dir names a directory no coverage run made ---
+    NOTE: 'elsewhere' names no root it measured; no code shown
+    COMPONENT . (core) -- Core                     0 proven, 2 failing, 2 unproven
+        does       Pairs lines.
+        serves     Alignment is what compare shows.
+        FEATURES TEST                              0 proven, 2 failing, 2 unproven
+            serves     What 'core' promises, proven.
+            [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
+                [PASS] TEST/test-pair.sh [plain]
+                [FAIL] TEST/test-pair.sh [gap]
+            [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
+                [FAIL] TEST/test-pair.sh [gap]
+            [UNPROVEN] TEST#3 untested
+            [UNPROVEN] TEST#- not-numbered
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            TEST/test-stray.sh   'no-such'
+        test run, links to no feature
+            TEST/test-pair.sh [odd]
+        statement, not read
+            hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            TEST   no 'id'
+status: OK
+
+--- --cov-dir names the output ---
+    COMPONENT . (core) -- Core                     0 proven, 2 failing, 2 unproven
+        does       Pairs lines.
+        serves     Alignment is what compare shows.
+        FEATURES TEST                              0 proven, 2 failing, 2 unproven
+            serves     What 'core' promises, proven.
+            [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
+                [PASS] TEST/test-pair.sh [plain]
+                [FAIL] TEST/test-pair.sh [gap]
+                code only    pair.c: 3..4, 10..13
+                code shared  2 line(s) in 1 file(s)
+            [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
+                [FAIL] TEST/test-pair.sh [gap]
+                code only    pair.c: 10..13
+                code shared  4 line(s) in 1 file(s)
+            [UNPROVEN] TEST#3 untested
+            [UNPROVEN] TEST#- not-numbered
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            TEST/test-stray.sh   'no-such'
+        test run, links to no feature
+            TEST/test-pair.sh [odd]
+        statement, not read
+            hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            TEST   no 'id'
+status: OK
+<hwut-end>

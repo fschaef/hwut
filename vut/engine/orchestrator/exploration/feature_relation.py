@@ -466,6 +466,8 @@ class CTestDirectory:
     state_tuple:     tuple = ()        # of CFeatureState, file order
     unlinked_tuple:  tuple = ()        # of (test, choice)
     undefined_tuple: tuple = ()        # of (test, choice, name)
+    run_tuple:       tuple = ()        # of (test, choice): EVERY run of
+                                       #  the directory, walk order
 
 
 @dataclass(frozen=True)
@@ -603,8 +605,10 @@ def test_directory_of(directory, path, app_set):
     run_db       = {}                  # feature name -> [CRun]
     unlinked     = []
     undefined    = []
+    every        = []
     for app in app_set:
         for choice, parameters in app.choice_db.items():
+            every.append((app.source_file, choice))
             name_tuple = linked_name_tuple(parameters)
             if not name_tuple:
                 unlinked.append((app.source_file, choice))
@@ -624,7 +628,7 @@ def test_directory_of(directory, path, app_set):
         state_list.append(CFeatureState(feature, run_tuple,
                                         state_of(run_tuple)))
     return CTestDirectory(path, feature_file, tuple(state_list),
-                          tuple(unlinked), tuple(undefined))
+                          tuple(unlinked), tuple(undefined), tuple(every))
 
 
 def relation_of_tree(root, interview_runner=None, fault_list=None):

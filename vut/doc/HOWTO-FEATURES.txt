@@ -1,0 +1,337 @@
+==============================================================================
+HOWTO-FEATURES -- say what a tree does, and see which test runs prove it
+==============================================================================
+
+A FEATURE is one thing a piece of software does, said in one sentence. A
+TEST RUN is one test application run with one choice; its verdict stands
+in 'GOOD/book.csv'. A test run is LINKED to the features it proves. From
+the links and the verdicts every feature has a state:
+
+    PROVEN     one linked test run or more; every one passes
+    FAILING    one linked test run or more; one does not pass, or has no
+               verdict yet
+    UNPROVEN   no linked test run
+
+Three texts carry it. Each stands where its subject stands:
+
+    <component>/hwut-composition.conf     what the component does
+    <component>/TEST/hwut-features.conf   the features proven in that TEST
+                                          directory
+    a test's '@hwut { }' block            the features that test proves
+
+    gateway/                      hwut-composition.conf   id "gateway"
+      +-- router/                 hwut-composition.conf   id "router"
+      |     +-- TEST/             hwut-features.conf      id "TEST"
+      |           +-- test-route.sh      features = ["forward"]
+      |           +-- test-restart.sh
+      +-- can/
+            +-- TEST/
+
+A COMPONENT is a directory that is not a TEST directory. The example
+below is a CAN-MOST gateway; every excerpt is the output of that tree.
+
+1   Features and links
+2   The report
+3   Components
+4   Ids, 'parent' and 'childs'
+5   Keeping the relation in order
+6   The table
+7   The code a feature's runs reached
+8   What hwut.run does with all this
+9   Reference
+
+
+1  FEATURES AND LINKS
+______________________________________________________________________________
+
+The feature file lists the features of one TEST directory.
+'router/TEST/hwut-features.conf':
+
+    features {
+        1 { name  = "forward"
+            title = "A CAN frame is forwarded to its MOST address." }
+        2 { name  = "keep-order"
+            title = "Frames leave in the order they arrived." }
+        3 { name  = "drop-unknown"
+            title = "A frame without a route is dropped and counted." }
+    }
+
+    <number>      the feature's id inside this file. A number is given
+                  once: a new feature takes the next unused one, a removed
+                  feature leaves its number unused.
+    name          the word a test writes to link to the feature; unique in
+                  the file. The name may change, the number stays.
+    title         one sentence: what the software does.
+    explanation   free text, optional.
+
+A test links to features by name, in its block. 'router/TEST/test-route.sh':
+
+    # @hwut {
+    #     title    = "Routing"
+    #     features = ["forward"]
+    #     choices {
+    #         single { }
+    #         burst  { features = ["forward", "keep-order"] }
+    #     }
+    # }
+
+'features' at the root of the block holds for every choice. 'features' in
+a choice REPLACES the root's list for that choice; '[]' links the choice
+to nothing. A name is looked up in the feature file of the test's own
+TEST directory only: a link never leaves its TEST directory.
+
+
+2  THE REPORT
+______________________________________________________________________________
+
+'hwut.report.features' prints the tree below the current directory
+('--directory=<path>' names another). It runs nothing; it reads the
+texts and the verdicts.
+
+    $ hwut.report.features
+    COMPONENT .                                    2 proven, 0 failing, 1 unproven
+        COMPONENT can                              0 proven, 0 failing, 0 unproven
+            FEATURES can/TEST                      0 proven, 0 failing, 0 unproven
+        COMPONENT router                           2 proven, 0 failing, 1 unproven
+            FEATURES router/TEST                   2 proven, 0 failing, 1 unproven
+                [PROVEN]   router/TEST#1 forward -- A CAN frame is forwarded to its MOST address.
+                    [PASS] router/TEST/test-route.sh [single]
+                    [PASS] router/TEST/test-route.sh [burst]
+                [PROVEN]   router/TEST#2 keep-order -- Frames leave in the order they arrived.
+                    [PASS] router/TEST/test-route.sh [burst]
+                [UNPROVEN] router/TEST#3 drop-unknown -- A frame without a route is dropped and counted.
+
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            can/TEST/test-frame.sh   'decode'
+        test run, links to no feature
+            router/TEST/test-restart.sh
+        TEST directory, no 'hwut-features.conf'
+            can/TEST
+        component, no 'hwut-composition.conf'
+            .
+            can
+            router
+
+A feature is addressed as '<TEST directory>#<number> <name>'. The counts
+of a component are the sum of everything below it.
+
+'OUTSIDE THE RELATION' names what the tree says too little or too much
+of:
+
+    what is named                               what it means
+    ---------------------------------------------------------------------
+    test run, names a feature its TEST          a misspelt name, or a
+    directory does not define                   feature not yet written
+    test run, links to no feature               a test that proves nothing
+                                                stated (listed only where
+                                                the directory carries a
+                                                feature file)
+    TEST directory, no 'hwut-features.conf'     tests, and no claim
+    component, no 'hwut-composition.conf'       a directory nobody describes
+    statement, not read                         a file with a fault; the
+                                                position and the fault
+    'parent' and 'childs', not as the           section 5
+    directories stand
+
+The exit status is 0 whatever is listed; 3 where no TEST directory stands
+below.
+
+
+3  COMPONENTS
+______________________________________________________________________________
+
+The composition file says what a component is. 'hwut-composition.conf' at
+the top of the tree, and 'router/hwut-composition.conf':
+
+    component {                          component {
+        id    = "gateway"                    title = "Router"
+        title = "CAN-MOST gateway"           does  = "Decides where a frame goes."
+        does  = "Carries frames between  }
+                 a CAN bus and a MOST
+                 ring."
+    }
+
+    title, does   what the component is, and what it does.
+
+The report prints both under the component:
+
+    COMPONENT . (gateway) -- CAN-MOST gateway      2 proven, 0 failing, 1 unproven
+        does       Carries frames between a CAN bus and a MOST ring.
+
+
+4  IDS, 'parent' AND 'childs'
+______________________________________________________________________________
+
+A composition file and a feature file are STATEMENT FILES. Each gives
+itself an 'id': a string of the author's choice, unique among the childs
+of its parent. Statement files name each other by id and by nothing else;
+no path is written into any of them.
+
+    id        this file's own id
+    parent    the id of the composition file of the directory above
+    childs    the ids of the statement files directly below: the
+              components, and the feature file of the TEST directory
+
+Both take a bare form and a form with a sentence per id:
+
+    parent = "gateway"              parent { gateway = "Feeds the MOST side." }
+    childs = ["router", "can"]      childs { router = "Decides where a frame goes."
+                                             can    = "Reads the bus." }
+
+The report prints the sentences as 'serves' (the file's own 'parent'
+sentence) and 'as child' (what the 'childs' above says of its id).
+
+A relation is stated twice -- the child names its parent, the parent
+lists its child. The DIRECTORIES are the fact; both statements are held
+against them. The file at the top of the tree, beside 'hwut-root.conf',
+states no parent.
+
+
+5  KEEPING THE RELATION IN ORDER
+______________________________________________________________________________
+
+Where 'id', 'parent' or 'childs' do not agree with the directories, the
+report says so in its last block and names the remedy:
+
+    'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+        router   no 'id'
+        router/TEST   no 'id'
+        router/TEST   the directory above gives itself no id
+
+'hwut.sanitize.propose --relations -o <file>' writes one command per
+disagreement into '<file>'. The file is read, edited where wanted, and
+handed to 'hwut.sanitize.apply':
+
+    $ hwut.sanitize.propose --relations -o todo.txt
+    $ hwut.sanitize.apply todo.txt
+     relate router ........................................................ [DONE]
+          router: id = "router"
+          router: parent = "gateway"
+          .: childs, 'router' entered, its sentence empty
+     relate router/TEST ................................................... [DONE]
+          router/TEST: id = "TEST"
+          router/TEST: parent = "router"
+          router: childs, 'TEST' entered, its sentence empty
+    Done 2/2
+
+'relate <dir>' gives the file an id where it has none (the directory's
+name; rename it afterwards, in the file and where it is listed), sets
+its 'parent' to the id above, and enters its id in the 'childs' above.
+'unrelate <dir> <id>' takes a dead entry out of 'childs'. Every other
+byte of the files stays as it was.
+
+    what the report says                        proposed
+    ---------------------------------------------------------------------
+    no 'id'                                     relate <dir>
+    'parent' is not the id above                relate <dir>
+    the directory above does not list the id    relate <dir>
+    moved: another component still lists the    relate <dir> -- the entry
+    id, and nothing below that one carries it   is CARRIED from there,
+                                                with its sentence
+    'childs' lists an id nothing below carries  unrelate <dir> <id>
+    two childs of one parent carry one id       nothing; rename one
+    the directory above gives itself no id      nothing; its own 'relate'
+                                                comes first
+
+The faces that change the tree keep the relation themselves:
+
+    hwut.move <test> <dir>    carries the features the test links to into
+                              the target's feature file, under the
+                              target's next numbers, and takes them out
+                              of the source's unless a test that stays
+                              still links to them. A target without a
+                              feature file receives nothing; that is
+                              said.
+    hwut.rename               adapts nothing: the link stands in the
+                              test's block.
+    hwut.remove               names the features left without a linked
+                              test run.
+    a directory moved or      every id below it still resolves. The one
+    renamed by hand           relation that broke is reported as 'moved'
+                              and healed by 'relate'.
+
+
+6  THE TABLE
+______________________________________________________________________________
+
+'hwut.report.features --matrix' prints the links as a table, one per TEST
+directory that carries a feature file, in place of the tree. A row is a
+test run, a column a feature, a cell the run's verdict where it links.
+
+    $ hwut.report.features --matrix --directory=router
+    TEST                    #1    #2    #3
+    test-restart.sh         .     .     .     <- no feature
+    test-route.sh [single]  PASS  .     .
+    test-route.sh [burst]   PASS  PASS  .
+                                        ^     no test run
+      #1 forward       PROVEN
+      #2 keep-order    PROVEN
+      #3 drop-unknown  UNPROVEN
+
+    an empty row      a test run that proves nothing stated
+                      ('<- no feature'; '<- no feature defined' where it
+                      names only features the directory does not define)
+    an empty column   a feature no test run proves ('^ ... no test run')
+
+'OUTSIDE THE RELATION' follows the tables as it follows the tree.
+
+
+7  THE CODE A FEATURE'S RUNS REACHED
+______________________________________________________________________________
+
+'hwut.cov.run' measures which lines each test run executes and writes a
+coverage output directory ('hwut.coverage/' by default). With such an
+output, 'hwut.report.features --code' adds to each feature that has a
+linked test run the lines those runs executed:
+
+    [PROVEN]   TEST#2 keep-order -- Frames leave in the order they arrived.
+        [PASS] TEST/test-route.sh [burst]
+        code only    queue.c: 41..58
+        code shared  112 line(s) in 3 file(s)
+
+    code only     lines executed by this feature's test runs and by NO
+                  other measured test run; per source file
+    code shared   lines executed by this feature's test runs and by
+                  others; a count
+    code   <n> of <m> linked run(s) not measured
+                  linked test runs the coverage output does not hold
+
+The coverage output is the one '--cov-dir=<dir>' names; else the nearest
+'hwut.coverage/' from the directory upward. Where none is found the
+first line is a NOTE and the page stands without code.
+
+The lines say where the runs WENT. Which lines are 'only' depends on
+what else the coverage run measured: measured alone, a test run owns
+every line it touches. Source files standing in a TEST directory are
+left out. '--matrix' prints no code.
+
+
+8  WHAT hwut.run DOES WITH ALL THIS
+______________________________________________________________________________
+
+Nothing. A test runs and is judged whether or not its links resolve, and
+whether or not a statement file stands. The relation is read by
+'hwut.report.features' and 'hwut.sanitize' only.
+
+
+9  REFERENCE
+______________________________________________________________________________
+
+    hwut.report.features [--matrix] [--code] [--cov-dir=<dir>]
+                         [--directory=<path>]
+    hwut.sanitize.propose --relations [-o <file>]
+    hwut.sanitize.apply <file>
+    hwut.sanitize relate <dir>
+    hwut.sanitize unrelate <dir> <id>
+
+    hwut-features.conf        features  { id  parent  issued
+                                          <number> { name title explanation } }
+    hwut-composition.conf     component { id  title  does  parent  childs }
+    '@hwut { }' block         features = ["<name>", ...]
+
+    'issued' is the highest feature number the file ever gave; hwut
+    writes it where it numbers a feature.
+
+Every face answers '--help' with its full text. The complete statement,
+with what is still open, is 'adm/WORK/spec/23-features.txt'.

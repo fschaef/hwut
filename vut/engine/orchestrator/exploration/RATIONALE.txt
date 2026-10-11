@@ -2229,3 +2229,33 @@ GRAVEYARD 'hwut-coverage.marker' as the mark (this entry's first
           form, the same day): a coverage word for a thing that is not
           about coverage.
 PINNED    'services/TEST/test-book-defects.sh coverage-ground'.
+
+
+R-86  WHERE A FEATURE'S RUNS WENT IN THE CODE                          (2026-10-10)
+
+PROBLEM   A feature is linked to test runs (R-83); a coverage output
+          says per source range which test runs executed it. Nothing
+          joined the two.
+DECISION  'feature_code.code_db_of(relation, root, output_directory)'
+          -> {(TEST directory, feature key): CFeatureCode}. A range is,
+          for one feature,
+              only     every run that executed it is linked to the feature
+              shared   linked runs executed it, and others did too
+          'only' is kept per source as ranges; 'shared' as counts of
+          lines and files.
+          A HINT, NOT A PROOF: where the runs went, not where the
+          feature is implemented. 'only' depends on WHAT ELSE WAS
+          MEASURED -- a coverage run over one test makes every line
+          'only'.
+          A SOURCE STANDING IN A TEST DIRECTORY of the relation is left
+          out: it is a test, executed by its own runs only.
+          A LINKED RUN THE OUTPUT DOES NOT HOLD is counted
+          ('unmeasured_n'); with none held there is no range.
+          SOURCES ARE NAMED FROM 'root', as the relation names its
+          directories.
+          Lives here, beside the relation; reads 'engine/coverage/api'
+          only ('Output', 'root_of', 'union').
+COST      Every coverage file of the output is read per call.
+          A source outside the relation's walk (the output's root is
+          wider than 'root') is still named, with '../'.
+PINNED    'services/TEST/test-report-features.py code'.

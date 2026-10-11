@@ -5,7 +5,8 @@ PURPOSE: THE 'hwut.report.features' COMMAND LINE -- print what the tree
          below a directory claims to do, and which test runs prove it:
          component -> part -> feature -> test runs and their verdicts.
 
-    hwut.report.features [--directory=<path>]
+    hwut.report.features [--matrix] [--code] [--cov-dir=<dir>]
+                         [--directory=<path>]
 
 THE THREE STATEMENTS READ
 
@@ -38,6 +39,38 @@ THE PAGE
 
     A component's counts are its features in each state, summed over
     its parts. Every path is relative to where the face is called.
+
+--matrix: THE LINKS AS A TABLE, one per TEST directory that carries a
+feature file, in place of the tree -- a row per test run, a column per
+feature, the run's verdict where it links:
+
+    <path>/TEST                    #1    #2    #3
+    test-pair.sh [plain]           PASS  .     .
+    test-pair.sh [gap]             FAIL  FAIL  .
+    test-pair.sh [odd]             .     .     .     <- no feature
+                                               ^ no test run
+      #1 line-pairing   FAILING
+      #2 missing-side   FAILING
+      #3 untested       UNPROVEN
+
+    '--code' adds nothing to a table.
+
+    An empty ROW is a test run that proves nothing stated; an empty
+    COLUMN is a feature nobody proves. A link never leaves its TEST
+    directory, so the tables are the whole of the relation.
+
+--code: WHERE A FEATURE'S RUNS WENT IN THE CODE, from the output of a
+'hwut.cov.run' -- '--cov-dir=<dir>', else the nearest 'hwut.coverage/'
+from the directory upward. Under each feature that has a linked run:
+
+    code only    <source>: <lines>     executed by this feature's runs
+                                       and by NO OTHER measured run
+    code shared  <n> line(s) in <m> file(s)
+                                       executed by its runs and others'
+    code         <n> of <m> linked run(s) not measured
+
+    A hint where to look, not a proof where the feature is implemented.
+    The test applications' own lines are left out.
 
 OUTSIDE THE RELATION, named below the tree:
 
@@ -72,7 +105,8 @@ from   vut.engine.orchestrator.exploration.feature_relation \
                                          UNJUDGED, UNLISTED,
                                          mismatch_list, relation_of_tree)
 
-USAGE = "usage: hwut.report.features [--directory=<path>] [--help]"
+USAGE = ("usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] "
+         "[--directory=<path>] [--help]")
 
 _INDENT = "    "
 _WIDTH  = 78
@@ -81,8 +115,13 @@ _WIDTH  = 78
 @dataclass(frozen=True)
 class Request:
     """WHAT WAS ASKED of 'hwut.report.features': the directory whose
-    tree is reported."""
-    directory: str = "."
+    tree is reported; 'matrix_f' the links as tables in place of the
+    tree; 'code_f' the code each feature's runs went through, read from
+    'cov_dir' or the nearest coverage output."""
+    directory: str        = "."
+    matrix_f:  bool       = False
+    code_f:    bool       = False
+    cov_dir:   str | None = None
 
 
 @dataclass(frozen=True)
@@ -150,6 +189,105 @@ def _id_text(relation, path):
     return " (%s)" % statement.id
 
 
+def span_text(range_tuple):
+    """RETURN: str, half-open line ranges as a reader counts them:
+    'first..last', a single line alone, ', ' between."""
+    return ", ".join("%i..%i" % (begin, end - 1) if end - begin > 1
+                     else "%i" % begin for begin, end in range_tuple)
+
+
+def _code_line_list(code, depth):
+    """RETURN: list[str], where one feature's runs went in the code
+    ('feature_code.CFeatureCode', or None where nothing is to say):
+    'code only' per source, 'code shared' as a count, and the linked
+    runs the coverage output does not hold."""
+    if code is None: return []
+    lead      = _INDENT * depth
+    line_list = ["%scode only    %s: %s" % (lead, source, span_text(spans))
+                 for source, spans in code.only_tuple]
+    if code.shared_line_n:
+        line_list.append("%scode shared  %i line(s) in %i file(s)"
+                         % (lead, code.shared_line_n, code.shared_file_n))
+    if code.measured_n and not code.only_tuple and not code.shared_line_n:
+        line_list.append("%scode         none outside the TEST directories"
+                         % lead)
+    if code.unmeasured_n:
+        line_list.append("%scode         %i of %i linked run(s) not measured"
+                         % (lead, code.unmeasured_n,
+                            code.unmeasured_n + code.measured_n))
+    return line_list
+
+
+def matrix_line_list(relation, path):
+    """RETURN: list[str], the links of one TEST directory as a table:
+    a row per test run, a column per feature ('#<number>', '#-' where
+    it carries none), the run's verdict where it links and '.' where it
+    does not; '<- no feature' behind a run that links to none, '<- no
+    feature defined' behind one that names only what the directory does
+    not define, '^ no test run' under a feature nobody proves; then the
+    features by
+    number, name and state. Empty where the directory carries no
+    feature file."""
+    test_directory = relation.test_directory_db[path]
+    if test_directory.feature_file is None: return []
+    state_tuple = test_directory.state_tuple
+    head_list   = ["#%s" % ("-" if each.feature.number is None
+                            else each.feature.number)
+                   for each in state_tuple]
+    cell_db     = {}               # (test, choice) -> {column: verdict}
+    for column, each in enumerate(state_tuple):
+        for run in each.run_tuple:
+            cell_db.setdefault((run.test, run.choice), {})[column] = \
+                run.verdict
+    undefined = set((test, choice) for test, choice, _
+                    in test_directory.undefined_tuple)
+    name_list = [run_text(".", test, choice)
+                 for test, choice in test_directory.run_tuple]
+    width_0   = max([len(name) for name in name_list] + [len(path)])
+    width     = max([len(head) for head in head_list]
+                    + [len(verdict) for row in cell_db.values()
+                       for verdict in row.values()] + [1])
+
+    def row(first, cell_list, tail=""):
+        """RETURN: str, one table row, cells left-aligned in columns."""
+        return ("%-*s  %s%s" % (width_0, first,
+                                "  ".join("%-*s" % (width, cell)
+                                          for cell in cell_list),
+                                tail)).rstrip()
+
+    line_list = [row(path, head_list)]
+    for name, key in zip(name_list, test_directory.run_tuple):
+        linked = cell_db.get(key, {})
+        line_list.append(row(name, [linked.get(column, ".")
+                                    for column in range(len(state_tuple))],
+                             "" if linked
+                             else "  <- no feature defined"
+                             if key in undefined
+                             else "  <- no feature"))
+    if any(not each.run_tuple for each in state_tuple):
+        line_list.append(row("", ["^" if not each.run_tuple else ""
+                                  for each in state_tuple],
+                             "  no test run"))
+    name_width = max([len(feature_name(each.feature))
+                      for each in state_tuple] + [1])
+    head_width = max(len(head) for head in head_list) if head_list else 1
+    for head, each in zip(head_list, state_tuple):
+        line_list.append("  %-*s %-*s  %s" % (head_width, head, name_width,
+                                              feature_name(each.feature),
+                                              each.state))
+    return line_list
+
+
+def feature_name(feature):
+    """RETURN: str, the feature's name; its key where it states none."""
+    return feature.key if feature.name is None else feature.name
+
+
+#  THE CODE OF THE FEATURES, where '--code' asked for it: read once by
+#  'do' and looked up by the lines of each TEST directory.
+relation_code_db = None
+
+
 def _test_directory_line_list(relation, path, depth):
     """RETURN: list[str], one TEST directory: its head with the counts,
     its statements, every feature with its state, and below each the
@@ -167,6 +305,9 @@ def _test_directory_line_list(relation, path, depth):
         line_list += ["%s[%s] %s" % (_INDENT * (depth + 2), run.verdict,
                                      run_text(path, run.test, run.choice))
                       for run in each.run_tuple]
+        line_list += _code_line_list(
+            (relation_code_db or {}).get((path, each.feature.key)),
+            depth + 2)
     return line_list
 
 
@@ -261,23 +402,41 @@ def do(request):
 
     IT NEVER PRINTS (E-101).
     """
+    global relation_code_db
     directory = request.directory or "."
     if not os.path.isdir(directory):
         raise Refused("REFUSED: the directory '%s' does not exist"
                       % directory)
+    root = os.path.abspath(directory)
     try:
-        relation = relation_of_tree(os.path.abspath(directory))
+        relation = relation_of_tree(root)
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     if not relation.test_directory_db:
         raise Empty("EMPTY: no TEST directory below '%s'" % directory)
 
-    if "." in relation.component_db:
+    note_list        = []
+    relation_code_db = None
+    if request.code_f or request.cov_dir:
+        relation_code_db, note = _code_db(relation, root, request.cov_dir)
+        if note: note_list.append(note)
+
+    if request.matrix_f:
+        line_list = []
+        for path in sorted(relation.test_directory_db):
+            found = matrix_line_list(relation, path)
+            if found: line_list += found + [""]
+        if line_list: line_list.pop()
+        else:         line_list = ["no TEST directory carries '%s'"
+                                   % FEATURE_FILE_NAME]
+    elif "." in relation.component_db:
         line_list = _component_line_list(relation, ".", 0)
     else:
         #  ASKED INSIDE A TEST DIRECTORY: it is the whole of the tree.
         line_list = _test_directory_line_list(relation, ".", 0)
+    line_list  = note_list + line_list
     line_list += _outside_line_list(relation)
+    relation_code_db = None
 
     count_db = dict.fromkeys(STATE_TUPLE, 0)
     for path in relation.test_directory_db:
@@ -285,6 +444,32 @@ def do(request):
             count_db[state] += n
     return Result(tuple(line_list),
                   tuple((state, count_db[state]) for state in STATE_TUPLE))
+
+
+def _code_db(relation, root, cov_dir):
+    """
+    RETURN: [0] dict, the code of the features
+                ('feature_code.code_db_of'); None where no coverage
+                output is found or it cannot be read
+            [1] str, the NOTE that says why none is shown; None where
+                one is
+    """
+    from vut.engine.coverage.api import OutputRefused
+    from vut.engine.orchestrator.exploration.feature_code import code_db_of
+    from vut.services.lib.report.details import coverage_directory_of
+    output_directory = coverage_directory_of(root, cov_dir)
+    if output_directory is None or not os.path.isdir(output_directory):
+        return None, ("NOTE: no coverage output found -- 'hwut.cov.run' "
+                      "writes one, '--cov-dir=<dir>' names one; no code "
+                      "shown")
+    try:
+        found = code_db_of(relation, root, output_directory)
+    except OutputRefused as refusal:
+        return None, "NOTE: %s; no code shown" % refusal
+    if found is None:
+        return None, ("NOTE: '%s' names no root it measured; no code shown"
+                      % os.path.relpath(output_directory))
+    return found, None
 
 
 def printed(result, write):
@@ -302,6 +487,7 @@ def main(argv=None, write=None):
     if write is None: write = print
     if argv  is None: argv  = sys.argv[1:]
     directory = "."
+    matrix_f, code_f, cov_dir = False, False, None
     for word in argv:
         if word == "--help":
             from vut.services._core import man_page
@@ -312,12 +498,19 @@ def main(argv=None, write=None):
             return E_ExitCode.OK
         elif word.startswith("--directory="):
             directory = word[len("--directory="):]
+        elif word == "--matrix":
+            matrix_f = True
+        elif word == "--code":
+            code_f = True
+        elif word.startswith("--cov-dir="):
+            cov_dir = word[len("--cov-dir="):]
         else:
             write("REFUSED: 'hwut.report.features' does not take '%s'"
                   % word)
             write(USAGE)
             return E_ExitCode.REFUSED
-    return answered(do, Request(directory), write, printed, USAGE)
+    return answered(do, Request(directory, matrix_f, code_f, cov_dir),
+                    write, printed, USAGE)
 
 
 if __name__ == "__main__":

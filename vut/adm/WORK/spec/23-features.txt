@@ -3,7 +3,7 @@ spec/23-features -- FEATURES: what a tree claims to do, and which test
                     runs prove it
 ==============================================================================
 
-VERSION: 3
+VERSION: 4
 
 COMPONENTS: engine/bookkeeper, engine/orchestrator/exploration,
             engine/coverage, services.
@@ -15,6 +15,8 @@ THEMSELVES IDS AND RELATE BY THEM -- 'id', 'parent', 'childs' -- sanitize
 investigates the relation and proposes detected move corrections, and
 every face that moves, renames or removes relies on ONE adaption.
 'to-parent' and 'parts' of version 1 are gone.
+VERSION 4 adds to section 5 the table ('--matrix') and the code a
+feature's runs reached ('--code').
 
     section                                   stands / OWED
     ---------------------------------------------------------------------
@@ -22,7 +24,8 @@ every face that moves, renames or removes relies on ONE adaption.
     2  the link, 'features' in the block      stands  (R-83)
     3  the composition file                   stands  (R-83, R-84)
     4  ids, 'parent' and 'childs'             stands  (R-84)
-    5  hwut.report.features                   stands  (services E-139)
+    5  hwut.report.features                   stands  (services E-139, E-143;
+                                                      exploration R-86)
     6  the judgement, and what sanitize       stands  (R-84, services E-140)
        proposes
     7  the one adaption; move, rename,        stands  (R-84, E-140)
@@ -156,6 +159,36 @@ TEST directory does not define; a test run linking to no feature (where the
 directory carries a feature file); a TEST directory without a feature file;
 a component without a composition file; a statement that is not read; and
 every disagreement of section 6.
+
+'--matrix' prints, in place of the tree, one table per TEST directory that
+carries a feature file:
+
+    engine/compare/core/TEST  #1    #2    #3
+    test-pair.sh [plain]      PASS  .     .
+    test-pair.sh [gap]        FAIL  FAIL  .
+    test-pair.sh [odd]        .     .     .     <- no feature
+    test-stray.sh             .     .     .     <- no feature defined
+                                          ^     no test run
+      #1 line-pairing  FAILING
+      #2 missing-side  FAILING
+      #3 untested      UNPROVEN
+
+    row      a test run; column: a feature; cell: the run's verdict where
+             it links
+    A link never leaves its TEST directory: the tables are the relation.
+
+'--code' adds under each feature that has a linked run where those runs
+went in the code, read from a coverage output ('--cov-dir=<dir>'; else the
+nearest 'hwut.coverage/' from the directory upward):
+
+    code only    <source>: <lines>    executed by this feature's runs and
+                                      by no other measured run
+    code shared  <n> line(s) in <m> file(s)
+    code         <n> of <m> linked run(s) not measured
+
+    A hint where to look. What is 'only' depends on what else the coverage
+    run measured. Sources standing in a TEST directory are left out.
+    No coverage output: a NOTE, and the page without code.
 
 
 6  THE JUDGEMENT, AND WHAT SANITIZATION PROPOSES

@@ -219,7 +219,7 @@ made from real runs by [`vut/adm/screenshots/make.sh`](vut/adm/screenshots/make.
 
 ## The commands
 
-46 launchers stand in `vut/bin`; put it on `PATH` to call them by name:
+49 launchers stand in `vut/bin`; put it on `PATH` to call them by name:
 
 ```
 export PATH=$PWD/vut/bin:$PATH
@@ -259,6 +259,7 @@ failed test, 2 the command line cannot be read, 3 it asks for nothing.
 | `hwut.report.details` | packs one test whole — source, GOOD, output, coverage — for another pair of eyes |
 | `hwut.report.timings` | what this machine measured, read back from the traces |
 | `hwut.report.wishlist` | lists every test and choice a wish selects |
+| `hwut.report.features` | what the tree claims to do and which test runs prove it: component, feature, linked runs, their verdicts; `--matrix` as a table, `--code` with the lines those runs reached |
 | `hwut.report.wallflowers` | lists files in test directories that no test application claims |
 | `hwut.help` | explains each failure that is not a plain difference from GOOD, once, with its remedy |
 
@@ -317,6 +318,7 @@ Where to read next:
 
 - [`vut/engine/compare/MANUAL.txt`](vut/engine/compare/MANUAL.txt) — every tolerance and region, with examples
 - [`vut/test_writing_support/hwut_pype/MANUAL.txt`](vut/test_writing_support/hwut_pype/MANUAL.txt) — the pype language
+- [`vut/doc/HOWTO-FEATURES.txt`](vut/doc/HOWTO-FEATURES.txt) — features, their links to test runs, and the report
 - [`vut/adm/PHILOSOPHY.txt`](vut/adm/PHILOSOPHY.txt) — what a test is, and when it is worth having
 - [`vut/services/README.txt`](vut/services/README.txt) — every command, its words, its exit status
 

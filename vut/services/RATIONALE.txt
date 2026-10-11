@@ -5805,3 +5805,50 @@ COST      Every recorded text view that holds an unpaired line gained
           partner stands higher up; 'g' realigns.
 PINNED    'services/TEST/test-diff.sh differing, side-by-side';
           'lib/viewers/keyed/TEST/test-keyed.py unpaired'.
+
+
+E-143  THE FEATURE REPORT AS A TABLE, AND WITH THE CODE ITS RUNS REACHED  (2026-10-10)
+
+PROBLEM   The tree of E-139 is read from the FEATURE: what proves it.
+          The other direction -- what does THIS TEST RUN prove, and
+          which runs prove nothing stated -- stood only as a list under
+          'OUTSIDE THE RELATION'. And nothing said WHERE in the code a
+          feature lives, though a coverage output holds, per line, the
+          test runs that executed it.
+DECISION  RULED (Frank-Rene, 2026-10-10: "both"). Two flags on
+          'hwut.report.features':
+          '--matrix'  one table per TEST directory that carries a
+              feature file, IN PLACE of the tree: test runs down,
+              features across ('#<number>'), the run's verdict where it
+              links, '.' where not. '<- no feature' behind an empty
+              row, '<- no feature defined' where the run names only what
+              the directory does not define, '^ ... no test run' under
+              an empty column; then the features by number, name, state.
+              PER TEST DIRECTORY because a link never leaves its TEST
+              directory (exploration R-83): one table over the tree
+              would be blocks on a diagonal and empty elsewhere.
+          '--code'  under each feature of the tree that has a linked
+              run, from the coverage output ('--cov-dir=<dir>', else the
+              nearest 'hwut.coverage/' upward, as 'hwut.report.details'
+              finds it, coverage D-42):
+                  code only    <source>: <lines>
+                  code shared  <n> line(s) in <m> file(s)
+                  code         <n> of <m> linked run(s) not measured
+              The reading is exploration R-86. '--cov-dir' alone asks
+              for the code too.
+          NO OUTPUT, OR ONE THAT CANNOT BE READ, IS A NOTE in the first
+          line and the page without code; status OK. The page is about
+          the relation; the code is an addition to it.
+          '--matrix --code' prints the table: a cell has no place for
+          lines.
+COST      'code_db' is carried from 'do' to the lines of a TEST
+          directory by a module variable, set and cleared in 'do'.
+          The matrix is as wide as the directory has features; nothing
+          folds it.
+GRAVEYARD A communication/UML diagram of features and tests: the
+          relation is bipartite and local to a TEST directory, which a
+          table shows whole and a terminal prints.
+          One matrix for the tree (above).
+          Listing the shared lines: they are mostly what every run
+          passes through, and drown the hint.
+PINNED    'services/TEST/test-report-features.py matrix, code'.

@@ -918,7 +918,8 @@ ruling stands, the page is evidence of a defect and must not be
 blessed.
 
 
-13  THE FEATURE RELATION -- 'feature_relation.py', 'feature_adapt.py'
+13  THE FEATURE RELATION -- 'feature_relation.py', 'feature_adapt.py',
+    'feature_code.py'
 ______________________________________________________________________________
 
 Three statements say what a tree claims to do and which test runs prove
@@ -981,6 +982,12 @@ the forms without sentences. The top of the tree states no parent.
                                         TEST directory's feature file
     unproven_by_removal(directory, test, choice)
                                         features a removal leaves unlinked
+
+'feature_code.py' joins the relation with a coverage output (R-86):
+
+    code_db_of(relation, root, output)  per feature, the source ranges
+                                        ONLY its linked runs executed,
+                                        the shared ones counted
 
 'hwut.report.features' prints the relation; 'hwut.sanitize.propose
 --relations' proposes 'relate' and 'unrelate'; 'hwut.move' and
