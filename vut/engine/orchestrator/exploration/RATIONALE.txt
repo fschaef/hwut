@@ -2259,3 +2259,39 @@ COST      Every coverage file of the output is read per call.
           A source outside the relation's walk (the output's root is
           wider than 'root') is still named, with '../'.
 PINNED    'services/TEST/test-report-features.py code'.
+
+
+R-87  A CONF ABOVE THE TEST DIRECTORY IS NAMED BY ITS PATH FROM THERE   (2026-10-11)
+
+PROBLEM   Book work 2026-10-11 (A-4): a value stated by 'hwut.conf' of
+          the directory ABOVE a test directory read '# hwut.conf:3' --
+          the same words as one stated by the test directory's own.
+          Two files, one name; the provenance did not tell them apart.
+DECISION  'provenance._made' names a conf met on the climb by its path
+          FROM THE TEST DIRECTORY: '../hwut.conf:3'. The directory's own
+          stays 'hwut.conf', the root's 'hwut-root.conf' (one per
+          tree). 'Provenance.shown' carries the name; '--provenance'
+          prints it, '--gnu' keeps the absolute path an editor jumps
+          to. The test directory travels 'explore' -> '_resolve' ->
+          'of_choice'.
+          AMENDS the comment's former rule "by its file name, never by
+          an absolute path": never absolute stands.
+COST      A caller of '_resolve' without a directory gets the bare file
+          name, as before.
+PINNED    'services/TEST/test-config-show.py above'.
+
+
+R-88  A TREE THAT RELATES NOTHING BY ID IS NOT JUDGED                  (2026-10-11)
+
+PROBLEM   'mismatch_list' said 'no id' of every feature file, and
+          'unjudged' with it, in a tree that holds no composition file
+          and whose feature files state neither 'id' nor 'parent'
+          (services E-144). Nothing there can name an id.
+DECISION  NOT RULED -- built as proposed. 'id_relation_used_f': a
+          composition file stands in the tree or directly above it, or
+          a feature file states 'id' or 'parent'. Where it is False
+          'mismatch_list' is empty; 'hwut.sanitize.propose --relations'
+          proposes nothing there.
+COST      A lone feature file never learns that it has no id until
+          something relates.
+PINNED    'services/TEST/test-report-features.py outside'.

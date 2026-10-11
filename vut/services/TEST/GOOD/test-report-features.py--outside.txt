@@ -10,11 +10,42 @@
         test run, names a feature its TEST directory does not define
             a/b/TEST/test-b.sh   'wanted'
         TEST directory, no 'hwut-features.conf'
-            a/TEST
-            a/b/TEST
+            a/TEST   1 test run(s)
+            a/b/TEST   1 test run(s)
+status: OK
+
+--- a feature file alone: no id is asked for, no component named ---
+    COMPONENT .                                    0 proven, 1 failing, 0 unproven
+        COMPONENT a                                0 proven, 1 failing, 0 unproven
+            FEATURES a/TEST                        0 proven, 0 failing, 0 unproven
+            COMPONENT a/b                          0 proven, 1 failing, 0 unproven
+                FEATURES a/b/TEST                  0 proven, 1 failing, 0 unproven
+                    [FAILING]  a/b/TEST#1 wanted
+                        [NO VERDICT] a/b/TEST/test-b.sh
+    
+    OUTSIDE THE RELATION
+        TEST directory, no 'hwut-features.conf'
+            a/TEST   1 test run(s)
+status: OK
+
+--- the same file stating a parent: the relation by ids is in use ---
+    COMPONENT .                                    0 proven, 1 failing, 0 unproven
+        COMPONENT a                                0 proven, 1 failing, 0 unproven
+            FEATURES a/TEST                        0 proven, 0 failing, 0 unproven
+            COMPONENT a/b                          0 proven, 1 failing, 0 unproven
+                FEATURES a/b/TEST                  0 proven, 1 failing, 0 unproven
+                    [FAILING]  a/b/TEST#1 wanted
+                        [NO VERDICT] a/b/TEST/test-b.sh
+    
+    OUTSIDE THE RELATION
+        TEST directory, no 'hwut-features.conf'
+            a/TEST   1 test run(s)
         component, no 'hwut-composition.conf'
             .
             a
             a/b
+        'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            a/b/TEST   no 'id'
+            a/b/TEST   the directory above gives itself no id
 status: OK
 <hwut-end>

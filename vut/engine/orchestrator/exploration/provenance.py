@@ -10,6 +10,8 @@ The provenances, in the order they overrule one another:
     "app"             the application's root, reaching every choice
     "hwut.conf:<n>"   'app_defaults' of the directory, or the 'apps' entry
                       that carries this application; the line is the key's
+    "../hwut.conf:<n>"  the same of a conf ABOVE the directory, named by
+                      its path from the test directory (R-87)
     "--hwut-info"     the application said it through its info block
     "default"         the component that owns the parameter declared it
 
@@ -32,11 +34,14 @@ class Provenance:
     'hwut.conf:3'. 'file' and 'line' are the place itself, for the
     services that print places ('--provenance', '--gnu'); they are 'None'
     where there is no place, which is what a declared default has.
+    'shown' is the file as a reader is told it -- a conf above the test
+    directory by its path from there; None where 'file' is that already.
     """
     text: str
     file: str | None = None
     line: int | None = None
     column: int | None = None
+    shown: str | None = None
 
     def __str__(self):
         """RETURN: str, the short form -- what stands in a comment."""
@@ -53,10 +58,11 @@ class Provenance:
         return "%s:%d:%d" % (self.file, self.line, self.column)
 
 
-def of_choice(spec, choice, app_defaults, directory_spec):
+def of_choice(spec, choice, app_defaults, directory_spec, directory=None):
     """
     RETURN: dict, parameter name -> Provenance, for one choice of one
-            specification.
+            specification -- 'directory' the test directory, from which
+            a conf above it is named.
     """
     result             = {}
     choice_parameters  = spec.choice_db[choice]
@@ -85,13 +91,15 @@ def of_choice(spec, choice, app_defaults, directory_spec):
             stated_in = conf_file_db.get(name) \
                         or conf_file_db.get(name.split(".")[0]) or conf_file
             result[name] = _made(stated_in, None, stated_in,
-                                 conf_position_db, name, stated_in)
+                                 conf_position_db, name, stated_in,
+                                 directory)
         else:
             result[name] = Provenance("default")
     return result
 
 
-def _made(carrier, own_text, file, position_db, name, conf_file):
+def _made(carrier, own_text, file, position_db, name, conf_file,
+          directory=None):
     """
     RETURN: Provenance, the text a reader wants and the place itself.
 
@@ -104,16 +112,20 @@ def _made(carrier, own_text, file, position_db, name, conf_file):
         return Provenance("--hwut-info", file)
     if (carrier is not None and carrier.endswith(".conf")) \
        or carrier is None and file == conf_file:
-        #  THE CONF THAT SPOKE, by the name it has in the tree: the
-        #  root's is 'hwut-root.conf', a directory's 'hwut.conf'; one
-        #  met on the climb is named by its file name, never by an
-        #  absolute path.
-        label = os.path.basename(conf_file) if os.path.isabs(conf_file) \
-                else conf_file
+        #  THE CONF THAT SPOKE: the directory's own is 'hwut.conf'; one
+        #  met on the climb is named by its path FROM THE TEST DIRECTORY
+        #  ('../hwut.conf', '../../hwut-root.conf'), never by an absolute
+        #  path -- two confs of one name are two places (R-87).
+        if not os.path.isabs(conf_file): label = conf_file
+        elif directory is None:          label = os.path.basename(conf_file)
+        else:
+            label = os.path.relpath(
+                conf_file, os.path.abspath(directory)).replace(os.sep, "/")
         text = ("%s:%d" % (label, position.line)) if position else label
         return Provenance(text, conf_file,
                           position.line if position else None,
-                          position.column if position else None)
+                          position.column if position else None,
+                          label if label != conf_file else None)
     return Provenance(own_text or "", file,
                       position.line if position else None,
                       position.column if position else None)

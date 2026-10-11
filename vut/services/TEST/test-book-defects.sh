@@ -68,6 +68,11 @@ page() {            # <path> <choices block> ; body on stdin
 #  The flow without what the machine chose: timings.
 flow() { grep -v '^RESULTS:' | sed 's/, [0-9:]*$//'; }
 said() { "$@" 2>&1; echo "exit $?"; }
+#  STDOUT ALONE, and the exit status. Where a face writes its answer to
+#  stdout and a note to stderr, the ORDER of the two in one pipe is the
+#  machine's (who flushes first), not the face's: a page that shows both
+#  through 'said' differs between machines.
+said_out() { "$@" 2> /dev/null; echo "exit $?"; }
 
 case "$1" in
 
@@ -216,11 +221,11 @@ EOF
     line_of() { grep -n "print(\"$1\")" test-m.py | cut -d: -f1; }
     change() { printf -- '--- a/test-m.py\n+++ b/test-m.py\n@@ -%s,1 +%s,1 @@\n-x\n+y\n' "$1" "$1"; }
     echo "--- a change in 'one': the first run alone"
-    change "$(line_of one)"  | said hwut.affected --bare 2> /dev/null
+    change "$(line_of one)"  | said_out hwut.affected --bare
     echo "--- a change in 'both': both runs, framed"
     change "$(line_of both)" | said hwut.affected
     echo "--- a change in a line nobody executes"
-    change 2 | said hwut.affected --bare 2> /dev/null
+    change 2 | said_out hwut.affected --bare
     echo "--- the answer is a wishlist"
     change "$(line_of two)" | hwut.affected --bare > w.txt 2> /dev/null
     $RUN --wishlist w.txt | grep -E '^(START|END|      :)'

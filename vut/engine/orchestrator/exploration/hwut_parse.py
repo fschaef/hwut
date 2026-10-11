@@ -46,7 +46,7 @@ def text_of_file(directory, name, no_default_f=False,
 
     from .explorer import _resolve
     governing, conf_fault_list = _governing_of(directory)
-    return app_text(_resolve(spec, governing),
+    return app_text(_resolve(spec, governing, directory),
                     no_default_f, provenance_f, gnu_f, verbose_f), \
            fault_list + conf_fault_list
 

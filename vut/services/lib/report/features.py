@@ -103,7 +103,8 @@ from   vut.engine.orchestrator.exploration.feature_relation \
                                          FEATURE_FILE_NAME, STATE_TUPLE,
                                          GONE, MOVED, NO_ID, PARENT, TWIN,
                                          UNJUDGED, UNLISTED,
-                                         mismatch_list, relation_of_tree)
+                                         id_relation_used_f, mismatch_list,
+                                         relation_of_tree)
 
 USAGE = ("usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] "
          "[--directory=<path>] [--help]")
@@ -358,7 +359,11 @@ def _outside_line_list(relation):
     for path in sorted(relation.test_directory_db):
         each = relation.test_directory_db[path]
         if each.feature_file is None:
-            bare_test.append(path)
+            #  ITS TEST RUNS ARE COUNTED, not named: none of them can
+            #  link, and a tree that states no features would name
+            #  every test it has (E-144).
+            bare_test.append("%s   %i test run(s)"
+                             % (path, len(each.run_tuple)))
         else:
             unlinked += [run_text(path, test, choice)
                          for test, choice in each.unlinked_tuple]
@@ -366,10 +371,13 @@ def _outside_line_list(relation):
                       for f in each.feature_file.fault_tuple]
         undefined += ["%s   '%s'" % (run_text(path, test, choice), name)
                       for test, choice, name in each.undefined_tuple]
+    composed_f = id_relation_used_f(relation)
     for path in sorted(relation.component_db):
         each = relation.component_db[path]
         if each.composition is None:
-            bare_component.append(path)
+            #  NAMED ONLY WHERE THE TREE DESCRIBES COMPONENTS AT ALL:
+            #  feature files alone are complete (E-144).
+            if composed_f: bare_component.append(path)
         else:
             fault += ["%s/%s" % (path, f) if path != "." else "%s" % f
                       for f in each.composition.fault_tuple]

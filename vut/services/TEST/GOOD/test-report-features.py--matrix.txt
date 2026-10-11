@@ -24,7 +24,7 @@
         test run, links to no feature
             engine/compare/core/TEST/test-pair.sh [odd]
         TEST directory, no 'hwut-features.conf'
-            engine/plain/TEST
+            engine/plain/TEST   1 test run(s)
         component, no 'hwut-composition.conf'
             engine/plain
         statement, not read
@@ -60,9 +60,6 @@ status: OK
     
     OUTSIDE THE RELATION
         TEST directory, no 'hwut-features.conf'
-            a/TEST
-        component, no 'hwut-composition.conf'
-            .
-            a
+            a/TEST   1 test run(s)
 status: OK
 <hwut-end>

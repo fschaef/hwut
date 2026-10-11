@@ -37,7 +37,7 @@
         test run, links to no feature
             engine/compare/core/TEST/test-pair.sh [odd]
         TEST directory, no 'hwut-features.conf'
-            engine/plain/TEST
+            engine/plain/TEST   1 test run(s)
         component, no 'hwut-composition.conf'
             engine/plain
         statement, not read

@@ -129,7 +129,7 @@ def explore(directory, interview_runner=None, inherited=None):
             if spec is None:
                 silent_list.append(name)
                 continue
-        app = _resolve(spec, directory_spec)
+        app = _resolve(spec, directory_spec, directory)
         pair_fault_list = _execute_interactive_refused(app)
         if pair_fault_list:
             fault_list.extend(pair_fault_list)
@@ -149,7 +149,7 @@ def explore(directory, interview_runner=None, inherited=None):
                 E_FaultKind.DIRECTORY, finder.CONF_NAME, spec.position,
                 "'apps' names '%s', which does not exist" % name))
             continue
-        app = _resolve(spec, directory_spec)
+        app = _resolve(spec, directory_spec, directory)
         pair_fault_list = _execute_interactive_refused(app)
         if pair_fault_list:
             fault_list.extend(pair_fault_list)
@@ -196,14 +196,15 @@ def _language_of(spec, directory_spec):
     return None, False
 
 
-def _resolve(spec, directory_spec=None):
+def _resolve(spec, directory_spec=None, directory=None):
     """
     RETURN: CTestApp, 'spec' folded: the directory's 'app_defaults' is the
             outermost default, the application's own root the next, and a
             choice's own value stands over both.
 
     The provenance of every value is settled here, while the three
-    sources still stand apart, and travels in 'origin_db'.
+    sources still stand apart, and travels in 'origin_db'. 'directory'
+    is the test directory: a conf above it is named from there.
     """
     app_defaults = getattr(directory_spec, "app_defaults", None) \
                   if directory_spec is not None else None
@@ -217,7 +218,7 @@ def _resolve(spec, directory_spec=None):
     for name, parameters in spec.choice_db.items():
         choice_db[name] = base.overwritten_by(parameters)
         origin_db[name] = provenance.of_choice(spec, name, app_defaults,
-                                               directory_spec)
+                                               directory_spec, directory)
 
     language, derived_f = _language_of(spec, directory_spec)
     return CTestApp(source_file = spec.source_file,

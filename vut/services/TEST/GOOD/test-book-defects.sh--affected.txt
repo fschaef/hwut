@@ -1,11 +1,6 @@
 --- hwut.cov.run
 COVERAGE DATA: <dir>/hwut.coverage -- 2 test run(s), 1 source file(s)
 --- a change in 'one': the first run alone
-NOTE: these are the runs that CERTAINLY executed the changed lines.
-      A run ABSENT here may still be affected -- by a branch that was
-      deleted, by a data file, by a dynamic dispatch, by an absence.
-      This is a SUGGESTION, never a clearance: running only these and
-      calling the suite green is a false green.
 ./test-m.py first
 exit 0
 --- a change in 'both': both runs, framed
@@ -25,11 +20,6 @@ NOTE: these are the runs that CERTAINLY executed the changed lines.
       calling the suite green is a false green.
 exit 0
 --- a change in a line nobody executes
-NOTE: these are the runs that CERTAINLY executed the changed lines.
-      A run ABSENT here may still be affected -- by a branch that was
-      deleted, by a data file, by a dynamic dispatch, by an absence.
-      This is a SUGGESTION, never a clearance: running only these and
-      calling the suite green is a false green.
 exit 3
 --- the answer is a wishlist
 START test-m.py  second                                                    ||1

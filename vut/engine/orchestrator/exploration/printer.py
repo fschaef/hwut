@@ -288,8 +288,9 @@ def _place_text(origin):
     """RETURN: str, 'file:line' where the value has a place, the short
     word where it has none."""
     if origin.file is None:  return origin.text
-    if origin.line is None:  return origin.file
-    return "%s:%d" % (origin.file, origin.line)
+    file = origin.shown or origin.file
+    if origin.line is None:  return file
+    return "%s:%d" % (file, origin.line)
 
 
 def value_text(value):

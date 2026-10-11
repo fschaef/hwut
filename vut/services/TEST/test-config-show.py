@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "hwut.config.show: the configuration the framework read"
-#     choices    = ["directory", "faults", "file", "help", "labels",
-#                   "refused"]
+#     choices    = ["above", "directory", "faults", "file", "help",
+#                   "labels", "refused"]
 #     interactive = true
 # }
 #
@@ -16,7 +16,7 @@ The face is driven through 'main(argv, write)', so what is shown is the
 face itself and no process stands between. The directory is stated with
 '--directory='; its path is machine-chosen and never printed.
 
-CHOICES: file, directory, faults, refused, help, labels;
+CHOICES: file, directory, above, faults, refused, help, labels;
 
 DESCRIPTION:
 
@@ -25,6 +25,13 @@ file       one file's specification, resolved; and the same with
 
 directory  the whole directory: 'hwut.conf' first, then every test
            application.
+
+above      three confs speak for one test: the test directory's own
+           'hwut.conf', one in the directory above, and the root's.
+           Each value names the conf that stated it -- the one above by
+           its path from the test directory ('../hwut.conf'), so two
+           files of one name are two places (book work 2026-10-11,
+           A-4); the same once the directory's own conf is gone.
 
 faults     a broken header: its faults print, its tree does not; the
            status is 1.
@@ -115,6 +122,33 @@ def test_directory():
         shutil.rmtree(directory, ignore_errors=True)
 
 
+def test_above():
+    """RETURN: None. A value stated by a conf ABOVE the test directory
+    names that conf by its path from there."""
+    ground = tempfile.mkdtemp(prefix="vut_show_")
+    conf   = 'hwut {\n    app_defaults {\n        caps { %s }\n    }\n}\n'
+    try:
+        directory = os.path.join(ground, "physics", "TEST")
+        os.makedirs(directory)
+        for path, text in (
+                ("hwut-root.conf",         conf % "memory_mb = 77"),
+                ("physics/hwut.conf",      conf % "timeout_sec = 10"),
+                ("physics/TEST/hwut.conf", conf % "cpu_sec = 5"),
+                ("physics/TEST/test-push.py", '# @hwut { title = "Push" }\n')):
+            with open(os.path.join(ground, path), "w") as fh: fh.write(text)
+        banner("own conf, the conf above, the root's")
+        call(directory, ["test-push.py", "--no-default"])
+        banner("the same, the test directory's own conf stating the value")
+        with open(os.path.join(directory, "hwut.conf"), "w") as fh:
+            fh.write(conf % "timeout_sec = 5")
+        call(directory, ["test-push.py", "--no-default"])
+        banner("--provenance")
+        os.remove(os.path.join(directory, "hwut.conf"))
+        call(directory, ["test-push.py", "--no-default", "--provenance"])
+    finally:
+        shutil.rmtree(ground, ignore_errors=True)
+
+
 def test_faults():
     """RETURN: None. A broken header yields faults, no tree."""
     directory = build_directory(
@@ -199,6 +233,7 @@ if __name__ == "__main__":
                "hwut.config.show: the configuration the framework read;", {
         "file":      test_file,
         "directory": test_directory,
+        "above":     test_above,
         "faults":    test_faults,
         "refused":   test_refused,
         "help":      test_help,

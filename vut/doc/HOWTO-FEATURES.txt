@@ -107,11 +107,7 @@ texts and the verdicts.
         test run, links to no feature
             router/TEST/test-restart.sh
         TEST directory, no 'hwut-features.conf'
-            can/TEST
-        component, no 'hwut-composition.conf'
-            .
-            can
-            router
+            can/TEST   1 test run(s)
 
 A feature is addressed as '<TEST directory>#<number> <name>'. The counts
 of a component are the sum of everything below it.
@@ -127,8 +123,13 @@ of:
                                                 stated (listed only where
                                                 the directory carries a
                                                 feature file)
-    TEST directory, no 'hwut-features.conf'     tests, and no claim
+    TEST directory, no 'hwut-features.conf'     tests, and no claim; the
+                                                count of its test runs
     component, no 'hwut-composition.conf'       a directory nobody describes
+                                                (named once the tree holds
+                                                a composition file, or a
+                                                feature file states 'id'
+                                                or 'parent')
     statement, not read                         a file with a fault; the
                                                 position and the fault
     'parent' and 'childs', not as the           section 5

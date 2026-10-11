@@ -5852,3 +5852,26 @@ GRAVEYARD A communication/UML diagram of features and tests: the
           Listing the shared lines: they are mostly what every run
           passes through, and drown the hint.
 PINNED    'services/TEST/test-report-features.py matrix, code'.
+
+
+E-144  FEATURE FILES ALONE ARE COMPLETE; A BARE TEST DIRECTORY COUNTS ITS RUNS  (2026-10-11)
+
+PROBLEM   Book work 2026-10-11 (A-2, A-3), on a tree holding feature
+          files and nothing else: the report named every component as
+          lacking 'hwut-composition.conf' and every feature file as
+          lacking an 'id' -- four things "missing" where nothing was
+          asked for. And a TEST directory without a feature file was
+          named, its test runs nowhere.
+DECISION  NOT RULED -- built as proposed, for Frank-Rene to rule.
+          'component, no hwut-composition.conf' and the judgement of
+          'parent' and 'childs' appear only where the tree relates by
+          id (exploration R-88): a composition file in it or directly
+          above, or a feature file stating 'id' or 'parent'.
+          'TEST directory, no hwut-features.conf' carries the COUNT of
+          the directory's test runs: '<path>   <n> test run(s)'.
+COST      The first composition file written into a tree brings every
+          undescribed component onto the page at once.
+GRAVEYARD NAMING the runs of a bare TEST directory under 'links to no
+          feature': a tree that states no features would name every
+          test it has.
+PINNED    'services/TEST/test-report-features.py outside'.

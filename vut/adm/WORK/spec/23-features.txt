@@ -156,9 +156,14 @@ runs and their verdicts, each component with its id and its counts.
 
 OUTSIDE THE RELATION, named below the tree: a test run naming a feature its
 TEST directory does not define; a test run linking to no feature (where the
-directory carries a feature file); a TEST directory without a feature file;
-a component without a composition file; a statement that is not read; and
-every disagreement of section 6.
+directory carries a feature file); a TEST directory without a feature file,
+with the count of its test runs; a component without a composition file; a
+statement that is not read; and every disagreement of section 6.
+
+FEATURE FILES ALONE ARE COMPLETE (services E-144, NOT RULED): components
+without a composition file, and the disagreements of section 6, are named
+only where the tree relates by id -- a composition file stands in it or
+directly above it, or a feature file states 'id' or 'parent'.
 
 '--matrix' prints, in place of the tree, one table per TEST directory that
 carries a feature file:

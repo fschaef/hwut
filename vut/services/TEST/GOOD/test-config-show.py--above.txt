@@ -1,0 +1,47 @@
+
+--- own conf, the conf above, the root's ---
+$ hwut.config.show test-push.py --no-default
+    test-push.py {
+        title = "Push"
+        choices {                                 # app
+            - {
+                caps {
+                    timeout_sec = 10.0            # ../hwut.conf:3
+                    cpu_sec = 5                   # hwut.conf:3
+                    memory_mb = 77                # hwut-root.conf:3
+                }
+            }
+        }
+    }
+    [status 0]
+
+--- the same, the test directory's own conf stating the value ---
+$ hwut.config.show test-push.py --no-default
+    test-push.py {
+        title = "Push"
+        choices {                                 # app
+            - {
+                caps {
+                    timeout_sec = 5.0             # hwut.conf:3
+                    memory_mb = 77                # hwut-root.conf:3
+                }
+            }
+        }
+    }
+    [status 0]
+
+--- --provenance ---
+$ hwut.config.show test-push.py --no-default --provenance
+    test-push.py {
+        title = "Push"
+        choices {                                 # app
+            - {
+                caps {
+                    timeout_sec = 10.0            # ../hwut.conf:3
+                    memory_mb = 77                # hwut-root.conf:3
+                }
+            }
+        }
+    }
+    [status 0]
+<hwut-end>

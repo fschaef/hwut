@@ -35,7 +35,12 @@ DESCRIPTION:
                     out. Then: no output found, and a directory that is
                     none.
     outside         a tree where nothing is linked and no statement
-                    stands: no feature, and every directory named.
+                    stands: no feature, every TEST directory named with
+                    the count of its test runs. Then a feature file
+                    ALONE: complete as it stands -- no id asked for, no
+                    component named as undescribed (book work
+                    2026-10-11, A-2, A-3); and the same file stating a
+                    'parent', which brings the judgement of ids back.
     empty           a tree without a TEST directory: said as EMPTY,
                     status 3.
     refused         a directory that does not stand, a tree no root
@@ -298,6 +303,20 @@ def run_outside():
         banner("no feature file, no composition file")
         _page([])
     _in_tree(build, body)
+    def alone(root):
+        build(root)
+        _write(root, "a/b/TEST/hwut-features.conf",
+               'features {\n    1 { name = "wanted" }\n}\n')
+    def complete():
+        banner("a feature file alone: no id is asked for, no component "
+               "named")
+        _page([])
+        banner("the same file stating a parent: the relation by ids is "
+               "in use")
+        _write(".", "a/b/TEST/hwut-features.conf",
+               'features {\n    parent = "b"\n    1 { name = "wanted" }\n}\n')
+        _page([])
+    _in_tree(alone, complete)
 
 
 def run_empty():

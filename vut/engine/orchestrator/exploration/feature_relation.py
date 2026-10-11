@@ -796,6 +796,23 @@ def old_lister_of(relation, path):
     return None
 
 
+def id_relation_used_f(relation):
+    """
+    RETURN: True, the tree relates statement files by id: a composition
+            file stands in it or directly above it, or a feature file
+            states an 'id' or a 'parent'
+            False, it holds feature files only, none of which states
+            either -- nothing asks for an id there
+    """
+    if relation.above is not None: return True
+    if any(each.composition is not None
+           for each in relation.component_db.values()): return True
+    return any(each.feature_file is not None
+               and (each.feature_file.id is not None
+                    or each.feature_file.parent_id is not None)
+               for each in relation.test_directory_db.values())
+
+
 def mismatch_list(relation):
     """
     RETURN: list of CMismatch, every disagreement between 'parent',
@@ -805,8 +822,12 @@ def mismatch_list(relation):
     Judged for every directory that carries a statement file. A
     directory without one states nothing and is not judged. The top of
     the tree states no parent.
+
+    A TREE THAT RELATES NOTHING BY ID is not judged at all
+    ('id_relation_used_f', R-88): feature files alone are complete.
     """
     result    = []
+    if not id_relation_used_f(relation): return result
     path_list = sorted(set(relation.component_db)
                        | set(relation.test_directory_db),
                        key=lambda path: (path != ".", path.split("/")))
