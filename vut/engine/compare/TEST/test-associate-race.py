@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Async Racing: associate Stream Flow"
+#     features   = ["streamed-association"]
 #     choices    = ["jittery", "nominal-slow", "subject-slow"]
 # }
 #

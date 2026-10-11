@@ -1,4 +1,4 @@
-# vut-register 5 generation:351 apps:44 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=8,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=3,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=7,42=7,43=5
+# vut-register 5 generation:353 apps:44 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=8,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=7,42=8,43=5
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -153,6 +153,7 @@ test-help-pages.sh;examples;true;ok;;40;0
 ;shape;true;ok;;40;1
 test-help.sh;empty;true;ok;;33;1
 ;explain;true;ok;;33;0
+;nonsense;true;ok;;33;3
 ;refused;true;ok;;33;2
 test-keep.py;cancel;true;ok;;28;0
 ;enter-add;true;ok;;28;1
@@ -226,6 +227,7 @@ test-report-details.sh;bare;true;ok;;20;0
 ;raw;true;ok;;20;5
 ;wish;true;ok;;20;6
 test-report-features.py;code;true;ok;;42;5
+;document;true;ok;;42;7
 ;empty;true;ok;;42;0
 ;matrix;true;ok;;42;6
 ;outside;true;ok;;42;1

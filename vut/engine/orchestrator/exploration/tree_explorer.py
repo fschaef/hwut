@@ -311,6 +311,21 @@ def transient_ground_f(path):
     return own_ground_f(path, (TRANSIENT_ROOT_NAME,))
 
 
+def path_from_root_conf(directory):
+    """
+    RETURN: str, 'directory' as its path from the directory that holds
+            the tree's 'hwut-root.conf', '/' between -- 'router/TEST'
+            None, 'directory' IS that directory, or no root conf stands
+            above it
+    """
+    try:
+        boundary = root_conf_directory(directory)
+    except RootConfMissing:
+        return None
+    relative = os.path.relpath(os.path.abspath(directory), boundary)
+    return None if relative == "." else relative.replace(os.sep, "/")
+
+
 def root_conf_directory(start):
     """
     RETURN: str, the ABSOLUTE directory holding the 'hwut-root.conf'

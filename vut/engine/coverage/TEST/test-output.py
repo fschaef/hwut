@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "The output directory carries every measure"
-#     choices    = ["carry", "refused", "rebased"]
+#     choices {
+#         carry   { features = ["measures-carried"] }
+#         refused { features = ["gather-refused"] }
+#         rebased { features = ["source-rebased"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

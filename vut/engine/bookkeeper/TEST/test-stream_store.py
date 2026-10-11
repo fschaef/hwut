@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "The store: records and the directory lock"
-#     choices    = ["keys", "lock_dead", "lock_live", "nominal_kinds",
-#                   "promotion"]
+#     choices {
+#         keys          { features = ["record-naming"] }
+#         lock_dead     { features = ["lock-dead-holder"] }
+#         lock_live     { features = ["lock-live-holder"] }
+#         nominal_kinds { features = ["nominal-kinds"] }
+#         promotion     { features = ["promotion"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

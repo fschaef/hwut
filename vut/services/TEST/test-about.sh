@@ -3,7 +3,12 @@
 #
 # @hwut {
 #     title   = "hwut.about: the version, and where this installation stands."
-#     choices = ["page", "refused", "version"]
+#     features = ["about-page"]
+#     choices {
+#         page    { }
+#         refused { features = ["face-refusal-by-name"] }
+#         version { features = ["about-version"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

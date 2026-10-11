@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "The interview: hwut 1.0 answers, and is read"
-#     choices    = ["block", "directory", "memo", "precedence",
-#                   "procsitter", "relic", "silence"]
+#     choices {
+#         block      { features = ["interview-read"] }
+#         directory  { features = ["interview-only-where-silent"] }
+#         memo       { features = ["untriggered-file-silent"] }
+#         precedence { features = ["interview-only-where-silent"] }
+#         procsitter { features = ["interview-read"] }
+#         relic      { features = ["info-dat-not-read"] }
+#         silence    { features = ["interview-read"] }
+#     }
 #     interactive = true
 # }
 #

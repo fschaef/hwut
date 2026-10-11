@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title = "The configuration namespace: which key is read where."
+#     features = ["key-places-enforced"]
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

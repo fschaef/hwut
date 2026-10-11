@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "FriendsPairing: Search anyway"
+#     features   = ["exact-pairing"]
 #     choices    = ["analogy", "basic", "border", "special", "wild",
 #                   "wild-2"]
 # }

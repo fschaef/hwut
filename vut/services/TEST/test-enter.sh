@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title      = "A test named by path ENTERS its directory (E-47)."
+#     features   = ["path-word-enters", "path-word-two-directories-refused"]
 #     choices    = ["enter", "refused"]
 #     tolerance { eq_pattern = ["(\\.( \\.){2,}|\\.{3,}) +",
 #                              ", [0-9]+\\.[0-9]+ \\[sec\\] total"] }

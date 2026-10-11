@@ -3,10 +3,21 @@
 #
 # @hwut {
 #     title   = "A word typed at a face: what the ruling says, every face does."
-#     choices = ["book", "boundary", "coverage_serial", "glob_silenced",
-#                "label_unknown", "language_unknown", "propose",
-#                "pype_call", "query_here", "shape", "strategy", "tiers",
-#                "yes_gone"]
+#     choices {
+#         book             { features = ["run-book-as-left"] }
+#         boundary         { features = ["tree-boundary-refused", "sanitize-root"] }
+#         coverage_serial  { features = ["cov-run-serial"] }
+#         glob_silenced    { features = ["wish-label-silence"] }
+#         label_unknown    { features = ["wish-label-unknown-refused"] }
+#         language_unknown { features = ["wish-language-unknown-refused"] }
+#         propose          { features = ["accept-propose", "accept-apply"] }
+#         pype_call        { features = ["run-pype-own-python"] }
+#         query_here       { features = ["labels-query-here"] }
+#         shape            { features = ["report-difference-shape"] }
+#         strategy         { features = ["run-strategy"] }
+#         tiers            { features = ["run-display-tiers"] }
+#         yes_gone         { features = ["face-retired-word-named"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

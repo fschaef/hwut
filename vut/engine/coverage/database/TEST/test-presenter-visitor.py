@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "The presenters: every registered axis answered, and no name outside the vocabulary"
-#     choices    = ["text", "vocabulary", "walk"]
+#     choices {
+#         text       { features = ["presenter-accounts-measures"] }
+#         vocabulary { features = ["presenter-vocabulary"] }
+#         walk       { features = ["walk-order"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

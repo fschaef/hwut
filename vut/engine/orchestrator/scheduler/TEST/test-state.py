@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Plan state: admission, supports, exclusion, ordering"
-#     choices    = ["admission", "exclusion", "ordering", "supports"]
+#     choices {
+#         admission { features = ["readiness-admission", "misdep-never-dispatched"] }
+#         exclusion { features = ["exclusion-set"] }
+#         ordering  { features = ["ordering-link"] }
+#         supports  { features = ["supports-carry-verdict"] }
+#     }
 #     interactive = true
 # }
 #

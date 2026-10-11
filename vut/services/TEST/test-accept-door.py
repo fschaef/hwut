@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "'hwut.accept' at a terminal: the merge door (E-88)"
-#     choices    = ["ask_no", "ask_quit", "ask_save", "cancel", "done",
-#                   "realign", "short", "unbuilt"]
+#     features   = ["accept-merge-at-terminal"]
+#     choices {
+#         ask_no   { }
+#         ask_quit { }
+#         ask_save { }
+#         cancel   { }
+#         done     { }
+#         realign  { }
+#         short    { }
+#         unbuilt  { features = ["accept-standing-left-alone"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

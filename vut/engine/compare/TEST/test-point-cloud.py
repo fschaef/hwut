@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "Point-Cloud Region: coverage, pair, dist, constraint, errors"
-#     choices    = ["constraint", "coverage", "dist", "errors",
-#                   "generative", "pair", "spatial"]
+#     choices {
+#         constraint { features = ["point-cloud-constraint"] }
+#         coverage   { features = ["point-cloud-coverage", "malformed-data-asymmetry"] }
+#         dist       { features = ["point-cloud-distance", "region-parameters-nominal"] }
+#         errors     { features = ["region-faults-loud", "malformed-data-asymmetry"] }
+#         generative { features = ["point-cloud-coverage"] }
+#         pair       { features = ["point-cloud-pair"] }
+#         spatial    { features = ["point-cloud-coverage"] }
+#     }
 # }
 #
 """'point-cloud' region: every line is an n-dimensional point.

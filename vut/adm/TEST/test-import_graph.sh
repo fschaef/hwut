@@ -4,9 +4,14 @@
 # @hwut {
 #     title      = "adm/import_graph.py: who depends on whom, and the layering"
 #     choices {
-#         depth { }  formats { }  layering { }  refused { }  shared { }
-#         unreadable { }
-#         vut { tolerance { eq_pattern = ["STATUS: [01]",
+#         depth      { features = ["graph-depth"] }
+#         formats    { features = ["graph-formats"] }
+#         layering   { features = ["layering-direction", "layering-sealed-and-door"] }
+#         refused    { features = ["graph-refusals"] }
+#         shared     { features = ["shared-names"] }
+#         unreadable { features = ["unreadable-reported"] }
+#         vut { features = ["graph-of-this-tree"]
+#               tolerance { eq_pattern = ["STATUS: [01]",
 #                                         "[0-9]+ module\\(s\\): .*",
 #                                         "(--> .*|imports nothing of this tree)",
 #                                         "LAYERING( VIOLATED --|:) .*"] } }

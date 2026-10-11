@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title      = "The 'output' parameter: declared subjects, files included."
+#     features   = ["output-subjects", "output-file-missing", "stderr-never-subject"]
 #     choices    = ["cycle", "declare", "forgotten", "refuse"]
 #     tolerance { eq_pattern = ["(\\.( \\.){2,}|\\.{3,}) +"] }
 #     #  the second: the display's dot leader, whose length is the

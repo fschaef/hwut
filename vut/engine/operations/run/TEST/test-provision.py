@@ -2,9 +2,18 @@
 #
 # @hwut {
 #     title      = "Provision: execute, canonicalise, and the loaded read"
-#     choices    = ["absent_application", "argv", "canonicalisation",
-#                   "canonicaliser_broken", "containment", "loaded",
-#                   "same_shape", "source_kinds", "stages", "subjects"]
+#     choices {
+#         absent_application   { features = ["absent-application-is-launch-failure"] }
+#         argv                 { features = ["argv-from-source-kind"] }
+#         canonicalisation     { features = ["canonicalised-before-compare"] }
+#         canonicaliser_broken { features = ["failing-canonicaliser-ends-provision"] }
+#         containment          { features = ["cap-named-in-report", "partial-streams-delivered"] }
+#         loaded               { features = ["loaded-same-shape", "absent-recording-reported"] }
+#         same_shape           { features = ["loaded-same-shape"] }
+#         source_kinds         { features = ["argv-from-source-kind"] }
+#         stages               { features = ["wrong-slot-refused"] }
+#         subjects             { features = ["channels-and-declared-files-are-subjects"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

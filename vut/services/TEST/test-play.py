@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "hwut.run.play: shows and forgets, or saves the candidate"
-#     choices    = ["accept_runs", "entrance", "forgets", "save"]
+#     features   = ["play-save"]
+#     choices {
+#         accept_runs { features = ["accept-refresh"] }
+#         entrance    { features = ["play-save", "accept-whole"] }
+#         forgets     { features = ["play-reading"] }
+#         save        { }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

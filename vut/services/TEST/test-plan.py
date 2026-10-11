@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "hwut.plan: the test plan the framework intends"
-#     choices    = ["faults", "help", "plan", "refused",
-#                   "short-form", "wish"]
+#     features   = ["plan-page"]
+#     choices {
+#         faults       { features = ["face-fault-keeps-output"] }
+#         help         { features = ["face-help-page"] }
+#         plan         { }
+#         refused      { features = ["face-refusal-by-name", "wish-fail-beside-pass-refused"] }
+#         "short-form" { features = ["wish-short-form"] }
+#         wish         { features = ["plan-wish-narrows", "wish-glob", "face-empty-said"] }
+#     }
 #     interactive = true
 # }
 #

@@ -3,7 +3,10 @@
 #
 # @hwut {
 #     title      = "adm/bundle.sh --self: a bundle that lands in a standing tree"
-#     choices    = ["self", "refused"]
+#     choices {
+#         self    { features = ["bundle-self-applying", "bundle-classifies"] }
+#         refused { features = ["bundle-manifest-proved", "bundle-wrong-root-refused", "bundle-self-limits"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

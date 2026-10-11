@@ -2,11 +2,25 @@
 #
 # @hwut {
 #     title      = "pype line-matching language"
-#     choices    = ["anchors_repeat", "boundaries_stack", "compat",
-#                   "default_mode", "else_flush", "errors", "examples",
-#                   "generate", "if_cause", "imports", "inheritance",
-#                   "modes", "multi_inheritance", "namespace",
-#                   "patterns", "pipe", "terminal"]
+#     choices {
+#         anchors_repeat    { features = ["anchors", "repeat-groups", "mandatory-else"] }
+#         boundaries_stack  { features = ["file-boundaries", "push-pop", "pype-line-information", "no-reserved-mode-names", "trace", "dry-run"] }
+#         compat            { features = ["python-version-independence"] }
+#         default_mode      { features = ["default-mode"] }
+#         else_flush        { features = ["else-handler", "flush-and-ignore", "else-precedence", "inheritance", "no-reserved-mode-names"] }
+#         errors            { features = ["script-faults-located"] }
+#         examples          { features = ["shipped-examples"] }
+#         generate          { features = ["example-input"] }
+#         if_cause          { features = ["if-cause"] }
+#         imports           { features = ["imports", "exit-from-block"] }
+#         inheritance       { features = ["inheritance", "shadowing-forbidden", "inheritance-faults", "flush-and-ignore"] }
+#         modes             { features = ["mode-switch", "one-handler-per-line"] }
+#         multi_inheritance { features = ["inheritance", "shadowing-forbidden"] }
+#         namespace         { features = ["shared-namespace"] }
+#         patterns          { features = ["pattern-tokens", "glob-classes", "one-handler-per-line"] }
+#         pipe              { features = ["pipe-filter", "input-file-arguments", "trace"] }
+#         terminal          { features = ["terminal-token"] }
+#     }
 #     interactive = true
 # }
 #

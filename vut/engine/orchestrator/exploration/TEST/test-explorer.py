@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Explorer: carriers, cross-check, resolution"
-#     choices    = ["carriers", "defaults", "directory", "faults",
-#                   "graph", "resolve"]
+#     choices {
+#         carriers  { features = ["one-carrier"] }
+#         defaults  { features = ["complete-configuration", "record-keeps-chosen"] }
+#         directory { features = ["candidate-files", "one-carrier"] }
+#         faults    { features = ["faults-collected", "empty-choices-refused"] }
+#         graph     { features = ["dependency-graph"] }
+#         resolve   { features = ["choice-overwrites-root"] }
+#     }
 #     interactive = true
 # }
 #

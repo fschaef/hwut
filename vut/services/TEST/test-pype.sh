@@ -3,7 +3,15 @@
 #
 # @hwut {
 #     title      = "The pype service face: the filter behind one door."
-#     choices    = ["help", "filter", "shebang", "refused", "fault", "exit"]
+#     features   = ["pype-filter"]
+#     choices {
+#         help    { features = ["face-help-page"] }
+#         filter  { }
+#         shebang { features = ["pype-shebang"] }
+#         refused { features = ["pype-door", "face-refusal-by-name"] }
+#         fault   { features = ["pype-door"] }
+#         exit    { features = ["pype-exit-passes"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

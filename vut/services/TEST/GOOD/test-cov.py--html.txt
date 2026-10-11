@@ -19,6 +19,7 @@ $ hwut.cov.conv.to_html <dir>/out
           .src td.ln { color: #888; text-align: right; }
           .src td.runs, .src td.pts { font-family: sans-serif; font-size: 85%;
                                       color: #555; white-space: normal; }
+          tr:target td.ln { background: #ffd24d; color: #000; font-weight: bold; }
           tr.cov td.txt { background: #dff5dd; }
           tr.unc td.txt { background: #f8d7d7; }
           tr.cov td.pts { color: #2a6; }
@@ -54,6 +55,7 @@ $ hwut.cov.conv.to_html <dir>/out
           .src td.ln { color: #888; text-align: right; }
           .src td.runs, .src td.pts { font-family: sans-serif; font-size: 85%;
                                       color: #555; white-space: normal; }
+          tr:target td.ln { background: #ffd24d; color: #000; font-weight: bold; }
           tr.cov td.txt { background: #dff5dd; }
           tr.unc td.txt { background: #f8d7d7; }
           tr.cov td.pts { color: #2a6; }
@@ -65,17 +67,17 @@ $ hwut.cov.conv.to_html <dir>/out
       <h1>src/a.c</h1>
       <p>lines 5/9 (55.6%); branch arms 2/4 (50.0%); functions 2/2 (100.0%); toggle bits 1/1 (100.0%)</p>
       <table class="src">
-      <tr class="cov"><td class="ln">1</td><td class="txt">int main(void) {</td><td class="pts">FN main</td><td class="runs">t0, t1</td></tr>
-      <tr class="cov"><td class="ln">2</td><td class="txt">    int x = 1;</td><td class="pts">TG clk</td><td class="runs">t0, t1</td></tr>
-      <tr class="cov"><td class="ln">3</td><td class="txt">    if (x) {</td><td class="pts">BR 2/2</td><td class="runs">t0</td></tr>
-      <tr class="cov"><td class="ln">4</td><td class="txt">        x = 2;</td><td class="pts"></td><td class="runs">t0</td></tr>
-      <tr class="cov"><td class="ln">5</td><td class="txt">        f();</td><td class="pts"></td><td class="runs">t2</td></tr>
-      <tr class="unc"><td class="ln">6</td><td class="txt">    } else {</td><td class="pts">FN f</td><td class="runs"></td></tr>
-      <tr class="unc"><td class="ln">7</td><td class="txt">        x = 3;</td><td class="pts"></td><td class="runs"></td></tr>
-      <tr class="unc"><td class="ln">8</td><td class="txt">        if (x) f();</td><td class="pts">BR 0/2</td><td class="runs"></td></tr>
-      <tr class="unc"><td class="ln">9</td><td class="txt">    }</td><td class="pts"></td><td class="runs"></td></tr>
-      <tr class="non"><td class="ln">10</td><td class="txt">    return 0;</td><td class="pts"></td><td class="runs"></td></tr>
-      <tr class="non"><td class="ln">11</td><td class="txt">}</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr id="L1" class="cov"><td class="ln">1</td><td class="txt">int main(void) {</td><td class="pts">FN main</td><td class="runs">t0, t1</td></tr>
+      <tr id="L2" class="cov"><td class="ln">2</td><td class="txt">    int x = 1;</td><td class="pts">TG clk</td><td class="runs">t0, t1</td></tr>
+      <tr id="L3" class="cov"><td class="ln">3</td><td class="txt">    if (x) {</td><td class="pts">BR 2/2</td><td class="runs">t0</td></tr>
+      <tr id="L4" class="cov"><td class="ln">4</td><td class="txt">        x = 2;</td><td class="pts"></td><td class="runs">t0</td></tr>
+      <tr id="L5" class="cov"><td class="ln">5</td><td class="txt">        f();</td><td class="pts"></td><td class="runs">t2</td></tr>
+      <tr id="L6" class="unc"><td class="ln">6</td><td class="txt">    } else {</td><td class="pts">FN f</td><td class="runs"></td></tr>
+      <tr id="L7" class="unc"><td class="ln">7</td><td class="txt">        x = 3;</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr id="L8" class="unc"><td class="ln">8</td><td class="txt">        if (x) f();</td><td class="pts">BR 0/2</td><td class="runs"></td></tr>
+      <tr id="L9" class="unc"><td class="ln">9</td><td class="txt">    }</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr id="L10" class="non"><td class="ln">10</td><td class="txt">    return 0;</td><td class="pts"></td><td class="runs"></td></tr>
+      <tr id="L11" class="non"><td class="ln">11</td><td class="txt">}</td><td class="pts"></td><td class="runs"></td></tr>
       </table>
       </body>
       </html>

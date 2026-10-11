@@ -3,8 +3,14 @@
 #
 # @hwut {
 #     title      = "hwut.config.ignore: the answer to the wallflower NOTE."
-#     choices    = ["paths", "wishlist", "wallflowers", "reported", "refused",
-#                   "refused_too"]
+#     choices {
+#         paths       { features = ["ignore-named-paths"] }
+#         wishlist    { features = ["ignore-from-wishlist"] }
+#         wallflowers { features = ["settle-wallflowers"] }
+#         reported    { features = ["report-feeds-ignore"] }
+#         refused     { features = ["ignore-refusals"] }
+#         refused_too { features = ["refused-file-is-wallflower"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

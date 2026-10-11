@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "Tree plan: one plan per directory, walk order"
-#     choices    = ["refused", "tree"]
+#     choices {
+#         refused { features = ["base-needs-bookkeeper"] }
+#         tree    { features = ["tree-plan", "empty-selection-reported"] }
+#     }
 #     interactive = true
 # }
 #

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The face contract: Request, do(), Result (E-101)"
+#     features   = ["face-as-library"]
 #     choices    = ["accept", "plain", "refuse", "reuse", "run", "split",
 #                   "stream"]
 # }

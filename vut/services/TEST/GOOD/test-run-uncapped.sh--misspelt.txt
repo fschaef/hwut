@@ -1,4 +1,4 @@
-DIR  .                                                                        
+DIR  TEST                                                                     
 ERROR hwut-root.conf:4:9: VOCABULARY: unknown cap 'netwerk'; known: child_process_max_n, cpu_sec, file_handle_max_n, file_size_mb, memory_mb, network, timeout_sec, write_directory_list
 ERROR hwut-root.conf:5:19: TYPE: 'network' must be a boolean
 DONE  test-net.sh  a .......................................... [REFUSED]  ||0
@@ -9,7 +9,7 @@ END   test-free.sh ................................................. [OK]  ||0
 ==============================================================================
 DIRECTORIES                                             1 ok, 0 fail, <t>
 ------------------------------------------------------------------------------
-   . . . . . . . . . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
 
 ==============================================================================
 REFUSED -- not run

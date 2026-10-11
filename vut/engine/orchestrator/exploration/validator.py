@@ -29,7 +29,7 @@ from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
 
-_STRUCTURAL_KEY_SET = ("title", "language", "choices")
+_STRUCTURAL_KEY_SET = ("title", "doc", "language", "choices")
 
 #  The caps that are a positive quantity, and the type each carries.
 _CAP_POSITIVE_SET   = {"timeout_sec":         float,
@@ -87,6 +87,7 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
     parameters  = {}
     position_db = {}
     title       = None
+    doc         = None
     language    = None
     choice_db   = {}
     choice_position_db = {}
@@ -95,6 +96,11 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
     for entry in hwut_node.entry_list:
         if entry.key == "title":
             title = _string(entry, file, fault_list)
+        elif entry.key == "doc":
+            #  WHAT THE TEST IS ABOUT, in as many lines as it takes
+            #  (R-90): the application's alone -- no choice, no
+            #  'app_defaults' states one.
+            doc = _string(entry, file, fault_list)
         elif entry.key == "language":
             language = _string(entry, file, fault_list)
         elif entry.key == "choices":
@@ -128,7 +134,8 @@ def validate_header(hwut_node, file, origin=E_Origin.HEADER,
                        origin             = origin,
                        position           = hwut_node.position,
                        position_db        = position_db,
-                       choice_position_db = choice_position_db), fault_list
+                       choice_position_db = choice_position_db,
+                       doc                = doc), fault_list
 
 
 def validate_conf(hwut_node, file):

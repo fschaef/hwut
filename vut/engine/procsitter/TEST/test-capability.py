@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title   = "The capability board: what the procsitter can watch, announced before a call"
-#     choices = ["board", "platform", "unenforced", "utility"]
+#     choices {
+#         board      { features = ["capability-board"] }
+#         platform   { features = ["capability-board"] }
+#         unenforced { features = ["unenforced-caps-reported"] }
+#         utility    { features = ["capability-board"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

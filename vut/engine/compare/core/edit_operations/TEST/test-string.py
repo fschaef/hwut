@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Strings"
+#     features   = ["string-edit-distance"]
 #     choices    = ["basic", "long"]
 # }
 #

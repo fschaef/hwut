@@ -1,0 +1,26 @@
+--- the run: RESULTS: 1 ok, 0 fail
+--- hwut.help:
+STATUS: 0
+    FEATURES -- test run without a feature
+    
+        NONSENSE? -- links to no feature  [1 case(s)]
+        
+            Each test run below stands in a TEST directory that states its
+            features in 'hwut-features.conf', and links to none of them. It is
+            NOT a failure: a test run that shows acceptable behaviour is OK, and
+            its verdict stands. The question is what it is for -- a test run
+            that proves nothing anybody claimed is either a claim nobody wrote
+            down, or a test nobody needs.
+        
+            In order to heal, write the feature the test run proves into
+            'hwut-features.conf' and name it under 'features' in the test's
+            '@hwut { }' block; or link the test run to a feature that stands
+            there already; or remove the test ('hwut.remove').
+        
+            CONCERNED:
+                TEST
+                    test-dev.sh
+--- the test links to the feature:
+STATUS: 3
+    nothing to explain: no case below 'tree' failed for a reason other than a plain difference from GOOD
+<hwut-end>

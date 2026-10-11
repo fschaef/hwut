@@ -9,6 +9,9 @@
             [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
                 [PASS] TEST/test-pair.sh [plain]
                 [FAIL] TEST/test-pair.sh [gap]
+                see          README.txt#pairing
+                see          https://example.org/pairing
+                see          absent.txt
             [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
                 [FAIL] TEST/test-pair.sh [gap]
             [UNPROVEN] TEST#3 untested
@@ -17,9 +20,12 @@
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             TEST/test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             TEST/test-pair.sh [odd]
+        feature, names a document that does not stand
+            TEST#1 line-pairing   '../absent.txt'
         statement, not read
+            TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
             hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             TEST   no 'id'
@@ -54,6 +60,9 @@ status: OK
                         [FAILING]  engine/compare/core/TEST#1 line-pairing -- Two streams are aligned line by line.
                             [PASS] engine/compare/core/TEST/test-pair.sh [plain]
                             [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                            see          engine/compare/core/README.txt#pairing
+                            see          https://example.org/pairing
+                            see          engine/compare/core/absent.txt
                             code only    engine/compare/core/pair.c: 3..4, 10..13
                             code shared  2 line(s) in 1 file(s)
                         [FAILING]  engine/compare/core/TEST#2 missing-side -- A line present on one side only is shown whole.
@@ -68,13 +77,14 @@ status: OK
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             engine/compare/core/TEST/test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             engine/compare/core/TEST/test-pair.sh [odd]
-        TEST directory, no 'hwut-features.conf'
-            engine/plain/TEST   1 test run(s)
+        feature, names a document that does not stand
+            engine/compare/core/TEST#1 line-pairing   '../absent.txt'
         component, no 'hwut-composition.conf'
             engine/plain
         statement, not read
+            engine/compare/core/TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
             engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             .   'childs' lists 'old'; nothing below carries it
@@ -87,6 +97,9 @@ status: OK
         [FAILING]  .#1 line-pairing -- Two streams are aligned line by line.
             [PASS] test-pair.sh [plain]
             [FAIL] test-pair.sh [gap]
+            see          ../README.txt#pairing
+            see          https://example.org/pairing
+            see          ../absent.txt
             code only    ../pair.c: 3..4, 10..13
             code shared  2 line(s) in 1 file(s)
         [FAILING]  .#2 missing-side -- A line present on one side only is shown whole.
@@ -99,8 +112,12 @@ status: OK
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             test-pair.sh [odd]
+        feature, names a document that does not stand
+            .#1 line-pairing   '../absent.txt'
+        statement, not read
+            hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             .   no 'id'
 status: OK
@@ -109,7 +126,7 @@ status: OK
     TEST                  #1    #2    #3    #-
     test-pair.sh [plain]  PASS  .     .     .
     test-pair.sh [gap]    FAIL  FAIL  .     .
-    test-pair.sh [odd]    .     .     .     .     <- no feature
+    test-pair.sh [odd]    .     .     .     .     <- NONSENSE?
     test-stray.sh         .     .     .     .     <- no feature defined
                                       ^     ^     no test run
       #1 line-pairing  FAILING
@@ -120,9 +137,12 @@ status: OK
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             TEST/test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             TEST/test-pair.sh [odd]
+        feature, names a document that does not stand
+            TEST#1 line-pairing   '../absent.txt'
         statement, not read
+            TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
             hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             TEST   no 'id'
@@ -138,6 +158,9 @@ status: OK
             [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
                 [PASS] TEST/test-pair.sh [plain]
                 [FAIL] TEST/test-pair.sh [gap]
+                see          README.txt#pairing
+                see          https://example.org/pairing
+                see          absent.txt
             [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
                 [FAIL] TEST/test-pair.sh [gap]
             [UNPROVEN] TEST#3 untested
@@ -146,9 +169,12 @@ status: OK
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             TEST/test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             TEST/test-pair.sh [odd]
+        feature, names a document that does not stand
+            TEST#1 line-pairing   '../absent.txt'
         statement, not read
+            TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
             hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             TEST   no 'id'
@@ -163,6 +189,9 @@ status: OK
             [FAILING]  TEST#1 line-pairing -- Two streams are aligned line by line.
                 [PASS] TEST/test-pair.sh [plain]
                 [FAIL] TEST/test-pair.sh [gap]
+                see          README.txt#pairing
+                see          https://example.org/pairing
+                see          absent.txt
                 code only    pair.c: 3..4, 10..13
                 code shared  2 line(s) in 1 file(s)
             [FAILING]  TEST#2 missing-side -- A line present on one side only is shown whole.
@@ -175,9 +204,12 @@ status: OK
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             TEST/test-stray.sh   'no-such'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             TEST/test-pair.sh [odd]
+        feature, names a document that does not stand
+            TEST#1 line-pairing   '../absent.txt'
         statement, not read
+            TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
             hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
             TEST   no 'id'

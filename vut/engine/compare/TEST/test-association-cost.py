@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Association cost: how the search grows with the input"
+#     features   = ["search-budget-counted"]
 #     choices    = ["fixture", "lines", "long_lines", "profile", "tokens",
 #                   "unrelated"]
 #     tolerance { regions = false  eq_pattern = ["SUCCESS.*", "BUDGET.*"] }

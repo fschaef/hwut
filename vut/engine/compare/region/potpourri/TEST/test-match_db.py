@@ -2,8 +2,11 @@
 #
 # @hwut {
 #     title      = "MatchDb"
-#     choices    = ["analogy_interferences", "extract_ultimates",
-#                   "pairing"]
+#     choices {
+#         analogy_interferences { features = ["analogy-interference"] }
+#         extract_ultimates     { features = ["forced-matches"] }
+#         pairing               { features = ["match-db-pairing"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

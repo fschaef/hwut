@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Detector and unwrapper: no comment syntax known"
+#     features   = ["marker-in-head", "decoration-any-language", "region-unwrapped", "positions-file-relative"]
 #     choices    = ["blank", "dash", "decoration", "detect", "hash", "head",
 #                   "offsets", "single", "star"]
 #     interactive = true

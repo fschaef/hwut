@@ -3,7 +3,13 @@
 #
 # @hwut {
 #     title      = "hwut.help: the subtle failures of the last results, explained"
-#     choices    = ["explain", "empty", "refused"]
+#     features   = ["help-explains-failures"]
+#     choices {
+#         explain  { features = ["help-explains-failures", "run-points-to-help", "run-stderr-fails"] }
+#         empty    { features = ["help-explains-failures", "run-points-to-help"] }
+#         nonsense { features = ["help-explains-nonsense", "run-ignores-features", "report-features-nonsense"] }
+#         refused  { features = ["face-refusal-by-name"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -18,6 +24,10 @@
 #           failures, once each, and not the deviation.
 # empty     a run whose only failure is a deviation: no pointer in the
 #           run; 'hwut.help' has nothing to explain (exit 3).
+# nonsense  the TEST directory states features and the one test links to
+#           none: no failure, the run says nothing of it; 'hwut.help'
+#           explains 'NONSENSE?' and names the test run (exit 0). Once
+#           the test links to a feature there is nothing to explain.
 # refused   an unknown option; a directory that does not exist.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -30,7 +40,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "hwut.help: the subtle failures of the last results, explained;"
-        echo "CHOICES: explain, empty, refused;"
+        echo "CHOICES: explain, empty, nonsense, refused;"
         exit 0 ;;
 esac
 
@@ -85,6 +95,21 @@ empty)
     ( cd tree/TEST && $RUN --jobs=1 > run.txt 2>&1 )
     echo "--- the run names no pointer: $(grep -c "hwut.help" tree/TEST/run.txt)"
     echo "--- hwut.help:"
+    face "$HELP" --directory=tree
+    ;;
+
+nonsense)
+    tree
+    printf 'what the run says\n<hwut-end>\n' > tree/TEST/GOOD/test-dev.sh.txt
+    printf 'features {\n    1 { name = "says" }\n}\n' \
+        > tree/TEST/hwut-features.conf
+    ( cd tree/TEST && $RUN --jobs=1 > run.txt 2>&1 )
+    echo "--- the run: $(grep '^RESULTS' tree/TEST/run.txt | cut -d, -f1-2)"
+    echo "--- hwut.help:"
+    face "$HELP" --directory=tree
+    echo "--- the test links to the feature:"
+    sed -i 's|title = "Dev"|title = "Dev" features = ["says"]|' \
+        tree/TEST/test-dev.sh
     face "$HELP" --directory=tree
     ;;
 

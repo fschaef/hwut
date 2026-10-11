@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title      = "The exit status law: one enum, every face relates."
+#     features   = ["face-exit-status-law", "face-signal-ends-quietly"]
 #     choices    = ["law", "signal"]
 # }
 #

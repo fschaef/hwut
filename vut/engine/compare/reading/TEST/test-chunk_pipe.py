@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "ChunkPipe"
-#     choices    = ["comment", "normal", "special"]
+#     choices {
+#         comment { features = ["comment-lines"] }
+#         normal  { features = ["chunking"] }
+#         special { features = ["chunking", "framing-refused"] }
+#     }
 #     tolerance { regions = false
 #                 #  THE REGISTRY IS NOT THIS UNIT'S BEHAVIOUR. The
 #                 #  error names the offending handler and calls it

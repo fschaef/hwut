@@ -3,7 +3,11 @@
 #
 # @hwut {
 #     title      = "hwut.labels.list: every label, with a count beside it."
-#     choices    = ["counts", "empty", "refused"]
+#     choices {
+#         counts  { features = ["list-counts"] }
+#         empty   { features = ["list-counts"] }
+#         refused { features = ["unreadable-command-refused"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "The configuration of one test application"
-#     choices    = ["aggregation", "choices", "frozen", "interpreted",
-#                   "places", "refusal"]
+#     choices {
+#         aggregation { features = ["configuration-aggregates-verbatim"] }
+#         choices     { features = ["none-choice"] }
+#         frozen      { features = ["configuration-frozen"] }
+#         interpreted { features = ["unservable-configuration-refused"] }
+#         places      { features = ["three-places-derived"] }
+#         refusal     { features = ["unservable-configuration-refused"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

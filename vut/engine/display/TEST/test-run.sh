@@ -4,11 +4,24 @@
 # @hwut {
 #     title      = "The hwut.run face: the tree run, rendered live."
 #     choices {
-#         busy { }  colour { }  empty { }  fail { }  green { }  tree-ink { }
-#         jobs-budget { }  linear-raw { }  nostore { }  refused { }
-#         short-form { }  strategy-refused { }  tiers { }  timing { }
-#         tree-fail { }  tree-green { }
-#         labels { tolerance { eq_pattern = [
+#         busy             { features = ["busy-directory-fault"] }
+#         colour           { features = ["colour-decision"] }
+#         empty            { features = ["exit-status"] }
+#         fail             { features = ["exit-status", "flow-line", "directories-roll-call"] }
+#         green            { features = ["exit-status", "flow-line", "directories-roll-call"] }
+#         tree-ink         { features = ["tree-ink"] }
+#         jobs-budget      { features = ["jobs-budget"] }
+#         linear-raw       { features = ["deterministic-flow"] }
+#         nostore          { features = ["store-and-timing-knobs"] }
+#         refused          { features = ["rendering-refused", "exit-status"] }
+#         short-form       { features = ["short-form"] }
+#         strategy-refused { features = ["strategy-refused"] }
+#         tiers            { features = ["tiers"] }
+#         timing           { features = ["store-and-timing-knobs"] }
+#         tree-fail        { features = ["strategy-homogeneity"] }
+#         tree-green       { features = ["strategy-homogeneity"] }
+#         labels { features = ["label-silence"]
+#                  tolerance { eq_pattern = [
 #             ", [0-9]+\\.[0-9]+ \\[sec\\]",
 #             "(\\.( \\.){2,}|\\.{3,}) +", "RESULTS: .*", "\\|[ a-z|]*\\|",
 #             "hwut-root\\.labels:[0-9]+:"] } }

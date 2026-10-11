@@ -366,24 +366,26 @@ def test_moved(source_directory, target_directory, name_set,
             name the target defines already is not written again: the
             source's entry goes where it is written alike and no
             staying test links to it, and both stand where they differ.
-            'reason' says so where the target carries no feature file
-            to write into.
+            A target without a feature file receives one.
     """
     source = read_feature_file(source_directory)
     if source is None or not name_set: return CAdapted()
     carried_list = [feature for feature in source.feature_tuple
                     if feature.name in name_set]
     if not carried_list: return CAdapted()
-    target = read_feature_file(target_directory)
-    if target is None:
-        return CAdapted(reason="no '%s' stands in the target directory: "
-                               "%s stay(s) defined in the source"
-                               % (FEATURE_FILE_NAME, ", ".join(
-                                   "'%s'" % f.name for f in carried_list)))
     source_file = os.path.join(source_directory, FEATURE_FILE_NAME)
     target_file = os.path.join(target_directory, FEATURE_FILE_NAME)
-    scope       = target.scope()
     said_list   = []
+    target      = read_feature_file(target_directory)
+    if target is None:
+        #  A LINK MUST RESOLVE WHERE THE TEST STANDS (ruled 2026-10-11,
+        #  R-91): the target states no features yet, so the file is
+        #  written -- empty, for the carried ones to enter.
+        _write(target_file, "features {\n}\n")
+        said_list.append("'%s' written in the target directory"
+                         % FEATURE_FILE_NAME)
+        target = read_feature_file(target_directory)
+    scope       = target.scope()
     for feature in carried_list:
         source_text = _read(source_file)
         container   = amend.named_container(source_text, "features")

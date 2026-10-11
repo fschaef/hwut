@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "CSP Backtracking MRV: Friends Pairing Stress Test"
+#     features   = ["consistent-pairing"]
 #     #  TWO OF THE FOUR ARE STRESS TESTS AND SAY SO (C-6). Measured
 #     #  UNCONSTRAINED they need 1069 MB, so the 512 MB default kills
 #     #  them; the cap is raised where it is needed and NOWHERE ELSE

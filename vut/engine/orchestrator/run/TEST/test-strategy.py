@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Strategy: when a directory's unit starts"
-#     choices    = ["bundled", "contract", "linear", "parallel", "successor",
-#                   "together"]
+#     choices {
+#         bundled   { features = ["bundled-strategy"] }
+#         contract  { features = ["strategy-contract", "strategy-words", "strategy-defaults"] }
+#         linear    { features = ["directory-strategy"] }
+#         parallel  { features = ["directory-strategy"] }
+#         successor { features = ["directory-strategy"] }
+#         together  { features = ["choices-together", "unmeasured-last"] }
+#     }
 #     interactive = true
 # }
 #

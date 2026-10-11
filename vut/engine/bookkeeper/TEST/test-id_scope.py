@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "The id scope: one allocation law, and the spellings of an id"
-#     choices    = ["allocate", "ceiling", "give_back", "mark_line", "spellings"]
+#     choices {
+#         allocate  { features = ["id-allocation"] }
+#         ceiling   { features = ["id-allocation"] }
+#         give_back { features = ["id-allocation"] }
+#         mark_line { features = ["id-spellings"] }
+#         spellings { features = ["id-spellings"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

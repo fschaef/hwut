@@ -226,6 +226,7 @@ class TestAppSpec:
     position:           Position
     position_db:        dict = None       # key -> Position (root)
     choice_position_db: dict = None       # choice -> {key: Position}
+    doc:                str | None = None # what the test is about (R-90)
 
 
 @dataclass(frozen=True, slots=True)
@@ -340,6 +341,7 @@ class CTestApp:
     origin:      E_Origin
     position:    Position
     origin_db:   dict = None              # choice -> {name: str}
+    doc:         str | None = None        # what the test is about (R-90)
     #  THE APPLICATION'S OWN WORD, RESOLVED (O-21): the directory's
     #  'app_defaults' folded, then the header's root -- what every
     #  choice inherits BEFORE its own statement. The caps a multi

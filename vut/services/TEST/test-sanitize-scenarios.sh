@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title      = "hwut.sanitize.propose: every scenario it reports, once"
+#     features   = ["sanitize-session", "sanitize-lock", "sanitize-out", "sanitize-transient", "sanitize-orphans", "sanitize-move", "sanitize-books", "sanitize-constraints", "sanitize-target", "sanitize-notes-on-stderr"]
 #     choices    = ["catalogue"]
 # }
 #

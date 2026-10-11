@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "Line Sequence"
-#     choices    = ["info", "judge"]
+#     choices {
+#         info  { features = ["line-sequence-association"] }
+#         judge { features = ["line-sequence-verdict"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

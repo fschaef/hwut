@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "The event line: one grammar, every kind, round trip"
-#     choices    = ["roundtrip", "quoting", "refused"]
+#     choices {
+#         roundtrip { features = ["line-round-trip"] }
+#         quoting   { features = ["content-forms"] }
+#         refused   { features = ["malformed-line-refused"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #

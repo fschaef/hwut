@@ -2,11 +2,23 @@
 #
 # @hwut {
 #     title      = "Procsitter resource containment with attribution"
-#     choices    = ["cancelled_run", "clean_under_caps", "command_guard",
-#                   "cpu_time", "disk_space_low", "disk_usage",
-#                   "file_size", "memory", "no_psutil", "output_gap",
-#                   "pids", "self_exit_codes", "stderr_tail_cap",
-#                   "wall_clock", "created_files"]
+#     choices {
+#         cancelled_run    { features = ["interrupted-run-leaks-nothing"] }
+#         clean_under_caps { features = ["clean-under-caps"] }
+#         command_guard    { features = ["missing-program-is-a-result"] }
+#         cpu_time         { features = ["cap-hit-ends-call-and-is-named"] }
+#         disk_space_low   { features = ["cap-hit-ends-call-and-is-named"] }
+#         disk_usage       { features = ["cap-hit-ends-call-and-is-named"] }
+#         file_size        { features = ["cap-hit-ends-call-and-is-named"] }
+#         memory           { features = ["cap-hit-ends-call-and-is-named"] }
+#         no_psutil        { features = ["unenforced-caps-reported"] }
+#         output_gap       { features = ["silence-cap"] }
+#         pids             { features = ["cap-hit-ends-call-and-is-named", "no-child-left-behind"] }
+#         self_exit_codes  { features = ["exit-classes"] }
+#         stderr_tail_cap  { features = ["stderr-tail-kept"] }
+#         wall_clock       { features = ["cap-hit-ends-call-and-is-named"] }
+#         created_files    { features = ["created-files-listed"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 #     #  A TEST OF THE SUPERVISOR STORMS ON PURPOSE (O-21). 'pids' forks

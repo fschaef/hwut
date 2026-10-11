@@ -1,4 +1,4 @@
-DIR  .                                                                        
+DIR  a/TEST                                                                   
 ERROR test-c.py:5:48: REFUSED: constraint 'min > 5': 'min' is a function of the constraint namespace -- a variable cannot carry that name
 NOTE  the selection is empty: no test case answers the wish
 SKIP  test-c.py ............................................. spec [FAIL]  ||0
@@ -6,7 +6,7 @@ SKIP  test-c.py ............................................. spec [FAIL]  ||0
 ==============================================================================
 DIRECTORIES                                             0 ok, 1 fail
 ------------------------------------------------------------------------------
-   . . . . . . . . . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/1
+   a/TEST . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/1
 
 ==============================================================================
 HINTS

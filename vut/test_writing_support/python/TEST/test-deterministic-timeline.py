@@ -2,9 +2,17 @@
 #
 # @hwut {
 #     title      = "TriggerDispatcher: schedule, priority, and the end of time"
-#     choices    = ["abstract", "cancel", "edges", "priority",
-#                   "schedule", "stable", "stop", "termination",
-#                   "yielding"]
+#     choices {
+#         abstract    { features = ["timeline-trigger-contract"] }
+#         cancel      { features = ["timeline-cancel-silent"] }
+#         edges       { features = ["timeline-schedule", "timeline-termination"] }
+#         priority    { features = ["timeline-order-in-tick"] }
+#         schedule    { features = ["timeline-schedule"] }
+#         stable      { features = ["timeline-order-in-tick"] }
+#         stop        { features = ["timeline-termination"] }
+#         termination { features = ["timeline-termination"] }
+#         yielding    { features = ["timeline-yields"] }
+#     }
 #     interactive = true
 # }
 #

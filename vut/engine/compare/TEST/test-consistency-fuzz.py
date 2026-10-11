@@ -2,8 +2,12 @@
 #
 # @hwut {
 #     title      = "Generative Judge/Lawyer consistency net"
-#     choices    = ["consistency", "constraints", "metamorphic",
-#                   "reflexive"]
+#     choices {
+#         consistency { features = ["verdict-and-diff-agree"] }
+#         constraints { features = ["verdict-and-diff-agree", "constraint-binding"] }
+#         metamorphic { features = ["verdict-and-diff-agree", "potpourri-any-order", "analogy-consistent", "numbers-within-ratio", "visible-nothing"] }
+#         reflexive   { features = ["verdict-and-diff-agree"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

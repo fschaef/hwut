@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Task list: select, or refuse at the door"
+#     features   = ["cases-selected", "selection-refused"]
 #     choices    = ["all", "named", "refused"]
 #     interactive = true
 # }

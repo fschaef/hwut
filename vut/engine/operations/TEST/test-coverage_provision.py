@@ -2,8 +2,12 @@
 #
 # @hwut {
 #     title      = "The coverage provision chain"
-#     choices    = ["harvested", "incomplete", "no_target",
-#                   "nothing_borne"]
+#     choices {
+#         harvested     { features = ["coverage-run-harvested"] }
+#         incomplete    { features = ["coverage-absence-answered"] }
+#         no_target     { features = ["coverage-absence-answered"] }
+#         nothing_borne { features = ["coverage-absence-answered"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

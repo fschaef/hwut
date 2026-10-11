@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Region Handlers: shebang framing, verbatim, ignore, params, errors"
-#     choices    = ["constraint-violation", "errors", "ignore", "params",
-#                   "verbatim", "unaccepted"]
+#     choices {
+#         constraint-violation { features = ["constraint-violation-region"] }
+#         errors               { features = ["region-faults-loud"] }
+#         ignore               { features = ["ignore-region", "region-framing-must-match"] }
+#         params               { features = ["region-parameter-precedence"] }
+#         verbatim             { features = ["verbatim-region", "comments-and-blanks-insignificant"] }
+#         unaccepted           { features = ["unaccepted-region", "region-framing-must-match"] }
+#     }
 # }
 #
 """Region handlers via the shebang framing: 'verbatim', 'ignore', the

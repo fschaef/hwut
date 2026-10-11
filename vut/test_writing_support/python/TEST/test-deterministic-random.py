@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "DeterministicStream RNG and SelectionMarker spread"
-#     choices    = ["gauss", "primitives", "ranges", "sample",
-#                   "seed_sweep", "select", "unchosen"]
+#     choices {
+#         gauss      { features = ["random-gauss"] }
+#         primitives { features = ["random-stream-reproducible"] }
+#         ranges     { features = ["random-stream-reproducible"] }
+#         sample     { features = ["random-sampling"] }
+#         seed_sweep { features = ["random-stream-reproducible"] }
+#         select     { features = ["random-sampling"] }
+#         unchosen   { features = ["random-spread-selection"] }
+#     }
 #     interactive = true
 # }
 #

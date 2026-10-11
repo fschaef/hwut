@@ -2,7 +2,14 @@
 #
 # @hwut {
 #     title      = "hwut.cov.run end to end"
-#     choices    = ["door", "output", "real", "run", "trace"]
+#     features   = ["cov-run-records"]
+#     choices {
+#         door   { features = ["run-no-coverage-option", "cov-run-wish", "face-empty-said"] }
+#         output { features = ["cov-run-output"] }
+#         real   { }
+#         run    { }
+#         trace  { features = ["cov-run-trace", "help-explains-coverage"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

@@ -3,8 +3,17 @@
 #
 # @hwut {
 #     title      = "The hwut.run.play face: run one test, show the reading"
-#     choices    = ["build", "pyped", "reading", "refused", "silent",
-#                   "solo", "stderr", "why"]
+#     features   = ["play-reading"]
+#     choices {
+#         build   { features = ["play-build-failure"] }
+#         pyped   { features = ["play-views"] }
+#         reading { }
+#         refused { features = ["face-refusal-by-name", "face-choice-roster"] }
+#         silent  { features = ["play-empty-explained"] }
+#         solo    { features = ["play-one-choice", "face-choice-roster"] }
+#         stderr  { features = ["play-stderr-view"] }
+#         why     { features = ["play-empty-explained"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

@@ -3,7 +3,10 @@
 #
 # @hwut {
 #     title      = "The launcher roof: every shim answers with its face's voice."
-#     choices    = ["answer", "path"]
+#     choices {
+#         answer { features = ["launcher-per-face", "bare-hwut-is-run"] }
+#         path   { features = ["path-forms-agree", "pype-shebang"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

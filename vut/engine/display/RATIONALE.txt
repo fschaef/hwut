@@ -1151,3 +1151,18 @@ DECISION  THE REASON IS THE HEADING, once; the directory once within
 
 COST      Red is no longer '[FAIL]''s alone (the note in 'word.py').
           One nominal moved: 'test-ignore.sh refused_too'.
+
+
+D-47  A RUN ASKED INSIDE A TEST DIRECTORY NAMES IT FROM THE ROOT CONF  (2026-10-11)
+
+PROBLEM   Book work 2026-10-11 (B-4): 'hwut.run' inside a TEST directory
+          wrote 'DIR  .' and, in DIRECTORIES, a row whose name '.' was
+          lost in the dot leaders.
+DECISION  RULED (Frank-Rene, 2026-10-11): the directory is printed
+          relative to the 'hwut-root.conf'. The face hands the flow
+          'here_name' ('tree_explorer.path_from_root_conf'); the flow
+          says it wherever it would say '.' -- the DIR band and the
+          DIRECTORIES row. Asked at the root conf itself, '.' stays.
+COST      Only '.' is renamed: a run asked in 'router/' still names
+          'TEST', not 'router/TEST'.
+PINNED    the pages that run inside a TEST directory.

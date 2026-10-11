@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "Tolerance PatternFinder"
-#     choices    = ["aggressive", "do", "dot", "setup", "tolerance_id"]
+#     choices {
+#         aggressive   { features = ["lexing", "overlapping-patterns"] }
+#         do           { features = ["lexing"] }
+#         dot          { features = ["number-dot"] }
+#         setup        { features = ["tolerance-table", "pattern-order", "slash-is-pattern"] }
+#         tolerance_id { features = ["tolerance-table"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

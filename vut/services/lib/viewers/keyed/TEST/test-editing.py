@@ -2,9 +2,23 @@
 #
 # @hwut {
 #     title      = "The keyed merge's editing panes: GOOD typed into, the tolerance tried."
-#     choices    = ["discard", "f6", "fault", "foot", "from-report",
-#                   "good-cc", "good-editor", "good-type", "good-unchanged",
-#                   "good-undo", "leave", "main-keys", "pane", "try", "view"]
+#     choices {
+#         discard        { features = ["pane-discard"] }
+#         f6             { features = ["good-edited-in-place", "tolerance-pane"] }
+#         fault          { features = ["pane-fault-kept-open"] }
+#         foot           { features = ["foot-keys"] }
+#         from-report    { features = ["tolerance-pane"] }
+#         good-cc        { features = ["good-edited-in-place"] }
+#         good-editor    { features = ["good-edited-in-place"] }
+#         good-type      { features = ["good-edited-in-place"] }
+#         good-unchanged { features = ["realign-on-change-only"] }
+#         good-undo      { features = ["edit-undo-apart"] }
+#         leave          { features = ["leave-asks"] }
+#         main-keys      { features = ["undo-redo-reset"] }
+#         pane           { features = ["tolerance-pane"] }
+#         try            { features = ["tolerance-pane", "pane-lower-line-stands"] }
+#         view           { features = ["viewing-screen"] }
+#     }
 #     tolerance { comment = []  analogy = [] }
 # }
 #

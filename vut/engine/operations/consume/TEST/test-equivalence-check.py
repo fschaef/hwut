@@ -2,10 +2,18 @@
 #
 # @hwut {
 #     title      = "EquivalenceCheck: read -> verdict"
-#     choices    = ["blind", "fast_fail", "named_absent",
-#                   "nominal_missing", "observer", "provision_failed",
-#                   "terminated", "unexpected_stderr", "unjudged",
-#                   "verdict"]
+#     choices {
+#         blind             { features = ["provenance-blind"] }
+#         fast_fail         { features = ["deterministic-fast-fail"] }
+#         named_absent      { features = ["named-subject-absent-fails"] }
+#         nominal_missing   { features = ["unreadable-nominal-is-fault"] }
+#         observer          { features = ["watching-changes-nothing"] }
+#         provision_failed  { features = ["failed-provision-no-comparison"] }
+#         terminated        { features = ["nominal-without-token-fails", "cut-short-subject-named"] }
+#         unexpected_stderr { features = ["undeclared-stderr-fails"] }
+#         unjudged          { features = ["unnamed-subject-unjudged"] }
+#         verdict           { features = ["verdict-from-comparison"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Refresh: the provisioning steps each engine executes (E-122)"
+#     features   = ["accept-refresh"]
 #     choices    = ["accept", "diff", "interactive"]
 # }
 #

@@ -3,7 +3,11 @@
 #
 # @hwut {
 #     title      = "hwut.config.show: what a conf states, where it states it."
-#     choices    = ["app_defaults", "provenance", "stray"]
+#     choices {
+#         app_defaults { features = ["show-defaults-merged"] }
+#         provenance   { features = ["show-provenance"] }
+#         stray        { features = ["stray-parameter-refused"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

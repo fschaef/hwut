@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "The gathered coverage of one source file"
-#     choices    = ["faults", "measures", "same", "text"]
+#     choices {
+#         faults   { features = ["gathered-faults-named"] }
+#         measures { features = ["run-measures"] }
+#         same     { features = ["gathered-same-file"] }
+#         text     { features = ["gathered-text"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

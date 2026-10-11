@@ -1,7 +1,12 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "VUT Potpourri Regression Suite"
-#    choices = ["bool", "csp", "edit-merge", "visible-nothing"]
+#    choices {
+#        bool            { features = ["potpourri-any-order"] }
+#        csp             { features = [] }
+#        edit-merge      { features = [] }
+#        visible-nothing { features = ["visible-nothing"] }
+#    }
 #    tolerance { eq_pattern = ["VERDICT: PASS"] }
 #  }
 """

@@ -3,7 +3,12 @@
 #
 # @hwut {
 #     title      = "hwut.labels.query: the runs a label expression names."
-#     choices    = ["doors", "forms", "silence", "wishlist"]
+#     choices {
+#         doors    { features = ["query-unknown-label-refused", "unreadable-command-refused"] }
+#         forms    { features = ["query-forms", "query-expression"] }
+#         silence  { features = ["query-expression"] }
+#         wishlist { features = ["query-wishlist"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

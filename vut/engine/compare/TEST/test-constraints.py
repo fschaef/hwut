@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "Stateful Constraints: bindings, space, dependencies, errors"
-#     choices    = ["basic", "deps", "errors", "lawyer", "strings"]
+#     choices {
+#         basic   { features = ["constraint-binding", "constraint-findings"] }
+#         deps    { features = ["constraint-fires-when-complete", "constraint-findings", "constraint-evaluation-failure"] }
+#         errors  { features = ["constraint-spec-refused", "constraint-good-violation", "constraint-order-free-refused", "constraint-findings"] }
+#         lawyer  { features = ["verdict-and-diff-agree", "constraint-binding"] }
+#         strings { features = ["constraint-expression-language", "constraint-evaluation-failure"] }
+#     }
 # }
 #
 """STATEFUL CONSTRAINTS: '((name: value))' bindings + Configuration.constraint_db.

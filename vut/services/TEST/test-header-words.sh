@@ -3,11 +3,27 @@
 #
 # @hwut {
 #     title   = "A word in a test's header, through the face: what the validator admits, the run does."
-#     choices = ["budget_spent", "build", "carrier", "climb",
-#                "constraint", "constraint_refused", "cycle", "directory",
-#                "execute", "namespace", "pattern_first", "printed",
-#                "pype_fails", "region", "same", "session", "tolerance",
-#                "values"]
+#     features = ["spec-word-fault"]
+#     choices {
+#         budget_spent       { features = ["diff-search-budget"] }
+#         build              { }
+#         carrier            { features = ["spec-one-carrier"] }
+#         climb              { features = ["tree-boundary-refused"] }
+#         constraint         { features = ["accept-constraint-refused"] }
+#         constraint_refused { }
+#         cycle              { features = ["run-dependency-cycle", "plan-misdep-cycle-tags"] }
+#         directory          { features = ["run-directory-frame"] }
+#         execute            { features = ["run-execute-expansion"] }
+#         namespace          { }
+#         pattern_first      { features = ["run-pattern-before-number"] }
+#         printed            { features = ["config-show-reads-back", "config-show-no-default", "config-show-provenance"] }
+#         pype_fails         { features = ["run-pype-defect-fails"] }
+#         region             { features = ["spec-block-found"] }
+#         same               { features = ["run-same-nominal"] }
+#         session            { features = ["plan-session-node"] }
+#         tolerance          { features = ["spec-tolerance-scope"] }
+#         values             { features = [] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

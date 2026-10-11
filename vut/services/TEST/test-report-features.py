@@ -1,8 +1,17 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "hwut.report.features"
-#    choices = ["code", "empty", "matrix", "outside", "refused",
-#               "test_directory", "tree"]
+#    features = ["report-features-tree"]
+#    choices {
+#        code           { features = ["report-features-code"] }
+#        document       { features = ["report-features-document", "report-features-document-tree", "report-features-document-coverage", "report-features-test-doc", "report-features-documents"] }
+#        empty          { features = ["face-empty-said"] }
+#        matrix         { features = ["report-features-matrix", "report-features-nonsense"] }
+#        outside        { features = ["report-features-alone-complete"] }
+#        refused        { features = ["face-refusal-by-name", "tree-boundary-refused"] }
+#        test_directory { }
+#        tree           { features = ["report-features-tree", "report-features-components", "report-features-outside", "report-features-nonsense", "report-features-documents"] }
+#    }
 #  }
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
@@ -10,13 +19,16 @@ ______________________________________________________________________________
 PURPOSE: 'hwut.report.features' -- the page of a tree: component, part,
          feature, test runs and their verdicts.
 
-CHOICES: tree, test_directory, matrix, code, outside, empty, refused;
+CHOICES: tree, test_directory, matrix, code, document, outside, empty,
+         refused;
 
 DESCRIPTION:
 
     tree            called at the root: every component with its id,
                     counts and statements, every feature with its state
-                    and its linked runs; then what stands outside --
+                    and its linked runs, and the documents it names
+                    ('see'); then what stands outside -- a document
+                    that does not stand, 'documents' that is no list,
                     where 'parent' and 'childs' disagree with the
                     directories included.
     test_directory  called inside a TEST directory: that directory is
@@ -34,6 +46,29 @@ DESCRIPTION:
                     one a file in its own TEST directory, which is left
                     out. Then: no output found, and a directory that is
                     none.
+    document        '--html=<file>' and '--ods=<file>': the feature
+                    document. The face says what it wrote; the page's
+                    rows are shown tab by tab, tags as they stand -- a
+                    feature's id leads to '#f-<n>', a test run to
+                    '#t-<n>'; the spreadsheet's three sheets are shown
+                    cell by cell with the targets of their links. A
+                    test's 'doc', written in triple quotes, stands in
+                    'Tests'. The 'Tree' tab holds the components, their
+                    TEST directories and the features, folded. Written
+                    twice, the bytes are the same. A file that cannot be
+                    written is refused.
+                    A feature's 'documents' stand in 'Features' as
+                    links from where the document is written; the tree
+                    carries its controls, the spreadsheet its row
+                    groups.
+                    WITH A COVERAGE OUTPUT ('--code') the 'Features' tab
+                    gains the code only a feature's runs reached; with
+                    '--cov-html=<dir>' each source is a link to its
+                    coverage page, RELATIVE to where the document
+                    stands -- '../' before it in the spreadsheet, whose
+                    links are resolved inside the archive. '--cov-html'
+                    without a document, and one that names no
+                    directory, are refused.
     outside         a tree where nothing is linked and no statement
                     stands: no feature, every TEST directory named with
                     the count of its test runs. Then a feature file
@@ -52,9 +87,12 @@ the machine.
 ______________________________________________________________________________
 """
 import os
+import re
 import sys
 import shutil
 import tempfile
+import zipfile
+from   xml.dom import minidom
 
 import config                                                       # noqa: F401
 
@@ -132,10 +170,13 @@ def fixture(root):
            '    parent { core = "What \'core\' promises, proven." }\n'
            '    issued = 3\n'
            '    1 { name  = "line-pairing"\n'
-           '        title = "Two streams are aligned line by line." }\n'
+           '        title = "Two streams are aligned line by line."\n'
+           '        documents = ["../README.txt#pairing",\n'
+           '                     "https://example.org/pairing",\n'
+           '                     "../absent.txt"] }\n'
            '    2 { name  = "missing-side"\n'
            '        title = "A line present on one side only is shown whole." }\n'
-           '    3 { name  = "untested" }\n'
+           '    3 { name  = "untested"  documents = "README.txt" }\n'
            '    fresh { name = "not-numbered" }\n'
            '}\n')
     _write(root, "engine/compare/TEST/hwut-features.conf",
@@ -146,6 +187,7 @@ def fixture(root):
            '    1 { name = "whole-page"  title = "A whole page is judged." }\n'
            '    2 { name = "never-run"   title = "Linked, and not in the book." }\n'
            '}\n')
+    _write(root, "engine/compare/core/README.txt", "Pairing.\n")
     _test(root, "engine/compare/core/TEST/test-pair.sh",
           ['title    = "Pairing"', 'features = ["line-pairing"]',
            'choices {', '    plain { }',
@@ -154,7 +196,13 @@ def fixture(root):
     _test(root, "engine/compare/core/TEST/test-stray.sh",
           ['title    = "Stray"', 'features = ["no-such"]'])
     _test(root, "engine/compare/TEST/test-pages.sh",
-          ['title    = "Pages"', 'features = ["whole-page"]',
+          ['title    = "Pages"',
+           'doc      = """',
+           '    Judges whole pages, a small one and a large one.',
+           '',
+           '      "large" holds a thousand lines.',
+           '    """',
+           'features = ["whole-page"]',
            'choices = ["small", "large"]'])
     _test(root, "engine/compare/TEST/test-fresh.sh",
           ['title    = "Fresh"', 'features = ["never-run"]'])
@@ -292,6 +340,133 @@ def run_code():
     _in_tree(fixture, body)
 
 
+def _sheet_shown(content, name):
+    """RETURN: None. Prints one sheet of a spreadsheet's 'content.xml':
+    a row per line, cells between '|', a link as 'text -> target'."""
+    for table in content.getElementsByTagName("table:table"):
+        if table.getAttribute("table:name") != name: continue
+        print("    [%s]" % name)
+        for row in table.getElementsByTagName("table:table-row"):
+            cell_list = []
+            for cell in row.getElementsByTagName("table:table-cell"):
+                piece_list = []
+                for paragraph in cell.getElementsByTagName("text:p"):
+                    text = "".join(node.data for node
+                                   in _text_nodes(paragraph))
+                    link = paragraph.getElementsByTagName("text:a")
+                    if link:
+                        text += " -> %s" % link[0].getAttribute("xlink:href")
+                    piece_list.append(text)
+                cell_list.append(" / ".join(piece_list))
+            print("    %s" % " | ".join(cell_list))
+
+
+def _text_nodes(node):
+    """RETURN: list, every text node below 'node', document order."""
+    found = []
+    for child in node.childNodes:
+        if child.nodeType == child.TEXT_NODE: found.append(child)
+        else:                                 found += _text_nodes(child)
+    return found
+
+
+def _code_shown(html_name, ods_name):
+    """RETURN: None. Prints the code and document cells of the page's
+    'Features' tab -- heads and one line per feature that has any -- and, where
+    'ods_name' is given, the same cells of the spreadsheet."""
+    with open(html_name, encoding="utf-8") as handle:
+        section = re.search(r'<section id="features">(.*?)</section>',
+                            handle.read(), re.S).group(1)
+    head_list = re.findall(r"<th>(.*?)</th>", section)[6:]
+    print("    [features] %s" % " | ".join(head_list))
+    for row in re.findall(r"<tr id=.*?</tr>", section, re.S):
+        cell_list = re.findall(r"<td>(<ul>.*?</ul>)</td>", row,
+                               re.S)[-len(head_list):]
+        if any(cell != "<ul></ul>" for cell in cell_list):
+            print("    %s  %s" % (re.search(r'id="(f-\d+)"', row).group(1),
+                                  " | ".join(cell_list)))
+    if ods_name is None: return
+    with zipfile.ZipFile(ods_name) as archive:
+        content = minidom.parseString(archive.read("content.xml"))
+    for table in content.getElementsByTagName("table:table"):
+        if table.getAttribute("table:name") != "Features": continue
+        print("    [Features] links: %s" % ", ".join(
+            link.getAttribute("xlink:href")
+            for link in table.getElementsByTagName("text:a")
+            if not link.getAttribute("xlink:href").startswith("#")))
+
+
+def run_document():
+    """RETURN: None. The feature document, as a page and as a
+    spreadsheet."""
+    def body():
+        banner("--html=features.html --ods=features.ods")
+        _page(["--html=features.html", "--ods=features.ods"])
+        with open("features.html", encoding="utf-8") as handle:
+            page = handle.read()
+        banner("the page: tabs, and the rows of each")
+        print("    %s" % re.search(r"<nav>.*?</nav>", page).group(0))
+        print("    %s" % re.search(r'<p class="count">.*?</p>',
+                                   page).group(0))
+        section = re.search(r'<section id="tree">(.*?)</section>',
+                            page, re.S).group(1)
+        print("    [tree]")
+        for line in section.split("\n")[1:]:
+            if line.startswith('<div id="tree-bar"'):
+                print("    controls: %s" % ", ".join(
+                    re.findall(r'id="(tree-[a-z]+)"', line)
+                    + re.findall(r'class="tree-state" value="(\w+)"', line)))
+                continue
+            if line: print("    %s" % line)
+        for name in ("matrix", "features", "tests"):
+            section = re.search(r'<section id="%s">(.*?)</section>' % name,
+                                page, re.S).group(1)
+            print("    [%s] %s" % (name, " | ".join(
+                re.findall(r"<th>(.*?)</th>", section))))
+            for row in re.findall(r"<tr id=.*?</tr>", section, re.S):
+                print("    %s" % row.replace("\n", "\\n"))
+        banner("the spreadsheet: three sheets, cell by cell")
+        with zipfile.ZipFile("features.ods") as archive:
+            print("    %s; mimetype: %s"
+                  % (", ".join(archive.namelist()),
+                     archive.read("mimetype").decode()))
+            content = minidom.parseString(archive.read("content.xml"))
+        for name in ("Matrix", "Tree", "Features", "Tests"):
+            _sheet_shown(content, name)
+        print("    row groups in 'Tree': %i"
+              % len(content.getElementsByTagName("table:table-row-group")))
+        banner("written twice: the same bytes")
+        before = [open(name, "rb").read()
+                  for name in ("features.html", "features.ods")]
+        features.main(["--html=features.html", "--ods=features.ods"],
+                      write=lambda text: None)
+        after  = [open(name, "rb").read()
+                  for name in ("features.html", "features.ods")]
+        print("    page: %s   spreadsheet: %s"
+              % tuple("same" if a == b else "DIFFERS"
+                      for a, b in zip(before, after)))
+        banner("--code: the 'Features' tab carries the code; no links")
+        coverage_written(os.getcwd(), "hwut.coverage")
+        _page(["--html=features.html", "--code"])
+        _code_shown("features.html", None)
+        banner("--cov-html=pages: each source a link, from where the "
+               "document stands")
+        os.makedirs("pages"); os.makedirs("out/deep")
+        _page(["--html=out/deep/features.html", "--ods=features.ods",
+               "--cov-html=pages"])
+        _code_shown("out/deep/features.html", "features.ods")
+        banner("--cov-html without a document; naming no directory")
+        _page(["--cov-html=pages"])
+        _page(["--html=features.html", "--cov-html=nowhere"])
+        banner("inside a TEST directory; a file that cannot be written")
+        os.chdir("engine/compare/TEST")
+        _page(["--html=own.html"])
+        _page(["--html=no/such/directory/x.html"])
+        banner("'--html=' names no file")
+        _page(["--html="])
+    _in_tree(fixture, body)
+
+
 def run_outside():
     """RETURN: None. A tree with tests and no statement at all."""
     def build(root):
@@ -357,6 +532,7 @@ if __name__ == "__main__":
             "tree":           run_tree,
             "test_directory": run_test_directory,
             "matrix":         run_matrix,
+            "document":       run_document,
             "code":           run_code,
             "outside":        run_outside,
             "empty":          run_empty,

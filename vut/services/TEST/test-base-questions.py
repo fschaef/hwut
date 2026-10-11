@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The base questions: --fail, --pass, --since, --until"
+#     features   = ["wish-fail-pass", "wish-since-until", "wish-faster-than"]
 #     choices    = ["asked", "fail", "never_run", "pass", "until"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true

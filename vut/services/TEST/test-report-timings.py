@@ -1,7 +1,14 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "hwut.report.timings"
-#    choices = ["traditional", "table", "file", "empty", "refused"]
+#    features = ["report-timings-traditional"]
+#    choices {
+#        traditional { }
+#        table       { features = ["report-timings-table", "report-timings-own-machine"] }
+#        file        { features = ["report-timings-table"] }
+#        empty       { features = ["report-timings-own-machine", "face-empty-said"] }
+#        refused     { features = ["face-refusal-by-name"] }
+#    }
 #  }
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________

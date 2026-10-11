@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "Tier 1, the plain console report, over scripted streams"
-#     choices    = ["allgreen", "badge", "empty", "fault", "mixed",
-#                   "tiers", "unknown", "width", "words"]
+#     choices {
+#         allgreen { features = ["flow-line", "directories-roll-call"] }
+#         badge    { features = ["parallel-badge", "two-modes"] }
+#         empty    { features = ["empty-selection-noted"] }
+#         fault    { features = ["faults-shown"] }
+#         mixed    { features = ["flow-line", "flow-elision", "two-modes", "reason-word", "directories-roll-call", "hints-by-category"] }
+#         tiers    { features = ["tiers"] }
+#         unknown  { features = ["stream-stability"] }
+#         width    { features = ["report-width"] }
+#         words    { features = ["phrase-table", "reason-word", "no-good-file-fails", "stream-stability"] }
+#     }
 #     interactive = true
 # }
 #

@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "'did you mean' -- the one suggester (E-73)"
-#     choices    = ["case", "completion", "faces", "listed", "parser",
-#                   "phantom", "prefix", "threshold"]
+#     features   = ["face-did-you-mean"]
+#     choices {
+#         case       { }
+#         completion { features = ["face-completion-table"] }
+#         faces      { features = ["face-completion-table"] }
+#         listed     { }
+#         parser     { }
+#         phantom    { features = [] }
+#         prefix     { }
+#         threshold  { }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

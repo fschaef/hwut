@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "Plan form: nodes, links, exclusions, laws at the door"
-#     choices    = ["closure", "derived", "nodes", "refused", "stage"]
+#     choices {
+#         closure { features = ["misdep-marked", "construction-laws"] }
+#         derived { features = ["derived-tables"] }
+#         nodes   { features = ["node-kinds"] }
+#         refused { features = ["construction-laws"] }
+#         stage   { features = ["provision-stage"] }
+#     }
 #     interactive = true
 # }
 #

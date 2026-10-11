@@ -3,9 +3,21 @@
 #
 # @hwut {
 #     title      = "hwut.execute: a target over the tree, or shell commands in every test directory."
-#     choices    = ["run", "absence", "default", "reasons", "lock",
-#                   "passthrough", "quiet", "vocabulary", "refused", "help",
-#                   "command", "command-refused"]
+#     features   = ["execute-target"]
+#     choices {
+#         run               { features = ["execute-target", "execute-exit-codes-inform"] }
+#         absence           { features = ["execute-phase-one"] }
+#         default           { features = ["execute-phase-one"] }
+#         reasons           { features = ["execute-phase-one"] }
+#         lock              { features = ["execute-locked-directory"] }
+#         passthrough       { }
+#         quiet             { features = ["execute-quiet"] }
+#         vocabulary        { features = ["execute-standard-target-refused"] }
+#         refused           { features = ["face-refusal-by-name", "execute-nothing-bound"] }
+#         help              { features = ["face-help-page"] }
+#         command           { features = ["execute-command", "execute-exit-codes-inform"] }
+#         "command-refused" { features = ["execute-command", "face-refusal-by-name"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

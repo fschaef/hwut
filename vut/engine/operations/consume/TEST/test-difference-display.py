@@ -2,9 +2,15 @@
 #
 # @hwut {
 #     title      = "DifferenceDisplay and the feed session"
-#     choices    = ["down_stream", "every_subject", "no_provision",
-#                   "only_differing", "sequence", "signature",
-#                   "verdict_safe"]
+#     choices {
+#         down_stream    { features = ["down-is-compares-stream"] }
+#         every_subject  { features = ["every-named-subject-shown"] }
+#         no_provision   { features = ["failed-provision-no-comparison"] }
+#         only_differing { features = ["only-differing-carried"] }
+#         sequence       { features = ["feed-session-order"] }
+#         signature      { features = ["foreign-signature-refused"] }
+#         verdict_safe   { features = ["watching-changes-nothing"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

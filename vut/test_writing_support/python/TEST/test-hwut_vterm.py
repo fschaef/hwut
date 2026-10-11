@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "A terminal's screen read by a test: libvterm through ctypes."
-#     choices    = ["attributes", "colours", "events", "keys", "missing",
-#                   "regions", "screen", "text", "unnoticed"]
+#     choices {
+#         attributes { features = ["vterm-cell-attributes"] }
+#         colours    { features = ["vterm-cell-colours"] }
+#         events     { features = ["vterm-raw-events"] }
+#         keys       { features = ["vterm-keys"] }
+#         missing    { features = ["vterm-library-missing"] }
+#         regions    { features = ["vterm-regions"] }
+#         screen     { features = ["vterm-screen-text"] }
+#         text       { features = ["vterm-screen-text"] }
+#         unnoticed  { features = ["vterm-application-unaware"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

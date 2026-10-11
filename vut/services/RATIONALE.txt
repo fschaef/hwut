@@ -5875,3 +5875,127 @@ GRAVEYARD NAMING the runs of a bare TEST directory under 'links to no
           feature': a tree that states no features would name every
           test it has.
 PINNED    'services/TEST/test-report-features.py outside'.
+
+
+E-145  A TEST RUN WITHOUT A FEATURE IS 'NONSENSE?'; NO FEATURE FILE IS NOTHING  (2026-10-11)
+
+PROBLEM   The report called a test run that links to nothing 'links to
+          no feature', and named every TEST directory without a feature
+          file (E-144: with a count). Neither said what the reader is to
+          think of it.
+DECISION  RULED (Frank-Rene, 2026-10-11).
+          A TEST RUN THAT LINKS TO NO FEATURE, in a TEST directory that
+          states features, is 'NONSENSE?': the word in the report's last
+          block, behind the run's row in '--matrix', behind the run in
+          the feature document. IT DOES NOT FAIL -- "a test that shows
+          acceptable behaviour is OK"; its verdict stands, and
+          'hwut.run' says nothing of it. 'hwut.help' explains the word,
+          as its last part, with the test runs concerned; with nothing
+          else to explain it answers OK where such a run stands.
+          FEATURE FILES ARE NOT MANDATORY: a TEST directory without one
+          is not named anywhere. AMENDS E-144, whose count is gone.
+          Feature files alone are complete (E-144): CONFIRMED.
+COST      'hwut.help' reads the feature relation of the tree on every
+          call.
+PINNED    'services/TEST/test-report-features.py tree, matrix';
+          'services/TEST/test-help.sh nonsense'.
+
+
+E-146  THE FEATURE DOCUMENT: HTML AND OPENDOCUMENT                    (2026-10-11)
+
+PROBLEM   The report is a terminal page. A feature matrix for somebody
+          else -- a reviewer, a customer -- needs a file that opens
+          anywhere, where a feature leads to its explanation and an
+          implementing test run to its test.
+DECISION  RULED (Frank-Rene, 2026-10-11: "implement it as you proposed
+          it"). 'hwut.report.features --html=<file>' and
+          '--ods=<file>' ('lib/report/feature_document.py'):
+              Matrix     feature id, brief, state, implemented by
+              Features   name, title, explanation, component, state
+              Tests      file, title, 'doc', test runs, features
+          a feature's id in 'Matrix' -> its row in 'Features'; a test
+          run -> its test's row in 'Tests'; and back.
+          HTML: one self-contained page; the tabs are script, and
+          without script the three stand one below the other with the
+          links intact. ODS: three sheets, links '#<Sheet>.A<row>'.
+          BOTH WITH THE STANDARD LIBRARY -- the spreadsheet is a zip of
+          'mimetype', 'content.xml' and a manifest.
+          THE SAME TREE YIELDS THE SAME BYTES: no date, no absolute
+          path, one fixed time stamp in the archive.
+          Only TEST directories that state features are in it (E-145).
+          The file is written IN PLACE OF the page; one line says so.
+COST      No '.xls'/'.xlsx': ODS is the open format and every office
+          suite reads it (MEASURED: LibreOffice converts it to '.xlsx'
+          with the three sheets and the links kept).
+          '--code' has no place in the document yet.
+GRAVEYARD A spreadsheet library as a dependency.
+PINNED    'services/TEST/test-report-features.py document'.
+
+
+E-147  THE FEATURE DOCUMENT HOLDS THE TREE, AND LEADS TO THE COVERAGE PAGES  (2026-10-11)
+
+PROBLEM   The feature document (E-146) listed features flat, and said
+          nothing of the code. The tree of components the features
+          stand in, and the source lines a feature's runs reached, were
+          the terminal page's alone.
+DECISION  RULED (Frank-Rene, 2026-10-11: "Yes" to both).
+          A FOURTH TAB, 'Tree': component -> the components below ->
+          its TEST directory -> the features; a component with its
+          title, what it does, and the counts summed from below; a
+          feature a link to its row in 'Features'. HTML folds it
+          ('details'); the spreadsheet indents it. A component with no
+          feature below it, and a TEST directory that states none, are
+          left out.
+          THE CODE, in 'Features', where '--code' or '--cov-dir' read a
+          coverage output: per feature the sources and lines ONLY its
+          runs executed (exploration R-86), the shared lines and the
+          runs not measured as counts.
+          '--cov-html=<dir>' NAMES WHERE THE COVERAGE PAGES STAND
+          ('hwut.cov.conv.to_html -o <dir>'): each source becomes a link
+          '<dir>/<source>.html#L<first line>'. THE LINK IS RELATIVE to
+          where the document is written -- the document and the pages
+          travel together, or the links break. In the spreadsheet the
+          link begins with '../': a relative reference there is resolved
+          inside the archive.
+          FOR THAT, 'to_html' gives every source line the anchor
+          'L<number>' and marks the targeted line; and its OUTDIR
+          carries the no-entry marker -- MEASURED: the pages mirror the
+          tree, 'TEST' directories included, and 'hwut.report.features'
+          walked into them (exploration R-85 covered the coverage
+          output only).
+          '--cov-html' without a document, or naming no directory, is
+          refused.
+COST      With '--cov-html' the HTML document is no longer
+          self-contained.
+          Nothing checks that a linked page exists: pages written from
+          another coverage output than the one read give dead links.
+PINNED    'services/TEST/test-report-features.py document'.
+
+
+E-148  THE DOCUMENT'S TREE IS INTERACTIVE; A FEATURE'S DOCUMENTS ARE LINKS  (2026-10-11)
+
+PROBLEM   The 'Tree' tab (E-147) folded level by level and no more: in
+          a tree of hundreds of features nothing found the unproven
+          ones, or the ones about a subject. And a feature said one
+          sentence, with no way to where more is said.
+DECISION  RULED (Frank-Rene, 2026-10-11).
+          HTML: above the tree 'Expand all', 'Collapse all', one box
+          per state (PROVEN, FAILING, UNPROVEN) and a word filter; a
+          level without a feature left to show is hidden; a count says
+          how many features show. The controls are script and stay
+          hidden without it -- the tree then stands as written.
+          ODS: the levels are ROW GROUPS ('table:table-row-group'),
+          nested as the tree is; the spreadsheet folds them at its
+          margin (MEASURED: LibreOffice reads seven outline levels of
+          hwut's own tree).
+          DOCUMENTS: what a feature names under 'documents'
+          (exploration R-92) is printed on the page as 'see <path>'
+          below the feature, and stands in the document's 'Features'
+          tab as links, relative to where the document is written
+          ('../' before them in the spreadsheet). A named file that
+          does not stand is said in the page's last block; a URL is not
+          looked up.
+COST      The filter reads a feature's whole line: a word of the title
+          and a word of the name both match.
+          A spreadsheet has no filter of ours; its own does.
+PINNED    'services/TEST/test-report-features.py tree, document'.

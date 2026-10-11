@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Potpourri Variants: subset, duplicates"
+#     features   = ["potpourri-subset-duplicates"]
 #     choices    = ["combined", "duplicates", "subset"]
 # }
 #

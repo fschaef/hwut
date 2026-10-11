@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "The traces table: a machine class, and 'the one above'"
-#     choices    = ["key", "table", "elision", "place"]
+#     choices {
+#         key     { features = ["traces-machine-class"] }
+#         table   { features = ["traces-table"] }
+#         elision { features = ["traces-table"] }
+#         place   { features = ["traces-under-tmp"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*", "FAILURE.*",
 #                               "[0-9]{4}-[0-9]{2}-[0-9]{2}"] }
 # }

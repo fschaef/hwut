@@ -35,6 +35,7 @@ engine/compare/TEST/hwut-features.conf:
     test-pages.sh -> engine/plain/TEST/test-pages.sh:
         book entry: adopted by 'engine/plain/TEST'
         register: retired here; issued 0 there
-        NOTE  no 'hwut-features.conf' stands in the target directory: 'whole-page' stay(s) defined in the source
+        'hwut-features.conf' written in the target directory
+        feature 'whole-page' -> #1
 status: OK
 <hwut-end>

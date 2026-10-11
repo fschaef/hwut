@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title   = "adm/book_stain.py: the books to one 'stain' column (B-18)"
+#     features = ["stain-conversion"]
 #     choices = ["convert"]
 # }
 #

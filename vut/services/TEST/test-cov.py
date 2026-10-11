@@ -2,8 +2,20 @@
 #
 # @hwut {
 #     title      = "The faces beside hwut.cov.run: the converters and formats"
-#     choices    = ["cobertura", "formats", "help", "html", "jacoco", "json",
-#                   "lcov", "pdf", "refused", "tex", "to_humans"]
+#     features   = ["cov-to-xml-json"]
+#     choices {
+#         cobertura { }
+#         formats   { features = ["cov-formats"] }
+#         help      { features = ["face-help-page"] }
+#         html      { features = ["cov-to-html"] }
+#         jacoco    { }
+#         json      { }
+#         lcov      { features = ["cov-to-lcov"] }
+#         pdf       { features = ["cov-to-tex-pdf"] }
+#         refused   { features = ["face-refusal-by-name"] }
+#         tex       { features = ["cov-to-tex-pdf"] }
+#         to_humans { features = ["cov-to-humans"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -284,14 +296,14 @@ def test_html():
         ("<td class=\"ln\">1</td><td class=\"txt\">int main(void) {</td>"
          "<td class=\"pts\">FN main</td><td class=\"runs\">t0, t1</td>" in page,
          "line 1 was run by t0 and t1, and holds the function point"),
-        ("<tr class=\"cov\"><td class=\"ln\">3</td><td class=\"txt\">    if (x) {"
+        ("<tr id=\"L3\" class=\"cov\"><td class=\"ln\">3</td><td class=\"txt\">    if (x) {"
          "</td><td class=\"pts\">BR 2/2</td><td class=\"runs\">t0</td>" in page,
          "line 3 names the runs that executed it (t0) and the arms taken "
          "over EVERY run (2/2: the fixture's t1 reports the arm alone)"),
-        ("<tr class=\"unc\"><td class=\"ln\">8</td>" in page
+        ("<tr id=\"L8\" class=\"unc\"><td class=\"ln\">8</td>" in page
          and "BR 0/2" in page,
          "line 8 is uncovered with its two arms untaken"),
-        ("<tr class=\"non\"><td class=\"ln\">10</td>" in page,
+        ("<tr id=\"L10\" class=\"non\"><td class=\"ln\">10</td>" in page,
          "a line that is not executable is neither"),
         ("was not found" in gone and "<td class=\"ln\">8</td>" in gone,
          "a missing source keeps its lines and says the text is gone"),

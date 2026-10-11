@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Determination: a wish and a directory become a plan"
-#     choices    = ["closure", "deterministic", "empty", "misdep",
-#                   "pruned", "whole"]
+#     choices {
+#         closure       { features = ["dependency-closure"] }
+#         deterministic { features = ["deterministic-plan"] }
+#         empty         { features = ["empty-selection-reported"] }
+#         misdep        { features = ["misdep-marked"] }
+#         pruned        { features = ["lone-exclusion-dropped"] }
+#         whole         { features = ["plan-determined"] }
+#     }
 #     interactive = true
 # }
 #

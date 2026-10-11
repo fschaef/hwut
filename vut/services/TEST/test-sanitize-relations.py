@@ -1,7 +1,14 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "hwut.sanitize --relations, and the faces that follow a test"
-#    choices = ["apply", "command", "move", "propose", "remove"]
+#    features = ["sanitize-relations"]
+#    choices {
+#        apply   { features = ["sanitize-relations", "sanitize-apply"] }
+#        command { features = ["sanitize-relations", "sanitize-command"] }
+#        move    { features = ["move-features-follow"] }
+#        propose { }
+#        remove  { features = ["remove-names-features"] }
+#    }
 #  }
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________

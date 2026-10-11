@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Plan printer: the canonical text, one-way"
+#     features   = ["canonical-print"]
 #     choices    = ["bare", "empty", "full"]
 #     interactive = true
 # }

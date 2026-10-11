@@ -3,9 +3,21 @@
 #
 # @hwut {
 #     title      = "The hwut.accept face: promotion, and what it refuses."
-#     choices    = ["ask", "bless", "first", "labels", "merge", "onedoor",
-#                   "opening", "refresh", "stderr", "sugar", "token",
-#                   "interactive", "unaccepted"]
+#     choices {
+#         ask         { features = ["accept-asks-with-reading"] }
+#         bless       { features = ["accept-whole", "accept-refresh"] }
+#         first       { features = ["accept-partial-first", "run-unaccepted-fails"] }
+#         labels      { features = ["wish-label-silence"] }
+#         merge       { features = ["accept-standing-left-alone", "accept-whole"] }
+#         onedoor     { features = ["accept-standing-left-alone", "accept-merge-at-terminal"] }
+#         opening     { features = ["interactive-first-nominal", "interactive-checklist", "interactive-session"] }
+#         refresh     { features = ["accept-refresh"] }
+#         stderr      { features = ["accept-stderr-refused", "accept-refusal-atomic"] }
+#         sugar       { features = ["wish-short-form"] }
+#         token       { features = ["accept-incomplete-refused", "accept-refusal-atomic"] }
+#         interactive { features = ["interactive-session", "interactive-checklist", "accept-book-and-good"] }
+#         unaccepted  { features = ["wish-unaccepted", "run-unaccepted-fails"] }
+#     }
 #     #  the run's TOTAL is wall time since the face began: this machine's,
 #     #  not the page's subject
 #     tolerance { eq_pattern = [", [0-9]+\\.[0-9]+ \\[sec\\] total"] }

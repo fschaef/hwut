@@ -28,6 +28,12 @@ DESCRIPTION
 
        The explanations stand in ONE table, 'engine/display/failure.py'.
 
+       TEST RUNS WITHOUT A FEATURE, LAST: 'NONSENSE?' -- every test run
+       that links to no feature while its TEST directory states
+       features ('hwut-features.conf'). No failure: the run's verdict
+       stands. What the word means, and how it is resolved. A tree that
+       states no features says nothing here.
+
        THE LAST COVERAGE RUN, AFTER THAT (coverage D-41): every selected
        case it left WITHOUT A RECORD, read from the local trace
        'TMP/hwut-traces-coverage.csv' of each directory, under the headings
@@ -300,6 +306,63 @@ def uncapped_explanation_line_list(uncapped, case_list, platform):
 
 
 UNCAPPED_HEADING_STR = "CONFINEMENT -- cap not enforceable"
+NONSENSE_HEADING_STR = "FEATURES -- test run without a feature"
+NONSENSE_WORD_STR    = "NONSENSE?"
+
+
+def nonsense_case_list_of(root):
+    """
+    RETURN: list of (directory, file, choice), every test run below
+            'root' that links to NO feature while its TEST directory
+            states features ('hwut-features.conf') -- walk order. Empty
+            where no directory states features: features are not
+            mandatory, and a tree without them holds no nonsense.
+    """
+    from vut.engine.orchestrator.exploration.feature_relation \
+                                        import relation_of_tree
+    from vut.engine.orchestrator.exploration.tree_explorer \
+                                        import RootConfMissing
+    try:
+        relation = relation_of_tree(os.path.abspath(root))
+    except RootConfMissing:
+        return []
+    return [(path, test, choice)
+            for path in sorted(relation.test_directory_db)
+            if relation.test_directory_db[path].feature_file is not None
+            for test, choice
+            in relation.test_directory_db[path].unlinked_tuple]
+
+
+def nonsense_explanation_line_list(case_list):
+    """
+    RETURN: list of str, what 'hwut.help' says of the test runs that
+            link to no feature: the head, what the word means, how it
+            is resolved, then 'CONCERNED:' and the cases.
+    """
+    paragraph_list = [
+        "Each test run below stands in a TEST directory that states its "
+        "features in 'hwut-features.conf', and links to none of them. "
+        "It is NOT a failure: a test run that shows acceptable behaviour "
+        "is OK, and its verdict stands. The question is what it is for "
+        "-- a test run that proves nothing anybody claimed is either a "
+        "claim nobody wrote down, or a test nobody needs.",
+        HEAL_OPENER_STR + "write the feature the test run proves into "
+        "'hwut-features.conf' and name it under 'features' in the "
+        "test's '@hwut { }' block; or link the test run to a feature "
+        "that stands there already; or remove the test "
+        "('hwut.remove')."]
+    line_list = ["%s -- links to no feature  [%i case(s)]"
+                 % (NONSENSE_WORD_STR, len(case_list))]
+    for paragraph in paragraph_list:
+        line_list.append("")
+        line_list.extend("    " + line for line in
+                         textwrap.wrap(paragraph, width=WRAP_WIDTH,
+                                       break_on_hyphens=False))
+    line_list.append("")
+    line_list.append("    CONCERNED:")
+    line_list.extend("        " + line
+                     for line in concerned_line_list(case_list))
+    return line_list
 
 
 def uncapped_introduction_line_list(case_n, reason_n):
@@ -390,7 +453,9 @@ def main(argv=None, write=None):
     coverage_db   = coverage_occurrence_db_of(block_list, directory)
     uncapped_db   = uncapped_occurrence_db_of(
                         directory, with_targets(wish, word_list))
-    if not occurrence_db and not coverage_db and not uncapped_db:
+    nonsense_list = nonsense_case_list_of(directory)
+    if not occurrence_db and not coverage_db and not uncapped_db \
+       and not nonsense_list:
         write("nothing to explain: no case below '%s' failed for a "
               "reason other than a plain difference from GOOD" % directory)
         return E_ExitCode.EMPTY
@@ -455,6 +520,14 @@ def main(argv=None, write=None):
             for line in uncapped_explanation_line_list(
                             uncapped, uncapped_db[uncapped], platform):
                 write("    " + line)
+    #  THE FEATURES PART, last of all: no failure, a QUESTION -- what a
+    #  test run is for that proves nothing its directory claims (E-145).
+    if nonsense_list:
+        if occurrence_db or coverage_db or uncapped_db: write("")
+        write(NONSENSE_HEADING_STR)
+        write("")
+        for line in nonsense_explanation_line_list(nonsense_list):
+            write("    " + line)
     return E_ExitCode.OK
 
 

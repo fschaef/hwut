@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Member state: the states, the events, the guards"
-#     choices    = ["transitions", "sealed", "evidence", "consistency"]
+#     choices {
+#         transitions { features = ["member-states", "aspirant-playable-not-runnable", "no-output-moves-nothing"] }
+#         sealed      { features = ["state-sealed", "run-judges-members-only"] }
+#         evidence    { features = ["state-of-evidence"] }
+#         consistency { features = ["book-against-files"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

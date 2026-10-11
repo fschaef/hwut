@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Every supervisor event reaches the HINTS by name"
+#     features = ["kill-names-its-cap-on-every-road"]
 #     choices    = ["caps", "multi"]
 #     #  THIS TEST STORMS ON PURPOSE (O-21): its 'pids' offender forks
 #     #  40 past an INNER cap of 4. The outer supervisor watches the

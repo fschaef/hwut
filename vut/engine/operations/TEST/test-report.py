@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Products, the derived result, and the progress seam"
-#     choices    = ["console", "empty_comparison", "failed_build",
-#                   "observer", "precedence", "products"]
+#     choices {
+#         console          { features = ["console-observer"] }
+#         empty_comparison { features = ["empty-comparison-not-a-pass"] }
+#         failed_build     { features = ["failed-build-is-failed-test"] }
+#         observer         { features = ["observer-never-reaches-verdict"] }
+#         precedence       { features = ["first-reason-by-precedence"] }
+#         products         { features = ["products-kept-apart"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

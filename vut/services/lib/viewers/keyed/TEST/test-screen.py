@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "The keyed merge screen AS DRAWN: 'hwut.accept.interactive' in a terminal."
-#     choices    = ["asking", "open", "quit"]
+#     choices {
+#         asking { features = ["leave-asks"] }
+#         open   { features = ["screen-titles", "foot-keys"] }
+#         quit   { features = ["leave-asks"] }
+#     }
 #     tolerance { comment = []  analogy = [] }
 # }
 #

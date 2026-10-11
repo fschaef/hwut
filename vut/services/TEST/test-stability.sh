@@ -3,8 +3,17 @@
 #
 # @hwut {
 #     title      = "The hwut.run.stability face: what did not stay the same."
-#     choices    = ["bytes", "cadence", "length", "refused", "stain",
-#                   "steady", "verbose", "verdict"]
+#     features   = ["stability-verdict"]
+#     choices {
+#         bytes   { features = ["stability-bytes"] }
+#         cadence { features = ["stability-cadence", "run-timing"] }
+#         length  { features = ["stability-length", "run-timing"] }
+#         refused { features = ["face-refusal-by-name"] }
+#         stain   { features = ["stability-stain", "run-stained-not-run", "accept-stained-refused"] }
+#         steady  { }
+#         verbose { features = ["stability-counts-not-numbers"] }
+#         verdict { }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

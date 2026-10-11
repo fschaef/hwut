@@ -44,8 +44,10 @@ from ...coverage.api import Output, root_of, union
 @dataclass(frozen=True)
 class CFeatureCode:
     """Where one feature's linked runs went. 'only_tuple' holds
-    (source, tuple of half-open (begin, end) line ranges), path order,
-    the source named from the directory the relation was asked in."""
+    (source, tuple of half-open (begin, end) line ranges, measured
+    source), path order: 'source' named from the directory the relation
+    was asked in, 'measured source' as the coverage output names it --
+    from the coverage run's root, which is where its pages stand."""
     only_tuple:    tuple = ()
     shared_file_n: int   = 0
     shared_line_n: int   = 0
@@ -80,8 +82,9 @@ def code_db_of(relation, root, output_directory):
         shown = os.path.relpath(os.path.join(coverage_root, source),
                                 root).replace(os.sep, "/")
         source_list.append((shown, [(output.run_set_of(reference), spans)
-                                    for reference, spans in covered]))
-    source_list.sort(key=lambda pair: pair[0])
+                                    for reference, spans in covered],
+                            source))
+    source_list.sort(key=lambda triple: triple[0])
 
     result = {}
     for path, test_directory in relation.test_directory_db.items():
@@ -104,13 +107,13 @@ def _code_of(source_list, id_set, unmeasured_n):
     ids 'id_set' of one feature."""
     if not id_set: return CFeatureCode(unmeasured_n=unmeasured_n)
     only_list, shared_file_n, shared_line_n = [], 0, 0
-    for source, covered in source_list:
+    for source, covered, measured in source_list:
         only, shared = (), ()
         for run_set, spans in covered:
             if not run_set & id_set: continue
             if run_set <= id_set: only   = union(only, spans)
             else:                 shared = union(shared, spans)
-        if only: only_list.append((source, tuple(only)))
+        if only: only_list.append((source, tuple(only), measured))
         if shared:
             shared_file_n += 1
             shared_line_n += sum(end - begin for begin, end in shared)

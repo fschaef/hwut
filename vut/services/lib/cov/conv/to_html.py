@@ -53,6 +53,7 @@ import html
 import os
 import sys
 
+from   vut.auxiliary.no_entry         import marked_no_entry
 from   vut.services.lib.cov.conv._face import help_of, many_files_main
 from   vut.services.lib.cov.summary    import (line_count, measure_summary,
                                                percent)
@@ -80,6 +81,7 @@ STYLE = """\
     .src td.ln { color: #888; text-align: right; }
     .src td.runs, .src td.pts { font-family: sans-serif; font-size: 85%;
                                 color: #555; white-space: normal; }
+    tr:target td.ln { background: #ffd24d; color: #000; font-weight: bold; }
     tr.cov td.txt { background: #dff5dd; }
     tr.unc td.txt { background: #f8d7d7; }
     tr.cov td.pts { color: #2a6; }
@@ -97,6 +99,12 @@ def _page(title, body):
     return ("<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n"
             "<title>%s</title>\n<style>\n%s</style>\n</head>\n<body>\n"
             "%s</body>\n</html>\n" % (_e(title), STYLE, body))
+
+
+def line_anchor(number):
+    """RETURN: str, the anchor of line 'number' on a source's page --
+    'L<number>'; a link '<page>#L<number>' lands on that line."""
+    return "L%i" % number
 
 
 def page_path(source):
@@ -225,9 +233,10 @@ class HtmlVisitor(I_OutputVisitor):
             text = text_list[number - 1] if text_list is not None \
                    and number <= len(text_list) else ""
             line_list.append(
-                "<tr class=\"%s\"><td class=\"ln\">%i</td><td class=\"txt\">%s"
+                "<tr id=\"%s\" class=\"%s\"><td class=\"ln\">%i</td>"
+                "<td class=\"txt\">%s"
                 "</td><td class=\"pts\">%s</td><td class=\"runs\">%s</td></tr>"
-                % (cls, number, _e(text) or " ",
+                % (line_anchor(number), cls, number, _e(text) or " ",
                    _e(", ".join(self.point_db.get(number, ()))),
                    _e(", ".join(self.run_db.get(number, ())))))
         line_list.append("</table>")
@@ -259,8 +268,14 @@ class HtmlVisitor(I_OutputVisitor):
 
 
 def _build(root, summary_list, found, out_dir):
-    """RETURN: str, the closing line: where 'index.html' stands."""
+    """RETURN: str, the closing line: where 'index.html' stands.
+
+    OUTDIR CARRIES THE NO-ENTRY MARKER (exploration R-85): the pages
+    mirror the tree they describe, 'TEST' directories and all, and no
+    walk may take them for tests."""
     page_db = walk(root, summary_list, HtmlVisitor())
+    os.makedirs(out_dir, exist_ok=True)
+    marked_no_entry(out_dir)
     for relative, text in page_db.items():
         path = os.path.join(out_dir, *relative.split("/"))
         os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -3,8 +3,19 @@
 #
 # @hwut {
 #     title      = "The removal faces: a test, or one choice, forgotten."
-#     choices    = ["asking", "choice", "labels", "refused", "stain", "words",
-#                   "unknown", "untouched", "whole", "unbooked"]
+#     features   = ["remove-test"]
+#     choices {
+#         asking    { features = ["remove-asks"] }
+#         choice    { features = ["remove-choice"] }
+#         labels    { features = ["labels-follow"] }
+#         refused   { features = ["face-refusal-by-name"] }
+#         stain     { features = ["remove-takes-stain"] }
+#         words     { features = ["remove-choice"] }
+#         unknown   { features = ["remove-unknown-no-error"] }
+#         untouched { features = ["remove-author-untouched"] }
+#         whole     { }
+#         unbooked  { }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

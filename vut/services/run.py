@@ -81,7 +81,8 @@ from   vut.engine.display.console                    import USAGE_TOKEN_TUPLE \
                                                              as RENDERING_TOKEN_TUPLE
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                    import RootConfMissing
+                                                    import (RootConfMissing,
+                                                            path_from_root_conf)
 from   vut.services.lib.labels                          import view_at
 from   vut.services.lib.labels._file                    import LabelFileError
 from   vut.engine.orchestrator.plan.wish             import (HELP as WISH_HELP,
@@ -563,7 +564,8 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color,
                             write_wallflowers=wallflowers_writer(write_error),
-                            root=directory, started_at=started_at)
+                            root=directory, started_at=started_at,
+                            here_name=path_from_root_conf(directory))
         try:
             tally = do(request, sink=event_sink, flow=flow, write=write)
         except FaceError as error:

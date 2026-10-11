@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Amending an author's header or conf: one implementation, any language"
+#     features   = ["header-amended"]
 #     choices    = ["languages", "replace", "conf", "remove"]
 #     tolerance { comment = []  analogy = [] }
 # }

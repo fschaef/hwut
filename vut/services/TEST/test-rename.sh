@@ -3,7 +3,12 @@
 #
 # @hwut {
 #     title      = "The rename face: the boundary records follow the name."
-#     choices    = ["labels", "across", "notes"]
+#     features   = ["rename-follows-name"]
+#     choices {
+#         labels { features = ["labels-follow", "rename-follows-name", "rename-collision-refused"] }
+#         across { features = ["rename-across-directories", "labels-follow", "move-is-rename"] }
+#         notes  { features = ["rename-says-never-edits"] }
+#     }
 #     tolerance { eq_pattern = ["-- [0-9]+ file\\(s\\)"] }
 # }
 #

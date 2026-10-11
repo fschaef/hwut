@@ -3,7 +3,7 @@ spec/23-features -- FEATURES: what a tree claims to do, and which test
                     runs prove it
 ==============================================================================
 
-VERSION: 4
+VERSION: 7
 
 COMPONENTS: engine/bookkeeper, engine/orchestrator/exploration,
             engine/coverage, services.
@@ -17,6 +17,14 @@ every face that moves, renames or removes relies on ONE adaption.
 'to-parent' and 'parts' of version 1 are gone.
 VERSION 4 adds to section 5 the table ('--matrix') and the code a
 feature's runs reached ('--code').
+VERSION 5 takes the rulings of 2026-10-11: a test run without a feature is
+'NONSENSE?' and does not fail; feature files are not mandatory; 'doc' and
+triple quotes; the feature document ('--html', '--ods'); 'hwut.move'
+writes the target's feature file.
+VERSION 6: the feature document holds the tree and leads to the coverage
+pages (services E-147).
+VERSION 7: a feature names documents (exploration R-92); the document's
+tree is interactive (services E-148).
 
     section                                   stands / OWED
     ---------------------------------------------------------------------
@@ -72,6 +80,10 @@ ______________________________________________________________________________
                   file. A name may change; the number stays.
     title         one sentence: what the software does.
     explanation   free text.
+    documents     where more is said: a list of paths from this file's
+                  directory ('#<anchor>' may follow), or URLs --
+                  documents = ["../README.txt#3"]. Printed as 'see' under
+                  the feature; links in the feature document.
 
 A feature number means something inside its own file only. Across the tree
 a feature is addressed as '<path>#<number> <name>', composed by whoever
@@ -155,12 +167,16 @@ runs and their verdicts, each component with its id and its counts.
     'as child'    what the 'childs' of the directory above says of its id
 
 OUTSIDE THE RELATION, named below the tree: a test run naming a feature its
-TEST directory does not define; a test run linking to no feature (where the
-directory carries a feature file); a TEST directory without a feature file,
-with the count of its test runs; a component without a composition file; a
-statement that is not read; and every disagreement of section 6.
+TEST directory does not define; 'NONSENSE?' -- a test run linking to no
+feature, where the directory states features; a component without a
+composition file; a statement that is not read; and every disagreement of
+section 6.
 
-FEATURE FILES ALONE ARE COMPLETE (services E-144, NOT RULED): components
+'NONSENSE?' IS NO FAILURE (services E-145): the run's verdict stands,
+'hwut.run' says nothing of it, 'hwut.help' explains the word. FEATURE FILES
+ARE NOT MANDATORY: a TEST directory without one is named nowhere.
+
+FEATURE FILES ALONE ARE COMPLETE (services E-144, ruled): components
 without a composition file, and the disagreements of section 6, are named
 only where the tree relates by id -- a composition file stands in it or
 directly above it, or a feature file states 'id' or 'parent'.
@@ -171,12 +187,14 @@ carries a feature file:
     engine/compare/core/TEST  #1    #2    #3
     test-pair.sh [plain]      PASS  .     .
     test-pair.sh [gap]        FAIL  FAIL  .
-    test-pair.sh [odd]        .     .     .     <- no feature
+    test-pair.sh [odd]        .     .     .     <- NONSENSE?
     test-stray.sh             .     .     .     <- no feature defined
                                           ^     no test run
       #1 line-pairing  FAILING
       #2 missing-side  FAILING
       #3 untested      UNPROVEN
+
+    ('<- NONSENSE?' behind a run that links to no feature)
 
     row      a test run; column: a feature; cell: the run's verdict where
              it links
@@ -194,6 +212,34 @@ nearest 'hwut.coverage/' from the directory upward):
     A hint where to look. What is 'only' depends on what else the coverage
     run measured. Sources standing in a TEST directory are left out.
     No coverage output: a NOTE, and the page without code.
+
+'--html=<file>' and '--ods=<file>' write THE FEATURE DOCUMENT (services
+E-146) in place of the page -- one self-contained HTML page, or an
+OpenDocument spreadsheet -- with four tabs:
+
+    Matrix     feature id, brief (title), state, implemented by (the linked
+               test runs and their verdicts)
+    Tree       component -> components below -> TEST directory -> features,
+               each component with title and counts
+    Features   feature id, name, title, explanation, component, state
+    Tests      test file, title, 'doc', test runs and verdicts, features
+
+    feature id in 'Matrix'  ->  its row in 'Features'
+    test run in 'Matrix'    ->  its test's row in 'Tests'
+    feature in 'Tree'       ->  its row in 'Features'
+
+    THE TREE IS INTERACTIVE (E-148): the page unfolds and folds all
+    levels, shows the features of chosen states and those whose line holds
+    a word; the spreadsheet carries the levels as row groups.
+    A feature's 'documents' stand in 'Features' as links.
+
+    With '--code' or '--cov-dir' the 'Features' tab carries the code only a
+    feature's runs reached. With '--cov-html=<dir>' -- where
+    'hwut.cov.conv.to_html' wrote its pages -- each source is a RELATIVE
+    link '<dir>/<source>.html#L<line>'.
+
+'doc' is a key of the test's block beside 'title' (exploration R-90): what
+the test is about, written in triple quotes over as many lines as it takes.
 
 
 6  THE JUDGEMENT, AND WHAT SANITIZATION PROPOSES
@@ -255,8 +301,8 @@ implementation behind 'relate', 'unrelate', 'hwut.move', 'hwut.rename' and
                           test that stays still links to it. Defined alike
                           in both: taken out of the source with its last
                           link. Defined differently: both stand, and said.
-                          No feature file in the target: nothing carried,
-                          and said.
+                          No feature file in the target: it is WRITTEN
+                          (R-91).
     hwut.rename, within   nothing to adapt: the link is the block's, and
     a directory           the block is the author's (services E-48)
     hwut.remove           the features left without a linked run are named
@@ -287,15 +333,13 @@ author's and are issued by nobody.
 9  OPEN
 ______________________________________________________________________________
 
-    o-3  Whether test runs that link to no feature make the report exit
-         with a failure. BUILT: listed only, exit 0.
+    o-3  CLOSED 2026-10-11 (E-145): a test run that links to no feature is
+         'NONSENSE?' and no failure; exit 0.
     o-5  Whether 'hwut.run' prints a one-line count of unresolved links at
          its end, as it does for other hints.
     o-6  A feature without a number ('fresh { name = "..." }') is read and
          reported '#-'; nothing numbers it yet (version 1's F-4).
-    o-8  NEW: 'hwut.move' carries a feature only where the target TEST
-         directory carries a feature file. Whether it shall WRITE one
-         (id, parent, issued) where none stands.
+    o-8  CLOSED 2026-10-11 (R-91): 'hwut.move' writes the feature file.
     o-9  NEW: the sentence forms  parent { <id> = "..." }  and
          childs { <id> = "..." }  keep version 1's 'to-parent' and 'parts'
          sentences under the ruled attribute names; the bare forms

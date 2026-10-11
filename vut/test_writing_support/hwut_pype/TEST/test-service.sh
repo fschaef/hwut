@@ -3,7 +3,11 @@
 #
 # @hwut {
 #     title      = "The pype service called as a shell citizen -- its natural habitat."
-#     choices    = ["absent_script", "exit_code", "filter"]
+#     choices {
+#         absent_script { features = ["exit-status"] }
+#         exit_code     { features = ["exit-status", "script-faults-located"] }
+#         filter        { features = ["pipe-filter", "file-boundaries"] }
+#     }
 #     #  THE PLATFORM'S WORDS ARE NOT PYPE'S. After 'pype: ' the line
 #     #  is the operating system's and Python's: the errno number, the
 #     #  'strerror' phrase (locale-bound: "No such file or directory"

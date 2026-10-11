@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "Tree walk: markers found, configuration folded down"
-#     choices    = ["inherit", "locals", "marker", "root",
-#                   "stream", "walk"]
+#     choices {
+#         inherit { features = ["configuration-inherited"] }
+#         locals  { features = ["local-keys-do-not-flow"] }
+#         marker  { features = ["marker-name-inherited"] }
+#         root    { features = ["tree-walked"] }
+#         stream  { features = ["tree-walked"] }
+#         walk    { features = ["tree-walked"] }
+#     }
 #     interactive = true
 # }
 #

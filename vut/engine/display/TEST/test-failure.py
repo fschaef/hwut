@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "The failure table: one entry per reason a case fails"
-#     choices    = ["brief", "explain", "total"]
+#     choices {
+#         brief   { features = ["failure-table"] }
+#         explain { features = ["failure-table"] }
+#         total   { features = ["failure-table"] }
+#     }
 #     interactive = true
 # }
 #

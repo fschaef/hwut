@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Defaults: declared by the owner, related by us"
+#     features   = ["defaults-related-to-owner", "unrelated-parameter-refused", "complete-configuration", "record-keeps-chosen"]
 #     choices    = ["declared", "instantiate", "merge", "refused",
 #                   "table"]
 #     interactive = true

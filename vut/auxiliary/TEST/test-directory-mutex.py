@@ -2,8 +2,16 @@
 #
 # @hwut {
 #     title      = "The directory mutex: one live holder, asked liveness, named refusals"
-#     choices    = ["age", "dead", "foreign", "ground", "hold_timeout",
-#                   "reentry", "taken", "waiting"]
+#     choices {
+#         age          { features = ["holder-age"] }
+#         dead         { features = ["dead-holder-broken"] }
+#         foreign      { features = ["foreign-holder-busy", "wait-policy"] }
+#         ground       { features = ["ground-left-as-found"] }
+#         hold_timeout { features = ["hold-allowance"] }
+#         reentry      { features = ["non-recursive"] }
+#         taken        { features = ["one-live-holder"] }
+#         waiting      { features = ["wait-policy"] }
+#     }
 #     interactive = true
 # }
 #

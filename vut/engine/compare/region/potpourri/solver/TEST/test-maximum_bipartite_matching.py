@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "Bipartite Matching: Augmenting Path Algorithm"
-#     choices    = ["basic", "chain", "stress"]
+#     choices {
+#         basic  { features = ["maximum-matching"] }
+#         chain  { features = ["maximum-matching", "long-augmenting-paths"] }
+#         stress { features = ["maximum-matching"] }
+#     }
 # }
 #
 import sys

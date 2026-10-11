@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "The translation: stated parameters reach their owners"
-#     choices    = ["caps", "caps_inherit", "compare", "constraints",
-#                   "naming", "refused", "sweep"]
+#     choices {
+#         caps         { features = ["caps-inherited"] }
+#         caps_inherit { features = ["caps-inherited"] }
+#         compare      { features = ["parameters-reach-owners"] }
+#         constraints  { features = ["constraints-enforced"] }
+#         naming       { features = ["parameters-reach-owners"] }
+#         refused      { features = ["translation-refused"] }
+#         sweep        { features = ["parameters-reach-owners"] }
+#     }
 #     interactive = true
 # }
 #

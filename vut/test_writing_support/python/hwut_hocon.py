@@ -22,9 +22,13 @@ ambiguity, and 'yes' is a boolean while 'yes please' is a string. The quotes
 are no burden once one is used to them, and they say plainly where a value
 begins and ends.
 
-REFUSED BY NAME, each with a fault: 'include', substitutions '${...}',
-'+=', and triple-quoted strings. The first two would let a specification
-refer outside its file.
+A TEXT OF SEVERAL LINES IS WRITTEN IN TRIPLE QUOTES (ruled, Frank-Rene,
+2026-10-11): from three double quotes to the next three, as written -- no
+escape is resolved -- and laid out as a docstring is: the common
+indentation removed, blank lines at its beginning and end dropped.
+
+REFUSED BY NAME, each with a fault: 'include', substitutions '${...}' and
+'+='. The first two would let a specification refer outside its file.
 
 The parser accumulates faults and recovers at the next line; it never
 raises. The annotated tree lives between this parser and the validator and
@@ -33,6 +37,7 @@ ______________________________________________________________________________
 """
 import re
 
+from inspect     import cleandoc
 from dataclasses import dataclass, field
 from enum        import Enum, auto
 
@@ -128,6 +133,7 @@ _TOKEN_RE = re.compile(r'[^\s{}\[\]=,:"#]*')
 _QUOTED_PLAIN_RE = re.compile(r'([^"\\\n]*)"')
 
 _ESCAPE_DB = {"n": "\n", "t": "\t", '"': '"', "\\": "\\"}
+_TRIPLE_QUOTE = '"' * 3
 
 
 
@@ -372,11 +378,8 @@ def _parse_value(cursor, file, fault_list, in_list_f=False):
             cursor.skip(1)
             return _parse_list(cursor, position, file, fault_list)
         case '"' if cursor.peek(1) == '"' and cursor.peek(2) == '"':
-            fault_list.append(ParseFault(
-                E_ParseFault.REFUSED, file, position,
-                "triple-quoted strings do not exist here"))
-            cursor.skip_line()
-            return None
+            value = _parse_triple_quoted(cursor, file, fault_list)
+            return None if value is None else ScalarNode(value, position)
         case '"':
             value = _parse_quoted(cursor, file, fault_list)
             return None if value is None else ScalarNode(value, position)
@@ -427,6 +430,35 @@ def _parse_list(cursor, position, file, fault_list):
                 if item is None and (cursor.i_line, cursor.i_col) == before:
                     cursor.skip(1)
     return ListNode(tuple(item_list), position)
+
+
+def _parse_triple_quoted(cursor, file, fault_list):
+    """
+    RETURN: str,  the text between three double quotes and the next
+                  three, over as many lines as it takes, taken AS
+                  WRITTEN (no escape is resolved) and then laid out as a
+                  docstring is: the indentation common to its lines
+                  removed, blank lines at its beginning and end dropped
+                  ('inspect.cleandoc').
+            None, no closing three quotes stand before the text's end
+                  (fault recorded).
+    """
+    begin = cursor.position()
+    cursor.skip(3)
+    piece_list = []
+    while not cursor.at_end():
+        text = cursor.text
+        end  = text.find(_TRIPLE_QUOTE, cursor.i_col)
+        if end >= 0:
+            piece_list.append(text[cursor.i_col:end])
+            cursor.i_col = end + 3
+            return cleandoc("\n".join(piece_list))
+        piece_list.append(text[cursor.i_col:])
+        cursor.skip_line()
+    fault_list.append(ParseFault(
+        E_ParseFault.SYNTAX, file, begin,
+        "unterminated triple-quoted string: closing '\"\"\"' missing"))
+    return None
 
 
 def _parse_quoted(cursor, file, fault_list):

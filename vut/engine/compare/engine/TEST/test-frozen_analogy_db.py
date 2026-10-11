@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "FrozenAnalogyDb Validation Suite"
-#     choices    = ["consistency", "flyweight", "hybrid_masks",
-#                   "immutability", "member_functions"]
+#     choices {
+#         consistency      { features = ["analogy-db-consistency"] }
+#         flyweight        { features = ["analogy-db-flyweight"] }
+#         hybrid_masks     { features = ["analogy-db-hybrid"] }
+#         immutability     { features = ["analogy-db-immutable"] }
+#         member_functions { features = ["analogy-db-consistency"] }
+#     }
 # }
 #
 """

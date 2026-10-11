@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "Accept: write the nominal"
-#     choices    = ["all_or_nothing", "initiate", "ledger", "pulls_run",
-#                   "stderr", "take_dump", "the_loop"]
+#     choices {
+#         all_or_nothing { features = ["accept-all-or-nothing"] }
+#         initiate       { features = ["initiate-stores-session-stream"] }
+#         ledger         { features = ["acceptance-booked-undated"] }
+#         pulls_run      { features = ["accept-pulls-provision"] }
+#         stderr         { features = ["accept-refuses-undeclared-stderr", "stderr-stain-cleared"] }
+#         take_dump      { features = ["dump-replaces-nominal"] }
+#         the_loop       { features = ["dump-replaces-nominal", "verdict-from-comparison"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

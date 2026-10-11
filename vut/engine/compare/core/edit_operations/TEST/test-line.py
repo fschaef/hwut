@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Lines"
-#     choices    = ["analogies", "basic", "special", "visible-nothing"]
+#     choices {
+#         analogies       { features = ["required-analogies"] }
+#         basic           { features = ["line-edit-operations"] }
+#         special         { features = ["line-edit-operations"] }
+#         visible-nothing { features = ["visible-nothing-good-skip"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

@@ -6,6 +6,7 @@ PURPOSE: THE 'hwut.report.features' COMMAND LINE -- print what the tree
          component -> part -> feature -> test runs and their verdicts.
 
     hwut.report.features [--matrix] [--code] [--cov-dir=<dir>]
+                         [--html=<file>] [--ods=<file>] [--cov-html=<dir>]
                          [--directory=<path>]
 
 THE THREE STATEMENTS READ
@@ -47,7 +48,7 @@ feature, the run's verdict where it links:
     <path>/TEST                    #1    #2    #3
     test-pair.sh [plain]           PASS  .     .
     test-pair.sh [gap]             FAIL  FAIL  .
-    test-pair.sh [odd]             .     .     .     <- no feature
+    test-pair.sh [odd]             .     .     .     <- NONSENSE?
                                                ^ no test run
       #1 line-pairing   FAILING
       #2 missing-side   FAILING
@@ -72,12 +73,49 @@ from the directory upward. Under each feature that has a linked run:
     A hint where to look, not a proof where the feature is implemented.
     The test applications' own lines are left out.
 
+--html=<file>, --ods=<file>: THE FEATURE DOCUMENT, for somebody else to
+open -- one self-contained HTML page, or an OpenDocument spreadsheet.
+Four tabs:
+
+    Matrix     a row per feature: id, brief (its title), state, and the
+               test runs that implement it with their verdicts
+    Tree       the features where they stand: component, the components
+               below it, its TEST directory, the features; a component
+               with its title and the counts summed from below
+    Features   a row per feature: name, title, explanation, component
+    Tests      a row per test application: file, title, 'doc', its test
+               runs with their verdicts ('NONSENSE?' behind one that
+               links to no feature), its features
+
+    A feature's id in 'Matrix' leads to its row in 'Features'; a test
+    run leads to its test's row in 'Tests'. Only TEST directories that
+    state features are in it. The file is written, one line says so, and
+    the tree is not printed; both may be asked at once.
+
+    WITH '--code' OR '--cov-dir=<dir>' the 'Features' tab carries, per
+    feature, the source lines its test runs executed and no other
+    measured run did. WITH '--cov-html=<dir>' -- the directory
+    'hwut.cov.conv.to_html' wrote its pages into -- each such source is
+    a link to its coverage page, at the first of those lines. The link
+    is RELATIVE: the document and the pages travel together.
+
+A FEATURE MAY NAME DOCUMENTS where more is said of it:
+
+    1 { name      = "forward"
+        title     = "A CAN frame is forwarded to its MOST address."
+        documents = ["../README.txt", "../spec/routing.txt#3"] }
+
+    Paths from the feature file's directory ('#<anchor>' may follow), or
+    URLs. The page prints each under the feature as 'see <path>'; the
+    feature document makes each a link.
+
 OUTSIDE THE RELATION, named below the tree:
 
     a test run that names a feature its TEST directory does not define
-    a test run that links to no feature, in a TEST directory that
-        carries a feature file
-    a TEST directory without 'hwut-features.conf'
+    NONSENSE?  a test run that links to no feature, in a TEST
+        directory that states features. No failure -- its verdict
+        stands; 'hwut.help' says what the word means.
+    a feature whose 'documents' names a file that does not stand
     a component without 'hwut-composition.conf'
     'parent' and 'childs' that disagree with where a directory stands
     what a feature or composition file states that cannot be read
@@ -103,10 +141,12 @@ from   vut.engine.orchestrator.exploration.feature_relation \
                                          FEATURE_FILE_NAME, STATE_TUPLE,
                                          GONE, MOVED, NO_ID, PARENT, TWIN,
                                          UNJUDGED, UNLISTED,
+                                         document_place,
                                          id_relation_used_f, mismatch_list,
                                          relation_of_tree)
 
 USAGE = ("usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] "
+         "[--html=<file>] [--ods=<file>] [--cov-html=<dir>] "
          "[--directory=<path>] [--help]")
 
 _INDENT = "    "
@@ -118,11 +158,16 @@ class Request:
     """WHAT WAS ASKED of 'hwut.report.features': the directory whose
     tree is reported; 'matrix_f' the links as tables in place of the
     tree; 'code_f' the code each feature's runs went through, read from
-    'cov_dir' or the nearest coverage output."""
+    'cov_dir' or the nearest coverage output; 'html_path' and 'ods_path'
+    the files the feature document is written to, in place of the
+    page."""
     directory: str        = "."
     matrix_f:  bool       = False
     code_f:    bool       = False
     cov_dir:   str | None = None
+    html_path: str | None = None
+    ods_path:  str | None = None
+    cov_html:  str | None = None     # where the coverage pages stand
 
 
 @dataclass(frozen=True)
@@ -205,7 +250,7 @@ def _code_line_list(code, depth):
     if code is None: return []
     lead      = _INDENT * depth
     line_list = ["%scode only    %s: %s" % (lead, source, span_text(spans))
-                 for source, spans in code.only_tuple]
+                 for source, spans, _ in code.only_tuple]
     if code.shared_line_n:
         line_list.append("%scode shared  %i line(s) in %i file(s)"
                          % (lead, code.shared_line_n, code.shared_file_n))
@@ -223,7 +268,7 @@ def matrix_line_list(relation, path):
     """RETURN: list[str], the links of one TEST directory as a table:
     a row per test run, a column per feature ('#<number>', '#-' where
     it carries none), the run's verdict where it links and '.' where it
-    does not; '<- no feature' behind a run that links to none, '<- no
+    does not; '<- NONSENSE?' behind a run that links to none, '<- no
     feature defined' behind one that names only what the directory does
     not define, '^ no test run' under a feature nobody proves; then the
     features by
@@ -264,7 +309,7 @@ def matrix_line_list(relation, path):
                              "" if linked
                              else "  <- no feature defined"
                              if key in undefined
-                             else "  <- no feature"))
+                             else "  <- NONSENSE?"))
     if any(not each.run_tuple for each in state_tuple):
         line_list.append(row("", ["^" if not each.run_tuple else ""
                                   for each in state_tuple],
@@ -287,6 +332,9 @@ def feature_name(feature):
 #  THE CODE OF THE FEATURES, where '--code' asked for it: read once by
 #  'do' and looked up by the lines of each TEST directory.
 relation_code_db = None
+#  THE DIRECTORY THE RELATION WAS ASKED IN, for the documents a feature
+#  names: set and cleared by 'do'.
+relation_root    = None
 
 
 def _test_directory_line_list(relation, path, depth):
@@ -306,6 +354,11 @@ def _test_directory_line_list(relation, path, depth):
         line_list += ["%s[%s] %s" % (_INDENT * (depth + 2), run.verdict,
                                      run_text(path, run.test, run.choice))
                       for run in each.run_tuple]
+        line_list += ["%ssee          %s%s"
+                      % (_INDENT * (depth + 2), place, anchor)
+                      for place, anchor, _ in (
+                          document_place(path, document)
+                          for document in each.feature.document_tuple)]
         line_list += _code_line_list(
             (relation_code_db or {}).get((path, each.feature.key)),
             depth + 2)
@@ -355,18 +408,24 @@ def _outside_line_list(relation):
     """RETURN: list[str], what stands outside the relation, one block
     per kind, a kind with nothing to name left out; empty where
     everything stands inside."""
-    undefined, unlinked, bare_test, bare_component, fault = [], [], [], [], []
+    undefined, unlinked, bare_component, fault = [], [], [], []
+    absent = []
     for path in sorted(relation.test_directory_db):
         each = relation.test_directory_db[path]
-        if each.feature_file is None:
-            #  ITS TEST RUNS ARE COUNTED, not named: none of them can
-            #  link, and a tree that states no features would name
-            #  every test it has (E-144).
-            bare_test.append("%s   %i test run(s)"
-                             % (path, len(each.run_tuple)))
-        else:
+        #  A TEST DIRECTORY WITHOUT A FEATURE FILE IS NOT NAMED: feature
+        #  files are not mandatory (ruled 2026-10-11, E-144).
+        if each.feature_file is not None:
             unlinked += [run_text(path, test, choice)
                          for test, choice in each.unlinked_tuple]
+            for state in each.state_tuple:
+                for document in state.feature.document_tuple:
+                    place, _, url_f = document_place(path, document)
+                    if url_f or relation_root is None: continue
+                    if not os.path.exists(os.path.join(relation_root,
+                                                       place)):
+                        absent.append("%s   '%s'"
+                                      % (feature_text(path, state.feature),
+                                         document))
             fault += ["%s/%s" % (path, f) if path != "." else "%s" % f
                       for f in each.feature_file.fault_tuple]
         undefined += ["%s   '%s'" % (run_text(path, test, choice), name)
@@ -385,8 +444,9 @@ def _outside_line_list(relation):
     for head, entry_list in (
             ("test run, names a feature its TEST directory does not "
              "define", undefined),
-            ("test run, links to no feature", unlinked),
-            ("TEST directory, no '%s'" % FEATURE_FILE_NAME, bare_test),
+            ("NONSENSE? test run, links to no feature => hwut.help",
+             unlinked),
+            ("feature, names a document that does not stand", absent),
             ("component, no '%s'" % COMPOSITION_FILE_NAME, bare_component),
             ("statement, not read", fault),
             ("'parent' and 'childs', not as the directories stand => "
@@ -410,7 +470,7 @@ def do(request):
 
     IT NEVER PRINTS (E-101).
     """
-    global relation_code_db
+    global relation_code_db, relation_root
     directory = request.directory or "."
     if not os.path.isdir(directory):
         raise Refused("REFUSED: the directory '%s' does not exist"
@@ -422,6 +482,17 @@ def do(request):
         raise Refused("REFUSED: %s" % error) from error
     if not relation.test_directory_db:
         raise Empty("EMPTY: no TEST directory below '%s'" % directory)
+
+    count_db = dict.fromkeys(STATE_TUPLE, 0)
+    for path in relation.test_directory_db:
+        for state, n in relation.count_of(path).items():
+            count_db[state] += n
+    count_tuple = tuple((state, count_db[state]) for state in STATE_TUPLE)
+
+    if request.html_path or request.ods_path:
+        return Result(tuple(_document_written(relation, request, root)),
+                      count_tuple)
+    relation_root = root
 
     note_list        = []
     relation_code_db = None
@@ -445,13 +516,54 @@ def do(request):
     line_list  = note_list + line_list
     line_list += _outside_line_list(relation)
     relation_code_db = None
+    relation_root    = None
+    return Result(tuple(line_list), count_tuple)
 
-    count_db = dict.fromkeys(STATE_TUPLE, 0)
-    for path in relation.test_directory_db:
-        for state, n in relation.count_of(path).items():
-            count_db[state] += n
-    return Result(tuple(line_list),
-                  tuple((state, count_db[state]) for state in STATE_TUPLE))
+
+def _document_written(relation, request, root):
+    """
+    RETURN: list[str], one line per file of the feature document
+            written: "'<file>' written -- <n> feature(s), <m> test(s)";
+            before them the NOTE that says why no code is in it, where
+            code was asked and no coverage output could be read
+
+    RAISES: Refused, where a file cannot be written, or '--cov-html'
+            names no directory.
+    """
+    from vut.services.lib.report.feature_document import (document_of,
+                                                          html_text,
+                                                          ods_bytes)
+    line_list, code_db = [], None
+    if request.code_f or request.cov_dir or request.cov_html:
+        code_db, note = _code_db(relation, root, request.cov_dir)
+        if note: line_list.append(note)
+    if request.cov_html and not os.path.isdir(request.cov_html):
+        raise Refused("REFUSED: '%s' is no directory -- '--cov-html' names "
+                      "where 'hwut.cov.conv.to_html' wrote its pages"
+                      % request.cov_html)
+    for path, content in ((request.html_path, html_text),
+                          (request.ods_path,  ods_bytes)):
+        if not path: continue
+        #  THE WAY TO THE PAGES IS FROM WHERE THE DOCUMENT STANDS.
+        page_base = None if not request.cov_html else os.path.relpath(
+            os.path.abspath(request.cov_html),
+            os.path.dirname(os.path.abspath(path))).replace(os.sep, "/") + "/"
+        root_base = os.path.relpath(
+            root, os.path.dirname(os.path.abspath(path))).replace(os.sep, "/")
+        document = document_of(relation, code_db, page_base,
+                               "" if root_base == "." else root_base + "/")
+        found    = content(document)
+        try:
+            with open(path, "wb") as handle:
+                handle.write(found if isinstance(found, bytes)
+                             else found.encode("utf-8"))
+        except OSError as error:
+            raise Refused("REFUSED: '%s' cannot be written (%s)"
+                          % (path, error.strerror)) from error
+        line_list.append("'%s' written -- %i feature(s), %i test(s)"
+                         % (path, len(document.feature_tuple),
+                            len(document.test_tuple)))
+    return line_list
 
 
 def _code_db(relation, root, cov_dir):
@@ -496,6 +608,8 @@ def main(argv=None, write=None):
     if argv  is None: argv  = sys.argv[1:]
     directory = "."
     matrix_f, code_f, cov_dir = False, False, None
+    html_path, ods_path       = None, None
+    cov_html                  = None
     for word in argv:
         if word == "--help":
             from vut.services._core import man_page
@@ -512,12 +626,25 @@ def main(argv=None, write=None):
             code_f = True
         elif word.startswith("--cov-dir="):
             cov_dir = word[len("--cov-dir="):]
+        elif word.startswith("--html=") and word[len("--html="):]:
+            html_path = word[len("--html="):]
+        elif word.startswith("--ods=") and word[len("--ods="):]:
+            ods_path = word[len("--ods="):]
+        elif word.startswith("--cov-html=") and word[len("--cov-html="):]:
+            cov_html = word[len("--cov-html="):]
         else:
             write("REFUSED: 'hwut.report.features' does not take '%s'"
                   % word)
             write(USAGE)
             return E_ExitCode.REFUSED
-    return answered(do, Request(directory, matrix_f, code_f, cov_dir),
+    if cov_html and not (html_path or ods_path):
+        write("REFUSED: '--cov-html' links the feature document to the "
+              "coverage pages; name the document with '--html=<file>' or "
+              "'--ods=<file>'")
+        write(USAGE)
+        return E_ExitCode.REFUSED
+    return answered(do, Request(directory, matrix_f, code_f, cov_dir,
+                                html_path, ods_path, cov_html),
                     write, printed, USAGE)
 
 

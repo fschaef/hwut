@@ -3,7 +3,12 @@
 #
 # @hwut {
 #     title      = "hwut.labels.remove: take a label off what a wish selects."
-#     choices    = ["comments", "delete", "doors", "take"]
+#     choices {
+#         comments { features = ["comments-travel"] }
+#         delete   { features = ["stateless-wish-refused", "empty-label-deleted"] }
+#         doors    { features = ["stateless-wish-refused", "remove-refuses-absent"] }
+#         take     { features = ["remove-takes-off"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

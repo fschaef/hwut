@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "The binary spelling of the coverage record"
-#     choices    = ["faults", "large", "measures", "witnessed"]
+#     choices {
+#         faults    { features = ["binary-faults-named"] }
+#         large     { features = ["binary-same-record"] }
+#         measures  { features = ["binary-same-record"] }
+#         witnessed { features = ["binary-same-record"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

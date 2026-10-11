@@ -1,0 +1,35 @@
+
+--- several lines: indentation and blank ends go ---
+{ at 1:1
+  key 'doc' at 1:1 ->
+    'First line.\n\n  indented more\nlast line' (str) at 1:7
+  key 'after' at 7:1 ->
+    1 (int) at 7:9
+}
+
+--- on one line; beside another entry; in a list ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    'one line' (str) at 1:5
+  key 'b' at 1:21 ->
+    2 (int) at 1:25
+  key 'c' at 2:1 ->
+    [ at 2:5
+        'x' (str) at 2:6
+        'y' (str) at 2:15
+    ]
+}
+
+--- as written: a quote, a backslash-n, a comment marker ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    'says "no" \\n # not a comment' (str) at 1:5
+}
+
+--- never closed: a fault, at its beginning ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    1 (int) at 1:5
+}
+FAULT f.hocon:2:5: SYNTAX: unterminated triple-quoted string: closing '"""' missing
+<hwut-end>

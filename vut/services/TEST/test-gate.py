@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "hwut.run admits by the nominal (E-41)"
-#     choices    = ["backup_shaped", "new_choice", "not_accepted",
-#                   "plan_agrees", "registered"]
+#     features   = ["run-gate-nominal"]
+#     choices {
+#         backup_shaped { features = ["run-backup-refused"] }
+#         new_choice    { }
+#         not_accepted  { }
+#         plan_agrees   { features = ["plan-agrees-with-run"] }
+#         registered    { }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

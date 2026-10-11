@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "UI Feeder Protocol (Comprehensive)"
-#     choices    = ["potpourri", "structure", "types"]
+#     choices {
+#         potpourri { features = ["ui-potpourri-structure"] }
+#         structure { features = ["ui-sequence-structure"] }
+#         types     { features = ["ui-element-status"] }
+#     }
 #     interactive = true
 # }
 #

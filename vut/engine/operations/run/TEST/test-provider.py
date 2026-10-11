@@ -2,7 +2,14 @@
 #
 # @hwut {
 #     title      = "The provider seam: one interface per role, refused at the door"
-#     choices    = ["cadence", "door", "foreign", "live", "roles", "scheme"]
+#     choices {
+#         cadence { features = ["cadence-in-delivery"] }
+#         door    { features = ["wrong-slot-refused"] }
+#         foreign { features = ["local-and-proxy-alike"] }
+#         live    { features = ["raw-stream-live"] }
+#         roles   { features = ["wrong-slot-refused"] }
+#         scheme  { features = ["local-and-proxy-alike"] }
+#     }
 #     interactive = true
 # }
 #

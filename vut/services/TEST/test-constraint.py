@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title   = "Constraints as a verdict: the run, the book, the GOOD (E-123)"
-#     choices = ["accept", "cleared", "diff", "good", "interactive",
-#                "output", "sanitize", "tightened"]
+#     features = ["run-constraint-verdict"]
+#     choices {
+#         accept      { features = ["accept-constraint-refused"] }
+#         cleared     { features = ["run-constraint-stain-cleared"] }
+#         diff        { features = ["diff-constraint-finding"] }
+#         good        { }
+#         interactive { features = ["accept-constraint-refused"] }
+#         output      { }
+#         sanitize    { features = ["sanitize-constraints"] }
+#         tightened   { }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

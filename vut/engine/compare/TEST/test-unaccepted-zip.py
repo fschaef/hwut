@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The zip beside an 'unaccepted' region (C-10)"
+#     features   = ["unaccepted-zip"]
 #     choices    = ["posttake", "token", "virgin"]
 #     tolerance { regions = false }
 # }

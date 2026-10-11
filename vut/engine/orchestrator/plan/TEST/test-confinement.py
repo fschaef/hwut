@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title   = "Confinement: an unenforceable cap refuses the case, unless acknowledged"
-#     choices = ["acknowledged", "gate", "reason", "required"]
+#     choices {
+#         acknowledged { features = ["cap-lack-acknowledged"] }
+#         gate         { features = ["unenforceable-cap-refused", "cap-lack-acknowledged"] }
+#         reason       { features = ["unenforceable-cap-refused"] }
+#         required     { features = ["required-caps"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

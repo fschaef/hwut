@@ -2,9 +2,17 @@
 #
 # @hwut {
 #     title      = "Validator: plain tree, or refusal by name"
-#     choices    = ["choiceless", "conf", "exclusivity", "header",
-#                   "list_form", "off", "root_only", "types",
-#                   "vocabulary"]
+#     choices {
+#         choiceless  { features = ["specification-shape"] }
+#         conf        { features = ["directory-keys"] }
+#         exclusivity { features = ["conf-root-no-test-parameter"] }
+#         header      { features = ["specification-shape", "record-keeps-chosen"] }
+#         list_form   { features = ["specification-shape"] }
+#         off         { features = ["absence-is-not-off"] }
+#         root_only   { features = ["root-only-parameters"] }
+#         types       { features = ["value-shape-refused"] }
+#         vocabulary  { features = ["unknown-key-refused", "title-stands-in"] }
+#     }
 #     interactive = true
 # }
 #

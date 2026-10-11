@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Subject provision: the one channel"
+#     features = ["subject-channel-decides"]
 #     choices    = ["bare", "executes", "loads", "production_false",
 #                   "records", "stale"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }

@@ -3,7 +3,11 @@
 #
 # @hwut {
 #     title      = "hwut.labels.add: grow a STANDING label."
-#     choices    = ["doors", "grow", "standard"]
+#     choices {
+#         doors    { features = ["reserved-names-refused", "stateless-wish-refused", "add-refuses-absent"] }
+#         grow     { features = ["add-grows"] }
+#         standard { features = ["standard-meta-stands", "labels-accumulate"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

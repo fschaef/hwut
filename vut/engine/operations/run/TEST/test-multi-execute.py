@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "The multi-executor: one application call, many choices"
-#     choices    = ["files", "plugged", "refused", "session", "status",
-#                   "unknown"]
+#     choices {
+#         files   { features = ["session-file-subjects"] }
+#         plugged { features = ["one-call-many-choices", "cadence-in-delivery"] }
+#         refused { features = ["session-needs-registered-capability"] }
+#         session { features = ["one-call-many-choices", "session-record-on-every-choice"] }
+#         status  { features = ["non-zero-status-delivered"] }
+#         unknown { features = ["unknown-choice-survived", "session-record-on-every-choice"] }
+#     }
 #     interactive = true
 # }
 #

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Lines: Permutation LineElement-types"
+#     features   = ["edit-classes"]
 #     choices    = ["different", "different-2", "different-good-2",
 #                   "different-void-2", "same"]
 # }

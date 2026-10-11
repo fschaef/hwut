@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "Wish: keywords read, cases selected"
-#     choices    = ["anchors", "base", "globs", "parsing", "refused"]
+#     choices {
+#         anchors { features = ["time-anchors"] }
+#         base    { features = ["cases-by-base", "base-needs-bookkeeper"] }
+#         globs   { features = ["cases-by-glob"] }
+#         parsing { features = ["wish-keywords"] }
+#         refused { features = ["wish-refused"] }
+#     }
 #     interactive = true
 # }
 #

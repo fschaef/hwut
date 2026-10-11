@@ -3,7 +3,13 @@
 #
 # @hwut {
 #     title      = "hwut.remove.propose and hwut.remove.apply: lost ground, forgotten"
-#     choices    = ["propose", "apply", "veto", "refused"]
+#     features   = ["remove-propose"]
+#     choices {
+#         propose { }
+#         apply   { features = ["remove-apply"] }
+#         veto    { features = ["remove-apply"] }
+#         refused { features = ["face-refusal-by-name"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Table Region: ordered, unordered, key, columns, errors"
-#     choices    = ["columns", "errors", "key", "modes"]
+#     choices {
+#         columns { features = ["table-columns", "region-parameters-nominal"] }
+#         errors  { features = ["region-faults-loud", "malformed-data-asymmetry"] }
+#         key     { features = ["table-rows"] }
+#         modes   { features = ["table-rows"] }
+#     }
 # }
 #
 """'table' region: every line is a row of columns.

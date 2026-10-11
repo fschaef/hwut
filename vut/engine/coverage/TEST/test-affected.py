@@ -2,7 +2,14 @@
 #
 # @hwut {
 #     title      = "hwut.affected: the runs that executed a change"
-#     choices    = ["answer", "bare", "diff", "empty", "help", "refused"]
+#     choices {
+#         answer  { features = ["affected-answer", "affected-rebase", "affected-limit-stated", "affected-exit-status"] }
+#         bare    { features = ["affected-bare"] }
+#         diff    { features = ["diff-read", "diff-strip"] }
+#         empty   { features = ["affected-exit-status", "affected-limit-stated"] }
+#         help    { features = ["affected-help"] }
+#         refused { features = ["affected-exit-status"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

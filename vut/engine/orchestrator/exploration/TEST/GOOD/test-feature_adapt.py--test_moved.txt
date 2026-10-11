@@ -52,7 +52,13 @@ engine/compare/TEST/hwut-features.conf:
 
 --- into a directory without a feature file ---
 test_moved(engine/compare/TEST -> engine/plain/TEST, test-pages.sh)   links ['whole-page']
-    REASON no 'hwut-features.conf' stands in the target directory: 'whole-page' stay(s) defined in the source
+    'hwut-features.conf' written in the target directory
+    feature 'whole-page' -> #1
+engine/plain/TEST/hwut-features.conf:
+    | features {
+    |     issued = 1
+    |     1 { name = "whole-page"  title = "A whole page is judged." }
+    | }
 
 --- a test that links to nothing ---
 test_moved(engine/plain/TEST -> engine/compare/core/TEST, test-plain.sh)   links []

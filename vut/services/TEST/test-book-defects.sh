@@ -3,8 +3,15 @@
 #
 # @hwut {
 #     title   = "Defects found by a reader: each one, on the road the reader took."
-#     choices = ["affected", "constraint-name", "coverage-ground",
-#                "frame-side", "refused-band", "table-sep", "test-directory"]
+#     choices {
+#         affected          { features = ["affected-runs"] }
+#         "constraint-name" { features = ["spec-word-fault"] }
+#         "coverage-ground" { features = ["walk-no-entry"] }
+#         "frame-side"      { features = ["diff-fault-side"] }
+#         "refused-band"    { features = ["run-backup-refused"] }
+#         "table-sep"       { features = ["run-table-separator"] }
+#         "test-directory"  { features = ["run-test-directory-name"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Edit Distance: Line list alignment"
+#     features   = ["line-sequence-alignment"]
 #     choices    = ["nominal", "special", "subject"]
 # }
 #

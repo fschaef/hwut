@@ -3,9 +3,20 @@
 #
 # @hwut {
 #     title      = "The hwut.report.list face: the list, printed and spent."
-#     choices    = ["dirs", "elided", "empty", "labels", "print", "refused",
-#                   "roundtrip", "select", "short-form", "spent",
-#                   "travels"]
+#     features   = ["report-list-print"]
+#     choices {
+#         dirs         { features = ["wish-dir-rules"] }
+#         elided       { features = ["wish-wishlist-elided"] }
+#         empty        { features = ["face-empty-said"] }
+#         labels       { features = ["wish-label-silence"] }
+#         print        { }
+#         refused      { features = ["face-refusal-by-name"] }
+#         roundtrip    { features = ["wish-wishlist-file"] }
+#         select       { features = ["wish-glob"] }
+#         "short-form" { features = ["wish-short-form"] }
+#         spent        { features = ["wish-wishlist-file"] }
+#         travels      { features = ["wish-wishlist-file"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

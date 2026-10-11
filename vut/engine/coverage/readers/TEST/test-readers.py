@@ -2,11 +2,29 @@
 #
 # @hwut {
 #     title      = "The readers: three artifact formats, one record"
-#     choices    = ["absent", "agreement", "aliases", "branches", "calls",
-#                   "cobertura", "gather", "gcov", "ghdl", "go",
-#                   "jacoco", "lcov", "luacov", "native", "psl",
-#                   "python", "resultset", "roles", "ucis", "verilator",
-#                   "witnessed"]
+#     choices {
+#         absent    { features = ["absent-is-not-empty"] }
+#         agreement { features = ["readers-agree"] }
+#         aliases   { features = ["tool-aliases"] }
+#         branches  { features = ["arms-read-and-merged"] }
+#         calls     { features = ["framework-calls", "gcov-late-second-call"] }
+#         cobertura { features = ["cobertura-read"] }
+#         gather    { features = ["harvest-globs"] }
+#         gcov      { features = ["gcov-read"] }
+#         ghdl      { features = ["gcov-serves-vhdl"] }
+#         go        { features = ["go-read"] }
+#         jacoco    { features = ["jacoco-read"] }
+#         lcov      { features = ["lcov-read"] }
+#         luacov    { features = ["luacov-read"] }
+#         native    { features = ["verilator-native-read"] }
+#         psl       { features = ["psl-read"] }
+#         python    { features = ["python-json-read"] }
+#         resultset { features = ["simplecov-read", "readers-agree"] }
+#         roles     { features = ["two-roles"] }
+#         ucis      { features = ["ucis-read"] }
+#         verilator { features = ["verilator-export-read"] }
+#         witnessed { features = ["jacoco-read"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

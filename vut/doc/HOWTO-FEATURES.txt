@@ -37,8 +37,9 @@ below is a CAN-MOST gateway; every excerpt is the output of that tree.
 5   Keeping the relation in order
 6   The table
 7   The code a feature's runs reached
-8   What hwut.run does with all this
-9   Reference
+8   The feature document
+9   What hwut.run does with all this
+10  Reference
 
 
 1  FEATURES AND LINKS
@@ -63,6 +64,13 @@ The feature file lists the features of one TEST directory.
                   the file. The name may change, the number stays.
     title         one sentence: what the software does.
     explanation   free text, optional.
+    documents     where more is said of the feature, optional: a list of
+                  paths from this file's directory ('#<anchor>' may
+                  follow), or URLs --
+                      documents = ["../README.txt", "../spec.txt#3"]
+                  The report prints each as 'see <path>' under the
+                  feature and names one that does not stand; the feature
+                  document makes each a link.
 
 A test links to features by name, in its block. 'router/TEST/test-route.sh':
 
@@ -104,10 +112,8 @@ texts and the verdicts.
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
             can/TEST/test-frame.sh   'decode'
-        test run, links to no feature
+        NONSENSE? test run, links to no feature => hwut.help
             router/TEST/test-restart.sh
-        TEST directory, no 'hwut-features.conf'
-            can/TEST   1 test run(s)
 
 A feature is addressed as '<TEST directory>#<number> <name>'. The counts
 of a component are the sum of everything below it.
@@ -119,12 +125,11 @@ of:
     ---------------------------------------------------------------------
     test run, names a feature its TEST          a misspelt name, or a
     directory does not define                   feature not yet written
-    test run, links to no feature               a test that proves nothing
-                                                stated (listed only where
-                                                the directory carries a
-                                                feature file)
-    TEST directory, no 'hwut-features.conf'     tests, and no claim; the
-                                                count of its test runs
+    NONSENSE? test run, links to no feature     a test run that proves
+                                                nothing its directory
+                                                claims. NO FAILURE: its
+                                                verdict stands. 'hwut.help'
+                                                says what to do with it.
     component, no 'hwut-composition.conf'       a directory nobody describes
                                                 (named once the tree holds
                                                 a composition file, or a
@@ -137,6 +142,9 @@ of:
 
 The exit status is 0 whatever is listed; 3 where no TEST directory stands
 below.
+
+Feature files are not mandatory. A TEST directory without one is named
+nowhere, and its tests are nobody's nonsense.
 
 
 3  COMPONENTS
@@ -242,8 +250,7 @@ The faces that change the tree keep the relation themselves:
                               target's next numbers, and takes them out
                               of the source's unless a test that stays
                               still links to them. A target without a
-                              feature file receives nothing; that is
-                              said.
+                              feature file receives one.
     hwut.rename               adapts nothing: the link stands in the
                               test's block.
     hwut.remove               names the features left without a linked
@@ -262,7 +269,7 @@ test run, a column a feature, a cell the run's verdict where it links.
 
     $ hwut.report.features --matrix --directory=router
     TEST                    #1    #2    #3
-    test-restart.sh         .     .     .     <- no feature
+    test-restart.sh         .     .     .     <- NONSENSE?
     test-route.sh [single]  PASS  .     .
     test-route.sh [burst]   PASS  PASS  .
                                         ^     no test run
@@ -271,7 +278,7 @@ test run, a column a feature, a cell the run's verdict where it links.
       #3 drop-unknown  UNPROVEN
 
     an empty row      a test run that proves nothing stated
-                      ('<- no feature'; '<- no feature defined' where it
+                      ('<- NONSENSE?'; '<- no feature defined' where it
                       names only features the directory does not define)
     an empty column   a feature no test run proves ('^ ... no test run')
 
@@ -308,28 +315,98 @@ every line it touches. Source files standing in a TEST directory are
 left out. '--matrix' prints no code.
 
 
-8  WHAT hwut.run DOES WITH ALL THIS
+8  THE FEATURE DOCUMENT
+______________________________________________________________________________
+
+'hwut.report.features --html=<file>' writes the relation as one
+self-contained HTML page; '--ods=<file>' as an OpenDocument spreadsheet.
+Both hold four tabs:
+
+    Matrix     a row per feature: id, brief (its title), state, and the
+               test runs that implement it, with their verdicts
+    Tree       the features where they stand: component, the components
+               below it, its TEST directory, the features; each
+               component with its title and its counts
+    Features   a row per feature: name, title, explanation, component
+    Tests      a row per test application: file, title, doc, test runs
+               with their verdicts, features
+
+    a feature's id in 'Matrix'   leads to its row in 'Features'
+    a test run in 'Matrix'       leads to its test's row in 'Tests'
+    a feature in 'Tree'          leads to its row in 'Features'
+    a document of a feature      opens from its row in 'Features'
+
+The tree is interactive. On the page: 'Expand all', 'Collapse all', a box
+per state to show only the PROVEN, FAILING or UNPROVEN features, and a
+word filter. In the spreadsheet the levels are row groups, folded and
+unfolded at the sheet's margin.
+
+    $ hwut.report.features --html=features.html
+    'features.html' written -- 3 feature(s), 2 test(s)
+
+The 'Tests' tab shows what a test says of itself: its 'title', and its
+'doc' -- a text of as many lines as it takes, written in the test's block
+between three double quotes:
+
+    # @hwut {
+    #     title    = "Routing"
+    #     doc      = """
+    #         Sends CAN frames through the router and prints where each
+    #         one leaves.
+    #
+    #         'burst' sends two in a row: their order must hold.
+    #         """
+    #     features = ["forward"]
+    # }
+
+The text is taken as written; the indentation common to its lines is
+removed. Only TEST directories that state features are in the document.
+The same tree yields the same file, byte for byte.
+
+THE WAY TO THE CODE. After a coverage run the document can say where each
+feature's test runs went, and lead there:
+
+    $ hwut.cov.run
+    $ hwut.cov.conv.to_html -o covpages
+    $ hwut.report.features --html=doc/features.html --cov-html=covpages
+
+The 'Features' tab then carries, per feature, the sources and lines only
+its runs executed (section 7); each source is a link to its coverage page,
+at the first of those lines:
+
+    calc/calc.py: 5..7    ->    ../covpages/calc/calc.py.html#L5
+
+The link is relative to where the document stands: the document and the
+directory of pages travel together. '--code' alone gives the column
+without links.
+
+
+9  WHAT hwut.run DOES WITH ALL THIS
 ______________________________________________________________________________
 
 Nothing. A test runs and is judged whether or not its links resolve, and
 whether or not a statement file stands. The relation is read by
-'hwut.report.features' and 'hwut.sanitize' only.
+'hwut.report.features', 'hwut.help' and 'hwut.sanitize' only.
 
 
-9  REFERENCE
+10  REFERENCE
 ______________________________________________________________________________
 
     hwut.report.features [--matrix] [--code] [--cov-dir=<dir>]
+                         [--html=<file>] [--ods=<file>] [--cov-html=<dir>]
                          [--directory=<path>]
+    hwut.help                 explains 'NONSENSE?'
     hwut.sanitize.propose --relations [-o <file>]
     hwut.sanitize.apply <file>
     hwut.sanitize relate <dir>
     hwut.sanitize unrelate <dir> <id>
 
     hwut-features.conf        features  { id  parent  issued
-                                          <number> { name title explanation } }
+                                          <number> { name title explanation
+                                                     documents } }
     hwut-composition.conf     component { id  title  does  parent  childs }
     '@hwut { }' block         features = ["<name>", ...]
+                              doc      = """<text>"""
 
     'issued' is the highest feature number the file ever gave; hwut
     writes it where it numbers a feature.

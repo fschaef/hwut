@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "hwut.sanitize.propose --books: the records of acceptance"
+#     features   = ["sanitize-books"]
 #     choices    = ["agree", "apply_books", "disagree"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true

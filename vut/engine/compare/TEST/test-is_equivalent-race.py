@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Async Racing: is_equivalent Early Abort"
+#     features   = ["early-abort"]
 #     choices    = ["jittery", "nominal-slow", "subject-slow"]
 # }
 #

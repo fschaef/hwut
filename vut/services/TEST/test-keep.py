@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "Keeping a tried tolerance: the question, TMP, the header."
+#     features   = ["interactive-keep-tolerance"]
 #     choices    = ["unchanged", "store", "enter-replace", "enter-add",
 #                   "enter-oneline", "refuse-apps", "refuse-choice",
 #                   "cancel", "omit", "nobody"]

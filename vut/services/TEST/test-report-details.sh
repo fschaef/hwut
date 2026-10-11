@@ -3,7 +3,16 @@
 #
 # @hwut {
 #     title      = "The report service face: one command packs one test whole."
-#     choices    = ["bare", "coverage", "err", "flags", "pack", "raw", "wish"]
+#     features   = ["report-details-pack"]
+#     choices {
+#         bare     { }
+#         coverage { features = ["report-details-coverage"] }
+#         err      { }
+#         flags    { features = ["report-details-raw", "report-details-coverage"] }
+#         pack     { }
+#         raw      { features = ["report-details-raw"] }
+#         wish     { features = ["report-details-wish", "path-word-enters"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #

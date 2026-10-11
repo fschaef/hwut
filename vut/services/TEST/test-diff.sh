@@ -3,8 +3,17 @@
 #
 # @hwut {
 #     title      = "The diff service face: the diff convention, on stdout."
-#     choices    = ["differing", "reading", "tolerated", "side-by-side", "stderr",
-#                   "stderr-alone", "stains", "store"]
+#     features   = ["diff-two-files"]
+#     choices {
+#         differing      { features = ["diff-two-files", "diff-side-by-side"] }
+#         reading        { features = ["diff-reading-view"] }
+#         tolerated      { features = ["diff-two-files", "diff-setup-options"] }
+#         "side-by-side" { features = ["diff-side-by-side"] }
+#         stderr         { features = ["diff-stains-said"] }
+#         "stderr-alone" { features = ["diff-stains-said"] }
+#         stains         { features = ["diff-stains-said"] }
+#         store          { features = ["diff-store-form", "interactive-checklist", "path-word-enters"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
 #

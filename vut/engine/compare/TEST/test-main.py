@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "Line Comparison"
-#     choices    = ["associate", "associate-2", "associate-3", "compare",
-#                   "compare-2", "compare-3", "numbers"]
+#     choices {
+#         associate   { features = ["association-for-display"] }
+#         associate-2 { features = ["association-for-display"] }
+#         associate-3 { features = ["association-for-display"] }
+#         compare     { features = ["line-by-line-in-order", "comments-and-blanks-insignificant"] }
+#         compare-2   { features = ["line-by-line-in-order", "region-framing-must-match"] }
+#         compare-3   { features = ["comments-and-blanks-insignificant"] }
+#         numbers     { features = ["numbers-within-ratio", "number-always-number"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

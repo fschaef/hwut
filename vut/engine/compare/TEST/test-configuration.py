@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "Configuration: declarations, slots, constraint relation"
-#     choices    = ["constraint_db", "declared", "edges", "namespace",
-#                   "slots"]
+#     choices {
+#         constraint_db { features = ["constraint-relation"] }
+#         declared      { features = ["configuration-declared"] }
+#         edges         { features = ["constraint-relation", "constraint-reserved-names"] }
+#         namespace     { features = ["constraint-expression-language", "constraint-glob", "constraint-reserved-names", "constraint-space-per-run"] }
+#         slots         { features = ["misspelt-field-refused"] }
+#     }
 #     tolerance { eq_pattern = ["'( and no __dict__ for setting new attributes)?$"] }
 #     interactive = true
 # }

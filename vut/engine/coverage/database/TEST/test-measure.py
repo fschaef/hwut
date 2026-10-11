@@ -2,8 +2,16 @@
 #
 # @hwut {
 #     title      = "Branch and MC/DC: measures registered beside the line axis"
-#     choices    = ["branch", "faults", "in_record", "mcdc", "named",
-#                   "points", "registration", "union"]
+#     choices {
+#         branch       { features = ["branch-arms"] }
+#         faults       { features = ["measure-faults-named"] }
+#         in_record    { features = ["measure-own-line"] }
+#         mcdc         { features = ["mcdc-conditions"] }
+#         named        { features = ["named-points"] }
+#         points       { features = ["points-of-items"] }
+#         registration { features = ["measure-registration"] }
+#         union        { features = ["measure-union"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

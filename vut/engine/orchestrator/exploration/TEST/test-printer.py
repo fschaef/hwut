@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "hwut.parse: what the framework read"
-#     choices    = ["directory", "faults", "file", "no_default",
-#                   "origins", "places", "read_back"]
+#     choices {
+#         directory  { features = ["configuration-printed"] }
+#         faults     { features = ["faulty-file-prints-faults"] }
+#         file       { features = ["configuration-printed"] }
+#         no_default { features = ["no-default-drops-unstated"] }
+#         origins    { features = ["provenance-in-comment", "app-defaults-yield"] }
+#         places     { features = ["places-named"] }
+#         read_back  { features = ["configuration-printed"] }
+#     }
 #     interactive = true
 # }
 #

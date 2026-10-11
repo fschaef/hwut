@@ -81,6 +81,8 @@ def app_text(app, no_default_f=False, provenance_f=False, gnu_f=False,
 
     pair_list = [(app_place, "%s {" % app.source_file),
                  _line("title", app.title, None, 1, provenance_f, gnu_f)]
+    if getattr(app, "doc", None) is not None:
+        pair_list.append(_line("doc", app.doc, None, 1, provenance_f, gnu_f))
     if app.language is not None:
         place, text = _line("language", app.language, None, 1,
                             provenance_f, gnu_f)

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "ChunkPair.description()"
+#     features   = ["chunk-pair-description"]
 #     choices    = ["line-sequence", "potpourri"]
 # }
 #

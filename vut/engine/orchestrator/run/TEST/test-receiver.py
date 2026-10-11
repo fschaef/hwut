@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Vocabulary and receiver: format, dispatch, misfit"
-#     choices    = ["dispatch", "emitter", "format", "misfit"]
+#     choices {
+#         dispatch { features = ["receiver-dispatch"] }
+#         emitter  { features = ["emitter-refuses"] }
+#         format   { features = ["vocabulary-format"] }
+#         misfit   { features = ["receiver-misfit"] }
+#     }
 #     interactive = true
 # }
 #

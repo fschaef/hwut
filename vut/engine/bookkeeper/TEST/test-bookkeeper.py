@@ -2,9 +2,18 @@
 #
 # @hwut {
 #     title      = "The Bookkeeper: the naming, the base, the verdicts"
-#     choices    = ["damage", "divergence", "naming", "overwrite",
-#                   "protection", "record", "reproduce", "setup_delta",
-#                   "one_act", "stain"]
+#     choices {
+#         damage      { features = ["protected-base"] }
+#         divergence  { features = ["divergence-on-call"] }
+#         naming      { features = ["record-naming"] }
+#         overwrite   { features = ["one-row-per-choice"] }
+#         protection  { features = ["protected-base"] }
+#         record      { features = ["decision-only-book"] }
+#         reproduce   { features = ["decision-only-book", "one-row-per-choice"] }
+#         setup_delta { features = [] }
+#         one_act     { features = ["one-locked-act", "healed-through-the-door"] }
+#         stain       { features = ["stain-cell"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*",
 #                              "'( and no __dict__ for setting new attributes)?$"] }
 #     interactive = true

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The person's preferences: two files, one colour vocabulary"
+#     features   = ["preferences-person-overlay", "preferences-not-project"]
 #     choices    = ["defaults", "faults", "overlay", "project", "vocabulary"]
 # }
 #

@@ -1,8 +1,16 @@
 #
 # @hwut {
 #     title      = "The test register: ids that survive renames"
-#     choices    = ["allocation", "book_format", "face", "faults",
-#                   "healing", "retire", "tables", "vanished"]
+#     choices {
+#         allocation  { features = ["register-allocation"] }
+#         book_format { features = ["register-in-the-book"] }
+#         face        { features = ["register-shown"] }
+#         faults      { features = ["register-in-the-book"] }
+#         healing     { features = ["id-survives-rename"] }
+#         retire      { features = ["id-retired", "aborted-accept-gives-back"] }
+#         tables      { features = ["register-in-the-book"] }
+#         vanished    { features = ["vanished-named"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

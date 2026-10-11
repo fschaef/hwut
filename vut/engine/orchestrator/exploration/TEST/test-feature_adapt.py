@@ -2,7 +2,15 @@
 #
 # @hwut {
 #     title      = "Feature statements adapted: ids, parent, childs against the directories"
-#     choices    = ["judged", "moved", "relate", "removed", "surgery", "test_moved", "unrelate"]
+#     choices {
+#         judged     { features = ["relation-judged"] }
+#         moved      { features = ["relation-adapted"] }
+#         relate     { features = ["relation-adapted"] }
+#         removed    { features = ["removal-names-unproven"] }
+#         surgery    { features = ["relation-adapted"] }
+#         test_moved { features = ["features-follow-moved-test"] }
+#         unrelate   { features = ["relation-adapted"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
@@ -310,6 +318,7 @@ def test_test_moved():
         _shown(root, page + "/hwut-features.conf")
         banner("into a directory without a feature file")
         _moved(root, page, "engine/plain/TEST", "test-pages.sh")
+        _shown(root, "engine/plain/TEST/hwut-features.conf")
         banner("a test that links to nothing")
         _moved(root, "engine/plain/TEST", core, "test-plain.sh")
     _in_tree(_agreeing_tree, body)

@@ -229,4 +229,5 @@ def _resolve(spec, directory_spec=None, directory=None):
                     root        = base,
                     origin      = spec.origin,
                     position    = spec.position,
-                    origin_db   = origin_db)
+                    origin_db   = origin_db,
+                    doc         = getattr(spec, "doc", None))

@@ -3,9 +3,23 @@
 #
 # @hwut {
 #     title      = "hwut.sanitize: propose, edit, apply -- what a tree accumulates"
-#     choices    = ["propose", "session", "lock", "nameless", "out",
-#                   "orphans", "unreachable", "apply", "target",
-#                   "refused", "transient", "command", "veto", "rejudge"]
+#     features   = ["sanitize-command"]
+#     choices {
+#         propose     { features = ["sanitize-propose-acts-on-nothing"] }
+#         session     { features = ["sanitize-session"] }
+#         lock        { features = ["sanitize-lock"] }
+#         nameless    { features = ["sanitize-lock"] }
+#         out         { features = ["sanitize-out"] }
+#         orphans     { features = ["sanitize-orphans", "sanitize-rerun-trigger"] }
+#         unreachable { features = ["sanitize-orphans"] }
+#         apply       { features = ["sanitize-apply", "sanitize-rerun-trigger"] }
+#         target      { features = ["sanitize-target"] }
+#         refused     { features = ["face-refusal-by-name"] }
+#         transient   { features = ["sanitize-transient", "sanitize-notes-on-stderr"] }
+#         command     { features = ["sanitize-command", "sanitize-rerun-trigger"] }
+#         veto        { features = ["sanitize-apply"] }
+#         rejudge     { features = ["sanitize-judges-again"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

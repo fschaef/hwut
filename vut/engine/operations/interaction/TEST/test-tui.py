@@ -2,9 +2,16 @@
 #
 # @hwut {
 #     title      = "The TUI tier"
-#     choices    = ["display_only", "editor_loop", "elements", "reading",
-#                   "regions", "rendering", "target_wiring",
-#                   "undecided_author"]
+#     choices {
+#         display_only     { features = ["display-only-driver"] }
+#         editor_loop      { features = ["tui-edit-through-editor", "edit-is-realigned"] }
+#         elements         { features = [] }
+#         reading          { features = ["tui-reading-view"] }
+#         regions          { features = ["tui-renders-down"] }
+#         rendering        { features = ["tui-renders-down"] }
+#         target_wiring    { features = ["target-builds-driver"] }
+#         undecided_author { features = ["tui-unchanged-edit-reprompted"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

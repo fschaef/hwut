@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "The component's hygiene, checked rather than remembered"
-#     choices    = ["good_files", "no_crash", "no_orphans",
-#                   "return_first", "token_ranks"]
+#     choices {
+#         good_files   { features = [] }
+#         no_crash     { features = [] }
+#         no_orphans   { features = [] }
+#         return_first { features = [] }
+#         token_ranks  { features = ["first-reason-by-precedence"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

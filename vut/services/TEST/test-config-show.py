@@ -2,8 +2,16 @@
 #
 # @hwut {
 #     title      = "hwut.config.show: the configuration the framework read"
-#     choices    = ["above", "directory", "faults", "file", "help",
-#                   "labels", "refused"]
+#     features   = ["config-show-resolved"]
+#     choices {
+#         above     { features = ["config-show-provenance"] }
+#         directory { }
+#         faults    { features = ["config-show-faults"] }
+#         file      { features = ["config-show-resolved", "config-show-no-default"] }
+#         help      { features = ["face-help-page"] }
+#         labels    { features = ["config-show-labels"] }
+#         refused   { features = ["face-refusal-by-name"] }
+#     }
 #     interactive = true
 # }
 #

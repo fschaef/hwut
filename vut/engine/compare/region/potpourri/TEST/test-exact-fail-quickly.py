@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "FriendsPairing: fail quickly"
+#     features   = ["fail-quickly"]
 #     choices    = ["analogy", "basic", "border", "wild"]
 # }
 #

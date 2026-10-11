@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title   = "Demo: an order law, stated as modes (a pype)"
+#     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
 #     choices { clean { } }
 # }
 #

@@ -2,9 +2,20 @@
 #
 # @hwut {
 #     title      = "HOCON parser: subset (A), annotated tree"
-#     choices    = ["comments", "faults", "numbers", "oneline",
-#                   "positions", "quoting", "refused", "scalars",
-#                   "structure", "unclosed", "fuzz"]
+#     choices {
+#         comments  { features = ["hocon-comments"] }
+#         faults    { features = ["hocon-faults-are-values", "hocon-duplicate-key"] }
+#         fuzz      { features = ["hocon-faults-are-values"] }
+#         numbers   { features = ["hocon-numbers"] }
+#         oneline   { features = ["hocon-separators"] }
+#         positions { features = ["hocon-positions"] }
+#         quoting   { features = ["hocon-strings-quoted"] }
+#         refused   { features = ["hocon-refused-by-name"] }
+#         scalars   { features = ["hocon-strings-quoted", "hocon-booleans-and-nothing", "hocon-objects-and-lists"] }
+#         structure { features = ["hocon-objects-and-lists", "hocon-separators"] }
+#         triple    { features = ["hocon-text-of-several-lines"] }
+#         unclosed  { features = ["hocon-faults-are-values"] }
+#     }
 #     interactive = true
 # }
 #
@@ -15,7 +26,7 @@ PURPOSE: The HOCON parser against HOCON alone -- no exploration vocabulary
          appears anywhere in this file.
 
 CHOICES: scalars, numbers, quoting, structure, oneline, comments,
-         refused, faults, positions, unclosed, fuzz;
+         refused, triple, faults, positions, unclosed, fuzz;
 
 DESCRIPTION:
 
@@ -43,8 +54,14 @@ oneline    several entries on one line without commas: a bare value
 comments   '#' and '//', whole-line and trailing; a comment never
            becomes content.
 
-refused    'include', '${...}', '+=', and triple-quoted strings -- each
-           refused BY NAME, never silently misread.
+refused    'include', '${...}' and '+=' -- each refused BY NAME, never
+           silently misread.
+
+triple     a text of several lines between three double quotes: taken as
+           written (no escape resolved), its common indentation removed,
+           blank lines at both ends dropped; on one line; inside a list;
+           with a quote and a comment marker inside; and one that never
+           closes, which is a fault.
 
 faults     duplicate keys, unterminated strings, unmatched and missing
            braces; the parse completes and reports them all at once.
@@ -222,13 +239,34 @@ def test_comments():
 
 
 def test_refused():
-    """RETURN: None. The four constructs that do not exist here."""
+    """RETURN: None. The three constructs that do not exist here."""
     run("refused, each by name",
         'include "other.conf"\n'
         'a = ${outside.value}\n'
         'b += appended\n'
-        'c = """triple"""\n'
-        'd = survives\n')
+            'd = survives\n')
+
+
+def test_triple():
+    """RETURN: None. The text of several lines."""
+    q = '"' * 3
+    run("several lines: indentation and blank ends go",
+        'doc = %s\n'
+        '    First line.\n'
+        '\n'
+        '      indented more\n'
+        '    last line\n'
+        '    %s\n'
+        'after = 1\n' % (q, q))
+    run("on one line; beside another entry; in a list",
+        'a = %sone line%s  b = 2\n'
+        'c = [%sx%s, "y"]\n' % (q, q, q, q))
+    run("as written: a quote, a backslash-n, a comment marker",
+        'a = %ssays "no" \\n # not a comment%s\n' % (q, q))
+    run("never closed: a fault, at its beginning",
+        'a = 1\n'
+        'b = %sopen\n'
+        'c = 2\n' % q)
 
 
 def test_faults():
@@ -349,6 +387,7 @@ if __name__ == "__main__":
         "oneline":   test_oneline,
         "comments":  test_comments,
         "refused":   test_refused,
+        "triple":    test_triple,
         "unclosed":  test_unclosed,
         "fuzz":      test_fuzz,
         "faults":    test_faults,

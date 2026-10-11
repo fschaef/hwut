@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title      = "hwut.renovate: carry hwut 1.0's words into VUT 2.0's (B-7, initial)"
+#     features   = ["renovate-report", "renovate-apply", "renovate-keeps-stated", "renovate-slash"]
 #     choices    = ["apply", "clean", "kept", "report", "slash"]
 # }
 #

@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "The tolerance proposals: discrepancies in, proposal out."
-#     choices    = ["applied", "blanks", "classes", "edit", "example",
-#                   "in-force", "none", "nothing", "numeric"]
+#     choices {
+#         applied  { features = ["proposals-reach"] }
+#         blanks   { features = ["propose-whitespace"] }
+#         classes  { features = ["propose-eq-pattern"] }
+#         edit     { features = ["propose-eq-pattern"] }
+#         example  { features = ["propose-numeric-ratio", "propose-eq-pattern"] }
+#         in-force { features = ["proposals-only-news"] }
+#         none     { features = ["proposals-only-news"] }
+#         nothing  { features = ["propose-nothing-pattern"] }
+#         numeric  { features = ["propose-numeric-ratio"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

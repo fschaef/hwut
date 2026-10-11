@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "The two-way tee: eavesdrop stdout, inject stdin -- pure pipe composition"
-#     choices    = ["chain_stdin", "chain_stop_early", "control_signals",
-#                   "pype_interactor", "tee_copy", "tee_degenerate"]
+#     choices {
+#         chain_stdin      { features = ["chain-feeds-through"] }
+#         chain_stop_early { features = ["chain-stops-upstream"] }
+#         control_signals  { features = ["man-in-the-middle"] }
+#         pype_interactor  { features = ["man-in-the-middle"] }
+#         tee_copy         { features = ["tee-fans-out"] }
+#         tee_degenerate   { features = ["tee-fans-out"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

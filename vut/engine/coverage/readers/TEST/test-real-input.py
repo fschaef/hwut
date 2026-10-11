@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "Scenario coverage: every format has a real artefact, and every artefact reads"
-#     choices    = ["every_format", "every_artefact", "no_orphan"]
+#     choices {
+#         every_format   { features = ["real-artefact-per-format"] }
+#         every_artefact { features = ["real-artefact-per-format"] }
+#         no_orphan      { features = ["real-artefact-per-format"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

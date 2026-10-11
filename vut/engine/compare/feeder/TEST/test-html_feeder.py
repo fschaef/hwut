@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The HTML generator feeder"
+#     features   = ["html-report"]
 # }
 #
 import io

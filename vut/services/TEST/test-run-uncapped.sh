@@ -3,8 +3,17 @@
 #
 # @hwut {
 #     title   = "hwut.run: a cap that cannot be enforced refuses the test."
-#     choices = ["acknowledged", "doors", "elsewhere", "help", "misspelt",
-#                "plan", "refused", "utility"]
+#     features = ["run-cap-refused"]
+#     choices {
+#         acknowledged { }
+#         doors        { features = ["run-cap-refused-every-door"] }
+#         elsewhere    { }
+#         help         { features = ["help-explains-cap-refusal"] }
+#         misspelt     { }
+#         plan         { features = ["run-cap-refused-every-door", "plan-agrees-with-run"] }
+#         refused      { }
+#         utility      { features = ["run-cap-refused", "help-explains-cap-refusal"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "Orchestrator: the report stream of a run"
-#     choices    = ["broken", "empty", "frame", "stream"]
+#     choices {
+#         broken { features = ["failures-as-verdicts", "faults-in-stream", "summary-fold"] }
+#         empty  { features = ["empty-wish-run"] }
+#         frame  { features = ["frame-per-directory"] }
+#         stream { features = ["report-stream", "summary-fold"] }
+#     }
 #     interactive = true
 # }
 #

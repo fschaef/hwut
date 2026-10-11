@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "hwut.dev.podman.build / enter: the development container"
-#     choices    = ["build", "enter", "help", "refused"]
+#     features   = ["dev-container-build"]
+#     choices {
+#         build   { }
+#         enter   { features = ["dev-container-enter"] }
+#         help    { features = ["face-help-page"] }
+#         refused { features = ["face-refusal-by-name"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

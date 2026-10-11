@@ -2,8 +2,17 @@
 #
 # @hwut {
 #     title      = "Scheduler: the plan executed, trace and report"
-#     choices    = ["budget", "build", "exclusion", "frame", "misdep",
-#                   "ordering", "parallel", "session", "workers"]
+#     choices {
+#         budget    { features = ["shared-budget"] }
+#         build     { features = ["supports-carry-verdict"] }
+#         exclusion { features = ["exclusion-set"] }
+#         frame     { features = ["frame-scripts", "run-report"] }
+#         misdep    { features = ["misdep-never-dispatched", "run-report"] }
+#         ordering  { features = ["ordering-link"] }
+#         parallel  { features = ["concurrent-dispatch"] }
+#         session   { features = ["session-lifecycle"] }
+#         workers   { features = ["worker-bound"] }
+#     }
 #     interactive = true
 # }
 #

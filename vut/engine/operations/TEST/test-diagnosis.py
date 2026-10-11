@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "Diagnosis: every silent failure names itself"
-#     choices    = ["channel_hint", "empty_answer", "never_judges",
-#                   "nothing", "one_source", "record", "resolution"]
+#     choices {
+#         channel_hint { features = ["wrong-channel-hint"] }
+#         empty_answer { features = ["empty-answer-explained"] }
+#         never_judges { features = ["observer-never-reaches-verdict"] }
+#         nothing      { features = ["empty-answer-explained"] }
+#         one_source   { features = ["empty-answer-explained"] }
+#         record       { features = ["empty-answer-explained"] }
+#         resolution   { features = ["resolution-chain-shown"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

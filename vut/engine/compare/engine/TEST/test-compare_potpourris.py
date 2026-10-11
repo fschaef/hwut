@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "Potpourri"
-#     choices    = ["info", "judge"]
+#     choices {
+#         info  { features = ["potpourri-association"] }
+#         judge { features = ["potpourri-verdict"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

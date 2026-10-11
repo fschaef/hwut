@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "VUT Edit Operations Debugger"
+#    features = ["cheapest-line-alignment"]
 #    choices = ["amnesia", "pruning_analogy", "pruning_trans"]
 #    tolerance { numeric_ratio = 0.012 }
 #  }

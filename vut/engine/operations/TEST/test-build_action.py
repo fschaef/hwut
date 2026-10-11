@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "The build step of provision"
-#     choices    = ["argv", "contained", "reasons", "silent_failure",
-#                   "success"]
+#     choices {
+#         argv           { features = ["build-without-tool-refused"] }
+#         contained      { features = ["build-report-names-reason"] }
+#         reasons        { features = ["build-report-names-reason"] }
+#         silent_failure { features = ["clean-exit-not-a-built-target"] }
+#         success        { features = ["clean-exit-not-a-built-target"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

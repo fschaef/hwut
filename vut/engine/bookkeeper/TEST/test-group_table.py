@@ -2,7 +2,12 @@
 #
 # @hwut {
 #     title      = "The group table: a set of runs is a number, issued once"
-#     choices    = ["faults", "groups", "persisted", "tables"]
+#     choices {
+#         faults    { features = ["group-table-file"] }
+#         groups    { features = ["run-set-group"] }
+#         persisted { features = ["group-table-file"] }
+#         tables    { features = ["group-table-file"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

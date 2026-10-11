@@ -2,10 +2,27 @@
 #
 # @hwut {
 #     title      = "The keyed merge: the laws of taking, and the keymap."
-#     choices    = ["crossing", "cut", "element", "filler", "header",
-#                   "keymap", "latch", "merge-colour", "reindex", "remove",
-#                   "report", "rounds", "split", "stay", "take", "token",
-#                   "undo", "unpaired", "view"]
+#     choices {
+#         crossing     { features = ["take-paired-in-place"] }
+#         cut          { features = ["other-regions-never-cut"] }
+#         element      { features = ["element-colours", "element-status"] }
+#         filler       { features = ["filler-per-output-line"] }
+#         header       { features = ["screen-titles"] }
+#         keymap       { features = ["keymap-table"] }
+#         latch        { features = ["target-follows-cursor"] }
+#         merge-colour { features = ["element-colours"] }
+#         reindex      { features = ["local-reindex"] }
+#         remove       { features = ["spent-lines", "remove-from-good"] }
+#         report       { features = ["differ-count-and-jump", "tolerance-report"] }
+#         rounds       { features = ["round-pairs"] }
+#         split        { features = ["unaccepted-region-split"] }
+#         stay         { features = ["realign-on-change-only"] }
+#         take         { features = ["take-replaces-target"] }
+#         token        { features = ["spent-lines", "closing-token"] }
+#         undo         { features = ["undo-redo-reset"] }
+#         unpaired     { features = ["unpaired-line-marked"] }
+#         view         { features = ["viewing-screen"] }
+#     }
 #     tolerance { regions = false }
 # }
 #

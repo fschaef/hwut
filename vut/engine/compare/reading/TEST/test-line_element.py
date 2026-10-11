@@ -2,9 +2,13 @@
 #
 # @hwut {
 #     title      = "Tolerance: LineElement-s"
-#     choices    = ["LineElementAnalogy",
-#                   "LineElementEquivalencePattern", "LineElementNumber",
-#                   "LineElementString", "NumberBand"]
+#     choices {
+#         LineElementAnalogy            { features = ["element-comparison"] }
+#         LineElementEquivalencePattern { features = ["element-comparison", "equivalence-words"] }
+#         LineElementNumber             { features = ["element-comparison", "number-band"] }
+#         LineElementString             { features = ["element-comparison"] }
+#         NumberBand                    { features = ["number-band"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

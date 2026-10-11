@@ -2,8 +2,15 @@
 #
 # @hwut {
 #     title      = "The coverage index: who executed this line, and what to run when it changes"
-#     choices    = ["change", "economy", "honest", "keys", "lossy",
-#                   "query", "segments"]
+#     choices {
+#         change   { features = ["who-executed"] }
+#         economy  { features = ["origin-segments"] }
+#         honest   { features = ["empty-is-no-clearance"] }
+#         keys     { features = ["run-keys"] }
+#         lossy    { features = ["index-not-merge"] }
+#         query    { features = ["who-executed"] }
+#         segments { features = ["origin-segments"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

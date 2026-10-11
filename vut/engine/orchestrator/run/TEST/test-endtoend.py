@@ -2,7 +2,11 @@
 #
 # @hwut {
 #     title      = "End to end: the wire over real processes"
-#     choices    = ["frame", "nostore", "stream"]
+#     choices {
+#         frame   { features = ["frame-per-directory"] }
+#         nostore { features = ["store-knob"] }
+#         stream  { features = ["report-stream", "faults-in-stream", "failures-as-verdicts", "finer-report-word", "summary-fold", "parameters-reach-owners", "real-processes"] }
+#     }
 #     interactive = true
 # }
 #

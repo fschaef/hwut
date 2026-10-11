@@ -2307,3 +2307,74 @@ DECISION  'printer.value_text' writes a line break as '\n' and a tab as
           '\t', beside backslash and quote: the reader's four escapes.
 COST      None known.
 PINNED    'services/TEST/test-config-show.py file'.
+
+
+R-90  'doc': WHAT A TEST IS ABOUT; TRIPLE QUOTES FOR A TEXT OF SEVERAL LINES  (2026-10-11)
+
+PROBLEM   A test states a 'title' -- one line. What it is about, in
+          sentences, had no place in the block; and the dialect's
+          strings are one line, with triple quotes refused by name.
+DECISION  RULED (Frank-Rene, 2026-10-11: "For doc, I want \"\"\"").
+          'doc' is a key of the test's block beside 'title': the
+          APPLICATION's alone -- no choice and no 'app_defaults' states
+          one. It travels 'TestAppSpec.doc' -> 'CTestApp.doc', is
+          printed by 'hwut.config.show', and stands in the feature
+          document's 'Tests' tab (services E-146).
+          THE DIALECT READS TRIPLE QUOTES ('hwut_hocon.py'): from three
+          double quotes to the next three, over as many lines as it
+          takes, AS WRITTEN -- no escape resolved, a quote and a comment
+          marker are content -- then laid out as a docstring is
+          ('inspect.cleandoc'). LIFTS the refusal "triple-quoted strings
+          do not exist here". Any string value may be written so.
+COST      The printer writes a 'doc' back as ONE line with '\n' (R-89):
+          read back it is the same text, but not the same spelling.
+          In a '#'-commented block every line of the text carries the
+          comment prefix, which the unwrapper takes off as for any line.
+PINNED    'test_writing_support/python/TEST/test-hwut_hocon.py triple';
+          'services/TEST/test-report-features.py document'.
+
+
+R-91  A MOVED TEST'S FEATURES STAND IN THE TARGET; THE FILE IS WRITTEN  (2026-10-11)
+
+PROBLEM   'hwut.move' carried a test's features only where the target
+          TEST directory had a feature file (spec o-8); else the link
+          arrived naming nothing.
+DECISION  RULED (Frank-Rene, 2026-10-11): where a moved test run relates
+          to a feature, that feature must be present in the target's
+          feature file. 'feature_adapt.test_moved' WRITES
+          'hwut-features.conf' in the target where none stands, then
+          carries as before: under the target's next number (the id is
+          the target's -- adapted, never the source's).
+          CLOSES o-8.
+COST      The written file states no 'id' and no 'parent'; where the
+          tree relates by id, 'relate' follows (R-84, R-88).
+          UNCHANGED, and to be ruled: a name the target already defines
+          DIFFERENTLY -- both stand, the moved test now links to the
+          target's; and the source's entry is taken out with its last
+          link, not kept as a copy.
+PINNED    'engine/orchestrator/exploration/TEST/test-feature_adapt.py
+          test_moved'.
+
+
+R-92  A FEATURE NAMES THE DOCUMENTS WHERE MORE IS SAID                 (2026-10-11)
+
+PROBLEM   A feature is one sentence. The README section, the spec, the
+          ruling that says what stands behind it had no tie to it.
+DECISION  RULED (Frank-Rene, 2026-10-11: "let features have links to
+          additional documents").
+              <number> { name = ...  title = ...
+                         documents = ["../README.txt#3", "https://..."] }
+          A list of strings: paths FROM THE FEATURE FILE'S DIRECTORY,
+          '#<anchor>' allowed behind, or URLs ('<scheme>://').
+          'CFeature.document_tuple'; 'document_place(path, document)'
+          gives where one stands as the relation addresses it. Anything
+          but a list of non-empty strings is a fault, said with the
+          statement's other faults.
+          The key is 'documents' -- NOT RULED, chosen beside 'doc' of a
+          test (R-90): 'doc' is text, 'documents' are places.
+COST      'hwut.move' carries a feature's entry as written (R-84): the
+          paths in a carried 'documents' then count from the target's
+          directory and may no longer stand; the report says so.
+          An anchor means what the linked file's viewer makes of it; a
+          plain text file has none.
+PINNED    'services/TEST/test-report-features.py tree, document'.

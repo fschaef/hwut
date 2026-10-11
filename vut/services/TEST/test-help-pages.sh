@@ -3,6 +3,7 @@
 #
 # @hwut {
 #     title   = "'--help' of every face: one manual page shape, examples that run."
+#     features = ["face-help-page"]
 #     choices = ["examples", "shape"]
 # }
 #

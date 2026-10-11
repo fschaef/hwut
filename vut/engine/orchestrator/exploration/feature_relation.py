@@ -81,6 +81,7 @@ THE RELATION
 ______________________________________________________________________________
 """
 import os
+import posixpath
 from   dataclasses import dataclass
 
 from vut.test_writing_support.python import hwut_hocon
@@ -119,6 +120,10 @@ class CFeature:
     explanation: str | None = None
     key:         str        = ""       # the entry's key, as written
     line_n:      int        = 0
+    document_tuple: tuple   = ()       # of str: where more is said --
+                                       #  paths from the feature file's
+                                       #  directory ('#<anchor>' may
+                                       #  follow), or URLs
 
 
 @dataclass(frozen=True)
@@ -389,21 +394,36 @@ def feature_file_of_text(text, file=FEATURE_FILE_NAME):
 
 
 def _feature(entry, number, file, fault_list):
-    """RETURN: CFeature, the entry's 'name', 'title' and 'explanation'
-    under 'number'; an unknown key inside is a fault and is dropped."""
-    field_db = {}
+    """RETURN: CFeature, the entry's 'name', 'title', 'explanation' and
+    'documents' under 'number'; an unknown key inside, and 'documents'
+    that is no list of strings, is a fault and is dropped."""
+    field_db      = {}
+    document_list = []
     for inner in entry.node.entry_list:
         if inner.key in ("name", "title", "explanation"):
             value = _sentence(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
+        elif inner.key == "documents":
+            node = inner.node
+            if isinstance(node, ListNode) \
+               and all(isinstance(item, ScalarNode)
+                       and isinstance(item.value, str) and item.value
+                       for item in node.item_list):
+                document_list = [item.value for item in node.item_list]
+            else:
+                fault_list.append(Fault(
+                    E_FaultKind.VOCABULARY, file, inner.key_position,
+                    "'documents' of feature '%s' is no list of file "
+                    "names: documents = [\"README.txt\", ...]"
+                    % entry.key))
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in feature '%s': 'name', 'title', "
-                "'explanation'" % (inner.key, entry.key)))
+                "'explanation', 'documents'" % (inner.key, entry.key)))
     return CFeature(number, field_db.get("name"), field_db.get("title"),
                     field_db.get("explanation"), entry.key,
-                    entry.key_position.line)
+                    entry.key_position.line, tuple(document_list))
 
 
 def composition_of_text(text, file=COMPOSITION_FILE_NAME):
@@ -468,6 +488,10 @@ class CTestDirectory:
     undefined_tuple: tuple = ()        # of (test, choice, name)
     run_tuple:       tuple = ()        # of (test, choice): EVERY run of
                                        #  the directory, walk order
+    app_tuple:       tuple = ()        # of (test, title, doc): every
+                                       #  application, walk order
+    verdict_db:      dict  = None      # (test, choice) -> verdict text,
+                                       #  for every run of the directory
 
 
 @dataclass(frozen=True)
@@ -590,6 +614,24 @@ def _verdict_text(bookkeeper, test, choice):
     return verdict.name
 
 
+def document_place(path, document):
+    """
+    RETURN: [0] str, where a feature's document stands, addressed from
+                the directory the relation was asked in ('/' between);
+                the document itself where it is a URL
+            [1] str, its '#<anchor>', '' where it names none
+            [2] bool, True where it is a URL ('<scheme>://...'), which
+                nothing here looks up
+
+    'path' is the feature's TEST directory as the relation addresses
+    it; 'document' what the feature states, a path from that directory.
+    """
+    if "://" in document: return document, "", True
+    name, mark, anchor = document.partition("#")
+    place = posixpath.normpath(posixpath.join(path, name))
+    return place, mark + anchor, False
+
+
 def linked_name_tuple(parameters):
     """RETURN: tuple of str, the feature names a test run with these
     'TestParameters' links to; empty where it links to none."""
@@ -606,9 +648,15 @@ def test_directory_of(directory, path, app_set):
     unlinked     = []
     undefined    = []
     every        = []
+    app_list     = []
+    verdict_db   = {}
     for app in app_set:
+        app_list.append((app.source_file, app.title,
+                         getattr(app, "doc", None)))
         for choice, parameters in app.choice_db.items():
             every.append((app.source_file, choice))
+            verdict_db[(app.source_file, choice)] = _verdict_text(
+                bookkeeper, app.source_file, choice)
             name_tuple = linked_name_tuple(parameters)
             if not name_tuple:
                 unlinked.append((app.source_file, choice))
@@ -620,15 +668,15 @@ def test_directory_of(directory, path, app_set):
                     continue
                 run_db.setdefault(name, []).append(
                     CRun(app.source_file, choice,
-                         _verdict_text(bookkeeper, app.source_file,
-                                       choice)))
+                         verdict_db[(app.source_file, choice)]))
     state_list = []
     for feature in feature_file.feature_tuple if feature_file else ():
         run_tuple = tuple(run_db.get(feature.name, ()))
         state_list.append(CFeatureState(feature, run_tuple,
                                         state_of(run_tuple)))
     return CTestDirectory(path, feature_file, tuple(state_list),
-                          tuple(unlinked), tuple(undefined), tuple(every))
+                          tuple(unlinked), tuple(undefined), tuple(every),
+                          tuple(app_list), verdict_db)
 
 
 def relation_of_tree(root, interview_runner=None, fault_list=None):

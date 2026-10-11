@@ -3,18 +3,20 @@
 # @hwut {
 #     title   = "Demo: what hwut tolerates, and where it is said"
 #     choices {
-#         plain       { }
-#         tolerance   { tolerance {
+#         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
+#         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+#                       tolerance {
 #                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
 #                           numeric_ratio = 0.01
 #                       } }
-#         constraints { tolerance {
+#         constraints { features = ["demo-passes-on-every-run", "constraints"]
+#                       tolerance {
 #                           constraints = ["load >= 0 and load <= 100",
 #                                          "even % 2 == 0",
 #                                          "twice == 2 * once"]
 #                       } }
-#         analogies   { }
-#         race        { }
+#         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
+#         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
 #     }
 # }
 #

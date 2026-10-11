@@ -2,8 +2,14 @@
 #
 # @hwut {
 #     title      = "The homogeneous coverage record: intervals, delta coding, merge, election"
-#     choices    = ["election", "encoding", "faults", "intervals",
-#                   "merge", "roundtrip"]
+#     choices {
+#         election  { features = ["tool-election"] }
+#         encoding  { features = ["delta-coding"] }
+#         faults    { features = ["record-faults-named"] }
+#         intervals { features = ["interval-algebra"] }
+#         merge     { features = ["record-merge", "record-names-runs"] }
+#         roundtrip { features = ["record-text-roundtrip", "record-names-runs", "absent-and-empty-distinct"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

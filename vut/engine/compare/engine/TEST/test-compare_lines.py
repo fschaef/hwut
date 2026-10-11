@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "Line Comparison"
-#     choices    = ["info", "judge"]
+#     choices {
+#         info  { features = ["line-edit-info"] }
+#         judge { features = ["line-verdict"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "The converters are visitors: every measure accounted for, no name outside the vocabulary"
+#     features   = ["cov-measures-accounted"]
 #     choices    = ["accounted", "vocabulary", "walk"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true

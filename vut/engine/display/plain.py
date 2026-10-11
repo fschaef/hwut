@@ -212,7 +212,7 @@ class CPlainFlow(CRunReportReceiver):
                  detail_f=False, failure_summary_f=True,
                  brief_f=False, write_log=None, write_wallflowers=None,
                  root=None, progress_write=None, started_at=None,
-                 vocabulary=RUN_VOCABULARY):
+                 vocabulary=RUN_VOCABULARY, here_name=None):
         """
         RETURN: CPlainFlow writing flow lines through 'write', faults
                 and notes through 'write_log', and -- in the SILENT
@@ -288,6 +288,10 @@ class CPlainFlow(CRunReportReceiver):
         self.progress_t0     = None
         self.progress_shown_f = False
         self.root        = root
+        #  THE NAME OF '.', where the run is asked INSIDE a test
+        #  directory: its path from the tree's root conf (D-47). None
+        #  leaves '.' as it is.
+        self.here_name   = here_name
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
         self.tier        = tier
@@ -568,7 +572,7 @@ class CPlainFlow(CRunReportReceiver):
         self.last_key       = None   # and any ':' elision: the application
                                      # above is another directory's
         prefix, _ = self._prefix(when)
-        text = "%sDIR  %s" % (prefix, directory)
+        text = "%sDIR  %s" % (prefix, self._named(directory))
         pad  = " " * max(self.width - len(text), 0)
         self.write(self.ink.dir_band(text + pad))
 
@@ -1122,6 +1126,13 @@ class CPlainFlow(CRunReportReceiver):
             node["directory"] = directory
         return root
 
+    def _named(self, directory):
+        """RETURN: str, the directory as it is SAID: '.' by its path
+        from the tree's root conf where the face handed one, every
+        other directory as it is."""
+        if directory == "." and self.here_name: return self.here_name
+        return directory
+
     def _write_directory_tree(self, write, w):
         """
         RETURN: None. The tree written depth-first.
@@ -1239,7 +1250,7 @@ class CPlainFlow(CRunReportReceiver):
             tag       = self.vocabulary.directory_tag(
                             good, *self._count(directory))
             counts    = "%d/%d" % self._count(directory)
-            left      = "%s%s" % (TREE_INDENT, directory)
+            left      = "%s%s" % (TREE_INDENT, self._named(directory))
             right, right_ink = _tag_and_count(
                 tag, counts, good, self.ink,
                 self.vocabulary.tag_width(TAG_WIDTH))

@@ -61,6 +61,19 @@ What quotes preserve, that nothing else can:
 
 Inside a string, '\\n', '\\t', '\\"' and '\\\\' are the escapes.
 
+A TEXT OF SEVERAL LINES stands between three double quotes:
+
+    doc = """
+        Routes a burst of frames and prints them in the order they
+        leave.
+        """
+
+It is taken as written -- no escape is resolved, a quote and a comment
+marker are content -- and laid out as a docstring is: the indentation
+common to its lines is removed, blank lines at its beginning and end are
+dropped. It ends at the next three double quotes; one that never closes
+is a fault.
+
 A KEY may stand bare -- a key is not a value. A key carrying a blank
 carries quotes:
 
@@ -127,7 +140,6 @@ ______________________________________________________________________________
     include "other.conf"        a specification refers to nothing
     a = ${outside.value}        outside its own file
     a += "appended"             no accumulation
-    a = """triple"""            no triple-quoted strings
 
 Each is refused with its own message, saying what does not exist rather
 than what was unexpected. The first two are refused for one reason: a

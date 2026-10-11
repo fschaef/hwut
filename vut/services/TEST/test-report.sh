@@ -3,9 +3,22 @@
 #
 # @hwut {
 #     title      = "The hwut.report face: the databases, rendered."
-#     choices    = ["color", "json", "junit", "never_run", "not_in_book",
-#                   "refused", "stain", "stain_last_ok", "tap",
-#                   "traditional", "width", "run_agrees", "run_width"]
+#     features   = ["report-traditional-page"]
+#     choices {
+#         color         { features = ["report-colour"] }
+#         json          { features = ["report-machine-formats"] }
+#         junit         { features = ["report-machine-formats"] }
+#         never_run     { features = ["report-no-good-file"] }
+#         not_in_book   { features = ["report-not-in-book"] }
+#         refused       { features = ["face-refusal-by-name"] }
+#         stain         { features = ["report-stain-fails"] }
+#         stain_last_ok { features = ["report-stain-fails"] }
+#         tap           { features = ["report-machine-formats"] }
+#         traditional   { }
+#         width         { features = ["report-width"] }
+#         run_agrees    { features = ["report-agrees-with-run"] }
+#         run_width     { features = ["report-width"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

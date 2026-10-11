@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "LinePair: subject_and_nominal_line_element_lists()"
+#     features   = ["line-pair-element-lists"]
 #     choices    = ["accordion", "exhaustion", "monkey", "visible-nothing"]
 # }
 #

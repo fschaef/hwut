@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "Region framing: switchable, and its fault is caught"
-#     choices    = ["caught", "content", "declared", "off", "on"]
+#     choices {
+#         caught   { features = ["framing-fault-caught"] }
+#         content  { features = ["regions-switchable"] }
+#         declared { features = ["regions-switchable", "configuration-declared"] }
+#         off      { features = ["regions-switchable", "comment-marker-configurable"] }
+#         on       { features = ["regions-switchable", "region-faults-loud"] }
+#     }
 #     interactive = true
 #     tolerance { regions = false  eq_pattern = ["SUCCESS.*"] }
 # }

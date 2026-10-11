@@ -3,7 +3,12 @@
 #
 # @hwut {
 #     title      = "hwut.labels.create: a NEW label, a snapshot of a wish."
-#     choices    = ["doors", "empty", "snapshot", "union"]
+#     choices {
+#         doors    { features = ["create-refuses-standing", "reserved-names-refused", "stateless-wish-refused", "unreadable-command-refused"] }
+#         empty    { features = ["empty-selection-no-label"] }
+#         snapshot { features = ["create-snapshot", "create-refuses-standing"] }
+#         union    { features = ["label-in-wish-union"] }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------

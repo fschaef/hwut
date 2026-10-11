@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "FriendsPairingMax: Search anyway"
-#     choices    = ["basic", "restricted_cmp"]
+#     choices {
+#         basic          { features = ["similar-pairing"] }
+#         restricted_cmp { features = ["comparison-budget"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

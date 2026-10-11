@@ -2,7 +2,10 @@
 #
 # @hwut {
 #     title      = "Lines: Transposition and Visible Nothing"
-#     choices    = ["transpose", "visible-nothing"]
+#     choices {
+#         transpose       { features = ["no-transposition-in-line"] }
+#         visible-nothing { features = ["visible-nothing-good-skip"] }
+#     }
 # }
 #
 """

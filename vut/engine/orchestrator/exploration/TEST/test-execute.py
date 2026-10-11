@@ -2,6 +2,7 @@
 #
 # @hwut {
 #     title      = "'execute': the call itself, stated verbatim"
+#     features   = ["execute-stated"]
 #     choices    = ["refused", "stated"]
 #     interactive = true
 # }

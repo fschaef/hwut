@@ -2,7 +2,13 @@
 #
 # @hwut {
 #     title      = "The feature relation: feature file, composition file, the link, the tree"
-#     choices    = ["block", "composition", "faults", "feature_file", "tree"]
+#     choices {
+#         block        { features = ["features-linked-in-block"] }
+#         composition  { features = ["feature-statements-read"] }
+#         faults       { features = ["statement-faults-named"] }
+#         feature_file { features = ["feature-statements-read"] }
+#         tree         { features = ["feature-states"] }
+#     }
 # }
 #
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer

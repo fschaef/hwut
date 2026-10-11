@@ -24,7 +24,7 @@
 
 --- an unknown key, and one inside a feature ---
   hwut-features.conf:2:3: VOCABULARY: unknown key 'owner' in 'features': 'id', 'parent', 'issued', or a feature '<number> { }'
-  hwut-features.conf:3:19: VOCABULARY: unknown key 'since' in feature '1': 'name', 'title', 'explanation'
+  hwut-features.conf:3:19: VOCABULARY: unknown key 'since' in feature '1': 'name', 'title', 'explanation', 'documents'
   kept: 1=a
 
 --- 'parent' that names no id, an empty 'id', 'childs' in a feature file ---

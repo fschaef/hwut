@@ -2,9 +2,20 @@
 #
 # @hwut {
 #     title      = "The merge session: the UP half"
-#     choices    = ["cancel", "commit", "display_only", "empty_commit",
-#                   "envelope", "loop", "loop_pipe", "loop_realigns",
-#                   "rich_client", "sequence", "unknown", "widened_down"]
+#     choices {
+#         cancel        { features = ["cancel-leaves-nominal", "basic-mergetool-tier"] }
+#         commit        { features = ["commit-becomes-nominal", "basic-mergetool-tier"] }
+#         display_only  { features = ["display-only-driver"] }
+#         empty_commit  { features = ["empty-commit-is-cancel"] }
+#         envelope      { features = ["envelope-signed"] }
+#         loop          { features = ["edit-is-realigned", "no-progress-guard", "round-cap"] }
+#         loop_pipe     { features = ["edit-is-realigned", "rich-client-over-pipe"] }
+#         loop_realigns { features = ["edit-is-realigned"] }
+#         rich_client   { features = ["rich-client-over-pipe"] }
+#         sequence      { features = ["session-sequence"] }
+#         unknown       { features = ["unknown-intent-refused", "target-builds-driver"] }
+#         widened_down  { features = ["down-carried-uninterpreted"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }

@@ -2,8 +2,13 @@
 #
 # @hwut {
 #     title      = "Orthogonal Space Consistency Check"
-#     choices    = ["analogy", "leakage", "numeric", "potpourri",
-#                   "sudoku"]
+#     choices {
+#         analogy   { features = ["verdict-and-diff-agree", "analogy-consistent"] }
+#         leakage   { features = ["verdict-and-diff-agree", "analogy-region-private"] }
+#         numeric   { features = ["verdict-and-diff-agree", "numbers-within-ratio"] }
+#         potpourri { features = ["verdict-and-diff-agree", "potpourri-any-order"] }
+#         sudoku    { features = ["verdict-and-diff-agree", "potpourri-any-order"] }
+#     }
 #     interactive = true
 #     tolerance { regions = false  eq_pattern = ["Consistency:         OK"] }
 # }

@@ -78,7 +78,8 @@ from   vut.services.lib                              import preferences
 
 from   vut.engine.orchestrator.exploration.task_list import SelectionError
 from   vut.engine.orchestrator.exploration.tree_explorer \
-                                                     import RootConfMissing
+                                                     import (RootConfMissing,
+                                                             path_from_root_conf)
 from   vut.engine.orchestrator.exploration.variant   import name_tuple_of
 from   vut.engine.orchestrator.plan.wish             import (parse_wish,
                                                              with_targets,
@@ -254,6 +255,7 @@ def main(argv=None, write=None, demand=None, write_error=None, ask=None):
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color,
                             root=directory, started_at=started_at,
+                            here_name=path_from_root_conf(directory),
                             vocabulary=COVERAGE_VOCABULARY)
         try:
             event_list = asyncio.run(

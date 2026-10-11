@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 #  @hwut {
 #    title   = "Registry Sandbox Regression"
+#    features = ["session-isolation"]
 #    choices = ["associate", "equivalence"]
 #  }
 """

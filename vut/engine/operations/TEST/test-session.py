@@ -2,9 +2,20 @@
 #
 # @hwut {
 #     title      = "The front door and its ceremony"
-#     choices    = ["book", "busy", "goal", "lock", "recording",
-#                   "refused", "request", "setup", "sidecars", "target",
-#                   "the_arc", "where"]
+#     choices {
+#         book      { features = ["outcome-booked-overwriting", "book-entry-holds-no-configuration"] }
+#         busy      { features = ["busy-directory-refused"] }
+#         goal      { features = ["goal-selects-operation"] }
+#         lock      { features = ["lock-released-however-ended"] }
+#         recording { features = ["judged-execution-recorded"] }
+#         refused   { features = ["unservable-configuration-refused"] }
+#         request   { features = ["goal-selects-operation"] }
+#         setup     { features = ["book-entry-holds-no-configuration"] }
+#         sidecars  { features = ["raw-and-cadence-sidecars"] }
+#         target    { features = ["display-target-selects-driver"] }
+#         the_arc   { features = ["goal-selects-operation", "judged-execution-recorded"] }
+#         where     { features = ["store-place-said-once"] }
+#     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
