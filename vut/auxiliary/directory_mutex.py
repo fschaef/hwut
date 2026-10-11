@@ -243,8 +243,16 @@ class MkdirMutex:
         deadline = time.monotonic() + self.wait_sec
         attempt_n = 0
         while True:
+            #  THE GROUND THE LOCK STANDS ON ('TMP/') is remembered where
+            #  THIS take makes it: 'release' takes it away again where
+            #  nothing else came to stand in it.
+            ground_made_f = not self.path.parent.exists()
             try:
                 self.path.mkdir(parents=True)
+            except FileNotFoundError:
+                #  Another holder took its ground away between the two
+                #  'mkdir' of this one: again.
+                continue
             except FileExistsError:
                 holder = self.holder()
                 if self._holder_is_gone(holder):
@@ -265,6 +273,7 @@ class MkdirMutex:
                            "started":  _process_start_time(os.getpid()),
                            "acquired": time.time()}, fh)
             self.taken = True
+            self.ground_made_f = ground_made_f
             return True
 
     def _break(self):
@@ -279,10 +288,18 @@ class MkdirMutex:
             pass
 
     def release(self):
-        """RETURN: None. Removes this process's lock. Idempotent."""
+        """RETURN: None. Removes this process's lock, and the ground it
+        stands on where this take made it and it is empty again: a
+        directory that was only LOOKED at keeps nothing of the look.
+        Idempotent."""
         if not self.taken: return
         self._break()
         self.taken = False
+        if getattr(self, "ground_made_f", False):
+            try:
+                self.path.parent.rmdir()
+            except OSError:
+                pass                       # something stands in it
 
     def __enter__(self):
         """

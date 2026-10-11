@@ -84,4 +84,15 @@ $ hwut.config.show test-a.py --no-default
         }
     }
     [status 0]
+
+--- a line break and a tab in a string: printed as read ---
+$ hwut.config.show test-c.py --no-default
+    test-c.py {
+        title = "two\nlines\tand a \"tab\""
+        choices {                                 # app
+            - {
+            }
+        }
+    }
+    [status 0]
 <hwut-end>

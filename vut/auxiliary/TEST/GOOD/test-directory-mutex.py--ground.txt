@@ -1,0 +1,5 @@
+  OK  : made by the take, empty at release: taken away
+  OK  : made by the take, a file came to stand in it: stays
+  OK  : stood before the take: stays, though empty
+SUCCESS: the lock leaves its ground as it found it.
+<hwut-end>

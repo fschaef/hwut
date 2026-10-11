@@ -22,7 +22,6 @@ STANDING {
     suite/TEST/GOOD/book.csv
     suite/TEST/GOOD/notes.md
     suite/TEST/GOOD/test-app.sh.txt
-    suite/TEST/TMP
     suite/TEST/hwut.conf
     suite/TEST/test-app.sh
 }

@@ -1,8 +1,9 @@
-# vut-register 5 generation:8 apps:1 marks:0=7
+# vut-register 5 generation:9 apps:1 marks:0=8
 test;choice;verdict;report;stain;test_id;choice_id
 test-directory-mutex.py;age;true;ok;;0;0
 ;dead;true;ok;;0;1
 ;foreign;true;ok;;0;2
+;ground;true;ok;;0;7
 ;hold_timeout;true;ok;;0;3
 ;reentry;true;ok;;0;4
 ;taken;true;ok;;0;5

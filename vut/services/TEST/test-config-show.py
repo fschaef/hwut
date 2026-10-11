@@ -108,6 +108,10 @@ def test_file():
         call(directory, ["test-a.py"])
         banner("--no-default: what somebody chose")
         call(directory, ["test-a.py", "--no-default"])
+        banner("a line break and a tab in a string: printed as read")
+        with open(os.path.join(directory, "test-c.py"), "w") as fh:
+            fh.write('# @hwut { title = "two\\nlines\\tand a \\"tab\\"" }\n')
+        call(directory, ["test-c.py", "--no-default"])
     finally:
         shutil.rmtree(directory, ignore_errors=True)
 

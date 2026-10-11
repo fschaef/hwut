@@ -296,7 +296,8 @@ def _place_text(origin):
 def value_text(value):
     """
     RETURN: str, a value AS A SPECIFICATION WRITES IT -- strings in double
-            quotes with backslash and quote escaped, booleans lower case,
+            quotes with backslash, quote, line break and tab escaped,
+            booleans lower case,
             absence as 'null', tuples and lists as lists.
 
     WHAT IS PRINTED READS BACK AS WRITTEN (X-PRINTED): the header's
@@ -310,7 +311,13 @@ def value_text(value):
         case True:   return "true"
         case False:  return "false"
         case str():
-            return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"')
+            #  AS THE READER TAKES IT: a line break or a tab inside a
+            #  string is its escape, or the printed form could not be
+            #  read back (R-50, R-89).
+            return '"%s"' % (value.replace("\\", "\\\\")
+                                  .replace('"', '\\"')
+                                  .replace("\n", "\\n")
+                                  .replace("\t", "\\t"))
         case tuple() | list():
             return "[%s]" % ", ".join(value_text(item) for item in value)
         case _:      return repr(value)

@@ -62,3 +62,25 @@ COST      A stolen-by-decree holder does not learn of the theft; the
 GRAVEYARD Expiry as the default (a healthy long run robbed of its
           lock -- the failure in the green direction). Heart beats and
           lease renewal (clock skew, a second mechanism).
+
+
+D-4  THE LOCK LEAVES ITS GROUND AS IT FOUND IT              (2026-10-11)
+
+PROBLEM   Book work 2026-10-11 (B-3): 'mkdir -p world/TEST; hwut.run;
+          rmdir world/TEST' failed, "Directory not empty". The run locks
+          every TEST directory it walks; 'mkdir(parents=True)' of
+          'TMP/lock' made 'TMP/', the release removed 'lock' and left
+          'TMP/'. A directory that was only looked at was written to.
+DECISION  RULED (Frank-Rene, 2026-10-11: "we must fix that"). The take
+          remembers whether IT made the lock's parent; the release
+          removes that parent where the take made it and it is empty.
+          A parent that stood before the take, or that holds anything,
+          stays.
+          A contender whose 'mkdir' meets the parent just taken away
+          ('FileNotFoundError' between pathlib's two 'mkdir') tries
+          again.
+COST      One 'exists()' per take, one 'rmdir' per release.
+GRAVEYARD Not locking a directory without tests: the lock is the
+          bookkeeper's (B-9), taken before anybody knows what the
+          directory holds.
+PINNED    'auxiliary/TEST/test-directory-mutex.py ground'.

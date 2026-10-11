@@ -2,8 +2,8 @@
 #
 # @hwut {
 #     title      = "The directory mutex: one live holder, asked liveness, named refusals"
-#     choices    = ["age", "dead", "foreign", "hold_timeout", "reentry",
-#                   "taken", "waiting"]
+#     choices    = ["age", "dead", "foreign", "ground", "hold_timeout",
+#                   "reentry", "taken", "waiting"]
 #     interactive = true
 # }
 #
@@ -13,12 +13,18 @@ ______________________________________________________________________________
 PURPOSE: The auxiliary directory mutex -- mutual exclusion over one
          directory, between processes.
 
-CHOICES: taken, reentry, foreign, dead, waiting, hold_timeout, age;
+CHOICES: taken, ground, reentry, foreign, dead, waiting, hold_timeout, age;
 
 DESCRIPTION:
 
 taken         acquisition of a free directory: 'mkdir' wins, the holder is
               recorded as this process, release removes every trace.
+
+ground        the directory the lock stands in ('TMP/'): made by the take
+              where it does not stand, and taken away by the release
+              where the take made it and nothing else came to stand in
+              it -- a directory that was only looked at keeps nothing.
+              A ground that stood before, or that holds a file, stays.
 
 reentry       the mutex is NON-RECURSIVE: the live holder acquiring again
               is refused by name -- 'DirectoryDeadlock', a 'DirectoryBusy'.
@@ -164,6 +170,28 @@ def test_taken():
         (mutex.taken is False,        "and the mutex says so"),
     ])
     _verdict(ok, "the mutex is taken and released without residue.")
+
+
+def test_ground():
+    """The ground of the lock: left as it was found."""
+    if not _liveness_or_bail(): return
+    directory = _directory()
+    ground    = os.path.dirname(_lock_path(directory))
+    mutex     = MkdirMutex(directory)
+    mutex.acquire(); mutex.release()
+    ok = _check([(os.listdir(directory) == [],
+                  "made by the take, empty at release: taken away")])
+    mutex.acquire()
+    with open(os.path.join(ground, "kept.txt"), "w") as fh: fh.write("x")
+    mutex.release()
+    ok = _check([(os.listdir(ground) == ["kept.txt"],
+                  "made by the take, a file came to stand in it: stays")]) \
+         and ok
+    os.remove(os.path.join(ground, "kept.txt"))
+    mutex.acquire(); mutex.release()
+    ok = _check([(os.path.isdir(ground),
+                  "stood before the take: stays, though empty")]) and ok
+    _verdict(ok, "the lock leaves its ground as it found it.")
 
 
 def test_reentry():
@@ -330,6 +358,7 @@ HwutRunner(
     title      = "The directory mutex: one live holder, asked liveness, named refusals",
     choice_map = {
         "taken":        test_taken,
+        "ground":       test_ground,
         "reentry":      test_reentry,
         "foreign":      test_foreign,
         "dead":         test_dead,

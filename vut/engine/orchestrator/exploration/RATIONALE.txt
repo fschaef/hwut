@@ -2295,3 +2295,15 @@ DECISION  NOT RULED -- built as proposed. 'id_relation_used_f': a
 COST      A lone feature file never learns that it has no id until
           something relates.
 PINNED    'services/TEST/test-report-features.py outside'.
+
+
+R-89  A STRING IS PRINTED WITH THE ESCAPES IT IS READ WITH              (2026-10-11)
+
+PROBLEM   MEASURED: 'title = "a\nb"' was read as two lines and printed
+          by 'hwut.config.show' with a RAW line break inside the
+          quotes -- which the reader refuses ('unterminated string').
+          R-50 says the printed form can be read back.
+DECISION  'printer.value_text' writes a line break as '\n' and a tab as
+          '\t', beside backslash and quote: the reader's four escapes.
+COST      None known.
+PINNED    'services/TEST/test-config-show.py file'.
