@@ -15,54 +15,65 @@ PURPOSE: THE FEATURE RELATION -- what a tree claims to do, and which test
     read_composition(directory)    -> CComposition | None
     relation_of_tree(root)         -> CRelation
 
+ONE KIND OF THING, A CLAIM (R-93): a sentence of what the software does,
+and what implements it.
+
+    claim       what implements it          stated in
+    ------------------------------------------------------------------------
+    component   claims: its parts and the   <component>/hwut-composition.conf
+                features of its TEST dir
+    feature     test runs                   <component>/TEST/hwut-features.conf
+
+Both carry the same words: 'title' (one line), 'doc' (as many lines as it
+takes, triple quotes) and 'documents' (where more is said) -- as a test
+carries 'title' and 'doc'.
+
 THE FEATURE FILE
 
     features {
-        id     = "core-proof"
-        parent { core = "What 'core' promises, proven." }
         issued = 2
-        1 { name        = "line-pairing"
-            title       = "Two streams are aligned line by line."
-            explanation = "..." }
+        1 { name  = "line-pairing"
+            title = "Two streams are aligned line by line."
+            doc   = "..." }
     }
 
     An entry whose key is a NUMBER is a feature, the number its id.
     'issued' is the highest number the file ever issued; the scope
     counts from 1 ('bookkeeper' IdScope). An OBJECT under any other key
-    but 'parent' is a feature WITHOUT a number. A number standing twice
-    is the parser's fault ('duplicate key'): the first stands.
+    is a feature WITHOUT a number. A number standing twice is the
+    parser's fault ('duplicate key'): the first stands.
+    A feature file states NO 'id' and NO 'parent': its features belong
+    to the component of the directory above. Where one states them all
+    the same, they are a mismatch ('stated') that 'relate' takes out.
 
 THE COMPOSITION FILE
 
     component {
         id     = "cmp"
         title  = "Compare"
-        does   = "Decides whether an output is equivalent to its nominal."
+        doc    = "Decides whether an output is equivalent to its nominal."
         parent { eng = "The engine's verdict rests on it." }
-        childs {
-            core       = "Aligns two streams line by line."
-            cmp-proof  = "Proves the whole comparison on real pages."
-        }
+        childs { core = "Aligns two streams line by line." }
     }
 
-IDS, 'parent' AND 'childs'
-    Each statement file gives ITSELF an 'id': a freely chosen string,
-    unique among the childs of its parent. The files relate to each
+IDS, 'parent' AND 'childs' -- components only
+    Each composition file gives ITSELF an 'id': a freely chosen string,
+    unique among the childs of its parent. Components relate to each
     other by these ids and by nothing else -- no path is written:
 
-        parent    the id of the statement file of the DIRECTORY ABOVE
-                  (its 'hwut-composition.conf'), and how this one
-                  serves it:   parent { <id> = "<sentence>" }
+        parent    the id of the component of the DIRECTORY ABOVE, and
+                  how this one serves it:   parent { <id> = "<sentence>" }
                   or, without the sentence:   parent = "<id>"
-        childs    the ids of the statement files in the DIRECTORIES
-                  DIRECTLY BELOW -- components and the TEST directory's
-                  feature file -- and what each contributes:
+        childs    the ids of the components in the DIRECTORIES DIRECTLY
+                  BELOW, and what each contributes:
                       childs { <id> = "<sentence>" ... }
                   or, without sentences:   childs = ["<id>", ...]
 
     Every relation is so stated twice, and the directories state it a
     third time by where they stand. 'mismatch_list()' compares the
     three; 'feature_adapt.py' adapts the statements to the directories.
+    A component's TEST directory is the component's own and is listed
+    nowhere.
 
 THE RELATION
     A feature id means something inside its own file only. A feature is
@@ -117,7 +128,7 @@ class CFeature:
     number:      int | None
     name:        str | None
     title:       str | None = None
-    explanation: str | None = None
+    doc:         str | None = None     # what more there is to say (R-93)
     key:         str        = ""       # the entry's key, as written
     line_n:      int        = 0
     document_tuple: tuple   = ()       # of str: where more is said --
@@ -129,14 +140,15 @@ class CFeature:
 @dataclass(frozen=True)
 class CFeatureFile:
     """What one 'hwut-features.conf' states. 'issued' is None where the
-    file states none, or one that spells no mark."""
-    id:            str | None = None
-    parent_id:     str | None = None
-    parent_text:   str | None = None   # how it serves its parent
+    file states none, or one that spells no mark. A feature file states
+    NO 'id' and NO 'parent' (R-93): its features belong to the component
+    of the directory above. 'stale_tuple' names those it states all the
+    same -- 'relate' takes them out."""
     issued:        int | None = None
     feature_tuple: tuple      = ()     # of CFeature, file order
     fault_tuple:   tuple      = ()     # of Fault
     child_tuple:   tuple      = ()     # a feature file has no childs
+    stale_tuple:   tuple      = ()     # of str: 'id', 'parent' stated
 
     def feature_of_name(self, name):
         """
@@ -172,7 +184,7 @@ class CComposition:
     where 'childs' is written as a list."""
     id:          str | None = None
     title:       str | None = None
-    does:        str | None = None
+    doc:         str | None = None     # what it is and does (R-93)
     parent_id:   str | None = None
     parent_text: str | None = None     # how it serves its parent
     child_tuple: tuple      = ()
@@ -338,19 +350,18 @@ def feature_file_of_text(text, file=FEATURE_FILE_NAME):
     in its 'fault_tuple', and what was readable beside it."""
     fault_list   = []
     outer        = _outer_node(text, file, "features", fault_list)
-    own_id       = None
-    parent_id    = None
-    parent_text  = None
+    stale_list   = []
     issued       = None
     feature_list = []
     name_set     = set()
     scope        = IdScope("the feature scope", first=1)
     for entry in outer.entry_list if outer is not None else ():
         number = number_of_decimal(entry.key)
-        if entry.key == "id":
-            own_id = _id(entry, file, fault_list)
-        elif entry.key == "parent":
-            parent_id, parent_text = _parent(entry, file, fault_list)
+        if entry.key in ("id", "parent"):
+            #  A FEATURE FILE RELATES THROUGH ITS COMPONENT (R-93): what
+            #  it states of its own is stale, a mismatch for 'relate' to
+            #  take out -- not a fault that would hide the features.
+            stale_list.append(entry.key)
         elif entry.key == "childs":
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
@@ -387,20 +398,20 @@ def feature_file_of_text(text, file=FEATURE_FILE_NAME):
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
-                "unknown key '%s' in 'features': 'id', 'parent', "
-                "'issued', or a feature '<number> { }'" % entry.key))
-    return CFeatureFile(own_id, parent_id, parent_text, issued,
-                        tuple(feature_list), tuple(fault_list))
+                "unknown key '%s' in 'features': 'issued', or a feature "
+                "'<number> { }'" % entry.key))
+    return CFeatureFile(issued, tuple(feature_list), tuple(fault_list),
+                        (), tuple(stale_list))
 
 
 def _feature(entry, number, file, fault_list):
-    """RETURN: CFeature, the entry's 'name', 'title', 'explanation' and
+    """RETURN: CFeature, the entry's 'name', 'title', 'doc' and
     'documents' under 'number'; an unknown key inside, and 'documents'
     that is no list of strings, is a fault and is dropped."""
     field_db      = {}
     document_list = []
     for inner in entry.node.entry_list:
-        if inner.key in ("name", "title", "explanation"):
+        if inner.key in ("name", "title", "doc"):
             value = _sentence(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
         elif inner.key == "documents":
@@ -420,9 +431,9 @@ def _feature(entry, number, file, fault_list):
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in feature '%s': 'name', 'title', "
-                "'explanation', 'documents'" % (inner.key, entry.key)))
+                "'doc', 'documents'" % (inner.key, entry.key)))
     return CFeature(number, field_db.get("name"), field_db.get("title"),
-                    field_db.get("explanation"), entry.key,
+                    field_db.get("doc"), entry.key,
                     entry.key_position.line, tuple(document_list))
 
 
@@ -439,7 +450,7 @@ def composition_of_text(text, file=COMPOSITION_FILE_NAME):
     for entry in outer.entry_list if outer is not None else ():
         if entry.key == "id":
             own_id = _id(entry, file, fault_list)
-        elif entry.key in ("title", "does"):
+        elif entry.key in ("title", "doc"):
             value = _sentence(entry, file, fault_list)
             if value is not None: field_db[entry.key] = value
         elif entry.key == "parent":
@@ -449,9 +460,9 @@ def composition_of_text(text, file=COMPOSITION_FILE_NAME):
         else:
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, entry.key_position,
-                "unknown key '%s' in 'component': 'id', 'title', 'does', "
+                "unknown key '%s' in 'component': 'id', 'title', 'doc', "
                 "'parent', 'childs'" % entry.key))
-    return CComposition(own_id, field_db.get("title"), field_db.get("does"),
+    return CComposition(own_id, field_db.get("title"), field_db.get("doc"),
                         parent_id, parent_text, child_tuple,
                         tuple(fault_list))
 
@@ -525,12 +536,12 @@ class CRelation:
 
     def statement_of(self, path):
         """
-        RETURN: CComposition | CFeatureFile, the statement file of the
-                directory at 'path'
-                None, it carries none, or 'path' is not in the relation
+        RETURN: CComposition, the composition file of the component at
+                'path' -- the statement that relates by id
+                None, it carries none, 'path' is a TEST directory (whose
+                feature file relates through its component, R-93), or
+                'path' is not in the relation
         """
-        test_directory = self.test_directory_db.get(path)
-        if test_directory is not None: return test_directory.feature_file
         component = self.component_db.get(path)
         return None if component is None else component.composition
 
@@ -546,14 +557,12 @@ class CRelation:
         return None if component is None else component.composition
 
     def below_tuple(self, path):
-        """RETURN: tuple of str, the paths directly below the component
-        at 'path' that are in the relation: its parts, then its own
-        TEST directory."""
+        """RETURN: tuple of str, the components directly below the
+        component at 'path' -- its parts. Its TEST directory is not
+        among them: it is the component's own (R-93)."""
         component = self.component_db.get(path)
         if component is None: return ()
-        return component.part_tuple + (
-            () if component.test_directory is None
-            else (component.test_directory,))
+        return component.part_tuple
 
     def count_of(self, path):
         """RETURN: dict, state -> how many features stand in it at and
@@ -754,10 +763,11 @@ UNLISTED = "unlisted"   # the directory above does not list it in 'childs'
 GONE     = "gone"       # 'childs' lists an id nothing below carries
 TWIN     = "twin"       # two childs of one parent carry one id
 UNJUDGED = "unjudged"   # the directory above states no id to relate to
+STATED   = "stated"     # a feature file states 'id' or 'parent' (R-93)
 
 #  The kinds 'feature_adapt.adapt_directory' heals, and the one
 #  'feature_adapt.child_dropped' heals; the others are the author's.
-ADAPTED_KIND_TUPLE = (NO_ID, MOVED, PARENT, UNLISTED)
+ADAPTED_KIND_TUPLE = (NO_ID, MOVED, PARENT, UNLISTED, STATED)
 
 
 @dataclass(frozen=True)
@@ -777,7 +787,7 @@ def moved_away_id_set(relation, path):
     for directories that stand elsewhere now ('old_lister_of' names
     'path' for them): theirs to carry away, not gone."""
     result = set()
-    for other in set(relation.component_db) | set(relation.test_directory_db):
+    for other in relation.component_db:
         if parent_of(other) == path: continue
         if old_lister_of(relation, other) == path:
             result.add(relation.statement_of(other).id)
@@ -846,19 +856,14 @@ def old_lister_of(relation, path):
 
 def id_relation_used_f(relation):
     """
-    RETURN: True, the tree relates statement files by id: a composition
-            file stands in it or directly above it, or a feature file
-            states an 'id' or a 'parent'
-            False, it holds feature files only, none of which states
-            either -- nothing asks for an id there
+    RETURN: True, the tree relates components by id: a composition file
+            stands in it or directly above it
+            False, it holds feature files only -- nothing asks for an
+            id there
     """
     if relation.above is not None: return True
-    if any(each.composition is not None
-           for each in relation.component_db.values()): return True
-    return any(each.feature_file is not None
-               and (each.feature_file.id is not None
-                    or each.feature_file.parent_id is not None)
-               for each in relation.test_directory_db.values())
+    return any(each.composition is not None
+               for each in relation.component_db.values())
 
 
 def mismatch_list(relation):
@@ -875,9 +880,15 @@ def mismatch_list(relation):
     ('id_relation_used_f', R-88): feature files alone are complete.
     """
     result    = []
+    #  A FEATURE FILE STATING 'id' OR 'parent' is stale wherever it
+    #  stands, ids in use or not (R-93).
+    for path in sorted(relation.test_directory_db):
+        found = relation.test_directory_db[path].feature_file
+        if found is not None and found.stale_tuple:
+            result.append(CMismatch(STATED, path,
+                                    ", ".join(found.stale_tuple)))
     if not id_relation_used_f(relation): return result
-    path_list = sorted(set(relation.component_db)
-                       | set(relation.test_directory_db),
+    path_list = sorted(relation.component_db,
                        key=lambda path: (path != ".", path.split("/")))
     for path in path_list:
         statement = relation.statement_of(path)

@@ -1,22 +1,21 @@
 
 --- the file's own keys ---
-id:        core-proof
-parent:    core -- What 'core' promises, proven.
 issued:    4
+stale:     none
 
 --- the features, file order ---
-number=1    key=1      name=line-pairing  line=5
+number=1    key=1      name=line-pairing  line=3
     title:       Two streams are aligned line by line.
-    explanation: Each line of the subject meets one of the nominal.
-number=2    key=2      name=missing-side  line=8
+    doc:         'Each line of the subject meets one of the nominal.\nThe rest is said in the MANUAL.'
+number=2    key=2      name=missing-side  line=9
     title:       A line present on one side only is shown whole.
-    explanation: None
-number=4    key=4      name=untested      line=10
+    doc:         None
+number=4    key=4      name=untested      line=11
     title:       None
-    explanation: None
-number=None key=fresh  name=not-numbered  line=11
+    doc:         None
+number=None key=fresh  name=not-numbered  line=12
     title:       Written today.
-    explanation: None
+    doc:         None
 
 --- asked by name ---
 missing-side  -> number 2

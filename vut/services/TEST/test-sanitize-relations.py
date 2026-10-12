@@ -22,8 +22,9 @@ CHOICES: propose, apply, command, move, remove;
 
 DESCRIPTION:
 
-    propose  a tree with a directory MOVED BY HAND, a statement file
-             without an id and a 'childs' entry nothing carries: one
+    propose  a tree with a directory MOVED BY HAND, a feature file
+             stating a 'parent' of its own (R-93) and a 'childs' entry
+             nothing carries: one
              'relate' per directory, the move noted, one 'unrelate';
              what cannot be proposed on stderr. A tree that agrees:
              EMPTY.
@@ -101,20 +102,18 @@ def tree():
            '    parent { eng = "The engine\'s verdict rests on it." }\n'
            '    childs {\n'
            '        core      = "Aligns two streams line by line."\n'
-           '        cmp-proof = "Proves the whole comparison."\n'
            '    }\n}\n')
     _write("engine/compare/core/hwut-composition.conf",
            'component {\n    id     = "core"\n'
-           '    parent { cmp = "Alignment is what compare shows." }\n'
-           '    childs { core-proof = "The proof of pairing." }\n}\n')
+           '    parent { cmp = "Alignment is what compare shows." }\n}\n')
     _write("engine/compare/core/TEST/hwut-features.conf",
-           'features {\n    id     = "core-proof"\n    parent = "core"\n'
+           'features {\n'
            '    issued = 2\n'
            '    1 { name = "line-pairing"  title = "Lines are paired." }\n'
            '    2 { name = "missing-side"  title = "A lone line is shown." }\n'
            '}\n')
     _write("engine/compare/TEST/hwut-features.conf",
-           'features {\n    id     = "cmp-proof"\n    parent = "cmp"\n'
+           'features {\n'
            '    issued = 1\n'
            '    1 { name = "whole-page"  title = "A whole page is judged." }\n'
            '}\n')
@@ -130,8 +129,9 @@ def tree():
 
 def disturbed():
     """RETURN: None. The tree, then: 'core' moved by hand below
-    'plain', the feature file of 'engine/compare/TEST' without its id,
-    and an entry 'old' in the 'childs' of 'engine'."""
+    'plain', the feature file of 'engine/compare/TEST' stating a
+    'parent' of its own (stale, exploration R-93), and an entry 'old'
+    in the 'childs' of 'engine'."""
     tree()
     shutil.move("engine/compare/core", "engine/plain/core")
     _write("engine/compare/TEST/hwut-features.conf",
@@ -183,7 +183,7 @@ def run_propose():
     """RETURN: None. The proposal of a disturbed and of an agreeing
     tree."""
     def body():
-        banner("a directory moved by hand, a missing id, a dead entry")
+        banner("a directory moved by hand, a feature file stating a parent, a dead entry")
         _proposed()
         banner("two childs under one id, and a parent without an id")
         _write("engine/twin/hwut-composition.conf",

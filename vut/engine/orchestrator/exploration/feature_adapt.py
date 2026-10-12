@@ -19,8 +19,9 @@ PURPOSE: ADAPTING THE FEATURE STATEMENTS TO WHERE THINGS STAND -- the
                                             the features a removed test
                                             leaves without a linked run
 
-WHAT 'adapt_directory' DOES, in this order, each step only where the
-statements disagree with the directories:
+WHAT 'adapt_directory' DOES to a component, in this order, each step only
+where the statements disagree with the directories (on a TEST directory
+whose feature file states 'id' or 'parent', it takes them out, R-93):
 
     1  no 'id'                    id = "<the directory's name>" -- or
                                   the ONE id the 'childs' above lists
@@ -50,7 +51,7 @@ from   dataclasses import dataclass
 
 from .                 import amend
 from .explorer         import explore
-from .feature_relation import (ADAPTED_KIND_TUPLE, GONE, MOVED,
+from .feature_relation import (ADAPTED_KIND_TUPLE, GONE, MOVED, STATED,
                                COMPOSITION_FILE_NAME, FEATURE_FILE_NAME,
                                CComposition, linked_name_tuple,
                                mismatch_list, parent_of, proposed_id_of,
@@ -231,6 +232,8 @@ def adapt_directory(root, directory):
     relation = relation_of_tree(root)
     wanted   = [each for each in mismatch_list(relation)
                 if each.path == path and each.kind in ADAPTED_KIND_TUPLE]
+    if any(each.kind == STATED for each in wanted):
+        return _stale_taken_out(directory, path)
     statement = relation.statement_of(path)
     if statement is None:
         return CAdapted(reason="no statement file stands in '%s'" % path)
@@ -285,6 +288,25 @@ def adapt_directory(root, directory):
         said_list.append("%s: childs, '%s' entered%s"
                          % (parent_of(path) or "..", own_id,
                             "" if sentence else ", its sentence empty"))
+    return CAdapted(tuple(said_list))
+
+
+def _stale_taken_out(directory, path):
+    """RETURN: CAdapted, 'id' and 'parent' taken out of the feature file
+    of the TEST directory 'directory' (R-93): a feature file relates
+    through its component. The entries go whole, what they said with
+    them; everything else stays byte for byte."""
+    file      = os.path.join(directory, FEATURE_FILE_NAME)
+    text      = _read(file)
+    said_list = []
+    for key in ("id", "parent"):
+        container = amend.named_container(text, "features")
+        entry     = _entry(text, container, key)
+        if entry is None: continue
+        text = amend.entry_remove(text, container, entry)
+        said_list.append("%s: '%s' taken out -- a feature file relates "
+                         "through its component" % (path, key))
+    _write(file, text)
     return CAdapted(tuple(said_list))
 
 

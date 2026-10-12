@@ -29,10 +29,10 @@
             engine/plain
         statement, not read
             engine/compare/core/TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
-            engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+            engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'doc', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            engine/compare/core/TEST   the feature file states parent; it relates through its component
             .   'childs' lists 'old'; nothing below carries it
-            engine/compare/core/TEST   no 'id'
 status: OK
 
 --- --matrix inside engine/compare/core/TEST ---
@@ -57,7 +57,7 @@ status: OK
         statement, not read
             hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
-            .   no 'id'
+            .   the feature file states parent; it relates through its component
 status: OK
 
 --- --matrix where no TEST directory states features ---

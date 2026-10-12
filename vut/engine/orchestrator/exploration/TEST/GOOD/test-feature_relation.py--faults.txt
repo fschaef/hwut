@@ -23,14 +23,17 @@
   hwut-features.conf:2:3: TYPE: 'issued' is the highest feature number issued: a number, 0 at least and below 4294967296
 
 --- an unknown key, and one inside a feature ---
-  hwut-features.conf:2:3: VOCABULARY: unknown key 'owner' in 'features': 'id', 'parent', 'issued', or a feature '<number> { }'
-  hwut-features.conf:3:19: VOCABULARY: unknown key 'since' in feature '1': 'name', 'title', 'explanation', 'documents'
+  hwut-features.conf:2:3: VOCABULARY: unknown key 'owner' in 'features': 'issued', or a feature '<number> { }'
+  hwut-features.conf:3:19: VOCABULARY: unknown key 'since' in feature '1': 'name', 'title', 'doc', 'documents'
   kept: 1=a
 
---- 'parent' that names no id, an empty 'id', 'childs' in a feature file ---
-  hwut-features.conf:2:3: TYPE: 'id' is a text, and not an empty one
-  hwut-features.conf:3:3: TYPE: 'parent' names ONE id: parent = "<id>", or parent { <id> = "<how this serves it>" }
+--- 'childs' in a feature file; 'id' and 'parent' there are no fault but stale (R-93), and 'does' and 'explanation' are words of the past ---
   hwut-features.conf:4:3: VOCABULARY: a feature file has no 'childs': its features are its numbered entries
+  hwut-features.conf:5:19: VOCABULARY: unknown key 'explanation' in feature '1': 'name', 'title', 'doc', 'documents'
+  kept: 1=a
+
+--- a component stating 'does' ---
+  hwut-composition.conf:2:3: VOCABULARY: unknown key 'does' in 'component': 'id', 'title', 'doc', 'parent', 'childs'
 
 --- 'parent' naming two ids ---
   hwut-composition.conf:2:3: TYPE: 'parent' names ONE id: parent = "<id>", or parent { <id> = "<how this serves it>" }
@@ -42,7 +45,7 @@
   hwut-composition.conf:1:1: VOCABULARY: the outer node is 'component { }'; not 'features'
 
 --- composition: an unknown key, a child that is no text ---
-  hwut-composition.conf:2:3: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+  hwut-composition.conf:2:3: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'doc', 'parent', 'childs'
   hwut-composition.conf:3:12: TYPE: 'core' must be a text
 
 --- composition: 'childs' that is neither scope nor list ---

@@ -16,7 +16,7 @@ FOUR TABS, and the ways between them:
                    the feature's id   -> its place in 'Features'
                    a test run         -> its test's place in 'Tests'
     Features   one row per feature: where it is EXPLAINED -- name,
-               title, explanation, the component it belongs to.
+               title, doc, the component it belongs to.
     Tests      one row per test application: file, title, 'doc', its
                test runs with their verdicts -- 'NONSENSE?' behind a
                run that links to no feature -- and the features it
@@ -75,7 +75,7 @@ class CFeatureRow:
     id_text:     str                   # '<TEST directory>#<number>'
     name:        str
     title:       str
-    explanation: str
+    doc:         str
     component:   str                   # the component's path and title
     state:       str
     run_tuple:   tuple = ()
@@ -190,7 +190,7 @@ def _tree_tuple(relation, feature_db):
         found       = relation.component_db[path]
         composition = found.composition
         detail = "" if composition is None else " -- ".join(
-            text for text in (composition.title, composition.does) if text)
+            text for text in (composition.title, composition.doc) if text)
         row_list.append(CTreeRow(depth, "component",
                                  relation.root_name if path == "." else path,
                                  detail, _count_text(count_db)))
@@ -247,7 +247,7 @@ def document_of(relation, code_db=None, page_base=None, root_base=""):
             feature_list.append(CFeatureRow(
                 index, id_text,
                 feature.key if feature.name is None else feature.name,
-                feature.title or "", feature.explanation or "",
+                feature.title or "", feature.doc or "",
                 component, state.state, tuple(run_list),
                 _code_tuple((code_db or {}).get((path, feature.key)),
                             page_base),
@@ -478,7 +478,7 @@ def html_text(document):
             '<td>%s</td><td>%s</td><td><pre>%s</pre></td><td>%s</td>'
             '<td class="%s">%s</td>%s</tr>'
             % (row.index, row.index, e(row.id_text), e(row.name),
-               e(row.title), e(row.explanation), e(row.component),
+               e(row.title), e(row.doc), e(row.component),
                row.state, row.state, code_text))
     for row in document.test_tuple:
         run_text = "".join(
@@ -558,7 +558,7 @@ def html_text(document):
         "\n".join(tree),
         "</section>",
         '<section id="features"><h2>Features</h2>',
-        table(("Feature", "Name", "Title", "Explanation", "Component",
+        table(("Feature", "Name", "Title", "Doc", "Component",
                "State") + (("Code only its runs reached",)
                            if document.code_f else ())
               + (("Documents",) if document.document_f else ()), features),
@@ -692,7 +692,7 @@ def ods_bytes(document):
         return "../" + link
 
     features = [[[(row.id_text, at("Matrix", row.index))], [row.name],
-                 [row.title], [row.explanation] if row.explanation else [],
+                 [row.title], [row.doc] if row.doc else [],
                  [row.component] if row.component else [], [row.state]]
                 + ([[(text, outward(link)) if link else text
                      for text, link in row.code_tuple]]
@@ -725,7 +725,7 @@ def ods_bytes(document):
                               "Implemented by"), matrix),
         _ods_table("Tree", ("Where", "What", "State"), tree,
                    [row.depth for row in document.tree_tuple]),
-        _ods_table("Features", ("Feature", "Name", "Title", "Explanation",
+        _ods_table("Features", ("Feature", "Name", "Title", "Doc",
                                 "Component", "State")
                    + (("Code only its runs reached",)
                       if document.code_f else ())

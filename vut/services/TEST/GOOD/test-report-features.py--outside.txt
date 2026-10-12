@@ -21,7 +21,7 @@ status: OK
                         [NO VERDICT] a/b/TEST/test-b.sh
 status: OK
 
---- the same file stating a parent: the relation by ids is in use ---
+--- the same file stating a parent: no id is asked for still -- the stale 'parent' is named for 'relate' ---
     COMPONENT .                                    0 proven, 1 failing, 0 unproven
         COMPONENT a                                0 proven, 1 failing, 0 unproven
             FEATURES a/TEST                        0 proven, 0 failing, 0 unproven
@@ -31,12 +31,7 @@ status: OK
                         [NO VERDICT] a/b/TEST/test-b.sh
     
     OUTSIDE THE RELATION
-        component, no 'hwut-composition.conf'
-            .
-            a
-            a/b
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
-            a/b/TEST   no 'id'
-            a/b/TEST   the directory above gives itself no id
+            a/b/TEST   the feature file states parent; it relates through its component
 status: OK
 <hwut-end>

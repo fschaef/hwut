@@ -20,11 +20,13 @@ PURPOSE: THE FEATURE RELATION, read: what 'hwut-features.conf' and
 
 CHOICES: feature_file, composition, block, faults, tree;
 
-feature_file  the features of a file with their numbers; the scope the
-              file hands out, counting from 1 and never below a number
-              the file holds; a feature without a number.
+feature_file  the features of a file with their numbers and their 'doc'
+              in triple quotes; the scope the file hands out, counting
+              from 1 and never below a number the file holds; a feature
+              without a number. A feature file states no 'id' and no
+              'parent' (R-93).
 
-composition   title, does, to-parent and the parts, as stated.
+composition   title, doc, parent and the childs, as stated.
 
 block         'features' in a test's block: at the root, in a choice
               (which replaces the root's), the empty list, and what the
@@ -55,12 +57,13 @@ from   vut.engine.orchestrator.exploration.feature_relation \
 
 
 FEATURE_TEXT = """features {
-    id     = "core-proof"
-    parent { core = "What 'core' promises, proven." }
     issued = 4
-    1 { name        = "line-pairing"
-        title       = "Two streams are aligned line by line."
-        explanation = "Each line of the subject meets one of the nominal." }
+    1 { name  = "line-pairing"
+        title = "Two streams are aligned line by line."
+        doc   = \"\"\"
+            Each line of the subject meets one of the nominal.
+            The rest is said in the MANUAL.
+            \"\"\" }
     2 { name        = "missing-side"
         title       = "A line present on one side only is shown whole." }
     4 { name        = "untested" }
@@ -71,12 +74,11 @@ FEATURE_TEXT = """features {
 COMPOSITION_TEXT = """component {
     id     = "cmp"
     title  = "Compare"
-    does   = "Decides whether an output is equivalent to its nominal."
+    doc    = "Decides whether an output is equivalent to its nominal."
     parent { eng = "The engine's verdict rests on it." }
     childs {
         core      = "Aligns two streams line by line."
         pat       = "Lets declared variation pass."
-        cmp-proof = "Proves the whole comparison on real pages."
     }
 }
 """
@@ -92,15 +94,14 @@ def test_feature_file():
     """RETURN: None. Prints a feature file as read, and its scope."""
     found = feature_file_of_text(FEATURE_TEXT)
     banner("the file's own keys")
-    print("id:        %s" % found.id)
-    print("parent:    %s -- %s" % (found.parent_id, found.parent_text))
     print("issued:    %s" % found.issued)
+    print("stale:     %s" % (", ".join(found.stale_tuple) or "none"))
     banner("the features, file order")
     for feature in found.feature_tuple:
         print("number=%-4s key=%-6s name=%-13s line=%i"
               % (feature.number, feature.key, feature.name, feature.line_n))
         print("    title:       %s" % feature.title)
-        print("    explanation: %s" % feature.explanation)
+        print("    doc:         %r" % feature.doc)
     banner("asked by name")
     for name in ("missing-side", "not-numbered", "nobody"):
         feature = found.feature_of_name(name)
@@ -127,7 +128,7 @@ def test_composition():
     banner("the component")
     print("id:        %s" % found.id)
     print("title:     %s" % found.title)
-    print("does:      %s" % found.does)
+    print("doc:       %s" % found.doc)
     print("parent:    %s -- %s" % (found.parent_id, found.parent_text))
     banner("the childs, file order")
     for child_id, text in found.child_tuple:
@@ -142,7 +143,7 @@ def test_composition():
           % (short.parent_id, short.parent_text, short.child_tuple,
              len(short.fault_tuple)))
     banner("a component that states no id, no parent, no childs")
-    bare = composition_of_text('component { title = "Root"  does = "All." }')
+    bare = composition_of_text('component { title = "Root"  doc = "All." }')
     print("id: %s   parent: %s   childs: %i   faults: %i"
           % (bare.id, bare.parent_id, len(bare.child_tuple),
              len(bare.fault_tuple)))
@@ -207,9 +208,14 @@ def test_faults():
         ("an unknown key, and one inside a feature",
          feature_file_of_text,
          'features {\n  owner = "me"\n  1 { name = "a"  since = "v2" }\n}'),
-        ("'parent' that names no id, an empty 'id', 'childs' in a feature file",
+        ("'childs' in a feature file; 'id' and 'parent' there are no "
+         "fault but stale (R-93), and 'does' and 'explanation' are words "
+         "of the past",
          feature_file_of_text,
-         'features {\n  id = ""\n  parent = 7\n  childs = ["a"]\n}'),
+         'features {\n  id = ""\n  parent = 7\n  childs = ["a"]\n'
+         '  1 { name = "a"  explanation = "old" }\n}'),
+        ("a component stating 'does'",
+         composition_of_text, 'component {\n  does = "old"\n}'),
         ("'parent' naming two ids",
          composition_of_text,
          'component {\n  parent { a = "x"  b = "y" }\n}'),
@@ -258,10 +264,10 @@ def _tree(root):
     _write(root, "engine/compare/core/hwut-composition.conf",
            'component { id = "core"  title = "Core"\n'
            '            parent { cmp = "Alignment." }\n'
-           '            childs { core-proof = "The proof." } }\n')
+           '            }\n')
     _write(root, "engine/compare/core/TEST/hwut-features.conf", FEATURE_TEXT)
     _write(root, "engine/compare/TEST/hwut-features.conf",
-           'features {\n  id = "cmp-proof"\n  parent = "cmp"\n  issued = 1\n'
+           'features {\n  issued = 1\n'
            '  1 { name = "whole-page"  title = "A whole page is judged." }\n}\n')
     _test(root, "engine/compare/core/TEST/test-pair.sh",
           ['title    = "Pairing"', 'features = ["line-pairing"]',

@@ -2,17 +2,16 @@
 --- the component ---
 id:        cmp
 title:     Compare
-does:      Decides whether an output is equivalent to its nominal.
+doc:       Decides whether an output is equivalent to its nominal.
 parent:    eng -- The engine's verdict rests on it.
 
 --- the childs, file order ---
 core      Aligns two streams line by line.
 pat       Lets declared variation pass.
-cmp-proof Proves the whole comparison on real pages.
 
 --- asked by id ---
 core      -> Aligns two streams line by line.
-cmp-proof -> Proves the whole comparison on real pages.
+cmp-proof -> None
 gone      -> None
 
 --- the forms without sentences ---

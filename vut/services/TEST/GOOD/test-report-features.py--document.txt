@@ -34,7 +34,7 @@ status: OK
     <tr id="m-3"><td class="id"><a href="#f-3">engine/compare/core/TEST#2</a></td><td>A line present on one side only is shown whole.</td><td class="FAILING">FAILING</td><td><ul><li><a href="#t-2">test-pair.sh [gap]</a> <span class="FAIL">FAIL</span></li></ul></td></tr>
     <tr id="m-4"><td class="id"><a href="#f-4">engine/compare/core/TEST#3</a></td><td>untested</td><td class="UNPROVEN">UNPROVEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
     <tr id="m-5"><td class="id"><a href="#f-5">engine/compare/core/TEST#-</a></td><td>not-numbered</td><td class="UNPROVEN">UNPROVEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
-    [features] Feature | Name | Title | Explanation | Component | State | Documents
+    [features] Feature | Name | Title | Doc | Component | State | Documents
     <tr id="f-0"><td class="id"><a href="#m-0">engine/compare/TEST#1</a></td><td>whole-page</td><td>A whole page is judged.</td><td><pre></pre></td><td>engine/compare -- Compare</td><td class="PROVEN">PROVEN</td><td><ul></ul></td></tr>
     <tr id="f-1"><td class="id"><a href="#m-1">engine/compare/TEST#2</a></td><td>never-run</td><td>Linked, and not in the book.</td><td><pre></pre></td><td>engine/compare -- Compare</td><td class="FAILING">FAILING</td><td><ul></ul></td></tr>
     <tr id="f-2"><td class="id"><a href="#m-2">engine/compare/core/TEST#1</a></td><td>line-pairing</td><td>Two streams are aligned line by line.</td><td><pre></pre></td><td>engine/compare/core -- Core</td><td class="FAILING">FAILING</td><td><ul><li><a href="engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul></td></tr>
@@ -72,7 +72,7 @@ status: OK
     #3 untested -> #Features.A6 |  | UNPROVEN
     #- not-numbered -> #Features.A7 |  | UNPROVEN
     [Features]
-    Feature | Name | Title | Explanation | Component | State | Documents
+    Feature | Name | Title | Doc | Component | State | Documents
     engine/compare/TEST#1 -> #Matrix.A2 | whole-page | A whole page is judged. |  | engine/compare -- Compare | PROVEN | 
     engine/compare/TEST#2 -> #Matrix.A3 | never-run | Linked, and not in the book. |  | engine/compare -- Compare | FAILING | 
     engine/compare/core/TEST#1 -> #Matrix.A4 | line-pairing | Two streams are aligned line by line. |  | engine/compare/core -- Core | FAILING | engine/compare/core/README.txt#pairing -> ../engine/compare/core/README.txt#pairing / https://example.org/pairing -> https://example.org/pairing / engine/compare/core/absent.txt -> ../engine/compare/core/absent.txt

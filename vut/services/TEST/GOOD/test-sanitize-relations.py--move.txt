@@ -13,15 +13,11 @@ status: OK
 --- the two feature files ---
 engine/compare/core/TEST/hwut-features.conf:
     | features {
-    |     id     = "core-proof"
-    |     parent = "core"
     |     issued = 2
     |     1 { name = "line-pairing"  title = "Lines are paired." }
     | }
 engine/compare/TEST/hwut-features.conf:
     | features {
-    |     id     = "cmp-proof"
-    |     parent = "cmp"
     |     issued = 3
     |     1 { name = "whole-page"  title = "A whole page is judged." }
     |     2 { name = "line-pairing"  title = "Lines are paired." }

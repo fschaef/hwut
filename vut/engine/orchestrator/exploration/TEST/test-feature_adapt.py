@@ -128,21 +128,18 @@ def _agreeing_tree(root):
            '    parent { eng = "The engine\'s verdict rests on it." }\n'
            '    childs {\n'
            '        core      = "Aligns two streams line by line."\n'
-           '        cmp-proof = "Proves the whole comparison on real pages."\n'
            '    }\n}\n')
     _write(root, "engine/compare/core/hwut-composition.conf",
            'component {\n    id     = "core"\n    title  = "Core"\n'
-           '    parent { cmp = "Alignment is what compare shows." }\n'
-           '    childs { core-proof = "The proof of pairing." }\n}\n')
+           '    parent { cmp = "Alignment is what compare shows." }\n}\n')
     _write(root, "engine/compare/core/TEST/hwut-features.conf",
-           'features {\n    id     = "core-proof"\n'
-           '    parent { core = "What \'core\' promises, proven." }\n'
+           'features {\n'
            '    issued = 2\n'
            '    1 { name  = "line-pairing"\n'
            '        title = "Two streams are aligned line by line." }\n'
            '    2 { name = "missing-side" }\n}\n')
     _write(root, "engine/compare/TEST/hwut-features.conf",
-           'features {\n    id     = "cmp-proof"\n    parent = "cmp"\n'
+           'features {\n'
            '    issued = 1\n'
            '    1 { name = "whole-page"  title = "A whole page is judged." }\n}\n')
     _write(root, "engine/plain/hwut-composition.conf",
@@ -174,9 +171,8 @@ def _disagreeing_tree(root):
     #  PARENT: 'core' names another parent.
     _write(root, "engine/compare/core/hwut-composition.conf",
            'component {\n    id     = "core"\n    title  = "Core"\n'
-           '    parent { compare = "Alignment is what compare shows." }\n'
-           '    childs { core-proof = "The proof of pairing." }\n}\n')
-    #  NO_ID in a TEST directory.
+           '    parent { compare = "Alignment is what compare shows." }\n}\n')
+    #  STATED: a feature file that relates on its own (R-93).
     _write(root, "engine/compare/TEST/hwut-features.conf",
            'features {\n    parent = "cmp"\n    issued = 1\n'
            '    1 { name = "whole-page"  title = "A whole page is judged." }\n}\n')

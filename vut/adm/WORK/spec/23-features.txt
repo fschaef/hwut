@@ -3,7 +3,7 @@ spec/23-features -- FEATURES: what a tree claims to do, and which test
                     runs prove it
 ==============================================================================
 
-VERSION: 7
+VERSION: 8
 
 COMPONENTS: engine/bookkeeper, engine/orchestrator/exploration,
             engine/coverage, services.
@@ -25,6 +25,12 @@ VERSION 6: the feature document holds the tree and leads to the coverage
 pages (services E-147).
 VERSION 7: a feature names documents (exploration R-92); the document's
 tree is interactive (services E-148).
+VERSION 8 takes the rulings of 2026-10-12 (exploration R-93): A COMPONENT
+IS A CLAIM IMPLEMENTED BY CLAIMS, as a feature is a claim implemented by
+test runs; both speak with 'title', 'doc', 'documents' ('does' and
+'explanation' are gone); a feature file states no 'id' and no 'parent' --
+only components relate by id. OWED: a claim's state on two axes
+(section 10).
 
     section                                   stands / OWED
     ---------------------------------------------------------------------
@@ -40,38 +46,43 @@ tree is interactive (services E-148).
        remove
     8  engine/bookkeeper/id_scope.py          stands  (bookkeeper B-31)
     9  open
+    10 a claim's state on two axes            OWED    (ruled 2026-10-12)
 
-A FEATURE is one thing a piece of software does, stated by its author in a
-sentence. A feature is PROVEN where at least one test run is linked to it
-and every linked test run passes. A feature with no linked test run is
-UNPROVEN, and an unproven feature counts as not implemented.
+A CLAIM is a sentence of what the software does, and what implements it
+(R-93):
 
-A COMPONENT is a directory that is not a TEST directory.
+    claim       implemented by                 stated in
+    ---------------------------------------------------------------------
+    component   claims: its own features and   <component>/hwut-composition.conf
+                the components below it
+    feature     test runs                      <component>/TEST/hwut-features.conf
+                                               (the link: a test's block)
 
-    <component>/hwut-composition.conf     what the component does; its id,
-                                          its parent's, its childs'
-    <component>/TEST/hwut-features.conf   the features proven in this TEST
-                                          directory; its id, its parent's
-    a test's '@hwut { }' block            the features this test proves
+Both speak with the same words: 'title' (one line), 'doc' (as many lines
+as it takes, triple quotes) and 'documents' (where more is said; a
+feature's, for now). A test carries 'title' and 'doc' as well.
+
+A FEATURE is PROVEN where at least one test run is linked to it and every
+linked test run passes. A feature with no linked test run is UNPROVEN,
+and an unproven feature counts as not implemented. (Section 10 owes the
+two axes.)
+
+A COMPONENT is a directory that is not a TEST directory. Its TEST
+directory is its own: the features there are the component's.
 
 
 1  THE FEATURE FILE
 ______________________________________________________________________________
 
     features {
-        id     = "core-proof"
-        parent { core = "What 'core' promises, proven." }
         issued = 2
-        1 { name        = "line-pairing"
-            title       = "Two streams are aligned line by line."
-            explanation = "..." }
+        1 { name  = "line-pairing"
+            title = "Two streams are aligned line by line."
+            doc   = "..." }
         2 { name        = "missing-side"
             title       = "A line present on one side only is shown whole." }
     }
 
-    id            the file's own id (section 4).
-    parent        the id of the composition file of the directory above,
-                  and how these features serve it (section 4).
     issued        the highest feature number this file ever issued.
     <number>      a feature; the number is its ID inside this file, issued
                   once and never again: the next feature receives
@@ -79,7 +90,8 @@ ______________________________________________________________________________
     name          what a test writes to link to the feature. Unique in this
                   file. A name may change; the number stays.
     title         one sentence: what the software does.
-    explanation   free text.
+    doc           what more there is to say: as many lines as it takes,
+                  between three double quotes.
     documents     where more is said: a list of paths from this file's
                   directory ('#<anchor>' may follow), or URLs --
                   documents = ["../README.txt#3"]. Printed as 'see' under
@@ -90,8 +102,12 @@ a feature is addressed as '<path>#<number> <name>', composed by whoever
 reports, at the moment it reports, and stored nowhere (as coverage D-14
 rules for test run ids).
 
-An object under a key that is neither a number nor 'parent' is a feature
-WITHOUT a number. A number standing twice is refused by the parser; the
+A feature file states NO 'id' and NO 'parent' (R-93): its features belong
+to the component of the directory above. Where it states them all the
+same, they are the mismatch 'stated' (section 6), which 'relate' heals by
+taking them out.
+
+An object under a key that is not a number is a feature WITHOUT a number. A number standing twice is refused by the parser; the
 first stands.
 
 
@@ -117,27 +133,25 @@ ______________________________________________________________________________
     component {
         id     = "cmp"
         title  = "Compare"
-        does   = "Decides whether an output is equivalent to its nominal."
+        doc    = "Decides whether an output is equivalent to its nominal."
         parent { eng = "The engine's verdict rests on it." }
-        childs {
-            core      = "Aligns two streams line by line."
-            cmp-proof = "Proves the whole comparison on real pages."
-        }
+        childs { core = "Aligns two streams line by line." }
     }
 
-    id            the file's own id (section 4).
-    title, does   what the component is and does.
-    parent        the id of the composition file of the directory above,
-                  and how this component serves it.
-    childs        the ids of the statement files directly below -- the
-                  components and the TEST directory's feature file -- and
-                  what each contributes.
+    id            the component's own id (section 4).
+    title, doc    what the component is and does.
+    parent        the id of the component of the directory above, and how
+                  this component serves it.
+    childs        the ids of the components directly below, and what each
+                  contributes. The component's TEST directory is not
+                  listed: it is the component's own.
 
 
 4  IDS, 'parent' AND 'childs'
 ______________________________________________________________________________
 
-Each statement file gives ITSELF an 'id': a freely chosen string ("cmp"),
+COMPONENTS ONLY (R-93). Each composition file gives ITSELF an 'id': a
+freely chosen string ("cmp"),
 unique among the childs of its parent. The files relate to each other by
 these ids and by nothing else. No path and no directory name is written.
 
@@ -179,7 +193,7 @@ ARE NOT MANDATORY: a TEST directory without one is named nowhere.
 FEATURE FILES ALONE ARE COMPLETE (services E-144, ruled): components
 without a composition file, and the disagreements of section 6, are named
 only where the tree relates by id -- a composition file stands in it or
-directly above it, or a feature file states 'id' or 'parent'.
+directly above it.
 
 '--matrix' prints, in place of the tree, one table per TEST directory that
 carries a feature file:
@@ -246,7 +260,8 @@ the test is about, written in triple quotes over as many lines as it takes.
 ______________________________________________________________________________
 
 'feature_relation.mismatch_list' holds 'parent' and 'childs' against the
-directories, for every directory that carries a statement file:
+directories, for every component that carries a composition file, and
+names every feature file that states an 'id' or a 'parent':
 
     kind       what disagrees                             healed by
     ---------------------------------------------------------------------
@@ -265,6 +280,8 @@ directories, for every directory that carries a statement file:
                                                           renames one
     unjudged   the directory above gives itself no id     said; its own
                                                           'relate' comes first
+    stated     a feature file states 'id' or 'parent'     relate <TEST dir>
+               (R-93; judged with ids in use or not)      takes them out
 
 'hwut.sanitize.propose --relations' (one of the aspects a bare call asks)
 writes one 'relate' per directory -- noted 'moved from <dir>' where the move
@@ -340,8 +357,20 @@ ______________________________________________________________________________
     o-6  A feature without a number ('fresh { name = "..." }') is read and
          reported '#-'; nothing numbers it yet (version 1's F-4).
     o-8  CLOSED 2026-10-11 (R-91): 'hwut.move' writes the feature file.
-    o-9  NEW: the sentence forms  parent { <id> = "..." }  and
+    o-9  the sentence forms  parent { <id> = "..." }  and
          childs { <id> = "..." }  keep version 1's 'to-parent' and 'parts'
          sentences under the ruled attribute names; the bare forms
          parent = "<id>"  and  childs = [...]  are read alike. Whether the
          sentences belong there.
+
+
+10 A CLAIM'S STATE ON TWO AXES -- OWED
+______________________________________________________________________________
+
+RULED (Frank-Rene, 2026-10-12): "a component's state has two dimensions:
+implementation being implemented or not, test failing or succeeding.
+Those are separate axes." Today's PROVEN / FAILING / UNPROVEN mixes the
+two. The concrete form -- what a feature and a component show on each
+axis, and how a component's axes fold from its parts -- is put to
+Frank-Rene before it is built.
+

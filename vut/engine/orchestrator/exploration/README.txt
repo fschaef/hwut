@@ -923,15 +923,17 @@ blessed.
 ______________________________________________________________________________
 
 Three statements say what a tree claims to do and which test runs prove
-it (R-83, R-84):
+it (R-83, R-84, R-93). A component and a feature are both CLAIMS: a
+component is implemented by claims (its own features and the components
+below it), a feature by test runs. Both speak with 'title', 'doc' and
+'documents'.
 
-    <component>/hwut-composition.conf     component { id  title  does
+    <component>/hwut-composition.conf     component { id  title  doc
                                           parent { <id> = "..." }
                                           childs { <id> = "..." } }
-    <component>/TEST/hwut-features.conf   features { id
-                                          parent { <id> = "..." }  issued
-                                          <number> { name  title
-                                          explanation } }
+    <component>/TEST/hwut-features.conf   features { issued
+                                          <number> { name  title  doc
+                                          documents } }
     a test's '@hwut { }' block            features = ["<name>", ...]
 
     read_feature_file(directory)   CFeatureFile, or None where no file
@@ -950,10 +952,11 @@ A feature's number is its id inside its file; 'issued' is the highest
 number the file issued; 'CFeatureFile.scope()' is the IdScope that
 issues the next one.
 
-Each statement file gives itself an 'id', a freely chosen string unique
-among the childs of its parent. 'parent' names the id of the composition
-file of the directory above; 'childs' lists the ids of the statement
-files directly below. 'parent = "<id>"' and 'childs = ["<id>", ...]' are
+Each COMPOSITION file gives itself an 'id', a freely chosen string unique
+among the childs of its parent. 'parent' names the id of the component of
+the directory above; 'childs' lists the ids of the components directly
+below. A feature file states no 'id' and no 'parent': it relates through
+its component, and its TEST directory stands in no 'childs' (R-93). 'parent = "<id>"' and 'childs = ["<id>", ...]' are
 the forms without sentences. The top of the tree states no parent.
 
     kind       what disagrees with the directories
@@ -965,6 +968,7 @@ the forms without sentences. The top of the tree states no parent.
     gone       'childs' lists an id nothing below carries
     twin       two childs of one parent carry one id
     unjudged   the directory above gives itself no id
+    stated     a feature file states 'id' or 'parent' (R-93)
 
     state of a feature
         PROVEN     one linked test run or more; all of them pass

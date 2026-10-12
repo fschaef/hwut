@@ -2378,3 +2378,48 @@ COST      'hwut.move' carries a feature's entry as written (R-84): the
           An anchor means what the linked file's viewer makes of it; a
           plain text file has none.
 PINNED    'services/TEST/test-report-features.py tree, document'.
+
+
+R-93  A COMPONENT IS A CLAIM IMPLEMENTED BY CLAIMS                      (2026-10-12)
+
+PROBLEM   Three kinds of node with three vocabularies: a component
+          ('title', 'does', 'id', 'parent', 'childs'), a feature file
+          ('id', 'parent', 'issued' -- no text), a feature ('title',
+          'explanation', 'documents'). Components related downward and
+          upward by id; feature files took part in that relation as
+          childs of their component; features were linked from below by
+          test runs. The commonality was not visible.
+DECISION  RULED (Frank-Rene, 2026-10-12). ONE KIND OF THING, A CLAIM:
+              component   implemented by claims -- its own features and
+                          the components below it
+              feature     implemented by test runs
+          ONE VOCABULARY: 'title' (one line), 'doc' (as many lines as it
+          takes, triple quotes, as a test's 'doc', R-90), 'documents'.
+          'does' and 'explanation' are gone; read, they are unknown keys.
+          A FEATURE FILE RELATES THROUGH ITS COMPONENT: it states no 'id'
+          and no 'parent'; a component's 'childs' lists components only;
+          a TEST directory is its component's own and stands in no
+          'childs'. Only components are judged by id ('mismatch_list').
+          A feature file that states 'id' or 'parent' all the same is the
+          mismatch 'stated' -- judged whether ids are in use or not, its
+          features read as ever -- and 'relate <TEST dir>' takes both
+          out ('feature_adapt._stale_taken_out'); 'hwut.sanitize.propose
+          --relations' proposes it ('relation-stated').
+          COMPONENTS ARE NOT LOCATED IN TEST DIRECTORIES (ruled): a
+          component is implemented by claims, never by test runs
+          directly.
+          OWED: the state of a claim on two axes (spec 23, section 10).
+COST      Trees written under R-84 carry 'id'/'parent' in feature files
+          and 'TEST' ids in 'childs': the first is 'stated', the second
+          'gone' -- both healed by one 'hwut.sanitize.propose
+          --relations' and its apply.
+          'documents' on a component is not built.
+GRAVEYARD The feature file as a node of its own between component and
+          features (R-84): an id with no text, which 'relate' had to
+          keep in step for nothing a reader asks.
+PINNED    'engine/orchestrator/exploration/TEST/test-feature_relation.py
+          feature_file, composition, faults';
+          'engine/orchestrator/exploration/TEST/test-feature_adapt.py
+          judged, relate';
+          'services/TEST/test-sanitize-relations.py propose, apply';
+          'services/TEST/test-report-features.py tree, outside'.

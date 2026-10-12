@@ -75,7 +75,8 @@ DESCRIPTION:
                     ALONE: complete as it stands -- no id asked for, no
                     component named as undescribed (book work
                     2026-10-11, A-2, A-3); and the same file stating a
-                    'parent', which brings the judgement of ids back.
+                    'parent': stale, named for 'relate' (exploration
+                    R-93), and no id asked for.
     empty           a tree without a TEST directory: said as EMPTY,
                     status 3.
     refused         a directory that does not stand, a tree no root
@@ -142,7 +143,7 @@ def fixture(root):
            'component {\n'
            '    id     = "eng"\n'
            '    title  = "Engine"\n'
-           '    does   = "Runs tests and judges them."\n'
+           '    doc    = "Runs tests and judges them."\n'
            '    parent = "all"\n'
            '    childs { cmp = "Gives the verdict." }\n'
            '}\n')
@@ -150,18 +151,17 @@ def fixture(root):
            'component {\n'
            '    id     = "cmp"\n'
            '    title  = "Compare"\n'
-           '    does   = "Decides whether an output is equivalent to its nominal."\n'
+           '    doc    = "Decides whether an output is equivalent to its nominal."\n'
            '    parent { eng = "The engine\'s verdict rests on it." }\n'
            '    childs {\n'
            '        core      = "Aligns two streams line by line."\n'
-           '        cmp-proof = "Proves the whole comparison on real pages."\n'
            '    }\n'
            '}\n')
     _write(root, "engine/compare/core/hwut-composition.conf",
            'component {\n'
            '    id     = "core"\n'
            '    title  = "Core"\n'
-           '    does   = "Pairs lines."\n'
+           '    doc    = "Pairs lines."\n'
            '    parent { cmp = "Alignment is what compare shows." }\n'
            '    owner  = "nobody"\n'
            '}\n')
@@ -181,8 +181,6 @@ def fixture(root):
            '}\n')
     _write(root, "engine/compare/TEST/hwut-features.conf",
            'features {\n'
-           '    id     = "cmp-proof"\n'
-           '    parent = "cmp"\n'
            '    issued = 2\n'
            '    1 { name = "whole-page"  title = "A whole page is judged." }\n'
            '    2 { name = "never-run"   title = "Linked, and not in the book." }\n'
@@ -486,8 +484,8 @@ def run_outside():
         banner("a feature file alone: no id is asked for, no component "
                "named")
         _page([])
-        banner("the same file stating a parent: the relation by ids is "
-               "in use")
+        banner("the same file stating a parent: no id is asked for "
+               "still -- the stale 'parent' is named for 'relate'")
         _write(".", "a/b/TEST/hwut-features.conf",
                'features {\n    parent = "b"\n    1 { name = "wanted" }\n}\n')
         _page([])

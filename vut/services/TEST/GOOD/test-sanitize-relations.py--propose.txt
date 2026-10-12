@@ -1,5 +1,5 @@
 
---- a directory moved by hand, a missing id, a dead entry ---
+--- a directory moved by hand, a feature file stating a parent, a dead entry ---
     # hwut.sanitize.propose -- in '.': relations
     #
     # One command per line, '<command> <concerned entity>', the entity
@@ -10,19 +10,17 @@
     #
     # Every command judges again before it acts.
     
-    # NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives
-    # itself no 'id'; nothing can name it as parent or child.
-    # 'relate' writes 'id = "<the directory's name>"' -- rename it
-    # afterwards, here and where it is listed -- and relates it to the
-    # directory above.
-    relate engine/compare/TEST
-    
     # DETECTED MOVE: a directory stands below one component, and its
     # statement file and the 'childs' it came from still say another.
     # 'relate' sets 'parent' to the id of the directory above and
     # carries the 'childs' entry, with its sentence, from the old
     # parent's file to the new one's.
     relate engine/plain/core  # moved from engine/compare
+    
+    # FEATURE FILE RELATES ON ITS OWN: a 'hwut-features.conf' states an
+    # 'id' or a 'parent'. Its features belong to the component of the
+    # directory above (exploration R-93); 'relate' takes both out.
+    relate engine/compare/TEST
     
     # CHILD GONE: 'childs' lists an id that nothing directly below
     # carries, and that no moved directory took with it.
@@ -43,13 +41,17 @@ status: OK
     #
     # Every command judges again before it acts.
     
-    # NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives
-    # itself no 'id'; nothing can name it as parent or child.
+    # NO ID: a 'hwut-composition.conf' gives itself no 'id'; nothing
+    # can name the component as parent or child.
     # 'relate' writes 'id = "<the directory's name>"' -- rename it
     # afterwards, here and where it is listed -- and relates it to the
     # directory above.
-    relate engine/compare/TEST
     relate engine/plain
+    
+    # FEATURE FILE RELATES ON ITS OWN: a 'hwut-features.conf' states an
+    # 'id' or a 'parent'. Its features belong to the component of the
+    # directory above (exploration R-93); 'relate' takes both out.
+    relate engine/compare/TEST
     
     # CHILD GONE: 'childs' lists an id that nothing directly below
     # carries, and that no moved directory took with it.

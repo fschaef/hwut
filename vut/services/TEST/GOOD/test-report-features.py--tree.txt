@@ -2,25 +2,23 @@
 --- hwut.report.features ---
     COMPONENT . (all) -- All                       1 proven, 3 failing, 2 unproven
         COMPONENT engine (eng) -- Engine           1 proven, 3 failing, 2 unproven
-            does       Runs tests and judges them.
+            doc        Runs tests and judges them.
             as child   Runs and judges.
             COMPONENT engine/compare (cmp) -- Compare 1 proven, 3 failing, 2 unproven
-                does       Decides whether an output is equivalent to its nominal.
+                doc        Decides whether an output is equivalent to its nominal.
                 serves     The engine's verdict rests on it.
                 as child   Gives the verdict.
-                FEATURES engine/compare/TEST (cmp-proof) 1 proven, 1 failing, 0 unproven
-                    as child   Proves the whole comparison on real pages.
+                FEATURES engine/compare/TEST       1 proven, 1 failing, 0 unproven
                     [PROVEN]   engine/compare/TEST#1 whole-page -- A whole page is judged.
                         [PASS] engine/compare/TEST/test-pages.sh [small]
                         [PASS] engine/compare/TEST/test-pages.sh [large]
                     [FAILING]  engine/compare/TEST#2 never-run -- Linked, and not in the book.
                         [NO VERDICT] engine/compare/TEST/test-fresh.sh
                 COMPONENT engine/compare/core (core) -- Core 0 proven, 2 failing, 2 unproven
-                    does       Pairs lines.
+                    doc        Pairs lines.
                     serves     Alignment is what compare shows.
                     as child   Aligns two streams line by line.
                     FEATURES engine/compare/core/TEST 0 proven, 2 failing, 2 unproven
-                        serves     What 'core' promises, proven.
                         [FAILING]  engine/compare/core/TEST#1 line-pairing -- Two streams are aligned line by line.
                             [PASS] engine/compare/core/TEST/test-pair.sh [plain]
                             [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
@@ -45,10 +43,10 @@
             engine/plain
         statement, not read
             engine/compare/core/TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
-            engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+            engine/compare/core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'doc', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
+            engine/compare/core/TEST   the feature file states parent; it relates through its component
             .   'childs' lists 'old'; nothing below carries it
-            engine/compare/core/TEST   no 'id'
 status: OK
 
 --- the same tree, as a record ---
@@ -57,21 +55,19 @@ status: OK
 
 --- --directory=engine/compare: paths from there ---
     COMPONENT . (cmp) -- Compare                   1 proven, 3 failing, 2 unproven
-        does       Decides whether an output is equivalent to its nominal.
+        doc        Decides whether an output is equivalent to its nominal.
         serves     The engine's verdict rests on it.
-        FEATURES TEST (cmp-proof)                  1 proven, 1 failing, 0 unproven
-            as child   Proves the whole comparison on real pages.
+        FEATURES TEST                              1 proven, 1 failing, 0 unproven
             [PROVEN]   TEST#1 whole-page -- A whole page is judged.
                 [PASS] TEST/test-pages.sh [small]
                 [PASS] TEST/test-pages.sh [large]
             [FAILING]  TEST#2 never-run -- Linked, and not in the book.
                 [NO VERDICT] TEST/test-fresh.sh
         COMPONENT core (core) -- Core              0 proven, 2 failing, 2 unproven
-            does       Pairs lines.
+            doc        Pairs lines.
             serves     Alignment is what compare shows.
             as child   Aligns two streams line by line.
             FEATURES core/TEST                     0 proven, 2 failing, 2 unproven
-                serves     What 'core' promises, proven.
                 [FAILING]  core/TEST#1 line-pairing -- Two streams are aligned line by line.
                     [PASS] core/TEST/test-pair.sh [plain]
                     [FAIL] core/TEST/test-pair.sh [gap]
@@ -92,8 +88,8 @@ status: OK
             core/TEST#1 line-pairing   '../absent.txt'
         statement, not read
             core/TEST/hwut-features.conf:11:29: VOCABULARY: 'documents' of feature '3' is no list of file names: documents = ["README.txt", ...]
-            core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'does', 'parent', 'childs'
+            core/hwut-composition.conf:6:5: VOCABULARY: unknown key 'owner' in 'component': 'id', 'title', 'doc', 'parent', 'childs'
         'parent' and 'childs', not as the directories stand => hwut.sanitize.propose --relations
-            core/TEST   no 'id'
+            core/TEST   the feature file states parent; it relates through its component
 status: OK
 <hwut-end>

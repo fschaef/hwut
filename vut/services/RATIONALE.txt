@@ -5999,3 +5999,20 @@ COST      The filter reads a feature's whole line: a word of the title
           and a word of the name both match.
           A spreadsheet has no filter of ours; its own does.
 PINNED    'services/TEST/test-report-features.py tree, document'.
+
+
+E-149  THE FACES SPEAK OF A COMPONENT'S 'doc'; A FEATURE FILE'S ID IS STALE  (2026-10-12)
+
+PROBLEM   Exploration R-93 renames 'does' and 'explanation' to 'doc' and
+          takes the feature file out of the relation by id.
+DECISION  'hwut.report.features' prints a component's 'doc' under it,
+          line by line ('doc' where it printed 'does'); a TEST directory
+          has no 'serves' and 'as child' lines any more. The mismatch
+          'stated' reads '<TEST dir>   the feature file states <keys>;
+          it relates through its component'. 'hwut.sanitize.propose
+          --relations' proposes 'relate <TEST dir>' for it under its own
+          heading ('relation-stated'), first of the relate kinds. The
+          feature document's column 'Explanation' is 'Doc'.
+COST      Pages recorded before show 'does'.
+PINNED    'services/TEST/test-report-features.py';
+          'services/TEST/test-sanitize-relations.py propose, apply'.

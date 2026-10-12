@@ -82,7 +82,7 @@ Four tabs:
     Tree       the features where they stand: component, the components
                below it, its TEST directory, the features; a component
                with its title and the counts summed from below
-    Features   a row per feature: name, title, explanation, component
+    Features   a row per feature: name, title, doc, component
     Tests      a row per test application: file, title, 'doc', its test
                runs with their verdicts ('NONSENSE?' behind one that
                links to no feature), its features
@@ -140,7 +140,7 @@ from   vut.engine.orchestrator.exploration.feature_relation \
                                  import (COMPOSITION_FILE_NAME,
                                          FEATURE_FILE_NAME, STATE_TUPLE,
                                          GONE, MOVED, NO_ID, PARENT, TWIN,
-                                         UNJUDGED, UNLISTED,
+                                         STATED, UNJUDGED, UNLISTED,
                                          document_place,
                                          id_relation_used_f, mismatch_list,
                                          relation_of_tree)
@@ -209,11 +209,12 @@ def _headed(head, tail, depth):
                                            len(tail))))
 
 
-def _statement_line_list(relation, path, depth, does=None):
-    """RETURN: list[str], the sentences that stand for the directory at
-    'path', one per line: 'does', 'serves' (its own 'parent' sentence)
-    and 'as child' (what the 'childs' of the directory above says of
-    its id)."""
+def _statement_line_list(relation, path, depth, doc=None):
+    """RETURN: list[str], the sentences that stand for the component at
+    'path': its 'doc' (each of its lines), 'serves' (its own 'parent'
+    sentence) and 'as child' (what the 'childs' of the directory above
+    says of its id). Nothing for a TEST directory: its feature file
+    relates through its component (exploration R-93)."""
     statement = relation.statement_of(path)
     above     = relation.statement_above(path)
     serves    = None if statement is None else statement.parent_text
@@ -221,10 +222,15 @@ def _statement_line_list(relation, path, depth, does=None):
     if statement is not None and statement.id is not None \
        and above is not None:
         as_child = above.child_text(statement.id)
-    return ["%s%-10s %s" % (_INDENT * depth, label, text)
-            for label, text in (("does", does), ("serves", serves),
-                                ("as child", as_child))
-            if text]
+    line_list = []
+    for label, text in (("doc", doc), ("serves", serves),
+                        ("as child", as_child)):
+        if not text: continue
+        for i, line in enumerate(text.split("\n")):
+            line_list.append(("%s%-10s %s" % (_INDENT * depth,
+                                              label if i == 0 else "",
+                                              line)).rstrip())
+    return line_list
 
 
 def _id_text(relation, path):
@@ -378,7 +384,7 @@ def _component_line_list(relation, path, depth):
                          _count_text(relation.count_of(path)), depth)]
     line_list += _statement_line_list(
         relation, path, depth + 1,
-        None if composition is None else composition.does)
+        None if composition is None else composition.doc)
     if component.test_directory is not None:
         line_list += _test_directory_line_list(
             relation, component.test_directory, depth + 1)
@@ -400,6 +406,8 @@ def mismatch_text(mismatch):
                   "carries it",
         TWIN:     "%(path)s   two childs carry the id '%(id)s'",
         UNJUDGED: "%(path)s   the directory above gives itself no id",
+        STATED:   "%(path)s   the feature file states %(id)s; it relates "
+                  "through its component",
     }[mismatch.kind] % {"path": mismatch.path, "id": mismatch.id,
                         "from_path": mismatch.from_path}
 

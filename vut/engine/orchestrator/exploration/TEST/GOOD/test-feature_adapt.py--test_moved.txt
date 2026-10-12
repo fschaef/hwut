@@ -5,15 +5,11 @@ test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-pair.sh)   link
     feature 'missing-side' -> #3, kept in the source: still linked there
 engine/compare/core/TEST/hwut-features.conf:
     | features {
-    |     id     = "core-proof"
-    |     parent { core = "What 'core' promises, proven." }
     |     issued = 2
     |     2 { name = "missing-side" }
     | }
 engine/compare/TEST/hwut-features.conf:
     | features {
-    |     id     = "cmp-proof"
-    |     parent = "cmp"
     |     issued = 3
     |     1 { name = "whole-page"  title = "A whole page is judged." }
     |     2 { name  = "line-pairing" title = "Two streams are aligned line by line." }
@@ -25,8 +21,6 @@ test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-side.sh)   link
     feature 'missing-side' stands in the target alike: taken out of the source
 engine/compare/core/TEST/hwut-features.conf:
     | features {
-    |     id     = "core-proof"
-    |     parent { core = "What 'core' promises, proven." }
     |     issued = 2
     | }
 
@@ -35,15 +29,11 @@ test_moved(engine/compare/TEST -> engine/compare/core/TEST, test-side.sh)   link
     feature 'missing-side' -> #3, kept in the source: still linked there
 engine/compare/core/TEST/hwut-features.conf:
     | features {
-    |     id     = "core-proof"
-    |     parent { core = "What 'core' promises, proven." }
     |     issued = 3
     |     3 { name = "missing-side" }
     | }
 engine/compare/TEST/hwut-features.conf:
     | features {
-    |     id     = "cmp-proof"
-    |     parent = "cmp"
     |     issued = 3
     |     1 { name = "whole-page"  title = "A whole page is judged." }
     |     2 { name  = "line-pairing" title = "Two streams are aligned line by line." }

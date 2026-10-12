@@ -16,7 +16,6 @@ engine/compare/hwut-composition.conf:
     |     title  = "Compare"
     |     parent { eng = "The engine's verdict rests on it." }
     |     childs {
-    |         cmp-proof = "Proves the whole comparison on real pages."
     |     }
     | }
 engine/plain/hwut-composition.conf:
@@ -26,14 +25,11 @@ engine/plain/core/hwut-composition.conf:
     |     id     = "core"
     |     title  = "Core"
     |     parent { plain = "Alignment is what compare shows." }
-    |     childs { core-proof = "The proof of pairing." }
     | }
 
 --- what stood below it travelled with it and still agrees ---
 engine/plain/core/TEST/hwut-features.conf:
     | features {
-    |     id     = "core-proof"
-    |     parent { core = "What 'core' promises, proven." }
     |     issued = 2
     |     1 { name  = "line-pairing"
     |         title = "Two streams are aligned line by line." }

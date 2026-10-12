@@ -183,8 +183,8 @@ ISSUE_KIND_TUPLE = (
         "caused it -- a variable never bound at the head -- and stains the",
         "book 'constraint'. Nothing is removed; mend the nominal.")),
     CIssueKind("relation-id", "relate", (
-        "NO ID: a 'hwut-composition.conf' or 'hwut-features.conf' gives",
-        "itself no 'id'; nothing can name it as parent or child.",
+        "NO ID: a 'hwut-composition.conf' gives itself no 'id'; nothing",
+        "can name the component as parent or child.",
         "'relate' writes 'id = \"<the directory's name>\"' -- rename it",
         "afterwards, here and where it is listed -- and relates it to the",
         "directory above.")),
@@ -200,6 +200,10 @@ ISSUE_KIND_TUPLE = (
         "list the id in its 'childs'.",
         "'relate' sets 'parent', and enters the id in the 'childs' above",
         "with an EMPTY sentence -- write it.")),
+    CIssueKind("relation-stated", "relate", (
+        "FEATURE FILE RELATES ON ITS OWN: a 'hwut-features.conf' states an",
+        "'id' or a 'parent'. Its features belong to the component of the",
+        "directory above (exploration R-93); 'relate' takes both out.")),
     CIssueKind("relation-gone", "unrelate", (
         "CHILD GONE: 'childs' lists an id that nothing directly below",
         "carries, and that no moved directory took with it.",
@@ -634,8 +638,9 @@ def relation_issue_list(root, relation):
     """
     from vut.engine.orchestrator.exploration import feature_relation as fr
     kind_db   = {fr.MOVED: "relation-moved", fr.NO_ID: "relation-id",
-                 fr.PARENT: "relation-parent", fr.UNLISTED: "relation-parent"}
-    rank_list = [fr.MOVED, fr.NO_ID, fr.PARENT, fr.UNLISTED]
+                 fr.PARENT: "relation-parent", fr.UNLISTED: "relation-parent",
+                 fr.STATED: "relation-stated"}
+    rank_list = [fr.STATED, fr.MOVED, fr.NO_ID, fr.PARENT, fr.UNLISTED]
     issue_list, note_list, chosen_db = [], [], {}
     for mismatch in fr.mismatch_list(relation):
         directory = os.path.normpath(os.path.join(root, mismatch.path))
