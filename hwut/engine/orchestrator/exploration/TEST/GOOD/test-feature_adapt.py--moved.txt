@@ -1,0 +1,45 @@
+
+--- 'engine/compare/core' moved by hand to 'engine/plain/core' ---
+    moved     engine/plain/core        id=core                           from=engine/compare
+    unmapped  engine/plain/core/TEST   id=engine.plain.core.line-pairing from=None
+    unmapped  engine/plain/core/TEST   id=engine.plain.core.missing-side from=None
+
+--- adapted: the directory, then its TEST directory, whose features the map points elsewhere ---
+adapt_directory(engine/plain/core)
+    engine/compare: childs, 'core' taken out
+    engine/plain: childs, 'core' entered, carried with its key
+adapt_directory(engine/plain/core/TEST)
+    map: 'engine.cmp.core.line-pairing' now means engine.plain.core.line-pairing
+    map: 'engine.cmp.core.missing-side' now means engine.plain.core.missing-side
+    none
+
+--- the files: where it came from, where it stands, the map ---
+engine/compare/hwut-features.conf:
+    | features {
+    |     title  = "Compare"
+    |     childs {
+    |     }
+    | }
+engine/plain/hwut-features.conf:
+    | features {
+    |     title = "Plain"
+    |     childs {
+    |         core = "./core"
+    |     }
+    | }
+hwut-feature-map.conf:
+    | map {
+    |     "engine.cmp.core.line-pairing" = "engine.plain.core.line-pairing"
+    |     "engine.cmp.core.missing-side" = "engine.plain.core.missing-side"
+    |     "engine.cmp.whole-page"        = "engine.cmp.whole-page"
+    | }
+
+--- the map is repointed, the published ids stay ---
+    engine.cmp.core.line-pairing   -> engine.plain.core.line-pairing
+    engine.cmp.core.missing-side   -> engine.plain.core.missing-side
+    engine.cmp.whole-page          -> engine.cmp.whole-page
+
+--- adapted again ---
+adapt_directory(engine/plain/core)
+    nothing to do
+<hwut-end>

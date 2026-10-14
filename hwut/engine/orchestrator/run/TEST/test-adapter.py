@@ -1,0 +1,419 @@
+#! /usr/bin/env python3
+#
+# @hwut {
+#     title      = "The translation: stated parameters reach their owners"
+#     choices {
+#         caps         { features = ["caps-inherited"] }
+#         caps_inherit { features = ["caps-inherited"] }
+#         compare      { features = ["parameters-reach-owners"] }
+#         constraints  { features = ["constraints-enforced"] }
+#         naming       { features = ["parameters-reach-owners"] }
+#         refused      { features = ["translation-refused"] }
+#         sweep        { features = ["parameters-reach-owners"] }
+#     }
+#     interactive = true
+# }
+#
+"""SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: THE TRANSLATION -- every parameter an author STATES reaches
+         the component that OWNS it, or is refused by name.
+
+Exploration resolves what an author wrote into 'TestParameters'.
+Nothing judges a test by that: the RUN needs operations'
+TestConfiguration, compare needs its own Configuration, procsitter its
+caps, the bookkeeper its naming law. 'adapter.py' is the one crossing,
+and a parameter it drops is worse than one it refuses: the test then
+runs under a setup nobody chose, and its verdict means something other
+than what its author asked for.
+
+CHOICES: sweep, compare, constraints, caps, naming, refused;
+
+DESCRIPTION:
+
+sweep    EVERY member of 'TestParameters', stated, and where it
+         arrives. A member that reaches nothing is named -- the sweep
+         reads the DECLARATION, so a parameter exploration gains later
+         is swept the day it exists.
+
+compare  the TOLERANCES, member by member, into compare's own
+         Configuration: the ratio, the pattern lists, the marker
+         PAIRS, and the stated OFF (the empty tuple).
+
+constraints  A PAGE'S CONSTRAINTS ARE ENFORCED (O-34): the expressions
+         arrive COMPILED into 'constraint_db', and compare judges by
+         them -- a binding that violates one is not equivalent, one that
+         keeps it is.
+
+caps_inherit  CAPS TRAVEL BY INHERITANCE (O-20): a choice's word
+         stands over the application's, the application's over
+         procsitter's, and a cap nobody states keeps the owner's own.
+         A sibling that states nothing is untouched by what its
+         neighbour states.
+
+caps     the CAPS into procsitter's configuration; an unstated cap
+         keeps procsitter's own default, never a zero.
+
+naming   'same' into the bookkeeper's naming law: one nominal for
+         every choice, candidates still per choice.
+
+refused  a language no interpreter is declared for, and a marker pair
+         that is not a pair -- refused BY NAME at the door, never
+         guessed into a default.
+______________________________________________________________________________
+"""
+import dataclasses
+import sys
+from config import HwutRunner                                # noqa: F401
+
+from hwut.engine.orchestrator.exploration.configuration_tree import (
+                                                  Build, Caps,
+                                                  CTestApp, E_Origin,
+                                                  Position,
+                                                  TestParameters, Tolerance,
+                                                  DiffDisplayParameters)
+from hwut.engine.orchestrator.exploration.feature_relation import (
+                                                  linked_name_tuple)
+from hwut.engine.orchestrator.run.adapter import (naming_of,
+                                                 test_configuration_of,
+                                                 _compare_of)
+from hwut.engine.operations.configuration import E_SourceKind, caps_of
+
+
+def _check(result_list):
+    """RETURN: bool, all (bool, label) pairs hold; prints OK/FAIL."""
+    ok = True
+    for holds, label in result_list:
+        print("  %s: %s" % ("OK  " if holds else "FAIL", label))
+        ok = ok and bool(holds)
+    return ok
+
+
+def _verdict(ok, sentence):
+    """RETURN: None. The suite's closing line."""
+    print("%s: %s%s" % ("SUCCESS" if ok else "FAIL", sentence,
+                        "" if ok else " (see above)"))
+
+
+def _app(parameters=None, language="bash", choice_db=None):
+    """RETURN: CTestApp over the given parameters, RESOLVED as the
+    explorer resolves: 'root' is the application's own word, and every
+    choice carries it folded under its own (O-21). A choiceless app's
+    root IS its one choice."""
+    root = parameters if parameters is not None else TestParameters()
+    if choice_db is None:
+        choice_db = {None: root}
+    else:
+        choice_db = {name: root.overwritten_by(p)
+                     for name, p in choice_db.items()}
+    return CTestApp(source_file = "test-demo.sh",
+                    title       = "Demo",
+                    language    = language,
+                    choice_db   = choice_db,
+                    root        = root,
+                    origin      = E_Origin.HEADER,
+                    position    = Position(1, 1))
+
+
+def _configuration(parameters, language="bash"):
+    """RETURN: TestConfiguration of an application stating that."""
+    return test_configuration_of(_app(parameters, language), "/tmp")
+
+
+def _stated_value(member):
+    """
+    RETURN: a value a member of 'TestParameters' can be STATED as --
+            chosen to be visibly not a default.
+
+    Raises AssertionError for a member the sweep has not met: a new
+    parameter must be PLACED here, never silently skipped.
+    """
+    match member.name:
+        case "build":       return Build(framework="make",
+                                         executable="app")
+        case "caps":        return Caps(timeout_sec=11)
+        case "tolerance":   return Tolerance(numeric_ratio=0.25)
+        case "diff_display_parameters":
+                            return DiffDisplayParameters(search_budget=777)
+        case "pype":        return "python3 filter.py"
+        case "tolerance.numeric_ratio":  return 0.25
+        case "tolerance.eq_pattern":     return ("alpha|beta",)
+        case "tolerance.nothing":        return ("~",)
+        case "tolerance.analogy":        return ("<<", ">>")
+        case "tolerance.constraints":    return ("x < y",)
+        case "tolerance.comment":        return ("/*", "*/")
+        case "tolerance.whitespace":     return False
+        case "tolerance.regions":        return False
+        case "same":        return True
+        case "interactive": return True
+        case "execute":     return "./run-me --now"
+        case "output":      return ("<stdout>", "extra.log")
+        case "features":    return ("line-pairing",)
+        case _:
+            assert False, ("the sweep does not know how to state '%s'"
+                           % member.name)
+
+
+def _arrivals(parameters):
+    """
+    RETURN: list[str], the names of the places a stated parameter
+            REACHED -- 'compare', 'caps', 'naming', 'feature relation',
+            or the TestConfiguration member it became.
+
+    The comparison is against an application stating NOTHING: what
+    differs, arrived.
+    """
+    plain    = _configuration(TestParameters())
+    carried  = _configuration(parameters)
+    arrival  = []
+
+    for member in dataclasses.fields(type(plain)):
+        name = member.name
+        if name == "choice_db": continue
+        if getattr(plain, name) != getattr(carried, name):
+            arrival.append(name)
+
+    plain_choice   = plain.choice_db[None]
+    carried_choice = carried.choice_db[None]
+    if plain_choice.canonicalisers != carried_choice.canonicalisers:
+        arrival.append("canonicalisers")
+    if carried_choice.compare is not None:
+        arrival.append("compare")
+    if plain_choice.output != carried_choice.output:
+        arrival.append("output")
+    if naming_of([_app(parameters)]) != naming_of([_app(TestParameters())]):
+        arrival.append("naming")
+    #  'features' IS NOT THE RUN'S: a test runs and is judged whether or
+    #  not its links resolve. Its receiver is the feature relation.
+    if linked_name_tuple(parameters) != linked_name_tuple(TestParameters()):
+        arrival.append("feature relation")
+    return arrival
+
+
+def test_sweep():
+    """RETURN: None. Every declared parameter, stated, and where it
+    arrives."""
+    print("INSPECT: every member of 'TestParameters', stated alone")
+    print("         %-16s %s" % ("stated", "arrives at"))
+    unreached = []
+    for member in dataclasses.fields(TestParameters):
+        parameters = TestParameters(
+                        **{member.name: _stated_value(member)})
+        arrival    = _arrivals(parameters)
+        if not arrival: unreached.append(member.name)
+        print("         %-16s %s"
+              % (member.name,
+                 ", ".join(arrival) if arrival else "NOTHING -- DROPPED"))
+    ok = _check([
+        (not unreached,
+         "every stated parameter reaches a component -- none is "
+         "silently dropped"),
+    ])
+    _verdict(ok, "what an author states, a component receives.")
+
+
+def test_compare():
+    """RETURN: None. The tolerances into compare's Configuration."""
+    print("INSPECT: nothing stated -> %s"
+          % _compare_of(TestParameters()))
+
+    options = _compare_of(TestParameters(
+                              tolerance = Tolerance(numeric_ratio = 0.01,
+                                                    whitespace    = False,
+                                                    eq_pattern    = ("a|b",),
+                                                    nothing       = ("~",),
+                                                    analogy       = ("<<", ">>"),
+                                                    comment       = ("/*", "*/"),
+                                                    constraints   = ("x < y",))))
+    finder = options.pattern_finder
+    print("         tolerance.numeric_ratio -> %s" % finder.numeric_tolerance_ratio)
+    print("         tolerance.eq_pattern   -> %s" % finder.equivalent_pattern_list)
+    print("         tolerance.nothing      -> %s"
+          % finder.visible_nothing_pattern_list)
+    print("         analogy pair   -> %s %s (on: %s)"
+          % (finder.analogy_begin_marker, finder.analogy_end_marker,
+             finder.analogy_f))
+    print("         comment pair   -> %s %s (on: %s)"
+          % (finder.ignored_line_begin_marker,
+             finder.ignored_line_end_marker, finder.ignored_line_f))
+    print("         tolerance.constraints  -> %s" % options.constraint_expression_list)
+    print("         tolerance.whitespace -> whitespace_f %s" % finder.whitespace_f)
+
+    off = _compare_of(TestParameters(
+              tolerance=Tolerance(analogy=(), comment=())))
+    print("         stated OFF: analogy_f %s, ignored_line_f %s"
+          % (off.pattern_finder.analogy_f,
+             off.pattern_finder.ignored_line_f))
+    ok = _check([
+        (_compare_of(TestParameters()) is None,
+         "an unstated tolerance is compare's OWN default -- no "
+         "configuration is invented"),
+        (finder.numeric_tolerance_ratio == 0.01
+         and finder.equivalent_pattern_list == ["a|b"]
+         and finder.visible_nothing_pattern_list == ["~"],
+         "the ratio and the pattern lists arrive"),
+        (finder.analogy_begin_marker == "<<"
+         and finder.analogy_end_marker == ">>",
+         "a marker PAIR arrives as begin and end"),
+        (finder.whitespace_f is False,
+         "the equivalence flag arrives under compare's own name"),
+        (options.constraint_expression_list == ["x < y"],
+         "the constraint expressions arrive"),
+        (off.pattern_finder.analogy_f is False
+         and off.pattern_finder.ignored_line_f is False,
+         "the empty tuple is the stated OFF, and switches the "
+         "handling off"),
+    ])
+    _verdict(ok, "every stated tolerance reaches compare, by its own "
+                 "name.")
+
+
+def test_constraints():
+    """RETURN: None. The stated constraints, enforced by compare."""
+    import asyncio
+    import io
+    from hwut.engine.compare.api import is_equivalent
+    options = _compare_of(TestParameters(
+                  tolerance=Tolerance(constraints=("x < 5",))))
+    print("INSPECT: constraints = [\"x < 5\"]  ->  constraint_db %s"
+          % sorted(options.constraint_db))
+    nominal = "v ((x: 1))\n"
+    verdict_db = {}
+    for subject in ("v ((x: 3))\n", "v ((x: 9))\n"):
+        verdict_db[subject] = asyncio.run(is_equivalent(
+                                  options, io.StringIO(subject),
+                                  io.StringIO(nominal)))
+        print("         %-12s vs %-12s -> %s"
+              % (subject.strip(), nominal.strip(),
+                 "equivalent" if verdict_db[subject] else "NOT equivalent"))
+    ok = _check([
+        (sorted(options.constraint_db) == ["x"],
+         "the expression is compiled, under the variable it names"),
+        (verdict_db["v ((x: 3))\n"] is True,
+         "a binding inside the constraint is equivalent"),
+        (verdict_db["v ((x: 9))\n"] is False,
+         "a binding that violates it is not"),
+    ])
+    _verdict(ok, "a page's constraints are enforced.")
+
+
+def test_caps():
+    """RETURN: None. The caps into procsitter's configuration."""
+    default = _configuration(TestParameters()).caps
+    carried = _configuration(TestParameters(
+                    caps=Caps(timeout_sec=11, memory_mb=64))).caps
+    print("INSPECT: unstated -> wall clock %s, memory %s"
+          % (default.max_wall_clock_sec, default.max_memory_mb))
+    print("         stated   -> wall clock %s, memory %s"
+          % (carried.max_wall_clock_sec, carried.max_memory_mb))
+    print("         a cap NOT stated keeps procsitter's own: cpu %s"
+          % carried.max_cpu_time_sec)
+    ok = _check([
+        (carried.max_wall_clock_sec == 11
+         and carried.max_memory_mb == 64,
+         "a stated cap arrives under procsitter's name"),
+        (carried.max_cpu_time_sec == default.max_cpu_time_sec,
+         "an unstated cap keeps procsitter's default -- never a zero"),
+    ])
+    _verdict(ok, "caps arrive; silence keeps the owner's default.")
+
+
+def test_caps_inherit():
+    """RETURN: None. Caps travel to the choices, and only where stated."""
+    configuration = test_configuration_of(
+        _app(choice_db={
+            "plain":  TestParameters(),
+            "hungry": TestParameters(caps=Caps(memory_mb=2048)),
+        }),
+        "/tmp")
+    application = configuration.caps
+    plain       = caps_of(configuration, "plain")
+    hungry      = caps_of(configuration, "hungry")
+    print("INSPECT: application -> memory %s" % application.max_memory_mb)
+    print("         'plain'     -> memory %s (states nothing)"
+          % plain.max_memory_mb)
+    print("         'hungry'    -> memory %s (states 2048)"
+          % hungry.max_memory_mb)
+    print("         inherited   -> cpu %s, wall %s on both"
+          % (hungry.max_cpu_time_sec, hungry.max_wall_clock_sec))
+    ok = _check([
+        (hungry.max_memory_mb == 2048,
+         "the choice's own cap governs the choice"),
+        (plain.max_memory_mb == application.max_memory_mb,
+         "a sibling that states nothing keeps the application's"),
+        (hungry.max_cpu_time_sec == application.max_cpu_time_sec
+         and hungry.max_wall_clock_sec == application.max_wall_clock_sec,
+         "a cap the choice does not state is INHERITED, not reset"),
+        (application.max_memory_mb != 2048,
+         "and the application is not raised by what a choice states"),
+    ])
+    _verdict(ok, "caps travel by inheritance, to the choice that asks.")
+
+
+def test_naming():
+    """RETURN: None. 'same' into the bookkeeper's naming law."""
+    #  THE LAW IS THE DIRECTORY'S AND NAMES THE TESTS (bookkeeper B-30).
+    plain_app = _app(TestParameters())
+    same_app  = _app(TestParameters(same=True))
+    plain = naming_of([plain_app]).shared_f(plain_app.source_file)
+    same  = naming_of([same_app]).shared_f(same_app.source_file)
+    print("INSPECT: unstated -> same_nominal_f %s" % plain)
+    print("         same=yes -> same_nominal_f %s" % same)
+    ok = _check([
+        (plain is False,
+         "unstated: a nominal per choice"),
+        (same is True,
+         "'same' reaches the bookkeeper's naming law"),
+    ])
+    _verdict(ok, "'same' is a NAMING law, and arrives as one.")
+
+
+def test_refused():
+    """RETURN: None. Refusal by name, at the door -- and what is NOT
+    refused: a language the table does not know is called by its own
+    name (exploration R-10, R-73)."""
+    from hwut.engine.orchestrator.exploration.configuration_tree \
+                                                       import LanguageSetup
+    own_name = _configuration(TestParameters(), language="klingon")
+    stated   = test_configuration_of(
+                   _app(TestParameters(), "python"), "/tmp",
+                   language_setup={"python":
+                                   LanguageSetup(interpreter="python3 -u")})
+    refusal = []
+    try:
+        _compare_of(TestParameters(tolerance=Tolerance(analogy=("<<",))))
+        refusal.append("(none)")
+    except AssertionError as error:
+        refusal.append(str(error))
+
+    print("INSPECT: an unknown language  -> interpreter %s"
+          % (own_name.interpreter,))
+    print("         a stated interpreter -> interpreter %s"
+          % (stated.interpreter,))
+    print("         a marker pair of one -> %s" % refusal[0])
+    ok = _check([
+        (own_name.interpreter == ["klingon"],
+         "the unknown language is called by its own name"),
+        (stated.interpreter == ["python3", "-u"],
+         "'language-setup' names the call, split as a shell would"),
+        ("analogy" in refusal[0],
+         "the malformed pair is named in its refusal"),
+    ])
+    _verdict(ok, "what cannot be translated is refused, by name; "
+                 "what is merely unknown is called by its own name.")
+
+
+if __name__ == "__main__":
+    HwutRunner(
+        argv       = sys.argv,
+        title      = "The translation: stated parameters reach their owners",
+        choice_map = {
+            "sweep":   test_sweep,
+            "compare": test_compare,
+            "constraints": test_constraints,
+            "caps":    test_caps,
+            "caps_inherit": test_caps_inherit,
+            "naming":  test_naming,
+            "refused": test_refused,
+        }).run()

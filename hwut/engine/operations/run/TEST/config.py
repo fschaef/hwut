@@ -1,0 +1,46 @@
+"""SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: Bootstrap module for tests in this directory.
+
+This file is the chicken-and-egg solution: HwutRunner.insert_project_path()
+cannot be used to locate HwutRunner itself, because importing it requires
+sys.path to be set up first. So this tiny stdlib-only module does the
+bootstrap by walking upward from its own location until it finds a directory
+named 'hwut/', then inserts that directory's parent into sys.path.
+
+After 'import config' (as the first import in a test file), all of:
+
+    from hwut.test_writing_support.python.hwut_runner import HwutRunner
+    from hwut.engine.procsitter.api import ...
+
+work normally.
+
+NOTE: This file imports nothing from hwut. It is excluded from coverage
+      and from test discovery via 'hwut-info.dat'.
+______________________________________________________________________________
+"""
+import os
+import sys
+
+_here = os.path.abspath(os.path.dirname(__file__))
+_cur  = _here
+while True:
+    if os.path.basename(_cur) == "hwut":
+        sys.path.insert(0, os.path.dirname(_cur))
+        break
+    _parent = os.path.dirname(_cur)
+    if _parent == _cur:
+        raise RuntimeError(
+            "config.py: could not find directory 'hwut' walking up from '%s'"
+            % _here
+        )
+    _cur = _parent
+
+#  THE WALK'S FINDING, EXPORTED. Tests that reach a SIBLING component
+#  (e.g. hwut_pype) take the hwut directory from here instead of
+#  counting '..' -- a hop count is a silent hostage to the layout, and
+#  it is this file that knows where 'hwut' is.
+HWUT_DIRECTORY = _cur
+
+from hwut.test_writing_support.python.hwut_runner import HwutRunner # noqa E401

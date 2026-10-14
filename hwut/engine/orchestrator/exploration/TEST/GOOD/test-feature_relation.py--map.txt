@@ -1,0 +1,13 @@
+
+--- the entries, file order ---
+scroll       -> display.game.scroll    line=2
+old-scroll   -> None                   line=3
+with space   -> a.b                    line=4
+
+--- asked ---
+scroll       target=display.game.scroll standing=True
+old-scroll   target=None standing=True
+nobody       target=None standing=False
+published: ('scroll', 'old-scroll', 'with space')
+faults: 0
+<hwut-end>

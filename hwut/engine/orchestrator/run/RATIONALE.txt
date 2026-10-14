@@ -1,0 +1,1262 @@
+============================================================================
+VUT-ORCHESTRATOR-RUN -- RATIONALE
+============================================================================
+Settled. Read-only. O-N handles; plan P-N, scheduler S-N, exploration
+R-N cited.
+
+----------------------------------------------------------------------------
+O-1  THE OUTER FACE
+----------------------------------------------------------------------------
+PROBLEM   One call that takes a wish and a root and yields a running,
+          observable whole.
+DECISION  Two functions. 'orchestrate(root, wish) -> CTreePlan':
+          determination, synchronous -- explore the tree (R-69),
+          determine per directory (P-17), Bookkeepers made here and
+          handed down. 'orchestrator(root, wish, dispatcher_factory)
+          -> asyncio.Queue': sets a CTreeScheduler running as an
+          asyncio task; the queue carries the report stream and one
+          'None' after 'tree-done' closes it. Determination happens
+          BEFORE the first event: a refused wish raises at the call.
+COST      A running event loop is required; a consumer that wants only
+          the end must drain the queue (O-4 pays it back).
+GRAVEYARD Returning a report object beside the queue (two carriers of
+          one truth, drifting). A thread-backed queue (the house runs
+          asyncio; a second concurrency model buys nothing here).
+
+----------------------------------------------------------------------------
+O-2  THE STREAM'S SHAPE
+----------------------------------------------------------------------------
+PROBLEM   TUI, web server and customer application must all read the
+          run as it happens, without the scheduler knowing any of
+          them.
+DECISION  Flat JSON-able dicts, one per event; every event carries
+          'format' (integer, starts at 1), 'kind' and 'when'. Kinds
+          are PLAIN STRINGS -- no padding, no 64-bit forms; the format
+          description notes kinds are ASCII, <= 9 bytes, unique, so a
+          consumer MAY pad one into an integer. THE PROMISE: fields
+          are only ever added, kinds never removed; unknown kinds and
+          fields are ignored; 'format' rises only where the promise
+          cannot hold. The table in vocabulary.py IS the format;
+          'format_text()' prints it. The emitter asserts every event
+          against the table: a wrong event is OUR defect, named at
+          emission.
+COST      A vocabulary to keep; growth is append-only by promise.
+GRAVEYARD 8-byte padded kinds ('dir--beg': paid by every reader,
+          earning only in a binary wire we do not speak). Nested
+          objects mirroring CRunReport (heavier, and the add-only
+          promise breaks at first growth). JSON encoding inside the
+          scheduler (serialisation baked into the emitter).
+
+----------------------------------------------------------------------------
+O-3  EVERYTHING THAT LEADS TO EXECUTABILITY IS THE TEST
+----------------------------------------------------------------------------
+PROBLEM   A test that never ran because its build broke must be
+          reported as the failed test it is, cause named.
+DECISION  'run-ended' carries 'verdict' -- WHY: ok, test-failed,
+          build-failed, launch-failed, unsupported, misdep, and the
+          list is OPEN under the add-only promise (an unknown verdict
+          reads not-ok; 'refused-cap' and 'pype-failed' join with the
+          test_run dispatcher). 'cause' names the node whose breaking
+          failed this one. A node that never dispatched still gets its
+          'run-ended'; a 'run-ended' without 'run-begun' is legal and
+          stated in the format.
+COST      Two failure carriers per broken supporter: its own event and
+          one per supported test -- by design, that IS the premise.
+GRAVEYARD A bare good/bad bit (the WHY lost on the wire). Reporting
+          only the supporter's failure (the test's own failure
+          invisible to a consumer watching tests).
+
+----------------------------------------------------------------------------
+O-4  THE SUMMARY IS A FOLD
+----------------------------------------------------------------------------
+PROBLEM   A final run report is wanted; a second carrier would drift
+          from the stream.
+DECISION  'summary.fold(events) -> CRunSummary' -- a pure function
+          over the stream, shipped beside it; 'drain(queue)' folds to
+          the closing 'None'. The queue is the outer face's ONLY
+          return; the scheduler's internal CRunReport stays internal.
+COST      The whole is only as complete as the stream (which is the
+          point).
+GRAVEYARD CRunReport returned beside the queue (two truths).
+
+----------------------------------------------------------------------------
+O-5  THE RECEIVER
+----------------------------------------------------------------------------
+PROBLEM   A consumer wants handlers, not a parsing loop; the wire must
+          stay ours to change.
+DECISION  'CRunReportReceiver', CONCRETE: every 'on_<kind>' a no-op
+          with NAMED parameters -- exactly the vocabulary's fields,
+          optionals defaulting to 'None', newer fields dropped before
+          the call, which is how named parameters survive growth.
+          '**fields' on the catch-alls alone: 'on_any' (every event,
+          raw, before its handler), 'on_unknown' (a kind the
+          vocabulary does not carry), 'on_misfit' (a KNOWN kind whose
+          structure does not fit: required field missing or badly
+          typed, or no dict at all).
+COST      Nothing forces a user to handle anything -- that is the
+          point; and the receiver must be regenerated in step with the
+          vocabulary (one table feeds both).
+GRAVEYARD Abstract methods (every vocabulary growth breaks every
+          user). '**fields' on specific handlers (the named surface
+          was the stated want).
+
+----------------------------------------------------------------------------
+O-6  THE VERDICT WORD LAW
+----------------------------------------------------------------------------
+PROBLEM   The real dispatcher knows a finer WHY (E_TestRunResult) than
+          the six verdict words; the wire had to carry it without
+          growing every consumer's switch.
+DECISION  'verdict' stays the COARSE six -- a consumer's switch never
+          grows -- and 'run-ended' gains the OPTIONAL field 'report':
+          the operation's own word, E_TestRunResult verbatim, absent
+          where nothing finer is known. Add-only; the promise holds.
+          One lift: a TEST whose report is 'test-app-launch-failed'
+          carries verdict 'launch-failed' -- the launch is the WHAT,
+          whichever node met it.
+COST      Two words for one failure where the fine one exists -- by
+          design: one for switching, one for reading.
+GRAVEYARD Fine words ON the switch (every consumer must know an open
+          list to act). Coarse only (the ledger would know what the
+          wire withheld).
+
+----------------------------------------------------------------------------
+O-7  THE REAL DISPATCHER
+----------------------------------------------------------------------------
+PROBLEM   The seam (S-1) needed its one binding onto operations.
+DECISION  'run/dispatcher.py': the ONE file that knows both sides.
+          ONE LOCK, ONE STORE, ONE LIFETIME -- taken at construction
+          (DirectoryBusy refused at the door), released at 'close()';
+          the per-choice ceremony enters through 'run_test_held', the
+          held door, never the standalone one. run_script -> a
+          procsitter-supervised 'bash -c' in the directory; run_build
+          -> build_action, the finer word kept; open_session -> the
+          MultiExecute stands up, the application call LAZY (R-46);
+          run_test -> the ceremony, with the session's own
+          ChoiceExecute plugged as provision where one stands;
+          close_session -> spend and shut down. 'adapter.py' maps
+          exploration's CTestApp to operations' TestConfiguration;
+          what it does not map is refused, not guessed. The factory
+          takes (directory, entry): the entry's app_set names what
+          exists; a double may ignore it. 'report_of' hands the wire
+          the finer word.
+COST      The two-mode ChoiceExecute (held vs one-shot) the dispatcher
+          forced into the open; the adapter must grow with the
+          exploration vocabulary.
+GRAVEYARD Per-choice locks (the mutex is non-recursive; the standalone
+          door fights itself). session.run_test per choice (same).
+          Scheduler importing operations (the seam was the point).
+
+----------------------------------------------------------------------------
+O-8  THE STORE'S OWN GROUND
+----------------------------------------------------------------------------
+PROBLEM   Found by the end-to-end suite: candidates lived under 'OUT/'
+          -- the TEST'S product space, whose every file execution
+          reads as a subject -- so each run ingested the previous
+          runs' candidates, sidecars of sidecars ('.when.when').
+          Storing by default (n-1) surfaced it.
+DECISION  The store's records live on THE STORE'S OWN GROUND:
+          '<directory>/.hwut-store/' -- candidates, raws, cadences,
+          freshness sidecars. 'OUT/' is the test's alone; 'GOOD/'
+          stays the author's. The dot-name also keeps the tree walk
+          out. Three worlds apart, applied to the disk.
+COST      Two blessed suites re-worded to the new ground (audited:
+          the rename alone).
+GRAVEYARD Filtering store keys out of the subject scan (guessing at
+          the door). Snapshot-diff of 'OUT/' (statefulness, races).
+AMENDED   2026-10-08 (audit D-9): MEASURED -- the store's ground is
+          '<directory>/TMP/store/' ('ls TMP/store' after a run:
+          'observations.bin', '<key>.stdout.when', '.times'); nothing
+          in the tree writes '.hwut-store/'. NO RULING RECORDS THE
+          MOVE; the transient ground 'TMP/' is cited in code as
+          'services E-24', an id that entry does not bear.
+
+----------------------------------------------------------------------------
+O-9  THE TRANSLATION: WHAT AN AUTHOR STATES, A COMPONENT RECEIVES
+----------------------------------------------------------------------------
+PROBLEM   The adapter carried the source kind, the caps, the build and
+          the pype -- and DROPPED the rest. A test stating
+          'numeric = 0.01' was compared byte-exact; a test stating
+          'same' looked for a nominal per choice; a test stating
+          'execute' was launched by a derived argv. Each produced a
+          CONFIDENT WRONG VERDICT on correct code -- the worst failure
+          a validator has, and invisible, because the test simply
+          failed and the author saw a diff.
+DECISION  Every member of 'TestParameters' reaches the component that
+          OWNS it, or is refused BY NAME:
+              tolerances (numeric, eq_pattern, nothing, analogy,
+              constraints, comment, slash_eqv, whitespace_eqv)
+                            -> compare's Configuration, per choice.
+                               Nothing stated -> None: an unstated
+                               tolerance is compare's own default, and
+                               a Configuration built here would only
+                               restate it.
+              caps          -> procsitter's configuration; an unstated
+                               cap keeps procsitter's default, never a
+                               zero.
+              same          -> the bookkeeper's NamingConfig: one
+                               nominal for every choice. Candidates
+                               keep their own names, or the choices
+                               would overwrite one another.
+              execute       -> the CALL itself (R-68): a stated argv
+                               stands and the source kind decides
+                               nothing.
+          A marker pair that is not a pair, and a language no
+          interpreter is declared for, are refused at the door.
+          THE ORACLE IS A SWEEP: 'run/TEST/test-adapter.py' walks
+          'dataclasses.fields(TestParameters)' and names any member
+          that reaches nothing -- a parameter exploration gains later
+          is swept the day it exists.
+COST      The adapter must grow with exploration's vocabulary, and the
+          sweep goes red the day it does not. That is the point.
+GRAVEYARD Mapping the tolerances "when someone asks" (the byte-exact
+          comparison was silent, and looked like the test's fault).
+          A per-choice Bookkeeper for 'same' (the naming is the
+          APPLICATION's word; the lock is the directory's).
+
+----------------------------------------------------------------------------
+O-10 A CONFIGURATION LIVES IN 'configuration.py'
+----------------------------------------------------------------------------
+PROBLEM   'ProcsitterConfig' lived in 'procsitter.py', 'StoreConfig' in
+          'stream_store.py' -- a reader looking for what a component
+          can be told had to know which module to open.
+DECISION  Every component subject to configuration holds its
+          configuration class in 'configuration.py' in its own core
+          directory, every member documented there: compare (already),
+          operations (already), procsitter (moved), bookkeeper (moved,
+          and gained 'NamingConfig'). Each old home RE-EXPORTS its
+          class, so existing imports keep standing.
+          'specification.py' in exploration is NOT renamed: a
+          SPECIFICATION is what an author STATED, before resolution --
+          a different animal from a configuration a component consumes.
+COST      One import hop for readers of the old modules.
+GRAVEYARD One central 'configuration.py' for the tree (a component's
+          contract belongs with the component).
+
+----------------------------------------------------------------------------
+O-11 DIRECTORIES RUN IN PARALLEL; A DIRECTORY IS A CLOSED ENVIRONMENT
+----------------------------------------------------------------------------
+PROBLEM   The tree scheduler ran the directories one after another and
+          parallelised within one; a tree of many small directories was
+          bounded by the slowest chain, not by the host.
+DECISION  Every test directory is a CLOSED ENVIRONMENT: no dependency
+          stands between two directories, 'on_entry'/'on_exit' stay
+          local to their directory (R-69), and the configuration tree
+          shapes WHAT a directory runs, never WHEN. The pool is FLAT:
+          all directories are started at once under the budget of
+          O-12; the ORDER of events across directories is not promised.
+          WHEN a directory starts is the STRATEGY's word (O-15). The
+          closing blocks keep walk order
+          ('tree-begun' carries it); the flow tier is a live surface.
+COST      A consumer of the stream may see 'dir-begun' of B before
+          'dir-done' of A. The receiver and 'fold()' already keyed by
+          (directory, node) and are order-independent.
+GRAVEYARD A DAG of directories ordered by frame keys lifted to the tree
+          level (lifts R-69; no need demonstrated; stage 2's placement
+          does not want it). Parallel as opt-in (the serial run stays
+          reachable by one flag; the default is the host's speed).
+
+----------------------------------------------------------------------------
+O-12 '--jobs' IS ONE HOST-GLOBAL BUDGET; EVERY DISPATCH TAKES A SLOT
+----------------------------------------------------------------------------
+PROBLEM   With directories in flight at once, a per-directory bound
+          multiplies: 'jobs' times directories standing; a second knob
+          for the directory count would have become unavoidable.
+DECISION  '--jobs=<n>' is ONE budget of work standing at once on this
+          host, across every directory; absent is no bound; '--jobs=1'
+          under '--dbd' is the serial run byte for byte. The budget is
+          'CBudget' (scheduler/budget.py), made in the tree scheduler
+          and handed to every directory's Scheduler in place of the
+          bare number -- one mechanism, one meaning; a Scheduler given
+          a number still makes a private budget. EVERY dispatched thing
+          takes a slot: frame scripts, builds, session launches, tests.
+          The word HOST is deliberate: when runs are hosted on several
+          machines (stage 2) the budget may re-emerge per host.
+COST      No directory is guaranteed a share: a scheduler returning a
+          slot may take it back before another's waiter runs, so a
+          large directory can run ahead of a small one. Fairness is
+          not promised; throughput is bounded, correctly.
+GRAVEYARD A per-directory bound (squares the load). Frames running
+          free of the budget (a budget of one would then overlap a
+          frame with a test somewhere on the host: dishonest).
+          Gating inside the work task with a semaphore (the 'started'
+          notification would then precede the 'ended' of the slot's
+          previous holder, moving every bounded-run GOOD).
+
+----------------------------------------------------------------------------
+O-13 THE UNIT OF PLACEABLE WORK IS THE DIRECTORY
+----------------------------------------------------------------------------
+PROBLEM   Stage 2 places directory runs on other hosts; the seam had
+          to exist before it is plugged, and it had to be narrow.
+DECISION  'CDirectoryWork(root, entry, dispatcher_factory).run(emit,
+          budget) -> CDirDone' is the unit. The dispatcher -- and with
+          it bookkeeper, store and the directory lock -- is constructed
+          INSIDE the unit, on its own lifetime; the lock is taken where
+          the directory is. Nothing crosses the edge but 'emit' and the
+          budget; no display, no bookkeeper. A placement backend
+          answers a different 'run' for the same unit and streams the
+          same events back (adm/WORK/gathered/0c-todo-2-placement-backend.txt).
+COST      The tree scheduler no longer sees the dispatcher; what it
+          knows of a directory is its CDirDone and its events.
+GRAVEYARD A unit per node (the lock and the bookkeeper are the
+          directory's; a node cannot travel without them).
+
+----------------------------------------------------------------------------
+O-14 PARALLEL-RUN SUITES BLESS THE FLOW THROUGH A PYPE FILTER
+----------------------------------------------------------------------------
+PROBLEM   Interleaved flow lines are nondeterministic; a golden-master
+          framework cannot bless nondeterminism, and a flow tier that
+          is never blessed has no oracle for its per-scope attribution.
+DECISION  A parallel-run choice pipes 'hwut.run' through a '.pype'
+          script beside the test application (same file stem, '--
+          <choice>' appended where two choices need different
+          digests). The filter records the flow lines per directory
+          nickname and prints them SORTED, the parallel column dropped;
+          the closing blocks pass through verbatim; a machine path in a
+          fault's text is masked there. THAT digest is the GOOD. The
+          renderer buffers and sorts nothing. '--dbd --jobs=1' is
+          blessed RAW. The suite's exit status is PIPESTATUS[0].
+COST      A '.pype' file per parallel suite; the dump tool must carry
+          the '.pype' extension.
+GRAVEYARD Blessing the quiet tier alone (the flow's attribution would
+          have stood without an oracle). Sorting flow lines in the
+          renderer until 'dir-done' (a live surface turned batch).
+
+----------------------------------------------------------------------------
+O-15 THE STRATEGY SAYS WHEN A DIRECTORY STARTS; THE DIGEST IS STRATEGY-FREE
+----------------------------------------------------------------------------
+PROBLEM   Serial and parallel were two code paths behind a flag. The
+          question "what runs next -- and later, where" is a workflow
+          question and wants one seat with a contract, filled by
+          strategies, the first ones simple enough to test the contract.
+DECISION  'run/strategy.py': 'CStrategy.run(guarded_list) -> [CDirDone]'
+          is the TEMPLATE -- walk order, start a unit when the hook
+          'may_start(index, running)' says so, re-ask on every ending.
+          Three strategies, one line each: 'linear' (the run of old,
+          THE DEFAULT), 'successor' (the next directory starts while
+          the current runs), 'parallel' (all at once). 'hwut.run
+          --strategy=<name>'; '--dbd' is 'linear'. The strategy decides
+          WHEN only: the budget (O-12) bounds, the unit (O-13) owns.
+          HOMOGENEITY: a tree suite's GOOD is the pype digest (O-14)
+          recorded under LINEAR; it records WHAT ran, never when; every
+          other strategy must reproduce it byte for byte, and the suite
+          displays that it does. One GOOD serves all strategies, present
+          and to come.
+COST      The strategy sees directories, not nodes across directories;
+          a node-level strategy (dependencies, standing artifacts, the
+          host) is the contract's next step and a ruling of its own.
+GRAVEYARD Strategy at the budget (decides whom to wake, not when to
+          start -- the wrong seat). One global node scheduler now (too
+          much at once; the unit of O-13 would have moved before its
+          first two strategies taught anything).
+
+O-16 'E_TestRunResult' STAYS WHERE IT IS -- SHARED IS NOT CROSS-CUTTING
+
+PROBLEM   'adm/import_graph.py --shared' names 'E_TestRunResult' among
+          the tree's most-imported names: thirteen modules read it,
+          and the lowest common ancestor of those readers is 'engine'.
+          Read as a rule, that says the enum belongs in an
+          engine-level contract, and 'engine/operations' is where it
+          lives.
+
+DECISION  IT STAYS. TWELVE OF THE THIRTEEN READERS ARE 'operations'
+          ITSELF; exactly one reaches in from outside -- this
+          component's 'dispatcher.py'. That is not a shared
+          vocabulary. It is a component's own enum with one external
+          reader, and moving it would relocate a name away from the
+          twelve modules that live with it in order to serve one.
+
+          THE LESSON, and it corrects how the measurement reads: A
+          COUNT OF READERS IS NOT A CLAIM. What matters is whether the
+          readers are SPREAD. 'E_ToleranceId' was read by five
+          sub-components of 'compare' with no majority anywhere;
+          'E_TestRunResult' is read by one component and a visitor.
+          The tool answers 'who reads this'; whether they are one
+          family is a person's answer.
+
+COST      The lowest-common-ancestor report will keep naming it. That
+          is the report doing its job, and this entry is the reason it
+          may be passed over.
+
+O-17 THE PROTOCOL LEAVES THE PRODUCER -- 'engine/protocol'
+
+PROBLEM   'engine/display -> engine/orchestrator' was the ONE SIDEWAYS
+          ARROW in this tree: every other component pointed downward.
+          It existed for two imports -- 'CRunReportReceiver', the
+          class a consumer derives from, and 'fold', the pure fold
+          over the report stream. Both were written to be consumed
+          from OUTSIDE, and their own purposes say so: "any consumer
+          may use it: our exit-status logic, a TUI, a customer
+          application". Held here, they made a consumer reach into a
+          producer for the shape the two agree on, and a TUI or an
+          HTML renderer had to drag the orchestrator along to get
+          three leaf modules.
+
+DECISION  'engine/protocol' holds 'vocabulary.py', 'receiver.py' and
+          'summary.py' -- the kinds of event, the class a consumer
+          derives from, and the fold. SEALED: it imports nothing of
+          this tree, and the seal is checked (C-2).
+
+          MEASURED, NOT GUESSED. The lowest common ancestor of
+          'fold's readers -- 'engine/display', 'services/run',
+          'services/stability' -- is THE TREE ROOT; 'receiver's is
+          'engine'. The level was read off the readers, not chosen.
+
+          WHAT STAYED: the QUEUE, the scheduler, the dispatcher, and
+          every caller of the fold. A protocol is the SHAPE two
+          parties agree on; the transport and the machinery stay
+          where they run.
+
+COST      Eight modules re-pointed. 'orchestrate.py' now reaches
+          three levels up for 'event', which is what it costs to have
+          the vocabulary above both parties instead of inside one.
+
+VERIFIED  'engine/display -> engine/orchestrator' is GONE; display
+          points down, as everything else does. 224 declared choices
+          unmoved. The static-analysis total fell from 284 to 283 --
+          the two '__all__' lists, this one and the contract's, are
+          sorted now.
+
+O-18 A FAILING CANONICALISER ENDS PROVISION -- IT DOES NOT DELIVER
+
+PROBLEM   'StageCanonicalise' reported a failing pype and DELIVERED
+          THE RAW TEXT ANYWAY: "a failing canonicaliser leaves its
+          text unchanged and says so; the subject is delivered either
+          way". The comparison then ran on a stream the filter never
+          touched.
+
+          A CANONICALISER EXISTS BECAUSE THE RAW STREAM IS NOT
+          COMPARABLE -- a timestamp, a pid, an address that differs
+          every run. Delivering the raw text does not deliver 'almost
+          the subject'; it delivers a stream NOBODY EVER MEANT TO
+          COMPARE. And where the nominal happens to have been blessed
+          from an equally unfiltered run, THE TEST PASSES FOR THE
+          WRONG REASON and nothing says so.
+
+          FOUND BY ACCIDENT: a fixture pype written without a shebang
+          ran as a shell script, failed, and the comparison proceeded.
+
+DECISION  'product' is None where any canonicaliser fails, so
+          provision ENDS with that stage's token -- the one rule this
+          shape already had: "a stage whose product is None ends
+          provision, and the stages beyond never run".
+
+          THE PYPE IS PART OF THE TEST APPLICATION and may contain
+          errors (doc/manual-note-pype-is-part-of-the-oracle.txt;
+          cited as gathered/06 until 2026-10-05). A missing shebang, a
+          syntax error, a mode with no '<else>' handler, a file that
+          is not there: each is a DEFECT IN THE TEST, and a defect in
+          a test is a RESULT -- stated, not swallowed.
+
+COST      A test whose pype is broken now FAILS rather than comparing
+          something. That is the point, and it will surface pypes that
+          have been silently not running.
+
+VERIFIED  A pype without a shebang: 'pype interpreter missing [FAIL]'.
+          A pype whose language is wrong: 'pype failed [FAIL]'. The
+          same pype, corrected: '[OK]'.
+
+
+O-19  A KILL NAMES ITS CAP, AND ITS NUMBER                        (2026-09-01)
+______________________________________________________________________________
+PROBLEM   "killed by the supervisor" -- and nothing else. 'stage_
+          execute' folded every 'E_Containment.FAIL_*_EXCEEDED' into
+          one token, 'test-app-contained', and the record's
+          'peak_memory_mb' never left the operation. A reader could
+          not tell a memory kill from a wall-clock kill, let alone
+          how far over the cap the test went; the observed case was a
+          solver at well over 512 MB, reported as a bare kill.
+DECISION  ONE TOKEN PER CAP: 'test-app-wall-clock-exceeded',
+          'test-app-cpu-time-exceeded', 'test-app-memory-exceeded',
+          'test-app-file-size-exceeded', 'test-app-pids-exceeded',
+          'test-app-disk-exceeded'; 'test-app-contained' remains for a
+          containment none of these names. The token is the VERDICT'S
+          word and enters the book: which cap was hit is a fact about
+          the software as configured, not about the machine.
+          THE NUMBERS TRAVEL AS 'detail', a new optional field of
+          'run-ended' beside 'cause' and 'report' (protocol
+          vocabulary): "cap 512 MB, peak 1069 MB". A peak is what THIS
+          machine saw (E-36) -- so 'detail' is spoken in HINTS and the
+          log and is NOT written to the book. 'cause' is not reused:
+          it names the node whose breaking failed this one, a
+          different thing, and a field with two meanings is no field.
+COST      'result.py' tokens; 'stage_execute' maps containment to
+          token and composes 'detail' from the record and the caps in
+          force; 'TestResult' carries 'detail'; the dispatcher emits
+          it; the vocabulary declares it; 'summary.py' folds it; the
+          display prints it after the phrase; 'word.py' phrases the
+          six tokens. The protocol's suite re-recorded once.
+
+O-20  CAPS TRAVEL BY INHERITANCE, TO THE CHOICE THAT ASKS       (2026-09-02)
+
+PROBLEM   The header vocabulary admitted 'caps' inside a choice, the
+          validator accepted it, and 'hwut.show' printed it per choice
+          -- two choices at 512, two at 2048, exactly as written. The
+          run IGNORED it: 'adapter' read '_caps_of(root)', one value
+          for the application, and 'TestChoiceConfiguration' held no
+          caps at all. A parameter stated, validated, displayed and
+          silently discarded; 'hwut.show' a document that lied. Found
+          settling C-6, which had to raise the cap for two choices
+          that did not need it (disc-7, now closed).
+
+RULED     (Frank-Rene) "caps travel through inheritance to choices".
+
+DECISION  'TestChoiceConfiguration.caps', COMPLETE AS HANDED IN, as
+          every member of that record is: the adapter folds, once,
+          procsitter's defaults <- the application's word <- the
+          choice's word. 'configuration.caps_of(configuration,
+          choice)' is the ONE accessor: the choice's where it has
+          them, the application's else.
+
+          WHO ASKS WHICH:
+            stage_execute       the case's      it knows its choice
+            stage_canonicalise  the case's      a pype is the choice's
+                                                filter
+            multi_execute       the APPLICATION's, deliberately: one
+                                process holds every choice, so no
+                                single cap can govern it; an author
+                                who needs a choice capped apart must
+                                not state 'same'
+            build_action        the application's: built once for all
+            coverage_action     the application's: harvested once for
+                                all
+          Each of the four that reads 'configuration.caps' directly
+          now says why beside the read.
+
+FOUND     THE APPLICATION'S CAPS MUST COME FROM ITS TRUE ROOT. The
+          first cut read them through '_root_of', which -- where an
+          application states no root -- answers THE FIRST CHOICE BY
+          NAME. The regression test went red on that: a choice
+          'hungry' stating 2048 sorted before 'plain', became the
+          application's baseline, and 'plain' inherited 2048. Caps
+          now come from 'choice_db.get(None)' and from procsitter's
+          defaults where there is none. '_root_of' is untouched for
+          'same' and 'interactive', which are root-only words and a
+          different question -- but a silent default that elects a
+          choice to speak for the application is worth a word of its
+          own.
+
+CHECKED   'test-adapter.py caps_inherit': the choice's own cap
+          governs it; a sibling stating nothing keeps the
+          application's; a cap the choice does not state is INHERITED
+          not reset; the application is not raised by what a choice
+          states. On the real test: 'massive-pipe' and 'soduko' at
+          2048, 'backtracking' and 'lane-trap' at 512, every unstated
+          cap inherited whole.
+
+COST      C-6 restated as it should have been: the cap raised where
+          it is needed and nowhere else. solver 7 ok / 0 fail.
+
+O-21  A KILL NAMES ITS CAP ON EVERY ROAD                        (2026-09-02)
+
+PROBLEM   Four choices of 'procsitter/TEST/test-procsitter_limits.py'
+          reported "killed by the supervisor" under 'hwut.run' and
+          passed standalone -- the x-th time that phrase reached a
+          reader. O-19 had given every cap its token and its numbers,
+          and 'stage_execute' spoke them; but that test is
+          'interactive', which takes the MULTI road, and
+          'multi_execute' answered 'TEST_APP_CONTAINED' for every
+          'session-ended', unconditionally. The session KNEW: its
+          record said FAIL_PIDS_EXCEEDED, peak 66; 'supply()' never
+          asked. And the phrase said "killed" of three choices that
+          had never begun.
+
+RULED     (Frank-Rene) the supervisor's complaints must be reported
+          properly, and a test at the OUTER level, in a shell script
+          through 'hwut.run', shall check that every procsitter event
+          is -- rather than 'killed by the supervisor'.
+
+DECISION  ONE PLACE: 'run/containment.py' -- 'token_of(containment)'
+          and 'detail_of(record, caps)', moved out of stage_execute
+          and read by both roads, so no road can fall back while the
+          other names the cap.
+
+          THE MULTI ROAD TELLS TWO STORIES, because two things
+          happened. The session remembers 'died_during': the first
+          unresolved ticket in submission order when the wire fell
+          silent -- the application serves 'run' lines in the order
+          they arrive, so that choice was IN FLIGHT. Where the record
+          names a cap, that choice owns the kill, named and numbered
+          as the plain road names it. Every other unresolved choice
+          gets 'TEST_APP_SESSION_GONE', "not run: the process had
+          already died": not killed -- never begun.
+
+          THE RECORD IS AWAITED AT THE WIRE'S END, in '_read_up',
+          before the leftovers fail -- not first in 'close()', which
+          comes after the providers have already read their tickets
+          and asked why.
+
+          THE APPLICATION'S ROOT IS KEPT. Exploration folds the
+          directory's default and the header's root into every choice
+          and dropped the fold itself; O-20 reached for
+          'choice_db.get(None)', which exists only where the header
+          names no choice. 'CTestApp.root' now carries the resolved
+          root and the adapter reads the application's caps from it.
+          Without this, a cap stated at the root of an application
+          with named choices reached every choice and NOT the
+          application -- so the multi session ran under procsitter's
+          defaults whatever the header said.
+
+FOUND     A FLOAT CAP KILLED A WHOLE DIRECTORY. 'cpu_sec = 1' reached
+          procsitter as 1.0; 'setrlimit' demands integers and raised a
+          TypeError in 'preexec', which the suppress there did not
+          catch -- the directory FAULTED and no test ran. Procsitter
+          rounds up and suppresses TypeError; 'cpu_sec' is typed int
+          (RLIMIT_CPU is whole seconds).
+
+          TWO TESTS OF THE SUPERVISOR STORM ON PURPOSE and now say
+          so: 'test-procsitter_limits.py' (64 forks against an inner
+          8, racing past the outer 32) and the new 'test-reporting.sh'
+          both state 'caps { child_process_max_n = 128 }'.
+
+CHECKED   'procsitter/TEST/test-reporting.sh', run through 'hwut.run'
+          and read at the HINTS alone, numbers stripped:
+            caps   five applications, one cap each, each 'exec'ing
+                   its offence -- the wall clock, cpu time, memory,
+                   file size, process count -- every one NAMED, and
+                   "killed by the supervisor" nowhere
+            multi  one interactive process, four choices served in
+                   SORTED order: 'a_first' passes, 'b_blow' is named
+                   with its cap, 'c_after' and 'd_last' say the
+                   process had already died, and neither is "killed"
+          Written red first, on both roads, then made green.
+
+          Its first offenders were WRONG twice, and both mistakes
+          stand as comments in the script: a bash wrapper whose CHILD
+          blew the cap left bash to print '<hwut-end>' and exit 0, so
+          "unexpected stderr" was the truth; and an interactive
+          fixture that never spoke the wire protocol hung, which read
+          like the defect and was not.
+
+COST      'test-endtoend frame/stream' re-recorded: 'test-dead.sh',
+          an interactive app that dies before the protocol, reads
+          "not run: the process had already died" where it read
+          "killed by the supervisor" -- nothing killed it. procsitter
+          19 ok / 4 fail -> 25 / 0.
+
+O-22  A LIFT'S SIBLINGS DRIFT TOO, IF THEY ARE LEFT BEHIND        (2026-09-03)
+
+PROBLEM   The lift that gave 'engine/protocol' its 'vocabulary.py',
+          'receiver.py' and 'summary.py' left all three origins
+          standing in 'orchestrator/run/'. Left standing, the two
+          that carried no reference at all then DRIFTED: 'protocol/
+          receiver.py' gained 'on_refused' (E-41), 'protocol/
+          summary.py' gained 'detail_db' (O-19), and the dead copies
+          here had neither. A stale twin does not merely sit still;
+          every ruling that touches its live sibling widens the gap.
+
+          'orchestrator/run/vocabulary.py' was a THIRD, older sibling
+          of the same lift, found and reported at the very start of
+          this session alongside 'engine/operations/interaction/
+          feed.py' and 'tui.py' -- and none of the three was ever
+          actually removed. 'feed.py' and 'tui.py' import ONE
+          ANOTHER and nothing else in the tree imports either: a
+          mutual island, the identical shape C-3 found in 'compare/
+          engine' ("the two that imported at all imported each
+          other"), and it defeats a plain in-degree count -- each has
+          exactly one incoming edge, from its own dead sibling.
+
+FOUND     By 'adm/unread_modules.py' (new): every module walked from
+          every entry point (a script run by name, a TEST file, a
+          package's own '__init__.py'), reachability, not bare
+          in-degree -- an island answers to no root and is DEAD
+          however many edges point at it from inside itself.
+
+          Getting a trustworthy answer needed a real fix to 'import_
+          graph.py' first: 'imported_tuple()' collapsed 'from X
+          import Y' to the edge 'X' alone whenever 'Y' named a
+          SUBMODULE rather than an attribute -- true for the bare
+          relative form ('from . import finder') and the absolute
+          form alike ('from hwut.engine...exploration import
+          selection'), and it had been losing 37 such edges across 16
+          files, silently, since before this session. Every module
+          the fix newly reconnected ('finder.py', 'validator.py',
+          'selection.py', every coverage reader) was checked by hand
+          before trusting the DEAD bucket at all.
+
+DECISION  'engine/orchestrator/run/{vocabulary,receiver,summary}.py'
+          and 'engine/operations/interaction/{feed,tui}.py' deleted --
+          five files, one lift's leftovers and one mutual island.
+          Every road into their live counterparts checked by class
+          name as well as module path ('CRunReportReceiver',
+          'CRunSummary', 'KIND_DB') so a reader mistaking one file
+          for the other would still be found.
+
+          'imported_tuple()' now offers BOTH readings of every
+          'from X import Y' -- 'X' alone, and 'X.Y' -- and leaves
+          '_matched's existing tail search to find whichever is real;
+          the wrong guess costs one failed lookup, the same cost the
+          tool already pays for every import naming nothing of this
+          tree.
+
+COST      None in behaviour: nothing outside the five imported any of
+          them. 'import_graph.py --check' answers the same twelve
+          findings before and after the fix -- the edges it recovers
+          do not cross a DOOR.
+
+GRAVEYARD Leaving the fix narrow (relative bare imports only) --
+          rejected: 'services/accept.py's absolute
+          'from hwut.engine...exploration import selection' hits the
+          identical gap, and a narrow fix would have kept the false
+          DEAD reading for 'selection.py' while calling itself done.
+          A plain in-degree=0 filter -- rejected: it missed 'feed.py'/
+          'tui.py' entirely, each showing one incoming edge from its
+          own dead sibling; only a walk from real roots finds an
+          island.
+
+O-24  A FAULT STANDS IN THE FLOW; THE LOG IS THE FLOW, ASKED FOR  (2026-09-07)
+------------------------------------------------------------------------------
+PROBLEM   FAULT and NOTE were MARGINALIA: written to a log file that
+          stood by default ('hwut.log'), or, with '--no-log', to
+          stderr. Three consequences. A file nobody asked for was
+          written in every directory a run was called from. A fault
+          was read out of sequence -- after the run, or in another
+          stream racing the flow -- so the node it belonged to was
+          already gone from the eye. And an attempt to make the log a
+          RECORD (an event stream, one file per run, rotated) put a
+          second query surface beside the book and the traces, for a
+          question neither of them was asked.
+
+DECISION  A FAULT STANDS IN THE FLOW, at the moment it happens, where
+          START and DONE stand:
+
+              START test-a.sh one
+              DONE  :           one ............................ [OK]
+              ERROR other/TEST: line 4: unknown key 'ttile'
+
+          'ERROR' is a BLOCK, not a word: bright white and bold on the
+          red ground the '[FAIL]' tag and the closing bar wear, so it
+          is seen at a glance among its neighbours. A NOTE
+          (determination's word, e.g. an empty selection) rides the
+          same way, unblocked. NOTHING IS HELD: a message kept for the
+          end is lost to a signal and read out of sequence; one
+          written in place survives a kill and reads beside the node
+          it belongs to. SILENT has no flow, so there it still goes to
+          'write_error'; QUIET keeps its closing FAULTS block as well.
+
+          '--log <file>' WRITES THE FLOW, plain, to that file --
+          START, DONE, ERROR, the run-time markers, in order.
+          WITHOUT IT NO FILE IS WRITTEN: '--no-log' is retired, and
+          'hwut.log' as a default name is gone. ONE log, OVERWRITTEN
+          at the run's start. IT IS NOT A QUERY SURFACE: what a run
+          COST is 'TEST/hwut-traces.csv' (B-11), what it DECIDED is
+          the book (B-10); the log is for the eye and for a mail
+          attachment.
+
+COST      A long run's flow in a file is large where the terminal
+          would have scrolled. The line language of the first cut
+          ('<t>:<kind>:<content>') stays in 'engine/protocol/line.py'
+          with its suite: it costs nothing standing, and a consumer
+          that wants the stream verbatim has it.
+
+GRAVEYARD 'TMP/session/events.log', the whole stream written per run
+          and rotated -- retired the day after it was built: it
+          answered no question the traces and the book do not answer
+          better, and a record that must be parsed is not what a
+          reader of a log wants. Holding faults for a footer, drained
+          on SIGINT/SIGTERM -- rejected: buffers lose what a kill
+          takes, and the machinery to defend them (handlers,
+          restoration, a drain in every exit path) all disappears
+          when the line is simply written where it happens.
+
+O-25  AN UNACCEPTED NOMINAL IS A NOMINAL FAILURE, NOTHING APART
+                                                              (2026-10-01)
+------------------------------------------------------------------------------
+PROBLEM   A GOOD carrying an 'unaccepted' region (compare C-9) cannot
+          serve as a pole. It had a verdict of its own -- '[ ?! ]',
+          counted apart, exit 0 -- while 'hwut.report' read the same
+          book row as 'unaccepted [FAIL]', exit 1. MEASURED
+          (2026-10-01): one fixture, two faces, two answers. The special
+          case was the error: an unfinished GOOD is one way among
+          several that a GOOD is wrong.
+
+DECISION  RULED (Frank-Rene, 2026-10-01): "All nominal related failures
+          are reported as [FAIL] with the brief content in front;
+          internally we hold the error code and let report report the
+          same way", and, of this entry's first form: "0.25 is wrong
+          [...] there are at minimum three failure categories. First of
+          one is nominals are wrong, meaning there's something wrong
+          with the good files." The categories stand in display D-34.
+          'unaccepted' is a NOMINAL failure like 'no GOOD file' and
+          'no <hwut-end> marker': refused at the gate (no process is
+          spent), then 'run-ended', 'unaccepted [FAIL]', counted, named
+          in HINTS, pointing to 'hwut.help'; the report reads the book's
+          aspirant row as the same failure. No failure is counted apart.
+
+COST      An unfinished acceptance reads as a failure in every run until
+          it is finished ('hwut.accept.interactive'). The '[ ?! ]' tag,
+          the REFUSED line for aspirants and the 'unaccepted' count of
+          'RESULTS' are gone.
+
+
+O-26  A FINDING THAT DECIDES NOTHING IS AN EVENT                  (2026-09-19)
+------------------------------------------------------------------------------
+PROBLEM   Determination's warnings -- 'the glob met only runs the
+          standard label silences' -- travelled a SIDE ROAD:
+          'orchestrator(..., warn=<callable>)', a parameter the
+          caller had to remember. MEASURED: 'services/run.py's 'do'
+          called '_drive' without it, so 'hwut.run' printed no
+          warning at all, on any wish, while 'hwut.report.wishlist' on the
+          same tree and the same glob printed it and exited 3. The
+          loss was invisible because display's own suite was already
+          red for O-24. A callback nobody is obliged to pass is a
+          page that goes missing and nothing notices.
+
+DECISION  'warning' is a KIND of the vocabulary -- {"text": str},
+          tree-level, no directory, because the finding is about the
+          WISH and not about any one place. The scheduler emits one
+          per finding on the same road as a fault, BEFORE the first
+          run: a finding that decides nothing still belongs before
+          the thing it is about. 'CRunReportReceiver.on_warning'
+          carries it; every other receiver inherits the no-op.
+
+          The 'warn=' parameter is REMOVED. One road, and a consumer
+          that is not a terminal -- a server, a test, 'run.do's sink
+          -- sees the finding for the first time.
+
+          THE TEXT IS VERBATIM. Determination's line already opens
+          'WARNING:' and is the same line 'hwut.report.wishlist' prints;
+          the renderer adds no word of its own (D-8: display owns
+          the rendering words, and here the word is determination's).
+          SILENT drops it, as it drops the flow.
+
+COST      One kind, so every walker of the vocabulary moves:
+          'test-line.py roundtrip' reads 11 kinds where it read 10.
+          'test-receiver.py format' was ALREADY red before this
+          (verdict words, meta_n/skip_n) and stays red -- not ours.
+
+O-27  TWO QUESTIONS, TWO ENUMS, ONE OPTION                       (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   'state.ready()' has always said ADMISSION, never choice --
+          it documents that which of the admissible nodes starts "is
+          the scheduler's own decision". The decision slot held
+          'ready_tuple[0]': plan order, chosen by nobody.
+
+          MEASURED on this tree's own 'hwut-traces.csv' (321 cases,
+          204 s of wall time), simulating list scheduling in both
+          orders:
+
+              LINEAR strategy        plan order   longest 1st   gain
+                   2 jobs               108.5s       106.5s     1.9%
+                   4 jobs                63.9s        61.4s     3.9%
+                   8 jobs                44.6s        39.6s    11.3%
+                  16 jobs                36.6s        31.9s    12.9%
+              PARALLEL strategy
+                   2 jobs               102.2s       102.2s     0.0%
+                   4 jobs                51.1s        51.1s     0.0%
+                   8 jobs                28.2s        25.6s     9.4%
+                  16 jobs                17.1s        12.8s    25.2%
+
+          At 16 jobs parallel, longest-first reaches 12.8s against a
+          perfect-balance bound of 12.8s -- the OPTIMAL makespan --
+          where plan order leaves 17.1s, a third above it. The
+          mechanism is the spread: 'services/TEST' holds a case 7.7
+          times its own mean, and admitted last it is the tail
+          everybody waits for. This is Graham's 1969 result: any list
+          order is within 2 - 1/m of optimal and fails exactly when
+          the last job to finish is long; sorting by non-increasing
+          duration (LPT) gets 4/3 - 1/3m.
+
+DECISION  RULED (Frank-Rene): LONGEST-FIRST IS THE DEFAULT, the others
+          are offered, and ONE option carries both questions --
+          "having two arguments would confuse the user".
+
+              E_SchedulerTestRun_Strategy        when a directory starts
+                  LINEAR  SUCCESSOR  PARALLEL
+              E_SchedulerTestRun_SelectionOrder  which admissible node
+                  LONGEST_FIRST  PLAN_ORDER  SHORTEST_FIRST
+
+              --strategy=parallel,longest-first
+              --strategy=p,lf                 the same thing
+              --strategy=longest-first,p      and so is this
+              --strategy=p                    parallel, longest-first
+              --strategy=sf                   linear, shortest-first
+
+          TWO ENUMS AND NOT ONE, because the axes are orthogonal and
+          the measured win lives in 'parallel' AND 'longest-first'
+          TOGETHER -- a single enum could not spell that, and making
+          longest-first its default would displace 'linear' and leave
+          the directory policy undefined. GRAVEYARD: a second option,
+          '--order='; the user should not have to hold a distinction
+          the tool can resolve from the word itself.
+
+          THE SHORTHANDS SHARE ONE NAMESPACE. The option's value is a
+          SET and no token announces which enum it belongs to, so
+          'plan-order' is 'po' and never 'p' -- 'p' is 'parallel', and
+          a token that could mean either means nothing.
+
+          AN ENUM NAMED TWICE IS REFUSED, not last-wins:
+          '--strategy=linear,parallel' is a contradiction the user can
+          only have written by mistake, and a silent winner hides it.
+          'words_of()' is the ONE parser; 'stability' calls it only to
+          refuse at the door and hands the spec to 'hwut.run' verbatim,
+          so no default is spelt in two places.
+
+          A NODE NOBODY HAS MEASURED GOES FIRST under either duration
+          order. It is as likely long as short, and starting an unknown
+          early is the cheaper mistake: started late, a long one
+          becomes the very tail LONGEST_FIRST exists to prevent. A
+          fresh tree has no measurements at all, and is then plain plan
+          order, which is what it should be. Durations come from THIS
+          MACHINE's 'Run' rows only ('duration_db_of'); another
+          machine's milliseconds say nothing about this one's.
+
+          PLAN ORDER BREAKS EVERY TIE, so the choice is deterministic.
+
+          A BUDGET OF ONE IS NOT ORDERED AT ALL. Where nothing may
+          stand beside the node that starts there is no tail to shorten
+          and no makespan to win -- measured, zero gain below two
+          workers, and none is possible. A serial run keeps WALK ORDER,
+          which is what its reader expects and what its raw nominals
+          hold: 'test-run.sh linear-raw' and 'short-form' are blessed
+          RAW and stand BYTE-EXACT through this cut, which is the proof
+          of the guard.
+
+COST      'strategy.py' gains the two enums, the shared shorthand
+          table and 'words_of'; 'STRATEGY_DB' is keyed by enum and
+          'DEFAULT_STRATEGY_NAME' is gone. 'scheduler.py' gains
+          '_selected' in the slot that held 'ready_tuple[0]', plus
+          'selection_order' and 'duration_db'. 'traces.py' gains
+          'duration_db_of'. 'orchestrate.py' carries the order down to
+          the node-level Scheduler through CDirectoryWork.
+          'run.py' and 'stability.py' move to the one parser.
+
+          THREE PAGES RE-RECORDED, each the subject of its own page:
+          'test-run.sh strategy-refused' and 'test-stability.sh
+          refused' hold the refusal message, and 'test-strategy.py
+          contract' asserted the old string API and was REWRITTEN --
+          not blessed -- against the enums, and now states the whole
+          option vocabulary as a table.
+
+          Census 841 ok / 12 fail -> 841 ok / 12 fail, the same twelve.
+
+          NOT RULED, and it stands: longest-first delays the moment a
+          watched suite first says [FAIL], because the quick tests go
+          last. Frank-Rene ruled the default with that measurement in
+          front of him. Left open beside it: 'failed last time first,
+          then longest', which would want both and has 'book.csv'
+          already holding the verdicts.
+
+O-28  ONE CRITERIA VOCABULARY, BOTH LEVELS; DIRECTORIES CONSIDERED
+      TOGETHER BY DEFAULT                                    (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   O-27 wired 'longest first' to NODES only. MEASURED
+          afterwards: 'orchestrate.py' built 'unit_list' straight from
+          tree_plan iteration -- nothing sorted units -- and
+          'selection_order' was merely CARRIED THROUGH CDirectoryWork
+          to the node-level Scheduler. So the default never chose the
+          slowest directory first, and could not: DEFAULT_STRATEGY was
+          LINEAR, one directory after another in walk order. That was
+          an under-reading of the ruling, found by Frank-Rene reading
+          the running tree.
+
+          MEASURED, from this tree's own hwut-traces.csv (19
+          directories, 321 cases, 204 s of wall time):
+
+              jobs linear/walk linear/big bundled/big flat  ideal
+                 2      95.4s      95.4s       91.7s 91.7s  91.7s
+                 4      55.3s      55.3s       45.8s 45.8s  45.8s
+                 8      35.6s      35.6s       23.0s 22.9s  22.9s
+                16      29.2s      29.2s       11.5s 11.5s  11.5s
+                32      29.2s      29.2s        6.4s  6.4s   5.7s
+
+          TWO THINGS THAT TABLE SETTLES. Ordering directories under
+          LINEAR buys EXACTLY ZERO -- walk and heaviest-first are
+          identical to the millisecond at every job count, because
+          serial directories sum alike in any order. And POOLING buys
+          almost nothing over keeping directories bundled: 23.0 s
+          against 22.9 s at 8 jobs, identical elsewhere. The whole
+          gain -- 35% at 8 jobs, 61% at 16 against the old default --
+          is the word TOGETHER.
+
+DECISION  RULED (Frank-Rene): the default is DIRECTORY BUNDLING KEPT,
+          DIRECTORIES CONSIDERED TOGETHER, LONGEST DIRECTORY FIRST,
+          LONGEST APPLICATION FIRST. DEFAULT_STRATEGY is PARALLEL.
+
+          CRITERIA RECORDS. A selection order IS an ordered tuple of
+          'E_Criterion', applied lexicographically by 'sort_key_of';
+          every criterion states itself as 'less is earlier', so the
+          caller always takes the minimum.
+
+              LONGEST_FIRST  = (UNMEASURED_FIRST, DURATION_DESC,
+                                PLAN_ORDER)
+              SHORTEST_FIRST = (UNMEASURED_FIRST, DURATION_ASC,
+                                PLAN_ORDER)
+              PLAN_ORDER     = (PLAN_ORDER,)
+
+          PLAN_ORDER ENDS EVERY TUPLE, so the choice is deterministic.
+          A new criterion is a member of the enum plus one line in
+          '_component_of' -- 'FAILED_FIRST' needs no scheduler edit.
+
+          ONE VOCABULARY, BOTH LEVELS. The same record orders NODES in
+          'scheduler._selected' and DIRECTORIES in
+          'orchestrate._ordered'. A node weighs its own run; a
+          DIRECTORY WEIGHS THE SUM of every case this machine has
+          measured in it. 'longest first' therefore says the same
+          sentence about a directory as about a test, and an unmeasured
+          directory goes first for the same reason an unmeasured test
+          does.
+
+          THE ORDER IS LEFT APPLIED UNDER 'linear' though it wins no
+          time there: it decides which directory a READER SEES first,
+          and that is not nothing.
+
+COST      'strategy.py' gains 'E_Criterion', 'CRITERIA_DB',
+          '_component_of' and 'sort_key_of'; DEFAULT_STRATEGY moves to
+          PARALLEL. 'scheduler._selected' is now four guards and a
+          'min' over 'sort_key_of' -- the policy left the method.
+          'orchestrate.py' gains '_ordered'.
+
+          'test-strategy.py contract' re-recorded: it prints the
+          defaults, and PARALLEL is now one of them.
+
+          STOPPED AND NOT RECORDED, per the rule that a suite moving in
+          a way the ruling did not foresee is a fork and not a bless:
+          'test-run.sh linear-raw' and 'short-form' are blessed RAW and
+          PIN DIRECTORY ORDER. '_ordered' applies under linear too, so
+          gamma now precedes alpha in both. 'linear-raw' exists to be
+          'the serial run of old'; recording a heaviest-first order
+          into it would change what the page MEANS, and that is
+          Frank-Rene's to rule, not a diff to bless. They stand red:
+          census 839 ok / 14 fail, the twelve plus these two.
+
+O-29  BUNDLED IS A RULE, NOT A NUMBER; INTERIM DEFAULT SUCCESSOR
+                                                             (2026-09-20)
+------------------------------------------------------------------------------
+PROBLEM   O-28 read 'directories considered together' as PARALLEL --
+          every directory at once. Frank-Rene, reading the running
+          tree: "I thought the default scheduler would bundle
+          directories." It did not; nineteen DIR bands interleaved.
+
+          MEASURED, how many directories must stand open at once:
+
+              jobs    1 dir  2 dirs  3 dirs  4 dirs  all 19  ideal
+                 4    52.1s   52.1s   52.1s   52.1s   52.1s  52.1s
+                 8    27.4s   27.4s   26.0s   26.1s   26.0s  26.0s
+                16    16.3s   16.2s   14.9s   13.1s   13.0s  13.0s
+                32    10.4s   10.7s   10.0s    8.8s    6.6s   6.5s
+
+          (Approximate: a worker freed early takes the next
+          directory's work, so '1 dir' is nearer successor than
+          linear. The shape is what stands.) At 16 jobs FOUR
+          directories give 13.1 s against 13.0 s for all nineteen.
+          Opening them all bought a tenth of a second and cost the
+          readable flow.
+
+DECISION  RULED (Frank-Rene), FORMALLY, in the enums that exist:
+          WE BUNDLE DIRECTORIES. SLOW DIRECTORIES FIRST. IN EACH
+          DIRECTORY, SLOW TEST RUNS FIRST.
+
+          BUNDLED IS THE MISSING STRATEGY MEMBER:
+
+              may_start = the open directories cannot fill the budget
+
+          A RULE, NOT A NUMBER. No 'k' to justify: the budget states
+          how many directories stand open, by forcing exactly as many
+          as it takes to keep no worker idle. A directory is drained
+          before the next is touched, so the flow reads as bundled.
+
+          NOT BUILT, and why: 'CStrategy.run' wakes only on
+          FIRST_COMPLETED of a DIRECTORY. BUNDLED must also wake when
+          a SLOT frees ('budget.changed()') and ask each open unit
+          whether it has admissible work -- plumbing across strategy,
+          CDirectoryWork and the Scheduler. It lands as its own cut.
+
+          INTERIM DEFAULT: SUCCESSOR. At most two directories open --
+          'bundled' in the strongest existing sense and 'together' in
+          the weakest. 16.2 s at 16 jobs against 13.0 s ideal; the
+          whole gain at 8 jobs and below. It contradicts no word of
+          the ruling, where PARALLEL contradicted 'bundle'.
+
+          BUNDLING RECURSES, AND THE DISPLAY DEPENDS ON IT. Frank-Rene:
+          "consider the interactive runs, where we run choices in
+          parallel." Read as: an application's CHOICES belong
+          together. Longest-first across a whole directory scatters
+          them -- and 'plain._run_body' elides to ':' only where
+          (directory, file) repeats THE LINE ABOVE, and sets the choice
+          column from the name that opens a group. Ordered by duration,
+          consecutive lines rarely share an application: the elision
+          stops firing, every line restates its file, the choice
+          column resets. So the node-level order must be BUNDLE
+          APPLICATIONS, slowest application first (its weight the sum
+          of its choices), and an application's choices together.
+          Expressible with 'sort_key_of' over an application-level
+          weight_of. Not built.
+
+COST      One line: DEFAULT_STRATEGY. 'test-strategy.py contract'
+          re-recorded; it prints the default. Census 839 ok / 14 fail,
+          unchanged: the standing twelve plus 'linear-raw' and
+          'short-form', which the determinism ruling closes.
+
+O-30  THE DETERMINISM LAW; '--deterministic'; UNMEASURED LAST;
+      THE ORDER APPLIES AT ONE WORKER                        (2026-09-21)
+------------------------------------------------------------------------------
+PROBLEM   O-28 ordered directories and nodes by 'hwut-traces.csv'.
+          That file is MACHINE-LOCAL AND HISTORY-DEPENDENT, so the flow
+          order of a default run became a fact about this machine's
+          past -- different on a colleague's box, on a fresh checkout,
+          and here tomorrow. Two pages blessed RAW ('linear-raw',
+          'short-form') went red for exactly that reason, and every
+          page that ever records hwut's own flow was one trace away
+          from doing the same.
+
+DECISION  RULED (Frank-Rene), and it is basic HWUT testing: CONTENT IN
+          GOOD MUST BE DETERMINISTIC AND DEPEND SOLELY ON THE BEHAVIOUR
+          UNDER INVESTIGATION. Behaviour that differs beyond control is
+          caught by equivalence patterns or by a 'hwut.pype' script.
+
+          '--deterministic' IS A MUST, and it is sugar:
+          '--strategy=linear,name-sorted'. NAME_SORTED reads no trace
+          -- its key is the name and the plan, both of which the tree
+          states -- so the order holds on every machine and every day.
+          Given beside '--strategy=' it is refused: the one says 'I
+          choose', the other 'choose nothing the tree does not state'.
+          '--dbd' keeps its own meaning (linear, default order); the
+          serial run of old is now spelt '--deterministic', and
+          'linear-raw' PROVED IT: switched over, its flow stood
+          BYTE-IDENTICAL -- only the banner line moved.
+
+          PYPES ARE THE OTHER ROAD, AND THE MORE REALISTIC ONE: a test
+          piped through a '.pype' that sorts and expands runs hwut as
+          the user runs it and still records a deterministic nominal.
+          'test-run.pype' has done this since D-10. Prefer it where
+          convenient; say '--deterministic' where the RAW flow is the
+          subject.
+
+          UNMEASURED LAST, reversing O-27. A node nobody has measured
+          goes AFTER every measured one. The reason is the VIEWER: the
+          flow must visibly honour its priority from the first line --
+          the slowest known test first -- and never leave the reader
+          asking why an unknown jumped the queue. The cost is paid once,
+          on the first run; after it the node is measured.
+
+          THE ORDER APPLIES AT A BUDGET OF ONE. The guard of O-27 made
+          the flow mean two different things by a number nobody
+          printed. A page that wants walk order now says so.
+
+COST      'strategy.py': NAME_SORTED / NAME_ASC, UNMEASURED_LAST,
+          DETERMINISTIC_SPEC. 'run.py': the option, the refusal, the
+          usage. 'scheduler.py': the guard is gone. 'test-run.sh':
+          three invocations say '--deterministic' -- including the
+          empty-selection case, whose DIR bands were still ordered by
+          a trace. Five usage/vocabulary pages re-recorded; the two
+          raw pages recorded on their new spelling.
+
+          Census 839 ok / 14 fail -> 841 ok / 12 fail, the twelve of
+          old, with 'linear-raw' and 'short-form' green for the first
+          time since O-28.
+
+          A LAPSE, so that it is on record: 'short-form' was accepted
+          before its third invocation had been re-run. 'accept' re-runs
+          the case before recording, so the nominal is right -- but
+          the order of operations was not, and it is the exact lapse
+          the bin's section 8 already names.
+
+O-31  'BUNDLED' IS BUILT; THE DEFAULT HAS NOT MOVED             (2026-09-22)
+----------------------------------------------------------------------------
+PROBLEM   O-28 ruled 'we bundle directories'; O-29 measured that no
+          NUMBER of open directories serves every budget (two at 8
+          jobs, three at 16, four for the last second) and left
+          SUCCESSOR as interim. The member that reads the rule off the
+          tree did not exist.
+
+DECISION  RULED (Frank-Rene): BUNDLED opens a further directory ONLY
+          WHERE THE OPEN ONES CANNOT FILL THE BUDGET -- with 'b' free
+          slots and 'r' nodes the open units could start now, exactly
+          when r < b. Built (intend 20) as four seams: 'Scheduler.
+          ready_n' asks the plan state, never cached, an UPPER BOUND
+          (an exclusion set withdraws admission on a start) so the
+          rule errs towards FEWER open directories; 'CDirectoryWork.
+          ready_n' answers it, or None where its Scheduler does not
+          stand; 'CStrategy.bind' hands a strategy the budget and the
+          units; 'CStrategy.run' waits on 'budget.changed()' beside
+          the unit tasks where a strategy says so. None IS READ AS
+          'ASSUME IT FILLS': a unit started a moment ago has said
+          nothing, and reading its silence as zero would open the
+          whole tree in one pass. '--strategy=bundled', short 'b'.
+          THE DEFAULT STAYS SUCCESSOR: moving it moves every
+          flow-subject nominal and is a ruling of its own.
+
+COST      A take wakes nothing, so a unit that reveals a SMALL ready
+          count is read at the next slot given back -- an underfill of
+          one node's duration at most, never an over-open (measured on
+          the strategy page: C opens when B's slot returns). On a
+          one-core sandbox the budget is one and BUNDLED is LINEAR;
+          its worth is measurable only where cores are. Three pages
+          moved by the member's name; 'bundled' recorded anew. The
+          help had called LINEAR the default since O-29 moved it --
+          corrected in the same pass.
+
+O-32  AN APPLICATION'S CHOICES GO TOGETHER                      (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   Longest-first weighed NODES alone, so an application's
+          choices were scattered round other applications' -- 'a.py
+          two' between 'c.py' and 'b.py', 'a.py one' far below. The
+          display's ':' elision fires only where directory and file
+          repeat the line above, and its choice column stopped meaning
+          anything.
+
+DECISION  RULED (Frank-Rene): SLOWEST APPLICATION FIRST, weighed as
+          the SUM of its choices, and its choices TOGETHER; inside it,
+          the slowest choice first. Built as three criteria in front
+          of the node ones (APP_UNMEASURED_LAST, APP_DURATION_DESC or
+          _ASC, APP_TOGETHER), so 'E_Criterion' and '_component_of'
+          grew and the scheduler did not. 'applications_of' beside
+          'sort_key_of' answers each node's application as (weight,
+          first plan index); an application none of whose choices is
+          measured goes LAST, as an unmeasured node does (O-30). At the
+          directory level a candidate is its own application and the
+          level collapses onto it -- one vocabulary, both levels.
+
+COST      One dict per plan, built once per run. Measured on the
+          strategy page ('together'): 'b.py' (1500 ms as two choices)
+          before 'c.py' (1500 ms as one) by plan index, 'a.py' (990)
+          whole, 'd.py' (unmeasured) last. No flow nominal moved in
+          the tree: every raw flow of two or more runs is pinned by
+          D-16, and this is what the pin was for.
+
+------------------------------------------------------------------------------
+O-33  A DIRECTORY WEIGHS ITS LONGEST CASE                      (2026-09-26)
+------------------------------------------------------------------------------
+PROBLEM   O-28 weighed a directory by the SUM of its measured cases. A
+          sum says how much work a directory holds, not what cannot be
+          split: many short cases outweighed one long one, and the CSP
+          solver's 5.4 s case started fifth, behind directories of
+          short cases (MEASURED, this tree's own traces).
+
+DECISION  RULED (Frank-Rene): a directory's weight is its LONGEST
+          measured case -- its critical path, the one case no worker
+          count shortens. 'longest first' among directories now puts
+          first the directory whose single longest case would otherwise
+          become the tail the run waits for. A directory nobody has
+          measured still goes first (O-28).
+
+COST      MEASURED on this tree: the solver's directory moves from
+          fifth to third, behind 'bin/TEST' (7.7 s) and 'services/TEST'
+          (6.4 s). A directory of many medium cases may now start later
+          than before; the worker budget still fills with its cases as
+          soon as anything frees.
+
+------------------------------------------------------------------------------
+O-34  A PAGE'S CONSTRAINTS ARE COMPILED WHERE THEY ARE MAPPED  (2026-09-27)
+------------------------------------------------------------------------------
+PROBLEM   'tolerance { constraints = [...] }' reached compare as
+          'constraint_expression_list' and nothing more. Compare checks
+          'constraint_db', which only 'derive_constraint_db()' builds, and
+          nothing called it: every page's constraints were stored and
+          never enforced. MEASURED: 'constraints = ["x < 5"]', subject
+          'v ((x: 9))' against 'v ((x: 1))' -> equivalent.
+
+DECISION  RULED (Frank-Rene, 2026-09-27): "fix this please!". The one
+          mapping ('tolerance_applied') compiles the expressions right
+          after it sets them, so the run and the merge's tolerance pane
+          enforce the same constraints. Pinned by 'test-adapter.py
+          constraints': the case above is now NOT equivalent, 'x: 3'
+          still is; against the old mapping the page reads FAIL.
+          'constraints = []' is the DEFAULT, not an off (unlike a marker
+          pair's '[]'): it leaves compare's configuration as it stands.
+          It used to clear 'constraint_f', so the default that
+          'hwut.config.show' prints did not read back as the default
+          (measured by 'test-printer.py read_back', X-PRINTED).
+
+COST      A page whose output violated its own constraints would turn
+          red. MEASURED: none in this tree -- the census stayed 853/0.

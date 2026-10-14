@@ -1,0 +1,49 @@
+
+--- --since=2 ---
+REFUSED: '--since=2': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+
+--- --since=xh ---
+REFUSED: '--since=xh': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+
+--- --since= ---
+REFUSED: '--since=': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+
+--- --since ---
+REFUSED: '--since' stands without a point; write '--since=2h' or '--since=yesterday'
+
+--- --until ---
+REFUSED: '--until' stands without a point; write '--until=2h' or '--until=yesterday'
+
+--- --glob ---
+REFUSED: '--glob' stands without a target
+
+--- --since=-1h ---
+REFUSED: '--since=-1h': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+
+--- --until=noon ---
+REFUSED: '--until=noon': a point is a span -- a number and one of 's', 'm', 'h', 'd', as in '2h' -- or one of: today, yesterday, last-week, last-month, a weekday, a month
+
+--- --fail --pass ---
+REFUSED: '--fail' beside '--pass' can want nothing
+
+--- --since=1h --until=2h ---
+REFUSED: '--since=1h --until=2h': the window is empty -- 'until' must lie further back than 'since'
+
+--- -F ---
+REFUSED: '-F' stands without an id glob
+
+--- --feature= ---
+REFUSED: '--feature' names no id
+
+--- -k ---
+REFUSED: '-k' stands without an expression
+
+--- --keys= ---
+REFUSED: '--keys ' cannot be read -- the expression is empty
+
+--- -k gui AND ---
+REFUSED: '--keys gui AND' cannot be read -- the expression ends where a label must stand
+
+--- -k gui --keys net ---
+REFUSED: '--keys' stands twice; one expression holds the whole question -- write '--keys "gui OR net"'
+<hwut-end>

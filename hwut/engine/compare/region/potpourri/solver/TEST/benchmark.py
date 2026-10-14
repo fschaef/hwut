@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+import time
+
+# Assuming these are accessible via your sys.path setup
+import sys
+import os
+
+this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../../")
+sys.path.insert(0, this_directory)
+
+import hwut.engine.compare.region.potpourri.matching                                as m  #noqa E402
+from hwut.engine.compare.contract.analogy_db import AnalogyDb  #noqa E402
+import hwut.engine.compare.region.potpourri.solver.TEST.benchmark_scenario_generator as scn  #noqa E402
+
+def run_benchmark(n_range:     list[int],
+                  k_range:     list[float],
+                  ratio_range: list[float],
+                  iterations:  int = 1) -> None:
+    """
+    PERFORMANCE ANALYSIS:
+    Sweeps through parameter variations to measure pairing efficiency.
+    """
+    results = []
+
+    print(f"{'N':>5} {'K_AVG':>6} {'RATIO':>6} {'TIME (s)':>10} {'STATUS'}")
+    print("-" * 50)
+
+    def iterable(n_range, k_range, ratio_range):
+        for n in n_range:
+            for k in k_range:
+                for ratio in ratio_range:
+                    yield n, k , ratio
+
+    for n, k, ratio in iterable(n_range, k_range, ratio_range):
+        # Generate the potential_pair_db using our deterministic generator
+        # Note: ac_pp_n is kept constant for baseline, but could be swept too
+        db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
+
+        # Wrap the dictionary into the Result structure required by pairing()
+        # Assuming 'PotentialPairDb' can be initialized from our dict
+        state = m.Result(potential_pair_db     = db,
+                         pair_db               = {}, # Start with empty paired graph
+                         analogy_constraint_db = AnalogyDb(),
+                         required_pair_n       = n,
+                         aborted_f             = False)
+
+        # Timing execution
+        start  = time.perf_counter()
+        output = m.pairing(state, abort_early_f=True)
+        end    = time.perf_counter()
+        avg_t  = end - start
+
+        status = "ABORTED" if output.aborted_f else "SUCCESS"
+        print(f"{n:5d} {k:6.1f} {ratio:6.2f} {avg_t:10.5f} {status}")
+        if output.aborted_f:
+            for ia, mate_list in db.items():
+                for ib, analogy_db in mate_list:
+                    print(f"{status} [{ia}]-[{ib}] -- {analogy_db}")
+
+    return results
+
+if __name__ == "__main__":
+    import sys
+    if "simple" in sys.argv:
+        N_SAMPLES = [ 10000 ]
+        K_SAMPLES = [ 10 ]
+        RATIO_SAMPLES = [ 0.5 ]
+    else:
+        # Define the variations you want to test
+        # Example: See how scaling N from 10 to 100 affects time
+        N_SAMPLES = [ 1000 * i for i in range(1, 7) ]
+
+        # Example: See how 'ambiguity' (partners per entry) affects backtracking
+        K_SAMPLES = [2, 5, 10]
+
+        # Example: See how constraint density affects speed
+        RATIO_SAMPLES = [0.1, 0.2, 0.5 ]
+
+    results = run_benchmark(N_SAMPLES, K_SAMPLES, RATIO_SAMPLES)

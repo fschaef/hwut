@@ -1,0 +1,31 @@
+
+--- the keys of the whole file ---
+keys:      ('algorithm',)
+
+--- the features, file order ---
+name=line-pairing  line=4 keys=('heavy',)
+    title:       Two streams are aligned line by line.
+    doc:         'Each line of the subject meets one of the nominal.\nThe rest is said in the MANUAL.'
+    documents:   ('../MANUAL.md#pairing',)
+name=missing-side  line=13 keys=()
+    title:       A line present on one side only is shown whole.
+    doc:         None
+    documents:   ()
+name=007           line=14 keys=()
+    title:       A feature named by digits.
+    doc:         None
+    documents:   ()
+name=untested      line=15 keys=()
+    title:       None
+    doc:         None
+    documents:   ()
+
+--- asked by name ---
+missing-side  -> line 13
+007           -> line 14
+nobody        -> None
+names: line-pairing, missing-side, 007, untested
+
+--- faults ---
+0
+<hwut-end>

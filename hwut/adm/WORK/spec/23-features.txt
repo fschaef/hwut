@@ -1,0 +1,493 @@
+==============================================================================
+spec/23-features -- FEATURES: what a tree claims to do, and which test
+                    runs prove it
+==============================================================================
+
+VERSION: 9
+
+COMPONENTS: engine/bookkeeper, engine/orchestrator/exploration,
+            engine/coverage, services.
+INTEND:     adm/WORK/intend/23-features.txt
+
+VERSION 1 was the concept of 2026-10-10. VERSION 2 said what of it stood.
+VERSION 3 took the ruling of the same day: THE STATEMENT FILES GIVE
+THEMSELVES IDS AND RELATE BY THEM. VERSION 4 added the table ('--matrix')
+and the code a feature's runs reached ('--code'). VERSION 5 took the
+rulings of 2026-10-11: a test run without a feature is 'NONSENSE?' and does
+not fail; feature files are not mandatory; 'doc' and triple quotes; the
+feature document; 'hwut.move' writes the target's feature file. VERSION 6:
+the document holds the tree and leads to the coverage pages (services
+E-147). VERSION 7: a feature names documents (exploration R-92); the tree
+is interactive (services E-148). VERSION 8 took the rulings of 2026-10-12
+(R-93): A COMPONENT IS A CLAIM IMPLEMENTED BY CLAIMS.
+VERSION 9 takes the rulings of 2026-10-13 and REPLACES the id model of the
+versions 3 to 8 (exploration R-94, services E-150):
+
+    - ONE file kind, 'hwut-features.conf'. 'hwut-composition.conf' is gone.
+      A file states title, doc, documents, keys and 'childs'.
+    - THE PARENT NAMES THE CHILD: 'childs' maps a key to a directory
+      ("./core") -- or, in a TEST directory's file, to an inline feature.
+      A file states no 'id', no 'parent', no number, no 'issued'.
+    - The FULL ID is the chain of keys from the directory holding
+      'hwut-root.conf' down to the feature, joined by '.'.
+    - A test links SHORT (a name in its own TEST directory).
+    - 'hwut-feature-map.conf' at the top is REQUIRED: published id -> full
+      id, or none (RETIRED). What a customer was told keeps its meaning
+      across moves and renames. It holds the CURRENT state only.
+    - KEYS: categories of features, set on a claim, valid for it and all
+      below it -- never upward. "Component has key" is derived.
+    - WISH (R-95): '-F/--feature <id-glob>' and '-k/--keys <expr>'.
+    OWED beside it: a claim's state on two axes (section 10).
+
+    section                                   stands / OWED
+    ---------------------------------------------------------------------
+    1  the feature file (TEST directory)      stands  (exploration R-94)
+    2  the link, 'features' in the block      stands  (R-83)
+    3  the component file                     stands  (R-94)
+    4  ids, 'childs', implicit and explicit   stands  (R-94)
+    5  hwut.report.features                   stands  (services E-139, E-143,
+                                                      E-150; exploration R-86)
+    6  the judgement, and what sanitize       stands  (R-94, services E-150)
+       proposes
+    7  the one adaption; move, rename,        stands  (R-94, E-150)
+       remove
+    8  the map                                stands  (R-94)
+    9  keys                                   stands  (R-94)
+    10 open
+    11 the wish: -F and -k                    stands  (exploration R-95)
+    12 a claim's state on two axes            OWED    (ruled 2026-10-12)
+
+A CLAIM is a sentence of what the software does, and what implements it
+(R-93):
+
+    claim       implemented by                 stated in
+    ---------------------------------------------------------------------
+    component   claims: its own features and   <component>/hwut-features.conf
+                the components below it
+    feature     test runs                      <component>/TEST/hwut-features.conf
+                                               (the link: a test's block)
+
+Both speak with the same words: 'title' (one line), 'doc' (as many lines
+as it takes, triple quotes) and 'documents' (where more is said; a
+feature's, for now). A test carries 'title' and 'doc' as well.
+
+A FEATURE is PROVEN where at least one test run is linked to it and every
+linked test run passes. A feature with no linked test run is UNPROVEN,
+and an unproven feature counts as not implemented. A published id the map
+binds to none is RETIRED. (Section 12 owes the two axes.)
+
+A COMPONENT is a directory that is not a TEST directory. Its TEST
+directory is its own: the features there are the component's, and the
+TEST directory is no level of an id.
+
+
+1  THE FEATURE FILE (a TEST directory's)
+______________________________________________________________________________
+
+    features {
+        keys = ["algorithm"]
+        childs {
+            line-pairing { title = "Two streams are aligned line by line."
+                           doc   = "..."
+                           keys  = ["heavy"] }
+            missing-side { title = "A line present on one side only is shown whole." }
+            007          { title = "Names may be digits." }
+        }
+    }
+
+    keys          keys that apply to every feature of the file.
+    childs        the features; the KEY of each is its name -- what a test
+                  writes to link to it, unique in the file, the last level
+                  of its id. A key is an identifier of letters, digits,
+                  '_' and '-', no dot; digits may lead.
+    title         one sentence: what the software does.
+    doc           what more there is to say: as many lines as it takes,
+                  between three double quotes.
+    documents     where more is said: a list of paths from this file's
+                  directory ('#<anchor>' may follow), or URLs --
+                  documents = ["../README.txt#3"]. Printed as 'see' under
+                  the feature; links in the feature document.
+    keys          on a feature: its own keys (section 9).
+
+A TEST directory's file states nothing else: 'title', 'doc' and
+'documents' of the file itself belong to the component and stand in ITS
+file. A key standing twice, a name that is no key, a directory reference
+(a child that is a text) are faults; the first stands. The words of the
+past -- 'issued', numbers, 'id', 'parent' -- are unknown keys: faults,
+nothing is read from them.
+
+
+2  THE LINK
+______________________________________________________________________________
+
+    # @hwut {
+    #     title    = "Pairing"
+    #     features = ["line-pairing"]
+    #     choices { gap { features = ["line-pairing", "missing-side"] } }
+    # }
+
+'features' is a test parameter like every other: at the root for the whole
+test, in a choice for that choice (the choice's list REPLACES the root's,
+'[]' links nothing), in 'app_defaults'. A name is looked up in the feature
+file of the test's own TEST directory and nowhere else: the link is SHORT,
+relative to the component that owns the TEST directory. The link exists in
+the test's block only.
+
+
+3  THE COMPONENT FILE
+______________________________________________________________________________
+
+    features {
+        title  = "Compare"
+        doc    = "Decides whether an output is equivalent to its nominal."
+        documents = ["README.txt"]
+        keys   = ["engine-part"]
+        childs {
+            core = "./core"
+            pat  = "./patterns"
+        }
+    }
+
+    title, doc, documents   what the component is and does.
+    keys                    keys that apply to it and everything below.
+    childs                  key -> the directory one level below,
+                            "./<directory>" (or "<directory>"); a path of
+                            more than one level, '..' and absolute paths
+                            are faults. The component's TEST directory is
+                            not listed: it is the component's own. An
+                            inline feature in a component's file is a
+                            fault: features stand in the TEST directory.
+
+
+4  IDS, 'childs', IMPLICIT AND EXPLICIT TREES
+______________________________________________________________________________
+
+THE PARENT NAMES THE CHILD (R-94). The key under which 'childs' lists a
+directory is the child's name in every id below it; the child states no
+name of its own, and there is no number anywhere.
+
+    full id = <key>.<key>. ... .<feature name>
+
+from the directory holding 'hwut-root.conf' (its own key is no level),
+down through the components, to the feature. A TEST directory is no level.
+A directory no file lists has the key 'key_of_name(directory name)': its
+name, characters a key cannot hold replaced by '_'.
+
+An id is addressed in whole by the map and the wish, and short by a test.
+
+THE DIRECTORIES ARE THE FACT. The file above states a directory a second
+time by listing it; both are held against the directories (section 6).
+
+IMPLICIT AND EXPLICIT. A tree whose only feature files stand in TEST
+directories is IMPLICIT: component = directory, key = its name, no
+component file asked for, nothing judged but the map. As soon as one
+'hwut-features.conf' stands outside a TEST directory -- in the tree, or
+directly above the root asked -- the tree is EXPLICIT: every component on
+the way must state a file and be listed by its parent.
+
+
+5  THE REPORT
+______________________________________________________________________________
+
+'hwut.report.features [--directory=<path>]' walks the tree below the
+directory it is called in and prints component -> part -> feature -> test
+runs and their verdicts, each component with its key and its counts, each
+feature with its FULL ID, the id it is PUBLISHED as where that differs, and
+its EFFECTIVE keys.
+
+    state of a feature
+        PROVEN     one linked test run or more; all of them pass
+        FAILING    one linked test run or more; one of them does not pass,
+                   or has no verdict in 'GOOD/book.csv'
+        UNPROVEN   no linked test run
+
+    RETIRED    a published id the map binds to none; a block of its own
+               in the report ('--matrix' omits it)
+
+OUTSIDE THE RELATION, named below the tree: a test run naming a feature its
+TEST directory does not define; 'NONSENSE?' -- a test run linking to no
+feature, where the directory states features; a document a claim names
+that does not stand; a statement that is not read; and every disagreement
+of section 6 (files, directories and map).
+
+'NONSENSE?' IS NO FAILURE (services E-145): the run's verdict stands,
+'hwut.run' says nothing of it, 'hwut.help' explains the word. FEATURE FILES
+ARE NOT MANDATORY: a TEST directory without one is named nowhere.
+
+AN IMPLICIT TREE IS COMPLETE AS IT STANDS (services E-144, ruled; E-150):
+the directories are not judged against component files where none stands
+-- a component file stands in the tree or directly above it, else only the
+map is judged.
+
+'--matrix' prints, in place of the tree, one table per TEST directory that
+carries a feature file:
+
+    engine/compare/core/TEST  #1    #2    #3
+    test-pair.sh [plain]      PASS  .     .
+    test-pair.sh [gap]        FAIL  FAIL  .
+    test-pair.sh [odd]        .     .     .     <- NONSENSE?
+    test-stray.sh             .     .     .     <- no feature defined
+                                          ^     no test run
+      #1 line-pairing  FAILING
+      #2 missing-side  FAILING
+      #3 untested      UNPROVEN
+
+    ('<- NONSENSE?' behind a run that links to no feature)
+
+    row      a test run; column: a feature, numbered by its POSITION in the
+             table (#1 ..), not an id; cell: the run's verdict where it
+             links
+    A link never leaves its TEST directory: the tables are the relation.
+
+'--code' adds under each feature that has a linked run where those runs
+went in the code, read from a coverage output ('--cov-dir=<dir>'; else the
+nearest 'hwut.coverage/' from the directory upward):
+
+    code only    <source>: <lines>    executed by this feature's runs and
+                                      by no other measured run
+    code shared  <n> line(s) in <m> file(s)
+    code         <n> of <m> linked run(s) not measured
+
+    A hint where to look. What is 'only' depends on what else the coverage
+    run measured. Sources standing in a TEST directory are left out.
+    No coverage output: a NOTE, and the page without code.
+
+'--html=<file>' and '--ods=<file>' write THE FEATURE DOCUMENT (services
+E-146) in place of the page -- one self-contained HTML page, or an
+OpenDocument spreadsheet -- with four tabs:
+
+    Matrix     full id, brief (title), state, implemented by (the linked
+               test runs and their verdicts)
+    Tree       component -> components below -> TEST directory -> features,
+               each component with title and counts
+    Features   full id, name, title, doc, component, state, the id it is
+               published as, effective keys, documents
+    Tests      test file, title, 'doc', test runs and verdicts, features
+
+    feature id in 'Matrix'  ->  its row in 'Features'
+    test run in 'Matrix'    ->  its test's row in 'Tests'
+    feature in 'Tree'       ->  its row in 'Features'
+
+    THE TREE IS INTERACTIVE (E-148): the page unfolds and folds all
+    levels, shows the features of chosen states and those whose line holds
+    a word; the spreadsheet carries the levels as row groups.
+    A feature's 'documents' stand in 'Features' as links.
+
+    With '--code' or '--cov-dir' the 'Features' tab carries the code only a
+    feature's runs reached. With '--cov-html=<dir>' -- where
+    'hwut.cov.conv.to_html' wrote its pages -- each source is a RELATIVE
+    link '<dir>/<source>.html#L<line>'.
+
+'doc' is a key of the test's block beside 'title' (exploration R-90): what
+the test is about, written in triple quotes over as many lines as it takes.
+
+
+6  THE JUDGEMENT, AND WHAT SANITIZATION PROPOSES
+______________________________________________________________________________
+
+'feature_relation.mismatch_list' holds the files and the map against the
+directories. In an IMPLICIT tree only the map is judged.
+
+    kind       what disagrees                             healed by
+    ---------------------------------------------------------------------
+    no-file    a component states no file                 relate <dir>
+    unlisted   the file above does not list it            relate <dir>
+    moved      it stands below one parent; ANOTHER file   relate <dir>
+               still lists its directory and that
+               directory stands nowhere below it
+    dangling   'childs' lists a directory no component    unrelate <dir> <name>
+               stands at, and none was moved from it
+    twin       one directory listed under two keys        said; the author
+                                                          removes one
+    no-map     features stand and no map                  relate .
+    unmapped   a feature no published id binds            relate <TEST dir>
+    map-gone   a published id is bound to a full id that  retire <dir> <id>
+               names no feature (and no unique counter-
+               part to repoint to)
+    map-twin   a published id twice, or a full id          said
+               bound twice
+    map-clash  a RETIRED id equals a standing feature's   said; the author
+               full id                                    renames
+
+'hwut.sanitize.propose --relations' (one of the aspects a bare call asks)
+writes one 'relate' per directory -- noted 'moved from <dir>' where the move
+was detected -- one 'unrelate' per dangling entry and one 'retire' per
+map-gone id, parents before childs. 'hwut.sanitize.apply' and
+'hwut.sanitize relate|unrelate|retire' judge again and act.
+
+'hwut.run' is not affected by any of it: a test runs and is judged whether
+or not its links resolve.
+
+
+7  THE ONE ADAPTION
+______________________________________________________________________________
+
+'engine/orchestrator/exploration/feature_adapt.py' is the one
+implementation behind 'relate', 'unrelate', 'retire', 'hwut.move',
+'hwut.rename' and 'hwut.remove'. Text is MOVED, never composed; every edit
+is text surgery ('amend.py'), so what is not adapted stays byte for byte.
+
+    relate <dir>          1  no file: 'features {}' written, empty
+                          2  not listed: '<key> = "./<dir>"' entered in
+                             the 'childs' above under the directory's name
+                             -- CARRIED there with its KEY from the file
+                             that still lists it (a detected move)
+                          3  no map: written, every feature published under
+                             its full id; unmapped features: published
+                             under their full ids -- or an id bound to a
+                             gone full id is REPOINTED to the feature that
+                             is its one counterpart (longest common suffix
+                             of the ids, at least the feature name; a tie is
+                             the author's)
+    unrelate <dir> <name> the entry removed (only where dangling)
+    retire <dir> <id>     the published id bound to none (only where its
+                          full id names no feature)
+    hwut.move, across     each feature the test links to that the source's
+    TEST directories      feature file defines and the target's does not is
+                          written into the target's under its name, and
+                          taken out of the source's unless a test that
+                          stays still links to it. Its published ids follow
+                          (moved), are retired (merged into a feature of
+                          the same name), or a copy is published under its
+                          own id (kept in the source). No feature file in
+                          the target: it is WRITTEN (R-91).
+    hwut.rename, within   nothing to adapt: the link is the block's, and
+    a directory           the block is the author's (services E-48)
+    hwut.remove           the features left without a linked run are named
+    a directory moved     nothing global breaks: below it every key still
+    or renamed BY HAND    resolves; what no longer agrees is 'moved', and
+                          'relate' carries the entry; the map is repointed
+                          by the 'relate' of its TEST directories
+    sanitize 'move'       an orphan's records carried after its application
+                          go through 'hwut.move' (E-131) and so through the
+                          same adaption
+
+THE RISKS of these steps are collected in
+adm/WORK/gathered/sanitizer-risks-2026-10-13.md.
+
+
+8  THE MAP
+______________________________________________________________________________
+
+'hwut-feature-map.conf' stands beside 'hwut-root.conf' and is REQUIRED:
+
+    map {
+        "scroll"     = "display.game.level.scroll"
+        "old-scroll" = none
+    }
+
+    "<published id>" = "<full id>"   what a customer was told = where the
+                                     feature stands now
+    "<published id>" = none          RETIRED: no longer claimed
+
+- Every feature has an entry. The first time a feature is seen its published
+  id is its full id. The author may rename a published id by editing the
+  left side; a rename REPLACES, there are no aliases.
+- A moved or renamed feature changes the RIGHT side only ('relate',
+  'hwut.move').
+- A feature that is removed stays as 'none'. RETIRED is reported beside
+  PROVEN, FAILING and UNPROVEN, and does not count in the components.
+- The map holds the CURRENT state. History is configuration management's.
+- The map is a sanity check's subject: no-map, unmapped, map-gone, map-twin,
+  map-clash (section 6), and faults of the file itself.
+- Below the top (a root asked that is not the tree's own) only 'unmapped'
+  is judged: entries pointing outside are not seen.
+
+
+9  KEYS
+______________________________________________________________________________
+
+'keys = ["a", "b"]' stands on a feature, in a TEST directory's file (for all
+its features) or in a component's file (for itself and everything below).
+A key is an identifier as an id's level.
+
+    effective keys of a feature = its own
+                                + those of its TEST file
+                                + those of every component above it,
+                                  up to the top of the tree (and, where the
+                                  root asked is lower, those of the files
+                                  above the root)
+
+Keys travel DOWNWARD only. "Component has key k" is DERIVED -- a feature at
+or below it carries it -- and never written. In an implicit tree the keys
+of a component are the directory names (the derived reading of the ids).
+
+KEYS ARE NOT LABELS. A label (hwut.run -l) names a set of test runs and is
+ephemeral; a key is a durable category of features. They have separate
+options (section 11).
+
+
+10  OPEN
+______________________________________________________________________________
+
+    o-3  CLOSED 2026-10-11 (E-145): a test run that links to no feature is
+         'NONSENSE?' and no failure; exit 0.
+    o-5  CLOSED 2026-10-13: 'hwut.run' prints NO feature report; the
+         verdicts stay in 'hwut.report.features'.
+    o-6  CLOSED 2026-10-13 (R-94): there are no numbers; a feature's name
+         is its id's last level.
+    o-8  CLOSED 2026-10-11 (R-91): 'hwut.move' writes the feature file.
+    o-9  CLOSED 2026-10-13 (R-94): 'parent' is gone; 'childs' maps a key to
+         a directory.
+    o-10 RULED 2026-10-13, NOT YET BUILT: keys and published ids follow
+         Unicode UAX #31 (XID_Start / XID_Continue), widened by digits at
+         the start and '-' in the continue part, NFC enforced (a word that
+         is not NFC is a fault), no case folding. A published id is such
+         words joined by '.'. 'key_of_name' follows the same rule.
+    o-11 'hwut.move' says nothing where the map step is skipped for want of
+         a 'hwut-root.conf'.
+    o-12 RULED 2026-10-13, NOT YET BUILT: the proposal names every repointing
+         under its 'relate' line ('repoint <published> <old full id> -> <new
+         full id>') and every pairing it refuses ('unpaired <published>
+         <old full id> (candidates: ...)'). Text only; the pairing rule is
+         untouched (see o-15).
+    o-13 An implicit tree gets one explaining line above a proposal that
+         the flip causes (names the first component file found). Offered
+         2026-10-13, answer pending.
+    o-14 RULED 2026-10-13, NOT YET BUILT: component and feature states are
+         IMPLEMENTED / NOT IMPLEMENTED / RETIRED, and a verdict ok / fail
+         beside them. Leaf: implemented = at least one run linked. Component:
+         implemented = every non-retired feature below it is implemented;
+         retired where all below are retired; retired features have no
+         verdict. Not implemented implies fail. A component with nothing
+         below it: treated as not implemented (assumed, unconfirmed).
+    o-15 SESSION TO BE HELD: restructuring and the map -- moves, inserted
+         levels, merges and splits, pairing by suffix, what a published id
+         means after them. Until then o-12 (naming the pairs on the
+         proposal line) is discussed but the pairing rule stays as built.
+
+11  THE WISH: -F AND -k
+______________________________________________________________________________
+
+BUILT (exploration R-95, 'feature_wish.py'):
+
+    -F, --feature <id-glob>   a glob over FULL ids, matched by key names:
+                              '*' one key, '**' any depth, '{a,b}' choice;
+                              a bare key is '**.key'. A component brings its
+                              subtree. Repeats UNION; the option NARROWS the
+                              rest of the wish. The glob resolves through
+                              the map first; a retired id selects nothing and
+                              says so.
+    -k, --keys <expr>         the grammar of '-l' (AND, OR, NOT, brackets,
+                              ',') over EFFECTIVE keys.
+
+'-k' and '-l' are separate options; '-f' is taken by hwut.accept.
+'hwut.report.list -F ... -k ...' round-trips as a wishlist.
+
+    A component brings its subtree: a feature is wanted where its id or
+    any proper prefix of it is named. A text that is a published id of the
+    map means what the map binds it to; a retired one is refused by name,
+    as is a key no feature carries. A run is wanted where ONE of its
+    features satisfies both. A run linked to nothing is wanted by neither.
+
+
+12  A CLAIM'S STATE ON TWO AXES -- OWED
+______________________________________________________________________________
+
+RULED (Frank-Rene, 2026-10-12): "a component's state has two dimensions:
+implementation being implemented or not, test failing or succeeding.
+Those are separate axes." Today's PROVEN / FAILING / UNPROVEN mixes the
+two. The concrete form -- what a feature and a component show on each
+axis, and how a component's axes fold from its parts -- is put to
+Frank-Rene before it is built.
+

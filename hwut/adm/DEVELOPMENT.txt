@@ -1,0 +1,534 @@
+
+============================================================================
+  OPEN, PROMINENT:  A SESSION ON DOCUMENT CONSISTENCY IS DUE.
+  See 'adm/WORK/gathered/02-disc-1-document-consistency.txt'. Until it is held,
+  a README sentence may lag its ruling and a component's laws may stand in
+  another component's RATIONALE -- read the RATIONALE index lines first.
+============================================================================
+
+----------------------------------------------------------------------------
+RE-RECORDING A GOOD: THE VERDICT MUST NOT MOVE
+----------------------------------------------------------------------------
+A GOOD is re-recorded when a change is DESIGNED -- a name, a phrase, a
+column. It is not re-recorded because the suite went red.
+
+THE TWO ARE INDISTINGUISHABLE BY EYE, and a redirect makes both green:
+
+    python3 test-x.py choice > GOOD/test-x.py--choice.txt
+
+That command records whatever came out, a FAILURE or a TRACEBACK
+included, and the next run agrees with it perfectly.
+
+SO CHECK THE VERDICT, ALWAYS, before and after:
+
+    grep -c '^FAILURE\|^  FAIL' <old>   ==   same in <new>
+
+A count that MOVED is not a designed change: it is the suite telling
+you something and being silenced. Read the diff.
+
+This is written down because it happened three times in one session:
+twice caught, once not -- 'test-coverage_provision.py--harvested' was
+blessed FAILING and stayed green for hours, because the failure was
+its own oracle.
+
+A VERDICT COUNT IS NOT ENOUGH FOR A DISPLAY-ONLY SUITE
+------------------------------------------------------
+Some suites carry no 'FAIL'/'SUCCESS' line at all: they SHOW what
+happened and the GOOD is the whole of the judgement ('test-remove.sh',
+'test-wishlist.sh', 'test-report.sh'). There the verdict check has
+nothing to count, and a change can turn the test into a SILENT NO-OP
+that still prints, still matches its fresh GOOD, and asserts nothing.
+
+That happened here: the record key became the file WHOLE, the fixture
+kept asking 'hwut.remove' for the STEM, the face looked under a key
+that does not exist, found nothing, and said so politely --
+
+    TO BE FORGOTTEN: test-app -- 0 file(s)
+        book entry: none stood
+    AFTER { ... book: ['test-app.sh'] }        <- unchanged
+
+-- and that was recorded as the oracle. Nothing failed. Nothing was
+tested either.
+
+SO COUNT THE PHRASES THAT MEAN 'I FOUND NOTHING', before and after:
+
+    none stood | not registered | no recorded artefact | <no entry>
+    <none> | never run | GOOD missing | nothing to accept | is EMPTY
+
+A count that ROSE is the suite going quiet, not the suite agreeing.
+
+THE IMPORT GRAPH, AND THE LAYERING
+______________________________________________________________________________
+
+'adm/import_graph.py' reads every module with 'ast' and reports who
+depends on whom at a stated DEPTH -- 1 the outer directories, 2 the
+inner ones, 0 the modules themselves.
+
+    adm/import_graph.py . --depth=1 --exclude="*/TEST/*" \
+        --exclude="*/test-*" --exclude="*/config.py"
+
+AN IMPORT IS A FACT IN THE TEXT, and nothing here guesses. That is why
+this tool is static while a CALL graph could not be: duck typing and
+dynamic dispatch mean a static call graph INVENTS edges, and an
+invented edge in an architecture document is worse than no document.
+Real calls are observed, never derived.
+
+THE SUITES ARE EXCLUDED. A test application imports whatever it tests,
+upward and downward alike, and is no part of the shape it examines.
+
+FORMATS: 'tree' (nested blocks and arrows, for reading), 'edges' (one
+per line, for grep and for diff -- the form a GOOD file wants), 'dot'
+(graphviz), 'mermaid' (a browser, with nothing installed).
+
+'--check' MAKES THE ARCHITECTURE EXECUTABLE. 'adm/LAYERING.txt'
+declares the permitted DIRECTION between components; an edge no rule
+permits is a violation naming both ends, and the tool answers 1.
+
+    adm/import_graph.py . --depth=2 --check=adm/LAYERING.txt \
+        --exclude="*/TEST/*" --exclude="*/test-*" \
+        --exclude="*/config.py"
+
+The suite is 'adm/TEST/test-import_graph.sh'. Its 'layering' choice
+shows the check PASSING and BITING, because a check that never fails
+proves nothing; its 'hwut' choice records the real tree's outer picture
+and its layering, so a change to either shows up as a moved GOOD.
+______________________________________________________________________________
+
+
+STATIC ANALYSIS -- THE RATCHET
+______________________________________________________________________________
+
+'adm/TEST/test-static-analysis.sh' runs 'ruff' over the tree with the
+tree's own configuration and records, SORTED, every kind of finding
+that still stands.
+
+TWO SUITES IN THIS TREE ASK ABOUT THE CODE BASE'S SHAPE RATHER THAN
+ITS BEHAVIOUR -- this one and 'test-import_graph.sh'. Every other
+suite RUNS the product and reads what came out; these two read the
+SOURCE and never run it. That is what 'static analysis' names, and it
+is why they live in 'adm' rather than beside the component they
+examine: their subject is the tree.
+
+NOT 'COMPLIANCE': that word names conformance to an EXTERNAL standard
+-- a MISRA clause, a PEP, an ISO paragraph. There is none here. The
+tree declares its own tolerance in 'adm/ruff.toml' and the GOOD
+records what remains, so the authority is entirely inward and the
+word would point the wrong way.
+
+AND NOT 'HYGIENE', WHICH IS ALREADY TAKEN and means something
+narrower: A COMPONENT'S OWN SOURCE AND GOOD FILES, checked against the
+defects that recurred while that component was built --
+'engine/operations/TEST/test-hygiene.py' is the instance, and disc-6
+expects more. A hygiene suite belongs TO ITS COMPONENT and knows what
+that component keeps getting wrong. This suite belongs to no component
+and knows nothing but what a tool reports about every file alike.
+Terminological invariance: one word, one thing.
+
+IT IS NOT A TEST THAT THE TREE IS CLEAN. It is a test that the tree is
+NO LESS CLEAN THAN IT WAS. One more instance of a tolerated kind, or a
+kind not tolerated before, moves the GOOD and the suite says so. A
+finding REMOVED moves it too, and that re-blessing is the record of an
+improvement.
+
+WHAT IS IGNORED IS IGNORED BY NAME, in 'adm/ruff.toml', each with its
+reason: '%' formatting, hand-aligned imports and asserts-as-door-guards
+are house style, not findings, and 878 of one kind drown every finding
+that matters.
+
+THE 'MUST STAND AT ZERO' SET is four rules, each of which can HIDE A
+FAILURE rather than merely offend:
+
+    F      a name that is not there
+    B011   a dispatch that vanishes under 'python -O' and then hands
+           None to a caller who blames their own code
+    B020   a loop variable rebinding what the loop reads from
+    S110   a swallow with no reason given
+
+'S102' (exec) is deliberately NOT among them: the pype language
+executes its own effect blocks, so exec is the feature. A set that can
+never be empty is a set people learn to ignore.
+
+THE RUFF VERSION IS PRINTED, AND IT IS A HAPPY PATTERN
+
+    eq-pattern = ["ruff [0-9]+\\.[0-9]+\\.[0-9]+"]
+
+so two runs under different ruffs are EQUIVALENT on that line. THIS IS
+WHAT HAPPY PATTERNS ARE FOR: the version is not the fact this suite is
+about -- the findings are. A ruff that knows new rules moves the list,
+and there the suite speaks; a ruff that merely counts higher and finds
+the same things has said nothing, and the suite says nothing back.
+
+Without the pattern the test would go red on every upgrade for a
+reason nobody could act on, and A SUITE THAT CRIES AT NOISE IS A SUITE
+THAT GETS RE-BLESSED UNREAD.
+
+NO RUFF, NO REPORT. A missing tool is a MISSING PRECONDITION, and a
+missing precondition is a RESULT stated as one -- never a silent pass
+that would let hygiene rot unwatched.
+______________________________________________________________________________
+
+
+CONTRACT MATERIAL -- '--shared'
+______________________________________________________________________________
+
+    adm/import_graph.py . --depth=3 --shared=3 \
+        --exclude="*/TEST/*" --exclude="*/test-*" --exclude="*/config.py"
+
+names every NAME that three or more components import, and where it
+lives today.
+
+A NAME THAT THREE COMPONENTS REACH FOR IS NO PART OF WHICHEVER ONE
+HAPPENS TO HOLD IT. Where it lives inside one of its own readers it
+HOLDS A CYCLE SHUT -- and the report says which name, so the question
+stops being 'is there a cycle' and becomes 'what would moving ONE name
+do'.
+
+THE TEST FOR CONTRACT MATERIAL: would moving it move BEHAVIOUR? An
+enum has none and is the clearest case there is. A class with twenty
+methods is not contract however many components import it -- it is
+shared because a REAL dependency exists, and the layering must express
+that rather than hide it.
+
+    adm/import_graph.py . --depth=2 --format=svg > architecture.svg
+
+draws the picture HERE -- no graphviz, no browser, no dependency.
+Components in rows, importers above what they import, and A MUTUAL
+PAIR IN AMBER WITH A HEAD AT BOTH ENDS, so a cycle shows itself.
+
+AND IT IS EDITABLE. Every box is a GROUP with an id, holding the
+rectangle and both labels; every arrow is an INKSCAPE CONNECTOR bound
+to two of those ids, and every box carries 'connector-avoid'. Open the
+file, take the Selector ('S'), drag a box: THE LINES FOLLOW, routing
+around the boxes rather than through them.
+
+    the connector tool   'O' (or Ctrl+F2) -- click one box, click
+                         another, to draw a NEW arrow
+    the XML editor       Ctrl+Shift+X -- shows
+                         'inkscape:connection-start/-end'
+    a deleted box        leaves its connectors dangling; they are not
+                         removed with it
+
+THE 'd' ATTRIBUTE IS WRITTEN ANYWAY, because a browser knows nothing
+of connectors and must still see a line. Inkscape recomputes it the
+moment anything moves, so ONE FILE serves both.
+'engine/compare/contract' is the first fruit of both
+(engine/compare/RATIONALE.txt, C-1).
+______________________________________________________________________________
+
+SEALED COMPONENTS
+______________________________________________________________________________
+
+'adm/LAYERING.txt' has two line shapes, because there are two kinds of
+law.
+
+    <from> -> <to>      a permitted DIRECTION between two components,
+                        judged at the '--depth' asked for
+    SEALED <glob>       a component that IMPORTS NOTHING of this tree,
+                        judged at MODULE depth and therefore true at
+                        EVERY '--depth'
+
+A DIRECTION IS ABOUT A PAIR and can only be read where both are named:
+at depth 2 the whole of 'engine/compare' is one box, and a rule about
+what happens inside it cannot be tested. A SEAL IS ABOUT ONE
+COMPONENT, and 'nothing leaves here' is the whole of a contract's
+claim -- so it holds however coarsely the rest is declared.
+
+SEALED TODAY: 'engine/compare/contract', 'engine/procsitter',
+'auxiliary', 'test_writing_support'.
+
+THREE OF THE FOUR NEEDED NO MOVING, ONLY DECLARING. They already
+imported nothing of this tree; the seal is that sentence made
+checkable, so what is true today cannot quietly stop being true.
+
+WHAT A SEAL DOES NOT FORBID: a sealed component's own modules may
+speak among themselves. The pair that results is INSIDE the seal,
+where nothing outside can be made to wait on it.
+______________________________________________________________________________
+
+______________________________________________________________________________
+A TEST APP'S OUTPUT IS CONTROLLED BY THE TEST APP, NOT BY THE MACHINE
+______________________________________________________________________________
+An OUTCOME any oracle may state: what a test app or the software under
+it PRINTS, decides, or fails on. Never in the running: the LOCALE, the
+timezone, the terminal width, the number of CPUs, a path's LENGTH, an
+environment variable nobody in the test set.
+
+The tell is always the same: a GOOD passes here and fails there, both
+runs correct, because the machine spoke a line the test never asked
+for. Found twice already, both in the same class:
+
+    'test-affected.py'    stderr's BYTE COUNT, which moves with the
+                          length of the temporary path the machine
+                          chose (D-27, engine/coverage/RATIONALE.txt)
+    'test-service.sh'     an OSError's TEXT, which is the C library's
+                          'strerror' and follows LC_MESSAGES -- "No
+                          such file or directory" here, "Datei oder
+                          Verzeichnis nicht gefunden" under de_DE
+
+NEITHER WAS THE SOFTWARE'S FAULT. 'hwut_pype' named the file and the
+errno correctly on every machine; nothing needed fixing there. The
+GOOD had simply recorded MORE than the software controls: the byte
+count is a fact about the path, not about the pipe; the phrase is a
+fact about glibc, not about pype. What was owed was a NARROWER
+assertion, not a translated program.
+
+TWO WAYS TO NARROW, and the fixture chooses which:
+
+    COUNT WHAT IS STABLE, NOT WHAT VARIES.  A byte count that tracks a
+    temporary path is unstable; the LINE it appears on, or whether it
+    is present at all, usually is not.
+
+    AN 'eq_pattern' AROUND THE PLATFORM'S WORDS, LEAVING WHAT THE CODE
+    CONTROLS REQUIRED. Not "tolerate the locale phrase" alone --
+    'errno' NUMBERS, quote characters, and path SEPARATORS ('/' vs
+    '\') are equally the platform's, not the code's, and a pattern
+    that stops at the first one found is still too narrow:
+
+        tolerance { eq_pattern = ["stderr   : pype: .*no-such\\.pype.*"] }
+
+    requires only that pype spoke on stderr and named the offending
+    file -- the two things pype actually decided.
+
+GETTING THIS RIGHT TOOK THREE PASSES on the same line, each one
+anchoring on whatever had just been shown to vary and missing the
+next thing that would: first only the errno's phrase, then the errno
+NUMBER too, then the quoting and the separator. The question that
+finds all of it in one pass is not "what have I seen vary" but "what
+does the code under test actually decide" -- everything else is the
+platform's and belongs outside the pattern.
+
+THE STATED EXCEPTION: a suite that is KNOWN to run only inside one
+fixed container or VM image may fix the locale, the timezone, and the
+rest as PROPERTIES OF THAT IMAGE, and assert on their output directly
+-- the image is then a controlled variable, not an unnoticed one. That
+is a decision to make and to WRITE DOWN where the suite states its own
+setup, not a default to fall into.
+
+______________________________________________________________________________
+'import_graph.py': 'from X import Y' HAD A BLIND SPOT
+______________________________________________________________________________
+'imported_tuple()' turned 'from X import Y' into the one edge 'X',
+whatever 'Y' named. Where 'Y' is an attribute defined inside module X,
+that is right. Where 'Y' is a SUBMODULE of package X -- 'from . import
+finder', 'from hwut.engine...exploration import selection' -- the real
+edge is 'X.Y', and it was silently dropped: 37 such statements across
+16 files, in both the bare relative form and the absolute one alike.
+
+FOUND BY adm/unread_modules.py (new: every module walked from every
+entry point -- a script run by name, a TEST file, a package's own
+'__init__.py' -- reachability, not bare in-degree), which reused this
+tool's own reading and returned modules central to the whole tree --
+'finder.py', 'validator.py', 'selection.py', every coverage reader --
+as unreachable. They were not; the graph could not see the edge.
+
+REACHABILITY MATTERED A SECOND WAY, independent of this bug: two
+modules that import only EACH OTHER ('engine/operations/interaction/
+feed.py' and 'tui.py') show one incoming edge apiece and pass a bare
+"zero incoming edges" filter clean, while nothing live reaches either
+-- the same island shape 'compare/engine's dead twins had (RATIONALE
+C-3: "the two that imported at all imported each other"). Only a walk
+from real entry points, not an in-degree count, finds an island.
+
+FIXED by offering BOTH readings of every 'from X import Y' -- 'X'
+alone, and 'X.Y' -- and leaving '_matched's existing tail search to
+find whichever is real. The wrong guess costs one failed lookup,
+already the tool's cost for any import naming nothing of this tree.
+'import_graph.py --check' answers the same findings before and after:
+none of the recovered edges crosses a DOOR.
+
+CHECK A GRAPH TOOL AGAINST ITS OWN CENTRAL MODULES before trusting an
+"unused" report from it. A false DEAD reading on something everyone
+knows is live is the tool telling you it cannot see, not the module
+telling you it is dead.
+
+______________________________________________________________________________
+'bin/TEST/test-launchers.sh': THE SAME MACHINE-CONTROLLED-OUTPUT BUG,
+IN THE FRAMEWORK'S OWN TEST OF ITSELF
+______________________________________________________________________________
+'unset COLUMNS' is not the same as PINNING it. Three launchers wrap
+their '--help' through argparse, which chooses its wrap column from
+the environment's reported terminal width; 'unset' only stops a value
+from being INHERITED, and leaves the machine's own fallback (80 here,
+possibly anything on another machine or a real tty) to decide where
+the line breaks. 'hwut.run.diff' (then 'hwut.compare') and 'hwut.merge' (since retired) both carried more
+arguments now than a long-stale GOOD recorded, and at width 80 one of
+the two happened to wrap at a point that still matched the old GOOD
+by chance -- masking the staleness until the width was pinned wide
+enough (300) to show every argument on one line.
+
+FIXED: 'export COLUMNS=300', not 'unset COLUMNS' -- wide enough that
+every '--help' this suite drives answers in one line regardless of
+where it runs. Found only because 'bin/TEST' had never been run in
+this whole session: nobody had reason to census 'bin/' directly.
+
+CENSUS bin/, ADM/, AND EVERY OTHER DIRECTORY THAT LOOKS LIKE
+INFRASTRUCTURE RATHER THAN PRODUCT. A suite testing the launchers
+themselves is exactly as liable to drift, unnoticed, as any other --
+more so, since nothing routes through it during ordinary work.
+
+______________________________________________________________________________
+CLONE DETECTION: WHAT IT FOUND, AND WHAT IT ONLY LOOKED LIKE
+______________________________________________________________________________
+A PMD CPD run over the tree returned 160 findings. Most were noise of
+three predictable kinds, and a future run should exclude them at the
+source: the 'TEST/config.py' bootstrap family (one canonical text, by
+design -- it cannot import what it exists to make importable),
+'TEST/TMP/scratch' fixture debris, and 'ON_HOLD-*' files parked on
+purpose. What remained divided into three honest kinds.
+
+DUPLICATION THAT WAS A DEFECT. 'operations/run/TEST/test-provision.py'
+was 980 lines: its ENTIRE BODY written twice, 506 + 474. Both halves
+were complete and identical; the first carried the '@hwut' header and
+'test_stages', the second the runner block. Python executed both, so
+every test ran from the second half's definitions and 'test_stages'
+survived only from the first. Now 525 lines, every function defined
+once, all ten choices byte-identical before and after.
+
+DUPLICATION THAT WAS A LAW WRITTEN FIVE TIMES. 'import_graph.py' built
+its dotted-name index in four places, and 'unread_modules.py' -- whose
+own docstring claimed to REUSE that reading -- had copied it a fifth.
+A name resolved differently by two of them would mean two different
+graphs of one tree. Now 'by_dotted_db()', called from all five.
+Similarly 'display/plain.py' assembled its tag-and-count twice (tree
+node, single directory) and the labels faces wrote one '--help /
+parse_wish / split_directory' prologue three times; both now stand
+once ('_tag_and_count', '_faces.opened').
+
+DUPLICATION THAT WAS SCAFFOLDING AROUND A REAL DIFFERENCE. Cobertura
+and JaCoCo shared an entire line-record fold and differed in exactly
+one thing: the branch extraction, in BOTH its tuple fields and its
+predicate. The fold moved to 'reader.line_record_of' and the differing
+part is passed in as 'branch_of' -- taken, never guessed at.
+
+AND THE ONES DELIBERATELY LEFT. 'ucis' and 'gcov' appear in the same
+findings and were NOT folded in: ucis carries an axis database
+(line/branch/toggle) whose lines are bare integers, gcov is a
+GENERATOR feeding the older 'record_of'. Bending the helper to fit
+either would make the shared function worse than the duplication it
+removed. A clone detector reports token overlap; whether two things
+are the SAME THING is a judgement it cannot make.
+
+THE SUITES ARE THE PROOF. Every extraction here was made under the
+rule that no GOOD file may be touched -- so behaviour preservation is
+not asserted, it is demonstrated: any drift would have shown up as a
+failing byte-exact comparison against an oracle nobody was allowed to
+adjust.
+
+______________________________________________________________________________
+SCENARIO COVERAGE
+______________________________________________________________________________
+A THIRD KIND OF COVERAGE, beside line and branch, and the one that
+decides whether a READER is actually tested: does the test material
+contain, for every input format, EVERY SYNTAX ELEMENT AT LEAST ONCE IN
+EVERY ENVIRONMENT IT MAY OCCUR?
+
+Line coverage says a parser's statements ran. Branch coverage says its
+decisions went both ways. NEITHER SAYS THE PARSER MET THE LANGUAGE. A
+reader can reach 100% line coverage against one small artefact and
+still have never seen an element the format permits -- an empty block,
+a repeated key, a field the tool omits when it is zero, a construct
+that appears only in one environment. The gap does not show as a
+number; it shows as a defect the first time a real file carries the
+element.
+
+TWO OBLIGATIONS FOLLOW, and both are about MATERIAL rather than about
+assertions:
+
+    ONE REAL ARTEFACT PER FORMAT, AT MINIMUM. Written by the actual
+    tool, on a real run, kept as evidence -- never constructed to suit
+    the reader. A fixture a developer invented tests the reader
+    against that developer's BELIEF about the format; an artefact
+    tests it against the format.
+
+    EVERY SYNTAX ELEMENT, IN EVERY ENVIRONMENT IT MAY OCCUR. The same
+    element can differ by surrounding: a count field the tool omits at
+    top level but writes inside a block, a path spelled relative in
+    one emitter and absolute in another. One occurrence somewhere is
+    not the same as one occurrence in each place it may stand.
+
+THE WITNESSED ARTEFACTS under 'engine/coverage' are this discipline
+already practised -- and they earned it: 'TEST/REAL_PARSING_INPUT/PROVENANCE.txt'
+records a decision (disc-9) that was OVERTURNED by running the tools
+and reading what they actually wrote. A belief about the format lost
+to an artefact of it. That is what this kind of coverage is for.
+
+IT IS NOT MEASURED BY A TOOL. No instrument counts it, which is why it
+has to be written down and asked deliberately: for each format, WHICH
+elements does the material contain, and which does it not?
+
+
+THE ONE LIST OF LABOUR
+
+'adm/WORK/TODO.txt' is the one place a piece of owed work stands AS
+LABOUR. A RATIONALE entry says 'OWED' as the record of what its
+decision left open; a DISCUSSIONS todo holds the discussion; the item
+that says 'this is to be built', with its band (blocked, ready, partly
+built, measurement first, waiting on a ruling, harmless) and a pointer
+back, is in TODO.txt and nowhere else. A session that leaves work owed
+adds the line in the same bundle; a session that builds one strikes it
+there, into the STRUCK ledger at the foot with the ruling that holds
+the residue. 'do we see anything undone?' is answered by reading that
+file, not by remembering.
+
+
+THE DEVELOPMENT CONTAINER
+
+WHAT IS REQUIRED is listed in 'adm/requirement-list.txt' -- every program,
+Python package and library, with the Debian package that brings it and
+whether the census is red without it. 'sh adm/requirement-check.sh' reads
+that list and says what this machine lacks.
+
+Every requirement of working on hwut stands in one image
+('adm/container/Containerfile'): python 3.13 and the packages the tree
+imports, coverage.py, ruff, gcc for gcov, git, and the TeX engine with
+the packages 'hwut.cov.conv.to_pdf' loads. The work then reads the same
+on any machine that has podman (or docker), and the organisation of it
+-- the census, the recording of GOODs, the cutting of bundles -- happens
+INSIDE the container, over the tree ON THE HOST'S DISK (services E-134):
+
+    hwut.dev.podman.build              the image 'hwut-dev', where none
+                                       stands ('--rebuild': anew)
+    hwut.dev.podman.enter              a shell inside, the directory
+                                       holding 'hwut/' mounted READ-WRITE
+                                       at its own absolute path, the
+                                       working directory kept, as your
+                                       own user
+    hwut.dev.podman.enter bin/hwut.run --plain
+                                       one command inside: the census
+    hwut.dev.podman.enter -- sh -c '...'
+                                       a command with options of its own
+
+Nothing of the tree is in the image, and nothing is copied: an edit, an
+accepted GOOD, a book entry made inside stands outside the moment it is
+made, under your user id. The container is thrown away on exit; the
+image stays.
+
+What the image leaves out, and why, stands in the Containerfile: the
+HDL and other-language tools, whose readers are tested on witnessed
+artefacts and whose census never calls them.
+
+
+THE PACKAGE IS 'hwut'; IMPORTS INSIDE IT ARE RELATIVE        (2026-10-12)
+
+The tree's root directory and its Python package are 'hwut/' (until
+2026-10-12: 'vut/'). A module that belongs to the package imports the
+package's other modules RELATIVELY -- 'from ..bookkeeper.api import X' --
+wherever Python allows it. An absolute 'from hwut. ...' stands only where
+a relative import cannot work:
+
+    TEST/ scripts             run by path; their 'config.py' puts the
+                              package on 'sys.path'
+    adm/ tools                run by path ('python3 adm/<tool>.py')
+    test_writing_support/     given to test authors, who may import them
+                              as top-level modules
+    demo/                     run by path
+    engine/compare/feeder/ui.py   run by path
+    'import a.b.c as d'       the 'import' form has no relative spelling
+
+The services faces are started as modules ('python3 -m hwut.services.X',
+'bin/'); run by path they adopt their package through '_config.py'
+(PEP 366), so their relative imports resolve either way.
+
+Data formats keep their names: the book's '# vut-register' line and the
+'##VUT-TEST-...' headers of the id and group tables are read back from
+existing trees and are NOT renamed.

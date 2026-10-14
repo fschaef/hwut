@@ -1,0 +1,27 @@
+
+--- the component ---
+title:     Compare
+doc:       Decides whether an output is equivalent to its nominal.
+keys:      ('engine-part',)
+
+--- the childs, file order ---
+core      -> core       line=6
+pat       -> patterns   line=7
+
+--- asked by directory ---
+core      -> core
+patterns  -> pat
+gone      -> None
+
+--- the forms of a reference ---
+./core   -> core
+core     -> core
+./core/  -> core
+../core  -> None
+a/b      -> None
+/abs     -> None
+.        -> None
+
+--- a component that states nothing but the outer node ---
+title: None   childs: 0   keys: ()   faults: 0
+<hwut-end>

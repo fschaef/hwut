@@ -1,0 +1,664 @@
+"""SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: THE TEST REGISTER of one directory -- every test application
+         and every choice carries a NUMBER, and the number survives a
+         rename.
+
+DESCRIPTION
+       RELATIONAL, two tables, ids scoped where their names are unique:
+
+           APP      app_id    o--o  application file name
+           CHOICE   choice_id o--o  choice name, PER application
+
+       A RUN is a 'TestRunId': the application's id, and the choice's
+       where the test has choices. Renaming an application touches ONE
+       entry, however many choices it has; that is what the second
+       table buys.
+
+       IDS ARE DIRECTORY-LOCAL (coverage RATIONALE D-14): unique inside
+       this directory by construction, meaningless outside it. A gather
+       across directories qualifies at gather time and never stores.
+
+       GIVING BACK. 'hwut.accept' must name a run BEFORE it knows the
+       acceptance will stand -- a coverage record is seated at harvest.
+       So it allocates as usual and, if it aborts, calls
+       'give_back(run_id)': the id is removed and the scope's mark
+       steps back IF that id is still the last one issued. Where it is
+       not -- something else allocated in between -- the mark stands
+       and the number is simply retired. Both outcomes are safe under
+       the law below; no reservation, no transaction, no pending state.
+
+       AN ID IS ISSUED ONCE AND NEVER AGAIN (bookkeeper RATIONALE B-2).
+       Each scope counts from 0 upward; the next id is one above the
+       highest that scope ever issued, and the file carries that
+       high-water mark ('N:' lines) so a removal cannot lower it.
+       REMOVAL DELETES the name; the number is RETIRED. So an id MAY
+       leave this book -- a coverage record, a group table, a report
+       may carry it -- and decodes later to the same test, or to 'no
+       longer registered', never to another test.
+
+       THE CEILING IS ID_LIMIT (2**32): a scope that would issue that
+       id REFUSES BY NAME. The two scopes are the applications of the
+       directory and the choices of ONE application; group ids are a
+       third scope of their own ('group_table.py').
+
+       THE GENERATION ('G:') counts mutations of this file. A snapshot
+       of the register -- what a coverage delivery carries (coverage
+       D-25) -- names the generation it copied, so a reader can say
+       whether the directory has moved since, rather than decoding
+       against a table that has changed.
+
+       THE REGISTER LIVES IN THE BOOK (B-13): the '# vut-register' block
+       bounds it, the two id columns carry it, and the bookkeeper lays
+       it there in the same act as every mutation. This type never
+       writes; it is a SNAPSHOT with a generation counter, parsed from
+       the book ('register_of_book') or, for a book from before B-13,
+       from the legacy 'GOOD/test_ids.dat' -- read where the book
+       carries no block, and gone at the first write (B-10). A DAMAGED
+       reading REFUSES BY NAME -- unlike the result base, which reads
+       empty on damage, because exploration restricts itself to this
+       register and an empty reading would silently hide every test.
+
+WHO WRITES
+       THE SHAPE 'TestRunId' STANDS IN 'test_run_id.py', this
+       component's, and every consumer imports it from there. THIS
+       module owns the allocation, the file and the names.
+
+       Allocation happens at ACCEPT: a test enters the register when
+       its first candidate is blessed. Renaming and removal are the
+       healing services' business, through this adapter and never
+       around it. One writer per key space; this module is the writer.
+______________________________________________________________________________
+"""
+from   pathlib     import Path
+
+from   .id_scope    import IdScope, ID_LIMIT
+from   .test_run_id import TestRunId
+
+
+FILE_NAME      = "test_ids.dat"
+FORMAT_VERSION = "5"
+
+
+class TestIdFault(ValueError):
+    """A register that cannot be read, a name collision, or an id that
+    names nothing where a name was required."""
+    pass
+
+
+def _app_scope(next_id=0):
+    """RETURN: IdScope, the application scope of one directory, issuing
+    'next_id' next."""
+    return IdScope("the app scope", next_id=next_id)
+
+
+def _choice_scope(app_id, next_id=0):
+    """RETURN: IdScope, the choice scope of application 'app_id',
+    issuing 'next_id' next."""
+    return IdScope("the choice scope of app %i" % app_id, next_id=next_id)
+
+
+def _issued(scope):
+    """
+    RETURN: int, the id 'scope' has just issued.
+
+    Raises TestIdFault where it does not issue: the scope has issued
+    2**32 ids and issues no more.
+    """
+    number = scope.allocate()
+    if number is None: raise TestIdFault(scope.refusal_text())
+    return number
+
+
+class TestIdDb:
+    """The register of one directory: two tables, in memory.
+
+    Made by the Bookkeeper, from the book. Every mutator BUMPS THE
+    GENERATION before it returns; the bookkeeper writes the result into
+    the book in the same act (B-13).
+    """
+
+    def __init__(self, directory):
+        """
+        RETURN: TestIdDb over 'directory', loaded from the LEGACY
+                sidecar where one stands -- a book from before B-13.
+                A missing file reads as an empty register; a damaged
+                one raises TestIdFault naming the first fault.
+        """
+        self.directory   = Path(directory)
+        self._app_db     = {}     # app_id -> name
+        self._app_id_db  = {}     # name   -> app_id
+        self._choice_db  = {}     # app_id -> {choice_id: name}
+        self._app_scope  = _app_scope()   # the app ids of the directory
+        self._choice_scope_db = {}        # app_id -> IdScope of its choices
+        self.generation      = 0  # bumped on every mutation (coverage D-25)
+        try:
+            text = self.path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return
+        self._parse(text)
+
+    @property
+    def path(self):
+        """RETURN: Path, the one file of this register."""
+        return self.directory / "GOOD" / FILE_NAME
+
+    def __len__(self):
+        """RETURN: int, how many applications are registered."""
+        return len(self._app_db)
+
+    # -- asking ---------------------------------------------------------
+    def run_id_of(self, app, choice=None, allocate_f=False):
+        """
+        RETURN: TestRunId, the run's id -- the standing one, or a
+                freshly allocated one where 'allocate_f' (persisted
+                before return).
+                None, where it is unknown and allocation was not asked
+                for.
+
+        Raises TestIdFault where the scope that must issue has reached
+        ID_LIMIT.
+
+        Allocation is NEXT-NEVER-REUSED in each scope: the app id one
+        above the highest app id this directory ever issued, the
+        choice id one above the highest THIS app ever issued.
+        """
+        app_id = self._app_id_db.get(app)
+        if app_id is None:
+            if not allocate_f: return None
+            app_id = _issued(self._app_scope)
+            self._app_db[app_id]    = app
+            self._app_id_db[app]    = app_id
+            self._choice_db[app_id] = {}
+            self._choice_scope_db[app_id] = _choice_scope(app_id)
+            self._mutated()
+        if choice is None:
+            return TestRunId(app_id, None)
+
+        choice_db = self._choice_db[app_id]
+        for choice_id, name in choice_db.items():
+            if name == choice: return TestRunId(app_id, choice_id)
+        if not allocate_f: return None
+        choice_id = _issued(self._choice_scope_db[app_id])
+        choice_db[choice_id] = choice
+        self._mutated()
+        return TestRunId(app_id, choice_id)
+
+    def name_of(self, run_id):
+        """
+        RETURN: (str, str|None), the application and choice names that
+                run id spells.
+                None, where the register does not hold it -- which the
+                caller must not read as 'nobody': it is a question
+                about a number this directory never issued.
+        """
+        app = self._app_db.get(run_id.app_id)
+        if app is None: return None
+        if run_id.choice_id is None: return (app, None)
+        choice = self._choice_db[run_id.app_id].get(run_id.choice_id)
+        return None if choice is None else (app, choice)
+
+    def app_iterable(self):
+        """
+        YIELD: [0] int   the application's id, ascending
+               [1] str   its file name
+               [2] tuple of (int, str), its choices, id-ascending
+        """
+        for app_id in sorted(self._app_db):
+            yield (app_id, self._app_db[app_id],
+                   tuple(sorted(self._choice_db[app_id].items())))
+
+    def roster(self):
+        """
+        RETURN: tuple of str, every registered application file name,
+                sorted -- what exploration restricts itself to.
+        """
+        return tuple(sorted(self._app_id_db))
+
+    def vanished(self):
+        """
+        RETURN: tuple of (int, str), id and name of every registered
+                application whose FILE IS ABSENT in the directory --
+                a test that vanished UNOFFICIALLY, removal never
+                passing through 'hwut.remove'. Empty where the
+                register and the directory agree.
+        """
+        return tuple((app_id, name)
+                     for app_id, name in sorted(self._app_db.items())
+                     if not (self.directory / name).is_file())
+
+    # -- healing --------------------------------------------------------
+    def rename_app(self, app_id, fresh):
+        """
+        RETURN: str, the OLD name. The id is unchanged -- that is the
+                point of the register: however many choices the test
+                has, a rename touches this one entry.
+
+        Raises TestIdFault on an unknown id, or where 'fresh' is
+        another live application's name.
+        """
+        standing = self._app_db.get(app_id)
+        if standing is None:
+            raise TestIdFault("no app id %s is registered" % app_id)
+        holder = self._app_id_db.get(fresh)
+        if holder is not None and holder != app_id:
+            raise TestIdFault("renaming app %i to '%s' collides with "
+                              "app %i" % (app_id, fresh, holder))
+        del self._app_id_db[standing]
+        self._app_db[app_id]   = fresh
+        self._app_id_db[fresh] = app_id
+        self._mutated()
+        return standing
+
+    def rename_choice(self, app_id, choice_id, fresh):
+        """
+        RETURN: str, the OLD choice name; the ids are unchanged.
+
+        Raises TestIdFault on an unknown id pair, or where 'fresh' is
+        another live choice of the same application.
+        """
+        choice_db = self._choice_db.get(app_id)
+        if choice_db is None or choice_id not in choice_db:
+            raise TestIdFault("no run id %s is registered"
+                              % TestRunId(app_id, choice_id))
+        for standing_id, name in choice_db.items():
+            if name == fresh and standing_id != choice_id:
+                raise TestIdFault(
+                    "renaming choice %s to '%s' collides with %s"
+                    % (TestRunId(app_id, choice_id), fresh,
+                       TestRunId(app_id, standing_id)))
+        old = choice_db[choice_id]
+        choice_db[choice_id] = fresh
+        self._mutated()
+        return old
+
+    def give_back(self, run_id):
+        """
+        RETURN: True,  the scope's mark stepped BACK: that id was the
+                       last one issued and is now unissued.
+                False, the entry is gone but the mark STANDS: something
+                       was issued after it, and lowering the mark would
+                       hand the later id out twice.
+
+        Raises TestIdFault where the run id is not registered.
+
+        FOR AN ABORTED ACCEPT, which must name a run before it knows
+        the acceptance will stand. Either outcome is safe: an id whose
+        mark stepped back reached no file that survives, and one whose
+        mark stands is simply retired (B-4).
+        """
+        if run_id.choice_id is None:
+            standing = self._app_db.get(run_id.app_id)
+            if standing is None:
+                raise TestIdFault("no app id %s is registered"
+                                  % run_id.app_id)
+            if self._choice_db[run_id.app_id]:
+                raise TestIdFault(
+                    "app %i still holds %i choice(s); give those back "
+                    "first" % (run_id.app_id,
+                               len(self._choice_db[run_id.app_id])))
+            self.remove_app(run_id.app_id)
+            if not self._app_scope.give_back(run_id.app_id): return False
+            self._mutated()
+            return True
+
+        self.remove_choice(run_id.app_id, run_id.choice_id)
+        scope = self._choice_scope_db[run_id.app_id]
+        if not scope.give_back(run_id.choice_id): return False
+        self._mutated()
+        return True
+
+    def remove_app(self, app_id):
+        """
+        RETURN: str, the name that is gone. The entry is DELETED, its
+                choices with it; the ids are RETIRED -- the app scope's
+                mark stands, so no later test is issued this number.
+
+        Raises TestIdFault on an unknown id.
+        """
+        standing = self._app_db.get(app_id)
+        if standing is None:
+            raise TestIdFault("no app id %s is registered" % app_id)
+        del self._app_db[app_id]
+        del self._app_id_db[standing]
+        del self._choice_db[app_id]
+        del self._choice_scope_db[app_id]
+        self._mutated()
+        return standing
+
+    def remove_choice(self, app_id, choice_id):
+        """
+        RETURN: str, the choice name that is gone; its id is RETIRED --
+                the application's mark stands.
+
+        Raises TestIdFault on an unknown id pair.
+        """
+        choice_db = self._choice_db.get(app_id)
+        if choice_db is None or choice_id not in choice_db:
+            raise TestIdFault("no run id %s is registered"
+                              % TestRunId(app_id, choice_id))
+        old = choice_db.pop(choice_id)
+        self._mutated()
+        return old
+
+    # -- the file ---------------------------------------------------------
+    def format(self):
+        """
+        RETURN: str, the register as it is stored:
+                    'G:<generation>'                  bumped per mutation
+                    'N:<next app id>'                 the app scope's mark
+                    'A:<id> <name>'                   per application
+                    'N:<app_id>.<next choice id>'     its choice mark
+                    'C:<app_id>.<choice_id> <name>'   per choice
+                ids ascending.
+
+        MACHINE-FREE: names and numbers, no paths outside the tree, no
+        timestamps.
+        """
+        line_list = ["##VUT-TEST-IDS " + FORMAT_VERSION,
+                     "G:%i" % self.generation,
+                     "N:" + self._app_scope.next_text()]
+        for app_id, name, choice_tuple in self.app_iterable():
+            line_list.append("A:%i %s" % (app_id, name))
+            line_list.append("N:%i.%s" % (
+                app_id, self._choice_scope_db[app_id].next_text()))
+            line_list += ["C:%i.%i %s" % (app_id, choice_id, choice)
+                          for choice_id, choice in choice_tuple]
+        return "\n".join(line_list) + "\n"
+
+    #  ------------------------------------------------- the book's shape
+
+    def book_header_line_list(self):
+        """
+        RETURN: list[str], the '#' block a 'book.csv' carries -- the
+                register's scope-wide facts, one per line:
+
+                    '# vut-register <version> generation:<n> apps:<n>'
+
+                'marks' carries EVERY application's own high-water mark,
+                because there are N+1 marks and not one: the application
+                scope's, and one per application.
+
+                MEASURED, AND THE REASON THEY ARE HERE: on the
+                application's own ROW they do not survive. Removing the
+                choice whose row carried the mark takes the mark with
+                it, and the scope then issues an id it has issued before
+                -- which B-2 forbids above every other rule of this
+                file. A mark is a fact about a SCOPE, not about any row
+                that may be deleted.
+
+                The COLUMNS are the book's own business and are written
+                beside this by the book's codec.
+
+        LOAD-BEARING, NOT A COMMENT. A gnuplot '#' line may be skipped;
+        this one may not. A book whose block is missing where ids stand
+        in its rows is REFUSED BY NAME -- see 'register_of_book'.
+        """
+        mark_text = ",".join("%i=%s" % (app_id, scope.next_text())
+                             for app_id, scope
+                             in sorted(self._choice_scope_db.items()))
+        return ["# vut-register %s generation:%i apps:%i marks:%s"
+                % (FORMAT_VERSION, self.generation, self._app_scope.next,
+                   mark_text or "-")]
+
+    def book_row_db(self):
+        """
+        RETURN: dict, (application, choice) -> (app_id, choice_id) for
+                every registered choice, and (application, None) ->
+                (app_id, None) for an application with no choice
+                registered.
+
+        A ROW CARRIES ONLY WHAT IT IS. The ids name this row; the marks
+        bound their scopes and live in the '#' block, where no removal
+        can reach them.
+        """
+        result = {}
+        for app_id, name, choice_tuple in self.app_iterable():
+            if not choice_tuple:
+                result[(name, None)] = (app_id, None)
+                continue
+            for choice_id, choice in choice_tuple:
+                result[(name, choice)] = (app_id, choice_id)
+        return result
+
+    @staticmethod
+    def register_of_book(header_line_list, row_iterable, directory):
+        """
+        RETURN: TestIdDb, the register the book carries -- built from
+                its '#' block and its id columns.
+
+                An EMPTY register, where the book carries no '#' block
+                and no row bears an id: that is what every book written
+                before this entry looks like, and it is not a fault.
+
+        RAISES: TestIdFault, where ids stand in the rows and the block
+                does not, or says a version this code does not know. A
+                book that names ids it cannot bound would issue one
+                twice, and B-2 forbids that above all.
+        """
+        row_list = [each for each in row_iterable]
+        header   = _book_header_of(header_line_list)
+        bearing  = [r for r in row_list if r.get("test_id") not in (None, "")]
+
+        if header is None:
+            if bearing:
+                raise TestIdFault("the book bears test ids and no "
+                                  "'# vut-register' block to bound them")
+            return _empty_register(directory)
+
+        version, generation, next_app, mark_db = header
+        if version != FORMAT_VERSION:
+            raise TestIdFault("the book's register says format '%s'; "
+                              "this is '%s'" % (version, FORMAT_VERSION))
+
+        register = _empty_register(directory)
+        register.generation = generation
+        register._app_scope.next = next_app
+        for row in bearing:
+            app_id = int(row["test_id"])
+            name   = row["test"]
+            register._app_db.setdefault(app_id, name)
+            register._app_id_db.setdefault(name, app_id)
+            register._choice_scope_db[app_id] = \
+                _choice_scope(app_id, mark_db.get(app_id, 0))
+            register._choice_db.setdefault(app_id, {})
+            if row.get("choice_id") in (None, ""): continue
+            register._choice_db.setdefault(app_id, {})[int(row["choice_id"])] \
+                = row["choice"]
+        return register
+
+    def _parse(self, text):
+        """
+        RETURN: None; the tables filled from 'text'.
+
+        Raises TestIdFault naming the first fault. Versions 1 and 2
+        (the coverage component's pair-interned tables, coverage
+        RATIONALE D-9 and D-14) and version 3 (this register before
+        it kept its marks, reusing ids) are refused by name.
+
+        A MARK IS REQUIRED, for the directory and for every
+        application, and every id read must lie below its scope's mark
+        and below ID_LIMIT: a register that would re-issue is not read.
+        """
+        seen = False
+        self._app_mark_seen = False
+        for raw in text.splitlines():
+            line = raw.strip()
+            if not line: continue
+            if line.startswith("##"):
+                if line.startswith("##VUT-TEST-IDS"):
+                    seen    = True
+                    version = line[len("##VUT-TEST-IDS"):].strip()
+                    if version != FORMAT_VERSION:
+                        raise TestIdFault(
+                            "register version '%s' is not read; this "
+                            "build writes %s. Versions 1 and 2 were "
+                            "the pair-interned tables; version 3 "
+                            "re-used ids and kept no mark; version 4 "
+                            "kept no generation."
+                            % (version or "<none>", FORMAT_VERSION))
+                continue
+            head, _, name = line.partition(" ")
+            if head.startswith("G:"):
+                try:               self.generation = int(head[2:])
+                except ValueError: raise TestIdFault(
+                                       "'%s' spells no generation" % line) from None
+                continue
+            if head.startswith("N:"):
+                self._parse_mark(head[2:], line)
+                continue
+            if not name:
+                raise TestIdFault("register line '%s' names nothing"
+                                  % line)
+            if head.startswith("A:"):
+                try:               app_id = int(head[2:])
+                except ValueError:
+                    raise TestIdFault("'%s' spells no app id" % head) from None
+                if app_id in self._app_db:
+                    raise TestIdFault("app id %i stands twice" % app_id)
+                if app_id >= ID_LIMIT:
+                    raise TestIdFault("app id %i lies beyond ID_LIMIT"
+                                      % app_id)
+                if name in self._app_id_db:
+                    raise TestIdFault("app name '%s' stands twice"
+                                      % name)
+                self._app_db[app_id]    = name
+                self._app_id_db[name]   = app_id
+                self._choice_db[app_id] = {}
+            elif head.startswith("C:"):
+                pair = head[2:].split(".")
+                try:
+                    app_id, choice_id = int(pair[0]), int(pair[1])
+                except (ValueError, IndexError):
+                    raise TestIdFault("'%s' spells no app.choice id"
+                                      % head) from None
+                choice_db = self._choice_db.get(app_id)
+                if choice_db is None:
+                    raise TestIdFault("choice %s.%s names an app id "
+                                      "that is not registered"
+                                      % (app_id, choice_id))
+                if choice_id in choice_db:
+                    raise TestIdFault("run id %i.%i stands twice"
+                                      % (app_id, choice_id))
+                if name in choice_db.values():
+                    raise TestIdFault("choice name '%s' stands twice "
+                                      "under app %i" % (name, app_id))
+                choice_db[choice_id] = name
+            else:
+                raise TestIdFault("unknown register line '%s'" % line)
+        if not seen:
+            raise TestIdFault("the register names no format version")
+        if not self._app_mark_seen:
+            raise TestIdFault("the register carries no app mark 'N:'")
+        for app_id in self._app_db:
+            if app_id >= self._app_scope.next:
+                raise TestIdFault("app id %i lies at or above the mark %i"
+                                  % (app_id, self._app_scope.next))
+            scope = self._choice_scope_db.get(app_id)
+            mark  = None if scope is None else scope.next
+            if mark is None:
+                raise TestIdFault("app %i carries no choice mark 'N:%i.'"
+                                  % (app_id, app_id))
+            for choice_id in self._choice_db[app_id]:
+                if choice_id >= mark:
+                    raise TestIdFault(
+                        "run id %i.%i lies at or above the mark %i"
+                        % (app_id, choice_id, mark))
+        for app_id in self._choice_scope_db:
+            if app_id not in self._app_db:
+                raise TestIdFault("choice mark 'N:%i.' names an app id "
+                                  "that is not registered" % app_id)
+
+    def _parse_mark(self, body, line):
+        """
+        RETURN: None; the app mark, or one application's choice mark,
+                taken from 'body' ('5' or '0.3').
+
+        Raises TestIdFault where it spells neither, stands twice, or
+        lies beyond ID_LIMIT.
+        """
+        part_list = body.split(".")
+        try:
+            value_list = [int(p) for p in part_list]
+        except ValueError:
+            raise TestIdFault("'%s' spells no mark" % line) from None
+        if any(v > ID_LIMIT for v in value_list):
+            raise TestIdFault("mark '%s' lies beyond ID_LIMIT" % line)
+        match value_list:
+            case [mark]:
+                if self._app_mark_seen:
+                    raise TestIdFault("the app mark stands twice")
+                self._app_mark_seen = True
+                self._app_scope.next = mark
+            case [app_id, mark]:
+                if app_id in self._choice_scope_db:
+                    raise TestIdFault("the choice mark of app %i stands "
+                                      "twice" % app_id)
+                self._choice_scope_db[app_id] = _choice_scope(app_id, mark)
+            case _:
+                raise TestIdFault("'%s' spells no mark" % line)
+
+    def _mutated(self):
+        """
+        RETURN: None. The GENERATION bumped: every mutation is one, and
+                a snapshot must be able to tell them apart (coverage
+                D-25).
+
+        NOTHING IS WRITTEN HERE. The register lives in the book
+        (B-13), and the bookkeeper lays it there in the same act as the
+        mutation ('_register_write'); 'GOOD/test_ids.dat' is read where
+        a book carries no register block and goes at the first write
+        (B-10, B-14). This type is a snapshot with a counter.
+        """
+        self.generation += 1
+
+
+def _empty_register(directory):
+    """
+    RETURN: TestIdDb bound to 'directory' but holding NOTHING -- the
+            file that may stand there is not read.
+
+    The constructor loads 'GOOD/test_ids.dat' where it finds one, which
+    is right for a register that IS that file and wrong for one built
+    from a book: the book is then the whole of the truth, and a stale
+    file beside it must not leak in.
+    """
+    register = TestIdDb.__new__(TestIdDb)
+    register.directory       = Path(directory)
+    register._app_db         = {}
+    register._app_id_db      = {}
+    register._choice_db      = {}
+    register._app_scope       = _app_scope()
+    register._choice_scope_db = {}
+    register.generation      = 0
+    return register
+
+
+def _book_header_of(line_list):
+    """
+    RETURN: (str, int, int, dict), the version, the generation, the
+            application scope's mark, and every application's own mark
+            by application id, as the block states them.
+
+            None, where no such line stands: a book written before the
+            register moved in carries none, and that is not a fault.
+    """
+    for line in line_list or []:
+        text = line.strip()
+        if not text.startswith("# vut-register"): continue
+        field_list = text.split()
+        if len(field_list) < 5: return None
+        db = dict(each.split(":", 1) for each in field_list[3:]
+                  if ":" in each)
+        try:
+            mark_db = {}
+            if db.get("marks", "-") != "-":
+                for each in db["marks"].split(","):
+                    app_text, mark_text = each.split("=")
+                    mark_db[int(app_text)] = int(mark_text)
+            return (field_list[2], int(db["generation"]), int(db["apps"]),
+                    mark_db)
+        except (KeyError, ValueError):
+            return None
+    return None

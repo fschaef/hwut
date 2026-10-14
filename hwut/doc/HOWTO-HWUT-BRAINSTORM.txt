@@ -1,0 +1,777 @@
+SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+==============================================================================
+HOWTO HWUT -- BRAINSTORMING BIN
+==============================================================================
+
+NOT A MANUAL YET. Raw experience, telegraphic, one item per thing
+learned, each with the case that taught it. TO BE DISTILLED LATER.
+Add here first, always; polish never happens in the bin.
+
+BIN DISCIPLINE
+    - every session that learns something about WRITING or MAINTAINING
+      tests drops it here, same turn, before the lesson goes cold
+    - keep the measured case with the item; a rule without its case is
+      unteachable and undefendable
+    - contradictions stay side by side until someone rules; do not
+      quietly resolve
+    - when an item hardens into a law, it moves to a RATIONALE entry
+      and leaves a pointer here
+
+==============================================================================
+1.  THE ONE LAW
+==============================================================================
+
+    A TEST'S OUTPUT MUST BE DETERMINED BY THE BEHAVIOUR OF THE UNIT
+    UNDER TEST -- BY NOTHING ELSE.
+
+    - everything below is consequence
+    - the test of foreignness is NOT 'does it vary between runs'
+    - it is: COULD THIS LINE MOVE WITHOUT THE UNIT CHANGING?
+    - a registry is perfectly steady until the day it is not
+    - a foreign fact has two lawful remedies: DROP IT, or TOLERATE it
+      with an equivalence pattern. BLESSING IS NOT ONE OF THEM
+    - ruled: exploration X-FOREIGN-FACT
+
+==============================================================================
+2.  FOREIGN FACTS -- THE THREE SPECIES, EACH WITH ITS CASE
+==============================================================================
+
+2.1 THE CENSUS OWNED BY A STRANGER    <- the instructive one
+    - case: 'compare/reading test-chunk_pipe.py special'
+    - the page printed the error under test AND the registry of known
+      region handlers:
+          unknown region handler 'quacksalber'; known handlers:
+          ignore, point-cloud, potpourri, table, verbatim
+    - the keyed merge registered 'unaccepted' in ANOTHER module
+    - page went red for a module it does not test
+    - PERFECTLY DETERMINISTIC. Never varies between runs. Determinism
+      guidance does not catch it. THIS is why the ownership test
+      replaces the variance test
+    - cure: eq_pattern over the census alone
+          eq_pattern = ["known handlers: [a-z, \-]+"]
+    - result: 'quacksalber' still pinned (rename it -> fails; reword
+      the clause -> fails); the list moves freely; GOOD BYTE-IDENTICAL,
+      the page never moved
+    - GENERAL: where the assertion SHARES THE LINE with the census,
+      TOLERATE rather than drop -- dropping the line throws out the
+      assertion with the census
+
+2.2 THE WALL CLOCK
+    - case: 'display test-run.sh', every choice
+    - GOOD held 'RESULTS: 1 ok, 0 fail, 0.00 [sec]'
+    - a machine-chosen value in an oracle: fails forever on any
+      machine slower than the recording one
+    - cure: eq_pattern
+          eq_pattern = [", [0-9]+\.[0-9]+ \[sec\]"]
+    - TRAP, MEASURED: the LEADING COMMA is load-bearing. Without it
+      the NUMERIC tolerance claims the digits first and the pattern
+      never fires. Start such a pattern on a WORD or a punctuation
+      mark, never on a digit class
+    - second cure, where a digest/pype stands between: mask there too
+      ('s.ss [sec]'). The digest IS part of the oracle
+
+2.3 THE CALENDAR DATE
+    - case: 'bookkeeper test-traces.py elision' -- GOOD holds
+      '2026-09-07'
+    - WORSE THAN A BLESS CANDIDATE: blessing only moves the bomb to
+      today's date
+    - cures: pattern, or mock the clock (precedent: services E-80,
+      'test-base-questions.py until')
+    - RULE: a date in a GOOD is never fixed by re-recording
+
+2.4 OTHERS SEEN, NOT YET WRITTEN UP
+    - paths, temp directories, pids
+    - counts of things the unit does not count
+    - the parallelism tail '||n' -- see 5 below, it is subtler
+
+
+    - THE LAW, ruled 2026-09-21: CONTENT IN GOOD MUST BE DETERMINISTIC
+      AND DEPEND SOLELY ON THE BEHAVIOUR UNDER INVESTIGATION. Anything
+      that differs beyond control -- time, machine, history -- is
+      caught by an equivalence pattern or a '.pype', or it does not
+      go in the nominal
+    - case: O-28 ordered the flow by hwut-traces.csv, and two raw
+      pages went red on the recording machine itself. The tool's own
+      output had stopped being a usable oracle. Found by the ruler
+      reading the running tree
+    - TWO ROADS. '--deterministic' (linear, name-sorted, reads no
+      trace) where the RAW flow is the subject; a '.pype' that sorts
+      and expands where the test should run hwut the way a user does.
+      The pype road is the more realistic one; prefer it where
+      convenient (O-30)
+    - the test of a fix: 'linear-raw' switched to '--deterministic'
+      and its flow stood BYTE-IDENTICAL. When a page moves only in its
+      banner, the behaviour under it did not move
+2.5 THE TRACE ACCEPT LEFT BEHIND        <- the flake nobody had named
+    - case: 'display test-run.sh fail'. Census 841/12, and about once
+      in three 840/13 with this page the thirteenth
+    - NOT PARALLELISM, though it showed first at '--jobs=4'. MEASURED
+      serial, the script alone: 4 of 20 red
+    - mechanism: the fixture records its nominals THROUGH HWUT'S OWN
+      FACE (section 6) -- and 'accept --whole' PROVISIONS, i.e. runs
+      each case once. That run writes 'hwut-traces.csv' in the fixture
+      BEFORE the face under test starts. MEASURED: test-diff.sh 6 ms,
+      test-ok.sh 6 ms, standing there before the face ran
+    - the face runs under the DEFAULT order, longest-first (O-27), so
+      the flow order is two millisecond durations from accept's runs.
+      Tie or diff-slower: plan order, green. Ok-slower: the two lines
+      swap, red
+    - a mktemp fixture is NOT a clean slate for the scheduler: the
+      fixture's own construction is history
+    - GENERAL: a page that accepts its fixture and then runs a flow of
+      two or more applications RAW, without '--deterministic', is
+      ordered by a wall clock. Exactly O-30's species, hidden one
+      step upstream
+    - '--deterministic' ALONE IS NOT THE CURE, though it measured 0 of
+      20 red: it was measured on ONE CORE, the machine that hides the
+      next species (2.6). At '--jobs=2' the same call is steady -- and
+      steadily a different page
+    - OPEN: eleven further pages accept then run with no ordering
+      word; whether each prints a multi-app flow is not measured
+
+2.6 THE RECORDER'S CORE COUNT              <- a species a sandbox cannot see
+    - case: the same page. 'hwut.run' defaults its budget to
+      'os.cpu_count()' ('services/run.py'); the page's inner face says
+      no '--jobs'; every GOOD and every census on record came from a
+      ONE-CORE sandbox
+    - MEASURED, 8 cores emulated on the default path: red 3 of 3. The
+      two runs INTERLEAVE -- START, START, END, END, '||2' -- where
+      the GOOD holds the serial shape with '||1' throughout
+    - so the nominal is a fact about the RECORDING MACHINE. It is green
+      on the machine that blessed it and red on the author's own
+    - and it hides a third: under concurrency the END order is which
+      process finishes first. A race, not yet seen to flip
+    - GENERAL: a page that records a RAW FLOW of two or more runs in
+      one directory must pin '--jobs=1' (as 'linear-raw' does) or go
+      through a pype that sorts and masks the tail. '--deterministic'
+      fixes the ORDER; only '--jobs=1' fixes the SHAPE
+    - HOW TO SEE IT ON ONE CORE: a 'usercustomize.py' in the user site
+      that sets 'os.cpu_count' ONLY WHERE AN ENVIRONMENT VARIABLE ASKS
+      ('HWUT_EMU_CORES=8'). It reaches EVERY python a page spawns --
+      the face, accept, the inner run -- where a patched launch line
+      reaches one. TRAP, MEASURED: a 'sitecustomize.py' on PYTHONPATH
+      does NOTHING -- the system's own is imported first. Check the
+      instrument took, then run a POSITIVE CONTROL (a page known to
+      move) before reading a negative
+
+2.7 A RED PAGE HIDES ITS FLAKES
+    - case: 'display test-run.sh labels', red for E-95 for sessions
+    - its bare call says '--strategy=linear --jobs=1'. That pins the
+      SHAPE, not the ORDER: 'linear' keeps the default selection,
+      longest-first, and DIRECTORIES are ordered by the sums of the
+      traces accept's provisioning left (2.5)
+    - MEASURED, 12 runs: three directory orders; the GOOD's in 2 of 12
+    - 'hwut.run.stability' cannot see it: it judges a CHANGE of verdict,
+      and a page red for another reason has a constant verdict
+    - the day E-95 is fixed this page turns from red to FLAKY, and the
+      fix will be blamed
+    - SECOND CASE, same sweep: 'services test-accept.sh interactive',
+      red for test_run_info. Its last step greps the verdict lines of
+      a RAW run of three cases: steady at one core, THREE DIFFERENT
+      OUTPUTS IN THREE RUNS at eight ('||3', and 'a'/'b' swapping at
+      END). Found only by hashing the red page's output across runs
+      and core counts; cured by D-16's rule, one-core output unchanged
+    - GENERAL: a standing red page is not audited by the census or by
+      stability. Audit it by the section, directly, before and after
+      the fix that turns it green
+    - SMALL, SAME SWEEP: all five BYTES warnings on this page were the
+      RESULTS seconds, which the page's own 'eq_pattern' tolerates by
+      name. Lawful -- the warning cannot tell a named tolerance from a
+      near miss
+
+2.8 THE CENSUS DOES NOT RUN THE META PAGES
+    - MEASURED, 2026-09-22: adding '-l' to 'parse_wish' moved 14
+      nominals. TWO FULL CENSUSES SAW NONE OF THEM -- both stood at
+      841 ok, 12 fail, the usual twelve
+    - the pages that record a face's USAGE and HELP carry the standard
+      label 'meta', which is SILENT where a wish names no label. The
+      census names none, so it never runs them -- and the usage block
+      is exactly what an option change moves
+    - '-l meta' does NOT reach them either: the silence comes from the
+      test's own declaration, not from an entry in 'hwut-root.labels'.
+      A GLOB LIFTS IT: 'hwut.run --glob "test-*"' from the root ran
+      850 cases and showed all 26
+    - so the census is the gate for BEHAVIOUR and no gate at all for
+      the command-line surface. After any change to an option, a
+      spelling in a usage line, or a help text: run the glob pass too,
+      and classify what it moves
+    - the 14 were the '-l' spelling alone; the completion table also
+      gained '-l=<value>', which the branch did not accept until it
+      was made to -- A TABLE THAT ADVERTISES A FORM THE PARSER REFUSES
+      is the defect the page caught
+
+2.9 OPEN: THE ROOT CENSUS DOES NOT SEE A NEW CHOICE
+    - MEASURED, 2026-09-22/23, twice: a choice added to a page's
+      '@hwut' header and recorded ('bundled', then 'together') runs
+      from its own directory and in the glob pass (830 -> 831 ok),
+      and the plain census from the root stays at 841 -- it does not
+      list the choice at all. A FRESH CLONE's census sees it (842)
+    - CHASED, and the guess above was wrong: the cause is the
+      DIRECTORY LOCK. A second run over a directory another run holds
+      reports 'ERROR DirectoryBusy' for that directory and SKIPS every
+      case in it -- and A SKIPPED CASE KEEPS ITS BOOK VERDICT, so the
+      census reports the last run's answer as if it had just measured
+      it. Both readings came from gates I had started while an earlier
+      pass still ran
+    - MEASURED: with the lock free, the same glob pass read 821 ok, 23
+      fail -- the twelve and the eleven pages a width change had moved,
+      none of which the overlapping run had seen
+    - SO: NEVER RUN TWO PASSES AT ONCE over one tree, and read the
+      RESULTS line's 'skip' count and the DirectoryBusy line before
+      believing any number. A fresh clone cannot collide and is the
+      safest proof
+
+==============================================================================
+3.  STALE PAGE vs FOREIGN FACT -- TELLING THEM APART
+==============================================================================
+
+    - a page that moved because THE UNIT moved is RE-RECORDED
+    - a page that moved because a STRANGER moved is TOLERATED or
+      DROPPED
+    - the two look identical in a diff. They are settled by DATING:
+      find the ruling that changed the behaviour, check the nominal
+      PREDATES it
+    - WHERE NO RULING STANDS, THE PAGE IS A DEFECT'S EVIDENCE AND IS
+      NOT BLESSED. This is the whole value of the check
+    - case: display stood 6 ok / 20 fail. First hypothesis: a code
+      regression, faults had moved from stderr into the flow. DATING
+      KILLED IT -- D-11/D-12 blessed display 2026-09-02, O-24 moved
+      faults into the flow 2026-09-07, nobody re-recorded. The code
+      was right; the oracle was stale
+    - lesson: a red suite suggests a code regression. It is as often
+      a ruling nobody propagated. DATE FIRST, READ CODE SECOND
+
+==============================================================================
+4.  ISOLATION -- THE SEQUENCE THAT MAKES BLIND BLESSING SAFE
+==============================================================================
+
+    RULED (Frank-Rene): behaviour change and formatting change are
+    SEPARATE CUTS, and the ORDER is what makes the second safe.
+
+    1.  BEHAVIOUR FIRST, under the OLD formatting
+    2.  mature it to ALL GREEN -- every page either passes or is
+        re-recorded with its diff read and dated
+    3.  ONLY THEN the formatting change, alone, on top
+    4.  now nothing but formatting can be in the diff. WRONGNESS
+        CANNOT ENTER. Bless blindly
+    5.  the one remaining duty: BE SURE THE FORMATTING ITSELF IS
+        FUNCTIONAL -- read a handful of rendered pages with the eye.
+        The census cannot tell you this; every affected page is red
+        either way
+
+    WHY THE ORDER MATTERS
+    - in a golden-master framework a pure formatting change turns
+      EVERY affected page red. There is no green left to read
+    - so 'green' cannot be the signal DURING the formatting step. It
+      is the signal BEFORE it, and that is what step 2 buys
+    - if the two changes land together, red pages have two possible
+      causes and no cheap way to tell which
+
+    WHAT WENT WRONG WHEN WE DID NOT SEQUENCE IT (worked example)
+    - one session landed: a behaviour change (aspirants refused at the
+      door) AND a formatting change (tag column 6 -> 9, 'END' closes
+      'START', '[ ?! ]' -> '[NO GOOD]')
+    - 27 pages moved, 190 differing lines
+    - classification:
+          157  tag column widened          formatting
+           17  'END' closes a 'START'      formatting
+            2  '[ ?! ]' -> '[NO GOOD]'     formatting
+            8  STATUS 1 -> 3               BEHAVIOUR, and unruled
+            6  'peak standing at once'
+               2 -> 9; 'digest identical
+               to linear: FALSE'           A DEFECT
+    - the six matched no stated rule. Blind blessing WITHOUT the
+      sequence would have recorded a broken homogeneity invariant
+      (O-15) as the oracle
+    - with the sequence, those six would have shown up in step 2, as
+      a red page in the behaviour cut, where they belong
+
+    COROLLARY -- WHEN YOU DID NOT SEQUENCE AND IT IS TOO LATE
+    - classify mechanically: every differing line must match a STATED
+      rule
+    - what matches, bless. WHAT MATCHES NOTHING IS A DEFECT
+    - this is a rescue, not a method. The sequence is the method
+
+==============================================================================
+5.  THE PARALLELISM TAIL -- A CASE STILL OPEN
+==============================================================================
+
+    - '||n' after the verdict column says how many runs stood
+    - MEASURED: last two lines of EVERY directory print no tail.
+      '_count_tail' returns '' below 2, and a DONE reads the count
+      'once it left' -- so the final departures see 1 and 0
+    - deeper: 'parallel_n' counts PROCESSES (++ at birth, -- at
+      death), while the trace shows ANNOUNCEMENTS. A run living under
+      START_DELAY_SECONDS = 2.0 is born, counted, and dies having
+      never appeared as a START
+    - so 'peak standing at once: 9' against a screen showing two open
+      STARTs. The number describes 'ps'; the reader is looking at a
+      screen
+    - RULED (Frank-Rene): COUNT UPON PRINT. '||n' = how many
+      announcements are OPEN ON THIS SCREEN -- ++ when a START is
+      actually written, -- when its END closes it
+    - buys: derivable from the printed trace alone; reader can verify
+      by counting lines; digest and screen cannot disagree; '||1'
+      becomes meaningful, '||0' impossible
+    - buys: 'END'/'START'/'||n' become ONE idea on ONE clock
+    - COST TO NAME: the screen's peak is LOWER than true parallelism.
+      Fine if the number is DECLARED to be about the trace. Not fine
+      if anyone reads it as 'how hard the machine worked'
+    - RULED AND BUILT (D-14). The line prints the count INCLUDING
+      ITSELF: START rises then prints; END prints then falls; DONE
+      opened none, so it rises, prints, falls; SKIP never ran and
+      counts nothing. Every line prints at least 1
+    - 'jobs-budget' CLOSED: the page reports the OBSERVED parallelism,
+      not the budget. The two coincide at 2 and 1 because the budget
+      binds -- and the GOOD's numbers stood BYTE-EXACT through the
+      cut, which is how one knows the cure restored the old meaning
+      instead of inventing a new one
+    - THE TWO NUMBERS ARE KEPT APART: 'parallel_n' still feeds the
+      '|n|' column of '--show-jobs' (how hard the MACHINE worked);
+      'screen_n' feeds '||n' (what the SCREEN shows). The defect was
+      one name serving two questions
+    - CLOSED by D-15: a serial run prints '||1' on every line and
+      that is right -- in NORMAL mode a START stands for every launch,
+      so the screen count and the process count are THE SAME NUMBER by
+      construction. The divergence that caused all of this cannot
+      recur while every launch is announced
+    - '--brief' announces no launch, so it has no screen count and
+      reports the LAUNCHER's -- in the same column, at the end of the
+      same line
+
+==============================================================================
+5b. A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY BADGE
+==============================================================================
+
+    - case: 'display test-run.sh jobs-budget', and it cost a session
+    - 'peak standing at once' is NOT read off '||n'. 'test-run.pype'
+      computes it from badges and MASKS the tail. Two counters, two
+      files, one name -- and the hypothesis chased the wrong one
+    - the filter's vocabulary was ("START", "DONE", "SKIP", ...).
+      'END  ' joined the flow badges; nobody told the filter
+    - AN UNKNOWN BADGE IS NOT IGNORED. It fell through
+      'badge not in BADGE_TUPLE' and was printed RAW, ABOVE the
+      digest, unsorted; and nothing decremented 'standing'
+    - two symptoms, one cause: 'peak 9' where two runs stood, AND
+      'digest identical to linear: FALSE' -- raw lines landed in one
+      strategy's output and not in another's
+    - O-15's homogeneity invariant was NEVER BROKEN. The filter was.
+      The session before had written the invariant down as the
+      suspect and built nothing; reading the OUT file settled it in
+      one minute
+    - GENERAL: when a page and a filter both count, FIND OUT WHICH
+      ONE THE PAGE PRINTS before theorising about either
+    - GENERAL: adding a badge, a kind or a verdict is a change to
+      EVERY reader of that vocabulary, filters included. Grep the
+      tuple, not just the emitter
+    - ruled: display D-14
+
+==============================================================================
+5c. WHEN A READER SCANS A FLOW, IT MUST EXPAND THE ELISION FIRST
+==============================================================================
+
+    - ':' means 'the same application as the line above'. Since D-15
+      every run writes a START and an END, and the END repeats its own
+      START -- so a verdict line carrying a choice reads ':'
+    - case: 'services test-gate.py new_choice' filtered verdict lines
+      for 'test-two.py' and found none. THE DISPLAY WAS RIGHT
+    - the reader was taught to expand; ITS GOOD STOOD BYTE-EXACT.
+      That is how you learn which half was broken -- fix the half you
+      suspect and see whether the page moves
+    - 'test-run.pype' has kept this rule from the day it was written:
+      'EXPANSION COMES FIRST'. Any new reader of a flow inherits it
+    - THE OTHER HALF, and it WAS a defect: a CHOICELESS run elided to
+      ':' names NOTHING. The pype stated that law; the display never
+      did, and D-15 made the gap universal
+    - case: 'services test-base-questions.py --fail' reported
+      'selected: ' -- empty. A ruled formatting change silently
+      emptied a measurement
+    - GENERAL: a change to HOW A LINE IS SPELT is a change to every
+      READER of that line, tests included. Grep for the readers, not
+      just the writers
+    - ruled: display D-15
+
+    - case, 2026-09-22, the rename to 'hwut.run.stability': a grep for
+      'hwut\.stability' found every reader but one.
+      'bin/TEST/test-launchers.sh' lists its faces WITHOUT the prefix
+      -- 'report.details stability wishlist' -- and prefixes 'hwut.'
+      itself. The page said so at once: exit 127 where it read 0
+    - GENERAL: a name has more spellings than its full one. Grep the
+      BARE WORD too, and read what it finds -- here the rest was prose
+      ('the stability promise'), one hit was a reader
+
+    - case, 2026-10-04, the SAME page a second time: 'test-gate.py
+      new_choice' red in 3 of ~12 eight-job passes, steady alone under
+      'hwut.run.stability --repeat=8'. HUNTED WITH LOAD: eight copies of
+      the test beside each other, 25 rounds -- 1 of 200 red, and the
+      raw flow kept:
+          START test-old.py
+                test-two.py  a          <- keyword column ELIDED
+          END   :            a   [OK]   <- application elided to ':'
+      TWO SPECIES OF ELISION stand in a flow, and the reader knew one:
+      '_expanded' took the application only off lines whose first word
+      is START/END/DONE/SKIP, so the keyword-elided START of the OTHER
+      application never became 'the line above', and the ':' expanded
+      to test-old.py. On one core the two runs never interleave; the
+      reader was right by luck (O-30: a finish order is a foreign fact)
+    - a flake STEADY ALONE AND RED UNDER THE CENSUS is a reader of a
+      parallel flow, until proven otherwise: hunt it with load beside
+      it, keep the raw lines of the red run, and read the elisions
+    - 'test-wishlist.sh' carries the same reader shape and is safe only
+      because its subject runs '--jobs=1 --deterministic': a reader
+      that cannot expand both species must pin the flow it reads
+
+==============================================================================
+5d. A TACTIC IS MEASURED ON THE TREE, NOT ARGUED
+==============================================================================
+
+    - case: 'big task first' for the scheduler. The theory is Graham
+      1969 -- any list order is within 2 - 1/m of optimal makespan and
+      fails exactly when the LAST job to finish is long; sorting by
+      non-increasing duration gets 4/3 - 1/3m
+    - the tree ALREADY HELD the data to settle it: 'hwut-traces.csv'
+      carries 'duration_ms' per case, per machine. 321 cases, 204 s
+    - simulated both orders: 25% at 16 jobs parallel (and it reaches
+      the perfect-balance bound EXACTLY), 13% at 16 linear, and ZERO
+      at 2 and 4 jobs
+    - THE ZERO IS THE USEFUL HALF. The default budget is the core
+      count, so on a four-core laptop the tactic is worth nothing
+      measurable. A gain quoted without the job count it needs is a
+      gain quoted for somebody else's machine
+    - the bigger lever was not the tactic: linear-at-16 is 31.9s,
+      parallel-at-16 is 12.8s. THE STRATEGY IS WORTH 2.5x THE
+      ORDERING, and the strategy's default was the thing nobody had
+      questioned
+    - COUNTER-OBJECTIVE, worth stating whenever makespan is optimised:
+      LPT minimises WHEN THE SUITE FINISHES; SPT minimises WHEN YOU
+      LEARN SOMETHING. A developer at a terminal wants the second. The
+      default was ruled with that in front of the ruler, and the
+      RATIONALE says so rather than pretending nobody noticed
+    - ruled: orchestrator/run O-27
+
+==============================================================================
+6.  FIXTURES -- MAKE THEM THE WAY A USER MAKES THINGS
+==============================================================================
+
+    - case: 'display test-run.sh' wrote its fixture nominals by hand,
+      'printf > GOOD/x.txt'
+    - so the register had no entry; since the register moved into the
+      book (B-14) every run said 'REGISTERED ... accepted outside the
+      book (E-41)' -- 79 lines across 9 choices
+    - WORSE: it says so on the FIRST run only, so 'digest identical to
+      linear' (O-15) read FALSE in four choices. Blessing would have
+      recorded a broken invariant
+    - cure: the fixture records through HWUT'S OWN FACE
+          $ACCEPT --whole --directory="$dir" "$name"
+    - a FAILING fixture is made the way failures are made: accepted
+      once saying one thing, the application rewritten afterwards to
+      say another
+    - THREE TRAPS MET ON THE WAY, all measured:
+        a) fixture applications must print '<hwut-end>' or accept
+           refuses them (R-70)
+        b) the candidate accept provisioned MUST BE REMOVED after
+           ('rm -rf TMP OUT'). A rewrite within the same second reads
+           as CURRENT by mtime, and the run REPLAYS the recording
+           instead of running -- a [FAIL] fixture came up [OK]. Also
+           '--no-store' counted accept's candidate as its own
+        c) accept the failing case ONCE, saying the nominal; a second
+           '--whole' is a different act
+    - GENERAL: a fixture built by hand tests a state the product
+      cannot produce
+    - case: 'services test-exit.sh' made its 'mktemp' scratch INSIDE
+      the 'law' branch; 'signal' built its tree in the page's own
+      directory. 'services/TEST/tree/', 'out.txt' and 'err.txt' were
+      left behind and COMMITTED (2026-09-10), and every run wrote a
+      book into 'tree/suite/TEST/GOOD/' -- noticed only when the book
+      became versioned (B-24)
+    - cure: the scratch directory is made ONCE, BEFORE the switch over
+      the choices, so no choice can run outside it
+
+==============================================================================
+7.  WHAT 'ACCEPT' MEANS -- SO A TEST AUTHOR KNOWS WHAT IS GUARANTEED
+==============================================================================
+
+    - acceptance = A BOOK ENTRY *AND* A GOOD FILE. Never one without
+      the other
+    - the GOOD holds at least '##! unaccepted', its fillers, '####',
+      and the closing token
+    - the consistency of the two is SANITIZE's to check, not any
+      face's
+    - a run that produced NO OUTPUT, or none ending in '<hwut-end>',
+      CANNOT BE ACCEPTED AT ALL -- not even as an aspirant
+    - accept PROVISIONS: nothing need run first
+    - three spellings, ONE act: '--whole', '--as-is', '--force'. What
+      an overwrite replaces is an EARLIER ACCEPT, never the author's
+      evidence
+    - GRAVEYARD: '--whole' as a first-acceptance-only word that left
+      standing nominals alone. It made every re-recording reach for
+      '--force' anyway. A word that does not do what its name says is
+      worse than no word
+
+==============================================================================
+8.  THE THREE STANDINGS -- WHAT A TEST CAN BE
+==============================================================================
+
+    - UNKNOWN   nothing accepted
+    - ASPIRANT  accepted INCOMPLETELY; GOOD carries '##! unaccepted';
+                stays aspirant exactly as long as the mark stands;
+                playable, NEVER runnable
+    - MEMBER    accepted whole; the only state a run may judge
+    - a member that FAILED is still a member. 'aspirant' is not a
+      verdict; it is the reason there can be none
+    - PASS means: does not negate the total verdict, is not an error.
+      An aspirant is NEITHER -- not considered, and unmeasurable
+    - home: 'bookkeeper/test_run_info' (B-15), one instance, events
+      only, nothing by assignment
+
+==============================================================================
+9.  SMALL THINGS NOT YET PLACED
+==============================================================================
+
+    - the digest/pype filter IS part of the oracle. A mask missing
+      there is an oracle defect, not a cosmetic one
+    - A PARSER IS FUZZED, NOT ONLY EXAMPLED. Ten hand-written choices
+      of 'test-hwut_hocon.py' never met a hang that 49 of 400 randomly
+      mistyped headers met (one to four edits each). A seeded mutation
+      page ('fuzz', 'deterministic_random') records COUNTS only --
+      clean, with faults, hang, exception -- so it is deterministic and
+      a new hang moves one number
+    - '--no-log' retired by O-24; usage lines in GOODs still showed it
+      long after
+    - THE '@hwut { }' BLOCK HAS THE AUTHORITY OF THE GOOD FILE.
+      Changing the test application is as significant as changing the
+      nominal. Both are the author's statement of what the case IS.
+      Consequence: a declaration in the block is never a 'second
+      witness' to be arbitrated against the book -- the book RECORDS
+      what was declared. (Case: E-110, 'tolerance { stderr = ignored }'
+      replacing '--stderr-tol')
+    - A DURABLE PER-CASE PROPERTY MUST NOT BE SET BY A WISH-WIDE
+      SWITCH. '--stderr-tol' looked like a one-shot flag and wrote a
+      permanent book note for every case the wish selected -- silently.
+      SMELL TO LOOK FOR: a command-line flag whose effect outlives the
+      command
+    - stderr: a run whose stderr SPOKE is refused unless tolerated;
+      but the stderr text is then recorded NOWHERE. OPEN: if accept
+      accepts all output generated, where does tolerated stderr go?
+    - a page that asserts in PROSE what the code no longer does is as
+      stale as the nominal under it. 'test-accept.sh first' still
+      says the next run reads '[ ?! ]' -- it no longer runs at all
+    - A CATALOGUE PAGE PROVES ITS CONTROLS BY NAME. One tree, one
+      directory per scenario, named after it: the proposal then says
+      WHICH scenario a line came from, and a control that shows up is
+      read at once. MEASURED (test-sanitize-scenarios.sh, first run):
+      two controls reported as other scenarios -- an aspirant whose
+      application did not stand was an ORPHAN, and a 'hwut.conf' body
+      handed to printf through '%s' kept its '\n' literally, so the
+      directory FAULTED instead of hiding an application. Read the
+      output for every directory, controls first
+    - A FACE THAT BOOKS LEAVES 'TMP/' BEHIND (it takes the directory's
+      lock). A fixture that books and then places transient scenarios
+      reports the booking's residue as TRANSIENT ROOT everywhere: make
+      the records first, sweep 'TMP/' and 'OUT/', then place what the
+      page is about
+    - A GREEN CASE MAY STAND ON A STALE GOOD that its own tolerance
+      forgives ('##' comments, blank lines, an eq_pattern). Any
+      re-accept then moves those lines too. MEASURED (o-8, 74 GOODs
+      gaining '<hwut-end>'): 63 moved by the token alone, 11 by
+      forgiven lines as well -- wall-clock timings in '##' comments,
+      a handler list grown since. THE PROOF THAT ONLY FORGIVEN LINES
+      MOVED: in a scratch copy, the OLD GOOD plus the token, run
+      against the NEW output -- [OK] for all 11. And a timing printed
+      into a nominal, even as a comment, is a GOOD that differs on
+      every recording
+    - AN IN-MEMORY NOMINAL IS A NOMINAL. When R-70 came to fail every
+      stdout nominal without '<hwut-end>', 21 cases on 6 pages went red
+      -- not GOOD files but fixtures: 'BytesNominal("alpha\n")', a
+      helper's 'put(good, ..., "line\n")', an app body without the
+      token. MENDED IN THE HELPER ('_place', 'app', 'good'), once per
+      page, so every fixture speaks the law; then each page was run
+      against its standing GOOD -- byte-identical but where it prints
+      the fixture (a stored stdout, a line count)
+    - A READER OF AN ELIDED BLOCK EXPANDS BEFORE IT COMPARES -- and the
+      elision has more than one axis. When HINTS gained ':' in the
+      PHRASE column (D-35), 'test-gate.py' already expanded ':' in the
+      NAME column and still broke: it read "test-two.py b   :" as a
+      line without the phrase it was looking for. MEASURED: two
+      choices red, both reading one elided phrase. Split at the LAST
+      wide gap, not the first; a line has as many gaps as it has
+      columns
+    - A STAND-IN TOOL PROVES THE CHAIN, NOT THE CALL. The coverage
+      pages ran a 'witness' tool whose wrap APPENDS a flag to the
+      call; every one was green. MEASURED (demo/python, coverage.py
+      7.16, the command a person types): the real tool takes a SCRIPT
+      where the chain handed it a COMMAND, read 'python3' as the file
+      to run, and all four cases ended 'cut-short [FAIL]'. One page
+      per real tool, run through the face, is owed beside every
+      stand-in -- and until it stands, the stand-in's green says
+      nothing about the tool
+    - A RECORD PLANTED BY HAND IS PLANTED WHERE A REAL RUN LEAVES IT,
+      or the page tests the plant. 'test-report-details.sh coverage'
+      wrote 'TMP/store/demo--basic.cover'; a real coverage run writes
+      'demo.py--basic.cover' (the key is the source file WHOLE). The
+      face stripped '.py' to find the planted file, so page and face
+      agreed with each other and with no real record: 'coverage: none
+      recorded' beside a record that stood. Before planting, RUN the
+      producer once and copy the name it wrote
+    - AN EXCEPTION'S TEXT IS THE INTERPRETER'S, NOT THE SUBJECT'S. Two
+      nominals quoted "'X' object has no attribute 'y'"; Python 3.13
+      appends " and no __dict__ for setting new attributes". MEASURED:
+      'test-bookkeeper.py setup_delta' and 'test-configuration.py
+      slots' red on 3.13, green before. Healed by ONE NARROW
+      eq_pattern, "'( and no __dict__ for setting new attributes)?$":
+      it forgives the tail and nothing else -- a wrong attribute name
+      still fails (control: the name altered in a scratch GOOD, red).
+      Better still, print the exception's TYPE and the name, not its
+      text
+    - A FAULT NAMES ITS COLUMN, AND A MACHINE'S WORD ON THE SAME LINE
+      MOVES IT. 'test-run-uncapped.sh misspelt' wrote 'procsitter {
+      <platform> { netwerk = false } }' on one line; the fault read
+      'hwut-root.conf:3:26' -- 26 because 'linux' has five letters.
+      Replacing the word in the OUTPUT does not heal a NUMBER derived
+      from its length. Healed in the fixture: one entry per line,
+      nothing machine-chosen to the left of what a fault points at
+    - A REFUSED CASE CANNOT BE ACCEPTED THROUGH THE RUN, so a page that
+      shows a refusal records its fixture's nominals FIRST, under the
+      condition that lets them run, and only then takes it away
+    - THE SAME, IN PROSE: A WRAPPED PARAGRAPH BREAKS WHERE ITS WORDS'
+      LENGTHS SAY. 'hwut.help' wrote the platform's word inside a
+      paragraph; 'linux' and 'windows' break the lines differently.
+      Healed in the SUBJECT: a machine's word stands on unwrapped
+      lines only
+    - 'TMPDIR' UNDER hwut IS BELOW THE TREE. 'test-dev_podman.py
+      refused' made "a directory with no root above it" with
+      'tempfile.mkdtemp()'; run by hwut, the procsitter's scratch
+      ground is 'TEST/TMP/...', a root IS above it, the face found the
+      machine's own tree and printed its path -- '/home/claude/hwut'
+      in the nominal, red on every other checkout. Healed as ruled: the
+      page marks a mount that is not the fixture's as an ANALOGY
+      ('-v ((path)):((path))'), the nominal says 'the same path twice'.
+      NOT HEALED: under hwut that step shows a call, not the refusal
+      its description names
+    - AN ANALOGY IS WRITTEN ON BOTH SIDES. '((x))' in the nominal alone
+      matches nothing: the SUBJECT marks the token too, and compare
+      pairs the marked tokens
+    - A STRING BINDING IS QUOTED: '((name: "build-7.log"))'. Unquoted,
+      '((name: build-7.log))' is an ANALOGY and binds nothing; a
+      constraint over 'name' then never fires, and 'hwut.accept' says
+      "'name' never bound". MEASURED while writing the page for G-3:
+      the fixture looked broken by the constraint and was read green
+    - A FIXTURE CAN PROVE THE RULE BY ITS OWN ACCIDENT. 'test-report.sh
+      stain' showed 'a stain is a failure in every format' over a
+      fixture that flips ok/failed and is repeated FOUR times: the
+      fourth run fails, so the book's own verdict was already false and
+      the page was green whether the report read the stain or not.
+      MEASURED (audit D-9, G-11): repeated twice or three times -- the
+      last repeat passing -- 'hwut.report' said '[OK]', exit 0. A page
+      that pins "X fails WHATEVER Y says" needs the fixture where Y
+      says the opposite; here, 'stain_last_ok'
+    - "IN EVERY FACE" IS PINNED BY A PAGE THAT WALKS THE FACES. A ruling
+      built in the one parser was green at the parser's page and at
+      the faces somebody happened to try. MEASURED (G-13, G-14): one
+      loop, 'for name in <the faces that take a wish>; <face> --label
+      nosuch', one line per face -- a traceback, an 'EMPTY' and a
+      silent success in ten lines. The table is the page
+      ('test-face-words.sh'): one line per face, the first telling
+      line of its answer and its exit status
+    - A FACE THAT FORWARDS AND SWALLOWS THE OUTPUT SWALLOWS THE
+      REFUSAL. 'hwut.run.stability' runs 'hwut.run' with both writers
+      shut and read only the events: a refused wish left no event, and
+      the face said 'EMPTY'. Probe a forwarding face with the word its
+      target REFUSES, not only with one it runs
+    - A SCREEN IS PROBED ON A PTY, AND THROUGH A TERMINAL EMULATOR. The
+      keyed session writes deltas; stripping escape codes from the raw
+      stream gives fragments ('l1 / NEW'), not a screen. With 'pyte'
+      fed from the pty the page reads as a person reads it, attributes
+      included -- that is how 'the cursor skips a spent line' (E-63)
+      was read. 'pyte' is NOT a dependency of this tree: such a probe
+      is a hand's work until one is ruled in
+    - A PROBE THAT ASKS MUST HAVE ITS STDIN SHUT. 'hwut.accept' without
+      '--dont-ask' waits at '[y/N]'; a probe script hung for its whole
+      120 s. Every probed face gets '< /dev/null' and a 'timeout'
+    - AN ID IS A FACT OF THE ORDER THINGS ENDED IN. 'test-face-words.sh
+      book' ran 'hwut.run' over a book that numbered nothing and
+      printed the book: the run registers each choice as it ENDS, so
+      under two jobs 'two' sometimes took id 0. MEASURED: green on
+      every single run and in the glob pass, red in the census --
+      'a:b.sh;one;...;0;1'. Healed in the page: '--jobs=1
+      --deterministic' on the run whose book is printed. The species is
+      2.6/2.7's; the new case is that a REGISTER shows it, not a flow
+    - A FIXTURE FROM ANOTHER TIME MUST BE SHAPED AS THAT TIME WROTE IT.
+      An "old" book made by renaming today's 'book.csv' carries
+      today's id columns under a name whose reader drops the
+      '# vut-register' line: the next run says 'TestIdFault'. That
+      state is the fixture's invention. The old book had four columns;
+      the probe that cut today's book down to them read and migrated
+      cleanly (B-10, B-27)
+    - A KEYWORD ARGUMENT ADDED AT THE TOP MUST BE FOLLOWED TO THE ROW.
+      'note_accept(..., equivalent_f=)' was given the parameter and its
+      inner call was not: the page 'short' said 'true / ok' and the
+      check looked broken. It was not -- the flag stopped one call
+      short. A page that prints the BOOK ROW, not the function's
+      return, is what showed it
+    - AN EXAMPLE IN A HELP PAGE IS A CLAIM, AND A CLAIM IS TYPED. The
+      first draft's 'hwut.labels.create nightly 'test-net*'' was
+      REFUSED by its own face (one label, two words), and 'hwut.run
+      --wishlist <(hwut.labels.query ...)' selected nothing from a test
+      directory. Both read plausibly. 'test-help-pages.sh examples'
+      types every example line on a fresh tree; write the example
+      table and that page in the same turn
+    - A FRAME, NOT A REWRITE, when forty texts must take one shape:
+      one function that finds what every text already has (a 'usage:'
+      block, a first paragraph, a synopsis) and places it. The texts
+      stay their authors'; the moved nominals have ONE cause
+    - WHAT A SESSION LEARNS OF A KEY IS NOT WRITTEN ONTO THE KEY. A key
+      is another module's record -- slotted in 'hwut.accept', and
+      something else again at 'hwut.accept.interactive'. 'key.short_f =
+      ...' passed the page of the one door and died in a traceback at
+      the other, found only by the census ('test-accept.sh opening').
+      Kept beside the key, by identity, and asked through a function
+    - A C STRUCTURE BOUND BY HAND IS MEASURED, NOT COPIED, where the
+      library's versions differ. 'libvterm' moved its attribute bits
+      between 0.1 and 0.2; a ctypes structure copied from one header
+      reads the other's cells wrongly and says nothing. 'hwut_vterm'
+      feeds a scratch terminal one attribute at a time and takes the
+      bit that changed. Proved by building three versions from source
+      and diffing the page's output across them -- the probe that
+      would have been skipped had the first version simply worked
+    - WHAT A SCREEN TEST RECORDS IS A REGION'S TEXT AFTER A PAUSE, not
+      the terminal's events. How many 'damage' events a redraw makes
+      depends on where the kernel cut the application's writes; a
+      region ("foot", the last row) told only when its text changed and
+      the application went quiet is the same on every run. 'nnn' typed
+      at once is ONE report. Where quiet is not enough (a slow start),
+      wait for a text ('expect'), never for a time
+    - libvterm DOES NOT SWITCH TO THE ALTERNATE SCREEN UNLESS TOLD
+      ('vterm_screen_enable_altscreen'). Without it a full-screen
+      program draws over the lines printed before it, and the page
+      looks almost right
+    - LINES AND COLUMNS IN THE ENVIRONMENT OVERRULE THE TERMINAL'S SIZE
+      for most programs. The container sets COLUMNS=300; an application
+      started on a pseudo-terminal of 80 columns would have drawn for
+      300. They are taken out of the child's environment
+    - A REQUIREMENT ADDED IS ENTERED IN 'adm/requirement-list.txt' IN THE
+      SAME CHANGE. Bundle 100 brought two pages that want libvterm and
+      said so only in their own headers: on the first machine without
+      the library eleven rows were red, and nothing outside those pages
+      said why. 'sh adm/requirement-check.sh' reads the list
+    - A RED THAT IS "KNOWN" HIDES THE NEXT ONE BEHIND IT. The static-
+      analysis page was red for a cause left alone as ordered; a new
+      finding of mine ('for l in' in 'services/plan.py', E741 5 -> 6)
+      went into three bundles under it, reported each time as "the one
+      known red". Frank-Rene's own run showed the count. A page left
+      red is still READ after every change: its difference against
+      GOOD is compared with the difference it had before
+
+    - A TOLERANCE MUST NOT COVER THE PAGE'S SUBJECT. 'test-exit.sh' is
+      a table of exit statuses and stated 'eq_pattern = ["[0-9]+"]' for
+      the whole page: any status equalled any other. Its GOOD read
+      'hwut.run 1 1 2 1' under a law printed three lines above as
+      0 1 2 3 -- three stimuli had gone stale (a conf opening '@hwut {',
+      a test without '<hwut-end>', a bare 'hwut.run.diff' that had
+      become a valid request) and the page stayed green for weeks. A
+      reader of the book found it by reading the GOOD file. Ask of
+      every tolerance: could the page still fail for the thing in its
+      title?
+    - A STIMULUS IS CHECKED BY WHAT THE FACE SAID, not by its status
+      alone: all three stale stimuli above produced '1' for a reason
+      other than the one the column names

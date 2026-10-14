@@ -1,0 +1,76 @@
+VERSION: 2
+COMPONENTS: engine/orchestrator/exploration
+
+todo-1  OWNER FACES: WHAT EACH COMPONENT OWES
+______________________________________________________________________________
+
+DECIDED (R-37..R-43). The mechanism is BUILT: 'relation.py' relates our word
+to '(class, member)', writes values with setattr, reads defaults out of the
+frozen dataclass declaration, and checks the whole table at IMPORT.
+
+UNBUILT: the owners have not all declared their faces, and 'RELATION' still
+names the stand-ins. 'owner_faces_provisional.py' stands in for six
+(measured 2026-10-04, audit r10: 'relation.py:45' imports all six):
+
+    ConfigBuild          -> the build component
+    ConfigCaps           -> procsitter          PAID in part (R-78): five
+                                                caps read 'ProcsitterConfig';
+                                                'file_handle_max_n',
+                                                'network',
+                                                'write_directory_list'
+                                                remain ('adm/WORK/TODO.txt'
+                                                A-4)
+    ConfigCanonicalise   -> the pype component
+    ConfigCompare        -> hwut.engine.compare  MIRRORS compare's own
+                                                'ConfigurationPatternFinder'
+                                                member for member; no face is
+                                                asked of compare (R-57) -- the
+                                                adapters in 'relation.py'
+                                                bridge the shapes
+    ConfigStore          -> the bookkeeper      the owner HAS declared:
+                                                'NamingConfig.same_nominal_f'
+                                                ('adm/WORK/TODO.txt' A-5)
+    ConfigRunner         -> operations          the owner HAS declared:
+                                                'TestConfiguration.interactive'
+                                                (A-5)
+
+WHAT AN OWNER OWES (R-41, R-57): its configuration declared as a FROZEN
+DATACLASS, with the default it judges least astonishing on each member --
+its own members, in its own words. No face, no second declaration: where a
+word of ours is several members of its, an ADAPTER in 'relation.py' bridges
+the two, and the default is derived backwards through it.
+
+THE MOVE, per owner:
+  1  The owner declares its face.
+  2  'RELATION' names the owner's class; member names change with it.
+  3  The stand-in class is deleted; when the file is empty, it goes.
+
+Nothing else changes, and '_assert_relation()' fails loudly at import if a
+name does not match. 'test-defaults.py' prints every declared default, so
+each step's GOOD file change IS the contract change.
+
+THE PROVISIONAL VALUES were not ruled one by one. One is worth the owner's
+eye: 'caps.network = True' -- the stand-in permits network access, and the
+opposite is defensible. It is procsitter's call.
+
+______________________________________________________________________________
+
+STILL OPEN, in compare ('adm/WORK/TODO.txt' B-27): 'engine/constraints.py'
+still declares 'SAFE_FUNCTION_DB', 'SAFE_CONSTANT_DB' and
+'SAFE_STR_METHOD_SET' of its own, and its AST door reads THOSE, while
+'engine/constraint_namespace.py' (R-66) holds the ruled tables. MEASURED
+2026-10-05: the two DISAGREE -- 26 functions and 2 constants of the
+namespace ('glob', 'isclose', 'sum', 'sorted', 'any', 'all', 'log10',
+'nan', 'tau' ...) are refused at the door, 3 str methods allowed at the
+door are absent from the namespace; 'glob(x, "a*")' as a constraint raises
+ConstraintSpecError. The three names become imports from
+'constraint_namespace':
+
+      SAFE_FUNCTION_DB    -> FUNCTION_DB
+      SAFE_CONSTANT_DB    -> CONSTANT_DB
+      SAFE_STR_METHOD_SET -> STR_METHOD_SET
+
+  and the scope built in 'ConstraintExpression' becomes
+  'namespace_of(bindings)'. The AST allow-list stays exactly as it is.
+  (The settled compare matters -- R-54..R-57, R-64..R-66 -- stand in
+  exploration's RATIONALE and are struck from this file, 2026-10-05.)

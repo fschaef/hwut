@@ -29,7 +29,7 @@ Three commands, about a minute. Python 3.10 or newer.
 ```
 git clone https://github.com/fschaef/hwut && cd hwut
 pip install bidict rapidfuzz regex typeguard
-cd vut/demo/python/TEST && ../../../bin/hwut --plain
+cd hwut/demo/python/TEST && ../../../bin/hwut --plain
 ```
 
 ```
@@ -170,7 +170,7 @@ hwut.pype --example law.pype    a generated input for the script
 Modes inherit (`is:`). Two handlers of one mode whose patterns could match
 the same line are refused at parse time, so dispatch does not depend on
 definition order. Where a script is part of the oracle, the manual says so:
-[`vut/test_writing_support/hwut_pype/MANUAL.txt`](vut/test_writing_support/hwut_pype/MANUAL.txt).
+[`hwut/test_writing_support/hwut_pype/MANUAL.txt`](hwut/test_writing_support/hwut_pype/MANUAL.txt).
 
 Where a tolerance can absorb a difference, a tolerance is stated. Where the
 output can be understood, a pype states the understanding, and what remains
@@ -188,47 +188,47 @@ sed -i 's/1 2 3/1 2 4/' demo.py
 **`hwut`** runs the whole tree below the current directory (`hwut` is
 `hwut.run`). One choice is red, the rest are green, the exit status is 1.
 
-![hwut: five choices green, one red, the summary bar](vut/doc/img/hwut-run.png)
+![hwut: five choices green, one red, the summary bar](hwut/doc/img/hwut-run.png)
 
 **`hwut.run.diff -y demo.py plain`** shows the subject on the left, what the
 program printed now, and the nominal on the right, the GOOD file. The
 differing token is marked.
 
-![hwut.run.diff -y: subject left, GOOD right, the changed number marked](vut/doc/img/hwut-run-diff.png)
+![hwut.run.diff -y: subject left, GOOD right, the changed number marked](hwut/doc/img/hwut-run-diff.png)
 
 **`hwut.accept.interactive`** is the merge, with keys. Here an invoice report
 changed in four lines; two have been taken into GOOD (`Enter`), two still
 differ. `a` takes a region, `A` the whole subject, `u` undoes, `F5` opens the
 tolerance pane.
 
-![hwut.accept.interactive: two of four differences taken](vut/doc/img/hwut-accept-interactive.png)
+![hwut.accept.interactive: two of four differences taken](hwut/doc/img/hwut-accept-interactive.png)
 
 **`hwut.report`** reads the result databases, not a run, and renders them for
 somebody else.
 
-![hwut.report: results grouped by test title, a summary, the result bar](vut/doc/img/hwut-report.png)
+![hwut.report: results grouped by test title, a summary, the result bar](hwut/doc/img/hwut-report.png)
 
 **`hwut.help`** explains each failure that is not a plain difference from
 GOOD, once: its cause, the remedy, the cases concerned. Here a program wrote to
 stderr and another stopped before `<hwut-end>`.
 
-![hwut.help: two failure reasons, each with its remedy and the cases concerned](vut/doc/img/hwut-help.png)
+![hwut.help: two failure reasons, each with its remedy and the cases concerned](hwut/doc/img/hwut-help.png)
 
 Restore the demo with `sed -i 's/1 2 4/1 2 3/' demo.py`. The screenshots are
-made from real runs by [`vut/adm/screenshots/make.sh`](vut/adm/screenshots/make.sh).
+made from real runs by [`hwut/adm/screenshots/make.sh`](hwut/adm/screenshots/make.sh).
 
 ## The commands
 
-49 launchers stand in `vut/bin`; put it on `PATH` to call them by name:
+49 launchers stand in `hwut/bin`; put it on `PATH` to call them by name:
 
 ```
-export PATH=$PWD/vut/bin:$PATH
+export PATH=$PWD/hwut/bin:$PATH
 ```
 
 Every command answers `--help` with its full documentation and takes
 `--directory=<path>`. Exit status is common to all: 0 ok, 1 a fault or a
 failed test, 2 the command line cannot be read, 3 it asks for nothing.
-[`vut/services/README.txt`](vut/services/README.txt) lists every one in full.
+[`hwut/services/README.txt`](hwut/services/README.txt) lists every one in full.
 
 **Run**
 
@@ -307,27 +307,27 @@ failed test, 2 the command line cannot be read, 3 it asks for nothing.
 
 | Path | Holds |
 |---|---|
-| `vut/bin/` | the launchers above |
-| `vut/services/` | the commands; its `README.txt` lists every one |
-| `vut/engine/` | compare (tolerant comparison), orchestrator, bookkeeper, coverage, display, operations, procsitter |
-| `vut/test_writing_support/hwut_pype/` | pype |
-| `vut/demo/` | the demos above |
-| `vut/adm/` | development tools; `PHILOSOPHY.txt` states the model |
+| `hwut/bin/` | the launchers above |
+| `hwut/services/` | the commands; its `README.txt` lists every one |
+| `hwut/engine/` | compare (tolerant comparison), orchestrator, bookkeeper, coverage, display, operations, procsitter |
+| `hwut/test_writing_support/hwut_pype/` | pype |
+| `hwut/demo/` | the demos above |
+| `hwut/adm/` | development tools; `PHILOSOPHY.txt` states the model |
 
 Where to read next:
 
-- [`vut/engine/compare/MANUAL.txt`](vut/engine/compare/MANUAL.txt) — every tolerance and region, with examples
-- [`vut/test_writing_support/hwut_pype/MANUAL.txt`](vut/test_writing_support/hwut_pype/MANUAL.txt) — the pype language
-- [`vut/doc/HOWTO-FEATURES.txt`](vut/doc/HOWTO-FEATURES.txt) — features, their links to test runs, and the report
-- [`vut/adm/PHILOSOPHY.txt`](vut/adm/PHILOSOPHY.txt) — what a test is, and when it is worth having
-- [`vut/services/README.txt`](vut/services/README.txt) — every command, its words, its exit status
+- [`hwut/engine/compare/MANUAL.txt`](hwut/engine/compare/MANUAL.txt) — every tolerance and region, with examples
+- [`hwut/test_writing_support/hwut_pype/MANUAL.txt`](hwut/test_writing_support/hwut_pype/MANUAL.txt) — the pype language
+- [`hwut/doc/HOWTO-FEATURES.txt`](hwut/doc/HOWTO-FEATURES.txt) — features, their links to test runs, and the report
+- [`hwut/adm/PHILOSOPHY.txt`](hwut/adm/PHILOSOPHY.txt) — what a test is, and when it is worth having
+- [`hwut/services/README.txt`](hwut/services/README.txt) — every command, its words, its exit status
 
 ## Status
 
 - 2.0 is a complete rewrite of 1.0 and a spare-time project.
 - Tests: 911 ok, 1 fail (`services/TEST/test-dev_podman.py refused`), measured by `hwut` from the root at commit `70417c0` (branch `26y10m4d-review-todo-and-done`).
 - Not there yet: a PyPI package or `pyproject.toml`; a test suite in a language other than Python and shell. All test applications in the tree are Python or shell.
-- Open work: `vut/adm/WORK/TODO.txt`.
+- Open work: `hwut/adm/WORK/TODO.txt`.
 
 ## License and no warranty
 

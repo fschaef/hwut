@@ -1,0 +1,12 @@
+
+--- a tree whose files agree with its directories ---
+    none
+
+--- one disagreement of every kind ---
+    twin      engine                   id=compare                        from=None
+    dangling  engine                   id=old                            from=None
+    no-file   engine/compare/core      id=None                           from=None
+    unlisted  engine/plain             id=plain                          from=None
+    unmapped  engine/compare/TEST      id=engine.cmp.extra               from=None
+    map-gone  .                        id=old-name                       from=None
+<hwut-end>

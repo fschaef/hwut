@@ -1,0 +1,79 @@
+
+--- the text ---
+    | # What compare is made of.
+    | features {
+    |     title  = "Compare"            # shown in the report
+    | 
+    |     childs {
+    |         # the alignment
+    |         core = "./core"
+    |         "odd id" = "./odd"   # stays
+    |     }
+    | }
+
+--- two childs added ---
+    | # What compare is made of.
+    | features {
+    |     title  = "Compare"            # shown in the report
+    | 
+    |     childs {
+    |         # the alignment
+    |         core = "./core"
+    |         "odd id" = "./odd"   # stays
+    |         pat = "./patterns"
+    |         007 = "./digits"
+    |     }
+    | }
+
+--- two childs removed (by directory); what each carried ---
+    carried: core | odd id | None
+    | # What compare is made of.
+    | features {
+    |     title  = "Compare"            # shown in the report
+    | 
+    |     childs {
+    |         # the alignment
+    |    # stays
+    |         pat = "./patterns"
+    |         007 = "./digits"
+    |     }
+    | }
+
+--- nothing listed yet: 'childs' is made ---
+    | features {
+    |     title = "New"
+    |     childs {
+    |         first = "./first-dir"
+    |     }
+    | }
+
+--- the forms on one line ---
+    | features { childs { a = "./a"  b = "./b" } }
+    carried: a
+    | features { childs {  b = "./b" } }
+
+--- the map: entered, bound to another, retired ---
+    | # the published ids
+    | map {
+    |     "scroll"   = "display.game.scroll"   # customers know it
+    |     "old"      = none
+    |     "zoom" = "display.zoom"
+    | }
+
+--- a feature with a doc in triple quotes: the text around it is not hurt ---
+    | features {
+    |     childs {
+    |         a {
+    |             doc = """
+    |                 says "x" and } and { too
+    |             """
+    |         }
+    |         b { }
+    |     }
+    | }
+    | features {
+    |     childs {
+    |         b { }
+    |     }
+    | }
+<hwut-end>

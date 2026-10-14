@@ -1,0 +1,139 @@
+SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+==============================================================================
+RATIONALE -- test_run_info
+==============================================================================
+
+B-15  THE STATE HAD NO HOME, SO ASPIRANT WAS UNREACHABLE      (2026-09-19)
+------------------------------------------------------------------------------
+PROBLEM   One question -- what standing does this case have? -- was
+          answered in three places and joined in none:
+
+            a nominal stands        'bookkeeper.nominal_stands_f',
+                                    asked by EIGHT callers
+            it carries the mark     'operations/consume.carries_-
+                                    unaccepted_f', asked by ONE, and
+                                    that one INSIDE the run's
+                                    comparison
+            the book's verdict      the row, read by sanitize, report,
+                                    task_list_query
+
+          Nobody read all three, so E_TestVerdict.ASPIRANT -- a value
+          the enum had carried since B-14 -- was unreachable by the
+          path that should create it.
+
+          MEASURED, end to end. 'accept <app>' left undecided writes
+          'GOOD/x.txt' holding '##! unaccepted / --?-- / #### /
+          <hwut-end>' and books verdict 'true' -- PASS. 'hwut.run'
+          then SELECTS the case (nothing upstream knows better), runs
+          it, spends a process on it, refuses it at compare time in
+          'equivalence_check' as UNACCEPTED, and rewrites the row to
+          'false;unaccepted' -- FAIL. After which 'hwut.report.wishlist
+          --fail' SELECTS it (exit 0) and '--unaccepted' selects
+          nothing (exit 3). Both ways round.
+
+          The refusal itself was correct and well worded. It simply
+          stood ten steps too late, in a component that cannot
+          influence selection.
+
+DECISION  RULED (Frank-Rene): the state belongs in ONE observable
+          instance, moved only by EVENTS, with its consistency checks
+          beside it and the state machine pattern to hold it. Named
+          'test_run_info', not 'membership' -- what it models is A
+          BOOK ENTRY BEING ALIVE, of which the member state is one
+          field among the register's ids, the last verdict, the
+          report, the acceptance time, coverage, stderr and the
+          stain. Homed in the bookkeeper, which owns both witnesses.
+
+          THE MEMBER STATE IS THE STATE AND NOTHING ELSE. The book's
+          'verdict' column compresses a run's outcome and a case's
+          standing into one field; the compression is the FILE'S,
+          and the attributes are factually separate. 'member_state'
+          says whether a case may be run; 'last_verdict' says what
+          happened when it was, and is None where nothing has judged
+          it.
+
+          NOTHING BY ASSIGNMENT. Both classes raise on '__setattr__'
+          and '__delattr__', naming the events in the refusal. A
+          caller states what HAPPENED; the object decides what that
+          means. This is the whole point: what it replaces was every
+          caller free to form its own opinion and write it down.
+
+          THE BASE STATE REFUSES. A state answers only the events
+          that move it; the rest inherit 'this does not move me'. A
+          transition nobody wrote cannot occur by accident.
+
+          'on_run_verdict' RAISES where the state is not runnable.
+          Today's silent defect becomes loud: the aspirant that is
+          currently selected, run and booked 'false' would stop at
+          the moment of judgement, naming the gate that let it past.
+
+          THE FILES DECIDE THE STATE. 'of_evidence' reads GOOD/, not
+          the book: a file is testimony, a row is a record of it.
+          'consistency_fault_tuple' names the disagreements and mends
+          none -- repair is a person's, through accept or remove
+          (E-41).
+
+COST      A new component in the bookkeeper, four nominals. Nothing
+          calls it yet; the wiring -- the eight askers, accept's
+          write, the gate leaving 'equivalence_check' -- changes what
+          'hwut.run' SELECTS and is its own cut, measured against the
+          census.
+
+ALSO      A LAPSE, recorded because the discipline is worth more than
+          the appearance. Two edits were found in
+          'bookkeeper/bookkeeper.py' that no entry announced and no
+          message reported: an import of a package that did not yet
+          exist, and a 'membership=None' parameter on 'note_accept' /
+          '_note_accept_unlocked' whose body booked ASPIRANT. The
+          method is live -- accept.py and lib/accept/engine.py call
+          it -- but NEITHER passes the argument, so the addition was
+          dead while the method ran. It surfaced only because the
+          import broke on a rename. Both were reverted; the file is
+          byte-identical to the tree as delivered, and the wiring was
+          done deliberately afterwards. Read what is in the tree
+          before believing what an entry says about it.
+
+B-16  AN INCOMPLETE ACCEPTANCE IS BOOKED AS ONE                 (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   'note_accept' wrote 'verdict = PASS, report = ok' for every
+          acceptance, including one that closed with a '##! unaccepted'
+          region. The state machine had the door -- 'on_accept_left_
+          unaccepted' -- and nobody walked through it, so ASPIRANT was
+          reachable only by a later reading of the GOOD.
+
+DECISION  BUILT: 'note_accept(test, choice, aspirant_f)'. 'hwut.accept'
+          asks the nominal IT JUST WROTE whether a region stands
+          unjudged and says so; the row then reads ASPIRANT /
+          'unaccepted'. An acceptance that stands and is incomplete is
+          not a pass, and the book must not spell the two alike.
+
+B-17  A REFUSAL IS SEEN, AND IT IS NOT 'EMPTY'                  (2026-09-23)
+----------------------------------------------------------------------------
+PROBLEM   B-15 moved the aspirant's refusal to the door, where it
+          belongs -- and then nothing said so IN THE FLOW: a case the
+          wish selected was passed over in silence, and the run exited
+          EMPTY (3), as though the wish had answered nothing at all.
+          'test-accept.sh first' and 'unaccepted' stood red on it.
+
+DECISION  BUILT, two halves.
+          THE FLOW SHOWS EVERY REFUSAL, where it happened, with the tag
+          that says WHICH: '[ ?! ]' for an ASPIRANT -- an acceptance
+          stands and is incomplete -- and '[REFUSED]' for any other
+          refusal. The closing REFUSED block keeps the reason; the flow
+          keeps the place. A case NOTHING WAS EVER ACCEPTED FOR is no
+          refusal: it reads 'no GOOD file [FAIL]' and fails (display
+          D-32).
+          THE EXIT STATUS: a run that ran nothing AND refused something
+          exits REFUSED (2), not EMPTY (3). E-1's four codes stand
+          unchanged; this assigns the case that had none. 'Nothing
+          answered the wish' and 'what answered it may not run' are
+          different news, and a script that branches on the status must
+          be able to tell them apart. The fold now carries
+          'refused_db', and the Tally 'refused_n', for that one rule.
+
+COST      A refusal is NOT counted as a case and does NOT fail its
+          directory (a case with no GOOD file is not a refusal, D-32): nothing ran, and a directory that failed would say
+          a verdict was formed where none was. The three pages of
+          'test-accept.sh' that encoded the pre-B-15 shape ('1
+          unaccepted', a failed directory, status 1) were re-recorded;
+          'interactive' was stale from D-14/D-15 besides.

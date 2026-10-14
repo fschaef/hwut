@@ -1,0 +1,356 @@
+# SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""
+______________________________________________________________________________
+PURPOSE: THE CASES A WISH SELECTS, WITH THEIR STREAMS -- the one block
+         every store-reading face runs between its words and its work
+         ('hwut.accept', 'hwut.accept.interactive', 'hwut.run.diff'; E-50,
+         E-51).
+
+    entered path -> directory exists -> the climb (ascended_spec)
+      -> the wish with its targets -> the labels view -> selection
+      (one directory under '--directory', the tree otherwise)
+      -> the cases grouped by the directory they were found in
+
+'differing_keys' then measures, per (test, choice), whether the stdout
+candidate and the nominal are EQUIVALENT under the choice's own compare
+setup -- the engine's verdict, taken NOW, not the book's memory -- and
+returns the keys that differ, with both texts in hand.
+______________________________________________________________________________
+"""
+import io
+import os
+import asyncio
+
+from ..engine.orchestrator.exploration.tree_explorer import (
+                                                    RootConfMissing,
+                                                    ascended_spec)
+from ..engine.orchestrator.exploration.task_list import SelectionError
+from ..engine.orchestrator.exploration import selection
+from ..engine.orchestrator.plan.wish import with_targets
+from ..engine.orchestrator.run.adapter import \
+                                                       test_configuration_of
+from ..engine.bookkeeper.api import Store
+from ..engine.orchestrator.plan import confinement
+from ._accept_common import stderr_ignored_f_of
+from .lib.labels import view_at
+from .lib.labels._file import LabelFileError
+from   ._target                                       import entered
+from   ._exit                                         import E_ExitCode
+
+
+class Selected:
+    """What a wish selected, ready to be read.
+
+        directory    absolute; the one entered or said
+        where_list   the directories cases were found in, walk order,
+                     relative to 'directory'
+        case_db      where -> [case]      (exploration's CTestCase)
+        found        the selection itself (result_db, bookkeeper_db)
+    """
+    __slots__ = ("directory", "where_list", "case_db", "found")
+
+    def __init__(self, directory, where_list, case_db, found):
+        self.directory  = directory
+        self.where_list = where_list
+        self.case_db    = case_db
+        self.found      = found
+
+    def store_of(self, where):
+        """RETURN: Store, over the bookkeeper of that directory; None
+        where the selection has none for it."""
+        bookkeeper = self.found.bookkeeper_db.get(where)
+        return None if bookkeeper is None else Store(bookkeeper)
+
+    def whole(self, where):
+        """RETURN: str, the directory's absolute path."""
+        return os.path.normpath(os.path.join(self.directory, where))
+
+
+def select(wish, word_list, directory, directory_said_f, write, usage):
+    """
+    RETURN: [0] Selected, what the wish and the words name.
+                None, where they refuse to be read or the selection
+                cannot be made -- the refusal is written.
+            [1] E_ExitCode, REFUSED or FAULT where [0] is None; OK else.
+    """
+    found = entered(word_list, directory, write, usage)
+    if found is None: return None, E_ExitCode.REFUSED
+    directory, word_list = found
+    if not os.path.isdir(directory):
+        write("REFUSED: the directory '%s' does not exist" % directory)
+        write(usage)
+        return None, E_ExitCode.REFUSED
+    try:
+        inherited, ascent_fault_list = ascended_spec(directory)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return None, E_ExitCode.REFUSED
+    for fault in ascent_fault_list:
+        write(str(fault))
+    wish      = with_targets(wish, word_list)
+    directory = os.path.abspath(directory)
+    try:
+        label_view = view_at(directory)
+    except LabelFileError as error:
+        write("FAULT: %s" % error)
+        return None, E_ExitCode.FAULT
+    try:
+        if directory_said_f:
+            found = selection.of_directory(directory, wish, label_view,
+                                           inherited=inherited,
+                                           base_f=True)
+        else:
+            found = selection.of_tree(directory, wish, label_view,
+                                      base_f=True)
+        for fault in found.fault_tuple:  write("FAULT: %s" % fault)
+        for text in found.warning_tuple: write(text)
+    except SelectionError as error:
+        write("REFUSED: %s" % error)
+        return None, E_ExitCode.REFUSED
+    where_list, case_db = [], {}
+    for entry in found.case_list:
+        where = entry.directory
+        if where not in case_db:
+            where_list.append(where); case_db[where] = []
+        case_db[where].append(entry.case)
+    return Selected(directory, where_list, case_db, found), E_ExitCode.OK
+
+
+class DifferingKey:
+    """One (test, choice) whose stdout candidate is NOT equivalent to
+    its nominal -- with both texts, the compare setup that judged them,
+    and where they stand.
+
+    'aspirant_f' is B-14's standing, MEASURED off 'GOOD/' and not
+    remembered: True where no nominal stood, so the nominal text is the
+    opening mirror and a commit is a FIRST BLESSING (E-51/E-59), never
+    a merge.
+    """
+    __slots__ = ("where", "test", "choice", "subject_text",
+                 "nominal_text", "setup", "candidate_path",
+                 "nominal_path", "aspirant_f", "stderr_ignored_f", "stain")
+
+    def __init__(self, where, test, choice, subject_text, nominal_text,
+                 setup, candidate_path, nominal_path, aspirant_f=False,
+                 stderr_ignored_f=False, stain=None):
+        self.where = where;               self.test = test
+        self.choice = choice;             self.subject_text = subject_text
+        self.nominal_text = nominal_text; self.setup = setup
+        self.candidate_path = candidate_path
+        self.nominal_path   = nominal_path
+        #  THE TEST'S OWN DECLARATION (E-136): shown by the faces that
+        #  view the case, and what an accept's refusal is decided by.
+        self.stderr_ignored_f = stderr_ignored_f
+        #  THE BOOK'S STAIN on the case (a dict, or None): mentioned by
+        #  the faces that view it (E-141).
+        self.stain          = stain
+        self.aspirant_f     = aspirant_f
+
+    @property
+    def name(self):
+        """RETURN: str, 'test [choice]' as the eye reads it."""
+        return self.test if self.choice is None \
+               else "%s %s" % (self.test, self.choice)
+
+    @property
+    def label(self):
+        """RETURN: str, the name with its directory where the selection
+        spans more than one."""
+        return self.name if self.where in (".", "") \
+               else "%s/%s" % (self.where, self.name)
+
+
+def differing_keys(selected, write, refresh_f=False, stained_list=None):
+    """
+    RETURN: [0] list[DifferingKey], every selected (test, choice) whose
+                stdout candidate stands, whose nominal stands, and
+                which compare's engine judges NOT equivalent under the
+                choice's setup; walk order.
+            [1] int, how many selected cases had BOTH streams and were
+                judged -- so a caller can say 'n of m differ'.
+            [2] int, how many of the judged could NOT BE READ: a broken
+                region framing, said per case in one 'FAULT:' line that
+                names the side and the line. Such a case is no key --
+                there is nothing to show -- and it is not equivalent.
+
+    ASPIRANTS STAND FIRST in [0] (B-14), walk order within the group.
+
+    A case without a candidate (never run) or without a nominal
+    (never accepted) is not a difference to show; it is skipped, and
+    the skip is said once per kind.
+
+    'stained_list': where a list is given, it receives one
+    (label, stain, witness path, path as shown) for every judged case
+    that IS equivalent and STAINED -- the book holds a stain, or its
+    stderr spoke untolerated (then the witness path is given, None
+    else): a case that fails or is not run, and has no difference to
+    show (E-141). Such a case is no key.
+
+    'refresh_f': the caller WORKS on the candidate -- the merge accepts
+    what it shows -- so it REFRESHES as 'hwut.accept' does (E-40's
+    REFRESH intent): a recording older than the test's source is run
+    again, through the session, before it is judged, and one 'RUN:' line
+    says so. Without it, only a first acceptance's missing candidate is
+    made.
+    """
+    from ..engine.compare.api import (is_equivalent, Configuration,
+                                        RegionSyntaxError)
+    key_list  = []
+    judged_n  = 0
+    unread_n  = 0
+    no_run_n  = 0
+    no_nom_n  = 0
+    for where in selected.where_list:
+        result = selected.found.result_db.get(where)
+        store  = selected.store_of(where)
+        if result is None or store is None: continue
+        whole  = selected.whole(where)
+        language_setup = result.app_set.directory_spec.language_setup
+        config_db = {}
+        for name, app in result.app_set.app_db.items():
+            try:
+                config_db[name] = test_configuration_of(
+                                      app, whole, language_setup=language_setup)
+            except Exception:
+                config_db[name] = None
+        for case in selected.case_db[where]:
+            test, choice = case.source_file, case.choice
+            out_path  = store.bookkeeper.candidate_path(test, choice, "stdout")
+            good_path = store.bookkeeper.nominal_path(test, choice, "stdout")
+            if refresh_f or (not out_path.exists() and not good_path.exists()):
+                #  A FIRST ACCEPTANCE HAS NO CANDIDATE YET: 'hwut.run'
+                #  refuses to run what nobody accepted, so the candidate
+                #  is made HERE, the way 'hwut.accept' refreshes (E-40)
+                #  -- through provision, held, recorded and booked as a
+                #  run books it. UNDER 'refresh_f' EVERY CASE IS ASKED:
+                #  a candidate older than its source is made again
+                #  (E-122) -- MEASURED: the merge judged the old candidate
+                #  of an edited 'regression-1.py' and found nothing to do.
+                #  THE STEPS are 'session.refresh''s, shared with accept:
+                #  build where built, run where not current.
+                configuration = config_db.get(test)
+                #  AN UNENFORCEABLE CAP REFUSES THE RUN (exploration
+                #  R-80), through this door as through the plan's.
+                reason = confinement.refusal_of(result.app_set, test,
+                                                choice)
+                if reason is not None:
+                    for line in confinement.refusal_line_list(
+                                    test if choice is None
+                                    else "%s %s" % (test, choice), reason):
+                        write(line)
+                    continue
+                if configuration is not None:
+                    from ..engine.operations.session import refresh
+                    had_f = out_path.exists()
+                    try:
+                        done = asyncio.run(refresh(configuration, choice,
+                                                   store.bookkeeper))
+                        if "run" in done.step_tuple and had_f:
+                            write("RUN: %s%s   %s"
+                                  % (test, "" if choice is None
+                                     else " " + choice,
+                                     done.decision.because))
+                    except Exception as error:                 # noqa: BLE001
+                        #  SAID, NOT SWALLOWED: the case is counted below
+                        #  as never run, and here is why.
+                        write("FAULT: '%s %s' -- no first candidate could "
+                              "be made: %s: %s" % (test, choice,
+                              type(error).__name__, error))
+            if not out_path.exists():  no_run_n += 1; continue
+            try:
+                subject_text = io.open(str(out_path),  encoding="utf-8").read()
+            except (OSError, UnicodeDecodeError):
+                continue
+            configuration = config_db.get(test)
+            setup = None
+            if configuration is not None:
+                try:
+                    setup = configuration.choice_configuration(choice).compare
+                except (KeyError, AttributeError):
+                    setup = None
+            if setup is None: setup = Configuration()
+            aspirant_f = not good_path.exists()
+            if good_path.exists():
+                try:
+                    nominal_text = io.open(str(good_path), encoding="utf-8").read()
+                except (OSError, UnicodeDecodeError):
+                    continue
+            else:
+                #  NO NOMINAL STANDS: A FIRST ACCEPTANCE (E-60). The
+                #  session opens on the candidate's SHAPE with nothing
+                #  decided -- the mirror 'accept_first' builds -- and
+                #  every take lifts a decision out of it. Skipping the
+                #  case here was the old 'hwut.accept first' rule.
+                from .accept_first import opening_nominal
+                nominal_text = opening_nominal(setup, subject_text, force_f=False)
+                if nominal_text is None: no_nom_n += 1; continue
+            judged_n += 1
+            try:
+                equivalent_f = asyncio.run(is_equivalent(
+                                   setup, io.StringIO(subject_text),
+                                   io.StringIO(nominal_text)))
+            except RegionSyntaxError as error:
+                #  THE ONE FAULT A CALLER MUST CATCH (compare C-5): a
+                #  finding of this case, never the end of the face.
+                unread_n += 1
+                write(region_fault_line(
+                          test if choice is None
+                          else "%s %s" % (test, choice), error,
+                          str(out_path), str(good_path)))
+                continue
+            stain = store.bookkeeper.stain(test, choice)
+            if equivalent_f:
+                if stained_list is not None:
+                    witness = None
+                    if not stderr_ignored_f_of(configuration, choice):
+                        witness = store.bookkeeper.error_witness_path(
+                                      test, choice)
+                        try:               size = os.path.getsize(witness)
+                        except OSError:    size = 0
+                        if size == 0: witness = None
+                    if stain or witness is not None:
+                        name = test if choice is None \
+                               else "%s %s" % (test, choice)
+                        stained_list.append((
+                            name if where in (".", "")
+                            else "%s/%s" % (where, name), stain,
+                            None if witness is None else str(witness),
+                            None if witness is None
+                            else os.path.relpath(str(witness))))
+                continue
+            key_list.append(DifferingKey(where, test, choice, subject_text,
+                                         nominal_text, setup,
+                                         str(out_path), str(good_path),
+                                         aspirant_f=aspirant_f,
+                                         stderr_ignored_f=
+                                             stderr_ignored_f_of(
+                                                 configuration, choice),
+                                         stain=stain))
+    #  ASPIRANTS FIRST (B-14). A test the book knows and nobody has
+    #  accepted is playable, not runnable; its accept is the act that
+    #  makes it a member, and a person working a list wants the
+    #  first blessings before the changes. Walk order is kept WITHIN
+    #  each group, so nothing else is reordered.
+    key_list = [k for k in key_list if k.aspirant_f] \
+             + [k for k in key_list if not k.aspirant_f]
+    if no_run_n: write("NOTE: %d selected case(s) never ran -- no "
+                       "candidate stands" % no_run_n)
+    if no_nom_n: write("NOTE: %d selected case(s) never COMPLETED -- no "
+                       "'<hwut-end>' -- and cannot be accepted" % no_nom_n)
+    return key_list, judged_n, unread_n
+
+
+def region_fault_line(name, error, out_path="output", good_path="GOOD file"):
+    """RETURN: str, the one line saying that a case's region framing
+               cannot be read: the case, the FILE AT FAULT -- the output's
+               where the error's side is "subject", the GOOD file's else
+               -- and compare's own message with its line number."""
+    path = out_path if getattr(error, "side", None) == "subject" \
+           else good_path
+    if os.path.isabs(path): path = os.path.relpath(path)
+    return "FAULT: '%s' -- broken region framing in '%s': %s" \
+           % (name, path, error)
+
+
+#  'choose' moved to 'services/lib/checklist.py' (E-67): one menu,
+#  one behaviour, shared by every face that offers a list.

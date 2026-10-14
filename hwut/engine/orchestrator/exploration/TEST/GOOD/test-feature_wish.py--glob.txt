@@ -1,0 +1,36 @@
+engine.comparison.csp.solve    True
+engine.comparison.csp          True
+engine.comparison              True
+engine                         True
+engine.*                       True
+engine.*.csp                   True
+engine.**                      True
+**                             True
+**.solve                       True
+solve                          True
+csp                            True
+comparison                     True
+**.csp.**                      True
+engine.**.solve                True
+engine.**.csp.solve            True
+engine.{comparison,x}.csp      True
+{display,engine}.**            True
+{a.b,engine}                   True
+e*.c*.csp                      True
+engine.?omparison              True
+display                        False
+engine.csp                     False
+engine.comparison.solve        False
+*                              True
+
+--- braces expanded ---
+a                ('a',)
+{a,b}            ('a', 'b')
+{a,b}.{c,d}      ('a.c', 'a.d', 'b.c', 'b.d')
+x.{a,{b,c}}.y    ('x.a.y', 'x.b.y', 'x.c.y')
+{a.b,c}          ('a.b', 'c')
+
+--- braces unbalanced ---
+{a,b     REFUSED: '{a,b': a '{' is not closed
+a}       REFUSED: 'a}': a '}' without its '{'
+<hwut-end>

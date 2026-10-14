@@ -1,0 +1,69 @@
+
+--- a test whose features another test here still links to: the features are copied, the old stay ---
+test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-pair.sh)   links ['line-pairing', 'missing-side']
+    feature 'line-pairing' -> TEST
+    map: 'engine.cmp.core.line-pairing' now means engine.cmp.line-pairing
+    feature 'missing-side' -> TEST, kept in the source: still linked there
+    map: 'engine.cmp.missing-side' published
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         missing-side { }
+    |     }
+    | }
+engine/compare/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         whole-page { title = "A whole page is judged." }
+    |         line-pairing { title = "Two streams are aligned line by line." }
+    |         missing-side { }
+    |     }
+    | }
+hwut-feature-map.conf:
+    | map {
+    |     "engine.cmp.core.line-pairing" = "engine.cmp.line-pairing"
+    |     "engine.cmp.core.missing-side" = "engine.cmp.core.missing-side"
+    |     "engine.cmp.whole-page"        = "engine.cmp.whole-page"
+    |     "engine.cmp.missing-side" = "engine.cmp.missing-side"
+    | }
+
+--- the last test linking to a feature: the feature follows, its published id with it ---
+test_moved(engine/compare/core/TEST -> engine/compare/TEST, test-side.sh)   links ['missing-side']
+    feature 'missing-side' stands in the target alike: taken out of the source
+    map: 'engine.cmp.core.missing-side' retired
+engine/compare/core/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |     }
+    | }
+hwut-feature-map.conf:
+    | map {
+    |     "engine.cmp.core.line-pairing" = "engine.cmp.line-pairing"
+    |     "engine.cmp.core.missing-side" = none
+    |     "engine.cmp.whole-page"        = "engine.cmp.whole-page"
+    |     "engine.cmp.missing-side" = "engine.cmp.missing-side"
+    | }
+
+--- into a directory without a feature file ---
+test_moved(engine/compare/TEST -> engine/plain/TEST, test-pages.sh)   links ['whole-page']
+    'hwut-features.conf' written in the target directory
+    feature 'whole-page' -> TEST
+    map: 'engine.cmp.whole-page' now means engine.plain.whole-page
+engine/plain/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         whole-page { title = "A whole page is judged." }
+    |     }
+    | }
+hwut-feature-map.conf:
+    | map {
+    |     "engine.cmp.core.line-pairing" = "engine.cmp.line-pairing"
+    |     "engine.cmp.core.missing-side" = none
+    |     "engine.cmp.whole-page"        = "engine.plain.whole-page"
+    |     "engine.cmp.missing-side" = "engine.cmp.missing-side"
+    | }
+
+--- a test that links to nothing ---
+test_moved(engine/plain/TEST -> engine/compare/core/TEST, test-plain.sh)   links []
+    nothing to do
+<hwut-end>

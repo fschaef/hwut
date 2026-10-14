@@ -1,0 +1,47 @@
+-F scroll                                     2 run(s)
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+-F display                                    3 run(s)
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+    display/game/TEST/test-view.sh zoomed
+-F display.game.zoom                          1 run(s)
+    display/game/TEST/test-view.sh zoomed
+-F display.game.scroll -F console             3 run(s)
+    console/TEST/test-echo.sh None
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+-F engine.**                                  3 run(s)
+    engine/comparison/csp/TEST/test-solve.sh None
+    engine/comparison/other/TEST/test-plain.sh None
+    engine/orchestrator/scheduler/TEST/test-order.sh None
+-F **.plain                                   1 run(s)
+    engine/comparison/other/TEST/test-plain.sh None
+-F *                                          7 run(s)
+    console/TEST/test-echo.sh None
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+    display/game/TEST/test-view.sh zoomed
+    engine/comparison/csp/TEST/test-solve.sh None
+    engine/comparison/other/TEST/test-plain.sh None
+    engine/orchestrator/scheduler/TEST/test-order.sh None
+-F nothing-like-it                            0 run(s)
+-F display -k gui                             2 run(s)
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+
+--- a run linked to nothing is never wanted ---
+-F engine.orchestrator.**                     1 run(s)
+    engine/orchestrator/scheduler/TEST/test-order.sh None
+-k all                                        7 run(s)
+    console/TEST/test-echo.sh None
+    display/game/TEST/test-view.sh fast
+    display/game/TEST/test-view.sh plain
+    display/game/TEST/test-view.sh zoomed
+    engine/comparison/csp/TEST/test-solve.sh None
+    engine/comparison/other/TEST/test-plain.sh None
+    engine/orchestrator/scheduler/TEST/test-order.sh None
+
+--- narrowing: -F and the rest of the wish stand together ---
+--fail --feature "display"   asks features: True
+<hwut-end>

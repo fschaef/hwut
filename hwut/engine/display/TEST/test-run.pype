@@ -1,0 +1,183 @@
+#! /usr/bin/env hwut.pype
+# SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+# ---------------------------------------------------------------------------
+# THE FLOW DIGEST of a parallel 'hwut.run'.
+#
+# THIS SCRIPT IS PART OF THE ORACLE, not a tidy-up on the way to the
+# terminal: what the GOOD file holds is what this filter made of the
+# stream. A defect here is a defect in the oracle, and a digest that
+# swallowed a verdict would bless a broken subject
+# (engine/display/DISCUSSIONS/todo-2-pype-is-part-of-the-oracle.txt).
+#
+# THE OUTPUT IS DETERMINISTIC. Launches are subject to race, so the
+# flow's ORDER is not a fact about the subject and must not be
+# recorded as one. The lines are collected, and written SORTED.
+#
+#     collect -> EXPAND -> sort on (directory, app, choice)
+#             -> RE-ELIDE -> print
+#
+# EXPANSION COMES FIRST. A live flow line elides against ARRIVAL
+# order: ':/:' means 'the same application as the line above'. Sorting
+# lines still in that form would attach a choice to whichever run
+# happened to sort above it. So each line is restored to its full key
+# before anything is compared -- and only then, having a total order,
+# may the digest elide again. ONLY A WRITER THAT SORTS MAY ELIDE
+# (disc-8), which is why the live flow's elision and this one are
+# different acts upon the same notation.
+#
+# WHAT IS MASKED, AND WHY IT IS MASKED HERE: the timing column, the
+# job column and machine-chosen paths are facts about the machine and
+# the morning, not about the subject. All three are swallowed in THIS
+# file -- deterministicalization in two places, a shell filter and a
+# pype, is one place too many to be wrong.
+#
+# WHAT IS NOT MASKED: the badge, the name, the phrase, the verdict.
+# Masking the clock is deterministicalization; masking a verdict is
+# blindness.
+# ---------------------------------------------------------------------------
+on: <bof> => {
+    import re
+
+    run_list  = []          # (directory, app, choice, badge, tail)
+    standing  = 0
+    peak      = 0
+    peak_f    = False       # set by 'test-run--jobs-budget.pype'
+    closed_f  = False       # the first ruler has passed
+    last_dir  = None        # the arrival-order elision being expanded
+    last_app  = None
+    last_badge = ""         # the badge a blank one repeats
+
+    #  'END  ' JOINED THE FLOW BADGES and this filter did not hear of
+    #  it. MEASURED: every 'END' line fell through 'not in
+    #  BADGE_TUPLE' and was printed RAW, above the digest, unsorted --
+    #  and nothing decremented 'standing', so 'peak standing at once'
+    #  read 9 where two runs stood, and two strategies' digests
+    #  disagreed. A FILTER THAT IS PART OF THE ORACLE MUST KNOW EVERY
+    #  BADGE THE DISPLAY CAN WRITE; an unknown one is not ignored, it
+    #  is mis-parsed.
+    BADGE_TUPLE = ("START", "END", "DONE", "SKIP", "DIR", "FRAME",
+                   "ROLL", "TREE", "FAULT", "NOTE")
+    RUN_BADGE_TUPLE = ("START", "END", "DONE", "SKIP")
+
+    def masked(text):
+        text = re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
+        text = re.sub(r"^\s*\d+\.\d+s\s+", "", text)
+        text = re.sub(r"^\|\d+\|\s+", "", text)
+        #  THE COUNT TAIL, '  ||n' (services E-97): how many runs stood
+        #  when this one's event happened is the scheduler's morning,
+        #  not the subject's.
+        text = re.sub(r"\s+\|\|\d+$", "", text)
+        #  THE DOTTED FILL IS NO FACT ABOUT THE SUBJECT: its length
+        #  is the width less the body, and the body carries the LIVE
+        #  elision mark, which arrival order decides. Two runs of one
+        #  suite would differ in nothing but a count of dots.
+        text = re.sub(r"\.{2,}", "..", text)
+        #  THE WALL CLOCK of the closing blocks: how long the suite
+        #  took is a fact about the machine and the morning -- the
+        #  DIRECTORIES bar's 'hh:mm:ss' and the RESULTS line's
+        #  seconds alike.
+        text = re.sub(r"\d+\.\d+ \[sec\]", "s.ss [sec]", text)
+        return re.sub(r"\d{2}:\d{2}:\d{2}", "hh:mm:ss", text)
+
+    def consume_run(text, badge):
+        """One flow line naming a run, into 'run_list'.
+
+        NO DIRECTORY COLUMN: the line is 'BADGE app [choice] .. [OK]'
+        and ':' stands where the APPLICATION repeats. The directory is
+        the DIR band's to say, and is carried from the last one seen.
+        'badge' is passed in because an elided one is blank on the
+        line and only the reader knows what it repeats.
+        """
+        global standing, peak, last_app
+        field = text.split()
+        if field and field[0] == badge: field = field[1:]
+        #  THE PEAK IS COUNTED UPON PRINT, the same law the display's
+        #  '||n' follows: how many announcements stand OPEN ON THE
+        #  SCREEN, this line's own included. 'START' opens one, 'END'
+        #  closes the one it opened, and 'DONE' -- which opened none --
+        #  stands for the length of its own line and no longer.
+        #  'SKIP' never ran and is no working job; it counts nothing.
+        #  SO THIS NUMBER IS THE PARALLELISM THE TRACE SHOWS, not the
+        #  budget that bounded it and not the process table.
+        if   badge == "START": standing += 1; peak = max(peak, standing)
+        elif badge == "END":   standing  = max(standing - 1, 0)
+        elif badge == "DONE":  peak      = max(peak, standing + 1)
+        mark = field[0] if field else ""
+        if mark == ":": app, rest = last_app, field[1:]
+        else:           app, rest = mark,     field[1:]
+        last_app = app
+        head, dot, tail = " ".join(rest).partition("..")
+        run_list.append((last_dir, app, head.strip(), badge,
+                         (dot + tail).strip()))
+}
+
+on: <bol> <"[A-Z]*"> => {
+    text  = masked(pype.line())
+    field = text.split()
+    badge = field[0] if field else ""
+    if badge in BADGE_TUPLE: last_badge = badge
+    if closed_f or badge not in BADGE_TUPLE:
+        print(text)
+    elif badge == "DIR":
+        #  THE BAND NAMES THE DIRECTORY ALONE. It used to read
+        #  'DIR  NICK = path'; no nickname is derived any more, so
+        #  the whole of the line after the badge is the path.
+        last_dir = field[1] if len(field) > 1 else last_dir
+        last_app = None
+        #  A BAND IS NOT A RUN. Under parallel directories the band is
+        #  reprinted at every switch (the display's rule: the marker
+        #  comes when the directory CHANGES); the digest, which is
+        #  about WHAT RAN, keeps one row per directory.
+        band_row = (last_dir, "", "", badge, "")
+        if band_row not in run_list: run_list.append(band_row)
+    elif badge not in RUN_BADGE_TUPLE:
+        last_app = None
+        print(text)
+    else:
+        consume_run(text, badge)
+}
+
+on: <else> => {
+    #  Everything that does not open with a badge. TWO KINDS reach
+    #  here: the flow's blank lines, and A LINE WHOSE BADGE WAS
+    #  ELIDED -- a badge that repeats prints as blanks, so every run
+    #  after the first of a block opens with spaces and never matches
+    #  the badge rule above.
+    text = masked(pype.line())
+    if not closed_f and text[:5].strip() == "" and text.strip() \
+       and last_badge in RUN_BADGE_TUPLE:
+        consume_run(text, last_badge)
+    elif closed_f or pype.line().strip():
+        print(text)
+}
+
+on: <bol> "=====" => {
+    if not closed_f:
+        closed_f = True
+        print("FLOW DIGEST (sorted; the launch order is no fact of the")
+        print("             subject, and is not recorded) {")
+        seen_dir = None
+        seen_app = None
+        for directory, app, choice, badge, tail in sorted(run_list):
+            #  ':' STANDS ONLY WHERE A CHOICE IDENTIFIES THE LINE. A
+            #  choiceless run elided to ':' would name nothing at all
+            #  -- the mark says 'the same application', and with no
+            #  choice beside it nothing tells one line from the next.
+            repeat_f = ((directory, app) == (seen_dir, seen_app)
+                        and bool(choice))
+            seen_dir, seen_app = directory, app
+            if badge == "DIR":
+                #  The band names the directory and opens the block;
+                #  it elides nothing.
+                seen_app = None
+                print(("    %-5s %s" % (badge, directory)).rstrip())
+                continue
+            shown = ":" if repeat_f else app
+            line  = "    %-5s %-24s %s" % (badge, shown, choice)
+            line  = line.rstrip()
+            print("%s %s" % (line, tail) if tail else line)
+        if peak_f: print("    peak standing at once: %d" % peak)
+        print("}")
+        print("")
+    print(masked(pype.line()))
+}

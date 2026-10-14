@@ -1,0 +1,37 @@
+== a directory that does not exist ==
+STATUS: 2
+STDOUT {
+    REFUSED: the directory 'nowhere-such-dir' does not exist
+    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+                    [--glob <target>]... [--exclude <target>]... [--dir <glob>]...
+                    [--exclude-dir <glob>]... [--wishlist <file>]...
+                    [-l|--label <expr>] [--language=<name>]...
+                    [--faster-than=<sec>] [-F|--feature <id-glob>]...
+                    [-k|--keys <expr>] [<file-glob> [choice-glob]...] [--no-store]
+                    [--timing] [--jobs=<n>] [--strategy=<name>] [--deterministic]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--show-timing] [--show-jobs] [--show-details]
+                    [--no-failure-summary] [--brief] [--log <file>]
+                    [--directory=<path>]
+}
+== an option nobody knows ==
+STATUS: 2
+STDOUT {
+    REFUSED: 'hwut.run' does not take: --frobnicate -- did you mean '-F'?
+}
+== tiers beside one another ==
+STATUS: 2
+STDOUT {
+    REFUSED: choose one of -v/--verbose, --quiet, --silent
+}
+== colour beside no-colour ==
+STATUS: 2
+STDOUT {
+    REFUSED: '--colour' beside '--no-colour' can want nothing
+}
+== jobs without a number ==
+STATUS: 2
+STDOUT {
+    REFUSED: '--jobs' takes a positive integer, not 'many'
+}
+<hwut-end>

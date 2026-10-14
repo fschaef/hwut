@@ -1,0 +1,270 @@
+"""SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE
+       THE INTERACTIVE ACCEPT -- 'hwut.accept.interactive': the cases a
+       wish selects whose candidate differs from its nominal, shown one
+       by one, edited by hand where wanted, and ACCEPTED on commit --
+       through accept's own door, books and all (E-51).
+
+           hwut.accept.interactive [<wish>] [<test> [<choice>]] ...
+                                   [--directory=<path>] [--all] [--force]
+                                   [--console] [-y] [--width N] [--plain]
+                                   [--editor E] [--max-rounds N]
+
+DESCRIPTION
+       'hwut.accept' refuses a case whose nominal stands ('merge
+       required') unless '--force' says: overwrite the pole with what
+       the run printed. THIS face is the third answer: look at the
+       difference, take the candidate's line here, the nominal's
+       there, edit, and commit what YOU decided. The commit IS the
+       acceptance: 'store.accept', the register, the book's
+       acceptance note -- the same three writes 'hwut.accept' makes,
+       so the three records agree (E-41).
+
+       THE CANDIDATE STAYS AS THE RUN LEFT IT. What was printed is
+       evidence; what was accepted is the nominal. A partial
+       acceptance -- three of five differing lines taken -- leaves a
+       candidate that still differs, and the next 'hwut.run' says so:
+       that is the story of a partial accept, not a bug in it.
+
+       WHAT IS SELECTED is measured, not remembered ('services/
+       _cases.py'): compare's engine judges each candidate against
+       its nominal under the choice's own setup, now -- and the
+       candidate is REFRESHED first, as 'hwut.accept' refreshes: one
+       older than its test's source is run again, one 'RUN:' line
+       saying so (E-122). More than one
+       differing case: the CHECKLIST first; '--all'/'--force' skip it.
+       THE CHECKLIST IS RE-ENTERED after every round and its '[X]'
+       says HANDLED -- what this session has already worked, and will
+       not offer again -- not 'selected'.
+
+       ASPIRANTS STAND FIRST (B-14). A test the book knows with no
+       nominal is an ASPIRANT -- playable, not runnable -- and this
+       door is where it becomes a member. It opens on the mirror
+       'accept_first' builds, the banner says 'aspirant', and what the
+       report says of it is BLESSED, never accepted: there was no pole
+       to reconcile with (E-51/E-59).
+
+       PER CASE, ONE SESSION: the view ('-y' two columns, subject
+       LEFT, nominal RIGHT), then [e]dit / [c]ommit / [q]uit. Quit
+       leaves the case exactly as it stood and goes on to the next.
+
+       '--console' asks for the line-based session; without it, where
+       the screen cannot run -- no terminal, no 'prompt_toolkit' -- the
+       line-based session runs and ONE note says why (E-79).
+
+       THE SCREEN (E-86..E-90): two columns, 'OUTPUT of <test> <choice>'
+       on blue over what the program printed, 'GOOD' on green over the
+       nominal; the driven title brighter. Every line wears its
+       elements' colours; what OUTPUT gets wrong stands on RED, what
+       GOOD holds against it in the verdict's blue pen. At the foot the
+       keys: '<space>' starts a range, '<enter>' copies it to GOOD, 'd'
+       removes from GOOD (the marked lines, or the whole region the
+       cursor stands in -- '##! unaccepted' and its '####' with it), 'u'
+       undoes, 'r' redoes, 'R' resets to how GOOD stood when the screen
+       opened, '<tab>' changes pane, 's' SAVES GOOD as it stands and
+       leaves, 'q' leaves WITHOUT saving -- each asks first, and 'S' and
+       'Q' do the same unasked; Ctrl-C is 'Q'; 'z' asks compare to re-align;
+       'e' makes GOOD an editable text and <F6> ('c-e') opens it in
+       $EDITOR; <F5> opens the TOLERANCE PANE -- the tolerance in memory,
+       with proposals under each key, tried on <F5>, <Esc> discards
+       (intend 21); 'c-z'/'c-y' undo and redo;
+       '<F1>' the whole table; '<number>g' goes to that OUTPUT line
+       (the gutter numbers them; GOOD is aligned, so one gutter tells
+       where both stand); 't' opens the TOLERANCE REPORT -- the
+       analogies line pair by line pair with where each binding
+       originates, the equivalence patterns that matched, the
+       constraints that failed. GOOD's title counts the OUTPUT lines
+       still standing against it; the foot warns where stderr spoke,
+       before the merge is begun. 'w'/'b' step through the line's elements
+       that can vary or differ, and the foot then says what the one
+       stepped on is -- a number's tolerated interval, computed as
+       compare computes it.
+
+       ON A TERMINAL the keyed tier runs and F1 prints the keymap --
+       the table itself, so it cannot go stale. Both panes hold ONE
+       viewport, so they stay level however far down the author goes;
+       'h'/'l' move the view sideways; '/' and '?' open a search line
+       that the keymap yields to while it is open. A subject section
+       already taken is SPENT: it stands on a grey-green band, no cursor
+       reaches it and no range intersects it (E-63). '--plain' reaches
+       this tier too.
+
+       REFUSED AT 's', with 'hwut.accept's own words: a stained
+       choice (a test that switches results has no pole), a text
+       without the closing token (never COMPLETED, R-70), a choice
+       whose stderr spoke and the test's block does not declare it
+       ignored ('tolerance { stderr_ignored = true }').
+
+       UI ON STDERR, like every session face; stdout stays clean.
+
+       EXIT: OK where every chosen case was accepted or quit on
+       purpose; FAULT where a commit was refused; EMPTY where the wish
+       selected nothing; REFUSED where the words cannot be read.
+______________________________________________________________________________
+"""
+import sys
+from . import engine
+from ..cmdline import parse_or_refuse
+from .engine import merge_text, MERGE_ROUND_MAX  # noqa: F401 (E-51's names)
+import argparse
+
+from ....engine.orchestrator.plan.wish import parse_wish, WishError
+from ..._cases import (select,
+                                                      differing_keys)
+from ..checklist import Checklist
+from ..._core import (add_setup_arguments,
+                                                      setup_from_arguments)
+from ..._exit import E_ExitCode
+
+def keys_of(selected, write, stained_list=None):
+    """
+    RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
+            'differing_keys' with the candidates REFRESHED first -- built
+            where the application is built, run where the recording is
+            not current ('session.refresh'; E-122) -- and how many were
+            judged.
+
+    A face that shows or merges a candidate works on it, so it must hold
+    a current one: a stale candidate shown as the run's is the lie E-40
+    forbids.
+
+    'stained_list' receives the cases that are equivalent and whose
+    stderr spoke untolerated ('differing_keys').
+    """
+    return differing_keys(selected, write, refresh_f=True,
+                          stained_list=stained_list)
+
+
+USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
+         "[--directory=<path>] [--all] [--force] [--console] [-y] "
+         "[--width N] [--plain] [--editor E]")
+
+
+#  What a value IS (E-81): True, a path follows; a tuple, the words.
+ARG_DB = {"--directory": True, "--editor": True}
+
+
+def main(argv=None):
+    """
+    RETURN: E_ExitCode, per the module purpose.
+    """
+    if argv is None: argv = sys.argv[1:]
+    err = lambda t: sys.stderr.write(t + "\n")
+    try:
+        wish, rest_list = parse_wish(list(argv))
+    except WishError as error:
+        err("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+
+    parser = argparse.ArgumentParser(
+        prog="hwut.accept.interactive",
+        #  NO ABBREVIATION (E-81): '--forc' was measured to RUN as
+        #  '--force'; a word not in the table is refused, and suggested.
+        allow_abbrev=False,
+        description="Show each differing case, edit, and ACCEPT on "
+                    "commit -- through hwut.accept's own door.")
+    parser.add_argument("word", nargs="*",
+                        help="a test, a test and a choice, any wish word")
+    parser.add_argument("--directory", default=None,
+                        help="ONE test directory (default: the tree "
+                             "below the cwd)")
+    parser.add_argument("--all", action="store_true",
+                        help="every differing case, no checklist")
+    parser.add_argument("-f", "--force", action="store_true",
+                        help="every differing case, no checklist, the "
+                             "subject taken whole -- for scripts")
+    parser.add_argument("--plain", action="store_true",
+                        help="no colors, even on a tty")
+    parser.add_argument("--console", action="store_true",
+                        help="the line-based session, not the screen")
+    parser.add_argument("-y", "--side-by-side", action="store_true",
+                        help="two columns: subject LEFT, nominal RIGHT")
+    parser.add_argument("--width", type=int, default=None)
+    parser.add_argument("--editor", default=None,
+                        help="editor command (default: $VISUAL, $EDITOR, "
+                             "'vi')")
+    parser.add_argument("--max-rounds", type=int, default=MERGE_ROUND_MAX)
+    add_setup_arguments(parser)
+    if "--help" in argv or "-h" in argv:
+        from ..._core import man_page
+        print(man_page(parser.prog, parser.format_help(), usage=USAGE))
+        return E_ExitCode.OK
+    arguments, completion_f = parse_or_refuse(parser, rest_list, err, ARG_DB)
+    if completion_f:      return E_ExitCode.OK
+    if arguments is None: return E_ExitCode.REFUSED
+    setup_said_f = any(getattr(arguments, n, None) is not None
+                       for n in ("numeric", "pattern", "nothing"))
+    setup = setup_from_arguments(arguments)
+
+    #  '--directory=<path>' as every accept face spells it, too.
+    selected, code = select(wish, arguments.word,
+                            arguments.directory or ".",
+                            arguments.directory is not None, err, USAGE)
+    if selected is None: return code
+    if not selected.where_list:
+        err("EMPTY: the wish selects no case")
+        return E_ExitCode.EMPTY
+    stained_list = []
+    key_list, judged_n, unread_n = keys_of(selected, err, stained_list)
+    #  A CASE THAT FAILS ON STDERR ALONE (E-141): nothing of it can be
+    #  accepted, and it is said rather than passed over.
+    from ..._accept_common import stain_line_list
+    for label, stain, witness, shown in stained_list:
+        for line in stain_line_list(label, stain, witness, shown): err(line)
+    if not key_list and unread_n:
+        return E_ExitCode.FAULT
+    if not key_list and stained_list:
+        err("nothing to accept: %d case(s) judged; %d stained -- an "
+            "accept does not lift a stain"
+            % (judged_n, len(stained_list)))
+        return E_ExitCode.FAULT
+    if not key_list:
+        err("nothing to accept: %d case(s) judged, every candidate "
+            "equivalent to its nominal" % judged_n)
+        return E_ExitCode.OK
+    editor_argv = None
+    if arguments.editor is not None:
+        import shlex
+        editor_argv = shlex.split(arguments.editor)
+
+    #  THE ENGINE IS SHARED (E-59): 'hwut.accept' reaches the same loop
+    #  where a nominal stands. Neither door owns it, so a rule about
+    #  promotion cannot hold at one and not the other.
+    adapter = engine.adapter_for(editor_argv=editor_argv,
+                                 plain_f=arguments.plain,
+                                 side_by_side_f=arguments.side_by_side,
+                                 width=arguments.width,
+                                 console_f=arguments.console
+                                           or arguments.force,
+                                 err=err)
+    #  ONE CASE PER ASK, and the checklist remembers what was handed
+    #  over. The loop ends on None and on nothing else.
+    checklist = Checklist(key_list, err, sys.stdin.readline,
+                          label_of=lambda key: key.label,
+                          all_f=arguments.all or arguments.force)
+    chosen_n = 0
+    accepted_list, refused_list, left_list = [], [], []
+    while True:
+        key = checklist.pick()
+        if key is None: break
+        chosen_n += 1
+        accepted, refused, left = engine.run_sessions(
+            [key], selected.store_of, adapter, err,
+            setup=setup if setup_said_f else None,
+            max_round_n=arguments.max_rounds)
+        accepted_list += accepted
+        refused_list  += refused
+        left_list     += left
+    if not chosen_n:
+        err("NOTE: nothing accepted")
+        return E_ExitCode.OK
+    return engine.report(accepted_list, refused_list, left_list,
+                         chosen_n, err)
+
+
+if __name__ == "__main__":
+    #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
+    from ..._exit import guarded
+    sys.exit(guarded("hwut.accept.interactive", main))

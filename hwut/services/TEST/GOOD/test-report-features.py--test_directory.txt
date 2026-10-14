@@ -1,0 +1,33 @@
+
+--- called inside engine/compare/core/TEST ---
+    FEATURES . (eng.cmp.core)                      0 proven, 2 failing, 2 unproven
+        [FAILING]  eng.cmp.core.line-pairing -- Two streams are aligned line by line.
+            published   pairing
+            keys        algorithm, engine-part, heavy
+            [PASS] test-pair.sh [plain]
+            [FAIL] test-pair.sh [gap]
+            see          ../README.txt#pairing
+            see          https://example.org/pairing
+            see          ../absent.txt
+        [FAILING]  eng.cmp.core.missing-side -- A line present on one side only is shown whole.
+            keys        algorithm, engine-part
+            [FAIL] test-pair.sh [gap]
+        [UNPROVEN] eng.cmp.core.untested
+            keys        algorithm, engine-part
+        [UNPROVEN] eng.cmp.core.not-numbered
+            keys        algorithm, engine-part
+    
+    RETIRED                                                              1 retired
+        [RETIRED]  once-published
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            test-stray.sh   'no-such'
+        NONSENSE? test run, links to no feature => hwut.help
+            test-pair.sh [odd]
+        claim, names a document that does not stand
+            eng.cmp.core.line-pairing   '../absent.txt'
+        statement, not read
+            hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+status: OK
+<hwut-end>

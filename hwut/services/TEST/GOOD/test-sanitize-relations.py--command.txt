@@ -1,0 +1,76 @@
+
+--- relate: a moved directory ---
+hwut.sanitize relate engine/plain/core
+    done: relate engine/plain/core
+        engine/compare: childs, 'core' taken out
+        engine/plain: childs, 'core' entered, carried with its key
+status: OK
+
+--- relate: again ---
+hwut.sanitize relate engine/plain/core
+    nothing to do: relate engine/plain/core -- the files and the map agree with the directories
+status: OK
+
+--- relate: the features it holds ---
+hwut.sanitize relate engine/plain/core/TEST
+    done: relate engine/plain/core/TEST
+        map: 'engine.cmp.core.line-pairing' now means engine.plain.core.line-pairing
+        map: 'engine.cmp.core.missing-side' now means engine.plain.core.missing-side
+status: OK
+
+--- relate: no such directory ---
+hwut.sanitize relate engine/nowhere
+    nothing to do: relate engine/nowhere -- nothing stands there
+status: OK
+
+--- unrelate: a dead entry ---
+hwut.sanitize unrelate engine old
+    done: unrelate engine old
+        engine: childs, 'old' taken out
+status: OK
+
+--- unrelate: again ---
+hwut.sanitize unrelate engine old
+    nothing to do: unrelate engine old -- 'old' is not listed there
+status: OK
+
+--- unrelate: a directory that stands ---
+hwut.sanitize unrelate engine compare
+    REFUSED: unrelate engine compare -- 'compare' stands below 'engine', or was moved and is carried elsewhere
+status: FAULT
+
+--- unrelate: without the name ---
+hwut.sanitize unrelate engine
+    REFUSED: 'unrelate' takes <dir> <name>
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, move, forget, book, remark, relate, unrelate, retire, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+status: REFUSED
+
+--- retire: an id whose feature stands ---
+hwut.sanitize retire . engine.cmp.whole-page
+    REFUSED: retire . engine.cmp.whole-page -- 'engine.cmp.whole-page' means engine.cmp.whole-page, which stands
+status: FAULT
+
+--- retire: an id whose feature is gone ---
+hwut.sanitize retire . old-name
+    done: retire . old-name
+        map: 'old-name' retired
+status: OK
+
+--- retire: again ---
+hwut.sanitize retire . old-name
+    nothing to do: retire . old-name -- 'old-name' is retired, or not in the map
+status: OK
+
+--- retire: an id nobody published ---
+hwut.sanitize retire . nobody
+    nothing to do: retire . nobody -- 'nobody' is retired, or not in the map
+status: OK
+
+--- retire: without the id ---
+hwut.sanitize retire .
+    REFUSED: 'retire' takes <dir> <published id>
+    usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
+           commands: remove, move, forget, book, remark, relate, unrelate, retire, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+status: REFUSED
+<hwut-end>

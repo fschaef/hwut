@@ -1,0 +1,121 @@
+
+--- --help ---
+$ hwut.plan --help
+    NAME
+        hwut.plan -- the TEST PLAN the framework intends
+
+    USAGE
+        hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
+                  [--glob <target>]... [--exclude <target>]...
+                  [--dir <glob>]... [--exclude-dir <glob>]...
+                  [--wishlist <file>]... [-l|--label <expr>]
+                  [--language=<name>]... [--faster-than=<sec>]
+                  [-F|--feature <id-glob>]... [-k|--keys <expr>]
+                  [<file-glob> [choice-glob]...] [--directory=<path>]
+
+    DESCRIPTION
+        hwut.plan           the plan of everything the directory offers:
+                            the nodes (TEST, BUILD, SESSION), the links
+                            ('x -> y' ordering, 'w ==> t' supports), and
+                            the exclusion sets
+
+    SELECTION -- the wish; an absent keyword asks nothing
+        --fail              the last recorded run's verdict was negative
+        --pass              the last recorded run's verdict was positive
+        --since=<point>     the last recorded run lies AT or AFTER the
+                            point; a case never run is not wanted
+        --until=<point>     the last recorded run lies BEFORE the point,
+                            and a case NEVER RUN is wanted too -- the
+                            stale wish
+        --exclude <target>  a target NOT wanted, whatever else selects it
+        --dir <glob>        A DIRECTORY WANTED, and every run in it. The
+                            glob matches a path relative to the run's root
+                            ('messaging/*') or a BARE NAME matching any
+                            path COMPONENT -- the same matching
+                            '--exclude-dir' uses. SEVERAL ARE A UNION
+                            among themselves and NARROW against the rest
+                            of the wish: '--dir a --fail' is 'the failing
+                            runs under a' (disc-10). A DIRECTORY-RELATED
+                            face reads the same field as its SUBJECT
+                            rather than as a filter.
+        --exclude-dir <glob>
+                            a directory not wanted, and every directory
+                            below it; a bare name matches any component
+                            WHERE '--dir' AND '--exclude-dir' MEET, grep's
+                            rule decides: they are read in command-line
+                            order and the LAST ONE MATCHING a directory
+                            decides; where none matches, the directory is
+                            wanted unless the FIRST of them is a '--dir'.
+                            '--exclude-dir a --dir a/keep' keeps 'a/keep'.
+        --wishlist <file>   the file's lines as targets, '#' comments and
+                            blanks dropped, './' meaning the file's own
+                            directory
+        --glob <target>     a target: a file name, or a file name and a
+                            choice name with one blank between, either
+                            carrying fnmatch's '*', '?' and '[ ]':
+                                --glob "test-*.py quick-[0-2]"
+                            may stand several times; the globs are OR'ed
+                            among themselves
+        -l, --label <expr>  the runs the label expression names ('AND',
+                            'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
+                            universe); a union among its labels, narrowing
+                            against the rest; absent, 'meta' is silent --
+                            which a LITERAL target overrides, and a glob
+                            does not (it warns instead)
+        --language=<name>   the runs of test applications of that language;
+                            several are a union, narrowing against the rest
+        -F, --feature <id-glob>
+                            the runs linked to the features the glob names:
+                            over full ids by key names -- '*' one key, '**'
+                            any depth, '{a,b}' alternatives, a bare key is
+                            '**.key'; a component brings its subtree; an id
+                            the feature map publishes is resolved through
+                            it. Several are a union, narrowing against the
+                            rest
+        -k, --keys <expr>   the runs linked to features whose effective keys
+                            satisfy the expression ('AND', 'OR', 'NOT',
+                            brackets; ',' is 'OR'); a key flows down from the
+                            claims above a feature, never up
+        --faster-than=<seconds>
+                            the runs this machine last saw finish faster
+                            than that; one this machine never saw is not
+                            wanted
+        <app> [<choice>...] the short form: bare words are targets, the
+                            first naming files, each further one a
+                            choice; globbing allowed in both
+
+        Keywords of different kinds are AND'ed. '--fail' beside '--pass'
+        is refused. A wish matching nothing yields an empty plan and a
+        report; the exit status is 3.
+
+    A <point> is a SPAN back from now -- a number and one of 's', 'm',
+    'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
+        today, yesterday            that day, 00:00
+        last-week                   Monday of the week before, 00:00
+        last-month                  the 1st of the month before, 00:00
+        monday .. sunday            the most recent such day, 00:00
+        january .. december         the 1st of the most recent such month
+
+    OTHER
+        --directory=<path>  the directory to read; the current one else
+        --help              this text
+
+    The plan is printed, never read back: to replay is to re-determine,
+    and determination is deterministic. Cases required by a selected case
+    enter by implication, marked '<= required by <target>'. A case whose
+    dependencies cannot be met carries '[MISDEP]': it is selected,
+    reported as failure, and does not run. A link that stands inside a
+    dependency cycle is listed and carries '[CYCLE]': it orders nothing.
+    On a terminal both tags stand on the failure's red.
+
+    The configuration the framework READ is the service 'hwut.config.show'.
+
+    EXIT STATUS
+        0    nothing refused, no fault met
+        1    a fault was met
+        2    the command line cannot be read, or the wish names what the
+             directory does not offer
+        3    the command line reads, and asks for nothing: the wish
+             selects no test case
+    [status 0]
+<hwut-end>

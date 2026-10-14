@@ -1,0 +1,43 @@
+
+--- no feature file, no claim file ---
+    COMPONENT .                                    0 proven, 0 failing, 0 unproven
+        COMPONENT a (a)                            0 proven, 0 failing, 0 unproven
+            FEATURES a/TEST (a)                    0 proven, 0 failing, 0 unproven
+            COMPONENT a/b (a.b)                    0 proven, 0 failing, 0 unproven
+                FEATURES a/b/TEST (a.b)            0 proven, 0 failing, 0 unproven
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            a/b/TEST/test-b.sh   'wanted'
+status: OK
+
+--- a feature file alone: no id is asked for, no component named ---
+    COMPONENT .                                    0 proven, 1 failing, 0 unproven
+        COMPONENT a (a)                            0 proven, 1 failing, 0 unproven
+            FEATURES a/TEST (a)                    0 proven, 0 failing, 0 unproven
+            COMPONENT a/b (a.b)                    0 proven, 1 failing, 0 unproven
+                FEATURES a/b/TEST (a.b)            0 proven, 1 failing, 0 unproven
+                    [FAILING]  a.b.wanted
+                        [NO VERDICT] a/b/TEST/test-b.sh
+    
+    OUTSIDE THE RELATION
+        files, directories and map, not as they should stand => hwut.sanitize.propose --relations
+            .   features stand; no 'hwut-feature-map.conf'
+status: OK
+
+--- the same file in the vocabulary of the past: named ---
+    COMPONENT .                                    0 proven, 0 failing, 0 unproven
+        COMPONENT a (a)                            0 proven, 0 failing, 0 unproven
+            FEATURES a/TEST (a)                    0 proven, 0 failing, 0 unproven
+            COMPONENT a/b (a.b)                    0 proven, 0 failing, 0 unproven
+                FEATURES a/b/TEST (a.b)            0 proven, 0 failing, 0 unproven
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            a/b/TEST/test-b.sh   'wanted'
+        statement, not read
+            a/b/TEST/hwut-features.conf:2:5: VOCABULARY: unknown key 'parent' in 'features': 'keys', 'childs'
+            a/b/TEST/hwut-features.conf:3:5: VOCABULARY: unknown key 'issued' in 'features': 'keys', 'childs'
+            a/b/TEST/hwut-features.conf:4:5: VOCABULARY: unknown key '1' in 'features': 'keys', 'childs'
+status: OK
+<hwut-end>

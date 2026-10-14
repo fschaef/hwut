@@ -1,0 +1,10 @@
+-F ghost                                      REFUSED: '--feature ghost' names a RETIRED id: the map binds it to none, no feature means it any more
+-F scroll -F ghost                            REFUSED: '--feature ghost' names a RETIRED id: the map binds it to none, no feature means it any more
+-k no-such-key                                REFUSED: no feature carries the key 'no-such-key'; keys that stand: computational, display-related, gui, heavy-test
+-k gui AND no-such AND other                  REFUSED: no feature carries the key 'no-such', 'other'; keys that stand: computational, display-related, gui, heavy-test
+-F {a,b                                       REFUSED: '{a,b': a '{' is not closed
+-F a}                                         REFUSED: 'a}': a '}' without its '{'
+
+--- no root reaches the selection ---
+REFUSED: '--feature' and '--keys' ask the feature relation of the tree, and no root reaches this selection
+<hwut-end>
