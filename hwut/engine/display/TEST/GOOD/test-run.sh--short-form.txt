@@ -19,7 +19,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.07 [sec], 0.08 [sec] total
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.14 [sec], 0.15 [sec] total
     |                  ok                  |                skip                 |
 }
 --- a globbed app
@@ -49,7 +49,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 6 ok, 0 fail, 0.12 [sec], 0.12 [sec] total
+    RESULTS: 6 ok, 0 fail, 0.17 [sec], 0.18 [sec] total
     |                                     ok                                     |
 }
 --- a bare word that names nothing selects nothing
@@ -70,7 +70,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec], 0.05 [sec] total
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.09 [sec], 0.10 [sec] total
     |                                    skip                                    |
 }
 --- a bare word that names a standing LABEL: the run stays
@@ -92,7 +92,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 6 skip, 0.04 [sec], 0.05 [sec] total
+    RESULTS: 0 ok, 0 fail, 6 skip, 0.07 [sec], 0.08 [sec] total
     |                                    skip                                    |
     NOTE: no test application answers 'steady', but a LABEL of that name stands -- 'hwut.run -l steady'
 }
@@ -105,8 +105,9 @@ STDOUT {
                     [--exclude-dir <glob>]... [--wishlist <file>]...
                     [-l|--label <expr>] [--language=<name>]...
                     [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                    [-k|--keys <expr>] [<file-glob> [choice-glob]...] [--no-store]
-                    [--timing] [--jobs=<n>] [--strategy=<name>] [--deterministic]
+                    [-e|--feature-ext <id>]... [-k|--keys <expr>]
+                    [<file-glob> [choice-glob]...] [--no-store] [--timing]
+                    [--jobs=<n>] [--strategy=<name>] [--deterministic]
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--brief] [--log <file>]

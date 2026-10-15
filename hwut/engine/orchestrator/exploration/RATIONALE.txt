@@ -2519,3 +2519,106 @@ COST      The cache is per process: a feature file edited while a
           tokens; the pages that pin it were re-recorded.
 PINNED    'engine/orchestrator/exploration/TEST/test-feature_wish.py';
           'engine/orchestrator/plan/TEST/test-wish.py parsing, refused'.
+
+
+R-96  FEATURES ARE REGISTERED IN ONE CENTRAL FILE; DIRECTORY IDS, EXTERNAL IDS,
+      A TREE OF AGGREGATES                                          (2026-10-14)
+
+PROBLEM   R-94 derived a full id from the chain of 'childs' keys through the
+          directories. The ids then follow the nesting; a restructuring changes
+          them; the map repairs it by pairing on the longest common SUFFIX of
+          two ids -- a guess, silent where unique but wrong. The directory
+          nesting also forced ONE perspective on the features: the aggregation
+          of features (what a customer reads) and the placement of tests (what
+          an author needs) are two trees.
+DECISION  RULED (Frank-Rene, 2026-10-14), in a discussion of the scenarios of
+          restructuring (22 scenarios, 8 natural messes, 14 use cases).
+          ONE CENTRAL FILE, 'hwut-root-features.conf' beside 'hwut-root.conf',
+          written by 'hwut.features.init' with a header of '#' comments. It is
+          the ONLY place where ids are registered. Redundancy (an id also
+          inside a directory, a key chain also in a component file) is a trap
+          for errors and is refused.
+          'directory_map': a generated directory id -> a path. 'tree': the
+          feature perspective, aggregates (blocks) and leaves (external id =
+          '<directory id>:<name>'). 'retired': the claims no longer made,
+          stored AS THEY WERE (title, doc, keys), so revival is moving a block
+          back by hand. Leaves are defined in TEST directories as before.
+          The component files outside TEST directories and
+          'hwut-feature-map.conf' are gone; 'childs' stays in TEST files.
+          A leaf stands under exactly ONE aggregate; other categories are keys.
+          Keys travel from the aggregate downward.
+          EXTERNAL ids stay constant for external references; if those change,
+          only the left sides are edited. A moved directory changes ONE line;
+          a renamed leaf one line; an aggregate moved changes no id.
+          Retirement is explicit ('hwut.features.retire'), never by a tool's
+          own judgement; a retired internal id is never bound again.
+          'hwut.features.register' ADDS and DETECTS with the SAME detector as
+          the sanitizer; pairing is by fingerprint (the set of feature names
+          of a directory; of a leaf its name, or the one gone and the one new
+          of its directory -- a live leaf keeps no title to compare, CORRECTED
+          2026-10-14), mutual, unique, named on the proposal line, never
+          guessed. The SWAP check (paths stand, the
+          contents are exchanged) is part of it.
+          States: IMPLEMENTED / OPEN / RETIRED with a verdict (o-14, renamed).
+          The wish: '-F' tree paths, '-e/--feature-ext' external ids, '-k'.
+          'hwut.run' ends with one hint line when a link has no registration
+          (an exception to o-5: a consistency hint, not a report).
+          Feature files are parsed LAZILY, only where a face needs them.
+          REUSED: the HOCON dialect, the label expression grammar, 'amend.py'
+          text surgery, the surgeon of 'feature_adapt.py'.
+SUPERSEDES R-94: the id as a key chain, 'childs' in component files, the
+          implicit/explicit trees, the map as 'published -> full id', the
+          suffix pairing. R-94's keys, one-file-kind-for-TEST, no aliases, and
+          history-is-configuration-management STAND. R-95: '-F' over tree
+          paths replaces the glob over key chains; '-k' stands; the refusal of
+          a retired id and of a key no feature carries stand.
+COST      917 leaves and 33 files of our tree are migrated once (a script under
+          adm/, deleted afterwards). Authors and tools share one file: text
+          conflicts in a branch merge are likelier; identical new leaf lines
+          merge cleanly. A cut-and-lost block loses a hand-edited external id
+          (version control). A subtree cut into another repository regenerates
+          ids (documented, not built).
+GRAVEYARD directory ids inside the directory (refused: the id travels with 'mv'
+          but 'cp -a' makes twins, and a second place to be wrong); feature ids
+          derived from <directory id>:<name> with no registration (refused:
+          a rename of a name is silent, retirement has no place, the old id
+          is reused); aggregates placed in the directory tree (refused: two
+          perspectives overlaid confuse); a leaf under several aggregates
+          (refused: counted twice; keys serve); an alias for a retired id
+          (refused, as in R-94); retirement proposed by register or the
+          sanitizer (refused: a gone entry stays reported, harming nobody);
+          ReqIF now (put aside; see spec 23 o-19).
+PINNED    BUILT IN STEPS; the plan is
+          'adm/WORK/gathered/session-features-build-2026-10-14.md'.
+          Step 1 (the reader, the identifiers, the states):
+          'engine/orchestrator/exploration/TEST/test-feature_registry.py
+          read, faults, identifiers, states'.
+          Step 2 (the detector, pairings named):
+          'engine/orchestrator/exploration/TEST/test-feature_detector.py
+          clean, new, moved, swapped, leaves, twin, old, below'.
+          Step 3a (the writer 'feature_registry_edit.py'; the faces
+          'hwut.features.init', 'register', 'tree'):
+          'services/lib/features/TEST/test-faces.py init, register, tree'.
+          Step 3b (the acts 'feature_registry_act.py'; 'retire', 'move',
+          'key.add', 'key.remove'):
+          'services/lib/features/TEST/test-acts.py retire, move, keys'.
+          Step 3c (the proposals through 'hwut.sanitize', the hint of
+          'hwut.run', 'hwut.help'):
+          'services/lib/features/TEST/test-proposals.py propose, apply,
+          verbs, hint'.
+          Step 4a (the view 'feature_view.py'; 'hwut.report.features' on
+          it): 'services/lib/features/TEST/test-report.py tree, below,
+          matrix, outside'. Step 4b (the feature document on the view):
+          'test-report.py document'. Step 4c (the wish on the view: '-F'
+          tree paths and internal ids, '-e/--feature-ext', '-k'):
+          'services/lib/features/TEST/test-wish.py path, ext, keys,
+          together'. Step 5: this tree migrated (a one-off script, deleted
+          after); the gate is the real tree's 'hwut.features.register' and
+          'hwut.sanitize.propose --relations', both finding nothing.
+          Step 6 (the files of the past no longer read; a moved test's
+          features carried and its leaf repointed, 'feature_carry.py'):
+          'engine/orchestrator/exploration/TEST/test-feature_carry.py
+          moved, removed', 'test-feature_relation.py feature_file, block,
+          faults, tree', 'services/TEST/test-features-follow.py move,
+          remove', 'services/TEST/test-report-features.py' (all choices,
+          on a central file; 'refused' names the missing one).

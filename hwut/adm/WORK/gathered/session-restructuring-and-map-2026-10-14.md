@@ -1,3 +1,7 @@
+> SUPERSEDED in part 2026-10-14 by `session-features-build-2026-10-14.md` and
+> spec 23 VERSION 10 / exploration R-96: sections 4 (the restructuring session)
+> and the o-12, o-13 rulings are replaced; sections 1-3 describe the BUILT tree.
+
 # Session hand-off -- features, the map, restructuring (2026-10-14)
 
 Self-contained: a session that has only this file, the tree and the bundles

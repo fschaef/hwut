@@ -9,10 +9,11 @@ STDERR {
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-k|--keys <expr>] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -25,10 +26,11 @@ STDERR {
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-k|--keys <expr>] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -41,10 +43,11 @@ STDERR {
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-k|--keys <expr>] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -59,6 +62,6 @@ STATUS: 2
 STDOUT {
     REFUSED: 'hwut.sanitize' does not take: --sideways
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, relate, unrelate, retire, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, register, redirect, repoint, fold, run, root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

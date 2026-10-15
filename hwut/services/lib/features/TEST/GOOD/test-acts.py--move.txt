@@ -1,0 +1,70 @@
+--- moved, the lines follow -------------------------------------
+>>> hwut.features.move gw/can gw/bus-can
+    moved  gw/can -> gw/bus-can
+        Aaaaaaa1  gw/can -> gw/bus-can
+    exit 0
+>>> a parent with two registered directories below: gw -> gateway
+    moved  gw -> gateway
+        Aaaaaaa1  gw/bus-can -> gateway/bus-can
+        Bbbbbbb2  gw/most -> gateway/most
+    exit 0
+>>> a directory without an id
+    moved  gateway/plain -> gateway/plain-2
+        no directory id stands at or below it
+    exit 0
+    hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gateway/bus-can"
+    |         "Bbbbbbb2" = "gateway/most"
+    |     }
+    |     tree {
+    |         gateway {
+    |             title = "CAN-MOST gateway"
+    |             keys  = ["product"]
+    |             childs {
+    |                 can {
+    |                     childs {
+    |                         "can.decode" = "Aaaaaaa1:decode"
+    |                         "can.encode" = "Aaaaaaa1:encode"
+    |                     }
+    |                 }
+    |                 most {
+    |                     title = "MOST side"
+    |                     childs {
+    |                         "most.send"    = "Bbbbbbb2:send"
+    |                         "most.receive" = "Bbbbbbb2:receive"
+    |                     }
+    |                 }
+    |             }
+    |         }
+    |         "can.ghost" = "Aaaaaaa1:ghost"
+    |     }
+    |     retired {
+    |     }
+    | }
+    stands: bus-can, most, plain-2
+--- refused -----------------------------------------------------
+>>> the target stands
+    REFUSED: 'gateway/bus-can' stands already
+    exit 2
+>>> the target inside the source
+    REFUSED: 'gateway/x' lies inside 'gateway'
+    exit 2
+>>> its parent does not stand
+    REFUSED: the directory 'a' does not stand
+    exit 2
+>>> the root
+    REFUSED: the root itself is not moved
+    exit 2
+>>> no such directory
+    REFUSED: 'nowhere' is no directory
+    exit 2
+>>> outside the root
+    REFUSED: '../x' does not stand below the root '<root>'
+    exit 2
+>>> one word
+    REFUSED: 'hwut.features.move' takes 2 word(s): gateway
+    usage: hwut.features.move <directory> <new directory> [--directory=<path>]
+    exit 2
+<hwut-end>

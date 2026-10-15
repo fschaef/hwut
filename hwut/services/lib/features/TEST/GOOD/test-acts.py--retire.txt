@@ -1,0 +1,125 @@
+--- a leaf ------------------------------------------------------
+>>> hwut.features.retire can.encode
+    retired  can.encode  (Aaaaaaa1:encode)
+        definition taken out of gw/can/TEST/hwut-features.conf
+    exit 0
+    hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |     }
+    |     tree {
+    |         gateway {
+    |             title = "CAN-MOST gateway"
+    |             keys  = ["product"]
+    |             childs {
+    |                 can {
+    |                     childs {
+    |                         "can.decode" = "Aaaaaaa1:decode"
+    |                     }
+    |                 }
+    |                 most {
+    |                     title = "MOST side"
+    |                     childs {
+    |                         "most.send"    = "Bbbbbbb2:send"
+    |                         "most.receive" = "Bbbbbbb2:receive"
+    |                     }
+    |                 }
+    |             }
+    |         }
+    |         "can.ghost" = "Aaaaaaa1:ghost"
+    |     }
+    |     retired {
+    |         "can.encode" { id = "Aaaaaaa1:encode"  title = "A frame is encoded."
+    |              doc   = """
+    |                  Both directions.
+    |                  """ }
+    |     }
+    | }
+    gw/can/TEST/hwut-features.conf:
+    | features {
+    |   keys = ["bus"]
+    |   childs {
+    |     decode { title = "A frame is decoded."
+    |              keys  = ["latency"] }
+    |   }
+    | }
+    read again: 0 fault(s); retired: can.encode
+--- an aggregate with everything below it -----------------------
+>>> hwut.features.retire most
+    retired  most  (aggregate, 2 leaf/leaves)
+    retired  most.send  (Bbbbbbb2:send)
+    retired  most.receive  (Bbbbbbb2:receive)
+        definition taken out of gw/most/TEST/hwut-features.conf
+    exit 0
+    hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |     }
+    |     tree {
+    |         gateway {
+    |             title = "CAN-MOST gateway"
+    |             keys  = ["product"]
+    |             childs {
+    |                 can {
+    |                     childs {
+    |                         "can.decode" = "Aaaaaaa1:decode"
+    |                     }
+    |                 }
+    |             }
+    |         }
+    |         "can.ghost" = "Aaaaaaa1:ghost"
+    |     }
+    |     retired {
+    |         "can.encode" { id = "Aaaaaaa1:encode"  title = "A frame is encoded."
+    |              doc   = """
+    |                  Both directions.
+    |                  """ }
+    |         most {
+    |             title = "MOST side"
+    |             childs {
+    |                 "most.send" { id = "Bbbbbbb2:send"  title = "A message is sent." }
+    |                 "most.receive" { id = "Bbbbbbb2:receive"  title = "A message arrives."  keys = ["bus"] }
+    |             }
+    |         }
+    |     }
+    | }
+    gw/most/TEST/hwut-features.conf:
+    | features {
+    |   childs {
+    |   }
+    | }
+    read again: 0 fault(s); retired: can.encode, most
+--- a leaf whose definition stood nowhere -----------------------
+>>> hwut.features.retire can.ghost
+    retired  can.ghost  (Aaaaaaa1:ghost)  -- no definition stood
+    exit 0
+    read again: 0 fault(s); retired: can.encode, most, can.ghost
+--- refused -----------------------------------------------------
+>>> retired already
+    REFUSED: 'can.encode' is retired
+    exit 2
+>>> a retired aggregate
+    REFUSED: 'most' is retired
+    exit 2
+>>> no claim of the tree
+    REFUSED: 'nothing' is no leaf and no aggregate of the tree => hwut.features.tree -e
+    exit 2
+>>> two words
+    REFUSED: 'hwut.features.retire' takes 1 word(s): can.decode, most
+    usage: hwut.features.retire <id> [--directory=<path>]
+    exit 2
+>>> no word
+    REFUSED: 'hwut.features.retire' takes 1 word(s): none given
+    usage: hwut.features.retire <id> [--directory=<path>]
+    exit 2
+--- the tree left -----------------------------------------------
+>>> hwut.features.tree -e
+    gateway  CAN-MOST gateway
+      can
+        decode  (gw/can)  can.decode  A frame is decoded.
+    exit 0
+<hwut-end>

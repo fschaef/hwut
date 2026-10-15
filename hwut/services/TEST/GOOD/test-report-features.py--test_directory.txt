@@ -1,24 +1,36 @@
 
 --- called inside engine/compare/core/TEST ---
-    FEATURES . (eng.cmp.core)                      0 proven, 2 failing, 2 unproven
-        [FAILING]  eng.cmp.core.line-pairing -- Two streams are aligned line by line.
-            published   pairing
-            keys        algorithm, engine-part, heavy
-            [PASS] test-pair.sh [plain]
-            [FAIL] test-pair.sh [gap]
-            see          ../README.txt#pairing
-            see          https://example.org/pairing
-            see          ../absent.txt
-        [FAILING]  eng.cmp.core.missing-side -- A line present on one side only is shown whole.
-            keys        algorithm, engine-part
-            [FAIL] test-pair.sh [gap]
-        [UNPROVEN] eng.cmp.core.untested
-            keys        algorithm, engine-part
-        [UNPROVEN] eng.cmp.core.not-numbered
-            keys        algorithm, engine-part
+    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
+        state      OPEN
+        doc        Runs tests and judges them.
+        keys       engine-part
+        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
+            state      OPEN
+            doc        Decides whether an output is equivalent to its nominal.
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
+                state      OPEN
+                doc        Pairs lines.
+                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
+                    internal    Core0001:line-pairing  (engine/compare/core)
+                    keys        algorithm, engine-part, heavy
+                    [PASS] test-pair.sh [plain]
+                    [FAIL] test-pair.sh [gap]
+                    see          ../README.txt#pairing
+                    see          https://example.org/pairing
+                    see          ../absent.txt
+                [IMPLEMENTED fail] eng.cmp.core.missing-side -- A line present on one side only is shown whole.
+                    internal    Core0001:missing-side  (engine/compare/core)
+                    keys        algorithm, engine-part
+                    [FAIL] test-pair.sh [gap]
+                [OPEN]             eng.cmp.core.untested
+                    internal    Core0001:untested  (engine/compare/core)
+                    keys        algorithm, engine-part
+                [OPEN]             eng.cmp.core.not-numbered
+                    internal    Core0001:not-numbered  (engine/compare/core)
+                    keys        algorithm, engine-part
     
     RETIRED                                                              1 retired
-        [RETIRED]  once-published
+        [RETIRED]  once-published  (Core0001:old-pairing)
     
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
@@ -26,7 +38,7 @@
         NONSENSE? test run, links to no feature => hwut.help
             test-pair.sh [odd]
         claim, names a document that does not stand
-            eng.cmp.core.line-pairing   '../absent.txt'
+            ./line-pairing   '../absent.txt'
         statement, not read
             hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
 status: OK

@@ -52,10 +52,10 @@ $ hwut.cov.run -o <root>/mine --silent
     |                     [--dir <glob>]... [--exclude-dir <glob>]...
     |                     [--wishlist <file>]... [-l|--label <expr>]
     |                     [--language=<name>]... [--faster-than=<sec>]
-    |                     [-F|--feature <id-glob>]... [-k|--keys <expr>]
-    |                     [<file-glob> [choice-glob]...] [--output=<path>]
-    |                     [--dont-ask] [--jobs=<n>] [--variant=<a,b>]
-    |                     [-v|--verbose|--plain|--quiet|--silent]
+    |                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+    |                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+    |                     [--output=<path>] [--dont-ask] [--jobs=<n>]
+    |                     [--variant=<a,b>] [-v|--verbose|--plain|--quiet|--silent]
     |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
     |                     [--show-details] [--no-failure-summary] [--brief]
     |                     [--log <file>] [--directory=<path>]
@@ -67,10 +67,10 @@ $ hwut.cov.run --silent
     |                     [--dir <glob>]... [--exclude-dir <glob>]...
     |                     [--wishlist <file>]... [-l|--label <expr>]
     |                     [--language=<name>]... [--faster-than=<sec>]
-    |                     [-F|--feature <id-glob>]... [-k|--keys <expr>]
-    |                     [<file-glob> [choice-glob]...] [--output=<path>]
-    |                     [--dont-ask] [--jobs=<n>] [--variant=<a,b>]
-    |                     [-v|--verbose|--plain|--quiet|--silent]
+    |                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+    |                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+    |                     [--output=<path>] [--dont-ask] [--jobs=<n>]
+    |                     [--variant=<a,b>] [-v|--verbose|--plain|--quiet|--silent]
     |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
     |                     [--show-details] [--no-failure-summary] [--brief]
     |                     [--log <file>] [--directory=<path>]

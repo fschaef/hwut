@@ -1,60 +1,24 @@
+root name: True
 
---- explicit tree? the top? the map? ---
-explicit=True top=True map=None
-
---- the components, their parts and their own TEST directory ---
-.                        key=        claim=True  TEST=None
-    part engine
-engine                   key=engine  claim=True  TEST=None
-    part engine/compare
-    part engine/empty
-engine/compare           key=cmp     claim=True  TEST=engine/compare/TEST
-    part engine/compare/core
-    part engine/compare/patterns
-engine/compare/core      key=core    claim=True  TEST=engine/compare/core/TEST
-engine/compare/patterns  key=pat     claim=True  TEST=engine/compare/patterns/TEST
-engine/empty             key=empty   claim=True  TEST=None
-
---- the TEST directories: full ids, keys, runs, verdicts ---
+--- the TEST directories: features, runs, verdicts ---
 engine/compare/TEST   feature file: True
-    PROVEN   engine.cmp.whole-page
-        keys: ('engine-part',)
+    whole-page
         PASS       test-pages.sh small
         PASS       test-pages.sh large
 engine/compare/core/TEST   feature file: True
-    FAILING  engine.cmp.core.line-pairing
-        keys: ('algorithm', 'engine-part', 'heavy')
+    line-pairing
         PASS       test-pair.sh plain
         FAIL       test-pair.sh gap
-    FAILING  engine.cmp.core.missing-side
-        keys: ('algorithm', 'engine-part')
+    missing-side
         FAIL       test-pair.sh gap
-    UNPROVEN engine.cmp.core.007
-        keys: ('algorithm', 'engine-part')
-    FAILING  engine.cmp.core.untested
-        keys: ('algorithm', 'engine-part')
+    007
+    untested
         ASPIRANT   test-stray.sh None
     unlinked   test-pair.sh odd
     undefined  test-stray.sh None 'no-such'
 engine/compare/patterns/TEST   feature file: False
     undefined  test-pat.sh None 'glob'
 
---- the keys a component has: derived, from what lies below ---
-.                        ('algorithm', 'engine-part', 'heavy')
-engine                   ('algorithm', 'engine-part', 'heavy')
-engine/compare           ('algorithm', 'engine-part', 'heavy')
-engine/compare/core      ('algorithm', 'engine-part', 'heavy')
-engine/compare/patterns  ()
-engine/empty             ()
-
---- the counts, summed over the parts ---
-.                            PROVEN=1  FAILING=3  UNPROVEN=1
-engine                       PROVEN=1  FAILING=3  UNPROVEN=1
-engine/compare               PROVEN=1  FAILING=3  UNPROVEN=1
-engine/compare/core          PROVEN=0  FAILING=3  UNPROVEN=1
-engine/compare/patterns      PROVEN=0  FAILING=0  UNPROVEN=0
-engine/empty                 PROVEN=0  FAILING=0  UNPROVEN=0
-engine/compare/TEST          PROVEN=1  FAILING=0  UNPROVEN=0
-engine/compare/core/TEST     PROVEN=0  FAILING=3  UNPROVEN=1
-engine/compare/patterns/TEST PROVEN=0  FAILING=0  UNPROVEN=0
+--- asked inside one TEST directory ---
+['.']
 <hwut-end>

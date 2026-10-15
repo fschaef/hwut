@@ -1,0 +1,32 @@
+--- renamed: gw/can -> gw/bus-can -------------------------------
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+--- moved and one leaf renamed (half of the names stand) --------
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+  leaf-gone    c.encode   Aaaaaaa1:encode is defined no more
+                   => repoint c.encode Aaaaaaa1:transmit  # from Aaaaaaa1:encode
+--- moved and only a third of the names stand -------------------
+  dir-new      x/can   no directory id
+                   => register x/can
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => # unpaired Aaaaaaa1 gw/can (candidates: x/can)
+--- a component moved with two TEST directories -----------------
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 new/gw/can  # from gw/can
+  dir-gone     Bbbbbbb2   'gw/most' stands no more
+                   => redirect Bbbbbbb2 new/gw/most  # from gw/most
+--- two candidates that cannot be told apart (a copy and the original gone) 
+  dir-new      gw/can-a   no directory id
+                   => register gw/can-a
+  dir-new      gw/can-b   no directory id
+                   => register gw/can-b
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => # unpaired Aaaaaaa1 gw/can (candidates: gw/can-a, gw/can-b)
+--- a directory deleted: its leaves are said by the directory ---
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => # unpaired Aaaaaaa1 gw/can (candidates: none)
+--- a copy next to the original: the original stands, the copy is new 
+  dir-new      gw/can-copy   no directory id
+                   => register gw/can-copy
+<hwut-end>

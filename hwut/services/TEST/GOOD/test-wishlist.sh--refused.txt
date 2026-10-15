@@ -6,8 +6,9 @@ STDOUT {
                             [--dir <glob>]... [--exclude-dir <glob>]...
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -17,8 +18,9 @@ STDOUT {
                             [--dir <glob>]... [--exclude-dir <glob>]...
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -28,8 +30,9 @@ STDOUT {
                             [--dir <glob>]... [--exclude-dir <glob>]...
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -39,7 +42,8 @@ STDOUT {
                             [--dir <glob>]... [--exclude-dir <glob>]...
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
 }
 <hwut-end>

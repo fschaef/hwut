@@ -1,0 +1,6 @@
+The Feature Faces -- the Central File of Features
+-------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

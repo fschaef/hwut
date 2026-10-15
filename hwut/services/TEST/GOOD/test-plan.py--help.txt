@@ -10,8 +10,9 @@ $ hwut.plan --help
                   [--dir <glob>]... [--exclude-dir <glob>]...
                   [--wishlist <file>]... [-l|--label <expr>]
                   [--language=<name>]... [--faster-than=<sec>]
-                  [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                  [<file-glob> [choice-glob]...] [--directory=<path>]
+                  [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                  [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                  [--directory=<path>]
 
     DESCRIPTION
         hwut.plan           the plan of everything the directory offers:
@@ -66,16 +67,18 @@ $ hwut.plan --help
                             several are a union, narrowing against the rest
         -F, --feature <id-glob>
                             the runs linked to the features the glob names:
-                            over full ids by key names -- '*' one key, '**'
-                            any depth, '{a,b}' alternatives, a bare key is
-                            '**.key'; a component brings its subtree; an id
-                            the feature map publishes is resolved through
-                            it. Several are a union, narrowing against the
-                            rest
+                            tree paths of the central file 'a/b/<external
+                            id>' ('*' one level, '**' any depth, '{a,b}'), a
+                            bare word anywhere, an aggregate its subtree; or
+                            an internal id 'X:name'. Several are a union,
+                            narrowing against the rest
+        -e, --feature-ext <id>
+                            the runs linked to the feature of that external
+                            id ('*' any characters); with '-F' a union
         -k, --keys <expr>   the runs linked to features whose effective keys
                             satisfy the expression ('AND', 'OR', 'NOT',
                             brackets; ',' is 'OR'); a key flows down from the
-                            claims above a feature, never up
+                            aggregates above a leaf, never up
         --faster-than=<seconds>
                             the runs this machine last saw finish faster
                             than that; one this machine never saw is not

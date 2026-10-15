@@ -1,0 +1,61 @@
+--- tree paths --------------------------------------------------
+>>> -F gateway/forwarding
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F gateway
+    ./gw/can/TEST/test-frame.sh
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F gateway/forwarding/router.keep-order
+    ./gw/router/TEST/test-route.sh burst
+    exit 0
+>>> -F gateway/*/can.decode
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -F **/router.forward
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F gateway/{buses,forwarding}
+    ./gw/can/TEST/test-frame.sh
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F router.*
+    exit 3
+>>> -F buses
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -F gateway/later
+    exit 3
+>>> -F router.drop
+    exit 3
+>>> -F nothing
+    exit 3
+--- the lines of hwut.features.tree --list ----------------------
+>>> -F gateway/forwarding/router.forward
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F gateway/forwarding/router.keep-order
+    ./gw/router/TEST/test-route.sh burst
+    exit 0
+>>> -F gateway/buses/can.decode
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -F router.drop
+    exit 3
+--- internal ids ------------------------------------------------
+>>> -F Aaaaaaa1:decode
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -F Bbbbbbb2:*
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F Aaaaaaa1:old
+    REFUSED: '--feature Aaaaaaa1:old' names a RETIRED feature: no longer claimed
+    exit 2
+<hwut-end>

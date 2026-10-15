@@ -1,41 +1,42 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FEATURE DOCUMENT -- the feature relation of a tree as ONE
-         file somebody else opens: HTML, or an OpenDocument spreadsheet.
+PURPOSE: THE FEATURE DOCUMENT -- the features of a tree as the central
+         file groups them ('feature_view', R-96), as ONE file somebody
+         else opens: HTML, or an OpenDocument spreadsheet.
 
-    document_of(relation)   -> CDocument     what the document says
+    document_of_view(view)  -> CDocument     what the document says
     html_text(document)     -> str           one self-contained page
     ods_bytes(document)     -> bytes         one '.ods' file
 
 FOUR TABS, and the ways between them:
 
-    Matrix     one row per feature: its id, its brief (the title), its
-               state, and what IMPLEMENTS it -- the linked test runs
+    Matrix     one row per leaf: its external id, its brief (the title),
+               its state, and what IMPLEMENTS it -- the linked test runs
                with their verdicts.
-                   the feature's id   -> its place in 'Features'
+                   the external id    -> its place in 'Features'
                    a test run         -> its test's place in 'Tests'
-    Features   one row per feature: where it is EXPLAINED -- name,
-               title, doc, the component it belongs to.
+    Features   one row per leaf: where it is EXPLAINED -- name, title,
+               doc, the aggregate it stands in, its internal id.
     Tests      one row per test application: file, title, 'doc', its
                test runs with their verdicts -- 'NONSENSE?' behind a
                run that links to no feature -- and the features it
                links to; a name its TEST directory does not define is
                said.
 
-    Tree       the features where they stand: component, the components
-               below it, its TEST directory, the features -- each
-               component with its title and its counts summed from
-               below, each feature leading to its row in 'Features'.
+    Tree       the aggregates and their leaves in file order -- each
+               aggregate with its title, its state and its counts summed
+               from below, each leaf leading to its row in 'Features';
+               the unplaced last.
                INTERACTIVE: the page folds and unfolds every level,
                shows the features of chosen states, and those whose
                line holds a word; the spreadsheet carries the levels as
                row groups, folded at its margin.
 
 A FEATURE'S DOCUMENTS ('documents' in the feature file) stand in
-'Features', each a link from where the document is written. So do the
-feature's PUBLISHED ID, where the map gives it another than its own, and
-the KEYS it carries -- its own and those of everything above it.
+'Features', each a link from where the document is written. So do its
+INTERNAL ID and the KEYS it carries -- its own, its TEST file's, the
+aggregates' above it.
 
 'Features' CARRIES THE CODE where a coverage output was read (services
 E-147): per feature the source lines its test runs executed and no other
@@ -60,8 +61,10 @@ from   dataclasses import dataclass
 from   html        import escape
 
 from   hwut.engine.orchestrator.exploration.feature_relation \
-                                 import (STATE_TUPLE, document_place,
-                                         parent_of)
+                                 import document_place
+
+#  THE STATES A LEAF STANDS IN, as the page writes them (R-96).
+STATE_TUPLE = ("IMPLEMENTED ok", "IMPLEMENTED fail", "OPEN")
 
 NONSENSE_WORD = "NONSENSE?"
 
@@ -74,24 +77,24 @@ class CFeatureRow:
     this feature's runs executed, then what is said without a link;
     'document_tuple' (text, link) -- the documents the feature names."""
     index:       int
-    id_text:     str                   # the full id, '<keys>.<name>'
+    id_text:     str                   # the external id
     name:        str
     title:       str
     doc:         str
-    component:   str                   # the component's path and title
+    component:   str                   # the aggregate's tree path
     state:       str
     run_tuple:   tuple = ()
     code_tuple:  tuple = ()
     document_tuple: tuple = ()
-    published:   str = ""              # the published id, where it differs
+    published:   str = ""              # the internal id and its directory
     key_text:    str = ""              # the keys it carries, ', ' between
 
 
 @dataclass(frozen=True)
 class CTreeRow:
-    """One line of the feature tree. 'kind' is 'component', 'features'
-    (a TEST directory) or 'feature'; 'feature_index' the feature's row,
-    None for the other two."""
+    """One line of the feature tree. 'kind' is 'component' (an aggregate)
+    or 'feature' (a leaf); 'feature_index' the leaf's row, None for an
+    aggregate."""
     depth:         int
     kind:          str
     label:         str
@@ -157,107 +160,69 @@ def _code_tuple(code, page_base):
     return tuple(found)
 
 
-def _count_text(count_db):
-    """RETURN: str, '<n> proven, <n> failing, <n> unproven'."""
-    return ", ".join("%i %s" % (count_db[state], state.lower())
-                     for state in STATE_TUPLE)
-
-
-def _tree_tuple(relation, feature_db):
-    """RETURN: tuple of CTreeRow, the features where they stand:
-    components depth-first, each with its own TEST directory before its
-    parts; a TEST directory that states no features, and a component
-    with none below it, left out. 'feature_db' maps (TEST directory,
-    feature key) to the feature's row."""
-    row_list = []
-
-    def test_directory(path, depth):
-        """RETURN: None. Appends one TEST directory and its features."""
-        directory = relation.test_directory_db[path]
-        if directory.feature_file is None: return
-        row_list.append(CTreeRow(depth, "features", path, "",
-                                 _count_text(relation.count_of(path))))
-        for state in directory.state_tuple:
-            feature = state.feature
-            index   = feature_db[(path, feature.key)]
-            row_list.append(CTreeRow(
-                depth + 1, "feature", feature.name,
-                feature.title or "", state.state, index))
-
-    def component(path, depth):
-        """RETURN: None. Appends one component and what stands below."""
-        count_db = relation.count_of(path)
-        if not sum(count_db.values()): return
-        found = relation.component_db[path]
-        claim = found.claim
-        detail = "" if claim is None else " -- ".join(
-            text for text in (claim.title, claim.doc) if text)
-        row_list.append(CTreeRow(depth, "component",
-                                 relation.root_name if path == "." else path,
-                                 detail, _count_text(count_db)))
-        if found.test_directory is not None:
-            test_directory(found.test_directory, depth + 1)
-        for part in found.part_tuple:
-            component(part, depth + 1)
-
-    if "." in relation.component_db: component(".", 0)
-    else:
-        for path in sorted(relation.test_directory_db):
-            test_directory(path, 0)
-    return tuple(row_list)
-
-
-def document_of(relation, code_db=None, page_base=None, root_base=""):
+def document_of_view(view, code_db=None, page_base=None, root_base=""):
     """
-    RETURN: CDocument, the features and the test applications of every
-            TEST directory of 'relation' that states features -- path
-            order, file order inside a directory -- and the tree they
-            stand in. 'code_db' is what 'feature_code.code_db_of' found,
-            None where no coverage output was read; 'page_base' the way
-            from the document to the coverage pages, '/' at its end,
-            None where they are not linked; 'root_base' the way from
-            the document to the directory the relation was asked in,
-            '/' at its end or '' -- what a feature's 'documents' are
-            linked through.
+    RETURN: CDocument, the features as the central file groups them
+            ('feature_view.CView', R-96): a row per leaf -- the tree's in
+            file order, then the unplaced -- its EXTERNAL id as its id, its
+            aggregate's tree path, its internal id and directory, its state
+            on two axes;
+            the test applications of every TEST directory that states
+            features; the tree of aggregates. 'code_db' is what
+            'feature_code.code_db_of' found, None where no coverage output
+            was read; 'page_base' the way from the document to the coverage
+            pages, '/' at its end, None where they are not linked;
+            'root_base' the way from the document to the directory asked,
+            '/' at its end or '' -- what a feature's 'documents' are linked
+            through. A feature its TEST directory defines and the
+            central file does not register has no row ('hwut.report.features'
+            names it).
     """
-    test_db      = {}                  # (path, test) -> index
-    feature_db   = {}                  # (path, feature key) -> index
-    test_list    = []
-    feature_list = []
-    linked_db    = {}                  # test index -> [(id text, index)]
+    from hwut.services.lib.report.features import view_state_text
+    relation   = view.relation
+    test_db    = {}                    # (test path, test) -> index
     for path in sorted(relation.test_directory_db):
         directory = relation.test_directory_db[path]
         if directory.feature_file is None: continue
         for test, _, _ in directory.app_tuple:
             test_db[(path, test)] = len(test_db)
-        component = _component_text(relation, path)
-        for state in directory.state_tuple:
-            feature = state.feature
-            index   = len(feature_list)
-            id_text = relation.id_of(path, feature.name)
-            published = relation.published_of(id_text)
-            run_list = []
-            for run in state.run_tuple:
-                test_index = test_db[(path, run.test)]
-                run_list.append((_run_text(run.test, run.choice),
-                                 run.verdict, test_index))
-                found = linked_db.setdefault(test_index, [])
-                if (id_text, index) not in found:
-                    found.append((id_text, index))
-            feature_db[(path, feature.key)] = index
-            feature_list.append(CFeatureRow(
-                index, id_text, feature.name,
-                feature.title or "", feature.doc or "",
-                component, state.state, tuple(run_list),
-                _code_tuple((code_db or {}).get((path, feature.key)),
-                            page_base),
-                tuple((place + anchor,
-                       place if url_f else root_base + place + anchor)
-                      for place, anchor, url_f in (
-                          document_place(path, document)
-                          for document in feature.document_tuple)),
-                "" if published in (None, id_text) else published,
-                ", ".join(relation.effective_key_tuple(path, feature))))
+    feature_list, linked_db, index_of_leaf = [], {}, {}
+    for leaf_view in view.leaf_list():
+        index   = len(feature_list)
+        leaf    = leaf_view.leaf
+        found   = leaf_view.feature_state
+        feature = None if found is None else found.feature
+        path    = leaf_view.test_path
+        run_list = []
+        for run in (() if found is None else found.run_tuple):
+            test_index = test_db[(path, run.test)]
+            run_list.append((_run_text(run.test, run.choice), run.verdict,
+                             test_index))
+            linked = linked_db.setdefault(test_index, [])
+            if (leaf.external, index) not in linked:
+                linked.append((leaf.external, index))
+        index_of_leaf[leaf.internal] = index
+        feature_list.append(CFeatureRow(
+            index, leaf.external, leaf.name,
+            "" if feature is None else feature.title or "",
+            "" if feature is None else feature.doc or "",
+            leaf_view.tree_path or "(unplaced)",
+            view_state_text(leaf_view.state), tuple(run_list),
+            () if feature is None else _code_tuple(
+                (code_db or {}).get((path, feature.key)), page_base),
+            () if feature is None else tuple(
+                (place + anchor,
+                 place if url_f else root_base + place + anchor)
+                for place, anchor, url_f in (
+                    document_place(path, document)
+                    for document in feature.document_tuple)),
+            "%s  (%s)" % (leaf.internal,
+                          leaf_view.directory_path or "no directory"),
+            ", ".join(leaf_view.key_tuple)))
+    test_list = []
+    for path in sorted(relation.test_directory_db):
+        directory = relation.test_directory_db[path]
+        if directory.feature_file is None: continue
         unlinked = set(directory.unlinked_tuple)
         for test, title, doc in directory.app_tuple:
             index = test_db[(path, test)]
@@ -278,24 +243,49 @@ def document_of(relation, code_db=None, page_base=None, root_base=""):
         tuple(feature_list), tuple(test_list),
         tuple((state, sum(1 for row in feature_list if row.state == state))
               for state in STATE_TUPLE),
-        _tree_tuple(relation, feature_db), code_db is not None,
+        _view_tree_tuple(view, index_of_leaf), code_db is not None,
         any(row.document_tuple for row in feature_list))
+
+
+def _view_tree_tuple(view, index_of_leaf):
+    """RETURN: tuple of CTreeRow, the aggregates and their leaves in file
+    order, each aggregate with its title and counts, each leaf leading to its
+    row; then the unplaced under '(unplaced)'."""
+    from hwut.services.lib.report.features import (view_state_text,
+                                                   _view_count_text)
+    row_list = []
+
+    def walk(child_tuple, depth):
+        for each in child_tuple:
+            if hasattr(each, "aggregate"):
+                aggregate = each.aggregate
+                row_list.append(CTreeRow(
+                    depth, "component", aggregate.key,
+                    " -- ".join(text for text in (aggregate.title,
+                                                  aggregate.doc) if text),
+                    "%s; %s" % (view_state_text(each.state),
+                                _view_count_text(each.count_db))))
+                walk(each.child_tuple, depth + 1)
+            else:
+                feature = None if each.feature_state is None \
+                          else each.feature_state.feature
+                row_list.append(CTreeRow(
+                    depth, "feature", each.leaf.external,
+                    "" if feature is None else feature.title or "",
+                    view_state_text(each.state),
+                    index_of_leaf[each.leaf.internal]))
+
+    walk(view.top_tuple, 0)
+    if view.unplaced:
+        row_list.append(CTreeRow(0, "component", "(unplaced)", "",
+                                 "%i leaf/leaves" % len(view.unplaced)))
+        walk(view.unplaced, 1)
+    return tuple(row_list)
 
 
 def _run_text(test, choice):
     """RETURN: str, '<test>' or '<test> [<choice>]'."""
     return test if choice is None else "%s [%s]" % (test, choice)
-
-
-def _component_text(relation, path):
-    """RETURN: str, the component a TEST directory belongs to: its path,
-    and ' -- <title>' where its file states one."""
-    above = parent_of(path)
-    if above is None: return ""
-    component = relation.component_db.get(above)
-    claim     = None if component is None else component.claim
-    if claim is None or not claim.title: return above
-    return "%s -- %s" % (above, claim.title)
 
 
 # -- HTML ------------------------------------------------------------------
@@ -336,9 +326,9 @@ td.id, td.path { font-family:ui-monospace, monospace; font-size:13px;
                  white-space:nowrap; }
 a { color:var(--link); }
 tr:target td { background:var(--mark); }
-.PROVEN, .PASS { color:var(--good); font-weight:600; }
-.FAILING, .FAIL { color:var(--bad); font-weight:600; }
-.UNPROVEN, .NONE { color:var(--none); font-weight:600; }
+.PASS, .IMPLEMENTED-ok { color:var(--good); font-weight:600; }
+.FAIL, .IMPLEMENTED-fail { color:var(--bad); font-weight:600; }
+.NONE, .OPEN { color:var(--none); font-weight:600; }
 ul { margin:0; padding:0; list-style:none; }
 details { margin-left:18px; }
 details.top { margin-left:0; }
@@ -422,24 +412,35 @@ _SCRIPT = """
 
 _TREE_OPEN_MAX = 40                    # features shown unfolded at most
 
+
+def _token(state):
+    """RETURN: str, a state as a style class and a 'data-state' value: its
+    words joined by '-' ('IMPLEMENTED ok' -> 'IMPLEMENTED-ok')."""
+    return state.replace(" ", "-")
+
+
 #  THE TREE'S CONTROLS: unfold, fold, show the features of chosen states,
 #  and those whose line holds a word. They are script; without script
 #  they stay hidden and the tree stands unfolded as written.
-_TREE_BAR = (
-    '<div id="tree-bar" hidden>'
-    '<button type="button" id="tree-open">Expand all</button>'
-    '<button type="button" id="tree-shut">Collapse all</button>'
-    + "".join('<label class="%s"><input type="checkbox" class="tree-state" '
-              'value="%s" checked> %s</label>' % (state, state, state)
-              for state in STATE_TUPLE)
-    + '<input type="search" id="tree-word" placeholder="filter features" '
-      'aria-label="filter features">'
-      '<span id="tree-count" class="count"></span></div>')
+def _tree_bar():
+    """RETURN: str, the tree's controls, a box per state."""
+    return (
+        '<div id="tree-bar" hidden>'
+        '<button type="button" id="tree-open">Expand all</button>'
+        '<button type="button" id="tree-shut">Collapse all</button>'
+        + "".join('<label class="%s"><input type="checkbox" '
+                  'class="tree-state" value="%s" checked> %s</label>'
+                  % (_token(state), _token(state), state)
+                  for state in STATE_TUPLE)
+        + '<input type="search" id="tree-word" placeholder="filter features" '
+          'aria-label="filter features">'
+          '<span id="tree-count" class="count"></span></div>')
 
 
 def _verdict_class(verdict):
     """RETURN: str, the style class of a verdict or a state."""
-    if verdict in ("PASS", "FAIL") or verdict in STATE_TUPLE: return verdict
+    if verdict in ("PASS", "FAIL"):  return verdict
+    if verdict in STATE_TUPLE:       return _token(verdict)
     return "NONE"
 
 
@@ -464,7 +465,8 @@ def html_text(document):
             '<tr id="m-%i"><td class="id"><a href="#f-%i">%s</a></td>'
             '<td>%s</td><td class="%s">%s</td><td><ul>%s</ul></td></tr>'
             % (row.index, row.index, e(row.id_text),
-               e(row.title or row.name), row.state, row.state, run_text))
+               e(row.title or row.name), _token(row.state), e(row.state),
+               run_text))
         code_text = ""
         if document.code_f:
             code_text = "<td><ul>%s</ul></td>" % "".join(
@@ -481,7 +483,8 @@ def html_text(document):
             '<td class="%s">%s</td><td class="id">%s</td><td>%s</td>%s</tr>'
             % (row.index, row.index, e(row.id_text), e(row.name),
                e(row.title), e(row.doc), e(row.component),
-               row.state, row.state, e(row.published), e(row.key_text),
+               _token(row.state), e(row.state), e(row.published),
+               e(row.key_text),
                code_text))
     for row in document.test_tuple:
         run_text = "".join(
@@ -516,8 +519,8 @@ def html_text(document):
             tree.append(
                 '<div class="leaf" data-state="%s"><a class="path" '
                 'href="#f-%i">%s</a> %s <span class="%s">%s</span></div>'
-                % (row.state, row.feature_index, e(row.label),
-                   e(row.detail), row.state, row.state))
+                % (_token(row.state), row.feature_index, e(row.label),
+                   e(row.detail), _token(row.state), e(row.state)))
             continue
         tree.append(
             '<details%s%s><summary><span class="path">%s%s</span>%s '
@@ -557,12 +560,12 @@ def html_text(document):
         table(("Feature", "Brief", "State", "Implemented by"), matrix),
         "</section>",
         '<section id="tree"><h2>Tree</h2>',
-        _TREE_BAR,
+        _tree_bar(),
         "\n".join(tree),
         "</section>",
         '<section id="features"><h2>Features</h2>',
-        table(("Feature", "Name", "Title", "Doc", "Component",
-               "State", "Published as", "Keys")
+        table(("Feature", "Name", "Title", "Doc", "Aggregate",
+               "State", "Internal id", "Keys")
               + (("Code only its runs reached",)
                            if document.code_f else ())
               + (("Documents",) if document.document_f else ()), features),
@@ -732,8 +735,8 @@ def ods_bytes(document):
         _ods_table("Tree", ("Where", "What", "State"), tree,
                    [row.depth for row in document.tree_tuple]),
         _ods_table("Features", ("Feature", "Name", "Title", "Doc",
-                                "Component", "State", "Published as",
-                                "Keys")
+                                "Aggregate", "State",
+                                "Internal id", "Keys")
                    + (("Code only its runs reached",)
                       if document.code_f else ())
                    + (("Documents",) if document.document_f else ()),

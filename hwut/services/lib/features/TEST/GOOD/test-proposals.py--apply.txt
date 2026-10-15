@@ -1,0 +1,55 @@
+>>> propose
+    exit 0
+>>> apply
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     register misc ........................................................ [DONE]
+          registered  misc  <new id>
+          registered  misc.x = <new id>:x
+     redirect Aaaaaaa1 gw/bus-can ......................................... [DONE]
+          Aaaaaaa1 now stands for gw/bus-can
+     repoint can.encode Aaaaaaa1:encode-frame ............................. [DONE]
+          can.encode now binds Aaaaaaa1:encode-frame
+    ==============================================================================
+    Done 3/3
+    exit 0
+>>> register afterwards
+    HINTS
+        5 leaf(s) in no aggregate => hwut.features.tree
+    nothing to register below '.'
+    exit 0
+>>> the tree
+    (unplaced)
+      decode  (gw/bus-can)  can.decode  decode.
+      encode-frame  (gw/bus-can)  can.encode  encode-frame.
+      send  (gw/most)  most.send  send.
+      receive  (gw/most)  most.receive  receive.
+      x  (misc)  misc.x  x.
+    exit 0
+--- a swap: two lines, the second NOTHING -----------------------
+>>> propose
+    exit 0
+    | redirect Aaaaaaa1 gw/most  # from gw/bus-can
+    | redirect Bbbbbbb2 gw/bus-can  # from gw/most
+>>> apply
+    ==============================================================================
+    EXECUTION:
+    ------------------------------------------------------------------------------
+     redirect Aaaaaaa1 gw/most ............................................ [DONE]
+          Aaaaaaa1 now stands for gw/most
+          Bbbbbbb2 now stands for gw/bus-can
+     redirect Bbbbbbb2 gw/bus-can ...................................... [NOTHING]
+    ==============================================================================
+    REPORT:
+    ------------------------------------------------------------------------------
+     redirect Bbbbbbb2 gw/bus-can  not proposed now: the detector proposes no such line
+    ==============================================================================
+    Done 1/2
+    exit 0
+>>> register afterwards
+    HINTS
+        5 leaf(s) in no aggregate => hwut.features.tree
+    nothing to register below '.'
+    exit 0
+<hwut-end>

@@ -1,0 +1,31 @@
+--- below None --------------------------------------------------
+  dir-new      other/x   no directory id
+                   => register other/x
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+  leaf-gone    m.receive   Bbbbbbb2:receive is defined no more
+                   => # unpaired m.receive Bbbbbbb2:receive (candidates: none)
+--- below '.' ---------------------------------------------------
+  dir-new      other/x   no directory id
+                   => register other/x
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+  leaf-gone    m.receive   Bbbbbbb2:receive is defined no more
+                   => # unpaired m.receive Bbbbbbb2:receive (candidates: none)
+--- below 'gw' --------------------------------------------------
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+  leaf-gone    m.receive   Bbbbbbb2:receive is defined no more
+                   => # unpaired m.receive Bbbbbbb2:receive (candidates: none)
+--- below 'gw/most' ---------------------------------------------
+  leaf-gone    m.receive   Bbbbbbb2:receive is defined no more
+                   => # unpaired m.receive Bbbbbbb2:receive (candidates: none)
+--- below 'gw/bus-can' ------------------------------------------
+  dir-gone     Aaaaaaa1   'gw/can' stands no more
+                   => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+--- below 'other' -----------------------------------------------
+  dir-new      other/x   no directory id
+                   => register other/x
+--- below 'zz' --------------------------------------------------
+  nothing found
+<hwut-end>

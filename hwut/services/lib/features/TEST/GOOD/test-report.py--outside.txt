@@ -1,0 +1,46 @@
+>>> an undefined name, a feature not registered, a directory moved
+    AGGREGATE gateway -- CAN-MOST gateway      1 implemented, 2 open; 0 ok, 3 fail
+        state      OPEN
+        keys       product
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 0 implemented, 2 open; 0 ok, 2 fail
+            state      OPEN
+            [OPEN]             router.forward
+                internal    Bbbbbbb2:forward  (gw/router)
+                            defined in no TEST directory
+                keys        product
+            [OPEN]             router.keep-order
+                internal    Bbbbbbb2:keep-order  (gw/router)
+                            defined in no TEST directory
+                keys        product
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail
+            state      IMPLEMENTED fail
+            [IMPLEMENTED fail] can.decode -- A frame is decoded.
+                internal    Aaaaaaa1:decode  (gw/can)
+                keys        product
+                [FAIL] gw/can/TEST/test-frame.sh
+        AGGREGATE gateway/later -- Nothing below yet. 0 implemented, 0 open; 0 ok, 0 fail
+            state      OPEN  (nothing below it)
+    
+    UNPLACED                                                         1 leaf/leaves
+        [OPEN]             router.drop
+            internal    Bbbbbbb2:drop  (gw/router)
+                        defined in no TEST directory
+    
+    RETIRED                                                              2 retired
+        [RETIRED]  can.old  (Aaaaaaa1:old)
+        [RETIRED]  router.old  (Bbbbbbb2:old)
+    
+    OUTSIDE THE RELATION
+        test run, names a feature its TEST directory does not define
+            gw/can/TEST/test-frame.sh   'nothing'
+        NONSENSE? test run, links to no feature => hwut.help
+            other/router/TEST/test-restart.sh
+        feature, defined and not registered => hwut.features.register
+            gw/can   'encode'
+            other/router   'forward'
+            other/router   'keep-order'
+            other/router   'drop'
+        central file and tree, not as they should stand => hwut.features.register
+            Bbbbbbb2   'gw/router' stands no more
+    exit 0
+<hwut-end>

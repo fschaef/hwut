@@ -77,23 +77,17 @@ candidates.
                 nominal where it was made and stains the book
                 'constraint'; nothing is removed. A finding already
                 written is not proposed again.
-    --relations THE CLAIMS AGAINST THE DIRECTORIES AND THE MAP: where a
-                tree states components ('hwut-features.conf' outside a
-                TEST directory), every component states a file and
-                every file is listed by the one above; every feature has
-                a published id in 'hwut-feature-map.conf'. A component
-                without its file, a directory the file above does not
-                list, a feature no published id names: healed by
-                'relate', which adapts the files and the map. Where
-                another file still lists the directory, it was MOVED:
-                'relate' carries the entry, key and all, noted 'moved
-                from <dir>'; the published ids of the features below
-                are repointed with it. A listed directory where nothing
-                stands is healed by 'unrelate', a published id bound to
-                a feature that is gone by 'retire'. A directory listed
-                under two keys, two published ids naming one feature
-                and a retired id that a feature bears are said on
-                stderr.
+    --relations THE CENTRAL FILE OF FEATURES AGAINST THE TREE
+                ('hwut-root-features.conf', R-96), judged by the one
+                detector that 'hwut.features.register' asks: a directory
+                or feature not registered -- 'register'; a directory
+                that moved -- 'redirect <id> <path>'; a feature renamed
+                or moved -- 'repoint <external> <internal>'; one path
+                under two ids -- 'fold <id> <first id>'. The old value
+                stands in the note. What it cannot pair, a retired name
+                defined again and files of the past are said on stderr;
+                so is a tree that defines features and has no central
+                file => hwut.features.init.
     (no option) A TREE WITHOUT A BOUNDARY (E-25): where no
                 'hwut-root.conf' stands in or above the directory, the
                 proposal is 'root <dir>' and nothing else -- nothing
@@ -289,10 +283,8 @@ def main(argv=None, write=None, err=None):
         note_list.extend(noted)
 
     if "relations" in aspect_set:
-        from hwut.engine.orchestrator.exploration.feature_relation \
-                                              import relation_of_exploration
-        found, noted = sanitize.relation_issue_list(
-            root, relation_of_exploration(root, exploration))
+        #  THE CENTRAL FILE IS JUDGED BY THE ONE DETECTOR (R-96).
+        found, noted = sanitize.registry_issue_list(root)
         issue_list.extend(found)
         note_list.extend(noted)
 

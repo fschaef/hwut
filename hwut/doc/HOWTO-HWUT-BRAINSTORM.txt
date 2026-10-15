@@ -775,3 +775,12 @@ BIN DISCIPLINE
     - A STIMULUS IS CHECKED BY WHAT THE FACE SAID, not by its status
       alone: all three stale stimuli above produced '1' for a reason
       other than the one the column names
+    - ACCEPT BLESSES THE CANDIDATE THAT STANDS, not the page as it would
+      print now. 'accept' provisions only where NO candidate stands; one
+      left in 'OUT/' by an earlier run is what it blesses. Measured
+      2026-10-14: four faces were added after 'test-help-pages.sh shape'
+      had last run; the page was checked by hand ('bash ... shape', its
+      output elsewhere), 'hwut.accept --force' said "blessed" -- and
+      blessed the old candidate of three faces. The census found it. After
+      a change that moves a page: 'hwut.run' it, read the diff, accept,
+      and grep the GOOD for what the change added

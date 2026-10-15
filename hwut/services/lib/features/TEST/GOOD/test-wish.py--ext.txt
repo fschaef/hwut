@@ -1,0 +1,45 @@
+>>> -e can.decode
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -e router.*
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> --feature-ext router.forward
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> --feature-ext=router.keep-order
+    ./gw/router/TEST/test-route.sh burst
+    exit 0
+>>> -e router.drop
+    exit 3
+>>> -e nope
+    REFUSED: '--feature-ext nope' names no feature: no line of 'hwut-root-features.conf' has that external id => hwut.features.tree -e
+    exit 2
+>>> -e can.old
+    REFUSED: '--feature-ext can.old' names a RETIRED feature: no longer claimed, no run proves it any more
+    exit 2
+>>> -e
+    REFUSED: '-e' stands without an external id
+    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
+                            [--glob <target>]... [--exclude <target>]...
+                            [--dir <glob>]... [--exclude-dir <glob>]...
+                            [--wishlist <file>]... [-l|--label <expr>]
+                            [--language=<name>]... [--faster-than=<sec>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
+    exit 2
+>>> --feature-ext=
+    REFUSED: '--feature-ext' names no id
+    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
+                            [--glob <target>]... [--exclude <target>]...
+                            [--dir <glob>]... [--exclude-dir <glob>]...
+                            [--wishlist <file>]... [-l|--label <expr>]
+                            [--language=<name>]... [--faster-than=<sec>]
+                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
+    exit 2
+<hwut-end>

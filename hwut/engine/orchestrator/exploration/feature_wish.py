@@ -1,35 +1,39 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FEATURE WISH -- which test runs '-F/--feature' and
-         '-k/--keys' want (exploration R-95).
+PURPOSE: THE FEATURE WISH -- which test runs '-F/--feature',
+         '-e/--feature-ext' and '-k/--keys' want, read from the view of
+         'hwut-root-features.conf' ('feature_view.view_of'; spec 23
+         VERSION 10 section 11, R-96):
 
-    -F <id-glob>   over FULL ids, matched by KEY NAMES
-                       '*'      one key (or part of one: 'scr*')
-                       '**'     any number of keys, none included
-                       '{a,b}'  alternatives
-                       a bare key is '**.key'
-                   A COMPONENT BRINGS ITS SUBTREE: the glob names a
-                   claim and every feature below it is wanted.
-                   An id the feature map publishes is resolved through
-                   it first: it means the full id the map binds it to,
-                   exactly. A RETIRED id is refused by name.
-    -k <expr>      the grammar of '-l' over the EFFECTIVE keys of a
-                   feature. A key no feature carries is refused by name.
+    -F <path-glob>   over TREE PATHS: the aggregate keys from the top, '/'
+                     between, the leaf's EXTERNAL id last; an unplaced leaf
+                     is its external id alone. '*' any part of ONE level,
+                     '**' any number of levels, '{a,b}' alternatives; a bare
+                     word is '**/word'. An aggregate brings its subtree. A
+                     word with ':' is an INTERNAL id '<directory id>:<name>'
+                     ('*' allowed). A retired internal id is refused.
+    -e <id>          over EXTERNAL ids, whole; '*' any characters. An id
+                     that names no feature, or a retired one, is refused by
+                     name -- a customer's id that selects nothing silently
+                     is the failure this wish exists to prevent.
+    -k <expr>        the grammar of '-l' over the EFFECTIVE keys of a leaf
+                     (its own, its TEST file's, the aggregates' above it).
+                     A key no leaf carries is refused by name.
 
-A RUN IS WANTED where ONE feature it is linked to is named by an '-F'
-glob (where any stands) AND satisfies the '-k' expression (where one
-stands). A run linked to no feature is wanted by neither: both ask for
-features.
+'-F' and '-e' are ONE union; '-k' narrows it. A run is wanted where ONE
+leaf it is linked to is selected. A run linked to no feature is wanted by
+none of them: all ask for features. Where no readable central file stands
+the wish is refused => hwut.features.init.
 
 THE VIEW is computed once per tree and process (reading the relation
 costs a walk of the whole tree, and a query stands in every TEST
 directory); 'forget_views' drops it, for a test that rebuilds a tree
 under one path.
 
-THIS MODULE REUSES: 'feature_relation' for the ids, the keys and the map,
+THIS MODULE REUSES: 'feature_view' for the leaves, their runs and keys,
 'plan/label' for the expression's grammar and its evaluation. It adds
-only the id glob.
+only the path glob.
 ______________________________________________________________________________
 """
 import os
@@ -37,7 +41,6 @@ import re
 
 from ..plan.label        import (evaluate_f, label_name_tuple,
                                  parse_expression)
-from .feature_relation   import relation_of_tree
 from .task_list          import SelectionError
 
 
@@ -91,123 +94,159 @@ def brace_alternative_tuple(pattern):
     return tuple(result)
 
 
-def _level_regex(level):
-    """RETURN: re.Pattern, the key-level glob 'level' ('*' any run of
-    characters, '?' one) as a regular expression over ONE key."""
-    text = "".join("[^.]*" if char == "*" else "[^.]" if char == "?"
+def _path_level_regex(level):
+    """RETURN: re.Pattern, one level of a tree-path glob ('*' any run of
+    characters, '?' one) over ONE level -- a level may hold dots (an
+    external id)."""
+    text = "".join(".*" if char == "*" else "." if char == "?"
                    else re.escape(char) for char in level)
     return re.compile(text + r"\Z")
 
 
-def _chain_hit_f(level_tuple, key_tuple):
-    """
-    RETURN: bool, True where the glob levels 'level_tuple' match the keys
-            'key_tuple' in whole: '**' takes any number of keys, none
-            included, every other level one key.
-    """
-    if not level_tuple: return not key_tuple
+def _path_chain_hit_f(level_tuple, part_tuple):
+    """RETURN: bool, True where the glob levels match the path parts in
+    whole: '**' any number of parts, none included, every other level one
+    part."""
+    if not level_tuple: return not part_tuple
     head, rest = level_tuple[0], level_tuple[1:]
     if head == "**":
-        return any(_chain_hit_f(rest, key_tuple[i:])
-                   for i in range(len(key_tuple) + 1))
-    if not key_tuple: return False
-    return _level_regex(head).match(key_tuple[0]) is not None \
-           and _chain_hit_f(rest, key_tuple[1:])
+        return any(_path_chain_hit_f(rest, part_tuple[i:])
+                   for i in range(len(part_tuple) + 1))
+    if not part_tuple: return False
+    return _path_level_regex(head).match(part_tuple[0]) is not None \
+           and _path_chain_hit_f(rest, part_tuple[1:])
 
 
-def glob_hit_f(glob, key_tuple):
+def path_glob_hit_f(glob, part_tuple):
     """
-    RETURN: bool, True where the id glob 'glob' names the claim at
-            'key_tuple' -- or any claim ABOVE the end of it, which brings
-            its subtree: a feature is wanted where its own id or any
-            proper prefix of it is named.
-
-    A glob without '.', '*', '?', '[' or '{' is a bare key: '**.key'.
+    RETURN: bool, True where the tree-path glob 'glob' names the leaf at
+            'part_tuple' (aggregate keys, then its external id) or a claim
+            above it -- an aggregate brings its subtree. A glob without '/'
+            and without '*', '?', '[' or '{' is a bare word: '**/word'.
     """
-    if not _GLOB_CHARS.search(glob) and "." not in glob:
-        glob = "**." + glob
+    if not _GLOB_CHARS.search(glob) and "/" not in glob:
+        glob = "**/" + glob
     for alternative in brace_alternative_tuple(glob):
-        level_tuple = tuple(alternative.split("."))
-        for end in range(1, len(key_tuple) + 1):
-            if _chain_hit_f(level_tuple, key_tuple[:end]):
+        level_tuple = tuple(alternative.strip("/").split("/"))
+        for end in range(1, len(part_tuple) + 1):
+            if _path_chain_hit_f(level_tuple, part_tuple[:end]):
                 return True
     return False
 
 
-def full_id_tuple_wanted(relation, glob_tuple):
-    """
-    RETURN: [0] dict, full id -> True for the glob-free texts of
-                'glob_tuple' the feature map resolves: the exact
-                features they mean
-            [1] tuple of str, the globs that remain
-    Raises SelectionError, naming the id, for a published id the map
-    retired.
-    """
-    exact_set, remaining = set(), []
-    map_db = {} if relation.feature_map is None else {
-        each: target for each, target, _
-        in relation.feature_map.entry_tuple}
-    for glob in glob_tuple:
-        if glob in map_db:
-            target = map_db[glob]
-            if target is None:
-                raise SelectionError(
-                    "'--feature %s' names a RETIRED id: the map binds it "
-                    "to none, no feature means it any more" % glob)
-            exact_set.add(target)
-        else:
-            remaining.append(glob)
-    return exact_set, tuple(remaining)
+def _whole_hit_f(glob, text):
+    """RETURN: bool, True where 'glob' ('*' any characters, '{a,b}') matches
+    'text' in whole."""
+    return any(_path_level_regex(each).match(text) is not None
+               for each in brace_alternative_tuple(glob))
 
 
-def _case_set_of(relation, root, wish):
+def _view_case_set_of(view, wish):
     """
     RETURN: [0] frozenset of (absolute test file, choice), the runs the
-                wish's features and keys want
-            [1] frozenset of str, every key a feature of the tree carries
+                wish's '-F', '-e' and '-k' want, read from the central
+                file's view
+            [1] frozenset of str, every key a leaf of the view carries
+    Raises SelectionError for an external id that names no feature, and
+    for a retired id named by '-e' or '-F'.
     """
-    exact_set, glob_tuple = full_id_tuple_wanted(relation, wish.feature_tuple)
+    from .feature_registry import name_set, retired_internal_set
+    leaf_list = view.leaf_list()
+    retired_internal = retired_internal_set(view.registry)
+    live_external = {each.leaf.external for each in leaf_list}
+    retired_name = name_set(view.registry) - live_external - {
+        each.aggregate.key for each in _aggregate_list(view)}
+    for text in wish.feature_ext_tuple:
+        if _GLOB_CHARS.search(text): continue
+        if text in retired_name:
+            raise SelectionError(
+                "'--feature-ext %s' names a RETIRED feature: no longer "
+                "claimed, no run proves it any more" % text)
+        if text not in live_external:
+            raise SelectionError(
+                "'--feature-ext %s' names no feature: no line of "
+                "'hwut-root-features.conf' has that external id => "
+                "hwut.features.tree -e" % text)
+    for text in wish.feature_tuple:
+        if ":" in text and not _GLOB_CHARS.search(text) \
+           and text in retired_internal:
+            raise SelectionError(
+                "'--feature %s' names a RETIRED feature: no longer "
+                "claimed" % text)
     key_tree = None if wish.keys_spec is None \
                else parse_expression(wish.keys_spec)
+    named_f  = bool(wish.feature_tuple or wish.feature_ext_tuple)
     case_set, known_set = set(), set()
-    for path, each in relation.test_directory_db.items():
-        for state in each.state_tuple:
-            chain    = relation.chain_tuple(path) + (state.feature.name,)
-            full_id  = ".".join(chain)
-            key_set  = set(relation.effective_key_tuple(path, state.feature))
-            known_set |= key_set
-            if wish.feature_tuple:
-                named = full_id in exact_set \
-                        or any(glob_hit_f(glob, chain)
-                               for glob in glob_tuple)
-                if not named: continue
-            if key_tree is not None and not evaluate_f(key_tree, key_set):
-                continue
-            for run in state.run_tuple:
-                case_set.add((os.path.normpath(
-                    os.path.join(root, path, run.test)), run.choice))
+    for each in leaf_list:
+        known_set |= set(each.key_tuple)
+        if named_f:
+            part_tuple = tuple(each.tree_path.split("/")
+                               if each.tree_path else ()) \
+                         + (each.leaf.external,)
+            hit = any(_whole_hit_f(text, each.leaf.internal)
+                      if ":" in text else path_glob_hit_f(text, part_tuple)
+                      for text in wish.feature_tuple) \
+                  or any(_whole_hit_f(text, each.leaf.external)
+                         for text in wish.feature_ext_tuple)
+            if not hit: continue
+        if key_tree is not None and not evaluate_f(key_tree,
+                                                   set(each.key_tuple)):
+            continue
+        if each.feature_state is None: continue
+        for run in each.feature_state.run_tuple:
+            case_set.add((os.path.normpath(os.path.join(
+                view.asked, each.test_path, run.test)), run.choice))
     return frozenset(case_set), frozenset(known_set)
+
+
+def _aggregate_list(view):
+    """RETURN: list of CAggregateView, every aggregate of the view."""
+    result = []
+
+    def walk(child_tuple):
+        for each in child_tuple:
+            if hasattr(each, "aggregate"):
+                result.append(each)
+                walk(each.child_tuple)
+
+    walk(view.top_tuple)
+    return result
+
+
+def _asked_text(wish):
+    """RETURN: str, the first feature option the wish states, as typed."""
+    if wish.feature_tuple:     return "--feature"
+    if wish.feature_ext_tuple: return "--feature-ext"
+    return "--keys"
 
 
 def case_set_of(root, wish):
     """
     RETURN: frozenset of (absolute test file, choice), the runs of the
-            tree below 'root' that the wish's '-F' and '-k' want --
+            tree below 'root' that the wish's '-F', '-e' and '-k' want --
             empty where none does.
 
-    Raises SelectionError for a retired id, for a key no feature of the
-    tree carries (a misspelt key silently selecting nothing is how an
+    Raises SelectionError where no readable central file stands, for a
+    retired id, for an external id naming no feature, for a key no leaf
+    carries (a misspelt key silently selecting nothing is how an
     author comes to believe a set is empty), and for a glob that cannot
     be read.
     """
     root = os.path.abspath(root)
-    mark = (root, wish.feature_tuple, wish.keys_spec)
+    mark = (root, wish.feature_tuple, wish.keys_spec,
+            wish.feature_ext_tuple)
     if mark in _view_db: return _view_db[mark]
-    relation = relation_of_tree(root)
     # the globs are read once, so a broken one is refused at the door
-    for glob in wish.feature_tuple:
+    for glob in wish.feature_tuple + wish.feature_ext_tuple:
         brace_alternative_tuple(glob)
-    case_set, known_set = _case_set_of(relation, root, wish)
+    from .feature_view  import view_of, ViewRefused
+    from .tree_explorer import RootConfMissing
+    try:
+        view = view_of(root)
+    except (ViewRefused, RootConfMissing) as error:
+        raise SelectionError("'%s' asks for features: %s"
+                             % (_asked_text(wish), error)) from error
+    case_set, known_set = _view_case_set_of(view, wish)
     if wish.keys_spec is not None:
         unknown = [name for name in label_name_tuple(
                        parse_expression(wish.keys_spec))

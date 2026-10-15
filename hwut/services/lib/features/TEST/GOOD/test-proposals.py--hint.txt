@@ -1,0 +1,36 @@
+>>> accepted, so the help speaks of nothing else
+    ACCEPTED  1 of 1
+    exit 0
+>>> no central file
+    exit 0
+>>> init
+    'hwut-root-features.conf' written -- 2 directory id(s), 4 feature(s), unplaced
+    exit 0
+>>> every feature registered
+    exit 0
+>>> renamed, moved, new: the tree
+    3 feature(s) not registered => hwut.features.register
+    exit 0
+>>> below gw only
+    2 feature(s) not registered => hwut.features.register
+    exit 0
+>>> hwut.help
+    FEATURES -- defined, not registered
+        not registered -- defined, in no line  [3 feature(s)]
+            Each feature below is defined in its TEST directory's
+            'hwut-features.conf', and 'hwut-root-features.conf' -- the one place
+            where features are registered -- has no line for it: it is new, it
+            was renamed, or its directory moved. It is NOT a failure: the test
+            runs and is judged. But a feature that is not registered has no
+            external id, and nothing a customer holds can name it.
+            In order to heal, run 'hwut.features.register'. It adds what is new
+            -- an id for a directory, a line for a feature, unplaced -- and
+            names what was renamed or moved, with the line that heals it
+            ('repoint', 'redirect'), for 'hwut.sanitize' to do. Then move the
+            new lines into aggregates of the tree.
+            CONCERNED:
+                gw/bus-can  decode
+                gw/bus-can  encode-frame
+                misc  x
+    exit 0
+<hwut-end>

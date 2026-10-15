@@ -37,23 +37,22 @@ relative to '--directory' (the current directory where none is given):
                                  is stained 'constraint'
     run    <dir> <target>        the project's own verb (E-7), through
                                  'hwut.execute', in <dir> and below
-    relate <dir>                 the claims of <dir> disagree with where
-                                 it stands: they are ADAPTED. A
-                                 component's 'hwut-features.conf' where it
-                                 states none (an explicit tree); its
-                                 entry '<key> = "./<dir>"' in the 'childs'
-                                 above -- CARRIED there, key and all, from
-                                 the 'childs' that still lists it where
-                                 the directory was MOVED; the published
-                                 ids of the features of a TEST directory
-                                 (an entry in 'hwut-feature-map.conf',
-                                 REPOINTED where the feature moved with
-                                 the directory)
-    unrelate <dir> <name>        'childs' of <dir> lists a directory where
-                                 no component stands: the entry is removed
-    retire <dir> <id>            the map in <dir> binds the published id
-                                 <id> to a feature that stands no more: it
-                                 is bound to none -- RETIRED
+    register <dir>               THE CENTRAL FILE OF FEATURES
+                                 ('hwut-root-features.conf', R-96) lacks
+                                 what <dir> defines: an id for the
+                                 directory, a line for each feature, added
+                                 unplaced ('hwut.features.register')
+    redirect <id> <path>         a directory id stands for a path that
+                                 stands no more, and the directory moved
+                                 to <path> (below the root): its line is
+                                 pointed there; half of a swap takes its
+                                 mate along
+    repoint <external> <internal>
+                                 a leaf's internal id is defined no more,
+                                 and <internal> is the feature it became:
+                                 the external id is bound to it
+    fold <id> <first id>         one path under two ids: the later line
+                                 goes, its leaves bound to the first
     root   [<dir>]               no 'hwut-root.conf' stands in or above
                                  <dir>: the file is written there, with
                                  its 'language-setup' table (E-25).
@@ -185,34 +184,30 @@ ISSUE_KIND_TUPLE = (
         "'remark' writes each finding into the nominal after the line that",
         "caused it -- a variable never bound at the head -- and stains the",
         "book 'constraint'. Nothing is removed; mend the nominal.")),
-    CIssueKind("relation-file", "relate", (
-        "FILE AND LISTING DISAGREE WITH THE DIRECTORIES: a component of an",
-        "explicit tree states no 'hwut-features.conf', or the file of the",
-        "directory above does not list it in its 'childs'.",
-        "'relate' writes the file, empty, and enters '<key> = \"./<dir>\"'",
-        "above -- the directory's name is the key; rename it, and the ids",
-        "below follow.")),
-    CIssueKind("relation-moved", "relate", (
-        "DETECTED MOVE: a directory stands below one component, and the",
-        "'childs' it came from still list it.",
-        "'relate' carries the entry, KEY AND ALL, from the old parent's",
-        "file to the new one's: the ids below keep their keys.")),
-    CIssueKind("relation-map", "relate", (
-        "NO PUBLISHED ID: a feature stands that no entry of",
-        "'hwut-feature-map.conf' names, or no map stands at all.",
-        "'relate' publishes it under its full id -- or, where a published",
-        "id is bound to a full id that stands no more and this feature is",
-        "its one counterpart, REPOINTS that id: what a customer was told",
+    CIssueKind("registry-new", "register", (
+        "NOT REGISTERED: a directory whose TEST directory defines features",
+        "has no id in 'hwut-root-features.conf', or a feature it defines",
+        "stands in no line (R-96).",
+        "'register' adds the id and the lines, the leaves unplaced under",
+        "their first external ids -- read them: a familiar name registered",
+        "afresh is a line that went missing.")),
+    CIssueKind("registry-moved", "redirect", (
+        "MOVED: a directory id stands for a path that stands no more, or",
+        "for one that holds another id's features, and ONE directory stands",
+        "whose feature names are the id's (mutually best, at least half).",
+        "'redirect' points the id's line at the new path; every external id",
+        "below stays valid.")),
+    CIssueKind("registry-renamed", "repoint", (
+        "RENAMED OR MOVED FEATURE: a leaf's internal id is defined no more,",
+        "and one feature stands that is it -- the only one gone and the",
+        "only one new of its directory, or of the same name elsewhere.",
+        "'repoint' binds the external id to it: what a customer was told",
         "keeps its meaning.")),
-    CIssueKind("relation-gone", "unrelate", (
-        "LISTED, NOT THERE: a 'childs' lists a directory where no component",
-        "stands, and none was moved away from it.",
-        "'unrelate' removes the entry.")),
-    CIssueKind("relation-retire", "retire", (
-        "PUBLISHED, GONE: a published id is bound to a full id that names",
-        "no feature, and no feature stands that could be it.",
-        "'retire' binds the id to none: it stays in the map as RETIRED, a",
-        "state reported beside PROVEN and FAILING.")),
+    CIssueKind("registry-twin", "fold", (
+        "ONE PATH, TWO IDS: a directory registered twice (two branches",
+        "merged, say).",
+        "'fold' removes the later id's line and binds its leaves to the",
+        "first; a feature registered under both stays once.")),
     CIssueKind("target", "run", (
         "TARGET: the project's own verb, asked for by '--target' (E-7).",
         "'run' calls it through 'hwut.execute' in the directory and every",
@@ -265,15 +260,20 @@ class CIssue:
                     forget  <dir>/<test> [<choice>]
                     move    <dir>/<test> <new-dir>
                     run     <dir> <target>
-                    relate  <dir>
-                    unrelate <dir> <name>
-                    retire  <dir> <published id>
+                    register <dir>
+                    redirect <id> <path>
+                    repoint <external> <internal>
+                    fold    <id> <first id>
                     root    <dir>
         """
         where = shown(base, self.directory).replace(os.sep, "/")
-        if self.verb() in ("root", "relate"):
+        #  THE CENTRAL FILE'S WORDS are its own: ids, and paths below the
+        #  root as 'directory_map' writes them -- never relative to 'base'.
+        if self.verb() in ("redirect", "repoint", "fold"):
+            return " ".join(self.word_tuple)
+        if self.verb() in ("root", "register"):
             return where
-        if self.verb() in ("run", "unrelate", "retire"):
+        if self.verb() == "run":
             return "%s %s" % (where, self.word_tuple[0])
         if self.verb() == "move":
             head = self.word_tuple[0] if where == "." \
@@ -627,60 +627,47 @@ def moved_issue_of(issue, home_list, root):
                   payload=issue.payload, note=note)
 
 
-def relation_issue_list(root, relation):
+def registry_issue_list(root):
     """
-    RETURN: [0] list[CIssue], one 'relate' per directory whose files or
-                map entries disagree with where it stands -- noted
-                'moved from <dir>' where the move was detected -- one
-                'unrelate' per 'childs' entry that lists a directory
-                where nothing stands, and one 'retire' per published id
-                bound to a feature that is gone; parents before their
-                childs.
-            [1] list[str], what is found and NOT proposed: a directory
-                listed under two keys, two published ids naming one
-                feature, a retired id that is a standing feature's.
-
-    'relation' is the feature relation of the tree below 'root'
-    ('feature_relation.relation_of_exploration').
+    RETURN: [0] list[CIssue], what the ONE detector ('feature_detector',
+                R-96) proposes for the central file of the tree at 'root':
+                'register' per directory that lacks an id or a line,
+                'redirect', 'repoint' and 'fold' as it pairs them -- the old
+                value in the note
+            [1] list[str], what it finds and does not propose: what it
+                could not pair (with the candidates), a retired name defined
+                again, files of the past, the root's own TEST directory;
+                where no central file stands and features are defined,
+                that one is wanted.
     """
-    from ..engine.orchestrator.exploration import feature_relation as fr
-    kind_db   = {fr.MOVED: "relation-moved", fr.NO_FILE: "relation-file",
-                 fr.UNLISTED: "relation-file", fr.NO_MAP: "relation-map",
-                 fr.UNMAPPED: "relation-map"}
-    rank_list = [fr.MOVED, fr.NO_FILE, fr.UNLISTED, fr.NO_MAP, fr.UNMAPPED]
-    issue_list, note_list, chosen_db = [], [], {}
-    for mismatch in fr.mismatch_list(relation):
-        directory = os.path.normpath(os.path.join(root, mismatch.path))
-        if mismatch.kind == fr.TWIN:
-            note_list.append("%s: the directory '%s' is listed under two "
-                             "keys -- remove one" % (mismatch.path,
-                                                     mismatch.id))
-        elif mismatch.kind == fr.MAP_TWIN:
-            note_list.append("%s: two published ids name %s -- retire or "
-                             "rename one" % (fr.MAP_FILE_NAME, mismatch.id))
-        elif mismatch.kind == fr.MAP_CLASH:
-            note_list.append("%s: '%s' is retired, and a feature stands "
-                             "under that id -- rename the published id"
-                             % (fr.MAP_FILE_NAME, mismatch.id))
-        elif mismatch.kind == fr.DANGLING:
-            issue_list.append(CIssue("relation-gone", directory,
-                                     (mismatch.id,)))
-        elif mismatch.kind == fr.MAP_GONE:
-            issue_list.append(CIssue("relation-retire", directory,
-                                     (mismatch.id,)))
-        else:
-            standing = chosen_db.get(directory)
-            if standing is not None and rank_list.index(standing.kind) \
-                                        <= rank_list.index(mismatch.kind):
-                continue
-            chosen_db[directory] = mismatch
-    relate_list = []
-    for directory, mismatch in chosen_db.items():
-        note = None if mismatch.from_path is None \
-               else "moved from %s" % mismatch.from_path
-        relate_list.append(CIssue(kind_db[mismatch.kind], directory, (),
-                                  note=note))
-    return relate_list + issue_list, note_list
+    from ..engine.orchestrator.exploration import feature_detector as fd
+    from ..engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
+    kind_db = {"register": "registry-new", "redirect": "registry-moved",
+               "repoint": "registry-renamed", "fold": "registry-twin"}
+    issue_list, note_list, seen = [], [], set()
+    found = fd.detect(root)
+    if found is None:
+        if fd.fact_db_of_tree(root)[0]:
+            note_list.append("features are defined, and no '%s' stands => "
+                             "hwut.features.init" % REGISTRY_FILE_NAME)
+        return issue_list, note_list
+    for each in found:
+        if each.kind == fd.UNPLACED: continue
+        for verb, word_tuple, note in each.command_tuple:
+            if (verb, word_tuple) in seen: continue
+            seen.add((verb, word_tuple))
+            if verb == "register":
+                issue_list.append(CIssue(
+                    kind_db[verb], os.path.normpath(
+                        os.path.join(root, word_tuple[0])), ()))
+            else:
+                issue_list.append(CIssue(kind_db[verb], root, word_tuple,
+                                         note=note))
+        if each.unpaired is not None:
+            note_list.append("unpaired %s" % each.unpaired)
+        elif not each.command_tuple:
+            note_list.append(each.text.strip())
+    return issue_list, note_list
 
 
 def books_issue_list(directory, app_set):

@@ -1,0 +1,38 @@
+--- written -----------------------------------------------------
+>>> hwut.features.init
+    'hwut-root-features.conf' written -- 2 directory id(s), 3 feature(s), unplaced
+    => move the leaf lines into aggregates of 'tree'
+    exit 0
+    header: 29 comment lines, first: # hwut-root-features.conf -- THE ONE PLACE where the features of this tree
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |     }
+    |     tree {
+    |         "gw.can.decode" = "Aaaaaaa1:decode"
+    |         "gw.can.encode" = "Aaaaaaa1:encode"
+    |         "gw.most.send" = "Bbbbbbb2:send"
+    |     }
+    |     retired {
+    |     }
+    | }
+--- refused -----------------------------------------------------
+>>> it stands already
+    REFUSED: 'hwut-root-features.conf' stands already => hwut.features.register
+    exit 2
+>>> a word it does not take
+    REFUSED: 'hwut.features.init' does not take: gw
+    usage: hwut.features.init [--directory=<path>]
+    exit 2
+>>> files of the past stand
+    REFUSED: files of the past stand; migrate them first:
+        gw/hwut-features.conf
+        hwut-feature-map.conf
+    exit 2
+    written: False
+>>> no hwut-root.conf
+    REFUSED: no 'hwut-root.conf' stands in or above '.' -- the tree has no boundary
+    HINT: use 'hwut.sanitize root [dir]' to place one.
+    exit 2
+<hwut-end>

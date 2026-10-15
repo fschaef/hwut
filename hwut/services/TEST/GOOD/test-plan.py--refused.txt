@@ -7,8 +7,9 @@ $ hwut.plan --since=noon
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
-                     [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                     [<file-glob> [choice-glob]...] [--directory=<path>]
+                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                     [--directory=<path>]
     [status 2]
 
 --- '--fail' beside '--pass' ---
@@ -19,8 +20,9 @@ $ hwut.plan --fail --pass
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
-                     [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                     [<file-glob> [choice-glob]...] [--directory=<path>]
+                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                     [--directory=<path>]
     [status 2]
 
 --- an OPTION the face does not take ---
@@ -31,7 +33,8 @@ $ hwut.plan --sideways
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
-                     [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                     [<file-glob> [choice-glob]...] [--directory=<path>]
+                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
+                     [--directory=<path>]
     [status 2]
 <hwut-end>

@@ -1,0 +1,22 @@
+--- gw/can and gw/most exchanged their contents -----------------
+  dir-swapped  Aaaaaaa1   'gw/can' stands; its features are defined in 'gw/most'
+                   => redirect Aaaaaaa1 gw/most  # from gw/can
+  dir-swapped  Bbbbbbb2   'gw/most' stands; its features are defined in 'gw/can'
+                   => redirect Bbbbbbb2 gw/can  # from gw/most
+--- gw/can now holds what gw/most held; gw/most holds something else 
+  dir-swapped  Bbbbbbb2   'gw/most' stands; its features are defined in 'gw/can'
+                   => # unpaired Bbbbbbb2 gw/most (candidates: gw/can)
+  leaf-new     gw/most   'other' is in no line
+                   => register gw/most
+  leaf-gone    c.decode   Aaaaaaa1:decode is defined no more
+                   => # unpaired c.decode Aaaaaaa1:decode (candidates: Aaaaaaa1:receive, Aaaaaaa1:send)
+  leaf-gone    c.encode   Aaaaaaa1:encode is defined no more
+                   => # unpaired c.encode Aaaaaaa1:encode (candidates: Aaaaaaa1:receive, Aaaaaaa1:send)
+  leaf-gone    m.receive   Bbbbbbb2:receive is defined no more
+                   => repoint m.receive Aaaaaaa1:receive  # from Bbbbbbb2:receive
+  leaf-gone    m.send   Bbbbbbb2:send is defined no more
+                   => repoint m.send Aaaaaaa1:send  # from Bbbbbbb2:send
+--- features removed from a directory that stands: no swap ------
+  leaf-gone    c.encode   Aaaaaaa1:encode is defined no more
+                   => # unpaired c.encode Aaaaaaa1:encode (candidates: none)
+<hwut-end>

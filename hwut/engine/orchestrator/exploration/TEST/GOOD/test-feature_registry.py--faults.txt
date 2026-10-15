@@ -1,0 +1,48 @@
+--- a directory id of the wrong shape ---------------------------
+  f:1:28: VOCABULARY: 'short' is no directory id: 8 characters of base64url (letters, digits, '_', '-')
+--- a path that leaves the root, or is none ---------------------
+  f:1:28: TYPE: 'Qm9xB_2a' stands for a path below the root: relative, no '..', no '.'
+  f:1:49: TYPE: 'Zk3aT-7c' stands for a path below the root: relative, no '..', no '.'
+  f:1:68: TYPE: 'AAAAAAAA' stands for a path below the root: relative, no '..', no '.'
+  f:1:86: TYPE: 'BBBBBBBB' stands for a path below the root: relative, no '..', no '.'
+  f:1:107: TYPE: 'CCCCCCCC' stands for a path below the root: relative, no '..', no '.'
+--- an unknown key, and a statement that is not a block ---------
+  f:1:12: TYPE: 'directory_map' is a block: directory_map { ... }
+  f:1:43: VOCABULARY: unknown key 'forest' in 'features': 'directory_map', 'tree', 'retired'
+--- 'none' in the tree, a name that is no identifier ------------
+  f:1:19: TYPE: 'gone' is none: a claim that is no more stands in 'retired' (hwut.features.retire)
+  f:1:34: VOCABULARY: 'a/b' is no external id: identifier words joined by '.'
+  f:1:56: VOCABULARY: 'a b' is no aggregate key: an identifier of one word, no dot
+  f:1:67: VOCABULARY: 'c.d' is no aggregate key: an identifier of one word, no dot
+--- an internal id of the wrong shape ---------------------------
+  f:1:19: TYPE: 'a' is bound to an internal id "<directory id>:<name>"
+  f:1:30: TYPE: 'b' is bound to an internal id "<directory id>:<name>"
+  f:1:49: TYPE: 'c' is bound to an internal id "<directory id>:<name>"
+  f:1:71: TYPE: 'd' is bound to an internal id "<directory id>:<name>"
+  f:1:88: TYPE: 'e' is an aggregate (a block) or a leaf (its internal id)
+--- a name twice across blocks, in one namespace ----------------
+  f:7:1: VOCABULARY: 'x' stands twice (line 4); the first stands
+  f:9:1: VOCABULARY: 'x' stands twice (line 4); the first stands
+  f:10:1: VOCABULARY: internal id 'Qm9xB_2a:a' stands twice (line 4); the first stands
+--- an aggregate key equal to an external id --------------------
+  f:6:1: VOCABULARY: 'forwarding' stands twice (line 4); the first stands
+--- retired, and bound again ------------------------------------
+  f:3:1: VOCABULARY: 'scroll-old' (Qm9xB_2a:n) is retired; it is never bound again
+  f:4:1: VOCABULARY: 'other' (Qm9xB_2a:s) is retired; it is never bound again
+  f:5:1: VOCABULARY: 'grp' is retired; it is never bound again
+--- retired: a leaf and an aggregate at once, no id, a bad id ---
+  f:1:22: VOCABULARY: 'a' is a leaf ('id') or an aggregate ('childs'), not both
+  f:1:61: TYPE: 'id' of 'b' is an internal id "<directory id>:<name>"
+  f:1:82: TYPE: 'c' is a block: a leaf { id = ... } or an aggregate { childs { ... } }
+  f:1:102: VOCABULARY: unknown key 'bogus' in 'd': 'id', 'title', 'doc', 'documents', 'keys', 'childs'
+--- an unknown key in an aggregate, a documents list that is none 
+  f:1:36: VOCABULARY: unknown key 'colour' in 'g': 'title', 'doc', 'documents', 'keys', 'childs'
+  f:1:52: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+  f:1:69: VOCABULARY: 'a.b' is no key: letters, digits, '_' and '-' -- no dot
+--- a file that does not parse, and one with no outer node ------
+  f:1:23: SYNTAX: unterminated object: '}' missing
+  f:1:23: SYNTAX: unterminated object: '}' missing
+  f:1:23: SYNTAX: unterminated object: '}' missing
+--- no outer node -----------------------------------------------
+  f:1:1: VOCABULARY: the outer node is 'features { }'; not 'tree'
+<hwut-end>

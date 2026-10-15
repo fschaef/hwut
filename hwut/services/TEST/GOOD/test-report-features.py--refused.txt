@@ -9,8 +9,18 @@ status: REFUSED
     usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 
+--- no central file at the top ---
+    REFUSED: no 'hwut-root-features.conf' stands at '<tree>' => hwut.features.init
+    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- a central file that states a fault ---
+    REFUSED: 'hwut-root-features.conf' cannot be read: hwut-root-features.conf:1:19: TYPE: 'x' is an aggregate (a block) or a leaf (its internal id)
+    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
+status: REFUSED
+
 --- a tree no 'hwut-root.conf' bounds ---
-    REFUSED: no 'hwut-root.conf' stands above '<tree>' -- a tree states its own boundary, and the global configuration that applies to it, in that file (the climb ends at the transient ground 'TMP/', E-24)
+    REFUSED: no 'hwut-root.conf' stands in or above '<tree>' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
 HINT: use 'hwut.sanitize root [dir]' to place one.
     usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED

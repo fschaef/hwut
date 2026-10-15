@@ -1,0 +1,30 @@
+>>> --matrix
+    gw/can/TEST    #1
+    test-frame.sh  FAIL
+      #1 decode  IMPLEMENTED fail
+    
+    gw/router/TEST          #1    #2    #3
+    test-restart.sh         .     .     .     <- NONSENSE?
+    test-route.sh [single]  PASS  .     .
+    test-route.sh [burst]   PASS  PASS  .
+                                        ^     no test run
+      #1 forward     IMPLEMENTED ok
+      #2 keep-order  IMPLEMENTED ok
+      #3 drop        OPEN
+    
+    OUTSIDE THE RELATION
+        NONSENSE? test run, links to no feature => hwut.help
+            gw/router/TEST/test-restart.sh
+    exit 0
+>>> --matrix, a feature not registered
+    TEST           #1    #2
+    test-frame.sh  FAIL  .
+                         ^     no test run
+      #1 decode  IMPLEMENTED fail
+      #2 encode  not registered
+    
+    OUTSIDE THE RELATION
+        feature, defined and not registered => hwut.features.register
+            gw/can   'encode'
+    exit 0
+<hwut-end>

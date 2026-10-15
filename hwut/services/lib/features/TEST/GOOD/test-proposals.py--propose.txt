@@ -1,0 +1,32 @@
+--- in agreement ------------------------------------------------
+>>> nothing to propose
+    # hwut.sanitize.propose -- in '.': relations
+    #
+    # One command per line, '<command> <concerned entity>', the entity
+    # relative to the directory this was written in. Put '#' before a
+    # line, or delete it, to leave it undone; then
+    #
+    #     hwut.sanitize.apply <this file>
+    #
+    # Every command judges again before it acts.
+    # nothing to sanitize
+    exit 3
+--- moved, renamed, new -----------------------------------------
+>>> proposed
+    exit 0
+    | register misc
+    | redirect Aaaaaaa1 gw/bus-can  # from gw/can
+    | repoint can.encode Aaaaaaa1:encode-frame  # from Aaaaaaa1:encode
+--- what cannot be paired: a note, no line ----------------------
+>>> moved, and every feature renamed: nothing to pair by
+    err: NOTE: unpaired Aaaaaaa1 gw/can (candidates: none)
+    exit 0
+    | register gw/bus-can
+    | register misc
+--- one path, two ids -------------------------------------------
+>>> a twin
+    exit 0
+    | register gw/bus-can
+    | register misc
+    | fold Ccccccc3 Aaaaaaa1  # one path, two ids
+<hwut-end>

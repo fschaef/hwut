@@ -1,0 +1,23 @@
+--- faults ------------------------------------------------------
+  0
+--- directories -------------------------------------------------
+  Qm9xB_2a -> gateway/router   (line 4)
+  Zk3aT-7c -> gateway/most   (line 5)
+  of 'gateway/most': Zk3aT-7c
+  of id 'nowhere1': None
+--- leaves, with the tree path ----------------------------------
+  gateway/forwarding   router.forward   Qm9xB_2a:forward   keys above: ('product', 'latency')
+  gateway/forwarding   most.send        Zk3aT-7c:send   keys above: ('product', 'latency')
+  (unplaced)           new-thing        Qm9xB_2a:new-thing   keys above: ()
+  keys above a leaf that is not there: None
+--- aggregates --------------------------------------------------
+  gateway              title='CAN-MOST gateway' keys=('product',) documents=()
+  gateway/forwarding   title='Frames reach their destination.' keys=('latency',) documents=('README.txt#3',)
+  gateway/buses        title='Both buses are served.' keys=() documents=()
+--- retired, as they were ---------------------------------------
+  scroll-old   leaf=True  internal=Qm9xB_2a:scroll title='The view scrolls by one line.' keys=('display',) below=[]
+  old-group    leaf=False internal=None title='Gone as a group.' keys=() below=[('old.one', 'Zk3aT-7c:one')]
+--- a file that is not there, and an empty one ------------------
+  None
+  0 directories, 0 in the tree, 0 retired, 0 faults
+<hwut-end>

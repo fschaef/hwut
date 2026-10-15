@@ -1,0 +1,20 @@
+>>> -F gateway/buses -e router.forward
+    ./gw/can/TEST/test-frame.sh
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -F gateway -k latency
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -e can.decode -k routing
+    exit 3
+>>> -F gateway/forwarding --fail
+    exit 3
+>>> -F gateway/buses --fail
+    ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -e can.decode
+    REFUSED: '--feature-ext' asks for features: no 'hwut-root-features.conf' stands at '<root>' => hwut.features.init
+    exit 2
+<hwut-end>

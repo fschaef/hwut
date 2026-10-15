@@ -48,10 +48,10 @@ WHAT MOVES, each step announced:
     THE LABELS   the boundary records ('services/_follow.py')
     THE FEATURES across a directory: each feature the test links to
                  that the source's 'hwut-features.conf' defines and the
-                 target's does not is CARRIED into the target's, under
-                 the target's next number -- and taken out of the
-                 source's unless a test that stays still links to it
-                 ('exploration/feature_adapt.py', the one adaption)
+                 target's does not is CARRIED into the target's, and
+                 taken out of the source's unless a test that stays
+                 still links to it; its leaf in 'hwut-root-features.conf'
+                 is repointed to the target ('exploration/feature_carry.py')
 
 WHAT IS NOT TOUCHED: the test application file, its '@hwut' block,
 and any 'hwut.conf' 'apps' section naming it. Renaming or moving the
@@ -282,24 +282,29 @@ class Rename:
 
     def _features_followed(self) -> None:
         """RETURN: None. The features the test links to, carried into
-        the target directory's feature file ('feature_adapt.test_moved')
-        -- each edit announced; a NOTE where the target carries no
-        feature file to carry them into; nothing where the test links
-        to no feature the source defines."""
-        from ..engine.orchestrator.exploration import feature_adapt
+        the target directory's feature file, the central file following
+        ('feature_carry.test_moved') -- each edit announced; nothing
+        where the test links to no feature the source defines."""
+        from ..engine.orchestrator.exploration import feature_carry
+        from ..engine.orchestrator.exploration.tree_explorer \
+            import root_conf_directory, RootConfMissing
         source_dir = str(self.source.directory)
         target_dir = str(self.target.directory)
         #  THE APPLICATION IS READ WHERE IT STANDS: the author's 'git mv'
         #  may have been made, or not yet.
         if (Path(target_dir) / self.fresh_test).is_file():
-            name_set = feature_adapt.linked_name_set(target_dir,
+            name_set = feature_carry.linked_name_set(target_dir,
                                                      test=self.fresh_test)
         else:
-            name_set = feature_adapt.linked_name_set(source_dir,
+            name_set = feature_carry.linked_name_set(source_dir,
                                                      test=self.test)
-        adapted = feature_adapt.test_moved(
-            source_dir, target_dir, name_set,
-            feature_adapt.linked_name_set(source_dir, without=self.test))
+        try:
+            root = root_conf_directory(source_dir)
+        except RootConfMissing:
+            return
+        adapted = feature_carry.test_moved(
+            root, source_dir, target_dir, name_set,
+            feature_carry.linked_name_set(source_dir, without=self.test))
         for line in adapted.said_tuple:
             self.write(f"    {line}")
         if adapted.reason:

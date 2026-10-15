@@ -1,0 +1,87 @@
+--- added -------------------------------------------------------
+>>> on a leaf
+    key 'safety' added to can.decode  (gw/can/TEST/hwut-features.conf)
+    exit 0
+>>> on a leaf without keys
+    key 'slow' added to most.send  (gw/most/TEST/hwut-features.conf)
+    exit 0
+>>> on an aggregate
+    key 'nightly' added to most  (hwut-root-features.conf)
+    exit 0
+    gw/can/TEST/hwut-features.conf:
+    | features {
+    |   keys = ["bus"]
+    |   childs {
+    |     decode { title = "A frame is decoded."
+    |              keys  = ["latency", "safety"] }
+    |     encode { title = "A frame is encoded."
+    |              doc   = """
+    |                  Both directions.
+    |                  """ }
+    |   }
+    | }
+    gw/most/TEST/hwut-features.conf:
+    | features {
+    |   childs {
+    |     send    { title = "A message is sent."  keys = ["slow"] }
+    |     receive { title = "A message arrives."  keys = ["bus"] }
+    |   }
+    | }
+--- taken off ---------------------------------------------------
+>>> its own
+    key 'latency' taken off can.decode  (gw/can/TEST/hwut-features.conf)
+    exit 0
+>>> one from above is not its own
+    REFUSED: 'can.decode' states no key 'product' of its own (a key from above is taken off where it is stated)
+    exit 2
+>>> on an aggregate
+    key 'nightly' taken off most  (hwut-root-features.conf)
+    exit 0
+--- --all -------------------------------------------------------
+>>> --all bus: a definition and a whole file
+    key 'bus' taken off most.receive  (gw/most/TEST/hwut-features.conf)
+    key 'bus' taken off every feature of gw/can/TEST/hwut-features.conf
+    exit 0
+    gw/can/TEST/hwut-features.conf:
+    | features {
+    |   childs {
+    |     decode { title = "A frame is decoded."
+    |              keys  = ["safety"] }
+    |     encode { title = "A frame is encoded."
+    |              doc   = """
+    |                  Both directions.
+    |                  """ }
+    |   }
+    | }
+    gw/most/TEST/hwut-features.conf:
+    | features {
+    |   childs {
+    |     send    { title = "A message is sent."  keys = ["slow"] }
+    |     receive { title = "A message arrives." }
+    |   }
+    | }
+>>> --all product: an aggregate
+    key 'product' taken off gateway  (hwut-root-features.conf)
+    exit 0
+    read again: 0 fault(s); retired: none
+--- refused -----------------------------------------------------
+>>> no key
+    REFUSED: 'a.b' is no key: letters, digits, '_' and '-' -- no dot
+    exit 2
+>>> stated already
+    REFUSED: 'can.decode' states the key 'safety' already
+    exit 2
+>>> a key it does not state
+    REFUSED: 'can.decode' states no key 'zzz' of its own (a key from above is taken off where it is stated)
+    exit 2
+>>> --all of a key no claim states
+    REFUSED: no claim states the key 'zzz'
+    exit 2
+>>> --all with two keys
+    REFUSED: 'hwut.features.key.remove --all' takes one key
+    usage: hwut.features.key.remove <id> <key> | --all <key> [--directory=<path>]
+    exit 2
+>>> an unknown id
+    REFUSED: 'nothing' is no leaf and no aggregate of the tree => hwut.features.tree -e
+    exit 2
+<hwut-end>

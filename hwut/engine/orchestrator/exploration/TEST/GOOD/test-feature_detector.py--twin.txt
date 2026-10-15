@@ -1,0 +1,4 @@
+--- gw/can under two ids ----------------------------------------
+  dir-twin     gw/can   under two ids: Aaaaaaa1, Ccccccc3
+                   => fold Ccccccc3 Aaaaaaa1  # one path, two ids
+<hwut-end>

@@ -1,0 +1,91 @@
+--- into dst, which defines 'same' alike and 'differ' otherwise -
+    feature 'only' -> dst
+    'only' now binds Trgt0001:only
+    feature 'shared' -> dst, kept in the source: still linked there; the copy is not registered => hwut.features.register
+    feature 'same' stands in the target alike: taken out of the source
+    'same' retired: the target's 'same' is the same
+    feature 'differ' stands in both, written differently: both left
+src/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         shared { title = "Both." }
+    |         differ { title = "Here." }
+    |     }
+    | }
+dst/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         same   { title = "Alike." }
+    |         differ { title = "There." }
+    |         only { title = "Only the mover." }
+    |         shared { title = "Both." }
+    |     }
+    | }
+hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Srce0001" = "src"
+    |         "Trgt0001" = "dst"
+    |     }
+    |     tree {
+    |         "only"   = "Trgt0001:only"
+    |         "shared" = "Srce0001:shared"
+    |         "differ" = "Srce0001:differ"
+    |         "same-t" = "Trgt0001:same"
+    |     }
+    |     retired {
+    |         "same" { id = "Srce0001:same" }
+    |     }
+    | }
+--- into new, without a feature file and without an id ----------
+    'hwut-features.conf' written in the target directory
+    feature 'only' -> new
+    <new id> registered for new
+    'only' now binds <new id>:only
+    feature 'shared' -> new, kept in the source: still linked there; the copy is not registered => hwut.features.register
+    feature 'same' -> new
+    'same' now binds <new id>:same
+    feature 'differ' -> new
+    'differ' now binds <new id>:differ
+new/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         only { title = "Only the mover." }
+    |         shared { title = "Both." }
+    |         same { title = "Alike." }
+    |         differ { title = "Here." }
+    |     }
+    | }
+hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Srce0001" = "src"
+    |         "Trgt0001" = "dst"
+    |         "<new id>" = "new"
+    |     }
+    |     tree {
+    |         "only"   = "<new id>:only"
+    |         "shared" = "Srce0001:shared"
+    |         "same"   = "<new id>:same"
+    |         "differ" = "<new id>:differ"
+    |         "same-t" = "Trgt0001:same"
+    |     }
+    |     retired {
+    |     }
+    | }
+--- no central file: the definitions alone ----------------------
+    'hwut-features.conf' written in the target directory
+    feature 'only' -> new
+    feature 'shared' -> new, kept in the source: still linked there; the copy is not registered => hwut.features.register
+    feature 'same' -> new
+    feature 'differ' -> new
+new/TEST/hwut-features.conf:
+    | features {
+    |     childs {
+    |         only { title = "Only the mover." }
+    |         shared { title = "Both." }
+    |         same { title = "Alike." }
+    |         differ { title = "Here." }
+    |     }
+    | }
+<hwut-end>

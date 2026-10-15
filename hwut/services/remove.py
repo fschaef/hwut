@@ -217,11 +217,11 @@ def forget(store, test, choice, whole_test_f, write):
 
     THE PAGE, MADE FROM 'forgotten' (E-107): the sentences unchanged.
     """
-    #  THE FEATURES THE REMOVAL LEAVES UNPROVEN, read while the test's
-    #  links can still be read ('exploration/feature_adapt.py').
-    from ..engine.orchestrator.exploration import feature_adapt
+    #  THE FEATURES THE REMOVAL LEAVES OPEN, read while the test's
+    #  links can still be read ('exploration/feature_carry.py').
+    from ..engine.orchestrator.exploration import feature_carry
     try:
-        unproven_tuple = feature_adapt.unproven_by_removal(
+        unproven_tuple = feature_carry.unproven_by_removal(
             str(store.directory), test, None if whole_test_f else choice)
     except OSError:
         unproven_tuple = ()

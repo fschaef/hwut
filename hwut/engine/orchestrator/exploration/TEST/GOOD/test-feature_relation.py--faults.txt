@@ -19,12 +19,12 @@
   kept: a
 
 --- 'title', 'doc' and 'documents' in a TEST directory's file ---
-  hwut-features.conf:2:3: VOCABULARY: 'title' states a component, and a TEST directory is not one: it belongs in the 'hwut-features.conf' of the directory above
-  hwut-features.conf:3:3: VOCABULARY: 'doc' states a component, and a TEST directory is not one: it belongs in the 'hwut-features.conf' of the directory above
-  hwut-features.conf:4:3: VOCABULARY: 'documents' states a component, and a TEST directory is not one: it belongs in the 'hwut-features.conf' of the directory above
+  hwut-features.conf:2:3: VOCABULARY: 'title' states an aggregate, and aggregates stand in 'hwut-root-features.conf'
+  hwut-features.conf:3:3: VOCABULARY: 'doc' states an aggregate, and aggregates stand in 'hwut-root-features.conf'
+  hwut-features.conf:4:3: VOCABULARY: 'documents' states an aggregate, and aggregates stand in 'hwut-root-features.conf'
 
 --- a directory reference in a TEST directory's file ---
-  hwut-features.conf:2:12: VOCABULARY: 'a' refers to a directory, and components are not in a TEST directory: the feature is 'a { title = "..." }'
+  hwut-features.conf:2:12: TYPE: 'a' is a feature: a { title = "..." }; the tree above the features stands in 'hwut-root-features.conf'
 
 --- keys: a dot, twice, a number ---
   hwut-features.conf:2:3: VOCABULARY: 'a.b' is no key: letters, digits, '_' and '-' -- no dot
@@ -32,27 +32,8 @@
   hwut-features.conf:3:16: VOCABULARY: 'keys' is a list of keys: keys = ["gui", ...]
   kept: x
 
---- claim: an inline feature ---
-  hwut-features.conf:2:12: VOCABULARY: 'a' is a feature, and features stand in the TEST directory's file: a component's file lists directories, a = "./<directory>"
-
---- claim: references that name more than one level ---
-  hwut-features.conf:3:5: TYPE: 'a' refers to '../a': a reference names ONE directory below, "./<directory>"
-  hwut-features.conf:4:5: TYPE: 'b' refers to 'x/y': a reference names ONE directory below, "./<directory>"
-  hwut-features.conf:5:5: TYPE: 'c' is a directory ("./<directory>") or a feature ({ title = "..." })
-
---- claim: 'childs' that is no scope ---
-  hwut-features.conf:2:3: TYPE: 'childs' is a scope: childs { <key> = "./<directory>" } in a component's file, childs { <name> { ... } } in a TEST directory's
-
---- claim: the old words ---
-  hwut-features.conf:2:3: VOCABULARY: unknown key 'id' in 'features': 'title', 'doc', 'documents', 'keys', 'childs'
-  hwut-features.conf:3:3: VOCABULARY: unknown key 'parent' in 'features': 'title', 'doc', 'documents', 'keys', 'childs'
-  hwut-features.conf:4:3: VOCABULARY: unknown key 'issued' in 'features': 'title', 'doc', 'documents', 'keys', 'childs'
-
---- map: the outer node is another ---
-  hwut-feature-map.conf:1:1: VOCABULARY: the outer node is 'map { }'; not 'features'
-
---- map: entries that are no id, no text ---
-  hwut-feature-map.conf:2:3: VOCABULARY: a published id is not empty
-  hwut-feature-map.conf:3:3: TYPE: 'x' is bound to the full id it means ("a.b.c"), or to none: retired
-  hwut-feature-map.conf:4:3: TYPE: 'y' is bound to the full id it means ("a.b.c"), or to none: retired
+--- the vocabulary of the past: 'parent', numbers ---
+  hwut-features.conf:2:3: VOCABULARY: unknown key 'parent' in 'features': 'keys', 'childs'
+  hwut-features.conf:3:3: VOCABULARY: unknown key 'issued' in 'features': 'keys', 'childs'
+  hwut-features.conf:4:3: VOCABULARY: unknown key '1' in 'features': 'keys', 'childs'
 <hwut-end>

@@ -5701,6 +5701,10 @@ PINNED    'services/TEST/test-report-features.py tree, test_directory,
 
 E-140  SANITIZE RELATES; MOVE AND REMOVE FOLLOW THE FEATURES          (2026-10-10)
 
+SUPERSEDED 2026-10-14 by exploration R-96 (bundle 125) where it speaks of
+          'relate' and the files of the past; MOVE AND REMOVE still follow
+          the features ('feature_carry.py').
+
 PROBLEM   A directory moved by hand left 'parent' and 'childs' saying
           where it had been (exploration R-84), and a test carried into
           another TEST directory left its features behind.
@@ -6019,6 +6023,11 @@ PINNED    'services/TEST/test-report-features.py';
 
 
 E-150  THE FACES SPEAK THE NEW IDS; 'relate', 'unrelate', 'retire'      (2026-10-13)
+
+SUPERSEDED 2026-10-14 by exploration R-96 (bundle 125): the verbs and the
+          map are gone; the sanitizer proposes 'register', 'redirect',
+          'repoint', 'fold'; 'hwut.move' repoints the leaf in
+          'hwut-root-features.conf' ('feature_carry.py').
 
 PROBLEM   Exploration R-94 replaces numbers, 'id' and 'parent' by keys
           named by the parent, and adds the map.

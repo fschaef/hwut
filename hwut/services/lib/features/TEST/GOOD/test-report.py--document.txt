@@ -1,0 +1,53 @@
+>>> --html=features.html --ods=features.ods
+    'features.html' written -- 4 feature(s), 3 test(s)
+    'features.ods' written -- 4 feature(s), 3 test(s)
+    exit 0
+--- the page ----------------------------------------------------
+    .PASS, .IMPLEMENTED-ok { color:var(--good); font-weight:600; }
+    4 feature(s): 2 implemented ok, 1 implemented fail, 1 open · 3 test(s)
+    router.forward | A frame is forwarded. | IMPLEMENTED ok | test-route.sh [single] | PASS | test-route.sh [burst] | PASS
+    router.keep-order | Frames keep their order. | IMPLEMENTED ok | test-route.sh [burst] | PASS
+    can.decode | A frame is decoded. | IMPLEMENTED fail | test-frame.sh | FAIL
+    router.drop | A frame without route is dropped. | OPEN | no test run
+    Expand all | Collapse all | IMPLEMENTED ok | IMPLEMENTED fail | OPEN
+    gateway | CAN-MOST gateway | OPEN; 3 implemented, 0 open; 2 ok, 1 fail
+    forwarding | Frames reach their destination. | IMPLEMENTED ok; 2 implemented, 0 open; 2 ok, 0 fail
+    router.forward | A frame is forwarded. | IMPLEMENTED ok
+    router.keep-order | Frames keep their order. | IMPLEMENTED ok
+    buses | Both buses are served. | IMPLEMENTED fail; 1 implemented, 0 open; 0 ok, 1 fail
+    can.decode | A frame is decoded. | IMPLEMENTED fail
+    later | Nothing below yet. | OPEN; 0 implemented, 0 open; 0 ok, 0 fail
+    (unplaced) | 1 leaf/leaves
+    router.drop | A frame without route is dropped. | OPEN
+    router.forward | forward | A frame is forwarded. | gateway/forwarding | IMPLEMENTED ok | Bbbbbbb2:forward  (gw/router) | latency, product, routing
+    router.keep-order | keep-order | Frames keep their order. | gateway/forwarding | IMPLEMENTED ok | Bbbbbbb2:keep-order  (gw/router) | product, routing
+    can.decode | decode | A frame is decoded. | gateway/buses | IMPLEMENTED fail | Aaaaaaa1:decode  (gw/can) | product
+    router.drop | drop | A frame without route is dropped. | (unplaced) | OPEN | Bbbbbbb2:drop  (gw/router) | routing
+    document.querySelectorAll(".tree-state").forEach(function (box) {
+    document.querySelectorAll(".tree-state").forEach(function (box) {
+--- the spreadsheet ---------------------------------------------
+    Matrix: Feature | Brief | State | Implemented by
+        router.forward
+        router.keep-order
+        can.decode
+        router.drop
+    Tree: Where | What | State
+        gateway
+        forwarding
+        router.forward
+        router.keep-order
+        buses
+        can.decode
+        later
+        (unplaced)
+        router.drop
+    Features: Feature | Name | Title | Doc | Aggregate | State | Internal id | Keys
+        router.forward
+        router.keep-order
+        can.decode
+        router.drop
+    Tests: Test | Title | Doc | Test runs | Features
+        gw/can/TEST/test-frame.sh
+        gw/router/TEST/test-restart.sh
+        gw/router/TEST/test-route.sh
+<hwut-end>

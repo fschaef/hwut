@@ -1,0 +1,67 @@
+--- words (UAX #31 + digit at the start + '-' inside, NFC) ------
+  'scroll'     True
+  '007'        True
+  '2nd-try'    True
+  'a-b'        True
+  '_x'         True
+  'x_'         True
+  '-x'         False
+  'x-'         True
+  'Gr\xf6\xdfe' True
+  '\u6bd4\u5206' True
+  'caf\xe9a\u0308' False
+  'aa\u0308'   False
+  'a b'        False
+  'a.b'        False
+  ''           False
+  'a:b'        False
+  'a*'         False
+  '\xb2'       False
+  'x\xb2'      False
+  'Abc'        True
+  'abc'        True
+--- external ids ------------------------------------------------
+  'router.forward' True
+  'a'              True
+  'a.b.c'          True
+  '.a'             False
+  'a.'             False
+  'a..b'           False
+  'a/b'            False
+  'a b'            False
+  'a*'             False
+  '2.0'            True
+  'x:y'            False
+  ''               False
+--- internal ids ------------------------------------------------
+  Qm9xB_2a:forward   ('Qm9xB_2a', 'forward')
+  Qm9xB_2a:007       ('Qm9xB_2a', '007')
+  Qm9x:forward       None
+  Qm9xB_2a:          None
+  :forward           None
+  Qm9xB_2a:a:b       None
+  Qm9xB_2a:a.b       None
+  Qm9xB-2a:x         ('Qm9xB-2a', 'x')
+  Qm9xB/2a:x         None
+--- paths below the root ----------------------------------------
+  'gateway/router' True
+  'a'              True
+  '.'              False
+  ''               False
+  '/a'             False
+  '../a'           False
+  'a/../b'         False
+  'a//b'           False
+  'a/'             False
+  './a'            False
+  'a/./b'          False
+--- directory ids -----------------------------------------------
+  Qm9xB_2a     True
+  Zk3aT-7c     True
+  short        False
+  toolong123   False
+  Qm9xB/2a     False
+  Qm9xB+2a     False
+  Qm9xB=2a     False
+  --------     True
+<hwut-end>

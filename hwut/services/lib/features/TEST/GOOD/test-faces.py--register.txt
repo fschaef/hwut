@@ -1,0 +1,73 @@
+>>> no central file
+    REFUSED: no 'hwut-root-features.conf' stands => hwut.features.init
+    exit 2
+--- adding ------------------------------------------------------
+>>> nothing to register
+    HINTS
+        3 leaf(s) in no aggregate => hwut.features.tree
+    nothing to register below '.'
+    exit 0
+>>> below 'gw': a new feature, a new directory; 'misc' not touched
+    registered  gw/router  QUFBQUFB
+    registered  gw.can.reset = Aaaaaaa1:reset
+    registered  gw.router.forward = QUFBQUFB:forward
+    HINTS
+        5 leaf(s) in no aggregate => hwut.features.tree
+    exit 0
+>>> from 'misc' itself
+    registered  misc  QUFBQUFC
+    registered  misc.x = QUFBQUFC:x
+    HINTS
+        6 leaf(s) in no aggregate => hwut.features.tree
+    exit 0
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |         "QUFBQUFB" = "gw/router"
+    |         "QUFBQUFC" = "misc"
+    |     }
+    |     tree {
+    |         "gw.can.decode" = "Aaaaaaa1:decode"
+    |         "gw.can.encode" = "Aaaaaaa1:encode"
+    |         "gw.most.send" = "Bbbbbbb2:send"
+    |         "gw.can.reset" = "Aaaaaaa1:reset"
+    |         "gw.router.forward" = "QUFBQUFB:forward"
+    |         "misc.x" = "QUFBQUFC:x"
+    |     }
+    |     retired {
+    |     }
+    | }
+--- disagreements are named, not acted on -----------------------
+>>> gw/can moved to gw/bus-can
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        dir-gone  Aaaaaaa1   'gw/can' stands no more
+                      => redirect Aaaaaaa1 gw/bus-can  # from gw/can
+    HINTS
+        6 leaf(s) in no aggregate => hwut.features.tree
+    exit 1
+>>> only below 'misc'
+    HINTS
+        6 leaf(s) in no aggregate => hwut.features.tree
+    nothing to register below 'misc'
+    exit 0
+--- refused -----------------------------------------------------
+>>> two directories
+    REFUSED: 'hwut.features.register' takes one directory at most: gw, misc
+    usage: hwut.features.register [<directory>] [--directory=<path>]
+    exit 2
+>>> an option it does not take
+    REFUSED: 'hwut.features.register' does not take: --force
+    usage: hwut.features.register [<directory>] [--directory=<path>]
+    exit 2
+>>> a directory outside the root
+    REFUSED: '..' does not stand below the root '<root>'
+    exit 2
+>>> no such directory
+    REFUSED: 'nowhere' is no directory
+    exit 2
+>>> the central file states a fault
+    FAULT: 'hwut-root-features.conf' states what is not read; nothing written:
+        hwut-root-features.conf:48:1: VOCABULARY: the outer node is 'features { }'; not 'extra'
+    exit 1
+<hwut-end>

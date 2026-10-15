@@ -1,0 +1,71 @@
+>>> in gw/can
+    AGGREGATE gateway -- CAN-MOST gateway      1 implemented, 0 open; 0 ok, 1 fail
+        state      IMPLEMENTED fail
+        keys       product
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail
+            state      IMPLEMENTED fail
+            [IMPLEMENTED fail] can.decode -- A frame is decoded.
+                internal    Aaaaaaa1:decode  (gw/can)
+                keys        product
+                [FAIL] TEST/test-frame.sh
+    
+    RETIRED                                                              1 retired
+        [RETIRED]  can.old  (Aaaaaaa1:old)
+    exit 0
+>>> --directory=gw/router
+    AGGREGATE gateway -- CAN-MOST gateway      2 implemented, 0 open; 2 ok, 0 fail
+        state      IMPLEMENTED ok
+        keys       product
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail
+            state      IMPLEMENTED ok
+            [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
+                internal    Bbbbbbb2:forward  (gw/router)
+                keys        latency, product, routing
+                [PASS] TEST/test-route.sh [single]
+                [PASS] TEST/test-route.sh [burst]
+            [IMPLEMENTED ok]   router.keep-order -- Frames keep their order.
+                internal    Bbbbbbb2:keep-order  (gw/router)
+                keys        product, routing
+                [PASS] TEST/test-route.sh [burst]
+    
+    UNPLACED                                                         1 leaf/leaves
+        [OPEN]             router.drop -- A frame without route is dropped.
+            internal    Bbbbbbb2:drop  (gw/router)
+            keys        routing
+    
+    RETIRED                                                              1 retired
+        [RETIRED]  router.old  (Bbbbbbb2:old)
+    
+    OUTSIDE THE RELATION
+        NONSENSE? test run, links to no feature => hwut.help
+            TEST/test-restart.sh
+    exit 0
+>>> in gw/router/TEST
+    AGGREGATE gateway -- CAN-MOST gateway      2 implemented, 0 open; 2 ok, 0 fail
+        state      IMPLEMENTED ok
+        keys       product
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail
+            state      IMPLEMENTED ok
+            [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
+                internal    Bbbbbbb2:forward  (gw/router)
+                keys        latency, product, routing
+                [PASS] test-route.sh [single]
+                [PASS] test-route.sh [burst]
+            [IMPLEMENTED ok]   router.keep-order -- Frames keep their order.
+                internal    Bbbbbbb2:keep-order  (gw/router)
+                keys        product, routing
+                [PASS] test-route.sh [burst]
+    
+    UNPLACED                                                         1 leaf/leaves
+        [OPEN]             router.drop -- A frame without route is dropped.
+            internal    Bbbbbbb2:drop  (gw/router)
+            keys        routing
+    
+    RETIRED                                                              1 retired
+        [RETIRED]  router.old  (Bbbbbbb2:old)
+    
+    OUTSIDE THE RELATION
+        NONSENSE? test run, links to no feature => hwut.help
+            test-restart.sh
+    exit 0
+<hwut-end>

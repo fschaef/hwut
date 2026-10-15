@@ -1,0 +1,22 @@
+--- a leaf, from the verdicts of its runs -----------------------
+  no run                                               CState(implementation='OPEN', verdict='fail')
+  one run, passes                                      CState(implementation='IMPLEMENTED', verdict='ok')
+  two runs, both pass                                  CState(implementation='IMPLEMENTED', verdict='ok')
+  two runs, one fails                                  CState(implementation='IMPLEMENTED', verdict='fail')
+  one run, no verdict yet                              CState(implementation='IMPLEMENTED', verdict='fail')
+  retired                                              CState(implementation='RETIRED', verdict=None)
+--- an aggregate, from the states below it ----------------------
+  nothing below (assumed OPEN)                         CState(implementation='OPEN', verdict='fail')
+  ok, ok                                               CState(implementation='IMPLEMENTED', verdict='ok')
+  ok, fail                                             CState(implementation='IMPLEMENTED', verdict='fail')
+  ok, open                                             CState(implementation='OPEN', verdict='fail')
+  fail, open                                           CState(implementation='OPEN', verdict='fail')
+  retired, retired                                     CState(implementation='RETIRED', verdict=None)
+  ok, retired (the retired are ignored)                CState(implementation='IMPLEMENTED', verdict='ok')
+  open, retired                                        CState(implementation='OPEN', verdict='fail')
+  fail, retired                                        CState(implementation='IMPLEMENTED', verdict='fail')
+--- aggregates of aggregates ------------------------------------
+  [ok,ok] and [ok,fail]                                CState(implementation='IMPLEMENTED', verdict='fail')
+  [ok,ok] and [retired]                                CState(implementation='IMPLEMENTED', verdict='ok')
+  [retired] alone                                      CState(implementation='RETIRED', verdict=None)
+<hwut-end>

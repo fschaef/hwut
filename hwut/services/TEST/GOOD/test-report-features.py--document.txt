@@ -6,86 +6,80 @@ status: OK
 
 --- the page: tabs, and the rows of each ---
     <nav><a id="tab-matrix" href="#matrix">Matrix</a><a id="tab-tree" href="#tree">Tree</a><a id="tab-features" href="#features">Features</a><a id="tab-tests" href="#tests">Tests</a></nav>
-    <p class="count">6 feature(s): 1 proven, 3 failing, 2 unproven &middot; 4 test(s)</p>
+    <p class="count">6 feature(s): 1 implemented ok, 3 implemented fail, 2 open &middot; 4 test(s)</p>
     [tree]
-    controls: tree-bar, tree-open, tree-shut, tree-word, tree-count, PROVEN, FAILING, UNPROVEN
-    <details open class="top"><summary><span class="path">tree</span> All <span class="count">1 proven, 3 failing, 2 unproven</span></summary>
-    <details open><summary><span class="path">engine</span> Engine -- Runs tests and judges them. <span class="count">1 proven, 3 failing, 2 unproven</span></summary>
-    <details open><summary><span class="path">engine/compare</span> Compare -- Decides whether an output is equivalent to its nominal. <span class="count">1 proven, 3 failing, 2 unproven</span></summary>
-    <details open><summary><span class="path">FEATURES engine/compare/TEST</span> <span class="count">1 proven, 1 failing, 0 unproven</span></summary>
-    <div class="leaf" data-state="PROVEN"><a class="path" href="#f-0">whole-page</a> A whole page is judged. <span class="PROVEN">PROVEN</span></div>
-    <div class="leaf" data-state="FAILING"><a class="path" href="#f-1">never-run</a> Linked, and not in the book. <span class="FAILING">FAILING</span></div>
+    controls: tree-bar, tree-open, tree-shut, tree-word, tree-count, IMPLEMENTED-ok, IMPLEMENTED-fail, OPEN
+    <details open class="top"><summary><span class="path">engine</span> Engine -- Runs tests and judges them. <span class="count">OPEN; 4 implemented, 2 open; 1 ok, 5 fail</span></summary>
+    <details open><summary><span class="path">compare</span> Compare -- Decides whether an output is equivalent to its nominal. <span class="count">OPEN; 4 implemented, 2 open; 1 ok, 5 fail</span></summary>
+    <details open><summary><span class="path">core</span> Core -- Pairs lines. <span class="count">OPEN; 2 implemented, 2 open; 0 ok, 4 fail</span></summary>
+    <div class="leaf" data-state="IMPLEMENTED-fail"><a class="path" href="#f-0">pairing</a> Two streams are aligned line by line. <span class="IMPLEMENTED-fail">IMPLEMENTED fail</span></div>
+    <div class="leaf" data-state="IMPLEMENTED-fail"><a class="path" href="#f-1">eng.cmp.core.missing-side</a> A line present on one side only is shown whole. <span class="IMPLEMENTED-fail">IMPLEMENTED fail</span></div>
+    <div class="leaf" data-state="OPEN"><a class="path" href="#f-2">eng.cmp.core.untested</a>  <span class="OPEN">OPEN</span></div>
+    <div class="leaf" data-state="OPEN"><a class="path" href="#f-3">eng.cmp.core.not-numbered</a>  <span class="OPEN">OPEN</span></div>
     </details>
-    <details open><summary><span class="path">engine/compare/core</span> Core -- Pairs lines. <span class="count">0 proven, 2 failing, 2 unproven</span></summary>
-    <details open><summary><span class="path">FEATURES engine/compare/core/TEST</span> <span class="count">0 proven, 2 failing, 2 unproven</span></summary>
-    <div class="leaf" data-state="FAILING"><a class="path" href="#f-2">line-pairing</a> Two streams are aligned line by line. <span class="FAILING">FAILING</span></div>
-    <div class="leaf" data-state="FAILING"><a class="path" href="#f-3">missing-side</a> A line present on one side only is shown whole. <span class="FAILING">FAILING</span></div>
-    <div class="leaf" data-state="UNPROVEN"><a class="path" href="#f-4">untested</a>  <span class="UNPROVEN">UNPROVEN</span></div>
-    <div class="leaf" data-state="UNPROVEN"><a class="path" href="#f-5">not-numbered</a>  <span class="UNPROVEN">UNPROVEN</span></div>
+    <div class="leaf" data-state="IMPLEMENTED-ok"><a class="path" href="#f-4">eng.cmp.whole-page</a> A whole page is judged. <span class="IMPLEMENTED-ok">IMPLEMENTED ok</span></div>
+    <div class="leaf" data-state="IMPLEMENTED-fail"><a class="path" href="#f-5">eng.cmp.never-run</a> Linked, and not in the book. <span class="IMPLEMENTED-fail">IMPLEMENTED fail</span></div>
     </details>
-    </details>
-    </details>
+    <details open><summary><span class="path">plain</span> Plain <span class="count">OPEN; 0 implemented, 0 open; 0 ok, 0 fail</span></summary>
     </details>
     </details>
     [matrix] Feature | Brief | State | Implemented by
-    <tr id="m-0"><td class="id"><a href="#f-0">eng.cmp.whole-page</a></td><td>A whole page is judged.</td><td class="PROVEN">PROVEN</td><td><ul><li><a href="#t-1">test-pages.sh [small]</a> <span class="PASS">PASS</span></li><li><a href="#t-1">test-pages.sh [large]</a> <span class="PASS">PASS</span></li></ul></td></tr>
-    <tr id="m-1"><td class="id"><a href="#f-1">eng.cmp.never-run</a></td><td>Linked, and not in the book.</td><td class="FAILING">FAILING</td><td><ul><li><a href="#t-0">test-fresh.sh</a> <span class="NONE">NO VERDICT</span></li></ul></td></tr>
-    <tr id="m-2"><td class="id"><a href="#f-2">eng.cmp.core.line-pairing</a></td><td>Two streams are aligned line by line.</td><td class="FAILING">FAILING</td><td><ul><li><a href="#t-2">test-pair.sh [plain]</a> <span class="PASS">PASS</span></li><li><a href="#t-2">test-pair.sh [gap]</a> <span class="FAIL">FAIL</span></li></ul></td></tr>
-    <tr id="m-3"><td class="id"><a href="#f-3">eng.cmp.core.missing-side</a></td><td>A line present on one side only is shown whole.</td><td class="FAILING">FAILING</td><td><ul><li><a href="#t-2">test-pair.sh [gap]</a> <span class="FAIL">FAIL</span></li></ul></td></tr>
-    <tr id="m-4"><td class="id"><a href="#f-4">eng.cmp.core.untested</a></td><td>untested</td><td class="UNPROVEN">UNPROVEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
-    <tr id="m-5"><td class="id"><a href="#f-5">eng.cmp.core.not-numbered</a></td><td>not-numbered</td><td class="UNPROVEN">UNPROVEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
-    [features] Feature | Name | Title | Doc | Component | State | Published as | Keys | Documents
-    <tr id="f-0"><td class="id"><a href="#m-0">eng.cmp.whole-page</a></td><td>whole-page</td><td>A whole page is judged.</td><td><pre></pre></td><td>engine/compare -- Compare</td><td class="PROVEN">PROVEN</td><td class="id"></td><td>engine-part</td><td><ul></ul></td></tr>
-    <tr id="f-1"><td class="id"><a href="#m-1">eng.cmp.never-run</a></td><td>never-run</td><td>Linked, and not in the book.</td><td><pre></pre></td><td>engine/compare -- Compare</td><td class="FAILING">FAILING</td><td class="id"></td><td>engine-part</td><td><ul></ul></td></tr>
-    <tr id="f-2"><td class="id"><a href="#m-2">eng.cmp.core.line-pairing</a></td><td>line-pairing</td><td>Two streams are aligned line by line.</td><td><pre></pre></td><td>engine/compare/core -- Core</td><td class="FAILING">FAILING</td><td class="id">pairing</td><td>algorithm, engine-part, heavy</td><td><ul><li><a href="engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul></td></tr>
-    <tr id="f-3"><td class="id"><a href="#m-3">eng.cmp.core.missing-side</a></td><td>missing-side</td><td>A line present on one side only is shown whole.</td><td><pre></pre></td><td>engine/compare/core -- Core</td><td class="FAILING">FAILING</td><td class="id"></td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
-    <tr id="f-4"><td class="id"><a href="#m-4">eng.cmp.core.untested</a></td><td>untested</td><td></td><td><pre></pre></td><td>engine/compare/core -- Core</td><td class="UNPROVEN">UNPROVEN</td><td class="id"></td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
-    <tr id="f-5"><td class="id"><a href="#m-5">eng.cmp.core.not-numbered</a></td><td>not-numbered</td><td></td><td><pre></pre></td><td>engine/compare/core -- Core</td><td class="UNPROVEN">UNPROVEN</td><td class="id"></td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
+    <tr id="m-0"><td class="id"><a href="#f-0">pairing</a></td><td>Two streams are aligned line by line.</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td><ul><li><a href="#t-2">test-pair.sh [plain]</a> <span class="PASS">PASS</span></li><li><a href="#t-2">test-pair.sh [gap]</a> <span class="FAIL">FAIL</span></li></ul></td></tr>
+    <tr id="m-1"><td class="id"><a href="#f-1">eng.cmp.core.missing-side</a></td><td>A line present on one side only is shown whole.</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td><ul><li><a href="#t-2">test-pair.sh [gap]</a> <span class="FAIL">FAIL</span></li></ul></td></tr>
+    <tr id="m-2"><td class="id"><a href="#f-2">eng.cmp.core.untested</a></td><td>untested</td><td class="OPEN">OPEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
+    <tr id="m-3"><td class="id"><a href="#f-3">eng.cmp.core.not-numbered</a></td><td>not-numbered</td><td class="OPEN">OPEN</td><td><ul><li class="dim">no test run</li></ul></td></tr>
+    <tr id="m-4"><td class="id"><a href="#f-4">eng.cmp.whole-page</a></td><td>A whole page is judged.</td><td class="IMPLEMENTED-ok">IMPLEMENTED ok</td><td><ul><li><a href="#t-1">test-pages.sh [small]</a> <span class="PASS">PASS</span></li><li><a href="#t-1">test-pages.sh [large]</a> <span class="PASS">PASS</span></li></ul></td></tr>
+    <tr id="m-5"><td class="id"><a href="#f-5">eng.cmp.never-run</a></td><td>Linked, and not in the book.</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td><ul><li><a href="#t-0">test-fresh.sh</a> <span class="NONE">NO VERDICT</span></li></ul></td></tr>
+    [features] Feature | Name | Title | Doc | Aggregate | State | Internal id | Keys | Documents
+    <tr id="f-0"><td class="id"><a href="#m-0">pairing</a></td><td>line-pairing</td><td>Two streams are aligned line by line.</td><td><pre></pre></td><td>engine/compare/core</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td class="id">Core0001:line-pairing  (engine/compare/core)</td><td>algorithm, engine-part, heavy</td><td><ul><li><a href="engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul></td></tr>
+    <tr id="f-1"><td class="id"><a href="#m-1">eng.cmp.core.missing-side</a></td><td>missing-side</td><td>A line present on one side only is shown whole.</td><td><pre></pre></td><td>engine/compare/core</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td class="id">Core0001:missing-side  (engine/compare/core)</td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
+    <tr id="f-2"><td class="id"><a href="#m-2">eng.cmp.core.untested</a></td><td>untested</td><td></td><td><pre></pre></td><td>engine/compare/core</td><td class="OPEN">OPEN</td><td class="id">Core0001:untested  (engine/compare/core)</td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
+    <tr id="f-3"><td class="id"><a href="#m-3">eng.cmp.core.not-numbered</a></td><td>not-numbered</td><td></td><td><pre></pre></td><td>engine/compare/core</td><td class="OPEN">OPEN</td><td class="id">Core0001:not-numbered  (engine/compare/core)</td><td>algorithm, engine-part</td><td><ul></ul></td></tr>
+    <tr id="f-4"><td class="id"><a href="#m-4">eng.cmp.whole-page</a></td><td>whole-page</td><td>A whole page is judged.</td><td><pre></pre></td><td>engine/compare</td><td class="IMPLEMENTED-ok">IMPLEMENTED ok</td><td class="id">Cmp00001:whole-page  (engine/compare)</td><td>engine-part</td><td><ul></ul></td></tr>
+    <tr id="f-5"><td class="id"><a href="#m-5">eng.cmp.never-run</a></td><td>never-run</td><td>Linked, and not in the book.</td><td><pre></pre></td><td>engine/compare</td><td class="IMPLEMENTED-fail">IMPLEMENTED fail</td><td class="id">Cmp00001:never-run  (engine/compare)</td><td>engine-part</td><td><ul></ul></td></tr>
     [tests] Test | Title | Doc | Test runs | Features
-    <tr id="t-0"><td class="path">engine/compare/TEST/test-fresh.sh</td><td>Fresh</td><td><pre></pre></td><td><ul><li>- <span class="NONE">NO VERDICT</span></li></ul></td><td><ul><li><a href="#f-1">eng.cmp.never-run</a></li></ul></td></tr>
-    <tr id="t-1"><td class="path">engine/compare/TEST/test-pages.sh</td><td>Pages</td><td><pre>Judges whole pages, a small one and a large one.\n\n  &quot;large&quot; holds a thousand lines.</pre></td><td><ul><li>small <span class="PASS">PASS</span></li><li>large <span class="PASS">PASS</span></li></ul></td><td><ul><li><a href="#f-0">eng.cmp.whole-page</a></li></ul></td></tr>
-    <tr id="t-2"><td class="path">engine/compare/core/TEST/test-pair.sh</td><td>Pairing</td><td><pre></pre></td><td><ul><li>plain <span class="PASS">PASS</span></li><li>gap <span class="FAIL">FAIL</span></li><li>odd <span class="NONE">NO VERDICT</span> <span class="NONE">NONSENSE?</span></li></ul></td><td><ul><li><a href="#f-2">eng.cmp.core.line-pairing</a></li><li><a href="#f-3">eng.cmp.core.missing-side</a></li></ul></td></tr>
+    <tr id="t-0"><td class="path">engine/compare/TEST/test-fresh.sh</td><td>Fresh</td><td><pre></pre></td><td><ul><li>- <span class="NONE">NO VERDICT</span></li></ul></td><td><ul><li><a href="#f-5">eng.cmp.never-run</a></li></ul></td></tr>
+    <tr id="t-1"><td class="path">engine/compare/TEST/test-pages.sh</td><td>Pages</td><td><pre>Judges whole pages, a small one and a large one.\n\n  &quot;large&quot; holds a thousand lines.</pre></td><td><ul><li>small <span class="PASS">PASS</span></li><li>large <span class="PASS">PASS</span></li></ul></td><td><ul><li><a href="#f-4">eng.cmp.whole-page</a></li></ul></td></tr>
+    <tr id="t-2"><td class="path">engine/compare/core/TEST/test-pair.sh</td><td>Pairing</td><td><pre></pre></td><td><ul><li>plain <span class="PASS">PASS</span></li><li>gap <span class="FAIL">FAIL</span></li><li>odd <span class="NONE">NO VERDICT</span> <span class="NONE">NONSENSE?</span></li></ul></td><td><ul><li><a href="#f-0">pairing</a></li><li><a href="#f-1">eng.cmp.core.missing-side</a></li></ul></td></tr>
     <tr id="t-3"><td class="path">engine/compare/core/TEST/test-stray.sh</td><td>Stray</td><td><pre></pre></td><td><ul><li>- <span class="NONE">NO VERDICT</span></li></ul></td><td><ul><li class="NONE">'no-such' not defined</li></ul></td></tr>
 
 --- the spreadsheet: three sheets, cell by cell ---
     mimetype, content.xml, META-INF/manifest.xml; mimetype: application/vnd.oasis.opendocument.spreadsheet
     [Matrix]
     Feature | Brief | State | Implemented by
-    eng.cmp.whole-page -> #Features.A2 | A whole page is judged. | PROVEN | test-pages.sh [small]  PASS -> #Tests.A3 / test-pages.sh [large]  PASS -> #Tests.A3
-    eng.cmp.never-run -> #Features.A3 | Linked, and not in the book. | FAILING | test-fresh.sh  NO VERDICT -> #Tests.A2
-    eng.cmp.core.line-pairing -> #Features.A4 | Two streams are aligned line by line. | FAILING | test-pair.sh [plain]  PASS -> #Tests.A4 / test-pair.sh [gap]  FAIL -> #Tests.A4
-    eng.cmp.core.missing-side -> #Features.A5 | A line present on one side only is shown whole. | FAILING | test-pair.sh [gap]  FAIL -> #Tests.A4
-    eng.cmp.core.untested -> #Features.A6 | untested | UNPROVEN | no test run
-    eng.cmp.core.not-numbered -> #Features.A7 | not-numbered | UNPROVEN | no test run
+    pairing -> #Features.A2 | Two streams are aligned line by line. | IMPLEMENTED fail | test-pair.sh [plain]  PASS -> #Tests.A4 / test-pair.sh [gap]  FAIL -> #Tests.A4
+    eng.cmp.core.missing-side -> #Features.A3 | A line present on one side only is shown whole. | IMPLEMENTED fail | test-pair.sh [gap]  FAIL -> #Tests.A4
+    eng.cmp.core.untested -> #Features.A4 | untested | OPEN | no test run
+    eng.cmp.core.not-numbered -> #Features.A5 | not-numbered | OPEN | no test run
+    eng.cmp.whole-page -> #Features.A6 | A whole page is judged. | IMPLEMENTED ok | test-pages.sh [small]  PASS -> #Tests.A3 / test-pages.sh [large]  PASS -> #Tests.A3
+    eng.cmp.never-run -> #Features.A7 | Linked, and not in the book. | IMPLEMENTED fail | test-fresh.sh  NO VERDICT -> #Tests.A2
     [Tree]
     Where | What | State
-    tree | All | 1 proven, 3 failing, 2 unproven
-    engine | Engine -- Runs tests and judges them. | 1 proven, 3 failing, 2 unproven
-    engine/compare | Compare -- Decides whether an output is equivalent to its nominal. | 1 proven, 3 failing, 2 unproven
-    FEATURES engine/compare/TEST |  | 1 proven, 1 failing, 0 unproven
-    whole-page -> #Features.A2 | A whole page is judged. | PROVEN
-    never-run -> #Features.A3 | Linked, and not in the book. | FAILING
-    engine/compare/core | Core -- Pairs lines. | 0 proven, 2 failing, 2 unproven
-    FEATURES engine/compare/core/TEST |  | 0 proven, 2 failing, 2 unproven
-    line-pairing -> #Features.A4 | Two streams are aligned line by line. | FAILING
-    missing-side -> #Features.A5 | A line present on one side only is shown whole. | FAILING
-    untested -> #Features.A6 |  | UNPROVEN
-    not-numbered -> #Features.A7 |  | UNPROVEN
+    engine | Engine -- Runs tests and judges them. | OPEN; 4 implemented, 2 open; 1 ok, 5 fail
+    compare | Compare -- Decides whether an output is equivalent to its nominal. | OPEN; 4 implemented, 2 open; 1 ok, 5 fail
+    core | Core -- Pairs lines. | OPEN; 2 implemented, 2 open; 0 ok, 4 fail
+    pairing -> #Features.A2 | Two streams are aligned line by line. | IMPLEMENTED fail
+    eng.cmp.core.missing-side -> #Features.A3 | A line present on one side only is shown whole. | IMPLEMENTED fail
+    eng.cmp.core.untested -> #Features.A4 |  | OPEN
+    eng.cmp.core.not-numbered -> #Features.A5 |  | OPEN
+    eng.cmp.whole-page -> #Features.A6 | A whole page is judged. | IMPLEMENTED ok
+    eng.cmp.never-run -> #Features.A7 | Linked, and not in the book. | IMPLEMENTED fail
+    plain | Plain | OPEN; 0 implemented, 0 open; 0 ok, 0 fail
     [Features]
-    Feature | Name | Title | Doc | Component | State | Published as | Keys | Documents
-    eng.cmp.whole-page -> #Matrix.A2 | whole-page | A whole page is judged. |  | engine/compare -- Compare | PROVEN |  | engine-part | 
-    eng.cmp.never-run -> #Matrix.A3 | never-run | Linked, and not in the book. |  | engine/compare -- Compare | FAILING |  | engine-part | 
-    eng.cmp.core.line-pairing -> #Matrix.A4 | line-pairing | Two streams are aligned line by line. |  | engine/compare/core -- Core | FAILING | pairing | algorithm, engine-part, heavy | engine/compare/core/README.txt#pairing -> ../engine/compare/core/README.txt#pairing / https://example.org/pairing -> https://example.org/pairing / engine/compare/core/absent.txt -> ../engine/compare/core/absent.txt
-    eng.cmp.core.missing-side -> #Matrix.A5 | missing-side | A line present on one side only is shown whole. |  | engine/compare/core -- Core | FAILING |  | algorithm, engine-part | 
-    eng.cmp.core.untested -> #Matrix.A6 | untested |  |  | engine/compare/core -- Core | UNPROVEN |  | algorithm, engine-part | 
-    eng.cmp.core.not-numbered -> #Matrix.A7 | not-numbered |  |  | engine/compare/core -- Core | UNPROVEN |  | algorithm, engine-part | 
+    Feature | Name | Title | Doc | Aggregate | State | Internal id | Keys | Documents
+    pairing -> #Matrix.A2 | line-pairing | Two streams are aligned line by line. |  | engine/compare/core | IMPLEMENTED fail | Core0001:line-pairing  (engine/compare/core) | algorithm, engine-part, heavy | engine/compare/core/README.txt#pairing -> ../engine/compare/core/README.txt#pairing / https://example.org/pairing -> https://example.org/pairing / engine/compare/core/absent.txt -> ../engine/compare/core/absent.txt
+    eng.cmp.core.missing-side -> #Matrix.A3 | missing-side | A line present on one side only is shown whole. |  | engine/compare/core | IMPLEMENTED fail | Core0001:missing-side  (engine/compare/core) | algorithm, engine-part | 
+    eng.cmp.core.untested -> #Matrix.A4 | untested |  |  | engine/compare/core | OPEN | Core0001:untested  (engine/compare/core) | algorithm, engine-part | 
+    eng.cmp.core.not-numbered -> #Matrix.A5 | not-numbered |  |  | engine/compare/core | OPEN | Core0001:not-numbered  (engine/compare/core) | algorithm, engine-part | 
+    eng.cmp.whole-page -> #Matrix.A6 | whole-page | A whole page is judged. |  | engine/compare | IMPLEMENTED ok | Cmp00001:whole-page  (engine/compare) | engine-part | 
+    eng.cmp.never-run -> #Matrix.A7 | never-run | Linked, and not in the book. |  | engine/compare | IMPLEMENTED fail | Cmp00001:never-run  (engine/compare) | engine-part | 
     [Tests]
     Test | Title | Doc | Test runs | Features
-    engine/compare/TEST/test-fresh.sh | Fresh |  | -  NO VERDICT | eng.cmp.never-run -> #Features.A3
-    engine/compare/TEST/test-pages.sh | Pages | Judges whole pages, a small one and a large one. /  / "large" holds a thousand lines. | small  PASS / large  PASS | eng.cmp.whole-page -> #Features.A2
-    engine/compare/core/TEST/test-pair.sh | Pairing |  | plain  PASS / gap  FAIL / odd  NO VERDICT  NONSENSE? | eng.cmp.core.line-pairing -> #Features.A4 / eng.cmp.core.missing-side -> #Features.A5
+    engine/compare/TEST/test-fresh.sh | Fresh |  | -  NO VERDICT | eng.cmp.never-run -> #Features.A7
+    engine/compare/TEST/test-pages.sh | Pages | Judges whole pages, a small one and a large one. /  / "large" holds a thousand lines. | small  PASS / large  PASS | eng.cmp.whole-page -> #Features.A6
+    engine/compare/core/TEST/test-pair.sh | Pairing |  | plain  PASS / gap  FAIL / odd  NO VERDICT  NONSENSE? | pairing -> #Features.A2 / eng.cmp.core.missing-side -> #Features.A3
     engine/compare/core/TEST/test-stray.sh | Stray |  | -  NO VERDICT | 'no-such' not defined
-    row groups in 'Tree': 6
+    row groups in 'Tree': 3
 
 --- written twice: the same bytes ---
     page: same   spreadsheet: same
@@ -94,21 +88,21 @@ status: OK
     'features.html' written -- 6 feature(s), 4 test(s)
 status: OK
     [features] Code only its runs reached | Documents
-    f-0  <ul><li>engine/compare/page.c: 1..7</li><li>shared: 2 line(s) in 1 file(s)</li><li>1 of 2 linked run(s) not measured</li></ul> | <ul></ul>
-    f-1  <ul><li>1 of 1 linked run(s) not measured</li></ul> | <ul></ul>
-    f-2  <ul><li>engine/compare/core/pair.c: 3..4, 10..13</li><li>shared: 2 line(s) in 1 file(s)</li></ul> | <ul><li><a href="engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul>
-    f-3  <ul><li>engine/compare/core/pair.c: 10..13</li><li>shared: 4 line(s) in 1 file(s)</li></ul> | <ul></ul>
+    f-0  <ul><li>engine/compare/core/pair.c: 3..4, 10..13</li><li>shared: 2 line(s) in 1 file(s)</li></ul> | <ul><li><a href="engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul>
+    f-1  <ul><li>engine/compare/core/pair.c: 10..13</li><li>shared: 4 line(s) in 1 file(s)</li></ul> | <ul></ul>
+    f-4  <ul><li>engine/compare/page.c: 1..7</li><li>shared: 2 line(s) in 1 file(s)</li><li>1 of 2 linked run(s) not measured</li></ul> | <ul></ul>
+    f-5  <ul><li>1 of 1 linked run(s) not measured</li></ul> | <ul></ul>
 
 --- --cov-html=pages: each source a link, from where the document stands ---
     'out/deep/features.html' written -- 6 feature(s), 4 test(s)
     'features.ods' written -- 6 feature(s), 4 test(s)
 status: OK
     [features] Code only its runs reached | Documents
-    f-0  <ul><li><a href="../../pages/engine/compare/page.c.html#L1">engine/compare/page.c: 1..7</a></li><li>shared: 2 line(s) in 1 file(s)</li><li>1 of 2 linked run(s) not measured</li></ul> | <ul></ul>
-    f-1  <ul><li>1 of 1 linked run(s) not measured</li></ul> | <ul></ul>
-    f-2  <ul><li><a href="../../pages/engine/compare/core/pair.c.html#L3">engine/compare/core/pair.c: 3..4, 10..13</a></li><li>shared: 2 line(s) in 1 file(s)</li></ul> | <ul><li><a href="../../engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="../../engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul>
-    f-3  <ul><li><a href="../../pages/engine/compare/core/pair.c.html#L10">engine/compare/core/pair.c: 10..13</a></li><li>shared: 4 line(s) in 1 file(s)</li></ul> | <ul></ul>
-    [Features] links: ../pages/engine/compare/page.c.html#L1, ../pages/engine/compare/core/pair.c.html#L3, ../engine/compare/core/README.txt#pairing, https://example.org/pairing, ../engine/compare/core/absent.txt, ../pages/engine/compare/core/pair.c.html#L10
+    f-0  <ul><li><a href="../../pages/engine/compare/core/pair.c.html#L3">engine/compare/core/pair.c: 3..4, 10..13</a></li><li>shared: 2 line(s) in 1 file(s)</li></ul> | <ul><li><a href="../../engine/compare/core/README.txt#pairing">engine/compare/core/README.txt#pairing</a></li><li><a href="https://example.org/pairing">https://example.org/pairing</a></li><li><a href="../../engine/compare/core/absent.txt">engine/compare/core/absent.txt</a></li></ul>
+    f-1  <ul><li><a href="../../pages/engine/compare/core/pair.c.html#L10">engine/compare/core/pair.c: 10..13</a></li><li>shared: 4 line(s) in 1 file(s)</li></ul> | <ul></ul>
+    f-4  <ul><li><a href="../../pages/engine/compare/page.c.html#L1">engine/compare/page.c: 1..7</a></li><li>shared: 2 line(s) in 1 file(s)</li><li>1 of 2 linked run(s) not measured</li></ul> | <ul></ul>
+    f-5  <ul><li>1 of 1 linked run(s) not measured</li></ul> | <ul></ul>
+    [Features] links: ../pages/engine/compare/core/pair.c.html#L3, ../engine/compare/core/README.txt#pairing, https://example.org/pairing, ../engine/compare/core/absent.txt, ../pages/engine/compare/core/pair.c.html#L10, ../pages/engine/compare/page.c.html#L1
 
 --- --cov-html without a document; naming no directory ---
     REFUSED: '--cov-html' links the feature document to the coverage pages; name the document with '--html=<file>' or '--ods=<file>'

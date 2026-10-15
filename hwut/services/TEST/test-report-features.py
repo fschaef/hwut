@@ -7,32 +7,33 @@
 #        document       { features = ["report-features-document", "report-features-document-tree", "report-features-document-coverage", "report-features-test-doc", "report-features-documents"] }
 #        empty          { features = ["face-empty-said"] }
 #        matrix         { features = ["report-features-matrix", "report-features-nonsense"] }
-#        outside        { features = ["report-features-alone-complete"] }
+#        outside        { features = ["report-features-outside"] }
 #        refused        { features = ["face-refusal-by-name", "tree-boundary-refused"] }
 #        test_directory { }
-#        tree           { features = ["report-features-tree", "report-features-components", "report-features-outside", "report-features-nonsense", "report-features-documents"] }
+#        tree           { features = ["report-features-tree", "report-features-outside", "report-features-nonsense", "report-features-documents"] }
 #    }
 #  }
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut.report.features' -- the page of a tree: component, part,
-         feature, test runs and their verdicts.
+PURPOSE: 'hwut.report.features' -- the page of a tree as
+         'hwut-root-features.conf' groups it: aggregate, leaf, test runs
+         and their verdicts (R-96).
 
 CHOICES: tree, test_directory, matrix, code, document, outside, empty,
          refused;
 
 DESCRIPTION:
 
-    tree            called at the root: every component with its id,
-                    counts and statements, every feature with its state
-                    and its linked runs, and the documents it names
-                    ('see'); then what stands outside -- a document
-                    that does not stand, 'documents' that is no list,
-                    where 'childs' and the map disagree with the
-                    directories included.
-    test_directory  called inside a TEST directory: that directory is
-                    the whole page, addressed as '.'.
+    tree            called at the root: every aggregate with its counts,
+                    state and statements, every leaf with its state, its
+                    internal id, its keys, its linked runs and the
+                    documents it names ('see'); RETIRED; then what stands
+                    outside -- a document that does not stand,
+                    'documents' that is no list, a link to a name not
+                    defined, a run linking nothing.
+    test_directory  called inside a TEST directory: its leaves are the
+                    whole page, under their aggregates, addressed as '.'.
     matrix          '--matrix': a table per TEST directory that carries
                     a feature file -- test runs down, features across,
                     the verdict where a run links; the run without a
@@ -53,8 +54,8 @@ DESCRIPTION:
                     '#t-<n>'; the spreadsheet's three sheets are shown
                     cell by cell with the targets of their links. A
                     test's 'doc', written in triple quotes, stands in
-                    'Tests'. The 'Tree' tab holds the components, their
-                    TEST directories and the features, folded. Written
+                    'Tests'. The 'Tree' tab holds the aggregates and their
+                    leaves, folded. Written
                     twice, the bytes are the same. A file that cannot be
                     written is refused.
                     A feature's 'documents' stand in 'Features' as
@@ -69,18 +70,16 @@ DESCRIPTION:
                     links are resolved inside the archive. '--cov-html'
                     without a document, and one that names no
                     directory, are refused.
-    outside         a tree where nothing is linked and no statement
-                    stands: no feature, every TEST directory named with
-                    the count of its test runs. Then a feature file
-                    ALONE (an implicit tree): complete as it stands --
-                    nothing judged but the map, no component named as
-                    undescribed (book work 2026-10-11, A-2, A-3); and
-                    the same file in the vocabulary of the past
-                    ('parent', numbers): named as what it is.
+    outside         a tree where nothing is linked and the central file
+                    registers nothing: no feature. Then a feature file
+                    the central file does not register: named, with the
+                    remedy; and the same file in the vocabulary of the
+                    past ('parent', numbers): named as what it is.
     empty           a tree without a TEST directory: said as EMPTY,
                     status 3.
-    refused         a directory that does not stand, a tree no root
-                    bounds, and an unknown word.
+    refused         a directory that does not stand, an unknown word, no
+                    central file at the top (=> hwut.features.init), one
+                    that states a fault, and a tree no root bounds.
 
 NOTHING IS RUN. The fixture's verdicts are written by the bookkeeper,
 so the page measures the reading of 'GOOD/book.csv' and nothing about
@@ -129,39 +128,58 @@ def _test(root, path, body):
     os.chmod(os.path.join(root, path), 0o755)
 
 
+#  THE CENTRAL FILE OF THE FIXTURE: aggregates mirroring the directories,
+#  one external id that is no directory's name ('pairing'), one retired.
+CENTRAL = """features {
+    directory_map {
+        "Core0001" = "engine/compare/core"
+        "Cmp00001" = "engine/compare"
+    }
+    tree {
+        engine {
+            title = "Engine"
+            doc   = "Runs tests and judges them."
+            keys  = ["engine-part"]
+            childs {
+                compare {
+                    title = "Compare"
+                    doc   = "Decides whether an output is equivalent to its nominal."
+                    childs {
+                        core {
+                            title = "Core"
+                            doc   = "Pairs lines."
+                            childs {
+                                "pairing"                   = "Core0001:line-pairing"
+                                "eng.cmp.core.missing-side" = "Core0001:missing-side"
+                                "eng.cmp.core.untested"     = "Core0001:untested"
+                                "eng.cmp.core.not-numbered" = "Core0001:not-numbered"
+                            }
+                        }
+                        "eng.cmp.whole-page" = "Cmp00001:whole-page"
+                        "eng.cmp.never-run"  = "Cmp00001:never-run"
+                    }
+                }
+                plain { title = "Plain" }
+            }
+        }
+    }
+    retired {
+        "once-published" { id = "Core0001:old-pairing"  title = "Gone." }
+    }
+}
+"""
+
+#  A CENTRAL FILE THAT REGISTERS NOTHING, for a tree that is not about it.
+EMPTY_CENTRAL = "features {\n    directory_map { }\n    tree { }\n" \
+                "    retired { }\n}\n"
+
+
 def fixture(root):
-    """RETURN: None. A tree of two components with statements, one
-    without, a map with a published id renamed and one retired, and the
-    verdicts of their runs."""
+    """RETURN: None. A tree of two TEST directories stating features, one
+    stating none, the central file grouping them under aggregates -- one
+    external id that is no name, one retired -- and the verdicts of their
+    runs."""
     _write(root, "hwut-root.conf", "hwut {\n}\n")
-    _write(root, "hwut-features.conf",
-           'features {\n'
-           '    title  = "All"\n'
-           '    childs { eng = "./engine"  old = "./old" }\n'
-           '}\n')
-    _write(root, "engine/hwut-features.conf",
-           'features {\n'
-           '    title  = "Engine"\n'
-           '    doc    = "Runs tests and judges them."\n'
-           '    keys   = ["engine-part"]\n'
-           '    childs { cmp = "./compare"  plain = "./plain" }\n'
-           '}\n')
-    _write(root, "engine/compare/hwut-features.conf",
-           'features {\n'
-           '    title  = "Compare"\n'
-           '    doc    = "Decides whether an output is equivalent to its nominal."\n'
-           '    childs {\n'
-           '        core = "./core"\n'
-           '    }\n'
-           '}\n')
-    _write(root, "engine/compare/core/hwut-features.conf",
-           'features {\n'
-           '    title  = "Core"\n'
-           '    doc    = "Pairs lines."\n'
-           '    owner  = "nobody"\n'
-           '}\n')
-    _write(root, "engine/plain/hwut-features.conf",
-           'features {\n    title = "Plain"\n}\n')
     _write(root, "engine/compare/core/TEST/hwut-features.conf",
            'features {\n'
            '    keys = ["algorithm"]\n'
@@ -185,16 +203,7 @@ def fixture(root):
            '        never-run  { title = "Linked, and not in the book." }\n'
            '    }\n'
            '}\n')
-    _write(root, "hwut-feature-map.conf",
-           'map {\n'
-           '    "pairing"                      = "eng.cmp.core.line-pairing"\n'
-           '    "eng.cmp.core.missing-side" = "eng.cmp.core.missing-side"\n'
-           '    "eng.cmp.core.untested"     = "eng.cmp.core.untested"\n'
-           '    "eng.cmp.core.not-numbered" = "eng.cmp.core.not-numbered"\n'
-           '    "eng.cmp.whole-page"        = "eng.cmp.whole-page"\n'
-           '    "eng.cmp.never-run"         = "eng.cmp.never-run"\n'
-           '    "once-published"               = none\n'
-           '}\n')
+    _write(root, "hwut-root-features.conf", CENTRAL)
     _write(root, "engine/compare/core/README.txt", "Pairing.\n")
     _test(root, "engine/compare/core/TEST/test-pair.sh",
           ['title    = "Pairing"', 'features = ["line-pairing"]',
@@ -282,6 +291,7 @@ def run_matrix():
     _in_tree(fixture, body)
     def bare(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
+        _write(root, "hwut-root-features.conf", EMPTY_CENTRAL)
         _test(root, "a/TEST/test-a.sh", ['title = "A"'])
     def unstated():
         banner("--matrix where no TEST directory states features")
@@ -423,7 +433,7 @@ def run_document():
             if line.startswith('<div id="tree-bar"'):
                 print("    controls: %s" % ", ".join(
                     re.findall(r'id="(tree-[a-z]+)"', line)
-                    + re.findall(r'class="tree-state" value="(\w+)"', line)))
+                    + re.findall(r'class="tree-state" value="([\w-]+)"', line)))
                 continue
             if line: print("    %s" % line)
         for name in ("matrix", "features", "tests"):
@@ -479,11 +489,12 @@ def run_outside():
     """RETURN: None. A tree with tests and no statement at all."""
     def build(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
+        _write(root, "hwut-root-features.conf", EMPTY_CENTRAL)
         _test(root, "a/TEST/test-a.sh", ['title = "A"'])
         _test(root, "a/b/TEST/test-b.sh",
               ['title = "B"', 'features = ["wanted"]'])
     def body():
-        banner("no feature file, no claim file")
+        banner("no feature file, a central file that registers nothing")
         _page([])
     _in_tree(build, body)
     def alone(root):
@@ -491,8 +502,7 @@ def run_outside():
         _write(root, "a/b/TEST/hwut-features.conf",
                'features {\n    childs { wanted { } }\n}\n')
     def complete():
-        banner("a feature file alone: no id is asked for, no component "
-               "named")
+        banner("a feature file the central file does not register: named")
         _page([])
         banner("the same file in the vocabulary of the past: named")
         _write(".", "a/b/TEST/hwut-features.conf",
@@ -506,6 +516,7 @@ def run_empty():
     """RETURN: None. A tree that holds no TEST directory."""
     def build(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
+        _write(root, "hwut-root-features.conf", EMPTY_CENTRAL)
         _write(root, "a/hwut-features.conf",
                'features { title = "A" }\n')
     def body():
@@ -521,6 +532,14 @@ def run_refused():
         _page(["--directory=nowhere"])
         banner("an unknown word")
         _page(["--verbose"])
+        banner("no central file at the top")
+        os.remove("hwut-root-features.conf")
+        status = features.main([], write=lambda text: print(
+            "    %s" % text.replace(os.getcwd(), "<tree>")))
+        print("status: %s" % status.name)
+        banner("a central file that states a fault")
+        _write(".", "hwut-root-features.conf", "features { tree { x = 3 } }\n")
+        _page([])
     _in_tree(fixture, body)
     def rootless(root):
         _test(root, "a/TEST/test-a.sh", ['title = "A"'])

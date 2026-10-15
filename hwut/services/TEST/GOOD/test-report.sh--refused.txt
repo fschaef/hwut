@@ -6,8 +6,8 @@ STDOUT {
                        [--dir <glob>]... [--exclude-dir <glob>]...
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
-                       [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                       [<file-glob> [choice-glob]...]
+                       [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                       [-k|--keys <expr>] [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
@@ -19,8 +19,8 @@ STDOUT {
                        [--dir <glob>]... [--exclude-dir <glob>]...
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
-                       [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                       [<file-glob> [choice-glob]...]
+                       [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                       [-k|--keys <expr>] [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
@@ -32,8 +32,8 @@ STDOUT {
                        [--dir <glob>]... [--exclude-dir <glob>]...
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
-                       [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                       [<file-glob> [choice-glob]...]
+                       [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                       [-k|--keys <expr>] [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
 }
@@ -45,8 +45,8 @@ STDOUT {
                        [--dir <glob>]... [--exclude-dir <glob>]...
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
-                       [-F|--feature <id-glob>]... [-k|--keys <expr>]
-                       [<file-glob> [choice-glob]...]
+                       [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
+                       [-k|--keys <expr>] [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
 }

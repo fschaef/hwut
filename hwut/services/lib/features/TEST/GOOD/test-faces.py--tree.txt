@@ -1,0 +1,57 @@
+>>> hwut.features.tree 
+    gateway  CAN-MOST gateway
+      forwarding  Frames reach their destination.
+        forward  (gw/router)  A frame is forwarded.
+        send  (gw/most)  A message is sent.
+      buses
+        decode  (gw/can)  A frame is decoded.
+    (unplaced)
+      encode  (gw/can)  A frame is encoded.
+    exit 0
+>>> hwut.features.tree -e
+    gateway  CAN-MOST gateway
+      forwarding  Frames reach their destination.
+        forward  (gw/router)  router.forward  A frame is forwarded.
+        send  (gw/most)  most.send  A message is sent.
+      buses
+        decode  (gw/can)  can.decode  A frame is decoded.
+    (unplaced)
+      encode  (gw/can)  can.encode  A frame is encoded.
+    exit 0
+>>> hwut.features.tree --list
+    gateway/forwarding/router.forward
+    gateway/forwarding/most.send
+    gateway/buses/can.decode
+    can.encode
+    exit 0
+>>> hwut.features.tree -b
+    gateway
+    gateway/forwarding
+    gateway/buses
+    exit 0
+>>> hwut.features.tree gateway/forwarding
+    forwarding  Frames reach their destination.
+      forward  (gw/router)  A frame is forwarded.
+      send  (gw/most)  A message is sent.
+    exit 0
+>>> hwut.features.tree gateway/forwarding --list
+    gateway/forwarding/router.forward
+    gateway/forwarding/most.send
+    exit 0
+>>> hwut.features.tree gateway/buses -b
+    gateway/buses
+    exit 0
+>>> hwut.features.tree nope
+    REFUSED: no aggregate 'nope' => hwut.features.tree -b lists them
+    exit 2
+>>> hwut.features.tree --list -b
+    REFUSED: 'hwut.features.tree' does not take: '--list' and '-b' together
+    usage: hwut.features.tree [<base>] [--list] [-b] [-e] [--directory=<path>]
+    exit 2
+>>> hwut.features.tree -x
+    REFUSED: 'hwut.features.tree' does not take: -x
+    usage: hwut.features.tree [<base>] [--list] [-b] [-e] [--directory=<path>]
+    exit 2
+>>> an empty tree
+    exit 3
+<hwut-end>

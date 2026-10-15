@@ -87,9 +87,10 @@ ARITY_DB = {
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "run":    (2, 2, "<dir> <target>"),
-    "relate":   (1, 1, "<dir>"),
-    "unrelate": (2, 2, "<dir> <name>"),
-    "retire":   (2, 2, "<dir> <published id>"),
+    "register": (1, 1, "<dir>"),
+    "redirect": (2, 2, "<id> <path below the root>"),
+    "repoint":  (2, 2, "<external id> <internal id>"),
+    "fold":     (2, 2, "<id> <first id>"),
     "root":   (1, 1, "<dir>"),
 }
 assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
@@ -242,55 +243,57 @@ class CContext:
                                "no 'hwut-root.conf' stands in or above it: "
                                "not a tree of hwut's")
 
-    def _do_relate(self, word_tuple):
-        """RETURN: CDone -- the files and map entries of the directory
-                   adapted to where the directory stands
-                   ('feature_adapt.adapt_directory'); NOTHING where they
-                   agree already, REFUSED where the directory above
-                   states no file."""
-        from ....engine.orchestrator.exploration import feature_adapt
+    def _do_register(self, word_tuple):
+        """RETURN: CDone -- what the directory defines added to the central
+                   file ('feature_registry_act.register'): an id, a line per
+                   feature; NOTHING where all of it is registered, REFUSED
+                   where no central file stands or the edit would leave a
+                   fault."""
+        from ....engine.orchestrator.exploration import feature_registry_act
         directory     = self.path_of(word_tuple[0])
         root, refusal = self._relation_root(directory)
         if refusal is not None: return refusal
-        adapted = feature_adapt.adapt_directory(root, directory)
-        if adapted.changed_f():
-            return CDone(E_Done.DONE, adapted.reason,
-                         tuple(adapted.said_tuple))
-        if adapted.reason: return CDone(E_Done.REFUSED, adapted.reason)
-        return CDone(E_Done.NOTHING, "the files and the map agree with "
-                                     "the directories")
+        below = os.path.relpath(directory, root).replace(os.sep, "/")
+        try:
+            directory_list, leaf_list, _ = feature_registry_act.register(
+                root, below)
+        except feature_registry_act.ActRefused as error:
+            return CDone(E_Done.REFUSED, str(error).split("\n")[0])
+        said = tuple("registered  %s  %s" % (p, i) for i, p in directory_list) \
+               + tuple("registered  %s = %s" % pair for pair in leaf_list)
+        if said: return CDone(E_Done.DONE, "", said)
+        return CDone(E_Done.NOTHING, "everything below it is registered")
 
-    def _do_unrelate(self, word_tuple):
-        """RETURN: CDone -- a 'childs' entry that lists a directory where
-                   nothing stands, removed ('feature_adapt.child_dropped');
-                   NOTHING where the directory is not listed, REFUSED
-                   where a component stands there."""
-        from ....engine.orchestrator.exploration import feature_adapt
-        directory     = self.path_of(word_tuple[0])
-        root, refusal = self._relation_root(directory)
+    def _registry_proposal(self, verb, word_tuple):
+        """RETURN: CDone -- the detector's proposal '<verb> <words>' done
+                   ('feature_registry_act.apply_proposal'), judged again
+                   first: NOTHING where it is proposed no more, REFUSED
+                   where no central file stands or the edit would leave a
+                   fault."""
+        from ....engine.orchestrator.exploration import feature_registry_act
+        root, refusal = self._relation_root(self.base)
         if refusal is not None: return refusal
-        adapted = feature_adapt.child_dropped(root, directory, word_tuple[1])
-        if adapted.changed_f():
-            return CDone(E_Done.DONE, "", tuple(adapted.said_tuple))
-        if adapted.reason: return CDone(E_Done.REFUSED, adapted.reason)
-        return CDone(E_Done.NOTHING, "'%s' is not listed there"
-                                     % word_tuple[1])
+        try:
+            said = feature_registry_act.apply_proposal(root, verb,
+                                                       word_tuple)
+        except feature_registry_act.ActRefused as error:
+            return CDone(E_Done.REFUSED, str(error).split("\n")[0])
+        if said is None:
+            return CDone(E_Done.NOTHING, "not proposed now: the detector "
+                                         "proposes no such line")
+        return CDone(E_Done.DONE, "", tuple(said))
 
-    def _do_retire(self, word_tuple):
-        """RETURN: CDone -- a published id bound to a feature that stands
-                   no more, bound to none ('feature_adapt.map_retired');
-                   NOTHING where it is retired already or the map holds
-                   no such id, REFUSED where the feature stands."""
-        from ....engine.orchestrator.exploration import feature_adapt
-        directory     = self.path_of(word_tuple[0])
-        root, refusal = self._relation_root(directory)
-        if refusal is not None: return refusal
-        adapted = feature_adapt.map_retired(root, word_tuple[1])
-        if adapted.changed_f():
-            return CDone(E_Done.DONE, "", tuple(adapted.said_tuple))
-        if adapted.reason: return CDone(E_Done.REFUSED, adapted.reason)
-        return CDone(E_Done.NOTHING, "'%s' is retired, or not in the map"
-                                     % word_tuple[1])
+    def _do_redirect(self, word_tuple):
+        """RETURN: CDone -- a directory id pointed at where it moved."""
+        return self._registry_proposal("redirect", word_tuple)
+
+    def _do_repoint(self, word_tuple):
+        """RETURN: CDone -- an external id bound to the feature it became."""
+        return self._registry_proposal("repoint", word_tuple)
+
+    def _do_fold(self, word_tuple):
+        """RETURN: CDone -- a twin id folded into the first."""
+        return self._registry_proposal("fold", word_tuple)
 
     def _do_remove(self, word_tuple):
         """RETURN: CDone -- a session, a dead lock, 'OUT/' or 'TMP/' gone."""

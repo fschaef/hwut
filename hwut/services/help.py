@@ -34,6 +34,12 @@ DESCRIPTION
        stands. What the word means, and how it is resolved. A tree that
        states no features says nothing here.
 
+       FEATURES DEFINED AND NOT REGISTERED, AFTER IT (R-96): where
+       'hwut-root-features.conf' stands, every feature defined in a TEST
+       directory below that it has no line for -- the line 'hwut.run'
+       ends with, said out. No failure. A tree without the file says
+       nothing here.
+
        THE LAST COVERAGE RUN, AFTER THAT (coverage D-41): every selected
        case it left WITHOUT A RECORD, read from the local trace
        'TMP/hwut-traces-coverage.csv' of each directory, under the headings
@@ -333,6 +339,61 @@ def nonsense_case_list_of(root):
             in relation.test_directory_db[path].unlinked_tuple]
 
 
+UNREGISTERED_HEADING_STR = "FEATURES -- defined, not registered"
+
+
+def unregistered_of(directory):
+    """
+    RETURN: list of (str, str), (directory path, name) of every feature
+            defined at or below 'directory' that the central file of
+            features does not register; [] where no central file stands
+            ('feature_detector.unregistered_list').
+    """
+    from hwut.engine.orchestrator.exploration.feature_detector \
+                                        import unregistered_list
+    from hwut.engine.orchestrator.exploration.tree_explorer \
+                                        import RootConfMissing, \
+                                               root_conf_directory
+    try:
+        root = root_conf_directory(directory)
+    except RootConfMissing:
+        return []
+    below = os.path.relpath(os.path.abspath(directory), root)
+    return unregistered_list(root, below.replace(os.sep, "/"))
+
+
+def unregistered_explanation_line_list(pair_list):
+    """
+    RETURN: list of str, what 'hwut.help' says of features defined and not
+            registered: the head, what it means, how it is resolved, then
+            'CONCERNED:' and the features, '<directory>  <name>'.
+    """
+    paragraph_list = [
+        "Each feature below is defined in its TEST directory's "
+        "'hwut-features.conf', and 'hwut-root-features.conf' -- the one "
+        "place where features are registered -- has no line for it: it "
+        "is new, it was renamed, or its directory moved. It is NOT a "
+        "failure: the test runs and is judged. But a feature that is not "
+        "registered has no external id, and nothing a customer holds can "
+        "name it.",
+        HEAL_OPENER_STR + "run 'hwut.features.register'. It adds what is "
+        "new -- an id for a directory, a line for a feature, unplaced -- "
+        "and names what was renamed or moved, with the line that heals it "
+        "('repoint', 'redirect'), for 'hwut.sanitize' to do. Then move the "
+        "new lines into aggregates of the tree."]
+    line_list = ["not registered -- defined, in no line  [%i feature(s)]"
+                 % len(pair_list)]
+    for paragraph in paragraph_list:
+        line_list.append("")
+        line_list.extend("    " + line for line in
+                         textwrap.wrap(paragraph, width=WRAP_WIDTH,
+                                       break_on_hyphens=False))
+    line_list.append("")
+    line_list.append("    CONCERNED:")
+    line_list.extend("        %s  %s" % pair for pair in pair_list)
+    return line_list
+
+
 def nonsense_explanation_line_list(case_list):
     """
     RETURN: list of str, what 'hwut.help' says of the test runs that
@@ -454,8 +515,9 @@ def main(argv=None, write=None):
     uncapped_db   = uncapped_occurrence_db_of(
                         directory, with_targets(wish, word_list))
     nonsense_list = nonsense_case_list_of(directory)
+    unregistered  = unregistered_of(directory)
     if not occurrence_db and not coverage_db and not uncapped_db \
-       and not nonsense_list:
+       and not nonsense_list and not unregistered:
         write("nothing to explain: no case below '%s' failed for a "
               "reason other than a plain difference from GOOD" % directory)
         return E_ExitCode.EMPTY
@@ -527,6 +589,15 @@ def main(argv=None, write=None):
         write(NONSENSE_HEADING_STR)
         write("")
         for line in nonsense_explanation_line_list(nonsense_list):
+            write("    " + line)
+    #  NOT REGISTERED, after it (R-96): the line 'hwut.run' ends with,
+    #  said out.
+    if unregistered:
+        if occurrence_db or coverage_db or uncapped_db or nonsense_list:
+            write("")
+        write(UNREGISTERED_HEADING_STR)
+        write("")
+        for line in unregistered_explanation_line_list(unregistered):
             write("    " + line)
     return E_ExitCode.OK
 

@@ -88,14 +88,23 @@ short form can never mean what the long form cannot say.
                         nothing here, which is the correct answer.
     -F, --feature <id-glob>
                         the runs linked to the FEATURES the glob names
-                        (exploration R-95): a glob over FULL ids, matched
-                        by KEY NAMES -- '*' one key, '**' any depth (none
-                        included), '{a,b}' alternatives; a bare key is
-                        '**.key'. A COMPONENT brings its whole subtree.
-                        An id the feature map publishes means what the
-                        map binds it to; a retired one is refused by
-                        name. SEVERAL ARE A UNION among themselves and
-                        NARROW against the rest of the wish, as '--dir'.
+                        (R-96): a glob over the TREE PATHS of
+                        'hwut-root-features.conf', '<aggregate>/
+                        <aggregate>/<external id>' -- '*' any part of one
+                        level, '**' any depth (none included), '{a,b}'
+                        alternatives; a bare word is '**/word'. An
+                        AGGREGATE brings its whole subtree; a line of
+                        'hwut.features.tree --list' fits as it stands; a
+                        word with ':' is an INTERNAL id '<directory
+                        id>:<name>'. A retired one is refused by name.
+                        SEVERAL ARE A UNION among themselves and NARROW
+                        against the rest of the wish, as '--dir'.
+    -e, --feature-ext <id>
+                        the runs linked to the feature whose EXTERNAL id
+                        (the left side of its line in the central file) is
+                        <id>; '*' matches any characters. An id that names
+                        no feature, or a RETIRED one, is refused by name.
+                        With '-F' a union.
     -k, --keys <expr>   the runs linked to features whose EFFECTIVE keys
                         (their own and those of every claim above them)
                         satisfy the expression -- the grammar of '-l':
@@ -173,7 +182,8 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--exclude-dir <glob>]...",
                      "[--wishlist <file>]...", "[-l|--label <expr>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]",
-                     "[-F|--feature <id-glob>]...", "[-k|--keys <expr>]")
+                     "[-F|--feature <id-glob>]...",
+                     "[-e|--feature-ext <id>]...", "[-k|--keys <expr>]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -222,16 +232,18 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         several are a union, narrowing against the rest
     -F, --feature <id-glob>
                         the runs linked to the features the glob names:
-                        over full ids by key names -- '*' one key, '**'
-                        any depth, '{a,b}' alternatives, a bare key is
-                        '**.key'; a component brings its subtree; an id
-                        the feature map publishes is resolved through
-                        it. Several are a union, narrowing against the
-                        rest
+                        tree paths of the central file 'a/b/<external
+                        id>' ('*' one level, '**' any depth, '{a,b}'), a
+                        bare word anywhere, an aggregate its subtree; or
+                        an internal id 'X:name'. Several are a union,
+                        narrowing against the rest
+    -e, --feature-ext <id>
+                        the runs linked to the feature of that external
+                        id ('*' any characters); with '-F' a union
     -k, --keys <expr>   the runs linked to features whose effective keys
                         satisfy the expression ('AND', 'OR', 'NOT',
                         brackets; ',' is 'OR'); a key flows down from the
-                        claims above a feature, never up
+                        aggregates above a leaf, never up
     --faster-than=<seconds>
                         the runs this machine last saw finish faster
                         than that; one this machine never saw is not
@@ -278,6 +290,8 @@ class Wish:
     #  over the keys of the features. Both narrow against the rest.
     feature_tuple:     tuple = ()
     keys_spec:         str | None = None
+    #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
+    feature_ext_tuple: tuple = ()
 
     def states_nothing_f(self):
         """
@@ -299,7 +313,8 @@ class Wish:
                and self.since_spec is None and self.until_spec is None \
                and self.label_spec is None and not self.language_tuple \
                and self.faster_than_ms is None \
-               and not self.feature_tuple and self.keys_spec is None
+               and not self.feature_tuple and self.keys_spec is None \
+               and not self.feature_ext_tuple
 
     def asks_feature_f(self):
         """
@@ -307,7 +322,8 @@ class Wish:
                 question only the feature relation of the tree can
                 answer.
         """
-        return bool(self.feature_tuple) or self.keys_spec is not None
+        return bool(self.feature_tuple) or self.keys_spec is not None \
+               or bool(self.feature_ext_tuple)
 
     def asks_glob_f(self):
         """
@@ -367,6 +383,8 @@ class Wish:
                              % (self.faster_than_ms / 1000.0))
         part_list.extend('--feature "%s"' % text
                          for text in self.feature_tuple)
+        part_list.extend('--feature-ext "%s"' % text
+                         for text in self.feature_ext_tuple)
         if self.keys_spec is not None:
             part_list.append('--keys "%s"' % self.keys_spec)
         return " ".join(part_list)
@@ -403,6 +421,7 @@ def parse_wish(argv):
     language_list    = []
     faster_than_ms   = None
     feature_list     = []
+    feature_ext_list = []
     keys_spec        = None
     rest_list        = []
 
@@ -500,6 +519,20 @@ def parse_wish(argv):
                 raise WishError("'--feature' names no id")
             if text.strip() not in feature_list:
                 feature_list.append(text.strip())
+        elif argument in ("--feature-ext", "-e") \
+                or argument.startswith("--feature-ext="):
+            if argument in ("--feature-ext", "-e"):
+                if index >= len(argv):
+                    raise WishError("'%s' stands without an external id"
+                                    % argument)
+                text   = argv[index]
+                index += 1
+            else:
+                text = argument[len("--feature-ext="):]
+            if not text.strip():
+                raise WishError("'--feature-ext' names no id")
+            if text.strip() not in feature_ext_list:
+                feature_ext_list.append(text.strip())
         elif argument in ("--keys", "-k") or argument.startswith("--keys="):
             if argument in ("--keys", "-k"):
                 if index >= len(argv):
@@ -563,7 +596,7 @@ def parse_wish(argv):
                  tuple(exclude_list), tuple(exclude_dir_list),
                  tuple(dir_list), label_spec, tuple(language_list),
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
-                 tuple(feature_list), keys_spec),
+                 tuple(feature_list), keys_spec, tuple(feature_ext_list)),
             rest_list)
 
 
