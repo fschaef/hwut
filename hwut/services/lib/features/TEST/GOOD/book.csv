@@ -1,0 +1,21 @@
+# vut-register 5 generation:24 apps:5 marks:0=3,1=3,2=4,3=5,4=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-acts.py;keys;true;ok;;0;0
+;move;true;ok;;0;1
+;retire;true;ok;;0;2
+test-faces.py;init;true;ok;;1;0
+;register;true;ok;;1;1
+;tree;true;ok;;1;2
+test-proposals.py;apply;true;ok;;2;0
+;hint;true;ok;;2;1
+;propose;true;ok;;2;2
+;verbs;true;ok;;2;3
+test-report.py;below;true;ok;;3;0
+;document;true;ok;;3;1
+;matrix;true;ok;;3;2
+;outside;true;ok;;3;3
+;tree;true;ok;;3;4
+test-wish.py;ext;true;ok;;4;0
+;keys;true;ok;;4;1
+;path;true;ok;;4;2
+;together;true;ok;;4;3

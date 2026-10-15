@@ -1,4 +1,4 @@
-# vut-register 5 generation:105 apps:16 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,14=8,15=5
+# vut-register 5 generation:122 apps:19 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,14=8,15=5,16=2,17=8,18=4
 test;choice;verdict;report;stain;test_id;choice_id
 test-amend.py;conf;true;ok;;12;0
 ;languages;true;ok;;12;1
@@ -34,6 +34,20 @@ test-feature_adapt.py;judged;true;ok;;14;0
 ;surgery;true;ok;;14;4
 ;test_moved;true;ok;;14;5
 ;unrelate;true;ok;;14;6
+test-feature_carry.py;moved;true;ok;;16;0
+;removed;true;ok;;16;1
+test-feature_detector.py;below;true;ok;;17;0
+;clean;true;ok;;17;1
+;leaves;true;ok;;17;2
+;moved;true;ok;;17;3
+;new;true;ok;;17;4
+;old;true;ok;;17;5
+;swapped;true;ok;;17;6
+;twin;true;ok;;17;7
+test-feature_registry.py;faults;true;ok;;18;0
+;identifiers;true;ok;;18;1
+;read;true;ok;;18;2
+;states;true;ok;;18;3
 test-feature_relation.py;block;true;ok;;13;0
 ;claim;true;ok;;13;5
 ;faults;true;ok;;13;2
