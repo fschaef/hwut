@@ -156,6 +156,9 @@ B-10 THE PACK STOPS RESERVING AND STARTS SHOWING
        summaries_of. 2026-10-04.
 
 B-11 COMMAND-LINE COMPLETION
+     BUILT 2026-10-15 (services E-151) -- to be STRUCK at version 17:
+       services/_complete.py, _complete_setup.py, shell/hwut.{bash,zsh,
+       ps1}; pinned by services/TEST/test-complete.py (12 choices).
      gathered/0s todo-2
      Every face completes on TAB, in bash, zsh and PowerShell at
      least. Design done, nothing built. The first brick stands:
@@ -547,9 +550,8 @@ E  WAITING ON A RULING -- no labour can start
      gathered/0r   two OPENs before building B-7's r-a: header beside
                    or replacing the '--hwut-info' block; the book
                    entry under '--apply' only.
-     gathered/0s   two OPENs of the completion design (B-11): one
-                   general face answers, or each; a '<file-glob>'
-                   completion.
+     gathered/0s   SETTLED 2026-10-15 (E-151): the general face answers,
+                   from a table setup generates; '<file-glob>' completes.
      gathered/0c   the placement backend (stage 2, O-13): the seam
                    'submit(unit) -> events + CDirDone' is decided; how
                    a remote slot and a local slot relate -- the first
@@ -688,7 +690,10 @@ F-4  THE HAND-PARSING FACES GAIN A PARSER (E-81)
      ON THEIR USAGE LINES until each is given a parser: a migration of
      nine refusal pages is its own session". Harmless: the faces
      refuse correctly in their own words; they lack the completion
-     table and the parser-derived usage.
+     table and the parser-derived usage -- and so COMPLETE THEIR NAMES
+     ONLY (E-151). MEASURED 2026-10-15: 'bin/<face>
+     --intern-cmd-get-completion-info' prints the table on 15 of 56
+     faces; FORTY-ONE, not nine, lack it.
      EVIDENCE: services/TEST/GOOD/test-cmdline.py--faces.txt lists
        11 parser-bearing modules; services/execute.py, move.py,
        remove.py, sanitize.py, pype.py parse by hand (no argparse,

@@ -1,0 +1,126 @@
+==============================================================================
+intend/25-platform-labels-and-untested -- A TEST THAT NEEDS A PLATFORM,
+                                          AND A VERDICT THAT WAS NOT MEASURED
+==============================================================================
+
+COMPONENTS CONCERNED: engine/bookkeeper (the book, a verdict 'untested'),
+                      engine/orchestrator/plan (labels, the wish),
+                      engine/display (the report: counts, a block),
+                      services (a face 'hwut.run.reset').
+SPEC:                 none yet; the forks below come first.
+RAISED:               2026-10-16, building the installation packages
+                      (adm/WORK/spec/24, ruling 8).
+
+SOME TESTS ARE STATEMENTS ABOUT A PLATFORM, NOT ONLY ABOUT THE SOFTWARE.
+'test-install.sh deb-debian' needs a container engine and the network;
+'test-hwut_vterm.py' needs libvterm. On a machine without them the run
+cannot say anything about hwut -- and today it says something anyway:
+
+    MEASURED 2026-10-15/16, cloud VM:
+      13 census pages red for want of 'libvterm0' and 'coverage' --
+         the platform, read as the software's failure
+      'test-install.sh deb-*' -- 'MISSING PRECONDITION', and no GOOD can
+         be recorded where it cannot run
+      34 'GOOD/book.csv' tracked in git: verdicts measured on one machine
+         travel to another
+      a case the wish does not select KEEPS ITS BOOK VERDICT; the report
+         prints it as if measured here (vut-session, measured twice)
+
+DONE CHANGES THIS: a person on any machine runs what that machine can run,
+knows which runs those are, and reads no verdict the machine did not
+measure.
+
+==============================================================================
+RULED
+==============================================================================
+ 1  PLATFORM DEPENDENCE IS SAID BY HAND, BY LABELS (2026-10-16, option a;
+    spec 24 ruling 8). A run that needs something of the platform carries
+    a label naming it in 'hwut-root.labels'; a machine deselects what it
+    lacks:
+
+        hwut-root.labels      ./adm/packaging/TEST/test-install.sh deb-debian
+                                  : meta needs-container needs-network
+        on a machine          hwut.run -l "meta AND NOT needs-container"
+        without an engine
+
+    STANDS TODAY, nothing new built: labels, label expressions, the
+    standard label 'meta'. Labels name CHOICES, so a new choice of such a
+    page is labelled in the same change that adds it.
+
+    REJECTED with it: (b) a header key 'requires { programs = [...] }'
+    judged on each machine. It would have the machine answer its own
+    question; the cost was a new header key and a check on every face
+    that plans. The labels need nothing new.
+
+==============================================================================
+THE PROPOSAL BEYOND THE RULING
+==============================================================================
+Labels choose what runs. They do not change what the report says about
+what did NOT run here. Two pieces close that gap:
+
+    hwut.run.reset [<wish>]       forget the VERDICTS of the selected
+                                  runs: the book says 'untested' for
+                                  them. GOOD, nominals, register ids,
+                                  labels and features stay. Not
+                                  'hwut.sanitize forget', which removes
+                                  the case.
+
+    verdict 'untested'            a third state beside ok and fail:
+                                  never run here, or reset. The report
+                                  counts it and names each such run:
+
+        RESULTS: 1069 ok, 0 fail, 4 untested
+        UNTESTED -- no verdict measured here
+            adm/packaging/TEST
+                test-install.sh  deb-debian    reset 2026-10-16
+                :                deb-ubuntu    never run
+
+    THE WORKFLOW IT GIVES a person arriving at a tree on a new machine:
+
+        hwut.run.reset                       nothing measured here yet
+        hwut.run -l "NOT needs-container"    what this machine can run
+        hwut.report                          ok, fail -- and untested:
+                                             exactly the needs-container
+                                             runs, named
+
+==============================================================================
+OPEN
+==============================================================================
+ o-1  WHAT 'untested' DOES TO THE EXIT STATUS.
+      (a) nothing: 0 where the rest is green. It is no claim about the
+          software. Costs: a census of only untested runs reads green
+          -- softened by the count in RESULTS.          <- recommended
+      (b) 1, like a failure. Costs: every machine that lacks a platform
+          is red for it, which is today's lie in a new word.
+      (c) 3, EMPTY, where nothing at all was measured; 0 otherwise.
+
+ o-2  WHAT A NOT-SELECTED RUN SHOWS IN THE REPORT.
+      (a) its book verdict, as today, until reset. Costs: a stale ok or
+          fail from another machine stays readable as current.
+      (b) 'untested' whenever this run of hwut did not measure it.
+          Costs: the report of a narrow wish says 'untested' for most of
+          the tree; 'hwut.report' (the book's view) and 'hwut.run' (this
+          run's view) would then differ by design.
+      (c) the book verdict, marked with WHERE and WHEN it was measured
+          (the machine's name in the book row). Costs: a book column.
+
+ o-3  WHAT 'hwut.run.reset' TOUCHES.
+      (a) the book's verdict only.                      <- recommended
+      (b) the verdict and 'hwut-traces.csv' (durations steer the
+          scheduler, O-27; a new machine's durations differ). Costs:
+          the first run after reset is ordered by name, not by measured
+          length.
+
+ o-4  WHETHER BOOKS STAY IN GIT.
+      (a) stay; reset is how a machine disowns what it did not measure.
+                                                         <- recommended
+      (b) leave git, like 'hwut-traces.csv' (machine-local). Costs: a
+          fresh clone knows nothing accepted; the 'accepted' state lives
+          in the book today (member_state), so this is a change of what
+          a clone means.
+      (c) a verdict per platform in the book ('platform_name' of
+          procsitter as a key). Costs: the book's format, every reader.
+
+ o-5  A STANDARD VOCABULARY OF PLATFORM LABELS ('needs-network',
+      'needs-container', 'needs-<library>') -- written down in
+      HOWTO-HWUT-BRAINSTORM as a convention, or left to each tree.

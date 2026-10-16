@@ -1,0 +1,15 @@
+
+--- written and compiled ---
+    status 0, stderr ''
+    first word: WRITTEN:
+    compiled:   True
+
+--- faces by name, options where a parser stands ---
+    hwut           named True  rows True  '--glob' True
+    hwut.run       named True  rows True  '--glob' True
+    hwut.run.play  named True  rows True  '--glob' False
+    hwut.about     named True  rows False '--glob' False
+
+--- a word setup does not take ---
+    status 2, REFUSED: 'hwut --command-line-setup' does not take: --force
+<hwut-end>

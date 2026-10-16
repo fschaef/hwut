@@ -1,0 +1,10 @@
+
+--- no candidate, no word on stderr, status 0 ---
+    []                                           status 0, stdout '', stderr ''
+    ['bash']                                     status 0, stdout '', stderr ''
+    ['bash', '']                                 status 0, stdout '', stderr ''
+    ['bash', 'hwut.run --']                      status 0, stdout '', stderr ''
+    ['fish', 'hwut.r']                           status 0, stdout '', stderr ''
+    ['bash', 'hwut.run.play /nonexistent/x']     status 0, stdout '', stderr ''
+    ['bash', 'hwut.run.play /nonexistent.sh ']   status 0, stdout '', stderr ''
+<hwut-end>

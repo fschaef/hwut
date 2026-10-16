@@ -1,0 +1,17 @@
+
+--- the applications here; a directory is a step ---
+    'hwut.run.play '                   -> sub/ test-a.sh test-b.py
+    'hwut.run.play test-'              -> test-a.sh test-b.py
+    'hwut.run '                        -> sub/ test-a.sh test-b.py
+    'hwut.run --glob test-a'           -> test-a.sh
+
+--- the choices of one ---
+    'hwut.run.play test-a.sh '         -> one three two
+    'hwut.run.play test-a.sh t'        -> three two
+    'hwut.run test-b.py '              -> alpha beta
+    'hwut.run --fail test-b.py a'      -> alpha
+    'hwut.run --strategy linear test-a.sh o' -> one
+
+--- an option's value is no application ---
+    'hwut.run --glob test-a.sh '       -> sub/ test-a.sh test-b.py
+<hwut-end>

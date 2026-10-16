@@ -1,0 +1,14 @@
+
+--- sourced after 'compinit': registered; a TAB answered ---
+    registered: hwut.run.play _hwut_complete, hwut _hwut_complete
+    [hwut.run --f]
+        _describe --fail --format
+    [hwut.run --format=j]
+        _describe --format=junit
+    [hwut.run --dir s]
+        compadd -S  -- sub/
+    [hwut.run.play --sa]
+        _describe --save
+    [hwut.about --]
+    status 0, stderr ''
+<hwut-end>

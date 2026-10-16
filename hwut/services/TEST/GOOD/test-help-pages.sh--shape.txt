@@ -17,6 +17,7 @@ hwut.cov.conv.to_pdf         -          ok
 hwut.cov.conv.to_tex         -          ok
 hwut.cov.formats             -          ok
 hwut.cov.run                 -          ok
+hwut.demo.python             -          ok
 hwut.dev.podman.build        -          ok
 hwut.dev.podman.enter        -          ok
 hwut.execute                 -          ok

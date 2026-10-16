@@ -1,0 +1,6 @@
+
+--- the version ---
+    adm/version.py      2.0.0
+    pyproject.toml      2.0.0
+    the same:           True
+<hwut-end>

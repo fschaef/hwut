@@ -1,0 +1,25 @@
+
+--- an interpreter without the modules: 'hwut.help' ---
+MISSING: the Python module 'bidict' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-bidict
+    pip:            pip install 'bidict>=0.22.1'
+MISSING: the Python module 'rapidfuzz' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-rapidfuzz
+    pip:            pip install 'rapidfuzz>=3.6.2'
+MISSING: the Python module 'regex' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-regex
+    pip:            pip install 'regex>=2022.10.31'
+MISSING: the Python module 'typeguard' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-typeguard
+    pip:            pip install 'typeguard>=4.1.5'
+MISSING: the Python module 'pyrsistent' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-pyrsistent
+    pip:            pip install 'pyrsistent>=0.20.0'
+MISSING: the Python module 'prompt_toolkit' (absent) -- the keyed merge screen.
+    Debian/Ubuntu:  sudo apt install python3-prompt-toolkit
+    pip:            pip install 'prompt_toolkit>=3.0.43'
+MISSING: the Python module 'psutil' (absent) -- the tree imports it.
+    Debian/Ubuntu:  sudo apt install python3-psutil
+    pip:            pip install 'psutil>=5.9.8'
+    status 1, stderr ''
+<hwut-end>

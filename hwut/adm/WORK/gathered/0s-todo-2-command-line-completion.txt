@@ -1,7 +1,7 @@
 VERSION: 1
 COMPONENTS: services
 
-todo-2-command-line-completion.txt                    ** DESIGN, NOT BUILT **
+todo-2-command-line-completion.txt     ** SETTLED 2026-10-15: E-151 **
 ______________________________________________________________________________
 
 RAISED (chat, 2026-08-29). Every face should complete on TAB, in bash,

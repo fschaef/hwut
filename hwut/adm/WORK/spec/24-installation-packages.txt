@@ -1,0 +1,117 @@
+==============================================================================
+spec/24-installation-packages -- WHEEL, PIPX, DEBIAN PACKAGE, IMAGE: the
+                                 same software, different landing
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: adm/packaging, services (help, _launch, lib/requirements,
+            lib/demo), adm/requirement-list.txt.
+SOURCE:     doc/the_book/dev/INSTRUCTION-installation-packages-2026-10-14.md
+            (Projects store); adm/ROLL-OUT.txt R-2.
+
+RULINGS (Frank-Rene, 2026-10-16)
+------------------------------------------------------------------------------
+ 1  THE ORDER IS R-2's: wheel and pipx, then the runtime image, the Debian
+    package last. The book follows.
+ 2  PyPI name 'hwut'; versions '2.0.0', from 'adm/version.py'; the image
+    'ghcr.io/fschaef/hwut'.
+ 3  'hwut.dev.*' is NOT in the packages: it develops hwut, and a package
+    user has no hwut tree to develop.
+ 4  THE DEBIAN PACKAGE DEPENDS ON THE DISTRIBUTION'S 'python3-*' PACKAGES
+    WITH THE MINIMUMS OF THE LIST (option A). Nothing is vendored; a
+    distribution too old is refused by apt, the module named.
+    MEASURED: the census green with the versions of Ubuntu 24.04 (1064
+    ok); 192 red with typeguard 2.13 ('@typechecked' on an async
+    generator). Debian 13 'trixie' is Debian stable.
+ 5  THE DEMONSTRATION TREE COMES BY A FACE, PER LANGUAGE:
+    'hwut.demo.python <dir>'; 'hwut.demo.cpp' and others later.
+ 6  'hwut.help' NAMES WHAT IS MISSING, in every form, before anything of
+    the tree is imported.
+ 7  The proof is 'adm/packaging/TEST/'; its features stand under the
+    aggregate 'delivery' of 'hwut-root-features.conf'.
+ 8  (2026-10-16, option a) A RUN THAT DEPENDS ON THE PLATFORM CARRIES A
+    LABEL SAYING SO, by hand, in 'hwut-root.labels' -- 'needs-network',
+    'needs-container' -- and a machine deselects what it cannot run:
+        hwut.run -l "meta AND NOT needs-container"
+    What did not run here, 'untested', and 'hwut.run.reset': adm/WORK/
+    intend/25-platform-labels-and-untested.txt (its OPEN forks).
+
+ONE SOURCE OF TRUTH
+------------------------------------------------------------------------------
+    version         'adm/version.py'
+    dependencies    'adm/requirement-list.txt': the 'python' rows of need
+                    'census'. The 'name' column carries pip's minimum
+                    ('regex>=2022.10.31'), the 'debian' column Debian's
+                    ('python3-regex>=0.1.20221031': Debian numbers regex
+                    otherwise). Read by 'services/lib/requirements.py'
+                    only -- the wheel's 'dependencies', the deb's
+                    'Depends', what 'hwut.help' names.
+    faces           the shims of 'bin/', read by 'services/_launch.py';
+                    an installed face is the entry point '_launch.main',
+                    which runs the module the shim names as '__main__'.
+    'pyproject.toml' is GENERATED into a stage by 'adm/packaging/build.py'
+    and never stands in the tree.
+
+THE STAGE (adm/packaging/build.py stage <dir>)
+------------------------------------------------------------------------------
+    in    engine, services, auxiliary, test_writing_support, demo,
+          adm/version.py, adm/requirement-list.txt, bin/.hwut.conf,
+          doc/HOWTO-*.txt; services/_launch_db.py (generated)
+    out   every TEST directory but 'demo/python/TEST'; WORK; what a run
+          leaves; the completion table; the shims; 'hwut.dev.*'
+
+THE FORMS
+------------------------------------------------------------------------------
+    wheel   'build.py wheel <dir>': hwut-<version>-py3-none-any.whl.
+            BUILT (step 1). A wheel carries no mode bits: 'hwut.demo.python'
+            makes every copied file that opens with '#!' executable.
+    pipx    the same wheel. BUILT (step 1).
+    deb     'build.py deb <dir>': hwut_<version>_all.deb, by 'dpkg-deb'
+            from the same stage. BUILT (step 2).
+              /usr/lib/python3/dist-packages/hwut      the stage's package
+              /usr/bin/<face>                          one launcher per face,
+                                                       '#! /usr/bin/python3',
+                                                       '_launch.main'
+              /usr/share/bash-completion/completions/<face>
+                                                       a link to
+                                                       'services/shell/hwut.bash'
+              /usr/share/doc/hwut/copyright            the LICENSE
+            'Depends' the list's census rows in Debian's numbering, and
+            'libvterm0'. postinst byte-compiles ('py3compile -p hwut') and
+            writes the completion table; prerm removes both -- they are
+            not dpkg's -- so 'apt remove hwut' leaves no file of hwut.
+            MEASURED 2026-10-16 on Ubuntu 24.04 (Python 3.12.3): install
+            pulls the seven 'python3-*' packages; 55 faces; the demo 6
+            ok; bash completion answers; after remove, no file named
+            '*hwut*' outside the clone.
+    image   'build.py image <dir>': 'adm/packaging/Containerfile' over
+            'debian:13-slim', the deb installed, nothing else; tagged
+            'ghcr.io/fschaef/hwut:<version>' and ':latest'. HOME=/tmp,
+            WORKDIR /work, CMD 'hwut.help'. The caller owns what a run
+            writes: podman '--userns=keep-id', docker '--user'. BUILT
+            (step 3), NOT RUN HERE: the cloud VM has no container engine.
+
+COMPLETION per form (services E-151): 'hwut --command-line-setup' writes
+the table beside the completer in every form; the deb runs it at install
+and links the scripts into '/usr/share/bash-completion/completions/'.
+
+PROOF
+------------------------------------------------------------------------------
+    adm/packaging/TEST/test-one-list.py   in the census: the stage against
+                                          the tree (version, faces, the
+                                          list), 'hwut.help' without the
+                                          modules, the deb's control file
+                                          and members
+    adm/packaging/TEST/test-install.sh    label 'meta' (silent in the
+                                          census: it fetches from PyPI);
+                                          'hwut.run -l meta -k packaging';
+                                          deb-debian, deb-ubuntu in a fresh
+                                          'debian:13' / 'ubuntu:24.04'
+                                          container (podman or docker);
+                                          image: the runtime image from
+                                          outside, the owner of its files.
+                                          Labels 'needs-network' (all),
+                                          'needs-container' (deb-*, image)
+                                          A NEW CHOICE IS LABELLED TOO:
+                                          'hwut-root.labels' names choices.

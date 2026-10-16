@@ -63,6 +63,16 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+import sys
+#  A TAB IS ANSWERED BEFORE ANYTHING IS IMPORTED (services E-151): the
+#  completer imports 'os' and 're' alone; the setup may import anything.
+if __name__ == "__main__" and sys.argv[1:2] == ["--command-line-complete"]:
+    from . import _complete
+    sys.exit(_complete.main(sys.argv[2:]))
+if __name__ == "__main__" and sys.argv[1:2] == ["--command-line-setup"]:
+    from . import _complete_setup
+    sys.exit(_complete_setup.main(sys.argv[2:]))
+
 import argparse
 import asyncio
 import os

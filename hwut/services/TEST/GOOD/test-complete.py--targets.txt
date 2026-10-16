@@ -1,0 +1,9 @@
+
+--- the targets this directory binds ---
+    'hwut.execute '                    -> check clean
+    'hwut.execute c'                   -> check clean
+    'hwut.execute cl'                  -> clean
+
+--- the second word is the script's ---
+    'hwut.execute clean '              -> (nothing)
+<hwut-end>

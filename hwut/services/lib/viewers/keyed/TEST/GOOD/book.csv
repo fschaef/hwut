@@ -44,5 +44,5 @@ test-proposal.py;applied;true;ok;;2;0
 ;nothing;true;ok;;2;6
 ;numeric;true;ok;;2;7
 test-screen.py;asking;true;ok;;3;0
-;open;false;not-equivalent-with-nominal;;3;1
+;open;true;ok;;3;1
 ;quit;true;ok;;3;2

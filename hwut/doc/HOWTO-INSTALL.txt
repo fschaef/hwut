@@ -1,0 +1,41 @@
+==============================================================================
+HOWTO-INSTALL -- getting hwut onto a machine
+==============================================================================
+
+THE SAME SOFTWARE IN EVERY FORM; they differ in where it lands.
+
+    pipx install hwut                  isolated, every face on PATH
+    sudo apt install ./hwut_<version>_all.deb
+                                       system-wide; the modules from the
+                                       distribution (Debian 13, Ubuntu
+                                       24.04 or newer); 'apt remove hwut'
+                                       takes every file of it, and bash
+                                       completes every face at once
+    podman run --rm --userns=keep-id -v "$PWD":/work:Z ghcr.io/fschaef/hwut hwut.help
+    docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/work ghcr.io/fschaef/hwut hwut.help
+                                       nothing on the host; what a run
+                                       writes into the tree is yours
+    python3 -m venv .venv && . .venv/bin/activate && pip install hwut
+                                       a project's own environment
+
+Python 3.10 or newer. The modules hwut needs come with it; which, and the
+oldest version of each, stand in 'adm/requirement-list.txt'.
+
+WHAT IS MISSING. Where a module is absent or too old, 'hwut.help' says so
+first, with the Debian/Ubuntu package and the pip line that installs it,
+and ends with status 1.
+
+A FIRST GREEN RUN, in any form:
+
+    hwut.demo.python ~/hwut-demo
+    cd ~/hwut-demo/TEST && hwut --plain        RESULTS: 6 ok, 0 fail
+
+TAB COMPLETION: 'hwut --command-line-setup', then doc/HOWTO-COMPLETION.txt.
+
+FROM A CLONE nothing is installed: 'bin/' holds every face; put it on PATH.
+
+BUILDING THE PACKAGES (for whoever releases hwut):
+
+    python3 adm/packaging/build.py wheel dist/
+    python3 adm/packaging/build.py deb dist/
+    python3 adm/packaging/build.py image <context-dir>

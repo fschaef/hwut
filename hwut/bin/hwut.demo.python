@@ -1,0 +1,8 @@
+#! /bin/sh
+# SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+# The launcher of 'hwut.demo.python': 'services/lib/demo/python.py' run
+# as a module, from wherever 'hwut.demo.python' is called, by PATH or by
+# path.
+HERE=$(dirname "$(readlink -f "$0")")
+PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
+    exec python3 -m hwut.services.lib.demo.python "$@"

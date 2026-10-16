@@ -1,0 +1,33 @@
+==============================================================================
+HOWTO-COMPLETION -- TAB completes hwut's faces, options and words
+==============================================================================
+
+ONCE, after installing or after options changed:
+
+    hwut --command-line-setup
+
+asks every face for its options and writes them as one compiled table
+beside the completer. Then, by the shell -- the lines it prints name
+the paths:
+
+    bash        in '~/.bashrc'     source <hwut>/services/shell/hwut.bash
+    zsh         in '~/.zshrc',     source <hwut>/services/shell/hwut.zsh
+                after 'compinit'
+    PowerShell  in '$PROFILE'      . <hwut>/services/shell/hwut.ps1
+ Every 'hwut' and 'hwut.*' command on
+PATH completes from then on:
+
+    hwut.run --f<TAB>                  --fail  --faster-than ...
+    hwut.run --strategy <TAB>          the words the option takes
+    hwut.run.play <TAB>                the test applications here
+    hwut.run.play test-a.sh <TAB>      that application's choices
+    hwut.run test-a.sh <TAB>           the same: the short form
+    hwut.run -l <TAB>                  the labels of 'hwut-root.labels'
+    hwut.execute <TAB>                 the targets this 'hwut.conf' binds
+    hwut.run --dir <TAB>               directories
+
+A TAB never runs a test, writes nothing, and is answered in about 30
+milliseconds; where an answer would cost more, it offers nothing.
+
+A face that reads its words by hand (TODO F-4) completes its name, not
+yet its options.

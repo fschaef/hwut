@@ -358,6 +358,15 @@ The faces:
                  '<app> <app'>' is 'hwut.rename <app> -to <app'>',
                  word for word; two words, no more.
 
+    _complete.py THE COMPLETER (E-151): 'hwut --command-line-complete
+                 <shell> "<line>"', checked at the top of 'run.py'
+                 before anything else is imported. Imports 'os', 're'
+                 and '_complete_db' -- the table that
+                 '_complete_setup.py' ('hwut --command-line-setup')
+                 writes from every face's parser and byte-compiles;
+                 generated, never tracked. 'shell/hwut.bash' is bash's
+                 side. doc/HOWTO-COMPLETION.txt.
+
     _target.py   A TEST NAMED BY PATH ENTERS ITS DIRECTORY. A bare
                  word 'a/TEST/keep.sh' whose directory part is literal
                  (no '*', '?', '[') means: enter 'a/TEST', perform

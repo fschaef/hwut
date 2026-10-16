@@ -1,0 +1,7 @@
+installed:    status 0, hwut-2.0.0-py3-none-any.whl
+version:      2.0.0
+faces:        55 on PATH
+hwut.dev.*:   0 on PATH
+hwut.help:    status 3, nothing to explain: no case below '.' failed for a reason other than a plain difference from GOOD
+RESULTS: 6 ok, 0 fail, 0.24 [sec], 0.24 [sec] total
+<hwut-end>

@@ -1,0 +1,14 @@
+
+--- an option's words ---
+    'hwut.run --strategy '             -> linear parallel
+    'hwut.run --strategy p'            -> parallel
+    'hwut.run --format='               -> --format=junit --format=plain
+    'hwut.run --format=j'              -> --format=junit
+
+--- directories ---
+    'hwut.run --dir '                  -> sub/
+    'hwut.run --directory s'           -> sub/
+
+--- a value of no kind: nothing ---
+    'hwut.run --jobs '                 -> (nothing)
+<hwut-end>

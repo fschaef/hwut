@@ -1,0 +1,17 @@
+
+--- bash: cut at the last '=' or ':' ---
+junit
+plain
+bc
+
+--- zsh: ':' escaped ---
+a\:bc
+
+--- powershell: candidate, TAB, description ---
+--format=junit	--format=junit
+--format=plain	--format=plain
+
+--- an unknown shell, or no candidate: nothing ---
+''
+''
+<hwut-end>

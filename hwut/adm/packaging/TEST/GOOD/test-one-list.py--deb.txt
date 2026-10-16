@@ -1,0 +1,14 @@
+
+--- the control file ---
+    file:          hwut_<version>_all.deb
+    Version:       the same as adm/version.py: True
+    Architecture:  all
+    Depends:       the list's census rows: True
+
+--- what it lands ---
+    /usr/bin:      the faces of bin/ but hwut.dev.*: True
+    completions:   one link per face: True
+    package:       True
+    TEST directories: demo/python/TEST
+    postinst, prerm: True
+<hwut-end>

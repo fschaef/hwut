@@ -64,12 +64,19 @@ RUN apt-get update \
         gcc g++ libc6-dev make lcov gcovr \
         verilator ghdl golang-go \
         lua5.4 luarocks default-jdk-headless \
-        git mercurial subversion breezy darcs fossil \
+        git mercurial subversion breezy darcs fossil zsh \
+        curl ca-certificates \
         libvterm0 libvterm-dev \
         texlive-latex-base texlive-latex-recommended latexmk \
  && rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install luacov
+
+#  PowerShell is no Debian package: Microsoft's release tarball.
+RUN mkdir -p /opt/pwsh \
+ && curl -sSL https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-x64.tar.gz \
+    | tar -xz -C /opt/pwsh \
+ && chmod +x /opt/pwsh/pwsh && ln -s /opt/pwsh/pwsh /usr/local/bin/pwsh
 
 RUN pip install --no-cache-dir \
         bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil \

@@ -56,6 +56,8 @@ DESCRIPTION
 
 EXIT STATUS (E-1, services/_exit.py):
     0  something was explained
+    1  a Python module hwut needs is absent or too old: named, with how
+       to install it, before anything else (adm/requirement-list.txt)
     3  nothing to explain: no selected case failed for a subtle reason,
        none was left without a coverage record, none is refused for
        want of an enforceable cap
@@ -65,6 +67,17 @@ ______________________________________________________________________________
 import os
 import sys
 import textwrap
+
+#  WHAT THIS MACHINE LACKS IS SAID FIRST (adm/WORK/spec/24): a census
+#  module that is absent ends every import below with a traceback before
+#  a word is said. The reader imports 'os' and 're' alone.
+if __name__ == "__main__":
+    from .lib import requirements as _requirements
+    _missing_list = _requirements.missing()
+    if _missing_list:
+        sys.stdout.write(_requirements.missing_text(_missing_list))
+        if any(row.kind == "python" for row, _ in _missing_list):
+            sys.exit(1)
 
 from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
                                                  WishError, parse_wish,

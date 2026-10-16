@@ -374,13 +374,11 @@ TIER 3  BLOCKS REAL USE, OR DECIDED AND UNBUILT
          NEEDS: nothing.
          SEE: TODO B-4; gathered/0h.
 
-[ ] B-11 COMMAND-LINE COMPLETION
-         The option table ('--intern-cmd-get-completion-info', E-81)
-         exists; no shell function.
-         DO: bash, zsh, PowerShell functions reading that table.
-         NEEDS: gathered/0s's two OPENs (one general face or each; a
-         '<file-glob>' completion). F-4 widens its reach.
-         SEE: TODO B-11; gathered/0s.
+[x] B-11 COMMAND-LINE COMPLETION
+         DONE 2026-10-15 (services E-151): the completer, 'hwut
+         --command-line-setup', bash, zsh and PowerShell scripts;
+         pinned by 'services/TEST/test-complete.py'. F-4 widens its
+         reach. SEE: doc/HOWTO-COMPLETION.txt.
 
 [ ] B-13 A VARIANT RESTATING A 'language-setup' ENTRY
          R-73 intends it; 'exploration/variant.py' knows no 'language'.
@@ -570,7 +568,7 @@ TIER 5  WAITING ON A RULING
 [ ] gathered/0u  tree-walk laws 1, 2, 4: '.' names skipped; 'ignore'
          child-wins (X-SILENT's COST doubts it -- the same fork twice).
 [ ] gathered/0r  B-7's two OPENs (see B-7).
-[ ] gathered/0s  B-11's two OPENs (see B-11).
+[x] gathered/0s  B-11's two OPENs -- settled 2026-10-15, E-151.
 [ ] 'scratch()'  a runner helper handing a test its scratch directory
          -- tidiness; wanted?
 [ ] coverage disc-5  counts in a merge: refuses today; moot at the
@@ -655,9 +653,11 @@ TIER 7  HARMLESS WHILE IT WAITS
          DONE 2026-10-08 (audit D-9, services E-44): 'services/TEST/
          test-face-words.sh propose' -- the proposal, the veto, the
          apply, the bound.
-[ ] F-4  THE NINE HAND-PARSING FACES GAIN A PARSER (E-81)
-         execute, move, remove, sanitize, pype ... refuse correctly in
-         their own words; no completion table. A session of its own.
+[ ] F-4  THE FORTY-ONE FACES WITHOUT A PARSER GAIN ONE (E-81)
+         MEASURED 2026-10-15: 15 of 56 faces print the completion
+         table; execute, labels.*, features.*, cov.conv.*, move,
+         remove*, sanitize*, pype, config.* ... do not, and so
+         complete their names only (E-151). A session of its own.
 [ ] F-1  'bin/README.txt' SAYS EVERY LAUNCHER RUNS 'hwut.services.<n>'
          Untrue for the 'lib/' faces. One pass with the launcher grid.
 [ ] F-3  'test-accept.py' RE-WIDENED TO TWO SUBJECTS

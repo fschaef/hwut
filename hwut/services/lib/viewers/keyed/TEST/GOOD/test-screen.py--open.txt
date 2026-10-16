@@ -1,6 +1,6 @@
      0 |> OUTPUT of: test-a.sh                            |  GOOD   2 differ
      1 |   1 one                                          |one
-     2 |   2 TWO                                          |
+     2 |   2 TWO                                          |## <no line in GOOD here>
      3 |   3 three                                        |two
      4 |   4 <hwut-end>                                   |<hwut-end>
      5 |                                                  |

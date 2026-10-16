@@ -14,8 +14,15 @@
 # reports as it happens and prints no '<hwut-end>': the pype's '<eof>'
 # does (pype manual 1b).
 HERE=$(cd "$(dirname "$0")" && pwd)
-ROOT=$(cd "$HERE/../../../.." && pwd)
-export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+#  THE PYPE IS THE FACE ON PATH in an installed hwut, and a copy written
+#  by 'hwut.demo.python' stands anywhere; in the clone, the module below.
+if command -v hwut.pype > /dev/null 2>&1; then
+    pype() { hwut.pype "$@"; }
+else
+    ROOT=$(cd "$HERE/../../../.." && pwd)
+    export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+    pype() { python3 -m hwut.services.pype "$@"; }
+fi
 
 producer() {
     python3 - <<'PY'
@@ -37,6 +44,6 @@ PY
 }
 
 case "$1" in
-    clean) producer | python3 -m hwut.services.pype "$HERE/protocol.pype" ;;
+    clean) producer | pype "$HERE/protocol.pype" ;;
     *)     echo "choices: clean"; exit 1 ;;
 esac

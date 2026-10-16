@@ -1,0 +1,9 @@
+
+--- dot-sourced: a TAB asked of 'TabExpansion2' ---
+    [hwut.run --f] -> --fail --format
+    [hwut.run --format=j] -> --format=junit
+    [hwut.run --dir s] -> sub/
+    [hwut.run.play --sa] -> --save
+    [hwut.about --] -> 
+    status 0, stderr ''
+<hwut-end>

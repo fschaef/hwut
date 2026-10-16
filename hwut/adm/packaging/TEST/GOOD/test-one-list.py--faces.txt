@@ -1,0 +1,18 @@
+
+--- the faces ---
+    the same as bin/ but hwut.dev.*:  True
+    left out:  hwut.dev.podman.build hwut.dev.podman.enter
+    launched by one entry point:  True
+
+--- what the stage holds ---
+    TEST directories:  demo/python/TEST
+    WORK directories:  0
+    completion table:  0
+    adm/version.py             True
+    adm/requirement-list.txt   True
+    bin/.hwut.conf             True
+    services/_launch_db.py     True
+    services/shell/hwut.bash   True
+    doc/HOWTO-COMPLETION.txt   True
+    bin/ holds a shim:  False
+<hwut-end>

@@ -41,8 +41,10 @@ User's step, confirmed as the right start; well-understood, weeks not months.
       accept/reject per test, per choice." This loop is where users decide
       whether they love the tool. Budget accordingly.
 
-STAGE R-2: REACH BEFORE FEATURES (packaging that tests adoption)  STATE: PROPOSED
+STAGE R-2: REACH BEFORE FEATURES (packaging that tests adoption)  STATE: RULED
 ================================================================================
+RULED 2026-10-16 for the packages: this order; deb kept, last; wheel,
+pipx, deb and the runtime image BUILT (adm/WORK/spec/24-installation-packages.txt).
 Replaces "deb/rpm" as the packaging target; reach-ordered for the current
 world:
     1. PyPI: 'pipx install hwut' -- one-command trial for strangers.

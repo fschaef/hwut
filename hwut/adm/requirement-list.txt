@@ -17,30 +17,46 @@ THE COLUMNS, separated by blanks; '#' opens a comment:
     kind      program   found on PATH
               python    a module Python imports
               library   a shared library the system's loader finds
-    name      what is looked for
+    name      what is looked for; for a 'python' row the module, and
+              '>=<version>' the oldest version measured to work, as pip
+              numbers it
     need      census    'bin/hwut.run' over the tree is red without it
               road      one road of hwut wants it; the census does not
-    debian    the Debian/Ubuntu package ('pip:<name>' for a Python one)
+    debian    the Debian/Ubuntu package; 'pip:<name>' where only pip has
+              it. '>=<version>' the oldest version measured to work, as
+              DEBIAN numbers it ('regex' 2022.10.31 is Debian's
+              0.1.20221031). MEASURED 2026-10-16: the census green with
+              the versions of Ubuntu 24.04; red with typeguard 2.13
     for       who needs it
+
+WHAT A USER'S INSTALLATION REQUIRES is read off this list, never restated
+(adm/WORK/spec/24-installation-packages.txt): the 'python' rows of need
+'census' are the wheel's dependencies -- the 'name' column as it stands -- and their
+'debian' column, with 'python3' and 'libvterm0', the Debian package's
+'Depends'. 'hwut.help' reads the same rows to name what is missing.
 
 ------------------------------------------------------------------------------
 kind     name            need    debian                 for
 ------------------------------------------------------------------------------
-program  python3         census  python3                everything; 3.10 at least ('match')
+program  python3         census  python3>=3.10          everything ('match')
 program  bash            census  bash                   every shell page; 'adm/bundle.sh'
 program  git             census  git                    'adm/bundle.sh', 'hwut.affected'
 program  gcc             census  gcc                    gcov, the C road of 'hwut.cov.run'
 program  gcov            census  gcc                    the same
 program  ruff            census  pip:ruff               'adm/TEST/test-static-analysis.sh'
+program  dpkg-deb        census  dpkg                   'adm/packaging/TEST/test-one-list.py deb'
+program  zsh             census  zsh                    'services/TEST/test-complete.py zsh'
+program  pwsh            census  -                      'test-complete.py powershell'; PowerShell 7,
+                                                        Microsoft's package or release tarball
 program  coverage        census  pip:coverage           'hwut.cov.run' over python
 
-python   bidict          census  pip:bidict             the tree imports it
-python   rapidfuzz       census  pip:rapidfuzz          the tree imports it
-python   regex           census  pip:regex              the tree imports it
-python   typeguard       census  pip:typeguard          the tree imports it
-python   pyrsistent      census  pip:pyrsistent         the tree imports it
-python   prompt_toolkit  census  pip:prompt_toolkit     the keyed merge screen
-python   psutil          census  pip:psutil             the tree imports it
+python   bidict>=0.22.1          census  python3-bidict>=0.22.1          the tree imports it
+python   rapidfuzz>=3.6.2        census  python3-rapidfuzz>=3.6.2        the tree imports it
+python   regex>=2022.10.31       census  python3-regex>=0.1.20221031     the tree imports it
+python   typeguard>=4.1.5        census  python3-typeguard>=4.1.5        the tree imports it
+python   pyrsistent>=0.20.0      census  python3-pyrsistent>=0.20.0      the tree imports it
+python   prompt_toolkit>=3.0.43  census  python3-prompt-toolkit>=3.0.43  the keyed merge screen
+python   psutil>=5.9.8           census  python3-psutil>=5.9.8           the tree imports it
 
 library  vterm           census  libvterm0              'test_writing_support/python/hwut_vterm.py':
                                                         'test-hwut_vterm.py', 'keyed/TEST/test-screen.py'

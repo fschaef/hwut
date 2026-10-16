@@ -1,0 +1,10 @@
+
+--- labels at the boundary, and the standard ones ---
+    'hwut.run -l '                     -> all meta nightly smoke
+    'hwut.run --label n'               -> nightly
+    'hwut.labels.remove '              -> all meta nightly smoke
+    'hwut.labels.remove s'             -> smoke
+
+--- outside a tree: the standard ones ---
+    'hwut.run -l '                     -> all meta
+<hwut-end>

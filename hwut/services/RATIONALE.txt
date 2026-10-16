@@ -6052,3 +6052,37 @@ DECISION  'hwut.report.features' prints every feature by its FULL ID
 COST      Pages and GOODs recorded before show numbers and 'composition'.
 PINNED    'services/TEST/test-report-features.py';
           'services/TEST/test-sanitize-relations.py'.
+
+
+E-151  COMPLETION FOLLOWS '0s'; TYPER IS GIVEN UP                       (2026-10-15)
+-----------------------------------------------------------------------------
+PROBLEM   TODO B-11 wants TAB completion in bash, zsh and PowerShell. Typer
+          offers it ready-made. A completion runs on EVERY TAB press.
+          MEASURED 2026-10-15, cloud VM, median of 7-9, per TAB:
+
+              Typer, a trivial three-option app                   0.078 s
+              bin/hwut.run --intern-cmd-get-completion-info       0.344 s
+              bin/hwut.report.list --intern-cmd-get-completion-info 0.319 s
+              python3 -I -c "import os, re"   (the 0s budget)      0.021 s
+              python3 -m hwut.services.<module importing os, re>   0.026 s
+              bash compgen over a static word list, bash incl.     0.002 s
+
+DECISION  COMPLETION FOLLOWS 'adm/WORK/gathered/0s-todo-2-command-line-
+          completion.txt': one entry on the general face,
+          'hwut --command-line-complete <shell> "<line>"', answered before
+          anything of the tree is imported, by 'services/_complete.py',
+          which imports 'os' and 're' only. The shell is an argument (one
+          completer, one rendering per shell); the whole line is passed.
+          Three tiers -- STATIC, CHEAP, DEAR -- and a tier that cannot
+          answer cheaply answers nothing. It never fails loudly, writes
+          nothing, takes no lock, runs no test.
+          TYPER IS GIVEN UP. (1) It runs the program on every TAB: behind
+          a hwut face that is the face's whole import per TAB (0.3 s
+          above, against 0.02 s). (2) It moves the faces off argparse,
+          on which E-84 stands -- the generated usage, did-you-mean, the
+          house refusal and the pages recording them. Its REST side
+          (FastAPI) is not wanted either: the remote protocol is JSON
+          lines over stdio (2026-08-27); REST only for the remote case.
+COST      Three shell scripts and one completer are ours to keep; the
+          per-face option lists must reach '_complete' without importing
+          the faces (open (a) of '0s').
