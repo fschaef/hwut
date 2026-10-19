@@ -24,8 +24,11 @@ ______________________________________________________________________________
 """
 import os
 
+import re
+
 from .feature_registry      import (registry_of_text, leaf_list,
-                                    aggregate_list, name_set)
+                                    aggregate_list, name_set,
+                                    retired_internal_set, word_valid_f)
 from .feature_relation      import (feature_file_of_text, key_valid_f,
                                     TEST_NAME)
 from .finder                import FEATURE_FILE_NAME, REGISTRY_FILE_NAME
@@ -34,6 +37,7 @@ from .feature_registry_edit import (EditRefused, edited, write_atomic,
                                     leaf_take, aggregate_take, leaf_block,
                                     aggregate_block, retired_add,
                                     directory_prefix_move, definition_take,
+                                    definition_renamed, leaf_repoint,
                                     definition_container,
                                     aggregate_container, aggregate_key_list,
                                     keys_of, keys_without)
@@ -174,6 +178,153 @@ def retire(root, name):
                              % _relative(root, test_path))
     write_atomic(path, new_text)
     return line_list
+
+
+# -- rename ------------------------------------------------------------------
+
+def rename(root, external, new):
+    """
+    RETURN: list of str, what was done: the feature behind the leaf
+            'external' renamed to 'new' in the three places that name it --
+            its definition in its TEST directory's 'hwut-features.conf',
+            every link to it in that directory's test headers, the leaf's
+            internal id in 'hwut-root-features.conf' -- the external id
+            unchanged (the book's D-7; ruled 2026-10-17 "A").
+
+    ActRefused where 'external' is no leaf, 'new' is no identifier word,
+    is defined there already or names a retired claim, the definition does
+    not stand, or an edit would leave a file with a fault. Nothing is
+    written where anything is refused.
+    """
+    from .explorer import explore
+    path, text, registry = _central(root)
+    kind, leaf = _claim(registry, external)
+    if kind != "leaf":
+        raise ActRefused("'%s' is an aggregate: a key of the central file, "
+                         "edited there" % external)
+    if not word_valid_f(new):
+        raise ActRefused("'%s' is no identifier word" % new)
+    test_path, test_text = _test_file(root, registry, leaf)
+    if test_text is None:
+        raise ActRefused("no '%s' stands for '%s'" % (FEATURE_FILE_NAME,
+                                                      external))
+    new_internal = "%s:%s" % (leaf.directory_id, new)
+    if new_internal in retired_internal_set(registry):
+        raise ActRefused("'%s' is retired: never bound again" % new_internal)
+    if definition_renamed(test_text, new, new) is not None:
+        raise ActRefused("'%s' is defined already in %s"
+                         % (new, _relative(root, test_path)))
+    new_test_text = _guarded(definition_renamed, test_text, leaf.name, new)
+    if new_test_text is None:
+        raise ActRefused("'%s' is not defined in %s"
+                         % (leaf.name, _relative(root, test_path)))
+    _test_edited(_relative(root, test_path), test_text, new_test_text)
+    new_text = _guarded(edited, text,
+                        _guarded(leaf_repoint, text, external, new_internal))
+    test_directory = os.path.dirname(test_path)
+    link_db = {}
+    for app in sorted(explore(test_directory).app_set,
+                      key=lambda each: each.source_file):
+        source = os.path.join(test_directory, app.source_file)
+        with open(source, encoding="utf-8") as fh: before = fh.read()
+        after = _links_renamed(before, leaf.name, new)
+        if after != before: link_db[source] = after
+    #  THE LINKS BY INTERNAL ID, from every other directory (D-8, R-4).
+    foreign_db = {source: after for source, after in internal_links_planned(
+                      root, lambda link: new_internal
+                      if link == leaf.internal else None).items()
+                  if source not in link_db}
+    write_atomic(test_path, new_test_text)
+    for source, after in link_db.items():
+        mode = os.stat(source).st_mode
+        write_atomic(source, after)
+        os.chmod(source, mode)
+    write_atomic(path, new_text)
+    line_list = ["renamed  %s  %s -> %s" % (external, leaf.internal,
+                                            new_internal),
+                 "    definition renamed in %s" % _relative(root, test_path)]
+    line_list += ["    link renamed in %s" % _relative(root, each)
+                  for each in link_db]
+    line_list += links_written(root, foreign_db)
+    return line_list
+
+
+_LINK_LIST_RE = re.compile(r"\bfeatures\s*=\s*\[[^\]]*\]", re.DOTALL)
+_QUOTED_RE    = re.compile(r'"([^"]*)"')
+
+
+def _links_mapped(text, map_f):
+    """
+    RETURN: str, the source 'text' with every quoted link inside a
+            'features = [...]' of its '@hwut { }' header replaced by
+            'map_f(link)' where that is not None -- the rest byte for byte
+    """
+    container = amend.header_container(text)
+    if container is None: return text
+
+    def quoted(match):
+        found = map_f(match.group(1))
+        return match.group(0) if found is None else '"%s"' % found
+
+    head = text[container.i_open:container.i_close]
+    head = _LINK_LIST_RE.sub(lambda m: _QUOTED_RE.sub(quoted, m.group(0)),
+                             head)
+    return text[:container.i_open] + head + text[container.i_close:]
+
+
+def internal_links_planned(root, map_f):
+    """
+    RETURN: dict, source path -> its new text: every test application of
+            the tree below 'root' whose header links by INTERNAL ID
+            something 'map_f(internal id)' rewrites (the book's D-8, R-4)
+            -- a name of a test's own directory is never touched. Nothing
+            is written here.
+    """
+    from .feature_relation import internal_link_f
+    from .tree_explorer    import explore_tree_stream
+
+    def mapped(link):
+        return map_f(link) if internal_link_f(link) else None
+
+    plan_db = {}
+    for relative, result in explore_tree_stream(root):
+        directory = os.path.normpath(os.path.join(root, relative))
+        for app in sorted(result.app_set, key=lambda a: a.source_file):
+            source = os.path.join(directory, app.source_file)
+            try:
+                with open(source, encoding="utf-8") as fh: before = fh.read()
+            except (OSError, UnicodeDecodeError):
+                continue
+            after = _links_mapped(before, mapped)
+            if after != before: plan_db[source] = after
+    return plan_db
+
+
+def links_written(root, plan_db):
+    """RETURN: list of str, one 'link rewritten in <file>' line per file of
+    'plan_db' (path -> text), each written, its mode kept."""
+    line_list = []
+    for source in sorted(plan_db):
+        mode = os.stat(source).st_mode
+        write_atomic(source, plan_db[source])
+        os.chmod(source, mode)
+        line_list.append("    link rewritten in %s" % _relative(root, source))
+    return line_list
+
+
+def _links_renamed(text, old, new):
+    """
+    RETURN: str, the source 'text' with every '"old"' inside a
+            'features = [...]' of its '@hwut { }' header written '"new"'
+            -- the rest byte for byte
+    """
+    container = amend.header_container(text)
+    if container is None: return text
+    head = text[container.i_open:container.i_close]
+    head = _LINK_LIST_RE.sub(lambda m: m.group(0).replace('"%s"' % old,
+                                                          '"%s"' % new),
+                             head)
+    return text[:container.i_open] + head + text[container.i_close:]
 
 
 # -- move --------------------------------------------------------------------
@@ -331,7 +482,7 @@ def register(root, below=".", token=None):
     fault, or the edit would leave one. 'token' stands in for the random
     source of directory ids (a test)."""
     from .feature_detector      import (detect, fact_db_of_tree,
-                                        DIR_NEW, LEAF_NEW)
+                                        DIR_NEW, LEAF_NEW, LEAF_GONE)
     from .feature_registry_edit import (directory_add_list, leaf_add_list,
                                         external_id_of, new_directory_id)
     path, text, registry = _central(root)
@@ -348,8 +499,17 @@ def register(root, below=".", token=None):
         id_of_path[directory] = directory_id
         directory_list.append((directory_id, directory))
         new_leaf[directory] = set(fact_db.get(directory, ()))
+    #  A DIRECTORY WITH A GONE LEAF THAT CANNOT BE PAIRED registers
+    #  nothing new: its new names are the candidates of the gone ones,
+    #  and an id minted for them would take the place of the external id
+    #  the world knows (the book's D-7). The author pairs ('repoint') or
+    #  renames ('hwut.features.rename'); what is new stays named until then.
+    unpaired_directory = {each.path_tuple[0] for each in found
+                          if each.kind == LEAF_GONE
+                          and each.unpaired is not None and each.path_tuple}
     for each in found:
-        if each.kind == LEAF_NEW:
+        if each.kind == LEAF_NEW \
+           and each.path_tuple[0] not in unpaired_directory:
             new_leaf.setdefault(each.path_tuple[0], set()).add(
                 each.subject.partition(":")[2])
     for directory in sorted(new_leaf):
@@ -405,10 +565,20 @@ def apply_proposal(root, verb, word_tuple):
     elif verb == "repoint":
         new_text = _guarded(leaf_repoint, text, *word_tuple)
         line_list.append("%s now binds %s" % tuple(word_tuple))
+        #  THE LINKS FOLLOW THE ID (the book's D-8, R-4).
+        old = next((leaf.internal for _, leaf in leaf_list(registry_of_text(
+                        text)) if leaf.external == word_tuple[0]), None)
+        plan_db = {} if old is None else internal_links_planned(
+            root, lambda link: word_tuple[1] if link == old else None)
     elif verb == "fold":
         new_text = _guarded(fold, text, *word_tuple)
         line_list.append("%s folded into %s" % tuple(word_tuple))
+        later, first = word_tuple
+        plan_db = internal_links_planned(
+            root, lambda link: first + ":" + link.partition(":")[2]
+            if link.partition(":")[0] == later else None)
     else:
         raise ActRefused("'%s' is no proposal of the detector" % verb)
     write_atomic(path, _guarded(edited, text, new_text))
+    if verb != "redirect": line_list += links_written(root, plan_db)
     return line_list

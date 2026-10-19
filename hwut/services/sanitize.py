@@ -88,6 +88,7 @@ import os
 import sys
 from   dataclasses import dataclass, field
 
+from .lib.face import write_refusal
 from ..auxiliary.directory_mutex import (MkdirMutex,
                                                              LOCK_DIRECTORY_NAME)
 from ..engine.bookkeeper.api import (Bookkeeper, STORE_DIRECTORY_NAME,
@@ -896,8 +897,7 @@ def main(argv=None, write=None, ask=None):
         word_list = ["root", chosen]
     command = line_of_words(word_list)
     if isinstance(command, str):
-        write("REFUSED: %s" % command)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % command, USAGE)
         return E_ExitCode.REFUSED
 
     context = CContext(base)

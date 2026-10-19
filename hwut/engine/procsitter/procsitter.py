@@ -219,7 +219,8 @@ class ProcsitterResult:
 class _RunState:
     """Shared mutable state between run(), watchdog, and stop watcher."""
     __slots__ = ("cause", "peak_memory_mb", "peak_pids", "peak_disk_mb",
-                 "cpu_time_sec", "descendants", "last_output_sec")
+                 "cpu_time_sec", "descendants", "last_output_sec",
+                 "standing_before")
 
     def __init__(self):
         self.cause           = None   # first containment cause wins
@@ -231,6 +232,7 @@ class _RunState:
         self.peak_disk_mb   = None
         self.cpu_time_sec   = None
         self.descendants    = {}      # pid -> create_time, ever observed
+        self.standing_before = frozenset()  # what stood before the spawn
 
     def set_cause(self, cause):
         """
@@ -285,7 +287,15 @@ class Procsitter:
         rusage_before      = self._rusage_children()
         env_overlay        = self._env_overlay()
         standing_before    = self._standing_set()
+        state.standing_before = standing_before
         t0                 = time.monotonic()
+
+        #  BELOW THE FLOOR, NOTHING STARTS (D-24): a call that would be
+        #  terminated on its first disk poll is not spawned at all.
+        free_mb = self._disk_free_mb()
+        if free_mb is not None and free_mb < self.config.min_free_disk_mb:
+            return ProcsitterResult(E_Containment.FAIL_DISK_SPACE_LOW, None,
+                                    0.0, None, None, unenforced)
 
         try:
             process = await asyncio.create_subprocess_exec(
@@ -645,7 +655,7 @@ class Procsitter:
                         await self._kill_ladder(process)
                         return
                 if tick % _DISK_POLL_EVERY == 0:
-                    usage_mb = self._disk_usage_mb()
+                    usage_mb = self._disk_usage_mb(state.standing_before)
                     if usage_mb is not None:
                         state.peak_disk_mb = max(state.peak_disk_mb or 0.0,
                                                  usage_mb)
@@ -706,30 +716,49 @@ class Procsitter:
                     rss_byte += proc.memory_info().rss
         return rss_byte / (1024.0 * 1024.0)
 
-    def _disk_usage_mb(self):
+    def _disk_usage_mb(self, standing_before=frozenset()):
         """
-        RETURN: float, allocated megabytes under the work dir -- summed
-                       st_blocks (actual disk claim; a sparse file
-                       counts what it allocates, not what it
-                       addresses). Platforms without st_blocks
+        RETURN: float, allocated megabytes THE CALL HOLDS -- its scratch
+                       ground whole, and what it created under the work
+                       dir (absent from 'standing_before', the work
+                       dir's own 'TMP/' excepted as in '_standing_set').
+                       Summed st_blocks (actual disk claim; a sparse
+                       file counts what it allocates, not what it
+                       addresses); platforms without st_blocks
                        (Windows) fall back to st_size.
                 None,  if the work dir cannot be walked.
+
+        THE CALL'S OWN, NOT THE DIRECTORY'S (D-24). MEASURED 2026-10-19:
+        the whole work dir was summed -- 'GOOD/', 'OUT/', every sibling's
+        scratch -- so one case writing 150 MB put every case running
+        beside it over a 100 MB cap, and all of them were killed.
         """
+        def allocated(st):
+            blocks = getattr(st, "st_blocks", None)
+            return blocks * 512 if blocks is not None else st.st_size
+
         total_byte = 0
+        scratch    = self.config.scratch_dir
+        root_list  = [(str(self.work_dir), True)]
+        if scratch is not None:
+            root_list.append((os.path.abspath(scratch), False))
         try:
-            stack = [str(self.work_dir)]
-            while stack:
-                path = stack.pop()
-                with os.scandir(path) as entry_iter:
-                    for entry in entry_iter:
-                        with suppress(OSError):
-                            st = entry.stat(follow_symlinks=False)
-                            blocks = getattr(st, "st_blocks", None)
-                            total_byte += (blocks * 512
-                                           if blocks is not None
-                                           else st.st_size)
-                            if entry.is_dir(follow_symlinks=False):
-                                stack.append(entry.path)
+            for root, under_work_f in root_list:
+                if not under_work_f and not os.path.isdir(root): continue
+                stack = [root]
+                while stack:
+                    path = stack.pop()
+                    with os.scandir(path) as entry_iter:
+                        for entry in entry_iter:
+                            with suppress(OSError):
+                                shown = os.path.relpath(entry.path, root)
+                                if under_work_f and shown == "TMP": continue
+                                st = entry.stat(follow_symlinks=False)
+                                if not under_work_f \
+                                   or shown not in standing_before:
+                                    total_byte += allocated(st)
+                                if entry.is_dir(follow_symlinks=False):
+                                    stack.append(entry.path)
         except OSError:
             return None
         return total_byte / (1024.0 * 1024.0)

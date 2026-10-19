@@ -227,7 +227,9 @@ def main(argv=None, write=None):
                         result.app_set.app_db[case.source_file],
                         os.path.abspath(directory),
                         language_setup=result.app_set.directory_spec
-                                             .language_setup)
+                                             .language_setup,
+                        free_disk_min_mb=result.app_set.directory_spec
+                                               .free_disk_min_mb)
     try:
         return asyncio.run(_play(configuration, choice_name,
                                  found.bookkeeper_db["."],

@@ -1,0 +1,3 @@
+help of '--jobs' says 'unbounded':      0
+help of '--jobs' names the CPU count:   1
+<hwut-end>

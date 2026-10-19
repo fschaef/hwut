@@ -2,11 +2,12 @@ STATUS: 1
 STDOUT {
     TAP version 13
     1..2
-    ok 1 - suite/TEST: test-app.sh
-    not ok 2 - suite/TEST: test-diff.sh
+    ok 1 - tree/suite/TEST: test-app.sh
+    not ok 2 - tree/suite/TEST: test-diff.sh
       ---
       reason: not-equivalent-diverged
-      message: the run reported a difference from GOOD; the stored candidate and the nominal, read whole, are 'not-equivalent-diverged'
+      category: DEVIATION -- output differs from GOOD
+      message: differs from GOOD
       ...
 }
 <hwut-end>

@@ -1038,6 +1038,13 @@ BAND B -- WHAT IS ACTUALLY OWED
           "Nothing depends on the ruling; history is being recorded
           either way." It was never owed labour.
 
+    B-17  'on_before_test' / 'on_after_test'      ** FOR LATER **
+          Said 2026-10-17: the helpers 'on_entry' / 'on_exit' run before
+          and after a TEST directory; the same is wanted around each test
+          run. Not built: no word of the tree names them (measured
+          2026-10-17). Like the frame, no verdict: an exit status that
+          is not 0 is said, never judged (services E-158).
+
 ------------------------------------------------------------------------------
 BAND E -- TWO ENTRIES ARE NOT WAITING ON ANYTHING
 ------------------------------------------------------------------------------

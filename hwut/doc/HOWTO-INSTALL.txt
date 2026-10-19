@@ -23,7 +23,11 @@ oldest version of each, stand in 'adm/requirement-list.txt'.
 
 WHAT IS MISSING. Where a module is absent or too old, 'hwut.help' says so
 first, with the Debian/Ubuntu package and the pip line that installs it,
-and ends with status 1.
+and ends with status 1. Where nothing is missing and no tree stands -- the
+place a person is in right after installing -- it says so and how a tree
+begins, status 0:
+
+    INSTALLED: hwut 2.0.0 -- no 'hwut-root.conf' in or above '/home/you' => hwut.sanitize root
 
 A FIRST GREEN RUN, in any form:
 

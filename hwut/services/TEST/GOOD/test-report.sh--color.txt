@@ -2,7 +2,7 @@
     ESC[30;48;5;208m                                                                      ESC[0m
     ESC[30;48;5;208m                           A fixture title                            ESC[0m
     ESC[30;48;5;208m                                                                      ESC[0m
-    suite/TEST                                           YYYYyMMmDDd hhhmm
+    tree/suite/TEST                                      YYYYyMMmDDd hhhmm
     ----------------------------------------------------------------------
     
      * The steady one:
@@ -19,7 +19,7 @@
     
         Fails: N: Verdict:          Directory:
     
-             1 2    ESC[97;48;5;160m[FAIL]ESC[0m   suite/TEST
+             1 2    ESC[97;48;5;160m[FAIL]ESC[0m   tree/suite/TEST
     
     ----------------------------------------------------------------------
                                                                  (2 tests)

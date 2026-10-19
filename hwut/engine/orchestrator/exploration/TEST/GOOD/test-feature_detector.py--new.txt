@@ -8,6 +8,12 @@
   unplaced     'c.encode' is in no aggregate   (hint)
 --- a name that was retired and is defined again ----------------
   retired-use  Aaaaaaa1:scroll   retired; a TEST directory defines it again
---- the root's own TEST directory is not a component ------------
-  root-test    '.' the root's own TEST directory defines features; no directory id can stand for it   (hint)
+--- the root's own TEST directory: a directory without an id ----
+  dir-new      .   no directory id
+                   => register .
+--- the root's names defined elsewhere: no redirect of its id ---
+  dir-new      top/x   no directory id
+                   => register top/x
+  leaf-gone    top   RootId01:top is defined no more
+                   => # unpaired top RootId01:top (candidates: none)
 <hwut-end>

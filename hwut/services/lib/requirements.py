@@ -133,18 +133,52 @@ def missing(path=LIST_PATH):
     return result
 
 
-def missing_text(missing_list):
+def _width():
+    """
+    RETURN: int, the columns a notice is wrapped to: 'COLUMNS' where it
+            stands, the terminal's else, 78 where neither is known --
+            held between 40 and 120, as 'hwut.run' holds its width.
+    """
+    try:
+        width = int(os.environ.get("COLUMNS", ""))
+    except ValueError:
+        try:              width = os.get_terminal_size().columns
+        except OSError:   width = 78
+    return max(40, min(120, width))
+
+
+def _wrapped(text, width, indent):
+    """
+    RETURN: list[str], 'text' broken at blanks into lines of at most
+            'width' columns, every line after the first led by 'indent'.
+            A word longer than a line stands alone on its line.
+    """
+    line_list, line = [], ""
+    for word in text.split():
+        if line and len(line) + 1 + len(word) > width:
+            line_list.append(line)
+            line = indent + word
+        else:
+            line = "%s %s" % (line, word) if line else word
+    if line: line_list.append(line)
+    return line_list
+
+
+def missing_text(missing_list, width=None):
     """
     RETURN: str, one paragraph per missing requirement -- what it is,
-            what is wrong, how Debian/Ubuntu and pip install it.
+            what is wrong, what it serves, how Debian/Ubuntu and pip
+            install it -- wrapped to 'width' (the terminal's, where None).
             "", for an empty list.
     """
+    if width is None: width = _width()
     out = []
     for row, what in missing_list:
         noun = {"python":  "the Python module",
                 "library": "the shared library"}.get(row.kind, row.kind)
-        out.append("MISSING: %s '%s' (%s) -- %s." % (noun, row.name, what,
-                                                     row.note))
+        out.extend(_wrapped("MISSING: %s '%s' (%s) -- %s."
+                            % (noun, row.name, what, row.note.rstrip(".")),
+                            width, "    "))
         out.append("    Debian/Ubuntu:  sudo apt install %s" % row.debian)
         if row.kind == "python":
             out.append("    pip:            pip install '%s>=%s'"

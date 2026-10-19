@@ -25,14 +25,16 @@ FORMAT = 1
 #  names the node whose breaking failed this one. The verdict words
 #  are OPEN under the add-only promise.
 VERDICT_TUPLE = ("ok", "test-failed", "build-failed", "launch-failed",
-                 "unsupported", "misdep", "unaccepted", "no-good-file")
+                 "unsupported", "misdep", "unaccepted", "no-good-file",
+                 "uncapped")
 
 #  kind -> (required {field: type}, optional {field: type}).
 #  'when' is on EVERY event and stated once below the table.
 KIND_DB = {
     "tree-begun": ({"directory_list": list}, {"node_n": int}),
     "dir-begun":  ({"directory": str, "node_n": int}, {}),
-    "frame":      ({"directory": str, "role": str, "good": bool}, {}),
+    "frame":      ({"directory": str, "role": str, "good": bool},
+                   {"command": str, "exit": str}),
     "run-begun":  ({"directory": str, "node": str,
                     "node_kind": str}, {}),
     "run-ended":  ({"directory": str, "node": str, "node_kind": str,
@@ -60,6 +62,10 @@ _FIELD_TEXT_DB = {
     "node_n":         "how many nodes the directory's plan holds -- on "
                       "'tree-begun', the whole tree's",
     "role":           "'on_entry' or 'on_exit'",
+    "command":        "the frame script's command as written -- where it "
+                      "did not end well",
+    "exit":           "how the frame script ended where it did not end "
+                      "well: 'exited <n>', 'ended: <how>'",
     "good":           "true where the thing stood",
     "node":           "the plan node's name, e.g. 'test-a.py one', "
                       "'build[make test-a.py]'",

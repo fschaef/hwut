@@ -12,74 +12,57 @@ STDOUT {
     START test-two.sh                                                          ||1
     END   test-two.sh ................................................ [FAIL]  ||0
     DIR  gamma/TEST                                                               
-    FRAME gamma/TEST:on_entry ....................................... frame [FAIL]
+    FRAME gamma/TEST:on_entry ........................................... exited 1
+    START test-one.sh                                                          ||1
+    END   test-one.sh .................................................. [OK]  ||0
+    START test-two.sh                                                          ||1
+    END   test-two.sh .................................................. [OK]  ||0
     
     ==============================================================================
-    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
+    DIRECTORIES                                             5 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
        +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/0
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     
-    ==============================================================================
-    HINTS
-    ------------------------------------------------------------------------------
-    ENVIRONMENT -- error around the test
-        gamma/TEST
-            frame on_entry   frame failed
-    
-    HINT: use 'hwut.help' for explanation of subtle issues.
+    NOTE  gamma/TEST  on_entry exited 1: false
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.97 [sec], 1.02 [sec] total
-    |                           ok                            |       fail       |
+    RESULTS: 5 ok, 1 fail, 0.15 [sec], 0.16 [sec] total
+    |                              ok                               |    fail    |
 }
 == --dbd --jobs=1 ==
 STATUS: 1
 STDOUT {
     
     ==============================================================================
-    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
+    DIRECTORIES                                             5 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
        +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/0
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     
-    ==============================================================================
-    HINTS
-    ------------------------------------------------------------------------------
-    ENVIRONMENT -- error around the test
-        gamma/TEST
-            frame on_entry   frame failed
-    
-    HINT: use 'hwut.help' for explanation of subtle issues.
+    NOTE  gamma/TEST  on_entry exited 1: false
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.89 [sec], 0.94 [sec] total
-    |                           ok                            |       fail       |
+    RESULTS: 5 ok, 1 fail, 0.17 [sec], 0.17 [sec] total
+    |                              ok                               |    fail    |
 }
 == --directory-by-directory, the long spelling ==
 STATUS: 1
 STDOUT {
     
     ==============================================================================
-    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
+    DIRECTORIES                                             5 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
        +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/0
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     
-    ==============================================================================
-    HINTS
-    ------------------------------------------------------------------------------
-    ENVIRONMENT -- error around the test
-        gamma/TEST
-            frame on_entry   frame failed
-    
-    HINT: use 'hwut.help' for explanation of subtle issues.
+    NOTE  gamma/TEST  on_entry exited 1: false
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, 0.98 [sec], 1.02 [sec] total
-    |                           ok                            |       fail       |
+    RESULTS: 5 ok, 1 fail, 0.18 [sec], 0.19 [sec] total
+    |                              ok                               |    fail    |
 }
 <hwut-end>

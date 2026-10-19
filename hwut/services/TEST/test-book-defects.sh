@@ -6,6 +6,11 @@
 #     choices {
 #         affected          { features = ["affected-runs"] }
 #         "constraint-name" { features = ["spec-word-fault"] }
+#         "cov-eof"         { features = ["cov-run-output"] }
+#         "cov-outside"     { features = ["cov-run-output"] }
+#         "jobs-help"       { }
+#         "refused-remedy"  { }
+#         "help-outside"    { }
 #         "coverage-ground" { features = ["walk-no-entry"] }
 #         "frame-side"      { features = ["diff-fault-side"] }
 #         "refused-band"    { features = ["run-backup-refused"] }
@@ -33,8 +38,8 @@
 #                  split by the nominal's.
 # test-directory   'test_directory = "checks"': the same result standing
 #                  above the directory and standing in it.
-# refused-band     a refused backup-shaped file stands under the band
-#                  of ITS directory.
+# refused-band     a backup-shaped file beside the tests is IGNORED
+#                  (services E-159): it stands under no band at all.
 # affected         'hwut.affected' after a real 'hwut.cov.run': the runs
 #                  that executed a changed line, as wishlist lines that
 #                  'hwut.run --wishlist' takes; an empty directory is
@@ -46,6 +51,25 @@
 #                  a walk out is the EMPTY 'hwut.no-entry-here.marker';
 #                  a person's own directory carrying it is passed over
 #                  alike, and so are a test directory's 'TMP' and 'OUT'.
+#
+# THE DEFECT REPORT OF 2026-10-15 (DEFECTS-hwut-78e11f7, on b2b6726):
+#
+# cov-eof          D-16: the question 'gather coverage data in ...?'
+#                  meets the end of input: read as no -- REFUSED, nothing
+#                  written; it was an EOFError traceback. The question is
+#                  put only on a terminal, so the asking function is
+#                  called with stdin closed.
+# cov-outside      D-21: 'hwut.cov.run --dont-ask' where no
+#                  'hwut-root.conf' stands: REFUSED, and NOTHING written;
+#                  it left an empty 'hwut.coverage/' behind.
+# jobs-help        D-22: what '--jobs' says of its absence is what the
+#                  run does -- the number of CPUs; it said 'unbounded'.
+# help-outside     D-11: 'hwut.help' where no 'hwut-root.conf' stands -- the
+#                  place right after installing: INSTALLED, the version,
+#                  where a tree begins; status 0. It refused, status 2.
+# refused-remedy   D-6: a refusal that names its remedy (' => ') ends on
+#                  it -- no usage line beneath; a command line that cannot
+#                  be read is refused with the usage, as before.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 BIN=$(cd "$HERE/../../bin" && pwd)
@@ -56,7 +80,7 @@ RUN="hwut.run --jobs=1 --deterministic --no-colour --plain"
 case "$1" in
     --hwut-info)
         echo "Defects found by a reader: each one, on the road the reader took.;"
-        echo "CHOICES: frame-side, constraint-name, table-sep, test-directory, refused-band, affected, coverage-ground;"
+        echo "CHOICES: frame-side, constraint-name, cov-eof, cov-outside, jobs-help, refused-remedy, help-outside, table-sep, test-directory, refused-band, affected, coverage-ground;"
         exit 0 ;;
 esac
 
@@ -113,6 +137,46 @@ print("v ((%s: 1))" % ("min" if sys.argv[1] == "fn" else "k"))
 EOF
     cd a/TEST
     $RUN | flow
+    ;;
+
+cov-eof)
+    PYTHONPATH="$BIN/../.." python3 -c '
+from hwut.services.lib.cov.run import output_directory_of, _terminal_ask
+print("answer: %s" % output_directory_of(None, False, _terminal_ask))
+' < /dev/null 2>&1 | sed "s|in '.*/hwut.coverage'|in '<here>/hwut.coverage'|; s/ *$//"
+    ls -A | grep -c '^hwut.coverage$' | sed 's/^/hwut.coverage written: /'
+    ;;
+
+cov-outside)
+    OUTSIDE=$(mktemp -d)
+    ( cd "$OUTSIDE" && said hwut.cov.run --dont-ask ) | sed "s|$OUTSIDE|<outside>|"
+    echo "entries written: $(ls -A "$OUTSIDE" | wc -l)"
+    rm -rf "$OUTSIDE"
+    ;;
+
+jobs-help)
+    help=$(hwut.run --help 2>&1 | sed -n '/--jobs=/,/--strategy=/p' | tr -s ' \n' ' ')
+    echo "help of '--jobs' says 'unbounded':      $(echo "$help" | grep -c unbounded)"
+    echo "help of '--jobs' names the CPU count:   $(echo "$help" | grep -c 'number of CPUs')"
+    ;;
+
+help-outside)
+    OUTSIDE=$(mktemp -d)
+    ( cd "$OUTSIDE" && said hwut.help ) \
+        | sed "s|$OUTSIDE|<outside>|; s/hwut [0-9][0-9.]* --/hwut <version> --/"
+    rm -rf "$OUTSIDE"
+    ;;
+
+refused-remedy)
+    echo "--- no 'hwut-root-features.conf': the remedy is another command"
+    said hwut.report.features | sed "s|$WORK|<tree>|"
+    page a/TEST/test-r.py 'one { }' <<'EOF2'
+print("x")
+EOF2
+    echo "--- the same, asked of 'hwut.run -F'"
+    said hwut.run -F shot | sed "s|$WORK|<tree>|"
+    echo "--- a misspelt option: the usage names the spelling"
+    said hwut.report.features --matrx
     ;;
 
 table-sep)

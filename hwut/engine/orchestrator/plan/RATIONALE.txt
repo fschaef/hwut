@@ -282,3 +282,10 @@ COST      Two small modules where one file stood; a stored attribute
 GRAVEYARD A Stage object in the plan with nodes carrying references
           (machinery ahead of any need). A stage member on the node
           (redundant with kind; one truth, derived).
+
+P-19 THE FRAME IS NO VERDICT (2026-10-17, amends P-10)
+    RULED: 'on_entry' / 'on_exit' are the author's helpers; their exit
+    status is said, never judged (services E-158). The scheduler
+    dispatches the work whatever the entry script did; the run report's
+    'good_f' is the nodes' alone. P-10's "entry failure: nothing is
+    dispatched" no longer holds.

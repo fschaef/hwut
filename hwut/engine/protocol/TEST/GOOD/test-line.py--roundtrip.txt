@@ -1,7 +1,7 @@
   0.41:dir-begun:sample text,7
   0.41:dir-done:{"directory": "sample text", "good": true, "fail_db": {"k": "v", "test-b.sh": "FAILED"}}
   0.41:fault:"sample text": sample text
-  0.41:frame:sample text,sample text,true
+  0.41:frame:sample text,sample text,true,sample text,sample text
   0.41:refused:"sample text" "sample text": sample text
   0.41:report:"sample text": sample text
   0.41:run-begun:sample text,sample text,sample text

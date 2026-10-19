@@ -25,6 +25,7 @@ is NOT a path: it is a WISH GLOB with a path member (E-15), and is
 left to the wish. The base name may glob either way:
 'a/TEST/test-*.py' enters 'a/TEST' and asks for 'test-*.py'.
 """
+from .lib.face import write_refusal
 import os
 
 GLOB_METACHARACTER_TUPLE = ("*", "?", "[")
@@ -93,7 +94,8 @@ def entered(word_list, directory, write, usage=None):
     RETURN: (str, list), the directory entered and the bare words --
             'split_words' applied.
             None, where the words refuse to be read: the refusal is
-            written, with 'usage' where given.
+            written, with 'usage' where given and the refusal names
+            no remedy ('lib.face.write_refusal').
 
     The one call every face makes between reading its words and
     checking its directory.
@@ -101,6 +103,5 @@ def entered(word_list, directory, write, usage=None):
     try:
         return split_words(word_list, directory)
     except TargetError as error:
-        write("REFUSED: %s" % error)
-        if usage is not None: write(usage)
+        write_refusal(write, "REFUSED: %s" % error, usage)
         return None

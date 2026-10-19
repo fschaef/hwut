@@ -1,0 +1,8 @@
+:: sub/TEST: ./hello.sh [exit 0]
+hello from the target
+directories: 1  executed: 1  skipped: 0
+STATUS: 0
+FAILED: sub/TEST: './slow.sh' ended by the supervisor: wall clock exceeded
+directories: 1  executed: 0  skipped: 0
+STATUS: 1
+<hwut-end>

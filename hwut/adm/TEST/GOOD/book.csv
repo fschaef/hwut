@@ -1,4 +1,4 @@
-# vut-register 5 generation:15 apps:4 marks:0=2,1=7,2=0,3=1
+# vut-register 5 generation:18 apps:5 marks:0=2,1=7,2=0,3=1,4=2
 test;choice;verdict;report;stain;test_id;choice_id
 test-book_stain.py;convert;true;ok;;3;0
 test-bundle.sh;refused;true;ok;;0;0
@@ -10,4 +10,6 @@ test-import_graph.sh;depth;true;ok;;1;0
 ;refused;true;ok;;1;3
 ;shared;true;ok;;1;4
 ;unreadable;true;ok;;1;5
+test-requirement-check.sh;census;true;ok;;4;0
+;road;true;ok;;4;1
 test-static-analysis.sh;;true;ok;;2

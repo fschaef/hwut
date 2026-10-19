@@ -72,13 +72,10 @@ def main(argv=None, write=None, id_list=None):
             write("    %s" % each)
         return E_ExitCode.REFUSED
     write_atomic(path, composed_text(fact_db, id_list))
-    path_n    = len([p for p in fact_db if p != "."])
-    feature_n = sum(len(fact_db[p]) for p in fact_db if p != ".")
+    path_n    = len(fact_db)
+    feature_n = sum(len(fact_db[p]) for p in fact_db)
     write("'%s' written -- %d directory id(s), %d feature(s), unplaced"
           % (REGISTRY_FILE_NAME, path_n, feature_n))
-    if "." in fact_db:
-        write("NOTE: the root's own TEST directory defines features; no "
-              "directory id can stand for it")
     if feature_n:
         write("=> move the leaf lines into aggregates of 'tree'")
     return E_ExitCode.OK

@@ -1,0 +1,3 @@
+INSTALLED: hwut <version> -- no 'hwut-root.conf' in or above '<outside>' => hwut.sanitize root
+exit 0
+<hwut-end>

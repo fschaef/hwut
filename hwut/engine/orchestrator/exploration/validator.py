@@ -27,7 +27,8 @@ from ...bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from ...compare.api import constraint_fault_of
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
-                            KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant)
+                            KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant,
+                            BUILD_FRAMEWORK_TUPLE)
 
 _STRUCTURAL_KEY_SET = ("title", "doc", "language", "choices")
 
@@ -37,11 +38,14 @@ _CAP_POSITIVE_SET   = {"timeout_sec":         float,
                        "memory_mb":           int,
                        "file_size_mb":        int,
                        "child_process_max_n": int,
+                       "disk_mb":             int,
                        "file_handle_max_n":   int}
 _EXECUTE_VARIABLE   = re.compile(r"\$(\w+)")
-_CONF_KEY_SET       = ("on_entry", "on_exit", "ignore", "collision",
+_CONF_KEY_SET       = ("on_entry", "on_exit", "on_before_test",
+                       "on_after_test", "script_caps",
+                       "ignore", "admit", "collision",
                        "dependency", "app_defaults", "language-setup",
-                       "apps", "procsitter")
+                       "apps", "procsitter", "free_disk_min_mb")
 
 
 #  THE BOOK'S NAME LAW (bookkeeper B-7, B-8), ASKED FOR AND NOT COPIED.
@@ -151,9 +155,16 @@ def validate_conf(hwut_node, file):
     app_db         = {}
 
     for entry in hwut_node.entry_list:
-        if entry.key in ("on_entry", "on_exit", "test_directory"):
+        if entry.key in ("on_entry", "on_exit", "on_before_test",
+                         "on_after_test", "test_directory"):
             value = _string(entry, file, fault_list)
             if value is not None: field_db[entry.key] = value
+        elif entry.key == "script_caps":
+            #  THE SUPERVISION OF THE DIRECTORY'S SCRIPTS (B-17): the
+            #  frame, the helpers around each test run, the targets of
+            #  'hwut.execute' -- in the words of 'caps { }'.
+            value = _caps(entry, file, fault_list)
+            if value is not None: field_db["script_caps"] = value
         elif entry.key == "title":
             #  THE DIRECTORY'S OWN TITLE (X-INFO-DAT): what 'hwut.report'
             #  writes above its rows. It stood in the first line of an
@@ -161,9 +172,9 @@ def validate_conf(hwut_node, file):
             #  other.
             value = _string(entry, file, fault_list)
             if value is not None: field_db["title"] = value
-        elif entry.key == "ignore":
+        elif entry.key in ("ignore", "admit"):
             value = _string_list(entry, file, fault_list)
-            if value is not None: field_db["ignore"] = value
+            if value is not None: field_db[entry.key] = value
         elif entry.key == "collision":
             value = _target_list(entry, file, fault_list)
             if value is not None: field_db["collision"] = value
@@ -185,6 +196,16 @@ def validate_conf(hwut_node, file):
         elif entry.key == "procsitter":
             value = _procsitter(entry, file, fault_list)
             if value: field_db["procsitter_db"] = value
+        elif entry.key == "free_disk_min_mb":
+            #  THE DISK'S FLOOR (D-24): free space no case may push a
+            #  disk below -- a property of the disk, so the root's alone.
+            value = _number(entry, file, fault_list)
+            if value is not None and value <= 0:
+                fault_list.append(Fault(
+                    E_FaultKind.TYPE, file, entry.node.position,
+                    "'free_disk_min_mb' must be greater than zero"))
+            elif value is not None:
+                field_db["free_disk_min_mb"] = int(value)
         elif entry.key == "variant_group":
             value = _variant_group(entry, file, fault_list)
             if value is not None: field_db["variant_db"] = value
@@ -429,6 +450,21 @@ def _features(entry, value, parameter_db, file, fault_list):
     parameter_db["features"] = value
 
 
+def _framework_known_f(framework, file, position, fault_list):
+    """
+    RETURN: bool, True where 'framework' is one a run can drive -- or
+                  carries '%', the source file's stem (R-74), whose
+                  expansion only the run knows
+            False, else (fault recorded, naming the known ones)
+    """
+    if "%" in framework or framework in BUILD_FRAMEWORK_TUPLE: return True
+    fault_list.append(Fault(
+        E_FaultKind.VOCABULARY, file, position,
+        "unknown build framework '%s'; known: %s"
+        % (framework, ", ".join(BUILD_FRAMEWORK_TUPLE))))
+    return False
+
+
 def _build(entry, file, fault_list):
     """
     RETURN: Build, from the framework named alone or from the scope.
@@ -436,6 +472,9 @@ def _build(entry, file, fault_list):
     """
     node = entry.node
     if isinstance(node, ScalarNode) and isinstance(node.value, str):
+        if not _framework_known_f(node.value, file,
+                                  _position_of(node, entry), fault_list):
+            return None
         return Build(framework=node.value)
     if not isinstance(node, ObjectNode):
         fault_list.append(Fault(
@@ -455,7 +494,13 @@ def _build(entry, file, fault_list):
                 "(R-73), '%' the source file's stem"))
         elif inner.key in ("framework", "executable"):
             value = _string(inner, file, fault_list)
-            if value is not None: field_db[inner.key] = value
+            if value is None: continue
+            if inner.key == "framework" \
+               and not _framework_known_f(value, file,
+                                          _position_of(inner.node, inner),
+                                          fault_list):
+                continue
+            field_db[inner.key] = value
         elif inner.key == "caps":
             value = _caps(inner, file, fault_list)
             if value is not None: field_db["caps"] = value
@@ -856,7 +901,8 @@ def _variant_group(entry, file, fault_list):
 #  The STANDARD targets: fixed semantics, their own top-level keys. The
 #  'target { }' dictionary exists so the open-ended namespace can never
 #  collide with them; a standard name inside it is refused by name (E-7).
-_STANDARD_TARGET_SET = ("on_entry", "on_exit")
+_STANDARD_TARGET_SET = ("on_entry", "on_exit", "on_before_test",
+                        "on_after_test")
 
 
 def _target_map(entry, file, fault_list):

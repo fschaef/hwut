@@ -128,6 +128,7 @@ RELATION = {
     "caps.memory_mb":            (ProcsitterConfig, CAPS_FIELD_DB["memory_mb"]),
     "caps.file_size_mb":         (ProcsitterConfig, CAPS_FIELD_DB["file_size_mb"]),
     "caps.child_process_max_n":  (ProcsitterConfig, CAPS_FIELD_DB["child_process_max_n"]),
+    "caps.disk_mb":              (ProcsitterConfig, CAPS_FIELD_DB["disk_mb"]),
     "caps.file_handle_max_n":    (ConfigCaps, "file_handle_max_n"),
     "caps.network":              (ConfigCaps, "network"),
     "caps.write_directory_list": (ConfigCaps, "write_directory_list"),

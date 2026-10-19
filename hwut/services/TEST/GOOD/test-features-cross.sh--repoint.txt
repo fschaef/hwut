@@ -1,0 +1,9 @@
+ repoint physics.stop <physics>:halt ................................... [DONE]
+      physics.stop now binds <physics>:halt
+          link rewritten in TEST/test-shot.sh
+Done 1/1
+#     choices { left { features = ["<physics>:bounce"] } right { features = ["<physics>:halt"] } }
+== hwut.report.list -e physics.stop
+./TEST/test-shot.sh right
+./physics/TEST/test-push.sh a
+<hwut-end>

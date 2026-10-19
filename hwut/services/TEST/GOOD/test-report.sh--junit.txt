@@ -2,10 +2,10 @@ STATUS: 1
 STDOUT {
     <?xml version="1.0" encoding="UTF-8"?>
     <testsuites tests="2" failures="1">
-      <testsuite name="suite/TEST" tests="2" failures="1">
-        <testcase classname="suite/TEST" name="test-app.sh"/>
-        <testcase classname="suite/TEST" name="test-diff.sh">
-          <failure type="not-equivalent-diverged" message="the run reported a difference from GOOD; the stored candidate and the nominal, read whole, are 'not-equivalent-diverged'"/>
+      <testsuite name="tree/suite/TEST" tests="2" failures="1">
+        <testcase classname="tree/suite/TEST" name="test-app.sh"/>
+        <testcase classname="tree/suite/TEST" name="test-diff.sh">
+          <failure type="not-equivalent-diverged" message="DEVIATION -- output differs from GOOD: differs from GOOD"/>
         </testcase>
       </testsuite>
     </testsuites>

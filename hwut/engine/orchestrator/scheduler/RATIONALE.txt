@@ -73,3 +73,42 @@ COST      One future created and cancelled per wait.
 GRAVEYARD asyncio.Semaphore around the work task (the 'started'
           notification moves after the previous holder's 'ended';
           bounded-run traces would change).
+
+----------------------------------------------------------------------------
+S-5  A CASE STARTS WHERE ITS DISK HAS ROOM FOR IT              (2026-10-19)
+----------------------------------------------------------------------------
+PROBLEM   Reported (DEFECTS-hwut-78e11f7, D-24): disk caps without a
+          key, and sibling cases killed when one case wrote 150 MB.
+          MEASURED: the procsitter summed the WHOLE test directory
+          against every case's 'max_disk_mb' (now the case's own: procsitter
+          MANUAL 4), and
+          nothing looked at the disk before a start.
+DECISION  RULED (Frank-Rene, 2026-10-19): "both caps, but the
+          orchestrator should have also a limit that her doesn't even
+          start a process if the free space is less than max(2 * limit,
+          expected limit due to TMP file data entries)" -- "the
+          orchestrator shall keep the limits in mind, and possibly
+          delay. that disk safety limits shall be per disk not per
+          directory."
+          'CDiskGuard' (disk_guard.py), ONE per process ('HOST_DISK_
+          GUARD'): reservations per disk ('st_dev'). The dispatcher asks
+          it before a test and before a session (held to the session's
+          close): need = max(2 x the case's 'disk_mb', the 'peak_disk_mb'
+          this machine last observed for the case); granted where
+          'free - reserved >= floor + need'; WAITS where something is
+          reserved on that disk; refused, 'disk-short' with its numbers,
+          where nothing is. The floor is the root's 'free_disk_min_mb',
+          one for every disk (exploration R-99).
+          'expected' was left open ("no preference"): the last observed
+          peak was taken because the observation database already holds
+          it, per machine.
+COST      The floor is added to the need, which the ruling does not
+          spell: a case that starts with exactly 'need' free would push
+          its disk under the floor at its cap. Pessimistic: what a
+          running case already wrote is counted in 'free' and in its
+          reservation. A waiting case holds its budget slot. Peaks
+          observed before procsitter's D-24 measured the whole directory
+          and overstate, until the case runs once.
+GRAVEYARD Waiting forever where nothing is reserved (nothing would ever
+          make room). A gate in the scheduler (it knows no caps; the
+          dispatcher does).

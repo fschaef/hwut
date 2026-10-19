@@ -29,8 +29,10 @@ KINDS
     leaf-gone       a line names a leaf that is defined no more
     retired-use     a name defined that was retired: never bound again
     unplaced        a leaf at the top of the tree (a hint)
-    root-test       the root's own TEST directory defines features: it is no
-                    component a directory id can stand for (a hint)
+
+THE ROOT IS A DIRECTORY LIKE ANY OTHER (the book's D-3): its own TEST
+directory defining features gets an id standing for '.'. That id is
+never gone and never redirected -- the root does not move.
 
 PAIRING (a gone with a new), NAMED on the proposal line, never guessed:
 
@@ -45,7 +47,12 @@ PAIRING (a gone with a new), NAMED on the proposal line, never guessed:
                   they are paired; with more, 'unpaired' lists the
                   candidates. Across directories (a block moved by hand) the
                   one gone name and the one new name that are EQUAL are
-                  paired.
+                  paired. A new name of a directory whose gone leaf is not
+                  paired is HELD: no 'register' is proposed for it, and
+                  'hwut.features.register' writes no line for it, until the
+                  gone one is repointed or retired -- a minted id would take
+                  the place of the external id the world knows (the book's
+                  D-7). A rename is 'hwut.features.rename'.
 
 PROPOSALS -- the lines of 'hwut.sanitize', one vocabulary for the detector,
 'hwut.features.register' and 'hwut.sanitize.propose'; the old value stands
@@ -78,10 +85,9 @@ LEAF_NEW       = "leaf-new"
 LEAF_GONE      = "leaf-gone"
 RETIRED_USE    = "retired-use"
 UNPLACED       = "unplaced"
-ROOT_TEST      = "root-test"
 KIND_TUPLE     = (OLD_VOCABULARY, DIR_NEW, DIR_GONE, DIR_SWAPPED, DIR_TWIN,
-                  LEAF_NEW, LEAF_GONE, RETIRED_USE, UNPLACED, ROOT_TEST)
-HINT_TUPLE     = (UNPLACED, ROOT_TEST)
+                  LEAF_NEW, LEAF_GONE, RETIRED_USE, UNPLACED)
+HINT_TUPLE     = (UNPLACED,)
 
 #  What a walk does not enter: the volatile directories of a run and of a
 #  checkout (the same the census strips), and every hidden one.
@@ -177,7 +183,7 @@ def unregistered_list(root, below="."):
     live    = {leaf.internal for _, leaf in leaf_list(registry)}
     retired = retired_internal_set(registry)
     result  = []
-    for path in sorted(p for p in fact_db if p != "."):
+    for path in sorted(fact_db):
         for name in fact_db[path]:
             internal = "%s:%s" % (id_of.get(path), name)
             if internal not in live and internal not in retired:
@@ -210,8 +216,12 @@ def detect_of(registry, fact_db, old_tuple=(), below=None):
         id_of.setdefault(each.path, []).append(each.id)
     found += _twin_list(id_of)
     name_db = _registered_name_db(registry)           # id -> set of names
-    gone_set = {i for i, p in path_of.items() if p not in fact_db}
-    new_set  = {p for p in fact_db if p not in id_of and p != "."}
+    #  THE ROOT'S ID IS NEVER GONE: the root does not move, and its id is
+    #  never sent elsewhere (the book's D-3, R-5). Where its TEST directory
+    #  defines nothing any more, its leaves are gone one by one.
+    gone_set = {i for i, p in path_of.items()
+                if p not in fact_db and p != "."}
+    new_set  = {p for p in fact_db if p not in id_of}
     pair_db, dir_list = _directory_pair_list(
         path_of, name_db, fact_db, gone_set, new_set)
     found += dir_list
@@ -231,11 +241,6 @@ def detect_of(registry, fact_db, old_tuple=(), below=None):
     found += [CDetection(UNPLACED, leaf.external,
                          "'%s' is in no aggregate" % leaf.external)
               for path, leaf in leaf_list(registry) if not path]
-    if "." in fact_db:
-        found.append(CDetection(
-            ROOT_TEST, ".",
-            "'.' the root's own TEST directory defines features; no "
-            "directory id can stand for it", (), None, (".",)))
     found = _below(found, below)
     return tuple(sorted(found, key=lambda each: (
         KIND_TUPLE.index(each.kind), each.subject, each.text)))
@@ -344,7 +349,7 @@ def _swap_list(path_of, id_of, name_db, fact_db, gone_set):
 
     away = {}
     for i, path in path_of.items():
-        if i in gone_set or not name_db.get(i): continue
+        if i in gone_set or not name_db.get(i) or path == ".": continue
         total = len(name_db[i])
         if overlap(i, path) * 2 >= total: continue
         score = sorted(((overlap(i, p), p) for p in fact_db if p != path),
@@ -394,6 +399,12 @@ def _leaf_list(registry, effective, fact_db, path_of):
             (), None, (defined[internal],)))
     pair_db = _leaf_pair_db(gone_list, new_list, live, effective)
     paired_new = {new for new, _ in pair_db.values()}
+    held_db    = {}            # new internal id -> the gone it may be
+    for old in gone_list:
+        if old in pair_db: continue
+        for each in _candidate_list(old, new_list):
+            if each.partition(":")[0] == old.partition(":")[0]:
+                held_db.setdefault(each, []).append(live[old].external)
     for old in gone_list:
         leaf = live[old]
         path = path_of.get(leaf.directory_id)
@@ -413,9 +424,20 @@ def _leaf_list(registry, effective, fact_db, path_of):
     for new in new_list:
         if new in paired_new: continue
         path = defined[new]
+        if new in held_db:
+            #  A CANDIDATE OF A GONE LEAF is not proposed for registering:
+            #  'hwut.features.register' holds it back (the book's D-7).
+            #  'repoint' makes it the gone one; retiring the gone one makes
+            #  it new.
+            command  = ()
+            unpaired = ("%s (candidate of: %s; held until repointed, "
+                        "or the gone retired)"
+                        % (new, ", ".join(held_db[new])))
+        else:
+            command, unpaired = (("register", (path,), None),), None
         result.append(CDetection(
             LEAF_NEW, new, "%s   '%s' is in no line" % (path, new.partition(":")[2]),
-            (("register", (path,), None),), None, (path,)))
+            command, unpaired, (path,)))
     return result
 
 

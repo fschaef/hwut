@@ -27,6 +27,18 @@ c before a
 a before b one
 b two before b one
 == on_entry fails: nothing is dispatched
-FRAME .:on_entry ................................................ frame [FAIL]
+FRAME TEST:on_entry ................................................. exited 1
+START test-a.sh                                                            ||1
+END   test-a.sh .................................................. [FAIL]  ||0
+START test-b.sh  one                                                       ||1
+END   :          one ............................................... [OK]  ||0
+START :          two                                                       ||1
+END   :          two ............................................... [OK]  ||0
+START test-c.sh                                                            ||1
+END   test-c.sh .................................................... [OK]  ||0
+a ran
+b one ran
+b two ran
+c ran
 EXIT
 <hwut-end>

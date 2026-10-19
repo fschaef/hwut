@@ -1,0 +1,6 @@
+
+--- 400 MB free, floor 128, need 200 each ---
+    first:  granted 200 MB
+    second: waits
+    second: granted 200 MB
+<hwut-end>

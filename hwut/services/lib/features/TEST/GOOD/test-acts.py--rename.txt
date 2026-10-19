@@ -1,0 +1,90 @@
+--- two features of one directory renamed -----------------------
+>>> hwut.features.rename can.decode parse
+    renamed  can.decode  Aaaaaaa1:decode -> Aaaaaaa1:parse
+        definition renamed in gw/can/TEST/hwut-features.conf
+        link renamed in gw/can/TEST/test-codec.sh
+    exit 0
+>>> hwut.features.rename can.encode render
+    renamed  can.encode  Aaaaaaa1:encode -> Aaaaaaa1:render
+        definition renamed in gw/can/TEST/hwut-features.conf
+        link renamed in gw/can/TEST/test-codec.sh
+    exit 0
+    hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |     }
+    |     tree {
+    |         gateway {
+    |             title = "CAN-MOST gateway"
+    |             keys  = ["product"]
+    |             childs {
+    |                 can {
+    |                     childs {
+    |                         "can.decode" = "Aaaaaaa1:parse"
+    |                         "can.encode" = "Aaaaaaa1:render"
+    |                     }
+    |                 }
+    |                 most {
+    |                     title = "MOST side"
+    |                     childs {
+    |                         "most.send"    = "Bbbbbbb2:send"
+    |                         "most.receive" = "Bbbbbbb2:receive"
+    |                     }
+    |                 }
+    |             }
+    |         }
+    |         "can.ghost" = "Aaaaaaa1:ghost"
+    |     }
+    |     retired {
+    |     }
+    | }
+    gw/can/TEST/hwut-features.conf:
+    | features {
+    |   keys = ["bus"]
+    |   childs {
+    |     parse { title = "A frame is decoded."
+    |              keys  = ["latency"] }
+    |     render { title = "A frame is encoded."
+    |              doc   = """
+    |                  Both directions.
+    |                  """ }
+    |   }
+    | }
+    gw/can/TEST/test-codec.sh:
+    | #! /bin/sh
+    | # @hwut {
+    | #     title    = "Codec"
+    | #     choices {
+    | #         one { features = ["parse", "render"] }
+    | #         two { features = ["render"] }
+    | #     }
+    | # }
+    | echo x
+    read again: 0 fault(s); retired: none
+>>> hwut.features.register
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        leaf-gone  can.ghost   Aaaaaaa1:ghost is defined no more
+                       => # unpaired can.ghost Aaaaaaa1:ghost (candidates: none)
+    HINTS
+        1 leaf(s) in no aggregate => hwut.features.tree
+    exit 1
+--- refused -----------------------------------------------------
+>>> defined already
+    REFUSED: 'render' is defined already in gw/can/TEST/hwut-features.conf
+    exit 2
+>>> an aggregate
+    REFUSED: 'can' is an aggregate: a key of the central file, edited there
+    exit 2
+>>> no word
+    REFUSED: 'a b' is no identifier word
+    exit 2
+>>> no claim of the tree
+    REFUSED: 'nothing' is no leaf and no aggregate of the tree => hwut.features.tree -e
+    exit 2
+>>> one word
+    REFUSED: 'hwut.features.rename' takes 2 word(s): can.decode
+    usage: hwut.features.rename <external id> <new name> [--directory=<path>]
+    exit 2
+<hwut-end>

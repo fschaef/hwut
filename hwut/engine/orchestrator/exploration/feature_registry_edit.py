@@ -103,9 +103,10 @@ def external_id_of(path, name, taken_set):
     """RETURN: str, the external id a leaf gets on first sight: the words of
     its directory's path and its name joined by '.' ('gw/router', 'forward'
     -> 'gw.router.forward'), each made a word; where that is in
-    'taken_set', '-2', '-3', ... is appended."""
-    base = ".".join([_word_of(part) for part in path.split("/")]
-                    + [name])
+    'taken_set', '-2', '-3', ... is appended. The root's own ('.') is the
+    bare name: its path has no word (the book's D-3)."""
+    base = ".".join([_word_of(part) for part in path.split("/")
+                     if path != "."] + [name])
     candidate, n = base, 2
     while candidate in taken_set:
         candidate = "%s-%d" % (base, n)
@@ -121,7 +122,7 @@ def composed_text(fact_db, id_list=None, taken_set=frozenset()):
     defines as an UNPLACED leaf under its generated external id, an empty
     'retired'. 'id_list' gives the ids in path order (a test); else they
     are generated."""
-    path_list = sorted(path for path in fact_db if path != ".")
+    path_list = sorted(fact_db)
     taken = set(taken_set)
     if id_list is None:
         id_list = []
@@ -404,6 +405,23 @@ def _definition_entry(text, name):
                 if inner.key == name and inner.object_f:
                     return inner, childs
     return None
+
+
+def definition_renamed(text, name, new):
+    """
+    RETURN: str, the feature file 'text' with the definition of 'name'
+            standing under the key 'new' -- its body, comments and layout
+            untouched
+            None, where 'name' is not defined
+    """
+    found = _definition_entry(text, name)
+    if found is None: return None
+    entry, _ = found
+    i_key = entry.i_key
+    for spelling in (name, '"%s"' % name):
+        if text.startswith(spelling, i_key):
+            return text[:i_key] + new + text[i_key + len(spelling):]
+    raise EditRefused("the key of '%s' is not written as a name" % name)
 
 
 def definition_take(text, name):

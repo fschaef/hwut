@@ -52,7 +52,7 @@ class CSpawned:
 
 
 def spawn(argv, input=None, cwd=None, env=None, max_wall_clock_sec=60.0,
-          capture_output=True, text=True):
+          capture_output=True, text=True, config=None):
     """
     RETURN: CSpawned, the answer of running 'argv' UNDER THE PROCSITTER
             -- the same supervision every test application and every
@@ -64,7 +64,9 @@ def spawn(argv, input=None, cwd=None, env=None, max_wall_clock_sec=60.0,
 
     'input' is fed on stdin, closed after. 'capture_output' and 'text'
     are accepted so that a 'subprocess.run' call site reads unchanged;
-    output is always captured, always text.
+    output is always captured, always text. 'config', where given, is
+    the whole ProcsitterConfig the call runs under ('env' still merged
+    on), and 'max_wall_clock_sec' is not read.
     """
     async def go():
         out, err = [], []
@@ -75,9 +77,14 @@ def spawn(argv, input=None, cwd=None, env=None, max_wall_clock_sec=60.0,
             await source.feed(input.encode("utf-8") if isinstance(input, str)
                               else input)
         source.close()
-        config = ProcsitterConfig(max_wall_clock_sec=max_wall_clock_sec,
-                                  env=env)
-        record = await Procsitter(config, cwd or os.getcwd()).run(
+        if config is None:
+            caps = ProcsitterConfig(max_wall_clock_sec=max_wall_clock_sec,
+                                    env=env)
+        else:
+            from dataclasses import replace
+            caps = config if env is None else replace(
+                config, env={**(config.env or {}), **env})
+        record = await Procsitter(caps, cwd or os.getcwd()).run(
                      [str(a) for a in argv],
                      stdout_handler=take_out, stderr_handler=take_err,
                      stdin_reader=source.reader)

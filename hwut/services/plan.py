@@ -26,6 +26,7 @@ ______________________________________________________________________________
 """
 import sys
 
+from .lib.face import write_refusal
 from ..engine.orchestrator.exploration.task_list import SelectionError
 from ..engine.orchestrator.exploration import selection
 from .lib.labels import view_at
@@ -232,8 +233,13 @@ def printed(result, write, ink=None):
     for text in result.warning_tuple: write(text)
     write("WISH: %s" % result.wish_text)
     for report in result.report_tuple: write("REPORT: %s" % report)
+    #  A CAP NOBODY CAN WATCH HERE FAILS THE CASE, not run (services
+    #  E-159): the plan says so in the run's word.
+    from ..engine.orchestrator.plan.confinement import uncapped_refusal_f
     for name, reason in result.refused_tuple:
-        write("REFUSED: %s -- %s" % (name, reason))
+        write("%s: %s -- %s" % ("UNCAPPED [FAIL]"
+                                if uncapped_refusal_f(reason) else "REFUSED",
+                                name, reason))
     write("TEST PLAN: %d node(s), %d link(s), %d exclusion set(s)"
           % (len(result.node_tuple), len(result.link_tuple),
              len(result.exclusion_tuple)))
@@ -288,8 +294,7 @@ def main(argv=None, write=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
 
     arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,

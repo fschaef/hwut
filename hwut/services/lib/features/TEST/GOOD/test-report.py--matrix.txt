@@ -10,7 +10,7 @@
                                         ^     no test run
       #1 forward     IMPLEMENTED ok
       #2 keep-order  IMPLEMENTED ok
-      #3 drop        OPEN
+      #3 drop        OPEN untested
     
     OUTSIDE THE RELATION
         NONSENSE? test run, links to no feature => hwut.help

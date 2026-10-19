@@ -26,15 +26,26 @@ stands, an empty one OPEN.
 
 EFFECTIVE KEYS of a leaf: its own, those of its TEST file, those of every
 aggregate above it. The directory nesting adds none.
+
+A LINK BY INTERNAL ID (the book's D-8) is resolved here, where the ids
+are known: '<directory id>:<name>' from any TEST directory of the
+relation adds its run to that leaf, the run carrying its own TEST
+directory ('CRun.path'). One that does not resolve -- an id in no
+'directory_map' line, a name its directory does not define, a retired
+leaf -- stands in 'foreign_outside'. A link never changes a verdict.
 ______________________________________________________________________________
 """
 import os
 from   dataclasses import dataclass
 
+from dataclasses import replace
+
 from .feature_registry import (read_registry, CLeaf, CAggregate,
                                leaf_state, aggregate_state, IMPLEMENTED,
-                               OPEN, OK, FAIL)
-from .feature_relation import relation_of_tree, TEST_NAME
+                               OPEN, OK, FAIL, UNTESTED, leaf_list,
+                               retired_internal_set)
+from .feature_relation import (relation_of_tree, read_feature_file,
+                               CRun, TEST_NAME)
 from .tree_explorer    import root_conf_directory
 from .finder           import REGISTRY_FILE_NAME
 
@@ -67,7 +78,7 @@ class CAggregateView:
     tree_path:   str
     child_tuple: tuple                  # of CAggregateView | CLeafView
     state:       object                 # CState
-    count_db:    dict                   # IMPLEMENTED, OPEN, OK, FAIL -> n
+    count_db:    dict                   # IMPLEMENTED, OPEN, OK, FAIL, UNTESTED -> n
 
 
 @dataclass(frozen=True)
@@ -81,6 +92,9 @@ class CView:
     unplaced:     tuple                 # of CLeafView
     top:          str                   # the directory holding the root conf
     asked:        str                   # the directory asked, absolute
+    foreign_outside: tuple = ()         # of (test path, test, choice,
+                                        #  internal id, why): the links by
+                                        #  internal id that do not resolve
 
     def leaf_list(self):
         """RETURN: list of CLeafView, every leaf of the view: the tree's in
@@ -96,7 +110,7 @@ class CView:
         return result + list(self.unplaced)
 
     def count_db(self):
-        """RETURN: dict, IMPLEMENTED, OPEN, OK, FAIL -> how many leaves of
+        """RETURN: dict, IMPLEMENTED, OPEN, OK, FAIL, UNTESTED -> how many leaves of
         the view stand so."""
         return _count_of(self.leaf_list())
 
@@ -113,9 +127,9 @@ class CView:
 
 
 def _count_of(leaf_list):
-    """RETURN: dict, IMPLEMENTED, OPEN, OK, FAIL -> how many of the leaves
+    """RETURN: dict, IMPLEMENTED, OPEN, OK, FAIL, UNTESTED -> how many of the leaves
     stand so."""
-    count_db = dict.fromkeys((IMPLEMENTED, OPEN, OK, FAIL), 0)
+    count_db = dict.fromkeys((IMPLEMENTED, OPEN, OK, FAIL, UNTESTED), 0)
     for each in leaf_list:
         count_db[each.state.implementation] += 1
         count_db[each.state.verdict] += 1
@@ -143,6 +157,7 @@ def view_of(directory):
                              "; ".join(str(f) for f in registry.fault_tuple)))
     relation = relation_of_tree(asked)
     whole_f  = os.path.normpath(asked) == os.path.normpath(top)
+    foreign_db, foreign_outside = _foreign_of(relation, registry, top)
 
     def leaf_view(leaf, tree_path, key_above):
         directory_line = registry.directory_of_id(leaf.directory_id)
@@ -161,6 +176,9 @@ def view_of(directory):
                                     if each.feature.name == leaf.name), None)
         elif not whole_f:
             return None
+        if state_found is not None and leaf.internal in foreign_db:
+            state_found = replace(state_found, run_tuple=(
+                state_found.run_tuple + tuple(foreign_db[leaf.internal])))
         key_set = set(key_above)
         if state_found is not None:
             key_set |= set(state_found.feature.key_tuple)
@@ -199,7 +217,77 @@ def view_of(directory):
             found = aggregate_view(each, "", ())
             if found is not None: top_list.append(found)
     return CView(relation, registry, tuple(top_list), tuple(unplaced),
-                 top, asked)
+                 top, asked, foreign_outside)
+
+
+#  WHY A LINK BY INTERNAL ID DOES NOT RESOLVE, as the page says it.
+FOREIGN_NO_ID      = "no directory id"
+FOREIGN_UNDEFINED  = "not defined in its directory"
+FOREIGN_RETIRED    = "a retired feature"
+
+
+def _foreign_of(relation, registry, top):
+    """
+    RETURN: [0] dict, internal id -> list of CRun: the runs linking a live
+                leaf by its internal id, each with its own TEST directory
+            [1] tuple of (test path, test, choice, internal id, why), the
+                links that do not resolve, in walk order
+    """
+    live     = {leaf.internal for _, leaf in leaf_list(registry)}
+    retired  = retired_internal_set(registry)
+    defined  = {}                     # directory id -> names, read once
+    found_db, outside = {}, []
+    for path in sorted(relation.test_directory_db):
+        each = relation.test_directory_db[path]
+        for test, choice, internal in each.foreign_tuple:
+            directory_id, _, name = internal.partition(":")
+            line = registry.directory_of_id(directory_id)
+            why  = None
+            if internal in retired:
+                why = FOREIGN_RETIRED
+            elif line is None:
+                why = FOREIGN_NO_ID
+            else:
+                if directory_id not in defined:
+                    feature_file = read_feature_file(
+                        os.path.join(top, line.path, TEST_NAME))
+                    defined[directory_id] = set() if feature_file is None \
+                        else {f.name for f in feature_file.feature_tuple}
+                if name not in defined[directory_id] or internal not in live:
+                    why = FOREIGN_UNDEFINED
+            if why is not None:
+                outside.append((path, test, choice, internal, why))
+                continue
+            found_db.setdefault(internal, []).append(
+                CRun(test, choice, each.verdict_db[(test, choice)], path))
+    return found_db, tuple(outside)
+
+
+def view_kept(view, keep_f):
+    """
+    RETURN: CView, 'view' with only the leaves for which 'keep_f(leaf
+            view)' is true -- every aggregate that keeps none dropped, the
+            others folded and counted anew over what they keep -- and no
+            retired claims: a cut names live claims only.
+    """
+    def kept(child_tuple):
+        result = []
+        for each in child_tuple:
+            if isinstance(each, CLeafView):
+                if keep_f(each): result.append(each)
+                continue
+            child_list = kept(each.child_tuple)
+            if not child_list: continue
+            result.append(CAggregateView(
+                each.aggregate, each.tree_path, tuple(child_list),
+                aggregate_state(tuple(c.state for c in child_list)),
+                _count_of(_leaves(child_list))))
+        return result
+
+    registry = replace(view.registry, retired_tuple=())
+    return CView(view.relation, registry, tuple(kept(view.top_tuple)),
+                 tuple(each for each in view.unplaced if keep_f(each)),
+                 view.top, view.asked, view.foreign_outside)
 
 
 def _leaves(child_list):

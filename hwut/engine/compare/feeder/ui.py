@@ -148,6 +148,16 @@ async def feed(config, subject_stream, nominal_stream,
 
     yield EndOfStreamInst()
 
+def _ref_f(ref_i, cell_list):
+    """
+    RETURN: bool, True where 'ref_i' names a cell of 'cell_list'
+            False, else -- a ONE-SIDED pair (a surplus or a missing
+                   line) has no cell on the other side, and an analogy
+                   cell there carries no origin (the book's D-13).
+    """
+    return ref_i is not None and 0 <= ref_i < len(cell_list)
+
+
 def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairInst:
     """Transforms an engine LinePair into a protocol LinePairInst with baked info."""
     engine_cells_s = lp.subject_list()
@@ -159,7 +169,8 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
     # Process Subject Cells
     for sc in engine_cells_s:
         lnp = None
-        if sc.tolerance_id == E_ToleranceId.ANALOGY and sc.subject:
+        if sc.tolerance_id == E_ToleranceId.ANALOGY and sc.subject \
+           and _ref_f(sc.nominal_ref_i, engine_cells_n):
             # Look up current mapping in this specific line pair
             current_n = engine_cells_n[sc.nominal_ref_i].nominal
 
@@ -186,7 +197,8 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
     # Process Nominal Cells
     for nc in engine_cells_n:
         lnp = None
-        if nc.tolerance_id == E_ToleranceId.ANALOGY and nc.nominal:
+        if nc.tolerance_id == E_ToleranceId.ANALOGY and nc.nominal \
+           and _ref_f(nc.subject_ref_i, engine_cells_s):
             current_s = engine_cells_s[nc.subject_ref_i].subject
 
             # Case A: Perfect match

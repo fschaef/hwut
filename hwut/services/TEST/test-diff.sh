@@ -12,6 +12,7 @@
 #         stderr         { features = ["diff-stains-said"] }
 #         "stderr-alone" { features = ["diff-stains-said"] }
 #         stains         { features = ["diff-stains-said"] }
+#         regions        { features = ["diff-two-files", "diff-side-by-side"] }
 #         store          { features = ["diff-store-form", "interactive-checklist", "path-word-enters"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
@@ -45,7 +46,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The diff service face: the diff convention, on stdout.;"
-        echo "CHOICES: differing, tolerated, reading, side-by-side, store, stderr, stderr-alone, stains;"
+        echo "CHOICES: differing, tolerated, reading, side-by-side, regions, store, stderr, stderr-alone, stains;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -97,6 +98,31 @@ differing)
     echo "Exit 1 says 'they differ' the way diff says it, and the"
     echo "rendering says WHERE -- on stdout, because it is the product."
     echo "SUCCESS: a difference answers 1, spoken on the product channel."
+    ;;
+
+regions)
+    #  THE BOOK'S D-13 TO D-15, each a pair of files the run judges
+    #  without a fault: a surplus line beside analogies in a potpourri;
+    #  a '##' comment line inside a table; a table row that drifts.
+    printf '##! potpourri\none ((0x5))\ntwo ((0x6))\nthree ((0x7))\n####\n' > s1.txt
+    printf '##! potpourri\none ((0x1))\ntwo ((0x2))\n####\n'                > n1.txt
+    printf '##! table\n## t  x  v\n1  2  3\n4  5  7\n####\n'                 > s2.txt
+    printf '##! table\n## t  x  v\n1  2  3\n4  5  6\n####\n'                 > n2.txt
+    printf '##! table\n0.1 1.000 2.000\n0.5 2.314 5.657\n0.9 3.000 4.000\n####\n' > s3.txt
+    printf '##! table\n0.1 1.000 2.000\n0.5 2.339 5.755\n0.9 3.000 4.000\n####\n' > n3.txt
+    for i in 1 2 3; do
+        echo "STIMULUS  hwut.run.diff --console s$i.txt n$i.txt --plain"
+        $DIFF s$i.txt n$i.txt --plain > out.txt 2> err.txt
+        code=$?
+        show out.txt
+        echo "          exit code : $code"
+        echo "          stderr    : $(wc -c < err.txt) bytes"
+        echo
+    done
+    echo "The surplus line stands alone, its neighbours keep their"
+    echo "analogies; the comment line is filler, in its place on both"
+    echo "sides; the drifted row stands beside the row it differs from."
+    echo "SUCCESS: three differing pairs, no traceback."
     ;;
 
 tolerated)

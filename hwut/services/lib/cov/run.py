@@ -60,6 +60,7 @@ line cannot be read or the output directory may not be emptied, EMPTY
 where the wish selects nothing.
 ______________________________________________________________________________
 """
+from ..face import write_refusal
 import asyncio
 import os
 import sys
@@ -79,7 +80,8 @@ from .. import preferences
 from ....engine.orchestrator.exploration.task_list import SelectionError
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                                      import (RootConfMissing,
-                                                             path_from_root_conf)
+                                                             path_from_root_conf,
+                                                             root_conf_directory)
 from ....engine.orchestrator.exploration.variant import name_tuple_of
 from ....engine.orchestrator.plan.wish import (parse_wish,
                                                              with_targets,
@@ -89,7 +91,6 @@ from   hwut.engine.orchestrator.run.coverage_dispatcher \
 from ....engine.orchestrator.run.orchestrate import orchestrator
 from ...run import optional_log_writer
 from ..._exit import E_ExitCode
-from ....engine.orchestrator.plan.confinement import uncapped_refusal_f
 from ..._target import entered
 from ..cmdline import (face_parser,
                                                              usage_of,
@@ -135,26 +136,34 @@ def exit_code_of(summary):
     """
     RETURN: E_ExitCode of a coverage run whose event stream folded to
             'summary' (E-1): FAULT where a fault was met or a case is
-            without a record, REFUSED where a case was not run for
-            want of an enforceable cap, EMPTY where no case was
+            without a record or failed -- an unenforceable cap among
+            them ('uncapped', services E-159) -- EMPTY where no case was
             selected, OK else.
     """
     if summary.fault_tuple or summary.fail_n \
        or summary.good_f is False:
         return E_ExitCode.FAULT
-    #  AN UNENFORCEABLE CAP REFUSES (exploration R-80), as on the run.
-    if any(uncapped_refusal_f(text)
-           for text in summary.refused_db.values()):
-        return E_ExitCode.REFUSED
     if not summary.verdict_db: return E_ExitCode.EMPTY
     return E_ExitCode.OK
 
 
 def _refused(write, message):
     """RETURN: E_ExitCode.REFUSED, the refusal and the usage written."""
-    write("REFUSED: %s" % message)
-    write(USAGE)
+    write_refusal(write, "REFUSED: %s" % message, USAGE)
     return E_ExitCode.REFUSED
+
+
+def _terminal_ask(question):
+    """
+    RETURN: str, the line the person typed at the terminal.
+            "", where the input ends before a line (Ctrl-D, a closed
+            stdin) -- read as no, never a traceback (the book's D-16).
+    """
+    try:
+        return input(question)
+    except EOFError:
+        print()
+        return ""
 
 
 def output_directory_of(stated, dont_ask_f, ask):
@@ -232,8 +241,16 @@ def main(argv=None, write=None, demand=None, write_error=None, ask=None):
                                % directory)
     directory = os.path.abspath(directory)
 
+    #  THE BOUNDARY BEFORE THE OUTPUT DIRECTORY: outside a tree the run
+    #  is refused, and a refused run writes nothing (the book's D-21).
+    try:
+        root_conf_directory(directory)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+
     tty_f = (not captured_f) and sys.stdout.isatty()
-    if ask is None and tty_f and sys.stdin.isatty(): ask = input
+    if ask is None and tty_f and sys.stdin.isatty(): ask = _terminal_ask
     output = output_directory_of(arguments.output, arguments.dont_ask, ask)
     if output is None:
         return _refused(write, "no output directory: state '-o "

@@ -337,7 +337,7 @@ class CPlainFlow(CRunReportReceiver):
         self.report_db   = {}        # (directory, node) -> report word
         self.cause_db    = {}
         self.detail_db  = {}        # (directory, node) -> the report's numbers (O-19)        # (directory, node) -> cause node
-        self.frame_bad_db = {}       # directory -> [role, ...]
+        self.frame_note_list = []    # (directory, role, exit, command)
         self.fault_list  = []        # (directory, rendered fault line),
         self.refused_db  = {}        # directory -> [(node, reason), ...]
         self.silent_db   = {}        # directory -> [node, ...]
@@ -360,9 +360,10 @@ class CPlainFlow(CRunReportReceiver):
         self._dispatch(item)
 
     def _ink_dir(self, directory):
-        """RETURN: str, 'directory' (the full path, verbatim), in the
-        directory's own colour."""
-        return self.ink.directory(str(directory))
+        """RETURN: str, 'directory' as it is SAID ('_named': '.' by its
+        path from the root conf, as the DIR line says it -- the book's
+        D-17), in the directory's own colour."""
+        return self.ink.directory(str(self._named(directory)))
 
     def _clock(self, when):
         """
@@ -583,24 +584,27 @@ class CPlainFlow(CRunReportReceiver):
         if directory not in self.dir_order:
             self.dir_order.append(directory)
 
-    def on_frame(self, when, directory, role, good):
-        """RETURN: None. A failed frame is a failure of the directory
-        and says so; a good one speaks in the VERBOSE tier alone."""
+    def on_frame(self, when, directory, role, good, command=None,
+                 exit=None):
+        """RETURN: None. A frame script is the author's helper, NO
+        VERDICT (ruled 2026-10-17): one that did not end well is said in
+        the flow by how it ended and noted at the end with its command;
+        a good one speaks in the VERBOSE tier alone."""
         if not good:
-            self.frame_bad_db.setdefault(directory, []).append(role)
+            self.frame_note_list.append((directory, role,
+                                         exit or "failed", command or ""))
         if self.tier in (E_Tier.QUIET, E_Tier.SILENT): return
         self._band(when, directory)
         if good and self.tier is not E_Tier.VERBOSE:   return
-        body = "%s:%s" % (directory, role)
+        body = "%s:%s" % (self._named(directory), role)
         body_ink = "%s:%s" % (self._ink_dir(directory), role)
         if good:
             self._line(when, "FRAME", "FRAME", body, body_ink,
                        self.vocabulary.tag_good,
                        self.ink.tag_ok(self.vocabulary.tag_good))
         else:
-            right, right_ink = self._fail_right("frame-failed")
-            self._line(when, "FRAME", "FRAME", body, body_ink,
-                       right, right_ink)
+            said = exit or "failed"
+            self._line(when, "FRAME", "FRAME", body, body_ink, said, said)
 
     def _provision_hidden_f(self, node_kind):
         """
@@ -1325,11 +1329,11 @@ class CPlainFlow(CRunReportReceiver):
                 write(line)
 
         fail_dir_list = [d for d in self.dir_order
-                         if self._hint_key_list(d)
-                         or self.frame_bad_db.get(d)]
+                         if self._hint_key_list(d)]
         if not self.failure_summary_f: fail_dir_list = []
         if not fail_dir_list:
             self._write_refused(write, w)
+            self._write_frame_notes(write, w)
             self._write_silent(write, w)
             write("=" * w)
             self._write_final_bar(write, w)
@@ -1354,80 +1358,32 @@ class CPlainFlow(CRunReportReceiver):
         #  under its heading; the DIRECTORY once within it; the
         #  APPLICATION once within that, ':' beneath where its choices
         #  repeat it -- the flow's own columns ('_run_body'). A failed
-        #  frame is ENVIRONMENT's, under its directory.
-        #
-        #  THE BRIEFING FOLLOWS THE WIDEST OF THEM, so the reasons
-        #  stand in one column down the whole block: the reason is
-        #  what this block exists to be read for, and a reason that
-        #  moves is one the eye must hunt for on every line.
-        group_db = {}                     # category -> directory -> [item]
+        #  frame is ENVIRONMENT's, under its directory. The shape is
+        #  'hint_line_list', shared with 'hwut.report'.
+        item_list = []
         for directory in fail_dir_list:
-            for role in self.frame_bad_db.get(directory, []):
-                group_db.setdefault(self.vocabulary.frame_category, {}) \
-                        .setdefault(directory, []) \
-                        .append(("frame %s" % role, None, "frame-failed",
-                                 None))
             for key in self._hint_key_list(directory):
                 token = self.report_db.get(key, self._verdict_of(key))
                 file, _, rest = _display_name(key[1]).partition(" ")
-                group_db.setdefault(self.vocabulary.category_of(token), {}) \
-                        .setdefault(directory, []) \
-                        .append((file, rest.strip() or None, token, key))
-        brief_column = 0
-        for directory_db in group_db.values():
-            for item_list in directory_db.values():
-                for file, choice, _, _ in item_list:
-                    width = len(file)
-                    if choice: width += CHOICE_GAP + len(choice)
-                    brief_column = max(brief_column, width + BRIEF_GAP)
-        first_f = True
-        for category in self.vocabulary.category_tuple:
-            directory_db = group_db.get(category)
-            if not directory_db: continue
-            if not first_f: write("")
-            first_f = False
-            write(self.vocabulary.heading_db[category])
-            for directory in fail_dir_list:
-                item_list = directory_db.get(directory)
-                if not item_list: continue
-                #  THE DIRECTORY, ONCE, and in the directory's colour.
-                write("    " + self._ink_dir(directory))
-                last_file     = None
-                last_phrase   = None
-                choice_column = 0
-                for file, choice, token, key in item_list:
-                    repeat_f = (last_file == file)
-                    if not repeat_f: choice_column = len(file) + CHOICE_GAP
-                    last_file = file
-                    shown     = ":" if repeat_f else file
-                    left      = "%-*s%s" % (choice_column, shown,
-                                            choice) if choice else shown
-                    #  THE SAME PHRASE IS NOT SAID TWICE (D-35): ':'
-                    #  under the one above, as the application's name.
-                    said      = self.vocabulary.phrase(token)
-                    right     = ":" if said == last_phrase else said
-                    last_phrase = said
-                    line = "        %-*s%s" % (brief_column, left,
-                                               ink.fail(right))
-                    #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the
-                    #  cap, the peak -- what a reader of a kill asks first.
-                    detail = self.detail_db.get(key) if key else None
-                    if detail is not None: line += "  (%s)" % detail
-                    cause = self.cause_db.get(key) if key else None
-                    if cause is not None: line += "  <- %s" % cause
-                    write(line)
+                item_list.append((self.vocabulary.category_of(token),
+                                  directory, file, rest.strip() or None,
+                                  token, self.detail_db.get(key),
+                                  self.cause_db.get(key)))
+        for line in hint_line_list(item_list, self.vocabulary,
+                                   ink.fail, self._ink_dir):
+            write(line)
         #  THE POINTER TO 'hwut.help' (D-34): once, where any failure is
         #  more than a plain deviation from GOOD.
         subtle_f = self.vocabulary.subtle_f
         if self.vocabulary.help_hint is not None \
-           and any(self.frame_bad_db.get(d)
-                   or any(subtle_f(self.report_db.get(key,
-                                                      self._verdict_of(key)))
-                          for key in self._hint_key_list(d))
+           and any(any(subtle_f(self.report_db.get(key,
+                                                   self._verdict_of(key)))
+                       for key in self._hint_key_list(d))
                    for d in fail_dir_list):
             write("")
             write(self.vocabulary.help_hint)
         self._write_refused(write, w)
+        self._write_frame_notes(write, w)
         self._write_silent(write, w)
         write("=" * w)
         self._write_final_bar(write, w)
@@ -1469,6 +1425,20 @@ class CPlainFlow(CRunReportReceiver):
             return "%.2f" % (t1 - t0).total_seconds()
         except (TypeError, ValueError):
             return "-"
+
+    def _write_frame_notes(self, write, w):
+        """
+        RETURN: None. One NOTE per frame script that did not end well --
+                the directory as the DIR line names it, the role, how it
+                ended, the command as written (ruled 2026-10-17). Nothing
+                where every frame ended well.
+        """
+        if not self.frame_note_list: return
+        write("")
+        for directory, role, exit, command in self.frame_note_list:
+            write("NOTE  %s  %s %s%s" % (self._named(directory), role,
+                                        exit,
+                                        ": %s" % command if command else ""))
 
     def _write_silent(self, write, w):
         """
@@ -1558,6 +1528,82 @@ class CPlainFlow(CRunReportReceiver):
            and any(REMEDY_MARK in reason for reason in group_db):
             write("")
             write(self.vocabulary.help_hint)
+
+
+def hint_line_list(item_list, vocabulary, fail_ink=str, directory_ink=str):
+    """
+    RETURN: list of str, the body of a HINTS block -- category heading,
+                 each directory once beneath it, each application once
+                 beneath that with ':' where its choices repeat it, and
+                 the phrase in one column, ':' where it repeats the one
+                 above (D-35).
+            [], where 'item_list' is empty.
+
+    ONE SHAPE, TWO FACES: 'hwut.run' (CPlainFlow) and 'hwut.report'
+    draw HINTS through here, so the two pages cannot drift apart.
+
+    'item_list' holds (category, directory, file, choice, token, detail,
+    cause) in walk order; 'choice', 'detail' and 'cause' are None where
+    none stands. Categories print in 'vocabulary.category_tuple' order,
+    directories in the order they first appear. 'fail_ink' paints the
+    phrase, 'directory_ink' the directory.
+    """
+    group_db       = {}                  # category -> directory -> [item]
+    directory_list = []
+    for category, directory, file, choice, token, detail, cause \
+        in item_list:
+        if directory not in directory_list: directory_list.append(directory)
+        group_db.setdefault(category, {}).setdefault(directory, []) \
+                .append((file, choice, token, detail, cause))
+    #  THE BRIEFING FOLLOWS THE WIDEST OF THEM, so the reasons stand in
+    #  one column down the whole block: the reason is what this block
+    #  exists to be read for, and a reason that moves is one the eye
+    #  must hunt for on every line.
+    brief_column = 0
+    for _, _, file, choice, _, _, _ in item_list:
+        width = len(file)
+        if choice: width += CHOICE_GAP + len(choice)
+        brief_column = max(brief_column, width + BRIEF_GAP)
+    line_list = []
+    for category in vocabulary.category_tuple:
+        directory_db = group_db.get(category)
+        if not directory_db: continue
+        if line_list: line_list.append("")
+        line_list.append(vocabulary.heading_db[category])
+        for directory in directory_list:
+            entry_list = directory_db.get(directory)
+            if not entry_list: continue
+            #  THE DIRECTORY, ONCE, and in the directory's colour.
+            line_list.append("    " + directory_ink(directory))
+            last_file     = None
+            last_phrase   = None
+            last_detail   = None
+            choice_column = 0
+            for file, choice, token, detail, cause in entry_list:
+                repeat_f = (last_file == file)
+                if not repeat_f: choice_column = len(file) + CHOICE_GAP
+                last_file = file
+                shown     = ":" if repeat_f else file
+                left      = "%-*s%s" % (choice_column, shown, choice) \
+                            if choice else shown
+                #  THE SAME PHRASE IS NOT SAID TWICE (D-35): ':' under
+                #  the one above, as the application's name.
+                said        = vocabulary.phrase(token)
+                right       = ":" if said == last_phrase else said
+                last_phrase = said
+                line = "        %-*s%s" % (brief_column, left,
+                                           fail_ink(right))
+                #  THE NUMBERS BESIDE THE WORD (O-19): which cap, the
+                #  cap, the peak -- what a reader of a kill asks first.
+                #  Said once: beneath the same phrase and the same
+                #  detail, nothing more (D-35).
+                if detail is not None \
+                   and not (right == ":" and detail == last_detail):
+                    line += "  (%s)" % detail
+                last_detail = detail
+                if cause  is not None: line += "  <- %s" % cause
+                line_list.append(line)
+    return line_list
 
 
 def results_line_list(ok_n, fail_n, w, ink, skip_n=0,

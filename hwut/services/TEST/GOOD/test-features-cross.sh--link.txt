@@ -1,0 +1,50 @@
+== hwut.report.list -e physics.bounce
+./TEST/test-shot.sh left
+./physics/TEST/test-push.sh a
+./physics/TEST/test-roll.sh off-wall
+./physics/TEST/test-roll.sh over-ice
+== hwut.report.features
+UNPLACED                                                         5 leaf/leaves
+    [IMPLEMENTED ok]   physics.bounce -- bounces
+        internal    <physics>:bounce  (physics)
+        [PASS] physics/TEST/test-push.sh [a]
+        [PASS] physics/TEST/test-roll.sh [off-wall]
+        [PASS] physics/TEST/test-roll.sh [over-ice]
+        [PASS] TEST/test-shot.sh [left]
+    [IMPLEMENTED ok]   physics.stop -- stops
+        internal    <physics>:stop  (physics)
+        [PASS] physics/TEST/test-push.sh [a]
+        [PASS] TEST/test-shot.sh [right]
+    [IMPLEMENTED ok]   physics.materials -- materials
+        internal    <physics>:materials  (physics)
+        [PASS] physics/TEST/test-roll.sh [off-wall]
+        [PASS] world/TEST/test-terrain.sh [seed-4]
+    [IMPLEMENTED ok]   physics.move -- moves
+        internal    <physics>:move  (physics)
+        [PASS] physics/TEST/test-push.sh [a]
+        [PASS] physics/TEST/test-push.sh [b]
+    [IMPLEMENTED ok]   world.terrain -- terrain
+        internal    <world>:terrain  (world)
+        [PASS] world/TEST/test-terrain.sh [seed-4]
+== hwut.report.features --matrix
+TEST                  #1    #2
+test-shot.sh [left]   PASS  .
+test-shot.sh [right]  .     PASS
+  #1 physics.bounce  IMPLEMENTED ok  (another directory's)
+  #2 physics.stop    IMPLEMENTED ok  (another directory's)
+
+physics/TEST             #1    #2    #3    #4
+test-push.sh [a]         PASS  PASS  .     PASS
+test-push.sh [b]         .     .     .     PASS
+test-roll.sh [off-wall]  PASS  .     PASS  .
+test-roll.sh [over-ice]  PASS  .     .     .
+  #1 bounce     IMPLEMENTED ok
+  #2 stop       IMPLEMENTED ok
+  #3 materials  IMPLEMENTED ok
+  #4 move       IMPLEMENTED ok
+
+world/TEST                #1    #2
+test-terrain.sh [seed-4]  PASS  PASS
+  #1 terrain            IMPLEMENTED ok
+  #2 physics.materials  IMPLEMENTED ok  (another directory's)
+<hwut-end>

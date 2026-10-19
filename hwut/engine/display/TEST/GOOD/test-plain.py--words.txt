@@ -18,13 +18,13 @@ END   test-06.sh ................................................. [FAIL]  ||0
 START test-07.sh                                                           ||1
 END   test-07.sh ........................................ unstable [FAIL]  ||0
 START test-08.sh                                                           ||1
-END   test-08.sh ....................................... no-launch [FAIL]  ||0
+END   test-08.sh ......................................... no-disk [FAIL]  ||0
 START test-09.sh                                                           ||1
-END   test-09.sh .......................................... killed [FAIL]  ||0
+END   test-09.sh ....................................... no-launch [FAIL]  ||0
 START test-10.sh                                                           ||1
-END   test-10.sh ...................................... no-session [FAIL]  ||0
+END   test-10.sh .......................................... killed [FAIL]  ||0
 START test-11.sh                                                           ||1
-END   test-11.sh .......................................... killed [FAIL]  ||0
+END   test-11.sh ...................................... no-session [FAIL]  ||0
 START test-12.sh                                                           ||1
 END   test-12.sh .......................................... killed [FAIL]  ||0
 START test-13.sh                                                           ||1
@@ -36,33 +36,33 @@ END   test-15.sh .......................................... killed [FAIL]  ||0
 START test-16.sh                                                           ||1
 END   test-16.sh .......................................... killed [FAIL]  ||0
 START test-17.sh                                                           ||1
-END   test-17.sh ....................................... no-output [FAIL]  ||0
+END   test-17.sh .......................................... killed [FAIL]  ||0
 START test-18.sh                                                           ||1
-END   test-18.sh ....................................... no-output [FAIL]  ||0
+END   test-18.sh ......................................... no-disk [FAIL]  ||0
 START test-19.sh                                                           ||1
 END   test-19.sh ....................................... no-output [FAIL]  ||0
 START test-20.sh                                                           ||1
 END   test-20.sh ....................................... no-output [FAIL]  ||0
 START test-21.sh                                                           ||1
-END   test-21.sh .................................... no GOOD file [FAIL]  ||0
+END   test-21.sh ....................................... no-output [FAIL]  ||0
 START test-22.sh                                                           ||1
-END   test-22.sh ....................................... cut-short [FAIL]  ||0
+END   test-22.sh ....................................... no-output [FAIL]  ||0
 START test-23.sh                                                           ||1
-END   test-23.sh ............................ no <hwut-end> marker [FAIL]  ||0
+END   test-23.sh .................................... no GOOD file [FAIL]  ||0
 START test-24.sh                                                           ||1
-END   test-24.sh .......................................... stderr [FAIL]  ||0
+END   test-24.sh ....................................... cut-short [FAIL]  ||0
 START test-25.sh                                                           ||1
-END   test-25.sh .......................................... region [FAIL]  ||0
+END   test-25.sh ............................ no <hwut-end> marker [FAIL]  ||0
 START test-26.sh                                                           ||1
-END   test-26.sh .......................................... region [FAIL]  ||0
+END   test-26.sh .......................................... stderr [FAIL]  ||0
 START test-27.sh                                                           ||1
-END   test-27.sh ...................................... constraint [FAIL]  ||0
+END   test-27.sh .......................................... region [FAIL]  ||0
 START test-28.sh                                                           ||1
-END   test-28.sh .......................................... stderr [FAIL]  ||0
+END   test-28.sh .......................................... region [FAIL]  ||0
 START test-29.sh                                                           ||1
-END   test-29.sh ............................................ pype [FAIL]  ||0
+END   test-29.sh ...................................... constraint [FAIL]  ||0
 START test-30.sh                                                           ||1
-END   test-30.sh ............................................ pype [FAIL]  ||0
+END   test-30.sh .......................................... stderr [FAIL]  ||0
 START test-31.sh                                                           ||1
 END   test-31.sh ............................................ pype [FAIL]  ||0
 START test-32.sh                                                           ||1
@@ -70,24 +70,28 @@ END   test-32.sh ............................................ pype [FAIL]  ||0
 START test-33.sh                                                           ||1
 END   test-33.sh ............................................ pype [FAIL]  ||0
 START test-34.sh                                                           ||1
-END   test-34.sh ........................................ no-build [FAIL]  ||0
+END   test-34.sh ............................................ pype [FAIL]  ||0
 START test-35.sh                                                           ||1
-END   test-35.sh ........................................ no-build [FAIL]  ||0
+END   test-35.sh ............................................ pype [FAIL]  ||0
 START test-36.sh                                                           ||1
 END   test-36.sh ........................................ no-build [FAIL]  ||0
 START test-37.sh                                                           ||1
 END   test-37.sh ........................................ no-build [FAIL]  ||0
 START test-38.sh                                                           ||1
-END   test-38.sh .......................................... no-dep [FAIL]  ||0
+END   test-38.sh ........................................ no-build [FAIL]  ||0
 START test-39.sh                                                           ||1
-END   test-39.sh ...................................... no-display [FAIL]  ||0
+END   test-39.sh ........................................ no-build [FAIL]  ||0
 START test-40.sh                                                           ||1
-END   test-40.sh .......................................... failed [FAIL]  ||0
+END   test-40.sh .......................................... no-dep [FAIL]  ||0
+START test-41.sh                                                           ||1
+END   test-41.sh ...................................... no-display [FAIL]  ||0
+START test-42.sh                                                           ||1
+END   test-42.sh .......................................... failed [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 41 fail, 00:00:41
+DIRECTORIES                                            0 ok, 43 fail, 00:00:43
 ------------------------------------------------------------------------------
-   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/41
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/43
 
 ==============================================================================
 HINTS
@@ -95,20 +99,20 @@ HINTS
 NOMINAL -- error in GOOD file
     suite/TEST
         test-02.sh   GOOD file carries unaccepted lines
-        test-21.sh   GOOD missing
-        test-23.sh   GOOD file does not end in <hwut-end>
-        test-25.sh   broken region framing
-        test-27.sh   constraint violated
+        test-23.sh   GOOD missing
+        test-25.sh   GOOD file does not end in <hwut-end>
+        test-27.sh   broken region framing
+        test-29.sh   constraint violated
 
 BUILD -- build or launch error
     suite/TEST
         test-00.sh   source file missing
         test-01.sh   interpreter missing
-        test-08.sh   application launch failed
-        test-34.sh   build tool missing
-        test-35.sh   build killed by supervisor
-        test-36.sh   build failed
-        test-37.sh   target not built
+        test-09.sh   application launch failed
+        test-36.sh   build tool missing
+        test-37.sh   build killed by supervisor
+        test-38.sh   build failed
+        test-39.sh   target not built
 
 BOOK -- book and tree disagree
     suite/TEST
@@ -116,38 +120,40 @@ BOOK -- book and tree disagree
 
 EXECUTION -- application invocation error
     suite/TEST
-        test-09.sh   killed by supervisor
-        test-10.sh   not run; process already dead
-        test-11.sh   killed; wall-clock cap exceeded
-        test-12.sh   killed; cpu-time cap exceeded
-        test-13.sh   killed; memory cap exceeded
-        test-14.sh   killed; file-size cap exceeded
-        test-15.sh   killed; process cap exceeded
-        test-16.sh   killed; disk cap exceeded
-        test-17.sh   no output
-        test-18.sh   stalled; no output
-        test-19.sh   no recording to replay
-        test-20.sh   output file missing
-        test-22.sh   output cut short; no <hwut-end>
-        test-24.sh   unexpected stderr
-        test-26.sh   broken region framing in output
-        test-28.sh   stderr undecided
-        test-29.sh   pype interpreter missing
-        test-30.sh   pype script missing
-        test-31.sh   pype script syntax error
-        test-32.sh   pype killed by supervisor
-        test-33.sh   pype failed
+        test-10.sh   killed by supervisor
+        test-11.sh   not run; process already dead
+        test-12.sh   killed; wall-clock cap exceeded
+        test-13.sh   killed; cpu-time cap exceeded
+        test-14.sh   killed; memory cap exceeded
+        test-15.sh   killed; file-size cap exceeded
+        test-16.sh   killed; process cap exceeded
+        test-17.sh   killed; disk cap exceeded
+        test-19.sh   no output
+        test-20.sh   stalled; no output
+        test-21.sh   no recording to replay
+        test-22.sh   output file missing
+        test-24.sh   output cut short; no <hwut-end>
+        test-26.sh   unexpected stderr
+        test-28.sh   broken region framing in output
+        test-30.sh   stderr undecided
+        test-31.sh   pype interpreter missing
+        test-32.sh   pype script missing
+        test-33.sh   pype script syntax error
+        test-34.sh   pype killed by supervisor
+        test-35.sh   pype failed
 
 ENVIRONMENT -- error around the test
     suite/TEST
-        test-38.sh   dependency not acquired
-        test-39.sh   display target unreachable
-        test-40.sh   a token nobody taught
+        test-08.sh   disk has no room; not run
+        test-18.sh   disk below its floor
+        test-40.sh   dependency not acquired
+        test-41.sh   display target unreachable
+        test-42.sh   a token nobody taught
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 0 ok, 41 fail, 41.00 [sec]
+RESULTS: 0 ok, 43 fail, 43.00 [sec]
 |                                    fail                                    |
-[fold: good_f=False fail_n=41 verdict_n=41 fault_n=0]
+[fold: good_f=False fail_n=43 verdict_n=43 fault_n=0]
 <hwut-end>

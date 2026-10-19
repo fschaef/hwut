@@ -6,7 +6,7 @@ STATUS: 1
 STDOUT {
     ======================================================================
     
-    suite/TEST                                           YYYYyMMmDDd hhhmm
+    tree/suite/TEST                                      YYYYyMMmDDd hhhmm
     ----------------------------------------------------------------------
     
      * The flip:
@@ -19,10 +19,17 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-             1 1    [FAIL]   suite/TEST
+             1 1    [FAIL]   tree/suite/TEST
     
     ----------------------------------------------------------------------
                                                                   (1 test)
+    
+    ======================================================================
+    HINTS
+    ----------------------------------------------------------------------
+    BOOK -- book and tree disagree
+        tree/suite/TEST
+            test-app.sh   UNSTABLE -- not run
     
     ======================================================================
     
@@ -36,9 +43,9 @@ STATUS: 1
 STDOUT {
     <?xml version="1.0" encoding="UTF-8"?>
     <testsuites tests="1" failures="1">
-      <testsuite name="suite/TEST" tests="1" failures="1">
-        <testcase classname="suite/TEST" name="test-app.sh">
-          <failure type="unstable" message="the choice bears a STAIN: it switched results over 3 repeat(s) and is not run until proven steady"/>
+      <testsuite name="tree/suite/TEST" tests="1" failures="1">
+        <testcase classname="tree/suite/TEST" name="test-app.sh">
+          <failure type="unstable" message="BOOK -- book and tree disagree: UNSTABLE -- not run"/>
         </testcase>
       </testsuite>
     </testsuites>
@@ -48,10 +55,11 @@ STATUS: 1
 STDOUT {
     TAP version 13
     1..1
-    not ok 1 - suite/TEST: test-app.sh
+    not ok 1 - tree/suite/TEST: test-app.sh
       ---
       reason: unstable
-      message: the choice bears a STAIN: it switched results over 3 repeat(s) and is not run until proven steady
+      category: BOOK -- book and tree disagree
+      message: UNSTABLE -- not run
       ...
 }
 --- json
@@ -62,8 +70,10 @@ STDOUT {
         {
           "case_list": [
             {
+              "category": "BOOK -- book and tree disagree",
               "choice": null,
               "file": "test-app.sh",
+              "message": "UNSTABLE -- not run",
               "name": "test-app.sh",
               "reason": "unstable",
               "stained": true,
@@ -71,7 +81,7 @@ STDOUT {
               "when": "<instant>"
             }
           ],
-          "directory": "suite/TEST",
+          "directory": "tree/suite/TEST",
           "title": ""
         }
       ],

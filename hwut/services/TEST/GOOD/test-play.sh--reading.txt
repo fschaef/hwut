@@ -9,6 +9,7 @@ STDOUT {
                 memory_mb = 512
                 file_size_mb = 10
                 child_process_max_n = 32
+                disk_mb = 100
                 network = true
             }
             tolerance {
@@ -55,6 +56,7 @@ STDOUT {
                 memory_mb = 512
                 file_size_mb = 10
                 child_process_max_n = 32
+                disk_mb = 100
                 network = true
             }
             tolerance {

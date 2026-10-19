@@ -98,8 +98,11 @@ class CRunReportReceiver:
     def on_dir_begun(self, when, directory, node_n):
         """RETURN: None. One directory's run begins."""
 
-    def on_frame(self, when, directory, role, good):
-        """RETURN: None. 'on_entry' or 'on_exit' ran."""
+    def on_frame(self, when, directory, role, good, command=None,
+                 exit=None):
+        """RETURN: None. 'on_entry' or 'on_exit' ran; where it did not end
+        well, 'command' is what ran and 'exit' how it ended ('exited 1',
+        'ended: <how>')."""
 
     def on_run_begun(self, when, directory, node, node_kind):
         """RETURN: None. One node's work was dispatched."""

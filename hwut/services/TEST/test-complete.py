@@ -113,11 +113,16 @@ def fixture_tree():
     """
     RETURN: str, a fresh tree in '/tmp': 'hwut-root.conf', a labels file,
             'TEST/' with two applications, a plain file and a 'hwut.conf'
-            binding two targets, and 'TEST/sub/'.
+            binding two targets, 'TEST/sub/', and 'GOOD/', 'OUT/', 'TMP/'
+            and a marked 'hwut.coverage/' that hold no application.
     """
     root = tempfile.mkdtemp(dir="/tmp")
     test = os.path.join(root, "TEST")
     os.makedirs(os.path.join(test, "sub"))
+    for name in ("GOOD", "OUT", "TMP", "hwut.coverage"):
+        os.makedirs(os.path.join(test, name))
+    open(os.path.join(test, "hwut.coverage",
+                      "hwut.no-entry-here.marker"), "w").close()
     files = {
         "hwut-root.conf":   "hwut { }\n",
         "hwut-root.labels": "#  hwut-root.labels\n#___\n"

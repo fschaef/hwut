@@ -39,10 +39,16 @@ WHAT FLOWS DOWN -- the keys that configure tests in general:
 
     app_defaults       merged parameter by parameter, child's word wins
     language_setup    per language, the child's word wins whole
-    ignore            the child's word wins whole
+    ignore            ADDED: the child's globs join the inherited ones
+    admit             ADDED, the same (ruled 2026-10-19, D-25: what the
+                      parent ignores stays ignored below it; 'admit' is
+                      the one way out)
     test_directory    the child's word wins
+    script_caps       the child's word wins whole (B-17): the caps every
+                      script of a directory runs under
 
-WHAT DOES NOT: 'on_entry', 'on_exit', 'collision', 'dependency' and the
+WHAT DOES NOT: 'on_entry', 'on_exit', 'on_before_test', 'on_after_test',
+'collision', 'dependency' and the
 directory's own TARGETS name LOCAL files and actions; stated at a tree
 level -- a directory that is not a test directory -- they draw a fault
 and flow nowhere.
@@ -73,9 +79,12 @@ FALLBACK_TEST_DIRECTORY = "TEST"
 
 #  The keys that flow down the tree; everything else is local.
 INHERITABLE_FIELD_TUPLE = ("app_defaults", "language_setup", "ignore",
+                           "admit",
                            "test_directory", "variant_db",
-                           "procsitter_db")
-LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
+                           "procsitter_db", "free_disk_min_mb",
+                           "script_caps")
+LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "on_before_test",
+                           "on_after_test", "collision",
                            "dependency", "target_db")
 
 #  THE ROOT CONF'S ALONE. A VARIANT GROUP IS A DIMENSION and
@@ -91,7 +100,7 @@ LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "collision",
 #  not flow. It was swallowed in silence, which is the worst of the
 #  three answers.
 ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db", "language_setup",
-                              "procsitter_db")
+                              "procsitter_db", "free_disk_min_mb")
 
 #  Field -> WHY it is the root's alone, for the fault that names it.
 ROOT_CONF_ONLY_REASON_DB = {
@@ -105,6 +114,8 @@ ROOT_CONF_ONLY_REASON_DB = {
     "procsitter_db":  "running a test with a cap unenforced is a "
                       "responsibility taken ONCE, for the whole tree "
                       "(R-48)",
+    "free_disk_min_mb": "the floor is a property of the DISK, not of a "
+                      "directory: every case on it shares one (D-24)",
 }
 
 
@@ -260,8 +271,8 @@ def inherited_spec(parent, child):
     RETURN: DirectorySpec, the spec that GOVERNS where 'child' stands:
             the inheritable fields of 'parent', each overwritten where
             'child' states its own word; 'app_defaults' merged parameter
-            by parameter (R-26); the local fields are the child's
-            alone.
+            by parameter (R-26); 'ignore' and 'admit' added up (D-25);
+            the local fields are the child's alone.
     """
     field_db = {}
     for name in INHERITABLE_FIELD_TUPLE:
@@ -269,6 +280,10 @@ def inherited_spec(parent, child):
         if name == "app_defaults" and mine is not None \
            and theirs is not None:
             field_db[name] = mine.merged_with(theirs)
+        elif name in ("ignore", "admit"):
+            #  GLOBS ADD UP (D-25): the parent's first, each once.
+            field_db[name] = tuple(dict.fromkeys(tuple(mine or ())
+                                                 + tuple(theirs or ())))
         else:
             field_db[name] = theirs if theirs else mine
     #  THE PLACES GO WITH THE VALUES: leaf by leaf, the child's where it

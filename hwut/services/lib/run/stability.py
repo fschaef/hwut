@@ -69,6 +69,7 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+from ..face import write_refusal
 import asyncio
 import os
 import statistics
@@ -417,8 +418,7 @@ def main(argv=None, write=None, write_error=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
 
     directory  = "."
@@ -456,8 +456,7 @@ def main(argv=None, write=None, write_error=None):
         #  word is named at the door rather than once per repetition.
         _, _, refusal = words_of(arguments.strategy)
         if refusal is not None:
-            write("REFUSED: %s" % refusal)
-            write(USAGE)
+            write_refusal(write, "REFUSED: %s" % refusal, USAGE)
             return E_ExitCode.REFUSED
         strategy = arguments.strategy
     #  A TEST NAMED BY PATH stands in the directory the path names

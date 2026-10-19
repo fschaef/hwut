@@ -8,6 +8,7 @@
 #         faces        { features = ["one-version"] }
 #         requirements { features = ["one-requirement-list"] }
 #         help-missing { features = ["help-names-missing"] }
+#         notice-width { features = ["help-names-missing"] }
 #         deb          { features = ["one-version", "one-requirement-list"] }
 #     }
 # }
@@ -30,6 +31,11 @@ the census.
                   by a reader of this page's own
     help-missing  'hwut.help' in an interpreter that has none of them:
                   each named with how to install it, status 1
+    notice-width  the notice of EVERY user requirement, as though each
+                  were absent, at 72 columns: one paragraph each, no line
+                  wider, the note ending in one '.' (the book's D-10: the
+                  'vterm' note ran on into the list's next line, was cut
+                  there, and ended in "':.", 95 columns)
     deb           'build.py deb': its control file states the version,
                   'Architecture: all' and the 'Depends' of the list; its
                   '/usr/bin' the same faces as the wheel; every face's bash
@@ -172,7 +178,8 @@ def test_help_missing():
         subprocess.run([sys.executable, "-m", "venv", "--without-pip", venv],
                        check=True)
         python = os.path.join(venv, "bin", "python3")
-        env = dict(os.environ, PYTHONPATH=os.path.dirname(HWUT))
+        env = dict(os.environ, PYTHONPATH=os.path.dirname(HWUT),
+                   COLUMNS="78")         # the notice wraps to it
         done = subprocess.run([python, "-m", "hwut.services.help"], cwd=root,
                               env=env, capture_output=True, text=True)
         banner("an interpreter without the modules: 'hwut.help'")
@@ -180,6 +187,21 @@ def test_help_missing():
         print("    status %i, stderr %r" % (done.returncode, done.stderr))
     finally:
         shutil.rmtree(root)
+
+
+def test_notice_width():
+    sys.path.insert(0, os.path.dirname(HWUT))
+    from hwut.services.lib import requirements
+    row_list = requirements.user_rows()
+    text = requirements.missing_text([(row, "absent") for row in row_list
+                                      if row.kind != "program"], width=72)
+    banner("every user requirement absent, 72 columns")
+    print(text, end="")
+    line_list = text.splitlines()
+    print("    widest line: %s" % ("<= 72" if max(map(len, line_list)) <= 72
+                                    else max(map(len, line_list))))
+    print("    a note ending in \"':.\": %s"
+          % any(line.endswith("':.") for line in line_list))
 
 
 def test_deb():
@@ -246,5 +268,6 @@ if __name__ == "__main__":
             "faces":        test_faces,
             "requirements": test_requirements,
             "help-missing": test_help_missing,
+            "notice-width": test_notice_width,
             "deb":          test_deb,
         }).run()

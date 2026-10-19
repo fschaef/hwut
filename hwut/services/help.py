@@ -47,20 +47,30 @@ DESCRIPTION
        stand in 'engine/display/coverage_reason.py'. A directory no
        coverage run has visited says nothing.
 
-       WHAT THE NEXT RUN REFUSES, LAST (exploration R-80): every
+       WHAT THE NEXT RUN FAILS, 'uncapped', LAST (exploration R-80,
+       services E-159): every
        selected case under a cap the procsitter cannot enforce on this
        platform and the root conf does not acknowledge -- the caps, the
        utility that is missing where one is ('psutil'), how it is
        installed, and the 'hwut-root.conf' entry that acknowledges.
-       Judged now, by the gate the run asks; no book holds a refusal.
+       Judged now, by the gate the run asks; no book holds the case.
+
+       A FILE THAT IS NOT SEEN is ignored: the default set ('*.txt',
+       '*.xml', '*.json', '*.pype'), the backup-shaped names ('*~',
+       '#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save', '*.rej',
+       '*.copy', '*.swp', '*.tmp'), and the globs of 'ignore' in
+       'hwut.conf'. 'admit' in 'hwut.conf' takes a glob out of all of
+       them -- a backup-shaped name meant as a test is one again:
+
+           hwut { admit = ["test-old-format.py.orig"] }
 
 EXIT STATUS (E-1, services/_exit.py):
     0  something was explained
     1  a Python module hwut needs is absent or too old: named, with how
        to install it, before anything else (adm/requirement-list.txt)
     3  nothing to explain: no selected case failed for a subtle reason,
-       none was left without a coverage record, none is refused for
-       want of an enforceable cap
+       none was left without a coverage record, none fails for want of
+       an enforceable cap
     2  the command line cannot be read
 ______________________________________________________________________________
 """
@@ -79,6 +89,7 @@ if __name__ == "__main__":
         if any(row.kind == "python" for row, _ in _missing_list):
             sys.exit(1)
 
+from .lib.face import write_refusal
 from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
                                                  WishError, parse_wish,
                                                  with_targets)
@@ -144,6 +155,9 @@ def occurrence_db_of(block_list):
         for row in block.row_tuple:
             token = token_of(row)
             if not subtle_f(token): continue
+            #  'uncapped' IS SAID ONCE, in the confinement part, which
+            #  names the cap and the entry that acknowledges it.
+            if token == "uncapped": continue
             occurrence_db.setdefault(token, []).append(
                 (block.directory or ".", row.source_file, row.choice))
     return occurrence_db
@@ -257,7 +271,8 @@ def coverage_explanation_line_list(token, case_list):
 def uncapped_occurrence_db_of(root, wish):
     """
     RETURN: dict, tuple of cap names -> list of (directory, file,
-            choice): every selected case 'hwut.run' REFUSES because a
+            choice): every selected case 'hwut.run' FAILS, 'uncapped',
+            not run, because a
             cap in force for it is neither enforceable on this platform
             nor acknowledged in the root conf (exploration R-80).
             Judged NOW, by the gate the run asks -- a refused case
@@ -293,7 +308,8 @@ def uncapped_explanation_line_list(uncapped, case_list, platform):
         "Each case below is under %s, stated in its header or standing "
         "by default, and on this platform nothing enforces %s. A cap "
         "that does not cap is worse than no cap: the author believes "
-        "the test confined and it is not. So the case is not run."
+        "the test confined and it is not. So the case is not run, "
+        "and fails."
         % ("this cap" if len(uncapped) == 1 else "these caps",
            "it" if len(uncapped) == 1 else "them")]
     for utility in utility_tuple:
@@ -309,7 +325,7 @@ def uncapped_explanation_line_list(uncapped, case_list, platform):
         "tree:"
         % ("install what is missing, or " if utility_tuple else "",
            ROOT_CONF_NAME))
-    line_list = ["refused -- %s  [%i case(s)]" % (head, len(case_list))]
+    line_list = ["uncapped -- %s  [%i case(s)]" % (head, len(case_list))]
     for paragraph in paragraph_list:
         line_list.append("")
         line_list.extend("    " + line for line in
@@ -446,7 +462,7 @@ def uncapped_introduction_line_list(case_n, reason_n):
             sets of caps.
     """
     return textwrap.wrap(
-        "'hwut.run' REFUSES %i case(s) on this platform, for %i set(s) "
+        "'hwut.run' FAILS %i case(s) on this platform, not run, for %i set(s) "
         "of caps the procsitter cannot enforce here. The paragraphs "
         "below explain each once, say what is missing and how to heal "
         "it, and name the cases concerned."
@@ -483,11 +499,33 @@ def introduction_line_list(case_n, failure_n):
         width=WRAP_WIDTH + 8, break_on_hyphens=False)
 
 
+def installed_line(directory):
+    """
+    RETURN: str, 'INSTALLED: hwut <version> -- no 'hwut-root.conf' in or
+                 above '<directory>' => hwut.sanitize root', where no
+                 tree bounds 'directory' -- what a person reads right
+                 after installing.
+            None, where a 'hwut-root.conf' bounds it.
+    """
+    from ..engine.orchestrator.exploration.tree_explorer \
+                                        import RootConfMissing, \
+                                               root_conf_directory
+    try:
+        root_conf_directory(directory)
+    except RootConfMissing:
+        import hwut.adm.version as version
+        return ("INSTALLED: hwut %s -- no 'hwut-root.conf' in or above "
+                "'%s' => hwut.sanitize root"
+                % (version.string, os.path.abspath(directory)))
+    return None
+
+
 def main(argv=None, write=None):
     """
-    RETURN: E_ExitCode, OK where something was explained, EMPTY where no
-            selected case failed for a subtle reason, REFUSED where the
-            command line cannot be read.
+    RETURN: E_ExitCode, OK where something was explained, or where no
+            tree stands and the installation is said ('installed_line'),
+            EMPTY where no selected case failed for a subtle reason,
+            REFUSED where the command line cannot be read.
     """
     if write is None: write = print
     if argv is None:  argv  = sys.argv[1:]
@@ -498,8 +536,7 @@ def main(argv=None, write=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
     arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
                                               ARG_DB)
@@ -515,6 +552,14 @@ def main(argv=None, write=None):
         write("REFUSED: the directory '%s' does not exist" % directory)
         write(USAGE)
         return E_ExitCode.REFUSED
+    #  THE INSTALLATION CHECK (spec 24; ruled 2026-10-17, D-11 "(a)"):
+    #  where no tree stands, the requirements were said above and there
+    #  is nothing to explain -- hwut answers that it is installed, and
+    #  where a tree begins.
+    installed = installed_line(directory)
+    if installed is not None:
+        write(installed)
+        return E_ExitCode.OK
 
     block_list = []
     try:

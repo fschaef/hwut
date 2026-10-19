@@ -39,6 +39,7 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and selects nothing
 ______________________________________________________________________________
 """
+from ..face import write_refusal
 import os
 import sys
 from   dataclasses import dataclass, field
@@ -205,8 +206,7 @@ def main(argv=None, write=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
 
     arguments, completion_f = parse_or_refuse(

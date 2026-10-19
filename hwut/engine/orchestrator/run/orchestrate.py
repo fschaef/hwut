@@ -30,8 +30,9 @@ from datetime    import datetime, timezone
 
 from ...bookkeeper.api       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
-from ..exploration.finder          import REFUSED_NAME_REASON
 from ..plan.form                   import E_NodeKind
+from ..plan.confinement            import uncapped_refusal_f
+from ..plan.determine              import EMPTY_SELECTION_STR
 from ..plan.tree                   import (determine_tree,
                                            NOT_ACCEPTED_REASON,
                                            UNACCEPTED_REASON)
@@ -138,7 +139,15 @@ class CDirectoryWork:
         #  in the count.
         for fault in entry.fault_tuple:
             emit("fault", directory=directory, text=str(fault))
+        unstood = unstood_tuple(
+                      os.path.normpath(os.path.join(self.root, directory)),
+                      entry.app_set, entry.fault_tuple)
         for report in entry.report_tuple:
+            #  NOT EMPTY WHERE THE BOOK ANSWERS: a test or choice the book
+            #  records and the tree no longer declares is a case of the
+            #  selection -- it fails, and is shown (2026-10-19, "the
+            #  selection is not empty, but fail is true").
+            if str(report) == EMPTY_SELECTION_STR and unstood: continue
             emit("report", directory=directory, text=str(report))
         #  NOT RUN, AND SAID SO (E-41): exploration's refusals, one
         #  event each, collected by the display into the closing REFUSED
@@ -148,30 +157,25 @@ class CDirectoryWork:
         #  carrying '##! unaccepted' (O-25) -- 'unaccepted [FAIL]'.
         no_good_tuple    = no_good_file_tuple(entry.refused_tuple)
         unaccepted_tuple = unaccepted_tuple_of(entry.refused_tuple)
+        #  A CAP NOBODY CAN WATCH HERE IS A FAILURE (ruled 2026-10-17,
+        #  services E-159): the test states a promise this machine cannot
+        #  keep, unacknowledged -- not run, counted, the remedy beside it.
+        uncapped_db = {name: reason for name, reason in entry.refused_tuple
+                       if uncapped_refusal_f(reason)}
         for name, reason in entry.refused_tuple:
-            if name in no_good_tuple or name in unaccepted_tuple: continue
+            if name in no_good_tuple or name in unaccepted_tuple \
+               or name in uncapped_db: continue
             emit("refused", directory=directory, node=name, text=reason)
         #  SILENT, NOT REFUSED (X-SILENT): a candidate carrying no
         #  'hwut { }' and named under no 'apps'. Ordinary -- a helper,
         #  a log -- so it is no fault and no refusal; the display says
         #  so ONCE at the end, lest a test that stopped being seen
         #  vanish without a word.
-        #  A REFUSED FILE IS A WALLFLOWER TOO (X-SILENT, amended 2026-10-
-        #  04): a backup-shaped name is refused by name in the REFUSED
-        #  block, and it is ALSO a file nobody speaks for -- so it
-        #  stands in the wallflower list, where 'hwut.config.ignore
-        #  --wallflowers' settles it with the rest.
         for name in entry.app_set.silent_tuple:
             emit("silent", directory=directory, node=name)
-        for name, reason in entry.refused_tuple:
-            if reason == REFUSED_NAME_REASON:
-                emit("silent", directory=directory, node=name)
-        unstood = unstood_tuple(
-                      os.path.normpath(os.path.join(self.root, directory)),
-                      entry.app_set, entry.fault_tuple)
         emit("dir-begun", directory=directory,
              node_n=len(entry.plan) + len(unstood) + len(no_good_tuple)
-                    + len(unaccepted_tuple))
+                    + len(unaccepted_tuple) + len(uncapped_db))
         #  THE BOOK DOCUMENTS WHAT TESTS EXIST, and a test it records
         #  that no longer stands is a FAILING TEST, not a silence: the
         #  documentation and the tree disagree, and only a person can
@@ -187,6 +191,10 @@ class CDirectoryWork:
         for name in unaccepted_tuple:
             emit("run-ended", directory=directory, node=name,
                  node_kind="TEST", good=False, verdict="unaccepted")
+        for name, reason in uncapped_db.items():
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict="uncapped",
+                 detail=reason)
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
         #  their 'run-ended' comes first, verdict named.
@@ -198,9 +206,15 @@ class CDirectoryWork:
 
         def notify(kind, **field_db):
             if kind == "frame":
-                emit("frame", directory=directory,
-                     role=field_db["role"],
-                     good=bool(field_db["good_f"]))
+                role  = field_db["role"]
+                extra = {}
+                if not field_db["good_f"]:
+                    extra["command"] = (entry.on_entry if role == "on_entry"
+                                        else entry.on_exit) or ""
+                    extra["exit"] = getattr(dispatcher, "frame_exit_db",
+                                            {}).get(role, "failed")
+                emit("frame", directory=directory, role=role,
+                     good=bool(field_db["good_f"]), **extra)
             elif kind == "started":
                 node = field_db["node"]
                 emit("run-begun", directory=directory,
@@ -230,6 +244,11 @@ class CDirectoryWork:
                          os.path.normpath(os.path.join(self.root,
                                                        directory)),
                          entry)
+        #  THE HELPERS AROUND EACH TEST RUN (B-17) speak as the frame
+        #  does: a FRAME line in the flow, a NOTE at the end.
+        dispatcher.frame_emit = lambda role, exit, command: emit(
+            "frame", directory=directory, role=role, good=False,
+            command=command, exit=exit)
         report_of  = getattr(dispatcher, "report_of",
                              lambda name: None)
         detail_of  = getattr(dispatcher, "detail_of",
@@ -262,7 +281,7 @@ class CDirectoryWork:
         fail_db = {name: state.name for name, state
                    in sorted(report.failure_db().items())}
         good_f  = report.good_f() and not entry.fault_tuple \
-                  and not unstood and not no_good_tuple \
+                  and not unstood and not no_good_tuple and not uncapped_db \
                   and not unaccepted_tuple
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
@@ -508,9 +527,13 @@ def unstood_tuple(directory, app_set, fault_tuple):
     is in the book as a verdict of its own -- the run never dispatches
     them -- so both ask this function, and the tree, directly.
     """
-    return tuple((name, "spec-broken")
-                 for name in broken_app_tuple(app_set, fault_tuple)) \
-           + vanished_tuple(directory, app_set)
+    #  ONE ORDER ON EVERY PAGE (2026-10-19, "order must be the same"):
+    #  by test, then choice -- the order the report and HINTS stand in.
+    return tuple(sorted(
+        tuple((name, "spec-broken")
+              for name in broken_app_tuple(app_set, fault_tuple))
+        + vanished_tuple(directory, app_set),
+        key=lambda pair: tuple(pair[0].partition(" ")[::2])))
 
 
 def orchestrate(root, wish, build_interview=None, label_view=None):

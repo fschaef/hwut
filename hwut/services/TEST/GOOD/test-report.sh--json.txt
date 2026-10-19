@@ -5,8 +5,10 @@ STDOUT {
         {
           "case_list": [
             {
+              "category": null,
               "choice": null,
               "file": "test-app.sh",
+              "message": null,
               "name": "test-app.sh",
               "reason": null,
               "stained": false,
@@ -14,8 +16,10 @@ STDOUT {
               "when": "<instant>"
             },
             {
+              "category": "DEVIATION -- output differs from GOOD",
               "choice": null,
               "file": "test-diff.sh",
+              "message": "differs from GOOD",
               "name": "test-diff.sh",
               "reason": "not-equivalent-diverged",
               "stained": false,
@@ -23,7 +27,7 @@ STDOUT {
               "when": "<instant>"
             }
           ],
-          "directory": "suite/TEST",
+          "directory": "tree/suite/TEST",
           "title": ""
         }
       ],

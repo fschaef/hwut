@@ -21,12 +21,12 @@ author may widen or narrow.
 
 A COPY OF A SOURCE FILE IS NOT A SOURCE FILE (E-41). 'test-x.py.backup',
 'test-x.py~', 'test-x.py.orig' carry the header they were copied with,
-and read as a test application: one that fails to launch, and enters
-the book as it fails. These names are REFUSED, not ignored: an ignored
-file is silent, a refused one is named, with its reason, in the run's
-closing REFUSED block. The shapes are the editors' and the tools'
-('REFUSED_NAME_GLOB_TUPLE'); 'ignore' in 'hwut.conf' remains the
-author's own word for silence.
+and would read as a test application. These names are IGNORED, as the
+default set is (ruled 2026-10-17, services E-159; they were refused by
+name before). The shapes are the editors' and the tools'
+('BACKUP_NAME_GLOB_TUPLE'); 'ignore' in 'hwut.conf' adds the author's
+own, 'admit' takes a glob out of the whole ignore set -- a backup-shaped
+name meant as a test stands as one again.
 ______________________________________________________________________________
 """
 import os
@@ -61,11 +61,12 @@ OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
 #  not be READ as one to be found not to be one.
 DEFAULT_IGNORE_SET = ("*.txt", "*.xml", "*.json", "*.pype")
 
-#  BACKUP-SHAPED NAMES: refused as source candidates, by name (E-41).
-REFUSED_NAME_GLOB_TUPLE = ("*~", "#*#", "*.bak", "*.backup", "*.orig",
-                           "*.old", "*.save", "*.rej", "*.copy", "*.swp",
-                           "*.tmp")
-REFUSED_NAME_REASON     = "backup-shaped name: not a source candidate"
+#  BACKUP-SHAPED NAMES ARE IGNORED (ruled 2026-10-17, superseding their
+#  refusal by name, E-41): silent, as every ignored name is. 'admit' in
+#  'hwut.conf' takes a glob out of the ignore set, this one included.
+BACKUP_NAME_GLOB_TUPLE = ("*~", "#*#", "*.bak", "*.backup", "*.orig",
+                          "*.old", "*.save", "*.rej", "*.copy", "*.swp",
+                          "*.tmp")
 
 
 def conf_text(directory):
@@ -79,25 +80,24 @@ def conf_text(directory):
         return fh.read()
 
 
-def candidate_list(directory, extra_ignore=()):
+def candidate_list(directory, extra_ignore=(), admit=()):
     """
-    RETURN: [0] list[str], sorted names of the directory's files that are
-                neither ignored nor refused -- the source file candidates.
-            [1] list[(str, str)], sorted (name, reason) of the files
-                REFUSED as candidates: backup-shaped names. Empty where
-                none stands.
+    RETURN: list[str], sorted names of the directory's files that are not
+            ignored -- the source file candidates.
 
-    'extra_ignore' are the configured globs, added to the default set;
-    an ignored file is silent, a refused one is reported.
+    IGNORED, silently: the default set, the backup-shaped names, and the
+    configured 'extra_ignore' globs -- less a name any 'admit' glob
+    matches, which is a candidate again. The directory's own files
+    ('hwut.conf', ...) are never candidates, 'admit' or not.
     """
-    ignore_set   = DEFAULT_IGNORE_SET + tuple(extra_ignore) + OWN_FILE_TUPLE
-    result       = []
-    refused_list = []
+    ignore_set = DEFAULT_IGNORE_SET + BACKUP_NAME_GLOB_TUPLE \
+                 + tuple(extra_ignore)
+    result     = []
     for name in sorted(os.listdir(directory)):
         if not os.path.isfile(os.path.join(directory, name)): continue
-        if any(fnmatch(name, glob) for glob in ignore_set):    continue
-        if any(fnmatch(name, glob) for glob in REFUSED_NAME_GLOB_TUPLE):
-            refused_list.append((name, REFUSED_NAME_REASON))
+        if any(fnmatch(name, glob) for glob in OWN_FILE_TUPLE): continue
+        if any(fnmatch(name, glob) for glob in ignore_set) \
+           and not any(fnmatch(name, glob) for glob in admit):
             continue
         result.append(name)
-    return result, refused_list
+    return result

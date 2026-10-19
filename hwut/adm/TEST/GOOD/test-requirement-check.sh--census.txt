@@ -1,0 +1,10 @@
+ok       program sh              census -                      a program that stands
+MISSING  program no-such-program-x census -                      a program that does not
+ok       python  json            census -                      a module without '>=' that stands
+ok       python  pip>=0.1        census -                      new enough
+OLD      python  pip>=999        census -                      below the oldest measured
+MISSING  python  no_such_module_x>=1.0 census -                      absent
+
+3 requirement(s) of the census missing or too old: its rows that want them are red.
+exit: 1
+<hwut-end>

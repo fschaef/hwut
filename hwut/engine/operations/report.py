@@ -43,6 +43,8 @@ _PRECEDENCE = (
     #  it; standing first says that a stain outranks anything a run
     #  could have found, because there was no run.
     E_TestRunResult.UNSTABLE,
+    #  The disk had no room: not started either (D-24).
+    E_TestRunResult.DISK_SHORT,
     # -- the source and the build: nothing could even be attempted
     E_TestRunResult.SOURCE_NOT_FOUND,
     E_TestRunResult.INTERPRETER_NOT_FOUND,
@@ -62,6 +64,7 @@ _PRECEDENCE = (
     E_TestRunResult.TEST_APP_FILE_SIZE_EXCEEDED,
     E_TestRunResult.TEST_APP_PIDS_EXCEEDED,
     E_TestRunResult.TEST_APP_DISK_EXCEEDED,
+    E_TestRunResult.TEST_APP_DISK_LOW,
     E_TestRunResult.TEST_APP_STALLED,
     E_TestRunResult.TEST_APP_NO_OUTPUT,
     E_TestRunResult.RECORDING_MISSING,

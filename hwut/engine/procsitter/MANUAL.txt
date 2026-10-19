@@ -165,11 +165,15 @@ CAP the procsitter ENFORCES:
                          (watchdog).
     max_pids             process count of the group.
     max_file_size_mb     size cap PER created file (RLIMIT_FSIZE).
-    max_disk_mb          TOTAL allocation under work_dir (watchdog, st_blocks):
-                         the many-files loop RLIMIT_FSIZE cannot see.
-    min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem. Below it
-                         the call is terminated so the OPERATING SYSTEM stays
-                         operable.
+    max_disk_mb          WHAT THE CALL HOLDS (watchdog, st_blocks): its
+                         scratch ground and the files it created under
+                         work_dir -- the many-files loop RLIMIT_FSIZE cannot
+                         see. What stood before and a sibling's scratch are
+                         not the call's.
+    min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem, a
+                         property of the disk. Below it the call is not
+                         spawned, or is terminated, so the OPERATING SYSTEM
+                         stays operable.
     max_output_gap_sec   SILENCE cap (watchdog): no output on EITHER
                          production port for this long ends the call.
                          Measured from launch, reset by every chunk.

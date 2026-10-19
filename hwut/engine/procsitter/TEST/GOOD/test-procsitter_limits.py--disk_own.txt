@@ -1,0 +1,5 @@
+INSPECT: containment = OK_COMPLETED
+  OK  : completed: 60 MB that are not the call's were not charged
+  OK  : peak is the call's own 4 MB, scratch and work dir together
+SUCCESS: the disk cap counts what the call holds.
+<hwut-end>

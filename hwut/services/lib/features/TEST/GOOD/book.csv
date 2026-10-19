@@ -1,8 +1,11 @@
-# vut-register 5 generation:24 apps:5 marks:0=3,1=3,2=4,3=5,4=4
+# vut-register 5 generation:27 apps:5 marks:0=6,1=3,2=4,3=5,4=4
 test;choice;verdict;report;stain;test_id;choice_id
-test-acts.py;keys;true;ok;;0;0
+test-acts.py;held;true;ok;;0;4
+;keys;true;ok;;0;0
 ;move;true;ok;;0;1
+;rename;true;ok;;0;3
 ;retire;true;ok;;0;2
+;root;true;ok;;0;5
 test-faces.py;init;true;ok;;1;0
 ;register;true;ok;;1;1
 ;tree;true;ok;;1;2

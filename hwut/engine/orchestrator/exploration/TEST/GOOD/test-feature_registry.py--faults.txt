@@ -1,11 +1,10 @@
 --- a directory id of the wrong shape ---------------------------
   f:1:28: VOCABULARY: 'short' is no directory id: 8 characters of base64url (letters, digits, '_', '-')
 --- a path that leaves the root, or is none ---------------------
-  f:1:28: TYPE: 'Qm9xB_2a' stands for a path below the root: relative, no '..', no '.'
-  f:1:49: TYPE: 'Zk3aT-7c' stands for a path below the root: relative, no '..', no '.'
-  f:1:68: TYPE: 'AAAAAAAA' stands for a path below the root: relative, no '..', no '.'
-  f:1:86: TYPE: 'BBBBBBBB' stands for a path below the root: relative, no '..', no '.'
-  f:1:107: TYPE: 'CCCCCCCC' stands for a path below the root: relative, no '..', no '.'
+  f:1:28: TYPE: 'Qm9xB_2a' stands for a path below the root: relative, no '..'; '.' is the root itself
+  f:1:49: TYPE: 'Zk3aT-7c' stands for a path below the root: relative, no '..'; '.' is the root itself
+  f:1:86: TYPE: 'BBBBBBBB' stands for a path below the root: relative, no '..'; '.' is the root itself
+  f:1:107: TYPE: 'CCCCCCCC' stands for a path below the root: relative, no '..'; '.' is the root itself
 --- an unknown key, and a statement that is not a block ---------
   f:1:12: TYPE: 'directory_map' is a block: directory_map { ... }
   f:1:43: VOCABULARY: unknown key 'forest' in 'features': 'directory_map', 'tree', 'retired'

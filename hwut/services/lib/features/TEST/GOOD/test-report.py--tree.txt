@@ -1,8 +1,8 @@
 >>> hwut.report.features
-    AGGREGATE gateway -- CAN-MOST gateway      3 implemented, 0 open; 2 ok, 1 fail
-        state      OPEN
+    AGGREGATE gateway -- CAN-MOST gateway 3 implemented, 0 open; 2 ok, 1 fail, 0 untested
+        state      OPEN fail
         keys       product
-        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail, 0 untested
             state      IMPLEMENTED ok
             [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
                 internal    Bbbbbbb2:forward  (gw/router)
@@ -13,17 +13,17 @@
                 internal    Bbbbbbb2:keep-order  (gw/router)
                 keys        product, routing
                 [PASS] gw/router/TEST/test-route.sh [burst]
-        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
             state      IMPLEMENTED fail
             [IMPLEMENTED fail] can.decode -- A frame is decoded.
                 internal    Aaaaaaa1:decode  (gw/can)
                 keys        product
                 [FAIL] gw/can/TEST/test-frame.sh
-        AGGREGATE gateway/later -- Nothing below yet. 0 implemented, 0 open; 0 ok, 0 fail
-            state      OPEN  (nothing below it)
+        AGGREGATE gateway/later -- Nothing below yet. 0 implemented, 0 open; 0 ok, 0 fail, 0 untested
+            state      OPEN untested  (nothing below it)
     
     UNPLACED                                                         1 leaf/leaves
-        [OPEN]             router.drop -- A frame without route is dropped.
+        [OPEN untested]    router.drop -- A frame without route is dropped.
             internal    Bbbbbbb2:drop  (gw/router)
             keys        routing
     

@@ -9,6 +9,7 @@
 #         cpu_time         { features = ["cap-hit-ends-call-and-is-named"] }
 #         disk_space_low   { features = ["cap-hit-ends-call-and-is-named"] }
 #         disk_usage       { features = ["cap-hit-ends-call-and-is-named"] }
+#         disk_own         { features = ["disk-cap-counts-the-call-own"] }
 #         file_size        { features = ["cap-hit-ends-call-and-is-named"] }
 #         memory           { features = ["cap-hit-ends-call-and-is-named"] }
 #         no_psutil        { features = ["unenforced-caps-reported"] }
@@ -70,9 +71,13 @@ CHOICES:
   disk_usage:  a MANY-FILES loop -> FAIL_DISK_USAGE_EXCEEDED (the
                work-dir allocation cap RLIMIT_FSIZE cannot see), peak
                recorded.
-  disk_space_low: a free-space FLOOR below current free space fires
-               at once -> FAIL_DISK_SPACE_LOW; the mechanism that
-               keeps the operating system operable.
+  disk_own:    the disk cap counts THE CALL'S OWN (D-24): files that
+               stood before the spawn and a sibling's scratch ground
+               are not charged; its own scratch and what it created
+               are.
+  disk_space_low: a free-space FLOOR below current free space: the
+               call is not spawned -> FAIL_DISK_SPACE_LOW; the
+               mechanism that keeps the operating system operable.
   clean_under_caps: THE COMPLEMENT -- a real workload (memory, a file,
                children, cpu) UNDER every cap completes cleanly: the
                watchdog does not false-positive.
@@ -491,11 +496,50 @@ async def test_disk_usage():
     _verdict(ok, "many-files flood contained by the disk-usage cap.")
 
 
+async def test_disk_own():
+    """THE CALL'S OWN (D-24). A work dir holding 30 MB from before and a
+    sibling's scratch ground holding 30 MB (six files of 5 MB each);
+    the call writes 2 MB into
+    its own scratch and 2 MB beside its source under a 20 MB cap.
+    MEASURED 2026-10-19: the whole work dir was summed and the call was
+    killed, FAIL_DISK_USAGE_EXCEEDED."""
+    import os
+    with tempfile.TemporaryDirectory(prefix="hwut_procsitter_test_") as work_dir:
+        sibling = os.path.join(work_dir, "TMP", "scratch", "test-sibling.py")
+        own     = os.path.join(work_dir, "TMP", "scratch", "test-own.py")
+        os.makedirs(sibling)
+        #  FIVE MEGABYTES A FILE: the page runs under its own
+        #  file-size cap of 10.
+        for i in range(6):
+            for where in (work_dir, sibling):
+                with open(os.path.join(where, "old%d.bin" % i), "wb") as fh:
+                    fh.write(b"o" * (5 * 1024 * 1024))
+        config = ProcsitterConfig(max_disk_mb=20, max_wall_clock_sec=30.0,
+                                  scratch_dir=own)
+        app = ("import os, time\n"
+               "for path in (os.path.join(os.environ['TMPDIR'], 'a.bin'),\n"
+               "             'b.bin'):\n"
+               "    with open(path, 'wb') as fh:\n"
+               "        fh.write(b'y' * (2 * 1024 * 1024))\n"
+               "time.sleep(2.5)\n")
+        result = await Procsitter(config, work_dir).run(_argv(app))
+
+    print(f"INSPECT: containment = {result.containment.name}")
+    ok = _check([
+        (result.containment is E_Containment.OK_COMPLETED,
+         "completed: 60 MB that are not the call's were not charged"),
+        (result.peak_disk_mb is not None
+         and 3.5 < result.peak_disk_mb < 10.0,
+         "peak is the call's own 4 MB, scratch and work dir together"),
+    ])
+    _verdict(ok, "the disk cap counts what the call holds.")
+
+
 async def test_disk_space_low():
     """THE FLOOR that keeps the OS operable: an absurdly high
-    min_free_disk_mb (larger than the whole disk) is below the free
-    space immediately, so the FIRST disk poll terminates the call --
-    FAIL_DISK_SPACE_LOW. This is the mechanism that stops a runaway
+    min_free_disk_mb (larger than the whole disk) is above the free
+    space before the spawn, so the call is not started --
+    FAIL_DISK_SPACE_LOW (D-24; it was terminated on its first poll). This is the mechanism that stops a runaway
     write from filling the filesystem out from under the operating
     system, whoever caused the shortage."""
     import shutil
@@ -665,6 +709,7 @@ if __name__ == "__main__":
             "cancelled_run": test_cancelled_run,
             "disk_usage":      test_disk_usage,
             "disk_space_low":  test_disk_space_low,
+            "disk_own":        test_disk_own,
             "clean_under_caps": test_clean_under_caps,
             "self_exit_codes":  test_self_exit_codes,
             "stderr_tail_cap":  test_stderr_tail_cap,

@@ -71,7 +71,7 @@ from ....test_writing_support.python.hwut_hocon import (ScalarNode,
 from .fault            import Fault, E_FaultKind, Position
 from .finder           import REGISTRY_FILE_NAME
 from .feature_relation import (_outer_node, _sentence, _text_list,
-                               _key_list, _text_of, PASS)
+                               _key_list, _text_of, PASS, NO_VERDICT)
 
 DIRECTORY_ID_RE = re.compile(r"[A-Za-z0-9_\-]{8}\Z")
 
@@ -81,6 +81,7 @@ OPEN        = "OPEN"
 RETIRED     = "RETIRED"
 OK          = "ok"
 FAIL        = "fail"
+UNTESTED    = "untested"          # no verdict measured (ruled 2026-10-17)
 
 
 # -- identifiers (o-10) -------------------------------------------------
@@ -120,12 +121,13 @@ def internal_id_split(text):
 
 
 def path_valid_f(path):
-    """RETURN: True, 'path' is a path below the directory holding
-    'hwut-root.conf': relative, normal, no '..', not empty; False else."""
+    """RETURN: True, 'path' is the directory holding 'hwut-root.conf' ('.',
+    whose own TEST directory may define features too -- the book's D-3) or
+    a path below it: relative, normal, no '..', not empty; False else."""
     return isinstance(path, str) and bool(path) \
            and not os.path.isabs(path) \
            and posixpath.normpath(path) == path \
-           and path != "." and ".." not in path.split("/")
+           and ".." not in path.split("/")
 
 
 # -- what the file states -----------------------------------------------
@@ -283,7 +285,7 @@ def _directory_tuple(node, file, fault_list):
         elif not path_valid_f(value):
             _fault(file, entry, E_FaultKind.TYPE,
                    "'%s' stands for a path below the root: relative, "
-                   "no '..', no '.'" % entry.key, fault_list)
+                   "no '..'; '.' is the root itself" % entry.key, fault_list)
         else:
             result.append(CDirectory(entry.key, value,
                                      entry.key_position.line))
@@ -583,7 +585,9 @@ def aggregate_key_tuple(registry, external):
 @dataclass(frozen=True)
 class CState:
     """A claim's state on the two axes. 'implementation' is IMPLEMENTED,
-    OPEN or RETIRED; 'verdict' is OK or FAIL, None where RETIRED."""
+    OPEN or RETIRED; 'verdict' is OK, FAIL or UNTESTED, None where
+    RETIRED. THE AXES ARE INDEPENDENT (ruled 2026-10-17): an open claim
+    has no measured verdict -- it is UNTESTED, not FAIL."""
     implementation: str
     verdict:        str | None
 
@@ -591,12 +595,21 @@ class CState:
 def leaf_state(verdict_tuple):
     """RETURN: CState, the state of a leaf whose linked test runs have the
     verdicts 'verdict_tuple' (PASS, FAIL, NO_VERDICT): no run is OPEN
-    (fail); runs are IMPLEMENTED, ok where every one passes, fail where one
-    does not or has no verdict."""
-    if not verdict_tuple: return CState(OPEN, FAIL)
-    return CState(IMPLEMENTED,
-                  OK if all(each == PASS for each in verdict_tuple)
-                  else FAIL)
+    untested; runs are IMPLEMENTED -- fail where one fails, else untested
+    where one has no verdict (it never ran), else ok."""
+    if not verdict_tuple: return CState(OPEN, UNTESTED)
+    return CState(IMPLEMENTED, _verdict_folded(
+        [OK if each == PASS else UNTESTED if each == NO_VERDICT else FAIL
+         for each in verdict_tuple]))
+
+
+def _verdict_folded(verdict_list):
+    """RETURN: str, the verdict of a claim from those below it, worst
+    first: FAIL where one fails, else UNTESTED where one is untested,
+    else OK."""
+    if FAIL in verdict_list:     return FAIL
+    if UNTESTED in verdict_list: return UNTESTED
+    return OK
 
 
 def retired_state():
@@ -607,15 +620,15 @@ def retired_state():
 def aggregate_state(state_tuple):
     """RETURN: CState, the state of an aggregate whose claims below it have
     the states 'state_tuple': RETIRED where every one is retired;
-    otherwise the retired are ignored and it is IMPLEMENTED only if every
-    remaining one is (else OPEN, fail), ok only if every remaining one is.
-    An aggregate with nothing below it is OPEN (ASSUMED, o-14, unconfirmed:
-    retire the aggregate, not its leaves one by one)."""
-    if not state_tuple: return CState(OPEN, FAIL)
+    otherwise the retired are ignored, and the two axes fold apart: it is
+    IMPLEMENTED only if every remaining one is (else OPEN); its verdict is
+    the worst below it ('_verdict_folded'). An aggregate with nothing
+    below it is OPEN untested (ASSUMED, o-14, unconfirmed: retire the
+    aggregate, not its leaves one by one)."""
+    if not state_tuple: return CState(OPEN, UNTESTED)
     standing = [each for each in state_tuple if each.implementation != RETIRED]
     if not standing: return CState(RETIRED, None)
-    if any(each.implementation == OPEN for each in standing):
-        return CState(OPEN, FAIL)
-    return CState(IMPLEMENTED,
-                  OK if all(each.verdict == OK for each in standing)
-                  else FAIL)
+    implementation = OPEN if any(each.implementation == OPEN
+                                 for each in standing) else IMPLEMENTED
+    return CState(implementation,
+                  _verdict_folded([each.verdict for each in standing]))

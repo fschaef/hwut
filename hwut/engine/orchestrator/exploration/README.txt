@@ -241,6 +241,9 @@ cannot make.
                         memory_mb             address space
                         file_size_mb          largest file written
                         child_process_max_n   children spawned
+                        disk_mb               what it holds on disk: its
+                                              scratch ground and the
+                                              files it created
                         file_handle_max_n     handles held open
                         network               reachability of the world
                         write_directory_list  where it may write; by
@@ -402,8 +405,22 @@ ______________________________________________________________________________
     }
 
 'on_entry' and 'on_exit' name scripts run on entering and leaving the
-directory. 'ignore' adds glob expressions to those omitted by default
-(section 0).
+directory -- the author's helpers, no verdict: the tests run whatever
+they did, and one that exits non-zero is said at the end of the run,
+'NOTE  <directory>  on_entry exited 1: <command>' (services E-158).
+'on_before_test' and 'on_after_test' do the same around EACH test run,
+told which by 'HWUT_TEST' and 'HWUT_CHOICE'. Every script of a directory
+-- these four and the targets of 'hwut.execute' -- runs under the
+procsitter with 'script_caps { ... }', the words of 'caps { }', a minute
+of wall clock where it states none; it flows down the tree (services
+E-161).
+'admit' takes glob expressions OUT of the ignored ones -- the default set,
+the backup-shaped names ('*~', '*.orig', '*.bak', ... -- finder.py), and
+'ignore''s own; a backup-shaped name meant as a test is one again
+(services E-159). 'ignore' adds glob expressions to those omitted by default
+(section 0). Both ADD UP down the tree: a directory's own globs join its
+parent's, so what a parent ignores stays ignored below it unless an 'admit'
+takes it out (R-98).
 
 'collision' and 'dependency' state how test applications stand to one
 another; both are written in TARGETS (section 5.1).
@@ -541,6 +558,12 @@ procsitter does not enforce on '<platform>' ('linux', 'darwin',
 'windows', ...), in the words 'caps { }' uses (R-48, R-80). A case
 requiring such a cap is REFUSED without it. 'true' acknowledges
 nothing. The root's alone.
+
+'free_disk_min_mb = <n>' is the FLOOR of free space on every disk a case
+runs on (procsitter's default: 128). No case starts where its disk would
+fall below it with room for twice the case's 'disk_mb'; a case waits
+while another on that disk may make room, and is 'disk-short' where none
+can (R-99, scheduler S-5). A property of the disk: the root's alone.
 
 The root of 'hwut.conf' carries directory keys only. It carries no test
 parameters for the directory at large.

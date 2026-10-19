@@ -143,4 +143,5 @@ CAPS_FIELD_DB = {
     "memory_mb":           "max_memory_mb",
     "file_size_mb":        "max_file_size_mb",
     "child_process_max_n": "max_pids",
+    "disk_mb":             "max_disk_mb",
 }

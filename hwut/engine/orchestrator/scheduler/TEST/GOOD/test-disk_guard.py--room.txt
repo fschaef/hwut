@@ -1,0 +1,10 @@
+
+--- 1000 MB free, floor 128 ---
+    a: granted 200 MB
+    b: granted 200 MB
+    reserved: 400 MB
+    c (700 MB) while a, b stand: waits
+    c after a ends: waits
+    c after b ends: granted 700 MB
+    reserved: 0 MB
+<hwut-end>

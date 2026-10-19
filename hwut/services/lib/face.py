@@ -132,6 +132,23 @@ def collected(do_f, request):
     return do_f(request, item_list.append), item_list
 
 
+#  WHAT SEPARATES A REFUSAL FROM ITS REMEDY: 'REFUSED: <why> => <what
+#  heals it>'. One spelling, the display's ('plain.REMEDY_MARK').
+REMEDY_MARK = " => "
+
+
+def write_refusal(write, said, usage):
+    """
+    RETURN: None. 'said' written, and 'usage' beneath it where 'said'
+            names no remedy (D-6 of the book, ruled 2026-10-16 "(a)"):
+            a refusal whose command line was read and whose remedy is
+            another command ends on that remedy; one whose command line
+            could not be read shows the usage, the spelling it missed.
+    """
+    write(said)
+    if usage and REMEDY_MARK not in said: write(usage)
+
+
 def answered(do_f, request, write, printer, usage=""):
     """
     RETURN: E_ExitCode, the face's status: 'do_f(request)' handed to
@@ -144,7 +161,10 @@ def answered(do_f, request, write, printer, usage=""):
     try:
         result = do_f(request)
     except FaceError as error:
-        if error.said: write(error.said)
-        if usage and isinstance(error, Refused): write(usage)
+        if error.said:
+            write_refusal(write, error.said,
+                          usage if isinstance(error, Refused) else "")
+        elif usage and isinstance(error, Refused):
+            write(usage)
         return error.code
     return printer(result, write)

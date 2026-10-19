@@ -58,58 +58,14 @@ the file that carries it:
 The reading and writing of those files is the caller's; the Bookkeeper
 names, it does not touch them.
 
-2.2  THE BASE
+2.2  THE BASE, THE RECORDING, THE QUERIES -- THE BOOKKEEPER'S
 
-ONE file: 'GOOD/result_db.json'. JSON. Write-protected (mode 0444) as
-every other file in GOOD. The adapter is the only way in or out: it
-unprotects, writes a temporary beside, replaces, re-protects. A missing
-or damaged base reads as EMPTY and never raises; a later write recovers
-it.
-
-The shape, one entry per (test, choice, operation), OVERWRITTEN:
-
-    { "<test>": {
-        "configuration": { source_file, source_kind, interpreter,
-                           interactive, caps },
-        "choices": {
-          "<choice>" | "<none>": {
-            "configuration": { canonicaliser, compare },
-            "operations": {
-              "Run" | "Display" | "Accept": {
-                verdict, report, when, host,
-                canonicaliser,          -- if the choice names any
-                compare,                -- the setup's differences only
-                records                 -- the attribution
-    } } } } } }
-
-State now, never a log: what was done before is the concern of the
-software configuration management system.
-
-2.3  RECORDING
-
-'record(result, configuration, goal, choice_name)' DERIVES the entry:
-
-    verdict, report      from the result
-    canonicaliser        from the choice's configuration
-    compare              compare_setup_delta(): only what differs from
-                         compare's default
-    when, host           added here
-    records              the result's provision records -- one
-                         ProcsitterResult per supervised call, made
-                         plain (Enum -> name, dataclass -> fields)
-
-The same write refreshes the test's and the choice's reproducible
-configuration, so a query answers from the base alone.
-
-2.4  THE QUERIES
-
-    book()                              the whole base
-    tests(), choices(test)              what is recorded
-    result(test, choice, operation)     the most recent entry
-    test_configuration(test)            reproducible test facts
-    choice_configuration(test, choice)  reproducible choice facts
-
-An unknown name answers None.
+What a test directory has decided stands in ONE file, 'GOOD/book.csv',
+one row per (test, choice); its shape, its writing and its reading are
+the bookkeeper's and are described once, in 'engine/bookkeeper/
+README.txt' (B-7, B-10). The JSON base 'GOOD/result_db.json' with
+'record()', 'book()', 'test_configuration()' and their kin, which this
+section described, stands no more.
 
 2.5  THE DIVERGENCE
 

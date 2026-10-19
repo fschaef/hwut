@@ -17,6 +17,9 @@ class Judgment:
     .subject_class     aligned with subject.row_list:
                        ('ok', nominal_index) or ('bad', reason)
     .nominal_uncovered set of nominal row indices without counterpart
+    .differs_db        subject index -> the nominal index it was held
+                       against and differs from ('differs' rows only):
+                       a display shows the two side by side
     """
     def __init__(self, subject, nominal):
         # NOMINAL IS AUTHORITATIVE: all criteria from the nominal chunk.
@@ -29,6 +32,7 @@ class Judgment:
         self.verdict           = True
         self.subject_class     = []
         self.nominal_uncovered = set()
+        self.differs_db        = {}
 
         width  = nominal.width()
         s_rows = [cells if (width is None or len(cells) == width) else None
@@ -131,6 +135,7 @@ class Judgment:
                 self.subject_class[i] = ("ok", i)
             else:
                 self.subject_class[i] = ("bad", "differs")
+                self.differs_db[i]    = i
                 self.verdict = False
         for ni in range(len(s_rows), len(n_rows)):
             self.nominal_uncovered.add(ni)
@@ -179,6 +184,7 @@ class Judgment:
                 self.subject_class[si] = ("ok", ni)
             else:
                 self.subject_class[si] = ("bad", "differs")
+                self.differs_db[si]    = ni
                 self.verdict = False
         covered = {n_by_key[k] for k in seen_keys if k in n_by_key}
         for ni in range(len(n_rows)):

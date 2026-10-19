@@ -1,0 +1,10 @@
+ok       program sh              road   -                      a program that stands
+MISSING  program no-such-program-x road   -                      a program that does not
+ok       python  json            road   -                      a module without '>=' that stands
+ok       python  pip>=0.1        road   -                      new enough
+OLD      python  pip>=999        road   -                      below the oldest measured
+MISSING  python  no_such_module_x>=1.0 road   -                      absent
+
+every requirement of the census stands.
+exit: 0
+<hwut-end>

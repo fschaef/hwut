@@ -26,6 +26,7 @@ hwut.features.key.add        -          ok
 hwut.features.key.remove     -          ok
 hwut.features.move           -          ok
 hwut.features.register       -          ok
+hwut.features.rename         -          ok
 hwut.features.retire         -          ok
 hwut.features.tree           -          ok
 hwut.help                    -          ok

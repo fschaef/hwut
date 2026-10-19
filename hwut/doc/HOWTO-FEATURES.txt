@@ -7,11 +7,16 @@ TEST RUN is one test application run with one choice; its verdict stands
 in 'GOOD/book.csv'. A test run is LINKED to the features it proves. From
 the links and the verdicts every feature has a state, on two axes:
 
-    IMPLEMENTED    one linked test run or more        ok    every one passes
-                                                      fail  one does not, or
-                                                            has no verdict
-    OPEN           no linked test run                 always fail
+    IMPLEMENTED    one linked test run or more        ok        every one passes
+                                                      fail      one fails
+                                                      untested  none fails, one
+                                                                never ran
+    OPEN           no linked test run                 untested
     RETIRED        no longer claimed (section 6)      no verdict
+
+The axes are independent: OPEN says nothing proves the claim, and that is
+no failure. An aggregate is OPEN where a claim below it is; its verdict is
+the worst below it -- fail, then untested, then ok.
 
 TWO kinds of file carry it. Each TEST directory DEFINES its features in its
 'hwut-features.conf'. ONE file at the top, 'hwut-root-features.conf' beside
@@ -88,7 +93,21 @@ A test links to features by name, in its block. 'router/TEST/test-route.sh':
 'features' at the root of the block holds for every choice. 'features' in
 a choice REPLACES the root's list for that choice; '[]' links the choice
 to nothing. A name is looked up in the feature file of the test's own
-TEST directory only: a link never leaves its TEST directory.
+TEST directory only.
+
+A FEATURE OF ANOTHER DIRECTORY is linked by its INTERNAL ID, '<directory
+id>:<name>' -- what the report's 'internal' line and the leaf line of the
+central file show. An end-to-end test at the top, say, proving a sentence
+of 'router':
+
+    #     features = ["Qm9xB_2a:forward"]
+
+The run is listed under that leaf beside router's own. The external id
+('router.forward') is the name for the world and no link: a test writing
+it is said under OUTSIDE THE RELATION, with the internal id to write. An
+internal id survives a move of its directory; where it does change -- a
+rename, a repoint, a fold, a test carrying a feature away -- every link by
+it is rewritten in that step, each file named.
 
 
 2  THE CENTRAL FILE
@@ -177,11 +196,11 @@ current directory ('--directory=<path>' names another). It runs nothing;
 it reads the texts and the verdicts.
 
     $ hwut.report.features
-    AGGREGATE gateway -- CAN-MOST gateway      3 implemented, 1 open; 3 ok, 1 fail
-        state      OPEN
+    AGGREGATE gateway -- CAN-MOST gateway      3 implemented, 1 open; 3 ok, 0 fail, 1 untested
+        state      OPEN untested
         doc        Carries frames between a CAN bus and a MOST ring.
-        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 1 open; 2 ok, 1 fail
-            state      OPEN
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 1 open; 2 ok, 0 fail, 1 untested
+            state      OPEN untested
             keys       routing
             [IMPLEMENTED ok]   router.forward -- A CAN frame is forwarded to its MOST address.
                 internal    Qm9xB_2a:forward  (router)
@@ -192,10 +211,10 @@ it reads the texts and the verdicts.
                 internal    Qm9xB_2a:keep-order  (router)
                 keys        routing
                 [PASS] router/TEST/test-route.sh [burst]
-            [OPEN]             router.drop-unknown -- A frame without a route is dropped and counted.
+            [OPEN untested]    router.drop-unknown -- A frame without a route is dropped and counted.
                 internal    Qm9xB_2a:drop-unknown  (router)
                 keys        routing
-        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 1 ok, 0 fail
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
             state      IMPLEMENTED ok
             [IMPLEMENTED ok]   can.decode -- A CAN frame is decoded into its signals.
                 internal    Zk3aT-7c:decode  (can)
@@ -219,6 +238,12 @@ of:
     ---------------------------------------------------------------------
     test run, names a feature its TEST          a misspelt name, or a
     directory does not define                   feature not yet written
+    test run, names an external id -- no        link the internal id named
+    link; link the internal id                  behind '=>'
+    test run, links by internal id what does    an id in no 'directory_map'
+    not resolve                                 line, a name its directory
+                                                does not define, a retired
+                                                leaf
     NONSENSE? test run, links to no feature     a test run that proves
                                                 nothing its directory
                                                 claims. NO FAILURE: its
@@ -311,22 +336,30 @@ A PAIRING IS PROPOSED ONLY WHERE IT IS CERTAIN: a directory by the names
 of its features (the best match both ways, at least half); a feature as
 the ONLY one gone and the ONLY one new of its directory, or by its name
 elsewhere. Where it cannot tell, it says 'unpaired' with the candidates
-and does nothing -- so rename ONE feature, or move ONE directory, then
-register. It never retires (section 6). Every command judges again before
-it acts.
+and does nothing -- so move ONE directory, then register. A new name in a
+directory whose gone feature it cannot pair is HELD: no line is written for
+it until the gone one is repointed or retired, and each side names the
+other. It never retires (section 6). Every command judges again before it
+acts.
 
 The faces that change the tree keep the central file themselves:
 
     hwut.features.move <dir> <new>  moves the directory and its line (and
                                     every line below it)
+    hwut.features.rename <external> <new name>
+                                    renames a feature: its definition, the
+                                    links of its TEST directory's tests,
+                                    the leaf's internal id; the external id
+                                    stays
     hwut.move <test> <dir>          carries the features the test links to
                                     into the target's TEST file, and takes
-                                    them out of the source's unless a test
-                                    that stays still links to them; the
-                                    leaf follows to the target's directory
-                                    id (one is registered where none
-                                    stands). A copy kept in the source
-                                    leaves the target's not registered.
+                                    them out of the source's; the leaf
+                                    follows to the target's directory id
+                                    (one is registered where none stands),
+                                    and every link by its old internal id
+                                    follows. A feature a test that stays
+                                    still links is not copied: the moved
+                                    test links it by internal id.
     hwut.rename                     adapts nothing: the link stands in the
                                     test's block.
     hwut.remove                     names the features left without a
@@ -424,7 +457,7 @@ where it links; a column is named with its leaf's state.
                                         ^     no test run
       #1 forward       IMPLEMENTED ok
       #2 keep-order    IMPLEMENTED ok
-      #3 drop-unknown  OPEN
+      #3 drop-unknown  OPEN untested
 
     an empty row      a test run that proves nothing stated
                       ('<- NONSENSE?'; '<- no feature defined' where it
@@ -487,8 +520,8 @@ Both hold four tabs:
     a document of a feature      opens from its row in 'Features'
 
 The tree is interactive. On the page: 'Expand all', 'Collapse all', a box
-per state to show only the IMPLEMENTED ok, IMPLEMENTED fail or OPEN
-leaves, and a word filter. In the spreadsheet the levels are row groups, folded and
+per state to show only the IMPLEMENTED ok, IMPLEMENTED fail, IMPLEMENTED
+untested or OPEN untested leaves, and a word filter. In the spreadsheet the levels are row groups, folded and
 unfolded at the sheet's margin.
 
     $ hwut.report.features --html=features.html

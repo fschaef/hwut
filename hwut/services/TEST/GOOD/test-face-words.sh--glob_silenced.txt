@@ -8,11 +8,11 @@ hwut.run.stability     exit 3  WARNING: the glob 'test-m*' met only runs the sta
 ./test-m.sh
 == the page that holds a case says it after its tail
         test-a.sh one ................................[OK]
-           1    [OK]     .
+           1    [OK]     TEST
 WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
 RESULTS: 1 ok, 0 fail
 == a machine format on stdout carries no warning line
 TAP version 13
 1..1
-ok 1 - .: test-a.sh one
+ok 1 - TEST: test-a.sh one
 <hwut-end>

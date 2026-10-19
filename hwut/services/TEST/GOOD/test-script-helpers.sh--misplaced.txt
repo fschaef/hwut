@@ -1,0 +1,2 @@
+ERROR sub/hwut.conf:1:7: VOCABULARY: 'on_before_test' at a tree level: it names local matters and belongs in a test directory's own 'hwut.conf'
+<hwut-end>

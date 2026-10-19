@@ -676,6 +676,10 @@ TIER 7  HARMLESS WHILE IT WAITS
 [ ] G-7  THE INTERVIEW HAS NO READER  -- closes with B-7's r-a, or
          by removing the interview.
 [ ] G-8  '--global-conf' WAS NEVER BUILT  -- closes with r-10l.
+[ ] B-17 'on_before_test' / 'on_after_test' AROUND EACH TEST RUN
+         The frame's helpers, per test run; for later (2026-10-17).
+         DO: the two keys, run like 'on_entry', said not judged.
+         SEE: TODO.txt B-17; services E-158.
 
 ==============================================================================
 COUNTS
@@ -695,7 +699,7 @@ COUNTS
                   questions of review-r10 are folded in here, not
                   listed twice)
      TIER 6   6   D-4 .. D-8, A-6/C-4c
-     TIER 7  10   F-1 .. F-5, F-7, C-3, C-7, G-7, G-8
+     TIER 7  11   F-1 .. F-5, F-7, C-3, C-7, G-7, G-8, B-17
 
      Every id of TODO.txt version 16 appears exactly once above except
      G-6 (under A-5), C-6 (under B-7), C-4c (under A-6), and the E

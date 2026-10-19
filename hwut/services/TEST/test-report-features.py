@@ -10,6 +10,7 @@
 #        outside        { features = ["report-features-outside"] }
 #        refused        { features = ["face-refusal-by-name", "tree-boundary-refused"] }
 #        test_directory { }
+#        wish           { }
 #        tree           { features = ["report-features-tree", "report-features-outside", "report-features-nonsense", "report-features-documents"] }
 #    }
 #  }
@@ -21,7 +22,7 @@ PURPOSE: 'hwut.report.features' -- the page of a tree as
          and their verdicts (R-96).
 
 CHOICES: tree, test_directory, matrix, code, document, outside, empty,
-         refused;
+         refused, wish;
 
 DESCRIPTION:
 
@@ -32,6 +33,14 @@ DESCRIPTION:
                     outside -- a document that does not stand,
                     'documents' that is no list, a link to a name not
                     defined, a run linking nothing.
+    wish            the feature wish, read as every face reads it
+                    ('feature_wish.selected_leaf_list'): '-F core' the
+                    subtree, '-e' one leaf, '-k' by key, '-F' and '-e'
+                    a union -- the aggregates above as headers, counted
+                    over what is kept, no RETIRED; a wish selecting
+                    nothing EMPTY; an unknown external id or key, a run
+                    selection ('--fail') and '--matrix' beside it are
+                    refused (the book's D-2).
     test_directory  called inside a TEST directory: its leaves are the
                     whole page, under their aggregates, addressed as '.'.
     matrix          '--matrix': a table per TEST directory that carries
@@ -268,6 +277,20 @@ def run_tree():
         print("    not plain: %s" % (record_check(result) or "nothing"))
         banner("--directory=engine/compare: paths from there")
         _page(["--directory=engine/compare"])
+    _in_tree(fixture, body)
+
+
+def run_wish():
+    """RETURN: None. The page cut by the feature wish."""
+    def body():
+        for argv in (["-F", "core"], ["-e", "eng.cmp.whole-page"],
+                     ["-k", "heavy"],
+                     ["-F", "engine/compare/core/pairing", "-e", "eng.cmp.whole-page"],
+                     ["-F", "nothing-here"], ["-e", "no.such.id"],
+                     ["-k", "no-such-key"], ["--fail"],
+                     ["-F", "core", "--matrix"]):
+            banner("hwut.report.features %s" % " ".join(argv))
+            _page(argv)
     _in_tree(fixture, body)
 
 
@@ -564,5 +587,6 @@ if __name__ == "__main__":
             "outside":        run_outside,
             "empty":          run_empty,
             "refused":        run_refused,
+            "wish":           run_wish,
         },
     ).run()

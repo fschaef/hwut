@@ -607,7 +607,7 @@ The Store's own struct, held verbatim by the configuration (2.7):
 
 THE BOOK. What HAPPENED is not this component's to keep. It is entered in
 the BOOKKEEPER (hwut/engine/bookkeeper/), which owns the one
-base of a test directory -- 'GOOD/result_db.json' -- and its shape. This is
+base of a test directory -- 'GOOD/book.csv' -- and its shape. This is
 what a recursive listing over results reads ('hwut info' in HWUT today).
 
 THE NAMING IS THE BOOKKEEPER'S TOO. A record's key is (test, choice,
@@ -947,7 +947,7 @@ connection IS the session has nothing to answer on once it is closed.
            writes (10) -- the nominal, the register, the book. A
            CANCEL writes nothing.
 
-           'hwut.compare' (services/compare.py): display only, never writes --
+           'hwut.run.diff' (services/lib/run/diff.py): display only, never writes --
            the rendering IS the product, so it goes to STDOUT; exit is
            the diff convention (0 equivalent, 1 differing). With ONE
            argument it displays the READING of that stream.

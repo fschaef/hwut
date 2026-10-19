@@ -30,8 +30,8 @@
 #              removes each list, and the next run finds nothing.
 # reported     'hwut.report.wallflowers' prints them, one path per line,
 #              and its output IS this face's input; then it finds none.
-# refused_too  a backup-shaped file, REFUSED by name, is a wallflower
-#              too: in the list, counted, settled with the rest.
+# refused_too  a backup-shaped file is IGNORED (services E-159): no
+#              wallflower, not in the list, nothing to settle.
 # refused      a path that stands nowhere; an unknown option;
 #              '--wishlist' without a file; a list that is not there.
 # ---------------------------------------------------------------------------

@@ -89,9 +89,16 @@ class Caps(_Scope):
     memory_mb:            int   | None = None
     file_size_mb:         int   | None = None
     child_process_max_n:  int   | None = None
+    disk_mb:              int   | None = None   # what the case holds on disk
     file_handle_max_n:    int   | None = None
     network:              bool  | None = None
     write_directory_list: tuple | None = None
+
+
+#  THE FRAMEWORKS A RUN CAN DRIVE -- the one list; the run's adapter maps
+#  each to its build system, and a header naming another is a fault at
+#  the header (the book's D-23), never an assertion at the run.
+BUILD_FRAMEWORK_TUPLE = ("make",)
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,8 +317,12 @@ class DirectorySpec:
     title:           str | None = None   # the directory's own (X-INFO-DAT)
     on_entry:        str | None = None
     on_exit:         str | None = None
+    on_before_test:  str | None = None   # before each test run (B-17)
+    on_after_test:   str | None = None   # after each test run
+    script_caps:     object     = None   # Caps over every script (B-17)
     test_directory:  str | None = None
     ignore:          tuple      = ()
+    admit:           tuple      = ()     # globs taken out of 'ignore'
     collision:       tuple      = ()     # of Target
     dependency:      dict       = None   # Target -> tuple of Target
     target_db:       dict       = None   # target name -> script (E-7)
@@ -322,6 +333,7 @@ class DirectorySpec:
     language_setup:  dict       = None
     procsitter_db:   dict       = None   # platform -> frozenset of caps
                                          #  acknowledged unenforceable (R-48)
+    free_disk_min_mb: int       = None   # every disk's free-space floor
     position:        Position   = None
 
 

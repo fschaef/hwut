@@ -33,7 +33,6 @@ class E_Failure(Enum):
     BUILD_TOOL_NOT_FOUND        = "build-tool-not-found"
     CONSTRAINT                  = "constraint"
     DISPLAY_TARGET_UNREACHABLE  = "display-target-unreachable"
-    FRAME_FAILED                = "frame-failed"
     INTERPRETER_NOT_FOUND       = "interpreter-not-found"
     LAUNCH_FAILED               = "launch-failed"
     MISDEP                      = "misdep"
@@ -62,6 +61,7 @@ class E_Failure(Enum):
     TEST_APP_CONTAINED          = "test-app-contained"
     TEST_APP_CPU_TIME_EXCEEDED  = "test-app-cpu-time-exceeded"
     TEST_APP_DISK_EXCEEDED      = "test-app-disk-exceeded"
+    TEST_APP_DISK_LOW           = "test-app-disk-low"
     TEST_APP_FILE_SIZE_EXCEEDED = "test-app-file-size-exceeded"
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_MEMORY_EXCEEDED    = "test-app-memory-exceeded"
@@ -74,6 +74,8 @@ class E_Failure(Enum):
     TEST_FAILED                 = "test-failed"
     TEST_VANISHED               = "test-vanished"
     UNACCEPTED                  = "unaccepted"
+    UNCAPPED                    = "uncapped"
+    DISK_SHORT                  = "disk-short"
     UNEXPECTED_STDERR           = "unexpected-stderr"
     UNSTABLE                    = "unstable"
     UNSUPPORTED                 = "unsupported"
@@ -226,6 +228,7 @@ _brief_failure_db = {
     _F.TEST_APP_FILE_SIZE_EXCEEDED: (_C.EXECUTION,  "killed"),
     _F.TEST_APP_PIDS_EXCEEDED:      (_C.EXECUTION,  "killed"),
     _F.TEST_APP_DISK_EXCEEDED:      (_C.EXECUTION,  "killed"),
+    _F.TEST_APP_DISK_LOW:           (_C.ENVIRONMENT, "no-disk"),
     _F.TEST_APP_SESSION_GONE:       (_C.EXECUTION,  "no-session"),
     _F.PYPE_INTERPRETER_NOT_FOUND:  (_C.EXECUTION,  "pype"),
     _F.PYPE_FILE_NOT_FOUND:         (_C.EXECUTION,  "pype"),
@@ -235,9 +238,10 @@ _brief_failure_db = {
     #  ENVIRONMENT
     _F.MISDEP:                      (_C.ENVIRONMENT, "no-dep"),
     _F.ACQUISITION_FAILED:          (_C.ENVIRONMENT, "no-dep"),
-    _F.FRAME_FAILED:                (_C.ENVIRONMENT, "frame"),
     _F.DISPLAY_TARGET_UNREACHABLE:  (_C.ENVIRONMENT, "no-display"),
     _F.UNSUPPORTED:                 (_C.ENVIRONMENT, "failed"),
+    _F.UNCAPPED:                    (_C.ENVIRONMENT, "uncapped"),
+    _F.DISK_SHORT:                  (_C.ENVIRONMENT, "no-disk"),
 }
 
 
@@ -459,7 +463,14 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              + _CAP_RAISE % "child_process_max_n"),
     _failure(_F.TEST_APP_DISK_EXCEEDED, "killed; disk cap exceeded",
              "The application wrote more to disk than its cap.",
-             "Let it clean up as it goes, or write less."),
+             "Let it clean up as it goes, or write less; "
+             + _CAP_RAISE % "disk_mb"),
+    _failure(_F.TEST_APP_DISK_LOW, "disk below its floor",
+             "Free space on the test's disk fell below 'free_disk_min_mb': "
+             "the case was not started, or was ended, so the operating "
+             "system stays operable -- whoever filled the disk (D-24).",
+             "Free space on that disk, or lower the floor in "
+             "'hwut-root.conf': 'hwut { free_disk_min_mb = ... }'."),
     _failure(_F.TEST_APP_SESSION_GONE, "not run; process already dead",
              "An interactive application serves several choices; it died "
              "on an earlier one, so this one never ran (O-21).",
@@ -493,10 +504,21 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.ACQUISITION_FAILED, "dependency not acquired",
              "A dependency's acquisition command failed.",
              "Run the command by hand to see why."),
-    _failure(_F.FRAME_FAILED, "frame failed",
-             "The directory's 'on_entry' or 'on_exit' command failed, so "
-             "its tests did not run on solid ground.",
-             "Run the command by hand in the directory."),
+    _failure(_F.UNCAPPED, "cap not enforceable here; not run",
+             "The test states a cap the supervisor cannot watch on this "
+             "machine, and 'hwut-root.conf' does not acknowledge it: the "
+             "promise cannot be kept, so the case is not run, and fails "
+             "(services E-159).",
+             "Install what the line behind '=>' names, or acknowledge the "
+             "cap in 'hwut-root.conf' as it says -- the test then runs "
+             "with that cap unwatched."),
+    _failure(_F.DISK_SHORT, "disk has no room; not run",
+             "The case needs twice its 'disk_mb' -- or what it last held, "
+             "where more -- free above the disk's floor, and nothing "
+             "running on that disk would make room by ending: it is not "
+             "started, and fails (D-24).",
+             "Free space on that disk; or lower the case's 'caps { "
+             "disk_mb = ... }', or the floor in 'hwut-root.conf'."),
     _failure(_F.UNSUPPORTED, "supporter failed; not run",
              "A case this one depends on ended badly, so this one was not "
              "run (P-5).",

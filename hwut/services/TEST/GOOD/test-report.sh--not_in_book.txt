@@ -3,7 +3,7 @@ STATUS: 1
 STDOUT {
     ======================================================================
     
-    suite/TEST                                                   <no date>
+    tree/suite/TEST                                              <no date>
     ----------------------------------------------------------------------
     
      * The steady one:
@@ -16,10 +16,17 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-             1 1    [FAIL]   suite/TEST
+             1 1    [FAIL]   tree/suite/TEST
     
     ----------------------------------------------------------------------
                                                                   (1 test)
+    
+    ======================================================================
+    HINTS
+    ----------------------------------------------------------------------
+    NOMINAL -- error in GOOD file
+        tree/suite/TEST
+            test-app.sh   GOOD file stands; case not in GOOD/book.csv
     
     ======================================================================
     
@@ -33,7 +40,7 @@ STATUS: 0
 STDOUT {
     ======================================================================
     
-    suite/TEST                                           YYYYyMMmDDd hhhmm
+    tree/suite/TEST                                      YYYYyMMmDDd hhhmm
     ----------------------------------------------------------------------
     
      * The steady one:
@@ -46,7 +53,7 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-               1    [OK]     suite/TEST
+               1    [OK]     tree/suite/TEST
     
     ----------------------------------------------------------------------
                                                                   (1 test)

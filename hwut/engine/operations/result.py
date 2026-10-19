@@ -63,6 +63,10 @@ class E_TestRunResult(Enum):
     # finds every verdict alike, or the test is removed and re-accepted.
     UNSTABLE                    = "unstable"
 
+    # THE DISK (D-24): the case's disk has no room for it, and nothing
+    # running there will make any -- it is not started.
+    DISK_SHORT                  = "disk-short"
+
     # THE TEST APPLICATION:
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_CONTAINED          = "test-app-contained"
@@ -77,6 +81,9 @@ class E_TestRunResult(Enum):
     TEST_APP_FILE_SIZE_EXCEEDED  = "test-app-file-size-exceeded"
     TEST_APP_PIDS_EXCEEDED       = "test-app-pids-exceeded"
     TEST_APP_DISK_EXCEEDED       = "test-app-disk-exceeded"
+    #  THE DISK'S FLOOR (D-24): free space below 'free_disk_min_mb' --
+    #  not spawned, or ended, so the operating system stays operable.
+    TEST_APP_DISK_LOW            = "test-app-disk-low"
     TEST_APP_NO_OUTPUT          = "test-app-no-output"
     TEST_APP_STALLED            = "test-app-stalled"
 

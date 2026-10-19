@@ -5,6 +5,7 @@
                 memory_mb = 512               # default
                 file_size_mb = 10             # default
                 child_process_max_n = 32      # default
+                disk_mb = 100                 # default
                 network = true                # default
             }
 == hwut.config.show test-p.sh --no-default

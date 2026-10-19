@@ -3,8 +3,8 @@ build-contained                build        no-build
 build-failed                   build        no-build
 build-tool-not-found           build        no-build
 constraint                     nominal      constraint
+disk-short                     environment  no-disk
 display-target-unreachable     environment  no-display
-frame-failed                   environment  frame
 interpreter-not-found          build        no-launch
 launch-failed                  build        no-launch
 misdep                         environment  no-dep
@@ -33,6 +33,7 @@ terminated-without-hwut-end    execution    cut-short
 test-app-contained             execution    killed
 test-app-cpu-time-exceeded     execution    killed
 test-app-disk-exceeded         execution    killed
+test-app-disk-low              environment  no-disk
 test-app-file-size-exceeded    execution    killed
 test-app-launch-failed         build        no-launch
 test-app-memory-exceeded       execution    killed
@@ -45,6 +46,7 @@ test-choice-vanished           book         no-choice
 test-failed                    deviation    -
 test-vanished                  book         no-app
 unaccepted                     nominal      unaccepted
+uncapped                       environment  uncapped
 unexpected-stderr              execution    stderr
 unstable                       book         unstable
 unsupported                    environment  failed

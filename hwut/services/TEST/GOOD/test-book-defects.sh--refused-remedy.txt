@@ -1,0 +1,11 @@
+--- no 'hwut-root-features.conf': the remedy is another command
+REFUSED: no 'hwut-root-features.conf' stands at '<tree>' => hwut.features.init
+exit 2
+--- the same, asked of 'hwut.run -F'
+REFUSED: '--feature' asks for features: no 'hwut-root-features.conf' stands at '<tree>' => hwut.features.init
+exit 2
+--- a misspelt option: the usage names the spelling
+REFUSED: 'hwut.report.features' does not take '--matrx'
+usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+exit 2
+<hwut-end>

@@ -10,4 +10,10 @@
         test-b.py    pype='root.pype'
     sub/TEST                 test-a.py
         test-a.py    pype='own.pype'
+
+--- 'ignore' and 'admit' add up, the parent's first, each once ---
+    other/TEST               ignore ('test-old*',)  admit ('test-a.py~',)
+    sub/TEST                 ignore ('test-old*', 'test-own*')  admit ('test-a.py~',)
+    other/TEST               test-b.py
+    sub/TEST                 test-a.py
 <hwut-end>

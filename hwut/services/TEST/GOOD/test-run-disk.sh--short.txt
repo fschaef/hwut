@@ -1,0 +1,26 @@
+DIR  TEST                                                                     
+START test-a.sh                                                            ||1
+END   test-a.sh .......................................... no-disk [FAIL]  ||0
+START test-b.sh                                                            ||1
+END   test-b.sh .......................................... no-disk [FAIL]  ||0
+
+==============================================================================
+DIRECTORIES                                             0 ok, 2 fail, <t>
+------------------------------------------------------------------------------
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/2
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+ENVIRONMENT -- error around the test
+    TEST
+        test-a.sh   disk has no room; not run  (free <n> MB on $WORK/TEST; needs 2000 MB above the floor of <n> MB)
+        test-b.sh   :
+
+HINT: use 'hwut.help' for explanation of subtle issues.
+==============================================================================
+
+RESULTS: 0 ok, 2 fail, <t> [sec], <t> [sec] total
+|                                    fail                                    |
+STATUS: 1
+<hwut-end>

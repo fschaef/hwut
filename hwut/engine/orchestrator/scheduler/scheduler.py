@@ -7,8 +7,10 @@ PURPOSE: THE SCHEDULER -- the unit that EXECUTES a test plan. It reads
          operations' (P-1).
 
     frame           on_entry before any dispatch; on_exit after all
-                    work has ended, ALWAYS. Entry failure: the frame
-                    did not stand -- nothing is dispatched (P-10).
+                    work has ended, ALWAYS. The frame is the author's
+                    helper, no verdict (ruled 2026-10-17, superseding
+                    P-10's "nothing is dispatched"): its exit status is
+                    said, the work is dispatched whatever it was.
     admission       CPlanState says who MAY start; the scheduler picks
                     out of that, at run time, free to use timings (P-3).
     supports law    a BUILD or SESSION node ending BAD leaves the TEST
@@ -101,10 +103,11 @@ class CRunReport:
 
     def good_f(self):
         """
-        RETURN: bool, True where the frame stood and no node failed.
+        RETURN: bool, True where no node failed. The frame scripts'
+                outcomes ('entry_f', 'exit_f') are said, never judged
+                (ruled 2026-10-17).
         """
-        return self.entry_f is not False and self.exit_f is not False \
-               and not self.failure_db()
+        return not self.failure_db()
 
 
 class Scheduler:
@@ -179,8 +182,9 @@ class Scheduler:
             entry_f = None
             if self.on_entry is not None:
                 entry_f = await self._frame("on_entry", self.on_entry)
-            if entry_f is not False:
-                await self._dispatch_all(plan, state, dispatched)
+            #  NO VERDICT (ruled 2026-10-17): the work runs whatever the
+            #  entry script's exit status was; the display says it.
+            await self._dispatch_all(plan, state, dispatched)
 
             exit_f = None
             if self.on_exit is not None:

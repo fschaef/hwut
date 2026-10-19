@@ -6086,3 +6086,281 @@ DECISION  COMPLETION FOLLOWS 'adm/WORK/gathered/0s-todo-2-command-line-
 COST      Three shell scripts and one completer are ours to keep; the
           per-face option lists must reach '_complete' without importing
           the faces (open (a) of '0s').
+
+E-152  THE TRADITIONAL REPORT CLOSES WITH HINTS, AS THE RUN DOES    (2026-10-16)
+-----------------------------------------------------------------------------
+PROBLEM   'hwut.run' closes with HINTS (display D-35): every failure that
+          is more than a plain deviation, under its category heading, with
+          its phrase ("BOOK -- book and tree disagree" / "in book, no such
+          test"). 'hwut.report' printed only the 'hwut.help' pointer: the
+          word before '[FAIL]' ('no-app'), no category, no phrase. The two
+          pages of one tree disagreed about what they say of a failure.
+          (Reviewers of the book, 2026-10-16.)
+
+DECISION  RULED (Frank-Rene, 2026-10-16): "(a)" -- the traditional report
+          gains the run's HINTS block, after the SUMMARY's closing rule,
+          from ONE function: 'plain.hint_line_list' draws the block for
+          both faces, so they cannot drift. The run feeds it its flow's
+          failures (frame, detail, cause included); the report its rows,
+          by 'report.hint_token_of' -- stain 'unstable', aspirant
+          'unaccepted', else the recorded report; a case the book never
+          saw names none. DEVIATION stays out, as in the run. Directories
+          stand in each face's own walk order.
+          NOT A REVERSAL OF E-70: HINTS is not the struck third saying --
+          deviations are left out, and it says whose fault and the
+          phrase, which the blocks do not carry.
+
+COST      The SUMMARY moves up by the block's length where a subtle
+          failure stands. Five pages moved, each by the block and nothing
+          else: 'test-report.sh' never_run, not_in_book, stain,
+          stain_last_ok (seven lines each); 'test-header-words.sh cycle'
+          (three -- its grep for 'test-[a-e].sh' now meets the report's
+          HINTS lines, 'missing dependency').
+          JUnit, TAP and JSON are untouched by this ruling.
+
+E-153  LINES THE FACES WRITE KEEP THEIR WIDTH                       (2026-10-16)
+-----------------------------------------------------------------------------
+PROBLEM   The book's reviewers (DEFECTS-hwut-78e11f7, D-5 and D-18)
+          measured faces on a 72-column terminal: 'hwut.report.features'
+          headers to 123 columns, refusals of 'hwut.report.list' and
+          'hwut.affected' to 138 and 127, the bars of 'hwut.config.show'
+          at a fixed 78, quoted source in 'hwut.report.details' to 85.
+          Only 'hwut.run' and 'hwut.report' follow the terminal.
+
+DECISION  RULED (Frank-Rene, 2026-10-16): "The line formatting is
+          absolutely fine the way it is. No change!" -- as built: no
+          wrapping, no width helper, the bars as they stand.
+
+COST      A book excerpt at 72 columns cuts such lines by hand.
+
+GRAVEYARD One helper for every face: bars at the run's width, long lines
+          broken at blanks with a hanging indent of four -- rejected
+          (above).
+
+E-154  A REFUSAL THAT NAMES ITS REMEDY ENDS ON IT                    (2026-10-16)
+-----------------------------------------------------------------------------
+PROBLEM   Every face wrote its usage line beneath every REFUSED (E-84),
+          also where the command line was read and the remedy is another
+          command: 'REFUSED: no 'hwut-root-features.conf' stands at ...
+          => hwut.features.init', then a usage line of options the person
+          had typed correctly. The remedy was not the last word.
+          (DEFECTS-hwut-78e11f7, D-6.)
+
+DECISION  RULED (Frank-Rene, 2026-10-16): "(a) makes sense" -- no usage
+          line where the refusal names a remedy (' => '); the usage line
+          stays where the command line cannot be read, since it shows the
+          spelling that was missed. ONE PLACE: 'lib.face.write_refusal',
+          called by 'answered()', 'entered()' and every face that writes
+          a refusal it did not phrase itself ('REFUSED: %s' % error).
+          Imported below the completion fast path (E-151): a TAB still
+          imports the completer alone.
+
+COST      'test-report-features.py refused' lost its usage line.
+
+GRAVEYARD No usage after any REFUSED -- rejected: a misspelt option would
+          lose the list it was misspelt from. As built -- rejected (above).
+
+E-155  'hwut.help' OUTSIDE A TREE IS THE INSTALLATION CHECK           (2026-10-17)
+-----------------------------------------------------------------------------
+PROBLEM   Right after installing, a person stands where no
+          'hwut-root.conf' is. 'hwut.help' -- the installation check of
+          spec 24 and 'doc/HOWTO-INSTALL.txt' -- said the missing
+          requirements and then REFUSED, status 2: the first answer of a
+          working installation read as a failure (DEFECTS-hwut-78e11f7,
+          D-11).
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "A" -- where no tree bounds the
+          directory, 'hwut.help' says the requirements as before, then one
+          line, status 0:
+              INSTALLED: hwut <version> -- no 'hwut-root.conf' in or
+              above '<directory>' => hwut.sanitize root
+          Inside a tree it explains as before. 'hwut.about' is unchanged.
+
+COST      'hwut.help' answers outside a tree, where every other face of
+          the tree refuses.
+
+GRAVEYARD The requirement check in 'hwut.about' -- rejected: two faces for
+          one question, and the documents name 'hwut.help'.
+
+E-156  'hwut.report.features' TAKES THE FEATURE WISH, READ IN ONE PLACE  (2026-10-17)
+-----------------------------------------------------------------------------
+PROBLEM   'hwut.run' and 'hwut.report.list' select by '-F', '-e', '-k';
+          the face that shows the features refused them, and a reader had
+          to cut its page by hand (DEFECTS-hwut-78e11f7, D-2).
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "A obviously, the wish shall be
+          handled by a common module." ONE READING:
+          'feature_wish.selected_leaf_list(view, wish)' -- the leaves the
+          wish selects, every refusal of it (an unknown or retired id, a
+          key no leaf carries) said there. 'case_set_of' (the runs a face
+          selects) is their runs; 'view_cut' (the page) is the view kept
+          to them ('feature_view.view_kept': aggregates above as headers,
+          folded and counted over what is kept, no retired claims).
+          The page under a cut leaves out RETIRED and OUTSIDE THE
+          RELATION; a wish selecting nothing is EMPTY; any other part of a
+          wish ('--fail', a glob, a label) is refused -- runs are
+          'hwut.report.list's -- and so is '--matrix' beside it, whose
+          table is every link of a TEST directory.
+
+COST      The usage line of 'hwut.report.features' grew by the three
+          options.
+
+E-157  A FEATURE IS RENAMED BY 'hwut.features.rename'; REGISTER HOLDS WHAT
+       IT CANNOT PAIR                                              (2026-10-17)
+-----------------------------------------------------------------------------
+PROBLEM   No face renamed a feature. A rename by hand in a TEST directory's
+          'hwut-features.conf' left 'hwut.features.register' to guess: one
+          gone and one new in a directory were paired ('repoint'); two
+          and two were not -- the new were REGISTERED under fresh external
+          ids, and the gone said 'candidates: none', the candidates having
+          just been registered. The external ids the world knows pointed
+          at nothing (DEFECTS-hwut-78e11f7, D-7).
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "A".
+          'hwut.features.rename <external id> <new name>' renames the
+          feature in the three places that name it -- its definition, the
+          links of its TEST directory's test headers, the leaf's internal
+          id -- the external id unchanged ('feature_registry_act.rename').
+          'hwut.features.register' stays the check for edits by hand: a
+          new name in a directory whose gone leaf cannot be paired is
+          HELD -- no line written, no 'register' proposed -- and the two
+          sides name each other ('candidate of: ...', 'candidates: ...'),
+          until the gone one is repointed or retired
+          ('feature_detector._leaf_list', exploration's PAIRING).
+
+COST      One face more. A directory that renames and adds by hand in one
+          step registers its additions only after the renames are settled.
+
+E-158  'on_entry' AND 'on_exit' ARE HELPERS: THEIR EXIT STATUS IS SAID,
+       NEVER JUDGED                                                (2026-10-17)
+-----------------------------------------------------------------------------
+PROBLEM   A frame script that exited non-zero stopped its directory (P-10:
+          nothing dispatched), painted it red and made the run's exit 1,
+          while the counts read '0 ok, 0 fail' (DEFECTS-hwut-78e11f7,
+          D-19).
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "on_entry is a script to run
+          upon entry. we do not check the exit status of the script as a
+          verdict. we might hint at the end that 'on_entry' exitted with
+          non-zero and show the script/command that was executed." The
+          playback of five consequences confirmed ("both true"):
+            the tests run whatever the entry script did (P-10's "nothing
+            is dispatched" superseded); the directory's colour, the
+            counts and the exit status are the tests' alone; 'frame-
+            failed' leaves the failure table; the flow says how it ended
+            ('FRAME world/TEST:on_entry ... exited 1'); one closing line
+            each, among the notes:
+                NOTE  world/TEST  on_entry exited 1: false
+            'on_exit' the same; 'hwut.report' unchanged (the frame is in
+            no book).
+          'on_before_test' / 'on_after_test' around each test run: for
+          later (TODO B-17).
+
+COST      An entry script that prepares what the tests need no longer
+          shields them: they run, and fail on their own account.
+
+E-159  A BACKUP-SHAPED NAME IS IGNORED, 'admit' UN-IGNORES; A CAP NOBODY
+       CAN WATCH IS A FAILURE                                      (2026-10-17)
+-----------------------------------------------------------------------------
+PROBLEM   Two kinds of case stood in the closing REFUSED block and nowhere
+          in the counts: a backup-shaped file name (E-41) and a case under
+          a cap the procsitter cannot enforce here, unacknowledged
+          (exploration R-48, R-80). A directory holding one read '[OK]'
+          (DEFECTS-hwut-78e11f7, D-20).
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "A backup shaped file name is
+          ignored, where the hwut.help might indicate how to not ignore
+          using the hwut.conf file; Refusal, because of not tolerated lack
+          of supervision, is a failure." Then "A" of the fork on the word:
+            BACKUP NAMES join the default ignore set ('finder.
+            BACKUP_NAME_GLOB_TUPLE'): silent, uncounted, no wallflower.
+            'admit = [<glob>, ...]' in 'hwut.conf' takes globs OUT of the
+            whole ignore set -- default, backup, 'ignore''s own -- and
+            flows down as 'ignore' does. 'hwut.help' (its page) and the
+            exploration README say so.
+            UNCAPPED is a failure: 'uncapped [FAIL]', not run, counted,
+            the directory red, exit 1, under ENVIRONMENT in HINTS with the
+            gate's reason and remedy beside it; 'hwut.help' explains it
+            ('FAILS ... not run'); 'hwut.plan' writes 'UNCAPPED [FAIL]:';
+            'hwut.report' asks the gate as the run does, after the
+            nominal. The doors that provision without a plan
+            ('hwut.accept', 'hwut.run.play', ...) still refuse to run it.
+          The REFUSED block and the 'refused' count are then empty; the
+          'refused' event stays in the wire vocabulary (fields are only
+          added, kinds never removed).
+
+COST      A backup copy meant as a test needs one 'admit' line. A machine
+          without what a cap needs is red until it is installed or the
+          cap acknowledged.
+
+E-160  BOOK AND TREE DISAGREE: EVERY PAGE SAYS IT ALIKE            (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   Marked for later (2026-10-16): "report and hwut.run output differ
+          when something is in the books and not implemented". MEASURED,
+          a test deleted and a choice taken out, both in the book, the faces
+          called inside the TEST directory: 'hwut.run --fail' said "the
+          selection is empty" above the two failing cases; 'hwut.report
+          --fail' put them in another order than without '--fail' and than
+          the run, and dated its heading '<no date>'; the report named the
+          directory '.', the run 'TEST'; JSON, JUnit and TAP said
+          'test-vanished' where the pages said 'no-app' and HINTS "in book,
+          no such test".
+
+DECISION  RULED (Frank-Rene, 2026-10-19): "1 the selection is not empty,
+          but fail is true / 2 order must be the same / 3 must be fixed /
+          4 words must be the same, use references to constant strings";
+          naming: "From the tree root".
+          1  The run takes back 'EMPTY_SELECTION_STR' (plan/determine) where
+             the book's discrepancies ('orchestrate.unstood_tuple') answer
+             the wish: they are cases of the selection, and they fail.
+          2  ONE ORDER, by test, then choice: 'unstood_tuple' sorts, and
+             the report sorts each directory's rows, the discrepancies
+             among them -- flow, rows and HINTS alike, '--fail' or not.
+          3  The heading's date is the DIRECTORY's: the newest instant of
+             any of its cases, selected or not ('CRowList.when_tuple').
+          4  'said_of(row)' reads word, category heading and phrase from
+             'display/failure' -- the table the page and HINTS read: JSON
+             'reason', 'category', 'message'; JUnit 'type' and 'message';
+             TAP 'reason', 'category', 'message'.
+          The report names a directory from the tree's root, as the run.
+
+COST      JSON 'reason' changes its words to the page's ('no-app' for
+          'test-vanished', 'differs'-type words for a plain difference) and
+          gains 'category' and 'message'; the stain's sentence of JUnit and
+          TAP is the phrase of 'unstable' now. Pages of the machine formats
+          and of the report called below the root moved.
+
+E-161  HELPERS AROUND EACH TEST RUN; EVERY SCRIPT IS SUPERVISED      (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   TODO B-17: 'on_entry' / 'on_exit' run around a TEST directory;
+          the same was wanted around each test run, and no word of the tree
+          named it. And not every script ran under the procsitter: the
+          frame did, with fixed caps nobody could set; 'hwut.execute' ran a
+          directory's targets by plain 'subprocess.run', unsupervised.
+
+DECISION  RULED (Frank-Rene, 2026-10-19): "B-17 should be easy to do, just
+          script execution. Procsitter may be v important, make sure the
+          target and on_entry and on_exit are also handled by procsitter;
+          config of the procsitter in these cases by hwut.conf".
+          'on_before_test' and 'on_after_test' are directory keys of a test
+          directory's 'hwut.conf', LOCAL as 'on_entry' (at a tree level, a
+          fault) and STANDARD targets (refused inside 'target { }'). They
+          run 'bash -c <command>' in the directory before and after each
+          test run that is run -- a stained, a disk-short or a refused case
+          has none -- told by 'HWUT_TEST' and 'HWUT_CHOICE' ('' for none).
+          No verdict, as the frame (E-158): an end other than exit 0 is a
+          FRAME line '<dir>:<role> of <run>' and a NOTE at the end.
+          'script_caps { }', in the words of 'caps { }', is the supervision
+          of EVERY script of the directory -- the frame, the helpers, the
+          targets of 'hwut.execute' -- folded onto a minute of wall clock
+          and procsitter's defaults ('adapter.script_config_of'), the
+          root's 'free_disk_min_mb' as the floor. It flows down the tree,
+          the child's word winning whole. 'hwut.execute' runs its targets
+          through 'procsitter.spawn' under it: a target ended by the
+          supervisor is FAILED by name.
+
+COST      A target is no longer unbounded: a minute of wall clock unless
+          'script_caps' says more, and it reads no terminal input (stdin is
+          the supervisor's, closed). A helper's stdout and stderr are
+          drained, not shown. A cap the platform cannot watch is not
+          refused for a script, which has no verdict to fail.

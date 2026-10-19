@@ -1,0 +1,5 @@
+
+--- 180 MB free, floor 128, need 200 ---
+    REFUSED: free 180 MB on <disk>; needs 200 MB above the floor of 128 MB
+    reserved: 0 MB
+<hwut-end>

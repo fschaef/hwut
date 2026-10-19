@@ -37,7 +37,11 @@ THE RELATION
     A test run is addressed as '<path>/<test> [<choice>]', the path
     RELATIVE to the root asked -- composed at the moment of asking, and
     stored nowhere. A name is looked up in the feature file of the test's
-    own TEST directory and nowhere else. The verdict of a run is what
+    own TEST directory and nowhere else -- unless the link is an INTERNAL
+    ID, '<directory id>:<name>' (a name holds no ':'): then it names a
+    feature of another directory, and the relation, which knows no ids,
+    keeps it aside ('foreign_tuple') for the join with the central file
+    ('feature_view'; the book's D-8). The verdict of a run is what
     'GOOD/book.csv' says: PASS, FAIL, the verdict's own name, NO VERDICT.
 ______________________________________________________________________________
 """
@@ -321,10 +325,13 @@ def feature_file_of_text(text, file=FEATURE_FILE_NAME):
 @dataclass(frozen=True)
 class CRun:
     """One linked test run and what 'GOOD/book.csv' says of it:
-    'PASS', 'FAIL', 'ASPIRANT' or 'NO VERDICT'."""
+    'PASS', 'FAIL', 'ASPIRANT' or 'NO VERDICT'. 'path' is the TEST
+    directory of the run where it is not the feature's own -- a link by
+    internal id from another directory (the book's D-8); None else."""
     test:    str
     choice:  str | None
     verdict: str
+    path:    str | None = None
 
 
 @dataclass(frozen=True)
@@ -351,6 +358,8 @@ class CTestDirectory:
                                        #  application, walk order
     verdict_db:      dict  = None      # (test, choice) -> verdict text,
                                        #  for every run of the directory
+    foreign_tuple:   tuple = ()        # of (test, choice, internal id):
+                                       #  links into another directory
 
 
 @dataclass(frozen=True)
@@ -392,6 +401,13 @@ def document_place(path, document):
     return place, mark + anchor, False
 
 
+def internal_link_f(link):
+    """RETURN: True, 'link' is an internal id, '<directory id>:<name>' --
+    a feature of the directory the id stands for; False, a name of the
+    test's own TEST directory."""
+    return ":" in link
+
+
 def linked_name_tuple(parameters):
     """RETURN: tuple of str, the feature names a test run with these
     'TestParameters' links to; empty where it links to none."""
@@ -410,6 +426,7 @@ def test_directory_of(directory, path, app_set):
     every        = []
     app_list     = []
     verdict_db   = {}
+    foreign      = []
     for app in app_set:
         app_list.append((app.source_file, app.title,
                          getattr(app, "doc", None)))
@@ -422,6 +439,9 @@ def test_directory_of(directory, path, app_set):
                 unlinked.append((app.source_file, choice))
                 continue
             for name in name_tuple:
+                if internal_link_f(name):
+                    foreign.append((app.source_file, choice, name))
+                    continue
                 if feature_file is None \
                    or feature_file.feature_of_name(name) is None:
                     undefined.append((app.source_file, choice, name))
@@ -434,7 +454,7 @@ def test_directory_of(directory, path, app_set):
                                   if feature_file else ())]
     return CTestDirectory(path, feature_file, tuple(state_list),
                           tuple(unlinked), tuple(undefined), tuple(every),
-                          tuple(app_list), verdict_db)
+                          tuple(app_list), verdict_db, tuple(foreign))
 
 
 def relation_of_tree(root, interview_runner=None, fault_list=None):

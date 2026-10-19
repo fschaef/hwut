@@ -1,4 +1,4 @@
-# vut-register 5 generation:369 apps:46 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=8,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=7,42=8,43=5,44=2,45=12
+# vut-register 5 generation:398 apps:50 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,43=5,44=3,45=12,46=3,47=5,48=5,49=4
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -31,11 +31,21 @@ test-base-questions.py;asked;true;ok;;3;0
 ;until;true;ok;;3;4
 test-book-defects.sh;affected;true;ok;;41;5
 ;constraint-name;true;ok;;41;1
+;cov-eof;true;ok;;41;7
+;cov-outside;true;ok;;41;8
 ;coverage-ground;true;ok;;41;6
 ;frame-side;true;ok;;41;0
+;help-outside;true;ok;;41;11
+;jobs-help;true;ok;;41;9
 ;refused-band;true;ok;;41;4
+;refused-remedy;true;ok;;41;10
 ;table-sep;true;ok;;41;2
 ;test-directory;true;ok;;41;3
+test-book-pages.sh;machine;true;ok;;48;0
+;report;true;ok;;48;2
+;report_fail;true;ok;;48;4
+;run;true;ok;;48;3
+;run_fail;true;ok;;48;1
 test-cmdline.py;case;true;ok;;4;0
 ;completion;true;ok;;4;1
 ;faces;true;ok;;4;2
@@ -96,6 +106,7 @@ test-dev_podman.py;build;true;ok;;35;0
 ;refused;true;ok;;35;3
 test-diff.sh;differing;true;ok;;8;0
 ;reading;true;ok;;8;1
+;regions;true;ok;;8;8
 ;side-by-side;true;ok;;8;2
 ;stains;true;ok;;8;7
 ;stderr;true;ok;;8;5
@@ -138,7 +149,13 @@ test-face-words.sh;book;true;ok;;38;8
 ;strategy;true;ok;;38;10
 ;tiers;true;ok;;38;9
 ;yes_gone;true;ok;;38;6
+test-features-cross.sh;external;true;ok;;47;4
+;link;true;ok;;47;3
+;move;true;ok;;47;0
+;repoint;true;ok;;47;1
+;unresolved;true;ok;;47;2
 test-features-follow.py;move;true;ok;;44;0
+;move_inside;true;ok;;44;2
 ;remove;true;ok;;44;1
 test-gate.py;backup_shaped;true;ok;;11;0
 ;new_choice;true;ok;;11;1
@@ -248,6 +265,7 @@ test-report-features.py;code;true;ok;;42;5
 ;refused;true;ok;;42;2
 ;test_directory;true;ok;;42;3
 ;tree;true;ok;;42;4
+;wish;true;ok;;42;8
 test-report-timings.py;empty;true;ok;;26;0
 ;file;true;ok;;26;1
 ;refused;true;ok;;26;2
@@ -266,6 +284,9 @@ test-report.sh;color;true;ok;;21;0
 ;tap;true;ok;;21;6
 ;traditional;true;ok;;21;7
 ;width;true;ok;;21;8
+test-run-disk.sh;local;true;ok;;46;1
+;short;true;ok;;46;2
+;wait;true;ok;;46;0
 test-run-uncapped.sh;acknowledged;true;ok;;36;0
 ;doors;true;ok;;36;7
 ;elsewhere;true;ok;;36;1
@@ -297,6 +318,10 @@ test-sanitize.sh;apply;true;ok;;23;0
 ;transient;true;ok;;23;9
 ;unreachable;true;ok;;23;10
 ;veto;true;ok;;23;14
+test-script-helpers.sh;around;true;ok;;49;2
+;caps;true;ok;;49;1
+;execute;true;ok;;49;0
+;misplaced;true;ok;;49;3
 test-stability.sh;bytes;true;ok;;24;0
 ;cadence;true;ok;;24;1
 ;length;true;ok;;24;2

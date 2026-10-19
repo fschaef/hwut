@@ -35,9 +35,12 @@ class ProcsitterConfig:
     max_file_size_mb     PER FILE (RLIMIT_FSIZE) -- one file the call
                          writes may not grow past this.
 
-    max_disk_mb          TOTAL allocation under the work dir, walked by
-                         the watchdog over st_blocks: the many-files
-                         loop cap, which a per-file limit cannot catch.
+    max_disk_mb          WHAT THE CALL HOLDS on disk: its scratch ground
+                         and the files it created under the work dir,
+                         walked by the watchdog over st_blocks -- the
+                         many-files loop cap, which a per-file limit
+                         cannot catch. A sibling's files are not this
+                         call's (D-24).
 
     max_output_gap_sec   SILENCE cap: no output on either production
                          port for this long ends the call. 'None' --
@@ -53,9 +56,11 @@ class ProcsitterConfig:
                          busy it is. An application that means to be
                          heard flushes.
 
-    min_free_disk_mb     free-space FLOOR of the work dir's filesystem.
-                         Below it the call is terminated so the OS
-                         stays operable, whoever caused the shortage.
+    min_free_disk_mb     free-space FLOOR of the work dir's filesystem
+                         -- a property of the DISK, the same for every
+                         call on it. Below it the call is not spawned,
+                         or is terminated, so the OS stays operable,
+                         whoever caused the shortage.
 
     scratch_dir          THE SCRATCH GROUND of the call: made empty
                          before the spawn and exported as 'TMPDIR' (and

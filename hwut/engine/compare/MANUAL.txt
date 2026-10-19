@@ -19,7 +19,7 @@ CONTENTS
   1. What the comparison does
   2. The GOOD file and tolerant lines
   3. Ignoring lines and blank lines
-  4. Numbers, whitespace, and slashes
+  4. Numbers, whitespace, and equivalence patterns
   5. Analogies -- placeholders that must stay consistent
   6. Equivalence words
   7. Regions -- letting a block declare its own rules
@@ -113,9 +113,16 @@ tolerance of each other. With a 10% tolerance, a nominal "100.0" accepts a
 subject "95.0" but not "80.0". This is how you tolerate run-times,
 measured quantities, and last-digit rounding.
 
-SLASHES. When slash tolerance is on, runs of '/' and '\' are
-interchangeable, so a path printed with backslashes on one platform
-matches the same path with forward slashes on another.
+EQUIVALENCE PATTERNS. A regular expression in the test's
+'tolerance { eq_pattern = [...] }' names text that varies in a bounded
+way: any two matches of one pattern compare equal. Paths printed with
+'\' on one platform and '/' on another are one pattern:
+
+    tolerance { eq_pattern = ["[\\\\/]+"] }
+
+(There is no slash switch any more: it was this pattern under a name of
+its own, RATIONALE C-18. 'hwut.renovate --apply' rewrites an old
+'slash = yes' to it.)
 
 
 --------------------------------------------------------------------------------
@@ -395,13 +402,10 @@ value (a number or a quoted string):
     start ((t: 12.5))
     mode  ((m: "run-fast"))
 
-The rules live in the configuration as a plain dictionary, variable name
--> constraint expression (or a list of expressions):
+The rules stand in the test's header, a list of expressions; a rule
+belongs to every variable it names:
 
-    constraint_db = {
-        "y": "y >= x",
-        "t": "t > 0 and t < 100",
-    }
+    tolerance { constraints = ["y >= x", "t > 0 and t < 100"] }
 
 THE MOMENT a variable enters -- the line carrying its binding is reached --
 all constraints defined for it are checked. Constraints may refer to other
@@ -444,9 +448,7 @@ Expressions are ordinary Python-style conditions: arithmetic, comparisons,
 'and'/'or'/'not', math functions (sqrt, sin, abs, min, max, ...), and
 string methods for quoted-string values:
 
-    constraint_db = {
-        "mode": "mode.startswith(\"run-\") and len(mode) < 12",
-    }
+    tolerance { constraints = ["mode.startswith('run-') and len(mode) < 12"] }
 
 Rules may relate variables in any direction: "a > b" beside "b > a" is
 two laws over the same pair, not a circle.
@@ -503,7 +505,8 @@ literal '||||' now has no special meaning; it is ordinary content.
 Comment / blank line ................. '## ...' or empty; ignored anywhere
 Analogy placeholder .................. ((name))       consistent value
 Constraint binding ................... ((name: value)) rule-checked value
-                                       (rules: constraint_db in the config;
+                                       (rules: tolerance { constraints =
+                                        [...] } in the header;
                                         ordinary text only, in line order)
 Region open / close .................. ##! <handler> <params>   ...   ####
 
@@ -515,6 +518,10 @@ Region open / close .................. ##! <handler> <params>   ...   ####
               [constraint={expr over p[], x y z w}]
   table [key=<c>] [unordered] [ignore=<c,..>]   columnar rows
         [numeric={c:t,..}] [sep={<s>}]
+  unaccepted                                nobody has judged it (C-9):
+                                            fails while it holds a line
+  constraint-violation                      a run found a constraint
+                                            broken here (services E-123)
 
 Rules of thumb:
   - The GOOD file describes what "correct" means; keep it as tolerant as

@@ -64,7 +64,8 @@ from   hwut.engine.orchestrator.exploration.feature_relation \
                                  import document_place
 
 #  THE STATES A LEAF STANDS IN, as the page writes them (R-96).
-STATE_TUPLE = ("IMPLEMENTED ok", "IMPLEMENTED fail", "OPEN")
+STATE_TUPLE = ("IMPLEMENTED ok", "IMPLEMENTED fail", "IMPLEMENTED untested",
+               "OPEN untested")
 
 NONSENSE_WORD = "NONSENSE?"
 
@@ -183,7 +184,10 @@ def document_of_view(view, code_db=None, page_base=None, root_base=""):
     test_db    = {}                    # (test path, test) -> index
     for path in sorted(relation.test_directory_db):
         directory = relation.test_directory_db[path]
-        if directory.feature_file is None: continue
+        #  A DIRECTORY THAT DEFINES NOTHING stands where its tests link
+        #  features of others by internal id (the book's D-8).
+        if directory.feature_file is None \
+           and not directory.foreign_tuple: continue
         for test, _, _ in directory.app_tuple:
             test_db[(path, test)] = len(test_db)
     feature_list, linked_db, index_of_leaf = [], {}, {}
@@ -195,7 +199,8 @@ def document_of_view(view, code_db=None, page_base=None, root_base=""):
         path    = leaf_view.test_path
         run_list = []
         for run in (() if found is None else found.run_tuple):
-            test_index = test_db[(path, run.test)]
+            test_index = test_db.get((run.path or path, run.test))
+            if test_index is None: continue
             run_list.append((_run_text(run.test, run.choice), run.verdict,
                              test_index))
             linked = linked_db.setdefault(test_index, [])
@@ -222,8 +227,11 @@ def document_of_view(view, code_db=None, page_base=None, root_base=""):
     test_list = []
     for path in sorted(relation.test_directory_db):
         directory = relation.test_directory_db[path]
-        if directory.feature_file is None: continue
-        unlinked = set(directory.unlinked_tuple)
+        if directory.feature_file is None \
+           and not directory.foreign_tuple: continue
+        #  NONSENSE? only where the directory defines features (R-7).
+        unlinked = set(directory.unlinked_tuple) \
+                   if directory.feature_file is not None else set()
         for test, title, doc in directory.app_tuple:
             index = test_db[(path, test)]
             test_list.append(CTestRow(
@@ -327,8 +335,8 @@ td.id, td.path { font-family:ui-monospace, monospace; font-size:13px;
 a { color:var(--link); }
 tr:target td { background:var(--mark); }
 .PASS, .IMPLEMENTED-ok { color:var(--good); font-weight:600; }
-.FAIL, .IMPLEMENTED-fail { color:var(--bad); font-weight:600; }
-.NONE, .OPEN { color:var(--none); font-weight:600; }
+.FAIL, .IMPLEMENTED-fail, .OPEN-fail { color:var(--bad); font-weight:600; }
+.NONE, .IMPLEMENTED-untested, .OPEN-untested { color:var(--none); font-weight:600; }
 ul { margin:0; padding:0; list-style:none; }
 details { margin-left:18px; }
 details.top { margin-left:0; }

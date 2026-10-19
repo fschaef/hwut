@@ -1,28 +1,28 @@
 >>> an undefined name, a feature not registered, a directory moved
-    AGGREGATE gateway -- CAN-MOST gateway      1 implemented, 2 open; 0 ok, 3 fail
-        state      OPEN
+    AGGREGATE gateway -- CAN-MOST gateway 1 implemented, 2 open; 0 ok, 1 fail, 2 untested
+        state      OPEN fail
         keys       product
-        AGGREGATE gateway/forwarding -- Frames reach their destination. 0 implemented, 2 open; 0 ok, 2 fail
-            state      OPEN
-            [OPEN]             router.forward
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 0 implemented, 2 open; 0 ok, 0 fail, 2 untested
+            state      OPEN untested
+            [OPEN untested]    router.forward
                 internal    Bbbbbbb2:forward  (gw/router)
                             defined in no TEST directory
                 keys        product
-            [OPEN]             router.keep-order
+            [OPEN untested]    router.keep-order
                 internal    Bbbbbbb2:keep-order  (gw/router)
                             defined in no TEST directory
                 keys        product
-        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
             state      IMPLEMENTED fail
             [IMPLEMENTED fail] can.decode -- A frame is decoded.
                 internal    Aaaaaaa1:decode  (gw/can)
                 keys        product
                 [FAIL] gw/can/TEST/test-frame.sh
-        AGGREGATE gateway/later -- Nothing below yet. 0 implemented, 0 open; 0 ok, 0 fail
-            state      OPEN  (nothing below it)
+        AGGREGATE gateway/later -- Nothing below yet. 0 implemented, 0 open; 0 ok, 0 fail, 0 untested
+            state      OPEN untested  (nothing below it)
     
     UNPLACED                                                         1 leaf/leaves
-        [OPEN]             router.drop
+        [OPEN untested]    router.drop
             internal    Bbbbbbb2:drop  (gw/router)
                         defined in no TEST directory
     

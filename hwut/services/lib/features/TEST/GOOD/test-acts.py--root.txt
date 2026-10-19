@@ -1,0 +1,17 @@
+--- register: an id for '.', bare names, a clash qualified ------
+    directory  AAAAAAAA = .
+    leaf       shot = AAAAAAAA:shot
+    leaf       gateway-2 = AAAAAAAA:gateway
+    then: leaf-gone, unplaced, unplaced, unplaced
+>>> hwut.features.register  (again)
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        leaf-gone  can.ghost   Aaaaaaa1:ghost is defined no more
+                       => # unpaired can.ghost Aaaaaaa1:ghost (candidates: none)
+    HINTS
+        3 leaf(s) in no aggregate => hwut.features.tree
+    exit 1
+>>> hwut.features.move . elsewhere
+    REFUSED: the root itself is not moved
+    exit 2
+    read again: 0 fault(s); retired: none
+<hwut-end>

@@ -1,0 +1,76 @@
+== --format=json
+{
+  "directory_list": [
+    {
+      "case_list": [
+        {
+          "category": null,
+          "choice": "x",
+          "file": "test-a.sh",
+          "message": null,
+          "name": "test-a.sh x",
+          "reason": null,
+          "stained": false,
+          "verdict": true,
+          "when": "<date>"
+        },
+        {
+          "category": "BOOK -- book and tree disagree",
+          "choice": "y",
+          "file": "test-a.sh",
+          "message": "in book, no such choice",
+          "name": "test-a.sh y",
+          "reason": "no-choice",
+          "stained": false,
+          "verdict": false,
+          "when": null
+        },
+        {
+          "category": "BOOK -- book and tree disagree",
+          "choice": null,
+          "file": "test-b.sh",
+          "message": "in book, no such test",
+          "name": "test-b.sh",
+          "reason": "no-app",
+          "stained": false,
+          "verdict": false,
+          "when": null
+        }
+      ],
+      "directory": "TEST",
+      "title": ""
+    }
+  ],
+  "fail_n": 2,
+  "test_n": 3
+}
+== --format=junit
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="3" failures="2">
+  <testsuite name="TEST" tests="3" failures="2">
+    <testcase classname="TEST" name="test-a.sh x"/>
+    <testcase classname="TEST" name="test-a.sh y">
+      <failure type="no-choice" message="BOOK -- book and tree disagree: in book, no such choice"/>
+    </testcase>
+    <testcase classname="TEST" name="test-b.sh">
+      <failure type="no-app" message="BOOK -- book and tree disagree: in book, no such test"/>
+    </testcase>
+  </testsuite>
+</testsuites>
+== --format=tap
+TAP version 13
+1..3
+ok 1 - TEST: test-a.sh x
+not ok 2 - TEST: test-a.sh y
+  ---
+  reason: no-choice
+  category: BOOK -- book and tree disagree
+  message: in book, no such choice
+  ...
+not ok 3 - TEST: test-b.sh
+  ---
+  reason: no-app
+  category: BOOK -- book and tree disagree
+  message: in book, no such test
+  ...
+<hwut-end>

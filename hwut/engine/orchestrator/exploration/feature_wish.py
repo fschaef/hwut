@@ -141,11 +141,47 @@ def _whole_hit_f(glob, text):
                for each in brace_alternative_tuple(glob))
 
 
-def _view_case_set_of(view, wish):
+def selected_leaf_list(view, wish):
     """
-    RETURN: [0] frozenset of (absolute test file, choice), the runs the
-                wish's '-F', '-e' and '-k' want, read from the central
-                file's view
+    RETURN: list of CLeafView, the leaves of 'view' the wish's '-F', '-e'
+            and '-k' select, in the view's order -- THE ONE READING of the
+            feature wish: the runs a face selects are these leaves' runs
+            ('case_set_of'), the page 'hwut.report.features' prints is
+            the view kept to them ('view_cut').
+    Raises SelectionError for an external id that names no feature, for a
+    retired id named by '-e' or '-F', and for a key no leaf carries.
+    """
+    leaf_list, known_set = _selected_and_known(view, wish)
+    if wish.keys_spec is not None:
+        unknown = [name for name in label_name_tuple(
+                       parse_expression(wish.keys_spec))
+                   if name not in known_set]
+        if unknown:
+            raise SelectionError(
+                "no feature carries the key '%s'; keys that stand: %s"
+                % ("', '".join(unknown),
+                   ", ".join(sorted(known_set)) or "(none)"))
+    return leaf_list
+
+
+def view_cut(view, wish):
+    """
+    RETURN: CView, 'view' kept to the leaves the wish selects
+            ('selected_leaf_list'), the aggregates above them as headers,
+            folded and counted over what is kept.
+    Raises SelectionError as 'selected_leaf_list' does.
+    """
+    from .feature_view import view_kept
+    for glob in wish.feature_tuple + wish.feature_ext_tuple:
+        brace_alternative_tuple(glob)
+    chosen = {id(each) for each in selected_leaf_list(view, wish)}
+    return view_kept(view, lambda each: id(each) in chosen)
+
+
+def _selected_and_known(view, wish):
+    """
+    RETURN: [0] list of CLeafView, the leaves the wish's '-F', '-e' and
+                '-k' select
             [1] frozenset of str, every key a leaf of the view carries
     Raises SelectionError for an external id that names no feature, and
     for a retired id named by '-e' or '-F'.
@@ -176,7 +212,7 @@ def _view_case_set_of(view, wish):
     key_tree = None if wish.keys_spec is None \
                else parse_expression(wish.keys_spec)
     named_f  = bool(wish.feature_tuple or wish.feature_ext_tuple)
-    case_set, known_set = set(), set()
+    selected_list, known_set = [], set()
     for each in leaf_list:
         known_set |= set(each.key_tuple)
         if named_f:
@@ -192,11 +228,8 @@ def _view_case_set_of(view, wish):
         if key_tree is not None and not evaluate_f(key_tree,
                                                    set(each.key_tuple)):
             continue
-        if each.feature_state is None: continue
-        for run in each.feature_state.run_tuple:
-            case_set.add((os.path.normpath(os.path.join(
-                view.asked, each.test_path, run.test)), run.choice))
-    return frozenset(case_set), frozenset(known_set)
+        selected_list.append(each)
+    return selected_list, frozenset(known_set)
 
 
 def _aggregate_list(view):
@@ -246,15 +279,12 @@ def case_set_of(root, wish):
     except (ViewRefused, RootConfMissing) as error:
         raise SelectionError("'%s' asks for features: %s"
                              % (_asked_text(wish), error)) from error
-    case_set, known_set = _view_case_set_of(view, wish)
-    if wish.keys_spec is not None:
-        unknown = [name for name in label_name_tuple(
-                       parse_expression(wish.keys_spec))
-                   if name not in known_set]
-        if unknown:
-            raise SelectionError(
-                "no feature carries the key '%s'; keys that stand: %s"
-                % ("', '".join(unknown),
-                   ", ".join(sorted(known_set)) or "(none)"))
+    case_set = frozenset(
+        (os.path.normpath(os.path.join(view.asked,
+                                       run.path or each.test_path,
+                                       run.test)), run.choice)
+        for each in selected_leaf_list(view, wish)
+        if each.feature_state is not None
+        for run in each.feature_state.run_tuple)
     _view_db[mark] = case_set
     return case_set

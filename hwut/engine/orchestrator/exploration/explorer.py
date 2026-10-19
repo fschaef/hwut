@@ -103,8 +103,9 @@ def explore(directory, interview_runner=None, inherited=None):
     #  THE WALK, then the headers.
     app_db = {}
     silent_list = []
-    candidate_list, refused_list = finder.candidate_list(
-                                       directory, directory_spec.ignore)
+    candidate_list = finder.candidate_list(directory, directory_spec.ignore,
+                                           directory_spec.admit)
+    refused_list   = []
     for name in candidate_list:
         with open(os.path.join(directory, name), "r",
                   encoding="utf-8", errors="replace") as fh:

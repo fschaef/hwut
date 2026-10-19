@@ -1,5 +1,5 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer"""
-from ...core.line_pair import LinePair
+from ...core.line_pair import LinePair, filler_pair_list
 from ...core.edit_operations.edit import Edit, E_EditId
 from ...engine.line import Line
 from ...reading.line_element import LineElementString
@@ -52,8 +52,7 @@ def do(subject, nominal, analogy_db):
         result.append(LinePair(None, _display_line(n), (), cost=1.0,
                                seq_edit_id=E_EditId.INSERT))
 
-    result.extend(LinePair(line, None, ()) for line in s_filler)
-    result.extend(LinePair(None, line, ()) for line in n_filler)
+    result.extend(filler_pair_list(s_filler, n_filler))
 
     def key(x):
         return (1, x.nominal_line_n) if x.subject_line_n == -1 \

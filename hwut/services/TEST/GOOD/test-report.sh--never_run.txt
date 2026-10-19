@@ -3,7 +3,7 @@ STATUS: 1
 STDOUT {
     ======================================================================
     
-    suite/TEST                                                   <no date>
+    tree/suite/TEST                                              <no date>
     ----------------------------------------------------------------------
     
      * The steady one:
@@ -16,10 +16,17 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-             1 1    [FAIL]   suite/TEST
+             1 1    [FAIL]   tree/suite/TEST
     
     ----------------------------------------------------------------------
                                                                   (1 test)
+    
+    ======================================================================
+    HINTS
+    ----------------------------------------------------------------------
+    NOMINAL -- error in GOOD file
+        tree/suite/TEST
+            test-app.sh   no GOOD file; not accepted, not run
     
     ======================================================================
     
@@ -36,16 +43,18 @@ STDOUT {
         {
           "case_list": [
             {
+              "category": "NOMINAL -- error in GOOD file",
               "choice": null,
               "file": "test-app.sh",
+              "message": "no GOOD file; not accepted, not run",
               "name": "test-app.sh",
-              "reason": "no-good-file",
+              "reason": "no GOOD file",
               "stained": false,
               "verdict": false,
               "when": null
             }
           ],
-          "directory": "suite/TEST",
+          "directory": "tree/suite/TEST",
           "title": ""
         }
       ],

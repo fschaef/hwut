@@ -3,7 +3,7 @@ STATUS: 1
 STDOUT {
     ============================================================
     
-    suite/TEST                                 YYYYyMMmDDd hhhmm
+    tree/suite/TEST                            YYYYyMMmDDd hhhmm
     ------------------------------------------------------------
     
      * The steady one:
@@ -20,7 +20,7 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-             1 2    [FAIL]   suite/TEST
+             1 2    [FAIL]   tree/suite/TEST
     
     ------------------------------------------------------------
                                                        (2 tests)
@@ -35,7 +35,7 @@ STATUS: 1
 STDOUT {
     ====================================================================================================
     
-    suite/TEST                                                                         YYYYyMMmDDd hhhmm
+    tree/suite/TEST                                                                    YYYYyMMmDDd hhhmm
     ----------------------------------------------------------------------------------------------------
     
      * The steady one:
@@ -52,7 +52,7 @@ STDOUT {
     
         Fails: N: Verdict:          Directory:
     
-             1 2    [FAIL]   suite/TEST
+             1 2    [FAIL]   tree/suite/TEST
     
     ----------------------------------------------------------------------------------------------------
                                                                                                (2 tests)

@@ -1,6 +1,6 @@
 STATUS: 1
 STDOUT {
-    FRAME gamma/TEST:on_entry .. frame [FAIL]
+    FRAME gamma/TEST:on_entry .. exited 1
     FLOW DIGEST (sorted; the launch order is no fact of the
                  subject, and is not recorded) {
         DIR   alpha/TEST
@@ -14,27 +14,24 @@ STDOUT {
         END   test-two.sh .. [FAIL]
         START test-two.sh
         DIR   gamma/TEST
+        END   test-one.sh .. [OK]
+        START test-one.sh
+        END   test-two.sh .. [OK]
+        START test-two.sh
     }
     
     ==============================================================================
-    DIRECTORIES                                             3 ok, 1 fail, hh:mm:ss
+    DIRECTORIES                                             5 ok, 1 fail, hh:mm:ss
     ------------------------------------------------------------------------------
        +--- alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
        +--- beta/TEST . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/2
-       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/0
+       '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     
-    ==============================================================================
-    HINTS
-    ------------------------------------------------------------------------------
-    ENVIRONMENT -- error around the test
-        gamma/TEST
-            frame on_entry   frame failed
-    
-    HINT: use 'hwut.help' for explanation of subtle issues.
+    NOTE  gamma/TEST  on_entry exited 1: false
     ==============================================================================
     
-    RESULTS: 3 ok, 1 fail, s.ss [sec], s.ss [sec] total
-    |                           ok                            |       fail       |
+    RESULTS: 5 ok, 1 fail, s.ss [sec], s.ss [sec] total
+    |                              ok                               |    fail    |
 }
 successor: digest identical to linear: True
 parallel: digest identical to linear: True

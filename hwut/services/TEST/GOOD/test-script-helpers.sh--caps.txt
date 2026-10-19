@@ -1,0 +1,21 @@
+DIR  sub/TEST                                                                 
+FRAME sub/TEST:on_entry ........................... ended: wall clock exceeded
+START test-a.sh  x                                                         ||1
+END   :          x ................................................. [OK]  ||0
+START :          y                                                         ||1
+END   :          y ................................................. [OK]  ||0
+
+==============================================================================
+DIRECTORIES                                             2 ok, 0 fail, <t>
+------------------------------------------------------------------------------
+   sub/TEST . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+
+NOTE  sub/TEST  on_entry ended: wall clock exceeded: sleep 5
+
+NOTE: 2 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+      see: hwut.config.ignore --wallflowers
+==============================================================================
+
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+|                                     ok                                     |
+<hwut-end>

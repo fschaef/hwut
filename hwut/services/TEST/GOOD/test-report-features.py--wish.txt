@@ -1,0 +1,116 @@
+
+--- hwut.report.features -F core ---
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
+        doc        Runs tests and judges them.
+        keys       engine-part
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
+            doc        Decides whether an output is equivalent to its nominal.
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
+                doc        Pairs lines.
+                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
+                    internal    Core0001:line-pairing  (engine/compare/core)
+                    keys        algorithm, engine-part, heavy
+                    [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                    see          engine/compare/core/README.txt#pairing
+                    see          https://example.org/pairing
+                    see          engine/compare/core/absent.txt
+                [IMPLEMENTED fail] eng.cmp.core.missing-side -- A line present on one side only is shown whole.
+                    internal    Core0001:missing-side  (engine/compare/core)
+                    keys        algorithm, engine-part
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                [OPEN untested]    eng.cmp.core.untested
+                    internal    Core0001:untested  (engine/compare/core)
+                    keys        algorithm, engine-part
+                [OPEN untested]    eng.cmp.core.not-numbered
+                    internal    Core0001:not-numbered  (engine/compare/core)
+                    keys        algorithm, engine-part
+status: OK
+
+--- hwut.report.features -e eng.cmp.whole-page ---
+    AGGREGATE engine -- Engine     1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+        state      IMPLEMENTED ok
+        doc        Runs tests and judges them.
+        keys       engine-part
+        AGGREGATE engine/compare -- Compare 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+            state      IMPLEMENTED ok
+            doc        Decides whether an output is equivalent to its nominal.
+            [IMPLEMENTED ok]   eng.cmp.whole-page -- A whole page is judged.
+                internal    Cmp00001:whole-page  (engine/compare)
+                keys        engine-part
+                [PASS] engine/compare/TEST/test-pages.sh [small]
+                [PASS] engine/compare/TEST/test-pages.sh [large]
+status: OK
+
+--- hwut.report.features -k heavy ---
+    AGGREGATE engine -- Engine     1 implemented, 0 open; 0 ok, 1 fail, 0 untested
+        state      IMPLEMENTED fail
+        doc        Runs tests and judges them.
+        keys       engine-part
+        AGGREGATE engine/compare -- Compare 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
+            state      IMPLEMENTED fail
+            doc        Decides whether an output is equivalent to its nominal.
+            AGGREGATE engine/compare/core -- Core 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
+                state      IMPLEMENTED fail
+                doc        Pairs lines.
+                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
+                    internal    Core0001:line-pairing  (engine/compare/core)
+                    keys        algorithm, engine-part, heavy
+                    [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                    see          engine/compare/core/README.txt#pairing
+                    see          https://example.org/pairing
+                    see          engine/compare/core/absent.txt
+status: OK
+
+--- hwut.report.features -F engine/compare/core/pairing -e eng.cmp.whole-page ---
+    AGGREGATE engine -- Engine     2 implemented, 0 open; 1 ok, 1 fail, 0 untested
+        state      IMPLEMENTED fail
+        doc        Runs tests and judges them.
+        keys       engine-part
+        AGGREGATE engine/compare -- Compare 2 implemented, 0 open; 1 ok, 1 fail, 0 untested
+            state      IMPLEMENTED fail
+            doc        Decides whether an output is equivalent to its nominal.
+            AGGREGATE engine/compare/core -- Core 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
+                state      IMPLEMENTED fail
+                doc        Pairs lines.
+                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
+                    internal    Core0001:line-pairing  (engine/compare/core)
+                    keys        algorithm, engine-part, heavy
+                    [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                    see          engine/compare/core/README.txt#pairing
+                    see          https://example.org/pairing
+                    see          engine/compare/core/absent.txt
+            [IMPLEMENTED ok]   eng.cmp.whole-page -- A whole page is judged.
+                internal    Cmp00001:whole-page  (engine/compare)
+                keys        engine-part
+                [PASS] engine/compare/TEST/test-pages.sh [small]
+                [PASS] engine/compare/TEST/test-pages.sh [large]
+status: OK
+
+--- hwut.report.features -F nothing-here ---
+    EMPTY: the feature wish selects no feature below '.'
+status: EMPTY
+
+--- hwut.report.features -e no.such.id ---
+    REFUSED: '--feature-ext no.such.id' names no feature: no line of 'hwut-root-features.conf' has that external id => hwut.features.tree -e
+status: REFUSED
+
+--- hwut.report.features -k no-such-key ---
+    REFUSED: no feature carries the key 'no-such-key'; keys that stand: algorithm, engine-part, heavy
+    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- hwut.report.features --fail ---
+    REFUSED: 'hwut.report.features' takes the feature wish alone ('-F', '-e', '-k'); a selection of runs is 'hwut.report.list's
+    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- hwut.report.features -F core --matrix ---
+    REFUSED: '--matrix' shows every link of each TEST directory; a feature wish cuts the tree => without '--matrix'
+status: REFUSED
+<hwut-end>

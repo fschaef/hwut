@@ -132,6 +132,29 @@ def test_inherit():
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
+    #  R-98 (D-25): 'ignore' and 'admit' ADD UP; a child's own glob does
+    #  not undo its parent's. MEASURED 2026-10-19: 'sub/TEST' read
+    #  ignore ('test-own*',) only, and 'test-old.py' was an application.
+    tree, root = tree_of({
+        "hwut.conf":             'hwut { ignore = ["test-old*"] '
+                                 'admit = ["test-a.py~"] }\n',
+        "sub/TEST/hwut.conf":    'hwut { ignore = ["test-own*"] }\n',
+        "sub/TEST/test-a.py":    '# @hwut { title = "A" }\n',
+        "sub/TEST/test-old.py":  '# @hwut { title = "OLD" }\n',
+        "sub/TEST/test-own.py":  '# @hwut { title = "OWN" }\n',
+        "other/TEST/test-b.py":  '# @hwut { title = "B" }\n',
+        "other/TEST/test-old.py": '# @hwut { title = "OLD" }\n',
+    })
+    try:
+        banner("'ignore' and 'admit' add up, the parent's first, each once")
+        for directory, result in tree:
+            spec = result.app_set.directory_spec
+            print("    %-24s ignore %r  admit %r"
+                  % (directory, spec.ignore, spec.admit))
+        show(tree)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
 
 def test_marker():
     """RETURN: None. 'test_directory' renames the marker below."""

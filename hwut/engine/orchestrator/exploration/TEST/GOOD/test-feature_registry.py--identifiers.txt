@@ -46,7 +46,7 @@
 --- paths below the root ----------------------------------------
   'gateway/router' True
   'a'              True
-  '.'              False
+  '.'              True
   ''               False
   '/a'             False
   '../a'           False

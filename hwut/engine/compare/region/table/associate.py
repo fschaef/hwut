@@ -1,5 +1,5 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer"""
-from ...core.line_pair import LinePair
+from ...core.line_pair import LinePair, filler_pair_list
 from ...core.edit_operations.edit import Edit, E_EditId
 from ...engine.line import Line
 from ...reading.line_element import LineElementString
@@ -35,6 +35,17 @@ def do(subject, nominal, analogy_db):
                                    _display_line(n_lines[info]),
                                    (Edit(E_EditId.GOOD_TOLERATED),),
                                    seq_edit_id=E_EditId.GOOD_TOLERATED))
+        elif si in judgment.differs_db:
+            #  HELD AGAINST A NOMINAL ROW AND DIFFERING FROM IT: shown
+            #  side by side, as verbatim shows a changed line -- not as
+            #  a lone subject row and a lone nominal row (the book's
+            #  D-15).
+            ni = judgment.differs_db[si]
+            used_nominal.add(ni)
+            result.append(LinePair(_display_line(s_line),
+                                   _display_line(n_lines[ni]),
+                                   (Edit(E_EditId.SUBSTITUTE),), cost=1.0,
+                                   seq_edit_id=E_EditId.SUBSTITUTE))
         else:
             result.append(LinePair(_display_line(s_line), None, (),
                                    cost=1.0,
@@ -50,6 +61,10 @@ def do(subject, nominal, analogy_db):
         result.append(LinePair(None, _display_line(n_line),
                                (Edit(E_EditId.GOOD_INSERT),),
                                seq_edit_id=E_EditId.GOOD_INSERT))
+
+    #  INSIGNIFICANT LINES are neutral display filler, as in verbatim
+    #  and the outer text; they are no rows ('chunk.row_list_split_by').
+    result.extend(filler_pair_list(subject.line_list, nominal.line_list))
 
     def key(x):
         return (1, x.nominal_line_n) if x.subject_line_n == -1 \

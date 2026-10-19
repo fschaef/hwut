@@ -5,7 +5,7 @@
     test-pages.sh [small]  PASS        .
     test-pages.sh [large]  PASS        .
       #1 whole-page  IMPLEMENTED ok
-      #2 never-run   IMPLEMENTED fail
+      #2 never-run   IMPLEMENTED untested
     
     engine/compare/core/TEST  #1    #2    #3    #4
     test-pair.sh [plain]      PASS  .     .     .
@@ -15,8 +15,8 @@
                                           ^     ^     no test run
       #1 line-pairing  IMPLEMENTED fail
       #2 missing-side  IMPLEMENTED fail
-      #3 untested      OPEN
-      #4 not-numbered  OPEN
+      #3 untested      OPEN untested
+      #4 not-numbered  OPEN untested
     
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
@@ -38,8 +38,8 @@ status: OK
                                       ^     ^     no test run
       #1 line-pairing  IMPLEMENTED fail
       #2 missing-side  IMPLEMENTED fail
-      #3 untested      OPEN
-      #4 not-numbered  OPEN
+      #3 untested      OPEN untested
+      #4 not-numbered  OPEN untested
     
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define

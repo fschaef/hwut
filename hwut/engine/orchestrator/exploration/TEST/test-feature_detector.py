@@ -186,13 +186,23 @@ def test_new():
     _case("a name that was retired and is defined again", fact, BASE_DIR,
           CAN + MOST,
           '\n "scroll-old" { id = "%s:scroll" title = "S" }\n' % A)
-    banner("the root's own TEST directory is not a component")
+    #  THE ROOT IS A DIRECTORY LIKE ANY OTHER (the book's D-3). MEASURED
+    #  2026-10-19: 'root-test ... no directory id can stand for it (hint)'.
+    banner("the root's own TEST directory: a directory without an id")
     root = _tree(BASE_FACT, BASE_DIR, CAN + MOST)
     try:
         _features(root, ".", ["top"])
         _show(root)
     finally:
         shutil.rmtree(root, ignore_errors=True)
+    #  ITS ID IS NEVER SENT ELSEWHERE: the root does not move. Its names
+    #  defined below it instead are a new directory; its leaves are gone.
+    fact = dict(BASE_FACT)
+    fact["top/x"] = ["top"]
+    dir_db = dict(BASE_DIR)
+    dir_db["RootId01"] = "."
+    _case("the root's names defined elsewhere: no redirect of its id", fact,
+          dir_db, CAN + MOST + [("top", "RootId01", "top")])
 
 
 def test_moved():

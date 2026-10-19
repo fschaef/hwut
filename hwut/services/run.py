@@ -22,8 +22,8 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
                                 alternatives of ONE group, or a name
                                 no group declares, are refused
     --jobs=<n>                  the host-global bound on work standing
-                                at once, across every directory;
-                                unbounded else
+                                at once, across every directory; the
+                                number of CPUs else
     --strategy=<words>          a comma list answering two questions;
                                 either order, each word long or short.
                                 WHEN A DIRECTORY STARTS: linear|l (one
@@ -82,6 +82,7 @@ from   contextlib import contextmanager
 from   datetime import datetime, timezone
 from   dataclasses import dataclass, field
 
+from .lib.face import write_refusal
 from .lib import preferences
 from ..engine.display.console import (HELP as RENDERING_HELP,
                                                              RenderingError,
@@ -108,7 +109,6 @@ from ..engine.orchestrator.run.strategy import (
            E_SchedulerTestRun_Strategy, E_SchedulerTestRun_SelectionOrder,
            strategy_of, words_of, DETERMINISTIC_SPEC)
 from ..engine.protocol.summary import fold
-from ..engine.orchestrator.plan.confinement import uncapped_refusal_f
 from   ._exit                                        import E_ExitCode
 from   ._target                                      import entered
 from .lib.face import Refused, Fault, FaceError
@@ -156,8 +156,8 @@ EXECUTION
                         it printed is kept
     --timing            keep the run's cadence beside each candidate
     --jobs=<n>          the host-global bound on work standing at
-                        once, across every directory; unbounded where
-                        absent
+                        once, across every directory; the number of
+                        CPUs where absent
     --strategy=<words>  a comma list answering TWO questions. The
                         words may stand in either order and each has a
                         short spelling; an unnamed question keeps its
@@ -272,7 +272,6 @@ class Tally:
     #  OF THOSE, FOR WANT OF AN ENFORCEABLE CAP (exploration R-80): the
     #  run is REFUSED whatever else passed -- a suite may not read green
     #  while tests the author confined did not run.
-    uncapped_n:  int = 0
 
 
 class _NoFlow:
@@ -311,8 +310,7 @@ def _label_hint(directory, wish, word_list):
 
 def _abort(write, message: str) -> E_ExitCode:
     """Writes a refusal and usage, returning the REFUSED state."""
-    write("REFUSED: %s" % message)
-    write(USAGE)
+    write_refusal(write, "REFUSED: %s" % message, USAGE)
     return E_ExitCode.REFUSED
 
 
@@ -424,9 +422,7 @@ def do(request: Request, sink=None, flow=None, write=None):
                  fault_tuple = tuple(str(f) for f in summary.fault_tuple),
                  good_f      = summary.good_f,
                  empty_f     = not summary.verdict_db,
-                 refused_n   = len(summary.refused_db),
-                 uncapped_n  = sum(1 for text in summary.refused_db.values()
-                                   if uncapped_refusal_f(text)))
+                 refused_n   = len(summary.refused_db))
 
 
 def exit_code_of(tally):
@@ -439,9 +435,7 @@ def exit_code_of(tally):
     #  every case it selected may not run was ASKED for something and
     #  said no. 'EMPTY' is for a wish nothing answered at all.
     if tally.empty_f and tally.refused_n: return E_ExitCode.REFUSED
-    #  AN UNENFORCEABLE CAP REFUSES THE RUN'S GREEN TOO (R-80, E-129):
-    #  after FAULT, which a failed case keeps; before OK, always.
-    if tally.uncapped_n: return E_ExitCode.REFUSED
+    #  AN UNENFORCEABLE CAP is a failing case (E-159): FAULT, above.
     if tally.empty_f: return E_ExitCode.EMPTY
     return E_ExitCode.OK
 

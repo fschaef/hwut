@@ -8,7 +8,7 @@ START test-a.sh                                                            ||1
 END   test-a.sh .................................................... [OK]  ||0
 START test-b.sh                                                            ||1
 END   test-b.sh ........................................ no-output [FAIL]  ||0
-FRAME suite/TEST:on_exit ........................................ frame [FAIL]
+FRAME suite/TEST:on_exit .............................................. failed
 ROLL  suite/TEST ........................................... 1 of 2 ok  [FAIL]
 TREE  done, 2 failure(s)
 
@@ -22,13 +22,11 @@ HINTS
 ------------------------------------------------------------------------------
 EXECUTION -- application invocation error
     suite/TEST
-        test-b.sh       stalled; no output
-
-ENVIRONMENT -- error around the test
-    suite/TEST
-        frame on_exit   frame failed
+        test-b.sh   stalled; no output
 
 HINT: use 'hwut.help' for explanation of subtle issues.
+
+NOTE  suite/TEST  on_exit failed
 ==============================================================================
 
 RESULTS: 1 ok, 1 fail, 3.00 [sec]
@@ -53,13 +51,11 @@ HINTS
 ------------------------------------------------------------------------------
 EXECUTION -- application invocation error
     suite/TEST
-        test-b.sh       stalled; no output
-
-ENVIRONMENT -- error around the test
-    suite/TEST
-        frame on_exit   frame failed
+        test-b.sh   stalled; no output
 
 HINT: use 'hwut.help' for explanation of subtle issues.
+
+NOTE  suite/TEST  on_exit failed
 ==============================================================================
 
 RESULTS: 1 ok, 1 fail, 3.00 [sec]

@@ -1,11 +1,11 @@
 --- the run's HINTS end with the pointer:
     HINTS
     NOMINAL -- error in GOOD file
-        .
+        TEST
             test-noend-a.sh   GOOD file does not end in <hwut-end>
             test-noend-b.sh   :
     EXECUTION -- application invocation error
-        .
+        TEST
             test-err.sh       unexpected stderr
     HINT: use 'hwut.help' for explanation of subtle issues.
 --- hwut.help:

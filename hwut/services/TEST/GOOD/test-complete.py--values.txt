@@ -6,7 +6,7 @@
     'hwut.run --format=j'              -> --format=junit
 
 --- directories ---
-    'hwut.run --dir '                  -> sub/
+    'hwut.run --dir '                  -> GOOD/ OUT/ TMP/ hwut.coverage/ sub/
     'hwut.run --directory s'           -> sub/
 
 --- a value of no kind: nothing ---

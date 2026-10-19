@@ -1,4 +1,4 @@
-# vut-register 5 generation:122 apps:19 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,14=8,15=5,16=2,17=8,18=4
+# vut-register 5 generation:128 apps:19 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,16=2,17=8,18=4
 test;choice;verdict;report;stain;test_id;choice_id
 test-amend.py;conf;true;ok;;12;0
 ;languages;true;ok;;12;1
@@ -26,14 +26,6 @@ test-explorer.py;carriers;true;ok;;3;0
 ;faults;true;ok;;3;3
 ;graph;true;ok;;3;4
 ;resolve;true;ok;;3;5
-test-feature_adapt.py;judged;true;ok;;14;0
-;moved;true;ok;;14;1
-;relate;true;ok;;14;2
-;removed;true;ok;;14;3
-;retire;true;ok;;14;7
-;surgery;true;ok;;14;4
-;test_moved;true;ok;;14;5
-;unrelate;true;ok;;14;6
 test-feature_carry.py;moved;true;ok;;16;0
 ;removed;true;ok;;16;1
 test-feature_detector.py;below;true;ok;;17;0
@@ -49,17 +41,9 @@ test-feature_registry.py;faults;true;ok;;18;0
 ;read;true;ok;;18;2
 ;states;true;ok;;18;3
 test-feature_relation.py;block;true;ok;;13;0
-;claim;true;ok;;13;5
 ;faults;true;ok;;13;2
 ;feature_file;true;ok;;13;3
-;map;true;ok;;13;6
-;mismatch;true;ok;;13;7
 ;tree;true;ok;;13;4
-test-feature_wish.py;glob;true;ok;;15;0
-;keys;true;ok;;15;1
-;map;true;ok;;15;2
-;refused;true;ok;;15;3
-;view;true;ok;;15;4
 test-interview.py;block;true;ok;;4;0
 ;directory;true;ok;;4;1
 ;memo;true;ok;;4;2

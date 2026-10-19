@@ -1,0 +1,4 @@
+OUTSIDE THE RELATION
+    test run, names an external id -- no link; link the internal id
+        TEST/test-shot.sh [left]   'physics.bounce' => '<physics>:bounce'
+<hwut-end>

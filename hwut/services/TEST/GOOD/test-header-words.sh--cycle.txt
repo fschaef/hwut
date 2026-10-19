@@ -29,4 +29,7 @@ END   test-e.sh .................................................... [OK]  ||0
         test-c.sh .......................... no-dep [FAIL]
         test-d.sh .......................... no-dep [FAIL]
         test-e.sh ....................................[OK]
+        test-a.sh   missing dependency
+        test-c.sh   :
+        test-d.sh   :
 <hwut-end>

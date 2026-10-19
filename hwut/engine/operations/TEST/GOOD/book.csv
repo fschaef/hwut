@@ -1,4 +1,4 @@
-# vut-register 5 generation:61 apps:8 marks:0=5,1=6,2=5,3=7,4=5,5=6,6=12,7=6
+# vut-register 5 generation:62 apps:8 marks:0=5,1=6,2=5,3=7,4=5,5=6,6=12,7=6
 test;choice;verdict;report;stain;test_id;choice_id
 test-build_action.py;argv;true;ok;;0;0
 ;contained;true;ok;;0;1

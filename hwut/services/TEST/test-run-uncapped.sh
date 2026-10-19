@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title   = "hwut.run: a cap that cannot be enforced refuses the test."
+#     title   = "hwut.run: a cap that cannot be enforced fails the test, not run."
 #     features = ["run-cap-refused"]
 #     choices {
 #         acknowledged { }
@@ -18,27 +18,28 @@
 #
 # ---------------------------------------------------------------------------
 #
-# A page stating 'caps { network = false }' is REFUSED where the
-# procsitter cannot deny the network (exploration R-48, R-80): not run,
-# named in the flow and in the closing REFUSED block under its reason,
-# with the 'hwut-root.conf' entry that acknowledges it. The other tests
-# run and the summary stands.
+# A page stating 'caps { network = false }' FAILS, not run, where the
+# procsitter cannot deny the network (exploration R-48, R-80; services
+# E-159): 'uncapped [FAIL]' in the flow, counted, the cap and the
+# 'hwut-root.conf' entry that acknowledges it beside it in HINTS. The
+# other tests run.
 #
 # THE PLATFORM'S WORD IS THE MACHINE'S FACT: it is shown as '<platform>'.
 #
-# refused       no acknowledgement: two choices refused, one test runs;
-#               the run exits REFUSED (2) though the rest passed.
+# refused       no acknowledgement: two choices fail 'uncapped', one test
+#               runs; the run exits 1.
 # acknowledged  'procsitter { <platform> { network = false } }': all run.
-# elsewhere     the acknowledgement names another platform: refused still.
+# elsewhere     the acknowledgement names another platform: uncapped still.
 # misspelt      an unknown cap, and a word where a boolean belongs:
 #               faults by name, and nothing is acknowledged.
 # doors         the faces that run WITHOUT a plan refuse the same case
 #               by the same reason: 'hwut.accept', 'hwut.run.play',
 #               'hwut.accept.interactive', 'hwut.report.details'.
-# plan          'hwut.plan' refuses the same cases, by the same reason.
-# help          'hwut.help' explains the refusal: the cap, the entry
+# plan          'hwut.plan' names the same cases 'UNCAPPED [FAIL]', by the
+#               same reason.
+# help          'hwut.help' explains the failure: the cap, the entry
 #               that acknowledges, the cases concerned.
-# utility       'psutil' taken away: EVERY case is refused -- the default
+# utility       'psutil' taken away: EVERY case fails uncapped -- the default
 #               memory cap is a cap -- and run and 'hwut.help' both name
 #               'psutil' as missing, and how it is installed.
 # ---------------------------------------------------------------------------
@@ -53,7 +54,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "hwut.run: a cap that cannot be enforced refuses the test.;"
+        echo "hwut.run: a cap that cannot be enforced fails the test, not run.;"
         echo "CHOICES: refused, acknowledged, elsewhere, misspelt, plan, help, utility, doors;"
         exit 0 ;;
 esac

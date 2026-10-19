@@ -1,14 +1,14 @@
 
 --- called inside engine/compare/core/TEST ---
-    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -22,10 +22,10 @@
                     internal    Core0001:missing-side  (engine/compare/core)
                     keys        algorithm, engine-part
                     [FAIL] test-pair.sh [gap]
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
     

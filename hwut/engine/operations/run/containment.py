@@ -21,6 +21,7 @@ CONTAINMENT_TOKEN_DB = {
     E_Containment.FAIL_FILE_SIZE_EXCEEDED:  E_TestRunResult.TEST_APP_FILE_SIZE_EXCEEDED,
     E_Containment.FAIL_PIDS_EXCEEDED:       E_TestRunResult.TEST_APP_PIDS_EXCEEDED,
     E_Containment.FAIL_DISK_USAGE_EXCEEDED: E_TestRunResult.TEST_APP_DISK_EXCEEDED,
+    E_Containment.FAIL_DISK_SPACE_LOW:      E_TestRunResult.TEST_APP_DISK_LOW,
 }
 
 
@@ -55,6 +56,8 @@ def detail_of(record, caps):
         peak = record.peak_disk_mb
         return "cap %s MB, peak %s MB" % (caps.max_disk_mb,
                                           "?" if peak is None else "%.0f" % peak)
+    if c is E_Containment.FAIL_DISK_SPACE_LOW:
+        return "floor %s MB free" % caps.min_free_disk_mb
     return None
 
 

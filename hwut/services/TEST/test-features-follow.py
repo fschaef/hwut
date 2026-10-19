@@ -3,6 +3,7 @@
 #    title   = "hwut.move and hwut.remove: the features of the test they act on"
 #    choices {
 #        move    { features = ["move-features-follow"] }
+#        move_inside { features = ["move-features-follow"] }
 #        remove  { features = ["remove-names-features"] }
 #    }
 #  }
@@ -12,17 +13,24 @@ ______________________________________________________________________________
 PURPOSE: WHAT 'hwut.move' AND 'hwut.remove' DO TO THE FEATURES of the test
          they act on (R-91, R-96 step 6).
 
-CHOICES: move, remove;
+CHOICES: move, move_inside, remove;
 
 DESCRIPTION:
 
     move     'hwut.move' of a test into another TEST directory: the features
              it links to are carried into that directory's feature file --
-             one still linked by a test that stays is copied, the copy not
-             registered -- and the central file follows: the leaf is
+             one still linked by a test that stays is not copied: the moved
+             test links it by its internal id (the book's D-8; it was
+             copied, the copy not registered) -- and the central file follows: the leaf is
              repointed to the target's directory id. Into a directory
              without a feature file and without an id: the file is written,
              the directory registered, the leaf repointed.
+    move_inside
+             the same move called from INSIDE the source TEST directory,
+             relative paths, no '--directory': the features are carried
+             and the central file follows as from the top (the book's
+             D-1: the source was '.', its parent '', and the carry ended
+             in a traceback with the tree half moved).
     remove   'hwut.remove' of a test: the features it leaves without a
              linked run are named.
 
@@ -170,6 +178,32 @@ def run_move():
     _in_tree(tree, body)
 
 
+def run_move_inside():
+    """RETURN: None. The move of 'run_move', called inside the source
+    TEST directory with relative paths."""
+    def body():
+        core, page = "engine/compare/core/TEST", "engine/compare/TEST"
+        Bookkeeper(core).note_accept("test-side.sh", None)
+        banner("hwut.move test-side.sh ../../TEST, inside %s" % core)
+        shutil.move(os.path.join(core, "test-side.sh"),
+                    os.path.join(page, "test-side.sh"))
+        root = os.getcwd()
+        os.chdir(core)
+        try:
+            status = rename.main(["test-side.sh", "-to", "../../TEST",
+                                  "--dont-ask"],
+                                 write=lambda text: _said(
+                                     str(text).replace(root, "<tree>")))
+        finally:
+            os.chdir(root)
+        print("status: %s" % status.name)
+        banner("the two feature files, and the central file")
+        _shown(core + "/hwut-features.conf")
+        _shown(page + "/hwut-features.conf")
+        _shown("hwut-root-features.conf")
+    _in_tree(tree, body)
+
+
 def run_remove():
     """RETURN: None. A test removed, and the features it leaves."""
     def body():
@@ -194,6 +228,7 @@ if __name__ == "__main__":
                      "test they act on",
         choice_map = {
             "move":    run_move,
+            "move_inside": run_move_inside,
             "remove":  run_remove,
         },
     ).run()

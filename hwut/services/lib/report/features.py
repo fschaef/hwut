@@ -21,8 +21,9 @@ THE STATEMENTS READ
 
 THE PAGE
 
-    AGGREGATE <tree path> -- <title>   <n> implemented, <n> open; <n> ok, <n> fail
-        state      IMPLEMENTED ok | IMPLEMENTED fail | OPEN
+    AGGREGATE <tree path> -- <title>   <n> implemented, <n> open; <n> ok, <n> fail, <n> untested
+        state      IMPLEMENTED ok | IMPLEMENTED fail | IMPLEMENTED untested
+                   | OPEN fail | OPEN untested
         keys       <the keys it states; they travel downward>
         [IMPLEMENTED ok]   <external id> -- <title>
             internal    <directory id>:<name>  (<directory>)
@@ -32,11 +33,21 @@ THE PAGE
     RETIRED         the claims of 'retired'
 
     A leaf is IMPLEMENTED where a test run is linked to it, else OPEN;
-    the verdict beside it is ok where every linked run passes. OPEN is
-    always fail; RETIRED has no verdict. An aggregate folds the states
-    below it; one with nothing below is OPEN. Asked below the top, only
+    the verdict beside it is ok where every linked run passes, fail where
+    one fails, untested where one never ran. The two are separate axes:
+    OPEN has no run, so it is untested -- never fail. RETIRED has no
+    verdict. An aggregate folds each axis apart -- OPEN where a claim
+    below is, its verdict the worst below; one with nothing below is OPEN
+    untested. Asked below the top, only
     the leaves whose directory stands below, under the aggregates that
     hold them. Every path is relative to where the face is called.
+
+-F <path-glob>, -e <id>, -k <expr>: THE FEATURE WISH, read as 'hwut.run'
+and 'hwut.report.list' read it ('feature_wish.selected_leaf_list'): the
+page is cut to the leaves it selects, the aggregates above them standing
+as headers and counted over what is kept; no RETIRED, no OUTSIDE THE
+RELATION. A wish that selects nothing is EMPTY; any other part of a wish
+('--fail', a glob, a label) is refused, and so is '--matrix' beside it.
 
 --matrix: THE LINKS AS A TABLE, one per TEST directory that carries a
 feature file, in place of the tree -- a row per test run, a column per
@@ -49,7 +60,7 @@ feature, the run's verdict where it links:
                                                ^ no test run
       #1 line-pairing   IMPLEMENTED fail
       #2 missing-side   IMPLEMENTED fail
-      #3 untested       OPEN
+      #3 untested       OPEN untested
 
     '#<n>' counts the features of the file in order; it is a column,
     not an id. A column is named by its leaf's state, 'not registered'
@@ -132,13 +143,13 @@ import sys
 from   dataclasses import dataclass
 
 from ..._exit import E_ExitCode
-from ..face import Refused, Empty, answered
+from ..face import Refused, Empty, answered, write_refusal
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                  import RootConfMissing
 from   hwut.engine.orchestrator.exploration.feature_relation \
                                  import document_place, TEST_NAME
 from   hwut.engine.orchestrator.exploration.feature_registry \
-                                 import IMPLEMENTED, OPEN, OK, FAIL
+                                 import IMPLEMENTED, OPEN, OK, FAIL, UNTESTED
 from   hwut.engine.orchestrator.exploration.feature_view \
                                  import view_of, ViewRefused
 from   hwut.engine.orchestrator.exploration.finder \
@@ -146,7 +157,8 @@ from   hwut.engine.orchestrator.exploration.finder \
 
 USAGE = ("usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] "
          "[--html=<file>] [--ods=<file>] [--cov-html=<dir>] "
-         "[--directory=<path>] [--help]")
+         "[-F|--feature <id-glob>]... [-e|--feature-ext <id>]... "
+         "[-k|--keys <expr>] [--directory=<path>] [--help]")
 
 _INDENT = "    "
 _WIDTH  = 78
@@ -167,12 +179,14 @@ class Request:
     html_path: str | None = None
     ods_path:  str | None = None
     cov_html:  str | None = None     # where the coverage pages stand
+    wish:      object     = None     # Wish: '-F', '-e', '-k'; None: all
 
 
 @dataclass(frozen=True)
 class Result:
     """WHAT HAPPENED: the page's lines, and how many leaves stand in each
-    state below the directory -- (state, n): IMPLEMENTED, OPEN, OK, FAIL."""
+    state below the directory -- (state, n): IMPLEMENTED, OPEN, OK, FAIL,
+    UNTESTED."""
     line_tuple:  tuple = ()
     count_tuple: tuple = ()
 
@@ -238,27 +252,46 @@ def _code_line_list(code, depth):
     return line_list
 
 
-def matrix_line_list(relation, path, state_of):
+def matrix_line_list(relation, path, state_of, foreign_of=None):
     """RETURN: list[str], the links of one TEST directory as a table:
     a row per test run, a column per feature ('#<n>', n counting the
-    features in file order), the run's verdict where it links and '.'
+    features in file order, then the features of other directories its
+    tests link by internal id), the run's verdict where it links and '.'
     where it does not; '<- NONSENSE?' behind a run that links to none,
     '<- no feature defined' behind one that names only what the
     directory does not define, '^ no test run' under a feature nobody
-    proves; then the features by column, name and state. Empty where
-    the directory carries no feature file. 'state_of(path, name)' names a
-    feature's state."""
+    proves; then the features by column, name and state -- a foreign one
+    by its external id (the book's D-8). Empty where the directory
+    neither carries a feature file nor links another's. 'state_of(path,
+    name)' names a feature's state; 'foreign_of(internal id)' -> (external
+    id, state text), None where the link does not resolve."""
     test_directory = relation.test_directory_db[path]
-    if test_directory.feature_file is None: return []
+    own_f = test_directory.feature_file is not None
+    foreign_list = []                   # (internal, external, state)
+    for _, _, internal in test_directory.foreign_tuple:
+        found = None if foreign_of is None else foreign_of(internal)
+        if found is not None and internal not in [f[0] for f in foreign_list]:
+            foreign_list.append((internal,) + tuple(found))
+    if not own_f and not foreign_list: return []
     state_tuple = test_directory.state_tuple
-    head_list   = ["#%i" % (column + 1) for column in range(len(state_tuple))]
+    column_n    = len(state_tuple) + len(foreign_list)
+    head_list   = ["#%i" % (column + 1) for column in range(column_n)]
     cell_db     = {}               # (test, choice) -> {column: verdict}
     for column, each in enumerate(state_tuple):
         for run in each.run_tuple:
             cell_db.setdefault((run.test, run.choice), {})[column] = \
                 run.verdict
+    column_of = {internal: len(state_tuple) + i
+                 for i, (internal, _, _) in enumerate(foreign_list)}
+    for test, choice, internal in test_directory.foreign_tuple:
+        if internal in column_of:
+            cell_db.setdefault((test, choice), {})[column_of[internal]] = \
+                test_directory.verdict_db[(test, choice)]
     undefined = set((test, choice) for test, choice, _
                     in test_directory.undefined_tuple)
+    unresolved = set((test, choice) for test, choice, internal
+                     in test_directory.foreign_tuple
+                     if internal not in column_of)
     name_list = [run_text(".", test, choice)
                  for test, choice in test_directory.run_tuple]
     width_0   = max([len(name) for name in name_list] + [len(path)])
@@ -277,23 +310,31 @@ def matrix_line_list(relation, path, state_of):
     for name, key in zip(name_list, test_directory.run_tuple):
         linked = cell_db.get(key, {})
         line_list.append(row(name, [linked.get(column, ".")
-                                    for column in range(len(state_tuple))],
+                                    for column in range(column_n)],
                              "" if linked
                              else "  <- no feature defined"
                              if key in undefined
-                             else "  <- NONSENSE?"))
+                             else "  <- link does not resolve"
+                             if key in unresolved
+                             else "  <- NONSENSE?" if own_f else ""))
     if any(not each.run_tuple for each in state_tuple):
         line_list.append(row("", ["^" if not each.run_tuple else ""
                                   for each in state_tuple],
                              "  no test run"))
     name_width = max([len(feature_name(each.feature))
-                      for each in state_tuple] + [1])
+                      for each in state_tuple]
+                     + [len(external) for _, external, _ in foreign_list]
+                     + [1])
     head_width = max(len(head) for head in head_list) if head_list else 1
     for head, each in zip(head_list, state_tuple):
         state = state_of(path, each.feature.name)
         line_list.append("  %-*s %-*s  %s" % (head_width, head, name_width,
                                               feature_name(each.feature),
                                               state))
+    for head, (_, external, state) in zip(head_list[len(state_tuple):],
+                                          foreign_list):
+        line_list.append("  %-*s %-*s  %s  (another directory's)"
+                         % (head_width, head, name_width, external, state))
     return line_list
 
 
@@ -307,15 +348,17 @@ def feature_name(feature):
 relation_code_db = None
 
 def _view_count_text(count_db):
-    """RETURN: str, '<n> implemented, <n> open; <n> ok, <n> fail'."""
-    return "%i implemented, %i open; %i ok, %i fail" % (
-        count_db[IMPLEMENTED], count_db[OPEN], count_db[OK], count_db[FAIL])
+    """RETURN: str, '<n> implemented, <n> open; <n> ok, <n> fail, <n>
+    untested' -- the implementation axis, then the verdict axis."""
+    return "%i implemented, %i open; %i ok, %i fail, %i untested" % (
+        count_db[IMPLEMENTED], count_db[OPEN], count_db[OK], count_db[FAIL],
+        count_db[UNTESTED])
 
 
 def view_state_text(state):
     """RETURN: str, a claim's state on its two axes as the page writes it:
-    'IMPLEMENTED ok', 'IMPLEMENTED fail', 'OPEN' (always fail), 'RETIRED'."""
-    if state.verdict is None or state.implementation == OPEN:
+    '<IMPLEMENTED|OPEN> <ok|fail|untested>'; 'RETIRED' alone."""
+    if state.verdict is None:
         return state.implementation
     return "%s %s" % (state.implementation, state.verdict)
 
@@ -344,7 +387,8 @@ def _view_leaf_line_list(view, leaf_view, depth):
     if leaf_view.feature_state is not None:
         path = leaf_view.test_path
         line_list += ["%s[%s] %s" % (lead, run.verdict,
-                                     run_text(path, run.test, run.choice))
+                                     run_text(run.path or path, run.test,
+                                              run.choice))
                       for run in leaf_view.feature_state.run_tuple]
         line_list += ["%ssee          %s%s" % (lead, place, anchor)
                       for place, anchor, _ in (
@@ -414,8 +458,13 @@ def _view_outside_line_list(view):
     detector finds of the central file against the tree."""
     from hwut.engine.orchestrator.exploration.feature_detector \
         import detect, unregistered_list
+    from hwut.engine.orchestrator.exploration.feature_registry \
+        import leaf_list
     relation = view.relation
     undefined, unlinked, fault, absent = [], [], [], []
+    external    = []
+    internal_of = {leaf.external: leaf.internal
+                   for _, leaf in leaf_list(view.registry)}
     for path in sorted(relation.test_directory_db):
         each = relation.test_directory_db[path]
         if each.feature_file is not None:
@@ -430,8 +479,19 @@ def _view_outside_line_list(view):
                                       % (path, state.feature.name, document))
             fault += ["%s/%s" % (path, f) if path != "." else "%s" % f
                       for f in each.feature_file.fault_tuple]
-        undefined += ["%s   '%s'" % (run_text(path, test, choice), name)
-                      for test, choice, name in each.undefined_tuple]
+        for test, choice, name in each.undefined_tuple:
+            if name in internal_of:
+                #  AN EXTERNAL ID IS NO LINK (the book's D-8, R-2).
+                external.append("%s   '%s' => '%s'"
+                                % (run_text(path, test, choice), name,
+                                   internal_of[name]))
+            else:
+                undefined.append("%s   '%s'"
+                                 % (run_text(path, test, choice), name))
+    foreign = ["%s   '%s': %s" % (run_text(path, test, choice), internal,
+                                  why)
+               for path, test, choice, internal, why
+               in view.foreign_outside]
     below = os.path.relpath(view.asked, view.top).replace(os.sep, "/")
     unregistered = ["%s   '%s'" % pair
                     for pair in unregistered_list(view.top, below)]
@@ -442,6 +502,10 @@ def _view_outside_line_list(view):
     for head, entry_list in (
             ("test run, names a feature its TEST directory does not "
              "define", undefined),
+            ("test run, names an external id -- no link; link the "
+             "internal id", external),
+            ("test run, links by internal id what does not resolve",
+             foreign),
             ("NONSENSE? test run, links to no feature => hwut.help",
              unlinked),
             ("claim, names a document that does not stand", absent),
@@ -468,25 +532,40 @@ def _view_matrix_state(view):
     return state_of
 
 
+def _view_foreign_of(view):
+    """RETURN: callable internal id -> (external id, state text) of the
+    leaf a link by internal id resolves to; None where it resolves to
+    none in the view."""
+    leaf_db = {each.leaf.internal: each for each in view.leaf_list()}
+
+    def foreign_of(internal):
+        found = leaf_db.get(internal)
+        return None if found is None \
+               else (found.leaf.external, view_state_text(found.state))
+    return foreign_of
+
+
 def _view_do(view, request, root):
     """RETURN: Result, the page of 'view' (see 'do')."""
     global relation_code_db
     count_db    = view.count_db()
     count_tuple = tuple((state, count_db[state])
-                        for state in (IMPLEMENTED, OPEN, OK, FAIL))
+                        for state in (IMPLEMENTED, OPEN, OK, FAIL,
+                                      UNTESTED))
     if request.html_path or request.ods_path:
         return Result(tuple(_document_written(view.relation, request, root,
                                               view)), count_tuple)
     note_list   = []
     relation_code_db = None
     if request.code_f or request.cov_dir:
-        relation_code_db, note = _code_db(view.relation, root,
-                                          request.cov_dir)
+        relation_code_db, note = _code_db(view, root, request.cov_dir)
         if note: note_list.append(note)
     if request.matrix_f:
         line_list, state_of = [], _view_matrix_state(view)
+        foreign_of = _view_foreign_of(view)
         for path in sorted(view.relation.test_directory_db):
-            found = matrix_line_list(view.relation, path, state_of)
+            found = matrix_line_list(view.relation, path, state_of,
+                                     foreign_of)
             if found: line_list += found + [""]
         if line_list: line_list.pop()
         else:         line_list = ["no TEST directory carries '%s'"
@@ -502,7 +581,11 @@ def _view_do(view, request, root):
             for each in view.unplaced:
                 line_list += _view_leaf_line_list(view, each, 1)
         line_list += _view_retired_line_list(view)
-    line_list = note_list + line_list + _view_outside_line_list(view)
+    #  A CUT SHOWS THE FEATURES ASKED FOR: what stands outside the
+    #  relation is the whole tree's matter, not theirs.
+    cut_f = request.wish is not None and request.wish.asks_feature_f()
+    line_list = note_list + line_list \
+                + ([] if cut_f else _view_outside_line_list(view))
     relation_code_db = None
     return Result(tuple(line_list), count_tuple)
 
@@ -529,6 +612,21 @@ def do(request):
         raise Refused("REFUSED: %s" % error) from error
     if not view.relation.test_directory_db:
         raise Empty("EMPTY: no TEST directory below '%s'" % directory)
+    if request.wish is not None and request.wish.asks_feature_f():
+        #  THE FEATURE WISH IS READ WHERE EVERY FACE READS IT
+        #  ('feature_wish.selected_leaf_list'); the page is the view kept
+        #  to what it selects (D-2 of the book, ruled 2026-10-17 "(a)").
+        from ....engine.orchestrator.exploration.feature_wish \
+                                                     import view_cut
+        from ....engine.orchestrator.exploration.task_list \
+                                                     import SelectionError
+        try:
+            view = view_cut(view, request.wish)
+        except SelectionError as error:
+            raise Refused("REFUSED: %s" % error) from error
+        if not view.leaf_list():
+            raise Empty("EMPTY: the feature wish selects no feature "
+                        "below '%s'" % directory)
     return _view_do(view, request, root)
 
 
@@ -545,7 +643,7 @@ def _document_written(relation, request, root, view):
     from .feature_document import document_of_view, html_text, ods_bytes
     line_list, code_db = [], None
     if request.code_f or request.cov_dir or request.cov_html:
-        code_db, note = _code_db(relation, root, request.cov_dir)
+        code_db, note = _code_db(view, root, request.cov_dir)
         if note: line_list.append(note)
     if request.cov_html and not os.path.isdir(request.cov_html):
         raise Refused("REFUSED: '%s' is no directory -- '--cov-html' names "
@@ -576,7 +674,7 @@ def _document_written(relation, request, root, view):
     return line_list
 
 
-def _code_db(relation, root, cov_dir):
+def _code_db(view, root, cov_dir):
     """
     RETURN: [0] dict, the code of the features
                 ('feature_code.code_db_of'); None where no coverage
@@ -593,7 +691,11 @@ def _code_db(relation, root, cov_dir):
                       "writes one, '--cov-dir=<dir>' names one; no code "
                       "shown")
     try:
-        found = code_db_of(relation, root, output_directory)
+        run_db = {(each.test_path, each.leaf.name):
+                      each.feature_state.run_tuple
+                  for each in view.leaf_list()
+                  if each.feature_state is not None}
+        found = code_db_of(view.relation, root, output_directory, run_db)
     except OutputRefused as refusal:
         return None, "NOTE: %s; no code shown" % refusal
     if found is None:
@@ -616,6 +718,26 @@ def main(argv=None, write=None):
     """
     if write is None: write = print
     if argv  is None: argv  = sys.argv[1:]
+    from ....engine.orchestrator.plan.wish import (Wish, WishError,
+                                                   parse_wish)
+    from dataclasses import replace
+    #  THE FEATURE WISH, read by the one reader of every face; any other
+    #  part of a wish selects runs, which this page does not list.
+    if "--help" not in argv:
+        try:
+            wish, argv = parse_wish(argv)
+        except WishError as error:
+            write_refusal(write, "REFUSED: %s" % error, USAGE)
+            return E_ExitCode.REFUSED
+        if replace(wish, feature_tuple=(), feature_ext_tuple=(),
+                   keys_spec=None) != Wish():
+            write("REFUSED: 'hwut.report.features' takes the feature wish "
+                  "alone ('-F', '-e', '-k'); a selection of runs is "
+                  "'hwut.report.list's")
+            write(USAGE)
+            return E_ExitCode.REFUSED
+    else:
+        wish = None
     directory = "."
     matrix_f, code_f, cov_dir = False, False, None
     html_path, ods_path       = None, None
@@ -653,8 +775,12 @@ def main(argv=None, write=None):
               "'--ods=<file>'")
         write(USAGE)
         return E_ExitCode.REFUSED
+    if matrix_f and wish is not None and wish.asks_feature_f():
+        write("REFUSED: '--matrix' shows every link of each TEST directory; "
+              "a feature wish cuts the tree => without '--matrix'")
+        return E_ExitCode.REFUSED
     return answered(do, Request(directory, matrix_f, code_f, cov_dir,
-                                html_path, ods_path, cov_html),
+                                html_path, ods_path, cov_html, wish),
                     write, printed, USAGE)
 
 

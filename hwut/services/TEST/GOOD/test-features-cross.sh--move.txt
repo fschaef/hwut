@@ -1,0 +1,15 @@
+    feature 'bounce' stays in the source, still linked there: the moved test links it as '<physics>:bounce'
+    feature 'materials' -> world
+    'physics.materials' now binds <world>:materials
+        link rewritten in world/TEST/test-terrain.sh
+world/TEST/test-roll.sh:#     choices { off-wall { features = ["<physics>:bounce", "materials"] } over-ice { features = ["<physics>:bounce"] } }
+world/TEST/test-terrain.sh:#     choices { seed-4 { features = ["terrain", "<world>:materials"] } }
+features { childs { terrain { title = "terrain" }  materials { title = "materials" } } }
+|                                     ok                                     |
+nothing to register below '.'
+== hwut.report.list -e physics.bounce
+./TEST/test-shot.sh left
+./physics/TEST/test-push.sh a
+./world/TEST/test-roll.sh off-wall
+./world/TEST/test-roll.sh over-ice
+<hwut-end>

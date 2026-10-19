@@ -116,6 +116,7 @@ EXIT: OK where something was proposed, EMPTY where nothing is insane,
 REFUSED where the command line cannot be read or names a target no
 directory binds.
 """
+from ..face import write_refusal
 import os
 import sys
 
@@ -209,8 +210,7 @@ def main(argv=None, write=None, err=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        err("REFUSED: %s" % error)
-        err(USAGE)
+        write_refusal(err, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
     if rest_list and rest_list[-1] in ("--target", "-o", "--output"):
         err("REFUSED: '%s' stands without a name" % rest_list[-1])

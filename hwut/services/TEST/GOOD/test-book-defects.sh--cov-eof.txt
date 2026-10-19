@@ -1,0 +1,4 @@
+no '-o <directory>': gather coverage data in '<here>/hwut.coverage'? Everything in it is removed. [y/N]
+answer: None
+hwut.coverage written: 0
+<hwut-end>

@@ -48,6 +48,12 @@ from .form import (CExclusionSet, CPlanLink, CPlanNode, CTestPlan,
                    E_LinkKind, E_Provenance)
 
 
+
+#  THE SELECTION SELECTED NOTHING -- said once, by this string, and taken
+#  back by the run where the book's discrepancies answer the wish
+#  ('orchestrate', the book's reviewers 2026-10-19).
+EMPTY_SELECTION_STR = "the selection is empty: no test case answers the wish"
+
 def determine(app_set, task_list, build_interview=None, admit=None):
     """
     RETURN: [0] CTestPlan, what the wish comes to on this directory.
@@ -87,8 +93,7 @@ def determine(app_set, task_list, build_interview=None, admit=None):
             refused_list.append((name, reason))
         case_list = admitted_list
     if not case_list and not refused_list:
-        report_list.append("the selection is empty: no test case "
-                           "answers the wish")
+        report_list.append(EMPTY_SELECTION_STR)
 
     case_list, implied_db = _closed(case_list, app_set)
 

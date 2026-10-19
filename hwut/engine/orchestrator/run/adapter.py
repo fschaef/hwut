@@ -23,6 +23,7 @@ from dataclasses import replace
 
 from ...bookkeeper.api  import StoreConfig
 from ..exploration.selection import naming_of           # noqa: F401
+from ..exploration.configuration_tree import BUILD_FRAMEWORK_TUPLE
 from ...operations.build_action  import BuildConfig, E_BuildSystem
 from ...operations.configuration import (E_SourceKind,
                                          TestChoiceConfiguration,
@@ -31,7 +32,9 @@ from ...procsitter.api    import ProcsitterConfig
 
 from ...bookkeeper.api    import CAPS_FIELD_DB as _CAPS_FIELD_DB
 
-_BUILD_SYSTEM_DB = {"make": E_BuildSystem.MAKE}
+#  ONE PER FRAMEWORK THE HEADER ADMITS ('BUILD_FRAMEWORK_TUPLE').
+_BUILD_SYSTEM_DB = {framework: E_BuildSystem(framework)
+                    for framework in BUILD_FRAMEWORK_TUPLE}
 
 
 
@@ -59,7 +62,8 @@ def interpreter_of(language, language_setup):
 
 
 def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
-                          timing_f=False, language_setup=None):
+                          timing_f=False, language_setup=None,
+                          free_disk_min_mb=None):
     """
     RETURN: TestConfiguration for 'app' as it stands in 'directory' --
             source kind and interpreter from the language, the build
@@ -78,6 +82,9 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
     'language_setup' is the tree's resolved 'language-setup' dict
     (R-73); None reads as empty, and every language is then called by
     its own name.
+
+    'free_disk_min_mb' is the root's floor of free space on every disk
+    (D-24); None leaves procsitter's own.
 
     'timing_f' asks for the RUN'S CADENCE ('--timing'): the per-line
     delta times are kept beside the candidate. It is the ONLY thing
@@ -98,8 +105,9 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
     #  would make one choice's cap the baseline its siblings inherit;
     #  and not from 'choice_db.get(None)' either, which exists only
     #  where the header names no choice at all.
-    caps  = _caps_of(app.root) if app.root is not None \
-            else ProcsitterConfig()
+    base  = ProcsitterConfig() if free_disk_min_mb is None \
+            else ProcsitterConfig(min_free_disk_mb=free_disk_min_mb)
+    caps  = _caps_of(app.root, base) if app.root is not None else base
     interpreter = None
     if build is not None:
         source_kind = E_SourceKind.COMPILED
@@ -142,8 +150,12 @@ def _build_of(parameters, source_file):
     stated = parameters.build
     if stated is None or stated.framework is None: return None
     framework = stem_expanded(stated.framework, source_file)
-    assert framework in _BUILD_SYSTEM_DB, \
-           "no build system declared for framework '%s'" % framework
+    #  A NAME THE HEADER DID NOT ADMIT reaches here only through '%'
+    #  (the validator judges every literal one): said by name.
+    if framework not in _BUILD_SYSTEM_DB:
+        raise ValueError("unknown build framework '%s' (from '%s'); "
+                         "known: %s" % (framework, stated.framework,
+                                        ", ".join(BUILD_FRAMEWORK_TUPLE)))
     target = stem_expanded(stated.executable or "app", source_file)
     return BuildConfig(_BUILD_SYSTEM_DB[framework], [target])
 
@@ -165,6 +177,33 @@ def _caps_of(parameters, inherited=None):
         for source, target in _CAPS_FIELD_DB.items():
             value = getattr(caps, source)
             if value is not None: field_db[target] = value
+    return replace(base, **field_db) if field_db else base
+
+
+#  WHAT A DIRECTORY'S SCRIPT RUNS UNDER WHERE 'script_caps' STATES
+#  NOTHING: the frame's minute of wall clock, procsitter's own else.
+SCRIPT_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
+
+
+def script_config_of(directory_spec, env=None):
+    """
+    RETURN: ProcsitterConfig, the caps a script of the directory runs
+            under -- 'on_entry', 'on_exit', 'on_before_test',
+            'on_after_test' and the targets of 'hwut.execute' (B-17):
+            'SCRIPT_CAPS' with the directory's 'script_caps' folded on,
+            the root's 'free_disk_min_mb' as the floor, 'env' as the
+            environment overlay.
+    """
+    base = SCRIPT_CAPS
+    floor = getattr(directory_spec, "free_disk_min_mb", None)
+    if floor is not None: base = replace(base, min_free_disk_mb=floor)
+    stated = getattr(directory_spec, "script_caps", None)
+    field_db = {}
+    if stated is not None:
+        for source, target in _CAPS_FIELD_DB.items():
+            value = getattr(stated, source)
+            if value is not None: field_db[target] = value
+    if env is not None: field_db["env"] = env
     return replace(base, **field_db) if field_db else base
 
 

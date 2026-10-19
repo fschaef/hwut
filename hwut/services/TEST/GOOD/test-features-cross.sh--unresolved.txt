@@ -1,0 +1,9 @@
+retired  physics.stop  (<physics>:stop)
+OUTSIDE THE RELATION
+    test run, names a feature its TEST directory does not define
+        physics/TEST/test-push.sh [a]   'stop'
+    test run, links by internal id what does not resolve
+        TEST/test-shot.sh [left]   '<physics>:gone': not defined in its directory
+        TEST/test-shot.sh [right]   '<physics>:stop': a retired feature
+runs ok: 10
+<hwut-end>

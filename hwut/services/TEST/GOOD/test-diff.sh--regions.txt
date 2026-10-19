@@ -1,0 +1,52 @@
+STIMULUS  hwut.run.diff --console s1.txt n1.txt --plain
+REACTION  stdout {
+              
+              =[ s1.txt ]========================================= round 1
+              setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ POTPOURRI/POTPOURRI ]--
+                   2    2 | one ~((0x5))~
+                          | ^ analogy '((0x5))' ~ '((0x1))' -- established at S:2/N:2
+                   3    3 | two ~((0x6))~
+                          | ^ analogy '((0x6))' ~ '((0x2))' -- established at S:3/N:3
+              S    4      | [three ((0x7))]
+              N           | ## <no line in GOOD here>
+              ============================================================
+          }
+          exit code : 1
+          stderr    : 0 bytes
+
+STIMULUS  hwut.run.diff --console s2.txt n2.txt --plain
+REACTION  stdout {
+              
+              =[ s2.txt ]========================================= round 1
+              setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ TABLE/TABLE ]--
+                   2    2 | ## t  x  v
+                   3    3 | ~1  2  3~
+              S    4      | [4  5  7]
+              N         4 | [4  5  6]
+              ============================================================
+          }
+          exit code : 1
+          stderr    : 0 bytes
+
+STIMULUS  hwut.run.diff --console s3.txt n3.txt --plain
+REACTION  stdout {
+              
+              =[ s3.txt ]========================================= round 1
+              setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ TABLE/TABLE ]--
+                   2    2 | ~0.1 1.000 2.000~
+              S    3      | [0.5 2.314 5.657]
+              N         3 | [0.5 2.339 5.755]
+                   4    4 | ~0.9 3.000 4.000~
+              ============================================================
+          }
+          exit code : 1
+          stderr    : 0 bytes
+
+The surplus line stands alone, its neighbours keep their
+analogies; the comment line is filler, in its place on both
+sides; the drifted row stands beside the row it differs from.
+SUCCESS: three differing pairs, no traceback.
+<hwut-end>

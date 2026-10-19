@@ -209,10 +209,28 @@ def _paths(word, app_f, file_f):
         if name.startswith(".") and not tail.startswith("."): continue
         path = os.path.join(where, name)
         if os.path.isdir(path):
+            if app_f and _holds_no_application_f(path): continue
             result.append(os.path.join(head, name) + "/")
         elif file_f or (app_f and _is_application(path)):
             result.append(os.path.join(head, name))
     return sorted(result)
+
+
+def _holds_no_application_f(path):
+    """
+    RETURN: True,  the directory 'path' holds no test application to
+                   step into: the 'GOOD', 'OUT' or 'TMP' of a test
+                   directory (one with 'GOOD/' beside them), or one that
+                   carries 'hwut.no-entry-here.marker' -- the rule of
+                   'auxiliary/no_entry.py', said again here because a
+                   TAB imports 'os' and 're' alone (E-151)
+            False, else -- the book's D-12: 'hwut.run.play <TAB>' in a
+                   test directory offered 'GOOD/ OUT/ TMP/'
+    """
+    if os.path.isfile(os.path.join(path, "hwut.no-entry-here.marker")):
+        return True
+    return os.path.basename(path) in ("GOOD", "OUT", "TMP") \
+           and os.path.isdir(os.path.join(os.path.dirname(path), "GOOD"))
 
 
 def _head(path):

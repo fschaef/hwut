@@ -27,7 +27,10 @@ THE COLUMNS, separated by blanks; '#' opens a comment:
               DEBIAN numbers it ('regex' 2022.10.31 is Debian's
               0.1.20221031). MEASURED 2026-10-16: the census green with
               the versions of Ubuntu 24.04; red with typeguard 2.13
-    for       who needs it
+    for       who needs it, on ONE line: for a user's requirement
+              'hwut.help' says it after 'MISSING: ... --', so it is said
+              in a user's words; a developer's note goes on a '#' line
+              beneath
 
 WHAT A USER'S INSTALLATION REQUIRES is read off this list, never restated
 (adm/WORK/spec/24-installation-packages.txt): the 'python' rows of need
@@ -50,16 +53,17 @@ program  pwsh            census  -                      'test-complete.py powers
                                                         Microsoft's package or release tarball
 program  coverage        census  pip:coverage           'hwut.cov.run' over python
 
-python   bidict>=0.22.1          census  python3-bidict>=0.22.1          the tree imports it
-python   rapidfuzz>=3.6.2        census  python3-rapidfuzz>=3.6.2        the tree imports it
-python   regex>=2022.10.31       census  python3-regex>=0.1.20221031     the tree imports it
-python   typeguard>=4.1.5        census  python3-typeguard>=4.1.5        the tree imports it
-python   pyrsistent>=0.20.0      census  python3-pyrsistent>=0.20.0      the tree imports it
+python   bidict>=0.22.1          census  python3-bidict>=0.22.1          hwut imports it
+python   rapidfuzz>=3.6.2        census  python3-rapidfuzz>=3.6.2        hwut imports it
+python   regex>=2022.10.31       census  python3-regex>=0.1.20221031     hwut imports it
+python   typeguard>=4.1.5        census  python3-typeguard>=4.1.5        hwut imports it
+python   pyrsistent>=0.20.0      census  python3-pyrsistent>=0.20.0      hwut imports it
 python   prompt_toolkit>=3.0.43  census  python3-prompt-toolkit>=3.0.43  the keyed merge screen
-python   psutil>=5.9.8           census  python3-psutil>=5.9.8           the tree imports it
+python   psutil>=5.9.8           census  python3-psutil>=5.9.8           hwut imports it
 
-library  vterm           census  libvterm0              'test_writing_support/python/hwut_vterm.py':
-                                                        'test-hwut_vterm.py', 'keyed/TEST/test-screen.py'
+library  vterm           census  libvterm0              testing terminal programs ('hwut_vterm')
+#        read by 'test_writing_support/python/hwut_vterm.py'; red without it:
+#        'test-hwut_vterm.py', 'keyed/TEST/test-screen.py'
 
 program  pdflatex        road    texlive-latex-base     'hwut.cov.conv.to_pdf'
 program  latexmk         road    latexmk                the same

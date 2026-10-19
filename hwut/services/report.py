@@ -17,7 +17,8 @@ WHAT THE RUN FAILS WITHOUT BOOKING IT IS ASKED OF THE TREE (E-128):
 every failure 'hwut.run' counts appears here too. A header that does
 not parse, a test or choice the book records and the directory no
 longer declares ('orchestrate.unstood_tuple', the run's own function),
-and a case whose dependencies cannot be met ('misdep') are FAILs in
+a case whose dependencies cannot be met ('misdep'), and one under a cap
+nothing can enforce here ('uncapped', E-159) are FAILs in
 every format, in the run's words -- whatever the wish, as in the run.
 
 FORMATS ('--format'):
@@ -26,7 +27,9 @@ FORMATS ('--format'):
                  directory, dot leaders to a right-aligned verdict,
                  then a summary whose directory column is
                  prefix-elided. A failure is said ONCE, where it
-                 happened (E-70).
+                 happened (E-70); what is more than a deviation
+                 from GOOD closes the page under HINTS, by
+                 category, as the run closes (E-152).
     junit        the XML every CI ingests.
     tap          Test Anything Protocol, version 13.
     json         for whoever builds their own.
@@ -70,15 +73,19 @@ import shutil
 import sys
 import xml.sax.saxutils as saxutils
 
+from .lib.face import write_refusal
 from ..engine.bookkeeper.api import (E_TestVerdict,
                                                              nominal_stands_f)
-from ..engine.orchestrator.exploration.task_list import SelectionError
+from ..engine.orchestrator.exploration.task_list import (SelectionError,
+                                                          CTestTaskListAll)
 from ..engine.orchestrator.exploration import selection
 from ..engine.orchestrator.run.orchestrate import unstood_tuple
+from ..engine.orchestrator.plan.confinement import uncapped_of
 from .lib.labels import view_at
 from .lib.labels._file import LabelFileError
 from   hwut.engine.orchestrator.exploration.tree_explorer \
-                                                     import (RootConfMissing)
+                                                     import (RootConfMissing,
+                                                             root_conf_directory)
 from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
                                                              WishError,
                                                              parse_wish,
@@ -90,10 +97,12 @@ from .lib.cmdline import (face_parser, usage_of,
 from .lib.face import Refused, Fault, FaceError
 from .lib.wallflowers import wallflowers_writer
 from ..engine.display.word import phrase, reason_word
-from ..engine.display.failure import HELP_HINT_STR
+from ..engine.display.failure import (HELP_HINT_STR, CATEGORY_HEADING_DB,
+                                      category_of, failure_of)
 from ..engine.display.console import console_width
 from ..engine.display.plain import (wallflower_note_list,
-                                       results_line_list)
+                                       results_line_list, hint_line_list)
+from ..engine.display.vocabulary import RUN_VOCABULARY
 from ..engine.display.word import CInk
 from ..engine.orchestrator.plan.wish import Wish
 from   dataclasses import dataclass, field
@@ -129,7 +138,7 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
 #  not as a report the run never wrote.
 UNSTOOD_REPORT_SET = frozenset(("spec-broken", "test-vanished",
                                 "test-choice-vanished", "misdep",
-                                "no-good-file"))
+                                "no-good-file", "uncapped"))
 
 
 class CRow:
@@ -414,10 +423,19 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
     #  Bookkeeper this face reads the book from is the one THE
     #  SELECTION MADE -- two over one directory would be two answers
     #  to one question.
-    for directory, result, bookkeeper, selected_list in \
+    #  A DIRECTORY IS NAMED FROM THE TREE'S ROOT, as the run names it,
+    #  wherever the face is called (2026-10-19): a name means one place.
+    try:
+        base = os.path.relpath(os.path.abspath(root),
+                               root_conf_directory(os.path.abspath(root)))
+    except RootConfMissing:
+        base = "."
+    for named, result, bookkeeper, selected_list in \
             selection.of_tree_stream(root, wish, view_at(root),
                                      base_f=True, reach=reach):
-        whole      = os.path.join(root, directory)
+        whole      = os.path.join(root, named)
+        directory  = os.path.normpath(os.path.join(base, named)) \
+                     .replace(os.sep, "/")
         app_db     = {app.source_file: app for app in result.app_set}
         if silent_db is not None:
             silent_db[os.path.relpath(whole)] = \
@@ -449,6 +467,12 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
             #  the run as here (display D-32), whatever the book holds.
             elif not nominal_stands_f(whole, test, case.choice):
                 verdict, report = E_TestVerdict.FAIL, "no-good-file"
+            #  A CAP NOBODY CAN WATCH HERE: the run fails the case, not
+            #  run, and books nothing (services E-159); the report asks
+            #  the run's own gate, now, on this machine -- after the
+            #  nominal, in the order the gate asks ('plan/tree.admit_of').
+            elif uncapped_of(result.app_set, test, case.choice):
+                verdict, report = E_TestVerdict.FAIL, "uncapped"
             #  A GOOD FILE STANDS AND THE BOOK NEVER SAW THE CASE: a
             #  NOMINAL failure by its name, 'not in book' (D-37) -- not
             #  a wordless '[FAIL]'.
@@ -486,7 +510,25 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
                 when        = "",
                 stain       = None,
                 title       = getattr(app_db.get(test), "title", "") or ""))
+        #  ONE ORDER ON EVERY PAGE (2026-10-19): by test, then choice --
+        #  the selection's own order, the book's discrepancies in it,
+        #  whatever the wish left out.
+        row_list = CRowList(sorted(row_list, key=lambda row: (
+                       row.source_file, row.choice or "")))
+        #  THE DIRECTORY'S DATE IS THE DIRECTORY'S (2026-10-19): the
+        #  newest instant of any of its cases, selected or not.
+        row_list.when_tuple = tuple(
+            when for when in (_observed_instant(bookkeeper, case)
+                              for case in CTestTaskListAll()
+                                          .get_test_cases(result.app_set))
+            if when)
         yield (directory, directory_title(whole), row_list)
+
+
+class CRowList(list):
+    """The rows of one directory, and 'when_tuple': the instants of every
+    case of the directory -- what its heading's date is taken from."""
+    when_tuple = ()
 
 
 #  ---------------------------------------------------------------------
@@ -513,21 +555,51 @@ def elided(previous, current):
     return "." * len(prefix) + current[len(prefix):]
 
 
+def hint_token_of(row):
+    """
+    RETURN: str, the wire token of why a failing row did not stand:
+                 'unstable' for a stain, 'unaccepted' for an aspirant
+                 (O-25), else the recorded report.
+            None, where the book never saw the case.
+    """
+    if row.stain_repeat_n is not None:        return "unstable"
+    if row.verdict is E_TestVerdict.ASPIRANT: return "unaccepted"
+    if row.verdict is None:                   return None
+    return row.report
+
+
 def reason_word_of(row):
     """
-    RETURN: str, the word before a failing row's '[FAIL]' (display D-31):
-                 'unstable' for a stain, else the word of the recorded
-                 report.
-                 'unaccepted' for an aspirant, as the run says it (O-25).
+    RETURN: str, the word before a failing row's '[FAIL]' (display D-31),
+                 the word of 'hint_token_of(row)'.
             None, where the failure is about equivalence, or the book
                  names no reason.
     """
-    if row.stain_repeat_n is not None: return reason_word("unstable")
-    if row.verdict is E_TestVerdict.ASPIRANT:
-        return reason_word("unaccepted")
-    if row.verdict is None:
-        return None
-    return reason_word(row.report)
+    token = hint_token_of(row)
+    return None if token is None else reason_word(token)
+
+
+def hint_item_list(entry_list):
+    """
+    RETURN: list, the HINTS items of the failing rows -- (category,
+                 directory, file, choice, token, None, None) as
+                 'plain.hint_line_list' reads them -- every failure that
+                 is more than a plain deviation from GOOD, as the run
+                 lists it (D-35).
+            [], where no such failure stands.
+    """
+    vocabulary = RUN_VOCABULARY
+    item_list  = []
+    for directory, _, row_list in entry_list:
+        for row in row_list:
+            if row.good_f: continue
+            token = hint_token_of(row)
+            if not token: continue
+            category = vocabulary.category_of(token)
+            if category is vocabulary.quiet_category: continue
+            item_list.append((category, directory, row.source_file,
+                              row.choice, token, None, None))
+    return item_list
 
 
 def leader_line(left, verdict_text, width, indent=4, shown=None):
@@ -661,6 +733,19 @@ def traditional_line_tuple(entry_list, width, color_f=False):
     yield ""
     yield rule_equals
 
+    #  HINTS, AS THE RUN CLOSES (D-35): what failed beyond a plain
+    #  deviation, by category -- not the third saying E-70 struck, but
+    #  the whose-fault and the phrase the blocks do not carry.
+    hint_list = hint_line_list(hint_item_list(seen_list), RUN_VOCABULARY,
+                               lambda text: painted(text, ANSI_FAIL,
+                                                    color_f))
+    if not hint_list: return
+    yield "HINTS"
+    yield rule_dashes
+    yield from hint_list
+    yield ""
+    yield rule_equals
+
 
 def _title_of(row):
     """RETURN: str, the application's own title, as the author wrote
@@ -676,7 +761,8 @@ def _stamp_of(row_list):
             '<no date>', where no row was ever run -- ABSENCE IS DATA,
             never a fabricated now.
     """
-    when_list = [row.when for row in row_list if row.when]
+    when_list = list(getattr(row_list, "when_tuple", ())) \
+                or [row.when for row in row_list if row.when]
     if not when_list: return "<no date>"
     newest = max(when_list)
     try:
@@ -718,32 +804,35 @@ def junit_line_tuple(entry_list):
                 yield '    <testcase %s/>' % attribute
                 continue
             yield '    <testcase %s>' % attribute
+            word, category, said = said_of(row)
             yield '      <failure type=%s message=%s/>' \
-                  % (saxutils.quoteattr(row.word),
-                     saxutils.quoteattr(_message_of(row)))
+                  % (saxutils.quoteattr(word),
+                     saxutils.quoteattr("%s: %s" % (category, said)))
             yield '    </testcase>'
         yield '  </testsuite>'
     yield '</testsuites>'
 
 
-def _message_of(row):
-    """RETURN: str, why the case did not stand, in one sentence."""
-    if row.stain_repeat_n is not None:
-        return ("the choice bears a STAIN: it switched results over %d "
-                "repeat(s) and is not run until proven steady"
-                % row.stain.get("repeat_n", 0))
-    if row.verdict is None:
-        return "'GOOD/book.csv' holds no row for this case"
-    #  THE SHAPES ARE THIS FACE'S WORD, not the run's (E-31): the run
-    #  said 'differs', and the files read afterwards said how.
-    if row.report in ("not-equivalent-grew", "not-equivalent-shrank",
-                      "not-equivalent-diverged"):
-        return ("the run reported a difference from GOOD; the stored "
-                "candidate and the nominal, read whole, are '%s'"
-                % row.report)
-    if row.report in UNSTOOD_REPORT_SET:
-        return phrase(row.report)
-    return "the run reported '%s'" % (row.report or "failure")
+def said_of(row):
+    """
+    RETURN: tuple (str, str, str), what every format says of a failing
+            row, read from the ONE table ('display/failure.failure_db',
+            D-34): [0] the word -- the one before '[FAIL]' on the page,
+            the failure's own word where the page writes none (a plain
+            difference from GOOD); [1] the category, as HINTS heads it;
+            [2] the phrase HINTS gives (2026-10-19, "words must be the
+            same, use references to constant strings"). A plain
+            difference, which the page leaves wordless, gives its token
+            ('not-equivalent-diverged').
+    """
+    token   = hint_token_of(row) or row.report or "not-in-book"
+    failure = failure_of(token)
+    #  A PLAIN DIFFERENCE carries no word before '[FAIL]' on the page;
+    #  the machine formats need one, and take the token itself.
+    word    = reason_word(token) or (failure.comment_before_FAIL_str
+                                     if failure is not None else None) \
+              or token
+    return (word, CATEGORY_HEADING_DB[category_of(token)], phrase(token))
 
 
 def tap_line_tuple(entry_list):
@@ -762,8 +851,10 @@ def tap_line_tuple(entry_list):
             continue
         yield "not ok %d - %s" % (index, name)
         yield "  ---"
-        yield "  reason: %s" % row.word
-        yield "  message: %s" % _message_of(row)
+        word, category, said = said_of(row)
+        yield "  reason: %s" % word
+        yield "  category: %s" % category
+        yield "  message: %s" % said
         yield "  ..."
 
 
@@ -791,7 +882,12 @@ def json_text_of(entry_list):
                            #  (E-11), whatever the book's last word.
                            "verdict": False if row.stain_repeat_n is not None
                                       else _json_verdict(row.verdict),
-                           "reason":  None if row.good_f else row.word,
+                           "reason":  None if row.good_f
+                                      else said_of(row)[0],
+                           "category": None if row.good_f
+                                       else said_of(row)[1],
+                           "message": None if row.good_f
+                                      else said_of(row)[2],
                            "stained": row.stain is not None,
                            "when":    row.when or None}
                           for row in row_list]})
@@ -844,6 +940,7 @@ class Block:
     directory:  str
     title:      str
     row_tuple:  tuple = ()          # of Row
+    when_tuple: tuple = ()          # every case's instant: the date
 
 
 @dataclass(frozen=True)
@@ -998,7 +1095,8 @@ def do(request, sink):
         block_n = row_n = fail_n = subtle_n = 0
         for where, title, row_list in itertools.chain(held_list, stream):
             block = Block(where, title,
-                          tuple(_row_of(row) for row in row_list))
+                          tuple(_row_of(row) for row in row_list),
+                          tuple(getattr(row_list, "when_tuple", ())))
             block_n += 1
             row_n   += len(block.row_tuple)
             fail_n  += sum(1 for row in row_list if not row.good_f)
@@ -1038,8 +1136,7 @@ def main(argv=None, write=None):
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
 
     arguments, completion_f = parse_or_refuse(PARSER, rest_list, write,
@@ -1100,8 +1197,9 @@ def main(argv=None, write=None):
                  if stream_f else None
     def sink(block):
         """RETURN: None. One directory's block: written now, or kept."""
-        entry = (block.directory, block.title,
-                 [_crow_of(row) for row in block.row_tuple])
+        row_list = CRowList(_crow_of(row) for row in block.row_tuple)
+        row_list.when_tuple = block.when_tuple
+        entry = (block.directory, block.title, row_list)
         if writer is not None: writer(entry)
         else:                  entry_list.append(entry)
     try:

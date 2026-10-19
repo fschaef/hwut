@@ -35,13 +35,19 @@ from ...operations.result           import E_TestRunResult
 from ...bookkeeper.api   import Bookkeeper
 
 from ...bookkeeper.api import Store, DirectoryBusy, unstable_f
-from ...procsitter.api       import Procsitter, ProcsitterConfig
+from ...procsitter.api       import Procsitter
 from ..scheduler.scheduler          import I_Dispatcher
+from ..scheduler.disk_guard         import HOST_DISK_GUARD
+from ...operations.configuration    import caps_of
+from ...bookkeeper.api import ObservationDb, ObservationFault
 from .adapter                       import (naming_of,
-                                            test_configuration_of)
+                                            test_configuration_of,
+                                            script_config_of,
+                                            SCRIPT_CAPS)
 
 
-FRAME_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
+#  THE FRAME'S CAPS WHERE THE DIRECTORY STATES NO 'script_caps' (B-17).
+FRAME_CAPS = SCRIPT_CAPS
 
 
 class TestRunDispatcher(I_Dispatcher):
@@ -105,14 +111,17 @@ class TestRunDispatcher(I_Dispatcher):
         self.notice_list = []
         directory_spec  = getattr(getattr(entry, "app_set", None),
                                   "directory_spec", None)
+        self.directory_spec = directory_spec
         variant_db      = getattr(directory_spec, "variant_db", None)
         language_setup  = getattr(directory_spec, "language_setup", None)
+        free_disk_min_mb = getattr(directory_spec, "free_disk_min_mb", None)
         self.config_db  = {app.source_file:
                                test_configuration_of(app, directory,
                                                      variant_tuple,
                                                      variant_db,
                                                      timing_f,
-                                                     language_setup)
+                                                     language_setup,
+                                                     free_disk_min_mb)
                            for app in entry.app_set}
         #  BUILD action name -> the configuration whose build it is.
         self.build_db   = {}
@@ -129,6 +138,8 @@ class TestRunDispatcher(I_Dispatcher):
         self.session_db = {}
         self.report_db  = {}
         self.detail_db = {}
+        self.frame_exit_db = {}       # role -> 'exited <n>' | 'ended: <how>'
+        self.disk_db    = {}          # session file -> its disk reservation
 
     async def close(self):
         """RETURN: None. Any standing session shut down; the lock
@@ -136,6 +147,9 @@ class TestRunDispatcher(I_Dispatcher):
         for multi in self.session_db.values():
             await multi.close()
         self.session_db = {}
+        for answer in self.disk_db.values():
+            HOST_DISK_GUARD.release(answer)
+        self.disk_db = {}
         self.lock.__exit__(None, None, None)
 
     def report_of(self, node_name):
@@ -152,16 +166,85 @@ class TestRunDispatcher(I_Dispatcher):
         """
         return self.detail_db.get(node_name)
 
+    async def _room(self, node, configuration, choice):
+        """
+        RETURN: CDiskAnswer -- room held on the directory's disk for the
+                case, or the refusal; on refusal the node's report and
+                detail are said here.
+
+        THE NEED (D-24): twice the case's 'disk_mb', or what this
+        machine last saw it hold, where that is more; above the disk's
+        floor. Where the disk has no room yet, it waits for a case
+        running there to end.
+        """
+        caps = caps_of(configuration, choice)
+        need = 2.0 * caps.max_disk_mb
+        try:
+            observed = ObservationDb(self.directory).get(
+                           configuration.key_name, choice, "Run")
+        except (ObservationFault, OSError):
+            observed = None
+        if observed is not None and observed.peak_disk_mb is not None:
+            need = max(need, observed.peak_disk_mb)
+        answer = await HOST_DISK_GUARD.reserve(self.directory, need,
+                                               caps.min_free_disk_mb)
+        if not answer.granted_f:
+            self.report_db[node.name()] = E_TestRunResult.DISK_SHORT.value
+            self.detail_db[node.name()] = answer.text()
+        return answer
+
     # -- the five doors ------------------------------------------------
     async def run_script(self, role, command):
         """
         RETURN: bool, whether the frame command ran to a good end:
                 supervised, in the directory, 'bash -c <command>'.
         """
-        procsitter = Procsitter(FRAME_CAPS, work_dir=self.directory)
+        how = await self._script(command)
+        #  HOW IT ENDED, for the closing note: the exit status, or the
+        #  containment where the supervisor ended it.
+        if how is not None: self.frame_exit_db[role] = how
+        return how is None
+
+    async def _script(self, command, env=None):
+        """
+        RETURN: None, the script ran to exit 0
+                str, how it ended else -- 'exited <n>', or 'ended: <how>'
+                     where the supervisor ended it
+
+        EVERY SCRIPT OF THE DIRECTORY IS SUPERVISED (B-17): 'bash -c
+        <command>' in the directory, under the directory's
+        'script_caps' ('adapter.script_config_of').
+        """
+        procsitter = Procsitter(script_config_of(self.directory_spec, env),
+                                work_dir=self.directory)
         record = await procsitter.run(["bash", "-c", command])
-        return record.containment.name.startswith("OK") \
-               and record.exit_code == 0
+        name   = record.containment.name
+        if name == "OK_COMPLETED" and record.exit_code == 0: return None
+        if name in ("OK_COMPLETED", "FAIL_COMPLETED"):
+            return "exited %s" % record.exit_code
+        return "ended: %s" % name[len("FAIL_"):].lower().replace("_", " ")
+
+    async def _helper(self, role, node):
+        """
+        RETURN: None. The directory's 'on_before_test' or 'on_after_test'
+                run for the test run 'node' -- the author's helper, NO
+                VERDICT (B-17, as the frame, E-158): an end other than
+                exit 0 is said, '<role> of <run> exited <n>: <command>',
+                as the frame's is: a FRAME line, a NOTE at the end, by
+                'frame_emit' where the orchestrator set it, among the
+                run's NOTEs else. The run is told by environment:
+                'HWUT_TEST', 'HWUT_CHOICE' ('' for none).
+        """
+        command = getattr(self.directory_spec, role, None)
+        if not command: return
+        how = await self._script(command, {"HWUT_TEST":   node.file,
+                                           "HWUT_CHOICE": node.choice or ""})
+        if how is None: return
+        said = "%s of %s" % (role, node.name())
+        emit = getattr(self, "frame_emit", None)
+        if emit is not None: emit(said, how, command)
+        else:                self.notice_list.append("%s %s: %s"
+                                                     % (said, how, command))
 
     async def run_build(self, node):
         """
@@ -186,6 +269,10 @@ class TestRunDispatcher(I_Dispatcher):
                 'launch-failed' (O-6).
         """
         configuration = self.config_db[node.file]
+        #  ONE PROCESS SERVES THE SESSION: its room is held as long.
+        answer = await self._room(node, configuration, None)
+        if not answer.granted_f: return False
+        self.disk_db[node.file] = answer
         multi = MultiExecute(configuration)
         await multi.start()
         self.session_db[node.file] = multi
@@ -196,6 +283,8 @@ class TestRunDispatcher(I_Dispatcher):
         multi = self.session_db.pop(node.file, None)
         if multi is not None:
             await multi.close()
+        answer = self.disk_db.pop(node.file, None)
+        if answer is not None: HOST_DISK_GUARD.release(answer)
 
     async def run_test(self, node):
         """
@@ -229,18 +318,29 @@ class TestRunDispatcher(I_Dispatcher):
                 % (configuration.key_name,
                    "" if node.choice is None else " " + node.choice))
         provision     = None
+        answer        = None
         multi         = self.session_db.get(node.file)
         if multi is not None:
             provision = Provision(
                 stage_execute      = multi.provider(node.choice),
                 stage_canonicalise = StageCanonicalise(configuration,
                                                        node.choice))
-        outcome = await run_test_held(
-            configuration,
-            Request(choice=node.choice, record=self.record,
-                    force_run=self.force_run_f),
-            store=self.store,
-            provision=provision)
+        else:
+            answer = await self._room(node, configuration, node.choice)
+            if not answer.granted_f: return False
+        try:
+            await self._helper("on_before_test", node)
+            try:
+                outcome = await run_test_held(
+                    configuration,
+                    Request(choice=node.choice, record=self.record,
+                            force_run=self.force_run_f),
+                    store=self.store,
+                    provision=provision)
+            finally:
+                await self._helper("on_after_test", node)
+        finally:
+            if answer is not None: HOST_DISK_GUARD.release(answer)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
             detail = getattr(outcome.result.provision, "detail", None)

@@ -1,0 +1,70 @@
+>>> hwut.features.retire can.ghost  (a leaf with no definition)
+    retired  can.ghost  (Aaaaaaa1:ghost)  -- no definition stood
+    exit 0
+--- two renames by hand: nothing written ------------------------
+>>> hwut.features.register
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        leaf-new   gw/can   'parse' is in no line
+                       => # unpaired Aaaaaaa1:parse (candidate of: can.decode, can.encode; held until repointed, or the gone retired)
+        leaf-new   gw/can   'render' is in no line
+                       => # unpaired Aaaaaaa1:render (candidate of: can.decode, can.encode; held until repointed, or the gone retired)
+        leaf-gone  can.decode   Aaaaaaa1:decode is defined no more
+                       => # unpaired can.decode Aaaaaaa1:decode (candidates: Aaaaaaa1:parse, Aaaaaaa1:render)
+        leaf-gone  can.encode   Aaaaaaa1:encode is defined no more
+                       => # unpaired can.encode Aaaaaaa1:encode (candidates: Aaaaaaa1:parse, Aaaaaaa1:render)
+    exit 1
+    hwut-root-features.conf:
+    | features {
+    |     directory_map {
+    |         "Aaaaaaa1" = "gw/can"
+    |         "Bbbbbbb2" = "gw/most"
+    |     }
+    |     tree {
+    |         gateway {
+    |             title = "CAN-MOST gateway"
+    |             keys  = ["product"]
+    |             childs {
+    |                 can {
+    |                     childs {
+    |                         "can.decode" = "Aaaaaaa1:decode"
+    |                         "can.encode" = "Aaaaaaa1:encode"
+    |                     }
+    |                 }
+    |                 most {
+    |                     title = "MOST side"
+    |                     childs {
+    |                         "most.send"    = "Bbbbbbb2:send"
+    |                         "most.receive" = "Bbbbbbb2:receive"
+    |                     }
+    |                 }
+    |             }
+    |         }
+    |     }
+    |     retired {
+    |         "can.ghost" { id = "Aaaaaaa1:ghost" }
+    |     }
+    | }
+--- one gone retired: one gone, two new -- still held -----------
+>>> hwut.features.retire can.encode
+    retired  can.encode  (Aaaaaaa1:encode)  -- no definition stood
+    exit 0
+>>> hwut.features.register
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        leaf-new   gw/can   'parse' is in no line
+                       => # unpaired Aaaaaaa1:parse (candidate of: can.decode; held until repointed, or the gone retired)
+        leaf-new   gw/can   'render' is in no line
+                       => # unpaired Aaaaaaa1:render (candidate of: can.decode; held until repointed, or the gone retired)
+        leaf-gone  can.decode   Aaaaaaa1:decode is defined no more
+                       => # unpaired can.decode Aaaaaaa1:decode (candidates: Aaaaaaa1:parse, Aaaaaaa1:render)
+    exit 1
+--- both retired: the new are registered ------------------------
+>>> hwut.features.retire can.decode
+    retired  can.decode  (Aaaaaaa1:decode)  -- no definition stood
+    exit 0
+>>> hwut.features.register
+    registered  gw.can.parse = Aaaaaaa1:parse
+    registered  gw.can.render = Aaaaaaa1:render
+    HINTS
+        2 leaf(s) in no aggregate => hwut.features.tree
+    exit 0
+<hwut-end>

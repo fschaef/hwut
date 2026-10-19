@@ -18,11 +18,11 @@ REPORT FAILS {
 }
 the same: yes
 PAGE {
+            test-broken.sh ................................. spec [FAIL]
                        two ............................ no-choice [FAIL]
             test-dep.sh .................................. no-dep [FAIL]
             test-diff.sh .........................................[FAIL]
-            test-new.sh ............................ no GOOD file [FAIL]
-            test-broken.sh ................................. spec [FAIL]
             test-gone.sh ................................. no-app [FAIL]
+            test-new.sh ............................ no GOOD file [FAIL]
 }
 <hwut-end>

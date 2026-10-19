@@ -87,6 +87,7 @@ from pathlib import Path
 import sys
 from typing import Callable, Optional, Union
 
+from .lib.face import write_refusal
 from ..engine.bookkeeper.api import Bookkeeper, Store
 from ..engine.bookkeeper.api import TestIdFault
 from ..engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
@@ -293,9 +294,11 @@ class Rename:
         #  THE APPLICATION IS READ WHERE IT STANDS: the author's 'git mv'
         #  may have been made, or not yet.
         if (Path(target_dir) / self.fresh_test).is_file():
+            test_path = str(Path(target_dir) / self.fresh_test)
             name_set = feature_carry.linked_name_set(target_dir,
                                                      test=self.fresh_test)
         else:
+            test_path = str(Path(source_dir) / self.test)
             name_set = feature_carry.linked_name_set(source_dir,
                                                      test=self.test)
         try:
@@ -304,7 +307,8 @@ class Rename:
             return
         adapted = feature_carry.test_moved(
             root, source_dir, target_dir, name_set,
-            feature_carry.linked_name_set(source_dir, without=self.test))
+            feature_carry.linked_name_set(source_dir, without=self.test),
+            test_path)
         for line in adapted.said_tuple:
             self.write(f"    {line}")
         if adapted.reason:
@@ -542,8 +546,7 @@ def _read(argv: list[str], write: Callable[[str], None]):
     try:
         source_dir, before = split_words(before, directory)
     except TargetError as error:
-        write(f"REFUSED: {error}")
-        write(USAGE)
+        write_refusal(write, f"REFUSED: {error}", USAGE)
         return None, yes_f
     test   = before[0]
     choice = before[1] if len(before) == 2 else None

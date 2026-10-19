@@ -42,7 +42,6 @@ ______________________________________________________________________________
 """
 import os
 import shutil
-import subprocess
 import sys
 
 
@@ -52,9 +51,13 @@ from ..engine.orchestrator.exploration import reader
 from   hwut.engine.orchestrator.exploration.task_list_query \
                                             import dir_ruled_out_f
 from   hwut.engine.orchestrator.exploration.tree_explorer \
-                                            import explore_tree_stream
+                                            import (explore_tree_stream,
+                                                    ascended_spec,
+                                                    inherited_spec)
 from ..auxiliary.no_entry import entered
 from ._exit import E_ExitCode
+from ..engine.procsitter.api import spawn
+from ..engine.orchestrator.run.adapter import script_config_of
 
 
 USAGE = "usage: hwut.execute [-i] [--default=<script>] [-q] [+x] " \
@@ -367,12 +370,21 @@ def _phase_two(arguments, plan, skipped_n, write):
                               arguments["command"]
             else:
                 argv, shown = [script] + arguments["pass_through"], script
-            try:
-                process = subprocess.run(argv, cwd=directory,
-                                         capture_output=True, text=True)
-            except OSError as error:
+            #  SUPERVISED, AS EVERY SCRIPT OF THE TREE (B-17): under the
+            #  directory's 'script_caps' -- its own 'hwut.conf' folded
+            #  over what flows down to it.
+            process = spawn(argv, cwd=directory,
+                            config=script_config_of(_spec_of(directory)))
+            if not process.launched_f():
                 failed_list.append("%s: cannot execute '%s': %s"
-                                   % (relative, shown, error))
+                                   % (relative, shown,
+                                      process.stderr.strip()))
+                continue
+            if process.returncode is None:
+                failed_list.append("%s: '%s' ended by the supervisor: %s"
+                                   % (relative, shown,
+                                      process.containment.name[len("FAIL_"):]
+                                      .lower().replace("_", " ")))
                 continue
         finally:
             if lock.taken: lock.release()
@@ -392,6 +404,20 @@ def _phase_two(arguments, plan, skipped_n, write):
     write("directories: %d  executed: %d  skipped: %d"
           % (len(plan) + skipped_n, executed_n, skipped_n))
     return E_ExitCode.FAULT if failed_list else E_ExitCode.OK
+
+
+def _spec_of(directory):
+    """RETURN: DirectorySpec, what governs 'directory' -- every conf from
+    the root down to it folded ('tree_explorer.ascended_spec'); None where
+    it cannot be read, and the script's caps are then the default."""
+    try:
+        above = ascended_spec(directory)[0]
+        text  = finder.conf_text(directory)
+        if text is None: return above
+        own, _, _ = reader.read_conf(text, finder.CONF_NAME)
+        return above if own is None else inherited_spec(above, own)
+    except Exception:                                    # noqa: BLE001
+        return None
 
 
 def _wanted_f_of(rule_tuple):

@@ -7,6 +7,7 @@ build.executable   ConfigBuild         executable                               
 build.framework    ConfigBuild         framework                                      None
 caps.child_process_max_n ProcsitterConfig    max_pids                                       32
 caps.cpu_sec       ProcsitterConfig    max_cpu_time_sec                               300
+caps.disk_mb       ProcsitterConfig    max_disk_mb                                    100
 caps.file_handle_max_n ConfigCaps          file_handle_max_n                              None
 caps.file_size_mb  ProcsitterConfig    max_file_size_mb                               10
 caps.memory_mb     ProcsitterConfig    max_memory_mb                                  512

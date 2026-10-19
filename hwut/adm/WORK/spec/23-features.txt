@@ -307,8 +307,8 @@ pairs on its own.
     retired-use   a retired internal id defined again / an      said; the author
                   external id of 'retired' in the tree
     unplaced      a leaf at the top level of 'tree'             a hint
-    root-test     the root's own TEST directory defines         a hint; it has
-                  features                                      no component
+    (root-test    struck 2026-10-19, the book's D-3: the root's own TEST
+                  directory gets an id standing for '.', as any other)
     linked-retired a test links a retired leaf                  a hint
     old-vocabulary component files, 'hwut-feature-map.conf'      migrate
 

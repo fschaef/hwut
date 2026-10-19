@@ -1,8 +1,8 @@
 >>> in gw/can
-    AGGREGATE gateway -- CAN-MOST gateway      1 implemented, 0 open; 0 ok, 1 fail
+    AGGREGATE gateway -- CAN-MOST gateway 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
         state      IMPLEMENTED fail
         keys       product
-        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail
+        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
             state      IMPLEMENTED fail
             [IMPLEMENTED fail] can.decode -- A frame is decoded.
                 internal    Aaaaaaa1:decode  (gw/can)
@@ -13,10 +13,10 @@
         [RETIRED]  can.old  (Aaaaaaa1:old)
     exit 0
 >>> --directory=gw/router
-    AGGREGATE gateway -- CAN-MOST gateway      2 implemented, 0 open; 2 ok, 0 fail
+    AGGREGATE gateway -- CAN-MOST gateway 2 implemented, 0 open; 2 ok, 0 fail, 0 untested
         state      IMPLEMENTED ok
         keys       product
-        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail, 0 untested
             state      IMPLEMENTED ok
             [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
                 internal    Bbbbbbb2:forward  (gw/router)
@@ -29,7 +29,7 @@
                 [PASS] TEST/test-route.sh [burst]
     
     UNPLACED                                                         1 leaf/leaves
-        [OPEN]             router.drop -- A frame without route is dropped.
+        [OPEN untested]    router.drop -- A frame without route is dropped.
             internal    Bbbbbbb2:drop  (gw/router)
             keys        routing
     
@@ -41,10 +41,10 @@
             TEST/test-restart.sh
     exit 0
 >>> in gw/router/TEST
-    AGGREGATE gateway -- CAN-MOST gateway      2 implemented, 0 open; 2 ok, 0 fail
+    AGGREGATE gateway -- CAN-MOST gateway 2 implemented, 0 open; 2 ok, 0 fail, 0 untested
         state      IMPLEMENTED ok
         keys       product
-        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 0 open; 2 ok, 0 fail, 0 untested
             state      IMPLEMENTED ok
             [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
                 internal    Bbbbbbb2:forward  (gw/router)
@@ -57,7 +57,7 @@
                 [PASS] test-route.sh [burst]
     
     UNPLACED                                                         1 leaf/leaves
-        [OPEN]             router.drop -- A frame without route is dropped.
+        [OPEN untested]    router.drop -- A frame without route is dropped.
             internal    Bbbbbbb2:drop  (gw/router)
             keys        routing
     

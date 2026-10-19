@@ -1,0 +1,5 @@
+REFUSED: no 'hwut-root.conf' stands in or above '<outside>' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
+HINT: use 'hwut.sanitize root [dir]' to place one.
+exit 2
+entries written: 0
+<hwut-end>

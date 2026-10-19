@@ -2622,3 +2622,133 @@ PINNED    BUILT IN STEPS; the plan is
           faults, tree', 'services/TEST/test-features-follow.py move,
           remove', 'services/TEST/test-report-features.py' (all choices,
           on a central file; 'refused' names the missing one).
+
+R-97  IMPLEMENTATION AND VERDICT ARE TWO AXES: AN OPEN CLAIM IS UNTESTED  (2026-10-17)
+------------------------------------------------------------------------------
+PROBLEM   A leaf without a linked run was 'OPEN' and counted as 'fail';
+          a green tree with one open feature read '5 ok, 1 fail'
+          (DEFECTS-hwut-78e11f7, D-4). An aggregate with any open claim
+          below was 'OPEN fail' whatever the rest did.
+
+DECISION  RULED (Frank-Rene, 2026-10-17): "We said, that those are two
+          axis: Implementation and verdict. If you need a coordinate for
+          the open feature, then the new verdict we have for best:
+          untested." The playback of six consequences was accepted ("good
+          for now"):
+            leaf      no linked run: OPEN untested; runs: fail where one
+                      fails, else untested where one never ran (the book's
+                      NO VERDICT), else ok
+            aggregate each axis folded apart: OPEN where a claim below is;
+                      the verdict the worst below -- fail, untested, ok;
+                      nothing below: OPEN untested
+            counts    '<n> implemented, <n> open; <n> ok, <n> fail,
+                      <n> untested'
+            page      every state names both axes ('OPEN untested')
+          The run verdict 'untested' of intend/25 (hwut.run.reset,
+          RESULTS) is not built by this; the feature axis borrows the word.
+
+COST      Eleven pages moved, every moved line by a state, a count or the
+          document's state list: 'test-feature_registry.py states',
+          'test-report-features.py' code, document, matrix,
+          test_directory, tree, 'lib/features/TEST/test-report.py' below,
+          document, matrix, outside, tree.
+
+R-98  'ignore' AND 'admit' ADD UP DOWN THE TREE                     (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   A directory's own 'ignore' REPLACED the inherited one (OPEN since
+          X-SILENT, "REPLACES the inherited one rather than adding to
+          it"): a child stating 'ignore = ["bench.dat"]' silently undid its
+          parent's 'ignore = ["*.log"]' (DEFECTS-hwut-78e11f7, D-25). The
+          new 'admit' (services E-159) inherited the same way.
+
+DECISION  RULED (Frank-Rene, 2026-10-19): "a, I guess that is what
+          intuitively the inheritance means." The child's globs JOIN the
+          inherited ones, parent's first, each once -- for 'ignore' and
+          for 'admit' ('tree_explorer.inherited_spec'). What a parent
+          ignores stays ignored below it unless an 'admit' names it.
+
+COST      A child can no longer narrow its parent's 'ignore' by restating
+          it; 'admit' says the exception instead.
+
+R-99  'disk_mb' IS A CAP; 'free_disk_min_mb' IS THE ROOT'S        (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   Procsitter's 'max_disk_mb' (100) and 'min_free_disk_mb' (128)
+          had no key (DEFECTS-hwut-78e11f7, D-24): a test that needs
+          more disk by nature could not say so, and no tree could set
+          the floor its disks need.
+
+DECISION  RULED (Frank-Rene, 2026-10-19): "both caps", and "disk safety
+          limits shall be per disk not per directory".
+          'caps { disk_mb = <n> }' -- what the case holds on disk, its
+          scratch ground and the files it created (procsitter MANUAL 4) --
+          stands beside 'memory_mb' and inherits as every cap does.
+          'hwut { free_disk_min_mb = <n> }' is a DIRECTORY key of
+          'hwut-root.conf' alone (ROOT_CONF_ONLY_FIELD_TUPLE): the
+          floor is a property of the disk, one value applied to every
+          disk a case runs on, and a directory has no word on it. The
+          scheduler's disk guard reads both (scheduler S-5).
+
+COST      Every page that prints the cap vocabulary or a case's caps in
+          force names 'disk_mb' now.
+
+R-100  THE ROOT'S OWN TEST DIRECTORY GETS A DIRECTORY ID            (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   The top TEST directory, beside 'hwut-root.conf', holds the tests
+          of the whole system, and a claim about the whole system has its
+          strongest proof there. It could be defined, never registered:
+          'init' said a NOTE, the detector the hint 'root-test', 'hwut.run'
+          nothing (DEFECTS-hwut-78e11f7, D-3; REQUIREMENT-root-directory-
+          id-2026-10-15).
+
+DECISION  RULED (Frank-Rene, 2026-10-15): "(a)" -- the root is a directory
+          like any other for the registry. 'directory_map' admits '"<id>" =
+          "."' ('path_valid_f'); 'init' and 'register' give it an id under
+          the rules of every id; its leaves are unplaced, and their external
+          id is the bare name (the path has no word), qualified '-2' where
+          it clashes with an external id or an aggregate key. The hint
+          'root-test' and the NOTE are struck.
+          THE ROOT DOES NOT MOVE: 'hwut.features.move .' was refused before
+          and stays so; the root's id is never 'gone' and never 'swapped',
+          so the detector proposes no 'redirect' of it. Where its TEST
+          directory defines nothing any more, its leaves are gone one by
+          one.
+
+COST      None measured beyond the pages that pinned the old answer
+          ('test-feature_detector.py new', 'test-feature_registry.py
+          identifiers', 'faults').
+
+R-101  A TEST LINKS A FEATURE OF ANOTHER DIRECTORY BY INTERNAL ID    (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   A link resolved in the test's own TEST directory only. A claim
+          proven from more than one directory -- an end-to-end test at the
+          top behind a component's sentence, a test moved away -- had to be
+          defined twice, and 'hwut.move' copied it: two definitions, two
+          external ids (DEFECTS-hwut-78e11f7, D-8; REQUIREMENT-cross-
+          directory-links-2026-10-16).
+
+DECISION  RULED (Frank-Rene, 2026-10-16): links across directories are
+          allowed, and only by INTERNAL id -- "Ich glaube das ist die
+          einzige Chance das ganze wartbar zu machen".
+          A link holding ':' is '<directory id>:<name>' (a name holds none).
+          The relation keeps it aside ('foreign_tuple'); the view resolves
+          it against the central file and adds the run to that leaf, the
+          run carrying its own directory ('CRun.path') -- report, '-F',
+          '-e', '-k', '--matrix' (a foreign column named by external id),
+          '--code' and the document follow. What does not resolve -- an
+          id in no 'directory_map' line, a name not defined there, a
+          retired leaf -- and an external id written as a link stand
+          OUTSIDE THE RELATION. A link never changes a verdict.
+          WHERE AN INTERNAL ID CHANGES, the links follow in the same step,
+          tree-wide, each file named: 'repoint', 'fold', 'hwut.features.
+          rename', and 'hwut.move' carrying a feature. 'redirect' and
+          'hwut.features.move' change a path, not an id: nothing to follow.
+          'hwut.move' NO LONGER COPIES: a feature a staying test still links
+          stays, and the moved test links it by its internal id. Without a
+          central file there is no id to write: it still copies.
+
+COST      Every rewrite walks the tree's test applications once. A
+          feature defined in its directory but not registered does not
+          resolve from another ('not defined in its directory') until it
+          is registered.
+          OPEN for the builder, as the requirement left it: whether
+          'hwut.features.tree' prints internal ids per leaf. Not built.

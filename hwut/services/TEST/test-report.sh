@@ -325,7 +325,7 @@ run_agrees)
     echo "REPORT STATUS: $?"
     grep -E '^[A-Z ]{5} ' run.txt | grep '\[FAIL\]' \
         | sed -E 's/^.{6}//; s/ *\.{3,}.*//; s/  +/ /g' | sort > run-fail.txt
-    grep '^not ok' report.txt | sed -E 's/^not ok [0-9]+ - suite\/TEST: //' \
+    grep '^not ok' report.txt | sed -E 's/^not ok [0-9]+ - tree\/suite\/TEST: //' \
         | sort > report-fail.txt
     echo "RUN FAILS {";    sed 's/^/    /' run-fail.txt;    echo "}"
     echo "REPORT FAILS {"; sed 's/^/    /' report-fail.txt; echo "}"

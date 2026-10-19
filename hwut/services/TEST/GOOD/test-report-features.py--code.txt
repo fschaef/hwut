@@ -1,15 +1,15 @@
 
 --- --code, and no coverage output anywhere ---
     NOTE: no coverage output found -- 'hwut.cov.run' writes one, '--cov-dir=<dir>' names one; no code shown
-    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -23,10 +23,10 @@
                     internal    Core0001:missing-side  (engine/compare/core)
                     keys        algorithm, engine-part
                     [FAIL] TEST/test-pair.sh [gap]
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
     
@@ -45,15 +45,15 @@
 status: OK
 
 --- --code, 'hwut.coverage/' at the root ---
-    AGGREGATE engine -- Engine                 4 implemented, 2 open; 1 ok, 5 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     4 implemented, 2 open; 1 ok, 2 fail, 3 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    4 implemented, 2 open; 1 ok, 5 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 4 implemented, 2 open; 1 ok, 2 fail, 3 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -71,10 +71,10 @@ status: OK
                     [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
                     code only    engine/compare/core/pair.c: 10..13
                     code shared  4 line(s) in 1 file(s)
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
             [IMPLEMENTED ok]   eng.cmp.whole-page -- A whole page is judged.
@@ -85,13 +85,13 @@ status: OK
                 code only    engine/compare/page.c: 1..7
                 code shared  2 line(s) in 1 file(s)
                 code         1 of 2 linked run(s) not measured
-            [IMPLEMENTED fail] eng.cmp.never-run -- Linked, and not in the book.
+            [IMPLEMENTED untested] eng.cmp.never-run -- Linked, and not in the book.
                 internal    Cmp00001:never-run  (engine/compare)
                 keys        engine-part
                 [NO VERDICT] engine/compare/TEST/test-fresh.sh
                 code         1 of 1 linked run(s) not measured
-        AGGREGATE engine/plain -- Plain        0 implemented, 0 open; 0 ok, 0 fail
-            state      OPEN  (nothing below it)
+        AGGREGATE engine/plain -- Plain 0 implemented, 0 open; 0 ok, 0 fail, 0 untested
+            state      OPEN untested  (nothing below it)
     
     RETIRED                                                              1 retired
         [RETIRED]  once-published  (Core0001:old-pairing)
@@ -108,15 +108,15 @@ status: OK
 status: OK
 
 --- --code inside engine/compare/core/TEST: the nearest output ---
-    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -134,10 +134,10 @@ status: OK
                     [FAIL] test-pair.sh [gap]
                     code only    ../pair.c: 10..13
                     code shared  4 line(s) in 1 file(s)
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
     
@@ -164,8 +164,8 @@ status: OK
                                       ^     ^     no test run
       #1 line-pairing  IMPLEMENTED fail
       #2 missing-side  IMPLEMENTED fail
-      #3 untested      OPEN
-      #4 not-numbered  OPEN
+      #3 untested      OPEN untested
+      #4 not-numbered  OPEN untested
     
     OUTSIDE THE RELATION
         test run, names a feature its TEST directory does not define
@@ -180,15 +180,15 @@ status: OK
 
 --- --cov-dir names a directory no coverage run made ---
     NOTE: 'elsewhere' names no root it measured; no code shown
-    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -202,10 +202,10 @@ status: OK
                     internal    Core0001:missing-side  (engine/compare/core)
                     keys        algorithm, engine-part
                     [FAIL] TEST/test-pair.sh [gap]
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
     
@@ -224,15 +224,15 @@ status: OK
 status: OK
 
 --- --cov-dir names the output ---
-    AGGREGATE engine -- Engine                 2 implemented, 2 open; 0 ok, 4 fail
-        state      OPEN
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
         doc        Runs tests and judges them.
         keys       engine-part
-        AGGREGATE engine/compare -- Compare    2 implemented, 2 open; 0 ok, 4 fail
-            state      OPEN
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
-            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 4 fail
-                state      OPEN
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
                 doc        Pairs lines.
                 [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
                     internal    Core0001:line-pairing  (engine/compare/core)
@@ -250,10 +250,10 @@ status: OK
                     [FAIL] TEST/test-pair.sh [gap]
                     code only    pair.c: 10..13
                     code shared  4 line(s) in 1 file(s)
-                [OPEN]             eng.cmp.core.untested
+                [OPEN untested]    eng.cmp.core.untested
                     internal    Core0001:untested  (engine/compare/core)
                     keys        algorithm, engine-part
-                [OPEN]             eng.cmp.core.not-numbered
+                [OPEN untested]    eng.cmp.core.not-numbered
                     internal    Core0001:not-numbered  (engine/compare/core)
                     keys        algorithm, engine-part
     

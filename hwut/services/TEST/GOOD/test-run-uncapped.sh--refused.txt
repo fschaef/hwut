@@ -1,27 +1,26 @@
 DIR  TEST                                                                     
-DONE  test-net.sh  a .......................................... [REFUSED]  ||0
-      :            b .......................................... [REFUSED]  ||0
+SKIP  test-net.sh  a .................................... uncapped [FAIL]  ||0
+      :            b .................................... uncapped [FAIL]  ||0
 START test-free.sh                                                         ||1
 END   test-free.sh ................................................. [OK]  ||0
 
 ==============================================================================
-DIRECTORIES                                             1 ok, 0 fail, <t>
+DIRECTORIES                                             1 ok, 2 fail, <t>
 ------------------------------------------------------------------------------
-   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/3
 
 ==============================================================================
-REFUSED -- not run
+HINTS
 ------------------------------------------------------------------------------
-cap 'network' not enforceable on '<platform>'
-=> hwut-root.conf: procsitter { <platform> { network = false } }
-    .
-        test-net.sh  a
-        :            b
+ENVIRONMENT -- error around the test
+    TEST
+        test-net.sh  a   cap not enforceable here; not run  (cap 'network' not enforceable on '<platform>' => hwut-root.conf: procsitter { <platform> { network = false } })
+        :            b   :
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 1 ok, 0 fail, 2 refused, <t> [sec], <t> [sec] total
-|                                     ok                                     |
-STATUS: 2
+RESULTS: 1 ok, 2 fail, <t> [sec], <t> [sec] total
+|           ok            |                       fail                       |
+STATUS: 1
 <hwut-end>

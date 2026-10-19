@@ -296,3 +296,30 @@ class LinePair:
             ("nominal", ",".join(nominal_cell(_) for _ in self.nominal_list())),
             ("cost",    "%0.4f" % self.cost),
         ]
+
+
+def filler_pair_list(subject_line_list, nominal_line_list):
+    """
+    RETURN: list[LinePair], the INSIGNIFICANT lines of a region's two
+            sides as display filler: the k-th of the subject beside the
+            k-th of the nominal -- GOOD where their text is equal,
+            neutral else -- and the longer side's tail one-sided. Every
+            pair is neutral for the verdict ('LinePair.is_equivalent');
+            [] where neither side has one.
+
+    For handlers that judge content only (verbatim, table): a comment
+    line standing in both GOOD and output is shown once, in its place,
+    as the outer text shows it -- not as a lone line on each side.
+    """
+    s_list = [line for line in subject_line_list if line.is_insignificant()]
+    n_list = [line for line in nominal_line_list if line.is_insignificant()]
+    result = []
+    for s, n in zip(s_list, n_list, strict=False):
+        if s._string.rstrip("\n") == n._string.rstrip("\n"):
+            result.append(LinePair(s, n, (Edit(E_EditId.GOOD),),
+                                   seq_edit_id=E_EditId.GOOD))
+        else:
+            result.append(LinePair(s, n, ()))
+    result.extend(LinePair(s, None, ()) for s in s_list[len(n_list):])
+    result.extend(LinePair(None, n, ()) for n in n_list[len(s_list):])
+    return result

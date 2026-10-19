@@ -1,5 +1,10 @@
 # Feature Reminder: Happy Constraints (Comparison Engine)
 
+> **SUPERSEDED IN ONE POINT.** This note says a constraint may reference only
+> its own value. As built, a constraint may name earlier variables and fires
+> once every variable it names is bound (RATIONALE C-19; MANUAL section 13).
+> The rest is the history of the idea.
+
 ## Background: happy patterns (already exist)
 
 The HWUT comparison engine already supports **happy patterns**: a pattern

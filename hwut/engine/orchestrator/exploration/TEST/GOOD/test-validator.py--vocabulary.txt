@@ -30,4 +30,15 @@ root:
     tolerance = Tolerance(numeric_ratio=0.5, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=None, constraints=None, comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)
+
+--- a build framework no run can drive, both forms; '%' passes ---
+title    'T'  language None  origin HEADER  at 1:8
+root:
+    (nothing stated)
+choice 'one':
+    build = Build(framework=None, executable=None, caps=None)
+choice 'two':
+    build = Build(framework='%-make', executable=None, caps=None)
+FAULT f.py:3:15: VOCABULARY: unknown build framework 'cmake'; known: make
+FAULT f.py:5:35: VOCABULARY: unknown build framework 'scons'; known: make
 <hwut-end>

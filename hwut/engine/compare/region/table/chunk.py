@@ -85,6 +85,10 @@ class InputChunkTable(AssociationRelatedInputChunk,
         """
         result = []
         for line in self.line_list:
+            #  AN INSIGNIFICANT LINE IS NO ROW (SEMANTICS 7.4, D-18): the
+            #  Judge never sees one; the Lawyer keeps it as display
+            #  filler ('associate.py') -- the book's D-14.
+            if line.is_insignificant(): continue
             raw = line._string.rstrip("\n")
             if separator is not None:
                 cells = tuple(c.strip() for c in raw.split(separator))

@@ -24,6 +24,8 @@ frame
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     role             str    'on_entry' or 'on_exit'
     good             bool   true where the thing stood
+    command          str    (optional) the frame script's command as written -- where it did not end well
+    exit             str    (optional) how the frame script ended where it did not end well: 'exited <n>', 'ended: <how>'
 
 run-begun
     directory        str    the test directory, RELATIVE to the root, '/'-separated
@@ -35,7 +37,7 @@ run-ended
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
     node_kind        str    'TEST', 'BUILD' or 'SESSION'
     good             bool   true where the thing stood
-    verdict          str    WHY it ended so: ok, test-failed, build-failed, launch-failed, unsupported, misdep, unaccepted, no-good-file, ... (open; unknown reads not-ok)
+    verdict          str    WHY it ended so: ok, test-failed, build-failed, launch-failed, unsupported, misdep, unaccepted, no-good-file, uncapped, ... (open; unknown reads not-ok)
     cause            str    (optional) the node whose breaking failed this one; absent else
     report           str    (optional) the operation's own word for WHY (open list, e.g. 'pype-failed', 'test-app-stalled'); absent where nothing finer than the verdict is known
     detail           str    (optional) the report's numbers, where it has them: which cap, the cap, the peak (O-19); absent else

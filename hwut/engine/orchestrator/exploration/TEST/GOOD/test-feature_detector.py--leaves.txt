@@ -3,9 +3,9 @@
                    => repoint c.encode Aaaaaaa1:encode-frame  # from Aaaaaaa1:encode
 --- two leaves renamed at once: not paired ----------------------
   leaf-new     gw/can   'decode-frame' is in no line
-                   => register gw/can
+                   => # unpaired Aaaaaaa1:decode-frame (candidate of: c.decode, c.encode; held until repointed, or the gone retired)
   leaf-new     gw/can   'encode-frame' is in no line
-                   => register gw/can
+                   => # unpaired Aaaaaaa1:encode-frame (candidate of: c.decode, c.encode; held until repointed, or the gone retired)
   leaf-gone    c.decode   Aaaaaaa1:decode is defined no more
                    => # unpaired c.decode Aaaaaaa1:decode (candidates: Aaaaaaa1:decode-frame, Aaaaaaa1:encode-frame)
   leaf-gone    c.encode   Aaaaaaa1:encode is defined no more

@@ -6,6 +6,9 @@
 #         retire { features = ["retire-moves"] }
 #         move   { features = ["move-follows"] }
 #         keys   { features = ["keys-edited"] }
+#         rename { }
+#         held   { }
+#         root   { }
 #     }
 # }
 #
@@ -16,7 +19,7 @@ PURPOSE: THE FEATURE FACES THAT TOUCH MORE THAN THE CENTRAL FILE (spec 23
          VERSION 10 sections 3, 8, 9; R-96), called as a person calls them
          on a scratch tree; after each act the files it touched are printed.
 
-CHOICES: retire, move, keys;
+CHOICES: retire, move, keys, rename, held, root;
 
 retire  a leaf: its line and its definition leave, a block in 'retired'
         holds both as they were; an aggregate with everything below it,
@@ -36,6 +39,25 @@ keys    a key added to a leaf (in its TEST directory) and to an aggregate
         taken off the claim below; '--all' over aggregates, definitions
         and a file's keys for all its features; refused: a key that is no
         key, a key stated already, '--all' of a key no claim states.
+rename  'hwut.features.rename <external id> <new name>': the definition in
+        its TEST directory, every link in that directory's test headers,
+        the leaf's internal id -- the external id stays; two renames in
+        one directory; afterwards 'register' finds nothing. Refused: a
+        name defined already, an aggregate, no word, an unknown id
+        (the book's D-7).
+
+held    the same two renames BY HAND: 'register' writes NO line -- the
+        two new names are the candidates of the two gone and are held,
+        each side naming the other (it registered both and said
+        'candidates: none', the book's D-7). One gone retired, still held;
+        both retired, the new are registered.
+
+root    the root's own TEST directory defines 'shot' and 'gateway':
+        'register' gives it a directory id standing for '.', and its
+        leaves bare names -- 'gateway' clashes with the aggregate and
+        is qualified; again, nothing more is registered (the scratch
+        tree's own 'can.ghost' is said); the root is not moved. MEASURED 2026-10-19 before (the book's D-3): nothing
+        registered, the hint 'root-test'.
 ______________________________________________________________________________
 """
 import os
@@ -47,6 +69,7 @@ import config                                                    # noqa F401
 from   config import HwutRunner                                  # noqa F401,E402
 
 from hwut.services.lib.features import retire, move, tree       # noqa E402
+from hwut.services.lib.features import rename, register         # noqa E402
 from hwut.services.lib.features.key import add, remove          # noqa E402
 from hwut.engine.orchestrator.exploration.feature_registry \
                                          import read_registry   # noqa E402
@@ -192,6 +215,111 @@ def test_retire():
         shutil.rmtree(root, ignore_errors=True)
 
 
+_LINKER = """#! /bin/sh
+# @hwut {
+#     title    = "Codec"
+#     choices {
+#         one { features = ["decode", "encode"] }
+#         two { features = ["encode"] }
+#     }
+# }
+echo x
+"""
+
+
+def _linked_tree():
+    """RETURN: str, the scratch tree with a test in 'gw/can/TEST' linking
+    'decode' and 'encode'."""
+    root = _tree()
+    _write(root, "gw/can/TEST/test-codec.sh", _LINKER)
+    os.chmod(os.path.join(root, "gw/can/TEST/test-codec.sh"), 0o755)
+    return root
+
+
+def test_rename():
+    """RETURN: None. Prints what renaming a feature does to the files."""
+    root = _linked_tree()
+    try:
+        banner("two features of one directory renamed")
+        _call("hwut.features.rename can.decode parse", rename,
+              ["can.decode", "parse"], root)
+        _call("hwut.features.rename can.encode render", rename,
+              ["can.encode", "render"], root)
+        _show(root, "hwut-root-features.conf",
+              "gw/can/TEST/hwut-features.conf", "gw/can/TEST/test-codec.sh")
+        _sound(root)
+        _call("hwut.features.register", register, [], root)
+        banner("refused")
+        _call("defined already", rename, ["can.decode", "render"], root)
+        _call("an aggregate", rename, ["can", "x"], root)
+        _call("no word", rename, ["can.decode", "a b"], root)
+        _call("no claim of the tree", rename, ["nothing", "x"], root)
+        _call("one word", rename, ["can.decode"], root)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_held():
+    """RETURN: None. Prints what 'register' does after two renames by
+    hand."""
+    root = _linked_tree()
+    try:
+        for path, old, new in (
+                ("gw/can/TEST/hwut-features.conf", "decode {", "parse {"),
+                ("gw/can/TEST/hwut-features.conf", "encode {", "render {"),
+                ("gw/can/TEST/test-codec.sh", '"decode"', '"parse"'),
+                ("gw/can/TEST/test-codec.sh", '"encode"', '"render"')):
+            full = os.path.join(root, path)
+            with open(full) as fh: text = fh.read()
+            with open(full, "w") as fh: fh.write(text.replace(old, new))
+        _call("hwut.features.retire can.ghost  (a leaf with no definition)",
+              retire, ["can.ghost"], root)
+        banner("two renames by hand: nothing written")
+        _call("hwut.features.register", register, [], root)
+        _show(root, "hwut-root-features.conf")
+        banner("one gone retired: one gone, two new -- still held")
+        _call("hwut.features.retire can.encode", retire, ["can.encode"],
+              root)
+        _call("hwut.features.register", register, [], root)
+        banner("both retired: the new are registered")
+        _call("hwut.features.retire can.decode", retire, ["can.decode"],
+              root)
+        _call("hwut.features.register", register, [], root)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_root():
+    """RETURN: None. Prints what 'register' makes of the root's own TEST
+    directory."""
+    from hwut.engine.orchestrator.exploration.feature_registry_act \
+        import register as act_register
+    root = _tree()
+    try:
+        _write(root, "TEST/hwut-features.conf", """features {
+  childs {
+    shot    { title = "A held key ends in a rolling ball." }
+    gateway { title = "The whole gateway forwards." }
+  }
+}
+""")
+        banner("register: an id for '.', bare names, a clash qualified")
+        directory_list, leaf_list, found = act_register(
+            root, token=lambda: b"\x00" * 6)
+        for directory_id, path in directory_list:
+            print("    directory  %s = %s" % (directory_id, path))
+        for external, internal in leaf_list:
+            print("    leaf       %s = %s" % (external, internal))
+        print("    then: %s" % (", ".join(each.kind for each in found)
+                                or "nothing found"))
+        _call("hwut.features.register  (again)", register, [], root)
+        _call("hwut.features.move . elsewhere", move, [".", "elsewhere"],
+              root)
+        _sound(root)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def test_move():
     """RETURN: None. Prints what moving a directory does."""
     root = _tree()
@@ -268,5 +396,8 @@ if __name__ == "__main__":
             "retire": test_retire,
             "move":   test_move,
             "keys":   test_keys,
+            "rename": test_rename,
+            "held":   test_held,
+            "root":   test_root,
         },
     ).run()

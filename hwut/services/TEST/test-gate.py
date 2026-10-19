@@ -24,17 +24,19 @@ THE GATE IS ON THE NOMINAL (services E-41). One fixture tree holds:
     test-new.py            never accepted: no nominal
     test-two.py            choices 'a' (accepted) and 'b' (not)
 
-    backup_shaped   the copy is REFUSED at candidacy, by name, in the
-                    closing REFUSED block; it is not run and the book
-                    has no entry for it.
+    backup_shaped   the copy is IGNORED (services E-159): silent -- not
+                    in the flow, no REFUSED block, no wallflower -- not
+                    run, no book entry. With 'admit = ["*.backup"]' in
+                    'hwut.conf' it is a candidate again and stands in the
+                    flow.
     not_accepted    the new test is NOT RUN, and FAILS: 'no GOOD file
                     [FAIL]' in the flow, the way in named in HINTS,
                     counted, the run red (display D-32); not booked.
     registered      the accepted test RUNS, gets a register entry on
                     the nominal's word, and the run SAYS so (NOTE).
     plan_agrees     'hwut.plan' refuses exactly what 'hwut.run' does not
-                    run: the copy it refuses, the cases with no GOOD file
-                    it fails.
+                    run: the cases with no GOOD file it fails; the copy
+                    neither names.
     new_choice      THE GATE IS PER CASE: 'test-two.py a' runs and
                     passes; 'test-two.py b' fails by name, 'no GOOD
                     file'.
@@ -224,26 +226,30 @@ def _no_good_flow(line_list):
 
 
 def test_backup_shaped():
-    """The copy is refused by name; not run, not booked."""
+    """The copy is ignored, silently; 'admit' makes it a candidate."""
     root, test = fixture()
     status, line_list, _ = _run(root)
-    block = _refused_block(line_list)
-    hit   = [l for l in block if l.startswith("test-old.py.backup")]
-    for line in hit: print("  " + line)
+    named = [l for l in line_list if "test-old.py.backup" in l]
+    for line in named: print("  " + line)
     ok = _check([
-        (len(hit) == 1, "the copy stands once in the REFUSED block"),
-        (hit and "backup-shaped" in hit[0], "the reason is the name"),
-        #  B-17: it DOES appear in the flow -- once, tagged '[REFUSED]'.
-        #  A file passed over in silence read as though nobody had
-        #  looked at it.
-        (len([l for l in line_list
-              if "test-old.py.backup" in l and "[REFUSED]" in l]) == 1,
-         "it appears in the flow, tagged [REFUSED]"),
+        (not named, "the copy is named nowhere: flow, blocks, notes"),
+        (not _refused_block(line_list), "no REFUSED block"),
         ("test-old.py.backup" not in Bookkeeper(test).tests(),
          "the book has no entry for it"),
     ])
+    with open(os.path.join(test, "hwut.conf"), "w") as fh:
+        fh.write('hwut { admit = ["*.backup"] }\n')
+    status, line_list, _ = _run(root)
+    seen = [l for l in _expanded(line_list) if "test-old.py.backup" in l
+            and "[" in l]
+    for line in seen:
+        print("  admitted: " + " ".join(line.split("||")[0].split()))
+    ok = _check([
+        (len(seen) == 1 and "no GOOD file [FAIL]" in seen[0],
+         "admitted, it is a test: no GOOD file of its own, so it fails"),
+    ]) and ok
     shutil.rmtree(root, ignore_errors=True)
-    _verdict(ok, "a backup-shaped name is refused, not run.")
+    _verdict(ok, "a backup-shaped name is ignored; 'admit' admits it.")
 
 
 def test_not_accepted():
@@ -298,8 +304,8 @@ def test_registered():
 
 
 def test_plan_agrees():
-    """What 'hwut.plan' refuses, 'hwut.run' does not run: the copy it
-    refuses too, the cases with no GOOD file it fails."""
+    """What 'hwut.plan' refuses, 'hwut.run' does not run: the cases with
+    no GOOD file it fails. The ignored copy neither names."""
     root, test = fixture()
     plan_list = []
     plan_main(["--directory=%s" % test], write=plan_list.append)
@@ -312,10 +318,10 @@ def test_plan_agrees():
                    for text in _hints_block(line_list) if "no GOOD file" in text]
     run_not_run = sorted(run_refused + run_failed)
     ok = _check([
-        (refused == ["test-new.py", "test-old.py.backup", "test-two.py b"],
-         "the plan refuses the copy, the new test and the new choice"),
+        (refused == ["test-new.py", "test-two.py b"],
+         "the plan refuses the new test and the new choice"),
         (refused == run_not_run,
-         "and the run runs none of them: the copy refused, the rest failed"),
+         "and the run runs neither: both failed"),
         (any("test-old.py" == text.strip().split()[0] for text in plan_list
              if text.strip() and not text.startswith(("REFUSED", "WISH", "REPORT"))),
          "the accepted test is in the plan"),

@@ -1,7 +1,8 @@
-# vut-register 5 generation:6 apps:1 marks:0=5
+# vut-register 5 generation:7 apps:1 marks:0=6
 test;choice;verdict;report;stain;test_id;choice_id
 test-one-list.py;deb;true;ok;;0;0
 ;faces;true;ok;;0;1
 ;help-missing;true;ok;;0;2
+;notice-width;true;ok;;0;5
 ;requirements;true;ok;;0;3
 ;version;true;ok;;0;4

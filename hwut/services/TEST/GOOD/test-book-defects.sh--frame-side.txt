@@ -12,7 +12,7 @@ DIRECTORIES                                             0 ok, 1 fail
 HINTS
 ------------------------------------------------------------------------------
 EXECUTION -- application invocation error
-    .
+    a/TEST
         test-t.py  table   broken region framing in output
 
 HINT: use 'hwut.help' for explanation of subtle issues.
@@ -37,7 +37,7 @@ DIRECTORIES                                             0 ok, 1 fail
 HINTS
 ------------------------------------------------------------------------------
 NOMINAL -- error in GOOD file
-    .
+    a/TEST
         test-t.py  table   broken region framing
 
 HINT: use 'hwut.help' for explanation of subtle issues.

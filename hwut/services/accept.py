@@ -46,6 +46,7 @@ ______________________________________________________________________________
 """
 import asyncio
 import time
+from .lib.face import write_refusal
 from .lib import preferences
 from dataclasses import replace, dataclass
 import os
@@ -991,8 +992,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
-        write("REFUSED: %s" % error)
-        write(USAGE)
+        write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
 
     if "--yes" in rest_list:
@@ -1210,7 +1210,9 @@ def refresh_cases(directory, result, bookkeeper, case_sequence,
     for case in case_sequence:
         configuration = test_configuration_of(
                             result.app_set.app_db[case.source_file],
-                            directory, language_setup=language_setup)
+                            directory, language_setup=language_setup,
+                            free_disk_min_mb=result.app_set.directory_spec
+                                                   .free_disk_min_mb)
         try:
             done = asyncio.run(refresh(configuration, case.choice, bookkeeper,
                                        force_run=force_run_f))

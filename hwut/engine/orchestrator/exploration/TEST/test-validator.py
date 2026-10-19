@@ -218,6 +218,15 @@ def test_vocabulary():
            '@hwut {\n'
            '    tolerance { numeric_ratio = 0.5 }\n'
            '}\n')
+    header("a build framework no run can drive, both forms; '%' passes",
+           '@hwut {\n'
+           '    title   = "T"\n'
+           '    build   = "cmake"\n'
+           '    choices {\n'
+           '        one { build { framework = "scons" } }\n'
+           '        two { build { framework = "%-make" } }\n'
+           '    }\n'
+           '}\n')
 
 
 def test_types():
