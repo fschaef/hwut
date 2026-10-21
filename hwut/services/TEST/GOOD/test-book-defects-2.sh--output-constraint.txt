@@ -1,0 +1,8 @@
+HINTS
+------------------------------------------------------------------------------
+EXECUTION -- application invocation error
+    TEST
+        test-c.sh   constraint violated by the output  (OUTPUT: constraint "ms < 50": broken by ((ms: 100)), line 1)
+
+HINT: use 'hwut.help' for explanation of subtle issues.
+<hwut-end>

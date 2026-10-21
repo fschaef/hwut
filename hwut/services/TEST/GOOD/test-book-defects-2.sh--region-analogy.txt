@@ -1,0 +1,11 @@
+== D=x: only the analogies differ
+END   test-t.sh .................................................... [OK]  ||0
+== D=y: the tail differs, the diff shows the analogies
+     2    2 | ball ~((0x9a))~
+            | ^ analogy '((0x9a))' ~ '((0x1a))' -- established at S:2/N:2
+     3    3 | cube ~((0x8b))~
+            | ^ analogy '((0x8b))' ~ '((0x2b))' -- established at S:3/N:3
+--
+     5    5 | ball meets ~((0x7c))~
+            | ^ analogy '((0x7c))' ~ '((0x1a))' -- established at S:5/N:5
+<hwut-end>

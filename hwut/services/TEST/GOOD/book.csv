@@ -1,4 +1,4 @@
-# vut-register 5 generation:404 apps:51 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,43=5,44=3,45=12,46=3,47=5,48=5,49=4,50=5
+# vut-register 5 generation:405 apps:51 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=4,50=5
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -63,14 +63,14 @@ test-complete.py;apps;true;ok;;45;0
 ;bash;true;ok;;45;1
 ;entry;true;ok;;45;2
 ;labels;true;ok;;45;3
-;powershell;false;not-equivalent-with-nominal;;45;4
+;powershell;true;ok;;45;4
 ;setup;true;ok;;45;5
 ;shells;true;ok;;45;6
 ;silent;true;ok;;45;7
 ;static;true;ok;;45;8
 ;targets;true;ok;;45;9
 ;values;true;ok;;45;10
-;zsh;false;not-equivalent-with-nominal;;45;11
+;zsh;true;ok;;45;11
 test-config-show.py;above;true;ok;;5;6
 ;directory;true;ok;;5;0
 ;faults;true;ok;;5;1
@@ -303,11 +303,6 @@ test-run-uncapped.sh;acknowledged;true;ok;;36;0
 test-sanitize-books.py;agree;true;ok;;22;0
 ;apply_books;true;ok;;22;3
 ;disagree;true;ok;;22;2
-test-sanitize-relations.py;apply;true;ok;;43;0
-;command;true;ok;;43;1
-;move;true;ok;;43;2
-;propose;true;ok;;43;3
-;remove;true;ok;;43;4
 test-sanitize-scenarios.sh;catalogue;true;ok;;32;0
 test-sanitize.sh;apply;true;ok;;23;0
 ;command;true;ok;;23;11

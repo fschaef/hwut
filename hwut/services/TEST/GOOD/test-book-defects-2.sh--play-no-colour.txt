@@ -1,0 +1,5 @@
+escapes written: 0
+    ball: 1.0 kg, friction 0.5
+reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
+     1 | ball: {1.0} kg, friction {0.5}
+<hwut-end>
