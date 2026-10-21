@@ -127,6 +127,37 @@ def bookkeeper_of(directory):
         return Bookkeeper(directory)
 
 
+def judgement_text(bookkeeper, test, choice, subject_tuple):
+    """
+    RETURN: str, the run's JUDGEMENT of the case, as the book records it:
+                 'OUT equivalent to GOOD: <subjects>' where it passed,
+                 'OUT not equivalent to GOOD (<the reason's phrase>):
+                 <subjects>' where it failed, 'not judged -- <why>' where
+                 the book holds no verdict or one that is neither.
+
+    EQUIVALENT OR NOT, NOTHING ELSE (ruled 2026-10-21, the book's D-33):
+    byte identity is no judgement -- a special case of equivalence that
+    happens by factors nobody controls. The bytes are never compared
+    here; the comparison is the run's, and the book holds what it found.
+    """
+    from ....engine.display.word import phrase, QUIET_REASON_SET
+    entry   = bookkeeper.result(test, choice)
+    verdict = None if entry is None else entry.get("verdict")
+    shown   = ", ".join(subject_tuple)
+    if verdict is None:
+        return "not judged -- the book holds no verdict; 'hwut.run' judges"
+    if verdict.passed_f:
+        return "OUT equivalent to GOOD: %s" % shown
+    if verdict.failed_f:
+        report = entry.get("report") or ""
+        #  A PLAIN DIFFERENCE SAYS NOTHING MORE (its phrase would only
+        #  repeat it); any other reason is named.
+        return "OUT not equivalent to GOOD%s: %s" % (
+            " (%s)" % phrase(report)
+            if report and report not in QUIET_REASON_SET else "", shown)
+    return "not judged -- the book says '%s'" % verdict.name
+
+
 def subject_tuple_of(bookkeeper, test, choice):
     """
     RETURN: tuple, the subjects recorded for that key, sorted -- the
@@ -471,13 +502,8 @@ def build_pack(directory, application, choice, raw_f,
     if not shared_tuple:
         verdict = "none -- no comparison was possible"
     else:
-        differing = tuple(name for name in shared_tuple
-                          if read(good_db[name]) != read(out_db[name]))
-        if not differing:
-            verdict = "OUT == GOOD (byte-identical): %s" \
-                      % ", ".join(shared_tuple)
-        else:
-            verdict = "OUT differs from GOOD: %s" % ", ".join(differing)
+        verdict = judgement_text(bookkeeper_of(directory), application,
+                                 choice, shared_tuple)
 
     #  THE STATUS REPORT is what the RECORDS say: which streams stand.
     #  A missing provision is a RESULT, stated as one.

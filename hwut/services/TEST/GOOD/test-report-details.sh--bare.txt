@@ -5,7 +5,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               directory:     TEST
               test:          demo.py
               choice:        basic
-              verdict:       OUT differs from GOOD: stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
               status report: run and accepted -- both records stand (stdout)
               provision:     current (A.2) the recording is current
               files:

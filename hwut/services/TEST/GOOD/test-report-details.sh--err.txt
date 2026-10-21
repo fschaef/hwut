@@ -5,7 +5,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               directory:     TEST
               test:          demo.py
               choice:        basic
-              verdict:       OUT differs from GOOD: stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
               status report: run and accepted -- both records stand (stdout)
               provision:     current (A.2) the recording is current
               files:
@@ -41,7 +41,7 @@ REACTION  exit code : 0   stderr : 0 bytes
               directory:     TEST
               test:          demo.py
               choice:        basic
-              verdict:       OUT differs from GOOD: stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
               status report: run and accepted -- both records stand (stdout)
               provision:     current (A.2) the recording is current
               files:
@@ -79,5 +79,5 @@ PRESENCE of the file is the statement.
 NEVER A SUBJECT (E-5): not compared, not a nominal, not
 named in output. The VERDICT and the STATUS line speak about
 subjects, and neither moves between the two reactions above.
-SUCCESS: Error reporting is shown, and judges nothing.
+SUCCESS: error reporting is shown, and judges nothing.
 <hwut-end>

@@ -6416,3 +6416,29 @@ DECISION  A FIX, NOT A RULING: where the subject's value has no origin with
           this nominal, the binding it HAS -- 'prov_db.get(subject)' -- is
           named. 'test-tui.py elements' now reads OK; 'test-book-defects-2.sh
           conflict-named' pins the outside-a-region case.
+
+E-164  THE JUDGEMENT IS EQUIVALENT OR NOT; BYTE IDENTITY IS NONE    (2026-10-21)
+------------------------------------------------------------------------------
+PROBLEM   'hwut.report.details' compared OUT and GOOD byte for byte and said
+          'OUT differs from GOOD' for runs judged OK -- other handles,
+          another order -- and 'OUT == GOOD (byte-identical)' else
+          (DEFECTS-hwut-78e11f7, D-33: 'test-things placed', 'test-live
+          long-shot').
+
+DECISION  RULED (Frank-Rene, 2026-10-21): "it is crucial not to distinguish
+          between byte-identical and equivalent in the judgement. we only
+          deliver the judgement 'equivalent' or not. byte-identity is a
+          special case that happens by factors we do not expect to
+          control." -- "philosophically, two situations are never
+          equivalent, they possess at least one discernible, at least
+          location or time. otherwise they would be one."
+          The 'verdict:' line is the run's judgement as the book holds it
+          ('details.judgement_text'): 'OUT equivalent to GOOD: <subjects>',
+          'OUT not equivalent to GOOD[ (<reason>)]: <subjects>' -- the
+          reason named unless it is a plain difference -- or 'not judged --
+          the book holds no verdict'. No byte is compared there.
+
+COST      'test-report-details.sh' (six pages): its fixtures write GOOD and
+          OUT by hand and never run, so they read 'not judged' now. A byte
+          tolerance, where wanted, belongs to the comparison's setup, never
+          to a face.

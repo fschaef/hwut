@@ -1,4 +1,4 @@
-# vut-register 5 generation:405 apps:51 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,43=5,44=3,45=12,46=3,47=5,48=5,49=4,50=6
+# vut-register 5 generation:406 apps:51 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=4,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,43=5,44=3,45=12,46=3,47=5,48=5,49=4,50=7
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -31,6 +31,7 @@ test-base-questions.py;asked;true;ok;;3;0
 ;until;true;ok;;3;4
 test-book-defects-2.sh;apply-names;true;ok;;50;2
 ;conflict-named;true;ok;;50;5
+;details-judgement;true;ok;;50;6
 ;diff-head;true;ok;;50;0
 ;output-constraint;true;ok;;50;3
 ;play-no-colour;true;ok;;50;4

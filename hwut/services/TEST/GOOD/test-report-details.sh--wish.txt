@@ -2,14 +2,14 @@ STIMULUS  hwut.report.details                      (no word: every case, one pac
 REACTION  exit code : 0   packs : 2
               test:          demo.py
               choice:        basic
-              verdict:       OUT differs from GOOD: stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
               test:          demo.py
               choice:        extra
-              verdict:       OUT == GOOD (byte-identical): stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
 STIMULUS  hwut.report.details --glob 'demo.py extra'
 REACTION  exit code : 0   packs : 1
               choice:        extra
-              verdict:       OUT == GOOD (byte-identical): stdout
+              verdict:       not judged -- the book holds no verdict; 'hwut.run' judges
 STIMULUS  ( cd .. && hwut.report.details TEST/demo.py basic )     (a path word enters)
 REACTION  exit code : 0   packs : 1
               directory:     TEST

@@ -5,7 +5,8 @@
 #     title    = "Defects found re-measuring the book's chapters 1-5 (D-27 to D-31)"
 #     features = ["book-defects-ch1-5"]
 #     choices  = ["play-no-colour", "apply-names", "region-analogy",
-#                 "output-constraint", "diff-head", "conflict-named"]
+#                 "output-constraint", "diff-head", "conflict-named",
+#                 "details-judgement"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -35,6 +36,11 @@
 #                    MEASURED before (727d141): line 6 red, no CONFLICT
 #                    line -- the subject's lookup asked a value that is
 #                    None whenever no origin is known.
+# details-judgement  D-33: 'hwut.report.details' says the run's JUDGEMENT,
+#                    equivalent or not -- never byte identity (ruled
+#                    2026-10-21). Other handles: 'equivalent'; a line
+#                    changed: 'not equivalent'. MEASURED before: 'OUT
+#                    differs from GOOD' for the run judged OK.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -45,7 +51,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "Defects found re-measuring the book's chapters 1-5 (D-27 to D-31);"
-        echo "CHOICES: play-no-colour, apply-names, region-analogy, output-constraint, diff-head, conflict-named;"
+        echo "CHOICES: play-no-colour, apply-names, region-analogy, output-constraint, diff-head, conflict-named, details-judgement;"
         exit 0 ;;
 esac
 
@@ -128,5 +134,14 @@ PYEOF
         A=9a B=8b C=7c D=7c "$BIN/hwut.run" > /dev/null 2>&1
         A=9a B=8b C=7c D=7c "$BIN/hwut.run.diff" test-k.sh 2>&1 \
             | sed -n '/LINE_SEQUENCE/,/CLOSING/p' ;;
+    details-judgement)
+        page test-j.sh 'title = "j"' 'echo "thing ((0x${H:-1a}))"' \
+             'echo "tail ${T:-x}"'
+        "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        for env in "H=9z T=x" "H=9z T=y"; do
+            echo "== $env"
+            env $env "$BIN/hwut.run" > /dev/null 2>&1
+            env $env "$BIN/hwut.report.details" test-j.sh 2>&1 | grep "^verdict:"
+        done ;;
 esac
 echo "<hwut-end>"

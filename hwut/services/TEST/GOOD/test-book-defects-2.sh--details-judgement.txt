@@ -1,0 +1,5 @@
+== H=9z T=x
+verdict:       OUT equivalent to GOOD: stdout
+== H=9z T=y
+verdict:       OUT not equivalent to GOOD: stdout
+<hwut-end>
