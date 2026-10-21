@@ -201,8 +201,11 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
 
             if s_orig is not None:
                 lnp = LineNumberPair(s_orig, n_orig)
-            elif n_orig is not None:
-                # Conflict case: subject is mapped to something else in prov_db
+            else:
+                # Case B: the subject was bound to ANOTHER nominal before --
+                # the binding that forbids this value (the book's D-32: the
+                # test read 'n_orig', which is None whenever 's_orig' is,
+                # so a subject-side conflict never named its binding).
                 established_n = prov_db.get(sc.subject)
                 if established_n is not None:
                     s_orig_c, n_orig_c = prov_db.get_origin(sc.subject, established_n)

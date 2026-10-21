@@ -6399,3 +6399,20 @@ DECISION  D-27  'NO_COLOR' (and 'CI', a dumb 'TERM') silence a terminal on
 COST      Pages driven through a pty with 'NO_COLOR' now see plain marks.
           JSON 'reason' of an output-side constraint reads 'constraint'
           as before (the word is the page's), 'category' EXECUTION.
+
+E-163  A BROKEN BINDING NAMES THE BINDING THAT FORBIDS IT            (2026-10-21)
+------------------------------------------------------------------------------
+PROBLEM   The book's D-32: since E-162 (D-29) a broken binding outside a
+          region showed red with no 'CONFLICT: ... binding established at'
+          line. MEASURED: the subject's side of 'feeder/ui.bake_line_pair_
+          inst' asked for the established binding only where 'n_orig' was
+          known -- and it is None whenever 's_orig' is, so a subject-side
+          conflict never named its binding. Before E-162 the NOMINAL'S side
+          often named one instead, from inside a region: the wrong one.
+          'test-tui.py elements' had recorded the omission as two FAIL
+          lines in its GOOD.
+
+DECISION  A FIX, NOT A RULING: where the subject's value has no origin with
+          this nominal, the binding it HAS -- 'prov_db.get(subject)' -- is
+          named. 'test-tui.py elements' now reads OK; 'test-book-defects-2.sh
+          conflict-named' pins the outside-a-region case.

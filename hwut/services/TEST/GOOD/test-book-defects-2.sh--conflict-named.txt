@@ -1,0 +1,8 @@
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     5    5 | ball meets ~((0x7c))~
+            | ^ analogy '((0x7c))' ~ '((0x1a))' -- established at S:5/N:5
+S    6      | cube meets [((0x7c))]
+N         6 | cube meets [((0x2b))]
+            | ^ CONFLICT: '((0x7c))' vs '((0x2b))' -- binding established at S:5/N:5
+--[ CLOSING-TOKEN ]--
+<hwut-end>

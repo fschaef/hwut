@@ -5,7 +5,7 @@
 #     title    = "Defects found re-measuring the book's chapters 1-5 (D-27 to D-31)"
 #     features = ["book-defects-ch1-5"]
 #     choices  = ["play-no-colour", "apply-names", "region-analogy",
-#                 "output-constraint", "diff-head"]
+#                 "output-constraint", "diff-head", "conflict-named"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -29,6 +29,12 @@
 # diff-head          D-31: 'hwut.run.diff | head -1' ends quietly.
 #                    MEASURED before: a ValueError traceback, a ContextVar
 #                    token 'created in a different Context'.
+# conflict-named     D-32: a broken binding outside a region names the
+#                    binding that forbids it, on the subject's side too:
+#                    '((0x7c))' bound at S:5 meets '((0x2b))' on line 6.
+#                    MEASURED before (727d141): line 6 red, no CONFLICT
+#                    line -- the subject's lookup asked a value that is
+#                    None whenever no origin is known.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -39,7 +45,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "Defects found re-measuring the book's chapters 1-5 (D-27 to D-31);"
-        echo "CHOICES: play-no-colour, apply-names, region-analogy, output-constraint, diff-head;"
+        echo "CHOICES: play-no-colour, apply-names, region-analogy, output-constraint, diff-head, conflict-named;"
         exit 0 ;;
 esac
 
@@ -113,5 +119,14 @@ PYEOF
         X=b "$BIN/hwut.run.diff" test-d.sh 2> err.txt | head -1 > /dev/null
         echo "stderr lines beyond the NOTE: $(grep -vc '^NOTE' err.txt)"
         grep -c "Traceback" err.txt | sed 's/^/tracebacks: /' ;;
+    conflict-named)
+        page test-k.sh 'title = "k"' "echo '##! potpourri'" \
+             'echo "ball ((0x${A:-1a}))"' 'echo "cube ((0x${B:-2b}))"' \
+             "echo '####'" 'echo "ball meets ((0x${C:-1a}))"' \
+             'echo "cube meets ((0x${D:-2b}))"'
+        "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        A=9a B=8b C=7c D=7c "$BIN/hwut.run" > /dev/null 2>&1
+        A=9a B=8b C=7c D=7c "$BIN/hwut.run.diff" test-k.sh 2>&1 \
+            | sed -n '/LINE_SEQUENCE/,/CLOSING/p' ;;
 esac
 echo "<hwut-end>"

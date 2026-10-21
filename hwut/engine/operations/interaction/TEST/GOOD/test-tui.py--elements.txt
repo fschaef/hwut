@@ -6,6 +6,7 @@ setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '#
             | ^ analogy '((X9))' ~ '((K2))' -- established at S:1/N:1
 S    2      | id [((X9))] reused
 N         2 | id [((ZZ))] reused
+            | ^ CONFLICT: '((X9))' vs '((ZZ))' -- binding established at S:1/N:1
      3    3 | value ~3.140~
 S    4      | value [9.000]
 N         4 | value [4.000]
@@ -28,8 +29,8 @@ N         9 | only [there]
   OK  : a numeric OUT of tolerance is a mismatch, on both sides
   FAIL: ... with the number that decides widen-the-limit vs fix-the-code
   OK  : the consistent analogy names its FIRST binding site
-  FAIL: the conflicting analogy is told as a CONFLICT ...
-  FAIL: ... naming the site of the binding it conflicts with
+  OK  : the conflicting analogy is told as a CONFLICT ...
+  OK  : ... naming the site of the binding it conflicts with
   OK  : two elements matching one equivalence pattern are tolerated
   FAIL: ... and the pattern that tolerated them is NAMED
   OK  : a visible nothing pairs against NOTHING -- and is marked as the tolerance it is
