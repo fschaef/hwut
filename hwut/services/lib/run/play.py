@@ -369,8 +369,10 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     #  watching -- a terminal, not '--plain' into a pipe. The reading
     #  follows once the pype has seen the whole stream; a pyped line
     #  cannot be read before that.
-    live_f = color_wanted_f(plain_f, None, sys.stdout) and not plain_f
-    banner_color_f = live_f
+    #  WATCHED is a terminal; PAINTED is the colour decision on top of it
+    #  -- 'NO_COLOR' leaves the pane and paints nothing (the book's D-27).
+    live_f = not plain_f and sys.stdout.isatty()
+    banner_color_f = color_wanted_f(plain_f, None, sys.stdout)
     def live_line(line):
         """RETURN: None. One raw line, on the screen now."""
         sys.stdout.write("    " + line)

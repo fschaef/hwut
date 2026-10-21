@@ -96,6 +96,7 @@ _PRECEDENCE = (
     #  -- the constraints' findings name the law the text broke, which a
     #     plain 'not equivalent' would hide (E-123)
     E_TestRunResult.CONSTRAINT,
+    E_TestRunResult.OUTPUT_CONSTRAINT,
     # -- the judgement: everything ran, the subject does not match
     E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
     E_TestRunResult.NOT_EQUIVALENT_GREW,

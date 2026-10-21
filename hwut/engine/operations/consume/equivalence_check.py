@@ -208,8 +208,14 @@ class EquivalenceCheck:
             #  said in full (E-123).
             finding_db[name] = tuple(finding_list)
             if finding_list:
+                #  WHOSE FAULT (the book's D-30): a finding of the GOOD's
+                #  is the nominal's; findings of the OUTPUT alone are the
+                #  behaviour's.
                 if report is E_TestRunResult.OK:
-                    report = E_TestRunResult.CONSTRAINT
+                    report = E_TestRunResult.OUTPUT_CONSTRAINT \
+                             if all(getattr(f, "side", None) == "OUTPUT"
+                                    for f in finding_list) \
+                             else E_TestRunResult.CONSTRAINT
                 detail_list.extend(f.text() for f in finding_list)
             verdict_db[name] = bool(ok)
             notify(self.observer, "verdict", name, bool(ok))

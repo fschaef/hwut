@@ -32,6 +32,7 @@ class E_Failure(Enum):
     BUILD_FAILED                = "build-failed"
     BUILD_TOOL_NOT_FOUND        = "build-tool-not-found"
     CONSTRAINT                  = "constraint"
+    OUTPUT_CONSTRAINT           = "output-constraint"
     DISPLAY_TARGET_UNREACHABLE  = "display-target-unreachable"
     INTERPRETER_NOT_FOUND       = "interpreter-not-found"
     LAUNCH_FAILED               = "launch-failed"
@@ -187,6 +188,7 @@ _brief_failure_db = {
     #  NOMINAL
     _F.NOMINAL_WITHOUT_END:         (_C.NOMINAL,    "no <hwut-end> marker"),
     _F.CONSTRAINT:                  (_C.NOMINAL,    "constraint"),
+    _F.OUTPUT_CONSTRAINT:           (_C.EXECUTION,  "constraint"),
     _F.UNACCEPTED:                  (_C.NOMINAL,    "unaccepted"),
     _F.REGION_SYNTAX_ERROR:         (_C.NOMINAL,    "region"),
     _F.NO_GOOD_FILE:                (_C.NOMINAL,    "no GOOD file"),
@@ -307,6 +309,12 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "handler, a bad parameter, an unclosed region. GOOD is not "
              "at fault. 'hwut.run.diff' names the line.",
              "Mend the framing the test prints."),
+    _failure(_F.OUTPUT_CONSTRAINT, "constraint violated by the output",
+             "The output breaks a constraint of the choice that GOOD "
+             "keeps: the behaviour failed the stated requirement (E-123). "
+             "The line behind the phrase names the value and its line.",
+             "Mend the behaviour; where the requirement itself is wrong, "
+             "the constraint in the header."),
     _failure(_F.CONSTRAINT, "constraint violated",
              "A constraint of the choice is broken, in the output or in "
              "GOOD, or names a variable the text never binds (E-123). The "

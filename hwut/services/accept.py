@@ -556,6 +556,23 @@ def _elided(entry_group):
     return found
 
 
+def root_named(where):
+    """
+    RETURN: str, the directory 'where' (relative to the call directory)
+                 named from the tree's root, as 'DIR' and HINTS name it
+                 ('game/TEST' where the call stands in it, not '.'; the
+                 book's D-28)
+            'where' itself, where no 'hwut-root.conf' bounds it
+    """
+    from ..engine.orchestrator.exploration.tree_explorer \
+        import root_conf_directory, RootConfMissing
+    try:
+        top = root_conf_directory(os.path.abspath(where))
+    except RootConfMissing:
+        return where
+    return os.path.relpath(os.path.abspath(where), top).replace(os.sep, "/")
+
+
 def write_brief(entry_list, write, ink, verb="Accepted"):
     """
     RETURN: None. A file's whole report, in the two sections a run's
@@ -598,7 +615,7 @@ def write_brief(entry_list, write, ink, verb="Accepted"):
     write("EXECUTION:")
     write(rule_soft)
     for where, group in _grouped(entry_list):
-        write(" %s" % where)
+        write(" %s" % root_named(where))
         pair_list = _elided(group)
         test_w = max(len(test) for test, _ in pair_list)
         for (test, choice), (_key, verdict, _reason) in zip(pair_list, group):
@@ -621,7 +638,7 @@ def write_brief(entry_list, write, ink, verb="Accepted"):
         write("REPORT:")
         write(rule_soft)
         for where, group in _grouped(failed_list):
-            write(" %s" % where)
+            write(" %s" % root_named(where))
             pair_list = _elided(group)
             test_w   = max(len(test) for test, _ in pair_list)
             choice_w = max(len(choice) for _, choice in pair_list)

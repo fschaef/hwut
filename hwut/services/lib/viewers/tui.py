@@ -228,7 +228,12 @@ class TuiDisplay(DisplayAdapter):
         self.input_f      = input_f if input_f is not None else input
         self.editor_argv  = editor_argv
         if color_f is None:
-            color_f = getattr(self.out, "isatty", lambda: False)()
+            #  THE TREE'S ONE COLOUR DECISION (display D-2): 'NO_COLOR'
+            #  silences a terminal too (the book's D-27) -- and then the
+            #  plain marks, '{numeric}' and its kin, are drawn instead.
+            from ....engine.display.word import colour_decision
+            color_f = colour_decision(
+                os.environ, getattr(self.out, "isatty", lambda: False)())
         if color_f: color_f = _ansi_enabled()
         self.color_f      = color_f
         self.side_by_side_f = side_by_side_f

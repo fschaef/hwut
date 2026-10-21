@@ -52,6 +52,20 @@ import io
 from   contextlib import aclosing
 
 @typechecked
+
+def _reset(variable, token):
+    """
+    RETURN: None. 'variable' back to what it was before 'token' was set --
+            or, where the generator is closed in ANOTHER context (its
+            consumer went away mid-stream, e.g. 'hwut.run.diff | head',
+            and the loop finalises it; the book's D-31), set to None: that
+            context ends with the generator, and nothing reads it after.
+    """
+    try:
+        variable.reset(token)
+    except ValueError:
+        variable.set(None)
+
 async def is_equivalent(config: Configuration,
                         subject_line_provider,
                         nominal_line_provider,
@@ -135,8 +149,8 @@ async def _is_equivalent_fast(config,
             return not (context is not None and context.alive
                         and context.unbound_found())
     finally:
-        constraints.context_constraint_context.reset(token_constraints)
-        frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
+        _reset(constraints.context_constraint_context, token_constraints)
+        _reset(frozen_analogy_db.context_frozen_analogy_db_registry, token)
 
 @typechecked
 async def is_equivalent_by_association(config: Configuration,
@@ -297,5 +311,5 @@ async def associate(config: Configuration, subject_line_provider,
             context.unbound_found()
 
     finally:
-        constraints.context_constraint_context.reset(token_constraints)
-        frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
+        _reset(constraints.context_constraint_context, token_constraints)
+        _reset(frozen_analogy_db.context_frozen_analogy_db_registry, token)

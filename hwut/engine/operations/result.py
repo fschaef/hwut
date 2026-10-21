@@ -114,6 +114,10 @@ class E_TestRunResult(Enum):
     #  bound -- on the OUTPUT's side or on the GOOD's. The sentence naming
     #  side, law and variable is the run's detail.
     CONSTRAINT                  = "constraint"
+    #  THE OUTPUT BROKE A CONSTRAINT and the GOOD did not (the book's
+    #  D-30): the behaviour failed the stated requirement -- the output's
+    #  fault, not the nominal's.
+    OUTPUT_CONSTRAINT           = "output-constraint"
     STDERR_UNDECIDED            = "stderr-undecided"
 
     # THE PYPE STAGE (deterministicalization):

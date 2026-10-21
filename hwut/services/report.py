@@ -103,7 +103,7 @@ from ..engine.display.console import console_width
 from ..engine.display.plain import (wallflower_note_list,
                                        results_line_list, hint_line_list)
 from ..engine.display.vocabulary import RUN_VOCABULARY
-from ..engine.display.word import CInk
+from ..engine.display.word import CInk, colour_decision
 from ..engine.orchestrator.plan.wish import Wish
 from   dataclasses import dataclass, field
 
@@ -281,7 +281,12 @@ def color_wanted_f(plain_f, out_name, stream, color_said_f=False):
     if plain_f:        return False
     if color_said_f:   return True
     if out_name is not None: return False
-    if not getattr(stream, "isatty", lambda: False)(): return False
+    #  THE TREE'S ONE COLOUR DECISION (display D-2): a terminal, and no
+    #  'NO_COLOR', no 'CI', a 'TERM' that is not dumb (the book's D-27:
+    #  'NO_COLOR' was not asked here).
+    if not colour_decision(os.environ,
+                           getattr(stream, "isatty", lambda: False)()):
+        return False
     return _ansi_enabled()
 
 

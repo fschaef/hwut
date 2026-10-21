@@ -6364,3 +6364,38 @@ COST      A target is no longer unbounded: a minute of wall clock unless
           the supervisor's, closed). A helper's stdout and stderr are
           drained, not shown. A cap the platform cannot watch is not
           refused for a script, which has no verdict to fail.
+
+E-162  THE READER'S D-27 TO D-31                                     (2026-10-19)
+------------------------------------------------------------------------------
+PROBLEM   The book's re-measuring of chapters 1-5 on 5acc421
+          (DEFECTS-hwut-78e11f7, D-27 to D-31).
+
+DECISION  D-27  'NO_COLOR' (and 'CI', a dumb 'TERM') silence a terminal on
+                every face that paints: 'hwut.report''s 'color_wanted_f' and
+                the viewer ('lib/viewers/tui') ask the tree's one decision,
+                'display/word.colour_decision'; the plain marks ('{numeric}'
+                ...) are drawn then. 'hwut.run.play' keeps its LIVE pane
+                where a terminal watches -- the raw stream as written,
+                unmarked by design (E-83) -- and paints its banners only
+                where the decision says so.
+          D-28  'hwut.accept.apply' (and 'hwut.remove.apply', the same
+                report) name a directory from the tree's root
+                ('accept.root_named').
+          D-29  THE RULE STANDS (compare MANUAL 5): "a REGION has its own
+                private analogy world". The comparison obeys it -- the run
+                passes a line outside that binds afresh; the DISPLAY did
+                not: 'feeder/ui.feed' kept one provenance table across
+                every chunk and cited a binding inside a potpourri for a
+                line outside it. A region's chunk now reads and feeds a
+                fresh table; the outer text one of its own.
+          D-30  'output-constraint': findings of the OUTPUT alone are the
+                behaviour's failure -- EXECUTION, 'constraint violated by
+                the output', word 'constraint'; a finding of the GOOD's
+                stays 'constraint', NOMINAL.
+          D-31  'compare/main' resets its context variables tolerantly: a
+                generator its consumer abandoned ('| head') is closed by
+                the loop in another context, and the reset is then moot.
+
+COST      Pages driven through a pty with 'NO_COLOR' now see plain marks.
+          JSON 'reason' of an output-side constraint reads 'constraint'
+          as before (the word is the page's), 'category' EXECUTION.

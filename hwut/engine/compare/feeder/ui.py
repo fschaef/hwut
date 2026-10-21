@@ -32,6 +32,7 @@ from hwut.engine.compare.core.line_pair import (LinePair,      #noqa: E402
                                                        NominalCell,
                                                        SubjectCell)
 from hwut.engine.compare.core.chunk_pair import ChunkPair       #noqa: E402
+from hwut.engine.compare.contract.enums import E_Chunk          #noqa: E402
 from hwut.engine.compare.reading.line_element import E_ToleranceId   #noqa: E402
 
 from   inspect     import isclass                   #noqa: E402
@@ -131,11 +132,18 @@ async def feed(config, subject_stream, nominal_stream,
                      analogy_begin_marker       = pf.analogy_begin_marker,
                      analogy_end_marker         = pf.analogy_end_marker)
 
-    prov_db = AnalogyProvenanceDb()
+    outer_db = AnalogyProvenanceDb()
 
     async for chunk in main.associate(config, subject_stream, nominal_stream,
                                       finding_list):
-        # 1. Update global provenance with current chunk data
+        # 1. Provenance as the comparison has it (MANUAL 5): the outer
+        #    text develops ONE table; a REGION has its own, fresh, and
+        #    neither sees nor feeds the outer one (the book's D-29: the
+        #    display cited bindings inside a potpourri for lines outside).
+        if _region_f(chunk):
+            prov_db = AnalogyProvenanceDb()
+        else:
+            prov_db = outer_db
         prov_db.update(chunk)
 
         yield SectionBeginInst(title      = _section_title(chunk),
@@ -147,6 +155,20 @@ async def feed(config, subject_stream, nominal_stream,
             yield baked_lp_inst
 
     yield EndOfStreamInst()
+
+#  THE CHUNKS OF THE OUTER TEXT: what is not one of these is a region.
+_OUTER_CHUNK_SET = frozenset((E_Chunk.LINE_SEQUENCE, E_Chunk.LINE,
+                              E_Chunk.TERMINAL, E_Chunk.VOID, E_Chunk.NONE))
+
+
+def _region_f(chunk):
+    """
+    RETURN: bool, True where 'chunk' pairs a REGION on either side -- its
+                  analogies are private to it (MANUAL 5)
+            False, where it is outer text, a terminal or nothing
+    """
+    return any(each not in _OUTER_CHUNK_SET for each in chunk.types())
+
 
 def _ref_f(ref_i, cell_list):
     """
