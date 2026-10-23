@@ -11,6 +11,7 @@ STDOUT {
       stderr         20 bytes   first: 'all of it on stderr'
       stdout          0 bytes
       HINT: stdout is EMPTY while stderr is not -- output on the wrong channel? (a runner may route print() to stderr; compare reads stdout)
+    RECORDED: test-wrong.sh.txt
 }
 STATUS: 3
 STDOUT {
@@ -24,5 +25,6 @@ STDOUT {
       REPORT     test-app-launch-failed
       stderr          0 bytes
       stdout          0 bytes
+    NOT RECORDED: the run did not complete, and a partial subject is never stored as if whole
 }
 <hwut-end>

@@ -26,7 +26,7 @@ PURPOSE: WHAT A RUN DOES WITH WHAT THE CONSTRAINTS FOUND (compare C-20),
     accept    'hwut.accept --force' of candidates that break their
               constraints: 'b' binds 150, 'c' never binds 'twice' -- both
               REFUSED by name, '--force' or not; 'a' is blessed.
-    diff      'hwut.run.diff' of a candidate that broke its constraint in a
+    diff      'hwut.diff' of a candidate that broke its constraint in a
               run: the finding stands in the candidate, directly after the
               line that caused it, and the view shows it there -- nothing
               is said beside the view.
@@ -102,6 +102,7 @@ def tree_of(load, said=None):
     path = os.path.join(test, "t.py")
     with open(path, "w") as fh: fh.write(APP)
     os.chmod(path, 0o755)
+    face(test, "lib.run.play", "--all", "--plain", load=load)  # E-165
     text = face(test, "accept", "--force", "--dont-ask", load=load)
     if said is not None: said.append(text)
     return root, test
@@ -119,10 +120,13 @@ def test_tightened():
             fh.write(APP.replace("load <= 100", "load <= 200"))
         os.chmod(path, 0o755)
         print("-- accepted under 'load <= 200'")
+        face(test, "lib.run.play", "--all", "--plain", load="150")  # E-165
         for line in face(test, "accept", "--force", "--dont-ask",
                          load="150").splitlines():
             if "t.py b" in line or line.startswith("REFUSED"):
-                print("   %s" % line.rstrip())
+                import re
+                print("   %s" % re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}",
+                                       "<when>", line.rstrip()))
         with open(path, "w") as fh: fh.write(APP)
         print("-- the constraint tightened to 'load <= 100'; OUTPUT unchanged")
         for label in ("first run", "second run"):

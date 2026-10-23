@@ -90,10 +90,11 @@ no_record_db = {
         "record is attributed by that id, and a coverage run reads "
         "the book without writing it, so the case was not run.",
         "Run the case once with 'hwut.run', which enters it into "
-        "'GOOD/book.csv', or accept it with 'hwut.accept'."),
+        "'GOOD/book.csv', or record it with 'hwut.play' and accept it "
+        "with 'hwut.accept'."),
     "run-incomplete": NoRecord(
         "incomplete",
-        "run did not end with <hwut-end>; nothing read",
+        "the run under the tool did not complete; nothing read",
         E_NoRecordCategory.RUN,
         "The application did not testify under the coverage tool: it "
         "was killed, could not be started, or its output did not end "
@@ -101,7 +102,7 @@ no_record_db = {
         "nothing, so the tool's data was not read. Where 'hwut.run' "
         "passes the same case, the tool's call is at fault, not the "
         "application.",
-        "Run the case with 'hwut.run.play' to see what it prints "
+        "Run the case with 'hwut.play' to see what it prints "
         "without the tool, then make the tool's call by hand in the "
         "test directory and read what it says."),
     "no-data-provided": NoRecord(

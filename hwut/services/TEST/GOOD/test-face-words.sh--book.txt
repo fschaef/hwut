@@ -22,6 +22,5 @@ t.sh;;true;ok;;1
 == an acceptance refused takes no id
     refused: 1
 t.sh;;true;ok;;1
-u.sh;;false;nominal-file-not-found
 v.sh;;true;ok;;2
 <hwut-end>

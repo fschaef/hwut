@@ -108,7 +108,8 @@ fixture() {             # <choice-line...> -- one app, run and accepted
     } > tree/suite/TEST/test-app.sh
     chmod +x tree/suite/TEST/test-app.sh
     $RUN --directory=tree --silent > /dev/null 2>&1
-    ( cd tree/suite/TEST && python3 -m hwut.services.accept --force \
+    ( cd tree/suite/TEST && python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1 \
+        ; python3 -m hwut.services.accept --force \
         > /dev/null 2>&1 )
     $RUN --directory=tree --timing --silent > /dev/null 2>&1
 }

@@ -46,6 +46,7 @@ from   config import HwutRunner                                  # noqa F401,E40
 from hwut.services.lib.sanitize.propose import main as propose_main  # noqa E402
 from hwut.services.lib.sanitize.apply import main as apply_main    # noqa E402
 from hwut.services.run import main as run_main             # noqa E402
+from hwut.services.lib.run.play import main as play_main     # noqa E402
 from hwut.services.accept import main as accept_main          # noqa E402
 from hwut.engine.bookkeeper.api import (Bookkeeper,              # noqa E402
                                          E_TestVerdict)
@@ -183,6 +184,11 @@ def test_agree():
     #  nominal the book never knew -- so only agreement remains.
     #  'test-asp.py' stays an aspirant, which is agreement.
     os.remove(os.path.join(test, "GOOD", "test-nom.py.txt"))
+    #  ITS RECORDING IS PLAY'S (services E-165): accept runs nothing.
+    import contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        play_main(["test-reg.py", "--plain", "--directory=%s" % test],
+                  write=lambda _: None)
     accept_main(["test-reg.py", "--force", "--directory=%s" % test],
                 write=lambda _: None)
     finding_list = _finding_list(_proposal(test))

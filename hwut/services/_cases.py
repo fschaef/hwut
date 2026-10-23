@@ -3,7 +3,7 @@
 ______________________________________________________________________________
 PURPOSE: THE CASES A WISH SELECTS, WITH THEIR STREAMS -- the one block
          every store-reading face runs between its words and its work
-         ('hwut.accept', 'hwut.accept.interactive', 'hwut.run.diff'; E-50,
+         ('hwut.accept', 'hwut.merge', 'hwut.diff'; E-50,
          E-51).
 
     entered path -> directory exists -> the climb (ascended_spec)
@@ -30,7 +30,6 @@ from ..engine.orchestrator.plan.wish import with_targets
 from ..engine.orchestrator.run.adapter import \
                                                        test_configuration_of
 from ..engine.bookkeeper.api import Store
-from ..engine.orchestrator.plan import confinement
 from ._accept_common import stderr_ignored_f_of
 from .lib.labels import view_at
 from .lib.labels._file import LabelFileError
@@ -186,12 +185,10 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
     else): a case that fails or is not run, and has no difference to
     show (E-141). Such a case is no key.
 
-    'refresh_f': the caller WORKS on the candidate -- the merge accepts
-    what it shows -- so it REFRESHES as 'hwut.accept' does (E-40's
-    REFRESH intent): a recording older than the test's source is run
-    again, through the session, before it is judged, and one 'RUN:' line
-    says so. Without it, only a first acceptance's missing candidate is
-    made.
+    NOTHING IS RUN HERE (services E-165): the faces that read this --
+    'hwut.diff', 'hwut.merge' -- work on the RECORDING, which only
+    'hwut.run' and 'hwut.play' make. 'refresh_f' is kept for the
+    callers' signature and asks nothing.
     """
     from ..engine.compare.api import (is_equivalent, Configuration,
                                         RegionSyntaxError)
@@ -217,45 +214,6 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
             test, choice = case.source_file, case.choice
             out_path  = store.bookkeeper.candidate_path(test, choice, "stdout")
             good_path = store.bookkeeper.nominal_path(test, choice, "stdout")
-            if refresh_f or (not out_path.exists() and not good_path.exists()):
-                #  A FIRST ACCEPTANCE HAS NO CANDIDATE YET: 'hwut.run'
-                #  refuses to run what nobody accepted, so the candidate
-                #  is made HERE, the way 'hwut.accept' refreshes (E-40)
-                #  -- through provision, held, recorded and booked as a
-                #  run books it. UNDER 'refresh_f' EVERY CASE IS ASKED:
-                #  a candidate older than its source is made again
-                #  (E-122) -- MEASURED: the merge judged the old candidate
-                #  of an edited 'regression-1.py' and found nothing to do.
-                #  THE STEPS are 'session.refresh''s, shared with accept:
-                #  build where built, run where not current.
-                configuration = config_db.get(test)
-                #  AN UNENFORCEABLE CAP REFUSES THE RUN (exploration
-                #  R-80), through this door as through the plan's.
-                reason = confinement.refusal_of(result.app_set, test,
-                                                choice)
-                if reason is not None:
-                    for line in confinement.refusal_line_list(
-                                    test if choice is None
-                                    else "%s %s" % (test, choice), reason):
-                        write(line)
-                    continue
-                if configuration is not None:
-                    from ..engine.operations.session import refresh
-                    had_f = out_path.exists()
-                    try:
-                        done = asyncio.run(refresh(configuration, choice,
-                                                   store.bookkeeper))
-                        if "run" in done.step_tuple and had_f:
-                            write("RUN: %s%s   %s"
-                                  % (test, "" if choice is None
-                                     else " " + choice,
-                                     done.decision.because))
-                    except Exception as error:                 # noqa: BLE001
-                        #  SAID, NOT SWALLOWED: the case is counted below
-                        #  as never run, and here is why.
-                        write("FAULT: '%s %s' -- no first candidate could "
-                              "be made: %s: %s" % (test, choice,
-                              type(error).__name__, error))
             if not out_path.exists():  no_run_n += 1; continue
             try:
                 subject_text = io.open(str(out_path),  encoding="utf-8").read()
@@ -333,8 +291,8 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
     #  each group, so nothing else is reordered.
     key_list = [k for k in key_list if k.aspirant_f] \
              + [k for k in key_list if not k.aspirant_f]
-    if no_run_n: write("NOTE: %d selected case(s) never ran -- no "
-                       "candidate stands" % no_run_n)
+    if no_run_n: write("NOTE: %d selected case(s) have no recording -- "
+                       "'hwut.play' records one" % no_run_n)
     if no_nom_n: write("NOTE: %d selected case(s) never COMPLETED -- no "
                        "'<hwut-end>' -- and cannot be accepted" % no_nom_n)
     return key_list, judged_n, unread_n

@@ -5,7 +5,7 @@ hwut.report            exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.l
 hwut.report.list       exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
 hwut.report.details    exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
 hwut.run.stability     exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
-hwut.run.diff          exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
+hwut.diff              exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
 hwut.sanitize.propose  exit 2  REFUSED: '--label nosuch' asks 'hwut-root.labels', and no label view reaches
 hwut.cov.run           exit 2  REFUSED: no label 'nosuch' stands in 'hwut-root.labels'
 <hwut-end>

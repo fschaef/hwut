@@ -2,27 +2,27 @@
 ______________________________________________________________________________
 
 PURPOSE
-       THE DIFF SERVICE -- 'hwut.run.diff': display how two streams
+       THE DIFF SERVICE -- 'hwut.diff': display how two streams
        compare, how the store's candidates compare to their nominals,
        or how compare READS one stream.
 
 DESCRIPTION
-       THE SIBLING OF 'hwut.accept.interactive' (lib/accept/interactive.py),
+       THE SIBLING OF 'hwut.merge' (lib/accept/interactive.py),
        deliberately homogeneous:
        the same TUI renderer, the same rows, marks, notes and banner --
        an author moves between the two without relearning the picture.
        What differs is the QUESTION asked:
 
-           hwut.run.diff SUBJECT NOMINAL      how do these two FILES
+           hwut.diff SUBJECT NOMINAL      how do these two FILES
                                           compare? (the VERDICT view:
                                           marks say what DID differ)
-           hwut.run.diff FILE                 how does compare READ this
+           hwut.diff FILE                 how does compare READ this
                                           stream? (the READING view:
                                           marks say what CAN vary --
                                           '{numeric}', '~analogy~',
                                           '<pattern>', '!binding!',
                                           '|nothing|')
-           hwut.run.diff [<wish>] [<test> [<choice>]] ...
+           hwut.diff [<wish>] [<test> [<choice>]] ...
                                           THE STORE FORM (E-50): every
                                           case the wish selects whose
                                           stdout candidate differs from
@@ -52,12 +52,12 @@ DESCRIPTION
 
        DISPLAY ONLY. This service never merges and never writes an
        artifact. WHERE A PERSON SITS AT A TERMINAL it opens the keyed
-       SCREEN of 'hwut.accept.interactive' for looking only: the same
+       SCREEN of 'hwut.merge' for looking only: the same
        panes and element colours, moving and searching, 'q' to go on
        (services E-79). '--console' -- and a pipe, or a machine without
        'prompt_toolkit', where one NOTE says so -- gives the TEXT
        display on STDOUT instead, where the rendering IS the product.
-       Editing and accepting belong to 'hwut.accept.interactive'.
+       Editing and accepting belong to 'hwut.merge'.
 
        EXIT CODES (the diff convention):
                     0 equivalent -- no differing pair (or: a reading
@@ -132,8 +132,8 @@ async def reading_view(text, adapter, subject_name="reading",
     one; this function does not police it.)
 
     THE ONE FAULT A CALLER MUST CATCH ('compare/api.py') IS CAUGHT
-    HERE, for every road that shows a reading -- 'hwut.run.diff' and
-    'hwut.run.play' alike. A text whose framing does not parse is a text
+    HERE, for every road that shows a reading -- 'hwut.diff' and
+    'hwut.play' alike. A text whose framing does not parse is a text
     this face cannot show, and saying so IS the answer; raised
     through, it reaches the person as a traceback, which tells them
     the framework broke when it was their text that could not be
@@ -164,7 +164,7 @@ def main(argv=None):
     RETURN: int, the exit code -- 0 equivalent or reading displayed;
             1 differing; 141 the reader left early; 2 unusable request.
 
-    THE PIPE IS THE DESIGN ('hwut.run.diff A B | head'), so a reader
+    THE PIPE IS THE DESIGN ('hwut.diff A B | head'), so a reader
     that leaves early is an ORDINARY ending, not a crash: the unix
     answer, quietly, with the shell's own SIGPIPE code.
     """
@@ -193,7 +193,7 @@ def _main(argv):
     wish_said_f = rest_list != list(argv)
 
     parser = argparse.ArgumentParser(
-        prog="hwut.run.diff",
+        prog="hwut.diff",
         #  NO ABBREVIATION (E-81): '--forc' was measured to RUN as
         #  '--force'; a word not in the table is refused, and suggested.
         allow_abbrev=False,
@@ -304,7 +304,7 @@ def _main(argv):
         err("nothing differs: %d case(s) judged, every candidate "
             "equivalent to its nominal" % judged_n)
         return E_ExitCode.OK
-    #  THE SAME MENU AND THE SAME LOOP as 'hwut.accept.interactive'
+    #  THE SAME MENU AND THE SAME LOOP as 'hwut.merge'
     #  (E-67). Here 'handled' means VIEWED: the face that shows a case
     #  has done with it what this face does.
     checklist = Checklist(key_list, err, sys.stdin.readline,
@@ -344,14 +344,11 @@ def _main(argv):
 def keys_of(selected, write, stained_list=None):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
-            'differing_keys' with the candidates REFRESHED first -- built
-            where the application is built, run where the recording is
-            not current ('session.refresh'; E-122) -- and how many were
-            judged.
+            'differing_keys' over the RECORDINGS as they stand -- nothing
+            is run (services E-165) -- and how many were judged.
 
-    A face that shows or merges a candidate works on it, so it must hold
-    a current one: a stale candidate shown as the run's is the lie E-40
-    forbids.
+    A face that shows or merges a candidate works on the recording that
+    'hwut.run' or 'hwut.play' made, so what is merged is what was seen.
 
     'stained_list' receives the cases that are equivalent and whose
     stderr spoke untolerated ('differing_keys').
@@ -360,7 +357,7 @@ def keys_of(selected, write, stained_list=None):
                           stained_list=stained_list)
 
 
-USAGE = ("usage: hwut.run.diff SUBJECT NOMINAL | FILE | [<wish>] "
+USAGE = ("usage: hwut.diff SUBJECT NOMINAL | FILE | [<wish>] "
          "[<test> [<choice>]] [--directory D] [--all] [--console] [-y] "
          "[--width N] [--plain]")
 
@@ -428,4 +425,4 @@ def _setup_said_f(arguments):
 if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
     from ..._exit import guarded
-    sys.exit(guarded("hwut.run.diff", main))
+    sys.exit(guarded("hwut.diff", main))

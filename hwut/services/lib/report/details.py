@@ -390,19 +390,19 @@ def _place(directory):
 
 def refresh(directory, application, choice):
     """
-    RETURN: str, one line for the pack's header saying what provision
-            did before the pack was read -- 'ran: (A.1) ...' where the
-            recording was stale and the test was run, 'current: (A.2)
-            ...' where it stood; None where the channel could not be
-            asked (no tree, no such test), and the pack shows what
-            stands, as it always did.
+    RETURN: str, one line for the pack's header saying how the
+            recording stands against its source -- 'stale (A.1) ...
+            -- 'hwut.play' records afresh' where the source is younger,
+            'current (A.2) ...' where it is not; None where the channel
+            could not be asked (no tree, no such test), and the pack
+            shows what stands, as it always did.
 
-    THROUGH THE ONE CHANNEL (operations disc-2, E-40): a face that
-    OBTAINS A SUBJECT AND DOES SOMETHING WITH IT holds a CURRENT one.
-    'tell' presents; so it REFRESHES -- 'provider_of(refresh=True)':
-    PROVIDE where the recording is older than what it was recorded
-    from, RECORDED where it is not. Where it must run, it runs through
-    the session, held, recorded and booked as 'hwut.run' books it.
+    IT RUNS NOTHING (services E-165): only 'hwut.run' and 'hwut.play'
+    make a recording. The channel is asked for its DECISION alone
+    ('provider_of(refresh=True)'), and the decision is said. MEASURED
+    2026-10-22 before (E-40): where the recording was stale, this face
+    ran the test and replaced the recording a later 'hwut.accept' would
+    bless -- unseen.
     """
     from ....engine.orchestrator.exploration import selection
     from ....engine.orchestrator.exploration.task_list import SelectionError
@@ -410,11 +410,8 @@ def refresh(directory, application, choice):
                                                                 with_targets,
                                                                 WishError)
     from ....engine.operations import subject_provision
-    from ....engine.operations.session import run_test, Request
     from ....engine.orchestrator.run.adapter import test_configuration_of
     from ....engine.bookkeeper.api import Store
-    from ....auxiliary.directory_mutex import DirectoryBusy
-    import asyncio
     try:
         wish, _ = parse_wish([])
         wish    = with_targets(wish, [application] if choice is None
@@ -452,13 +449,7 @@ def refresh(directory, application, choice):
            and reason is not None:
             said.append("not run -- %s" % reason.split(" => ")[0])
         elif word is subject_provision.E_Decision.PROVIDE:
-            try:
-                asyncio.run(run_test(configuration,
-                                     Request(choice=case.choice, record=True),
-                                     bookkeeper=bookkeeper))
-                said.append("ran %s" % because)
-            except DirectoryBusy as error:
-                said.append("could not run -- %s" % error)
+            said.append("stale %s -- 'hwut.play' records afresh" % because)
         else:
             said.append("current %s" % because)
     return "; ".join(said) if said else None

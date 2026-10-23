@@ -1,12 +1,12 @@
-STIMULUS  stderr tolerated, stdout changed: hwut.run.diff
+STIMULUS  stderr tolerated, stdout changed: hwut.diff
           exit code : 1
           NOTE lines: 0
           the book's stain: ''
 
-STIMULUS  the tolerance withdrawn, run: hwut.run.diff
+STIMULUS  the tolerance withdrawn, run: hwut.diff
           exit code : 1
           NOTE: test-noisy.sh -- STAIN: stderr SPOKE and nothing tolerates it; an accept is refused ('tolerance { stderr_ignored = true }' declares it)
-STIMULUS  the same case: hwut.accept.interactive --console --all
+STIMULUS  the same case: hwut.merge --console --all
           NOTE: test-noisy.sh -- STAIN: stderr SPOKE and nothing tolerates it; an accept is refused ('tolerance { stderr_ignored = true }' declares it)
           the book's stain: 'stderr-untolerated'
 

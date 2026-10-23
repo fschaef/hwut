@@ -34,12 +34,12 @@
 # a function while the face took another road.
 #
 # constraint          'constraints = ["glob(name, \"build-*.log\")"]'
-#                     (exploration R-66, G-3): 'hwut.run.play' reads the
+#                     (exploration R-66, G-3): 'hwut.play' reads the
 #                     stream under it and 'hwut.accept' judges it --
 #                     once holding, once broken.
 # constraint_refused  a name the namespace does not hold: a FAULT with
 #                     file, line and column, from 'hwut.run' and from
-#                     'hwut.run.play' -- no traceback.
+#                     'hwut.play' -- no traceback.
 # execute             'execute' with '$file', '$filestem', '$choice'
 #                     (exploration R-68, G-4): expanded in the call; a
 #                     placed '$choice' is not appended again; an
@@ -112,7 +112,11 @@ RUN="python3 -m hwut.services.run --jobs=1 --deterministic --no-colour --quiet"
 PLAY="python3 -m hwut.services.lib.run.play --plain"
 SHOW="python3 -m hwut.services.lib.config.show"
 PLAN="python3 -m hwut.services.plan"
-ACCEPT="python3 -m hwut.services.accept --whole --dont-ask"
+accepted() {            # play every case the words select, then bless (E-165)
+    python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
+    python3 -m hwut.services.accept --whole --dont-ask "$@"
+}
+ACCEPT=accepted
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
@@ -152,7 +156,7 @@ case "$1" in
         page test-holds.sh  "$HEAD" "echo 'file ((name: \"build-7.log\"))'"
         page test-breaks.sh "$HEAD" "echo 'file ((name: \"debug-7.log\"))'"
         for t in test-holds.sh test-breaks.sh; do
-            echo "== hwut.run.play $t"
+            echo "== hwut.play $t"
             $PLAY $t 2>&1 | shown | sed -n '/^===== OUTPUT/,$p' | grep -v "^=*$"
             echo "STATUS: ${PIPESTATUS[0]}"
             echo "== hwut.accept --whole $t"
@@ -166,7 +170,7 @@ case "$1" in
         echo "== hwut.run"
         $RUN 2>&1 | shown | grep "ERROR\|Traceback" | cut -c1-74
         echo "STATUS: ${PIPESTATUS[0]}"
-        echo "== hwut.run.play test-typo.sh"
+        echo "== hwut.play test-typo.sh"
         $PLAY test-typo.sh 2>&1 | shown | grep "FAULT\|Traceback\|nothing played" | cut -c1-74
         echo "STATUS: ${PIPESTATUS[0]}" ;;
     execute)
@@ -181,7 +185,7 @@ case "$1" in
              'echo "args: $*"'
         for t in "test-placed.sh one" "test-placed.sh two" \
                  "test-unplaced.sh one" "test-none.sh"; do
-            echo "== hwut.run.play $t --raw"
+            echo "== hwut.play $t --raw"
             $PLAY $t --raw 2>&1 | shown | grep "args:\|EMPTY\|FAULT" | head -1
         done ;;
     same)
@@ -190,6 +194,7 @@ case "$1" in
              'echo "one behaviour"'
         good() { ls GOOD | grep -v book.csv | sed 's/^/    GOOD: /'; }
         echo "== hwut.accept --whole"
+        python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1
         python3 -m hwut.services.accept --whole --dont-ask 2>&1 | grep "blessed\|REFUSED"
         good
         echo "== hwut.run"
@@ -366,10 +371,11 @@ case "$1" in
           echo "<hwut-end>"; } > GOOD/test-d.sh.txt
         echo "== the budget, as the configuration shows it"
         $SHOW test-d.sh --no-default 2>&1 | grep "search_budget" | tr -s ' '
-        echo "== hwut.run.diff test-d.sh --console"
+        $PLAY test-d.sh > /dev/null 2>&1   # the recording diff reads (E-165)
+        echo "== hwut.diff test-d.sh --console"
         python3 -m hwut.services.lib.run.diff test-d.sh --console 2>&1 \
             | grep "^[SN ] *[0-9]"
-        echo "== hwut.run.diff test-d.sh -y --width 70"
+        echo "== hwut.diff test-d.sh -y --width 70"
         python3 -m hwut.services.lib.run.diff test-d.sh -y --width 70 2>&1 \
             | grep "^ *[0-9]" ;;
     pype_fails)

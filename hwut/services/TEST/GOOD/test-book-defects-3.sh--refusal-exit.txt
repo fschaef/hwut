@@ -1,0 +1,5 @@
+constraint refused: exit 1
+blessed: exit 0
+REFUSED stained: 'test-f.sh x' bears a STAIN -- unstable under hwut.run.stability repetitions
+stained refused: exit 1
+<hwut-end>

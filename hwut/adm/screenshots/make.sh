@@ -64,9 +64,9 @@ snap() {            # snap NAME DIR ROWS TITLE COMMAND [KEY...]
 }
 
 snap hwut-run                "$DEMO" 24 'demo/python/TEST $ hwut'                          'hwut'
-snap hwut-run-diff           "$DEMO"  8 'hwut.run.diff -y demo.py plain'                   'hwut.run.diff -y demo.py plain'
-snap hwut-accept-interactive "$INV"  13 'hwut.accept.interactive invoice.sh totals (two takes made)' \
-     'hwut.accept.interactive invoice.sh totals' j Enter j j j Enter
+snap hwut-run-diff           "$DEMO"  8 'hwut.diff -y demo.py plain'                   'hwut.diff -y demo.py plain'
+snap hwut-accept-interactive "$INV"  13 'hwut.merge invoice.sh totals (two takes made)' \
+     'hwut.merge invoice.sh totals' j Enter j j j Enter
 snap hwut-report             "$DEMO" 30 'hwut.report'                                      'hwut.report'
 snap hwut-help               "$HLP"  42 'hwut.help'                                        'hwut.help'
 echo "screenshots in $OUT"

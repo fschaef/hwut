@@ -44,6 +44,8 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-noisy.sh.txt
 }
 --- '--stderr' shows it, marked as never tested
 STATUS: 0
@@ -94,5 +96,7 @@ STDOUT {
     
     ===== STDERR =================================================
         a warning
+    
+    RECORDED: test-noisy.sh.txt
 }
 <hwut-end>

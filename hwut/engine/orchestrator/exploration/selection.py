@@ -11,7 +11,7 @@ Six faces wrote these four lines apiece:
     CTestTaskListQuery(...)     the selection
     .get_test_cases(app_set)    the runs
 
-'plan', 'report.list', 'accept', 'report', 'run.play' and the label
+'plan', 'report.list', 'accept', 'report', 'play' and the label
 faces each assembled them, differing only in whether they walk ONE
 DIRECTORY or A TREE. That is not six faces using a component -- it is ONE
 ACTION IMPLEMENTED SIX TIMES, and the sixth copy is where they start to
@@ -113,7 +113,7 @@ def of_directory(directory, wish, label_view=None, inherited=None,
     """
     #  THE ROOT'S WORD REACHES A SINGLE DIRECTORY TOO (R-73): a face
     #  that has not ascended itself gets the climb here, so
-    #  'language-setup' governs 'hwut.run.play' as it governs 'hwut.run'.
+    #  'language-setup' governs 'hwut.play' as it governs 'hwut.run'.
     if inherited is None:
         inherited, _ascent_fault_list = ascended_spec(directory)
     result     = explore(directory, inherited=inherited)

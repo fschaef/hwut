@@ -1,11 +1,12 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.run.play' COMMAND LINE -- run one test, show the
+PURPOSE: THE 'hwut.play' COMMAND LINE -- run one test, show the
          READING of what it produced, under the test's OWN setup
          (disc-4).
 
-    hwut.run.play <test-app> [<choice>] [--save] [--directory=<path>]
+    hwut.play <test-app> [<choice>] [--directory=<path>]
+    hwut.play --all [<file-glob> [<choice-glob>...]] [--directory=<path>]
 
 IT IS WIRING, NOT MACHINERY. Play is the composition of bricks that
 already exist, and owns no ceremony of its own:
@@ -52,26 +53,31 @@ an artifact that may contain errors, and therefore part of the oracle
 (doc/manual-note-pype-is-part-of-the-oracle.txt).
 An author debugging one needs to see what it did to the stream.
 
-PLAY JUDGES NOTHING; IT RENDERS. No nominal is read, no verdict is
-reached, no result is written. 'hwut.run' is the face that judges and
-records, and the distinction is the whole point of this one: an author
-who wants to SEE how the framework reads their output must be able to
-ask without the asking becoming a result.
+PLAY JUDGES NOTHING; IT SHOWS AND RECORDS (services E-165). No nominal
+is read, no verdict is reached, no book entry is written. What it ran
+is stored as the case's RECORDING, through the channel's own
+'record()' -- what 'hwut.run' would have stored, and nothing else.
+ONE RECORDING PER CASE: the last of 'hwut.run' and 'hwut.play' to
+record it wins, and the recording says which of them it was and when.
 
-    --save      the subjects are ALSO stored as the run's candidates,
-                through the channel's own 'record()' -- what
-                'hwut.run' would have stored, and nothing else: no
-                verdict, no book entry. This is a NEW test's entrance:
-                'hwut.run.play --save', look, then 'hwut.accept'. Without
-                it nothing is written anywhere.
+'--all' PLAYS EVERY CASE THE WORDS SELECT here -- every case, where no
+word is given -- one after the other, each recorded. Without it, words
+that name several cases are refused rather than guessed at.
+
+RECORD, LOOK, BLESS. 'hwut.play' and 'hwut.run' are the only faces
+that run a test. 'hwut.diff', 'hwut.merge' and 'hwut.accept' read the
+recording and run nothing -- so what is blessed is what was seen:
+
+    hwut.play test-a.py one        run, show, record
+    hwut.accept test-a.py one      bless what was recorded
 
 This closes the seam '_core.py' names -- "a service run inside a test
 run receives that Configuration object directly". Play is the command
 line's way to stand inside.
 
-THE STREAM IS NOT KEPT unless '--save' says so: what a run would
-store, play shows and forgets. A person who wants the bytes redirects
-the rendering, or saves the candidate.
+A RECORDING NEEDS A WHOLE STREAM: a build that failed, an application
+that would not launch, a stream cut short are shown and NOT recorded --
+a partial subject is never stored as if whole.
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       the choice ran and its reading is displayed
@@ -112,11 +118,11 @@ from ...report import (painted, color_wanted_f,
                                    ANSI_TITLE)
 
 #  THE STANDARD READER (E-84). Play takes no wish: ONE test, one choice.
-PARSER = face_parser("hwut.run.play", "Run one choice now and show it.",
+PARSER = face_parser("hwut.play", "Run one choice now and show it.",
                      wish_f=False,
                      word_help="the test application, and a choice",
                      word_metavar="<test-app> [<choice>]")
-for _name in ("--raw", "--pyped", "--stderr", "--plain", "--save"):
+for _name in ("--raw", "--pyped", "--stderr", "--plain", "--all"):
     PARSER.add_argument(_name, action="store_true")
 PARSER.add_argument("--directory", default=None)
 ARG_DB = {"--directory": True}
@@ -163,7 +169,7 @@ def main(argv=None, write=None):
     if argv is None:  argv  = sys.argv[1:]
     if "--help" in argv:
         from ..._core import man_page
-        write(man_page("hwut.run.play", HELP))
+        write(man_page("hwut.play", HELP))
         return E_ExitCode.OK
 
     arguments, completion_f = parse_or_refuse(PARSER, argv, write, ARG_DB)
@@ -176,15 +182,18 @@ def main(argv=None, write=None):
     stderr_f  = arguments.stderr
     raw_f     = arguments.raw
     pyped_f   = arguments.pyped
-    save_f    = arguments.save
     word_list = arguments.word
+    all_f     = arguments.all
 
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
     directory, word_list = found
+    if all_f:
+        return _play_all(directory, word_list, plain_f, stderr_f, raw_f,
+                         pyped_f, write)
     if not word_list or len(word_list) > 2:
-        write("REFUSED: 'hwut.run.play' plays ONE test, and one choice of "
+        write("REFUSED: 'hwut.play' plays ONE test, and one choice of "
               "it: <test-app> [<choice>]")
         write(USAGE)
         return E_ExitCode.REFUSED
@@ -194,8 +203,8 @@ def main(argv=None, write=None):
     #  ONE ACTION, ONE PLACE ('exploration/selection.py').
     try:
         #  'base_f=True': the channel needs the Store over the book --
-        #  to decide against the candidate path, and to write one on
-        #  '--save'. Nothing is written without that word.
+        #  to decide against the candidate path, and to write the
+        #  recording (E-165).
         found  = selection.of_directory(os.path.abspath(directory),
                                         Wish(), base_f=True)
     except RootConfMissing as error:
@@ -234,12 +243,80 @@ def main(argv=None, write=None):
         return asyncio.run(_play(configuration, choice_name,
                                  found.bookkeeper_db["."],
                                  plain_f, stderr_f, raw_f, pyped_f,
-                                 save_f, write,
+                                 write,
                                  case=case,
                                  app=result.app_set.app_db[case.source_file]))
     except DirectoryBusy as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+
+
+def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
+              write):
+    """
+    RETURN: E_ExitCode, the worst of the cases played: OK where every
+            case the words select was played and recorded; FAULT where
+            one could not be; REFUSED where the selection cannot be
+            made; EMPTY where it selects nothing.
+
+    '--all' PLAYS EVERY CASE THE WORDS SELECT, in this directory, one
+    after the other -- the short form ('<file-glob> [<choice-glob>...]')
+    or nothing for every case here. ASKED FOR, NOT GUESSED: without it a
+    word that names several cases is refused (see '_settled_case'). It
+    is how a directory of new cases gets its first recordings before
+    'hwut.accept' (E-165; the writers' D-36).
+    """
+    try:
+        found = selection.of_directory(os.path.abspath(directory),
+                                       Wish(), base_f=True)
+    except RootConfMissing as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    result = found.result_db["."]
+    if found.fault_tuple:
+        for fault in found.fault_tuple: write("FAULT: %s" % fault)
+        write("nothing played: a directory that cannot be fully read "
+              "cannot say what it offers")
+        return E_ExitCode.FAULT
+    wish  = with_targets(Wish(), word_list) if word_list else Wish()
+    query = CTestTaskListQuery(wish, directory=".",
+                               root=os.path.abspath(directory))
+    try:
+        case_tuple = tuple(query.get_test_cases(result.app_set))
+    except SelectionError as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    if not case_tuple:
+        write("EMPTY: the words select no case here")
+        return E_ExitCode.EMPTY
+    worst = E_ExitCode.OK
+    for case in case_tuple:
+        name = case.source_file if case.choice is None \
+               else "%s %s" % (case.source_file, case.choice)
+        reason = confinement.refusal_of(result.app_set, case.source_file,
+                                        case.choice)
+        if reason is not None:
+            for line in confinement.refusal_line_list(name, reason):
+                write(line)
+            worst = E_ExitCode.FAULT
+            continue
+        app = result.app_set.app_db[case.source_file]
+        configuration = test_configuration_of(
+                            app, os.path.abspath(directory),
+                            language_setup=result.app_set.directory_spec
+                                                 .language_setup,
+                            free_disk_min_mb=result.app_set.directory_spec
+                                                   .free_disk_min_mb)
+        try:
+            code = asyncio.run(_play(configuration, case.choice,
+                                     found.bookkeeper_db["."],
+                                     plain_f, stderr_f, raw_f, pyped_f,
+                                     write, case=case, app=app))
+        except DirectoryBusy as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
+        if code is not E_ExitCode.OK: worst = E_ExitCode.FAULT
+    return worst
 
 
 #  The sentinel a settled run is not.
@@ -255,7 +332,7 @@ def _settled_case(app_set, source_file, choice_name, directory,
 
     THE SELECTION IS THE WISH'S, not this face's: the words become the
     1.0 short form ('wish.with_targets'), the same sugar every other
-    face takes, and 'CTestTaskListQuery' resolves it. So 'hwut.run.play
+    face takes, and 'CTestTaskListQuery' resolves it. So 'hwut.play
     "test-*.sh" one' globs as it does everywhere, and a choice that
     does not stand is refused in the words the whole framework uses.
 
@@ -340,7 +417,7 @@ def _case_name(case):
 
 
 async def _play(configuration, choice_name, bookkeeper, plain_f,
-                stderr_f, raw_f, pyped_f, save_f, write,
+                stderr_f, raw_f, pyped_f, write,
                 case=None, app=None):
     """
     RETURN: E_ExitCode, the exit status.
@@ -349,8 +426,9 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     launch, contain, collect, canonicalise -- because it IS a run's
     provision, obtained through the one channel ('subject_provision',
     'force_run': play means run now). Play adds no ceremony: it asks
-    for the subjects, and renders them; with '--save' it also hands
-    them to the channel's 'record()', which stores what a run stores.
+    for the subjects, hands them to the channel's 'record()', which
+    stores what a run stores, as the recording of 'hwut.play' (E-165),
+    and renders them.
 
     THE DIRECTORY IS HELD while the author's program runs, and while
     the candidates are written. What runs may write -- a concurrent
@@ -378,6 +456,30 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         sys.stdout.write("    " + line)
         sys.stdout.flush()
     tap = live_line if live_f else None
+    #  A BUILT APPLICATION IS BUILT FIRST (session B.1): the build tool
+    #  decides what is out of date. Play is the face that RECORDS a
+    #  case's first recording (E-165), so it builds as a run builds --
+    #  MEASURED 2026-10-22 before: play never built, and a compiled test
+    #  played only where 'hwut.run' or 'hwut.accept' had built it.
+    if configuration.build is not None:
+        from ....engine.operations.build_action import build
+        with MkdirMutex(str(configuration.test_directory)):
+            outcome = await build(configuration)
+        if not outcome.succeeded:
+            write("FAULT: the build failed (%s)%s"
+                  % (outcome.report.value,
+                     "" if not outcome.missing_target_list else
+                     " -- missing: %s"
+                     % ", ".join(outcome.missing_target_list)))
+            #  THE BUILD'S OWN WORD (operations todo-21, law 1): its
+            #  exit, containment and the first line of what it said.
+            if getattr(outcome, "record", None) is not None:
+                from ....engine.operations.diagnosis import explain_record
+                for line in explain_record(outcome.record, label="build"):
+                    write("  " + line)
+            write("NOT RECORDED: the run did not complete, and a partial "
+                  "subject is never stored as if whole")
+            return E_ExitCode.FAULT
     if live_f: write(banner("LIVE", banner_color_f))
     provision, _ = subject_provision.provider_of(configuration, store,
                                                  choice_name,
@@ -387,24 +489,30 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
 
     with MkdirMutex(str(configuration.test_directory)):
         subjects = await provision.provide()
-        if save_f and subjects is not None:
+        recorded_db = None
+        if subjects is not None:
             recorded_db = subject_provision.record(store, configuration,
                                                    choice_name, provision,
-                                                   wanted=True)
-            if recorded_db is None:
-                write("NOTE: nothing saved -- the provision did not "
-                      "complete, and a partial subject is never "
-                      "stored as if whole")
-            else:
-                write("SAVED: %s" % ", ".join(
-                    store.candidate_path(configuration.key_name,
-                                         choice_name, name).name
-                    for name in sorted(recorded_db)))
+                                                   wanted=True,
+                                                   by="hwut.play")
+    #  WHAT WAS RECORDED IS SAID AT THE END, where the reader's eye is
+    #  after the reading: the recording 'hwut.accept' will bless.
+    def recorded_note():
+        """RETURN: None. The recording's line, or why there is none."""
+        if recorded_db:
+            write("RECORDED: %s" % ", ".join(
+                store.candidate_path(configuration.key_name,
+                                     choice_name, name).name
+                for name in sorted(recorded_db)))
+        else:
+            write("NOT RECORDED: the run did not complete, and a partial "
+                  "subject is never stored as if whole")
 
     if subjects is None:
         write("FAULT: nothing was provided -- the build failed, or "
               "the application would not launch")
         _write_diagnosis(configuration, choice_name, provision, {}, write)
+        recorded_note()
         return E_ExitCode.FAULT
 
     subject_db = {name: nominal.open().read()
@@ -421,6 +529,7 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
                          {STDOUT: raw_db.get(STDOUT, "") or text,
                           STDERR: subject_db.get(STDERR, "")
                                   or raw_db.get(STDERR, "")}, write)
+        recorded_note()
         return E_ExitCode.EMPTY
 
     if live_f: write("")
@@ -481,6 +590,8 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         #  to show an author what their program produced may show it,
         #  and the banner keeps the two apart.
         _write_indented(error_text or "(nothing)", write)
+    write("")
+    recorded_note()
     #  THE READING IS THE PRODUCT: a text this face could not read is
     #  a FAULT, not an OK with a refusal printed in the middle of it.
     return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
@@ -540,4 +651,4 @@ def _write_indented(text, write):
 if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
     from ..._exit import guarded
-    sys.exit(guarded("hwut.run.play", main))
+    sys.exit(guarded("hwut.play", main))

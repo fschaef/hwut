@@ -1,8 +1,8 @@
 STATUS: 0
 STDOUT {
-    RUN: test-ok.sh   (0) nothing recorded for this choice
-    RUN: test-two.sh a   (0) nothing recorded for this choice
-    RUN: test-two.sh b   (0) nothing recorded for this choice
+    RECORDING: test-ok.sh .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh a .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
     ACCEPTED  3 of 3

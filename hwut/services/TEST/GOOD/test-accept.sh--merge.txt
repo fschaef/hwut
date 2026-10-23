@@ -1,6 +1,9 @@
 == a second accept: the nominals stand ==
 STATUS: 0
 STDOUT {
+    RECORDING: test-ok.sh .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh a .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
     ACCEPTED  3 of 3
@@ -13,6 +16,9 @@ STDOUT {
 == --force ==
 STATUS: 0
 STDOUT {
+    RECORDING: test-ok.sh .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh a .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
     ACCEPTED  3 of 3

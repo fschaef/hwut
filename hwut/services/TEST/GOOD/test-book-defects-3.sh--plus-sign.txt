@@ -1,0 +1,9 @@
+== pos
+    blessed        test-s.sh pos .stdout
+== plus
+    blessed        test-s.sh plus .stdout
+== neg
+REFUSED constraint: 'test-s.sh neg .stdout' -- the candidate breaks its constraints:
+    constraint "w > 0": broken by ((w: -4.2)), line 1
+    left alone     test-s.sh neg .stdout
+<hwut-end>

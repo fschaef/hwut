@@ -19,7 +19,7 @@ HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
 |                                    fail                                    |
---- hwut.run.diff
+--- hwut.diff
 NOTE: no terminal -- the text display is used ('--console' asks for it outright)
 FAULT: 'test-t.py table' -- broken region framing in 'OUT/test-t.py--table.txt': line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim
 exit 1
@@ -44,7 +44,7 @@ HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
 |                                    fail                                    |
---- hwut.run.diff
+--- hwut.diff
 NOTE: no terminal -- the text display is used ('--console' asks for it outright)
 FAULT: 'test-t.py table' -- broken region framing in 'GOOD/test-t.py--table.txt': line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim
 exit 1

@@ -9,7 +9,7 @@ DESCRIPTION
        undecided by an earlier partial acceptance -- is what the session
        opens on. 'hwut.accept' itself never writes here without
        '--force'; a change to something already judged is
-       'hwut.accept.interactive's business, and this module is what it
+       'hwut.merge's business, and this module is what it
        reads through.
 
        THE DYNAMICS DIFFER FROM A FIRST ACCEPTANCE: an adaptation starts

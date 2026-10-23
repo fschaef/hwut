@@ -199,8 +199,8 @@ async def refresh(configuration, choice_name, bookkeeper, force_run=False):
             (test, choice) CURRENT, and the decision.
 
     THE REFRESH INTENT (services E-40, E-122), in ONE place -- the faces
-    that work on a candidate ('hwut.accept', 'hwut.accept.interactive',
-    'hwut.run.diff') all come here:
+    that work on a candidate ('hwut.accept', 'hwut.merge',
+    'hwut.diff') all come here:
 
         (B.1)  a BUILT application is built first: the build TOOL decides
                whether anything is out of date (provision does not

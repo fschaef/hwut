@@ -98,10 +98,15 @@ class StageExecute(I_ExecuteProvider):
         record_list = (record,)
 
         if record.containment is E_Containment.FAIL_LAUNCH:
+            #  THE CAUSE BESIDE THE WORD (D-43): a file without its 'x'
+            #  bit and no language to call it is named so in HINTS.
+            from ..diagnosis import launch_detail_of
+            self.detail = launch_detail_of(argv[0])
             return Supply(product     = None,
                           report      = E_TestRunResult
                                         .TEST_APP_LAUNCH_FAILED,
-                          record_list = record_list)
+                          record_list = record_list,
+                          detail      = self.detail)
 
         raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
         self._witness_error(stderr_text)

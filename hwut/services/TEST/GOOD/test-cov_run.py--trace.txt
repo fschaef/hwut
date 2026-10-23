@@ -45,7 +45,8 @@ $ hwut.help
     |         writing it, so the case was not run.
     | 
     |         In order to heal, run the case once with 'hwut.run', which enters it
-    |         into 'GOOD/book.csv', or accept it with 'hwut.accept'.
+    |         into 'GOOD/book.csv', or record it with 'hwut.play' and accept it
+    |         with 'hwut.accept'.
     | 
     |         CONCERNED:
     |             suite/TEST
@@ -53,7 +54,7 @@ $ hwut.help
     | 
     | RUN -- application did not testify
     | 
-    |     incomplete -- run did not end with <hwut-end>; nothing read  [1 case(s)]
+    |     incomplete -- the run under the tool did not complete; nothing read  [1 case(s)]
     | 
     |         The application did not testify under the coverage tool: it was
     |         killed, could not be started, or its output did not end in
@@ -61,7 +62,7 @@ $ hwut.help
     |         the tool's data was not read. Where 'hwut.run' passes the same case,
     |         the tool's call is at fault, not the application.
     | 
-    |         In order to heal, run the case with 'hwut.run.play' to see what it
+    |         In order to heal, run the case with 'hwut.play' to see what it
     |         prints without the tool, then make the tool's call by hand in the
     |         test directory and read what it says.
     | 

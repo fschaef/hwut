@@ -1,0 +1,9 @@
+DIFF(./test-p.sh x) > 4 lines
+exit 1
+== the file
+#  proposal -- delete or '#' out what you do not want, then hand it back:
+#      hwut.accept.apply <this file>
+
+#  nothing proposed: 1 case(s) differ beyond what a proposal shows --
+#  named on stdout as 'DIFF(...)'; open them with 'hwut.report.details'
+<hwut-end>

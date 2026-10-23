@@ -23,6 +23,6 @@ Accepted 1/1
     second two
 == hwut.accept.propose 0 -o over.txt: over the bound
 DIFF(./test-a.sh two) > 0 lines
-STATUS: 3
+STATUS: 1
     targets in the file: 0
 <hwut-end>

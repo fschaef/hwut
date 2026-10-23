@@ -306,7 +306,7 @@ run_agrees)
     app test-diff.sh ''
     app test-new.sh  ''                                   # no GOOD file
     ( cd $T && for t in test-ok.sh test-ch.sh test-gone.sh test-dep.sh test-diff.sh; do
-          python3 -m hwut.services.accept $t --whole --dont-ask > /dev/null 2>&1
+          python3 -m hwut.services.lib.run.play --all $t --plain > /dev/null 2>&1; python3 -m hwut.services.accept $t --whole --dont-ask > /dev/null 2>&1
       done )
     $RUN --directory=tree --silent > /dev/null 2>&1
     #  THE DAMAGE, each kind once.

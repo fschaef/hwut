@@ -139,6 +139,8 @@ app() {                 # <dir> <name> <title> <prints> [<nominal>]
     printf '#!/bin/bash\n# @hwut { title = "%s" }\nprintf "%%b\\n" "%s"\n' \
         "$title" "$nominal" > "$dir/$name"
     chmod +x "$dir/$name"
+    python3 -m hwut.services.lib.run.play --all --plain --directory="$dir" \
+        "$name" > /dev/null 2>&1                     # the recording (E-165)
     $ACCEPT --whole --directory="$dir" "$name" > /dev/null 2>&1 \
         || { echo "FAULT: the fixture's nominal of '$name' was not recorded"; exit 1; }
     [ "$nominal" = "$prints" ] \

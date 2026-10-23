@@ -354,10 +354,13 @@ def finding_list_of(snapshot_list, cadence_f, byte_pedantic_f=False):
 
 
 def report_line_tuple(finding_list, repeat_n, key_n, verbose_f=False,
-                      stained_list=(), cleared_list=()):
+                      stained_list=(), cleared_list=(), named=lambda d: d):
     """
     YIELD: [0] str  one line of the report, in reading order: the
                     steady statement or the findings, then the tally.
+
+    'named' turns a key's directory into the name a reader is shown:
+    from the tree's root, as 'DIR' and HINTS name it (D-52).
 
     NO NUMBER THE MACHINE CHOSE, unless 'verbose_f': a delta, an
     average and a ratio are all the machine's, and a GOOD file that
@@ -370,7 +373,7 @@ def report_line_tuple(finding_list, repeat_n, key_n, verbose_f=False,
     else:
         for finding in finding_list:
             directory, node_name = finding.key
-            yield "%s: %s" % (directory, node_name)
+            yield "%s: %s" % (named(directory), node_name)
             for note in finding.note_list:
                 yield "    %s" % note
             if verbose_f:
@@ -379,13 +382,13 @@ def report_line_tuple(finding_list, repeat_n, key_n, verbose_f=False,
     for key in stained_list:
         yield ""
         yield "STAINED: %s: %s -- not run again until proven steady " \
-              "over %d repeat(s)." % (key[0], key[1], repeat_n)
+              "over %d repeat(s)." % (named(key[0]), key[1], repeat_n)
         yield "         In an urgent case: 'hwut.remove <test> " \
               "[<choice>]' and accept afresh."
     for key in cleared_list:
         yield ""
         yield "CLEARED: %s: %s -- steady over %d repeat(s); the stain " \
-              "is gone." % (key[0], key[1], repeat_n)
+              "is gone." % (named(key[0]), key[1], repeat_n)
     yield ""
     unstable_n = sum(1 for f in finding_list if f.unstable_f)
     warned_n   = len(finding_list) - unstable_n
@@ -493,8 +496,12 @@ def main(argv=None, write=None, write_error=None):
                                    byte_pedantic_f)
     stained_list, cleared_list = _judge(root, key_set, finding_list,
                                         repeat_n)
+    from ...accept import root_named
     for line in report_line_tuple(finding_list, repeat_n, len(key_set),
-                                  verbose_f, stained_list, cleared_list):
+                                  verbose_f, stained_list, cleared_list,
+                                  named=lambda where: root_named(
+                                      os.path.normpath(
+                                          os.path.join(root, where)))):
         write(line)
 
     if any(finding.unstable_f for finding in finding_list):

@@ -6442,3 +6442,130 @@ COST      'test-report-details.sh' (six pages): its fixtures write GOOD and
           OUT by hand and never run, so they read 'not judged' now. A byte
           tolerance, where wanted, belongs to the comparison's setup, never
           to a face.
+
+E-165  RECORD, LOOK, BLESS: ONLY 'hwut.run' AND 'hwut.play' RUN       (2026-10-22)
+------------------------------------------------------------------------------
+PROBLEM   The book's D-34 (agent swarm H1): 'hwut.accept' ran ON NECESSITY
+          (2026-09-05, E-40, E-122) -- a recording older than the test's
+          SOURCE was run again, a current one blessed as it stood. A test
+          that reads a data file, a fixture, or a unit under test in
+          another file changed none of that, so accept blessed the OLD
+          output unread, and the next run was red. 'hwut.merge' and
+          'hwut.diff' refreshed the same way, through the same engine.
+
+DECISION  RULED (Frank-Rene, 2026-10-22): "actually, hwut.play might run
+          and play the tests to the console (showing how it is
+          interpreted) and writing it at the same time to the screen).
+          then hwut.accept may follow saying that this is what I want to
+          accept. hwut.diff (instead of hwut.run.diff) does also not run,
+          but only diff-es recorded entries. hwut.merge (instead of
+          hwut.accept.interactive) merges recorded OUT vs. recorded GOOD.
+          advantage: the user accepts on recorded fixed output, not on
+          content that might be produced in the background (this time
+          failing for some reason)." -- On the consequences: "1. they go"
+          (the old names, no alias); "2. one recording per case, of
+          course."; "3. yes, this important." (a hint where the source
+          changed since the recording).
+
+          - THE NAMES: 'hwut.run.play' -> 'hwut.play', 'hwut.run.diff' ->
+            'hwut.diff', 'hwut.accept.interactive' -> 'hwut.merge'. The
+            old launchers are gone; the modules stay where they were.
+          - PRODUCERS: 'hwut.run' and 'hwut.play' run a test, and nothing
+            else does. 'hwut.play' always records what it ran ('--save'
+            is gone) and says 'RECORDED: <file>' or 'NOT RECORDED: ...';
+            it builds a compiled test first, as a run does, and shows the
+            build's record where it fails (MEASURED before: play never
+            built -- a compiled test played only where a run or an accept
+            had built it). '--all' plays every case the words select --
+            every case here where none is given -- one after the other:
+            ASKED FOR, NOT GUESSED; without it, words naming several
+            cases are refused as before.
+          - ONE RECORDING PER CASE: the last of 'hwut.run' and 'hwut.play'
+            to record it wins. The freshness sidecar '<candidate>.when'
+            keeps 'by' -- the face that recorded -- beside the instant and
+            the source digest ('Store.freshness').
+          - CONSUMERS: 'hwut.accept', 'hwut.merge', 'hwut.diff' (and
+            'hwut.accept.propose', 'hwut.accept.apply') read the recording
+            and run nothing. 'session.refresh' has no caller among them;
+            'accept.refresh_cases' is gone; 'differing_keys' no longer
+            makes a first candidate. 'hwut.report.details' asks the
+            channel for its DECISION alone and says 'stale ... --
+            'hwut.play' records afresh' (MEASURED before: it ran a stale
+            case and replaced the recording a later accept would bless).
+          - 'hwut.accept' names what it blesses, one line per key before
+            the blessing: 'RECORDING: <key> -- by hwut.play, <local date
+            and minute>' ('recorded <time>' for a recording older than
+            this ruling). A key whose test source changed since (content
+            digest, not mtime) is blessed all the same, under 'HINT: ...
+            the test's source changed since it was recorded; 'hwut.play'
+            shows it as it stands'. A selected case with NO recording is
+            refused by name, exit 1: "no recording -- 'hwut.play' records
+            it; accept runs nothing" ('_accept_common.NO_RECORDING_TEXT').
+          - '--force-run' is refused by name, exit 2.
+
+          Wording: '_accept_common.recording_text', 'source_changed_hint',
+          'NO_RECORDING_TEXT' -- one place for every face that reads a
+          recording.
+
+COST      A first acceptance needs a recording made before it. 'hwut.run'
+          does not make one (2026-09-01: no GOOD file, not run), so
+          'hwut.play' is the way in ('--all' for a directory of new cases;
+          OPEN: the writers' D-36 asks whether 'hwut.run' should record
+          such cases instead). Every page that blessed
+          a new case with a bare 'hwut.accept --whole' plays it first.
+          'test-refresh.py' inverts: its three engines execute no step in
+          any circumstance (MEASURED before: E-122's table). Pages that
+          print accept's report gain the 'RECORDING:' line, its time
+          masked. Regression: 'test-book-defects-3.sh record-bless',
+          'test-play.py records, accept_hints', 'test-refresh.py'.
+
+GRAVEYARD Accept refuses where the source is newer than the recording --
+          rejected: the extra step where it should not be (the person
+          has already looked; a hint suffices).
+          Accept always runs what it blesses -- rejected: it blesses what
+          the background produced, not what was seen.
+          Dependency tracking of data and imports -- rejected: it cannot
+          be complete (a C binary, a fixture read by path), and the
+          ruling makes it unnecessary.
+
+E-166  THE AGENT SWARM'S DEFECTS, ROUND 2 (D-35 TO D-53, DIRECT FIXES)  (2026-10-22)
+------------------------------------------------------------------------------
+PROBLEM   The book writers' round 2 and a swarm of agents that worked
+          through the book (report 2026-10-22, H1-H4, M1-M5, N1-N7)
+          brought defects whose fix is the only reading of the rule
+          already standing. Each measured on 5f0cc9d before it was fixed.
+
+DECISION  FIXES, NOT RULINGS (the forks of the same report wait):
+          D-35  '((w: +4.2))' binds: the binding grammar takes '[-+]?'
+                (C-12: the sign is the number's, either sign). It took
+                '-?', so '+4.2' fell to an analogy: "'w' never bound".
+          D-38  A goto requested by an '<entry>' or '<exit>' handler is
+                applied in the same step, before the next input line
+                (pype MANUAL 7); a circle of such gotos is an error naming
+                the chain. It waited for the next line's handler, which
+                ran in the transit mode and swallowed the line.
+          D-42a A proposal that leaves a case out (difference beyond the
+                bound) says so in the file and exits 1. It closed with
+                'every selected case agrees with its nominal', exit 3.
+          D-43  A test application without its x bit, whose extension no
+                language claims, is named so: 'not executable: no x bit,
+                and no language calls an interpreter for it' -- in HINTS
+                beside 'application launch failed', in play's RESOLVED
+                line ('NOT FOUND on PATH' for a file standing there).
+          D-44  A refused acceptance exits 1: a constraint the candidate
+                breaks, a stain, an unreadable or unfinished candidate. A
+                key the person declined at the prompt stays exit 0.
+          D-52  'hwut.run.stability' names a directory from the root
+                ('accept.root_named'), not from the call's '.'.
+          D-53  The coverage reason 'incomplete' reads 'the run under the
+                tool did not complete' -- it said 'did not end with
+                <hwut-end>' also for a run killed or never started.
+
+          Regression: 'services/TEST/test-book-defects-3.sh', one choice
+          per item (plus-sign, entry-goto, refusal-exit, propose-too-large,
+          not-executable, stability-names); D-53 by 'test-cov_run.py run,
+          trace'.
+
+COST      'test-pattern_finder.py' (three pages print the grammar),
+          'test-face-words.sh propose' (status 3 -> 1),
+          'test-stability.sh' (six pages: 'tree/suite/TEST').

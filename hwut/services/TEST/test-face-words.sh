@@ -126,8 +126,8 @@ face() {                # <launcher name> <argument>...
         hwut.report.list)      python3 -m hwut.services.lib.report.list "$@" ;;
         hwut.report.details)   python3 -m hwut.services.lib.report.details "$@" ;;
         hwut.run.stability)    python3 -m hwut.services.lib.run.stability "$@" ;;
-        hwut.run.play)         python3 -m hwut.services.lib.run.play "$@" ;;
-        hwut.run.diff)         python3 -m hwut.services.lib.run.diff "$@" ;;
+        hwut.play)         python3 -m hwut.services.lib.run.play "$@" ;;
+        hwut.diff)         python3 -m hwut.services.lib.run.diff "$@" ;;
         hwut.cov.run)          python3 -m hwut.services.lib.cov.run "$@" ;;
         hwut.sanitize.propose) python3 -m hwut.services.lib.sanitize.propose "$@" ;;
         hwut.sanitize.apply)   python3 -m hwut.services.lib.sanitize.apply "$@" ;;
@@ -169,19 +169,19 @@ labelled() {            # two tests accepted; 'test-m.sh' labelled 'meta'
     page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' 'echo "a $1"'
     page test-m.sh '#     title   = "m"\n' 'echo "m"'
     face hwut.labels.add meta --glob "test-m.sh" > /dev/null
-    face hwut.accept --whole --label all --dont-ask < /dev/null > /dev/null 2>&1
+    face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --label all --dont-ask < /dev/null > /dev/null 2>&1
     face hwut.run --label all --silent < /dev/null > /dev/null 2>&1
 }
 
 WISH_FACES="hwut.run hwut.accept hwut.plan hwut.report hwut.report.list
-            hwut.report.details hwut.run.stability hwut.run.diff
+            hwut.report.details hwut.run.stability hwut.diff
             hwut.sanitize.propose"
 
 case "$1" in
     book)
         page 'a:b.sh' '#     title   = "colon"\n#     choices = ["one", "two"]\n' 'echo "c $1"'
         page t.sh '#     title = "t"\n' 'echo "t"'
-        face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
         echo "== the book"
         cat GOOD/book.csv
         echo "== under an old name, as that time wrote it: no ids, a 'coverage' column"
@@ -201,15 +201,15 @@ case "$1" in
         echo "== an acceptance refused takes no id"
         printf '#! /bin/bash\n# @hwut {\n#     title = "no token"\n# }\necho x\n' > u.sh
         chmod +x u.sh
-        face hwut.accept u.sh --whole --dont-ask < /dev/null 2>&1 | grep -c "REFUSED" \
+        face hwut.play --all u.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept u.sh --whole --dont-ask < /dev/null 2>&1 | grep -c "REFUSED" \
             | sed 's/^/    refused: /'
         page v.sh '#     title = "v"\n' 'echo "v"'
-        face hwut.accept v.sh --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all v.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept v.sh --whole --dont-ask < /dev/null > /dev/null 2>&1
         grep "^[tuv]\.sh" GOOD/book.csv ;;
     tiers)
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' 'echo "a $1"'
         page test-b.sh '#     title = "b"\n' 'echo "b"'
-        face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
         printf 'DIFFERENT\n<hwut-end>\n' > GOOD/test-b.sh.txt
         R="--jobs=1 --deterministic --no-colour"
         for tier in "" "--plain" "--verbose" "--quiet" "--silent" \
@@ -238,6 +238,9 @@ case "$1" in
             ( cd $name/TEST
               page test-$name.sh "#     title = \"$name\"\n" "sleep $nap; echo $name" )
         done
+        for name in quick slow mid; do      # each directory records (E-165)
+            ( cd $name/TEST && face hwut.play --all --plain < /dev/null > /dev/null 2>&1 )
+        done
         face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
         face hwut.run --silent < /dev/null > /dev/null 2>&1
         for words in "linear,longest-first" "linear,shortest-first" \
@@ -265,7 +268,7 @@ open("log.txt", "a").write("%.3f %.3f\n" % (began, time.time()))
 print(unit.f(1 if sys.argv[1] == "pos" else -1))
 print("<hwut-end>")
 PAGE
-        face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
         overlaps() {
             python3 -c "
 span = sorted(tuple(map(float, line.split())) for line in open('log.txt'))
@@ -338,6 +341,8 @@ PYTHON
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' 'echo "a $1"'
         mkdir -p ../other/TEST
         cp test-a.sh ../other/TEST/test-b.sh
+        face hwut.play --all --plain < /dev/null > /dev/null 2>&1
+        ( cd ../other/TEST && face hwut.play --all --plain < /dev/null > /dev/null 2>&1 )
         ( cd .. && face hwut.accept --whole < /dev/null > /dev/null 2>&1 )
         face hwut.labels.create nightly --glob 'test-*' --directory=.. > /dev/null
         for where in "$WORK/TEST" "$WORK" "$WORK/other/TEST"; do
@@ -376,7 +381,7 @@ PYTHON
         page test-a.sh '#     title = "a"\n' 'echo "a"'
         PATTERN="REFUSED"
         answered hwut.accept --yes
-        answered hwut.run.diff --yes
+        answered hwut.diff --yes
         answered hwut.rename test-a.sh -to test-b.sh --yes
         answered hwut.move test-a.sh test-b.sh --yes
         answered hwut.remove test-a.sh --yes ;;
@@ -388,8 +393,8 @@ PYTHON
         chmod -x keep.pype
         echo "she-bang: $(head -1 keep.pype)"
         echo "execute bit: $([ -x keep.pype ] && echo set || echo none)"
-        echo "== hwut.run.play test-p.sh --pyped"
-        face hwut.run.play test-p.sh --pyped --plain 2>&1 | shown \
+        echo "== hwut.play test-p.sh --pyped"
+        face hwut.play test-p.sh --pyped --plain 2>&1 | shown \
             | grep "l[0-9]\|FAULT\|EMPTY\|Traceback"
         echo "STATUS: ${PIPESTATUS[0]}" ;;
     shape)
@@ -410,7 +415,7 @@ PYTHON
     propose)
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' \
              'echo "first  line"; echo "second $1"; echo "third"'
-        face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' \
              'echo "first  line"; echo "SECOND  $1"; echo "third"'
         face hwut.run --silent < /dev/null > /dev/null 2>&1

@@ -423,7 +423,11 @@ SWITCHING. '=> goto OTHERMODE;' as an effect, or
 'pype.goto("OTHERMODE")' inside a block, requests a switch. The
 request is applied after the current handler's effects have completed;
 the last request wins. A switch to
-the already-active mode is a no-operation.
+the already-active mode is a no-operation. A request raised by the
+'<exit>' or '<entry>' handlers that a switch fires is applied in the
+same step, before the next input line: a mode whose '<entry>' says
+'goto A' hands the next line to A. Requests that go in a circle
+('A <entry> goto B', 'B <entry> goto A') are an error naming the chain.
 
 <entry> / <exit>. On a switch, '<exit>' handlers of the old mode fire, then
 '<entry>' handlers of the new mode. The start mode's '<entry>' fires before

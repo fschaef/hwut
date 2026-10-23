@@ -1,0 +1,9 @@
+  RECORDING: test-new.py .stdout -- by hwut.play
+  HINT: 'test-new.py .stdout' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+  OK  : accept status OK
+  OK  : accept ran nothing
+  OK  : it named the recording and who made it
+  OK  : it said the source changed since
+  OK  : the nominal is what was RECORDED, not what the edit prints
+SUCCESS: accept blesses the recording, and says it is older than the source.
+<hwut-end>

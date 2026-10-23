@@ -168,7 +168,7 @@ def refusal_of(app_set, test, choice):
             None, where it may.
 
     THE DOOR FOR A FACE THAT RUNS WITHOUT A PLAN (R-80): 'hwut.accept',
-    'hwut.accept.interactive', 'hwut.run.diff', 'hwut.run.play',
+    'hwut.merge', 'hwut.diff', 'hwut.play',
     'hwut.report.details' provision a candidate themselves, and ask
     here before they do.
     """

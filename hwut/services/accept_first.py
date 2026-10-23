@@ -13,7 +13,7 @@ DESCRIPTION
 
        '--force' is the old blessing: the candidate whole, as it stands.
 
-       THE SESSION OPENS ON THE VIRGIN NOMINAL. 'hwut.accept.interactive'
+       THE SESSION OPENS ON THE VIRGIN NOMINAL. 'hwut.merge'
        on a first acceptance hands the keyed session that nominal, and
        every take lifts a decision out of a region. This module is what
        supplies it; the session itself is 'lib/viewers/keyed'.
@@ -52,4 +52,4 @@ def question(key, force_f):
     if force_f:
         return "record the candidate of '%s' as its nominal, whole?" % key.name
     return ("record '%s' as UNACCEPTED -- the shape, nothing decided; "
-            "decide in 'hwut.accept.interactive'?" % key.name)
+            "decide in 'hwut.merge'?" % key.name)

@@ -234,7 +234,7 @@ class LineElementConstraintBinding(LineElement):
 
     _PARSE_RE = re.compile(
         r'([A-Za-z_]\w*)\s*:\s*'
-        r'(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")')
+        r'([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")')
 
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.CONSTRAINT_BINDING, content)

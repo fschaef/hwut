@@ -12,7 +12,7 @@ STATUS: 0
 STDOUT {
     REPEATS: 3   KEYS: 1
     
-    suite/TEST: test-app.sh
+    tree/suite/TEST: test-app.sh
         BYTES differ where the tolerances say EQUIVALENT: subject 'stdout' -- asked for by '--byte-pedantic'
     
     TALLY: 0 unstable, 1 warned, 0 steady

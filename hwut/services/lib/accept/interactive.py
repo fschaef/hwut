@@ -2,12 +2,12 @@
 ______________________________________________________________________________
 
 PURPOSE
-       THE INTERACTIVE ACCEPT -- 'hwut.accept.interactive': the cases a
+       THE INTERACTIVE ACCEPT -- 'hwut.merge': the cases a
        wish selects whose candidate differs from its nominal, shown one
        by one, edited by hand where wanted, and ACCEPTED on commit --
        through accept's own door, books and all (E-51).
 
-           hwut.accept.interactive [<wish>] [<test> [<choice>]] ...
+           hwut.merge [<wish>] [<test> [<choice>]] ...
                                    [--directory=<path>] [--all] [--force]
                                    [--console] [-y] [--width N] [--plain]
                                    [--editor E] [--max-rounds N]
@@ -30,10 +30,9 @@ DESCRIPTION
 
        WHAT IS SELECTED is measured, not remembered ('services/
        _cases.py'): compare's engine judges each candidate against
-       its nominal under the choice's own setup, now -- and the
-       candidate is REFRESHED first, as 'hwut.accept' refreshes: one
-       older than its test's source is run again, one 'RUN:' line
-       saying so (E-122). More than one
+       its nominal under the choice's own setup, now -- on the
+       RECORDING as it stands: this face runs nothing (E-165; it ran a
+       stale case before, E-122). More than one
        differing case: the CHECKLIST first; '--all'/'--force' skip it.
        THE CHECKLIST IS RE-ENTERED after every round and its '[X]'
        says HANDLED -- what this session has already worked, and will
@@ -121,14 +120,12 @@ from ..._exit import E_ExitCode
 def keys_of(selected, write, stained_list=None):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
-            'differing_keys' with the candidates REFRESHED first -- built
-            where the application is built, run where the recording is
-            not current ('session.refresh'; E-122) -- and how many were
+            'differing_keys' over the RECORDINGS as they stand --
+            nothing is run (services E-165) -- and how many were
             judged.
 
-    A face that shows or merges a candidate works on it, so it must hold
-    a current one: a stale candidate shown as the run's is the lie E-40
-    forbids.
+    What is merged is what was RECORDED by 'hwut.play' or 'hwut.run',
+    so what is merged is what was seen (E-165).
 
     'stained_list' receives the cases that are equivalent and whose
     stderr spoke untolerated ('differing_keys').
@@ -137,7 +134,7 @@ def keys_of(selected, write, stained_list=None):
                           stained_list=stained_list)
 
 
-USAGE = ("usage: hwut.accept.interactive [<wish>] [<test> [<choice>]] "
+USAGE = ("usage: hwut.merge [<wish>] [<test> [<choice>]] "
          "[--directory=<path>] [--all] [--force] [--console] [-y] "
          "[--width N] [--plain] [--editor E]")
 
@@ -159,7 +156,7 @@ def main(argv=None):
         return E_ExitCode.REFUSED
 
     parser = argparse.ArgumentParser(
-        prog="hwut.accept.interactive",
+        prog="hwut.merge",
         #  NO ABBREVIATION (E-81): '--forc' was measured to RUN as
         #  '--force'; a word not in the table is refused, and suggested.
         allow_abbrev=False,
@@ -267,4 +264,4 @@ def main(argv=None):
 if __name__ == "__main__":
     #  A TERMINAL SIGNAL IS AN ENDING, NOT A CRASH (E-55).
     from ..._exit import guarded
-    sys.exit(guarded("hwut.accept.interactive", main))
+    sys.exit(guarded("hwut.merge", main))

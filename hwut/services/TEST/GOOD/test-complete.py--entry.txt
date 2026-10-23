@@ -1,7 +1,7 @@
 
 --- through 'bin/hwut' ---
     'hwut.run --f'           status 0, '--fail\n--format\n', stderr ''
-    'hwut.r'                 status 0, 'hwut.run\nhwut.run.play\n', stderr ''
+    'hwut.r'                 status 0, 'hwut.run\n', stderr ''
     'hwut.run --format='     status 0, 'junit\nplain\n', stderr ''
 
 --- the modules of the tree a TAB imports ---

@@ -1,17 +1,17 @@
-STIMULUS  stderr tolerated, stdout as accepted: hwut.run.diff
+STIMULUS  stderr tolerated, stdout as accepted: hwut.diff
           exit code : 0
           nothing differs: 1 case(s) judged, every candidate equivalent to its nominal
 
 STIMULUS  the tolerance withdrawn, stdout as accepted: hwut.run
           END   test-noisy.sh ....................................... stderr [FAIL]  ||0
-STIMULUS  hwut.run.diff
+STIMULUS  hwut.diff
           exit code : 1
           STAIN: test-noisy.sh -- stdout equivalent; stderr SPOKE, untolerated: 'tree/suite/TEST/OUT/test-noisy.sh.err'
               | diagnostic 1
               | diagnostic 2
               heal: stop the writing, or declare 'tolerance { stderr_ignored = true }'
           no stdout differs: 1 case(s) judged; 1 stained
-STIMULUS  hwut.accept.interactive --console --all
+STIMULUS  hwut.merge --console --all
           exit code : 1
           STAIN: test-noisy.sh -- stdout equivalent; stderr SPOKE, untolerated: 'tree/suite/TEST/OUT/test-noisy.sh.err'
               | diagnostic 1
@@ -19,7 +19,7 @@ STIMULUS  hwut.accept.interactive --console --all
               heal: stop the writing, or declare 'tolerance { stderr_ignored = true }'
           nothing to accept: 1 case(s) judged; 1 stained -- an accept does not lift a stain
 
-STIMULUS  thirteen lines on stderr: hwut.run.diff
+STIMULUS  thirteen lines on stderr: hwut.diff
           exit code : 1
           STAIN: test-noisy.sh -- stdout equivalent; stderr SPOKE, untolerated: 'tree/suite/TEST/OUT/test-noisy.sh.err'
               | diagnostic 1

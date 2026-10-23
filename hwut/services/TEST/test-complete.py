@@ -64,7 +64,7 @@ BIN  = os.path.join(HWUT, "bin")
 
 TABLE_DB = {
     "FACE_TUPLE": ("hwut", "hwut.about", "hwut.execute", "hwut.labels.remove",
-                   "hwut.run", "hwut.run.play"),
+                   "hwut.run", "hwut.play"),
     "TABLE": {
         "hwut.run": (("--fail", "flag", ()), ("--glob", "value", ()),
                      ("--dir", "value", ()), ("-l", "value", ()),
@@ -72,7 +72,7 @@ TABLE_DB = {
                      ("--strategy", "enum", ("linear", "parallel")),
                      ("--format", "enum", ("plain", "junit")),
                      ("--jobs", "value", ())),
-        "hwut.run.play": (("--save", "flag", ()), ("--raw", "flag", ())),
+        "hwut.play": (("--save", "flag", ()), ("--raw", "flag", ())),
     },
 }
 
@@ -161,7 +161,7 @@ def test_static():
     ask("hwut.run --")
     ask("hwut.run --f")
     ask("/opt/hwut/bin/hwut.run --st")
-    ask("hwut.run.play test-a.sh --s")
+    ask("hwut.play test-a.sh --s")
     banner("a face without a table: nothing")
     ask("hwut.about --")
     ask("hwut.unknown --")
@@ -185,13 +185,13 @@ def test_values():
 def test_apps():
     def body():
         banner("the applications here; a directory is a step")
-        ask("hwut.run.play ")
-        ask("hwut.run.play test-")
+        ask("hwut.play ")
+        ask("hwut.play test-")
         ask("hwut.run ")
         ask("hwut.run --glob test-a")
         banner("the choices of one")
-        ask("hwut.run.play test-a.sh ")
-        ask("hwut.run.play test-a.sh t")
+        ask("hwut.play test-a.sh ")
+        ask("hwut.play test-a.sh t")
         ask("hwut.run test-b.py ")
         ask("hwut.run --fail test-b.py a")
         ask("hwut.run --strategy linear test-a.sh o")
@@ -255,8 +255,8 @@ def test_silent():
         run_main(["bash", ""], {"HWUT_COMPLETE_DB": missing})
         run_main(["bash", "hwut.run --"], {"HWUT_COMPLETE_DB": broken})
         run_main(["fish", "hwut.r"], {"HWUT_COMPLETE_DB": broken})
-        run_main(["bash", "hwut.run.play /nonexistent/x"])
-        run_main(["bash", "hwut.run.play /nonexistent.sh "])
+        run_main(["bash", "hwut.play /nonexistent/x"])
+        run_main(["bash", "hwut.play /nonexistent.sh "])
     finally:
         shutil.rmtree(root)
 
@@ -323,7 +323,7 @@ def test_setup():
         name_db = {}
         with open(output) as fh: exec(fh.read(), name_db)
         banner("faces by name, options where a parser stands")
-        for face in ("hwut", "hwut.run", "hwut.run.play", "hwut.about"):
+        for face in ("hwut", "hwut.run", "hwut.play", "hwut.about"):
             row_list = name_db["TABLE"].get(face, ())
             spelling_set = set(r[0] for r in row_list)
             print("    %-14s named %-5s rows %-5s '--glob' %s"
@@ -344,13 +344,13 @@ def test_bash():
         script = os.path.join(HWUT, "services", "shell", "hwut.bash")
         program = """
             source %s
-            complete -p hwut.run.play hwut
+            complete -p hwut.play hwut
             tab() { COMP_LINE="$1"; COMP_POINT=${#1}; COMPREPLY=()
                     _hwut_complete; echo "    [$1] -> ${COMPREPLY[*]}"; }
             tab "hwut.run --f"
             tab "hwut.run --format=j"
             tab "hwut.r"
-            tab "hwut.run.play --sa"
+            tab "hwut.play --sa"
         """ % script
         env = dict(os.environ, PATH=BIN + os.pathsep + os.environ["PATH"],
                    HWUT_COMPLETE_DB=written_table(root))
@@ -394,11 +394,11 @@ def test_zsh():
         program = """
             autoload -U compinit; compinit -u -D
             source %s
-            print "    registered: hwut.run.play ${_comps[hwut.run.play]}, hwut ${_comps[hwut]}"
+            print "    registered: hwut.play ${_comps[hwut.play]}, hwut ${_comps[hwut]}"
             compadd()   { print -r -- "        compadd $*"; }
             _describe() { print -r -- "        _describe ${(P)4}"; }
             for line in "hwut.run --f" "hwut.run --format=j" "hwut.run --dir s" \
-                        "hwut.run.play --sa" "hwut.about --"; do
+                        "hwut.play --sa" "hwut.about --"; do
                 print -r -- "    [$line]"; LBUFFER=$line _hwut_complete
             done
         """ % script
@@ -416,7 +416,7 @@ def test_powershell():
         program = """
             . '%s'
             foreach ($s in 'hwut.run --f', 'hwut.run --format=j',
-                           'hwut.run --dir s', 'hwut.run.play --sa',
+                           'hwut.run --dir s', 'hwut.play --sa',
                            'hwut.about --') {
                 $r = TabExpansion2 -inputScript $s -cursorColumn $s.Length
                 '    [' + $s + '] -> ' + (($r.CompletionMatches |

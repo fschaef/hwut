@@ -1,0 +1,11 @@
+  RECORDED: test-new.py.txt
+  recorded by: hwut.play
+  OK  : status OK
+  OK  : the subject is rendered
+  OK  : the face says what it recorded
+  OK  : the recording stands in the store
+  OK  : and says who made it
+  OK  : no nominal: play blesses nothing
+  OK  : no book entry: play judges nothing
+SUCCESS: play shows and records, and only that.
+<hwut-end>

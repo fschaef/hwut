@@ -51,7 +51,7 @@ VALUE_KIND_DB = {
 #  ('--glob') takes the SHORT FORM -- the first bare word an application,
 #  every further one a choice of it (gathered/0s, open b).
 POSITIONAL_DB = {
-    "hwut.run.play":      "app",
+    "hwut.play":          "app",
     "hwut.labels.add":    "label",
     "hwut.labels.remove": "label",
     "hwut.execute":       "target",
@@ -224,7 +224,7 @@ def _holds_no_application_f(path):
                    carries 'hwut.no-entry-here.marker' -- the rule of
                    'auxiliary/no_entry.py', said again here because a
                    TAB imports 'os' and 're' alone (E-151)
-            False, else -- the book's D-12: 'hwut.run.play <TAB>' in a
+            False, else -- the book's D-12: 'hwut.play <TAB>' in a
                    test directory offered 'GOOD/ OUT/ TMP/'
     """
     if os.path.isfile(os.path.join(path, "hwut.no-entry-here.marker")):

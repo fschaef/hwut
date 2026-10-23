@@ -53,7 +53,7 @@ def classify(key, force_f):
                       the candidate becomes the nominal WHOLE, as it
                       stands (E-109)
             'merge'   a nominal stands and '--force' was not said: this
-                      is a CHANGE, and 'hwut.accept.interactive's
+                      is a CHANGE, and 'hwut.merge's
                       business
             'force'   a nominal stands and '--force' was said
     """
@@ -178,3 +178,60 @@ def stderr_mention_of(label, spoke_f, ignored_f):
                "it; an accept is refused ('%s' declares it)" \
                % (label, STDERR_IGNORED_LINE)
     return None
+
+
+#  ---------------------------------------------------------- the recording
+#
+#  RECORD, LOOK, BLESS (services E-165). Only 'hwut.run' and 'hwut.play'
+#  run a test; 'hwut.accept', 'hwut.merge' and 'hwut.diff' read the
+#  RECORDING they left and run nothing. The words about that recording
+#  live HERE, said alike by every face that reads one.
+
+NO_RECORDING_TEXT = "no recording -- 'hwut.play' records it; accept runs nothing"
+
+
+def recording_text(freshness):
+    """
+    RETURN: str, which face made the recording and when, from its
+                 freshness sidecar ('Store.freshness'):
+                 'by hwut.play, 2026-10-22 08:51' -- local time, minutes;
+                 'recorded 2026-10-22 08:51' where no face is known (a
+                 recording older than E-165)
+            'recorded at an unknown time', where no sidecar stands
+    """
+    if not freshness: return "recorded at an unknown time"
+    from datetime import datetime
+    try:
+        when = datetime.fromisoformat(freshness["instant"]).astimezone()
+        when_text = when.strftime("%Y-%m-%d %H:%M")
+    except (KeyError, TypeError, ValueError):
+        when_text = "an unknown time"
+    by = freshness.get("by")
+    return ("by %s, %s" % (by, when_text)) if by \
+           else ("recorded %s" % when_text)
+
+
+def source_changed_f(freshness, source_path):
+    """
+    RETURN: bool, True where the test's source no longer is what was
+                  recorded: its content digest differs from the one the
+                  freshness sidecar keeps. False where it is the same,
+                  or where either side cannot be read -- no hint is
+                  better than a false one.
+    """
+    if not freshness or "source_digest" not in freshness: return False
+    from ..engine.bookkeeper.api import source_digest_of
+    try:
+        return source_digest_of(source_path) != freshness["source_digest"]
+    except OSError:
+        return False
+
+
+def source_changed_hint(name):
+    """
+    RETURN: str, the HINT that the test's source changed since the
+                 recording '<name>' was made: blessed all the same
+                 (E-165), and how to see it as it stands now.
+    """
+    return ("HINT: '%s' -- the test's source changed since it was "
+            "recorded; 'hwut.play' shows it as it stands" % name)

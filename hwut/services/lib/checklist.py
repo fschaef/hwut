@@ -6,8 +6,8 @@ PURPOSE: THE CHECKLIST -- the one menu every face uses to let an author
          which he has already worked.
 
 DESCRIPTION
-       ONE MENU, ONE BEHAVIOUR. 'hwut.accept.interactive' and
-       'hwut.run.diff' both offer a list and both work the cases one after
+       ONE MENU, ONE BEHAVIOUR. 'hwut.merge' and
+       'hwut.diff' both offer a list and both work the cases one after
        another. They held a copy of that loop each, and the copies had
        already drifted: one re-entered the menu and the other showed it
        once, so the SAME marks meant different things at the two

@@ -57,7 +57,7 @@ def _reset(variable, token):
     """
     RETURN: None. 'variable' back to what it was before 'token' was set --
             or, where the generator is closed in ANOTHER context (its
-            consumer went away mid-stream, e.g. 'hwut.run.diff | head',
+            consumer went away mid-stream, e.g. 'hwut.diff | head',
             and the loop finalises it; the book's D-31), set to None: that
             context ends with the generator, and nothing reads it after.
     """

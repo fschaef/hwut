@@ -98,12 +98,12 @@ PYEOF
     ;;
 
 cycle)
-    #  Declare -> 'play --save' records the file as a CANDIDATE, no
+    #  Declare -> 'play' records the file as a CANDIDATE, no
     #  residue -> accept blesses it beside stdout -> the run is green.
     #  (E-41: a case with no nominal is not RUN; play is the way in.)
     fixture
-    $PLAY test-file.sh --save --directory=tree/suite/TEST > /dev/null 2>&1
-    echo "first play --save (no nominal yet): status $?"
+    $PLAY test-file.sh --directory=tree/suite/TEST > /dev/null 2>&1
+    echo "first play (no nominal yet): status $?"
     echo "residue in the test directory: $(ls tree/suite/TEST | grep -c result.csv)"
     echo "candidates:"
     ls tree/suite/TEST/OUT/ | sed 's/^/    /'
@@ -120,7 +120,7 @@ forgotten)
     #  'output-file-not-found', phrased, status 1 -- a stale file from
     #  the earlier run CANNOT green this one (it was removed).
     fixture
-    $PLAY test-file.sh --save --directory=tree/suite/TEST > /dev/null 2>&1
+    $PLAY test-file.sh --directory=tree/suite/TEST > /dev/null 2>&1
     $ACCEPT --directory=tree/suite/TEST --force > /dev/null 2>&1
     printf '#!/bin/bash\n# @hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-file.sh

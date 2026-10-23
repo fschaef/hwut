@@ -1,5 +1,5 @@
 -- accepted under 'load <= 200'
-   RUN: t.py b   (0) nothing recorded for this choice
+   RECORDING: t.py b .stdout -- by hwut.play, <when>
    REFUSED constraint: 't.py c .stdout' -- the candidate breaks its constraints:
        blessed        t.py b .stdout
 -- the constraint tightened to 'load <= 100'; OUTPUT unchanged

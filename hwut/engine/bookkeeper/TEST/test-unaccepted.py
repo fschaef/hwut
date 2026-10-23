@@ -35,6 +35,7 @@ from hwut.engine.bookkeeper.api import (Bookkeeper, E_TestVerdict,  # noqa: E402
                                        carries_unaccepted_f,
                                        carries_unaccepted_text_f)
 from hwut.services.accept import main as accept_main   # noqa: E402
+from hwut.services.lib.run.play import main as play_main  # noqa: E402
 
 ROOT_CONF = "hwut {\n}\n"
 SCRIPT = ('#! /usr/bin/env python3\n'
@@ -103,6 +104,11 @@ def test_booked():
         path = os.path.join(test, "test-%s.py" % stem)
         with open(path, "w") as fh: fh.write(SCRIPT % (stem, body))
         os.chmod(path, 0o755)
+    #  THE RECORDINGS ARE PLAY'S (services E-165): accept runs nothing.
+    import contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        play_main(["--all", "--plain", "--directory=%s" % test],
+                  write=lambda _: None)
     accept_main(["test-region.py", "--whole", "--dont-ask",
                  "--directory=%s" % test], write=lambda _: None)
     accept_main(["test-plain.py", "--dont-ask",

@@ -73,7 +73,7 @@ DESCRIPTION
        printed" rather than presenting it as current.
 
        'force_run=True' is the opposite word: (A.1)/(B.2) are taken as
-       younger. 'hwut.run.play' says it, since a play IS the request to
+       younger. 'hwut.play' says it, since a play IS the request to
        execute now.
 
        NO CONFIGURATION IN HAND ('configuration=None'): a face that has
@@ -164,7 +164,8 @@ def decide(configuration, candidate_path, built_path=None,
                       younger -- and RECORDED where it is current.
                       False (the default): a producer ALWAYS runs.
                       'hwut.run' is the request to run; a face that
-                      merely needs a current subject REFRESHES.
+                      asks for the DECISION alone ('hwut.report.
+                      details') reads it, and runs nothing (E-165).
     'force_run'       True: (A.1)/(B.2) are taken as younger.
     'force_build'     True: passed on to whoever builds; recorded here
                       in the reason so the face can say so.
@@ -317,11 +318,11 @@ def provider_of(configuration, store, choice_name=None, production=True,
                          back a Loaded, and the decision says so.
     'force_run'          True: execute regardless of the clocks.
     'on_raw_line'        a TAP fed every raw stdout line as it arrives
-                         (E-83) -- 'hwut.run.play' draws them live; None
+                         (E-83) -- 'hwut.play' draws them live; None
                          where nobody watches.
     'keep_raw'           None: as the store's 'record_raw' says; True
                          asks for the raw streams whatever it says
-                         ('hwut.run.play' shows them).
+                         ('hwut.play' shows them).
     'subject_name_list'  for a Loaded: which subjects to read back;
                          None means the standard pair.
 
@@ -371,7 +372,8 @@ def bare_provider_of(store, test_name, choice_name=None,
                        subject_name_list=subject_name_list)
 
 
-def record(store, configuration, choice_name, provider, wanted=None):
+def record(store, configuration, choice_name, provider, wanted=None,
+           by="hwut.run"):
     """
     RETURN: dict, subject name -> the text stored as its candidate.
             None, nothing was recorded: a Loaded provider (it would
@@ -381,16 +383,20 @@ def record(store, configuration, choice_name, provider, wanted=None):
             or the store knob says no.
 
     'wanted' is THE STORE KNOB: None follows the configuration ('store'
-    declared); a face's '--no-store' or '--save' is a later word over
-    it. The raw stream and the cadence ride along where the provider
-    kept them.
+    declared); a face's '--no-store' is a later word over it, and
+    'hwut.play' always records (services E-165). The raw stream and the
+    cadence ride along where the provider kept them.
+
+    'by' names the face that made the recording -- 'hwut.run' or
+    'hwut.play' -- kept in the freshness sidecar beside the instant, so
+    'hwut.accept' can say WHAT it blesses (E-165).
     """
     if getattr(provider, "stage_execute", None) is None: return None
     if wanted is None: wanted = configuration.store is not None
     if not wanted:                                       return None
     #  THE RAW STREAM IS KEPT ON THE STORE'S WORD ('record_raw') and
-    #  not on the provider's appetite: 'hwut.run.play' asks for raw to
-    #  SHOW it, and its '--save' must store what a run would store.
+    #  not on the provider's appetite: 'hwut.play' asks for raw to
+    #  SHOW it, and what it records must be what a run would store.
     raw_f = bool(configuration.store and configuration.store.record_raw)
     provided = getattr(provider, "last_provided", None)
     if provided is None:                                 return None
@@ -411,7 +417,7 @@ def record(store, configuration, choice_name, provider, wanted=None):
         with provided[name].open() as reader:
             text = reader.read()
         store.write_candidate(test_name, choice_name, name, text,
-                              source_digest=source_digest)
+                              source_digest=source_digest, by=by)
         recorded_db[name] = text
         if raw_f and provided.raw_db and name in provided.raw_db:
             store.write_raw(test_name, choice_name, name,

@@ -258,7 +258,7 @@ def _failure(failure_id, description, what, heal, sanitize=None):
 
 
 _DEVIATION_WHAT = "The output differs from GOOD -- the ordinary business of a test."
-_DEVIATION_HEAL = ("Read 'hwut.run.diff <test> [<choice>]'; mend the code, or "
+_DEVIATION_HEAL = ("Read 'hwut.diff <test> [<choice>]'; mend the code, or "
                    "accept the new output with 'hwut.accept'.")
 _CAP_RAISE = ("raise the cap in the header's 'caps { %s = ... }' only for a "
               "test that needs it by nature.")
@@ -271,7 +271,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.NO_GOOD_FILE, "no GOOD file; not accepted, not run",
              "Nothing was ever accepted for this case, so it is not run: "
              "a verdict needs a nominal to compare against (E-41).",
-             "Look at its output with 'hwut.run.play <test> [<choice>]', "
+             "Look at its output with 'hwut.play <test> [<choice>]', "
              "then accept it: 'hwut.accept <test> [<choice>]'."),
     _failure(_F.NOT_IN_BOOK, "GOOD file stands; case not in GOOD/book.csv",
              "A GOOD file stands for this case, and 'GOOD/book.csv' has no "
@@ -285,7 +285,8 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "nothing runs, nothing in GOOD/ moves."),
     _failure(_F.NOMINAL_FILE_NOT_FOUND, "GOOD missing",
              "The GOOD file named for a subject cannot be read.",
-             "Restore it from git, or accept anew with 'hwut.accept'."),
+             "Restore it from git, or record it with 'hwut.play' and "
+             "accept anew with 'hwut.accept'."),
     _failure(_F.NOMINAL_WITHOUT_END,
              "GOOD file does not end in <hwut-end>",
              "Every stdout GOOD ends in '<hwut-end>' (R-70); this one does "
@@ -296,18 +297,18 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.UNACCEPTED, "GOOD file carries unaccepted lines",
              "GOOD holds a '##! unaccepted' region: an acceptance that was "
              "begun and not finished (an ASPIRANT, B-14).",
-             "Finish it: 'hwut.accept.interactive <test> [<choice>]'; or "
+             "Finish it: 'hwut.merge <test> [<choice>]'; or "
              "take the output whole, 'hwut.accept --force'."),
     _failure(_F.REGION_SYNTAX_ERROR, "broken region framing",
              "A '##!' region in GOOD cannot be read: an unknown handler, "
-             "a bad parameter, an unclosed region. 'hwut.run.diff' names "
+             "a bad parameter, an unclosed region. 'hwut.diff' names "
              "the line.",
              "Mend the framing in the GOOD file, or accept anew."),
     _failure(_F.OUTPUT_REGION_SYNTAX_ERROR,
              "broken region framing in output",
              "A '##!' region the test printed cannot be read: an unknown "
              "handler, a bad parameter, an unclosed region. GOOD is not "
-             "at fault. 'hwut.run.diff' names the line.",
+             "at fault. 'hwut.diff' names the line.",
              "Mend the framing the test prints."),
     _failure(_F.OUTPUT_CONSTRAINT, "constraint violated by the output",
              "The output breaks a constraint of the choice that GOOD "
@@ -427,7 +428,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "GOOD ends in '<hwut-end>' and the output does not: the "
              "application stopped before its end -- a crash, an early "
              "exit, a lost line (R-70).",
-             "Find why it stopped; 'hwut.run.diff' shows the output as "
+             "Find why it stopped; 'hwut.diff' shows the output as "
              "far as it got."),
     _failure(_F.TEST_APP_NO_OUTPUT, "no output",
              "The application ran and printed nothing.",
@@ -436,7 +437,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.TEST_APP_STALLED, "stalled; no output",
              "The application stopped producing output and did not end.",
              "Look for a read on stdin, a lock, or a loop; "
-             "'hwut.run.play' shows it live."),
+             "'hwut.play' shows it live."),
     _failure(_F.RECORDING_MISSING, "no recording to replay",
              "A replay was asked for and no recording stands.",
              "Run the case once with 'hwut.run' to record it."),

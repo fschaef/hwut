@@ -252,6 +252,11 @@ def test_hint():
                'echo "<hwut-end>"\n')
         os.chmod(os.path.join(root, "gw/can/TEST/test-d.sh"), 0o755)
         keep = "not registered"
+        #  THE RECORDING IS PLAY'S (services E-165): accept runs nothing.
+        subprocess.run([os.path.join(BIN, "hwut.play"), "--all", "--plain"],
+                       cwd=os.path.join(root, "gw/can/TEST"),
+                       capture_output=True, stdin=subprocess.DEVNULL,
+                       env=dict(os.environ, PYTHONPATH=""))
         _face(root, "accepted, so the help speaks of nothing else",
               "hwut.accept", "--dont-ask", "--force", keep="ACCEPTED")
         _face(root, "no central file", "hwut.run", "--silent", keep=keep)

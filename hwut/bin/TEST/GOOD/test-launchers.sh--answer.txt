@@ -1,12 +1,12 @@
 hwut.config.show   exit 0: hwut.config.show -- the configuration the framework READ
 hwut.plan          exit 0: hwut.plan -- the TEST PLAN the framework intends
 hwut.run           exit 0: hwut.run -- the tree run, rendered live
-hwut.run.play      exit 0: hwut.run.play -- run one test, show the READING of what it produced, under
+hwut.play          exit 0: hwut.play -- run one test, show the READING of what it produced, under the
 hwut.accept        exit 0: hwut.accept -- PROMOTION: a candidate becomes the nominal
 hwut.accept.propose exit 0: hwut.accept.propose -- the differences, as a file to read and hand back.
 hwut.accept.apply  exit 0: hwut.accept.apply -- bless what a file names, and nothing else.
 hwut.renovate      exit 0: hwut.renovate -- carry what hwut 1.0 said into what VUT 2.0 reads (B-7,
-hwut.accept.interactive exit 0: hwut.accept.interactive -- Show each differing case, edit, and ACCEPT on
+hwut.merge         exit 0: hwut.merge -- Show each differing case, edit, and ACCEPT on commit --
 hwut.execute       exit 0: hwut.execute -- run one user-defined target over the tree
 hwut.cov.run       exit 0: hwut.cov.run, THE COVERAGE RUN (coverage D-38) -- every selected test case
 hwut.cov.formats   exit 0: hwut.cov.formats -- the table of coverage tools, formats and aliases this
@@ -20,7 +20,7 @@ hwut.cov.conv.to_tex exit 0: hwut.cov.conv.to_tex -- the output directory of a c
 hwut.cov.conv.to_pdf exit 0: hwut.cov.conv.to_pdf -- the document of 'hwut.cov.conv.to_tex' compiled to
 hwut.dev.podman.build exit 0: hwut.dev.podman.build -- the development container's image, built from
 hwut.dev.podman.enter exit 0: hwut.dev.podman.enter -- a shell, or one command, inside the development
-hwut.run.diff      exit 0: hwut.run.diff -- Display how two streams compare, how the store's
+hwut.diff          exit 0: hwut.diff -- Display how two streams compare, how the store's candidates
 hwut.report.details exit 0: hwut.report.details -- Pack a test whole -- metadata, source, GOOD, OUT
 hwut.run.stability exit 0: hwut.run.stability -- run the same wish SEVERAL TIMES and report what did
 hwut.report.list   exit 0: hwut.report.list -- print, one per line, every test application and choice

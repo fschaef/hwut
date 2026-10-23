@@ -22,8 +22,6 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
                                 further word a choice; both carry
                                 fnmatch's '*', '?' and '[ ]'
     --dont-ask                  do not ask; the reading has been read
-    --force-run                 run every selected case before blessing,
-                                current recording or not
     --whole, --as-is, --force   record the candidate WHOLE, as it
                                 stands: a first acceptance without the
                                 undecided shape (E-60), a standing
@@ -34,12 +32,13 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
 
 WHAT ACCEPT DOES NOT DO: it never overwrites a standing nominal unless
 '--force' says so out loud. Where a nominal stands, the candidate is
-not a first blessing but a CHANGE, and a change is 'hwut.accept.interactive's
+not a first blessing but a CHANGE, and a change is 'hwut.merge's
 business -- accept names the key and leaves the pole alone.
 
 EXIT STATUS (E-1, services/_exit.py):
     0  everything the wish selected was accepted, or needed nothing
-    1  a fault was met, or a key needed a merge and was left alone
+    1  a fault was met, a case was refused, or a key needed a merge
+       and was left alone
     2  the command line cannot be read
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
@@ -69,11 +68,8 @@ from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
                                                                parse_wish,
                                                                with_targets)
 from ..engine.compare.api import Configuration
-from ..engine.operations.session import refresh
 from ..engine.orchestrator.run.adapter import \
                                                        test_configuration_of
-from ..engine.orchestrator.plan import confinement
-from ..auxiliary.directory_mutex import DirectoryBusy
 from   ._exit                                          import E_ExitCode
 from   ._target                                        import entered
 from .lib.cmdline import (face_parser, usage_of,
@@ -99,7 +95,7 @@ HELP = """hwut.accept -- PROMOTION: a candidate becomes the nominal
     hwut.accept         blesses every candidate the wish selects that
                         has no nominal yet -- the FIRST pole. Where a
                         nominal already stands, the key is named and
-                        left alone: that is 'hwut.accept.interactive's business.
+                        left alone: that is 'hwut.merge's business.
 
 """ + WISH_HELP + """
 
@@ -131,17 +127,19 @@ PROMOTION
                         accept, never the author's evidence -- a GOOD
                         file cannot exist without this face (E-109).
                         It implies '--dont-ask' and is never implied
-                        itself. It provisions the candidate, so
-                        nothing need run first
+                        itself
     A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run' does -- the
     failures a run reports do not sit in one directory.
     '--directory=<path>' names one directory and reads that alone.
 
-    --force-run         run every selected case first, whether or not
-                        its recording is current. Without it, accept
-                        runs ON NECESSITY: a case whose recording is
-                        older than its source is run; a current one
-                        is blessed as it stands
+    ACCEPT RUNS NOTHING (E-165). It blesses the RECORDING that
+    'hwut.play' or 'hwut.run' left -- what was seen -- and says which
+    face made it and when. A case with no recording is refused; a
+    recording whose test source changed since is blessed, with a HINT.
+    '--force-run' is gone: 'hwut.play' records afresh.
+
+        hwut.play test-a.py one        run, show, record
+        hwut.accept test-a.py one      bless what was recorded
     --directory=<path>  where to read; the current one else
 
 STDERR IS NEVER SUBJECT TO TESTING
@@ -165,7 +163,8 @@ WHAT IS SHOWN BEFORE A BLESSING
 
 EXIT STATUS
     0   everything selected was accepted, or needed nothing
-    1   a fault was met, or a key needed a merge and was left alone
+    1   a fault was met, a case was refused, or a key needed a merge
+        and was left alone
     2   the command line cannot be read
     3   the command line reads, and asks for nothing
 
@@ -754,7 +753,7 @@ def propose(store, case_sequence, directory, line_n, write,
     #  editing out anything but the targets refused. 'write' takes
     #  STDOUT -- what cannot: the cases a reader must open himself.
     #  A proposal one has to strip before use is not a proposal.
-    said_n = 0
+    said_n, unproposed_n = 0, 0
     where = os.path.relpath(directory, os.getcwd())
     #  ONE CONFIGURATION PER TEST, built as the run builds it, so the
     #  tolerances a proposal honours are the ones the run honoured.
@@ -809,9 +808,11 @@ def propose(store, case_sequence, directory, line_n, write,
             #  reads better unbroken. 'hwut.report.details' shows one whole.
             if refusal is not None:
                 write("DIFF(%s) %s" % (label, refusal))
+                unproposed_n += 1
                 continue
             if len(pair_list) > line_n:
                 write("DIFF(%s) > %d lines" % (label, line_n))
+                unproposed_n += 1
                 continue
             #  A PROPOSAL IS SPOKEN, not merely labelled: the head says
             #  what the block below proposes, and for which case.
@@ -829,6 +830,16 @@ def propose(store, case_sequence, directory, line_n, write,
             put(label)
             put("")
             said_n += 1
+    #  A CASE THAT DIFFERS AND COULD NOT BE PROPOSED IS NO AGREEMENT
+    #  (D-42): the file must not close with 'every selected case agrees',
+    #  and the exit status says that something was left to the reader.
+    if unproposed_n:
+        if not said_n:
+            put("#  nothing proposed: %d case(s) differ beyond what a "
+                "proposal shows --" % unproposed_n)
+            put("#  named on stdout as 'DIFF(...)'; open them with "
+                "'hwut.report.details'")
+        return E_ExitCode.FAULT
     return E_ExitCode.OK if said_n else E_ExitCode.EMPTY
 
 
@@ -902,7 +913,7 @@ def ask(key, text, write, read_line, setup=None):
 
     THE READING IS SHOWN, NOT THE TEXT (E-57): the candidate fed
     against itself through compare's one door, rendered as
-    'hwut.run.play' renders it -- every '{numeric}', '~analogy~',
+    'hwut.play' renders it -- every '{numeric}', '~analogy~',
     '<pattern>', '!binding!' and '|nothing|' marked. A blessing is a
     promise about how this stream will be READ, and the reading is
     what that promise says. Anything but 'y' leaves the pole alone --
@@ -935,7 +946,7 @@ def ask(key, text, write, read_line, setup=None):
     answer = read_line()
     if answer.strip().lower() in ("y", "yes"): return True
     write("NOTE: left alone. To accept PART of it: "
-          "'hwut.accept.interactive' takes lines from the candidate into "
+          "'hwut.merge' takes lines from the candidate into "
           "a nominal, one at a time.")
     return False
 
@@ -1028,8 +1039,13 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     directory    = arguments.directory or "."
     force_f      = arguments.force
     dont_ask_f   = arguments.dont_ask
-    force_run_f  = arguments.force_run
     word_list    = arguments.word
+    if arguments.force_run:
+        #  E-165: accept runs nothing. Refused BY NAME so a script that
+        #  still says it is told, not silently given the recording.
+        write("REFUSED: '--force-run' is gone (E-165) -- accept blesses "
+              "the recording; 'hwut.play' records afresh")
+        return E_ExitCode.REFUSED
     #  '--force' IMPLIES '--dont-ask' (E-70). The two words say
     #  DIFFERENT things -- one what to do with a standing nominal, the
     #  other whether anybody need be consulted -- but 'overwrite the
@@ -1153,7 +1169,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
             write("")
             write("== %s" % os.path.relpath(whole, os.getcwd()))
         code = accept_one(whole, result, bookkeeper, case_db[where],
-                          force_f, force_run_f,
+                          force_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list,
                           interactive_f=interactive_f,
@@ -1191,61 +1207,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     return worst
 
 
-def refresh_cases(directory, result, bookkeeper, case_sequence,
-                  force_run_f, write, brief_f=False):
-    """
-    RETURN: None, every case's candidate is current -- refreshed where
-                  it was not.
-            E_ExitCode.REFUSED, the directory is held by another run,
-                  or a case is under a cap that cannot be enforced
-                  here (exploration R-80) -- said by name.
-
-    ACCEPT'S ENGINE FOR PROVISION: 'session.refresh' per case (E-40,
-    E-122) -- build where the application is built, run where the
-    recording is not current -- and one 'RUN:' line per case it ran,
-    unless 'brief_f' (a column of verdicts is wanted, and a line per
-    refreshed case is noise between the reader and his answer).
-    '--force-run' ('force_run_f') runs every case regardless.
-    """
-    language_setup = result.app_set.directory_spec.language_setup
-    #  AN UNENFORCEABLE CAP REFUSES HERE TOO (exploration R-80): this
-    #  face runs what it accepts, and a case 'hwut.run' would refuse is
-    #  not run through another door. Judged for EVERY case before the
-    #  first is run: nothing is refreshed where something is refused.
-    uncapped_list = [(case, reason) for case, reason in
-                     ((case, confinement.refusal_of(result.app_set,
-                                                    case.source_file,
-                                                    case.choice))
-                      for case in case_sequence) if reason is not None]
-    for case, reason in uncapped_list:
-        for line in confinement.refusal_line_list(
-                        case.source_file if case.choice is None
-                        else "%s %s" % (case.source_file, case.choice),
-                        reason):
-            write(line)
-    if uncapped_list: return E_ExitCode.REFUSED
-    for case in case_sequence:
-        configuration = test_configuration_of(
-                            result.app_set.app_db[case.source_file],
-                            directory, language_setup=language_setup,
-                            free_disk_min_mb=result.app_set.directory_spec
-                                                   .free_disk_min_mb)
-        try:
-            done = asyncio.run(refresh(configuration, case.choice, bookkeeper,
-                                       force_run=force_run_f))
-        except DirectoryBusy as error:
-            write("REFUSED: %s" % error)
-            return E_ExitCode.REFUSED
-        if "run" in done.step_tuple and not brief_f:
-            write("RUN: %s%s   %s" % (case.source_file,
-                                      "" if case.choice is None
-                                      else " " + case.choice,
-                                      done.decision.because))
-    return None
-
-
 def accept_one(directory, result, bookkeeper, case_sequence,
-               force_f, force_run_f, propose_n,
+               force_f, propose_n,
                write, read_line, put=None, brief_list=None,
                interactive_f=False, dont_ask_f=False):
     """
@@ -1253,32 +1216,22 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             holds was blessed or nothing was owed, EMPTY where it held
             no recorded candidate, FAULT where a key was refused.
 
-    THE WHOLE OF ACCEPT'S WORK, for one directory: refresh, propose or
-    bless. 'main' selects -- over the tree or over one directory, as
+    THE WHOLE OF ACCEPT'S WORK, for one directory: propose or bless --
+    the RECORDING, which this face never makes (E-165). 'main' selects -- over the tree or over one directory, as
     the wish says -- and calls this once per directory it met, so the
     two doors of 'exploration/selection.py' differ for accept only in
     HOW MANY TIMES this runs.
     """
     store = Store(bookkeeper)
 
-    #  SUBJECT PROVISION, THROUGH THE ONE CHANNEL (operations disc-2):
-    #  'provider_of' decides per case whether the recording is current
-    #  or the test must run; where it must, it RUNS -- this face is
-    #  the source of the nominal and cannot wait on a run somebody
-    #  else makes (E-40). The run goes through the session, so it is
-    #  held, recorded and booked exactly as 'hwut.run' books it.
-    #  ON NECESSITY (ruled 2026-09-05): accept REFRESHES -- a stale
-    #  recording is run, a current one blessed as it stands.
-    #  '--force-run' runs every case regardless.
-    #  PROPOSING RUNS NOTHING. It READS what stands and asks the
-    #  reader to judge it; a run is the reader's next act, not this
-    #  one's. 'hwut.run' refreshes, 'hwut.accept' refreshes before it
-    #  blesses -- proposing is neither.
-    if propose_n is None:
-        refused = refresh_cases(directory, result, bookkeeper, case_sequence,
-                                force_run_f, write, brief_f=brief_list is not None)
-        if refused is not None: return refused
-
+    #  ACCEPT RUNS NOTHING (services E-165, ruled 2026-10-22): "the
+    #  user accepts on recorded fixed output, not on content that might
+    #  be produced in the background". The recording is 'hwut.play''s or
+    #  'hwut.run''s; this face blesses it as it stands, says which face
+    #  made it and when, and hints where the test's source changed since.
+    #  It used to run ON NECESSITY (2026-09-05, E-40): a recording older
+    #  than the source was run again -- and data, fixtures, the unit
+    #  under test in another file were never seen (the book's D-34).
     language_setup = result.app_set.directory_spec.language_setup
     if propose_n is not None:
         return propose(store, case_sequence, directory, propose_n, write,
@@ -1322,8 +1275,33 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         write("    Apply 'hwut.run.stability --repeat=<n>' to proof stability, or")
         write("    'hwut.remove' it and 'hwut.accept' afresh.")
 
+    #  A REFUSAL IS A FAULT OF THE CALL (D-44): what was asked for was
+    #  not done, and a script must see it in the exit status. A key the
+    #  person declined at the prompt is no refusal -- that was an answer.
+    refused_f = bool(stained_list)
+
+    #  NO RECORDING, NOTHING TO BLESS (E-165): a case that 'hwut.play'
+    #  or 'hwut.run' never recorded is refused by name, with the remedy.
+    from ._accept_common import NO_RECORDING_TEXT
+    stained_set = set(stained_list)
+    for case in case_sequence:
+        if (case.source_file, case.choice) in stained_set: continue
+        if any(subject != STDERR_SUBJECT for subject
+               in subject_tuple_of(store, case.source_file, case.choice)):
+            continue
+        name = case.source_file if case.choice is None \
+               else "%s %s" % (case.source_file, case.choice)
+        if brief_list is not None:
+            brief_list.append(((os.path.relpath(directory, os.getcwd()),
+                                case.source_file, case.choice or ""),
+                               ERROR_TEXT, NO_RECORDING_TEXT))
+        else:
+            write("REFUSED: '%s' -- %s" % (name, NO_RECORDING_TEXT))
+        refused_f = True
+
     key_list = key_list_of(store, case_sequence)
     if not key_list:
+        if refused_f: return E_ExitCode.FAULT    # the refusal said why
         write("NOTE: nothing to accept -- selection empty")
         return E_ExitCode.EMPTY
 
@@ -1380,6 +1358,20 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         except Exception:
             config_db[name] = None
 
+    #  WHAT IS BLESSED IS NAMED (E-165): the recording, which face made
+    #  it and when; a HINT where the test's source changed since.
+    if brief_list is None:
+        from ._accept_common import (recording_text, source_changed_f,
+                                     source_changed_hint)
+        for key in key_list:
+            if id(key) in conflict_set: continue
+            freshness = store.freshness(key.test, key.choice, key.subject)
+            write("RECORDING: %s -- %s" % (key.name,
+                                           recording_text(freshness)))
+            if source_changed_f(freshness,
+                                os.path.join(directory, key.test)):
+                write(source_changed_hint(key.name))
+
     blessed_list, merge_list, skipped_list = [], [], []
     undecided_list = []                 # first acceptances: the shape only
     for key in key_list:
@@ -1391,7 +1383,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             #  ONE FACE (E-59). A nominal stands: this is a CHANGE, and
             #  a change is merged, not blessed. Where there is a session
             #  to hold it, 'hwut.accept' holds it HERE, through the same
-            #  engine 'hwut.accept.interactive' runs -- the author does
+            #  engine 'hwut.merge' runs -- the author does
             #  not choose a face by a fact this face can read.
             #  Where there is none -- a pipe, a script, a suite -- it
             #  says so as it always did, and '--force' still overwrites.
@@ -1402,6 +1394,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             write("FAULT: the candidate of '%s' cannot be read"
                   % key.name)
             skipped_list.append(key)
+            refused_f = True
             continue
         #  A SUBJECT THAT BREAKS ITS CONSTRAINTS IS NEVER ACCEPTED -- no
         #  '--force' reaches past this (E-124). Held against itself: what
@@ -1413,6 +1406,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                   "constraints:" % key.name)
             for own in own_list: write("    %s" % own)
             skipped_list.append(key)
+            refused_f = True
             continue
         written = text
         if verdict == "first":
@@ -1430,6 +1424,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                 write("REFUSED: the candidate of '%s' does not end in "
                       "'<hwut-end>' -- it never COMPLETED" % key.name)
                 skipped_list.append(key)
+                refused_f = True
                 continue
         if key.shared_f and not dont_ask_f:
             write("NOTE: '%s' shares its nominal with every choice of "
@@ -1491,7 +1486,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         report_written(outcome_tuple, len(key_list), write)
 
     if result.fault_list or merge_list or uncommitted_list or conflict_db \
-       or short_list:
+       or short_list or refused_f:
         return E_ExitCode.FAULT
     return E_ExitCode.OK
 
@@ -1582,7 +1577,7 @@ def _merge_through_engine(key_list, store, write, config_db):
     """
     RETURN: [0..2] accepted_list, refused_list, left_list for the keys a
             nominal already stands for -- run through the SAME engine
-            'hwut.accept.interactive' uses, so the three writes of E-41
+            'hwut.merge' uses, so the three writes of E-41
             and every refusal have one implementation.
 
             [3] bool, True where a screen RAN: a key it left was left

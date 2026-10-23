@@ -1,8 +1,0 @@
-  rendered 'hello from new': True
-  OK  : status OK
-  OK  : the subject is rendered
-  OK  : no candidate written
-  OK  : no book entry
-  OK  : no register entry
-SUCCESS: play shows and forgets.
-<hwut-end>

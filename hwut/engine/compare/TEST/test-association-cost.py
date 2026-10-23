@@ -15,7 +15,7 @@ PURPOSE: THE ASSOCIATION SEARCH IS A*, AND IT IS UNBOUNDED. This test
          makes its cost VISIBLE, so that a blow-up is a number in a
          GOOD file rather than a face that never returns.
 
-WHY IT EXISTS. 'hwut.accept.interactive' on a real pair was seen to sit
+WHY IT EXISTS. 'hwut.merge' on a real pair was seen to sit
 in 'WorkList.run()' without end -- 'line_sequence.do' deriving steps,
 each calling a nested LINE-level 'edit_operations' of its own. Nothing
 said it was searching; it simply did not come back.

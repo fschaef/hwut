@@ -131,7 +131,7 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
         sys.unraisablehook = lambda unraisable: None
         return ending["code"]
     except BrokenPipeError:
-        #  THE READER HUNG UP ('hwut.run.diff ... | head'): an ordinary
+        #  THE READER HUNG UP ('hwut.diff ... | head'): an ordinary
         #  ending. stdout is pointed at the void so the interpreter's
         #  own flush at exit cannot raise a second time.
         try:

@@ -32,9 +32,11 @@
 # elsewhere     the acknowledgement names another platform: uncapped still.
 # misspelt      an unknown cap, and a word where a boolean belongs:
 #               faults by name, and nothing is acknowledged.
-# doors         the faces that run WITHOUT a plan refuse the same case
-#               by the same reason: 'hwut.accept', 'hwut.run.play',
-#               'hwut.accept.interactive', 'hwut.report.details'.
+# doors         the face that runs WITHOUT a plan, 'hwut.play', refuses
+#               the same case by the same reason, and 'hwut.report.details'
+#               says it; 'hwut.accept' and 'hwut.merge' run nothing
+#               (E-165), so no cap concerns them. MEASURED 2026-10-22
+#               before: accept and merge refused too -- they ran.
 # plan          'hwut.plan' names the same cases 'UNCAPPED [FAIL]', by the
 #               same reason.
 # help          'hwut.help' explains the failure: the cap, the entry
@@ -49,7 +51,11 @@ export PYTHONPATH="$ROOT"
 RUN="python3 -m hwut.services.run --jobs=1 --deterministic --no-colour"
 PLAN="python3 -m hwut.services.plan"
 HELP="python3 -m hwut.services.help"
-ACCEPT="python3 -m hwut.services.accept --whole --dont-ask"
+accepted() {            # play every case the words select, then bless (E-165)
+    python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
+    python3 -m hwut.services.accept --whole --dont-ask "$@"
+}
+ACCEPT=accepted
 unset NO_COLOR CI COLUMNS
 
 case "$1" in
@@ -123,21 +129,21 @@ case "$1" in
         $RUN 2>&1 | shown; echo "STATUS: ${PIPESTATUS[0]}" ;;
     doors)
         conf ""
-        touch test-net.sh           # the recording is older: a run is owed
-        echo "== hwut.accept test-net.sh a"
-        python3 -m hwut.services.accept test-net.sh a --dont-ask 2>&1 | shown
-        echo "STATUS: ${PIPESTATUS[0]}"
-        echo "== hwut.run.play test-net.sh a"
+        touch test-net.sh           # the source is younger than its recording
+        echo "== hwut.play test-net.sh a"
         python3 -m hwut.services.lib.run.play test-net.sh a --plain 2>&1 | shown
         echo "STATUS: ${PIPESTATUS[0]}"
-        echo "== hwut.accept.interactive test-net.sh a --console --all"
+        echo "== hwut.accept test-net.sh a: it runs nothing, no cap concerns it"
+        python3 -m hwut.services.accept test-net.sh a --dont-ask 2>&1 \
+            | grep -c "^REFUSED" | sed 's/^/REFUSED lines: /'
+        echo "== hwut.merge test-net.sh a --console --all: the same"
         python3 -m hwut.services.lib.accept.interactive test-net.sh a \
-                --console --all --plain < /dev/null 2>&1 | shown
-        echo "STATUS: ${PIPESTATUS[0]}"
+                --console --all --plain < /dev/null 2>&1 \
+            | grep -c "^REFUSED" | sed 's/^/REFUSED lines: /'
         echo "== hwut.report.details test-net.sh a"
         python3 -m hwut.services.lib.report.details test-net.sh a 2>&1 \
             | grep -i "not run\|REFUSED\|provision" | shown
-        echo "== nothing ran: the candidates are the acceptance's own"
+        echo "== nothing ran: the candidates are the fixture's own"
         ls OUT | grep -c "test-net" | sed 's/^/candidate files: /'
         ;;
     plan)

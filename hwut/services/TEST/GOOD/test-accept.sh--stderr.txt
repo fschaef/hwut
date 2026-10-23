@@ -1,9 +1,6 @@
 == stderr spoke, no flag ==
 STATUS: 1
 STDOUT {
-    RUN: test-ok.sh   (0) nothing recorded for this choice
-    RUN: test-two.sh a   (0) nothing recorded for this choice
-    RUN: test-two.sh b   (0) nothing recorded for this choice
     REFUSED: stderr SPOKE and nothing tolerates it --
         test-ok.sh   (10 bytes)
     stderr is for ERROR REPORTING and is never subject to
@@ -20,7 +17,10 @@ STDOUT {
 == the test declares it ==
 STATUS: 0
 STDOUT {
-    RUN: test-ok.sh   (A.1) '<tree>/test-ok.sh' is younger than the recording
+    RECORDING: test-ok.sh .stdout -- by hwut.play, <when>
+    HINT: 'test-ok.sh .stdout' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+    RECORDING: test-two.sh a .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
     ACCEPTED  3 of 3

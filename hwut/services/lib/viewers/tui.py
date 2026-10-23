@@ -39,13 +39,13 @@ DESCRIPTION
 
        TWO WAYS TO MARK, one renderer. The VERDICT marking (the merge
        view) marks what DID differ, by relation. The READING marking
-       ('reading_f', the interpretation view -- 'hwut.run.diff FILE')
+       ('reading_f', the interpretation view -- 'hwut.diff FILE')
        marks what CAN vary, by tolerance kind:
 
            {numeric}   ~analogy~   <pattern>   !binding!   |nothing|
 
        Same rows, same notes, same banner -- an author moves between
-       'hwut.run.diff' and 'hwut.accept.interactive' without relearning
+       'hwut.diff' and 'hwut.merge' without relearning
        the picture.
 
        TWO COLUMNS ('--side-by-side', '-y'; E-49). One row per aligned
@@ -253,7 +253,7 @@ class TuiDisplay(DisplayAdapter):
     async def open(self, subject_name):
         """RETURN: None. The session for one subject begins; the round
         count starts afresh -- one driver may carry several subjects
-        in turn ('hwut.run.diff', 'hwut.accept.interactive')."""
+        in turn ('hwut.diff', 'hwut.merge')."""
         self.subject_name = subject_name
         self.generation_n = 0
 

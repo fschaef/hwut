@@ -148,8 +148,9 @@ OPTIONS
     --help              this text.
 
 EXIT: OK where something was proposed, EMPTY where every selected case
-agrees with its nominal, REFUSED where '-o' is missing or the
-selection could not be made.
+agrees with its nominal, FAULT where a case differs and could not be
+proposed (its 'DIFF(...)' line on stdout), REFUSED where '-o' is
+missing or the selection could not be made.
 
 SET 'VUT_PROPOSE_TRACE=1' to watch the reading: one line on STDERR per
 subject with the replacements found, the time, and how many positions

@@ -26,7 +26,7 @@ A TEST APPLICATION OF HWUT, FOR READING -- the template for every language.
 
     hwut.run                   runs every choice below, compares with GOOD/
     hwut.accept demo.py        records what the choices print as GOOD
-    hwut.accept.interactive    shows OUTPUT against GOOD, key by key
+    hwut.merge    shows OUTPUT against GOOD, key by key
     hwut.config.show demo.py   prints what hwut READ from the header above
 
 The header above is the whole configuration: a title, and one scope per

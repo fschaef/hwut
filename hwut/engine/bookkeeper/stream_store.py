@@ -120,7 +120,7 @@ class Store:
 
 
     def write_candidate(self, test, choice, subject, text,
-                        source_digest=None, instant=None):
+                        source_digest=None, instant=None, by=None):
         """
         RETURN: Path, where the candidate was written.
 
@@ -134,6 +134,8 @@ class Store:
         place completeness is known.
 
         'instant' is a parameter so that a test may state the clock.
+        'by' names the face that recorded -- 'hwut.run', 'hwut.play'
+        (services E-165) -- where the caller knows it.
         """
         path = self.candidate_path(test, choice, subject)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -147,6 +149,8 @@ class Store:
         freshness = {"instant": instant or _utc_now()}
         if source_digest is not None:
             freshness["source_digest"] = source_digest
+        if by is not None:
+            freshness["by"] = by
         with open(when_path, "w", encoding="utf-8") as fh:
             json.dump(freshness, fh, sort_keys=True)
         return path
@@ -180,6 +184,21 @@ class Store:
         """RETURN: Path, where the freshness sidecar of that key lives
                    -- the instant and the source digest."""
         return self.bookkeeper.freshness_path(test, choice, subject)
+
+    def freshness(self, test, choice, subject):
+        """
+        RETURN: dict, the freshness sidecar of that key: 'instant' (UTC,
+                      ISO), and where known 'source_digest' and 'by'
+                      (the face that recorded, services E-165)
+                None, where no sidecar stands or it does not read
+        """
+        try:
+            with open(self.freshness_path(test, choice, subject),
+                      encoding="utf-8") as fh:
+                content = json.load(fh)
+        except (OSError, ValueError):
+            return None
+        return content if isinstance(content, dict) else None
 
     def write_raw(self, test, choice, subject, text):
         """

@@ -145,7 +145,7 @@ class KeyedDisplay(DisplayAdapter):
         self.act_script  = list(act_script) if act_script is not None else None
         self.width       = width
         self.plain_f     = (color_f is False)
-        #  VIEW ONLY ('hwut.run.diff'): the same screen, the viewing keymap,
+        #  VIEW ONLY ('hwut.diff'): the same screen, the viewing keymap,
         #  and no act that changes the nominal.
         self.view_only_f = view_only_f
         self.keymap      = keymap.VIEW_KEYMAP if view_only_f else keymap.KEYMAP

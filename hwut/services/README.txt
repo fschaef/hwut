@@ -84,15 +84,16 @@ The faces:
                  undecided shape, on a standing nominal instead of
                  the merge. What an overwrite replaces is an earlier
                  acceptance: a GOOD file cannot exist without this
-                 face. It provisions the candidate itself, so nothing
-                 need run first. It implies '--dont-ask'. The two
-                 readings of a first acceptance:
+                 face. It implies '--dont-ask'. The two readings of a
+                 first acceptance -- both after 'hwut.play' recorded
+                 the case:
 
-                     hwut.run.play <app> --save     look, again, until
-                     hwut.accept <app>          it is right, then
-                                                decide the lines
+                     hwut.play <app>            run, look, again,
+                     hwut.accept <app>          until it is right,
+                                                then decide the lines
 
-                     hwut.accept <app> --as-is  it is right already
+                     hwut.play <app>            it is right already
+                     hwut.accept <app> --as-is
 
                  The first is the author's path; the second is a
                  fixture's, a script's, and an author's who has read
@@ -110,7 +111,7 @@ The faces:
 
                  A CHANGE IS MERGED HERE where stdin and stderr are
                  terminals, through the same engine
-                 'hwut.accept.interactive' runs ('lib/accept/
+                 'hwut.merge' runs ('lib/accept/
                  engine.py'). Off a terminal -- a pipe, a script, a
                  suite -- it says so and '--force' still overwrites: a
                  face that cannot ask must not decide.
@@ -121,7 +122,7 @@ The faces:
                  exist, and this face is the only thing that calls
                  it. Selection is the wish; a positional short form
                  desugars into '--glob'. A standing nominal is a
-                 CHANGE and 'hwut.accept.interactive's business: detected, named,
+                 CHANGE and 'hwut.merge's business: detected, named,
                  left alone unless '--force' says otherwise.
                  STDERR IS NEVER SUBJECT TO TESTING: never promoted;
                  where it spoke, refused unless the test's own block
@@ -136,9 +137,11 @@ The faces:
                  not what it reads.
                  A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run'
                  does; '--directory=<path>' reads one directory.
-                 It RUNS ON NECESSITY: a case whose recording is
-                 older than its source is run before it is judged;
-                 '--force-run' runs every case regardless.
+                 IT RUNS NOTHING (E-165): it blesses the RECORDING
+                 'hwut.play' or 'hwut.run' left, says which face made
+                 it and when ('RECORDING: ...'), and adds a HINT where
+                 the test's source changed since. A case with no
+                 recording is refused. '--force-run' is gone.
                  It does not read a file of targets: that is
                  'hwut.accept.apply'.
 
@@ -383,7 +386,7 @@ The faces:
                  it. Two words naming two directories are refused, as
                  is an absolute path outside '--directory'.
 
-    hwut.run.diff    (diff.py)
+    hwut.diff    (diff.py)
                  'SUBJECT NOMINAL': how two files compare (the VERDICT
                  view). 'FILE' without an '@hwut' block: how compare
                  READS it. Otherwise THE STORE FORM: the wish, a test,
@@ -403,7 +406,7 @@ The faces:
                  ('viewers/tui.py'); '--width N'. Rendering on stdout;
                  exit 0 equivalent, 1 shown differing, 2 unusable, 3
                  no case selected. Display only; the merge is
-                 'hwut.accept.interactive's.
+                 'hwut.merge's.
 
     the merge engine   (lib/accept/engine.py)
                  THE SESSION LOOP, the three writes of an acceptance
@@ -479,10 +482,10 @@ The faces:
                  runs: a merge is NEVER hard-failed for a missing
                  import.
 
-    hwut.accept.interactive   (lib/accept/interactive.py)
+    hwut.merge   (lib/accept/interactive.py)
                  the cases a wish selects whose stdout candidate is
                  not equivalent to its nominal (measured now, as
-                 'hwut.run.diff'), the checklist, then ONE SESSION PER
+                 'hwut.diff'), the checklist, then ONE SESSION PER
                  CASE on stderr: the view ('-y' two columns), then
                  [t]ake the subject whole, [e]dit the nominal,
                  [c]ommit the nominal as it stands, [q]uit. COMMIT IS
@@ -495,8 +498,9 @@ The faces:
                  visible at the next run. E-51's NAME for the engine
                  above; 'hwut.accept' reaches the same loop. A case
                  with NO nominal is now this face's too (E-60): it
-                 provisions the candidate itself, the way 'hwut.accept'
-                 refreshes (E-40), and opens on the mirror.
+                 opens on the mirror of the recording. It runs nothing
+                 (E-165): what it merges is what 'hwut.play' or
+                 'hwut.run' recorded.
 
     hwut.cov.run   (lib/cov/run.py)
                  the coverage run (coverage D-38, D-42): the wish's

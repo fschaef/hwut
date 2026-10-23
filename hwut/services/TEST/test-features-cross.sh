@@ -86,7 +86,7 @@ case "$1" in
     unresolved) sed -i "s/\"$PH:bounce\"/\"$PH:gone\"/" TEST/test-shot.sh ;;
 esac
 for d in TEST physics/TEST world/TEST; do
-    (cd $d && face hwut.accept --whole --dont-ask > /dev/null 2>&1)
+    (cd $d && face hwut.play --all --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask > /dev/null 2>&1)
 done
 face hwut.run > /dev/null 2>&1
 

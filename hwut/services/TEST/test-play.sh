@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "The hwut.run.play face: run one test, show the reading"
+#     title      = "The hwut.play face: run one test, show the reading"
 #     features   = ["play-reading"]
 #     choices {
 #         build   { features = ["play-build-failure"] }
@@ -18,7 +18,7 @@
 #
 # ---------------------------------------------------------------------------
 #
-# 'hwut.run.play <test-app> [<choice>]' -- run one test and display the
+# 'hwut.play <test-app> [<choice>]' -- run one test and display the
 # READING of what it produced, under the TEST'S OWN setup (disc-4).
 #
 # pyped     THE THREE VIEWS. The default shows THE SUBJECT -- what
@@ -37,7 +37,9 @@
 # stderr    '--stderr' shows the error stream, MARKED as never tested
 #           (E-5): seeing is not judging.
 # build     a build that fails is the reason there is nothing to play;
-#           its log is shown plainly and the face stops.
+#           its log is shown plainly and the face stops; nothing is
+#           recorded. MEASURED 2026-10-22 before: play never built --
+#           'EMPTY', a launch of the absent 'app' (E-165 made it build).
 # silent    a choice producing nothing to read answers EMPTY -- and
 #           says why (operations todo-21, C-1): the call, what PATH
 #           resolved, containment, exit, the report, the channels.
@@ -59,7 +61,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "The hwut.run.play face: run one test, show the reading;"
+        echo "The hwut.play face: run one test, show the reading;"
         echo "CHOICES: reading, pyped, solo, stderr, build, silent, refused;"
         exit 0 ;;
 esac
@@ -119,7 +121,7 @@ reading)
     face --directory=suite/TEST test-loose.sh
     echo "--- the application declares none: it stands plain"
     face --directory=suite/TEST test-exact.sh
-    echo "--- and PLAY RECORDED NOTHING:"
+    echo "--- and PLAY RECORDED WHAT IT RAN, and nothing else (E-165):"
     standing
     ;;
 
@@ -179,8 +181,9 @@ build)
     printf '#! /bin/bash\n# @hwut { title = "B"  build { framework = "make"  executable = "app" } }\necho "never reached"\necho "<hwut-end>"\n' \
         > suite/TEST/test-built.sh
     chmod +x suite/TEST/test-built.sh
+    mkdir -p suite/TEST/BUILD/test-built.sh
     printf 'app:\n\t@echo "compiling"; echo "error: no such header" >&2; exit 1\n' \
-        > suite/TEST/Makefile
+        > suite/TEST/BUILD/test-built.sh/Makefile
     face --directory=suite/TEST test-built.sh
     ;;
 

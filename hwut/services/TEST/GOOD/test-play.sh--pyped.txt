@@ -56,6 +56,8 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          3 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-pyped.sh.txt
 }
 --- and where NO pype stands, the view says so
 STATUS: 0
@@ -106,5 +108,7 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-plainly.sh.txt
 }
 <hwut-end>

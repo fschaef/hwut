@@ -30,6 +30,9 @@
 -- hwut.move
    $ hwut.move test-old.sh test-new.sh
      exit 0
+-- hwut.play
+   $ hwut.play test-parse.sh
+     exit 0
 -- hwut.remove
    $ hwut.remove test-gone.sh
      exit 0
@@ -59,9 +62,6 @@
    $ hwut.run --fail
      exit 3
    $ hwut.run 'test-parse*' --jobs=4
-     exit 0
--- hwut.run.play
-   $ hwut.run.play test-parse.sh
      exit 0
 -- hwut.run.stability
    $ hwut.run.stability 'test-*' --repeat=5

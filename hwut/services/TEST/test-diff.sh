@@ -22,10 +22,10 @@
 #
 # THE DIFF SERVICE, IN ITS NATURAL HABITAT. The shell asks, the
 # service answers by the DIFF CONVENTION -- so it composes where diff
-# composes ('if hwut.run.diff A B; then ...'):
+# composes ('if hwut.diff A B; then ...'):
 #
-#     hwut.run.diff SUBJECT NOMINAL      the VERDICT view
-#     hwut.run.diff FILE                 the READING view
+#     hwut.diff SUBJECT NOMINAL      the VERDICT view
+#     hwut.diff FILE                 the READING view
 #
 #     EXIT 0    equivalent (or: a reading was displayed)
 #     EXIT 1    at least one differing pair
@@ -71,7 +71,7 @@ store_fixture() {       # a suite: two-choice app, run, accepted; then changed a
     printf '#!/bin/bash\n# @hwut { title = "Steady" }\necho "steady"\necho "<hwut-end>"\n' > tree/suite/TEST/test-b.sh
     chmod +x tree/suite/TEST/*.sh
     python3 -m hwut.services.run --directory=tree --silent
-    ( cd tree/suite/TEST && python3 -m hwut.services.accept --force > /dev/null 2>&1 )
+    ( cd tree/suite/TEST && python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1; python3 -m hwut.services.accept --force > /dev/null 2>&1 )
     sed -i 's/echo "line for \$1"/echo "changed line for $1"/' tree/suite/TEST/test-app.sh
     python3 -m hwut.services.run --directory=tree --silent
 }
@@ -88,7 +88,7 @@ differing)
     #  3.140 against 3.141, no tolerance granted: a differing pair.
     echo "STIMULUS  subject.txt: alpha, value 3.140"
     echo "          nominal.txt: alpha, value 3.141"
-    echo "          hwut.run.diff --console subject.txt nominal.txt --plain"
+    echo "          hwut.diff --console subject.txt nominal.txt --plain"
     $DIFF subject.txt nominal.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -111,7 +111,7 @@ regions)
     printf '##! table\n0.1 1.000 2.000\n0.5 2.314 5.657\n0.9 3.000 4.000\n####\n' > s3.txt
     printf '##! table\n0.1 1.000 2.000\n0.5 2.339 5.755\n0.9 3.000 4.000\n####\n' > n3.txt
     for i in 1 2 3; do
-        echo "STIMULUS  hwut.run.diff --console s$i.txt n$i.txt --plain"
+        echo "STIMULUS  hwut.diff --console s$i.txt n$i.txt --plain"
         $DIFF s$i.txt n$i.txt --plain > out.txt 2> err.txt
         code=$?
         show out.txt
@@ -129,7 +129,7 @@ tolerated)
     #  The SAME streams, one flag wider: '--numeric 0.01'. The verdict
     #  flips; the machinery does not.
     echo "STIMULUS  the same streams,"
-    echo "          hwut.run.diff --console subject.txt nominal.txt --plain --numeric 0.01"
+    echo "          hwut.diff --console subject.txt nominal.txt --plain --numeric 0.01"
     $DIFF subject.txt nominal.txt --plain --numeric 0.01 \
              > out.txt 2> err.txt
     code=$?
@@ -144,7 +144,7 @@ tolerated)
 reading)
     #  ONE argument asks the other question: how does compare READ this
     #  stream? Fed against itself, so only interpretation shows.
-    echo "STIMULUS  hwut.run.diff --console subject.txt --plain      (one argument)"
+    echo "STIMULUS  hwut.diff --console subject.txt --plain      (one argument)"
     $DIFF subject.txt --plain > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -160,7 +160,7 @@ side-by-side)
     #  merge goes. The gutter says the relation; a wide line wraps.
     printf 'alpha\nvalue 3.140\nonly in subject\nsame ((token)) here\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > s.txt
     printf 'alpha\nvalue 3.141\nsame ((other)) here\ninserted in nominal\na line wide enough to wrap around the column it is given, so the continuation rows show\n' > n.txt
-    echo "STIMULUS  hwut.run.diff --console s.txt n.txt --plain --side-by-side --width 80"
+    echo "STIMULUS  hwut.diff --console s.txt n.txt --plain --side-by-side --width 80"
     $DIFF s.txt n.txt --plain --side-by-side --width 80 > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -180,7 +180,7 @@ store)
     #  THE STORE FORM (E-50): the wish, the verdict measured now, the
     #  checklist, the view per case.
     store_fixture
-    echo "STIMULUS  hwut.run.diff --console --directory=tree/suite/TEST --all --plain -y --width 70"
+    echo "STIMULUS  hwut.diff --console --directory=tree/suite/TEST --all --plain -y --width 70"
     $DIFF --directory=tree/suite/TEST --all --plain -y --width 70 > out.txt 2> err.txt
     code=$?
     show out.txt
@@ -192,7 +192,7 @@ store)
     echo "          stderr (the checklist) {"; sed 's/^/              /' err.txt; echo "          }"
     grep -E '^=\[' out.txt | sed 's/^/          shown: /'
     echo
-    echo "STIMULUS  a path word enters the directory: hwut.run.diff tree/suite/TEST/test-app.sh one"
+    echo "STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.sh one"
     $DIFF tree/suite/TEST/test-app.sh one --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     grep -E '^=\[|^[SN] ' out.txt | sed 's/^/              /'
@@ -209,8 +209,8 @@ store)
 stderr)
     #  THE STDERR STAIN IS MENTIONED (E-136) by the faces that VIEW a
     #  case: stderr spoke and nothing tolerates it -- said, with the
-    #  line that declares it, in the same words by 'hwut.run.diff' and
-    #  'hwut.accept.interactive'; the book's stain cell holds
+    #  line that declares it, in the same words by 'hwut.diff' and
+    #  'hwut.merge'; the book's stain cell holds
     #  'stderr-untolerated'. TOLERATED STDERR IS NO STAIN: nothing is
     #  said and the cell is clean.
     mkdir -p tree/suite/TEST/GOOD
@@ -221,11 +221,11 @@ stderr)
     }
     DECLARED='#     tolerance { stderr_ignored = true }\n'
     noisy "first line" "$DECLARED"
-    ( cd tree/suite/TEST && python3 -m hwut.services.accept --force > /dev/null 2>&1 )
+    ( cd tree/suite/TEST && python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1; python3 -m hwut.services.accept --force > /dev/null 2>&1 )
     noisy "changed line" "$DECLARED"
     python3 -m hwut.services.run --directory=tree --silent
     stain() { echo "          the book's stain: '$(grep '^test-noisy.sh' tree/suite/TEST/GOOD/book.csv | cut -d';' -f5)'"; }
-    echo "STIMULUS  stderr tolerated, stdout changed: hwut.run.diff"
+    echo "STIMULUS  stderr tolerated, stdout changed: hwut.diff"
     $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     echo "          NOTE lines: $(grep -c '^NOTE' err.txt)"
@@ -233,11 +233,11 @@ stderr)
     echo
     noisy "changed line" ""
     python3 -m hwut.services.run --directory=tree --silent
-    echo "STIMULUS  the tolerance withdrawn, run: hwut.run.diff"
+    echo "STIMULUS  the tolerance withdrawn, run: hwut.diff"
     $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     grep "^NOTE" err.txt | sed 's/^/          /'
-    echo "STIMULUS  the same case: hwut.accept.interactive --console --all"
+    echo "STIMULUS  the same case: hwut.merge --console --all"
     python3 -m hwut.services.lib.accept.interactive tree/suite/TEST/test-noisy.sh \
             --console --all --plain < /dev/null > out.txt 2> err.txt
     grep "^NOTE" err.txt | sed 's/^/          /'
@@ -265,8 +265,8 @@ stderr-alone)
     DECLARED='#     tolerance { stderr_ignored = true }\n'
     said() { sed 's/^/          /' err.txt; }
     noisy "$DECLARED" 2
-    ( cd tree/suite/TEST && python3 -m hwut.services.accept --force > /dev/null 2>&1 )
-    echo "STIMULUS  stderr tolerated, stdout as accepted: hwut.run.diff"
+    ( cd tree/suite/TEST && python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1; python3 -m hwut.services.accept --force > /dev/null 2>&1 )
+    echo "STIMULUS  stderr tolerated, stdout as accepted: hwut.diff"
     $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     said
@@ -276,11 +276,11 @@ stderr-alone)
     echo "STIMULUS  the tolerance withdrawn, stdout as accepted: hwut.run"
     python3 -m hwut.services.run --directory=tree --plain --no-colour --jobs=1 --deterministic \
         | grep -E '^(END|      :)' | sed 's/^/          /'
-    echo "STIMULUS  hwut.run.diff"
+    echo "STIMULUS  hwut.diff"
     $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     said
-    echo "STIMULUS  hwut.accept.interactive --console --all"
+    echo "STIMULUS  hwut.merge --console --all"
     python3 -m hwut.services.lib.accept.interactive tree/suite/TEST/test-noisy.sh \
             --console --all --plain < /dev/null > out.txt 2> err.txt
     echo "          exit code : $?"
@@ -288,7 +288,7 @@ stderr-alone)
     echo
     noisy "" 13
     python3 -m hwut.services.run --directory=tree --silent
-    echo "STIMULUS  thirteen lines on stderr: hwut.run.diff"
+    echo "STIMULUS  thirteen lines on stderr: hwut.diff"
     $DIFF tree/suite/TEST/test-noisy.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?"
     said
@@ -312,26 +312,26 @@ Bookkeeper('tree/suite/TEST').note_stain(sys.argv[1], sys.argv[2] or None, 4, [T
     stained test-b.sh ""
     stained test-app.sh one
     echo "          the book: $(grep -c ';4 repeat;' tree/suite/TEST/GOOD/book.csv) row(s) hold '4 repeat'"
-    echo "STIMULUS  an equivalent case, stained: hwut.run.diff"
+    echo "STIMULUS  an equivalent case, stained: hwut.diff"
     ( cd tree/suite/TEST && $DIFF test-b.sh --plain > ../../../out.txt 2> ../../../err.txt
       echo "          exit code : $?" )
     said
-    echo "STIMULUS  the same: hwut.accept.interactive"
+    echo "STIMULUS  the same: hwut.merge"
     ( cd tree/suite/TEST && python3 -m hwut.services.lib.accept.interactive test-b.sh \
             --console --all --plain < /dev/null > ../../../out.txt 2> ../../../err.txt
       echo "          exit code : $?" )
     said
     echo
-    echo "STIMULUS  a differing case, stained: hwut.run.diff"
+    echo "STIMULUS  a differing case, stained: hwut.diff"
     ( cd tree/suite/TEST && $DIFF test-app.sh one --plain > ../../../out.txt 2> ../../../err.txt
       echo "          exit code : $?" )
     said
-    echo "STIMULUS  the same: hwut.accept.interactive"
+    echo "STIMULUS  the same: hwut.merge"
     ( cd tree/suite/TEST && python3 -m hwut.services.lib.accept.interactive test-app.sh one \
             --console --all --plain < /dev/null > ../../../out.txt 2> ../../../err.txt )
     said
     echo
-    echo "STIMULUS  a differing case that is clean: hwut.run.diff"
+    echo "STIMULUS  a differing case that is clean: hwut.diff"
     ( cd tree/suite/TEST && $DIFF test-app.sh two --plain > ../../../out.txt 2> ../../../err.txt
       echo "          exit code : $?" )
     echo "          STAIN or NOTE lines: $(grep -cE '^(STAIN|NOTE: test)' err.txt)"

@@ -622,7 +622,7 @@ def test_report():
 
 
 def test_view():
-    print("E-79: the screen for LOOKING -- 'hwut.run.diff'")
+    print("E-79: the screen for LOOKING -- 'hwut.diff'")
     import asyncio
     from types import SimpleNamespace
     from hwut.services.lib.viewers.keyed.driver import KeyedDisplay

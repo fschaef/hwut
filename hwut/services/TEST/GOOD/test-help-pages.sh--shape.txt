@@ -2,7 +2,6 @@ hwut                         EXAMPLE    ok
 hwut.about                   EXAMPLE    ok
 hwut.accept                  EXAMPLE    ok
 hwut.accept.apply            EXAMPLE    ok
-hwut.accept.interactive      -          ok
 hwut.accept.propose          EXAMPLE    ok
 hwut.affected                -          ok
 hwut.config.ignore           -          ok
@@ -20,6 +19,7 @@ hwut.cov.run                 -          ok
 hwut.demo.python             -          ok
 hwut.dev.podman.build        -          ok
 hwut.dev.podman.enter        -          ok
+hwut.diff                    -          ok
 hwut.execute                 -          ok
 hwut.features.init           -          ok
 hwut.features.key.add        -          ok
@@ -35,8 +35,10 @@ hwut.labels.create           EXAMPLE    ok
 hwut.labels.list             -          ok
 hwut.labels.query            EXAMPLE    ok
 hwut.labels.remove           -          ok
+hwut.merge                   -          ok
 hwut.move                    EXAMPLE    ok
 hwut.plan                    -          ok
+hwut.play                    EXAMPLE    ok
 hwut.pype                    -          ok
 hwut.remove                  EXAMPLE    ok
 hwut.remove.apply            EXAMPLE    ok
@@ -50,8 +52,6 @@ hwut.report.list             -          ok
 hwut.report.timings          -          ok
 hwut.report.wallflowers      -          ok
 hwut.run                     EXAMPLE    ok
-hwut.run.diff                -          ok
-hwut.run.play                EXAMPLE    ok
 hwut.run.stability           EXAMPLE    ok
 hwut.sanitize                EXAMPLE    ok
 hwut.sanitize.apply          EXAMPLE    ok

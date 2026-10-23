@@ -2,8 +2,8 @@
 ______________________________________________________________________________
 
 PURPOSE
-       WHAT THE SERVICE FACES SHARE -- 'hwut.accept.interactive' (lib/accept/interactive.py) and
-       'hwut.run.diff' (diff.py) speak one argument language.
+       WHAT THE SERVICE FACES SHARE -- 'hwut.merge' (lib/accept/interactive.py) and
+       'hwut.diff' (diff.py) speak one argument language.
 
 DESCRIPTION
        The two mini-apps are HOMOGENEOUS by design: same stream
@@ -153,8 +153,8 @@ EXAMPLE_DB = {
         "hwut.rename test-io.sh small -to tiny",
     "hwut.remove":
         "hwut.remove test-gone.sh",
-    "hwut.run.play":
-        "hwut.run.play test-parse.sh",
+    "hwut.play":
+        "hwut.play test-parse.sh",
     "hwut.run.stability":
         "hwut.run.stability 'test-*' --repeat=5",
     "hwut.report":

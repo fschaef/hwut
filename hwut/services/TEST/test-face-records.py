@@ -259,7 +259,7 @@ def test_run():
         for choice in (["one", "two"] if name == "test-a.sh" else [""]):
             argv = [name] + ([choice] if choice else [])
             subprocess.run([sys.executable, "-m", "hwut.services.lib.run.play"] + argv
-                           + ["--save"], cwd=TEST, capture_output=True)
+                           , cwd=TEST, capture_output=True)
             subprocess.run([sys.executable, "-m", "hwut.services.accept"] + argv
                            + ["--force"], cwd=TEST, capture_output=True)
 

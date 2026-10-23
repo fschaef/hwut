@@ -165,7 +165,7 @@ where that colour stands. The answer is kept for the life of the process.
 
 The page 'TEST/test-hwut_vterm.py' prints the same on all three versions.
 The first user is 'services/lib/viewers/keyed/TEST/test-screen.py': the
-keyed merge screen of 'hwut.accept.interactive', as drawn.
+keyed merge screen of 'hwut.merge', as drawn.
 
 
 4  THE LIBRARY: FOUND, NOT SHIPPED -- AND SAID WHEN MISSING

@@ -2,7 +2,7 @@
 size: 7;
 None -> STRING
 nothing -> VISIBLE_NOTHING
-\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
 hallo -> EQUIVALENCE_PATTERN
 (?>(?:(?<=\d)[-+]|(?<!\w)[-+]?)(?:\d+(?:\.(?:\d+|(?=[eE][-+]?\d)))?|\.\d+)(?:[eE][-+]?\d+)?)(?!\w|\.\w) -> NUMERIC

@@ -53,7 +53,8 @@ left, it cannot be entered again.
 '=> OTHERMODE' switches the active mode: '<exit>' of the old mode fires, then
 '<entry>' of the new one. Inside Python blocks the same is available as
 'mode("OTHERMODE")'; the switch is applied after the current handler's
-blocks have completed.
+blocks have completed -- and a switch the '<entry>' or '<exit>' handlers
+of that transition request, in the same step, before the next line.
 
 'MODE/else:' (bare 'else:' in the default mode) fires when every match
 handler of the active mode failed on the line; the first 'else' of the
@@ -1378,23 +1379,37 @@ class Interpreter:
                 self.fire(handler)
 
     def apply_pending_request(self):
-        """RETURN: None. Performs a requested switch, push or pop, if
-                         any. A switch to the already-active mode is a
+        """RETURN: None. Performs the requested switch, push or pop, if
+                         any -- and every request the '<exit>' and
+                         '<entry>' handlers of that transition raise,
+                         in turn, before the next input line (D-38). A
+                         switch to the already-active mode is a
                          no-operation; 'pop' with an empty stack is an
                          error.
+
+        A chain longer than the modes and the stack can hold without
+        repeating itself is a CIRCLE ('A <entry> goto B', 'B <entry>
+        goto A'): an error naming the chain, never a hang.
         """
-        request, self.request = self.request, None
-        if request is None: return
-        if request[0] == "switch":
-            if request[1] != self.active.name:
+        chain     = [self.active.name] if self.active is not None else []
+        step_max  = len(self.mode_db) + len(self.stack) + 1
+        while self.request is not None:
+            request, self.request = self.request, None
+            if request[0] == "switch":
+                if request[1] == self.active.name: continue
                 self.transition(request[1])
-        elif request[0] == "push":
-            self.stack.append(self.active.name)
-            self.transition(request[1])
-        else:                                            # pop
-            if not self.stack:
-                raise PypeError("pop with empty mode stack")
-            self.transition(self.stack.pop())
+            elif request[0] == "push":
+                self.stack.append(self.active.name)
+                self.transition(request[1])
+            else:                                        # pop
+                if not self.stack:
+                    raise PypeError("pop with empty mode stack")
+                self.transition(self.stack.pop())
+            chain.append(self.active.name)
+            if len(chain) > step_max:
+                raise PypeError("mode switches requested by <entry>/<exit> "
+                                "handlers go in a circle: %s"
+                                % " -> ".join(str(n) for n in chain))
 
     def feed(self, line):
         """RETURN: None. Dispatches one input line (without newline) to

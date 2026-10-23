@@ -1,0 +1,5 @@
+== hwut.run
+        test-n.py  x   application launch failed  (not executable: no x bit, and no language calls an interpreter for it)
+== hwut.play
+  RESOLVED   test-n.py: not executable: no x bit, and no language calls an interpreter for it
+<hwut-end>

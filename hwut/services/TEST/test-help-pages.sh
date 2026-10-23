@@ -53,6 +53,7 @@ tree() {    #  a fresh tree, run and accepted; the shell stands in its TEST
     app test-net1.sh  'title = "net"'   'echo net'
     app test-io.sh    'title = "io"  choices = ["big", "small"]' 'echo "$1"'
     "$VUT/bin/hwut.run" --silent                 > /dev/null 2>&1 < /dev/null
+    "$VUT/bin/hwut.play" --all --plain            > /dev/null 2>&1 < /dev/null
     "$VUT/bin/hwut.accept" --dont-ask --force    > /dev/null 2>&1 < /dev/null
 }
 

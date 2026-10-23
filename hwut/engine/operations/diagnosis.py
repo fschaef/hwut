@@ -42,9 +42,16 @@ def resolution_chain(command):
     RETURN: list[str], the command's resolution, one hop per line:
             what PATH answers, then each symlink hop to the real file.
             A command PATH cannot answer is SAID so -- never guessed.
+            A PATH-bearing command that stands but carries no 'x' bit
+            is said to be NOT EXECUTABLE (D-43): 'shutil.which' answers
+            None for it too, and 'not found' sent the reader looking
+            for a file that stands before his eyes.
     """
     found = shutil.which(command)
     if found is None:
+        reason = launch_detail_of(command)
+        if reason is not None:
+            return ["%s: %s" % (os.path.basename(command), reason)]
         return ["%s: NOT FOUND on PATH" % command]
     line_list = ["%s -> %s" % (command, found)]
     seen, current = {found}, found
@@ -60,6 +67,21 @@ def resolution_chain(command):
         seen.add(target)
         current = target
     return line_list
+
+
+def launch_detail_of(command):
+    """
+    RETURN: str, why the command cannot be called, where the reason is
+                 one a file can show: 'not executable: no x bit, and
+                 no language calls an interpreter for it'
+            None, where the command is a bare name or the file does
+                 not stand -- the caller says 'not found'.
+    """
+    if os.sep not in str(command): return None
+    if not os.path.isfile(command): return None
+    if os.access(command, os.X_OK): return None
+    return ("not executable: no x bit, and no language calls an "
+            "interpreter for it")
 
 
 def explain_record(record, label="call"):

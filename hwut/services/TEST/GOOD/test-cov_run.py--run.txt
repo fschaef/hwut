@@ -23,7 +23,7 @@ $ hwut.cov.run -o <out>
     | 
     | RUN -- application did not testify
     |     suite/TEST
-    |         test-hang.py  x   run did not end with <hwut-end>; nothing read
+    |         test-hang.py  x   the run under the tool did not complete; nothing read
     | 
     | TOOL -- no usable data from tool
     |     suite/TEST

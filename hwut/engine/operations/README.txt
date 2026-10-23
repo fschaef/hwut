@@ -941,13 +941,13 @@ connection IS the session has nothing to answer on once it is closed.
            '_core.py':
            '-' is stdin; --numeric/--pattern/--nothing name the setup):
 
-           'hwut.accept.interactive' (services/lib/accept/interactive.py):
+           'hwut.merge' (services/lib/accept/interactive.py):
            the store's differing cases, one merge session each, UI on
            stderr; a COMMIT is an acceptance through Accept's own
            writes (10) -- the nominal, the register, the book. A
            CANCEL writes nothing.
 
-           'hwut.run.diff' (services/lib/run/diff.py): display only, never writes --
+           'hwut.diff' (services/lib/run/diff.py): display only, never writes --
            the rendering IS the product, so it goes to STDOUT; exit is
            the diff convention (0 equivalent, 1 differing). With ONE
            argument it displays the READING of that stream.
@@ -1183,8 +1183,8 @@ PART V -- REFERENCE
                         tui.py              TuiDisplay -- the terminal
                                             tier, two marking views (11.5)
                       services/           the service faces (11.5):
-                        lib/accept/interactive.py  'hwut.accept.interactive'
-                        diff.py             'hwut.run.diff'
+                        lib/accept/interactive.py  'hwut.merge'
+                        diff.py             'hwut.diff'
                         report.py           'hwut.report' -- one test
                                             packed whole: metadata,
                                             source, GOOD, OUT, cadence

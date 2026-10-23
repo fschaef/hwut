@@ -63,7 +63,7 @@ apply)
     echo "--- the relic stays until the person deletes it:"; ls suite/TEST/hwut-info.dat
     echo "--- a second run:"; $FACE
     echo "--- the directory is now VUT's:"
-    ( cd suite/TEST && python3 -m hwut.services.lib.run.play test-a.sh --save >/dev/null 2>&1
+    ( cd suite/TEST && python3 -m hwut.services.lib.run.play test-a.sh >/dev/null 2>&1
       python3 -m hwut.services.accept test-a.sh --force >/dev/null 2>&1
       python3 -m hwut.services.run 2>&1 | grep RESULTS | sed 's/[0-9.]* \[sec\]/N [sec]/g' )
     ;;

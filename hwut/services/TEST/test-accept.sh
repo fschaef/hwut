@@ -39,16 +39,21 @@
 #     sugar      the short form desugars into the wish's own '--glob'
 #     ask        the interactive question shows the CANDIDATE and
 #                anything but 'y' leaves the pole alone
-#     refresh    E-122: the merge REFRESHES -- a source edited after its
-#                candidate was recorded is run again before it is judged,
-#                with one 'RUN:' line; a current candidate is not
+#     refresh    E-165: the merge RUNS NOTHING -- a source edited after
+#                its recording is merged as recorded; 'hwut.play' records
+#                the edit, and the merge then shows it. MEASURED
+#                2026-10-22 before (E-122): the merge ran the edited
+#                source itself, with one 'RUN:' line.
 #
-# The wall clock is masked; fixture paths are relative.
+# THE RECORDINGS ARE 'hwut.play''s (E-165): accept runs nothing, so the
+# fixture plays every case it makes. The wall clock is masked; fixture
+# paths are relative.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 RUN="python3 -m hwut.services.run"
 ACCEPT="python3 -m hwut.services.accept"
+PLAY="python3 -m hwut.services.lib.run.play"
 WISHLIST="python3 -m hwut.services.lib.report.list"
 export PYTHONPATH="$ROOT"
 
@@ -68,7 +73,10 @@ cd "$WORK"
 #  fixture states its own. Empty says only 'the tree ends here'.
 printf 'hwut {\n}\n' > hwut-root.conf
 
-mask() { sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
+mask() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/<when>/g; s/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
+record() {              # every case here gets its recording (E-165)
+    $PLAY --all --plain --directory=tree/suite/TEST > /dev/null 2>&1
+}
 
 face() {                # <args...>  -- status, stdout
     $ACCEPT "$@" > out.txt 2> err.txt
@@ -92,6 +100,7 @@ fixture() {             # one directory, one plain test, one two-choice
         > tree/suite/TEST/test-two.sh
     chmod +x tree/suite/TEST/*.sh
     $RUN --directory=tree --silent 2> /dev/null
+    record
 }
 
 good() { ls tree/suite/TEST/GOOD/ 2>/dev/null | grep -v -e book.csv -e result_db; }
@@ -133,6 +142,7 @@ stderr)
         > tree/suite/TEST/test-ok.sh
     chmod +x tree/suite/TEST/test-ok.sh
     $RUN --directory=tree --silent 2> /dev/null
+    record
     echo "== stderr spoke, no flag =="
     face --directory=tree/suite/TEST --force
     echo "== --stderr-tol: the flag is gone =="
@@ -198,6 +208,7 @@ token)
         > tree/suite/TEST/test-cut.sh
     chmod +x tree/suite/TEST/test-cut.sh
     $RUN --directory=tree --silent 2> /dev/null
+    record
     face --directory=tree/suite/TEST --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
@@ -243,26 +254,26 @@ interactive)
     ;;
 
 refresh)
-    #  THE MERGE WORKS ON THE CANDIDATE, SO IT REFRESHES IT (E-122).
-    #  Reported: 'regression-1.py' edited, then 'hwut.accept.interactive
-    #  regression-1.py amnesia' judged the OLD candidate and found nothing.
+    #  THE MERGE WORKS ON THE RECORDING, AND RUNS NOTHING (E-165). An
+    #  edited source is merged as it was recorded; 'hwut.play' records
+    #  the edit, and the merge then shows it.
     fixture
     $ACCEPT --directory=tree/suite/TEST --force > /dev/null
     INTERACTIVE="python3 -m hwut.services.lib.accept.interactive"
-    echo "--- the source edited, NO run: the candidate is older than it"
-    #  THE RECORDING MADE OLDER than any edit could be, so mtime's
-    #  granularity cannot decide the page.
-    touch -d "-60 seconds" tree/suite/TEST/OUT/test-two.sh--a.txt
+    echo "--- the source edited, NO play: the merge reads the recording"
     sed -i 's/echo "choice \$1"/echo "edited choice $1"/' tree/suite/TEST/test-two.sh
     printf 'q\n' | $INTERACTIVE --directory=tree/suite/TEST --console test-two.sh a \
         > out.txt 2> ui.txt; echo "STATUS: $?"
-    grep -E '^RUN:|^[SN] ' ui.txt | sed "s|'[^']*/test-two.sh'|'<tree>/test-two.sh'|; s/^/    /"
-    echo "--- the candidate is what the edited source prints"
+    grep -cE '^RUN:' ui.txt | sed 's/^/    RUN lines: /'
+    grep -E '^[SN] |^NOTE' ui.txt | sed 's/^/    /'
+    echo "--- the recording is what the old source printed"
     sed 's/^/    /' tree/suite/TEST/OUT/test-two.sh--a.txt
-    echo "--- again, nothing edited: no run, the same difference"
+    echo "--- 'hwut.play' records the edit; the merge now shows it"
+    $PLAY test-two.sh a --plain --directory=tree/suite/TEST > /dev/null 2>&1
     printf 'q\n' | $INTERACTIVE --directory=tree/suite/TEST --console test-two.sh a \
         > out.txt 2> ui.txt; echo "STATUS: $?"
     grep -cE '^RUN:' ui.txt | sed 's/^/    RUN lines: /'
+    grep -E '^[SN] ' ui.txt | sed 's/^/    /'
     ;;
 
 first)
@@ -289,7 +300,7 @@ first)
 onedoor)
     #  ONE FACE (E-59). A change is MERGED by 'hwut.accept' itself where
     #  there is a terminal to merge in -- through the SAME engine
-    #  'hwut.accept.interactive' runs, so the three writes and every
+    #  'hwut.merge' runs, so the three writes and every
     #  refusal have one implementation. Off a terminal -- a pipe, a
     #  script, this suite -- it says 'merge required' as it always did.
     fixture
@@ -298,7 +309,7 @@ onedoor)
     $RUN --directory=tree --silent 2> /dev/null
     echo "--- off a terminal: the refusal, and the way out"
     $ACCEPT --directory=tree/suite/TEST > out.txt 2>&1; echo "STATUS: $?"
-    grep -E 'merge required|first blessing|hwut.accept.interactive' out.txt \
+    grep -E 'merge required|first blessing|hwut.merge' out.txt \
         | sed 's/^/    /'
     echo "--- the engine both doors call"
     python3 - <<'PYEOF' | sed 's/^/    /'

@@ -1,11 +1,11 @@
 
 --- sourced: every face on PATH registered; a TAB answered ---
-complete -F _hwut_complete hwut.run.play
+complete -F _hwut_complete hwut.play
 complete -F _hwut_complete hwut
     [hwut.run --f] -> --fail --format
     [hwut.run --format=j] -> junit
-    [hwut.r] -> hwut.run hwut.run.play
-    [hwut.run.play --sa] -> --save
+    [hwut.r] -> hwut.run
+    [hwut.play --sa] -> --save
     status 0, stderr ''
 
 --- no face on PATH: sourced quietly ---

@@ -30,7 +30,11 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 export PYTHONPATH="$ROOT"
 RUN="python3 -m hwut.services.run --no-colour"
-ACCEPT="python3 -m hwut.services.accept --whole --dont-ask"
+accepted() {            # play every case the words select, then bless (E-165)
+    python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
+    python3 -m hwut.services.accept --whole --dont-ask "$@"
+}
+ACCEPT=accepted
 unset NO_COLOR CI COLUMNS
 
 case "$1" in

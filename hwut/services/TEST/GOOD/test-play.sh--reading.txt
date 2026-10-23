@@ -44,6 +44,8 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-loose.sh.txt
 }
 --- the application declares none: it stands plain
 STATUS: 0
@@ -91,14 +93,22 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-exact.sh.txt
 }
---- and PLAY RECORDED NOTHING:
+--- and PLAY RECORDED WHAT IT RAN, and nothing else (E-165):
 STANDING {
     GOOD
+    OUT
+    OUT/test-exact.sh.txt
+    OUT/test-loose.sh.txt
     TMP
     TMP/scratch
     TMP/scratch/test-exact.sh
     TMP/scratch/test-loose.sh
+    TMP/store
+    TMP/store/test-exact.sh.stdout.when
+    TMP/store/test-loose.sh.stdout.when
     hwut.conf
     test-exact.sh
     test-loose.sh

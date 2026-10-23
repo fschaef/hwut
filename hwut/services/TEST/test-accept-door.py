@@ -80,7 +80,9 @@ def tree():
     face = lambda *a: subprocess.run([sys.executable, "-m"] + list(a),
                                      cwd=root, capture_output=True, text=True)
     write_app("old")
-    face("hwut.services.run", "--directory=suite", "--silent")
+    #  THE FIRST RECORDING IS PLAY'S (services E-165): accept runs nothing.
+    face("hwut.services.lib.run.play", "--all", "--plain",
+         "--directory=suite/TEST")
     face("hwut.services.accept", "--directory=suite/TEST", "--force")
     write_app("new")
     face("hwut.services.run", "--directory=suite", "--silent")

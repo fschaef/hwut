@@ -126,7 +126,9 @@ MODES:
 
     '=> OTHERMODE' and the namespace function 'mode("OTHERMODE")' both
     request a switch; the request is applied after the current handler's
-    blocks have completed. The last request wins.
+    blocks have completed. The last request wins. A request raised by
+    the '<entry>' or '<exit>' handlers of that switch is applied in the
+    same step, before the next input line (MANUAL 7).
 
 INHERITANCE:
 

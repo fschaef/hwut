@@ -102,13 +102,15 @@ class PatternFinder:
         # BEFORE the analogy pattern: both use the same markers and regex
         # alternation prefers the earlier alternative, so the more specific
         # binding shape wins ('engine/constraints.py').
+        # THE SIGN IS THE NUMBER'S (C-12), either sign: '((w: +4.2))'
+        # binds 4.2 (D-35; it fell through to an analogy before).
         self._constraint_binding_re = None
         if config.constraint_f:
             b = re.escape(config.analogy_begin_marker)
             e = re.escape(config.analogy_end_marker)
             binding_re_str = (
                 b + r"\s*[A-Za-z_]\w*\s*:\s*"
-                    r"(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+                    r"(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
                     r"|\"[^\"]*\")\s*" + e)
             self._constraint_binding_re = re.compile(binding_re_str)
             _register(E_ToleranceId.CONSTRAINT_BINDING, binding_re_str)

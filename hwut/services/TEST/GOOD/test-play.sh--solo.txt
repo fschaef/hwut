@@ -44,6 +44,8 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-one.sh.txt
 }
 --- several, none named: refused, and they are listed
 STATUS: 2
@@ -96,6 +98,8 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-one.sh.txt
 }
 --- named: played
 STATUS: 0
@@ -143,5 +147,7 @@ STDOUT {
     --[ CLOSING-TOKEN ]--
          2 | <hwut-end>
     ============================================================
+    
+    RECORDED: test-many.sh--b.txt
 }
 <hwut-end>

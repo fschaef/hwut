@@ -1,13 +1,13 @@
 
 --- face names ---
-    'hwut.r'                           -> hwut.run hwut.run.play
-    'hwut.run.'                        -> hwut.run.play
+    'hwut.r'                           -> hwut.run
+    'hwut.run.'                        -> (nothing)
 
 --- a face's options ---
     'hwut.run --'                      -> --dir --directory --fail --format --glob --jobs --label --strategy
     'hwut.run --f'                     -> --fail --format
     '/opt/hwut/bin/hwut.run --st'      -> --strategy
-    'hwut.run.play test-a.sh --s'      -> --save
+    'hwut.play test-a.sh --s'          -> --save
 
 --- a face without a table: nothing ---
     'hwut.about --'                    -> (nothing)

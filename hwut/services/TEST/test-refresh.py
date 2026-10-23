@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "Refresh: the provisioning steps each engine executes (E-122)"
+#     title      = "Refresh: the faces that read a recording execute no step (E-165)"
 #     features   = ["accept-refresh"]
 #     choices    = ["accept", "diff", "interactive"]
 # }
@@ -9,10 +9,12 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE ENGINES, NOT THE FACES -- the function each face runs to hold a
-         current candidate before it works on it:
+PURPOSE: THE ENGINES OF THE FACES THAT READ A RECORDING -- 'hwut.accept',
+         'hwut.merge', 'hwut.diff' -- RUN NOTHING (services E-165, ruled
+         2026-10-22: "the user accepts on recorded fixed output, not on
+         content that might be produced in the background"):
 
-    accept       'services/accept.py refresh_cases'
+    accept       'services/accept.py main' ('--force --dont-ask')
     interactive  'services/lib/accept/interactive.py keys_of'
     diff         'services/lib/run/diff.py keys_of'
 
@@ -28,16 +30,12 @@ PURPOSE: THE ENGINES, NOT THE FACES -- the function each face runs to hold a
          by what they leave behind: the Makefile's recipe appends a line to
          'compile.log' when it compiles, and each application appends one
          to 'run.log' when it runs. Neither log is written by anything but
-         the step itself. The steps ruled (E-40's REFRESH, E-122):
+         the step itself. Ruled (E-165): no step, in any circumstance --
+         the recording is made by 'hwut.play' or 'hwut.run' alone.
 
-                          no build            build ('make' decides)
-    absent                run                 compiled?-no, run
-    present               -                   compiled-no, no run
-    source                run                 compiled, run
-
-         'build invoked' is not observable apart from 'compiled' where
-         'make' finds nothing to do -- 'make' deciding is the ruling (B.1),
-         and what it decided is what the log shows.
+         MEASURED 2026-10-22 before (E-40's REFRESH, E-122): accept, diff
+         and interactive ran where no candidate stood or the source was
+         newer, and compiled where the source changed.
 ______________________________________________________________________________
 """
 import os
@@ -91,8 +89,9 @@ def age(path, second_n):
 def tree_of(built_f):
     """
     RETURN: (str, str, str), the scratch root, its TEST directory, and the
-            application's file name -- accepted once, through the face
-            ('hwut.accept --force'), so a candidate and a nominal stand.
+            application's file name -- recorded by 'hwut.play' and
+            accepted through the face ('hwut.accept --force'), so a
+            candidate and a nominal stand.
     """
     root = tempfile.mkdtemp(prefix="hwut_refresh_")
     test = os.path.join(root, "suite", "TEST")
@@ -106,6 +105,9 @@ def tree_of(built_f):
     else:
         name = "test-i.sh"
         put(os.path.join(test, name), SCRIPT, executable_f=True)
+    subprocess.run([sys.executable, "-m", "hwut.services.lib.run.play",
+                    name, "c", "--plain", "--directory=%s" % test],
+                   cwd=root, env=ENV, capture_output=True, text=True)
     subprocess.run([sys.executable, "-m", "hwut.services.accept",
                     "--directory=%s" % test, "--force", "--dont-ask"],
                    cwd=root, env=ENV, capture_output=True, text=True)
@@ -143,11 +145,8 @@ def engine_run(engine, test):
     selected, _ = select(wish, [], test, True, silent, "")
     if engine == "accept":
         from hwut.services import accept
-        for where in selected.where_list:
-            accept.refresh_cases(selected.whole(where),
-                                 selected.found.result_db[where],
-                                 selected.found.bookkeeper_db[where],
-                                 selected.case_db[where], False, silent)
+        accept.main(["--directory=%s" % test, "--force", "--dont-ask"],
+                    write=silent)
     elif engine == "interactive":
         from hwut.services.lib.accept import interactive
         interactive.keys_of(selected, silent)
@@ -162,9 +161,9 @@ def count(path):
     with open(path) as file_handle: return len(file_handle.read().splitlines())
 
 
-EXPECTED_DB = {("absent",  False): (0, 1), ("absent",  True): (0, 1),
+EXPECTED_DB = {("absent",  False): (0, 0), ("absent",  True): (0, 0),
                ("present", False): (0, 0), ("present", True): (0, 0),
-               ("source",  False): (0, 1), ("source",  True): (1, 1)}
+               ("source",  False): (0, 0), ("source",  True): (0, 0)}
 
 
 def test_engine(engine):

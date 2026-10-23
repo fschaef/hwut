@@ -1,0 +1,19 @@
+== a new case: hwut.run, then hwut.accept
+SKIP  test-d.sh  a .................................. no GOOD file [FAIL]  ||0
+        test-d.sh  a   no GOOD file; not accepted, not run
+accept exit 1
+REFUSED: 'test-d.sh a' -- no recording -- 'hwut.play' records it; accept runs nothing
+== hwut.play records it; hwut.accept blesses it
+RECORDED: test-d.sh--a.txt
+RECORDING: test-d.sh a .stdout -- by hwut.play, <when>
+    blessed        test-d.sh a .stdout
+== the data changes, no play: the recording is blessed
+RECORDING: test-d.sh a .stdout -- by hwut.play, <when>
+GOOD: one
+== the source changes: a HINT; details runs nothing
+HINT: 'test-d.sh a .stdout' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+provision:     stale (A.n) 'test-d.sh' is younger than the recording -- 'hwut.play' records afresh
+OUT:  one
+== hwut.play, then hwut.accept
+GOOD: two
+<hwut-end>

@@ -1,4 +1,4 @@
-== hwut.run.play test-holds.sh
+== hwut.play test-holds.sh
 ===== OUTPUT =================================================
 =[ test-holds.sh ]================================== round 1
 setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -8,10 +8,11 @@ reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
        | ^ constraint binding ((name: "build-7.log")) -- the value enters the constraint space
 --[ CLOSING-TOKEN ]--
      2 | <hwut-end>
+RECORDED: test-holds.sh.txt
 STATUS: 0
 == hwut.accept --whole test-holds.sh
     blessed        test-holds.sh .stdout
-== hwut.run.play test-breaks.sh
+== hwut.play test-breaks.sh
 ===== OUTPUT =================================================
 =[ test-breaks.sh ]================================= round 1
 setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -21,6 +22,7 @@ reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
        | ^ constraint binding ((name: "debug-7.log")) -- the value enters the constraint space
 --[ CLOSING-TOKEN ]--
      2 | <hwut-end>
+RECORDED: test-breaks.sh.txt
 STATUS: 0
 == hwut.accept --whole test-breaks.sh
 REFUSED constraint: 'test-breaks.sh .stdout' -- the candidate breaks its constraints:

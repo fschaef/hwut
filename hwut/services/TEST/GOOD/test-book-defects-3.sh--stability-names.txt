@@ -1,0 +1,4 @@
+TEST: test-f.sh x
+STAINED: TEST: test-f.sh x -- not run again until proven steady over 4 repeat(s).
+CLEARED: TEST: test-f.sh x -- steady over 4 repeat(s); the stain is gone.
+<hwut-end>

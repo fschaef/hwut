@@ -27,7 +27,7 @@
 #
 # frame-side       a broken region frame names THE SIDE AT FAULT: in the
 #                  output it is 'EXECUTION ... in output', in GOOD it is
-#                  'NOMINAL'. 'hwut.run.diff' says it in one FAULT line
+#                  'NOMINAL'. 'hwut.diff' says it in one FAULT line
 #                  with file and line, exit 1 -- no traceback.
 # constraint-name  a constraint over a variable named like a function
 #                  of the namespace ('min > 5') is REFUSED where the
@@ -115,18 +115,18 @@ print("a  1")
 print("####")
 EOF
     cd a/TEST
-    hwut.accept --force test-t.py table > /dev/null 2>&1
+    hwut.play --all test-t.py table --plain > /dev/null 2>&1; hwut.accept --force test-t.py table > /dev/null 2>&1
     echo "--- the OUTPUT opens '##! tabel'; GOOD is intact"
     H=tabel $RUN | flow
-    echo "--- hwut.run.diff"
-    H=tabel said hwut.run.diff test-t.py table < /dev/null
+    echo "--- hwut.diff"
+    H=tabel said hwut.diff test-t.py table < /dev/null
     echo "--- GOOD opens '##! tabel'; the output is intact"
     $RUN > /dev/null 2>&1
     chmod u+w GOOD/*.txt
     sed -i 's/##! table/##! tabel/' GOOD/test-t.py--table.txt
     $RUN | flow
-    echo "--- hwut.run.diff"
-    said hwut.run.diff test-t.py table < /dev/null
+    echo "--- hwut.diff"
+    said hwut.diff test-t.py table < /dev/null
     ;;
 
 constraint-name)
@@ -188,7 +188,7 @@ print("b;2")
 print("####")
 EOF
     cd a/TEST
-    hwut.accept --force test-s.py run > /dev/null 2>&1
+    hwut.play --all test-s.py run --plain > /dev/null 2>&1; hwut.accept --force test-s.py run > /dev/null 2>&1
     echo "--- the output opens '##! table', no 'sep'"
     SEP= $RUN | grep -E '^(END|SKIP)'
     echo "--- the output opens '##! table sep={,}'"
@@ -206,7 +206,7 @@ print("hello")
 EOF
     echo "--- standing in 'lib/alpha/checks'"
     ( cd lib/alpha/checks
-      hwut.accept --force test-x.py one 2>&1 | grep -E 'ACCEPTED|blessed|NOTE'
+      hwut.play --all test-x.py one --plain > /dev/null 2>&1; hwut.accept --force test-x.py one 2>&1 | grep -E 'ACCEPTED|blessed|NOTE'
       $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory' )
     echo "--- standing at the root"
     $RUN | grep -E '^(DIR |END|SKIP|NOTE)|no directory'
@@ -217,7 +217,7 @@ coverage-ground)
     page a/TEST/test-m.py 'one { }' <<'EOF'
 print("hello")
 EOF
-    ( cd a/TEST; hwut.accept --force test-m.py one > /dev/null 2>&1 )
+    ( cd a/TEST; hwut.play --all test-m.py one --plain > /dev/null 2>&1; hwut.accept --force test-m.py one > /dev/null 2>&1 )
     hwut.cov.run --dont-ask --plain --jobs=1 > /dev/null 2>&1
     hwut.cov.run -o measured --dont-ask --plain --jobs=1 > /dev/null 2>&1
     echo "--- the outputs mirror the tree"
@@ -259,7 +259,7 @@ refused-band)
         page $d/TEST/test-r.py 'one { }' <<'EOF'
 print("hello")
 EOF
-        ( cd $d/TEST; hwut.accept --force test-r.py one > /dev/null 2>&1 )
+        ( cd $d/TEST; hwut.play --all test-r.py one --plain > /dev/null 2>&1; hwut.accept --force test-r.py one > /dev/null 2>&1 )
     done
     cp router/TEST/test-r.py router/TEST/test-r.py.orig
     $RUN | grep -E '^(DIR |START|END|DONE)'
@@ -283,8 +283,8 @@ EOF
     page a/TEST/test-m.py 'first { }  second { }' < a_TEST_body
     rm a_TEST_body
     cd a/TEST
-    hwut.accept --force test-m.py first  > /dev/null 2>&1
-    hwut.accept --force test-m.py second > /dev/null 2>&1
+    hwut.play --all test-m.py first --plain > /dev/null 2>&1; hwut.accept --force test-m.py first  > /dev/null 2>&1
+    hwut.play --all test-m.py second --plain > /dev/null 2>&1; hwut.accept --force test-m.py second > /dev/null 2>&1
     echo "--- hwut.cov.run"
     hwut.cov.run --dont-ask --plain --jobs=1 2>&1 | grep -E 'rec\]|^COVERAGE DATA' \
         | sed 's|: .*hwut.coverage|: <dir>/hwut.coverage|'

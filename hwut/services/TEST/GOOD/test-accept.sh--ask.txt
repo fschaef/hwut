@@ -1,7 +1,7 @@
 STATUS: 0
-    RUN: test-ok.sh   (0) nothing recorded for this choice
-    RUN: test-two.sh a   (0) nothing recorded for this choice
-    RUN: test-two.sh b   (0) nothing recorded for this choice
+    RECORDING: test-ok.sh .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh a .stdout -- by hwut.play, <when>
+    RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
     ACCEPT  test-ok.sh .stdout
@@ -36,7 +36,7 @@ STATUS: 0
         candidate: test-two.sh--a.txt
         nominal:   test-two.sh--a.txt
     accept this as the nominal? [y/N] 
-    NOTE: left alone. To accept PART of it: 'hwut.accept.interactive' takes lines from the candidate into a nominal, one at a time.
+    NOTE: left alone. To accept PART of it: 'hwut.merge' takes lines from the candidate into a nominal, one at a time.
     
     ==============================================================================
     ACCEPT  test-two.sh b .stdout
@@ -54,7 +54,7 @@ STATUS: 0
         candidate: test-two.sh--b.txt
         nominal:   test-two.sh--b.txt
     accept this as the nominal? [y/N] 
-    NOTE: left alone. To accept PART of it: 'hwut.accept.interactive' takes lines from the candidate into a nominal, one at a time.
+    NOTE: left alone. To accept PART of it: 'hwut.merge' takes lines from the candidate into a nominal, one at a time.
     
     ==============================================================================
     ACCEPTED  1 of 3

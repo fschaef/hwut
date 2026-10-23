@@ -1,14 +1,8 @@
-STATUS: 3
+STATUS: 1
 STDOUT {
-    EMPTY: the choice produced no output to read
-    
-    EXPLAIN  test-built.sh, choice None
-      REQUEST    ['<work>/suite/TEST/BUILD/test-built.sh/app']
-      RESOLVED   <work>/suite/TEST/BUILD/test-built.sh/app: NOT FOUND on PATH
-      CWD        <work>/suite/TEST
-      call[0]    containment fail-launch   exit None   wall <t>s
-      REPORT     test-app-launch-failed
-      stderr          0 bytes
-      stdout          0 bytes
+    FAULT: the build failed (build-failed) -- missing: app
+      build      containment fail-completed   exit 2   wall <t>s
+                 stderr tail (2 line(s)) | first: 'error: no such header'
+    NOT RECORDED: the run did not complete, and a partial subject is never stored as if whole
 }
 <hwut-end>

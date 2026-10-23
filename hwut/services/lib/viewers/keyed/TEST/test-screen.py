@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "The keyed merge screen AS DRAWN: 'hwut.accept.interactive' in a terminal."
+#     title      = "The keyed merge screen AS DRAWN: 'hwut.merge' in a terminal."
 #     choices {
 #         asking { features = ["leave-asks"] }
 #         open   { features = ["screen-titles", "foot-keys"] }
@@ -14,7 +14,7 @@
 ______________________________________________________________________________
 
 PURPOSE: THE SCREEN A PERSON SEES (audit r10, r-11d), not what the driver
-         decided: 'hwut.accept.interactive' is started by its launcher in
+         decided: 'hwut.merge' is started by its launcher in
          a terminal ('test_writing_support/python/hwut_vterm.py',
          libvterm), on a tree whose one test changed after it was
          accepted. The face cannot tell this terminal from a person's.
@@ -67,6 +67,7 @@ def tree():
                        cwd=directory, stdin=subprocess.DEVNULL,
                        capture_output=True, env=ENVIRONMENT)
     page("echo one; echo two")
+    face("hwut.play", "--all", "--plain")       # the recording (E-165)
     face("hwut.accept", "--whole")
     page("echo one; echo TWO; echo three")
     face("hwut.run", "--silent")
@@ -86,7 +87,7 @@ def session(key_list, observe=None):
     try:
         with Terminal(ROW_N, COLUMN_N, settle_s=0.3) as terminal:
             if observe is not None: observe(terminal)
-            terminal.run([os.path.join(VUT, "bin", "hwut.accept.interactive"),
+            terminal.run([os.path.join(VUT, "bin", "hwut.merge"),
                           "--all"], cwd=directory, env=ENVIRONMENT,
                          start_s=30)
             terminal.expect("OUTPUT of", 30)

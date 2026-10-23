@@ -499,7 +499,7 @@ BIN DISCIPLINE
       face's
     - a run that produced NO OUTPUT, or none ending in '<hwut-end>',
       CANNOT BE ACCEPTED AT ALL -- not even as an aspirant
-    - accept PROVISIONS: nothing need run first
+    - accept RUNS NOTHING (E-165): play records, accept blesses
     - three spellings, ONE act: '--whole', '--as-is', '--force'. What
       an overwrite replaces is an EARLIER ACCEPT, never the author's
       evidence
@@ -722,7 +722,7 @@ BIN DISCIPLINE
       stay their authors'; the moved nominals have ONE cause
     - WHAT A SESSION LEARNS OF A KEY IS NOT WRITTEN ONTO THE KEY. A key
       is another module's record -- slotted in 'hwut.accept', and
-      something else again at 'hwut.accept.interactive'. 'key.short_f =
+      something else again at 'hwut.merge'. 'key.short_f =
       ...' passed the page of the one door and died in a traceback at
       the other, found only by the census ('test-accept.sh opening').
       Kept beside the key, by identity, and asked through a function
@@ -767,7 +767,7 @@ BIN DISCIPLINE
       the whole page: any status equalled any other. Its GOOD read
       'hwut.run 1 1 2 1' under a law printed three lines above as
       0 1 2 3 -- three stimuli had gone stale (a conf opening '@hwut {',
-      a test without '<hwut-end>', a bare 'hwut.run.diff' that had
+      a test without '<hwut-end>', a bare 'hwut.diff' that had
       become a valid request) and the page stayed green for weeks. A
       reader of the book found it by reading the GOOD file. Ask of
       every tolerance: could the page still fail for the thing in its
