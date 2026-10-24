@@ -1,0 +1,25 @@
+session: app_runner.py --interactive, parallel=None (sequential)
+    DOWN  run de <sink-out> <sink-err>
+    DOWN  run en <sink-out> <sink-err>
+    DOWN  run ch <sink-out> <sink-err>
+    DOWN  quit
+    UP    done de 0
+    UP    done en 0
+    UP    done ch 0
+    UP    bye
+
+  choice   own process   session
+  de       5 lines       equal
+  en       5 lines       DIFFERS   !!
+           own process: en               0.00    session: en               0,00
+           own process: en               7.50    session: en               7,50
+           own process: en           1,234.50    session: en           1.234,50
+           own process: en       1,234,567.89    session: en       1.234.567,89
+  ch       5 lines       DIFFERS   !!
+           own process: ch               0.00    session: ch               0,00
+           own process: ch               7.50    session: ch               7,50
+           own process: ch           1'234.50    session: ch           1.234,50
+           own process: ch       1'234'567.89    session: ch       1.234.567,89
+
+choices printing differently in the session ((differ: 2))   law == 0   BROKEN: state leaks between choices
+<hwut-end>

@@ -1,0 +1,26 @@
+table: units.txt
+1 <row> = <cell> <column>, 7 significant digits
+                hPa          bar          psi          atm         mmHg         inHg
+hPa               1        0.001   0.01450377 0.0009869233    0.7500616   0.02952998
+bar            1000            1     14.50377    0.9869233     750.0616     29.52998
+psi        68.94757   0.06894757            1   0.06804596     51.71493     2.036021
+atm         1013.25      1.01325     14.69595            1     759.9999     29.92126
+mmHg       1.333224  0.001333224   0.01933678   0.00131579            1   0.03937008
+inHg       33.86389   0.03386389    0.4911541   0.03342106         25.4            1
+factor check: 1 <unit> in Pa against the definition
+  hPa   error 0       ok
+  bar   error 0       ok
+  psi   error 8e-17   ok
+  atm   error 0       ok
+  mmHg  error 6e-17   ok
+  Torr  error 1e-17   ok
+  inHg  error 5e-17   ok
+R1 worst of all 56 pairs: psi -> mmHg, relative error ((rel_err: 2e-16))
+round trips: value unit -> other (via) -> back
+  0.1      bar   psi   (inHg)  0.10000000000000001
+  1013.25  hPa   inHg  (psi )  1013.25
+  14.7     psi   atm   (Torr)  14.699999999999996
+  760      Torr  mmHg  (atm )  760
+## seed 1792738453451044406
+R2 10000 random round trips, worst relative error ((trip_err: 4.4e-16))
+<hwut-end>

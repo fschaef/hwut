@@ -1,0 +1,4 @@
+{ "+": { "prec": 1, "assoc": "left"  },
+  "-": { "prec": 1, "assoc": "right" },
+  "*": { "prec": 2, "assoc": "left"  },
+  "^": { "prec": 3, "assoc": "right" } }

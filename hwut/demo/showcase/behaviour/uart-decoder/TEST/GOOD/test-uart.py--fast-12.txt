@@ -1,0 +1,31 @@
+capture: captures/fast-12.cap -- 'Hi!\n' from a sender whose clock runs 12 % fast; 167 samples, 4 per nominal bit
+
+sample 11: frame, byte 0xa4 '\xa4', stop bit high (ok)
+##! verbatim
+    line   ---______________----_______----___-------___
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...0...0...1...0...0...1...0...1...1...
+####
+(line: one character per sample, 4 per bit, '-' high '_' low; look: where the receiver
+ sampled -- S start, 0..7 data bits LSB first, T stop; value: the level it read; '.' no sample)
+
+sample 50: frame, byte 0xb1 '\xb1', stop bit high (ok)
+##! verbatim
+    line   ---____----_______---____-------____-------__
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...0...0...0...1...1...0...1...1...
+####
+
+sample 90: frame, byte 0x91 '\x91', stop bit high (ok)
+##! verbatim
+    line   ---___----______________----_______-------___
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...0...0...0...1...0...0...1...1...
+####
+
+sent:      'H' 'i' '!' '\n'
+received:  '\xa4' '\xb1' '\x91'
+frames:    3, framing errors: 0, glitches: 0
+verdict:   !! the frames without framing error carry 0xa4 0xb1 0x91, the sender sent 0x48 0x69 0x21 0x0a
+bytes not as sent: ((wrong_bytes: 4)) = 3 wrong + 1 missing + 0 extra   law == 0   BROKEN
+<hwut-end>

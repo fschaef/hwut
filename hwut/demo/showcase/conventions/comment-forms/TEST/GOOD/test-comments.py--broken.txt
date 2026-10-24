@@ -1,0 +1,38 @@
+rules: C1 TODO(owner) only   C2 no /* */ in C++   C3 no commented-out code
+
+COMMENT INVENTORY of 'broken/src'
+line  form  text (first 40 characters; under C3 the last 40)   verdict
+can.cpp
+    1  //    can.cpp -- CAN frame dispatch               ok
+   11  //    case 0x103: motor_.reset(); break;          C3
+   12  //    counted, never answered                     ok
+   16  //    namespace bus                               ok
+motor.cpp
+    1  //    motor.cpp -- speed loop of the drive ...    ok
+    6  /*    The loop runs at 1 kHz from the timer...    C2
+   10  //    FIXME feed-forward term                     C1
+   12  //    0.0 .. 1.0                                  ok
+   13  //    ...(0.5f);                // bench value    C3
+   16  //    A URL in a string is no comment: "htt...    ok
+   19  //    namespace drive                             ok
+pid.c
+    1  /*    pid.c -- discrete PID controller (C: ...    ok
+    6  /*    Anti-windup: the integral is clamped ...    ok
+    9  /*    I term                                      ok
+   12  /*    TODO: derivative on measurement             C1
+   15  /*    p->integral = 0.0f;                         C3
+pid.h
+    1  /*    pid.h -- discrete PID controller            ok
+    6  /*    gains                                       ok
+    9  /*    output clamp                                ok
+   14  /*    PID_H                                       ok
+
+RULE MATRIX  breaches per file and rule ('.' = none)
+  file         C1   C2   C3
+  can.cpp      .    .    1
+  motor.cpp    1    1    1
+  pid.c        1    .    1
+  pid.h        .    .    .
+
+comments: 20   ((violations: 6))   law == 0   BROKEN
+<hwut-end>

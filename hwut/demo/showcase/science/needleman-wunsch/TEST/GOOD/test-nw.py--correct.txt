@@ -1,0 +1,31 @@
+unit: nw.c (as written); match +1, mismatch -1, gap -1
+
+##! verbatim
+        -    G    C    A    T    G    C    U
+    -   0   -1   -2   -3   -4   -5   -6   -7
+    G  -1    1    0   -1   -2   -3   -4   -5
+    A  -2    0    0    1    0   -1   -2   -3
+    T  -3   -1   -1    0    2    1    0   -1
+    T  -4   -2   -2   -1    1    1    0   -1
+    A  -5   -3   -3   -1    0    0    0   -1
+    C  -6   -4   -2   -2   -1   -1    1    0
+    A  -7   -5   -3   -1   -2   -2    0    0
+    ('!' a cell that breaks the recurrence, given its neighbours: 0)
+
+    score 0   rescored 0 = reported
+    A  G-ATTACA
+       | | | |    4 matches
+    B  GCA-TGCU
+####
+
+## seed 19700343
+sweep: 200 random pairs, length 1..6 over ACGT, against a brute force over all alignments,
+       under each scheme (match, mismatch, gap): (+1, -1, -1)  (+1, -1, -2)
+##! verbatim
+  scheme (+1, -1, -1): invalid 0, rescore errors 0, suboptimal 0
+  scheme (+1, -1, -2): invalid 0, rescore errors 0, suboptimal 0
+####
+alignments not spelling their sequences ((invalid: 0))   law == 0   kept
+reported score != rescored ((rescore_errors: 0))   law == 0   kept
+reported score != brute-force optimum ((suboptimal: 0))   law == 0   kept
+<hwut-end>

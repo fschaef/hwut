@@ -1,0 +1,4 @@
+# vut-register 5 generation:3 apps:1 marks:0=2
+test;choice;verdict;report;stain;test_id;choice_id
+test-invoice.py;awk-float;true;ok;;0;0
+;decimal;true;ok;;0;1

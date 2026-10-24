@@ -1,0 +1,50 @@
+Makefile of 'good' -- data base of 'make -pRrq'; nothing is built
+STANDALONE = clean distclean flash help
+
+TARGET GRAPH  roots: all, STANDALONE, then any target nobody reaches
+              (phony) in .PHONY   [file] recipe writes $@
+##! verbatim
+== from 'all' ==
+all (phony)
++-- firmware (phony)
+|   `-- build/fw.elf [file]
+|       +-- build/main.o [file, rule build/%.o]
+|       |   +-- src/main.c
+|       |   `-- src/board.h
+|       +-- build/uart.o [file, rule build/%.o]
+|       |   +-- src/uart.c
+|       |   `-- src/board.h
+|       `-- build/spi.o [file, rule build/%.o]
+|           +-- src/spi.c
+|           `-- src/board.h
++-- docs (phony)
+|   `-- build/manual.html [file]
+|       `-- doc/manual.md
+`-- test (phony)
+    `-- build/fw.elf [file]  ^ above
+== from STANDALONE ==
+clean (phony)
+distclean (phony)
+`-- clean (phony)
+flash (phony)
+`-- firmware (phony)  ^ above
+help (phony)
+####
+
+INVENTORY  (sorted by target)
+target             writes-$@  phony  reached-from
+all                no         yes    all
+build/fw.elf       yes        no     all
+build/manual.html  yes        no     all
+clean              no         yes    STANDALONE
+distclean          no         yes    STANDALONE
+docs               no         yes    all
+firmware           no         yes    all
+flash              no         yes    STANDALONE
+help               no         yes    STANDALONE
+test               no         yes    all
+
+R1  every target is reachable from 'all' or named in STANDALONE
+R2  every target whose recipe does not write $@ is .PHONY
+((violations: 0))   law == 0   kept
+<hwut-end>

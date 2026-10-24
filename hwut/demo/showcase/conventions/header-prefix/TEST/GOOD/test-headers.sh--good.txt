@@ -1,0 +1,27 @@
+headers of 'good/include': adc.h gpio.h spi.h uart.h
+rules: P  every macro starts with MODULE_   G  the guard is <MODULE>_H, '#endif' last
+
+GUARD (G)  tests            defines          last directive   verdict
+adc.h      ADC_H            ADC_H            #endif           ok
+gpio.h     GPIO_H           GPIO_H           #endif           ok
+spi.h      SPI_H            SPI_H            #endif           ok
+uart.h     UART_H           UART_H           #endif           ok
+
+PREFIX RULER (P)   prefix | rest of the macro name     ('------': prefix missing)
+  adc.h         ADC_ | CHANNELS
+  adc.h         ADC_ | VREF_MV
+  adc.h         ADC_ | TO_MV(..)
+  gpio.h       GPIO_ | PIN(..)
+  gpio.h       GPIO_ | LED_RED
+  spi.h         SPI_ | MODE_0
+  spi.h         SPI_ | MODE_3
+  spi.h         SPI_ | MAX_XFER
+  spi.h         SPI_ | TRACE
+  uart.h       UART_ | BAUD_DEFAULT
+  uart.h       UART_ | FIFO_DEPTH
+  uart.h       UART_ | FLAG_OVERRUN
+  uart.h       UART_ | IS_READY(..)
+
+macros: 13   headers: 4
+G guard: 0   P prefix: 0   ((violations: 0))   law == 0   kept
+<hwut-end>

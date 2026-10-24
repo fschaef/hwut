@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-logsum.sh;boundary;true;ok;;0;3
+;crashloop;true;ok;;0;0
+;garbled;true;ok;;0;1
+;normal;true;ok;;0;2

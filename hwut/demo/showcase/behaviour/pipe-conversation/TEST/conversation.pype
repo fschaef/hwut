@@ -1,0 +1,62 @@
+# conversation.pype -- THE LAW OF A REQUEST/RESPONSE CONVERSATION over a pipe.
+#
+#     TALKING  '> req <id> <op> <arg>' the client asked; '< res <id> <result>'
+#              the server answered; '< bye <n>' the server ends
+#     OVER     after bye nothing may be said
+#
+# Laws: an answer comes AFTER its request -- never before; each request is
+# answered exactly once; bye counts the answers. The order of the answers
+# is free. Printed: one row per request, sorted by id; then the breaches.
+
+TALKING is: BASE
+TALKING/on: "> req" <id = int> <op = "*"> <arg = "*"> => {
+    if id in asked_db:
+        breach_db[id] = "request %d sent twice" % id
+    asked_db[id] = (op, arg)
+}
+TALKING/on: "< res" <id = int> <result = "*"> => {
+    if id not in asked_db:
+        breach_db.setdefault(id, "answer %d came BEFORE its request" % id)
+        early_set.add(id)
+    answer_db.setdefault(id, []).append(result)
+}
+TALKING/on: "< bye" <n = int> => {
+    said = sum(len(v) for v in answer_db.values())
+    if n != said:
+        breach_db[9999] = "bye counts %d answers, %d were given" % (n, said)
+    closed = True
+}
+and: goto OVER;
+
+OVER is: BASE
+OVER/on: <else> => {
+    breach_db[10000] = "after bye: " + pype.line()
+}
+
+BASE/on: <bof> => {
+    asked_db, answer_db, breach_db = {}, {}, {}
+    closed = False
+    early_set = set()
+}
+BASE/on: <else> => {
+    breach_db[10001] = "not a line of the conversation: " + pype.line()
+}
+BASE/on: <eof> => {
+    print("  id  request              answer      answered")
+    for id in sorted(set(asked_db) | set(answer_db)):
+        op, arg = asked_db.get(id, ("?", "?"))
+        given = answer_db.get(id, [])
+        status = "once" if len(given) == 1 else "!! never" if not given else "!! %d times" % len(given)
+        if not given:
+            breach_db.setdefault(id, "request %d never answered" % id)
+        if id in early_set:
+            status += "  !! one before its request"
+        print("  %2d  %-6s %-13s %-11s %s" % (id, op, arg, " ".join(given) or "-", status))
+    print("server said bye: %s" % ("yes" if closed else "NO"))
+    for key in sorted(breach_db):           # a request's own breach stands in its row
+        if key >= 9999 or "twice" in breach_db[key]:
+            print("BREACH: " + breach_db[key])
+    breach_n = len(breach_db) + (0 if closed else 1)    # no 'bye' is a breach too
+    print("breaches of the conversation: ((breaches: %d))   law == 0   %s" % (breach_n, "kept" if not breach_n else "BROKEN"))
+    print("<hwut-end>")
+}

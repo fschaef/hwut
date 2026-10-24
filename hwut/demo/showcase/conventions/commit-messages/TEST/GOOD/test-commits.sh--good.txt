@@ -1,0 +1,13 @@
+COMMIT LAW   H1 type(scope): subject   H2 header <= 50, no final '.'
+             B1 blank second line   B2 body lines <= 72   S1 Signed-off-by
+cells: ok, XX broken; under H2 and B2 a number is the measured length that breaks it
+commit       H1   H2   B1   B2   S1   header
+((6b796f4))  ok   ok   ok   ok   ok   build: add the Makefile of the bench firmware
+((7137b57))  ok   ok   ok   ok   ok   feat(adc): sample all 8 channels at 1 kHz
+((2caeabc))  ok   ok   ok   ok   ok   fix(uart): drop frames with a bad CRC
+((fe71e41))  ok   ok   ok   ok   ok   docs: describe the calibration procedure
+((38892ca))  ok   ok   ok   ok   ok   refactor(motor): split the speed loop from the PWM
+((e6c77ff))  ok   ok   ok   ok   ok   test(adc): cover the over-range reading
+
+commits: 6   breaking the law ((broken: 0))   law == 0   kept
+<hwut-end>

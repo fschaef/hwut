@@ -1,0 +1,28 @@
+error codes of 'good': 12 defined, 12 documented
+
+CODE SPACE   . free  o defined+documented  u undocumented  g ghost  D defined twice
+             r N  a code this component defines with a value N outside its range
+             offset  0000000000111111   (decimal)
+                     0123456789012345
+  1000  fw     |.oooo.....o.....|
+  2000  web    |.ooo......o.....|
+  3000  tools  |.oo..o..........|
+
+CROSS REFERENCE (sorted by code)
+  code  name               defined at             documented as
+  1001  ERR_TIMEOUT        fw/errors.h:4          yes
+  1002  ERR_CRC            fw/errors.h:5          yes
+  1003  ERR_FLASH_WRITE    fw/errors.h:6          yes
+  1004  ERR_NO_MEMORY      fw/errors.h:7          yes
+  1010  ERR_SENSOR_RANGE   fw/errors.h:8          yes
+  2001  E_BAD_REQUEST      web/errors.js:3        yes
+  2002  E_UNAUTHORIZED     web/errors.js:4        yes
+  2003  E_RATE_LIMIT       web/errors.js:5        yes
+  2010  E_DEVICE_OFFLINE   web/errors.js:6        yes
+  3001  USAGE              tools/errors.py:5      yes
+  3002  NO_DEVICE          tools/errors.py:6      yes
+  3005  IMAGE_FORMAT       tools/errors.py:7      yes
+
+E1 unique   E2 in its range   E3 documented   E4 no ghost entry
+codes: 12   ((findings: 0))   law == 0   kept
+<hwut-end>

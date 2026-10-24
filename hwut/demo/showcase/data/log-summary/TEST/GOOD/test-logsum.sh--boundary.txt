@@ -1,0 +1,29 @@
+window     2026-10-24T12:19:39.255Z .. 2026-10-24T12:24:38.076Z  (298 s)
+lines      1833 read, 0 unreadable
+per host
+##! table key=0
+  host     requests  errors  p95_ms
+  web-3         595      16     446
+  web-1         623      16     448
+  web-2         598       9     448
+####
+per minute   (requests; bar: 8 requests per =)
+  +0 min  357 ============================================
+  +1 min  368 ==============================================
+  +2 min  372 ==============================================
+  +3 min  364 =============================================
+  +4 min  355 ============================================
+restarts
+  web-2 worker[((42787))] code=137 at +20s, restarted as worker[((26468))]
+  web-1 worker[((11136))] code=137 at +40s, restarted as worker[((27313))]
+  web-2 worker[((26468))] code=137 at +90s, restarted as worker[((12989))]
+  web-1 worker[((27313))] code=137 at +140s, restarted as worker[((61241))]
+  web-2 worker[((12989))] code=137 at +160s, restarted as worker[((20633))]
+  web-2 worker[((20633))] code=137 at +230s, restarted as worker[((1210))]
+  web-1 worker[((61241))] code=137 at +240s, restarted as worker[((48554))]
+alerts
+  CRASH LOOP web-2 worker: 4 restarts, more than 3 within 300 s
+near misses
+  web-1 worker: 3 restarts within 300 s -- no alert (needs more than 3)
+R3 alert iff more than 3 restarts within 300 s: misses ((alert_misses: 0))   law == 0   kept
+<hwut-end>

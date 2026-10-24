@@ -1,0 +1,6 @@
+# Montreal, 23 July 1983, as computed: the refueller's specific gravity,
+# 1.77, was the figure for POUNDS per litre; it went onto the sheet as if
+# it were kilograms per litre.
+dripstick 7682  L
+required  22300 kg
+density   1.77  kg/L

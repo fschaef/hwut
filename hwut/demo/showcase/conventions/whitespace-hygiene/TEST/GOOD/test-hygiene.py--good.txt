@@ -1,0 +1,12 @@
+HYGIENE GRID of 'good'   '.' clean, else the number of lines breaking the rule
+  W1 tab indent  W2 trailing blank  W3 CR LF  W4 BOM  W5 non-ASCII in code  W6 final newline
+  file              W1  W2  W3  W4  W5  W6
+  Makefile          .   .   .   .   .   .
+  docs/notes.md     .   .   .   .   .   .
+  scripts/run.sh    .   .   .   .   .   .
+  src/filter.c      .   .   .   .   .   .
+  src/units.c       .   .   .   .   .   .
+  web/app.js        .   .   .   .   .   .
+
+files 6   files x rules broken ((findings: 0))   law == 0   kept
+<hwut-end>

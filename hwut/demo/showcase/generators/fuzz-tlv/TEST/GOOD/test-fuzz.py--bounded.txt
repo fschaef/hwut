@@ -1,0 +1,15 @@
+generator: DeterministicStream(2026), 3000 cases, corpus ../corpus.txt
+           block = select(corpus); operator = select_unchosen(OPERATORS, marker)
+unit:      ../tlv.c, each block ending at a guard page
+
+  operator      parsed  rejected  OVERREAD   total
+  flip_bit         380       120         0     500
+  byte_00          394       106         0     500
+  byte_ff          371       129         0     500
+  cut_short        107       393         0     500
+  insert_byte        1       499         0     500
+  repeat_byte        0       500         0     500
+  total           1253      1747         0    3000
+
+cases read outside the block ((overread: 0)) of 3000   law == 0   kept
+<hwut-end>

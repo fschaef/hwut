@@ -1,0 +1,5 @@
+# vut-register 5 generation:6 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-ntc.py;datasheet;true;ok;;0;0
+;lab;true;ok;;0;2
+;typo;true;ok;;0;3

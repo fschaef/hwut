@@ -1,0 +1,6 @@
+{ "id":       { "type": "int",    "required": true },
+  "date":     { "type": "date",   "required": true },
+  "customer": { "type": "string", "required": true },
+  "status":   { "type": "enum",   "required": true, "values": ["open", "paid", "void"] },
+  "amount":   { "type": "number", "required": true },
+  "note":     { "type": "string", "required": false } }

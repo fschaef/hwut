@@ -1,0 +1,22 @@
+## seed 19650101
+unit: sum.c, gcc -O2; 100000 doubles, magnitudes 1e-6..1e6, 60 % positive
+exact sum      924959014.93563974   (rounded to double)
+u * sum|x|     4.730e-07   (u = 2^-53; Kahan's bound is 2 of these)
+
+PARTIALS  as the workers reported them (arrival order differs run to run)
+##! potpourri
+worker 0 [0, 25000) partial 257215306.53942254
+worker 1 [25000, 50000) partial 213855924.23089859
+worker 2 [50000, 75000) partial 227720666.44140464
+worker 3 [75000, 100000) partial 226167117.72391608
+####
+partials differing from the test's own recomputation ((partial_mismatch: 0))   law == 0   kept
+
+ALL 24 ARRIVAL ORDERS give 2 distinct totals
+##! verbatim
+  924959014.93564177     error 2.022e-06  4.28 u*sum|x|   orders 0123 0132 0312 1023 1032 1203 1230 1302 1320 2103 2130 3012 3102 3120
+  924959014.93564188     error 2.141e-06  4.53 u*sum|x|   orders 0213 0231 0321 2013 2031 2301 2310 3021 3201 3210
+####
+unit total 924959014.93564177   (compared with a ratio of 1e-15)
+the unit's total is one of the arrival totals ((known: "yes"))   law: yes   kept
+<hwut-end>

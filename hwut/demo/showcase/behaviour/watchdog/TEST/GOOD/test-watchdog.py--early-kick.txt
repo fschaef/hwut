@@ -1,0 +1,18 @@
+unit:     wdt.c, timeout 300 ms, window 60 ms (a kick sooner than 60 ms after the previous one resets)
+kicks at: 100 200 230 330 ms
+
+##! verbatim
+ms      0         100       200
+kick    ..........K.........K..K
+count   000111222300011122230000
+reset   .......................R
+####
+(one column per 10 ms; K a kick, R the reset; count: time since the last kick in tenths of the
+ 300 ms timeout, 0 = under 30 ms ... 9 = under 300 ms, '!' = timeout reached)
+
+specification: reset at 230 ms (early-kick: 230 - 200 = 30 ms < 60 ms)
+watchdog:      reset at 230 ms (early-kick)
+verdict:       as specified
+deviations:    ((deviations: 0))   law == 0   kept
+longest time without a kick: ((silence: 100 ms))   law <= 300 ms   kept
+<hwut-end>

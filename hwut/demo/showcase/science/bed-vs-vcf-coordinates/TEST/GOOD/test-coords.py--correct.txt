@@ -1,0 +1,34 @@
+unit: convert.awk; reference chr1, 40 bp
+
+##! verbatim
+                0         1         2         3            0-based (BED)
+                0123456789012345678901234567890123456789
+  chr1          GATTACACGTTAGCATGCAACGGTCTAGCATTCGAACCTG
+                1234567890123456789012345678901234567890   1-based (GFF, VCF)
+                         1         2         3         4
+
+  BED  exon1     ....======..............................   4 10     ACACGT
+  GFF  exon1     ....======..............................   5..10    ACACGT
+  BED' exon1     ....======..............................   4 10     ACACGT
+
+  BED  snp1      ..............=.........................   14 15    A
+  GFF  snp1      ..............=.........................   15..15   A
+  BED' snp1      ..............=.........................   14 15    A
+
+  BED  exon2     ....................===========.........   20 31    CGGTCTAGCAT
+  GFF  exon2     ....................===========.........   21..31   CGGTCTAGCAT
+  BED' exon2     ....................===========.........   20 31    CGGTCTAGCAT
+
+  BED  cap       ==......................................   0 2      GA
+  GFF  cap       ==......................................   1..2     GA
+  BED' cap       ==......................................   0 2      GA
+####
+
+VCF  (#CHROM POS ID REF; POS from the GFF start, REF read at POS)
+  chr1  15  snp1  A   BED base A
+
+## seed 48853
+sweep: 300 random BED intervals -> GFF -> BED
+features misplaced ((misplaced: 0)) of 5 (4 features + 1 VCF record)   law == 0   kept
+sweep intervals changed ((roundtrip_errors: 0)) of 300   law == 0   kept
+<hwut-end>

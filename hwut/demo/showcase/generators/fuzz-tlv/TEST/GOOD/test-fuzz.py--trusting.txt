@@ -1,0 +1,18 @@
+generator: DeterministicStream(2026), 3000 cases, corpus ../corpus.txt
+           block = select(corpus); operator = select_unchosen(OPERATORS, marker)
+unit:      ../tlv_trusting.c, each block ending at a guard page
+
+  operator      parsed  rejected  OVERREAD   total
+  flip_bit         380         0       120     500
+  byte_00          394         0       106     500
+  byte_ff          371         0       129     500
+  cut_short        107       114       279     500
+  insert_byte        1       156       343     500
+  repeat_byte        0       214       286     500
+  total           1253       484      1263    3000
+
+cases read outside the block ((overread: 1263)) of 3000   law == 0   BROKEN
+first reproducer: DeterministicStream(2026), case 0, operator byte_ff
+    block (11 bytes): 01 02 0a 0b 02 ff 11 22 33 ff 00
+    the walker touched the guard page right after byte 10
+<hwut-end>

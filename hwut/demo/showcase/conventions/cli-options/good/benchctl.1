@@ -1,0 +1,28 @@
+.TH BENCHCTL 1 "2024-05-02" "bench 2.1" "User Commands"
+.SH NAME
+benchctl \- talk to the motor bench over its serial port
+.SH SYNOPSIS
+.B benchctl
+[\fIoptions\fR] \fICOMMAND\fR
+.SH OPTIONS
+.TP
+.BR \-p ", " \-\-port " " \fIDEVICE\fR
+Serial device. Default: /dev/ttyUSB0.
+.TP
+.BR \-b ", " \-\-baud " " \fIRATE\fR
+Baud rate. Default: 115200.
+.TP
+.BR \-t ", " \-\-timeout " " \fISEC\fR
+Answer timeout in seconds. Default: 2.
+.TP
+.BR \-\-retries " " \fIN\fR
+Resend a frame N times on timeout. Default: 3.
+.TP
+.BR \-l ", " \-\-log\-level " " \fILVL\fR
+One of debug, info, warning, error. Default: info.
+.TP
+.BR \-n ", " \-\-dry\-run
+Print the frames, send nothing.
+.TP
+.BR \-h ", " \-\-help
+Print the option summary.

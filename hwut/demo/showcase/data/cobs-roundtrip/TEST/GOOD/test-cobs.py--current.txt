@@ -1,0 +1,22 @@
+codec: cobs.c
+worked examples          encoded, [code bytes] in brackets
+  00                     [01] [01]
+  00 00                  [01] [01] [01]
+  11 22 00 33            [03] 11 22 [02] 33
+  11 22 33 44            [05] 11 22 33 44
+  11 00 00 00            [02] 11 [01] [01] [01]
+  (empty)                [01]
+## seed 1792844624780010615
+random frames               count   round-trip errors
+  short, 0..64 any bytes     3000   ((err_short: 0))   law == 0   kept
+  long, 0..1000 few zeros     300   ((err_long: 0))   law == 0   kept
+encoded frames holding 0x00         ((zeros: 0))   law == 0   kept
+frames over 1 + n/254 overhead      ((over: 0))   law == 0   kept
+edge frames
+  253 x non-zero        253 ->  254 bytes ->  253   ok
+  254 x non-zero        254 ->  256 bytes ->  254   ok
+  255 x non-zero        255 ->  257 bytes ->  255   ok
+  508 x non-zero        508 ->  511 bytes ->  508   ok
+  254 x non-zero, 00    255 ->  257 bytes ->  255   ok
+edge frames wrong                   ((err_edge: 0))   law == 0   kept
+<hwut-end>

@@ -1,0 +1,82 @@
+# THE LAW OF A MAP/REDUCE WORD COUNT, as the states it has.
+#
+#     RUNNING   workers start, count and finish files, at most 4 at once;
+#     REDUCED   'total' has been said: nothing may follow.
+#
+# What the script COMPARES does not depend on the order the workers' lines
+# arrive in: the counts per file, sorted; the total against the sum (R1);
+# every order breach, sorted (R2); the largest number of files in flight, as
+# a binding (R3) -- each with its verdict. The in-flight chart of this run
+# is printed in an 'ignore' region: it shows the schedule, it is not judged.
+RUNNING is: ANY
+ANY/on: <bof> => {
+    started, counted, finished = set(), {}, set()
+    in_flight, in_flight_max = 0, 0
+    total = None
+    breach_set = set()
+    event_list = []                      # (kind, file) in arrival order
+}
+RUNNING/on: <bol> "start" <f = "*"> <eol> => {
+    if f in started:
+        breach_set.add("%s started twice" % f)
+    started.add(f)
+    event_list.append(("start", f))
+    in_flight += 1
+    in_flight_max = max(in_flight_max, in_flight)
+}
+RUNNING/on: <bol> "count" <f = "*"> <n = int> <eol> => {
+    if f not in started or f in finished:
+        breach_set.add("%s counted outside its run" % f)
+    counted[f] = n
+}
+RUNNING/on: <bol> "done" <f = "*"> <eol> => {
+    if f not in started or f in finished:
+        breach_set.add("%s done without a start, or twice" % f)
+    elif f not in counted:
+        breach_set.add("%s done without a count" % f)
+    finished.add(f)
+    event_list.append(("done", f))
+    in_flight -= 1
+}
+RUNNING/on: <bol> "total" <n = int> <eol> => {
+    if finished != started:
+        breach_set.add("total before every worker finished")
+    if n != sum(counted.values()):
+        breach_set.add("total %d is not the sum of the counts" % n)
+    total = n
+}
+and: goto REDUCED;
+
+REDUCED is: ANY
+REDUCED/on: <bol> <"*"> => {
+    breach_set.add("a line after the total: " + pype.line())
+}
+
+ANY/on: <else> => {
+    breach_set.add("an unknown line: " + pype.line())
+}
+ANY/on: <eof> => {
+    if total is None:
+        breach_set.add("no total")
+    verdict = lambda flag: "kept" if flag else "BROKEN"
+    print("words per file:")
+    for f in sorted(counted):
+        print("    %-14s %5d" % (f, counted[f]))
+    print("files: %d started, %d done" % (len(started), len(finished)))
+    r1 = total == sum(counted.values()) and len(counted) == len(started)
+    print("R1 total: %s   sum of the %d counts: %d   %s" % (total, len(counted), sum(counted.values()), verdict(r1)))
+    print("R2 order breaches: %s" % ("none   kept" if not breach_set else "%d   BROKEN" % len(breach_set)))
+    for breach in sorted(breach_set):
+        print("    BREACH: " + breach)
+    print("files in flight, start to done, in arrival order of the events ('=' running);")
+    print("this run's schedule -- it differs from run to run and is not compared:")
+    print("##! ignore")
+    for f in sorted(started):
+        k0 = next(k for k, e in enumerate(event_list) if e == ("start", f))
+        k1 = next((k for k, e in enumerate(event_list) if e == ("done", f)), len(event_list))
+        print("    %-14s %s%s" % (f, " " * k0, "=" * (k1 - k0)))
+    print("####")
+    print("R3 files in flight at most ((in_flight_max: %d))   law <= 4   %s"
+          % (in_flight_max, verdict(in_flight_max <= 4)))
+    print("<hwut-end>")
+}

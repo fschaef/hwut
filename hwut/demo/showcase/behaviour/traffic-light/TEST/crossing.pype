@@ -1,0 +1,162 @@
+# crossing.pype -- THE SAFETY LAW OF THE CROSSING, as its reference state chart.
+#
+#   START --NS GREEN--> NS_GO ---NS YELLOW---> NS_CLEAR ---NS RED---> ALL_RED_1
+#                       ^   stays >= 10 s        stays >= 3 s          |  stays >= 2 s
+#                       |                                              |
+#                   NS GREEN                                       EW GREEN
+#                       |                                              |
+#                       |   stays >= 2 s         stays >= 3 s          v  stays >= 8 s
+#                   ALL_RED_2 <---EW RED--- EW_CLEAR <--EW YELLOW--- EW_GO
+#
+# Each mode knows the ONE lamp change that may come next; any other lamp
+# change is a breach -- so 'never two greens' and 'all-red between the
+# roads' need no rule of their own: no mode admits them. The duration of
+# each phase is checked when it ends. After the first illegal change the
+# script is LOST: it draws the lamps on, but judges nothing more.
+#
+# The controller's log carries its time with the unit, '4 s NS GREEN';
+# '<t = quantity(s)>' binds it in seconds whatever unit the log uses
+# ('4000 ms' would bind 4.0).
+#
+# LIVENESS: a car on EW gets EW green within 20 s -- the worst case is a car
+# that arrives as EW turns yellow: 3 s yellow + 2 s all-red + 10 s NS green
+# + 3 s yellow + 2 s all-red. A car that arrives while EW is green is served
+# at once. The script MEASURES the wait of every car seen before the chart
+# was left (a car never served: the time it was seen waiting) and prints the
+# longest as a quantity, '((wait: 11 s))'; the 20 s bound is the test's
+# constraint 'wait <= 20 s', not a breach counted here.
+#
+# At the end of the input the script draws what it saw: one column per
+# second, G Y R per road, c for a car; then every car's wait and the
+# longest, the breaches of the chart and their count.
+
+START is: BASE
+START/on: <t = quantity(s)> "EW" "RED" => {
+    lamp("EW", "R")
+}
+START/on: <t = quantity(s)> "NS" "GREEN" => {
+    lamp("NS", "G")
+}
+and: goto NS_GO;
+
+NS_GO is: BASE
+NS_GO/on: <t = quantity(s)> "NS" "YELLOW" => {
+    lamp("NS", "Y")
+    phase("NS green", 10)
+}
+and: goto NS_CLEAR;
+
+NS_CLEAR is: BASE
+NS_CLEAR/on: <t = quantity(s)> "NS" "RED" => {
+    lamp("NS", "R")
+    phase("NS yellow", 3)
+}
+and: goto ALL_RED_1;
+
+ALL_RED_1 is: BASE
+ALL_RED_1/on: <t = quantity(s)> "EW" "GREEN" => {
+    lamp("EW", "G")
+    phase("all-red", 2)
+}
+and: goto EW_GO;
+
+EW_GO is: BASE
+EW_GO/on: <t = quantity(s)> "EW" "YELLOW" => {
+    lamp("EW", "Y")
+    phase("EW green", 8)
+}
+and: goto EW_CLEAR;
+
+EW_CLEAR is: BASE
+EW_CLEAR/on: <t = quantity(s)> "EW" "RED" => {
+    lamp("EW", "R")
+    phase("EW yellow", 3)
+}
+and: goto ALL_RED_2;
+
+ALL_RED_2 is: BASE
+ALL_RED_2/on: <t = quantity(s)> "NS" "GREEN" => {
+    lamp("NS", "G")
+    phase("all-red", 2)
+}
+and: goto NS_GO;
+
+LOST is: BASE
+LOST/on: <t = quantity(s)> <road = "[NE][SW]"> <colour = "*"> => {
+    lamp_db[road].append((int(t), colour[0]))
+}
+
+BASE/on: <bof> => {
+    lamp_db = {"NS": [], "EW": []}         # road -> [(t, colour)]
+    car_list, breach_list = [], []          # (t, text)
+    started = 0
+    lost_at = None                          # time the chart was left
+    short_list = []                         # (start, phase) of phases too short
+    def lamp(road, c):
+        lamp_db[road].append((int(t), c))
+    def phase(name, minimum):
+        global started
+        if minimum and int(t) - started < minimum:
+            breach_list.append((int(t), "%s lasted %d s, at least %d s required" % (name, int(t) - started, minimum)))
+            short_list.append((started, name))
+        started = int(t)
+}
+BASE/on: <t = quantity(s)> "car" "EW" => {
+    car_list.append(int(t))
+}
+BASE/on: <t = quantity(s)> <road = "[NE][SW]"> <colour = "*"> => {
+    lamp_db[road].append((int(t), colour[0]))       # a change no state admits
+    breach_list.append((int(t), "%s %s at %d s, in %s: no state of the reference chart allows this; judging stops" % (road, colour, int(t), pype.mode_name())))
+    lost_at = int(t)
+    pype.goto("LOST")
+}
+BASE/on: <else> => {
+    breach_list.append((0, "not a line of the controller: " + pype.line()))
+}
+BASE/on: <eof> => {
+    end = 60
+    ew = ""
+    for s in range(end):                    # EW colour per second
+        ew += ([c for at, c in lamp_db["EW"] if at <= s] or ["?"])[-1]
+    wait_list, unjudged = [], []            # (car, waited, served?)
+    for car in car_list:
+        if lost_at is not None and car >= lost_at:
+            unjudged.append(car)
+            continue
+        served = ew.find("G", car)
+        wait_list.append((car, served - car, True) if served >= 0 else (car, end - car, False))
+    print("##! verbatim")
+    print("s     " + "".join(str(s // 10).ljust(10) if s % 10 == 0 else "" for s in range(end)).rstrip())
+    for road in ("NS", "EW"):
+        row, now = "", "?"
+        changes = lamp_db[road]
+        for s in range(end):
+            for at, c in changes:
+                if at == s:
+                    now = c
+            row += now
+        print("%-5s %s" % (road, row))
+    print("car   " + "".join("c" if s in car_list else "." for s in range(end)))
+    if short_list:
+        print("short " + "".join("^" if any(st == s for st, _ in short_list) else " " for s in range(end)).rstrip())
+    print("####")
+    print("(one column per second, tens of seconds on the ruler; G green, Y yellow, R red; c a car on EW%s)"
+          % ("; ^ a phase that began here and ended too soon" if short_list else ""))
+    for car, waited, served in wait_list:
+        print("car at %2d s: %s" % (car, "EW green after %d s" % waited if served
+                                       else "no EW green in the %d s seen" % waited))
+    if unjudged:
+        print("cars at %s s: not judged (judging stopped at %d s)" % (", ".join(map(str, unjudged)), lost_at))
+    longest = max([w for _, w, _ in wait_list] or [0])
+    print("longest wait for EW green: ((wait: %d s))   law <= 20 s   %s" % (longest, "kept" if longest <= 20 else "BROKEN"))
+    group_db = {}                           # the same breach at several times: one line
+    for at, breach in sorted(breach_list):
+        group_db.setdefault(breach, []).append(at)
+    for breach, at_list in sorted(group_db.items(), key=lambda kv: kv[1][0]):
+        if "lasted" in breach:
+            print("BREACH: %s -- %d time(s), the '^' marks" % (breach, len(at_list)))
+        else:
+            print("BREACH: " + breach)
+    print("breaches of the chart: ((breaches: %d))   law == 0   %s" % (len(breach_list), "kept" if not breach_list else "BROKEN"))
+    print("<hwut-end>")
+}

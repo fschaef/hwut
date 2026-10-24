@@ -1,0 +1,38 @@
+unit: convert_legacy.awk; reference chr1, 40 bp
+
+##! verbatim
+                0         1         2         3            0-based (BED)
+                0123456789012345678901234567890123456789
+  chr1          GATTACACGTTAGCATGCAACGGTCTAGCATTCGAACCTG
+                1234567890123456789012345678901234567890   1-based (GFF, VCF)
+                         1         2         3         4
+
+  BED  exon1     ....======..............................   4 10     ACACGT
+  GFF  exon1     ...=======..............................   4..10    TACACGT   !! other bases
+  BED' exon1     ...=======..............................   3 10     TACACGT   !! moved
+
+  BED  snp1      ..............=.........................   14 15    A
+  GFF  snp1      .............==.........................   14..15   CA   !! other bases
+  BED' snp1      .............==.........................   13 15    CA   !! moved
+
+  BED  exon2     ....................===========.........   20 31    CGGTCTAGCAT
+  GFF  exon2     ...................============.........   20..31   ACGGTCTAGCAT   !! other bases
+  BED' exon2     ...................============.........   19 31    ACGGTCTAGCAT   !! moved
+
+  BED  cap       ==......................................   0 2      GA
+  GFF  cap       <=......................................   0..2     GA   !! other bases   !! start 0 does not exist
+  BED' cap       <=......................................   -1 2     GA   !! moved
+####
+
+VCF  (#CHROM POS ID REF; POS from the GFF start, REF read at POS)
+  chr1  14  snp1  C   BED base A   !! REF is not the BED base
+
+## seed 48853
+sweep: 300 random BED intervals -> GFF -> BED
+  [699516, 704161) came back as [699515, 704161)
+  [267839, 269822) came back as [267838, 269822)
+  [444284, 447782) came back as [444283, 447782)
+  ... and 297 more
+features misplaced ((misplaced: 5)) of 5 (4 features + 1 VCF record)   law == 0   BROKEN
+sweep intervals changed ((roundtrip_errors: 300)) of 300   law == 0   BROKEN
+<hwut-end>

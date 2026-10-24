@@ -1,0 +1,5 @@
+id,date,customer,status,amount,note
+1001,2024-02-28,Acme GmbH,paid,1499.00,
+1002,2024-02-29,"Smith, Jones & Co",open,23.5,"leap day order"
+1003,2024-03-01,Müller KG,void,0,"said ""cancel"" by phone"
+1004,2024-03-02,Zeta,paid,-12.40,refund

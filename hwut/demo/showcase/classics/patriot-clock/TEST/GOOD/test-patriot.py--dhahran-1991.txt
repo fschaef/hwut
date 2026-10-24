@@ -1,0 +1,22 @@
+range gate: GATE_MIXED, interval between two radar times 10 tenths of a second
+##! verbatim
+0.1 in the 24-bit register (23 fraction bits, chopped):
+    binary 0.00011001100110011001100   = 838860 / 2^23 = 0.099999904632568359375
+    short by 0.8 / 2^23 = 9.5367431640625e-08 s per tenth
+####
+
+uptime    true time   calculated  inaccuracy  GAO 1992  gate interval  gate shift  GAO shift (Dhahran
+     h            s            s           s         s  error s, < 0.001          m  software, compare)
+     0       0.0000       0.0000      0.0000    0.0000      0.0000000         0.0          0
+     1    3600.0000    3599.9966      0.0034    0.0034      0.0034332         5.8          7
+     8   28800.0000   28799.9725      0.0275    0.0275      0.0274658        46.0         55  ==
+    20   72000.0000   71999.9313      0.0687    0.0687      0.0686646       115.1        137  =====
+    48  172800.0000  172799.8352      0.1648    0.1648      0.1647949       276.2        330  =============
+    72  259200.0000  259199.7528      0.2472    0.2472      0.2471924       414.3        494  ====================
+   100  360000.0000  359999.6567      0.3433    0.3433      0.3433228       575.4        687  ============================
+(gate shift of THIS software at about 1676 m/s, '=' per 20 m; GAO's shift column, for the Dhahran
+ software, implies about 2000 m/s and is printed as published, not reproduced)
+
+model against GAO's inaccuracy column: largest difference ((gao_dev: 0.00000 s))   law <= 0.1 ms (GAO's 4 decimals)   kept
+worst gate interval error over 100 h: ((gate: 0.3433228 s))   law < 1 ms   BROKEN
+<hwut-end>

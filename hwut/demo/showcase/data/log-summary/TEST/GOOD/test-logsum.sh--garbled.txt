@@ -1,0 +1,23 @@
+window     2026-10-24T12:19:41.164Z .. 2026-10-24T12:24:39.985Z  (298 s)
+lines      1823 read, 3 unreadable (line 18, 231, 401)
+per host
+##! table key=0
+  host     requests  errors  p95_ms
+  web-3         594      16     446
+  web-1         623      16     448
+  web-2         598       9     448
+####
+per minute   (requests; bar: 8 requests per =)
+  +0 min  356 ============================================
+  +1 min  368 ==============================================
+  +2 min  372 ==============================================
+  +3 min  364 =============================================
+  +4 min  355 ============================================
+restarts
+  web-2 worker[((17152))] code=137 at +200s, restarted as worker[((12423))]
+alerts
+  none
+near misses
+  none
+R3 alert iff more than 3 restarts within 300 s: misses ((alert_misses: 0))   law == 0   kept
+<hwut-end>

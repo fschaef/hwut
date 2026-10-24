@@ -1,0 +1,12 @@
+unit: lights.c; cars on EW at: 4 s
+##! verbatim
+s     0         1         2         3         4         5
+NS    GGGGGGGGGGYYYRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+EW    RRRRRRRRRRRRRRRGGGGGGGGYYYRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+car   ....c.......................................................
+####
+(one column per second, tens of seconds on the ruler; G green, Y yellow, R red; c a car on EW)
+car at  4 s: EW green after 11 s
+longest wait for EW green: ((wait: 11 s))   law <= 20 s   kept
+breaches of the chart: ((breaches: 0))   law == 0   kept
+<hwut-end>

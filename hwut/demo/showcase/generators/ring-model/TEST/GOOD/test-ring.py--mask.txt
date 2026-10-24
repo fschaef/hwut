@@ -1,0 +1,25 @@
+unit:  ../rb_mask.c against a bounded-queue model
+space: CAPACITY [1, 2, 3, 4, 5, 7, 8, 64] x LOAD ['push-heavy', 'balanced', 'pop-heavy'] = 24 cells
+walk:  seeded operations until 512 bytes went in (two turns of an 8-bit index)
+       shortest 1031 ops (capacity 64, balanced), longest 2476 ops (capacity 1, push-heavy)
+cells: 'ok' agrees with the model; 'op N' = first operation that differs
+
+##! verbatim
+  load \ capacity       1      2      3      4      5      7      8     64
+  push-heavy P=0.7      ok     ok   op 8     ok   op 7   op 4     ok     ok
+  balanced   P=0.5      ok     ok   op 8     ok   op 7   op 4     ok     ok
+  pop-heavy  P=0.3      ok     ok  op 11     ok  op 12   op 5     ok     ok
+####
+
+first diverging cell: capacity 3, push-heavy, seed 17853610
+     op  action    FIFO    model
+    (ops 1-2 agree)
+      3  push 85   ok      ok
+      4  push 120  full    full
+      5  push 99   full    full
+      6  push 173  full    full
+      7  push 217  full    full
+      8  pop       85      76       <- differs
+!! the FIFO is no bounded queue for capacities [3, 5, 7] -- exactly the capacities that are not a power of two
+cells that diverge from the model ((diverging: 9)) of 24   law == 0   BROKEN
+<hwut-end>

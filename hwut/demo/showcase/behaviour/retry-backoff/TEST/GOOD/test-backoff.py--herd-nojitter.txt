@@ -1,0 +1,22 @@
+unit: backoff_nojitter.js; 4 clients fail at t = 0, the server is down until 2.0 s; seed 7
+
+##! verbatim
+s         0.0       0.5       1.0       1.5       2.0       2.5       3.0       3.5
+client A  x.x...x.......x...............x...............................S
+client B  x.x...x.......x...............x...............................S
+client C  x.x...x.......x...............x...............................S
+client D  x.x...x.......x...............x...............................S
+server    DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+load      4.4...4.......4...............4...............................4.................
+####
+(one column per 50 ms; x a failed request, S the one that succeeds, . waiting;
+ server: D down, u up; load: requests per column)
+
+delays drawn (ms):
+    client A    100   200   400   800  1600  3200  5000  5000
+    client B    100   200   400   800  1600  3200  5000  5000
+    client C    100   200   400   800  1600  3200  5000  5000
+    client D    100   200   400   800  1600  3200  5000  5000
+retries (all requests after t = 0): 20; within 5 ms of another client's retry: 20  !! every one: a thundering herd
+clients whose whole schedule equals another's: ((lockstep: 4)) of 4   law == 0   BROKEN
+<hwut-end>

@@ -1,0 +1,22 @@
+layering of 'broken' (layers.ini, gcc -I. -Ihal -Idrivers -Iservices -Iapp)
+
+LAYERS  (a layer may include itself and what stands below it)
+  L3 app       | app_config.h main.c
+  L2 services  | logger.c logger.h telemetry.c telemetry.h
+  L1 drivers   | led.c led.h modem.c modem.h
+  L0 hal       | gpio.c gpio.h uart.c uart.h
+
+INCLUDE MATRIX  includes from the row's layer into the column's (as gcc resolves them)
+                hal       drivers   services  app
+  hal (L0)      2         .         [2]       .
+  drivers (L1)  2         2         .         [1]
+  services (L2) 1         1         3         .
+  app (L3)      .         1         2         1
+  ^ rows include columns; '[n]' = upward, forbidden; upper right must be '.'
+
+UPWARD  drivers/modem.c:4   includes <app/app_config.h>         = app/app_config.h      L1 drivers -> L3 app
+UPWARD  hal/gpio.c:2        includes "../services/telemetry.h"  = services/telemetry.h  L0 hal -> L2 services
+UPWARD  hal/uart.c:3        includes "logger.h"                 = services/logger.h     L0 hal -> L2 services
+edges: 18   L1 upper right empty: upward ((upward: 3))   law == 0   BROKEN
+files outside every layer ((unlayered: 0))   law == 0   kept
+<hwut-end>

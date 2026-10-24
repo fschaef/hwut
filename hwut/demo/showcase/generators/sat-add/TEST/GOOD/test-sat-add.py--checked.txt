@@ -1,0 +1,20 @@
+unit:   ../sat_add.c
+basis:  a in {MIN, MIN+1, -1, 0, +1, MAX-1, MAX}
+        b in {MIN, MIN+1, -1, 0, +1, MAX-1, MAX}
+space:  7 x 7 = 49 points (space_iterator.do, b fastest)
+cells:  '=' exact sum   '^' clamped to MAX   'v' clamped to MIN   '!' WRONG
+
+##! verbatim
+  a \ b     MIN MIN+1    -1     0    +1 MAX-1   MAX
+  MIN         v     v     v     =     =     =     =
+  MIN+1       v     v     =     =     =     =     =
+  -1          v     =     =     =     =     =     =
+  0           =     =     =     =     =     =     =
+  +1          =     =     =     =     =     =     ^
+  MAX-1       =     =     =     =     =     ^     ^
+  MAX         =     =     =     =     ^     ^     ^
+####
+
+exact: 37   clamped up: 6   clamped down: 6
+points with a wrong result ((wrong: 0)) of 49   law == 0   kept
+<hwut-end>

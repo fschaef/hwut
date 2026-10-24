@@ -1,0 +1,15 @@
+rule: deployed-2019  pattern .*(?:.*=.*)   engine: Python re (backtracking)
+same answers as '"=" in s' on 400 random inputs (seed 2019): disagree ((disagree: 0))   law == 0   kept
+
+##! table ignore=2,3
+     n  match        us*  log-time*
+    25  no          13.7  ==============
+    50  no          81.1  ===================
+   100  no         550.6  =========================
+   200  no        2377.2  =============================
+   400  no       16403.8  ===================================
+####
+(* not compared: they belong to the machine; log-time: one '=' per factor 1.41 (2 per doubling) above 0.1 us)
+time ~ n^k, fitted over n = 50, 100, 200, 400: k = ((exponent: 2.51))   law <= 1.5   BROKEN
+slowest call ((slowest: 16403.8 us)) at n <= 400   (not judged: the time of this machine; the exponent is the verdict)
+<hwut-end>

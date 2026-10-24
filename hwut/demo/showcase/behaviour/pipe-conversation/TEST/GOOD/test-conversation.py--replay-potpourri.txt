@@ -1,0 +1,22 @@
+conversation: the recorded transcript transcripts/calcd-0.9.txt
+##! potpourri
+> req 1 fib 20
+> req 2 upper hello
+< res 2 HELLO
+> req 3 rev pipes
+< res 1 6765
+> req 4 len conversation
+< res 5 832040
+< res 3 sepip
+> req 5 fib 30
+> req 6 upper hwut
+< res 4 12
+> req 7 rev stressed
+< res 6 HWUT
+> req 8 len a
+< res 7 desserts
+< res 8 1
+####
+< bye 8
+(order not judged: a potpourri compares the lines as a set)
+<hwut-end>

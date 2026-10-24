@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-crossing.sh;bus-patch;true;ok;;0;0
+;one-car;true;ok;;0;1
+;quick-patch;true;ok;;0;2
+;traffic;true;ok;;0;3

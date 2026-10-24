@@ -1,0 +1,59 @@
+unit:      ../shell.awk
+generator: DeterministicStream(2).select_unchosen(alternatives, marker[site]) per site
+budget:    36 commands = the alternatives multiplied along the deepest site, 'reset target -> key -> <key>'
+
+   1  reset              -> OK                19  set echo off       -> OK
+   2  get echo           -> OK                20  get baud           -> OK
+   3  set stop odd       -> OK                21  reset baud         -> OK
+   4  get parity         -> OK                22  set baud on        -> OK
+   5  reset all          -> OK                23  get parity         -> OK
+   6  set echo on        -> OK                24  reset all          -> OK
+   7  reset echo         -> OK                25  reset              -> OK
+   8  get stop           -> OK                26  set echo even      -> OK
+   9  set baud even      -> OK                27  get stop           -> OK
+  10  set parity none    -> OK                28  reset              -> OK
+  11  reset              -> OK                29  set parity 9600    -> OK
+  12  get baud           -> OK                30  get echo           -> OK
+  13  get echo           -> OK                31  set baud odd       -> OK
+  14  set stop off       -> OK                32  reset all          -> OK
+  15  reset parity       -> OK                33  get baud           -> OK
+  16  reset all          -> OK                34  reset stop         -> OK
+  17  set parity 9600    -> OK                35  get parity         -> OK
+  18  get stop           -> OK                36  set stop none      -> OK
+
+  <command>:
+      set key value   12  ############
+      get key         12  ############
+      reset target    12  ############
+  set key value -> <key>:
+      baud             3  ###
+      parity           3  ###
+      stop             3  ###
+      echo             3  ###
+  set key value -> <value>:
+      9600             2  ##
+      on               2  ##
+      off              2  ##
+      odd              2  ##
+      even             2  ##
+      none             2  ##
+  get key -> <key>:
+      baud             3  ###
+      parity           3  ###
+      stop             3  ###
+      echo             3  ###
+  reset target -> <target>:
+      (nothing)        4  ####
+      all              4  ####
+      key              4  ####
+  reset target -> key -> <key>:
+      baud             1  #
+      parity           1  #
+      stop             1  #
+      echo             1  #
+
+seeds 1..200, 36 commands each -- walks that leave a hole: select 191 of 200, select_unchosen 0 of 200
+
+commands refused ((refused: 0))   law == 0   kept
+alternatives never generated at their site ((holes: 0))   law == 0   kept
+<hwut-end>

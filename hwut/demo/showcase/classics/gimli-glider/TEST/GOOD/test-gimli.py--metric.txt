@@ -1,0 +1,14 @@
+fuel sheet: sheets/montreal-metric.txt, computed by fuel_sheet.awk
+    dripsticks         7682 L
+    density used     ((density: 0.803 kg/L)) = 0.803 kg/L   law: jet fuel 0.775 .. 0.840 kg/L   kept
+    on board           6169 kg   (dripstick litres x density)
+    required          22300 kg
+    to add            16131 kg
+    litres to add     20089 L
+
+the tanks after refuelling: 27771 L at the fuel's real 0.803 kg/L
+    fuel on board    ((on_board: 49163.3 lb)) = 22300 kg   law >= 22300 kg   kept
+    (one '#' per 1000 kg)
+    required  ######################    22300 kg
+    on board  ######################    22300 kg
+<hwut-end>

@@ -1,0 +1,71 @@
+unit: config_holder.get_publish_early
+schedule strings: position = tick; a digit = the caller takes its next atomic step
+in that tick, lower digit first (0 before 1 before 2); blank = no step
+
+timeline 'reader long after'
+    W = "1111111"
+    R = "        11"
+##! verbatim
+  tick  0          1          2          3          4          5          6          8          9   (ticks without a step omitted)
+  W     chk1 none  lock       chk2 none  publish    fill       unlock     use 8080
+  R                                                                                  chk1 set   use 8080
+####
+    read: W 8080, R 8080   built: 1
+    invariant: kept
+
+timeline 'reader in the window, init goes first'
+    W = "1111111"
+    R = "   2222222222"
+##! verbatim
+  tick  0          1          2          3          4          5          6
+  W     chk1 none  lock       chk2 none  publish    fill       unlock     use 8080
+  R                                      chk1 set   use 8080
+####
+    read: R 8080, W 8080   built: 1
+    invariant: kept
+
+timeline 'reader in the window, reader goes first'
+    W = "1111111"
+    R = "   2022222222"
+##! verbatim
+  tick  0          1          2          3          4          5          6
+  W     chk1 none  lock       chk2 none  publish    fill       unlock     use 8080
+  R                                      chk1 set   use None
+####
+    read: R None, W 8080   built: 1
+    !! R read port None: a half-initialised object
+    invariant: BROKEN
+
+timeline 'two initialisers and a reader'
+    W = "1111111111"
+    V = "2222222222"
+    R = "   0000000000"
+##! verbatim
+  tick  0          1          2          3          4          5          6          7          8          9          10         11
+  W     chk1 none  lock       chk2 none  publish    fill       unlock     use 8080
+  V     chk1 none  wait       wait       wait       wait       lock       chk2 set   unlock     use 8080
+  R                                      chk1 none  wait       wait       wait       wait       lock       chk2 set   unlock     use 8080
+####
+    read: W 8080, V 8080, R 8080   built: 1
+    invariant: kept
+
+drawn timelines: 4, invariant kept: 3, broken: 1
+
+every schedule of two callers A, B, enumerated: 580, invariant kept: 578
+  (every order of the callers' steps; a caller that could only wait for the lock again
+  is not rescheduled -- so the number depends on how long this unit holds the lock)
+schedules breaking the invariant ((breaches: 2))   law == 0   BROKEN
+
+timeline 'first broken schedule AAAABBAAA'
+    A = "1111  111"
+    B = "    11   "
+##! verbatim
+  tick  0          1          2          3          4          5          6          7          8
+  A     chk1 none  lock       chk2 none  publish                          fill       unlock     use 8080
+  B                                                 chk1 set   use None
+####
+    read: B None, A 8080   built: 1
+    !! B read port None: a half-initialised object
+    invariant: BROKEN
+
+<hwut-end>

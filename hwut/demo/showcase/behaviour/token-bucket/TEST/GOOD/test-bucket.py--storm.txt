@@ -1,0 +1,21 @@
+unit: tb.c, 10 tokens/s, burst 5; traffic 'storm': 20/s for 1 s; quiet; 100/s from 4.0 to 4.3 s; then 8/s, 64 messages
+
+##! verbatim
+s         0.0       1.0       2.0       3.0       4.0       5.0
+arrived   2222222222..............................+++1111.1111.1111.11
+sent      2222111111..............................5111111.1111.1111.11
+dropped   ....111111..............................599.................
+ >5 tok   ............................................................
+  5 tok   ..............**************************....................
+  4 tok   .............***************************....................
+  3 tok   *...........****************************.................***
+  2 tok   **.........*****************************............********
+  1 tok   ***.......******************************.......*************
+####
+(one column per 100 ms; digits count messages, '+' ten or more;
+ '*' a token in the bucket at the column's end, '^' more than 5)
+
+messages: 35 sent, 29 dropped; highest level seen: 5.0 tokens   cap 5   kept
+busiest 1 s window: 14 sent, from 0.00 s   law <= 15   kept
+1 s windows with more than 15 sent: ((breaches: 0))   law == 0   kept
+<hwut-end>

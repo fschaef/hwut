@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-schedule.py;inheritance;true;ok;;0;0
+;inversion;true;ok;;0;1
+;overload;true;ok;;0;2
+;rate-monotonic;true;ok;;0;3

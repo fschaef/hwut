@@ -1,0 +1,68 @@
+schedule strings: position = tick; a digit = the task takes its next atomic step
+    in that tick, lower digit first; blank = no step
+step codes: seeN finds N items   putI>F puts item I, fill F after   prepI prepares
+    item I   takeI>F takes item I, fill F after   wait finds no room / no item
+    closes, done: the task ends.   buffer: the items after the tick, oldest left
+
+timeline consumer-keeps-up
+##! verbatim
+    P = "1   1   1   1   1"
+    Q = "  1   1   1   1   1"
+    C = " 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+  tick    0        1        2        3        4        5        6        7        8        9        10       11       12       13       14       15       16       17       18       19       21   (ticks without a step omitted)
+  P       see0                                put1>1                              see1                                put2>1                              closes
+  Q                         see0                                put11>2                             see1                                put12>2                             closes
+  C                wait              wait              see1              take1>1           see1              take11>0          see1              take2>1           see1              take12>0 done
+  buffer  []       []       []       []       [1]      [1]      [1 11]   [11]     [11]     [11]     [11]     []       [2]      [2]      [2 12]   [12]     [12]     [12]     [12]     []       []
+####
+    steps 21 (of all tasks, several per tick)   puts 4   takes 4   max fill 2 of 2
+    law: kept
+
+timeline producers-burst
+##! verbatim
+    P = "11111111111111"
+    Q = "  11111111111111111"
+    C = "      1111111111111111"
+  tick    0        1        2        3        4        5        6        7        8        9        10       11       12       13       14
+  P       see0     put1>1   see1     put2>2   closes
+  Q                         see1     put11>3  wait     wait     wait     wait     wait     wait     see1     put12>2  closes
+  C                                                             see3     take1>2  see2     take2>1  see1     take11>1 see1     take12>0 done
+  buffer  []       [1]      [1]      [1 2 11] [1 2 11] [1 2 11] [1 2 11] [2 11]   [2 11]   [11]     [11]     [12]     [12]     []       []
+####
+    steps 25 (of all tasks, several per tick)   puts 4   takes 4   max fill 3 of 2
+    !! fill 3 above capacity 2 at tick 3 (Q put 11)
+    law: BROKEN
+
+timeline same-tick-Q-checks
+##! verbatim
+    P = "1 2 2 2 2 2 2 2 2 2"
+    Q = "  1 1 1 1 1 1 1 1 1 1"
+    C = "      1 1 1 1 1 1 1 1 1 1 1"
+  tick    0        2        4        6        8        10       12       14       16       18       20       22   (ticks without a step omitted)
+  P       see0     put1>1   wait     wait     see1     put2>2   closes
+  Q                see0     put11>2  wait     wait     see1     put12>3  closes
+  C                                  see2     take1>1  see1     take11>2 see2     take2>1  see1     take12>0 done
+  buffer  []       [1]      [1 11]   [1 11]   [11]     [11 2]   [2 12]   [2 12]   [12]     [12]     []       []
+####
+    steps 23 (of all tasks, several per tick)   puts 4   takes 4   max fill 3 of 2
+    !! fill 3 above capacity 2 at tick 12 (Q put 12)
+    law: BROKEN
+
+timeline consumer-first
+##! verbatim
+    P = " 1 1 1 1 1 1 1 1 1"
+    Q = "  1 1 1 1 1 1 1 1 1"
+    C = "1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+  tick    0        1        2        3        4        5        6        7        8        9        10       11       12       14       16       18       20   (ticks without a step omitted)
+  P                see0              put1>1            wait              see1              put2>2            closes
+  Q                         see0              put11>2           wait              see1              put12>3           closes
+  C       wait              wait              see2              take1>1           see1              take11>2          see2     take2>1  see1     take12>0 done
+  buffer  []       []       []       [1]      [1 11]   [1 11]   [11]     [11]     [11]     [11 2]   [2 12]   [2 12]   [2 12]   [12]     [12]     []       []
+####
+    steps 23 (of all tasks, several per tick)   puts 4   takes 4   max fill 3 of 2
+    !! fill 3 above capacity 2 at tick 10 (Q put 12)
+    law: BROKEN
+
+timelines: 4, law kept in 1
+timelines breaking the law ((breaches: 3))   law == 0   BROKEN
+<hwut-end>

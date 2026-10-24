@@ -1,0 +1,24 @@
+unit: lru_nofresh.c, 4 slots; trace 'lru'
+
+step  op         result    cache (most recent first)   evicted
+----  ---------  --------  --------------------------  -------
+   1  put A 1    -         [A . . .]                   -
+   2  put B 2    -         [B A . .]                   -
+   3  put C 3    -         [C B A .]                   -
+   4  put D 4    -         [D C B A]                   -
+   5  get A      hit 1     [D C B A]                   -   !! hit not moved to the front
+   6  get B      hit 2     [D C B A]                   -   !! hit not moved to the front
+   7  put E 5    -         [E D C B]                   A   !! least recently used was C
+   8  get C      hit 3     [E D C B]                   -   !! hit not moved to the front
+   9  get A      miss      [E D C B]                   -
+  10  put F 6    -         [F E D C]                   B   !! least recently used was D
+  11  get D      hit 4     [F E D C]                   -   !! hit not moved to the front
+  12  get E      hit 5     [F E D C]                   -   !! hit not moved to the front
+  13  put G 7    -         [G F E D]                   C   ok
+  14  get B      miss      [G F E D]                   -
+  15  get A      miss      [G F E D]                   -
+
+hits: 5 of 8 gets
+(cache: '.' an empty slot; result and evicted: '-' none)
+evictions against the specification: ((wrong_evictions: 2))   law == 0   BROKEN
+<hwut-end>

@@ -1,0 +1,90 @@
+# lockdep.pype -- LOCK-ORDER CHECKING over a trace of lock events, after the
+# Linux kernel's lockdep. It needs no deadlock to happen: whenever a thread
+# takes lock Y while it holds lock X, the edge X -> Y enters the lock-order
+# graph. A CYCLE in that graph is a deadlock waiting for its moment.
+#
+#     RUNNING   lock events of the worker threads ('T1 got A', ...)
+#     SETTLED   after 'threads joined': only final balances may come
+#
+# Each thread's own events arrive in its own order; how the threads
+# interleave does not change the graph. The output is sorted throughout.
+
+RUNNING is: REPORT
+RUNNING/on: <bol> "scenario" => {
+    print(pype.line())
+}
+RUNNING/on: <bol> "opening total" <total = int> => {
+    opening = total
+}
+RUNNING/on: <t = "T[0-9]"> "got" <lock = "*"> => {
+    held = held_db.setdefault(t, [])
+    for h in held:
+        witness_db.setdefault((h, lock), set()).add(t)
+    held.append(lock)
+    lock_set.add(lock)
+}
+RUNNING/on: <t = "T[0-9]"> "released" <lock = "*"> => {
+    if lock not in held_db.get(t, []):
+        breach_set.add("%s released %s, which it did not hold" % (t, lock))
+    else:
+        held_db[t].remove(lock)
+}
+RUNNING/on: <t = "T[0-9]"> "timed out on" <lock = "*"> => ignore;
+RUNNING/on: "threads joined" => {
+    for t in sorted(held_db):
+        if held_db[t]:
+            breach_set.add("%s ended holding %s" % (t, " ".join(held_db[t])))
+}
+and: goto SETTLED;
+RUNNING/on: <else> => {
+    breach_set.add("an unknown line: " + pype.line())
+}
+
+SETTLED is: REPORT
+SETTLED/on: "balance" <account = "*"> <amount = int> => {
+    balance_db[account] = amount
+}
+SETTLED/on: <else> => {
+    breach_set.add("after the threads joined: " + pype.line())
+}
+
+REPORT/on: <bof> => {
+    held_db, witness_db, balance_db = {}, {}, {}
+    lock_set, breach_set = set(), set()
+    opening = None
+}
+REPORT/on: <eof> => {
+    name_list = sorted(lock_set)
+    print("lock order observed -- row: held, column: taken while holding it")
+    print("        " + "  ".join(name_list))
+    for a in name_list:
+        print("    %s   " % a + "  ".join(("!" if a > b else "x") if (a, b) in witness_db else "." for b in name_list))
+    print("(x taken in name order  ! taken AGAINST name order  . never)")
+    print("edges:")
+    for (a, b) in sorted(witness_db):
+        print("    %s -> %s   by %s" % (a, b, " ".join(sorted(witness_db[(a, b)]))))
+    succ = {}
+    for (a, b) in witness_db:
+        succ.setdefault(a, []).append(b)
+    cycle_set = set()
+    def walk(path):
+        for nxt in sorted(succ.get(path[-1], [])):
+            if nxt == path[0]:
+                cycle_set.add(tuple(path))
+            elif nxt not in path and nxt > path[0]:
+                walk(path + [nxt])
+    for start in name_list:
+        walk([start])
+    print("cycles (potential deadlocks): ((cycles: %d))   law == 0   %s" % (len(cycle_set), "kept" if not cycle_set else "BROKEN"))
+    for cycle in sorted(cycle_set):
+        ring = list(cycle) + [cycle[0]]
+        print("    " + " -> ".join(ring))
+        for a, b in zip(ring, ring[1:]):
+            print("        %s holds %s, takes %s" % ("/".join(sorted(witness_db[(a, b)])), a, b))
+    print("final balances: " + ", ".join("%s %d" % (k, balance_db[k]) for k in sorted(balance_db)))
+    total = sum(balance_db.values())
+    print("money at the end: ((total: %d))   law == %s (opening)   %s" % (total, opening, "kept" if total == opening else "BROKEN"))
+    for breach in sorted(breach_set):
+        print("BREACH: " + breach)
+    print("<hwut-end>")
+}

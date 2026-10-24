@@ -1,0 +1,98 @@
+# account.pype -- THE LIFECYCLE OF AN ACCOUNT, replayed from its events.
+#
+#     COMMANDS   outcomes of commands, in whatever order the clerks finished
+#     NEW        the replay has begun: the first event must be 'opened'
+#     ACTIVE     deposits and withdrawals; 'frozen' -> FROZEN, 'closed' -> CLOSED
+#     FROZEN     deposits only; 'unfrozen' -> ACTIVE
+#     CLOSED     nothing may follow
+#
+# Laws of the stream: sequence numbers run 1, 2, 3, ... without gap or
+# repeat; the balance never drops below zero; an account closes at zero.
+# The command outcomes arrive in any order -- only their counts are printed.
+# The replay arrives in sequence order -- its ledger is printed row by row.
+
+COMMANDS is: LEDGER
+COMMANDS/on: <bol> "scenario" => {
+    print(pype.line())
+}
+COMMANDS/on: <bol> "command" => {
+    what = pype.line().split(" ", 1)[1]           # 'withdraw 70: accepted'
+    outcome_db[what] = outcome_db.get(what, 0) + 1
+}
+COMMANDS/on: "replay" => {
+    print("command outcomes (counted; the clerks finish in any order):")
+    for key in sorted(outcome_db):
+        print("    %-42s x%d" % (key, outcome_db[key]))
+    print("replayed ledger:")
+    print("    seq    event        amount  balance")
+}
+and: goto NEW;
+COMMANDS/on: <else> => {
+    breach_set.add("an unknown line: " + pype.line())
+}
+
+NEW is: LEDGER
+NEW/on: "event" <seq = int> "opened" => {
+    row(seq, "opened", 0)
+}
+and: goto ACTIVE;
+
+ACTIVE is: LEDGER, MONEY
+ACTIVE/on: "event" <seq = int> "withdrawn" <amount = int> => {
+    row(seq, "withdrawn", -amount)
+}
+ACTIVE/on: "event" <seq = int> "frozen" => {
+    row(seq, "frozen", 0)
+}
+and: goto FROZEN;
+ACTIVE/on: "event" <seq = int> "closed" => {
+    row(seq, "closed", 0)
+    if balance != 0:
+        breach_set.add("closed at a balance of %d" % balance)
+}
+and: goto CLOSED;
+
+FROZEN is: LEDGER, MONEY
+FROZEN/on: "event" <seq = int> "unfrozen" => {
+    row(seq, "unfrozen", 0)
+}
+and: goto ACTIVE;
+
+CLOSED is: LEDGER
+
+# MONEY is a vocabulary, never entered on its own: it inherits LEDGER's
+# '<eof>' through every mode that names it before MONEY (pype: every mode
+# states its end; the first match in definition order fires).
+MONEY/on: <eof> => ignore;
+MONEY/on: "event" <seq = int> "deposited" <amount = int> => {
+    row(seq, "deposited", amount)
+}
+
+LEDGER/on: <bof> => {
+    outcome_db, breach_set = {}, set()
+    balance, last_seq = 0, 0
+    def row(seq, kind, amount):
+        global balance, last_seq
+        mark = "  "
+        if seq != last_seq + 1:
+            breach_set.add("seq %d follows seq %d" % (seq, last_seq))
+            mark = "!!"
+        last_seq = seq
+        balance += amount
+        bar = "=" * (balance // 10) if balance >= 0 else "!! below zero"
+        print("    %3d%s  %-10s %7s  %7d  |%s" % (seq, mark, kind, "%+d" % amount if amount else "-", balance, bar))
+        if balance < 0 and not [b for b in breach_set if b.startswith("balance")]:
+            breach_set.add("balance below zero, first after seq %d: %d" % (seq, balance))
+}
+LEDGER/on: <else> => {
+    breach_set.add("in %s: %s" % (pype.mode_name(), pype.line()))
+}
+LEDGER/on: <eof> => {
+    print("(seq '!!': not the previous seq + 1; bar: '=' per 10 of balance)")
+    print("final: %s, balance %d" % (pype.mode_name(), balance))
+    for breach in sorted(breach_set):
+        print("BREACH: " + breach)
+    print("breaches of lifecycle, sequence and balance: ((breaches: %d))   law == 0   %s"
+          % (len(breach_set), "kept" if not breach_set else "BROKEN"))
+    print("<hwut-end>")
+}

@@ -1,0 +1,8 @@
+id,date,customer,status,amount,note
+2001,2024-02-28,Acme GmbH,paid,1499.00,
+2002,2023-02-29,Beta AG,open,10,
+2003,2024-03-01,,paid,5,
+2004,2024-03-01,Gamma,shipped,7,
+2005,2024-03-02,Delta,paid,"1,5",German decimal comma
+2006,2024-03-03,Epsilon,open,12,too,many
+2007,03/04/2024,Zeta,open,8,

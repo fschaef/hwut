@@ -1,0 +1,20 @@
+ground program: sm_forces.c -DUNITS=UNITS_SI -- computes N*s, tags it 'N*s'; thruster log: thruster-log.txt
+the AMD file, as navigation reads it:
+ day  on-time  AMD file says   navigation reads   flown at 0.2 lbf   flown/read
+  18    3.5 s  3.1138 N*s          3.1138 N*s       3.1138 N*s      1.00
+  41    4.0 s  3.5586 N*s          3.5586 N*s       3.5586 N*s      1.00
+  63    4.5 s  4.0034 N*s          4.0034 N*s       4.0034 N*s      1.00
+  87    3.0 s  2.6689 N*s          2.6689 N*s       2.6689 N*s      1.00
+ 110    5.0 s  4.4482 N*s          4.4482 N*s       4.4482 N*s      1.00
+ 132    4.5 s  4.0034 N*s          4.0034 N*s       4.0034 N*s      1.00
+ 155    4.0 s  3.5586 N*s          3.5586 N*s       3.5586 N*s      1.00
+ 179    3.5 s  3.1138 N*s          3.1138 N*s       3.1138 N*s      1.00
+ 201    5.0 s  4.4482 N*s          4.4482 N*s       4.4482 N*s      1.00
+ 224    4.5 s  4.0034 N*s          4.0034 N*s       4.0034 N*s      1.00
+ 248    4.0 s  3.5586 N*s          3.5586 N*s       3.5586 N*s      1.00
+ 271    4.5 s  4.0034 N*s          4.0034 N*s       4.0034 N*s      1.00
+(navigation reads the number in N*s, converting from the tag; flown = on-time x 0.2 lbf; '!!' read != flown)
+total impulse navigation took:    ((total: 44.4823 N*s)) = 10.0000 lbf*s   law 10.0 +- 0.01 lbf*s   kept
+total impulse the thrusters gave: 44.4822 N*s  (50.0 s at 0.2 lbf)  -- the last digit: the file's rounding to 4 decimals
+periapsis at Mars: navigation predicts 226 km, the spacecraft flies ((periapsis: 226 km))   law >= 80 km (MIB)   kept
+<hwut-end>

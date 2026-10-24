@@ -1,0 +1,20 @@
+HYGIENE GRID of 'broken'   '.' clean, else the number of lines breaking the rule
+  W1 tab indent  W2 trailing blank  W3 CR LF  W4 BOM  W5 non-ASCII in code  W6 final newline
+  file              W1  W2  W3  W4  W5  W6
+  Makefile          .   .   .   .   .   .
+  docs/notes.md     .   .   .   .   .   .
+  scripts/run.sh    .   .   .   .   .   1
+  src/filter.c      .   2   8   .   .   .
+  src/units.c       .   .   .   .   2   .
+  web/app.js        1   .   .   1   .   .
+
+THE FIRST OFFENDING LINE OF EACH, MADE VISIBLE
+  W6 scripts/run.sh:4  ./build/fw.elf[no LF at EOF]
+  W2 src/filter.c:5  {[SP][CR]
+  W3 src/filter.c:1  /* filter.c -- first-order low-pass, "Grenzfrequenz" in comments is fine: [U+00E4] [U+00F6] [U+00FC] */[CR]
+  W5 src/units.c:5      float gr[U+00F6][U+00DF]e = celsius;
+  W1 web/app.js:4  [TAB]document.title = `${rpm} rpm`;
+  W4 web/app.js:1  [BOM]'use strict';
+
+files 6   files x rules broken ((findings: 6))   law == 0   BROKEN
+<hwut-end>

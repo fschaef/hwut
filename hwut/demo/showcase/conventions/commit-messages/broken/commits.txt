@@ -1,0 +1,26 @@
+build: add the Makefile of the bench firmware
+
+The firmware is built with arm-none-eabi-gcc; 'make flash' writes it
+to the board over SWD.
+
+Signed-off-by: Anna Berg <anna@example.com>
+%%
+feat(adc): sample all eight channels of the converter at one kilohertz
+
+Signed-off-by: Anna Berg <anna@example.com>
+%%
+Fixed the UART bug.
+%%
+fix(uart): drop frames with a bad CRC
+A frame whose CRC failed was passed on to the parser, which then
+reported a bogus speed. Such a frame is dropped now, and counted.
+
+Signed-off-by: Jonas Kurz <jonas@example.com>
+%%
+refactor(motor): split the speed loop from the PWM
+
+The loop computes a duty cycle; the PWM driver only writes it. Both can now be tested on their own, which was the point of the exercise.
+
+Signed-off-by: Jonas Kurz <jonas@example.com>
+%%
+test(adc): cover the over-range reading

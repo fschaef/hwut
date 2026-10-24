@@ -1,0 +1,5 @@
+HYGIENE of this area's own test applications, conventions/*/TEST/test-*, rules W1..W6
+
+test applications ((files: 14))   law >= 14 (one per example)
+files x rules broken ((findings: 0))   law == 0   kept
+<hwut-end>

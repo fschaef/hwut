@@ -1,0 +1,24 @@
+project header (LICENSE-HEADER.txt):
+    SPDX-License-Identifier: MIT
+    Copyright (c) 2024 Acme Embedded GmbH
+
+HEADER MATRIX of 'broken'   ok = holds   XX = broken   -- = no header to judge
+    H1 SPDX in lines 1-3  H2 identifier  H3 copyright  H4 comment syntax
+file                  H1   H2   H3   H4
+Makefile              ok   ok   ok   ok
+ci/pipeline.yaml      ok   ok   ok   XX
+src/board.h           ok   ok   XX   ok
+src/main.c            ok   ok   ok   ok
+tools/flash.sh        XX   --   --   --
+tools/gen_table.py    ok   XX   ok   ok
+web/app.js            XX   --   --   --
+
+WHAT STANDS  ->  WHAT SHOULD   (sorted by file)
+  ci/pipeline.yaml: '// SPDX-License-Identifier: MIT'  ->  a comment of this language: #
+  src/board.h: 'Copyright (C) 2023 ACME'  ->  'Copyright (c) 2024 Acme Embedded GmbH'
+  tools/flash.sh: the header begins only at line 8
+  tools/gen_table.py: 'SPDX-License-Identifier: GPL-2.0-only'  ->  'SPDX-License-Identifier: MIT'
+  web/app.js: no SPDX header at all
+
+files: 7   files failing ((failing: 5))   law == 0   BROKEN
+<hwut-end>

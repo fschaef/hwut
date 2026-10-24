@@ -1,0 +1,16 @@
+benchctl of 'good' -- four places that describe its options
+
+OPTION MATRIX   cell: the default stated   yes: named, no default   -: not named
+                !: a finding -- differs from the code, missing where the code has it,
+                   or named though the parser does not accept it
+  option       code           --help         README         man
+  --baud       115200         115200         115200         115200
+  --dry-run    yes            yes            yes            yes
+  --help       yes            yes            yes            yes
+  --log-level  info           info           info           info
+  --port       /dev/ttyUSB0   /dev/ttyUSB0   /dev/ttyUSB0   /dev/ttyUSB0
+  --retries    3              3              3              3
+  --timeout    2              2              2              2
+
+options: 7   ((findings: 0))   law == 0   kept
+<hwut-end>

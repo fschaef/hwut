@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-units.py;exact-gauges;true;ok;;0;2
+;exact-table;false;constraint;constraint;0;0
+;legacy-gauges;true;ok;;0;3
+;legacy-table;false;constraint;constraint;0;1

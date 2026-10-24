@@ -1,0 +1,15 @@
+unit:  ../rb.c against a bounded-queue model
+space: CAPACITY [1, 2, 3, 4, 5, 7, 8, 64] x LOAD ['push-heavy', 'balanced', 'pop-heavy'] = 24 cells
+walk:  seeded operations until 512 bytes went in (two turns of an 8-bit index)
+       shortest 1031 ops (capacity 64, balanced), longest 2476 ops (capacity 1, push-heavy)
+cells: 'ok' agrees with the model; 'op N' = first operation that differs
+
+##! verbatim
+  load \ capacity       1      2      3      4      5      7      8     64
+  push-heavy P=0.7      ok     ok     ok     ok     ok     ok     ok     ok
+  balanced   P=0.5      ok     ok     ok     ok     ok     ok     ok     ok
+  pop-heavy  P=0.3      ok     ok     ok     ok     ok     ok     ok     ok
+####
+
+cells that diverge from the model ((diverging: 0)) of 24   law == 0   kept
+<hwut-end>

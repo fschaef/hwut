@@ -1,0 +1,4 @@
+# Montreal, the same reading, with the density in kilograms per litre.
+dripstick 7682  L
+required  22300 kg
+density   0.803 kg/L

@@ -1,0 +1,7 @@
+table: units-legacy.txt
+gauge readings, sensor unit -> display (hPa); off = |display - definition|
+  tire            32 psi   ((tire: 2206.3232000 hPa))   off 0.0866 Pa   law <= 0.001 Pa   BROKEN
+  cuff           120 mmHg  ((cuff: 159.9864000 hPa))   off 0.0465 Pa   law <= 0.001 Pa   BROKEN
+  altimeter    29.92 inHg  ((altimeter: 1013.2078880 hPa))   off 0.0407 Pa   law <= 0.001 Pa   BROKEN
+  vacuum         760 Torr  ((vacuum: 1013.2472000 hPa))   off 0.2800 Pa   law <= 0.001 Pa   BROKEN
+<hwut-end>

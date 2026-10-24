@@ -1,0 +1,94 @@
+# queue.pype -- THE LAW OF THE WORK QUEUE, as the states the queue goes through.
+#
+#     OPEN     jobs are queued, taken, done, acknowledged, redelivered
+#     CLOSED   'queue closed': no job may be queued any more; work drains
+#     STOPPED  'workers stopped': nothing may happen at all
+#
+# WORK holds the vocabulary of a running queue, REPORT the opening and the
+# closing word; STOPPED inherits only REPORT, so every line there is a breach.
+#
+# Laws: a job is taken only after it was queued; a job is done only while a
+# worker holds it; every queued job is done EXACTLY ONCE; nothing is queued
+# after close. What it prints is independent of the arrival order: a grid of
+# counts per job, then the breaches, sorted.
+
+OPEN is: WORK
+OPEN/on: <bol> "scenario" => {
+    print(pype.line())
+}
+OPEN/on: "queued" <job = int> => {
+    if job in queued_db:
+        breach_set.add("job %d queued twice" % job)
+    queued_db[job] = 1
+}
+OPEN/on: "queue closed" => goto CLOSED;
+
+CLOSED is: WORK
+CLOSED/on: "queued" <job = int> => {
+    breach_set.add("job %d queued after close" % job)
+}
+CLOSED/on: "workers stopped" => goto STOPPED;
+
+STOPPED is: REPORT
+STOPPED/on: <else> => {
+    breach_set.add("after the workers stopped: " + pype.line())
+}
+
+REPORT/on: <bof> => {
+    queued_db, taken_db, done_db, redelivered_db = {}, {}, {}, {}
+    holding_db = {}                       # job -> workers holding it now
+    stale_n = 0
+    extended_db = {}                      # job -> lease extensions
+    breach_set = set()
+}
+WORK is: REPORT
+WORK/on: "taken" <job = int> => {
+    if job not in queued_db:
+        breach_set.add("job %d taken before it was queued" % job)
+    taken_db[job] = taken_db.get(job, 0) + 1
+    holding_db[job] = holding_db.get(job, 0) + 1
+}
+WORK/on: "done" <job = int> => {
+    if holding_db.get(job, 0) == 0:
+        breach_set.add("job %d done while no worker held it" % job)
+    done_db[job] = done_db.get(job, 0) + 1
+}
+WORK/on: "acked" <job = int> => {
+    holding_db[job] = holding_db.get(job, 0) - 1
+}
+WORK/on: "stale ack" <job = int> => {
+    holding_db[job] = holding_db.get(job, 0) - 1
+    stale_n += 1
+}
+WORK/on: "lease extended" <job = int> => {
+    if holding_db.get(job, 0) == 0:
+        breach_set.add("job %d: lease extended while no worker held it" % job)
+    extended_db[job] = extended_db.get(job, 0) + 1
+}
+WORK/on: "redelivered" <job = int> => {
+    redelivered_db[job] = redelivered_db.get(job, 0) + 1
+}
+WORK/on: <else> => {
+    breach_set.add("a line the queue never says: " + pype.line())
+}
+REPORT/on: <eof> => {
+    job_list = sorted(queued_db)
+    print("jobs queued: %d" % len(job_list))
+    for first in range(0, len(job_list), 12):
+        part = job_list[first:first + 12]
+        print("    job         " + "".join("%3d" % j for j in part))
+        print("    taken       " + "".join("%3d" % taken_db.get(j, 0) for j in part))
+        print("    done        " + "".join("%3d" % done_db.get(j, 0) for j in part))
+        print("    redelivered " + "".join("%3s" % (redelivered_db.get(j, 0) or ".") for j in part))
+    print("(counts per job; '.' none)")
+    print("leases extended (heartbeat): %s" % (", ".join("job %d" % j for j in sorted(extended_db)) or "none"))
+    print("stale acknowledgements (ignored by the queue): %d" % stale_n)
+    for job in job_list:
+        if done_db.get(job, 0) != 1:
+            breach_set.add("job %d done %d times" % (job, done_db.get(job, 0)))
+    for breach in sorted(breach_set):
+        print("BREACH: " + breach)
+    print("breaches of exactly-once and causal order: ((breaches: %d))   law == 0   %s"
+          % (len(breach_set), "kept" if not breach_set else "BROKEN"))
+    print("<hwut-end>")
+}

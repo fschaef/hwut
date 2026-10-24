@@ -1,0 +1,24 @@
+unit: lru.c, 4 slots; trace 'lru'
+
+step  op         result    cache (most recent first)   evicted
+----  ---------  --------  --------------------------  -------
+   1  put A 1    -         [A . . .]                   -
+   2  put B 2    -         [B A . .]                   -
+   3  put C 3    -         [C B A .]                   -
+   4  put D 4    -         [D C B A]                   -
+   5  get A      hit 1     [A D C B]                   -
+   6  get B      hit 2     [B A D C]                   -
+   7  put E 5    -         [E B A D]                   C   ok
+   8  get C      miss      [E B A D]                   -
+   9  get A      hit 1     [A E B D]                   -
+  10  put F 6    -         [F A E B]                   D   ok
+  11  get D      miss      [F A E B]                   -
+  12  get E      hit 5     [E F A B]                   -
+  13  put G 7    -         [G E F A]                   B   ok
+  14  get B      miss      [G E F A]                   -
+  15  get A      hit 1     [A G E F]                   -
+
+hits: 5 of 8 gets
+(cache: '.' an empty slot; result and evicted: '-' none)
+evictions against the specification: ((wrong_evictions: 0))   law == 0   kept
+<hwut-end>

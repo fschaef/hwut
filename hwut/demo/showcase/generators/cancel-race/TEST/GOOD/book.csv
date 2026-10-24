@@ -1,0 +1,4 @@
+# vut-register 5 generation:3 apps:1 marks:0=2
+test;choice;verdict;report;stain;test_id;choice_id
+test-cancel.py;atomic;true;ok;;0;0
+;check-then-set;true;ok;;0;1

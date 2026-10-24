@@ -1,0 +1,38 @@
+file: apple-2014/sslKeyExchange.c   function: SSLVerifySignedServerKeyExchange()
+
+CONTROL FLOW of the function body, from the first check on
+##! verbatim
+ line  reach  statement                                                         flow
+   23    |    if ((err = ReadyHash(&SSLHashSHA1, &hashCtx)) != 0)
+   24    |        goto fail;                                                    -err-> fail
+   25    |    if ((err = SSLHashSHA1.update(&hashCtx, &clientRandom)) != 0)
+   26    |        goto fail;                                                    -err-> fail
+   27    |    if ((err = SSLHashSHA1.update(&hashCtx, &serverRandom)) != 0)
+   28    |        goto fail;                                                    -err-> fail
+   29    |    if ((err = SSLHashSHA1.update(&hashCtx, &signedParams)) != 0)
+   30    |        goto fail;                                                    -err-> fail
+   31    |    goto fail;                                                        =ALWAYS=> fail
+   32    X    if ((err = SSLHashSHA1.final(&hashCtx, &hashOut)) != 0)
+   33    X        goto fail;                                                    -err-> fail
+   35    X    err = sslRawVerify(ctx, ctx->peerPubKey, hashOut.data, hashOu...
+   41    X    if(err) {
+   42    X        sslErrorLog("SSLDecodeSignedServerKeyExchange: sslRawVeri...
+   44    X        goto fail;                                                    -err-> fail
+   45    X    }
+   47    |    fail:                                                             <- every jump lands here
+   48    |    SSLFreeBuffer(&hashCtx);
+   49    |    return err;
+####
+('|' reachable  'X' unreachable  '-err->' jump on error only  '=ALWAYS=>' unconditional jump)
+
+UNREACHABLE  statements at lines 32, 33, 35, 41, 42, 44
+DUPLICATE    line 31 repeats the goto of the line before
+second opinion, gcc -Wmisleading-indentation: warns at line 29 (the 'if' whose body looks like lines 30-31)
+unreachable statements: ((unreachable: 6))   law == 0   BROKEN
+
+THE RUN: three ServerKeyExchange messages, verified by this file
+  case 1 | genuine server, its own signature          | returns      0 | client continues the handshake
+  case 2 | man in the middle, signs with his own key  | returns      0 | client continues the handshake
+  case 3 | man in the middle, alters the DH params    | returns      0 | client continues the handshake
+forgeries accepted: ((forged_accepted: 2)) of 2   law == 0   BROKEN
+<hwut-end>

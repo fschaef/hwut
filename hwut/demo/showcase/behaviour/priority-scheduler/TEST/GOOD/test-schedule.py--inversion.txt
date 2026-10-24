@@ -1,0 +1,25 @@
+task set: tasksets/pathfinder.txt, mutex protocol: none
+    bus    prio 3  release  2  period  -  deadline  8  work c1 m1 c1
+    comms  prio 2  release  4  period  -  deadline 30  work c8
+    meteo  prio 1  release  0  period  -  deadline 30  work c1 m5 c1
+    one-shot jobs (no period); mutex M shared by bus and meteo
+
+##! verbatim
+tick    0    5    10   15   20
+bus     ..=BBBBBBBBBBBBm=.......
+          ^       !
+comms   ....========............
+            ^
+meteo   =m-m--------mmm--=......
+        ^
+####
+(= running   m running, holding mutex M   - ready, a higher one runs
+ B blocked on M   . nothing to do;   under a row: ^ release  ! missed)
+
+jobs:
+    bus    released  2  done 17  response 15  deadline  8  !! MISSED
+    comms  released  4  done 12  response  8  deadline 30  met
+    meteo  released  0  done 18  response 18  deadline 30  met
+bus blocked on M for 12 ticks, 8 of them while a lower-priority task outside M ran
+deadline misses: ((misses: 1))   law == 0   BROKEN
+<hwut-end>

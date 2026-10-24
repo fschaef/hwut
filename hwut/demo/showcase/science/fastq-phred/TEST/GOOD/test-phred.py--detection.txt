@@ -1,0 +1,9 @@
+DETECTION  lowest and highest quality character, the verdict, the verdict required
+##! verbatim
+  reads.p33.fq     '#'  35 .. 'I'  73   phred+33   required phred+33
+  reads.p64.fq     'B'  66 .. 'h' 104   phred+64   required phred+64
+  reads.mid33.fq   ';'  59 .. 'I'  73   ambiguous  required ambiguous
+  reads.hiq33.fq   '@'  64 .. 'I'  73   ambiguous  required ambiguous
+####
+files misdetected ((misdetected: 0)) of 4   law == 0   kept
+<hwut-end>

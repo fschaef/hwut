@@ -1,0 +1,15 @@
+unit:  request.complete_atomic / request.cancel_atomic
+steps: measured alone, R 2, X 2
+space: space_iterator over {R,X}^4 = 16 words, 10 pruned (not 2 R), 6 orders
+order: who takes each global step, R the reply, X the cancel; 'n:' = global step number
+
+  order  R steps                            X steps                          user told              released
+  RRXX   0:cas won, 1:notify done           2:cas lost, 3:too late           done(42)               1  ok
+  RXRX   0:cas won, 2:notify done           1:cas lost, 3:too late           done(42)               1  ok
+  RXXR   0:cas won, 3:notify done           1:cas lost, 2:too late           done(42)               1  ok
+  XRRX   1:cas lost, 2:drop reply           0:cas won, 3:notify cancel       cancelled              1  ok
+  XRXR   1:cas lost, 3:drop reply           0:cas won, 2:notify cancel       cancelled              1  ok
+  XXRR   2:cas lost, 3:drop reply           0:cas won, 1:notify cancel       cancelled              1  ok
+
+orders: 6   told or released other than once ((breaches: 0))   law == 0   kept
+<hwut-end>

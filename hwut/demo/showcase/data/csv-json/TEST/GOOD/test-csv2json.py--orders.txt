@@ -1,0 +1,36 @@
+node csv2json.js schema.json orders.csv
+----------------------------------------------------------------------------
+csv line 2                           | json object 1
+  id        1001                     | "id": 1001
+  date      2024-02-28               | "date": "2024-02-28"
+  customer  Acme GmbH                | "customer": "Acme GmbH"
+  status    paid                     | "status": "paid"
+  amount    1499.00                  | "amount": 1499
+  note      ""                       | "note": null
+----------------------------------------------------------------------------
+csv line 3                           | json object 2
+  id        1002                     | "id": 1002
+  date      2024-02-29               | "date": "2024-02-29"
+  customer  Smith, Jones & Co        | "customer": "Smith, Jones & Co"
+  status    open                     | "status": "open"
+  amount    23.5                     | "amount": 23.5
+  note      leap day order           | "note": "leap day order"
+----------------------------------------------------------------------------
+csv line 4                           | json object 3
+  id        1003                     | "id": 1003
+  date      2024-03-01               | "date": "2024-03-01"
+  customer  Müller KG                | "customer": "Müller KG"
+  status    void                     | "status": "void"
+  amount    0                        | "amount": 0
+  note      said "cancel" by phone   | "note": "said \"cancel\" by phone"
+----------------------------------------------------------------------------
+csv line 5                           | json object 4
+  id        1004                     | "id": 1004
+  date      2024-03-02               | "date": "2024-03-02"
+  customer  Zeta                     | "customer": "Zeta"
+  status    paid                     | "status": "paid"
+  amount    -12.40                   | "amount": -12.4
+  note      refund                   | "note": "refund"
+----------------------------------------------------------------------------
+exit 0: 4 of 4 rows converted, rejected ((rejected: 0))   law == 0   kept
+<hwut-end>

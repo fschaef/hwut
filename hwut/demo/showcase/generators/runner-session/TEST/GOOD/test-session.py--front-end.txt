@@ -1,0 +1,64 @@
+answered: 'yes' where the reply comes from the choice map (runs the choice,
+names it, or lists the map); (framework) marks a request hwut itself sends
+
+request: a choice   (de)   (framework)
+    app_argv.py    exit 0   answered: yes
+        | de               0,00
+        | de               7,50
+        | de           1.234,50
+        | de       1.234.567,89
+        | <hwut-end>
+    app_runner.py  exit 0   answered: yes
+        | de               0,00
+        | de               7,50
+        | de           1.234,50
+        | de       1.234.567,89
+        | <hwut-end>
+
+request: a typo   (dee)
+    app_argv.py    exit 1   answered: no
+        | choices: de, en, ch
+    app_runner.py  exit 1   answered: yes
+        | error: choice 'dee' not available.
+        | error: available: ch, de, en.
+        | error: did you mean 'de'?
+
+request: a choice by index   (1)
+    app_argv.py    exit 1   answered: no
+        | choices: de, en, ch
+    app_runner.py  exit 1   answered: no
+        | error: choice '1' not available.
+        | error: available: ch, de, en.
+        | error: did you mean 'ch'?
+
+request: no argument, '1' on stdin   (no argument)
+    app_argv.py    exit 1   answered: no
+        | choices: de, en, ch
+    app_runner.py  exit 0   answered: yes
+        | Select choice:
+        | (0) ch
+        | (1) de
+        | (2) en
+        | de               0,00
+        | ... 3 more line(s)
+
+request: --hwut-info   (--hwut-info)   (framework)
+    app_argv.py    exit 1   answered: no
+        | choices: de, en, ch
+    app_runner.py  exit 0   answered: yes
+        | numfmt per locale;
+        | CHOICES: ch, de, en;
+        | INTERACTIVE;
+
+request: --interactive: 'info', 'quit'   (--interactive)   (framework)
+    app_argv.py    exit 1   answered: no
+        | choices: de, en, ch
+    app_runner.py  exit 0   answered: yes
+        | info: numfmt per locale;
+        | info: CHOICES: ch, de, en;
+        | info: INTERACTIVE;
+        | done - 0
+        | bye
+
+framework requests app_runner.py leaves unanswered ((framework_unanswered: 0))   law == 0   kept
+<hwut-end>

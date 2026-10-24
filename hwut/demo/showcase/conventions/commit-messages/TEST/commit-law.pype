@@ -1,0 +1,115 @@
+# THE LAW OF A COMMIT MESSAGE, written as the parts a message has.
+#
+#     OUTSIDE   between two commits; '@@commit <hash>' opens one
+#     HEADER    the first line: 'type(scope): subject'
+#     GAP       the second line, which must be blank
+#     BODY      free text and trailers, up to '@@end'
+#
+#   H1  the header reads 'type(scope): subject' (scope optional), the type
+#       one of build, chore, docs, feat, fix, refactor, test
+#   H2  the header has at most 50 characters and no final '.'
+#   B1  a blank line separates header and body
+#   B2  no body line is longer than 72 characters
+#   S1  a 'Signed-off-by: Name <mail>' trailer certifies the origin
+#
+# The test application only REPORTS the history ('git log'); this script
+# judges every message and prints one row per commit, oldest first, and
+# every breach. The hash is printed as an analogy '((..))'.
+
+OUTSIDE/on: <bof> => {
+    import re
+    commit_list = []
+    RULE_LIST = ("H1", "H2", "B1", "B2", "S1")
+    TYPE_SET = {"build", "chore", "docs", "feat", "fix", "refactor", "test"}
+    def breach(rule, text, cell="XX"):
+        if cur["verdict"][rule] in ("ok", "XX"):
+            cur["verdict"][rule] = cell
+        cur["breach"].append("%s %s" % (rule, text))
+    def close():                       # the one place a commit ends
+        if not cur["signed"]:
+            breach("S1", "no 'Signed-off-by: Name <mail>' trailer")
+    def report():                      # the one place the verdict is printed
+        print("COMMIT LAW   H1 type(scope): subject   H2 header <= 50, no final '.'")
+        print("             B1 blank second line   B2 body lines <= 72   S1 Signed-off-by")
+        print("cells: ok, XX broken; under H2 and B2 a number is the measured length that breaks it")
+        print("commit       %s  header" % "  ".join("%-3s" % r for r in RULE_LIST))
+        for c in commit_list:
+            print("((%s))  %s  %s" % (c["hash"], "  ".join("%-3s" % c["verdict"][r] for r in RULE_LIST),
+                                      c["header"]))
+        print()
+        broken = [c for c in commit_list if c["breach"]]
+        for c in broken:
+            for b in c["breach"]:
+                print("BREACH ((%s)) %s" % (c["hash"], b))
+        print("commits: %d   breaking the law ((broken: %d))   law == 0   %s"
+              % (len(commit_list), len(broken), "kept" if not broken else "BROKEN"))
+        print("<hwut-end>")
+}
+OUTSIDE/on: <bol> "@@commit" <h = "*"> => {
+    cur = {"hash": h, "header": "", "verdict": dict((r, "ok") for r in RULE_LIST),
+           "breach": [], "signed": False}
+    commit_list.append(cur)
+}
+and: goto HEADER;
+OUTSIDE/on: <else> => ignore;
+
+HEADER/on: <else> => {
+    header = pype.line()
+    cur["header"] = header
+    m = re.match(r"^(\w+)(\([\w-]+\))?: \S", header)
+    if not m or m.group(1) not in TYPE_SET:
+        breach("H1", "header is not 'type(scope): subject' with a known type")
+    if len(header) > 50:
+        breach("H2", "header has %d characters, 50 at most" % len(header), str(len(header)))
+    if header.rstrip().endswith("."):
+        breach("H2", "header ends with '.'")
+}
+and: goto GAP;
+
+GAP/on: <bol> <eol> => goto BODY;
+GAP/on: <bol> "@@end" <eol> => {
+    close()
+}
+and: goto OUTSIDE;
+GAP/on: <else> => {
+    breach("B1", "no blank line after the header")
+    if len(pype.line()) > 72:
+        breach("B2", "line %d has %d characters" % (pype.line_n(), len(pype.line())), str(len(pype.line())))
+}
+and: goto BODY;
+
+BODY/on: <bol> "@@end" <eol> => {
+    close()
+}
+and: goto OUTSIDE;
+BODY/on: <bol> "Signed-off-by:" => {
+    if re.match(r"^Signed-off-by: [^<>]+ <[^<>@\s]+@[^<>\s]+>$", pype.line()):
+        cur["signed"] = True
+}
+BODY/on: <bol> <eol> => ignore;
+BODY/on: <else> => {
+    if len(pype.line()) > 72:
+        breach("B2", "a body line has %d characters, 72 at most" % len(pype.line()), str(len(pype.line())))
+}
+
+OUTSIDE/on: <eof> => {
+    report()
+}
+
+# The input ends INSIDE a commit (no '@@end'): the message is judged as it
+# stands, the truncation is a breach of its own, and the report follows.
+HEADER/on: <eof> => {
+    breach("H1", "the history ends inside a commit, before its header")
+    close()
+    report()
+}
+GAP/on: <eof> => {
+    breach("B1", "the history ends inside a commit, no '@@end'")
+    close()
+    report()
+}
+BODY/on: <eof> => {
+    breach("B2", "the history ends inside a commit, no '@@end'")
+    close()
+    report()
+}

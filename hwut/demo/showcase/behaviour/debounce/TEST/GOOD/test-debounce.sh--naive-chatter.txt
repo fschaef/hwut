@@ -1,0 +1,23 @@
+unit:   debounce_naive.c, threshold 5 ms
+signal: signals/chatter.txt, one character per 1 ms
+
+##! verbatim
+ms         0         10        20        30        40        50        60        70        80        90        100     
+           |.........|.........|.........|.........|.........|.........|.........|.........|.........|.........|.......
+raw        ______________-__-_---_-___---_------------_-------------------_------__-___---_-__-___-____________________
+debounced  ____________________-----___-------------------------------------------______-----__________________________
+                                    ^
+####
+(one character per 1 ms; raw and debounced: '-' high, '_' low; '^' a pulse shorter than 5 ms)
+
+edges: raw 26, debounced 6
+debounced pulses (between two edges):
+    high  from  20 ms  for   5 ms   ok
+    low   from  25 ms  for   3 ms   !! shorter than 5 ms
+    high  from  28 ms  for  43 ms   ok
+    low   from  71 ms  for   6 ms   ok
+    high  from  77 ms  for   5 ms   ok
+shortest pulse:             ((shortest: 3 ms))   law >= 5 ms   BROKEN
+pulses shorter than 5 ms:   ((short_pulses: 1))   law == 0      BROKEN
+high pulses for one press:  ((high_pulses: 3))   law == 1      BROKEN
+<hwut-end>

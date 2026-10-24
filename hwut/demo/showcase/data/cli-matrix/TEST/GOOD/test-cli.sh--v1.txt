@@ -1,0 +1,28 @@
+crc32 built from crc32_v1.c
+rules: R1 results on stdout, nothing else there   R2 exit 0 all read, 1 a file unreadable,
+       2 bad command line (--help: 0, usage on stdout)   R3 complaints on stderr, 'crc32: ...'
+       R4 a bad file does not stop the others
+case                argv                exit want exit got  verdict
+check value         check                       0        0   ok
+    out| CBF43926  check
+empty file          empty                       0        0   ok
+    out| 00000000  empty
+standard input      -                           0        0   R1:stdout
+    out| error: - not found
+help                --help                      0        1   R2:exit R2:help
+    out| usage: crc32 FILE...
+missing file        nofile                      1        0   R2:exit R3:stdout R3:stderr
+    out| error: nofile not found
+missing among good  check nofile empty          1        0   R2:exit R1:stdout R3:stderr
+    out| CBF43926  check
+    out| error: nofile not found
+    out| 00000000  empty
+directory           TEST                        1        0   R2:exit R3:stdout R3:stderr
+    out| 00000000  TEST
+no argument         (none)                      2        1   R2:exit R3:stdout R3:stderr
+    out| usage: crc32 FILE...
+unknown option      -x check                    2        0   R2:exit R3:stdout R3:stderr
+    out| error: -x not found
+    out| CBF43926  check
+rows breaking a rule ((breaches: 7))   law == 0   BROKEN
+<hwut-end>

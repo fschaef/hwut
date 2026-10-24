@@ -1,0 +1,18 @@
+operator table: ops.json   + prec 1 left  - prec 1 left  * prec 2 left  ^ prec 3 right
+##! verbatim
+input  |2 * (3 + 4
+       |          ^  expected ')', found end of input
+input  |2 + * 3
+       |    ^  expected a number or '(', found '*'
+input  |12 ) + 1
+       |   ^  expected an operator, found ')'
+input  |7 % 2
+       |  ^  expected an operator, found '%'
+input  |
+       |^  expected a number or '(', found end of input
+input  |2 ^ -1
+       |(no column)  negative exponent
+input  |((1)
+       |    ^  expected ')', found end of input
+####
+<hwut-end>

@@ -1,0 +1,30 @@
+unit: life.awk -v rule=23/3 + grid_torus_v1.awk
+
+GLIDER on the torus, every 8th generation
+##! verbatim
+  gen 0      gen 8      gen 16     gen 24     gen 32
+  .O......   ........   ........   ........   ........
+  ..O.....   ........   ........   ........   ........
+  OOO.....   ...O....   ........   ........   ........
+  ........   ....O...   ........   ........   ........
+  ........   ..OOO...   .....O..   ........   ........
+  ........   ........   ......O.   ........   ........
+  ........   ........   ....OOO.   ......OO   ......OO
+  ........   ........   ........   ......OO   ......OO
+####
+cells per generation: 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 4 3 4 4 4 4 4 4 4 4 4 4
+
+RULE AS THE UNIT APPLIES IT  all 512 3x3 neighbourhoods, one generation ('?' = depends on more than the count)
+##! verbatim
+  live neighbours      0 1 2 3 4 5 6 7 8
+  dead cell -> born    . . . O . . . . .
+  live cell -> stays   . . O O . . . . .
+  B3/S23 requires      born: . . . O . . . . .   stays: . . O O . . . . .
+####
+
+LAWS
+  glider: gen 32 == gen 0 (4 x 8 generations around the torus)   BROKEN
+  glider: 5 cells in every generation                            BROKEN
+  rule: all 512 neighbourhoods follow B3/S23 (0 differ)          kept
+laws broken ((breaches: 2)) of 3   law == 0   BROKEN
+<hwut-end>

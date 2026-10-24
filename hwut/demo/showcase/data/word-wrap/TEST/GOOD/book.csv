@@ -1,0 +1,5 @@
+# vut-register 5 generation:4 apps:1 marks:0=3
+test;choice;verdict;report;stain;test_id;choice_id
+test-wrap.py;awk-justify;true;ok;;0;0
+;fmt;true;ok;;0;1
+;fold;true;ok;;0;2

@@ -1,0 +1,16 @@
+stream: seed 42, 100000 draws of next_int(0, 999)
+
+  producer               first 10 draws                               sha1 of all
+  python 3.11            382 407 37 815 842 157 175 858 905 845       26a81fd0220b
+  python 3.12            382 407 37 815 842 157 175 858 905 845       26a81fd0220b
+  python 3.13            382 407 37 815 842 157 175 858 905 845       26a81fd0220b
+  C, gcc + glibc libm    382 407 37 815 842 157 175 858 905 845       26a81fd0220b
+  JavaScript, node       382 407 37 815 842 157 175 858 905 845       26a81fd0220b
+producers whose stream differs from python 3.13's ((differing: 0)) of 5   law == 0   kept: one stream (sha1 26a81fd0220b)
+
+the standard 'random': random.Random(42).randint(0, 999)
+  python 3.11            654 114 25 759 281 250 228 142 754 104       eed68935384b   randrange(10.0) -> 1
+  python 3.12            654 114 25 759 281 250 228 142 754 104       eed68935384b   randrange(10.0) -> TypeError
+  python 3.13            654 114 25 759 281 250 228 142 754 104       eed68935384b   randrange(10.0) -> TypeError
+  C, JavaScript          no port: CPython's seeding (init_by_array) and _randbelow live in CPython
+<hwut-end>

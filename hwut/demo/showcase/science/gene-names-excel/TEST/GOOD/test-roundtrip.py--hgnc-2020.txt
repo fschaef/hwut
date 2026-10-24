@@ -1,0 +1,34 @@
+input: genes-2020.csv (12 genes), import: smart
+
+##! verbatim
+  symbol in     cell type  symbol out    HGNC renamed it from
+  TP53          text       TP53            -
+  SEPTIN2       text       SEPTIN2         SEPT2
+  MARCHF1       text       MARCHF1         MARCH1
+  BRCA1         text       BRCA1           -
+  DELEC1        text       DELEC1          DEC1
+  GAPDH         text       GAPDH           -
+  SEPTIN9       text       SEPTIN9         SEPT9
+  MYC           text       MYC             -
+  MARCHF5       text       MARCHF5         MARCH5
+  2310009E13    number     2.31E+19        -             !! mangled
+  EGFR          text       EGFR            -
+  ACTB          text       ACTB            -
+####
+symbols turned into dates ((dates: 0)), into numbers ((numbers: 1))
+symbols changed ((mangled: 1)) of 12   law == 0   BROKEN
+
+artifact significant.csv, written by sheet.save_significant (padj < 0.05): 8 rows
+line 1: symbol,log2fc   header first ((header_first: "yes"))   law: yes   kept
+rows 2..9, in the order the unit wrote them (undefined):
+##! potpourri
+TP53,1.84
+DELEC1,2.05
+MYC,1.66
+SEPTIN2,1.21
+2.31E+19,-1.12
+MARCHF1,-0.95
+EGFR,-0.71
+SEPTIN9,-1.47
+####
+<hwut-end>

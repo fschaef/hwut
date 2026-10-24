@@ -1,0 +1,121 @@
+#! /usr/bin/env hwut.pype
+# buffer.pype -- THE LAW of the bounded buffer, judged per timeline.
+#
+# Reads the event stream of test-buffer.py (one line per step, as the
+# dispatcher fired it) and states per timeline:
+#     fill <= capacity after every put
+#     items are taken in the order they were put (FIFO)
+#     every item put is taken exactly once
+#     every task finished inside its timeline
+# The lane picture between 'picture' and 'end-picture' passes through,
+# framed as a verbatim region. hwut runs this script on the test's
+# stdout ('pype = "buffer.pype"' in the test's header).
+
+IDLE/on: <bof> => {
+    timeline_n = 0
+    broken_n   = 0
+    def summary():                     # the one place the verdict is printed
+        print("timelines: %d, law kept in %d" % (timeline_n, timeline_n - broken_n))
+        print("timelines breaking the law ((breaches: %d))   law == 0   %s"
+              % (broken_n, "kept" if broken_n == 0 else "BROKEN"))
+        print("<hwut-end>")
+    print("schedule strings: position = tick; a digit = the task takes its next atomic step")
+    print("    in that tick, lower digit first; blank = no step")
+    print("step codes: seeN finds N items   putI>F puts item I, fill F after   prepI prepares")
+    print("    item I   takeI>F takes item I, fill F after   wait finds no room / no item")
+    print("    closes, done: the task ends.   buffer: the items after the tick, oldest left")
+    print("")
+}
+IDLE/on: <bol> "timeline" <name = "*"> => {
+    timeline_n += 1
+    capacity = None
+    put_list, take_list, breach_list = [], [], []
+    max_fill, step_n = 0, 0
+    print("timeline %s" % name)
+}
+and: goto RUN;
+IDLE/on: <else> => {
+    print("!! outside a timeline: " + pype.line())
+}
+IDLE/on: <eof> => {
+    summary()
+}
+
+RUN/on: <bol> "capacity" <c = int> => {
+    capacity = c
+}
+RUN/on: <bol> "t" <t = int> <who = "[PQC]"> "put" <item = int> "fill" <fill = int> <eol> => {
+    step_n += 1
+    put_list.append(item)
+    max_fill = max(max_fill, fill)
+    if fill > capacity:
+        breach_list.append("fill %d above capacity %d at tick %d (%s put %d)" % (fill, capacity, t, who, item))
+}
+RUN/on: <bol> "t" <t = int> <who = "[PQC]"> "take" <item = int> "fill" <fill = int> <eol> => {
+    step_n += 1
+    if len(take_list) < len(put_list) and put_list[len(take_list)] != item:
+        breach_list.append("tick %d: %s took %d, first in line was %d (not FIFO)"
+                           % (t, who, item, put_list[len(take_list)]))
+    take_list.append(item)
+}
+RUN/on: <bol> "t" <int> <"[PQC]"> "sees" "fill" <int> <eol> => {
+    step_n += 1
+}
+RUN/on: <bol> "t" <int> <"[PQC]"> "prepares" <int> <eol> => {
+    step_n += 1
+}
+RUN/on: <bol> "t" <int> <"[PQC]"> "wait" <"*"> <eol> => {
+    step_n += 1
+}
+RUN/on: <bol> "t" <int> <"[PQC]"> "closes" <eol> => {
+    step_n += 1
+}
+RUN/on: <bol> "t" <int> <"[PQC]"> "done" <eol> => {
+    step_n += 1
+}
+RUN/on: <bol> "unfinished" <who = "[PQC]"> <eol> => {
+    breach_list.append("%s did not finish inside its timeline" % who)
+}
+RUN/on: <bol> "picture" <eol> => {
+    print("##! verbatim")
+}
+and: goto PICTURE;
+RUN/on: <bol> "end-timeline" => {
+    lost = sorted(set(put_list) - set(take_list))
+    twice = sorted(set(i for i in take_list if take_list.count(i) > 1))
+    if lost:  breach_list.append("put but never taken: %s" % lost)
+    if twice: breach_list.append("taken twice: %s" % twice)
+    print("    steps %d (of all tasks, several per tick)   puts %d   takes %d   max fill %d of %d"
+          % (step_n, len(put_list), len(take_list), max_fill, capacity))
+    for b in sorted(breach_list):
+        print("    !! " + b)
+    print("    law: " + ("kept" if not breach_list else "BROKEN"))
+    print("")
+    if breach_list: broken_n += 1
+}
+and: goto IDLE;
+RUN/on: <else> => {
+    breach_list.append("unknown event: " + pype.line())
+}
+
+PICTURE/on: <bol> "end-picture" => {
+    print("####")
+}
+and: goto RUN;
+PICTURE/on: <else> => flush;
+
+# The stream ends INSIDE a timeline (no 'end-timeline'): that timeline is
+# broken -- its law cannot be stated -- and the summary follows.
+RUN/on: <eof> => {
+    print("    !! the stream ends inside the timeline")
+    print("    law: BROKEN")
+    broken_n += 1
+    summary()
+}
+PICTURE/on: <eof> => {
+    print("####")
+    print("    !! the stream ends inside the picture")
+    print("    law: BROKEN")
+    broken_n += 1
+    summary()
+}

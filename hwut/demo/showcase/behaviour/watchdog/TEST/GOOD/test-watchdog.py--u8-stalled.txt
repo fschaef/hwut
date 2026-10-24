@@ -1,0 +1,18 @@
+unit:     wdt_u8.c, timeout 300 ms, window off
+kicks at: 100 200 300 400 ms
+
+##! verbatim
+ms      0         100       200       300       400       500       600       700       800       900       1
+kick    ..........K.........K.........K.........K............................................................
+count   0001112223000111222300011122230001112223000111222333444555666777888999!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+reset   .....................................................................................................
+####
+(one column per 10 ms; K a kick, R the reset; count: time since the last kick in tenths of the
+ 300 ms timeout, 0 = under 30 ms ... 9 = under 300 ms, '!' = timeout reached)
+
+specification: reset at 700 ms (timeout: no kick since 400 ms)
+watchdog:      no reset
+verdict:       !! MISSED RESET: no kick for 600 ms, the MCU runs on
+deviations:    ((deviations: 1))   law == 0   BROKEN
+longest time without a kick: ((silence: 600 ms))   law <= 300 ms   BROKEN
+<hwut-end>

@@ -1,0 +1,19 @@
+session: app_runner.py --interactive, parallel=process
+    DOWN  run de <sink-out> <sink-err>
+    DOWN  run en <sink-out> <sink-err>
+    DOWN  run ch <sink-out> <sink-err>
+    DOWN  quit
+##! potpourri
+    UP    done de 0
+    UP    done en 0
+    UP    done ch 0
+####
+    UP    bye
+
+  choice   own process   session
+  de       5 lines       equal
+  en       5 lines       equal
+  ch       5 lines       equal
+
+choices printing differently in the session ((differ: 0))   law == 0   kept: the session is a pure accelerator
+<hwut-end>

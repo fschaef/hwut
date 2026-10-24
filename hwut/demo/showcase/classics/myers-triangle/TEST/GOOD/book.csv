@@ -1,0 +1,5 @@
+# vut-register 5 generation:4 apps:1 marks:0=3
+test;choice;verdict;report;stain;test_id;choice_id
+test-triangle.py;int-sum;true;ok;;0;0
+;lt;true;ok;;0;1
+;right;true;ok;;0;2

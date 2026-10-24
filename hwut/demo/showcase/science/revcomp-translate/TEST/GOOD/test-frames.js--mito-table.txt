@@ -1,0 +1,53 @@
+unit: dna_mito.js
+
+CODON TABLE used by translate()  ('!' = differs from NCBI table 1)
+##! verbatim
+         2nd T     2nd C     2nd A     2nd G
+  T.T    TTT F     TCT S     TAT Y     TGT C
+  T.C    TTC F     TCC S     TAC Y     TGC C
+  T.A    TTA L     TCA S     TAA *     TGA W!
+  T.G    TTG L     TCG S     TAG *     TGG W
+  C.T    CTT L     CCT P     CAT H     CGT R
+  C.C    CTC L     CCC P     CAC H     CGC R
+  C.A    CTA L     CCA P     CAA Q     CGA R
+  C.G    CTG L     CCG P     CAG Q     CGG R
+  A.T    ATT I     ACT T     AAT N     AGT S
+  A.C    ATC I     ACC T     AAC N     AGC S
+  A.A    ATA M!    ACA T     AAA K     AGA *!
+  A.G    ATG M     ACG T     AAG K     AGG *!
+  G.T    GTT V     GCT A     GAT D     GGT G
+  G.C    GTC V     GCC A     GAC D     GGC G
+  G.A    GTA V     GCA A     GAA E     GGA G
+  G.G    GTG V     GCG A     GAG E     GGG G
+####
+codons differing from table 1 ((codon_diffs: 4))   law == 0   BROKEN
+
+SIX FRAMES of 39 bp; amino acids under the middle base of their codon;
+pairs: '|' the two strands complementary at that base, 'x' not
+##! verbatim
+          1        10        20        30
+  5'      ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG  3'
+  +1       M  A  I  V  M  G  R  W  K  G  A  R  *
+  +2        W  P  L  *  W  A  A  E  *  V  P  D
+  +3         G  H  C  N  G  P  L  K  G  C  P  M
+  pairs   |||||||||||||||||||||||||||||||||||||||
+  3'      TACCGGTAACATTACCCGGCGACTTTCCCACGGGCTATC  5'
+  -1       H  G  N  Y  H  A  A  S  L  T  G  S  L
+  -2         A  M  T  I  P  R  Q  F  P  A  R  Y
+  -3        P  W  Q  L  P  G  S  F  P  H  G  I
+####
+bases of the minus strand not pairing with the plus strand ((unpaired: 0))   law == 0   kept
+  +1 MAIVMGRWKGAR*
+  -1 LSGTLSAAHYNGH
+
+CODON SWEEP ORF: ATG + 61 sense codons + TAA = 189 bp
+  protein MFFLLSSSSYYCCWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG*
+  !! internal stop AGA at codon 45
+  !! internal stop AGG at codon 46
+internal stops ((internal_stops: 2))   law == 0   BROKEN
+
+## seed 1953
+LAWS over 500 random pairs (a, b), length 1..60
+  involution    revcomp(revcomp(a)) == a                  errors ((roundtrip_errors: 0))   law == 0   kept
+  antiparallel  revcomp(a + b) == revcomp(b) + revcomp(a)  errors ((antiparallel_errors: 0))   law == 0   kept
+<hwut-end>

@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-life.py;classic;true;ok;;0;0
+;rule-mistyped;true;ok;;0;2
+;torus;true;ok;;0;1
+;wrap-bug;true;ok;;0;3

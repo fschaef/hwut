@@ -1,0 +1,28 @@
+configuration of 'good'
+
+CROSS REFERENCE   where each key is read, documented, exemplified
+                  ('-': nowhere; '- !': nowhere, and that is a finding K1, K2 or K3)
+  key             read by the code   as                README        example
+  APP_CONFIG      service/app.py:6   os.getenv         README.md:16  (env)
+  APP_DATA_DIR    deploy/run.sh:4    ${APP_DATA_DIR}   README.md:19  (env)
+  APP_LOG_LEVEL   service/app.py:12  os.environ.get    README.md:17  (env)
+  APP_REGION      deploy/run.sh:3    $APP_REGION       README.md:18  (env)
+  db.dsn          service/app.py:11  cfg[s][k]         README.md:15  example.ini:7
+  db.pool_size    service/app.py:10  cfg[s].getint(k)  README.md:14  example.ini:6
+  server.host     service/app.py:8   cfg.get(s,k)      README.md:12  example.ini:2
+  server.port     service/app.py:9   cfg.getint(s,k)   README.md:13  example.ini:3
+
+SETS   (K1: the left column is empty -- K2: the right column is empty)
+  READ, UNDOCUMENTED  |  READ AND DOCUMENTED |  DOCUMENTED, NOT READ
+  --------------------+----------------------+----------------------
+                      |  APP_CONFIG          |
+                      |  APP_DATA_DIR        |
+                      |  APP_LOG_LEVEL       |
+                      |  APP_REGION          |
+                      |  db.dsn              |
+                      |  db.pool_size        |
+                      |  server.host         |
+                      |  server.port         |
+
+keys: 8   K1 + K2 + K3 ((findings: 0))   law == 0   kept
+<hwut-end>

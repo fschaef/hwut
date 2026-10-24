@@ -1,0 +1,27 @@
+scenario: open, deposit 100, two clerks withdraw 70 at once, freeze, deposit 20, withdraw 10, unfreeze, withdraw 50, close, deposit 5
+command outcomes (counted; the clerks finish in any order):
+    close: accepted                            x1
+    deposit 100: accepted                      x1
+    deposit 20: accepted                       x1
+    deposit 5: refused (closed)                x1
+    freeze: accepted                           x1
+    open: accepted                             x1
+    unfreeze: accepted                         x1
+    withdraw 10: refused (frozen)              x1
+    withdraw 50: accepted                      x1
+    withdraw 70: accepted                      x1
+    withdraw 70: refused (insufficient funds)  x1
+replayed ledger:
+    seq    event        amount  balance
+      1    opened           -        0  |
+      2    deposited     +100      100  |==========
+      3    withdrawn      -70       30  |===
+      4    frozen           -       30  |===
+      5    deposited      +20       50  |=====
+      6    unfrozen         -       50  |=====
+      7    withdrawn      -50        0  |
+      8    closed           -        0  |
+(seq '!!': not the previous seq + 1; bar: '=' per 10 of balance)
+final: CLOSED, balance 0
+breaches of lifecycle, sequence and balance: ((breaches: 0))   law == 0   kept
+<hwut-end>

@@ -1,0 +1,25 @@
+capture: captures/cs-glitch.cap -- 'read ID' with a 2-sample spike on CS after bit 11
+
+##! verbatim
+sample 0         10        20        30        40        50        60        70
+CS     ---_______________________--_________________________________________---
+SCK    _____-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-____
+MOSI   ____--____----------____________________________________________________
+MISO   --------------------------__--------__--__________________----______----
+look   .....^.^.^.^.^.^.^.^.^.^.^...^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^....
+MOSI   .....<-----9f------>.<3b?>...<-----00------>.<-----00------>.<-4b?-->...
+MISO   .....<-----ff------>.<3b?>...<-----f4------>.<-----01------>.<-4b?-->...
+frame  ...|......................!.|........................................!..
+####
+(one character per sample, an SCK period is 2; look: ^ a bit sampled at a rising SCK edge;
+ MOSI/MISO: <--9f--> the samples of one byte, <3b?> 3 bits left over; frame: | CS falls or
+ rises, ! CS rises inside a byte)
+
+transaction 1: samples 3..26, 11 bits -- !! ends inside a byte: 1 whole byte(s) + 3 bit(s)
+    MOSI  9f
+    MISO  ff
+transaction 2: samples 28..69, 20 bits -- !! ends inside a byte: 2 whole byte(s) + 4 bit(s)
+    MOSI  00 00
+    MISO  f4 01
+truncated transactions: ((truncated: 2))   (a clean bus has 0)   !! reported
+<hwut-end>

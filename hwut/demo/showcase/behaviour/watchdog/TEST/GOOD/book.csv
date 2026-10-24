@@ -1,0 +1,7 @@
+# vut-register 5 generation:6 apps:1 marks:0=5
+test;choice;verdict;report;stain;test_id;choice_id
+test-watchdog.py;early-kick;true;ok;;0;0
+;healthy;true;ok;;0;1
+;slow-but-ok;true;ok;;0;2
+;stalled;true;ok;;0;3
+;u8-stalled;true;ok;;0;4

@@ -1,0 +1,14 @@
+# NTC 10k, lab sheet: temperature [degC]  resistance [ohm] -- typed in by hand
+ -20     71600
+ -10     44200
+   0     27900
+  10     18100
+  20     12000
+  30      8150
+  40      4710
+  50      3960
+  60      2840
+  70      2060
+  80      1520
+  90      1140
+ 100       864

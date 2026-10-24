@@ -1,0 +1,25 @@
+sorter: sort -t, -k2,2
+##! verbatim
+  tag  input           |  output          tag
+    1  zoe   ops       |  dev   ann         3
+    2  bob   sales     |  dev   cy          9
+    3  ann   dev       |  dev   lou        12
+    4  kim   ops       |  dev   max         6
+    5  al    sales     |  ops   ben        10
+    6  max   dev       |  ops   eve         7
+    7  eve   ops       |  ops   kim         4
+    8  dan   sales     |  ops   zoe         1
+    9  cy    dev       |  sales al          5
+   10  ben   ops       |  sales bob         2
+   11  ida   sales     |  sales dan         8
+   12  lou   dev       |  sales ida        11
+####
+by dept: in order
+  dev    tags 3 9 12 6       REORDERED
+  ops    tags 10 7 4 1       REORDERED
+  sales  tags 5 2 8 11       REORDERED
+## seed 1792844713257336751
+random arrays: 300 of 60 records, 3 depts
+  not in dept order        ((unsorted: 0))   law == 0   kept
+  equal depts reordered    ((reordered: 300))   law == 0   BROKEN
+<hwut-end>

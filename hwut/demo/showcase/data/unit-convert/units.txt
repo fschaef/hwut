@@ -1,0 +1,9 @@
+# pressure units: name, pascal per unit (exact or conventional definitions)
+Pa     1
+hPa    100
+bar    100000
+psi    6894.757293168361
+atm    101325
+mmHg   133.322387415
+Torr   133.32236842105263
+inHg   3386.388640341

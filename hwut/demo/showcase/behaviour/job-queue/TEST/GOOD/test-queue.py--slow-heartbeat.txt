@@ -1,0 +1,15 @@
+scenario: 24 jobs, 4 workers, lease 200 ms; job 7 takes 300 ms the first time, its worker extends the lease every 50 ms
+jobs queued: 24
+    job           1  2  3  4  5  6  7  8  9 10 11 12
+    taken         1  1  1  1  1  1  1  1  1  1  1  1
+    done          1  1  1  1  1  1  1  1  1  1  1  1
+    redelivered   .  .  .  .  .  .  .  .  .  .  .  .
+    job          13 14 15 16 17 18 19 20 21 22 23 24
+    taken         1  1  1  1  1  1  1  1  1  1  1  1
+    done          1  1  1  1  1  1  1  1  1  1  1  1
+    redelivered   .  .  .  .  .  .  .  .  .  .  .  .
+(counts per job; '.' none)
+leases extended (heartbeat): job 7
+stale acknowledgements (ignored by the queue): 0
+breaches of exactly-once and causal order: ((breaches: 0))   law == 0   kept
+<hwut-end>

@@ -1,0 +1,28 @@
+headers of 'broken/include': adc.h gpio.h spi.h uart.h
+rules: P  every macro starts with MODULE_   G  the guard is <MODULE>_H, '#endif' last
+
+GUARD (G)  tests            defines          last directive   verdict
+adc.h      ADC_H            ADC_HH           #endif           G DEFINES ANOTHER NAME
+gpio.h     __GPIO_H__       __GPIO_H__       #endif           G NOT GPIO_H
+spi.h      SPI_H            SPI_H            #endif           ok
+uart.h     UART_H           UART_H           #endif           ok
+
+PREFIX RULER (P)   prefix | rest of the macro name     ('------': prefix missing)
+  adc.h         ADC_ | CHANNELS
+  adc.h         ADC_ | VREF_MV
+  adc.h         ADC_ | TO_MV(..)
+  gpio.h       GPIO_ | PIN(..)
+  gpio.h       GPIO_ | LED_RED
+  gpio.h      ------ | BIT(..)                  <- P: not GPIO_
+  spi.h         SPI_ | MODE_0
+  spi.h         SPI_ | MODE_3
+  spi.h       ------ | MAX_XFER                 <- P: not SPI_
+  spi.h         SPI_ | TRACE
+  uart.h       UART_ | BAUD_DEFAULT
+  uart.h       UART_ | FIFO_DEPTH
+  uart.h       UART_ | FLAG_OVERRUN
+  uart.h       UART_ | IS_READY(..)
+
+macros: 14   headers: 4
+G guard: 2   P prefix: 2   ((violations: 4))   law == 0   BROKEN
+<hwut-end>

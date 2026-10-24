@@ -1,0 +1,24 @@
+project 'broken': log.c log.h main.c util.c util.h
+first build: ok  ((builds: 1))
+
+DEPENDENCIES  declared in the Makefile | read by the compiler (gcc -MM)
+  log.o   log.c log.h util.h    | log.c log.h util.h    
+  main.o  log.h main.c          | log.h main.c util.h     undeclared: util.h
+  util.o  log.h util.c util.h   | util.c util.h           never read: log.h
+  app     log.o main.o util.o   | log.o main.o util.o
+
+REBUILD MATRIX  touch one file, then 'make -n --trace'
+  R rebuilt, as it must   . left alone, as it must   MISSED   EXTRA
+
+  touched   log.o   main.o  util.o  app     
+  log.c     R       .       .       R
+  log.h     R       R       EXTRA   R
+  main.c    .       R       .       R
+  util.c    .       .       R       R
+  util.h    R       MISSED  R       R
+
+  EXTRA  util.o  <- log.h declared, never read
+  MISSED main.o  <- util.h undeclared in its rule
+missed ((missed: 1))   law == 0   BROKEN
+extra ((extra: 1))   law == 0   BROKEN
+<hwut-end>

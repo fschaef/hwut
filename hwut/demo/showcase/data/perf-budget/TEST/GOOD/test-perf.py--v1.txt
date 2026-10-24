@@ -1,0 +1,13 @@
+count_fields() from fields_v1.c, fastest of 30 runs per size
+log-time bar: log2 of the time, 4 '=' per doubling (linear: +4 per row, quadratic: +8)
+##! table ignore=2,3,4
+size_KiB  fields       ns    MiB/s  log-time
+       2     289    34076       57  ========================
+       4     571   118133       33  ================================
+       8    1152   488759       16  ========================================
+      16    2283  1771856        9  ===============================================
+      32    4573  8237746        4  ========================================================
+####
+R2 time grows as size^k, fitted over the five sizes: k = ((exponent: 1.97)), budget k <= 1.5   BROKEN
+R3 throughput at 32 KiB = ((throughput: 4 MiB/s)), budget >= 100 MB/s   BROKEN
+<hwut-end>

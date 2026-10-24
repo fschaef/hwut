@@ -1,0 +1,18 @@
+unit:   debounce.c, threshold 5 ms
+signal: signals/press.txt, one character per 1 ms
+
+##! verbatim
+ms         0         10        20        30        40        50        60        70        80   
+           |.........|.........|.........|.........|.........|.........|.........|.........|....
+raw        ______________-_-__--_------------------------------------_-__-_-_-__________________
+debounced  __________________________---------------------------------------------______________
+####
+(one character per 1 ms; raw and debounced: '-' high, '_' low)
+
+edges: raw 16, debounced 2
+debounced pulses (between two edges):
+    high  from  26 ms  for  45 ms   ok
+shortest pulse:             ((shortest: 45 ms))   law >= 5 ms   kept
+pulses shorter than 5 ms:   ((short_pulses: 0))   law == 0      kept
+high pulses for one press:  ((high_pulses: 1))   law == 1      kept
+<hwut-end>

@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-uart.py;clean;true;ok;;0;0
+;fast-12;true;ok;;0;1
+;fast-3;true;ok;;0;2
+;noise;true;ok;;0;3

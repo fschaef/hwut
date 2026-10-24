@@ -1,0 +1,12 @@
+scenario: retained temp 20, door closed; A subscribes to temp and door, B to temp; temp 21..40 and door open/closed x10 published concurrently; B unsubscribes after temp 30, its handler still busy with the retained 20
+who  topic  published-while-subscribed  delivered  purged  after-unsub  lost  retained-first  in-order
+A    door                           10         11       0            0     0  yes             yes
+A    temp                           20         21       0            0     0  yes             yes
+B    temp                           10         11       0        10 !!     0  yes             yes
+(laws per row: retained first, in order, after-unsub 0, lost 0; delivered counts the retained value)
+values delivered per pair, '^unsub' where unsubscribe returned:
+A/door: closed(retained) open closed open closed open closed open closed open closed ^unsub
+A/temp: 20(retained) 21..40 ^unsub
+B/temp: 20(retained) ^unsub 21..30  !! after unsubscribe
+breaches: ((breaches: 1))   law == 0   BROKEN
+<hwut-end>

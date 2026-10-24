@@ -1,0 +1,23 @@
+scenario: accounts A, B, C at 100 each; T1 moves 1 A->B, T2 2 B->C, T3 3 C->A, 20 times each; T4 audits (locks A, B, C) 5 times
+lock order observed -- row: held, column: taken while holding it
+        A  B  C
+    A   .  x  x
+    B   .  .  x
+    C   !  .  .
+(x taken in name order  ! taken AGAINST name order  . never)
+edges:
+    A -> B   by T1 T4
+    A -> C   by T4
+    B -> C   by T2 T4
+    C -> A   by T3
+cycles (potential deadlocks): ((cycles: 2))   law == 0   BROKEN
+    A -> B -> C -> A
+        T1/T4 holds A, takes B
+        T2/T4 holds B, takes C
+        T3 holds C, takes A
+    A -> C -> A
+        T4 holds A, takes C
+        T3 holds C, takes A
+final balances: A 140, B 80, C 80
+money at the end: ((total: 300))   law == 300 (opening)   kept
+<hwut-end>

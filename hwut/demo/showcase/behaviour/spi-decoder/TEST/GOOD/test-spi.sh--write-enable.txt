@@ -1,0 +1,25 @@
+capture: captures/write-enable.cap -- 'write enable' (0x06), then 'read status' (0x05)
+
+##! verbatim
+sample 0         10        20        30        40        50        60
+CS     ---__________________----__________________________________---
+SCK    _____-_-_-_-_-_-_-_-_______-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-____
+MOSI   ______________----__________________--__--____________________
+MISO   ------------------------------------------____________--__----
+look   .....^.^.^.^.^.^.^.^.......^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^....
+MOSI   .....<-----06------>.......<-----05------>.<-----00------>....
+MISO   .....<-----ff------>.......<-----ff------>.<-----02------>....
+frame  ...|.................|...|.................................|..
+####
+(one character per sample, an SCK period is 2; look: ^ a bit sampled at a rising SCK edge;
+ MOSI/MISO: <--9f--> the samples of one byte, <3b?> 3 bits left over; frame: | CS falls or
+ rises, ! CS rises inside a byte)
+
+transaction 1: samples 3..21, 8 bits
+    MOSI  06
+    MISO  ff
+transaction 2: samples 25..59, 16 bits
+    MOSI  05 00
+    MISO  ff 02
+truncated transactions: ((truncated: 0))   (a clean bus has 0)   clean
+<hwut-end>

@@ -1,0 +1,26 @@
+table: units-legacy.txt
+1 <row> = <cell> <column>, 7 significant digits
+                hPa          bar          psi          atm         mmHg         inHg
+hPa               1        0.001   0.01450377 0.0009869233    0.7500638   0.02952997
+bar            1000            1     14.50377    0.9869233     750.0638     29.52997
+psi         68.9476    0.0689476            1   0.06804599      51.7151     2.036021
+atm         1013.25      1.01325     14.69594            1     760.0021     29.92124
+mmHg        1.33322   0.00133322   0.01933671  0.001315786            1   0.03936995
+inHg        33.8639    0.0338639    0.4911542   0.03342107     25.40008            1
+factor check: 1 <unit> in Pa against the definition
+  hPa   error 0       ok
+  bar   error 0       ok
+  psi   error 4e-07   OFF
+  atm   error 0       ok
+  mmHg  error 3e-06   OFF
+  Torr  error 3e-06   OFF
+  inHg  error 4e-07   OFF
+R1 worst of all 56 pairs: inHg -> mmHg, relative error ((rel_err: 3e-06))
+round trips: value unit -> other (via) -> back
+  0.1      bar   psi   (inHg)  0.10000000000000001
+  1013.25  hPa   inHg  (psi )  1013.25
+  14.7     psi   atm   (Torr)  14.699999999999999
+  760      Torr  mmHg  (atm )  760
+## seed 1792738454347404803
+R2 10000 random round trips, worst relative error ((trip_err: 4.4e-16))
+<hwut-end>

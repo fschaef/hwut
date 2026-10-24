@@ -1,0 +1,25 @@
+table: naive, 5 seats, 3 meals each, real threads; fork k lies between seats k-1 and k
+policy: each seat takes fork n first, then fork n+1
+seat  takes first          then
+0     F0 ((0x7fb4dad90980)) F1 ((0x7fb4dad31d10))
+1     F1 ((0x7fb4dad31d10)) F2 ((0x7fb4dad31e50))
+2     F2 ((0x7fb4dad31e50)) F3 ((0x7fb4db0f6190))
+3     F3 ((0x7fb4db0f6190)) F4 ((0x7fb4dad843e0))
+4     F4 ((0x7fb4dad843e0)) F0 ((0x7fb4dad90980))
+(Fk and its object id: the same id must stand for the same fork in every line below)
+
+DEADLOCK: a waits-for cycle through 5 philosophers
+##! verbatim
+P0 -[F1]-> P1 -[F2]-> P2 -[F3]-> P3 -[F4]-> P4 -[F0]-> P0
+####
+(Pn the philosopher at seat n; -[Fk]-> waits for fork k, which the next one holds)
+seat  holds                 waits for             held by
+0     F0 ((0x7fb4dad90980)) F1 ((0x7fb4dad31d10)) seat 1
+1     F1 ((0x7fb4dad31d10)) F2 ((0x7fb4dad31e50)) seat 2
+2     F2 ((0x7fb4dad31e50)) F3 ((0x7fb4db0f6190)) seat 3
+3     F3 ((0x7fb4db0f6190)) F4 ((0x7fb4dad843e0)) seat 4
+4     F4 ((0x7fb4dad843e0)) F0 ((0x7fb4dad90980)) seat 0
+meals eaten per seat: P0 0  P1 0  P2 0  P3 0  P4 0   (total 0 of 15)
+waits-for cycles: ((cycles: 1))   law == 0   BROKEN
+philosophers who did not finish: ((hungry: 5))   law == 0   BROKEN
+<hwut-end>

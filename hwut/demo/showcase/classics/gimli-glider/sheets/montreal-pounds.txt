@@ -1,0 +1,5 @@
+# Montreal, the same reading, with the refueller's figure under its own
+# unit: pounds per litre. The sheet then computes in pounds.
+dripstick 7682  L
+required  22300 kg
+density   1.77  lb/L

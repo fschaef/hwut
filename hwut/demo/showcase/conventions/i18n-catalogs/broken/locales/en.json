@@ -1,0 +1,12 @@
+{
+  "app.title":           "Motor Bench",
+  "menu.file":           "File",
+  "menu.quit":           "Quit",
+  "dialog.save.title":   "Save measurement",
+  "dialog.save.confirm": "Save {count} files to {folder}?",
+  "status.connected":    "Connected to {host}",
+  "status.battery":      "Battery {percent}%",
+  "error.timeout":       "No answer from {device} after {seconds} s",
+  "button.ok":           "OK",
+  "button.cancel":       "Cancel"
+}

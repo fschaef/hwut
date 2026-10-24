@@ -1,0 +1,35 @@
+tool: wc-par-v1.sh ../corpus
+words per file:
+    part-01.txt      161
+    part-02.txt      393
+    part-03.txt      309
+    part-04.txt      318
+    part-05.txt      214
+    part-06.txt      145
+    part-07.txt      385
+    part-08.txt      293
+    part-09.txt      143
+    part-10.txt      260
+    part-11.txt      196
+    part-12.txt       68
+files: 12 started, 12 done
+R1 total: 2885   sum of the 12 counts: 2885   kept
+R2 order breaches: none   kept
+files in flight, start to done, in arrival order of the events ('=' running);
+this run's schedule -- it differs from run to run and is not compared:
+##! ignore
+    part-01.txt    ===============
+    part-02.txt      ==============
+    part-03.txt         =================
+    part-04.txt     ===========
+    part-05.txt       =================
+    part-06.txt               ==
+    part-07.txt        =================
+    part-08.txt            ===============
+    part-09.txt              =========
+    part-10.txt          ===========
+    part-11.txt           ===========
+    part-12.txt             =====
+####
+R3 files in flight at most ((in_flight_max: 12))   law <= 4   BROKEN
+<hwut-end>

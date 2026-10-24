@@ -1,0 +1,12 @@
+{
+  "app.title":           "Motorprüfstand",
+  "menu.file":           "Datei",
+  "menu.quit":           "Beenden",
+  "dialog.save.title":   "Messung speichern",
+  "dialog.save.confirm": "{count} Dateien nach {folder} speichern?",
+  "status.connected":    "Verbunden mit {host}",
+  "status.battery":      "Akku {percent} %",
+  "error.timeout":       "Keine Antwort von {device} nach {seconds} s",
+  "button.ok":           "OK",
+  "button.cancel":       "Abbrechen"
+}

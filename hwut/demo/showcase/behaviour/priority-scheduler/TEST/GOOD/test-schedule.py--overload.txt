@@ -1,0 +1,35 @@
+task set: tasksets/overload.txt, mutex protocol: none
+    fast   prio 3  release  0  period  4  deadline  4  work c1
+    mid    prio 2  release  0  period  8  deadline  8  work c2
+    slow   prio 1  release  0  period 16  deadline 16  work c9
+    utilisation U = 1/4 + 2/8 + 9/16 = 1.06  (> 1: more than the CPU has)
+
+##! verbatim
+tick    0    5    10   15   20   25   30
+fast    =...=...=...=...=...=...=...=...
+        ^   ^   ^   ^   ^   ^   ^   ^
+mid     -==.....-==.....-==.....-==.....
+        ^       ^       ^       ^
+slow    ---=-===---=-===---=-===---=-===
+        ^               !
+####
+(= running   m running, holding mutex M   - ready, a higher one runs
+ B blocked on M   . nothing to do;   under a row: ^ release  ! missed)
+
+jobs:
+    fast   released  0  done  1  response  1  deadline  4  met
+    fast   released  4  done  5  response  1  deadline  4  met
+    fast   released  8  done  9  response  1  deadline  4  met
+    fast   released 12  done 13  response  1  deadline  4  met
+    fast   released 16  done 17  response  1  deadline  4  met
+    fast   released 20  done 21  response  1  deadline  4  met
+    fast   released 24  done 25  response  1  deadline  4  met
+    fast   released 28  done 29  response  1  deadline  4  met
+    mid    released  0  done  3  response  3  deadline  8  met
+    mid    released  8  done 11  response  3  deadline  8  met
+    mid    released 16  done 19  response  3  deadline  8  met
+    mid    released 24  done 27  response  3  deadline  8  met
+    slow   released  0  done 20  response 20  deadline 16  !! MISSED
+    slow   released 16  not done by tick 32  deadline 16  !! MISSED
+deadline misses: ((misses: 2))   law == 0   BROKEN
+<hwut-end>

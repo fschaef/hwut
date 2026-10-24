@@ -1,0 +1,17 @@
+unit: lights_quick.c; cars on EW at: 4 30 31 45 s
+##! verbatim
+s     0         1         2         3         4         5
+NS    GGGGGGGGGGYYYRRRRRRRRRRRGGGGGGGGGGYYYRRRRRRRRRRRGGGGGGGGGGYY
+EW    RRRRRRRRRRRRRGGGGGGGGYYYRRRRRRRRRRRRRGGGGGGGGYYYRRRRRRRRRRRR
+car   ....c.........................cc.............c..............
+short              ^          ^            ^          ^
+####
+(one column per second, tens of seconds on the ruler; G green, Y yellow, R red; c a car on EW; ^ a phase that began here and ended too soon)
+car at  4 s: EW green after 9 s
+car at 30 s: EW green after 7 s
+car at 31 s: EW green after 6 s
+car at 45 s: no EW green in the 15 s seen
+longest wait for EW green: ((wait: 15 s))   law <= 20 s   kept
+BREACH: all-red lasted 0 s, at least 2 s required -- 4 time(s), the '^' marks
+breaches of the chart: ((breaches: 4))   law == 0   BROKEN
+<hwut-end>

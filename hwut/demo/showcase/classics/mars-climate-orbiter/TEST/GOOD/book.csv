@@ -1,0 +1,5 @@
+# vut-register 5 generation:4 apps:1 marks:0=3
+test;choice;verdict;report;stain;test_id;choice_id
+test-mco.sh;mco-1999;true;ok;;0;2
+;newton-seconds;true;ok;;0;0
+;tagged-lbf;true;ok;;0;1

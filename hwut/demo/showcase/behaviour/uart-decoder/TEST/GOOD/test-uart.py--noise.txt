@@ -1,0 +1,38 @@
+capture: captures/noise.cap -- 'O', a spike, a frame with a low stop bit, 'K'; 176 samples, 4 per nominal bit
+
+sample 12: frame, byte 0x4f 'O', stop bit high (ok)
+##! verbatim
+    line   ---____----------------________----____------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...1...1...1...0...0...1...0...1...
+####
+(line: one character per sample, 4 per bit, '-' high '_' low; look: where the receiver
+ sampled -- S start, 0..7 data bits LSB first, T stop; value: the level it read; '.' no sample)
+
+sample 58: falling edge, start bit NOT confirmed at its middle -> glitch, ignored
+##! verbatim
+    line   ---_-----
+    look   .....S...
+    value  .....1...
+####
+
+sample 64: frame, byte 0x3f '?', stop bit LOW -> framing error
+##! verbatim
+    line   ---____------------------------______________
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...1...1...1...1...1...0...0...0...
+####
+
+sample 124: frame, byte 0x4b 'K', stop bit high (ok)
+##! verbatim
+    line   ---____--------____----________----____------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...1...0...1...0...0...1...0...1...
+####
+
+sent:      'O' '?' 'K'
+received:  'O' '?'(FERR) 'K'
+frames:    3, framing errors: 1, glitches: 1
+verdict:   the frames without framing error carry exactly the bytes sent
+bytes not as sent: ((wrong_bytes: 0)) = 0 wrong + 0 missing + 0 extra   law == 0   kept
+<hwut-end>

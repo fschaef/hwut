@@ -1,0 +1,17 @@
+# thruster-log.txt -- the angular momentum desaturation (AMD) events of a
+# MODEL cruise: day after launch, total thruster on-time of the event in
+# seconds. A dozen events, 50.0 s of firing in all -- the model's numbers,
+# not MCO's telemetry (the real cruise had many more, smaller events).
+# day   on-time/s
+   18     3.5
+   41     4.0
+   63     4.5
+   87     3.0
+  110     5.0
+  132     4.5
+  155     4.0
+  179     3.5
+  201     5.0
+  224     4.5
+  248     4.0
+  271     4.5

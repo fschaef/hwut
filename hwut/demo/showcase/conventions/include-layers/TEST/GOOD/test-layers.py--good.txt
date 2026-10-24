@@ -1,0 +1,19 @@
+layering of 'good' (layers.ini, gcc -I. -Ihal -Idrivers -Iservices -Iapp)
+
+LAYERS  (a layer may include itself and what stands below it)
+  L3 app       | app_config.h main.c
+  L2 services  | logger.c logger.h telemetry.c telemetry.h
+  L1 drivers   | led.c led.h modem.c modem.h
+  L0 hal       | gpio.c gpio.h uart.c uart.h
+
+INCLUDE MATRIX  includes from the row's layer into the column's (as gcc resolves them)
+                hal       drivers   services  app
+  hal (L0)      2         .         .         .
+  drivers (L1)  2         2         .         .
+  services (L2) 1         1         3         .
+  app (L3)      .         1         2         1
+  ^ rows include columns; '[n]' = upward, forbidden; upper right must be '.'
+
+edges: 15   L1 upper right empty: upward ((upward: 0))   law == 0   kept
+files outside every layer ((unlayered: 0))   law == 0   kept
+<hwut-end>

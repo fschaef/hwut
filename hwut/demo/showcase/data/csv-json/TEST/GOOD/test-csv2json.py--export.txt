@@ -1,0 +1,62 @@
+node csv2json.js schema.json orders-export.csv
+----------------------------------------------------------------------------
+csv line 2                           | json object 1
+  id        2001                     | "id": 2001
+  date      2024-02-28               | "date": "2024-02-28"
+  customer  Acme GmbH                | "customer": "Acme GmbH"
+  status    paid                     | "status": "paid"
+  amount    1499.00                  | "amount": 1499
+  note      ""                       | "note": null
+----------------------------------------------------------------------------
+csv line 3                           | REJECTED
+  id        2002                     | -
+! date      2023-02-29               | date: '2023-02-29' is no day of the calendar
+  customer  Beta AG                  | -
+  status    open                     | -
+  amount    10                       | -
+  note      ""                       | -
+----------------------------------------------------------------------------
+csv line 4                           | REJECTED
+  id        2003                     | -
+  date      2024-03-01               | -
+! customer  ""                       | customer: required, but empty
+  status    paid                     | -
+  amount    5                        | -
+  note      ""                       | -
+----------------------------------------------------------------------------
+csv line 5                           | REJECTED
+  id        2004                     | -
+  date      2024-03-01               | -
+  customer  Gamma                    | -
+! status    shipped                  | status: 'shipped' is not one of open|paid|void
+  amount    7                        | -
+  note      ""                       | -
+----------------------------------------------------------------------------
+csv line 6                           | REJECTED
+  id        2005                     | -
+  date      2024-03-02               | -
+  customer  Delta                    | -
+  status    paid                     | -
+! amount    1,5                      | amount: '1,5' is not a number (decimal point, no grouping)
+  note      German decimal comma     | -
+----------------------------------------------------------------------------
+csv line 7                           | REJECTED
+  id        2006                     | -
+  date      2024-03-03               | -
+  customer  Epsilon                  | -
+  status    open                     | -
+  amount    12                       | -
+  note      too                      | -
+  (extra)   many                     | -
+! (the row)                          | row: 7 fields, the header has 6
+----------------------------------------------------------------------------
+csv line 8                           | REJECTED
+  id        2007                     | -
+! date      03/04/2024               | date: '03/04/2024' is not a date (YYYY-MM-DD)
+  customer  Zeta                     | -
+  status    open                     | -
+  amount    8                        | -
+  note      ""                       | -
+----------------------------------------------------------------------------
+exit 1: 1 of 7 rows converted, rejected ((rejected: 6))   law == 0   BROKEN (by the input rows)
+<hwut-end>

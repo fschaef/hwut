@@ -1,0 +1,69 @@
+space.conf, as read by hwut_hocon:
+    version               [0, 1, 2]        (space.conf:7:5)
+    words                 [0, 1, 2, 15]    (space.conf:8:5)
+    total_minus_hdr       [-1, 0, 1]       (space.conf:9:5)
+    received_minus_total  [-1, 0]          (space.conf:10:5)
+    type                  [0, 1, 3, 4]     (space.conf:11:5)
+    total                 = 4 * max(1, words) + total_minus_hdr
+    received              = total + received_minus_total
+    where 0 <= total <= 65535 and received >= 0
+
+unit: ../hdr_check_v0.c   space: 288 points, 0 pruned by 'where', 288 run
+letters: . ok  V version  H header length  L total length  T truncated  Y type
+cells:   the unit's letter; 'T/L' the unit says T where the spec says L; '-' pruned
+
+points per rule, as the spec assigns them:
+    T received < 4        72
+    V version            144
+    H header length       12
+    L total length        16
+    T received < total    20
+    Y type                12
+    . ok                  12
+rules no point reaches ((unreached: 0))   law == 0   kept
+
+##! verbatim
+                      d2=received-total:    -1   -1   -1   -1   +0   +0   +0   +0
+  ver words d1=total-4*words   type:         0    1    3    4    0    1    3    4
+    0     0       -1                         T    T    T    T    T    T    T    T
+    0     0       +0                         T    T    T    T    V    V    V    V
+    0     0       +1                         V    V    V    V    V    V    V    V
+    0     1       -1                         T    T    T    T    T    T    T    T
+    0     1       +0                         T    T    T    T    V    V    V    V
+    0     1       +1                         V    V    V    V    V    V    V    V
+    0     2       -1                         V    V    V    V    V    V    V    V
+    0     2       +0                         V    V    V    V    V    V    V    V
+    0     2       +1                         V    V    V    V    V    V    V    V
+    0    15       -1                         V    V    V    V    V    V    V    V
+    0    15       +0                         V    V    V    V    V    V    V    V
+    0    15       +1                         V    V    V    V    V    V    V    V
+    1     0       -1                         T    T    T    T    T    T    T    T
+    1     0       +0                         T    T    T    T    H    H    H    H
+    1     0       +1                         H    H    H    H    H    H    H    H
+    1     1       -1                         T    T    T    T    T    T    T    T
+    1     1       +0                         T    T    T    T    Y    .    .    Y
+    1     1       +1                         T    T    T    T    Y    .    .    Y
+    1     2       -1                       T/L  T/L  T/L  T/L  Y/L  ./L  ./L  Y/L
+    1     2       +0                         T    T    T    T    Y    .    .    Y
+    1     2       +1                         T    T    T    T    Y    .    .    Y
+    1    15       -1                       T/L  T/L  T/L  T/L  Y/L  ./L  ./L  Y/L
+    1    15       +0                         T    T    T    T    Y    .    .    Y
+    1    15       +1                         T    T    T    T    Y    .    .    Y
+    2     0       -1                         T    T    T    T    T    T    T    T
+    2     0       +0                         T    T    T    T    V    V    V    V
+    2     0       +1                         V    V    V    V    V    V    V    V
+    2     1       -1                         T    T    T    T    T    T    T    T
+    2     1       +0                         T    T    T    T    V    V    V    V
+    2     1       +1                         V    V    V    V    V    V    V    V
+    2     2       -1                         V    V    V    V    V    V    V    V
+    2     2       +0                         V    V    V    V    V    V    V    V
+    2     2       +1                         V    V    V    V    V    V    V    V
+    2    15       -1                         V    V    V    V    V    V    V    V
+    2    15       +0                         V    V    V    V    V    V    V    V
+    2    15       +1                         V    V    V    V    V    V    V    V
+####
+
+!! version 1,  2 words, total -1 against the header: unit T T T T Y . . Y, spec L (8 cells)
+!! version 1, 15 words, total -1 against the header: unit T T T T Y . . Y, spec L (8 cells)
+points that differ from the spec ((mismatches: 16)) of 288   law == 0   BROKEN
+<hwut-end>

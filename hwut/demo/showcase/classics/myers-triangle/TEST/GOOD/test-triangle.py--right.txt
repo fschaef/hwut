@@ -1,0 +1,17 @@
+unit: triangle.c   sides from SIDES = -1 0 1 2 3 4 MAX  (MAX = 2^31-1)
+space: space_iterator over SIDES^3 = 343 triples, all permutations included
+
+##! verbatim
+truth \ program says|      invalid  equilateral    isosceles      scalene
+--------------------+----------------------------------------------------
+invalid: side <= 0  |          218            .            .            .
+invalid: a+b < c    |           60            .            .            .
+invalid: a+b = c    |           18            .            .            .
+equilateral         |            .            5            .            .
+isosceles           |            .            .           36            .
+scalene             |            .            .            .            6
+####
+(every count belongs in its row's own column; '[n]' = n triples answered wrongly)
+
+mismatches: ((mismatches: 0)) of 343 triples   law == 0   kept
+<hwut-end>

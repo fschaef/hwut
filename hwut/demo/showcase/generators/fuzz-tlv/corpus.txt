@@ -1,0 +1,4 @@
+# corpus.txt -- valid option blocks seen in the field (hex), one per line
+0102abcd
+01020a0b0203112233ff00
+10051122334455200100300466778899

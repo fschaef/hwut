@@ -1,0 +1,12 @@
+{
+  "app.title":           "Banco de motores",
+  "menu.file":           "Archivo",
+  "menu.quit":           "Salir",
+  "dialog.save.title":   "Guardar medición",
+  "dialog.save.confirm": "¿Guardar {count} archivos en {folder}?",
+  "status.connected":    "Conectado a {host}",
+  "status.battery":      "Batería {percent} %",
+  "error.timeout":       "Sin respuesta de {device} tras {seconds} s",
+  "button.ok":           "",
+  "button.cancel":       "Cancelar"
+}

@@ -1,0 +1,31 @@
+unit:   ../valid_date_4only.awk        oracle: datetime.date
+basis:  YEARS  [1900, 2000, 2023, 2024, 2100]
+        MONTHS [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        DAYS   [0, 1, 28, 29, 30, 31, 32]
+space:  5 x 14 x 7 = 490 points
+cells:  'Y' valid   '.' invalid   '!' unit disagrees with the oracle
+
+##! verbatim
+        1900                   2000                   2023                   2024                   2100
+  d:      0  1 28 29 30 31 32    0  1 28 29 30 31 32    0  1 28 29 30 31 32    0  1 28 29 30 31 32    0  1 28 29 30 31 32
+  m0      .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .
+  m1      .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m2      .  Y  Y  !  .  .  .    .  Y  Y  Y  .  .  .    .  Y  Y  .  .  .  .    .  Y  Y  Y  .  .  .    .  Y  Y  !  .  .  .
+  m3      .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m4      .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .
+  m5      .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m6      .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .
+  m7      .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m8      .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m9      .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .
+  m10     .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m11     .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .    .  Y  Y  Y  Y  .  .
+  m12     .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .    .  Y  Y  Y  Y  Y  .
+  m13     .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .    .  .  .  .  .  .  .
+####
+
+valid: 269 (calendar: 267)   invalid: 221 (calendar: 223)
+!! 1900-02-29: unit says valid, the calendar says invalid
+!! 2100-02-29: unit says valid, the calendar says invalid
+points that differ from the calendar: ((disagreements: 2)) of 490   law == 0   BROKEN
+<hwut-end>

@@ -1,0 +1,21 @@
+enum motor_state_t (motor.h of 'broken'): 6 values
+
+COVERAGE MATRIX   x handled by a case   - NOT handled
+switch at       display.c:5     motor.c:5       telemetry.c:6
+in function     state_name      motor_step      state_code
+MOTOR_OFF       x               x               x
+MOTOR_STARTING  x               x               x
+MOTOR_RUNNING   x               x               x
+MOTOR_PAUSED    -               x               -
+MOTOR_STOPPING  x               x               x
+MOTOR_FAULT     x               x               -
+default:        yes             -               -
+
+SECOND WITNESS  gcc -Wswitch-enum -fsyntax-only, per file
+  display.c:5 misses MOTOR_PAUSED
+  telemetry.c:6 misses MOTOR_PAUSED
+  telemetry.c:6 misses MOTOR_FAULT
+
+switches: 3   holes in the matrix ((holes: 3))   law == 0   BROKEN
+gcc warnings ((gcc: 3))   law == holes   agree: two witnesses, one count
+<hwut-end>

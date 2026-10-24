@@ -1,0 +1,43 @@
+tool: backup-old.sh SRC DST   exit 0
+marks: + added  ~ changed  = untouched (same mtime)  ! rewritten though equal  - removed
+##! verbatim
+SRC                       DST before                DST after
+|-- -rf                   |-- README                |-- -rf  +
+|-- .env                  |-- docs/                 |-- README  ~
+|-- README                |   `-- plan.txt          |-- docs/
+|-- docs/                 |-- src/                  |   |-- my notes.txt  +
+|   |-- my notes.txt      |   |-- main.c            |   `-- plan.txt  ! rewritten
+|   `-- plan.txt          |   `-- old.c             |-- img/  +
+|-- img/                  `-- tmp/                  |   `-- ünïcode.png  +
+|   `-- ünïcode.png           `-- cache/            |-- src/
+`-- src/                          `-- x.bin         |   |-- main.c  ! rewritten
+    |-- main.c                                      |   |-- old.c  =
+    `-- util/                                       |   `-- util/  +
+        `-- str.c                                   |       `-- str.c  +
+                                                    `-- tmp/
+                                                        `-- cache/
+                                                            `-- x.bin  =
+####
+tool stderr: (none)
+md5 of DST after:
+##! verbatim
+  aac67ec66abc630316ee4cd8900492d7  -rf
+  e30260020baeb0398ff07b37dd33ed16  README
+  8f96a3d23bd32711ea8f320379b42471  docs/my notes.txt
+  847676261680bff61c72961c8198abc0  docs/plan.txt
+  6fbaf71b05831c7c361f1f9aa0f68c46  img/ünïcode.png
+  8548451c0f59b8a8a487fc0d599d9f51  src/main.c
+  ebfa4b8a8fea7ba86465c5a3ffcc14ff  src/old.c
+  6a30e1dca0700ba45acaca5aeda297f8  src/util/str.c
+  102f5037fe6474019fe947b4977bb2a5  tmp/cache/x.bin
+####
+R1 DST == SRC        missing 1, extra 4, wrong 0   BROKEN
+     missing  .env
+     extra    src/old.c
+     extra    tmp/
+     extra    tmp/cache/
+     extra    tmp/cache/x.bin
+R2 equal files kept  rewritten 2                 BROKEN
+R3 nothing outside DST changes: SRC same, sibling keep/ same   holds
+rules broken ((breaches: 2))   law == 0   BROKEN
+<hwut-end>

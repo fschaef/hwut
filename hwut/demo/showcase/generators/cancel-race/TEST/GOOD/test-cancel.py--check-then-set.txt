@@ -1,0 +1,15 @@
+unit:  request.complete_check_then_set / request.cancel_check_then_set
+steps: measured alone, R 2, X 2
+space: space_iterator over {R,X}^4 = 16 words, 10 pruned (not 2 R), 6 orders
+order: who takes each global step, R the reply, X the cancel; 'n:' = global step number
+
+  order  R steps                            X steps                          user told              released
+  RRXX   0:look pending, 1:notify done      2:look done, 3:too late          done(42)               1  ok
+  RXRX   0:look pending, 2:notify done      1:look pending, 3:notify cancel  done(42) + cancelled   2  !!
+  RXXR   0:look pending, 3:notify done      1:look pending, 2:notify cancel  cancelled + done(42)   2  !!
+  XRRX   1:look pending, 2:notify done      0:look pending, 3:notify cancel  done(42) + cancelled   2  !!
+  XRXR   1:look pending, 3:notify done      0:look pending, 2:notify cancel  cancelled + done(42)   2  !!
+  XXRR   2:look cancelled, 3:drop reply     0:look pending, 1:notify cancel  cancelled              1  ok
+
+orders: 6   told or released other than once ((breaches: 4))   law == 0   BROKEN
+<hwut-end>

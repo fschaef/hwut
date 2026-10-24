@@ -1,0 +1,13 @@
+migrations of 'good'
+rules: M1 no gap, no twin   M2 a down for every up   M3 the down drops what the up creates
+
+LADDER   [U] up   [D] down   ... missing   creates (up) -> dropped by the down?
+  0001  [U]===[D]  create_users         table users                          ok
+  0002  [U]===[D]  add_users_email      column users.email                   ok
+  0003  [U]===[D]  create_orders        table orders                         ok
+  0004  [U]===[D]  index_orders_user    index idx_orders_user                ok
+  0005  [U]===[D]  add_orders_status    column orders.status                 ok
+  0006  [U]===[D]  create_audit_log     index idx_audit_at, table audit_log  ok
+
+newest migration: 6   ((findings: 0))   law == 0   kept
+<hwut-end>

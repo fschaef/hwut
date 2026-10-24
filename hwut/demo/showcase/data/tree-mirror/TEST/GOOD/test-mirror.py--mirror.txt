@@ -1,0 +1,34 @@
+tool: mirror.sh SRC DST   exit 0
+marks: + added  ~ changed  = untouched (same mtime)  ! rewritten though equal  - removed
+##! verbatim
+SRC                       DST before                DST after
+|-- -rf                   |-- README                |-- -rf  +
+|-- .env                  |-- docs/                 |-- .env  +
+|-- README                |   `-- plan.txt          |-- README  ~
+|-- docs/                 |-- src/                  |-- docs/
+|   |-- my notes.txt      |   |-- main.c            |   |-- my notes.txt  +
+|   `-- plan.txt          |   `-- old.c  -          |   `-- plan.txt  =
+|-- img/                  `-- tmp/  -               |-- img/  +
+|   `-- ünïcode.png           `-- cache/  -         |   `-- ünïcode.png  +
+`-- src/                          `-- x.bin  -      `-- src/
+    |-- main.c                                          |-- main.c  =
+    `-- util/                                           `-- util/  +
+        `-- str.c                                           `-- str.c  +
+####
+tool stderr: (none)
+md5 of DST after:
+##! verbatim
+  aac67ec66abc630316ee4cd8900492d7  -rf
+  9e9f03aa8b147e71322c497f9768f750  .env
+  e30260020baeb0398ff07b37dd33ed16  README
+  8f96a3d23bd32711ea8f320379b42471  docs/my notes.txt
+  847676261680bff61c72961c8198abc0  docs/plan.txt
+  6fbaf71b05831c7c361f1f9aa0f68c46  img/ünïcode.png
+  8548451c0f59b8a8a487fc0d599d9f51  src/main.c
+  6a30e1dca0700ba45acaca5aeda297f8  src/util/str.c
+####
+R1 DST == SRC        missing 0, extra 0, wrong 0   holds
+R2 equal files kept  rewritten 0                 holds
+R3 nothing outside DST changes: SRC same, sibling keep/ same   holds
+rules broken ((breaches: 0))   law == 0   holds
+<hwut-end>

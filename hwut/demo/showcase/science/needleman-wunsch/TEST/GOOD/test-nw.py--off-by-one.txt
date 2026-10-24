@@ -1,0 +1,47 @@
+unit: nw.c -DOFF_BY_ONE; match +1, mismatch -1, gap -1
+
+##! verbatim
+        -    G    C    A    T    G    C    U
+    -   0    0!  -1!  -2!  -3!  -4!  -5!  -6!
+    G   0!   1    0   -1   -2   -2   -3   -4
+    A  -1!   0    0    1    0   -1   -2   -3
+    T  -2!  -1   -1    0    2    1    0   -1
+    T  -3!  -2   -2   -1    1    1    0   -1
+    A  -4!  -3   -3   -1    0    0    0   -1
+    C  -5!  -4   -2   -2   -1   -1    1    0
+    A  -6!  -5   -3   -1   -2   -2    0    0
+    ('!' a cell that breaks the recurrence, given its neighbours: 14)
+
+    score 0   rescored 0 = reported
+    A  G-ATTACA
+       | | | |    4 matches
+    B  GCA-TGCU
+####
+
+## seed 19700343
+sweep: 200 random pairs, length 1..6 over ACGT, against a brute force over all alignments,
+       under each scheme (match, mismatch, gap): (+1, -1, -1)  (+1, -1, -2)
+##! verbatim
+  GGGGGT / GTGGC   reported 1  rescored 0  brute force 0
+      A  GGGGGT
+          | ||    3 matches
+      B  -GTGGC
+  C      / CTC     reported 0  rescored -1  brute force -1
+      A  --C
+           |   1 match
+      B  CTC
+  scheme (+1, -1, -1): invalid 0, rescore errors 147, suboptimal 143   (failing pairs above, at most two)
+  GGGGGT / GTGGC   reported 1  rescored -1  brute force -1
+      A  GGGGGT
+          | ||    3 matches
+      B  -GTGGC
+  C      / CTC     reported -1  rescored -3  brute force -3
+      A  --C
+           |   1 match
+      B  CTC
+  scheme (+1, -1, -2): invalid 0, rescore errors 174, suboptimal 143   (failing pairs above, at most two)
+####
+alignments not spelling their sequences ((invalid: 0))   law == 0   kept
+reported score != rescored ((rescore_errors: 321))   law == 0   BROKEN
+reported score != brute-force optimum ((suboptimal: 286))   law == 0   BROKEN
+<hwut-end>

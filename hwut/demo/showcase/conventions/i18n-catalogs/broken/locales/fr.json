@@ -1,0 +1,10 @@
+{
+  "app.title":           "Banc moteur",
+  "menu.file":           "Fichier",
+  "menu.quit":           "Quitter",
+  "dialog.save.title":   "Enregistrer la mesure",
+  "status.connected":    "Connecté à {host}",
+  "status.battery":      "Batterie {percent} %",
+  "error.timeout":       "Pas de réponse de {device} après {seconds} s",
+  "button.ok":           "OK"
+}

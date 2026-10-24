@@ -1,0 +1,34 @@
+input: genes.csv (12 genes), import: text
+
+##! verbatim
+  symbol in     cell type  symbol out
+  TP53          text       TP53
+  SEPT2         text       SEPT2
+  MARCH1        text       MARCH1
+  BRCA1         text       BRCA1
+  DEC1          text       DEC1
+  GAPDH         text       GAPDH
+  SEPT9         text       SEPT9
+  MYC           text       MYC
+  MARCH5        text       MARCH5
+  2310009E13    text       2310009E13
+  EGFR          text       EGFR
+  ACTB          text       ACTB
+####
+symbols turned into dates ((dates: 0)), into numbers ((numbers: 0))
+symbols changed ((mangled: 0)) of 12   law == 0   kept
+
+artifact significant.csv, written by sheet.save_significant (padj < 0.05): 8 rows
+line 1: symbol,log2fc   header first ((header_first: "yes"))   law: yes   kept
+rows 2..9, in the order the unit wrote them (undefined):
+##! potpourri
+EGFR,-0.71
+DEC1,2.05
+TP53,1.84
+SEPT9,-1.47
+MARCH1,-0.95
+MYC,1.66
+SEPT2,1.21
+2310009E13,-1.12
+####
+<hwut-end>

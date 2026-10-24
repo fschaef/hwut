@@ -1,0 +1,9 @@
+# pressure units, as the old firmware header had them
+Pa     1
+hPa    100
+bar    100000
+psi    6894.76
+atm    101325
+mmHg   133.322
+Torr   133.322
+inHg   3386.39

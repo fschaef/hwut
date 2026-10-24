@@ -1,0 +1,37 @@
+tuning-tuned.conf:  q = 1.0 r = 0.0625
+ride with seed 4711:  '.' raw  '-' truth  'o' estimate
+##! verbatim
+  4.0 m |                                                            |
+        |                                      .         .           |
+  3.5 m |                              oooo   .   .    .  .     .  . |
+        |                             o.. .oooo   ...... ...... .  . |
+  3.0 m |                           ..---------oooooooooooooooooooooo|
+        |                           .o.   ....  . .... ... ..........|
+  2.5 m |                          .-   .          ..   .      .     |
+        |                          .o          .                     |
+  2.0 m |                         .-                                 |
+        |                        .-o                                 |
+  1.5 m |                         .                                  |
+        |                        -o.                                 |
+  1.0 m |                       .                                    |
+        |                      .-o                                   |
+  0.5 m |.     .   .       . ..-o                                    |
+        |..... ............   -o                                     |
+  0.0 m |oooo---ooooooooooooooo                                      |
+        |....ooo.....  . ......                                      |
+ -0.5 m |    . .    .       .                                        |
+        |              .                                             |
+ -1.0 m |                                                            |
+        +----------+---------+---------+---------+---------+---------+
+         0s        2s        4s        6s        8s        10s       12s
+####
+R1 rms error at rest     0.074 m   <= 0.18 m   holds
+R2 settled after ride     1.04 s   <= 2.5 s    holds
+R3 spread est/raw        0.300     <= 0.45     holds
+   (spread = std(estimate - truth) / std(raw - truth), at rest)
+## seed 1792844660209735571
+sweep of 40 rides, noise seeded by the clock:
+  R1 rms error at rest, worst    ((rms_worst: 0.118 m))   law <= 0.18 m   holds
+  R2 settled after ride, worst   ((settle_worst: 1.24 s))   law <= 2.5 s   holds
+  R3 spread est/raw, median      ((ratio_median: 0.283))   law <= 0.45   holds
+<hwut-end>

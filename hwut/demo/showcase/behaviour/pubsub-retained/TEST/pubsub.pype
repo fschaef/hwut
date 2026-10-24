@@ -1,0 +1,109 @@
+# pubsub.pype -- THE LAW OF SUBSCRIPTIONS, per subscriber and topic.
+#
+# The broker reports (causally ordered, threads interleaved):
+#     pub <topic> <seq> <value>          sub <who> <topic>
+#     deliver <who> <topic> <seq> <value>
+#     unsub <who> <topic>  (asked)       gone <who> <topic>  (done)
+#     purge <who> <topic> <seq>          end
+#
+# Laws for every pair (subscriber, topic):
+#     RETAINED   the first delivery is the value retained at 'sub'
+#     ORDER      deliveries come in publish order (seq rising)
+#     SILENCE    nothing is delivered after 'gone'
+#     NONE LOST  every publish while subscribed is delivered or purged
+# Modes: LIVE while the broker runs; DONE after 'end' -- nothing may follow.
+# The scenario fixes the race (B's handler holds its first delivery until
+# B has left), so the table prints COUNTS per pair, and one line per pair
+# with the values delivered, '^unsub' where unsubscribe returned.
+
+LIVE is: BASE
+LIVE/on: <bol> "scenario" => {
+    print(pype.line())
+}
+LIVE/on: <bol> "pub" <topic = "*"> <seq = int> <value = "*"> => {
+    last_seq[topic] = seq
+    value_db[(topic, seq)] = value
+    for key in pair_db:
+        if key[1] == topic and pair_db[key]["phase"] == "on":
+            pair_db[key]["owed"].add(seq)
+            pair_db[key]["owed_n"] += 1
+}
+LIVE/on: <bol> "sub" <who = "*"> <topic = "*"> => {
+    pair_db[(who, topic)] = {"phase": "on", "owed": set(), "last": 0, "first": None,
+                             "retained": last_seq.get(topic, 0), "after": 0, "order": True,
+                             "owed_n": 0, "delivered": 0, "purged": 0, "trail": [], "gone_vals": []}
+}
+LIVE/on: <bol> "deliver" <who = "*"> <topic = "*"> <seq = int> <value = "*"> => {
+    p = pair_db[(who, topic)]
+    if p["phase"] == "gone":
+        p["after"] += 1
+    if p["first"] is None:
+        p["first"] = seq
+    if seq <= p["last"]:
+        p["order"] = False
+    p["last"] = seq
+    p["owed"].discard(seq)
+    p["delivered"] += 1
+    p["trail"].append(value + ("(retained)" if seq == p["retained"] and p["delivered"] == 1 else ""))
+}
+LIVE/on: <bol> "purge" <who = "*"> <topic = "*"> <seq = int> => {
+    pair_db[(who, topic)]["owed"].discard(seq)
+    pair_db[(who, topic)]["purged"] += 1
+    pair_db[(who, topic)]["gone_vals"].append(value_db.get((topic, seq), "?"))
+}
+LIVE/on: <bol> "unsub" <who = "*"> <topic = "*"> => {
+    pair_db[(who, topic)]["phase"] = "leaving"
+}
+LIVE/on: <bol> "gone" <who = "*"> <topic = "*"> => {
+    pair_db[(who, topic)]["phase"] = "gone"
+    pair_db[(who, topic)]["trail"].append("^unsub")
+}
+LIVE/on: <bol> "end" <eol> => goto DONE;
+
+DONE is: BASE
+DONE/on: <else> => {
+    breach_set.add("after the end: " + pype.line())
+}
+
+BASE/on: <bof> => {
+    pair_db, last_seq, breach_set, value_db = {}, {}, set(), {}
+}
+BASE/on: <else> => {
+    breach_set.add("not a broker line: " + pype.line())
+}
+BASE/on: <eof> => {
+    def runs(trail):                        # '21 22 23' -> '21..23'
+        out, k = [], 0
+        while k < len(trail):
+            j = k
+            while (j + 1 < len(trail) and trail[j].isdigit() and trail[j + 1].isdigit()
+                   and int(trail[j + 1]) == int(trail[j]) + 1):
+                j += 1
+            out.append(trail[k] if j - k < 2 else "%s..%s" % (trail[k], trail[j]))
+            k = j + 1
+        return " ".join(out)
+    print("who  topic  published-while-subscribed  delivered  purged  after-unsub  lost  retained-first  in-order")
+    for (who, topic) in sorted(pair_db):
+        p = pair_db[(who, topic)]
+        lost = len(p["owed"])
+        print("%-4s %-6s %26d  %9d  %6d  %11s  %4s  %-14s  %s"
+              % (who, topic, p["owed_n"], p["delivered"], p["purged"],
+                 "%d !!" % p["after"] if p["after"] else "0", "%d !!" % lost if lost else "0",
+                 "yes" if p["first"] == p["retained"] else "!! no", "yes" if p["order"] else "!! no"))
+        if p["first"] != p["retained"]:
+            breach_set.add("%s/%s: the first delivery is not the retained value" % (who, topic))
+        if not p["order"]:
+            breach_set.add("%s/%s: deliveries out of publish order" % (who, topic))
+        if p["after"]:
+            breach_set.add("%s/%s: delivered after unsubscribe" % (who, topic))
+        if lost:
+            breach_set.add("%s/%s: published while subscribed, never delivered nor purged" % (who, topic))
+    print("(laws per row: retained first, in order, after-unsub 0, lost 0; delivered counts the retained value)")
+    print("values delivered per pair, '^unsub' where unsubscribe returned:")
+    for (who, topic) in sorted(pair_db):
+        p = pair_db[(who, topic)]
+        print("%s/%s: %s%s%s" % (who, topic, runs(p["trail"]), "  !! after unsubscribe" if p["after"] else "",
+                                 "   purged: " + runs(p["gone_vals"]) if p["gone_vals"] else ""))
+    print("breaches: ((breaches: %d))   law == 0   %s" % (len(breach_set), "kept" if not breach_set else "BROKEN"))
+    print("<hwut-end>")
+}

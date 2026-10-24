@@ -1,0 +1,38 @@
+capture: captures/hello.cap -- clean line: 'Hi!\n' at the nominal rate; 200 samples, 4 per nominal bit
+
+sample 12: frame, byte 0x48 'H', stop bit high (ok)
+##! verbatim
+    line   ---________________----________----____------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...0...0...0...1...0...0...1...0...1...
+####
+(line: one character per sample, 4 per bit, '-' high '_' low; look: where the receiver
+ sampled -- S start, 0..7 data bits LSB first, T stop; value: the level it read; '.' no sample)
+
+sample 56: frame, byte 0x69 'i', stop bit high (ok)
+##! verbatim
+    line   ---____----________----____--------____------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...0...0...1...0...1...1...0...1...
+####
+
+sample 104: frame, byte 0x21 '!', stop bit high (ok)
+##! verbatim
+    line   ---____----________________----________------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...1...0...0...0...0...1...0...0...1...
+####
+
+sample 148: frame, byte 0x0a '\n', stop bit high (ok)
+##! verbatim
+    line   ---________----____----________________------
+    look   .....S...0...1...2...3...4...5...6...7...T...
+    value  .....0...0...1...0...1...0...0...0...0...1...
+####
+
+sent:      'H' 'i' '!' '\n'
+received:  'H' 'i' '!' '\n'
+frames:    4, framing errors: 0, glitches: 0
+verdict:   the frames without framing error carry exactly the bytes sent
+bytes not as sent: ((wrong_bytes: 0)) = 0 wrong + 0 missing + 0 extra   law == 0   kept
+<hwut-end>

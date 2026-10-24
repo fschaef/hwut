@@ -1,0 +1,21 @@
+tool:  fmt -w 40 text.txt
+##! verbatim
+          1         2         3         4
+ 1234567890123456789012345678901234567890
+|A test that compares text needs to know | RAGGED
+|which differences matter. The width of  | RAGGED
+|a gap between two words rarely does;    | RAGGED
+|the order of the words always does.     | last
+|                                        | (gap)
+|Release notes, man pages and commit     | RAGGED
+|messages are wrapped by tools like      | RAGGED
+|this one, and nobody reads them twice   | RAGGED
+|to check the margins.                   | last
+####
+rule                      measured            verdict
+R1 longest line           39 <= 40            holds
+R2 words not whole         0 of 51            holds
+R3 flush lines             0 of 6             BROKEN
+   (words in 51, tokens out 51)
+rules broken ((breaches: 1))   law == 0   BROKEN
+<hwut-end>

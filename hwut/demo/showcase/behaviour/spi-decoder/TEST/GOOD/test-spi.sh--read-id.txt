@@ -1,0 +1,24 @@
+capture: captures/read-id.cap -- JEDEC 'read ID' (0x9f) to a W25Q128 flash
+
+##! verbatim
+sample 0         10        20        30        40        50        60        70
+CS     ---__________________________________________________________________---
+SCK    _____-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-____
+MOSI   ____--____----------____________________________________________________
+MISO   --------------------------__--------__--__________________----______----
+look   .....^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^.^....
+MOSI   .....<-----9f------>.<-----00------>.<-----00------>.<-----00------>....
+MISO   .....<-----ff------>.<-----ef------>.<-----40------>.<-----18------>....
+frame  ...|.................................................................|..
+####
+(one character per sample, an SCK period is 2; look: ^ a bit sampled at a rising SCK edge;
+ MOSI/MISO: <--9f--> the samples of one byte, <3b?> 3 bits left over; frame: | CS falls or
+ rises, ! CS rises inside a byte)
+
+transaction 1: samples 3..69, 32 bits
+    MOSI  9f 00 00 00
+    MISO  ff ef 40 18
+    JEDEC ID: manufacturer ef, type 40, capacity 2^0x18 bytes
+    capacity ((capacity: 16777216 B)) = 128 Mibit   law == 128 Mibit (W25Q128)   kept
+truncated transactions: ((truncated: 0))   (a clean bus has 0)   clean
+<hwut-end>

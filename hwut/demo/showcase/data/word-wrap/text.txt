@@ -1,0 +1,6 @@
+A test that compares text needs to know which differences matter. The
+width of a gap between two words rarely does; the order of the words
+always does.
+
+Release notes, man pages and commit messages are wrapped by tools like
+this one, and nobody reads them twice to check the margins.

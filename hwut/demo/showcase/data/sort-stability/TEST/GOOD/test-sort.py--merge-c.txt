@@ -1,0 +1,25 @@
+sorter: sortrec merge
+##! verbatim
+  tag  input           |  output          tag
+    1  zoe   ops       |  dev   ann         3
+    2  bob   sales     |  dev   max         6
+    3  ann   dev       |  dev   cy          9
+    4  kim   ops       |  dev   lou        12
+    5  al    sales     |  ops   zoe         1
+    6  max   dev       |  ops   kim         4
+    7  eve   ops       |  ops   eve         7
+    8  dan   sales     |  ops   ben        10
+    9  cy    dev       |  sales bob         2
+   10  ben   ops       |  sales al          5
+   11  ida   sales     |  sales dan         8
+   12  lou   dev       |  sales ida        11
+####
+by dept: in order
+  dev    tags 3 6 9 12       kept
+  ops    tags 1 4 7 10       kept
+  sales  tags 2 5 8 11       kept
+## seed 1792844709930831610
+random arrays: 300 of 60 records, 3 depts
+  not in dept order        ((unsorted: 0))   law == 0   kept
+  equal depts reordered    ((reordered: 0))   law == 0   kept
+<hwut-end>

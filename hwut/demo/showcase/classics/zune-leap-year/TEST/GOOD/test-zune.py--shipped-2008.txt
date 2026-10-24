@@ -1,0 +1,45 @@
+firmware: rtc.c FIXED=0 (shipped-2008)   day 1 = 1980-01-01
+
+1. THE LOOP TRACE for day 10593 = 2008-12-31
+##! verbatim
+   loop 1 year 1980 days 10593
+   loop 2 year 1981 days 10227
+   ... 24 iterations elided, one per year ...
+   loop 27 year 2006 days 1096
+   loop 28 year 2007 days 731
+   loop 29 year 2008 days 366
+   loop 30 year 2008 days 366   <- SAME STATE as loop 29: the loop cannot end
+   => no date: the player hangs here
+####
+
+2. EDGE DAYS, one column per year (Jan 1+ = Jan 1 of the next year)
+##! verbatim
+year     1980      1990      2000      2010      2020      2030      2040
+Dec 30   .............................................................
+Dec 31   H...H...H...H...H...H...H...H...H...H...H...H...H...H...H...H
+Jan 1+   .............................................................
+Feb 29   .---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.
+####
+('.' right  'x' wrong date  'H' hangs  '-' no such day)
+edge days: hang 16   wrong 0
+
+3. EVERY DAY of four years, one cell per month
+##! verbatim
+year  J F M A M J J A S O N D
+2000  . . . . . . . . . . . H
+2008  . . . . . . . . . . . H
+2009  . . . . . . . . . . . .
+2100  . . . . . . . . . . . .
+####
+(a month's cell: '.' every day right, 'H' a day hangs, 'x' a day converted wrongly)
+all days: 1462   hang 2 (2000-12-31, 2008-12-31)   wrong 0
+in total, distinct days (a day in both sections counts once):
+    days that hang ((hangs: 16))   law == 0   BROKEN
+    days converted wrongly ((wrong: 0))   law == 0   kept
+
+4. HWUT'S VERDICT: device test accepted on the fixed firmware, run on this one,
+   caps { timeout_sec = 1 }
+   END : new-years-eve ......................... killed [FAIL]
+   test-boot.sh  new-years-eve   killed; wall-clock cap exceeded  (cap 1.0 s)
+   RESULTS: 0 ok, 1 fail
+<hwut-end>

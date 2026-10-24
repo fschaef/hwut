@@ -1,0 +1,47 @@
+scenario: S:listen C:connect ~ C:close S:close ~ C:timeout S:timeout
+unit:     tcp_fsm.py
+
+##! verbatim
+client               the wire           server       cause
+------       -------------------------- ------       -----
+CLOSED                                  CLOSED
+                                        LISTEN       listen()
+SYN_SENT     --SYN------------------->               connect()
+              <---------------SYN+ACK-- SYN_RCVD     rcv SYN
+ESTABLISHED  --ACK------------------->               rcv SYN+ACK
+                                        ESTABLISHED  rcv ACK
+FIN_WAIT_1   --FIN------------------->               close()
+              <-------------------FIN-- FIN_WAIT_1   close()
+              <-------------------ACK-- CLOSING      rcv FIN
+CLOSING      --ACK------------------->               rcv FIN
+TIME_WAIT                                            rcv ACK
+                                        TIME_WAIT    rcv ACK
+CLOSED                                               timeout()
+                                        CLOSED       timeout()
+####
+(a row: the state an endpoint enters and the segment it sends; '!!' a transition outside RFC 793)
+
+transitions judged against RFC 793: 13
+end states: client CLOSED, server CLOSED
+the side that closed first (client) passed TIME_WAIT: yes
+transitions outside RFC 793: ((outside_rfc: 0))   law == 0   kept
+
+RFC 793 edges walked by this scenario ([x] walked, [ ] not):
+    [x] CLOSED      --listen()    --> LISTEN
+    [x] CLOSED      --connect()   --> SYN_SENT    sends SYN
+    [x] LISTEN      --rcv SYN     --> SYN_RCVD    sends SYN+ACK
+    [x] SYN_SENT    --rcv SYN+ACK --> ESTABLISHED sends ACK
+    [x] SYN_RCVD    --rcv ACK     --> ESTABLISHED
+    [ ] ESTABLISHED --send()      --> ESTABLISHED sends DATA
+    [ ] ESTABLISHED --rcv DATA    --> ESTABLISHED sends ACK
+    [ ] ESTABLISHED --rcv ACK     --> ESTABLISHED
+    [x] ESTABLISHED --close()     --> FIN_WAIT_1  sends FIN
+    [ ] ESTABLISHED --rcv FIN     --> CLOSE_WAIT  sends ACK
+    [ ] FIN_WAIT_1  --rcv ACK     --> FIN_WAIT_2
+    [x] FIN_WAIT_1  --rcv FIN     --> CLOSING     sends ACK
+    [ ] FIN_WAIT_2  --rcv FIN     --> TIME_WAIT   sends ACK
+    [x] CLOSING     --rcv ACK     --> TIME_WAIT
+    [x] TIME_WAIT   --timeout()   --> CLOSED
+    [ ] CLOSE_WAIT  --close()     --> LAST_ACK    sends FIN
+    [ ] LAST_ACK    --rcv ACK     --> CLOSED
+<hwut-end>

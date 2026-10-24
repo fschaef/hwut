@@ -1,0 +1,57 @@
+divider: radix-4 SRT, carry-save, full table
+
+1. THE TABLE, upper half (row = remainder estimate p, column = divisor 1.dddd)
+##! verbatim
+   p   0 1 2 3 4 5 6 7 8 9 A B C D E F
+ 5.500 . . . . . . . . . . . . . . . .
+ 5.375 . . . . . . . . . . . . . . . .
+ 5.250 . . . . . . . . . . . . . . . 2
+ 5.125 . . . . . . . . . . . . . . 2 2
+ 5.000 . . . . . . . . . . . . . . 2 2
+ 4.875 . . . . . . . . . . . . . 2 2 2
+ 4.750 . . . . . . . . . . . . 2 2 2 2
+ 4.625 . . . . . . . . . . . 2 2 2 2 2
+ 4.500 . . . . . . . . . . . 2 2 2 2 2
+ 4.375 . . . . . . . . . . 2 2 2 2 2 2
+ 4.250 . . . . . . . . . 2 2 2 2 2 2 2
+ 4.125 . . . . . . . . 2 2 2 2 2 2 2 2
+ 4.000 . . . . . . . . 2 2 2 2 2 2 2 2
+ 3.875 . . . . . . . 2 2 2 2 2 2 2 2 2
+ 3.750 . . . . . . 2 2 2 2 2 2 2 2 2 2
+ 3.625 . . . . . 2 2 2 2 2 2 2 2 2 2 2
+ 3.500 . . . . . 2 2 2 2 2 2 2 2 2 2 2
+ 3.375 . . . . 2 2 2 2 2 2 2 2 2 2 2 2
+ 3.250 . . . 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 3.125 . . 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 3.000 . . 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2.875 . 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2.750 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2.625 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1
+ 2.500 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1
+ 2.375 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1
+ 2.250 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1
+ 2.125 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1
+ 2.000 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1
+ 1.875 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
+ 1.750 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1
+ 1.625 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1.500 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+####
+(cell: the quotient digit the table selects, 1 or 2; '.' unreachable; '*' should be 2, holds 0;
+ column X = divisor 1.dddd with dddd = X in hex)
+
+2. FAMOUS DIVISIONS
+          1 / 824633702441 = 1.212659629408667e-12  exact 1.212659629408667e-12  ok  (Nicely, Jun-Oct 1994)
+    4195835 / 3145727      = 1.333820449136241e+00  exact 1.333820449136241e+00  ok  (T. Coe, Nov 1994, via C. Moler)
+    5505001 / 294911       = 1.866665197296811e+01  exact 1.866665197296811e+01  ok  (Coe/Tang list)
+          1 / 3            = 3.333333333333333e-01  exact 3.333333333333333e-01  ok  (an easy one)
+
+3. SEEDED FUZZ (deterministic_random, seed 1994) against the exact quotient
+   uniform   4000 random 24-bit pairs: wrong ((uniform_wrong: 0))   law == 0   kept
+   at-risk   1000 pairs per divisor column (1.dddd + twelve ones, quotient near a third):
+##! verbatim
+   column    0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+   wrong     0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+####
+   wrong results in the at-risk population: ((wrong: 0)) of 16000   law == 0   kept
+<hwut-end>

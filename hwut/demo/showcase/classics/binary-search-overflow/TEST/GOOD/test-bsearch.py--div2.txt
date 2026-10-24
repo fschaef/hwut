@@ -1,0 +1,25 @@
+midpoint: int mid = (low + high) / 2;    array: a[i] = i, int indices (32 bit, wrapping)
+space: space_iterator over 11 lengths x 6 keys = 66 searches
+
+##! verbatim
+length n  \ key        0     n/2    3n/4     n-2     n-1       n
+0                     ok      ok      ok      ok      ok      ok
+1                     ok      ok      ok      ok      ok      ok
+2                     ok      ok      ok      ok      ok      ok
+3                     ok      ok      ok      ok      ok      ok
+7                     ok      ok      ok      ok      ok      ok
+8                     ok      ok      ok      ok      ok      ok
+1000                  ok      ok      ok      ok      ok      ok
+2^30                  ok      ok      ok      ok      ok      ok
+2^30+2                ok      ok      ok  AIOOBE  AIOOBE  AIOOBE
+3*2^29                ok  AIOOBE  AIOOBE  AIOOBE  AIOOBE  AIOOBE
+2^31-1                ok      ok  AIOOBE  AIOOBE  AIOOBE  AIOOBE
+####
+(n-1 is the last element; key n is absent: the answer is its insertion point n;
+ AIOOBE = ArrayIndexOutOfBoundsException: the midpoint left the array)
+
+FAIL  n = 2^30+2  keys n-2, n-1, n              low 1073741824 + high 1073741825 = -2147483647 in int -> mid -1073741823, outside the array (probe 30)
+FAIL  n = 3*2^29  keys n/2, 3n/4, n-2, n-1, n   low 805306368 + high 1610612735 = -1879048193 in int -> mid -939524096, outside the array (probe 2)
+FAIL  n = 2^31-1  keys 3n/4, n-2, n-1, n        low 1073741824 + high 2147483646 = -1073741826 in int -> mid -536870913, outside the array (probe 2)
+searches failed: ((failures: 12)) of 66   law == 0   BROKEN
+<hwut-end>

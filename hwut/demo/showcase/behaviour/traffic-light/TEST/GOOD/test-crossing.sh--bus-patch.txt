@@ -1,0 +1,15 @@
+unit: lights_bus.c; cars on EW at: 4 30 31 45 s
+##! verbatim
+s     0         1         2         3         4         5
+NS    GGGGGGGGGGYYYRRRRRRRRRRRRRRRGGGGGGGGGGGGGGGGGGGGGGGGGGYYYRRR
+EW    RRRRRRRRRRRRRRRGGGGGGGGYYYRRRRRGGGGGGGGYYYRRRRRRRRRRRRRRRRRG
+car   ....c.........................cc.............c..............
+####
+(one column per second, tens of seconds on the ruler; G green, Y yellow, R red; c a car on EW)
+car at  4 s: EW green after 11 s
+car at 30 s: EW green after 1 s
+cars at 31, 45 s: not judged (judging stopped at 31 s)
+longest wait for EW green: ((wait: 11 s))   law <= 20 s   kept
+BREACH: EW GREEN at 31 s, in NS_GO: no state of the reference chart allows this; judging stops
+breaches of the chart: ((breaches: 1))   law == 0   BROKEN
+<hwut-end>

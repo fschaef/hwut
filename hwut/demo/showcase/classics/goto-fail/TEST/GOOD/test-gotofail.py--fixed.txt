@@ -1,0 +1,37 @@
+file: fixed/sslKeyExchange.c   function: SSLVerifySignedServerKeyExchange()
+
+CONTROL FLOW of the function body, from the first check on
+##! verbatim
+ line  reach  statement                                                         flow
+   23    |    if ((err = ReadyHash(&SSLHashSHA1, &hashCtx)) != 0)
+   24    |        goto fail;                                                    -err-> fail
+   25    |    if ((err = SSLHashSHA1.update(&hashCtx, &clientRandom)) != 0)
+   26    |        goto fail;                                                    -err-> fail
+   27    |    if ((err = SSLHashSHA1.update(&hashCtx, &serverRandom)) != 0)
+   28    |        goto fail;                                                    -err-> fail
+   29    |    if ((err = SSLHashSHA1.update(&hashCtx, &signedParams)) != 0)
+   30    |        goto fail;                                                    -err-> fail
+   31    |    if ((err = SSLHashSHA1.final(&hashCtx, &hashOut)) != 0)
+   32    |        goto fail;                                                    -err-> fail
+   34    |    err = sslRawVerify(ctx, ctx->peerPubKey, hashOut.data, hashOu...
+   40    |    if(err) {
+   41    |        sslErrorLog("SSLDecodeSignedServerKeyExchange: sslRawVeri...
+   43    |        goto fail;                                                    -err-> fail
+   44    |    }
+   46    |    fail:                                                             <- every jump lands here
+   47    |    SSLFreeBuffer(&hashCtx);
+   48    |    return err;
+####
+('|' reachable  'X' unreachable  '-err->' jump on error only  '=ALWAYS=>' unconditional jump)
+
+second opinion, gcc -Wmisleading-indentation: no warning
+unreachable statements: ((unreachable: 0))   law == 0   kept
+
+THE RUN: three ServerKeyExchange messages, verified by this file
+  case 1 | genuine server, its own signature          | returns      0 | client continues the handshake
+  log: SSLDecodeSignedServerKeyExchange: sslRawVerify returned -9809
+  case 2 | man in the middle, signs with his own key  | returns  -9809 | client aborts
+  log: SSLDecodeSignedServerKeyExchange: sslRawVerify returned -9809
+  case 3 | man in the middle, alters the DH params    | returns  -9809 | client aborts
+forgeries accepted: ((forged_accepted: 0)) of 2   law == 0   kept
+<hwut-end>

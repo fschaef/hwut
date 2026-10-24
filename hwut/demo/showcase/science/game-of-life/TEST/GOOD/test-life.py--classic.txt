@@ -1,0 +1,47 @@
+unit: life.awk -v rule=B3/S23 + grid_bounded.awk
+
+GLIDER
+##! verbatim
+  gen 0      gen 1      gen 2      gen 3      gen 4
+  .O......   ........   ........   ........   ........
+  ..O.....   O.O.....   ..O.....   .O......   ..O.....
+  OOO.....   .OO.....   O.O.....   ..OO....   ...O....
+  ........   .O......   .OO.....   .OO.....   .OOO....
+  ........   ........   ........   ........   ........
+  ........   ........   ........   ........   ........
+  ........   ........   ........   ........   ........
+  ........   ........   ........   ........   ........
+####
+BLINKER
+##! verbatim
+  gen 0   gen 1   gen 2
+  .....   .....   .....
+  ..O..   .....   ..O..
+  ..O..   .OOO.   ..O..
+  ..O..   .....   ..O..
+  .....   .....   .....
+####
+BLOCK
+##! verbatim
+  gen 0   gen 1
+  ....    ....
+  .OO.    .OO.
+  .OO.    .OO.
+  ....    ....
+####
+
+RULE AS THE UNIT APPLIES IT  all 512 3x3 neighbourhoods, one generation ('?' = depends on more than the count)
+##! verbatim
+  live neighbours      0 1 2 3 4 5 6 7 8
+  dead cell -> born    . . . O . . . . .
+  live cell -> stays   . . O O . . . . .
+  B3/S23 requires      born: . . . O . . . . .   stays: . . O O . . . . .
+####
+
+LAWS
+  glider: gen 4 == gen 0 moved by (+1, +1)                       kept
+  blinker: gen 2 == gen 0, gen 1 != gen 0                        kept
+  block: gen 1 == gen 0                                          kept
+  rule: all 512 neighbourhoods follow B3/S23 (0 differ)          kept
+laws broken ((breaches: 0)) of 4   law == 0   kept
+<hwut-end>

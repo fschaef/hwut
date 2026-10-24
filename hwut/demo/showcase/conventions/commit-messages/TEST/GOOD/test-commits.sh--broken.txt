@@ -1,0 +1,20 @@
+COMMIT LAW   H1 type(scope): subject   H2 header <= 50, no final '.'
+             B1 blank second line   B2 body lines <= 72   S1 Signed-off-by
+cells: ok, XX broken; under H2 and B2 a number is the measured length that breaks it
+commit       H1   H2   B1   B2   S1   header
+((6b796f4))  ok   ok   ok   ok   ok   build: add the Makefile of the bench firmware
+((b6a8b60))  ok   70   ok   ok   ok   feat(adc): sample all eight channels of the converter at one kilohertz
+((e6960dc))  XX   XX   ok   ok   XX   Fixed the UART bug.
+((ba7b9d9))  ok   ok   XX   ok   ok   fix(uart): drop frames with a bad CRC
+((5ed80b3))  ok   ok   ok   136  ok   refactor(motor): split the speed loop from the PWM
+((0bc8a7e))  ok   ok   ok   ok   XX   test(adc): cover the over-range reading
+
+BREACH ((b6a8b60)) H2 header has 70 characters, 50 at most
+BREACH ((e6960dc)) H1 header is not 'type(scope): subject' with a known type
+BREACH ((e6960dc)) H2 header ends with '.'
+BREACH ((e6960dc)) S1 no 'Signed-off-by: Name <mail>' trailer
+BREACH ((ba7b9d9)) B1 no blank line after the header
+BREACH ((5ed80b3)) B2 a body line has 136 characters, 72 at most
+BREACH ((0bc8a7e)) S1 no 'Signed-off-by: Name <mail>' trailer
+commits: 6   breaking the law ((broken: 5))   law == 0   BROKEN
+<hwut-end>

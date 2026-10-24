@@ -1,0 +1,35 @@
+unit:  stock.reserve_check_then_act, stock 1, orders A and B
+steps: measured alone, A 3, B 3
+space: space_iterator over {A,B}^6 = 64 words, 44 pruned (not 3 A), 20 interleavings
+word:  who takes each step.  steps: pN peeks, stock N   cN checks, sees N   wN writes,
+       stock N after   x gives up   u+ / u- the conditional update took / found none
+       ok confirms
+
+##! verbatim
+   #  word    A steps     B steps     stock  confirmed   n  verdict
+   1  AAABBB  p1 c1 w0    p0 c0 x         0  A           1  ok
+   2  AABABB  p1 c1 w0    p1 c0 x         0  A           1  ok
+   3  AABBAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+   4  AABBBA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+   5  ABAABB  p1 c1 w0    p1 c0 x         0  A           1  ok
+   6  ABABAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+   7  ABABBA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+   8  ABBAAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+   9  ABBABA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+  10  ABBBAA  p1 c0 x     p1 c1 w0        0  B           1  ok
+  11  BAAABB  p1 c1 w0    p1 c0 x         0  A           1  ok
+  12  BAABAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+  13  BAABBA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+  14  BABAAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+  15  BABABA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+  16  BABBAA  p1 c0 x     p1 c1 w0        0  B           1  ok
+  17  BBAAAB  p1 c1 w0    p1 c1 w0        0  A,B         2  !! 2 confirmed, stock 0
+  18  BBAABA  p1 c1 w0    p1 c1 w0        0  B,A         2  !! 2 confirmed, stock 0
+  19  BBABAA  p1 c0 x     p1 c1 w0        0  B           1  ok
+  20  BBBAAA  p0 c0 x     p1 c1 w0        0  B           1  ok
+####
+
+interleavings: 20
+tasks unfinished ((unfinished: 0))   law == 0   kept
+rows breaking the requirement ((breaches: 12))   law == 0   BROKEN
+<hwut-end>

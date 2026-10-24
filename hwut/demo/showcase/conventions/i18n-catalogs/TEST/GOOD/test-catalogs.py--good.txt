@@ -1,0 +1,23 @@
+catalogues of 'good': en (source) + de es fr
+
+MATRIX   ok | MISSING | EMPTY | {..}! placeholder differs | STALE key not in en
+         | . not applicable: the key is not in en, so its absence is no gap
+key                    en      de       es       fr
+app.title              src     ok       ok       ok
+menu.file              src     ok       ok       ok
+menu.quit              src     ok       ok       ok
+dialog.save.title      src     ok       ok       ok
+dialog.save.confirm    src     ok       ok       ok
+status.connected       src     ok       ok       ok
+status.battery         src     ok       ok       ok
+error.timeout          src     ok       ok       ok
+button.ok              src     ok       ok       ok
+button.cancel          src     ok       ok       ok
+
+COVERAGE  keys of en translated, per language
+  de  [==========] 10 of 10
+  es  [==========] 10 of 10
+  fr  [==========] 10 of 10
+
+keys: 10   languages: 4   gaps ((gaps: 0))   law == 0   kept
+<hwut-end>

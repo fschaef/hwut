@@ -1,0 +1,58 @@
+software: therac.Machine(as_delivered=False)   first typed: X-ray, edited to: electron
+space: space_iterator over edit tick 0..10 x order {before, after} the setup's step = 22 runs
+
+##! verbatim
+run edit        lane  0         1         2
+                      01234567890123456789012345
+  1 t=0  before op    e         F                 LOW current, turntable electron
+                setup SmmmmmmmR
+  2 t=0  after  op    e         bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  3 t=1  before op     e        bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  4 t=1  after  op     e        bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  5 t=2  before op      e       bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  6 t=2  after  op      e       bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  7 t=3  before op       e      bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  8 t=3  after  op       e      bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+  9 t=4  before op        e     bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 10 t=4  after  op        e     bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 11 t=5  before op         e    bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 12 t=5  after  op         e    bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 13 t=6  before op          e   bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 14 t=6  after  op          e   bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 15 t=7  before op           e  bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 16 t=7  after  op           e  bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 17 t=8  before op            e bbbbbbbF          LOW current, turntable electron
+                setup Smmmmmmm!SmmmmmmmR
+ 18 t=8  after  op            e ?bbbbbbbbF        LOW current, turntable electron
+                setup SmmmmmmmR  SmmmmmmmR
+ 19 t=9  before op             e?bbbbbbbbF        LOW current, turntable electron
+                setup SmmmmmmmR  SmmmmmmmR
+ 20 t=9  after  op             e?bbbbbbbbF        LOW current, turntable electron
+                setup SmmmmmmmR  SmmmmmmmR
+ 21 t=10 before op              ?bbbbbbbbF        LOW current, turntable electron
+                setup SmmmmmmmR  SmmmmmmmR
+ 22 t=10 after  op              ?bbbbbbbbF        LOW current, turntable electron
+                setup SmmmmmmmR  SmmmmmmmR
+####
+(one column per second, tens on the first ruler line;
+ op: e edit, b beam on not ready, ? beam on sees the edit, F fired;
+ setup: S read + current, m magnets, R ready, ! edit seen)
+runs that never fired: ((unfired: 0))   law == 0   kept
+runs fired with a mismatched mode: 0 of 22
+edit times that overdose: ((window: 0 s))   law == 0 s   kept
+<hwut-end>

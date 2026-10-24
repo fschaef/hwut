@@ -1,0 +1,57 @@
+# navigation.pype -- the NAVIGATION side of the AMD file, and the judge.
+#
+# Each line of the AMD file is 'AMD <day> <on-time> s <impulse> <unit>'.
+# Navigation reads the impulse in NEWTON-SECONDS, as the interface asked:
+#
+#     <imp = quantity(N*s)>
+#
+# binds the number in N*s WHATEVER unit the line carries -- '0.8 lbf*s'
+# binds 3.5586 -- and refuses a line whose unit is no impulse ('0.8 N' is
+# a force: it falls to '<else>' and is named). What it cannot know is a
+# number written under the WRONG unit: '0.8000 N*s' that is really lbf*s
+# binds 0.8. Only the physics can tell, so the judge flies the event too:
+# the thrusters' on-time times their rated 0.2 lbf (the model's value).
+#
+# The trajectory, a MODEL: navigation targets a periapsis of 226 km (the
+# MIB's planned altitude after the last trajectory correction). Impulse
+# the spacecraft got but navigation did not model lowers the true
+# periapsis in proportion; the slope is FITTED so that the 1999 under-read
+# (lbf*s taken as N*s over the model's 10 lbf*s of firing) gives the MIB's
+# reconstructed 57 km. Navigation's own prediction stays 226 km -- it
+# believes its file. 80 km is the lowest periapsis the MIB considered
+# survivable.
+
+NAV/on: <bof> => {
+    N_PER_LBF = 4.4482216152605            # N in one lbf, exact
+    RATED_N = 0.2 * N_PER_LBF              # rated thrust: 0.2 lbf
+    TARGET_KM, SURVIVABLE_KM = 226, 80     # MIB report
+    KM_PER_NS = (226 - 57) / (10.0 * (N_PER_LBF - 1))   # fitted, see above
+    read_total = flown_total = on_total = 0.0
+    print(" day  on-time  AMD file says   navigation reads   flown at 0.2 lbf   flown/read")
+}
+NAV/on: "AMD" <day = int> <on = quantity(s)> <imp = quantity(N*s)> => {
+    flown = on * RATED_N
+    said = " ".join(pype.line().split()[4:6])
+    ratio = flown / imp if imp else float("inf")
+    read_total += imp; flown_total += flown; on_total += on
+    print("%4d  %5.1f s  %-14s  %10.4f N*s   %10.4f N*s     %5.2f%s"
+          % (day, on, said, imp, flown, ratio, "" if abs(ratio - 1) < 0.01 else "  !!"))
+}
+NAV/on: <else> => {
+    print("!! not an AMD record navigation can read: " + pype.line())
+}
+NAV/on: <eof> => {
+    missing = flown_total - read_total
+    print("(navigation reads the number in N*s, converting from the tag; flown = on-time x 0.2 lbf; '!!' read != flown)")
+    flown_km = TARGET_KM - KM_PER_NS * missing
+    ok = abs(read_total - 10.0 * N_PER_LBF) <= 0.01 * N_PER_LBF
+    print("total impulse navigation took:    ((total: %.4f N*s)) = %.4f lbf*s   law 10.0 +- 0.01 lbf*s   %s"
+          % (read_total, read_total / N_PER_LBF, "kept" if ok else "!! BROKEN"))
+    print("total impulse the thrusters gave: %.4f N*s  (%.1f s at 0.2 lbf)%s"
+          % (flown_total, on_total, "  -- the last digit: the file's rounding to 4 decimals" if 0 < abs(missing) < 0.01 else ""))
+    if abs(missing) >= 0.01:
+        print("!! %.4f N*s fired but not modelled: navigation under-reads by %.2f" % (missing, flown_total / read_total))
+    print("periapsis at Mars: navigation predicts %d km, the spacecraft flies ((periapsis: %.0f km))   law >= %d km (MIB)   %s"
+          % (TARGET_KM, flown_km, SURVIVABLE_KM, "kept" if flown_km >= SURVIVABLE_KM else "!! BROKEN"))
+    print("<hwut-end>")
+}

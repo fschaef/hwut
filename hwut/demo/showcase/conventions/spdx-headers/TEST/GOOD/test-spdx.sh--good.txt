@@ -1,0 +1,17 @@
+project header (LICENSE-HEADER.txt):
+    SPDX-License-Identifier: MIT
+    Copyright (c) 2024 Acme Embedded GmbH
+
+HEADER MATRIX of 'good'   ok = holds   XX = broken   -- = no header to judge
+    H1 SPDX in lines 1-3  H2 identifier  H3 copyright  H4 comment syntax
+file                  H1   H2   H3   H4
+Makefile              ok   ok   ok   ok
+ci/pipeline.yaml      ok   ok   ok   ok
+src/board.h           ok   ok   ok   ok
+src/main.c            ok   ok   ok   ok
+tools/flash.sh        ok   ok   ok   ok
+tools/gen_table.py    ok   ok   ok   ok
+web/app.js            ok   ok   ok   ok
+
+files: 7   files failing ((failing: 0))   law == 0   kept
+<hwut-end>

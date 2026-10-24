@@ -1,0 +1,31 @@
+configuration of 'broken'
+
+CROSS REFERENCE   where each key is read, documented, exemplified
+                  ('-': nowhere; '- !': nowhere, and that is a finding K1, K2 or K3)
+  key             read by the code   as                README        example
+  APP_CONFIG      service/app.py:6   os.getenv         README.md:17  (env)
+  APP_DATA_DIR    deploy/run.sh:4    ${APP_DATA_DIR}   README.md:20  (env)
+  APP_LOG_LEVEL   service/app.py:12  os.environ.get    README.md:18  (env)
+  APP_REGION      - !                -                 README.md:19  (env)
+  APP_ZONE        deploy/run.sh:3    $APP_ZONE         - !           (env)
+  db.dsn          service/app.py:11  cfg[s][k]         README.md:16  example.ini:7
+  db.pool_size    service/app.py:10  cfg[s].getint(k)  README.md:15  example.ini:6
+  db.timeout_s    service/app.py:13  cfg[s][k]         - !           - !
+  server.host     service/app.py:8   cfg.get(s,k)      README.md:12  example.ini:2
+  server.port     service/app.py:9   cfg.getint(s,k)   README.md:13  example.ini:3
+  server.workers  - !                -                 README.md:14  -
+
+SETS   (K1: the left column is empty -- K2: the right column is empty)
+  READ, UNDOCUMENTED  |  READ AND DOCUMENTED |  DOCUMENTED, NOT READ
+  --------------------+----------------------+----------------------
+  APP_ZONE            |  APP_CONFIG          |  APP_REGION
+  db.timeout_s        |  APP_DATA_DIR        |  server.workers
+                      |  APP_LOG_LEVEL       |
+                      |  db.dsn              |
+                      |  db.pool_size        |
+                      |  server.host         |
+                      |  server.port         |
+
+K3  INI keys read, missing in config.example.ini: db.timeout_s
+keys: 11   K1 + K2 + K3 ((findings: 5))   law == 0   BROKEN
+<hwut-end>

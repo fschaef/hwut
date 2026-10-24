@@ -1,0 +1,13 @@
+conversation: the recorded transcript transcripts/calcd-0.9.txt
+  id  request              answer      answered
+   1  fib    20            6765        once
+   2  upper  hello         HELLO       once
+   3  rev    pipes         sepip       once
+   4  len    conversation  12          once
+   5  fib    30            832040      once  !! one before its request
+   6  upper  hwut          HWUT        once
+   7  rev    stressed      desserts    once
+   8  len    a             1           once
+server said bye: yes
+breaches of the conversation: ((breaches: 1))   law == 0   BROKEN
+<hwut-end>

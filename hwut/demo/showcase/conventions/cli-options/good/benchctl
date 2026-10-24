@@ -1,0 +1,34 @@
+#! /bin/bash
+# benchctl -- talk to the motor bench over its serial port
+PORT=/dev/ttyUSB0; BAUD=115200; TIMEOUT=2; LOG_LEVEL=info; DRY_RUN=0; RETRIES=3
+
+usage() {
+    cat <<'TXT'
+usage: benchctl [options] COMMAND
+
+options:
+  -p, --port DEVICE     serial device (default: /dev/ttyUSB0)
+  -b, --baud RATE       baud rate (default: 115200)
+  -t, --timeout SEC     answer timeout in seconds (default: 2)
+      --retries N       resend a frame N times on timeout (default: 3)
+  -l, --log-level LVL   debug, info, warning, error (default: info)
+  -n, --dry-run         print the frames, send nothing
+  -h, --help            this text
+TXT
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p|--port)      PORT=$2; shift ;;
+        -b|--baud)      BAUD=$2; shift ;;
+        -t|--timeout)   TIMEOUT=$2; shift ;;
+        --retries)      RETRIES=$2; shift ;;
+        -l|--log-level) LOG_LEVEL=$2; shift ;;
+        -n|--dry-run)   DRY_RUN=1 ;;
+        -h|--help)      usage; exit 0 ;;
+        -*)             echo "benchctl: unknown option $1" >&2; exit 2 ;;
+        *)              break ;;
+    esac
+    shift
+done
+echo "would send '$*' to $PORT at $BAUD baud (timeout $TIMEOUT s, $RETRIES retries, log $LOG_LEVEL, dry-run $DRY_RUN)"

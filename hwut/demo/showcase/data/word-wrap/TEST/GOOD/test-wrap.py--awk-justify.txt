@@ -1,0 +1,21 @@
+tool:  awk -v W=40 -f justify.awk text.txt
+##! verbatim
+          1         2         3         4
+ 1234567890123456789012345678901234567890
+|A  test that compares text needs to know| ok
+|which differences matter. The width of a| ok
+|gap  between  two words rarely does; the| ok
+|order of the words always does.         | last
+|                                        | (gap)
+|Release  notes,  man  pages  and  commit| ok
+|messages  are wrapped by tools like this| ok
+|one,  and  nobody  reads  them  twice to| ok
+|check the margins.                      | last
+####
+rule                      measured            verdict
+R1 longest line           40 <= 40            holds
+R2 words not whole         0 of 51            holds
+R3 flush lines             6 of 6             holds
+   (words in 51, tokens out 51)
+rules broken ((breaches: 0))   law == 0   holds
+<hwut-end>

@@ -1,0 +1,17 @@
+## seed 19650101
+unit: sum.c, gcc -O2 -ffast-math; 100000 doubles, magnitudes 1e-6..1e6, 60 % positive
+exact sum      924959014.93563974   (rounded to double)
+u * sum|x|     4.730e-07   (u = 2^-53; Kahan's bound is 2 of these)
+
+##! verbatim
+  order          result                 error vs exact   in u*sum|x|
+  forward       924959014.93562782          1.193e-05        25.21
+  backward      924959014.93564153          1.784e-06         3.77
+  ascending     924959014.93563879          9.580e-07         2.03
+  descending    924959014.93563616          3.581e-06         7.57
+  pairwise      924959014.93563986          1.149e-07         0.24
+  accurate      924959014.93562782          1.193e-05        25.21
+####
+NOTE accurate == forward, bit for bit: the compensation was optimized away
+sum_accurate(): error ((accurate_units: 25.21)) u*sum|x|   law <= 2   BROKEN
+<hwut-end>

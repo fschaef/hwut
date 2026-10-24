@@ -1,0 +1,10 @@
+operator table: ops.json   + prec 1 left  - prec 1 left  * prec 2 left  ^ prec 3 right
+## seed 1792844652753386607
+random expressions: 3000, depth up to ((depth_max: 4))
+operators drawn:  + ((n_plus: 2348))  - ((n_minus: 2386))  * ((n_times: 2355))   law >= 500 each
+                  ^ ((n_power: 2332))  unary - ((n_neg: 1547))   law >= 200 each
+parse failures:     ((failures: 0))   law == 0   kept
+value != Python's:  ((mismatches: 0))   law == 0   kept
+##! ignore
+####
+<hwut-end>

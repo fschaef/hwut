@@ -1,0 +1,34 @@
+conversion: protected   (BH: 64-bit float -> 16-bit signed int, -32768 .. 32767)
+
+VALUE RANGE x CONVERSION
+##! verbatim
+            BH   right answer               conversion gave      verdict
+           0.0   value 0                    value 0              ok
+        1234.4   value 1234                 value 1234           ok
+       32766.6   value 32767                value 32767          ok
+       32767.0   value 32767                value 32767          ok
+       32767.4   value 32767                value 32767          ok
+       32767.5   out of range: clamp, flag  clamped 32767 flag   ok
+       40000.0   out of range: clamp, flag  clamped 32767 flag   ok
+       65535.0   out of range: clamp, flag  clamped 32767 flag   ok
+       65536.0   out of range: clamp, flag  clamped 32767 flag   ok
+     1000000.0   out of range: clamp, flag  clamped 32767 flag   ok
+      -32768.0   value -32768               value -32768         ok
+      -32768.4   value -32768               value -32768         ok
+      -32768.6   out of range: clamp, flag  clamped -32768 flag  ok
+      -40000.0   out of range: clamp, flag  clamped -32768 flag  ok
+####
+
+THE FLIGHT (model curves BH = k t^2), H0 .. H0+40 s
+##! verbatim
+H0+ s        0         1         2         3         4
+Ariane 4 BH  .........................................
+Ariane 5 BH  .....................................cccc
+####
+(one column per second, tens of seconds on the ruler; '.' right value  'c' clamped + flagged
+ 'w' wrapped, wrong  'X' Operand Error  '-' SRI stopped, no data)
+Ariane 4 BH stays within int16 for all 40 s
+Ariane 5 BH leaves the int16 range at H0+37 s (BH = 33307.8)
+table rows wrong: ((wrong_rows: 0)) of 14   law == 0   kept
+flight seconds without a right or flagged value: ((bad_seconds: 0)) of 82   law == 0   kept
+<hwut-end>
