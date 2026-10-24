@@ -31,3 +31,8 @@ DISCOVERY/on: if ( pype.time() > 30.0 ) => {
 DISCOVERY/on: <else> => ignore;
 
 DONE/on: <else> => flush;
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+on: <eof> => ignore;
+DISCOVERY/on: <eof> => ignore;
+DONE/on: <eof> => ignore;

@@ -113,7 +113,7 @@ printf 'hwut.run            %s      %s        %s      %s\n' \
               --directory=run_ok --glob 'nothing-*')"
 printf 'steady\n'      > a.txt
 printf 'different\n'   > b.txt
-printf 'on: <else> => flush;\n' > ok.pype
+printf 'on: <else> => flush;\non: <eof> => ignore;\n' > ok.pype
 printf 'on: bad\n'              > broken.pype
 printf 'hwut.pype           %s      %s        %s      -\n' \
     "$(status python3 -m hwut.services.pype ok.pype a.txt)" \

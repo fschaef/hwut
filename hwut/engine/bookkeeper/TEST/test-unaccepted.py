@@ -109,9 +109,9 @@ def test_booked():
     with contextlib.redirect_stdout(io.StringIO()):
         play_main(["--all", "--plain", "--directory=%s" % test],
                   write=lambda _: None)
-    accept_main(["test-region.py", "--whole", "--dont-ask",
+    accept_main(["test-region.py", "--whole",
                  "--directory=%s" % test], write=lambda _: None)
-    accept_main(["test-plain.py", "--dont-ask",
+    accept_main(["test-plain.py",
                  "--directory=%s" % test], write=lambda _: None)
     book = Bookkeeper(test)
     region = book.result("test-region.py", None) or {}

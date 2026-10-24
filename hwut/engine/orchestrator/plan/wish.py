@@ -152,6 +152,7 @@ ______________________________________________________________________________
 """
 import calendar
 import os
+import re
 from dataclasses import dataclass, replace
 from datetime    import datetime, timedelta, timezone
 
@@ -292,6 +293,10 @@ class Wish:
     keys_spec:         str | None = None
     #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
     feature_ext_tuple: tuple = ()
+    #  THE RECORDINGS A WISHLIST NAMES BY DIGEST (E-168): pairs
+    #  '(<literal target>, <tag>)', the target as the list's line
+    #  expanded. Read by 'hwut.accept' alone; every other face refuses.
+    digest_tuple:      tuple = ()
 
     def states_nothing_f(self):
         """
@@ -390,7 +395,7 @@ class Wish:
         return " ".join(part_list)
 
 
-def parse_wish(argv):
+def parse_wish(argv, digest_f=False):
     """
     RETURN: [0] Wish, what the selection keywords of 'argv' state.
             [1] list[str], the arguments that are none of them, in
@@ -417,6 +422,7 @@ def parse_wish(argv):
     dir_list         = []
     dir_rule_list    = []
     wishlist_f       = False
+    digest_list      = []
     label_spec       = None
     language_list    = []
     faster_than_ms   = None
@@ -471,12 +477,16 @@ def parse_wish(argv):
         elif argument == "--wishlist":
             if index >= len(argv):
                 raise WishError("'--wishlist' stands without a file")
-            glob_list.extend(wishlist_target_tuple(argv[index]))
+            target_tuple, found = _wishlist_read(argv[index], digest_f)
+            glob_list.extend(target_tuple)
+            digest_list.extend(found)
             wishlist_f = True
             index += 1
         elif argument.startswith("--wishlist="):
-            glob_list.extend(
-                wishlist_target_tuple(argument[len("--wishlist="):]))
+            target_tuple, found = _wishlist_read(
+                argument[len("--wishlist="):], digest_f)
+            glob_list.extend(target_tuple)
+            digest_list.extend(found)
             wishlist_f = True
         elif argument in ("--label", "-l") \
                 or argument.startswith("--label=") \
@@ -596,16 +606,41 @@ def parse_wish(argv):
                  tuple(exclude_list), tuple(exclude_dir_list),
                  tuple(dir_list), label_spec, tuple(language_list),
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
-                 tuple(feature_list), keys_spec, tuple(feature_ext_list)),
+                 tuple(feature_list), keys_spec, tuple(feature_ext_list),
+                 digest_tuple=tuple(digest_list)),
             rest_list)
+
+
+#  A WISHLIST LINE MAY END IN ONE '--digest=<tag>' (E-168).
+_DIGEST_SUFFIX_RE = re.compile(r"\s+--digest=(\S+)\s*$")
+_GLOB_MARK_TUPLE  = ("*", "?", "[")
 
 
 def wishlist_target_tuple(file_name):
     """
-    RETURN: tuple[str], the targets a wishlist file states, in file
-            order -- one per line, '#' comments and blank lines
-            dropped, and a leading './' replaced by the file's OWN
-            directory.
+    RETURN: tuple[str], the targets a wishlist file states, as
+            '_wishlist_read' reads them, if success.
+            raises WishError, else -- also where a line carries a
+            '--digest', which only 'hwut.accept' reads.
+    """
+    return _wishlist_read(file_name, False)[0]
+
+
+def _wishlist_read(file_name, digest_f):
+    """
+    RETURN: [0] tuple[str], the targets the wishlist file states, in
+                file order, if success;
+            [1] tuple[(str, str)], '(<target>, <tag>)' for every line
+                ending in '--digest=<tag>', the target as in [0];
+            raises WishError naming file and line, else.
+
+    A '--digest' stands only after a LITERAL target -- a glob names a
+    set nobody has looked at yet (E-168) -- and only where the caller
+    reads it ('digest_f', 'hwut.accept'); every other face refuses it
+    by name, so a check written in the list is never silently dropped.
+
+    One target per line, '#' comments and blank lines dropped, a
+    leading './' replaced by the file's OWN directory.
 
     Raises WishError naming the file where it cannot be read: a
     wishlist that is not there is a command line that cannot be read,
@@ -629,9 +664,22 @@ def wishlist_target_tuple(file_name):
     #  what lets a list travel with the tree it describes.
     here = os.path.abspath(os.path.dirname(file_name) or ".")
     target_list = []
+    digest_list = []
     for number, line in enumerate(line_list, start=1):
         text = line.strip()
         if not text or text.startswith("#"): continue
+        tag   = None
+        match = _DIGEST_SUFFIX_RE.search(text)
+        if match is not None:
+            if not digest_f:
+                raise WishError("'%s', line %d: '--digest' is read by "
+                                "'hwut.accept' alone" % (file_name, number))
+            tag  = match.group(1)
+            text = text[:match.start()].rstrip()
+            if any(mark in text for mark in _GLOB_MARK_TUPLE):
+                raise WishError("'%s', line %d: '--digest' follows a glob "
+                                "-- a digest names ONE recording; name the "
+                                "test run literally" % (file_name, number))
         if text.startswith(":"):
             previous = target_list[-1] if target_list else None
             try:
@@ -643,7 +691,8 @@ def wishlist_target_tuple(file_name):
             text = "%s/%s" % (here.replace(os.sep, "/").rstrip("/"),
                               text[2:])
         target_list.append(text)
-    return tuple(target_list)
+        if tag is not None: digest_list.append((text, tag))
+    return tuple(target_list), tuple(digest_list)
 
 
 def desugar_positional(word_list):

@@ -15,6 +15,13 @@ THE NUMBER IS A COUNT, NEVER A HANDLE. Numbering for reference invites
 '--label 3', and a number that shifts when a label is added is a
 target that moves under the author.
 
+DERIVED LABELS (D-56), where the file's '[derived]' section holds any,
+follow under 'DERIVED': the expression beside each, the count of the
+file's targets that carry it, and the names the expression mentions
+that nothing assigns or derives -- 'missing in expression evaluation'.
+The count is over the targets the file names; a run the file names
+nowhere carries no label and is not counted.
+
 A tree that labels nothing prints nothing at all -- not a note, not a
 blank line; the status carries the news.
 
@@ -71,10 +78,12 @@ def main(argv=None, write=None):
         write("FAULT: %s" % error)
         return E_ExitCode.FAULT
 
-    standing = _faces.standing_of(entry_db)
-    if not standing.row_tuple:
+    standing     = _faces.standing_of(entry_db)
+    derived_list = _file.derivation_tuple(boundary, entry_db)
+    if not standing.row_tuple and not derived_list:
         return E_ExitCode.EMPTY
-    printed(standing, write)
+    if standing.row_tuple: printed(standing, write)
+    if derived_list:       derived_printed(derived_list, write)
     return E_ExitCode.OK
 
 
@@ -85,6 +94,23 @@ def printed(standing, write):
     width = max(len(label) for label, _ in standing.row_tuple)
     for label, member_n in standing.row_tuple:
         write("%-*s %4d" % (width, label, member_n))
+
+
+def derived_printed(derived_list, write):
+    """RETURN: None. The derived labels (D-56), below the assigned ones:
+               one per line, the expression beside it, the count of the
+               file's targets that carry it at the end, and under it the
+               names its expression mentions that nothing assigns or
+               derives."""
+    write("")
+    write("DERIVED")
+    width   = max(len(label) for label, _, _, _ in derived_list)
+    e_width = max(len(text) for _, text, _, _ in derived_list)
+    for label, text, member_n, missing in derived_list:
+        write("    %-*s = %-*s %4d" % (width, label, e_width, text, member_n))
+        if missing:
+            write("    %*s   missing in expression evaluation: %s"
+                  % (width, "", ", ".join(missing)))
 
 
 if __name__ == "__main__":

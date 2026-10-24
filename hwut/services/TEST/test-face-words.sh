@@ -169,7 +169,7 @@ labelled() {            # two tests accepted; 'test-m.sh' labelled 'meta'
     page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' 'echo "a $1"'
     page test-m.sh '#     title   = "m"\n' 'echo "m"'
     face hwut.labels.add meta --glob "test-m.sh" > /dev/null
-    face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --label all --dont-ask < /dev/null > /dev/null 2>&1
+    face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --label all < /dev/null > /dev/null 2>&1
     face hwut.run --label all --silent < /dev/null > /dev/null 2>&1
 }
 
@@ -181,7 +181,7 @@ case "$1" in
     book)
         page 'a:b.sh' '#     title   = "colon"\n#     choices = ["one", "two"]\n' 'echo "c $1"'
         page t.sh '#     title = "t"\n' 'echo "t"'
-        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole < /dev/null > /dev/null 2>&1
         echo "== the book"
         cat GOOD/book.csv
         echo "== under an old name, as that time wrote it: no ids, a 'coverage' column"
@@ -201,15 +201,15 @@ case "$1" in
         echo "== an acceptance refused takes no id"
         printf '#! /bin/bash\n# @hwut {\n#     title = "no token"\n# }\necho x\n' > u.sh
         chmod +x u.sh
-        face hwut.play --all u.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept u.sh --whole --dont-ask < /dev/null 2>&1 | grep -c "REFUSED" \
+        face hwut.play --all u.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept u.sh --whole < /dev/null 2>&1 | grep -c "REFUSED" \
             | sed 's/^/    refused: /'
         page v.sh '#     title = "v"\n' 'echo "v"'
-        face hwut.play --all v.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept v.sh --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all v.sh < /dev/null --plain > /dev/null 2>&1; face hwut.accept v.sh --whole < /dev/null > /dev/null 2>&1
         grep "^[tuv]\.sh" GOOD/book.csv ;;
     tiers)
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' 'echo "a $1"'
         page test-b.sh '#     title = "b"\n' 'echo "b"'
-        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole < /dev/null > /dev/null 2>&1
         printf 'DIFFERENT\n<hwut-end>\n' > GOOD/test-b.sh.txt
         R="--jobs=1 --deterministic --no-colour"
         for tier in "" "--plain" "--verbose" "--quiet" "--silent" \
@@ -241,7 +241,7 @@ case "$1" in
         for name in quick slow mid; do      # each directory records (E-165)
             ( cd $name/TEST && face hwut.play --all --plain < /dev/null > /dev/null 2>&1 )
         done
-        face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.accept --whole < /dev/null > /dev/null 2>&1
         face hwut.run --silent < /dev/null > /dev/null 2>&1
         for words in "linear,longest-first" "linear,shortest-first" \
                      "linear,name-sorted" "bundled,longest-first" \
@@ -268,7 +268,7 @@ open("log.txt", "a").write("%.3f %.3f\n" % (began, time.time()))
 print(unit.f(1 if sys.argv[1] == "pos" else -1))
 print("<hwut-end>")
 PAGE
-        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole < /dev/null > /dev/null 2>&1
         overlaps() {
             python3 -c "
 span = sorted(tuple(map(float, line.split())) for line in open('log.txt'))
@@ -388,7 +388,7 @@ PYTHON
     pype_call)
         page test-p.sh '#     title = "pype"\n#     pype  = "keep.pype"\n' \
              'echo "l1 x"; echo "l2"; echo "l3 x"'
-        printf '#! /usr/bin/env no-such-interpreter\non: "x" => flush;\non: <else> => ignore;\n' \
+        printf '#! /usr/bin/env no-such-interpreter\non: "x" => flush;\non: <else> => ignore;\non: <eof> => ignore;\n' \
                > keep.pype
         chmod -x keep.pype
         echo "she-bang: $(head -1 keep.pype)"
@@ -415,7 +415,7 @@ PYTHON
     propose)
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' \
              'echo "first  line"; echo "second $1"; echo "third"'
-        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole --dont-ask < /dev/null > /dev/null 2>&1
+        face hwut.play --all < /dev/null --plain > /dev/null 2>&1; face hwut.accept --whole < /dev/null > /dev/null 2>&1
         page test-a.sh '#     title   = "a"\n#     choices = ["one", "two"]\n' \
              'echo "first  line"; echo "SECOND  $1"; echo "third"'
         face hwut.run --silent < /dev/null > /dev/null 2>&1

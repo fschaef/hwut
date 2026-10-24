@@ -54,3 +54,6 @@ LINK/on: <exit> => {
     print("link done, %d warning(s)" % phase_warning_n)
     print("build total: %d warning(s)" % warning_n)
 }
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+ANY/on: <eof> => ignore;

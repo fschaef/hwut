@@ -19,6 +19,7 @@ beta
 --- no emission: the stream ends BARE -- the script's fault ---
 SCRIPT: {
     SCAN/on: <else> => flush;
+    SCAN/on: <eof> => ignore;
 }
 INPUT: {
     alpha

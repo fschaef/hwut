@@ -1,0 +1,20 @@
+== only
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+S    1      | ms = [((ms: 100))]
+N         1 | ms = ~((ms: 10))~
+            | ^ constraint binding ((ms: 100)) -- the value enters the constraint space
+            | ^ constraint binding ((ms: 10)) -- the value enters the constraint space
+            | ^ BROKEN: OUTPUT: constraint "ms < 50": broken by ((ms: 100)), line 1
+     2    2 | line a
+     3    3 | <hwut-end>
+== other
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+S    1      | ms = [((ms: 100))]
+N         1 | ms = ~((ms: 10))~
+            | ^ constraint binding ((ms: 100)) -- the value enters the constraint space
+            | ^ constraint binding ((ms: 10)) -- the value enters the constraint space
+            | ^ BROKEN: OUTPUT: constraint "ms < 50": broken by ((ms: 100)), line 1
+S    2      | line [b]
+N         2 | line [a]
+     3    3 | <hwut-end>
+<hwut-end>

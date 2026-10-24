@@ -1,0 +1,15 @@
+tag length: 11
+RECORDED: test-d.sh--x.txt (digest: <tag>)
+== two cases, one digest
+REFUSED: '--digest' blesses one recording; the words select 2 case(s) -- name one case, or give each its digest in a wishlist
+exit 2
+== the recording edited
+REFUSED: 'test-d.sh x' -- the recording is not the one played (digest <now>, asked <tag>) => hwut.play
+exit 1
+== played again: blessed
+exit 0
+== a wishlist
+ACCEPTED  2 of 2
+REFUSED: 'glob.txt', line 1: '--digest' follows a glob -- a digest names ONE recording; name the test run literally
+REFUSED: 'list.txt', line 1: '--digest' is read by 'hwut.accept' alone
+<hwut-end>

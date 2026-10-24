@@ -103,7 +103,7 @@ def tree_of(load, said=None):
     with open(path, "w") as fh: fh.write(APP)
     os.chmod(path, 0o755)
     face(test, "lib.run.play", "--all", "--plain", load=load)  # E-165
-    text = face(test, "accept", "--force", "--dont-ask", load=load)
+    text = face(test, "accept", "--force", load=load)
     if said is not None: said.append(text)
     return root, test
 
@@ -121,7 +121,7 @@ def test_tightened():
         os.chmod(path, 0o755)
         print("-- accepted under 'load <= 200'")
         face(test, "lib.run.play", "--all", "--plain", load="150")  # E-165
-        for line in face(test, "accept", "--force", "--dont-ask",
+        for line in face(test, "accept", "--force",
                          load="150").splitlines():
             if "t.py b" in line or line.startswith("REFUSED"):
                 import re

@@ -3,10 +3,10 @@ STATUS: 1
         merge required test-ok.sh .stdout
         merge required test-two.sh a .stdout
         merge required test-two.sh b .stdout
-    first blessing. At a TERMINAL this face merges them itself (E-59); here
+    first blessing => hwut.merge; or '--force' to overwrite the pole.
 --- the engine both doors call
     merge_text is the engine's: True
     the face calls run_sessions: True
-    hwut.accept calls it too   : True
+    hwut.accept calls it too   : False
     one refusal implementation : True
 <hwut-end>

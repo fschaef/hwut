@@ -7,6 +7,7 @@ SCRIPT: {
     M/on: <else> => {
         print("no line-start hash: %r" % pype.line())
     }
+    M/on: <eof> => ignore;
 }
 INPUT: {
     # starts here
@@ -17,8 +18,11 @@ comment line
 no line-start hash: 'value # trailing'
 }
 
---- anchors are transparent to interference: languages decide ---
-PypeError (expected): <test>: interference in mode 'M': handlers from 'M' (<test>:1) and 'M' (<test>:2) carry intersecting patterns; shadowing is forbidden
+--- a handler that can never fire is NOTED; '#' after '<bol> #' is not one ---
+    bol #
+    any #
+    bol #
+NOTE: mode 'M': '"#" "x"' (<test>:7) never fires -- '"#"' (<test>:4) comes first and matches every line it matches
 
 --- eol demands the pattern reaches line end ---
 SCRIPT: {
@@ -28,6 +32,7 @@ SCRIPT: {
     M/on: <else> => {
         print("no: %r" % pype.line())
     }
+    M/on: <eof> => ignore;
 }
 INPUT: {
     all done
@@ -47,6 +52,7 @@ SCRIPT: {
     M/on: <else> => {
         print("rejected: %r" % pype.line())
     }
+    M/on: <eof> => ignore;
 }
 INPUT: {
     sum 1.5 ; 2.5 ; 3.5 ; end
@@ -64,6 +70,7 @@ SCRIPT: {
               "b =", dict(sorted(b.items())))
     }
     M/on: <else> => ignore;
+    M/on: <eof> => ignore;
 }
 INPUT: {
     pair 10 11 20 21

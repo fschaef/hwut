@@ -724,6 +724,10 @@ class TuiDisplay(DisplayAdapter):
             note_list.append("constraint binding %s -- the value enters "
                              "the constraint space" % text)
 
+        #  A BROKEN CONSTRAINT (D-41), said under the line that broke it.
+        for text in getattr(item, "broken_list", ()):
+            note_list.append("BROKEN: %s" % text)
+
         def note(cell, own_value, partner_value):
             """RETURN: None. Appends 'cell's provenance note, once."""
             origin = cell.analogy_origin_line_number_pair

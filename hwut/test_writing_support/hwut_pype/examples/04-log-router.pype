@@ -43,3 +43,6 @@ NETWORK/on: "drop" <n = int> "packets" => {
     drop_n += n
     print("   network dropped %d packet(s)" % n)
 }
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+COMMON/on: <eof> => ignore;

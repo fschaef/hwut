@@ -54,7 +54,7 @@ $ hwut.cov.run -o <root>/mine --silent
     |                     [--language=<name>]... [--faster-than=<sec>]
     |                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
     |                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-    |                     [--output=<path>] [--dont-ask] [--jobs=<n>]
+    |                     [--cov-dir=<path>] [--dont-ask] [--jobs=<n>]
     |                     [--variant=<a,b>] [-v|--verbose|--plain|--quiet|--silent]
     |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
     |                     [--show-details] [--no-failure-summary] [--brief]
@@ -69,7 +69,7 @@ $ hwut.cov.run --silent
     |                     [--language=<name>]... [--faster-than=<sec>]
     |                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
     |                     [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-    |                     [--output=<path>] [--dont-ask] [--jobs=<n>]
+    |                     [--cov-dir=<path>] [--dont-ask] [--jobs=<n>]
     |                     [--variant=<a,b>] [-v|--verbose|--plain|--quiet|--silent]
     |                     [--colour|--no-colour] [--show-timing] [--show-jobs]
     |                     [--show-details] [--no-failure-summary] [--brief]

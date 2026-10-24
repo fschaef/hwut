@@ -14,6 +14,7 @@ EXIT: 0
     in-b.txt:1: input: 'l3 x'
     filter.pype:1: fire: <default>/on: "x"
     filter.pype:1: effect: flush ;
+    filter.pype:3: fire: <default>/on: <eof>
 SCRIPT: 'tmp-filter.pype' (she-bang: hwut.pype) {
     SCAN/on: "PASS" <n = int> ":" <f = "*.txt"> => {
         print("ok %d %s" % (n, f))

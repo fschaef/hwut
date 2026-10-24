@@ -151,7 +151,7 @@ def main(argv=None, write=None, read_line=None):
     #  and deleted what he refused, so the standing nominal may be
     #  overwritten ('--force') and no key needs confirming
     #  ('--dont-ask').
-    return accept.main(rest_list + ["--force", "--dont-ask"], write=write,
+    return accept.main(rest_list + ["--force"], write=write,
                        read_line=read_line, script_name=file_name,
                        brief_f=True)
 

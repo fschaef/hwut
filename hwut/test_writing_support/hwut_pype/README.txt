@@ -42,8 +42,9 @@ INVOCATION:
     hwut.pype --pype-dir DIR ... SCRIPT add 'import:' search
                                         directories (repeatable).
     hwut.pype --dry-run SCRIPT          parse and check only (syntax,
-                                        inheritance, interference,
-                                        mandatory else); read no input.
+                                        inheritance, mandatory else and
+                                        <eof>, a NOTE on a handler that
+                                        never fires); read no input.
     hwut.pype --example SCRIPT          print a generated example input
                                         for SCRIPT on stdout: one sample
                                         line per match handler, modes
@@ -106,9 +107,10 @@ DISPATCH:
     pype.mode_name(), pype.stack_depth(), pype.bindings(); actions:
     pype.goto(NAME), pype.push(NAME), pype.pop(). 'sys.exit(n)' in a
     block terminates immediately with exit status n. An 'if(...)'
-    cause fires when its condition evaluates true; conditions are not
-    patterns -- exempt from disjointness, definition-ordered, and a
-    mode containing one cannot be inherited from.
+    cause fires when its condition evaluates true, in definition order
+    with the patterns. EVERY mode carries an '<eof>' handler, own or
+    inherited (D-39). An effect may stand on the handler's line:
+    '=> { pass }' (D-46).
 
 MODES:
 
@@ -137,19 +139,13 @@ INHERITANCE:
     transitively. A handler arriving twice over a diamond is entered
     once.
 
-    SHADOWING IS FORBIDDEN. Any two distinct pattern handlers of one
-    effective list whose languages INTERSECT -- some line matches both
-    -- are a hard error, wherever the pair comes from. Pattern
-    dispatch is therefore order-free. Intersection is decided exactly
-    on the pattern automata (e.g. '<n = int>' intersects
-    '<x = number>'; '"abc"' does not intersect '"abc" "def"').
-    <else> is THE ONE EXCEPTION: it can and must be shadowed; the
-    first <else> of the effective list fires, own before inherited.
-    'if(...)' causes are conditions, not patterns: exempt,
-    definition-ordered; a mode containing one cannot be inherited
-    from. The error names the mode, both defining modes, and both
-    script locations. Bases hold the shared vocabulary; deriving
-    modes add disjoint vocabularies.
+    THE FIRST MATCH FIRES (D-47): where two pattern handlers of one
+    effective list match a line, the first of the effective list
+    triggers -- own before inherited, bases in declaration order; the
+    same order picks the <else>. '--dry-run' NOTEs a handler that can
+    never fire ('"abc" "def"' after '"abc"'), superficially: an
+    earlier handler's tokens contiguous among its own. Bases hold the
+    shared vocabulary; a deriving mode's own handler overrides.
 
     Inheritance cycles and unknown bases are parse errors. The default
     mode may inherit ('is: BASE1, BASE2'); it cannot be inherited from.

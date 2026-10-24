@@ -165,7 +165,7 @@ def _tree():
     for where in ("gw/router/TEST", "gw/can/TEST"):
         _launch(root, "hwut.play", "--all", "--plain",
                 cwd=os.path.join(root, where))
-    _launch(root, "hwut.accept", "--dont-ask", "--force")
+    _launch(root, "hwut.accept", "--force")
     _test(root, "gw/can/TEST/test-frame.sh", "frame",
           ['features = ["decode"]'], "changed")
     _launch(root, "hwut.run", "--silent")

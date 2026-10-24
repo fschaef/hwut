@@ -1,0 +1,4 @@
+inline 2
+end
+exit 0
+<hwut-end>

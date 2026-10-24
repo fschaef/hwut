@@ -10,6 +10,6 @@ STDOUT {
       REPORT     ok
       stderr          0 bytes
       stdout          0 bytes
-    RECORDED: test-mute.sh.txt
+    RECORDED: test-mute.sh.txt (digest: <tag>)
 }
 <hwut-end>

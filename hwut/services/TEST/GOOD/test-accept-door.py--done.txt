@@ -2,5 +2,6 @@
   exit        : OK
   GOOD after  : value new
   book        : true / ok
-  |     blessed        test-v.sh .stdout
+  | ACCEPTED  1 of 1
+  |     accepted       test-v.sh
 <hwut-end>

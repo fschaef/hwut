@@ -6,3 +6,6 @@ import: "test-run.pype"
 on: <bof> => {
     peak_f = True
 }
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+on: <eof> => ignore;

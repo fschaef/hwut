@@ -181,3 +181,6 @@ on: <bol> "=====" => {
         print("")
     print(masked(pype.line()))
 }
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+on: <eof> => ignore;

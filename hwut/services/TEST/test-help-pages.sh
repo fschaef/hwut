@@ -54,7 +54,7 @@ tree() {    #  a fresh tree, run and accepted; the shell stands in its TEST
     app test-io.sh    'title = "io"  choices = ["big", "small"]' 'echo "$1"'
     "$VUT/bin/hwut.run" --silent                 > /dev/null 2>&1 < /dev/null
     "$VUT/bin/hwut.play" --all --plain            > /dev/null 2>&1 < /dev/null
-    "$VUT/bin/hwut.accept" --dont-ask --force    > /dev/null 2>&1 < /dev/null
+    "$VUT/bin/hwut.accept" --force    > /dev/null 2>&1 < /dev/null
 }
 
 case "$1" in
@@ -105,10 +105,11 @@ for name in sorted(EXAMPLE_DB):
             esac
             echo "   \$ $line"
             #  '--dont-ask' IS THIS TEST'S, where the face would ask: no
-            #  person stands here to answer.
+            #  person stands here to answer. 'hwut.accept' asks nothing
+            #  (E-167) and refuses the word.
             typed=$line
             case "$line" in
-                "hwut.accept "*|"hwut.move "*|"hwut.rename "*|"hwut.remove "*)
+                "hwut.move "*|"hwut.rename "*|"hwut.remove "*)
                     typed="$line --dont-ask" ;;
             esac
             eval "timeout 100 $typed" > out.txt 2>&1 < /dev/null

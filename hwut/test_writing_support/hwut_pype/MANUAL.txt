@@ -163,8 +163,8 @@ Script check, reading no input:
 
     hwut.pype --dry-run SCRIPT
 
-parses and checks the script -- syntax, inheritance, interference,
-mandatory 'else' -- and reports 'dry run ok' with mode and handler
+parses and checks the script -- syntax, inheritance, mandatory 'else'
+and '<eof>', and the NOTE on a handler that can never fire -- and reports 'dry run ok' with mode and handler
 counts, or the error.
 
 Trace mode, for developing a script:
@@ -232,6 +232,8 @@ Blank lines are insignificant.
               |  "<bof>"   | "<eof>"    once, before the first / after
                                         the last input line
     EFFECT   :=  "{" python block "}"   run the block
+              |  "{" python "}" [";"]   the same, on the handler's own
+                                        line: '=> { pass }' (D-46)
               |  "goto" OTHERMODE ";"   switch mode
               |  "push" OTHERMODE ";"   stack the active mode, switch
               |  "pop" ";"              return to the stacked mode
@@ -373,6 +375,15 @@ errors; for modes reached only through 'pype.goto()'/'pype.push()'
 calls the check fires at activation. Pure mixin modes, inherited from
 but never activated, are exempt.
 
+MANDATORY <eof> (D-39). EVERY mode -- start mode, switch target, mixin
+alike -- must carry an <eof> handler in its effective list (own or
+inherited). A mode is meant to be entered, so it must cope with the end
+of the input, if only 'on: <eof> => ignore;'. A stream that ended in a
+mode without one ended without the token: the case could never
+COMPLETE. Violations are parse errors, on a run and on '--dry-run'
+alike, naming the mode -- every error of a script is a failure of the
+test, said where the script is read.
+
 <exit> STATUS. The interpreter exits 0 after the whole stream and 1 on a
 script error. A block may terminate the run itself with 'sys.exit(n)'
 -- the process exits IMMEDIATELY with status n, skipping any pending
@@ -475,43 +486,44 @@ gives SUB all handlers of every named base -- <entry>, <exit>, <bof>,
       |                           3. BASE2's effective list
     ROOT                      (ROOT entered once over the diamond)
 
-SHADOWING IS FORBIDDEN. Any two distinct pattern handlers in one
-effective list whose pattern languages INTERSECT -- some line matches
-both -- are a hard error, wherever the pair comes from: own against
-own, own against inherited, inherited against inherited. No handler may
-pre-empt another by order; there is no need to shadow. Consequently
-pattern dispatch is ORDER-FREE: at most one pattern can match a line,
-and a mode's meaning is readable from its handlers alone, without
-tracing precedence. Interference is decided EXACTLY on the pattern
-automata:
+THE FIRST MATCH FIRES (D-47). Where two pattern handlers of one
+effective list match a line, the one FIRST in the effective list
+triggers -- own before inherited, bases in declaration order, the order
+<else> follows too -- and only that one. A pattern matches ANYWHERE in
+the line unless anchored, so '"abc"' matches 'abc def' and 'abcdef':
 
-    <n = int>        and  <x = number>        interfere ('5' matches both)
-    <"*.txt">        and  <"*">               interfere ('a.txt')
-    <"*.txt">        and  <"*.log">           disjoint, lawful
-    "abc"            and  "abc" "def"         disjoint, lawful
+    on: "abc"       => ...      'abc', 'abc def', 'abcdef': this one
+    on: "abc" "def" => ...      never fires
 
-'if(...)' causes are CONDITIONS, not patterns; they are exempt from
-the disjointness law and fire in definition order. To keep things
-clean they never travel: A MODE CONTAINING AN 'if' CAUSE CANNOT BE
-INHERITED FROM -- conditions stay where they are written. <entry>,
-<exit>, <bof> and <eof> handlers ALL fire and cannot interfere.
+A handler that can NEVER fire -- an earlier one's tokens stand, in
+order and contiguous, among its own -- is NOTED by '--dry-run' (and on
+'--trace'), naming both handlers and their lines:
 
-THE <else> EXCEPTION. <else> is the one handler that CAN and MUST be
-shadowed: every <else> triggers on the same condition (no match
-handler fired), so disjointness is impossible and precedence is the
-law instead. The FIRST <else> of the effective list fires -- own
+    NOTE: mode '<default>': '"abc" "def"' (x.pype:4) never fires --
+          '"abc"' (x.pype:1) comes first and matches every line it matches
+
+The check is SUPERFICIAL by design: two patterns whose languages merely
+intersect ('<n = int>' and '<x = number>' on '5') are not reported --
+deciding that costs automata, and the first match firing is the law,
+not a fault. Put the more specific handler first, or anchor
+('<bol> "abc" <eol>').
+
+'if(...)' causes are CONDITIONS, not patterns, and take their place in
+the same order. <entry>, <exit>, <bof> and <eof> handlers ALL fire.
+
+<else> follows the same law: every <else> triggers on the same
+condition (no match handler fired), and the FIRST <else> of the
+effective list fires -- own
 before inherited, bases in declaration order. A base's <else> serves
 the whole hierarchy beneath it; a deriving mode overrides that default
 by giving its own.
 
-Bases therefore hold the SHARED vocabulary; a deriving mode adds a
-DISJOINT vocabulary of its own. If a mode must react differently to a
-line a base already handles, the handler does not belong in that base
--- restructure, rather than override. A handler arriving twice over a
+Bases hold the SHARED vocabulary; a deriving mode's own handlers come
+first, so a line a base already handles is taken by the deriving mode's
+handler where it gives one -- an override. A handler arriving twice over a
 diamond (two bases sharing a root) is entered once. Inheritance cycles
 and unknown bases are parse errors. The default mode may inherit
-('is: BASE'); having no name, it cannot be inherited from. The error
-names the mode, both defining modes, and both script locations.
+('is: BASE'); having no name, it cannot be inherited from.
 
 
 9  EXAMPLES
@@ -591,11 +603,9 @@ ______________________________________________________________________________
     <file>:<n>: repeat groups do not nest
     <file>:<n>: repeat group is never closed by ')'
     <file>: inheritance cycle: A is: B is: A
-    <file>: interference in mode '...': ... carry intersecting
-            patterns; shadowing is forbidden
-    <file>: interference in mode '...': ... an 'if' condition is opaque
-            and assumed to intersect
     <file>: mode '...' has no <else> handler in its effective list; ...
+    <file>: mode '...' has no <eof> handler in its effective list; ...
+    <file>:<n>: cannot compile the one-line effect: ...
     <file>:<n>: cannot find import '...' (searched: ...)
     <file>:<n>: import cycle via '...'
     <file>:<n>: import path must be a quoted string: import: "PATH"

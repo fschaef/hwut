@@ -88,9 +88,72 @@ import sys
 import config                                                       # noqa: F401
 
 from hwut.test_writing_support.python.hwut_runner import HwutRunner
-from hwut.test_writing_support.python.script_runner import CRunScript
+from hwut.test_writing_support.python.script_runner import CRunScript as _CRunScript
 from hwut.engine.procsitter.api import spawn
-from hwut.test_writing_support.hwut_pype.hwut_pype import parse, Interpreter, PypeError, generate_example_input
+from hwut.test_writing_support.hwut_pype.hwut_pype import parse as _parse, Interpreter, PypeError, generate_example_input
+import re
+
+
+#  EVERY MODE COPES WITH THE END OF THE INPUT (pype D-39, services
+#  E-169). A fixture whose subject is something else states it in the
+#  least intrusive way: 'on: <eof> => ignore;' for each mode it defines
+#  without an '<eof>' of its own -- appended, so no line of the fixture
+#  moves, and 'ignore' prints nothing. A fixture about '<eof>' itself
+#  states its own and is left as it stands. What runs is what is shown.
+_MODE_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*(?:/on:|\s+is:)", re.M)
+_BARE_RE = re.compile(r"^\s*(?:on|is):", re.M)
+_EOF_RE  = re.compile(r"^\s*(?:([A-Za-z_]\w*)/)?on:\s*<eof>", re.M)
+
+
+def lawful(script_txt):
+    """
+    RETURN: str, 'script_txt' with 'on: <eof> => ignore;' appended for
+            the default mode and '<M>/on: <eof> => ignore;' for every
+            mode 'M' the text defines without an '<eof>' handler of its
+            own -- the text unchanged where every mode has one.
+    """
+    mode_list = []
+    if _BARE_RE.search(script_txt): mode_list.append(None)
+    for name in _MODE_RE.findall(script_txt):
+        if name not in mode_list: mode_list.append(name)
+    stated = set(_EOF_RE.findall(script_txt))
+    stated = {None if name == "" else name for name in stated}
+    added  = ["on: <eof> => ignore;" if name is None
+              else "%s/on: <eof> => ignore;" % name
+              for name in mode_list if name not in stated]
+    if not added: return script_txt
+    tail = "" if script_txt.endswith("\n") or not script_txt else "\n"
+    return script_txt + tail + "\n".join(added) + \
+           ("\n" if script_txt.endswith("\n") else "")
+
+
+def parse(script_txt, file_name, **keyword_db):
+    """RETURN: what 'hwut_pype.parse' returns for the LAWFUL fixture."""
+    return _parse(lawful(script_txt), file_name, **keyword_db)
+
+
+def first_match(script_txt, input_txt):
+    """RETURN: None. Runs the LAWFUL 'script_txt' over 'input_txt' and
+                     prints what fired, then the check's NOTEs (D-47):
+                     which handler of several matching ones triggers."""
+    mode_db, first = parse(script_txt, "<test>")
+    buffer = io.StringIO()
+    stdout, sys.stdout = sys.stdout, buffer
+    try:
+        Interpreter(mode_db, first).run(io.StringIO(input_txt))
+    finally:
+        sys.stdout = stdout
+    for line in buffer.getvalue().splitlines(): print("    " + line)
+    for mode in mode_db.values():
+        for note in getattr(mode, "note_list", ()): print(note)
+
+
+class CRunScript(_CRunScript):
+    """A script written to a file and run -- the LAWFUL fixture."""
+    def __init__(self, file_name, shebang, script_txt_list, *rest, **keyword_db):
+        script_txt_list = lawful("\n".join(script_txt_list)).split("\n")
+        super().__init__(file_name, shebang, script_txt_list, *rest,
+                         **keyword_db)
 
 #  TWO WAYS IN. 'python3 hwut_pype.py' drives the INTERPRETER itself, which
 #  is what this suite tests; a she-bang line names the LAUNCHER 'hwut.pype',
@@ -111,7 +174,7 @@ def run_script(script_txt, input_txt):
                      prints script and input beforehand so the GOOD file is
                      self-describing.
     """
-    script_txt = textwrap.dedent(script_txt).strip("\n")
+    script_txt = lawful(textwrap.dedent(script_txt).strip("\n"))
     input_txt  = textwrap.dedent(input_txt).strip("\n")
     print("SCRIPT: {")
     for line in script_txt.splitlines(): print("    " + line)
@@ -371,26 +434,13 @@ def run_inheritance():
         extra
         """)
 
-    banner("shadowing is forbidden: own against inherited")
-    try:
-        parse('BASE/on: "x" => ignore;\n'
-              'BASE/on: <else> => ignore;\n'
-              'SUB is: BASE\n'
-              'SUB/on: "x" => flush;\n'
-              'on: "go" => goto SUB;\n'
-              'on: <else> => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("the first match fires: own before inherited (D-47)")
+    first_match('BASE/on: "x" => {\n    print("BASE x")\n}\nBASE/on: <else> => ignore;\nSUB is: BASE\nSUB/on: "x" => {\n    print("SUB x")\n}\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nx\n')
 
-    banner("shadowing is forbidden: own against own")
-    try:
-        parse('on: <n = int> => ignore;\n'
-              'on: <x = number> => ignore;\n'
-              'on: <else> => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("the first match fires: own against own, '<int>' before '<number>'")
+    first_match('on: <n = int> => {\n    print("int", n)\n}\non: <x = number> => {\n    print("number", x)\n}\non: <else> => ignore;\n',
+                '5\n5.5\n')
 
     banner("disjoint vocabularies inherit cleanly; no shadowing needed")
     run_script(
@@ -511,56 +561,25 @@ def run_multi_inheritance():
         q
         """)
 
-    banner("interference: equal patterns across two bases (trivial intersection)")
-    try:
-        parse('B1/on: "x" => {\n'
-              '    print("B1")\n'
-              '}\n'
-              'B2/on: "x" => {\n'
-              '    print("B2")\n'
-              '}\n'
-              'SUB is: B1, B2\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("equal patterns across two bases: the first base of the list fires")
+    first_match('B1/on: "x" => {\n    print("B1")\n}\nB2/on: "x" => {\n    print("B2")\n}\nSUB is: B1, B2\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nx\n')
 
-    banner("own override does not cure base interference")
-    try:
-        parse('B1/on: "x" => ignore;\n'
-              'B2/on: "x" => ignore;\n'
-              'SUB is: B1, B2\n'
-              'SUB/on: "x" => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("an own handler overrides both bases")
+    first_match('B1/on: "x" => {\n    print("B1")\n}\nB2/on: "x" => {\n    print("B2")\n}\nSUB is: B1, B2\nSUB/on: "x" => {\n    print("SUB")\n}\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nx\n')
 
-    banner("interference across depth: base and base-of-base")
-    try:
-        parse('ROOT/on: "x" => ignore;\n'
-              'MID is: ROOT\n'
-              'OTHER/on: "x" => ignore;\n'
-              'SUB is: MID, OTHER\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("across depth: the effective list's order decides (MID's ROOT before OTHER)")
+    first_match('ROOT/on: "x" => {\n    print("ROOT")\n}\nMID is: ROOT\nOTHER/on: "x" => {\n    print("OTHER")\n}\nSUB is: MID, OTHER\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nx\n')
 
-    banner("intersection, not identity: <int> against <number>")
-    try:
-        parse('B1/on: "v" <n = int> => ignore;\n'
-              'B2/on: "v" <x = number> => ignore;\n'
-              'SUB is: B1, B2\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("intersecting languages: B1's int, first, also matches inside '5.5' -- no NOTE")
+    first_match('B1/on: "v" <n = int> => {\n    print("B1 int", n)\n}\nB2/on: "v" <x = number> => {\n    print("B2 number", x)\n}\nSUB is: B1, B2\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nv 5\nv 5.5\n')
 
-    banner("intersection of globs: *.txt against *")
-    try:
-        parse('B1/on: <f = "*.txt"> => ignore;\n'
-              'B2/on: <s = "*"> => ignore;\n'
-              'SUB is: B1, B2\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("globs: '*.txt' first takes 'a.txt', '*' the rest")
+    first_match('B1/on: <f = "*.txt"> => {\n    print("txt", f)\n}\nB2/on: <s = "*"> => {\n    print("any", s)\n}\nSUB is: B1, B2\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\na.txt\nb.log\n')
 
     banner("disjoint languages are lawful across bases")
     run_script(
@@ -586,22 +605,9 @@ def run_multi_inheritance():
         abc def
         """)
 
-    banner("interference decides glob classes exactly")
-    try:
-        parse('B1/on: <"[abc]"> => ignore;\n'
-              'B2/on: "b" => ignore;\n'
-              'SUB is: B1, B2\n'
-              'SUB/on: <else> => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
-    mode_db, first = parse(
-        'on: "go" => goto SUB;\non: <else> => ignore;\n'
-        'B1/on: <"[abc]"> => ignore;\n'
-        'B2/on: "d" => ignore;\n'
-        'SUB is: B1, B2\n'
-        'SUB/on: <else> => ignore;\n', "<test>")
-    print("disjoint classes lawful: '[abc]' vs 'd'")
+    banner("glob classes: '[abc]' first takes 'b'")
+    first_match('B1/on: <"[abc]"> => {\n    print("class", pype.line())\n}\nB2/on: "b" => {\n    print("const b")\n}\nSUB is: B1, B2\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
+                'go\nb\nc\n')
 
     banner("effect-command words in a base list: plain unknown-mode law")
     try:
@@ -624,7 +630,8 @@ def _run_pipe_file_inputs():
     try:
         script_path = os.path.join(work_dir, "filter.pype")
         with open(script_path, "w") as fh:
-            fh.write('on: "x" => flush;\non: <else> => ignore;\n')
+            fh.write('on: "x" => flush;\non: <else> => ignore;\n'
+                     'on: <eof> => ignore;\n')
         a_path = os.path.join(work_dir, "in-a.txt")
         b_path = os.path.join(work_dir, "in-b.txt")
         with open(a_path, "w") as fh: fh.write("l1 x\nl2\n")
@@ -893,14 +900,9 @@ def run_anchors_repeat():
         value # trailing
         """)
 
-    banner("anchors are transparent to interference: languages decide")
-    try:
-        parse('M/on: <bol> "#" => ignore;\n'
-              'M/on: "#" => ignore;\n'
-              'M/on: <else> => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("a handler that can never fire is NOTED; '#' after '<bol> #' is not one")
+    first_match('M/on: <bol> "#" => {\n    print("bol #")\n}\nM/on: "#" => {\n    print("any #")\n}\nM/on: "#" "x" => {\n    print("never")\n}\nM/on: <else> => ignore;\n',
+                '# a\nb # c\n# x\n')
 
     banner("eol demands the pattern reaches line end")
     run_script(
@@ -1299,15 +1301,9 @@ def run_if_cause():
         odd again
         """)
 
-    banner("a mode containing 'if' cannot be inherited from")
-    try:
-        parse('B/on: if ( True ) => ignore;\n'
-              'B/on: <else> => ignore;\n'
-              'S is: B\n'
-              'S/on: <else> => ignore;\n', "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % e)
+    banner("a mode containing 'if' may be inherited from: order is the law (D-47)")
+    first_match('B/on: if ( pype.line() == "x" ) => {\n    print("B if")\n}\nB/on: <else> => ignore;\nS is: B\nS/on: <else> => ignore;\non: "go" => goto S;\non: <else> => ignore;\n',
+                'go\nx\ny\n')
 
     banner("broken condition rejected at parse")
     try:
@@ -1332,6 +1328,7 @@ def run_imports():
     try:
         with open(os.path.join(lib_dir, "common.pype"), "w") as fh:
             fh.write('COMMON/on: <else> => ignore;\n'
+                     'COMMON/on: <eof> => ignore;\n'
                      'COMMON/on: "shared" => {\n'
                      '    print("shared handler from the library")\n'
                      '}\n')

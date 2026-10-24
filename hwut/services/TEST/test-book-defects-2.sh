@@ -96,7 +96,7 @@ PYEOF
         ;;
     apply-names)
         page test-a.sh 'title = "a"' 'echo "value ${V:-1}"'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         V=2 "$BIN/hwut.run" > /dev/null 2>&1
         "$BIN/hwut.accept.propose" -o acc.txt test-a.sh > /dev/null 2>&1
         "$BIN/hwut.accept.apply" acc.txt 2>&1 | shown ;;
@@ -105,7 +105,7 @@ PYEOF
              'echo "ball ((0x${A:-1a}))"' 'echo "cube ((0x${B:-2b}))"' \
              "echo '####'" 'echo "ball meets ((0x${C:-1a}))"' \
              'echo "tail ${D:-x}"'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         echo "== D=x: only the analogies differ"
         A=9a B=8b C=7c D=x "$BIN/hwut.run" 2>&1 | grep "^END"
         echo "== D=y: the tail differs, the diff shows the analogies"
@@ -115,12 +115,12 @@ PYEOF
     output-constraint)
         page test-c.sh 'title = "c"  tolerance { constraints = ["ms < 50"] }' \
              'echo "took ((ms: ${MS:-10}))"'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         MS=100 "$BIN/hwut.run" --no-colour 2>&1 | sed -n '/^HINTS/,/^HINT:/p' | shown ;;
     diff-head)
         page test-d.sh 'title = "d"' \
              'for i in $(seq 1 400); do echo "row $i ${X:-a}"; done'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         X=b "$BIN/hwut.run" > /dev/null 2>&1
         X=b "$BIN/hwut.diff" test-d.sh 2> err.txt | head -1 > /dev/null
         echo "stderr lines beyond the NOTE: $(grep -vc '^NOTE' err.txt)"
@@ -130,14 +130,14 @@ PYEOF
              'echo "ball ((0x${A:-1a}))"' 'echo "cube ((0x${B:-2b}))"' \
              "echo '####'" 'echo "ball meets ((0x${C:-1a}))"' \
              'echo "cube meets ((0x${D:-2b}))"'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         A=9a B=8b C=7c D=7c "$BIN/hwut.run" > /dev/null 2>&1
         A=9a B=8b C=7c D=7c "$BIN/hwut.diff" test-k.sh 2>&1 \
             | sed -n '/LINE_SEQUENCE/,/CLOSING/p' ;;
     details-judgement)
         page test-j.sh 'title = "j"' 'echo "thing ((0x${H:-1a}))"' \
              'echo "tail ${T:-x}"'
-        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+        "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
         for env in "H=9z T=x" "H=9z T=y"; do
             echo "== $env"
             env $env "$BIN/hwut.run" > /dev/null 2>&1

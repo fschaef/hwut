@@ -215,15 +215,19 @@ token)
     ;;
 
 ask)
-    #  Interactive: the CANDIDATE is shown -- what the framework
-    #  compares -- and anything but 'y' leaves the pole alone.
+    #  ACCEPT ASKS NOTHING (E-167): the answers on stdin are never
+    #  read, every selected case is blessed at once, and '--dont-ask'
+    #  is refused by name.
     fixture
     printf 'y\nn\n' | $ACCEPT --directory=tree/suite/TEST \
         > out.txt 2> /dev/null
     echo "STATUS: $?"
     mask < out.txt | sed 's/^/    /'
-    echo "GOOD holds (first blessed, second left alone):"
+    echo "GOOD holds (all three, in E-60's undecided shape):"
     good | sed 's/^/    /'
+    echo "--- '--dont-ask' is gone"
+    $ACCEPT --directory=tree/suite/TEST --dont-ask 2>&1 | sed 's/^/    /'
+    echo "STATUS: ${PIPESTATUS[0]}"
     ;;
 
 interactive)

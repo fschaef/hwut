@@ -4,65 +4,17 @@ STATUS: 0
     RECORDING: test-two.sh b .stdout -- by hwut.play, <when>
     
     ==============================================================================
-    ACCEPT  test-ok.sh .stdout
-    ------------------------------------------------------------------------------
-        
-        =[ test-ok.sh .stdout ]============================= round 1
-        setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
-        reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
-        --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-             1 | steady line
-        --[ CLOSING-TOKEN ]--
-             2 | <hwut-end>
-        ============================================================
-    ------------------------------------------------------------------------------
-        candidate: test-ok.sh.txt
-        nominal:   test-ok.sh.txt
-    accept this as the nominal? [y/N] 
-    
-    ==============================================================================
-    ACCEPT  test-two.sh a .stdout
-    ------------------------------------------------------------------------------
-        
-        =[ test-two.sh a .stdout ]========================== round 1
-        setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
-        reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
-        --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-             1 | choice a
-        --[ CLOSING-TOKEN ]--
-             2 | <hwut-end>
-        ============================================================
-    ------------------------------------------------------------------------------
-        candidate: test-two.sh--a.txt
-        nominal:   test-two.sh--a.txt
-    accept this as the nominal? [y/N] 
-    NOTE: left alone. To accept PART of it: 'hwut.merge' takes lines from the candidate into a nominal, one at a time.
-    
-    ==============================================================================
-    ACCEPT  test-two.sh b .stdout
-    ------------------------------------------------------------------------------
-        
-        =[ test-two.sh b .stdout ]========================== round 1
-        setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
-        reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
-        --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
-             1 | choice b
-        --[ CLOSING-TOKEN ]--
-             2 | <hwut-end>
-        ============================================================
-    ------------------------------------------------------------------------------
-        candidate: test-two.sh--b.txt
-        nominal:   test-two.sh--b.txt
-    accept this as the nominal? [y/N] 
-    NOTE: left alone. To accept PART of it: 'hwut.merge' takes lines from the candidate into a nominal, one at a time.
-    
-    ==============================================================================
-    ACCEPTED  1 of 3
+    ACCEPTED  3 of 3
     ------------------------------------------------------------------------------
         undecided      test-ok.sh .stdout
-        left alone     test-two.sh a .stdout
-        left alone     test-two.sh b .stdout
+        undecided      test-two.sh a .stdout
+        undecided      test-two.sh b .stdout
     ==============================================================================
-GOOD holds (first blessed, second left alone):
+GOOD holds (all three, in E-60's undecided shape):
     test-ok.sh.txt
+    test-two.sh--a.txt
+    test-two.sh--b.txt
+--- '--dont-ask' is gone
+    REFUSED: '--dont-ask' is gone (E-167) -- accept never asks; it blesses what the words select
+STATUS: 2
 <hwut-end>

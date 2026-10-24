@@ -21,7 +21,6 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
                                 the first word names files, every
                                 further word a choice; both carry
                                 fnmatch's '*', '?' and '[ ]'
-    --dont-ask                  do not ask; the reading has been read
     --whole, --as-is, --force   record the candidate WHOLE, as it
                                 stands: a first acceptance without the
                                 undecided shape (E-60), a standing
@@ -33,7 +32,9 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
 WHAT ACCEPT DOES NOT DO: it never overwrites a standing nominal unless
 '--force' says so out loud. Where a nominal stands, the candidate is
 not a first blessing but a CHANGE, and a change is 'hwut.merge's
-business -- accept names the key and leaves the pole alone.
+business -- accept names the key, refers to 'hwut.merge' and leaves the
+pole alone. It asks nothing and opens no screen (E-167): the face has
+one task, and undoing it is the configuration management's (git).
 
 EXIT STATUS (E-1, services/_exit.py):
     0  everything the wish selected was accepted, or needed nothing
@@ -43,6 +44,7 @@ EXIT STATUS (E-1, services/_exit.py):
     3  the command line reads, and asks for nothing
 ______________________________________________________________________________
 """
+import argparse
 import asyncio
 import time
 from .lib.face import write_refusal
@@ -82,10 +84,14 @@ PARSER = face_parser("hwut.accept",
                      word_help="a test, a test and a choice, a file glob "
                                "and a choice glob",
                      word_metavar="[<file-glob> [choice-glob]...]")
-PARSER.add_argument("--dont-ask", action="store_true")
+#  GONE, AND REFUSED BY NAME: both stay readable so a script that still
+#  says them is told, never silently obeyed; neither shows in the usage.
+PARSER.add_argument("--dont-ask", action="store_true", help=argparse.SUPPRESS)
+PARSER.add_argument("--digest", action="append", default=[], metavar="tag")
 PARSER.add_argument("-f", "--force", action="store_true")
 PARSER.add_argument("--whole", "--as-is", dest="force", action="store_true")
-PARSER.add_argument("--force-run", action="store_true")
+PARSER.add_argument("--force-run", action="store_true",
+                    help=argparse.SUPPRESS)
 PARSER.add_argument("--directory", default=None)
 ARG_DB = {"--directory": True}
 USAGE  = usage_of(PARSER, ARG_DB)
@@ -112,12 +118,14 @@ THE SHORT FORM -- sugar over '--glob', not a second selection language
                         a file word alone means EVERY choice of it
 
 PROMOTION
-    --dont-ask          do not ask. It asserts 'I have already read
-                        the reading'. It says nothing about WHAT is
-                        done -- only that nobody need be consulted
-                        (E-70). '--force' implies it; the reverse does
-                        not hold, which is the whole point of two
-                        words.
+    ACCEPT ASKS NOTHING (E-167). It blesses what the words select, at
+    once; undoing it is git's. Where a nominal stands it refers to
+    'hwut.merge', which alone merges.
+    --digest=<tag>      bless only the recording 'hwut.play' named with
+                        this tag ('RECORDED: <file> (digest: <tag>)').
+                        A different recording is refused. The words
+                        must select exactly ONE case; a wishlist gives
+                        each of its literal lines a tag of its own
     --whole, --as-is, --force
                         record the candidate WHOLE, as it stands. On a
                         first acceptance that is the blessing rather
@@ -126,8 +134,6 @@ PROMOTION
                         merge. ONE ACT: what it replaces is an earlier
                         accept, never the author's evidence -- a GOOD
                         file cannot exist without this face (E-109).
-                        It implies '--dont-ask' and is never implied
-                        itself
     A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run' does -- the
     failures a run reports do not sit in one directory.
     '--directory=<path>' names one directory and reads that alone.
@@ -444,13 +450,15 @@ def difference_pair_list(compare_config, out_path, good_path, line_n):
             if out_text is not None and out_text == good_text:
                 continue                      # the bytes agree: no engine
             if out_text is None or good_text is None:
-                found.append((index + 1, out_text, good_text))
+                found.append((index + 1, out_text, index + 1, good_text,
+                              None))
             else:
                 asked += 1
                 if not await is_equivalent(options,
                                            io.StringIO(out_text + "\n"),
                                            io.StringIO(good_text + "\n")):
-                    found.append((index + 1, out_text, good_text))
+                    found.append((index + 1, out_text, index + 1,
+                                  good_text, None))
             if len(found) > line_n:
                 _trace("%s: %d line(s), ABORTED past %d   (%.3fs, %d asked)"
                        % (os.path.basename(str(out_path)),
@@ -462,7 +470,44 @@ def difference_pair_list(compare_config, out_path, good_path, line_n):
                   len(found), time.time() - started, asked))
         return found, False
 
+    async def aligned():
+        """RETURN: (entry list, done flag) -- the difference as an
+                   ALIGNMENT capped at the bound (D-42b), done False
+                   where the bytes differ in more than the cap allows."""
+        hunk_list = capped_hunk_list(out_line_list, good_line_list,
+                                     2 * line_n + 2)
+        if hunk_list is None: return [], False
+        found = []
+        for block, (out_begin, out_end, good_begin, good_end) \
+                in enumerate(hunk_list):
+            out_part  = out_line_list[out_begin:out_end]
+            good_part = good_line_list[good_begin:good_end]
+            for k in range(max(len(out_part), len(good_part))):
+                out_text  = out_part[k]  if k < len(out_part)  else None
+                good_text = good_part[k] if k < len(good_part) else None
+                if out_text is not None and good_text is not None \
+                   and await is_equivalent(options,
+                                           io.StringIO(out_text + "\n"),
+                                           io.StringIO(good_text + "\n")):
+                    continue
+                found.append((out_begin + k + 1
+                              if out_text is not None else None,
+                              out_text,
+                              good_begin + k + 1
+                              if good_text is not None else None,
+                              good_text, block))
+            if len(found) > line_n: return found, True
+        return found, True
+
     try:
+        #  ALIGNED FIRST (D-42b): one inserted line is one entry, not a
+        #  shift of every line after it. Where the bytes differ beyond
+        #  the cap -- a file whose every line carries a tolerated clock
+        #  -- the positional walk judges each position, as before.
+        found, done_f = asyncio.run(aligned())
+        if done_f:
+            if len(found) > line_n: return [], "> %d lines" % line_n
+            return found, None
         found, aborted_f = asyncio.run(walk())
     except RegionSyntaxError as error:
         return [], "the region framing does not read: %s" % error
@@ -651,20 +696,108 @@ def write_brief(entry_list, write, ink, verb="Accepted"):
                         len(entry_list)))
 
 
+def capped_hunk_list(out_list, good_list, d_max):
+    """
+    RETURN: list of (out begin, out end, good begin, good end), the
+            stretches where the two line lists differ, in order and
+            0-based, end exclusive -- a shortest edit script's hunks --
+            if the lists differ by at most 'd_max' inserted or deleted
+            lines;
+            None, else.
+
+    MYERS' DIFFERENCE, CAPPED AT THE BOUND (D-42b): O((N+M)*D) time and
+    O(D*D) memory, with D at most 'd_max', so for a fixed bound it is
+    linear in the file. It stops where the answer is already 'more
+    than the bound' -- the rule the positional walk always followed.
+    Lines are equal by their BYTES; the engine judges each pair inside
+    a hunk afterwards.
+    """
+    n, m = len(out_list), len(good_list)
+    #  The common head and tail cost nothing and shrink the search.
+    head = 0
+    while head < n and head < m and out_list[head] == good_list[head]:
+        head += 1
+    tail = 0
+    while tail < n - head and tail < m - head \
+          and out_list[n - 1 - tail] == good_list[m - 1 - tail]:
+        tail += 1
+    a = out_list[head:n - tail]
+    b = good_list[head:m - tail]
+    n_a, n_b = len(a), len(b)
+    if n_a == 0 and n_b == 0: return []
+    offset = d_max + 1
+    v = [0] * (2 * d_max + 3)
+    trace_list = []
+    end_d = None
+    for d in range(d_max + 1):
+        trace_list.append(list(v))
+        for k in range(-d, d + 1, 2):
+            if k == -d or (k != d and v[offset + k - 1] < v[offset + k + 1]):
+                x = v[offset + k + 1]                       # down: insert
+            else:
+                x = v[offset + k - 1] + 1                   # right: delete
+            y = x - k
+            while x < n_a and y < n_b and a[x] == b[y]:
+                x += 1; y += 1
+            v[offset + k] = x
+            if x >= n_a and y >= n_b:
+                end_d = d
+                break
+        if end_d is not None: break
+    if end_d is None: return None
+    #  BACKTRACK: the edit path, as (x, y) points from the end.
+    x, y = n_a, n_b
+    edit_list = []                       # (kind, x, y): 'del' a[x], 'ins' b[y]
+    for d in range(end_d, 0, -1):
+        v_d = trace_list[d]
+        k = x - y
+        if k == -d or (k != d and v_d[offset + k - 1] < v_d[offset + k + 1]):
+            k_prev = k + 1
+        else:
+            k_prev = k - 1
+        x_prev = v_d[offset + k_prev]
+        y_prev = x_prev - k_prev
+        while x > x_prev and y > y_prev:
+            x -= 1; y -= 1
+        if x == x_prev: edit_list.append(("ins", x, y - 1))
+        else:           edit_list.append(("del", x - 1, y))
+        x, y = x_prev, y_prev
+    edit_list.reverse()
+    #  HUNKS: neighbouring edits together, as stretches of both sides.
+    hunk_list = []
+    for kind, ex, ey in edit_list:
+        if kind == "del": span = (ex, ex + 1, ey, ey)
+        else:             span = (ex, ex, ey, ey + 1)
+        if hunk_list and span[0] <= hunk_list[-1][1] \
+           and span[2] <= hunk_list[-1][3]:
+            last = hunk_list[-1]
+            hunk_list[-1] = (last[0], max(last[1], span[1]),
+                             last[2], max(last[3], span[3]))
+        else:
+            hunk_list.append(span)
+    return [(h[0] + head, h[1] + head, h[2] + head, h[3] + head)
+            for h in hunk_list]
+
+
 def replacement_block_list(pair_list):
     """
-    RETURN: list of blocks, each a list of (position, out, good) taken
-            from 'pair_list' -- ADJACENT POSITIONS TOGETHER. A run of
-            neighbouring differences is one replacement of several
-            lines by several, and reads as one; a gap of agreeing
-            lines starts a new block.
+    RETURN: list of blocks, each a list of entries (out number, out,
+            good number, good, block) taken from 'pair_list' -- ONE
+            BLOCK PER HUNK of the alignment, or, where the walk was
+            positional (block None), ADJACENT POSITIONS TOGETHER. A run
+            of neighbouring differences is one replacement of several
+            lines by several, and reads as one.
     """
     block_list = []
     for entry in pair_list:
-        if block_list and entry[0] == block_list[-1][-1][0] + 1:
-            block_list[-1].append(entry)
-        else:
-            block_list.append([entry])
+        if block_list:
+            last = block_list[-1][-1]
+            if entry[4] is not None and entry[4] == last[4]:
+                block_list[-1].append(entry); continue
+            if entry[4] is None and last[4] is None \
+               and entry[0] == last[0] + 1:
+                block_list[-1].append(entry); continue
+        block_list.append([entry])
     return block_list
 
 
@@ -684,10 +817,10 @@ def write_replacement_block(block, put, width):
             so every block of a test lines up with every other and the
             quotes start at one column throughout.
     """
-    out_list  = [(number, text) for number, text, _ in block
-                 if text is not None]
-    good_list = [(number, text) for number, _, text in block
-                 if text is not None]
+    out_list  = [(entry[0], entry[1]) for entry in block
+                 if entry[1] is not None]
+    good_list = [(entry[2], entry[3]) for entry in block
+                 if entry[3] is not None]
 
     def line(mark, number, kind, text):
         """RETURN: str, one rendered line of the block."""
@@ -823,8 +956,9 @@ def propose(store, case_sequence, directory, line_n, write,
             #  BECOME the nominal, in place of the GOOD lines under
             #  them. Accepting the target below performs exactly these
             #  replacements and nothing else.
-            width = max([len(str(number)) for number, _, _ in pair_list]
-                        or [1])
+            width = max([len(str(number)) for entry in pair_list
+                         for number in (entry[0], entry[2])
+                         if number is not None] or [1])
             for block in replacement_block_list(pair_list):
                 write_replacement_block(block, put, width)
             put(label)
@@ -902,69 +1036,8 @@ def stderr_decision(spoke_db, ignored_f_of):
 #  they are what BOTH kinds of acceptance rely on, and a refusal rule
 #  must not be able to apply to one kind and not the other.
 from ._accept_common import (token_terminated_f, classify,  # noqa: E402
-                                         STDERR_IGNORED_LINE,
-                                         stderr_ignored_f_of)
+                                         STDERR_IGNORED_LINE)
 from . import accept_first                   # noqa: E402
-
-
-def ask(key, text, write, read_line, setup=None):
-    """
-    RETURN: bool, True where the user blessed this key.
-
-    THE READING IS SHOWN, NOT THE TEXT (E-57): the candidate fed
-    against itself through compare's one door, rendered as
-    'hwut.play' renders it -- every '{numeric}', '~analogy~',
-    '<pattern>', '!binding!' and '|nothing|' marked. A blessing is a
-    promise about how this stream will be READ, and the reading is
-    what that promise says. Anything but 'y' leaves the pole alone --
-    and says how to accept part of it.
-    """
-    import asyncio
-    from .lib.viewers.tui import TuiDisplay
-    from .lib.run.diff import reading_view
-    write("")
-    write("=" * 78)
-    write("ACCEPT  %s" % key.name)
-    write("-" * 78)
-    out = _Sink(write)
-    adapter = TuiDisplay(out=out, color_f=False, merge_f=False,
-                         reading_f=True)
-    try:
-        shown_f = asyncio.run(reading_view(text, adapter,
-                                           subject_name=key.name,
-                                           compare_options=setup,
-                                           write=lambda l: write("    " + l)))
-    except Exception as error:                              # noqa: BLE001
-        shown_f = False
-        write("    (the reading could not be rendered: %s)" % error)
-    if not shown_f:
-        for line in text.splitlines(): write("    %s" % line)
-    write("-" * 78)
-    write("    candidate: %s" % key.candidate_path.name)
-    write("    nominal:   %s" % key.nominal_path.name)
-    write("accept this as the nominal? [y/N] ")
-    answer = read_line()
-    if answer.strip().lower() in ("y", "yes"): return True
-    write("NOTE: left alone. To accept PART of it: "
-          "'hwut.merge' takes lines from the candidate into "
-          "a nominal, one at a time.")
-    return False
-
-
-class _Sink:
-    """A file-like over 'write': the TUI renderer writes lines, and
-    the face keeps its one channel."""
-    def __init__(self, write): self._write = write; self._rest = ""
-    def write(self, text):
-        """RETURN: None. Whole lines to 'write'; a tail waits for its
-        newline."""
-        text = self._rest + text
-        *line_list, self._rest = text.split("\n")
-        for line in line_list: self._write("    " + line)
-    def flush(self):
-        """RETURN: None. The tail, where one stands."""
-        if self._rest: self._write("    " + self._rest); self._rest = ""
-    def isatty(self): return False
 
 
 def main(argv=None, write=None, read_line=None, propose_n=None,
@@ -1006,19 +1079,15 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     if write is None: write = print
     if read_line is None: read_line = sys.stdin.readline
 
-    #  ONE FACE (E-59): a change is MERGED here, where there is a
-    #  terminal to merge in. A pipe, a script or a suite gets what it
-    #  always got -- 'merge required' and the way out. Proposing and
-    #  the brief column ask nothing and never merge.
-    interactive_f = (propose_n is None and not brief_f
-                     and sys.stdin.isatty() and sys.stderr.isatty())
+    #  ACCEPT NEVER MERGES AND NEVER ASKS (E-167, superseding E-59's
+    #  terminal merge and E-57's prompt): 'hwut.merge' alone merges.
     if "--help" in argv:
         from ._core import man_page
         write(man_page("hwut.accept", HELP, usage=USAGE))
         return E_ExitCode.OK
 
     try:
-        wish, rest_list = parse_wish(argv)
+        wish, rest_list = parse_wish(argv, digest_f=True)
     except WishError as error:
         write_refusal(write, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED
@@ -1038,29 +1107,19 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     directory_said_f = arguments.directory is not None
     directory    = arguments.directory or "."
     force_f      = arguments.force
-    dont_ask_f   = arguments.dont_ask
     word_list    = arguments.word
+    if arguments.dont_ask:
+        #  E-167: there is no question left to skip. Refused BY NAME so
+        #  a script that still says it is told.
+        write("REFUSED: '--dont-ask' is gone (E-167) -- accept never "
+              "asks; it blesses what the words select")
+        return E_ExitCode.REFUSED
     if arguments.force_run:
         #  E-165: accept runs nothing. Refused BY NAME so a script that
         #  still says it is told, not silently given the recording.
         write("REFUSED: '--force-run' is gone (E-165) -- accept blesses "
               "the recording; 'hwut.play' records afresh")
         return E_ExitCode.REFUSED
-    #  '--force' IMPLIES '--dont-ask' (E-70). The two words say
-    #  DIFFERENT things -- one what to do with a standing nominal, the
-    #  other whether anybody need be consulted -- but 'overwrite the
-    #  thing I judge against' is the strictly stronger assertion, and a
-    #  person who has made it has plainly already decided.
-    #
-    #  MEASURED, and this is why it is not merely tidy: with the two
-    #  fully separate, every script and every test in the tree that
-    #  says '--force' alone reached the prompt, and the prompt reads
-    #  'read_line()' on an inherited stdin that never closes. The suite
-    #  did not fail -- it HUNG. A flag split that turns old callers
-    #  into deadlocks is not a split anybody wants.
-    #  TAKING A CANDIDATE WHOLE IS A DECISION ALREADY MADE, so
-    #  nobody is asked (E-109).
-    if force_f: dont_ask_f = True
     #  A TEST NAMED BY PATH IS ENTERED ('services/_target.py', E-47).
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
@@ -1149,6 +1208,28 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
         if where not in case_db: where_list.append(where); case_db[where] = []
         case_db[where].append(entry.case)
 
+    #  WHAT WAS PLAYED IS WHAT IS BLESSED (E-168). On the command line a
+    #  digest names ONE recording, so the words must select one case; a
+    #  wishlist gives each literal line its own.
+    digest_db = {}
+    for target, tag in wish.digest_tuple:
+        path, _, choice = target.partition(" ")
+        digest_db.setdefault((os.path.abspath(path), choice.strip() or None),
+                             set()).add(tag)
+    if arguments.digest:
+        selected_n = sum(len(case_list) for case_list in case_db.values())
+        if selected_n != 1:
+            write("REFUSED: '--digest' blesses one recording; the words "
+                  "select %d case(s) -- name one case, or give each its "
+                  "digest in a wishlist" % selected_n)
+            return E_ExitCode.REFUSED
+        where = where_list[0]
+        case  = case_db[where][0]
+        digest_db.setdefault(
+            (os.path.abspath(os.path.join(directory, where,
+                                          case.source_file)),
+             case.choice or None), set()).update(arguments.digest)
+
     if propose_n is not None:
         put("#  proposal -- delete or '#' out what you do not want, "
             "then hand it back:")
@@ -1172,8 +1253,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
                           force_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list,
-                          interactive_f=interactive_f,
-                          dont_ask_f=dont_ask_f)
+                          digest_db=digest_db)
         if code is not E_ExitCode.EMPTY: empty_f = False
         if code not in (E_ExitCode.OK, E_ExitCode.EMPTY): worst = code
     if brief_list is not None:
@@ -1210,7 +1290,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 def accept_one(directory, result, bookkeeper, case_sequence,
                force_f, propose_n,
                write, read_line, put=None, brief_list=None,
-               interactive_f=False, dont_ask_f=False):
+               digest_db=None):
     """
     RETURN: E_ExitCode for ONE test directory -- OK where every key it
             holds was blessed or nothing was owed, EMPTY where it held
@@ -1372,6 +1452,29 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                                 os.path.join(directory, key.test)):
                 write(source_changed_hint(key.name))
 
+    #  A DIGEST ASKED FOR IS CHECKED PER CASE (E-168): over every
+    #  recorded file of the case, as 'hwut.play' named it. A case whose
+    #  recording carries another tag is refused whole.
+    if digest_db:
+        from ._accept_common import digest_tag, digest_refused_text
+        case_key_db = {}
+        for key in key_list:
+            if id(key) in conflict_set: continue
+            case_key_db.setdefault((key.test, key.choice), []).append(key)
+        for (test, choice), case_key_list in case_key_db.items():
+            tag_set = digest_db.get((os.path.abspath(
+                                         os.path.join(directory, test)),
+                                     choice or None))
+            if not tag_set: continue
+            standing = digest_tag([key.candidate_path
+                                   for key in case_key_list])
+            if standing in tag_set: continue
+            write(digest_refused_text(
+                      test if choice is None else "%s %s" % (test, choice),
+                      " or ".join(sorted(tag_set)), standing))
+            conflict_set.update(id(key) for key in case_key_list)
+            refused_f = True
+
     blessed_list, merge_list, skipped_list = [], [], []
     undecided_list = []                 # first acceptances: the shape only
     for key in key_list:
@@ -1380,13 +1483,9 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             continue
         verdict = classify(key, force_f)
         if verdict == "merge":
-            #  ONE FACE (E-59). A nominal stands: this is a CHANGE, and
-            #  a change is merged, not blessed. Where there is a session
-            #  to hold it, 'hwut.accept' holds it HERE, through the same
-            #  engine 'hwut.merge' runs -- the author does
-            #  not choose a face by a fact this face can read.
-            #  Where there is none -- a pipe, a script, a suite -- it
-            #  says so as it always did, and '--force' still overwrites.
+            #  A nominal stands: this is a CHANGE, and a change is
+            #  'hwut.merge's alone (E-167) -- named, left alone, and
+            #  '--force' still overwrites.
             merge_list.append(key)
             continue
         text = read_text(key.candidate_path)
@@ -1426,13 +1525,6 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                 skipped_list.append(key)
                 refused_f = True
                 continue
-        if key.shared_f and not dont_ask_f:
-            write("NOTE: '%s' shares its nominal with every choice of "
-                  "the test" % key.name)
-        if not dont_ask_f and not ask(key, text, write, read_line,
-                                      setup=key_setup_of(key, config_db)):
-            skipped_list.append(key)
-            continue
         store.accept(key.test, key.choice, key.subject, written)
         #  THE REGISTER: an id is born at first accept -- issued by
         #  'note_accept' in the acceptance's own act (B-9).
@@ -1453,25 +1545,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
                                      aspirant_f=aspirant_f)
         (undecided_list if verdict == "first" else blessed_list).append(key)
 
-    #  THE MERGE, THROUGH THE SHARED ENGINE. The keys a nominal stands
-    #  for are handed to the same loop as E-51's face, so the three
-    #  writes and every refusal are one implementation (E-59).
     uncommitted_list, short_list = [], []
-    if merge_list and interactive_f and not force_f:
-        merged_list, merge_refused_list, merge_left_list, sat_f, \
-            short_list = \
-            _merge_through_engine(merge_list, store, write, config_db)
-        blessed_list.extend(merged_list)
-        #  LEFT AT A TERMINAL IS NOT 'MERGE REQUIRED' (E-88): the screen
-        #  was there, and the author left it with Ctrl-C (E-89). The
-        #  report says so -- MEASURED: it said 'there is none' instead.
-        if sat_f:
-            merge_list, uncommitted_list = [], list(merge_left_list)
-        else:
-            merge_list = merge_left_list
-        for key, reason in merge_refused_list:
-            write("REFUSED: %s -- %s" % (key.name, reason))
-            skipped_list.append(key)
 
     #  WHAT BECAME OF EACH KEY, as data (E-105): the five lists are one
     #  outcome per key, and the page -- brief column or report block --
@@ -1561,77 +1635,14 @@ def report_written(outcome_tuple, key_n, write):
         write("")
         write("A nominal already stands for the keys above. That is a "
               "CHANGE, not a")
-        write("first blessing. At a TERMINAL this face merges them "
-              "itself (E-59); here")
-        write("there is none, so: run it on a terminal, or '--force' "
-              "to overwrite the pole.")
+        write("first blessing => hwut.merge; or '--force' to overwrite "
+              "the pole.")
     if any(o.kind == "cancelled" for o in outcome_tuple):
         write("")
         write("The screen was left without saving: nothing was written. "
               "'s' saves GOOD")
         write("as it stands and leaves.")
     write("=" * 78)
-
-
-def _merge_through_engine(key_list, store, write, config_db):
-    """
-    RETURN: [0..2] accepted_list, refused_list, left_list for the keys a
-            nominal already stands for -- run through the SAME engine
-            'hwut.merge' uses, so the three writes of E-41
-            and every refusal have one implementation.
-
-            [3] bool, True where a screen RAN: a key it left was left
-            by the author, with Ctrl-C. False where no session could
-            be built at all -- every key then left alone: a face that
-            cannot ask must not decide.
-
-            [4] list, the keys the screen SAVED SHORT of their output:
-            a GOOD stands, the output still differs from it (f-8). They
-            are not among [0].
-    """
-    from .lib.accept import engine
-
-    class _MergeKey:
-        """The engine's key shape, filled from 'hwut.accept's own."""
-        def __init__(self, key, setup):
-            self.where        = None
-            self.test         = key.test
-            self.choice       = key.choice
-            self.label        = key.name
-            self.setup        = setup
-            self.stderr_ignored_f = stderr_ignored_f_of(
-                                        config_db.get(key.test), key.choice)
-            self.subject_text = read_text(key.candidate_path)
-            self.nominal_text = read_text(key.nominal_path)
-
-    wanted_list = []
-    for key in key_list:
-        merge_key = _MergeKey(key, compare_setup_of(config_db.get(key.test),
-                                                    key.choice))
-        if merge_key.subject_text is None or merge_key.nominal_text is None:
-            continue
-        wanted_list.append((key, merge_key))
-    if not wanted_list: return ([], [], list(key_list), False, [])
-
-    try:
-        adapter = engine.adapter_for(err=write)
-    except Exception:                                          # noqa: BLE001
-        return ([], [], list(key_list), False, [])
-
-    origin_db = {id(m): k for k, m in wanted_list}
-    #  THE ADAPTER IS HANDED OVER. MEASURED: the call passed 'write' in
-    #  the adapter's place and no 'err' -- every merge through this door
-    #  died in a TypeError, and no suite reached the door (E-88).
-    accepted, refused, left = engine.run_sessions(
-        [m for _, m in wanted_list], lambda _: store, adapter, write)
-    #  SAVED SHORT OF THE OUTPUT (f-8): not among the accepted.
-    return ([origin_db[id(m)] for m in accepted
-             if not engine.short_f(m)],
-            [(origin_db[id(m)], reason) for m, reason in refused],
-            [origin_db[id(m)] for m in left],
-            True,
-            [origin_db[id(m)] for m in accepted
-             if engine.short_f(m)])
 
 
 if __name__ == "__main__":

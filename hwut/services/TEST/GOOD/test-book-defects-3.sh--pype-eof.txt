@@ -1,0 +1,8 @@
+== run
+pype: e.pype: mode 'BODY' has no <eof> handler in its effective list; every mode must state what happens at the end of the input
+exit 1
+== dry run
+pype: e.pype: mode 'BODY' has no <eof> handler in its effective list; every mode must state what happens at the end of the input
+exit 1
+dry run ok: 2 mode(s), 5 handler(s)
+<hwut-end>

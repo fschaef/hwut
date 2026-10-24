@@ -145,7 +145,7 @@ def engine_run(engine, test):
     selected, _ = select(wish, [], test, True, silent, "")
     if engine == "accept":
         from hwut.services import accept
-        accept.main(["--directory=%s" % test, "--force", "--dont-ask"],
+        accept.main(["--directory=%s" % test, "--force"],
                     write=silent)
     elif engine == "interactive":
         from hwut.services.lib.accept import interactive

@@ -53,7 +53,7 @@ for t in a b; do
 done
 chmod +x TEST/*.sh
 cd TEST
-"$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1
+"$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1
 "$BIN/hwut.run" > /dev/null 2>&1
 rm test-b.sh
 sed -i 's/"x", "y"/"x"/' test-a.sh

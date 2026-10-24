@@ -25,3 +25,4 @@
 :/: image                                       : meta needs-container needs-network
 :/: pipx                                        : meta needs-network
 :/: wheel                                       : meta needs-network
+./services/TEST/test-complete.py powershell     : needs-pwsh

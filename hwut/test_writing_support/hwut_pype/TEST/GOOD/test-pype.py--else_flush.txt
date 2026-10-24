@@ -7,6 +7,7 @@ SCRIPT: {
     on: <else> => {
         print("unmatched: %r" % pype.line())
     }
+    on: <eof> => ignore;
 }
 INPUT: {
     known 7
@@ -25,6 +26,7 @@ SCRIPT: {
         print("T = %.1f F" % (t * 9 / 5 + 32))
     }
     on: <else> => flush;
+    on: <eof> => ignore;
 }
 INPUT: {
     # header kept verbatim
@@ -47,6 +49,7 @@ SCRIPT: {
     }
     and: flush;
     on: <else> => ignore;
+    on: <eof> => ignore;
 }
 INPUT: {
     ERROR disk full
@@ -75,6 +78,9 @@ SCRIPT: {
     }
     on: "go" => goto STRICT;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    BASE/on: <eof> => ignore;
+    STRICT/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -97,6 +103,9 @@ SCRIPT: {
     STRICT/on: "ok" => {
         print("STRICT ok")
     }
+    on: <eof> => ignore;
+    BASE/on: <eof> => ignore;
+    STRICT/on: <eof> => ignore;
 }
 INPUT: {
     mystery in default
@@ -120,6 +129,10 @@ SCRIPT: {
     SUB/on: "x" => ignore;
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    B1/on: <eof> => ignore;
+    B2/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go

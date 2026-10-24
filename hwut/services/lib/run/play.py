@@ -367,8 +367,11 @@ def _settled_case(app_set, source_file, choice_name, directory,
     if app is not None:
         choice_list = _choice_list(app)
         if choice_name is None and case_tuple:
-            write("REFUSED: no choice specified; '%s' reports %d "
-                  "choice(s): %s"
+            #  A CHOICE IS NOT MANDATORY: a test with one meaningful run
+            #  declares none and plays without one. This one declares
+            #  several, and one of them is to be named.
+            write("REFUSED: '%s' has %d choices: %s -- name one, or "
+                  "'--all'"
                   % (source_file, len(choice_list),
                      ", ".join(choice_list)))
             return _REFUSED
@@ -500,10 +503,15 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     def recorded_note():
         """RETURN: None. The recording's line, or why there is none."""
         if recorded_db:
-            write("RECORDED: %s" % ", ".join(
-                store.candidate_path(configuration.key_name,
-                                     choice_name, name).name
-                for name in sorted(recorded_db)))
+            #  THE TAG NAMES WHAT WAS PLAYED (E-168): 'hwut.accept
+            #  --digest=<tag>' blesses this recording and no other.
+            from ..._accept_common import digest_tag
+            path_list = [store.candidate_path(configuration.key_name,
+                                              choice_name, name)
+                         for name in sorted(recorded_db)]
+            write("RECORDED: %s (digest: %s)"
+                  % (", ".join(path.name for path in path_list),
+                     digest_tag(path_list)))
         else:
             write("NOT RECORDED: the run did not complete, and a partial "
                   "subject is never stored as if whole")

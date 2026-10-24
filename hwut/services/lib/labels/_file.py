@@ -43,6 +43,24 @@ the rule receives the framework's header, which ends in that rule.
 
 ONE LINE PER RUN. A run named twice is a fault, named by line: two
 answers to one question is not a merge, it is a mistake.
+
+DERIVED LABELS (D-56) stand in a section of their own, to the end of
+the file, below the entries:
+
+    [derived]
+    needs-outside = needs-container OR needs-network OR needs-pwsh
+    sandbox       = meta AND NOT needs-outside
+
+    <label> = <label expression>
+
+The expression is the '--label' grammar (plan/label.py). A run carries
+a derived label where its labels -- assigned, and derived on lines it
+may name -- answer the expression; derived labels expand RECURSIVELY,
+and a circle is a fault naming it. A name nothing assigns or derives
+is absent in the evaluation and said as 'missing in expression
+evaluation' by 'hwut.labels.list'. The section is the PERSON'S: every
+rewrite keeps it verbatim, in its order, with its comments; an entry
+below the heading is refused by name.
 ______________________________________________________________________________
 """
 import io
@@ -93,10 +111,34 @@ HEADER = (
 #  the rule gets HEADER written.
 _RULE_RE = re.compile(r"^#_{3,}\s*$")
 
-#  THE GLUED COMMENTS, by entry key, from the last read (E-96): what
-#  the next write puts back beside each entry. One file per process.
-_GLUED_DB = {}
-_PREAMBLE = []                             # the kept header, from the last read
+#  WHAT THE LAST READ OF EACH FILE KEPT, by the file's path: the glued
+#  comments by entry key (E-96), the preamble (E-98), and the derived
+#  section (D-56) -- what the next write of THAT file puts back. Keyed by
+#  path: a face that reads one tree's file and writes another's
+#  ('hwut.move' across roots) must not write one file's header or
+#  derivations into the other.
+_KEPT_DB = {}
+
+DERIVED_HEADING = "[derived]"
+_DERIVATION_RE  = re.compile(r"^([^\s=]+)\s*=\s*(.*\S)\s*$")
+
+
+class _Kept:
+    """What one read of one labels file keeps for its next write."""
+    __slots__ = ("glued_db", "preamble", "derived_line_list",
+                 "derivation_list")
+
+    def __init__(self):
+        self.glued_db          = {}       # key -> (above, below)
+        self.preamble          = []       # the header, verbatim
+        self.derived_line_list = []       # the section below the heading
+        self.derivation_list   = []       # (line_n, label, text, tree)
+
+
+def _kept(path):
+    """RETURN: _Kept, what the last read of 'path' kept; an empty one
+               where the file was not read in this process."""
+    return _KEPT_DB.get(os.path.abspath(path)) or _Kept()
 
 
 class LabelFileError(Exception):
@@ -136,31 +178,40 @@ def read_entry_db(boundary):
     be meant (see the module purpose).
     """
     path = file_path(boundary)
+    kept = _Kept()
+    _KEPT_DB[os.path.abspath(path)] = kept
     if not os.path.isfile(path): return {}
     with io.open(path, "r", encoding="utf-8") as file_handle:
         line_list = file_handle.read().splitlines()
 
     entry_db = {}
     previous = None                        # last EXPANDED target text
-    _GLUED_DB.clear()
-    _PREAMBLE[:] = []
+    glued_db = kept.glued_db
+    preamble = kept.preamble
     #  THE PREAMBLE: up to and including the first '#___' rule (E-98).
     #  Without a rule, a leading comment block from line 1 is the old
     #  header and is replaced.
     rule_i = next((i for i, l in enumerate(line_list) if _RULE_RE.match(l)),
                   None)
     if rule_i is not None:
-        _PREAMBLE[:] = line_list[:rule_i + 1]
+        preamble[:] = line_list[:rule_i + 1]
         line_list    = line_list[rule_i + 1:]
         number_base  = rule_i + 1
     else:
         number_base  = 0
+    #  THE DERIVED SECTION: from its heading to the end of the file.
+    heading_i = next((i for i, l in enumerate(line_list)
+                      if l.strip() == DERIVED_HEADING), None)
+    if heading_i is not None:
+        kept.derived_line_list = line_list[heading_i + 1:]
+        _read_derivations(path, kept, number_base + heading_i + 2)
+        line_list = line_list[:heading_i]
     above, last_key, header_f = [], None, rule_i is None
     for number, line in enumerate(line_list, start=1 + number_base):
         text = line.strip()
         if not text:
             if above and last_key is not None:   # ended by a blank: below
-                _GLUED_DB[last_key][1].extend(above)
+                glued_db[last_key][1].extend(above)
             above, last_key = [], None      # a blank breaks the glue
             header_f = False                # ... and ends an old header
             continue
@@ -188,11 +239,111 @@ def read_entry_db(boundary):
                 % (path, number, target_text(key)))
         entry_db[key] = frozenset(_label_tuple(path, number,
                                                label_part))
-        _GLUED_DB[key] = (above, [])
+        glued_db[key] = (above, [])
         above, last_key = [], key
     if above and last_key is not None:      # trailing: below the last
-        _GLUED_DB[last_key][1].extend(above)
+        glued_db[last_key][1].extend(above)
+    _order_derivations(path, kept)
     return entry_db
+
+
+def _read_derivations(path, kept, first_number):
+    """
+    RETURN: None, filling 'kept.derivation_list' with one '(line,
+            label, expression text, tree)' per derivation of the section,
+            in file order, if success.
+            raises LabelFileError naming file and line, else: a line
+            that is no '<label> = <expression>', an entry below the
+            heading, a word no label may be, an expression the grammar
+            cannot mean, a label derived twice.
+    """
+    from ....engine.orchestrator.plan.label import (parse_expression,
+                                                     LabelExprError)
+    seen_db = {}
+    for number, line in enumerate(kept.derived_line_list,
+                                  start=first_number):
+        text = line.strip()
+        if not text or text.startswith("#"): continue
+        if text.startswith("./") or text.startswith(":"):
+            raise LabelFileError(
+                "%s:%d: an entry stands below '%s' -- entries go above "
+                "the heading; below it stand derivations only"
+                % (path, number, DERIVED_HEADING))
+        match = _DERIVATION_RE.match(text)
+        if match is None:
+            raise LabelFileError(
+                "%s:%d: a derivation reads '<label> = <expression>'"
+                % (path, number))
+        label, expression = match.group(1), match.group(2)
+        _label_tuple(path, number, label)
+        if label in seen_db:
+            raise LabelFileError(
+                "%s:%d: '%s' is derived twice (line %d) -- one label, "
+                "one expression" % (path, number, label, seen_db[label]))
+        seen_db[label] = number
+        try:
+            tree = parse_expression(expression)
+        except LabelExprError as error:
+            raise LabelFileError("%s:%d: %s" % (path, number, error)) \
+                  from None
+        kept.derivation_list.append((number, label, expression, tree))
+
+
+def _order_derivations(path, kept):
+    """
+    RETURN: None, with 'kept.derivation_list' ordered so that every
+            derived label an expression names stands before it, if
+            success.
+            raises LabelFileError naming the circle, else.
+    """
+    from ....engine.orchestrator.plan.label import label_name_tuple
+    by_label = {d[1]: d for d in kept.derivation_list}
+    ordered, state = [], {}
+
+    def visit(label, trail):
+        """RETURN: None. Places 'label' after what it depends on."""
+        if state.get(label) == "done": return
+        if state.get(label) == "open":
+            circle = trail[trail.index(label):] + [label]
+            raise LabelFileError(
+                "%s:%d: derived labels form a circle: %s"
+                % (path, by_label[label][0], " -> ".join(circle)))
+        state[label] = "open"
+        for name in label_name_tuple(by_label[label][3]):
+            if name in by_label: visit(name, trail + [label])
+        state[label] = "done"
+        ordered.append(by_label[label])
+
+    for derivation in kept.derivation_list:
+        visit(derivation[1], [])
+    kept.derivation_list = ordered
+
+
+def derivation_tuple(boundary, entry_db):
+    """
+    RETURN: tuple of (label, expression text, member count, missing
+            names) -- one per derivation of the file 'read_entry_db'
+            last read under 'boundary', in the FILE'S order. 'member
+            count' counts the file's targets that carry the label;
+            'missing names' are the names the expression mentions that
+            nothing assigns or derives (D-56).
+    """
+    from ....engine.orchestrator.plan.label import (label_name_tuple,
+                                                     derived_label_set)
+    kept     = _kept(file_path(boundary))
+    derived  = tuple((d[1], d[3]) for d in kept.derivation_list)
+    known    = defined_label_set(entry_db) | {d[0] for d in derived}
+    result   = []
+    for number, label, text, tree in sorted(kept.derivation_list):
+        member_n = 0
+        for (file, choice), label_set in entry_db.items():
+            own = label_set if choice is None \
+                  else label_set | entry_db.get((file, None), frozenset())
+            if label in derived_label_set(derived, own): member_n += 1
+        missing = tuple(name for name in label_name_tuple(tree)
+                        if name not in known)
+        result.append((label, text, member_n, missing))
+    return tuple(result)
 
 
 def write_entry_db(boundary, entry_db):
@@ -204,23 +355,32 @@ def write_entry_db(boundary, entry_db):
             canonical.
     """
     path = file_path(boundary)
-    if not entry_db:
+    kept = _kept(path)
+    derived_line_list = list(kept.derived_line_list)
+    while derived_line_list and not derived_line_list[-1].strip():
+        derived_line_list.pop()
+    if not entry_db and not kept.derivation_list:
         if os.path.isfile(path): os.remove(path)
         return
     line_list = _elided_line_list(entry_db)
-    width     = max(len(target) for target, _ in line_list)
+    width     = max([len(target) for target, _ in line_list] or [0])
     with io.open(path, "w", encoding="utf-8", newline="\n") \
          as file_handle:
-        for line in (_PREAMBLE or HEADER):
+        for line in (kept.preamble or HEADER):
             file_handle.write(line.rstrip("\n") + "\n")
         for key, (target, label_tuple) in zip(sorted(entry_db, key=sort_key),
                                               line_list, strict=True):
-            above, below = _GLUED_DB.get(key, ([], []))
+            above, below = kept.glued_db.get(key, ([], []))
             for line in above: file_handle.write(line.rstrip() + "\n")
             file_handle.write("%-*s : %s\n"
                               % (width, target,
                                  " ".join(label_tuple)))
             for line in below: file_handle.write(line.rstrip() + "\n")
+        #  THE DERIVED SECTION, as the person wrote it (D-56).
+        if kept.derivation_list or derived_line_list:
+            file_handle.write("\n%s\n" % DERIVED_HEADING)
+            for line in derived_line_list:
+                file_handle.write(line.rstrip() + "\n")
 
 
 def defined_label_set(entry_db):
@@ -240,9 +400,13 @@ def view_of(boundary, entry_db):
     RETURN: CLabelView over 'entry_db' -- the shape the engine's
             selection reads (plan/label.py).
     """
+    kept    = _kept(file_path(boundary))
+    derived = tuple((d[1], d[3]) for d in kept.derivation_list)
     return CLabelView(boundary = os.path.abspath(boundary),
                       entry_db = dict(entry_db),
-                      defined  = defined_label_set(entry_db))
+                      defined  = defined_label_set(entry_db)
+                                 | frozenset(label for label, _ in derived),
+                      derived  = derived)
 
 
 def sort_key(key):

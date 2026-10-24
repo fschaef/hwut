@@ -6,7 +6,11 @@
 #     features = ["book-defects-round-2"]
 #     choices  = ["plus-sign", "entry-goto", "refusal-exit",
 #                 "propose-too-large", "not-executable",
-#                 "stability-names", "record-bless"]
+#                 "stability-names", "record-bless",
+#                 "accept-asks-nothing", "digest", "pype-eof",
+#                 "pype-inline", "pype-first-match", "diff-broken",
+#                 "propose-aligned", "demo-root", "cov-dir",
+#                 "labels-derived", "play-choices"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -55,6 +59,44 @@
 #                    was newer, and blessed 'one' unseen where only the
 #                    data changed; details ran a stale case.
 #
+#
+# THE SESSION OF 2026-10-23 (rulings E-167 to E-170):
+#
+# accept-asks-nothing D-54, E-167: 'hwut.accept' asks nothing and opens
+#                    no screen; a standing GOOD is refused '=> hwut.merge';
+#                    '--dont-ask' is refused by name. MEASURED 2026-10-23
+#                    before: a y/N prompt per key, on a terminal the merge.
+# digest             E-168: 'hwut.play' says 'RECORDED: <file> (digest:
+#                    <tag>)'; 'hwut.accept --digest=<tag>' blesses that
+#                    recording and refuses another, exit 1; on several
+#                    cases it is refused, exit 2; a wishlist line may carry
+#                    one, after a glob it is refused, and 'hwut.run' refuses
+#                    it by name.
+# pype-eof           D-39: a mode without '<eof>' is refused where the
+#                    script is read, on a run and on '--dry-run', exit 1.
+#                    MEASURED before: exit 0 on both, the token missing.
+# pype-inline        D-46: '=> { print("x") }' on one line is a block.
+#                    MEASURED before: "cannot read EFFECT".
+# pype-first-match   D-47: where two patterns match a line, the first
+#                    defined fires; '--dry-run' NOTEs a handler that can
+#                    never fire. MEASURED before: both orders accepted as
+#                    'disjoint', the order decided silently.
+# diff-broken        D-41: 'hwut.diff' draws the broken binding as BAD with
+#                    'BROKEN:' under its line, and aligns the rest. MEASURED
+#                    before: the value drawn tolerated, every later line
+#                    shifted by the run's violation region.
+# propose-aligned    D-42b: one inserted line is one entry of the proposal.
+#                    MEASURED before: every later line a replacement.
+# demo-root          D-43, D-45: 'hwut.demo.python' writes the template
+#                    root. MEASURED before: 'hwut { }'.
+# cov-dir            D-50: 'hwut.cov.run' takes '--cov-dir' beside '-o'.
+# labels-derived     D-56: '[derived]' in 'hwut-root.labels' -- recursive,
+#                    'missing in expression evaluation', a circle refused,
+#                    kept verbatim by a rewrite, '--label' reaches it.
+# play-choices       a test with several choices and none named is refused
+#                    by its choices and '--all'; a test with none plays.
+#                    MEASURED before: "no choice specified".
+#
 # D-53 (a coverage run that did not complete, worded 'did not end with
 # <hwut-end>') is pinned by 'test-cov_run.py run' and 'trace'.
 # ---------------------------------------------------------------------------
@@ -68,7 +110,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "Defects of the book writers' round 2 and the agent swarm (D-34 onwards);"
-        echo "CHOICES: plus-sign, entry-goto, refusal-exit, propose-too-large, not-executable, stability-names, record-bless;"
+        echo "CHOICES: plus-sign, entry-goto, refusal-exit, propose-too-large, not-executable, stability-names, record-bless, accept-asks-nothing, digest, pype-eof, pype-inline, pype-first-match, diff-broken, propose-aligned, demo-root, cov-dir, labels-derived, play-choices;"
         exit 0 ;;
 esac
 
@@ -119,6 +161,8 @@ T/on: <entry> => {
 T/on: <else> => {
     print("T swallowed", pype.line_n(), pype.line())
 }
+A/on: <eof> => ignore;
+T/on: <eof> => ignore;
 PYPE
         cat > circle.pype <<'PYPE'
 on: "go" => goto A;
@@ -131,6 +175,9 @@ B/on: <entry> => {
     pype.goto("A")
 }
 B/on: <else> => ignore;
+on: <eof> => ignore;
+A/on: <eof> => ignore;
+B/on: <eof> => ignore;
 PYPE
         echo "== transit"
         printf 'open\nopen\nopen\nx\n' | "$BIN/hwut.pype" transit.pype
@@ -157,9 +204,10 @@ PYPE
         "$BIN/hwut.accept" --whole test-f.sh > /dev/null 2>&1
         echo "stained refused: exit $?" ;;
     propose-too-large)
+        #  EVERY LINE CHANGED: an alignment (D-42b) still finds six
+        #  replacements, beyond the bound of four.
         page test-p.sh 'choices = ["x"]' \
-             '[ -n "$ALT" ] && echo "inserted"' \
-             'for i in 0 1 2 3 4 5; do echo "line $i"; done'
+             'for i in 0 1 2 3 4 5; do echo "${ALT:+row}${ALT:-line} $i"; done'
         record
         "$BIN/hwut.accept" --whole test-p.sh > /dev/null 2>&1
         ALT=1 "$BIN/hwut.run" > /dev/null 2>&1
@@ -201,7 +249,8 @@ PYPE
         echo "accept exit $?"
         grep "REFUSED" out.txt
         echo "== hwut.play records it; hwut.accept blesses it"
-        "$BIN/hwut.play" test-d.sh a --plain 2>&1 | grep "RECORDED"
+        "$BIN/hwut.play" test-d.sh a --plain 2>&1 | grep "RECORDED" \
+            | sed 's/(digest: [^)]*)/(digest: <tag>)/'
         "$BIN/hwut.accept" test-d.sh a --force 2>&1 | grep -E "RECORDING|blessed" | when
         echo "== the data changes, no play: the recording is blessed"
         echo two > data.txt
@@ -217,6 +266,124 @@ PYPE
         "$BIN/hwut.play" test-d.sh a --plain > /dev/null 2>&1
         "$BIN/hwut.accept" test-d.sh a --force > /dev/null 2>&1
         echo "GOOD: $(head -1 GOOD/test-d.sh--a.txt)" ;;
+    accept-asks-nothing)
+        page test-a.sh 'choices = ["x", "y"]' 'echo "$1 ${ALT:-one}"'
+        record
+        echo "== the answers on stdin are never read"
+        printf 'n\nn\n' | "$BIN/hwut.accept" --whole test-a.sh 2>&1 \
+            | grep -E "blessed|left alone|ACCEPTED|\?"
+        echo "exit ${PIPESTATUS[1]}"
+        echo "== a standing GOOD"
+        ALT=two "$BIN/hwut.play" test-a.sh x --plain > /dev/null 2>&1
+        "$BIN/hwut.accept" test-a.sh x 2>&1 | grep -E "merge"
+        echo "== --dont-ask"
+        "$BIN/hwut.accept" --dont-ask 2>&1; echo "exit $?" ;;
+    digest)
+        page test-d.sh 'choices = ["x", "y"]' 'echo "$1"'
+        tag() { "$BIN/hwut.play" test-d.sh $1 --plain 2>&1 \
+                | sed -n 's/^RECORDED: .* (digest: \(.*\))$/\1/p'; }
+        X=$(tag x); Y=$(tag y)
+        echo "tag length: ${#X}"
+        "$BIN/hwut.play" test-d.sh x --plain 2>&1 | grep RECORDED \
+            | sed 's/(digest: [^)]*)/(digest: <tag>)/'
+        echo "== two cases, one digest"
+        "$BIN/hwut.accept" --whole test-d.sh --digest=$X 2>&1; echo "exit $?"
+        echo "== the recording edited"
+        sed -i '1s/^/edited /' OUT/test-d.sh--x.txt
+        "$BIN/hwut.accept" --whole test-d.sh x --digest=$X 2>&1 \
+            | grep REFUSED | sed 's/(digest [^)]*)/(digest <now>, asked <tag>)/'
+        echo "exit ${PIPESTATUS[0]}"
+        X=$(tag x)
+        echo "== played again: blessed"
+        "$BIN/hwut.accept" --whole test-d.sh x --digest=$X > /dev/null 2>&1
+        echo "exit $?"
+        echo "== a wishlist"
+        printf './test-d.sh x --digest=%s\n./test-d.sh y --digest=%s\n' $X $Y > list.txt
+        rm -f GOOD/test-d.sh--*.txt
+        "$BIN/hwut.accept" --whole --wishlist list.txt 2>&1 | grep ACCEPTED
+        echo './test-*.sh x --digest=abc' > glob.txt
+        "$BIN/hwut.accept" --wishlist glob.txt 2>&1 | grep REFUSED
+        "$BIN/hwut.run" --wishlist list.txt 2>&1 | grep REFUSED ;;
+    pype-eof)
+        printf 'on: "go" => goto BODY;\non: <else> => ignore;\non: <eof> => {\n    print("end")\n}\nBODY/on: <else> => ignore;\n' > e.pype
+        echo "== run"
+        printf 'go\n' | "$BIN/hwut.pype" e.pype 2>&1 | shown; echo "exit ${PIPESTATUS[1]}"
+        echo "== dry run"
+        "$BIN/hwut.pype" --dry-run e.pype 2>&1 | shown; echo "exit ${PIPESTATUS[0]}"
+        echo "BODY/on: <eof> => ignore;" >> e.pype
+        "$BIN/hwut.pype" --dry-run e.pype ;;
+    pype-inline)
+        printf 'on: "x" => { print("inline", pype.line_n()) }\non: <else> => ignore;\non: <eof> => { print("end") }\n' > i.pype
+        printf 'a\nx\n' | "$BIN/hwut.pype" i.pype; echo "exit $?" ;;
+    pype-first-match)
+        for order in short-first long-first; do
+            S='on: "abc" => {\n    print("short")\n}\n'
+            L='on: "abc" "def" => {\n    print("long")\n}\n'
+            [ $order = short-first ] && H="$S$L" || H="$L$S"
+            printf "${H}on: <else> => ignore;\non: <eof> => ignore;\n" > $order.pype
+            echo "== $order"
+            printf 'abc\nabc def\nabcdef\n' | "$BIN/hwut.pype" $order.pype | tr '\n' ' '; echo
+            "$BIN/hwut.pype" --dry-run $order.pype 2>&1 | sed 's/([^)]*:\([0-9]*\))/(line \1)/g'
+        done ;;
+    diff-broken)
+        page test-c.sh 'choices = ["only", "other"]
+#   tolerance { constraints = ["ms < 50"] }' \
+             'echo "ms = ((ms: ${MS:-10}))"' \
+             '[ "$1" = other ] && [ -n "$MS" ] && echo "line b" || echo "line a"'
+        record
+        "$BIN/hwut.accept" --whole test-c.sh > /dev/null 2>&1
+        MS=100 "$BIN/hwut.run" > /dev/null 2>&1
+        for c in only other; do
+            echo "== $c"
+            "$BIN/hwut.diff" test-c.sh $c --plain 2>&1 | grep -E '^(S|N| ) |\| '
+        done ;;
+    propose-aligned)
+        page test-q.sh 'choices = ["x"]' \
+             '[ -n "$ALT" ] && echo "inserted"' \
+             'for i in 0 1 2 3 4 5; do echo "line $i"; done' \
+             '[ -n "$ALT" ] && echo "line X" || echo "line 6"'
+        record
+        "$BIN/hwut.accept" --whole test-q.sh > /dev/null 2>&1
+        ALT=1 "$BIN/hwut.run" > /dev/null 2>&1
+        "$BIN/hwut.accept.propose" -o p.txt
+        echo "exit $?"
+        grep -v '^#  \|^$' p.txt ;;
+    demo-root)
+        "$BIN/hwut.demo.python" demo > /dev/null 2>&1
+        "$BIN/hwut.config.show" --root-conf-template > template.txt 2>/dev/null
+        cmp -s demo/hwut-root.conf template.txt && echo "root: the template" \
+            || echo "root: NOT the template"
+        grep -c "language-setup" demo/hwut-root.conf | sed 's/^/language-setup blocks: /' ;;
+    cov-dir)
+        "$BIN/hwut.cov.run" --help 2>&1 | grep -o -- "--cov-dir[^]]*" | head -1
+        "$BIN/hwut.cov.run" --cov-dir 2>&1 | head -1 ;;
+    labels-derived)
+        cd "$WORK"
+        page TEST/test-l.sh 'choices = ["x", "y"]' 'echo "$1"'
+        page TEST/test-m.sh 'choices = ["x"]' 'echo "$1"'
+        cd TEST
+        "$BIN/hwut.labels.create" needs-pwsh --glob "test-l.sh x" > /dev/null
+        "$BIN/hwut.labels.create" slow --glob "test-m.sh" > /dev/null
+        { echo; echo "[derived]"; echo "# what this machine cannot do"
+          echo "needs-outside = needs-container OR needs-pwsh"
+          echo "quick = NOT needs-outside AND NOT slow"; } >> ../hwut-root.labels
+        echo "== list"; "$BIN/hwut.labels.list"
+        echo "== query quick"; "$BIN/hwut.labels.query" quick
+        echo "== a rewrite keeps the section"
+        "$BIN/hwut.labels.add" slow --glob "test-l.sh y" > /dev/null
+        sed -n '/^\[derived\]/,$p' ../hwut-root.labels
+        echo "== remove a derived label"
+        "$BIN/hwut.labels.remove" quick --glob "test-l.sh y"; echo "exit $?"
+        echo "== a circle"
+        echo "a = b" >> ../hwut-root.labels; echo "b = a" >> ../hwut-root.labels
+        "$BIN/hwut.labels.list" 2>&1 | shown; echo "exit ${PIPESTATUS[0]}" ;;
+    play-choices)
+        page test-two.sh 'choices = ["a", "b"]' 'echo "$1"'
+        printf '#! /bin/bash\n# @hwut { title = "one run" }\necho "single"\necho "<hwut-end>"\n' > test-one.sh
+        chmod +x test-one.sh
+        "$BIN/hwut.play" test-two.sh --plain 2>&1 | grep REFUSED
+        "$BIN/hwut.play" test-one.sh --plain 2>&1 | grep RECORDED \
+            | sed 's/(digest: [^)]*)/(digest: <tag>)/' ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

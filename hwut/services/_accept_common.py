@@ -24,6 +24,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import io
+import os
 
 CLOSING_TOKEN = "<hwut-end>"
 
@@ -235,3 +236,54 @@ def source_changed_hint(name):
     """
     return ("HINT: '%s' -- the test's source changed since it was "
             "recorded; 'hwut.play' shows it as it stands" % name)
+
+
+#  ---------------------------------------------------------- the digest
+#
+#  WHAT WAS PLAYED IS WHAT IS BLESSED (services E-168). 'hwut.play' names
+#  the recording it left by a TAG; 'hwut.accept --digest=<tag>' blesses
+#  only a recording that still carries it. One function computes it for
+#  both faces, so the two can never disagree on what a tag means.
+
+DIGEST_TAG_LENGTH = 11                  # 64 bits in base64url, '=' dropped
+
+
+def digest_tag(path_list):
+    """
+    RETURN: str, the recording's TAG -- the first 64 bits of the sha256
+                 over every recorded file of ONE case, in name order,
+                 each as '<name> NUL <bytes> NUL', written in base64url
+                 without padding: 11 characters, no '+' or '/' -- if
+                 success;
+            None, else: no file of the list stands or can be read.
+
+    A tag guards against an ACCIDENTAL change (a hand edit, a run in
+    between), not a forged one; 64 bits make two different recordings
+    with one tag a 2**-64 chance.
+    """
+    import base64
+    import hashlib
+    hasher = hashlib.sha256()
+    found_f = False
+    for path in sorted(path_list, key=lambda p: os.path.basename(str(p))):
+        try:
+            with open(path, "rb") as handle: content = handle.read()
+        except OSError:
+            continue
+        found_f = True
+        hasher.update(os.path.basename(str(path)).encode("utf-8") + b"\0")
+        hasher.update(content + b"\0")
+    if not found_f: return None
+    return base64.urlsafe_b64encode(hasher.digest()[:8]) \
+                 .decode("ascii").rstrip("=")
+
+
+def digest_refused_text(name, tag, standing):
+    """
+    RETURN: str, the refusal of a case whose recording no longer carries
+                 the tag 'hwut.play' named: what stands now and what was
+                 asked, and the way to a fresh one.
+    """
+    return ("REFUSED: '%s' -- the recording is not the one played "
+            "(digest %s, asked %s) => hwut.play" % (name, standing or "none",
+                                                    tag))

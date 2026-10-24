@@ -76,9 +76,11 @@ face() {                # <args...> -- status, stdout, stderr
     $FACE "$@" --plain > out.txt 2> err.txt
     echo "STATUS: $?"
     #  THE MACHINE'S WORDS LEAVE THE PAGE: the work directory, a
-    #  call's wall clock, and where PATH found an interpreter.
+    #  call's wall clock, and where PATH found an interpreter. The
+    #  recording's tag (E-168) is a hash, said on its own page.
     echo "STDOUT {"; sed "s|$WORK|<work>|g" < out.txt \
                      | sed -E 's/wall [0-9.]+s/wall <t>s/;
+                               s/\(digest: [A-Za-z0-9_-]+\)/(digest: <tag>)/;
                                s/^(  RESOLVED   [^ ]+ -> ).*/\1<path>/;
                                /^ +-> /d' \
                      | sed 's/^/    /'; echo "}"
@@ -142,6 +144,7 @@ pyped)
       echo 'on: <else> => {'
       echo '    print(pype.line())'
       echo '}'
+      echo 'on: <eof> => ignore;'
     } > suite/TEST/tidy.pype
     chmod +x suite/TEST/tidy.pype
     echo "--- all three views of a pyped test"

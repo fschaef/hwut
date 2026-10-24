@@ -45,12 +45,12 @@ STDOUT {
          2 | <hwut-end>
     ============================================================
     
-    RECORDED: test-one.sh.txt
+    RECORDED: test-one.sh.txt (digest: <tag>)
 }
 --- several, none named: refused, and they are listed
 STATUS: 2
 STDOUT {
-    REFUSED: no choice specified; 'test-many.sh' reports 2 choice(s): a, b
+    REFUSED: 'test-many.sh' has 2 choices: a, b -- name one, or '--all'
 }
 --- the selection is the WISH'S, so a glob works too
 STATUS: 0
@@ -99,7 +99,7 @@ STDOUT {
          2 | <hwut-end>
     ============================================================
     
-    RECORDED: test-one.sh.txt
+    RECORDED: test-one.sh.txt (digest: <tag>)
 }
 --- named: played
 STATUS: 0
@@ -148,6 +148,6 @@ STDOUT {
          2 | <hwut-end>
     ============================================================
     
-    RECORDED: test-many.sh--b.txt
+    RECORDED: test-many.sh--b.txt (digest: <tag>)
 }
 <hwut-end>

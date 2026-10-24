@@ -20,6 +20,8 @@ SCRIPT: {
     }
     A/on: <else> => ignore;
     B/on: <else> => ignore;
+    A/on: <eof> => ignore;
+    B/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -50,6 +52,8 @@ SCRIPT: {
     }
     A/on: <else> => ignore;
     B/on: <else> => ignore;
+    A/on: <eof> => ignore;
+    B/on: <eof> => ignore;
 }
 INPUT: {
     x

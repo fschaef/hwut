@@ -2,6 +2,8 @@
   exit        : FAULT
   GOOD after  : value old
   book        : false / not-equivalent-with-nominal
+  | ACCEPTED  0 of 1
   |     merge required test-v.sh .stdout
   | A nominal already stands for the keys above. That is a CHANGE, not a
+  | first blessing => hwut.merge; or '--force' to overwrite the pole.
 <hwut-end>

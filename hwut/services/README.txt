@@ -84,7 +84,7 @@ The faces:
                  undecided shape, on a standing nominal instead of
                  the merge. What an overwrite replaces is an earlier
                  acceptance: a GOOD file cannot exist without this
-                 face. It implies '--dont-ask'. The two readings of a
+                 face. The two readings of a
                  first acceptance -- both after 'hwut.play' recorded
                  the case:
 
@@ -109,12 +109,15 @@ The faces:
                  each named, none removable by unlink. WHEN a nominal
                  was accepted is git's to say, not the book's (B-25).
 
-                 A CHANGE IS MERGED HERE where stdin and stderr are
-                 terminals, through the same engine
-                 'hwut.merge' runs ('lib/accept/
-                 engine.py'). Off a terminal -- a pipe, a script, a
-                 suite -- it says so and '--force' still overwrites: a
-                 face that cannot ask must not decide.
+                 A CHANGE IS 'hwut.merge's ALONE (E-167): accept names
+                 the key '=> hwut.merge', and '--force' still
+                 overwrites. ACCEPT ASKS NOTHING: it blesses what the
+                 words select, at once -- undoing it is git's.
+                 '--dont-ask' is refused by name.
+                 '--digest=<tag>' (E-168) blesses only the recording
+                 'hwut.play' named 'RECORDED: <file> (digest: <tag>)';
+                 another is refused. One case on the command line; a
+                 wishlist gives each literal line its own tag.
 
                  PROMOTION: a recorded candidate becomes the NOMINAL,
                  the pole every later run is judged against --
@@ -234,8 +237,7 @@ The faces:
                  line of the file is answered, a target that matched
                  nothing included. The refresh is silent here.
 
-                 IT ASKS NOTHING. '--force' and '--dont-ask' are both
-                 implicit: the file cannot exist unless somebody read
+                 IT ASKS NOTHING; '--force' is implicit: the file cannot exist unless somebody read
                  the change -- propose writes no target it has not
                  shown, line by line -- and the reader deleted what he
                  refused. THE READING IS THE CONSENT, and the EDITING

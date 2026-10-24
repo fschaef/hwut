@@ -8,7 +8,7 @@ reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
        | ^ constraint binding ((name: "build-7.log")) -- the value enters the constraint space
 --[ CLOSING-TOKEN ]--
      2 | <hwut-end>
-RECORDED: test-holds.sh.txt
+RECORDED: test-holds.sh.txt (digest: <tag>)
 STATUS: 0
 == hwut.accept --whole test-holds.sh
     blessed        test-holds.sh .stdout
@@ -22,7 +22,7 @@ reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
        | ^ constraint binding ((name: "debug-7.log")) -- the value enters the constraint space
 --[ CLOSING-TOKEN ]--
      2 | <hwut-end>
-RECORDED: test-breaks.sh.txt
+RECORDED: test-breaks.sh.txt (digest: <tag>)
 STATUS: 0
 == hwut.accept --whole test-breaks.sh
 REFUSED constraint: 'test-breaks.sh .stdout' -- the candidate breaks its constraints:

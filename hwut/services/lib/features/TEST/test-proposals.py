@@ -258,7 +258,7 @@ def test_hint():
                        capture_output=True, stdin=subprocess.DEVNULL,
                        env=dict(os.environ, PYTHONPATH=""))
         _face(root, "accepted, so the help speaks of nothing else",
-              "hwut.accept", "--dont-ask", "--force", keep="ACCEPTED")
+              "hwut.accept", "--force", keep="ACCEPTED")
         _face(root, "no central file", "hwut.run", "--silent", keep=keep)
         _face(root, "init", "hwut.features.init", keep="written")
         _face(root, "every feature registered", "hwut.run", "--silent",

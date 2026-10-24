@@ -10,6 +10,6 @@ l5 x
 EXIT:     0
 --- dry run reads no input
 STIMULUS: python3 -m hwut.services.pype --dry-run keep-x.pype
-dry run ok: 1 mode(s), 2 handler(s)
+dry run ok: 1 mode(s), 3 handler(s)
 EXIT:     0
 <hwut-end>

@@ -126,7 +126,11 @@ def test_records():
     status, text = _play(test)
     state = _state(test)
     recorded = [l for l in text.splitlines() if l.startswith("RECORDED:")]
-    print("  %s" % (recorded[0] if recorded else "(no RECORDED line)"))
+    #  The recording's tag (E-168) is a hash: masked.
+    import re
+    print("  %s" % (re.sub(r"\(digest: [A-Za-z0-9_-]+\)", "(digest: <tag>)",
+                           recorded[0]) if recorded
+                    else "(no RECORDED line)"))
     when = Store(Bookkeeper(test)).freshness("test-new.py", None, "stdout")
     print("  recorded by: %s" % (when or {}).get("by"))
     ok = _check([

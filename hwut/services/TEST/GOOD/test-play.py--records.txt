@@ -1,4 +1,4 @@
-  RECORDED: test-new.py.txt
+  RECORDED: test-new.py.txt (digest: <tag>)
   recorded by: hwut.play
   OK  : status OK
   OK  : the subject is rendered

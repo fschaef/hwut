@@ -10,6 +10,7 @@ SCRIPT: {
     M/on: <else> => {
         print("early unmatched: %r" % pype.line())
     }
+    M/on: <eof> => ignore;
 }
 INPUT: {
     stray
@@ -37,6 +38,7 @@ SCRIPT: {
         print("budget exhausted at %r" % pype.line())
     }
     M/on: <else> => ignore;
+    M/on: <eof> => ignore;
 }
 INPUT: {
     spend
@@ -62,6 +64,7 @@ SCRIPT: {
         print("catch-any condition, later in order")
     }
     M/on: <else> => ignore;
+    M/on: <eof> => ignore;
 }
 INPUT: {
     known
@@ -74,8 +77,8 @@ even line condition
 catch-any condition, later in order
 }
 
---- a mode containing 'if' cannot be inherited from ---
-PypeError (expected): <test>:3: mode 'B' contains an 'if' cause and cannot be inherited from
+--- a mode containing 'if' may be inherited from: order is the law (D-47) ---
+    B if
 
 --- broken condition rejected at parse ---
 PypeError (expected): <test>:1: cannot compile 'if' condition: invalid syntax (<test>:1, line 1)

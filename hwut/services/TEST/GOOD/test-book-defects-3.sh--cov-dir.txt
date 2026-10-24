@@ -1,0 +1,3 @@
+--cov-dir=<path>
+REFUSED: argument -o/--cov-dir/--output: expected one argument
+<hwut-end>

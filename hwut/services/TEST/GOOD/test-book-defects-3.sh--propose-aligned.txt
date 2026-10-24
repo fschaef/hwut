@@ -1,0 +1,7 @@
+exit 0
+# TEST RUN: ./test-q.sh x
+# -- [1] OUT:  "inserted"
+# -- [8] OUT:  "line X"
+# => [7] GOOD: "line 6"
+./test-q.sh x
+<hwut-end>

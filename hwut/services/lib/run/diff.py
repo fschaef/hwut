@@ -103,12 +103,107 @@ async def compare_view(subject_text, nominal_text, adapter,
     """
     from ....engine.compare.api import Configuration
     if compare_options is None: compare_options = Configuration()
-    await deliver(compare_feeder.feed(compare_options,
-                                      io.StringIO(subject_text),
-                                      io.StringIO(nominal_text)),
-                  adapter, subject_name)
+    #  A BROKEN CONSTRAINT IS DRAWN UNDER ITS LINE (D-41). The run left
+    #  its finding in the recording as a '##! constraint-violation'
+    #  region; that region is the RUN'S remark, not the subject's
+    #  output, and aligned as output it shifted every line after it.
+    #  The comparison judges the stream as the subject printed it, and
+    #  its own findings -- complete only at the end -- mark the line.
+    subject_text = without_violation_region(subject_text)
+    finding_list = []
+    item_list = [item async for item in
+                 compare_feeder.feed(compare_options,
+                                     io.StringIO(subject_text),
+                                     io.StringIO(nominal_text),
+                                     finding_list)]
+
+    async def marked():
+        """YIELD: every item, a pair whose binding broke a constraint
+                  with that binding marked BAD and the finding attached."""
+        for item in with_findings(item_list, finding_list):
+            yield item
+
+    await deliver(marked(), adapter, subject_name)
     await _viewed(adapter, subject_name, subject_text, nominal_text)
     return adapter.bad_pair_n
+
+
+def without_violation_region(text):
+    """
+    RETURN: str, 'text' without every '##! constraint-violation' region
+            a run wrote into the recording (services E-123) -- the
+            stream as the subject printed it.
+    """
+    out_list, inside_f = [], False
+    for line in text.splitlines(keepends=True):
+        if not inside_f and line.rstrip("\r\n") == "##! constraint-violation":
+            inside_f = True
+            continue
+        if inside_f:
+            if line.rstrip("\r\n") == "####": inside_f = False
+            continue
+        out_list.append(line)
+    return "".join(out_list)
+
+
+def with_findings(item_list, finding_list):
+    """
+    RETURN: list, 'item_list' with every line pair that carries a
+            VIOLATED binding replaced by one whose constraint-binding
+            cells on that side are BAD (drawn as broken, counted as a
+            difference) and which carries 'broken_list' -- the findings'
+            sentences, for the display's note under the line. An
+            'unbound' finding is attached to the last line pair.
+    """
+    import dataclasses
+    from ....engine.compare.core.line_pair import (E_SubjectRelationId,
+                                                   E_NominalRelationId)
+    from ....engine.compare.feeder.ui import LinePairInst
+    at_db, unbound_list = {}, []
+    for finding in finding_list:
+        if finding.kind == "violated" and finding.line_n is not None:
+            side = "s" if finding.side == "OUTPUT" else "n"
+            at_db.setdefault((side, finding.line_n), []).append(finding)
+        else:
+            unbound_list.append(finding)
+    if not at_db and not unbound_list: return item_list
+
+    def broken(cell_list, bad, name_set):
+        """RETURN: list, the cells, each binding of a broken variable BAD."""
+        result = []
+        for cell in cell_list:
+            if cell.tolerance_id.name == "CONSTRAINT_BINDING" \
+               and any("((%s:" % n in (getattr(cell, "subject", None)
+                                       or getattr(cell, "nominal", None)
+                                       or "").replace(" ", "")
+                       for n in name_set):
+                cell = dataclasses.replace(cell, relation_id=bad)
+            result.append(cell)
+        return result
+
+    pair_i_list = [i for i, item in enumerate(item_list)
+                   if isinstance(item, LinePairInst)]
+    out_list = list(item_list)
+    for i in pair_i_list:
+        item = out_list[i]
+        found_s = at_db.get(("s", item.line_n_s), []) \
+                  if item.line_n_s != -1 else []
+        found_n = at_db.get(("n", item.line_n_n), []) \
+                  if item.line_n_n != -1 else []
+        extra   = unbound_list if i == pair_i_list[-1] else []
+        if not (found_s or found_n or extra): continue
+        item = dataclasses.replace(
+            item,
+            cells_s=broken(item.cells_s,
+                           E_SubjectRelationId.BAD_NOMINAL_DIFFERS,
+                           {f.variable for f in found_s}),
+            cells_n=broken(item.cells_n,
+                           E_NominalRelationId.BAD_SUBJECT_DIFFERS,
+                           {f.variable for f in found_n}))
+        object.__setattr__(item, "broken_list",
+                           [f.text() for f in found_s + found_n + extra])
+        out_list[i] = item
+    return out_list
 
 
 async def _viewed(adapter, subject_name, subject_text, nominal_text):

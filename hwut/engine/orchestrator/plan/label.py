@@ -129,6 +129,11 @@ class CLabelView:
     boundary: str            # absolute, the directory of the file
     entry_db: dict           # (file, choice|None) -> frozenset
     defined:  frozenset      # every label that stands, 'meta' included
+    #  THE DERIVED LABELS (D-56): '(label, tree)' in an order where every
+    #  derived label a tree names comes BEFORE it -- the file's reader
+    #  sorts them so and refuses a circle. Each holds for a run whose
+    #  labels, assigned and derived so far, answer its tree.
+    derived:  tuple = ()
 
     def silences_f(self):
         """
@@ -140,7 +145,8 @@ class CLabelView:
                 behave byte for byte as one with no view at all.
         """
         return any(STANDARD_LABEL in label_set
-                   for label_set in self.entry_db.values())
+                   for label_set in self.entry_db.values()) \
+               or any(label == STANDARD_LABEL for label, _ in self.derived)
 
     def label_set_of(self, absolute_path, choice):
         """
@@ -156,7 +162,26 @@ class CLabelView:
         if choice is not None:
             found = found | self.entry_db.get((relative, choice),
                                               frozenset())
-        return found
+        return derived_label_set(self.derived, found)
+
+
+def derived_label_set(derived, label_set):
+    """
+    RETURN: frozenset[str], 'label_set' together with every derived
+            label whose tree it answers -- expanded in the order
+            'derived' stands in, so a label derived from a derived label
+            sees it (D-56).
+
+    A name a tree mentions that nothing assigns or derives is simply
+    absent here; the labels faces say it as 'missing in expression
+    evaluation'.
+    """
+    if not derived: return label_set
+    found = set(label_set)
+    for label, tree in derived:
+        if label not in found and evaluate_f(tree, found):
+            found.add(label)
+    return frozenset(found)
 
 
 GLOB_MARK_TUPLE = ("*", "?", "[")

@@ -53,7 +53,7 @@ printf '#! /bin/bash\n# @hwut { title = "a" choices = ["x", "y"] }\necho "$1"; e
 printf '#!/bin/bash\necho hello from the target\n' > sub/TEST/hello.sh
 printf '#!/bin/bash\nsleep 5\n'                     > sub/TEST/slow.sh
 chmod +x sub/TEST/*.sh
-(cd sub/TEST && "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole --dont-ask > /dev/null 2>&1)
+(cd sub/TEST && "$BIN/hwut.play" --all --plain > /dev/null 2>&1; "$BIN/hwut.accept" --whole > /dev/null 2>&1)
 rm -f sub/TEST/log.txt
 
 shown() {

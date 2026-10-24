@@ -5,7 +5,7 @@ PURPOSE: 'hwut.cov.run', THE COVERAGE RUN (coverage D-38) -- every
          selected test case is run by its coverage tool; what the tool
          leaves is read and stored as a record in hwut's own format.
 
-    hwut.cov.run [<wish>] -o <directory> [--dont-ask]
+    hwut.cov.run [<wish>] -o|--cov-dir <directory> [--dont-ask]
                  [--variant=<a>,<b>] [--jobs=<n>]
                  [<rendering words>] [--directory=<path>]
     hwut.cov.run --help         this text
@@ -16,7 +16,7 @@ directory into lcov, html, cobertura, jacoco, json, tex or pdf;
 'hwut.cov.formats' lists the tools this build reads.
 
 THE OUTPUT DIRECTORY (coverage D-42) is the one place coverage data is
-kept. '-o <directory>' names it; it then holds
+kept. '-o <directory>' ('--cov-dir', the readers' word) names it; it then holds
 
     test_run_id_db.csv         directory;test;choice;test_run_id
     test_run_group_id_db.csv   the sets of test runs that executed
@@ -105,12 +105,15 @@ PARSER = face_parser(NAME, "The coverage run.",
                                "and a choice glob",
                      word_metavar="[<file-glob> [choice-glob]...]",
                      shared_token_tuple=RENDERING_TOKEN_TUPLE)
-PARSER.add_argument("-o", "--output", default=None, metavar="directory")
+#  ONE NAME FOR THE COVERAGE DIRECTORY ON EVERY FACE (D-50): '--cov-dir',
+#  as the readers spell it; '-o' stays, the short form of the same word.
+PARSER.add_argument("-o", "--cov-dir", "--output", dest="output",
+                    default=None, metavar="directory")
 PARSER.add_argument("--dont-ask", action="store_true")
 PARSER.add_argument("--jobs", default=None, metavar="n")
 PARSER.add_argument("--variant", default="", metavar="a,b")
 PARSER.add_argument("--directory", default=None)
-ARG_DB = {"--directory": True, "--output": True}
+ARG_DB = {"--directory": True, "--cov-dir": True, "--output": True}
 USAGE  = usage_of(PARSER, ARG_DB)
 
 

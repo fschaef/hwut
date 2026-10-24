@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "'hwut.accept' at a terminal: the merge door (E-88)"
+#     title      = "'hwut.merge' at a terminal: the merge door (E-88, E-167)"
 #     features   = ["accept-merge-at-terminal"]
 #     choices {
 #         ask_no   { }
@@ -18,10 +18,12 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-WHERE A NOMINAL STANDS AND THE CANDIDATE DIFFERS, 'hwut.accept' at a
-terminal hands the key to the shared merge engine. MEASURED (E-88): the
-call passed 'write' where the adapter belongs -- every merge through the
-door died in a TypeError, and no suite reached the door.
+WHERE A NOMINAL STANDS AND THE CANDIDATE DIFFERS, the merge is
+'hwut.merge's alone (E-167): at a terminal it hands the key to the merge
+engine. Until 2026-10-23 'hwut.accept' opened the same door itself; the
+door moved, these sessions with it. MEASURED (E-88): the call passed
+'write' where the adapter belongs -- every merge through the door died
+in a TypeError, and no suite reached the door.
 
 The terminal is stood in for: the face's 'adapter_for' returns the keyed
 display with its keys scripted, and the face is told it sits at a
@@ -42,8 +44,8 @@ terminal. Everything else is the real face on a real tree.
     realign  a take, 'g' (realign), then 'S': a SECOND round of the
              session -- MEASURED (E-90) to die in 'hwut.accept' comparing
              the round against a bound it never stated
-    unbuilt  no session can be built at all: 'merge required', and the
-             way out, as before
+    unbuilt  'hwut.accept' on the same key: it opens no session (E-167);
+             'merge required', and the way out, '=> hwut.merge'
 ______________________________________________________________________________
 """
 import io
@@ -57,6 +59,7 @@ import contextlib
 from   config import HwutRunner                                  # noqa F401,E402
 from hwut.services import accept                                # noqa: E402
 from hwut.services.lib.accept import engine                     # noqa: E402
+from hwut.services.lib.accept import interactive                # noqa: E402
 from hwut.services.lib.viewers.keyed.driver import KeyedDisplay  # noqa: E402
 from hwut.services.lib.viewers.keyed.act import E_Act           # noqa: E402
 
@@ -113,9 +116,16 @@ def door(act_list):
     here = os.getcwd()
     try:
         os.chdir(root)
-        sys.stdin, sys.stderr = _Tty(real_stdin), _Tty(real_stderr)
-        code = accept.main(["--directory=suite/TEST"],
-                           write=line_list.append, read_line=lambda: "")
+        if act_list is None:
+            code = accept.main(["--directory=suite/TEST"],
+                               write=line_list.append)
+        else:
+            #  'hwut.merge' says everything on stderr; its lines are
+            #  collected as accept's were.
+            captured = io.StringIO()
+            sys.stdin, sys.stderr = _Tty(real_stdin), _Tty(captured)
+            code = interactive.main(["--directory=suite/TEST", "--all"])
+            line_list = captured.getvalue().splitlines()
     finally:
         os.chdir(here)
         engine.adapter_for = real_adapter_for
@@ -127,7 +137,8 @@ def door(act_list):
             if row.startswith("test-v.sh;"):
                 print("  book        : %s" % " / ".join(row.split(";")[2:4]))
     for line in line_list:
-        if line.startswith(("    ", "The screen", "'<enter>'", "A nominal")):
+        if line.startswith(("    ", "The screen", "'<enter>'", "A nominal",
+                            "ACCEPTED", "first blessing", "NOTE")):
             print("  | %s" % line)
     shutil.rmtree(root, ignore_errors=True)
 
@@ -136,7 +147,7 @@ if __name__ == "__main__":
     try:
         HwutRunner(
             argv       = sys.argv,
-            title      = "'hwut.accept' at a terminal: the merge door (E-88)",
+            title      = "'hwut.merge' at a terminal: the merge door (E-88, E-167)",
             choice_map = {
                 "done":    lambda: door([E_Act.TAKE_ALL, E_Act.DONE]),
                 "cancel":  lambda: door([E_Act.TAKE_ALL, E_Act.CANCEL]),

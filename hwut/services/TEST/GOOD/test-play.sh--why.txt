@@ -11,7 +11,7 @@ STDOUT {
       stderr         20 bytes   first: 'all of it on stderr'
       stdout          0 bytes
       HINT: stdout is EMPTY while stderr is not -- output on the wrong channel? (a runner may route print() to stderr; compare reads stdout)
-    RECORDED: test-wrong.sh.txt
+    RECORDED: test-wrong.sh.txt (digest: <tag>)
 }
 STATUS: 3
 STDOUT {

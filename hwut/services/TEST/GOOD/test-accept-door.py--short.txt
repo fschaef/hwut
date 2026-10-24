@@ -2,5 +2,6 @@
   exit        : FAULT
   GOOD after  : value old
   book        : false / not-equivalent-with-nominal
-  |     saved [FAIL]   test-v.sh .stdout
+  | ACCEPTED  1 of 1
+  |     saved [FAIL]   test-v.sh -- GOOD is saved; OUT still differs from it
 <hwut-end>

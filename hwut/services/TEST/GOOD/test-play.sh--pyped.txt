@@ -57,7 +57,7 @@ STDOUT {
          3 | <hwut-end>
     ============================================================
     
-    RECORDED: test-pyped.sh.txt
+    RECORDED: test-pyped.sh.txt (digest: <tag>)
 }
 --- and where NO pype stands, the view says so
 STATUS: 0
@@ -109,6 +109,6 @@ STDOUT {
          2 | <hwut-end>
     ============================================================
     
-    RECORDED: test-plainly.sh.txt
+    RECORDED: test-plainly.sh.txt (digest: <tag>)
 }
 <hwut-end>

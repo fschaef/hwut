@@ -11,6 +11,10 @@ SCRIPT: {
     SUB/on: <else> => ignore;
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    NUM/on: <eof> => ignore;
+    TXT/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -39,6 +43,11 @@ SCRIPT: {
     SUB is: LEFT, RIGHT
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    ROOT/on: <eof> => ignore;
+    LEFT/on: <eof> => ignore;
+    RIGHT/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -52,20 +61,26 @@ LEFT handler
 RIGHT handler
 }
 
---- interference: equal patterns across two bases (trivial intersection) ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:4) carry intersecting patterns; shadowing is forbidden
+--- equal patterns across two bases: the first base of the list fires ---
+    B1
+NOTE: mode 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
 
---- own override does not cure base interference ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'SUB' (<test>:4) and 'B1' (<test>:1) carry intersecting patterns; shadowing is forbidden
+--- an own handler overrides both bases ---
+    SUB
+NOTE: mode 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
+NOTE: mode 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
 
---- interference across depth: base and base-of-base ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'ROOT' (<test>:1) and 'OTHER' (<test>:3) carry intersecting patterns; shadowing is forbidden
+--- across depth: the effective list's order decides (MID's ROOT before OTHER) ---
+    ROOT
+NOTE: mode 'SUB': '"x"' (<test>:5) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
 
---- intersection, not identity: <int> against <number> ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
+--- intersecting languages: B1's int, first, also matches inside '5.5' -- no NOTE ---
+    B1 int 5
+    B1 int 5
 
---- intersection of globs: *.txt against * ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
+--- globs: '*.txt' first takes 'a.txt', '*' the rest ---
+    txt a.txt
+    any b.log
 
 --- disjoint languages are lawful across bases ---
 SCRIPT: {
@@ -82,6 +97,11 @@ SCRIPT: {
     SUB/on: <else> => ignore;
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    B1/on: <eof> => ignore;
+    B2/on: <eof> => ignore;
+    B3/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -95,9 +115,9 @@ log file: trace.log
 two-token constant, disjoint from both globs
 }
 
---- interference decides glob classes exactly ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
-disjoint classes lawful: '[abc]' vs 'd'
+--- glob classes: '[abc]' first takes 'b' ---
+    class b
+    class c
 
 --- effect-command words in a base list: plain unknown-mode law ---
 PypeError (expected): <test>:2: 'is:' names unknown mode 'IGNORE'

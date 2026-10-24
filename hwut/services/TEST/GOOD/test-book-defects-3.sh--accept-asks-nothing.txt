@@ -1,0 +1,12 @@
+== the answers on stdin are never read
+ACCEPTED  2 of 2
+    blessed        test-a.sh x .stdout
+    blessed        test-a.sh y .stdout
+exit 0
+== a standing GOOD
+    merge required test-a.sh x .stdout
+first blessing => hwut.merge; or '--force' to overwrite the pole.
+== --dont-ask
+REFUSED: '--dont-ask' is gone (E-167) -- accept never asks; it blesses what the words select
+exit 2
+<hwut-end>

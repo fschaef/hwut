@@ -32,7 +32,7 @@ export PYTHONPATH="$ROOT"
 RUN="python3 -m hwut.services.run --no-colour"
 accepted() {            # play every case the words select, then bless (E-165)
     python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
-    python3 -m hwut.services.accept --whole --dont-ask "$@"
+    python3 -m hwut.services.accept --whole "$@"
 }
 ACCEPT=accepted
 unset NO_COLOR CI COLUMNS

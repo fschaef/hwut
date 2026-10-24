@@ -86,7 +86,7 @@ printf 'hwut {\n}\n' > hwut-root.conf
         && echo "hwut.config.show: PATH form == by-path form: True" \
         || echo "hwut.config.show: PATH form == by-path form: FALSE"
 
-    printf '#! /usr/bin/env hwut.pype\non: "x" => flush;\non: <else> => ignore;\n' \
+    printf '#! /usr/bin/env hwut.pype\non: "x" => flush;\non: <else> => ignore;\non: <eof> => ignore;\n' \
         > filter.pype
     chmod +x filter.pype
     printf 'l1 x\nl2\nl3 x\n' | ./filter.pype

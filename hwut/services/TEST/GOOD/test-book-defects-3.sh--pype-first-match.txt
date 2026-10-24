@@ -1,0 +1,8 @@
+== short-first
+short short short 
+NOTE: mode '<default>': '"abc" "def"' (line 4) never fires -- '"abc"' (line 1) comes first and matches every line it matches
+dry run ok: 1 mode(s), 4 handler(s)
+== long-first
+short long long 
+dry run ok: 1 mode(s), 4 handler(s)
+<hwut-end>

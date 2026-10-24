@@ -79,7 +79,18 @@ def main(argv=None, write=None):
     open_labels = _editing.opened(directory, write)
     if open_labels.status is not None: return open_labels.status
 
+    derivation = next((d for d in _file._kept(
+                           _file.file_path(open_labels.boundary))
+                           .derivation_list if d[1] == label), None)
     if not _editing.stands_f(open_labels, label):
+        if derivation is not None:
+            #  A DERIVED LABEL IS NOT TAKEN OFF BY HAND (D-56): its
+            #  line in '[derived]' decides.
+            write("REFUSED: '%s' is derived ('%s', line %d: %s) -- its "
+                  "expression decides who carries it; edit that line"
+                  % (label, _file.DERIVED_HEADING, derivation[0],
+                     derivation[2]))
+            return E_ExitCode.REFUSED
         write("REFUSED: no label '%s' stands in 'hwut-root.labels'"
               % label)
         return E_ExitCode.REFUSED
@@ -116,6 +127,13 @@ def main(argv=None, write=None):
         member_n=len(removed_list) + len(untouched_list))
     printed(result,
             tuple(_file.target_text(key) for key in untouched_list), write)
+    #  ASSIGNED AND DERIVED: the assignment came off; the derivation
+    #  still stands, and is said (D-56).
+    if derivation is not None:
+        write("NOTE: '%s' is also derived ('%s', line %d: %s) -- a run "
+              "whose labels answer it keeps it"
+              % (label, _file.DERIVED_HEADING, derivation[0],
+                 derivation[2]))
     return E_ExitCode.OK
 
 

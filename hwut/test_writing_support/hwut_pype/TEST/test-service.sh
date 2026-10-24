@@ -77,6 +77,7 @@ exit_code)
 on: <else> => {
     print(pype.line())
 }
+on: <eof> => ignore;
 EOF
     printf 'a line\n' | $PYPE "$WORK/pass.pype" > /dev/null
     echo "STIMULUS  a clean run          -> exit code: $?"

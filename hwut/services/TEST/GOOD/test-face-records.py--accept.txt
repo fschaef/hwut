@@ -19,8 +19,7 @@
         left alone     test-e.sh .stdout
     
     A nominal already stands for the keys above. That is a CHANGE, not a
-    first blessing. At a TERMINAL this face merges them itself (E-59); here
-    there is none, so: run it on a terminal, or '--force' to overwrite the pole.
+    first blessing => hwut.merge; or '--force' to overwrite the pole.
     
     The screen was left without saving: nothing was written. 's' saves GOOD
     as it stands and leaves.

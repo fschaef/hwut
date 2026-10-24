@@ -53,7 +53,7 @@ PLAN="python3 -m hwut.services.plan"
 HELP="python3 -m hwut.services.help"
 accepted() {            # play every case the words select, then bless (E-165)
     python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
-    python3 -m hwut.services.accept --whole --dont-ask "$@"
+    python3 -m hwut.services.accept --whole "$@"
 }
 ACCEPT=accepted
 unset NO_COLOR CI COLUMNS
@@ -134,7 +134,7 @@ case "$1" in
         python3 -m hwut.services.lib.run.play test-net.sh a --plain 2>&1 | shown
         echo "STATUS: ${PIPESTATUS[0]}"
         echo "== hwut.accept test-net.sh a: it runs nothing, no cap concerns it"
-        python3 -m hwut.services.accept test-net.sh a --dont-ask 2>&1 \
+        python3 -m hwut.services.accept test-net.sh a 2>&1 \
             | grep -c "^REFUSED" | sed 's/^/REFUSED lines: /'
         echo "== hwut.merge test-net.sh a --console --all: the same"
         python3 -m hwut.services.lib.accept.interactive test-net.sh a \

@@ -79,7 +79,7 @@ test-complete.py;apps;true;ok;;45;0
 ;static;true;ok;;45;8
 ;targets;true;ok;;45;9
 ;values;true;ok;;45;10
-;zsh;false;not-equivalent-with-nominal;;45;11
+;zsh;true;ok;;45;11
 test-config-show.py;above;true;ok;;5;6
 ;directory;true;ok;;5;0
 ;faults;true;ok;;5;1

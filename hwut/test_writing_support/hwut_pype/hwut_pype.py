@@ -119,12 +119,15 @@ DEFAULT_MODE = "<default>"
 # grammatical collision are the script author's business.
 RE_ARROW  = re.compile(r"=>\s*(.*)$")
 RE_EFFECT = re.compile(
-    r"^(?:(\{)"
+    r"^(?:\{(.*\S.*)\}\s*;?"
+    r"|(\{)"
     r"|goto\s+([A-Za-z_]\w*)\s*;"
     r"|push\s+([A-Za-z_]\w*)\s*;"
     r"|(pop)\s*;"
     r"|(ignore)\s*;"
     r"|(flush)\s*;)$")
+
+WS_CHARS  = frozenset(" \t\n\r\v\f")     # what a glob never crosses
 
 RE_TOKEN_CONST  = re.compile(r'"((?:[^"\\]|\\.)*)"')
 RE_TOKEN_BIND   = re.compile(
@@ -316,8 +319,20 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
             if match_effect is None:
                 raise PypeError("%s: cannot read EFFECT '%s'"
                                 % (where, effect_txt))
-            block_f, goto_name, push_name, pop_w, ignore_w, flush_w = \
-                match_effect.groups()
+            inline_txt, block_f, goto_name, push_name, pop_w, ignore_w, \
+                flush_w = match_effect.groups()
+            if inline_txt is not None:
+                #  ONE LINE, ONE BLOCK (D-46): '=> { pass }' is the
+                #  block '{', 'pass', '}' written on the handler's line.
+                try:
+                    code = compile("\n" * i + inline_txt.strip(),
+                                   file_name, "exec")
+                except SyntaxError as error:
+                    raise PypeError("%s: cannot compile the one-line "
+                                    "effect: %s" % (where, error)) from None
+                current_handler.action_list.append(Action(code=code))
+                i += 1
+                continue
             if block_f is not None:
                 code, i = read_block(i + 1)
                 current_handler.action_list.append(Action(code=code))
@@ -349,6 +364,7 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
     else:                        start_mode_name = first_mode_name
 
     _check_else_present(mode_db, start_mode_name, file_name)
+    _check_eof_present(mode_db, file_name)
     return mode_db, start_mode_name
 
 
@@ -747,205 +763,6 @@ class Action:
         self.pop_f     = pop_f       # bool
 
 
-# ---------------------------------------------------------------------------
-# Pattern intersection (interference detection).
-#
-# A pattern's token list describes a regular language. Two patterns
-# INTERSECT if some string belongs to both languages. Test: Thompson NFA
-# per token list, then reachability of the joint accept pair on the
-# product automaton. Character classes are (negated, char_set) pairs.
-
-WS_CHARS  = frozenset(" \t\n\r\v\f")
-CLS_WS    = (False, WS_CHARS)
-CLS_NONWS = (True,  WS_CHARS)
-CLS_DIGIT = (False, frozenset("0123456789"))
-CLS_SIGN  = (False, frozenset("+-"))
-CLS_EXP   = (False, frozenset("eE"))
-
-
-def _cls_lit(char):
-    """RETURN: tuple, the character class matching exactly 'char'."""
-    return (False, frozenset((char,)))
-
-
-def _cls_intersect(cls_a, cls_b):
-    """RETURN: True, if some character belongs to both classes.
-               False, else.
-    """
-    neg_a, set_a = cls_a
-    neg_b, set_b = cls_b
-    if not neg_a and not neg_b: return bool(set_a & set_b)
-    if not neg_a and neg_b:     return bool(set_a - set_b)
-    if neg_a and not neg_b:     return bool(set_b - set_a)
-    return True   # complements of finite sets always share a character
-
-
-class _Nfa:
-    """RETURN: --. Thompson NFA over character classes.
-
-    'eps[s]' lists epsilon successors of state s; 'sym[s]' lists
-    (class, destination) transitions. Fragment constructors 'f_*' return
-    (entry, exit) state pairs; fragments are single-use (fresh states per
-    call).
-    """
-    def __init__(self):
-        self.eps = []
-        self.sym = []
-
-    def new_state(self):
-        """RETURN: int, a fresh state id."""
-        self.eps.append([])
-        self.sym.append([])
-        return len(self.eps) - 1
-
-    def f_eps(self):
-        """RETURN: (int, int), fragment matching the empty string."""
-        a, b = self.new_state(), self.new_state()
-        self.eps[a].append(b)
-        return a, b
-
-    def f_sym(self, cls):
-        """RETURN: (int, int), fragment matching one character of 'cls'."""
-        a, b = self.new_state(), self.new_state()
-        self.sym[a].append((cls, b))
-        return a, b
-
-    def f_seq(self, frag_list):
-        """RETURN: (int, int), fragment matching the concatenation."""
-        assert frag_list
-        for (_, e1), (s2, _) in zip(frag_list, frag_list[1:], strict=False):
-            self.eps[e1].append(s2)
-        return frag_list[0][0], frag_list[-1][1]
-
-    def f_alt(self, frag_list):
-        """RETURN: (int, int), fragment matching any alternative."""
-        a, b = self.new_state(), self.new_state()
-        for s, e in frag_list:
-            self.eps[a].append(s)
-            self.eps[e].append(b)
-        return a, b
-
-    def f_star(self, frag):
-        """RETURN: (int, int), fragment matching zero or more repetitions."""
-        a, b = self.new_state(), self.new_state()
-        s, e = frag
-        self.eps[a].extend((s, b))
-        self.eps[e].extend((s, b))
-        return a, b
-
-    def f_opt(self, frag):
-        """RETURN: (int, int), fragment matching the inner or nothing."""
-        return self.f_alt([frag, self.f_eps()])
-
-    def f_plus(self, make_frag):
-        """RETURN: (int, int), fragment matching one or more repetitions.
-
-        'make_frag' is a factory; fragments are single-use.
-        """
-        return self.f_seq([make_frag(), self.f_star(make_frag())])
-
-
-def _nfa_of_token_list(token_list):
-    """RETURN: (_Nfa, int, int), the automaton with its start and accept
-                                 state, accepting exactly the strings the
-                                 pattern built from 'token_list' matches.
-
-    '<bol>'/'<eol>' are position demands, not characters; they are
-    transparent here (interference is decided on the pattern languages).
-    A repeat group is one copy of its sub-pattern followed by a star of
-    further copies (one or more).
-    """
-    nfa = _Nfa()
-
-    def digits():
-        return nfa.f_plus(lambda: nfa.f_sym(CLS_DIGIT))
-
-    def token_fragment(token):
-        if token[0] == "const":
-            char_list = [nfa.f_sym(_cls_lit(c)) for c in token[1]]
-            return nfa.f_seq(char_list) if char_list else nfa.f_eps()
-        if token[0] == "int":
-            return nfa.f_seq([nfa.f_opt(nfa.f_sym(CLS_SIGN)), digits()])
-        if token[0] == "number":
-            mantissa = nfa.f_alt([
-                nfa.f_seq([digits(), nfa.f_sym(_cls_lit(".")),
-                           nfa.f_star(nfa.f_sym(CLS_DIGIT))]),
-                nfa.f_seq([nfa.f_sym(_cls_lit(".")), digits()]),
-                digits(),
-            ])
-            exponent = nfa.f_opt(nfa.f_seq([
-                nfa.f_sym(CLS_EXP),
-                nfa.f_opt(nfa.f_sym(CLS_SIGN)),
-                digits()]))
-            return nfa.f_seq([nfa.f_opt(nfa.f_sym(CLS_SIGN)),
-                              mantissa, exponent])
-        if token[0] == "glob":
-            frag_list = []
-            for element in parse_glob(token[1]):
-                if   element[0] == "star":
-                    frag_list.append(nfa.f_star(nfa.f_sym(CLS_NONWS)))
-                elif element[0] == "any":
-                    frag_list.append(nfa.f_sym(CLS_NONWS))
-                elif element[0] == "char":
-                    frag_list.append(nfa.f_sym(_cls_lit(element[1])))
-                elif element[1]:                     # negated set
-                    frag_list.append(
-                        nfa.f_sym((True, element[2] | WS_CHARS)))
-                else:
-                    frag_list.append(nfa.f_sym((False, element[2])))
-            return nfa.f_seq(frag_list) if frag_list else nfa.f_eps()
-        if token[0] in ("bol", "eol"):
-            return nfa.f_eps()
-        # repeat: one copy, then a star of further copies
-        _, _, sub_list = token
-        def one_copy(lead_ws_f):
-            frag_list = []
-            if lead_ws_f: frag_list.append(nfa.f_star(nfa.f_sym(CLS_WS)))
-            frag_list.append(sequence_fragment(sub_list))
-            return nfa.f_seq(frag_list)
-        return nfa.f_seq([one_copy(lead_ws_f=False),
-                          nfa.f_star(one_copy(lead_ws_f=True))])
-
-    def sequence_fragment(token_list):
-        frag_list = []
-        for k, token in enumerate(token_list):
-            if k > 0: frag_list.append(nfa.f_star(nfa.f_sym(CLS_WS)))
-            frag_list.append(token_fragment(token))
-        return nfa.f_seq(frag_list)
-
-    start, accept = sequence_fragment(token_list)
-    return nfa, start, accept
-
-
-def _patterns_intersect(token_list_a, token_list_b):
-    """RETURN: True, if some string is matched by both patterns.
-               False, else.
-
-    Reachability of (accept_a, accept_b) on the product automaton:
-    epsilon moves advance either side alone; a joint symbol move exists
-    where the two character classes intersect.
-    """
-    nfa_a, start_a, accept_a = _nfa_of_token_list(token_list_a)
-    nfa_b, start_b, accept_b = _nfa_of_token_list(token_list_b)
-    seen  = {(start_a, start_b)}
-    stack = [(start_a, start_b)]
-    while stack:
-        a, b = stack.pop()
-        if a == accept_a and b == accept_b:
-            return True
-        successor_list = [(a2, b) for a2 in nfa_a.eps[a]] \
-                       + [(a, b2) for b2 in nfa_b.eps[b]] \
-                       + [(a2, b2)
-                          for cls_a, a2 in nfa_a.sym[a]
-                          for cls_b, b2 in nfa_b.sym[b]
-                          if _cls_intersect(cls_a, cls_b)]
-        for pair in successor_list:
-            if pair not in seen:
-                seen.add(pair)
-                stack.append(pair)
-    return False
-
-
 class Handler:
     """RETURN: --. A (pattern, actions) pair inside a mode.
 
@@ -1053,6 +870,26 @@ def _check_else_present(mode_db, start_mode_name, file_name):
                             % (file_name, name))
 
 
+def _check_eof_present(mode_db, file_name):
+    """RETURN: None, if EVERY mode carries an '<eof>' handler in its
+                     effective list (own or inherited).
+               Raises PypeError naming the first mode without one, else.
+
+    A MODE IS MEANT TO BE ENTERED, so it must cope with the end of the
+    input (D-39): the '<eof>' handler is where a script emits
+    '<hwut-end>', and a stream that ends in a mode without one ends
+    without the token -- a failure of the test, said where the script
+    is read rather than discovered as 'never COMPLETED' at the run.
+    """
+    for name in sorted(mode_db, key=lambda n: (n != DEFAULT_MODE, n)):
+        if not mode_db[name].handlers("eof"):
+            shown = "<default>" if name == DEFAULT_MODE else name
+            raise PypeError("%s: mode '%s' has no <eof> handler in its "
+                            "effective list; every mode must state what "
+                            "happens at the end of the input"
+                            % (file_name, shown))
+
+
 def _resolve_inheritance(mode_db, file_name):
     """RETURN: None, with every mode's 'resolved_list' set if success.
                Raises PypeError, else.
@@ -1062,11 +899,11 @@ def _resolve_inheritance(mode_db, file_name):
     each base's effective list in declaration order. A handler arriving
     twice over a diamond is entered once.
 
-    INTERFERENCE is a hard error: any two DISTINCT pattern handlers of
-    one effective list whose languages INTERSECT (some line matches
-    both) -- SHADOWING IS FORBIDDEN, except for <else>; see
-    _check_interference. A mode containing an 'if(...)' cause cannot be
-    inherited from.
+    THE FIRST MATCH FIRES (D-47): where two pattern handlers of one
+    effective list match a line, the one first in the effective list
+    triggers. A handler that can never fire -- an earlier one matches
+    every line it matches -- is NOTED ('Mode.note_list', see
+    _shadow_note_list); it is not an error.
     """
     IN_PROGRESS = "in-progress"
 
@@ -1087,15 +924,11 @@ def _resolve_inheritance(mode_db, file_name):
                 raise PypeError("%s: 'is:' names unknown mode '%s'"
                                 % (where, base_name))
             base = mode_db[base_name]
-            if any(h.condition is not None for h in base.handler_list):
-                raise PypeError(
-                    "%s: mode '%s' contains an 'if' cause and cannot "
-                    "be inherited from" % (where, base_name))
             for handler in resolve(base, trail + [mode.name]):
                 if id(handler) in seen_id: continue      # diamond duplicate
                 result.append(handler)
                 seen_id.add(id(handler))
-        _check_interference(mode, result, mode_db, file_name)
+        mode.note_list     = _shadow_note_list(mode, result)
         mode.resolved_list = result
         mode.build_gate()
         return result
@@ -1104,37 +937,49 @@ def _resolve_inheritance(mode_db, file_name):
         resolve(mode, [])
 
 
-def _check_interference(mode, resolved_list, mode_db, file_name):
-    """RETURN: None, if the mode's effective list is free of
-                     interference: all pattern causes pairwise DISJOINT
-                     and at most one <else> handler.
-               Raises PypeError, else.
+def _shadow_note_list(mode, resolved_list):
+    """RETURN: list[str], one NOTE per pattern handler of the effective
+                     list that can NEVER fire because an earlier handler
+                     matches every line it matches; empty where none.
 
-    SHADOWING IS FORBIDDEN. Any two distinct pattern handlers in one
-    effective list -- own against own, own against inherited, inherited
-    against inherited -- whose pattern languages intersect (some line
-    matches both) are a hard error: no handler may pre-empt another by
-    order. Consequently pattern dispatch is order-free; at most one
-    pattern can match a line. <else> is THE ONE EXCEPTION: it can and
-    must be shadowed -- the first <else> of the effective list fires,
-    own before inherited. 'if(...)' causes are CONDITIONS, not
-    patterns: they never inherit (a mode containing one cannot be a
-    base) and fire in definition order. <entry>/<exit>/<bof>/<eof>
-    handlers all fire and cannot interfere. A handler arriving twice
-    over a diamond is one handler, not a pair.
+    A SUPERFICIAL CHECK, cheap by design (D-47): the earlier handler's
+    tokens stand, in order and contiguous, among the later one's --
+    '"abc"' before '"abc" "def"' -- so every line the later one matches
+    holds a match of the earlier. Wider shadowing (two languages that
+    merely intersect) is not decided: that costs automata, and the
+    first match firing is the law, not a fault.
     """
     pattern_list = [h for h in resolved_list
                     if h.kind == "match" and h.condition is None]
-    for k, first in enumerate(pattern_list):
-        for second in pattern_list[k + 1:]:
-            if _patterns_intersect(first.token_list, second.token_list):
-                raise PypeError(
-                    "%s: interference in mode '%s': handlers from '%s' "
-                    "(%s) and '%s' (%s) carry intersecting patterns; "
-                    "shadowing is forbidden"
-                    % (file_name, mode.name,
-                       first.owner_name, first.where,
-                       second.owner_name, second.where))
+    note_list = []
+    for k, later in enumerate(pattern_list):
+        later_key = [_token_shape(t) for t in later.token_list]
+        for earlier in pattern_list[:k]:
+            earlier_key = [_token_shape(t) for t in earlier.token_list]
+            n = len(earlier_key)
+            if any(later_key[j:j + n] == earlier_key
+                   for j in range(len(later_key) - n + 1)):
+                note_list.append(
+                    "NOTE: mode '%s': '%s' (%s) never fires -- '%s' (%s) "
+                    "comes first and matches every line it matches"
+                    % ("<default>" if mode.name == DEFAULT_MODE else mode.name,
+                       later.cause_txt, later.where,
+                       earlier.cause_txt, earlier.where))
+                break
+    return note_list
+
+
+def _token_shape(token):
+    """RETURN: tuple, what a pattern token matches, without the name it
+                     binds or its place -- two tokens of one shape match
+                     the same text.
+    """
+    kind = token[0]
+    if kind == "const":  return ("const", token[1])
+    if kind == "glob":   return ("glob", token[1])
+    if kind == "repeat": return ("repeat",
+                                 tuple(_token_shape(t) for t in token[2]))
+    return (kind,)
 
 
 class PypeInfo:
@@ -1672,6 +1517,12 @@ def main(argv=None, stream=None):
         mode_db, start_mode_name = parse(source_txt, file_name,
                                          search_dir_list=search_dir_list,
                                          source_db=source_db)
+        if dry_run_f or trace_style is not None:
+            #  THE CHECK'S NOTES (D-47) go where the script is CHECKED --
+            #  never into a run's stderr, which a test may compare.
+            for mode in mode_db.values():
+                for note in getattr(mode, "note_list", ()):
+                    print(note, file=sys.stderr)
         if dry_run_f:
             handler_n = sum(len(m.handler_list) for m in mode_db.values())
             print("dry run ok: %d mode(s), %d handler(s)"

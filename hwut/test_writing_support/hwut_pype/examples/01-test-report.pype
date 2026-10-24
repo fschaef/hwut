@@ -22,3 +22,6 @@ on: <exit> => {
     for name in fail_list:
         print("  failed: %s" % name)
 }
+
+#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+on: <eof> => ignore;

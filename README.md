@@ -190,18 +190,18 @@ sed -i 's/1 2 3/1 2 4/' demo.py
 
 ![hwut: five choices green, one red, the summary bar](hwut/doc/img/hwut-run.png)
 
-**`hwut.run.diff -y demo.py plain`** shows the subject on the left, what the
+**`hwut.diff -y demo.py plain`** shows the subject on the left, what the
 program printed now, and the nominal on the right, the GOOD file. The
 differing token is marked.
 
-![hwut.run.diff -y: subject left, GOOD right, the changed number marked](hwut/doc/img/hwut-run-diff.png)
+![hwut.diff -y: subject left, GOOD right, the changed number marked](hwut/doc/img/hwut-run-diff.png)
 
-**`hwut.accept.interactive`** is the merge, with keys. Here an invoice report
+**`hwut.merge`** is the merge, with keys. Here an invoice report
 changed in four lines; two have been taken into GOOD (`Enter`), two still
 differ. `a` takes a region, `A` the whole subject, `u` undoes, `F5` opens the
 tolerance pane.
 
-![hwut.accept.interactive: two of four differences taken](hwut/doc/img/hwut-accept-interactive.png)
+![hwut.merge: two of four differences taken](hwut/doc/img/hwut-accept-interactive.png)
 
 **`hwut.report`** reads the result databases, not a run, and renders them for
 somebody else.
@@ -236,8 +236,8 @@ failed test, 2 the command line cannot be read, 3 it asks for nothing.
 |---|---|
 | `hwut` | the default command: `hwut.run` over the whole tree below the current directory |
 | `hwut.run` | runs the tree and renders it live; the wish selects: `--fail`, `--pass`, `--since`, `--glob`, labels; `--jobs` bounds parallel work |
-| `hwut.run.play` | runs one choice and shows how compare reads what it printed; judges nothing, records nothing |
-| `hwut.run.diff` | how a run compares with its GOOD file, side by side (`-y`); the verdict view |
+| `hwut.play` | runs one choice (building it first), shows how compare reads what it printed, and records it: `RECORDED: <file> (digest: <tag>)`; judges nothing. `--all` plays every case the words select |
+| `hwut.diff` | how the recording compares with its GOOD file, side by side (`-y`); the verdict view; runs nothing |
 | `hwut.run.stability` | runs a wish several times and reports what did not stay the same |
 | `hwut.plan` | prints the test plan the framework intends: nodes, links, exclusion sets |
 | `hwut.execute` | runs one user-defined target over every directory that binds it |
@@ -246,8 +246,8 @@ failed test, 2 the command line cannot be read, 3 it asks for nothing.
 
 | Command | What it does |
 |---|---|
-| `hwut.accept` | promotes a candidate to the nominal. Partial by default: a first acceptance records the shape with nothing decided; `--whole` blesses the candidate as it stands |
-| `hwut.accept.interactive` | the merge with keys: take lines, regions or the whole subject into GOOD, edit, undo, adjust tolerances |
+| `hwut.accept` | promotes the recording to the nominal; runs nothing, asks nothing. Partial by default: a first acceptance records the shape with nothing decided; `--whole` blesses the recording as it stands; `--digest=<tag>` blesses only the recording `hwut.play` named. Where a nominal stands it refers to `hwut.merge` |
+| `hwut.merge` | the merge with keys, the one face that merges; runs nothing: take lines, regions or the whole subject into GOOD, edit, undo, adjust tolerances |
 | `hwut.accept.propose` | writes the differences as a file to read; blesses nothing |
 | `hwut.accept.apply` | blesses what such a file names, and nothing else |
 

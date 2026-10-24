@@ -54,7 +54,7 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'on: "x" => flush;\non: <else> => ignore;\n' > keep-x.pype
+printf 'on: "x" => flush;\non: <else> => ignore;\non: <eof> => ignore;\n' > keep-x.pype
 printf 'l1 x\nl2\nl3 x\n'                              > in-1.txt
 printf 'l4\nl5 x\n'                                    > in-2.txt
 
@@ -95,7 +95,7 @@ shebang)
         echo "          cannot reach it. Run the extraction's chmod"
         echo "          script: sh <bundle>.txt.chmod.sh"
     fi
-    printf '#! /usr/bin/env hwut.pype\non: "x" => flush;\non: <else> => ignore;\n' \
+    printf '#! /usr/bin/env hwut.pype\non: "x" => flush;\non: <else> => ignore;\non: <eof> => ignore;\n' \
         > filter.pype
     chmod +x filter.pype
     export PATH="$BIN:$PATH"
@@ -120,7 +120,7 @@ fault)
     show $PYPE broken.pype < /dev/null
     ;;
 exit)
-    printf 'on: <bof> => {\n    import sys\n    sys.exit(7)\n}\non: <else> => ignore;\n' \
+    printf 'on: <bof> => {\n    import sys\n    sys.exit(7)\n}\non: <else> => ignore;\non: <eof> => ignore;\n' \
         > leave.pype
     echo | show $PYPE leave.pype
     ;;

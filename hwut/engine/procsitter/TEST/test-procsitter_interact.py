@@ -280,7 +280,8 @@ async def test_pype_interactor():
                    'on: "six-times-seven" => {\n'
                    '    print("42")\n'
                    '}\n'
-                   'on: <else> => ignore;\n')
+                   'on: <else> => ignore;\n'
+                   'on: <eof> => ignore;\n')
 
     if not _require_hwut_pype(): return
     transcript = bytearray()

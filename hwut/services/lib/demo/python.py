@@ -37,11 +37,6 @@ SOURCE   = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
 #  What a run left in the source tree is no part of the demonstration.
 LEFT_BEHIND = ("OUT", "TMP", "__pycache__", "hwut-traces*", "hwut.log",
                ".coverage")
-ROOT_CONF = """\
-#  hwut-root.conf -- the boundary of the demonstration tree written by
-#  '%s'. Every face works below this file.
-hwut { }
-""" % NAME
 
 PARSER = face_parser(NAME, "Write the demonstration tree over Python.",
                      wish_f=False, word_help="the directory to write",
@@ -70,8 +65,11 @@ def written(target):
             with open(path, "rb") as fh: head = fh.read(2)
             if head == b"#!":
                 os.chmod(path, os.stat(path).st_mode | 0o111)
-    with open(os.path.join(target, "hwut-root.conf"), "w") as fh:
-        fh.write(ROOT_CONF)
+    #  THE ROOT IS THE TEMPLATE (services E-25, D-43): the demonstration
+    #  stands on the same 'hwut-root.conf' 'hwut.sanitize root' writes,
+    #  language table and all -- never on an empty 'hwut { }'.
+    from ..._boundary import written as root_written
+    root_written(target)
     return test
 
 

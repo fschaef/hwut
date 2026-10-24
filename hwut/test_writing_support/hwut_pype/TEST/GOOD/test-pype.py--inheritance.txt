@@ -17,6 +17,9 @@ SCRIPT: {
     }
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    BASE/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -30,11 +33,13 @@ SUB handles 'extra'
 BASE end
 }
 
---- shadowing is forbidden: own against inherited ---
-PypeError (expected): <test>: interference in mode 'SUB': handlers from 'SUB' (<test>:4) and 'BASE' (<test>:1) carry intersecting patterns; shadowing is forbidden
+--- the first match fires: own before inherited (D-47) ---
+    SUB x
+NOTE: mode 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:6) comes first and matches every line it matches
 
---- shadowing is forbidden: own against own ---
-PypeError (expected): <test>: interference in mode '<default>': handlers from '<default>' (<test>:1) and '<default>' (<test>:2) carry intersecting patterns; shadowing is forbidden
+--- the first match fires: own against own, '<int>' before '<number>' ---
+    int 5
+    int 5
 
 --- disjoint vocabularies inherit cleanly; no shadowing needed ---
 SCRIPT: {
@@ -48,6 +53,9 @@ SCRIPT: {
     }
     on: "go" => goto SUB;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    BASE/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -72,6 +80,10 @@ SCRIPT: {
     C is: B
     on: "go" => goto C;
     on: <else> => ignore;
+    on: <eof> => ignore;
+    A/on: <eof> => ignore;
+    B/on: <eof> => ignore;
+    C/on: <eof> => ignore;
 }
 INPUT: {
     go

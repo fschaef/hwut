@@ -16,6 +16,8 @@ SCRIPT: {
     }
     on: <else> => ignore;
     NAMED/on: <else> => ignore;
+    on: <eof> => ignore;
+    NAMED/on: <eof> => ignore;
 }
 INPUT: {
     tick
@@ -38,6 +40,8 @@ SCRIPT: {
         print("default handles it")
     }
     on: <else> => ignore;
+    on: <eof> => ignore;
+    NAMED/on: <eof> => ignore;
 }
 INPUT: {
     x

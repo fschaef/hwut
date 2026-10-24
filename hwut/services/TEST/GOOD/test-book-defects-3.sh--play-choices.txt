@@ -1,0 +1,3 @@
+REFUSED: 'test-two.sh' has 2 choices: a, b -- name one, or '--all'
+RECORDED: test-one.sh.txt (digest: <tag>)
+<hwut-end>

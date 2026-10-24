@@ -1,0 +1,22 @@
+== list
+needs-pwsh    1
+slow          1
+
+DERIVED
+    needs-outside = needs-container OR needs-pwsh     1
+                    missing in expression evaluation: needs-container
+    quick         = NOT needs-outside AND NOT slow    0
+== query quick
+test-l.sh y
+== a rewrite keeps the section
+[derived]
+# what this machine cannot do
+needs-outside = needs-container OR needs-pwsh
+quick = NOT needs-outside AND NOT slow
+== remove a derived label
+REFUSED: 'quick' is derived ('[derived]', line 30: NOT needs-outside AND NOT slow) -- its expression decides who carries it; edit that line
+exit 2
+== a circle
+FAULT: $WORK/hwut-root.labels:31: derived labels form a circle: a -> b -> a
+exit 1
+<hwut-end>

@@ -46,6 +46,8 @@ SCRIPT: {
     DETAIL/on: <exit> => {
         print("  DETAIL <exit>")
     }
+    on: <eof> => ignore;
+    DETAIL/on: <eof> => ignore;
 }
 INPUT: {
     x
@@ -73,6 +75,8 @@ SCRIPT: {
     on: <else> => ignore;
     SUB/on: "ret" => pop;
     SUB/on: <else> => ignore;
+    on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
 }
 INPUT: {
     call
@@ -94,6 +98,8 @@ SCRIPT: {
         print("a mode named IGNORE, lawfully addressed by goto")
     }
     IGNORE/on: <else> => ignore;
+    on: <eof> => ignore;
+    IGNORE/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -120,6 +126,9 @@ SCRIPT: {
         print("a mode named ENTRY, lawfully")
     }
     ENTRY/on: <else> => ignore;
+    on: <eof> => ignore;
+    WHEN_THE_SUN_SHINES/on: <eof> => ignore;
+    ENTRY/on: <eof> => ignore;
 }
 INPUT: {
     go
@@ -141,6 +150,7 @@ SCRIPT: {
         print("if fire, bindings:", pype.bindings())
     }
     M/on: <else> => ignore;
+    M/on: <eof> => ignore;
 }
 INPUT: {
     p 4 5
@@ -174,6 +184,7 @@ TRACE, gcc style (default) (stderr): {
     tmp-trace.pype:8: fire: DEEP/on: "up"
     tmp-trace.pype:8: effect: pop ;
     tmp-trace.pype: mode active: <default>
+    tmp-trace.pype:10: fire: <default>/on: <eof>
 }
 EXIT: 0
 STDOUT (the clean filter stream): {
@@ -197,6 +208,7 @@ TRACE, plain style (stderr): {
     TRACE|     fire DEEP/on: "up"   (tmp-trace.pype:8)
     TRACE|         effect: pop ;
     TRACE| mode active: <default>
+    TRACE|     fire <default>/on: <eof>   (tmp-trace.pype:10)
 }
 
 --- --trace with mode-name filters traces only those modes ---
@@ -211,7 +223,7 @@ TRACE, filtered to DEEP (stderr): {
 
 --- --dry-run checks the script and reads no input ---
 EXIT: 0
-STDOUT: dry run ok: 1 mode(s), 2 handler(s)
+STDOUT: dry run ok: 1 mode(s), 3 handler(s)
 EXIT: 1
 STDERR: pype: tmp-dry-bad.pype: mode '<default>' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
 <hwut-end>

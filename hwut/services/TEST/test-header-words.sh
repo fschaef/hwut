@@ -114,7 +114,7 @@ SHOW="python3 -m hwut.services.lib.config.show"
 PLAN="python3 -m hwut.services.plan"
 accepted() {            # play every case the words select, then bless (E-165)
     python3 -m hwut.services.lib.run.play --all "$@" --plain > /dev/null 2>&1
-    python3 -m hwut.services.accept --whole --dont-ask "$@"
+    python3 -m hwut.services.accept --whole "$@"
 }
 ACCEPT=accepted
 unset NO_COLOR CI COLUMNS
@@ -137,7 +137,9 @@ page() {                # <file> <header lines> <body line>
     printf '#! /bin/bash\n# @hwut {\n%b# }\n%s\necho "<hwut-end>"\n' "$2" "$3" > "$1"
     chmod +x "$1"
 }
-shown() { sed "s|$WORK|\$WORK|g"; }
+#  The recording's tag (E-168) is a hash of the recording: masked, so a
+#  page about header words does not hang on hash values.
+shown() { sed "s|$WORK|\$WORK|g; s/(digest: [A-Za-z0-9_-]*)/(digest: <tag>)/"; }
 
 #  ONE WORD, ONE LINE: the word in a header, and the first line of what
 #  'hwut.config.show --no-default' says of it -- the fault, or the key.
@@ -160,7 +162,7 @@ case "$1" in
             $PLAY $t 2>&1 | shown | sed -n '/^===== OUTPUT/,$p' | grep -v "^=*$"
             echo "STATUS: ${PIPESTATUS[0]}"
             echo "== hwut.accept --whole $t"
-            python3 -m hwut.services.accept --whole $t --dont-ask 2>&1 | shown \
+            python3 -m hwut.services.accept --whole $t 2>&1 | shown \
                 | grep "blessed\|REFUSED\|constraint\|Traceback"
         done ;;
     constraint_refused)
@@ -195,7 +197,7 @@ case "$1" in
         good() { ls GOOD | grep -v book.csv | sed 's/^/    GOOD: /'; }
         echo "== hwut.accept --whole"
         python3 -m hwut.services.lib.run.play --all --plain > /dev/null 2>&1
-        python3 -m hwut.services.accept --whole --dont-ask 2>&1 | grep "blessed\|REFUSED"
+        python3 -m hwut.services.accept --whole 2>&1 | grep "blessed\|REFUSED"
         good
         echo "== hwut.run"
         $RUN 2>&1 | grep "RESULTS" | sed 's/, [0-9.]* \[sec\].*//'
