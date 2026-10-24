@@ -20,6 +20,9 @@ DESCRIPTION
                              | stream EX | u8 n_universe | universe*
                              | u32 n_ref | ref* )
            universe  = tag[2] | u32 n | spliced: (delta [str name] total)*
+                       a decision point with ARM NAMES (E-179): delta 0
+                       str arms total -- a total of zero, which no point
+                       has, says the names follow
            ref       = u32 reference | stream CV | u8 n_measure | items*
            items     = tag[2] | u32 n | spliced: (ordinal delta, mask)*
            str       = u16 length | UTF-8        stream = u32 n | u8*
@@ -144,6 +147,9 @@ def pack_gathered(gathered):
             for line, point_name, total in point_tuple:
                 piece_list.append(("n", line - previous)); previous = line
                 if measure.named_f: piece_list.append(("s", point_name))
+                elif point_name:                         # arm names
+                    piece_list.append(("n", 0))
+                    piece_list.append(("s", point_name))
                 piece_list.append(("n", total))
             data = splice_bytes(piece_list)
             w.u32(len(data)); w.part_list.append(data)
@@ -237,7 +243,10 @@ def _unpack_plain(plain):
         while splice.more():
             line = previous + splice.number(); previous = line
             point_name = splice.string() if measure.named_f else ""
-            point_list.append((line, point_name, splice.number()))
+            total = splice.number()
+            if total == 0 and not measure.named_f:       # arm names
+                point_name, total = splice.string(), splice.number()
+            point_list.append((line, point_name, total))
         universe_list.append((measure.name, tuple(point_list)))
     universe_tuple = tuple(universe_list)
     total_db = _total_db_of(universe_tuple)
@@ -320,7 +329,15 @@ def _assert_measures(gathered):
             if total < 1:
                 raise RecordFault("a point of '%s' at line %i has nothing "
                                   "to take" % (name, line))
-            if bool(point_name) != measure.named_f:
+            if not measure.named_f and point_name:
+                #  ARM NAMES OF A DECISION (E-179): one per item.
+                if len(point_name.split("|")) != total \
+                   or "*" in point_name or "," in point_name \
+                   or "@" in point_name:
+                    raise RecordFault(
+                        "a point of '%s' at line %i names arms '%s' for "
+                        "%i item(s)" % (name, line, point_name, total))
+            elif bool(point_name) != measure.named_f:
                 raise RecordFault(
                     "a point of '%s' at line %i %s" % (
                         name, line, "has no name" if measure.named_f
@@ -397,7 +414,9 @@ def format_gathered(gathered):
                 piece_list.append("%i*%s*%i" % (line - previous,
                                                 point_name, total))
             else:
-                piece_list.append("%i*%i" % (line - previous, total))
+                piece_list.append("%i*%i%s" % (line - previous, total,
+                                               "@" + point_name
+                                               if point_name else ""))
             previous = line
         line_list.append("%s:%s" % (measure.tag, ",".join(piece_list)))
     for reference, span_tuple, _ in gathered.reference_list:
@@ -426,6 +445,9 @@ def _universe_of_text(measure, text):
     spells. Raises RecordFault on a piece that is no point."""
     result, previous = [], 0
     for piece in (text.split(",") if text.strip() else ()):
+        arms = ""
+        if not measure.named_f:                          # arm names
+            piece, _, arms = piece.partition("@")
         part_list = piece.split("*")
         if len(part_list) != (3 if measure.named_f else 2):
             raise RecordFault("'%s' spells no %s point" % (
@@ -440,7 +462,7 @@ def _universe_of_text(measure, text):
             raise RecordFault("delta %i in '%s' does not advance"
                               % (delta, piece))
         previous += delta
-        result.append((previous, part_list[1] if measure.named_f else "",
+        result.append((previous, part_list[1] if measure.named_f else arms,
                        total))
     return tuple(result)
 

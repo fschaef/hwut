@@ -1,0 +1,15 @@
+gathered: 2 run(s), 1 source(s)
+NOTE: 'test-gen.py' line 9: coverage did not list the branch arm 9->9 in 1 of 2 run(s) -- another run lists it, so it exists; counted there as not taken
+##VUT-COVERAGE 3
+##source:   test-gen.py
+##language: python
+##tool:     coverage
+##format:   coverage.py-json
+##id-width: 2
+EX:6+5
+BR:9*3@-9|9|10
+CV@01:8
+CV@10:6+2
+BR@01:1*7
+
+<hwut-end>

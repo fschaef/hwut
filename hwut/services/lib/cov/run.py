@@ -291,7 +291,8 @@ def main(argv=None, write=None, demand=None, write_error=None, ask=None):
     #  THE FINAL GATHERING (D-42): every record of this run folded into
     #  the output directory; the per-case records then go.
     try:
-        run_n, source_n, outside_list = gather(output, run_list)
+        run_n, source_n, outside_list, note_list = gather(output,
+                                                          run_list)
     except OutputRefused as refusal:
         write("FAULT: %s" % refusal)
         return E_ExitCode.FAULT
@@ -305,6 +306,10 @@ def main(argv=None, write=None, demand=None, write_error=None, ask=None):
                   % (source, directory))
         write("COVERAGE DATA: %s -- %i test run(s), %i source file(s)"
               % (output, run_n, source_n))
+    #  WHAT THE TOOL DID NOT SAY (E-179): after the summary, where it is
+    #  read, and whatever the tier -- it qualifies the record.
+    for note in note_list:
+        write("NOTE: %s" % note)
     return exit_code_of(fold(event_list))
 
 

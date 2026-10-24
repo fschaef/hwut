@@ -53,7 +53,8 @@ import zlib
 from ....auxiliary.binary_codec import Writer, Reader, ESCAPE, CodecFault
 
 from .record  import CoverageRecord, FileCoverage, RecordFault
-from .measure import measure_of, measure_of_tag, NamedPointMeasure
+from .measure import (measure_of, measure_of_tag, NamedPointMeasure,
+                      point_parts)
 from ...bookkeeper.api import TestRunId
 
 
@@ -237,12 +238,17 @@ def _pack_points(w, measure, entry):
         if named_f:
             line, name, covered, total = point
         else:
-            line, mask, total = point
+            line, mask, total, arms = point_parts(point)
         piece_list.append(("n", line - previous)); previous = line
         if named_f:
             piece_list.append(("s", name))
             piece_list.append(("n", covered)); piece_list.append(("n", total))
         else:
+            #  ARM NAMES (E-179): a total of ZERO, which no decision has,
+            #  says a name follows -- so a record without names reads
+            #  as it always did.
+            if arms:
+                piece_list.append(("n", 0)); piece_list.append(("s", arms))
             piece_list.append(("n", total))
             piece_list.append(("m", (mask, total)))
     out = splice_bytes(piece_list)
@@ -336,7 +342,11 @@ def _unpack_points(r, measure):
             covered, total = splice.number(), splice.number()
             out.append((line, name, covered, total))
         else:
-            total = splice.number()
+            total, arms = splice.number(), ""
+            if total == 0:                       # arm names follow (E-179)
+                arms, total = splice.string(), splice.number()
             if total < 1: raise RecordFault("a decision with nothing to take")
-            out.append((line, splice.mask(total), total))
+            mask = splice.mask(total)
+            out.append((line, mask, total, arms) if arms
+                       else (line, mask, total))
     return tuple(out)

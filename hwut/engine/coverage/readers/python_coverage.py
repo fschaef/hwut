@@ -121,10 +121,12 @@ def _entry_iterable(document, source_root, config):
 
 def _branch_point_tuple(entry):
     """
-    RETURN: tuple of (line, mask, total), one per decision line the json
-            entry names arcs for, in line order; the arms of a line in
-            ascending order of their destination, bit i set where arm i
-            was taken. Empty where the entry carries no arcs.
+    RETURN: tuple of (line, mask, total, arms), one per decision line
+            the json entry names arcs for, in line order; the arms of a
+            line in ascending order of their destination, bit i set where
+            arm i was taken; 'arms' the destinations joined by '|'
+            ('-9|9|10'), so a gather can unite runs that list different
+            arms (E-179). Empty where the entry carries no arcs.
     """
     taken_set = {(begin, end) for begin, end
                  in entry.get("executed_branches", [])}
@@ -136,7 +138,8 @@ def _branch_point_tuple(entry):
         (line,
          sum(1 << i for i, end in enumerate(sorted(arm_db[line]))
              if (line, end) in taken_set),
-         len(arm_db[line]))
+         len(arm_db[line]),
+         "|".join(str(end) for end in sorted(arm_db[line])))
         for line in sorted(arm_db))
 
 

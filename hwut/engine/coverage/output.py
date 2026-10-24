@@ -162,6 +162,10 @@ def gather(output_directory, run_list):
             [2] list of str, source files OUTSIDE the run's root, which
                 have no place under the output directory and were left
                 out, sorted
+            [3] list of str, the NOTES the user must read: per decision
+                where the tool listed an arm in some runs only, which
+                arm, in how many runs it went unlisted, and that it was
+                counted as existing and not taken (E-179)
 
     'run_list' holds one '(directory, test, choice, record path)' per
     test run that left a per-case record: 'directory' relative to the
@@ -202,6 +206,7 @@ def gather(output_directory, run_list):
     line_db  = {}                  # source -> {reference: [ranges]}
     universe_db, item_db = {}, {}  # source -> universe_tuple, {ref: items}
     outside_list = []
+    note_list    = []
     for source in sorted(executable_db):
         if source == ".." or source.startswith("../"):
             outside_list.append(source)
@@ -218,7 +223,11 @@ def gather(output_directory, run_list):
         line_db[source] = reference_db
         try:
             universe_db[source], item_db[source] = _measures_of(
-                measure_run_db.get(source, {}), group_db, start)
+                measure_run_db.get(source, {}), group_db, start,
+                note_list, source,
+                ",".join(sorted(t for t in header_db[source].get("tool",
+                                                                 ()) if t))
+                or "the tool")
         except MeasureFault as fault:
             raise OutputRefused("'%s' cannot be gathered: %s"
                                 % (source, fault)) from None
@@ -258,10 +267,11 @@ def gather(output_directory, run_list):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "wb") as handle:
             handle.write(pack_gathered(gathered))
-    return len(run_list), len(line_db), outside_list
+    return len(run_list), len(line_db), outside_list, note_list
 
 
-def _measures_of(run_db, group_db, start):
+def _measures_of(run_db, group_db, start, note_list=None, source="",
+                 tool="the tool"):
     """
     RETURN: [0] tuple of (measure name, tuple of (line, name, total)),
                 the UNIVERSE of every measure the runs reported for ONE
@@ -277,6 +287,11 @@ def _measures_of(run_db, group_db, start):
     from 'group_db' (frozenset of run numbers -> group id), which this
     adds to, new ids counted from 'start'.
 
+    ARMS WITH NAMES ARE UNITED FIRST (E-179): where the runs name
+    different arms for one decision, the union is the decision, and an
+    arm a run did not name counts as existing and not taken there --
+    one sentence per such decision goes to 'note_list'.
+
     Raises MeasureFault where a measure cannot name its items or where
     two runs disagree on the number of items of one point.
     """
@@ -285,7 +300,29 @@ def _measures_of(run_db, group_db, start):
         measure  = measure_of(name)
         total_db = {}                          # key -> total
         mask_db  = {}                          # key -> [(run, mask)]
-        for number, entry in run_db[name]:
+        run_entry_list = run_db[name]
+        if not getattr(measure, "named_f", False):
+            from .database.measure import arms_reconciled
+            entry_list, finding_list = arms_reconciled(
+                [entry for _, entry in run_entry_list])
+            run_entry_list = [(number, entry) for (number, _), entry
+                              in zip(run_entry_list, entry_list)]
+            for line, arm_tuple, n, m in finding_list:
+                if note_list is None: continue
+                note_list.append(
+                    "'%s' line %i: %s did not list the %s arm%s %s in %i "
+                    "of %i run(s) -- %s, so %s; counted there as not "
+                    "taken" % (
+                        source, line, tool, name,
+                        "" if len(arm_tuple) == 1 else "s",
+                        ", ".join("%i->%s" % (line, arm)
+                                  for arm in arm_tuple),
+                        n, m,
+                        "another run lists it" if len(arm_tuple) == 1
+                        else "other runs list them",
+                        "it exists" if len(arm_tuple) == 1
+                        else "they exist"))
+        for number, entry in run_entry_list:
             place_db = {}
             for line, point_name, total, mask in measure.point_list(entry):
                 place = place_db.get((line, point_name), 0)

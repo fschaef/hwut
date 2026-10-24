@@ -787,23 +787,60 @@ def test_branches():
         (entry_branch_of(clash) == (),
          "a line with two arms in one annotation and three in the other "
          "carries NO point: which arm is which is not known"),
-        (entry_branch_of(run_a2, "branches.py") == ((3, 1, 2), (5, 0, 2)),
+        (entry_branch_of(run_a2, "branches.py")
+         == ((3, 1, 2, "4|5"), (5, 0, 2, "6|7")),
          "coverage.py: the arms of a decision are the destinations of "
          "its arcs, executed and missing together, in ascending order; "
          "argument 2 took the first arm of line 3 and never reached "
-         "line 5"),
-        (entry_branch_of(run_a1, "branches.py") == ((3, 2, 2), (5, 1, 2)),
+         "line 5; each point names its arms by destination (E-179)"),
+        (entry_branch_of(run_a1, "branches.py")
+         == ((3, 2, 2, "4|5"), (5, 1, 2, "6|7")),
          "argument 1 took the other arm of line 3, and the first of "
          "line 5"),
-        (entry_branch_of(both, "branches.py") == ((3, 3, 2), (5, 1, 2)),
+        (entry_branch_of(both, "branches.py")
+         == ((3, 3, 2, "4|5"), (5, 1, 2, "6|7")),
          "two runs, different arms: the record merges, by OR, where "
          "counts (1 and 1) could not"),
         (harvested("coverage", [("coverage.json", COVERAGE_JSON)])
          .file_db["app.py"].measure_db.get("branch") is None,
          "a json without arcs, from a run without '--branch', carries "
          "no branch point: absence stays absent"),
-    ])
+    ] + _arm_name_check_list())
     verdict(ok, "the arms taken are a set, and sets can be unioned.")
+
+
+def _arm_name_check_list():
+    """
+    RETURN: list of (bool, str), the checks of ARMS UNITED BY NAME
+            (E-179): the shape coverage.py 7.6.1 reports for a generator
+            expression -- the loop arm '9|9' listed only in the run that
+            takes it.
+    """
+    from hwut.engine.coverage.database.measure import (BRANCH,
+                                                       arms_reconciled)
+    some = ((9, 7, 3, "-9|9|10"),)
+    none = ((9, 0, 2, "-9|10"),)
+    (some_r, none_r), finding_list = arms_reconciled([some, none])
+    gcov = ((3, 2, 2),)
+    (gcov_r,), gcov_finding = arms_reconciled([gcov])
+    text = BRANCH.encode(some + ((12, 1, 2),))
+    return [
+        (some_r == some and none_r == ((9, 0, 3, "-9|9|10"),),
+         "a run that lists fewer arms is restated over the union: the "
+         "unlisted arm exists and is not taken there"),
+        (finding_list == [(9, ("9",), 1, 2)],
+         "what was unlisted is said: line 9, arm 9, in 1 of 2 runs"),
+        (BRANCH.merge(some, none) == some,
+         "two records merge by arm name, not by position"),
+        (gcov_r == gcov and gcov_finding == [],
+         "a tool that numbers its arms (gcov) passes unchanged"),
+        (text == "9*7/3@-9|9|10,3*1/2"
+         and BRANCH.decode(text) == some + ((12, 1, 2),),
+         "the text spelling carries the names: '<delta>*<mask>/<total>"
+         "@<arms>'"),
+        (BRANCH.summary(some) == (3, 3) and BRANCH.summary(none) == (0, 2),
+         "a summary counts the arms a record names"),
+    ]
 
 
 def test_cobertura():

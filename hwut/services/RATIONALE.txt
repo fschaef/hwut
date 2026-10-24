@@ -6982,3 +6982,50 @@ DECISION  FIX: the printer receives 'origin_db[case.choice]'.
 
 COST      Play pages showing CONFIGURATION gain their provenance
           comments ('# hwut-root.conf:225'); such pages were re-blessed.
+
+
+E-179  BRANCH ARMS UNITED BY NAME; WHAT THE TOOL DID NOT LIST IS SAID
+       (D-37, E-18/E-49/E-51 of the agent swarm; ruled 2026-10-24)  (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED with coverage.py 7.6.1 (7.17.0 does not show it): a
+          generator expression 'max(len(str(f)) for f in flags)' on line
+          9 has the arms -9, 9, 10 in a run that executes it and -9, 10
+          in a run that does not -- the loop arm 9 -> 9 is listed only
+          where it was taken, neither taken nor missed elsewhere. Arms
+          were identified by POSITION, the totals differed, the gather
+          refused the file and with it the WHOLE record: no coverage of
+          the game tree at all, exit 1.
+
+DECISION  RULED: no healing of the tool, and no dropping of the spoon.
+          The root is that the tool omits an arm that exists and was not
+          passed; what that means to the user is "every branch it lists
+          is covered, nothing is lost" -- and that is what is said.
+          RULED (b): arms carry NAMES. coverage.py's reader names each
+          arm by its destination ('-9|9|10'); a decision point stores
+          them ('BR:9*7/3@-9|9|10'; binary: a total of zero announces
+          them, so records without names read as before). The gather
+          and 'merge' unite the arms of one line BY NAME: an arm a run
+          did not name counts there as existing and not taken. After the
+          COVERAGE DATA line, whatever the tier:
+              NOTE: 'test-gen.py' line 9: coverage did not list the
+              branch arm 9->9 in 1 of 2 run(s) -- another run lists it,
+              so it exists; counted there as not taken
+          The gathered file keeps the names (FORMAT.txt 5.2, 10.2), so
+          gathered outputs could be united later. Tools that number
+          their arms (gcov) name none and stay positional; two such
+          records that disagree are refused as before.
+          LAW FOR THE BOOK: the coverage hwut integrates is the measuring
+          tools' measurement -- its accuracy, and its effect on the
+          program measured, are the tool's and its version's. hwut
+          checks that records agree, says where they do not, and never
+          invents a value to make them.
+
+COST      Decision points have an optional fourth element; every reader
+          of them goes through 'point_parts'. Gathered text of Python
+          branches gains the names ('BR:10*2@11|13'). GRAVEYARD: (a)
+          dropping a self-arc in the reader -- it heals the tool (an
+          arm it reports only when taken can never show a gap, but the
+          choice is not ours); (a') uniting at gather time by names kept
+          only in the per-case record -- the names are lost after it.
+          Regression: 'test-book-defects-4.sh coverage-arms';
+          'engine/coverage/readers/TEST/test-readers.py branches'.

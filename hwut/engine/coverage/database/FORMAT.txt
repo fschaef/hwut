@@ -207,6 +207,23 @@ its line and its place among the points of that line; two records that
 give it different totals do not describe one decision, and the merge
 refuses (MeasureFault).
 
+ARM NAMES (E-179). A tool that reports WHERE each arm leads (coverage.py:
+the destination line; a negative line is the exit of the scope that
+starts there) names the arms, '|'-joined in item order:
+
+    <d>*<mask>/<total>@<arm>|<arm>|...
+
+    BR:9*7/3@-9|9|10  line 9, three arms (-9, 9, 10), all taken
+
+Named arms identify items BY NAME: where two runs name different arms
+for one line, the union is the decision, and an arm a run did not name
+counts there as EXISTING AND NOT TAKEN -- the gather says so in a NOTE
+(coverage.py 7.6.1 lists a generator expression's own loop arc only in
+a run that takes it). A tool that numbers its arms (gcov) names none,
+and its items stay identified by position. In the binary spelling (8) a
+named point is 'delta 0 str arms total mask': a total of zero, which no
+decision has, says the names follow.
+
 REFUSALS: a piece that spells no point; a first delta that does not
 advance from zero; a zero delta where the measure admits none; a total
 below one; a mask naming an item above 'total'.
@@ -454,8 +471,9 @@ Every refusal names the FIRST fault and stops (section 7).
       references that do not strictly ascend
       a universe or an item list under a tag no measure claims
       a measure twice or out of the order of its names
-      a point with nothing to take; a decision point with a name, or a
-        named point without one; a universe that does not ascend
+      a point with nothing to take; a decision point whose arm names
+        (5.2) are not one per item, or a named point without a name;
+        a universe that does not ascend
         by line and name
       items of a measure the universe lacks, an ordinal that does not
         ascend or names no point, a mask of no item or of an item the
@@ -515,6 +533,8 @@ number of items, ascending by line and name:
 
     BR:5*2,0*3                  line delta * total; a zero delta is
                                 another decision on the same line
+    BR:9*3@-9|9|10              a decision with arm names (5.2); binary:
+                                delta, 0, str arms, total
     TG:4*clk*1,0*rst*1          line delta * name * total
     FN:1*main*1,5*f*1
 

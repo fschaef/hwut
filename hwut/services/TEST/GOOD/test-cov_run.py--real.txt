@@ -24,7 +24,7 @@ $ hwut.cov.run -o <out>
       | ##format:   coverage.py-json
       | ##id-width: 2
       | EX:3+9,1
-      | BR:10*2
+      | BR:10*2@11|13
       | CV@00:5,5
       | CV@01:7,5
       | CV@10:3+2,1,1+3

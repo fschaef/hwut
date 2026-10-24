@@ -153,8 +153,10 @@ class PointMeasure(I_Measure):
         """
         piece_list = []
         previous   = 0
-        for line, mask, total in entry:
-            piece_list.append("%i*%x/%i" % (line - previous, mask, total))
+        for point in entry:
+            line, mask, total, arms = point_parts(point)
+            piece_list.append("%i*%x/%i%s" % (line - previous, mask, total,
+                                              "@" + arms if arms else ""))
             previous = line
         return ",".join(piece_list)
 
@@ -175,6 +177,7 @@ class PointMeasure(I_Measure):
         previous = 0
         for i, piece in enumerate(text.split(",")):
             head, _, ratio = piece.partition("*")
+            ratio, _, arms = ratio.partition("@")
             mask_text, _, total_text = ratio.partition("/")
             try:
                 delta = int(head)
@@ -198,22 +201,28 @@ class PointMeasure(I_Measure):
                     "arithmetic mistake, not a measurement"
                     % (piece, total))
             line = previous + delta
-            result.append((line, mask, total))
+            result.append((line, mask, total, arms) if arms
+                          else (line, mask, total))
             previous = line
         return tuple(result)
 
     def summary(self, entry):
         """RETURN: [0] int, items taken. [1] int, items there were."""
-        return (sum(bin(mask).count("1") for _, mask, _ in entry),
-                sum(total for _, _, total in entry))
+        part_list = [point_parts(point) for point in entry]
+        return (sum(bin(mask).count("1") for _, mask, _, _ in part_list),
+                sum(total for _, _, total, _ in part_list))
 
     def point_list(self, entry):
-        """RETURN: list of (line, '', total, mask) -- the entry's own
-        points, no name."""
-        return [(line, "", total, mask) for line, mask, total in entry]
+        """RETURN: list of (line, arms, total, mask) -- the entry's own
+        points; 'arms' is the point's ARM NAMES ('-9|9|10', see
+        'point_parts'), '' where the tool names none."""
+        return [(line, arms, total, mask)
+                for line, mask, total, arms in map(point_parts, entry)]
 
     def entry_of(self, point_list):
-        """RETURN: tuple of (line, mask, total) over the points."""
+        """RETURN: tuple of (line, mask, total) over the points -- the
+        arm names dropped: what a converter reads is the decision, its
+        items and which were taken."""
         return tuple((line, mask, total)
                      for line, _, total, mask in point_list)
 
@@ -227,25 +236,119 @@ class PointMeasure(I_Measure):
         -- the two records do not describe one decision, and
         adjudicating them would be an invention.
         """
+        (entry_a, entry_b), _ = arms_reconciled([entry_a, entry_b])
         point_db = {}
         for entry in (entry_a, entry_b):
             seen_db = {}
-            for line, mask, total in entry:
+            for line, mask, total, arms in map(point_parts, entry):
                 place = seen_db.get(line, 0)
                 seen_db[line] = place + 1
                 standing = point_db.get((line, place))
                 if standing is None:
-                    point_db[(line, place)] = (mask, total)
+                    point_db[(line, place)] = (mask, total, arms)
                     continue
                 if standing[1] != total:
                     raise MeasureFault(
                         "the decision at line %i has %i items in one "
                         "record and %i in the other: these are not one "
                         "decision" % (line, standing[1], total))
-                point_db[(line, place)] = (standing[0] | mask, total)
-        return tuple((line, mask, total)
-                     for (line, _), (mask, total)
+                point_db[(line, place)] = (standing[0] | mask, total,
+                                           standing[2] or arms)
+        return tuple((line, mask, total, arms) if arms
+                     else (line, mask, total)
+                     for (line, _), (mask, total, arms)
                      in sorted(point_db.items()))
+
+
+def point_parts(point):
+    """
+    RETURN: (line, mask, total, arms), a decision point in full; 'arms'
+            '' where the point carries no arm names.
+
+    A DECISION POINT MAY NAME ITS ARMS (RATIONALE E-179): a tool that
+    reports WHERE each arm leads (coverage.py: the destination line) gives
+    the point a fourth element, the arm names joined by '|' in the order
+    of the items -- '-9|9|10': item 0 leads to -9 (the scope's exit),
+    item 1 to line 9, item 2 to line 10. A tool that numbers its arms
+    (gcov) gives three elements, and the arms are known by position.
+    """
+    if len(point) == 4: return point
+    line, mask, total = point
+    return line, mask, total, ""
+
+
+def _arm_key(arm):
+    """RETURN: tuple, the order of arm names: numerically where they are
+    numbers (destination lines), as text else."""
+    try:              return (0, int(arm), "")
+    except ValueError: return (1, 0, arm)
+
+
+def arms_reconciled(entry_list):
+    """
+    RETURN: [0] list, 'entry_list' with every NAMED decision point
+                (point_parts) restated over the UNION of the arms the
+                entries name for its line: its total the union's size,
+                its mask remapped; an arm an entry does not name counts
+                as EXISTING AND NOT TAKEN there
+            [1] list of (line, tuple of arm names, n, m): per line where
+                some entries named fewer arms than the union, the arms
+                missing, in how many of the 'm' entries naming the line
+                they were missing ('n')
+
+    'entry_list' holds the entries of ONE measure for ONE source, one per
+    run. Points without arm names, and lines where every entry names the
+    same arms, pass unchanged. A line with several named points (a second
+    decision on one line) passes unchanged as well -- its arms cannot be
+    told apart by line.
+
+    WHY (RATIONALE E-179, D-37): coverage.py 7.6.1 lists a generator
+    expression's own loop arc (9 -> 9) only in a run that takes it; a run
+    that does not take it does not list it as missed either. The arm
+    exists; it was not passed. Union by name says exactly that, and the
+    second return value is what the user is told.
+    """
+    union_db, count_db = {}, {}
+    for entry in entry_list:
+        for line, mask, total, arms in map(point_parts, entry):
+            if not arms: continue
+            union_db.setdefault(line, set()).update(arms.split("|"))
+            count_db[line] = count_db.get(line, 0) + 1
+    finding_list = []
+    if not union_db: return list(entry_list), finding_list
+    order_db = {line: tuple(sorted(arm_set, key=_arm_key))
+                for line, arm_set in union_db.items()}
+    missing_db = {}
+    result = []
+    for entry in entry_list:
+        line_n_db = {}
+        for point in entry:
+            line_n_db[point[0]] = line_n_db.get(point[0], 0) + 1
+        out = []
+        for line, mask, total, arms in map(point_parts, entry):
+            if not arms or line_n_db[line] != 1 \
+               or arms == "|".join(order_db[line]):
+                out.append((line, mask, total, arms) if arms
+                           else (line, mask, total))
+                continue
+            own   = arms.split("|")
+            order = order_db[line]
+            new_mask = 0
+            for i, arm in enumerate(own):
+                if mask >> i & 1: new_mask |= 1 << order.index(arm)
+            for arm in order:
+                if arm not in own:
+                    missing_db.setdefault(line, {}).setdefault(arm, 0)
+                    missing_db[line][arm] += 1
+            out.append((line, new_mask, len(order), "|".join(order)))
+        result.append(tuple(out))
+    for line in sorted(missing_db):
+        arm_db = missing_db[line]
+        for n in sorted(set(arm_db.values())):
+            finding_list.append((line, tuple(arm for arm in order_db[line]
+                                             if arm_db.get(arm) == n),
+                                 n, count_db[line]))
+    return result, finding_list
 
 
 class NamedPointMeasure(I_Measure):

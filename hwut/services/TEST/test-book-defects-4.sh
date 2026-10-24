@@ -7,7 +7,7 @@
 #     choices  = ["compare-crash", "region-refused", "quoted-rule",
 #                 "help-coverage", "numeral", "nested-root", "quantity",
 #                 "units-list", "sub-root", "tick", "pype-system",
-#                 "system-draw", "quantity-compare"]
+#                 "system-draw", "quantity-compare", "coverage-arms"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -54,6 +54,13 @@
 # quantity-compare RQ-7: '((t: 2.5 ms))' binds a quantity, 't < 50 ms'
 #                 compares through pint: 40000us holds, 60 ms and 3 kg
 #                 break it; a rule over an unknown unit is refused.
+# coverage-arms   D-37/E-49, ruled (b): two per-case records of one source
+#                 as coverage.py 7.6.1 leaves them for a generator
+#                 expression -- arms -9|9|10 where the line ran, -9|10
+#                 where it did not -- gather into ONE record, the arm 9->9
+#                 counted as existing and not taken, and a NOTE says so.
+#                 MEASURED before: 'cannot be gathered', the whole record
+#                 lost, exit 1.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -65,7 +72,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards);"
-        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare;"
+        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms;"
         exit 0 ;;
 esac
 
@@ -221,6 +228,33 @@ case "$1" in
         echo "== a rule over an unknown unit"
         sed -i 's/50 ms/50 apples/' test-q.sh
         "$BIN/hwut.run" --plain 2>&1 | grep -E "apples" | shown ;;
+    coverage-arms)
+        python3 - "$WORK" <<'PYEOF2'
+import os, sys
+from hwut.engine.coverage.database.record import CoverageRecord, FileCoverage
+from hwut.engine.coverage.database.binary import pack_record
+from hwut.engine.coverage.output import gather, coverage_path
+from hwut.engine.coverage.database.gathered import (unpack_gathered,
+                                                     format_gathered)
+work = sys.argv[1]; out = os.path.join(work, "out"); os.makedirs(out)
+run_list = []
+for choice, covered, branch in (("some", ((6, 9),), ((9, 7, 3, "-9|9|10"),)),
+                                ("none", ((6, 8),), ((9, 0, 2, "-9|10"),))):
+    record = CoverageRecord(language="python", tool="coverage",
+                            source="coverage.py-json", counts_f=False,
+                            file_db={"test-gen.py": FileCoverage(
+                                "test-gen.py", ((6, 11),), covered, None,
+                                {"branch": branch})})
+    path = os.path.join(work, choice + ".record")
+    with open(path, "wb") as handle: handle.write(pack_record(record))
+    run_list.append(("", "test-gen.py", choice, path))
+run_n, source_n, outside_list, note_list = gather(out, run_list)
+print("gathered: %i run(s), %i source(s)" % (run_n, source_n))
+for note in note_list: print("NOTE: %s" % note)
+with open(coverage_path(out, "test-gen.py"), "rb") as handle:
+    print(format_gathered(unpack_gathered(handle.read())))
+PYEOF2
+        ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac
