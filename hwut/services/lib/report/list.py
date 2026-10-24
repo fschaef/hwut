@@ -33,6 +33,14 @@ that its output may be redirected into a file without editing.
 A CHOICE-LESS TEST prints its file alone -- which, read back, means
 every choice of it, as a bare target always has (R-34).
 
+WHAT THE RUN FAILS BEFORE ANYTHING RUNS is printed too, after its
+directory's cases (services E-171): a test the book records and the
+directory no longer declares ('in book, no such test'), a header that
+does not parse. 'hwut.run' counts each as a failing case whatever the
+wish, and 'hwut.report' reports it; this list names it, so the three
+faces agree. 'hwut.remove <test>' forgets a test that is gone on
+purpose.
+
 EXIT STATUS (E-1, services/_exit.py):
     0  the wish selected at least one case, and they are printed
     2  the command line cannot be read
@@ -108,11 +116,44 @@ def line_tuple_of(root, wish, warning_list=None):
     if warning_list is None: warning_list = []
     found = selection.of_tree(root, wish, view_at(root))
     warning_list.extend(found.warning_tuple)
+    #  WHAT THE RUN FAILS BEFORE ANYTHING RUNS (services E-128, E-171): a
+    #  test the book records and the directory no longer declares, a
+    #  header that does not parse. The run counts each as a failing case
+    #  whatever the wish, and 'hwut.report' reports it; so this list
+    #  names it too, after its directory's selected cases. MEASURED
+    #  before: 'hwut.run' and 'hwut.report --fail' counted
+    #  'test-sanitize-relations.py', 'hwut.report.list --fail' did not.
+    from ....engine.orchestrator.run.orchestrate import unstood_tuple
+    def unstood_line_list(where):
+        """RETURN: list[str], the wishlist lines of the cases the
+                   directory 'where' fails before anything runs."""
+        result = found.result_db.get(where)
+        if result is None: return []
+        line_list = []
+        for name, _ in unstood_tuple(os.path.join(root, where),
+                                     result.app_set,
+                                     tuple(result.fault_list)):
+            test, _, choice = name.partition(" ")
+            line_list.append(target_line(where, test, choice or None))
+        return line_list
+
+    #  THE WALK'S 'directory' IS RELATIVE to the root -- the very form a
+    #  wishlist line carries. A directory's pre-run failures follow its
+    #  selected cases; a directory none of whose cases was selected
+    #  follows the walk, in name order.
+    previous = None
+    said_set = set()
     for entry in found.case_list:
-        #  THE WALK'S 'directory' IS RELATIVE to the root -- the very
-        #  form a wishlist line carries.
+        if previous is not None and entry.directory != previous:
+            yield from unstood_line_list(previous)
+        previous = entry.directory
+        said_set.add(entry.directory)
         yield target_line(entry.directory, entry.case.source_file,
                           entry.case.choice)
+    if previous is not None:
+        yield from unstood_line_list(previous)
+    for where in sorted(set(found.result_db) - said_set):
+        yield from unstood_line_list(where)
 
 
 @dataclass(frozen=True)

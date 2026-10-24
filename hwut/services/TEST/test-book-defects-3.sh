@@ -10,7 +10,7 @@
 #                 "accept-asks-nothing", "digest", "pype-eof",
 #                 "pype-inline", "pype-first-match", "diff-broken",
 #                 "propose-aligned", "demo-root", "cov-dir",
-#                 "labels-derived", "play-choices"]
+#                 "labels-derived", "play-choices", "book-vanished"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -96,6 +96,12 @@
 # play-choices       a test with several choices and none named is refused
 #                    by its choices and '--all'; a test with none plays.
 #                    MEASURED before: "no choice specified".
+# book-vanished      E-171: a test deleted without 'hwut.remove' stays in
+#                    the book; 'hwut.run', 'hwut.report --fail' and
+#                    'hwut.report.list --fail' all count it, and
+#                    'hwut.remove' forgets it -- then all three agree on
+#                    nothing failing. MEASURED 2026-10-24 before: run and
+#                    report 2 fail, 'hwut.report.list --fail' 1 line.
 #
 # D-53 (a coverage run that did not complete, worded 'did not end with
 # <hwut-end>') is pinned by 'test-cov_run.py run' and 'trace'.
@@ -110,7 +116,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "Defects of the book writers' round 2 and the agent swarm (D-34 onwards);"
-        echo "CHOICES: plus-sign, entry-goto, refusal-exit, propose-too-large, not-executable, stability-names, record-bless, accept-asks-nothing, digest, pype-eof, pype-inline, pype-first-match, diff-broken, propose-aligned, demo-root, cov-dir, labels-derived, play-choices;"
+        echo "CHOICES: plus-sign, entry-goto, refusal-exit, propose-too-large, not-executable, stability-names, record-bless, accept-asks-nothing, digest, pype-eof, pype-inline, pype-first-match, diff-broken, propose-aligned, demo-root, cov-dir, labels-derived, play-choices, book-vanished;"
         exit 0 ;;
 esac
 
@@ -384,6 +390,25 @@ PYPE
         "$BIN/hwut.play" test-two.sh --plain 2>&1 | grep REFUSED
         "$BIN/hwut.play" test-one.sh --plain 2>&1 | grep RECORDED \
             | sed 's/(digest: [^)]*)/(digest: <tag>)/' ;;
+    book-vanished)
+        page test-k.sh 'choices = ["x"]' 'echo "kept"'
+        page test-v.sh 'choices = ["x"]' 'echo "vanishing"'
+        record
+        "$BIN/hwut.accept" --whole > /dev/null 2>&1
+        "$BIN/hwut.run" > /dev/null 2>&1
+        rm test-v.sh                    # deleted by hand, not 'hwut.remove'
+        agree() {
+            echo "run    : $("$BIN/hwut.run" --plain 2>&1 | grep '^RESULTS' \
+                            | sed -E 's/, [0-9.]+ \[sec\].*//')"
+            r=$("$BIN/hwut.report" --fail 2>&1 | grep '^RESULTS')
+            l=$("$BIN/hwut.report.list" --fail | tr '\n' ' ')
+            echo "report : ${r:-nothing}"
+            echo "list   : ${l:-nothing}"
+        }
+        echo "== test-v.sh deleted by hand"; agree
+        echo "== hwut.remove test-v.sh"
+        "$BIN/hwut.remove" test-v.sh --dont-ask 2>&1 | grep "book entry"
+        agree ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

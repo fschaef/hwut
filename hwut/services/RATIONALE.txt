@@ -6783,3 +6783,32 @@ GRAVEYARD 'no-claude-sandbox' -- rejected: it says who, not why.
           lose, and '::' is one character from the ditto ':/:'. The file
           turned around, label first -- rejected: every writer, and a
           label on 300 runs as one line.
+
+
+E-171  'hwut.report.list' NAMES WHAT THE RUN FAILS BEFORE IT RUNS    (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED by Frank-Rene on his tree, 2026-10-24: 'hwut.run' said
+          '1127 ok, 2 fail', 'hwut.report.list --fail' printed one line.
+          The second failure was 'test-sanitize-relations.py': deleted
+          by hand in 78e11f7, its row still in 'services/TEST/GOOD/
+          book.csv' -- 'in book, no such test'. The run counts such a
+          case whatever the wish, 'hwut.report' reports it (E-128, E-160),
+          the list walked the selected cases only and never named it.
+
+DECISION  FIX, the only reading of E-128 and E-160 ("both faces agree"):
+          'hwut.report.list' asks the run's own function
+          ('orchestrate.unstood_tuple') per directory and prints each
+          case it names after the directory's selected cases -- a
+          vanished test, a vanished choice, a header that does not
+          parse. A line read back by '--wishlist' is judged as the run
+          judges it: 'no-app [FAIL]'.
+
+          The book row itself is the author's: 'hwut.remove <test>'
+          forgets a test gone on purpose (book entry, register id);
+          'hwut.sanitize.propose --orphans' proposes it ('forget
+          test-sanitize-relations.py'); 'hwut.help' names both.
+
+COST      A tree with a stale book row lists one line more on every
+          'hwut.report.list'. Regression: 'test-book-defects-3.sh
+          book-vanished' -- run, report and list agree before and after
+          'hwut.remove'.

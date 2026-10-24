@@ -1,0 +1,11 @@
+== test-v.sh deleted by hand
+run    : RESULTS: 1 ok, 1 fail
+report : RESULTS: 0 ok, 1 fail
+list   : ./test-v.sh 
+== hwut.remove test-v.sh
+  test-v.sh -- 3 file(s), the book entry, the register id
+    book entry: removed
+run    : RESULTS: 1 ok, 0 fail
+report : nothing
+list   : nothing
+<hwut-end>
