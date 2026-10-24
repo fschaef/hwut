@@ -1,0 +1,19 @@
+== hwut.sanitize root a/b
+REFUSED: root a/b -- a boundary stands above: './hwut-root.conf' => a project of its own here: 'hwut.sanitize sub-root a/b'
+exit 1
+== hwut.sanitize sub-root a/b
+done: sub-root a/b
+exit 0
+== hwut.sanitize sub-root a/b
+nothing to do: sub-root a/b -- a boundary stands: 'a/b/hwut-root.conf'
+exit 0
+== hwut.sanitize root a/b
+nothing to do: root a/b -- a boundary stands: 'a/b/hwut-root.conf'
+exit 0
+== hwut.sanitize root (in a/)
+REFUSED: root -- a boundary stands above: '../hwut-root.conf' => a project of its own here: 'hwut.sanitize sub-root .'
+exit 2
+== hwut.sanitize sub-root . (no tree above)
+REFUSED: sub-root . -- no tree stands above => 'hwut.sanitize root .'
+exit 1
+<hwut-end>

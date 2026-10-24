@@ -5,8 +5,12 @@ NAME
 
 USAGE
     hwut.pype [--trace] SCRIPT < input
+    hwut.pype SYSTEM.pypes < input   (a system of scripts, wired)
+    hwut.pype --draw [--svg] SYSTEM.pypes   (draw the system: ASCII; SVG)
     hwut.pype --example SCRIPT   (print generated example input)
     hwut.pype --dry-run SCRIPT   (check the script, read no input)
+    hwut.pype --unit-types       (the unit types of 'quantity(...)')
+    hwut.pype --units [<type>]   (the units, of one type where named)
 
 DESCRIPTION
 --trace: show, on stderr, input lines against the

@@ -1,9 +1,9 @@
 
 --- the run's namespace: fixed names, and what the run bound ---
-    bound z      -> namespace carries 53 names, 1 of them the run's
-    bound area   -> namespace carries 54 names, 2 of them the run's
-    bound name   -> namespace carries 55 names, 3 of them the run's
-    a fresh run starts at 52
+    bound z      -> namespace carries 54 names, 1 of them the run's
+    bound area   -> namespace carries 55 names, 2 of them the run's
+    bound name   -> namespace carries 56 names, 3 of them the run's
+    a fresh run starts at 53
 
 --- a constraint evaluates against the namespace ---
     abs(sin(z)) < 1e-9                     {'z': 0.0}                   True
@@ -22,7 +22,7 @@
     exec         carried: False
     os           carried: False
     sys          carried: False
-    functions 47   constants 5   string methods 15
+    functions 48   constants 5   string methods 15
 
 --- glob is the shell's own form, and case sensitive ---
     'build-42.log' 'build-*.log'    True
@@ -32,7 +32,7 @@
     4711           '47*'            True
 
 --- what a variable may not be called ---
-    55 names
+    56 names
     sin        True
     min        True
     glob       True

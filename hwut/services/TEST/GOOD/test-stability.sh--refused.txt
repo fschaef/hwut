@@ -8,9 +8,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -22,9 +22,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -36,9 +36,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -50,9 +50,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -64,9 +64,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -78,9 +78,9 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -92,8 +92,8 @@ STDOUT {
                               [-l|--label <expr>] [--language=<name>]...
                               [--faster-than=<sec>] [-F|--feature <id-glob>]...
                               [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [<file-glob> [choice-glob]...] [--repeat=<n>]
-                              [--cadence] [--byte-pedantic] [--strategy=<name>]
-                              [--verbose] [--directory=<path>]
+                              [--no-boundary] [<file-glob> [choice-glob]...]
+                              [--repeat=<n>] [--cadence] [--byte-pedantic]
+                              [--strategy=<name>] [--verbose] [--directory=<path>]
 }
 <hwut-end>

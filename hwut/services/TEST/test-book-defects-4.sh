@@ -1,0 +1,227 @@
+#! /bin/bash
+# SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
+#
+# @hwut {
+#     title    = "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards)"
+#     features = ["book-defects-round-2"]
+#     choices  = ["compare-crash", "region-refused", "quoted-rule",
+#                 "help-coverage", "numeral", "nested-root", "quantity",
+#                 "units-list", "sub-root", "tick", "pype-system",
+#                 "system-draw", "quantity-compare"]
+# }
+#
+# ---------------------------------------------------------------------------
+#
+# REQUIREMENTS-for-development (RQ-n) and DEFECTS (D-n), 2026-10-24, one
+# choice each (services E-172 to E-178):
+#
+# compare-crash   D-58: a comparison that raises -- here 'pyrsistent'
+#                 made unimportable -- FAILS the case, 'compare [FAIL]',
+#                 the exception named in HINTS. MEASURED 2026-10-24
+#                 before: two tracebacks, then '[OK]', exit 0.
+# region-refused  D-59a: 'hwut.accept' refuses a candidate whose regions
+#                 cannot be read ('constraint={speed > 0}' over no column
+#                 'speed'), naming 'speed'; the run's HINT names it too.
+#                 MEASURED before: blessed; then 'broken region framing'.
+# quoted-rule     D-59b: a rule holding '"' is said as written,
+#                 'constraint 'm == "run"''. MEASURED before: '"m == "run""'.
+# help-coverage   RQ-5: 'hwut.help' names an absent 'coverage' as a road,
+#                 exit 0. MEASURED before: libvterm alone, then INSTALLED.
+# numeral         RQ-6: a number binding takes the longest numeral; '5.5'
+#                 is no 'int'. MEASURED before: 'count 5.5' bound n = 5.
+# nested-root     RQ-1: an inner 'hwut-root.conf' is a boundary: from
+#                 above, not walked and a NOTE; from inside, it governs;
+#                 '--no-boundary' walks in under the inner configuration
+#                 alone. MEASURED before: walked from above under the
+#                 outer configuration -- one case, two verdicts.
+# quantity        RQ-7: '<f = quantity(N)>' binds 30 and 2500 newton,
+#                 leaves '3 kg' unmatched; 'quantity(ms)' reads seconds.
+# units-list      RQ-7: '--unit-types' names 'time', '--units time' names
+#                 's', 'h', 'ms', 'us', 'ns'.
+# sub-root        RQ-1, ruled: 'hwut.sanitize root' below a root REFUSES,
+#                 naming 'hwut.sanitize sub-root'; 'sub-root' writes the
+#                 inner 'hwut-root.conf', and refuses where no tree stands
+#                 above. MEASURED before: 'nothing to do: a boundary stands'.
+# tick            RQ-3: 'tick: 0.5 => "<tick {time_sec}>"' -- lines of
+#                 time, in the active mode, between the input lines; a
+#                 bad interval and a bad format refused with the script.
+# pype-system     RQ-2: the ruled '.pypes' example over three lines: the
+#                 flow depth-first, '<eof>' once every predecessor ended,
+#                 one '<hwut-end>'; then each refusal of the file.
+# system-draw     RQ-2: '--draw' as ASCII; '--draw --svg' an SVG with a
+#                 box per script; '--svg' alone and '--draw' of a script
+#                 refused.
+# quantity-compare RQ-7: '((t: 2.5 ms))' binds a quantity, 't < 50 ms'
+#                 compares through pint: 40000us holds, 60 ms and 3 kg
+#                 break it; a rule over an unknown unit is refused.
+# ---------------------------------------------------------------------------
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$HERE/../../.." && pwd)
+export PYTHONPATH="$ROOT"
+BIN="$ROOT/hwut/bin"
+export PATH="$BIN:$PATH"
+unset NO_COLOR CI COLUMNS
+
+case "$1" in
+    --hwut-info)
+        echo "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards);"
+        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare;"
+        exit 0 ;;
+esac
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+mkdir -p "$WORK/TEST"
+cd "$WORK"
+printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
+       > hwut-root.conf
+cd TEST
+shown() {
+    sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g; s/, [0-9:]+$/, <t>/;
+            s/\(digest: [A-Za-z0-9_-]+\)/(digest: <tag>)/"
+}
+record() {              # every case here recorded by play (E-165)
+    "$BIN/hwut.play" --all --plain > /dev/null 2>&1
+}
+page() {                # <file> <header> <body lines...>
+    local file=$1 header=$2; shift 2
+    { echo '#! /bin/bash'; echo "# @hwut { $header }"; printf '%s\n' "$@"
+      echo 'echo "<hwut-end>"'; } > $file
+    chmod +x $file
+}
+pype() {                # <script text> <input text>: run, show output and status
+    printf '%b' "$1" > p.pype
+    printf '%b' "$2" | "$BIN/hwut.pype" p.pype 2>&1 | shown
+    echo "exit ${PIPESTATUS[1]}"
+}
+
+case "$1" in
+    compare-crash)
+        page test-cloud.sh 'title = "cloud"' \
+             'echo "##! point-cloud limit=0.05"' 'echo "${P:-0.1} 0.2"' 'echo "####"'
+        record
+        "$BIN/hwut.accept" --whole > /dev/null 2>&1
+        mkdir -p "$WORK/nopyr/pyrsistent"
+        echo 'raise ModuleNotFoundError("No module named '"'pyrsistent'"'", name="pyrsistent")' \
+             > "$WORK/nopyr/pyrsistent/__init__.py"
+        P=9.1 PYTHONPATH="$WORK/nopyr:$PYTHONPATH" "$BIN/hwut.run" --plain > out.txt 2>&1
+        echo "exit $?"
+        grep -E "^END|compare|comparison failed|^RESULTS" out.txt | grep -v Traceback | shown ;;
+    region-refused)
+        page test-pc.sh 'title = "pc"' \
+             'echo "##! point-cloud constraint={speed > 0}"' 'echo "0.1 0.2"' 'echo "####"'
+        record
+        echo "== accept"
+        "$BIN/hwut.accept" --whole test-pc.sh 2>&1 | grep -E "REFUSED|blessed" \
+            | sed 's/ (allowed:.*//'
+        echo "exit ${PIPESTATUS[0]}"
+        echo "== a GOOD placed by hand: the run says why"
+        mkdir -p GOOD
+        printf '##! point-cloud constraint={speed > 0}\n0.1 0.2\n####\n<hwut-end>\n' \
+            > GOOD/test-pc.sh.txt
+        "$BIN/hwut.run" --plain 2>&1 | grep -E "test-pc.sh  " | sed 's/ (allowed:.*//' ;;
+    quoted-rule)
+        page test-q.sh 'title = "q"  tolerance { constraints = ["m == \"run\""] }' \
+             'echo "m = ((m: \"walk\"))"'
+        record
+        "$BIN/hwut.accept" --whole test-q.sh 2>&1 | grep -E "REFUSED|constraint" ;;
+    help-coverage)
+        mkdir -p "$WORK/nocov"
+        for p in python3 sh dirname readlink; do ln -s "$(command -v $p)" "$WORK/nocov/$p"; done
+        OUT=$(mktemp -d)        # no 'hwut-root.conf' in or above it
+        ( cd "$OUT" && PATH="$WORK/nocov" COLUMNS=72 "$BIN/hwut.help" 2>&1 \
+             | grep -E -A2 "MISSING: the program 'coverage'"; echo "exit ${PIPESTATUS[0]}" )
+        rm -rf "$OUT" ;;
+    numeral)
+        pype 'on: "count" <n = int> => { print("int", n) }\non: "count" <x = number> => { print("number", x) }\non: <else> => { print("no match:", pype.line()) }\non: <eof> => ignore;\n' \
+             'count 5\ncount 5.5\ncount 5abc\ncount -3\ncount 1e3\n' ;;
+    nested-root)
+        #  $WORK: TEST/test-top.sh; world/ a project of its own whose
+        #  root caps every case at 1 s; world/TEST/test-slow.sh sleeps 2 s.
+        W="$WORK/world"
+        mkdir -p "$W/TEST"
+        sed 's/^hwut {/hwut {\n    app_defaults { caps { timeout_sec = 1 } }/' \
+            "$WORK/hwut-root.conf" > "$W/hwut-root.conf"
+        page "$W/TEST/test-slow.sh" 'title = "slow"' \
+             '[ -f "$(dirname "$0")/slow" ] && sleep 2' 'echo "done"'
+        page test-top.sh 'title = "top"' 'echo "top"'
+        record
+        "$BIN/hwut.accept" --whole > /dev/null 2>&1
+        ( cd "$W/TEST" && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
+        touch "$W/TEST/slow"        # from now on it takes 2 s
+        cd "$WORK"
+        echo "== from above"
+        "$BIN/hwut.run" --plain 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
+        echo "== from inside"
+        ( cd world && "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|^RESULTS" | shown )
+        echo "== from above, --no-boundary"
+        "$BIN/hwut.run" --plain --no-boundary --jobs=1 --deterministic 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
+        echo "== hwut.report.list from above"
+        "$BIN/hwut.report.list" 2>&1 ;;
+    quantity)
+        pype 'on: "push" <f = quantity(N)> => { print("push", f, "N") }\non: "t =" <t = quantity(ms)> => { print("t", t, "ms") }\non: <else> => { print("no match:", pype.line()) }\non: <eof> => ignore;\n' \
+             'push +30.0 N\npush 2.5 kN\npush 3 kg\nt = 2.5s\nt = 7 us\n'
+        echo "== a unit nobody knows"
+        printf 'on: "x" <a = quantity(cubit)> => ignore;\non: <else> => ignore;\non: <eof> => ignore;\n' > c.pype
+        "$BIN/hwut.pype" --dry-run c.pype 2>&1 | shown ;;
+    units-list)
+        "$BIN/hwut.pype" --unit-types | grep -E "^(time|force|length) "
+        "$BIN/hwut.pype" --units time | grep -E "^(s|h|ms|us|ns) " ;;
+    sub-root)
+        mkdir -p "$WORK/a/b"; cd "$WORK"
+        for c in "root a/b" "sub-root a/b" "sub-root a/b" "root a/b"; do
+            echo "== hwut.sanitize $c"
+            "$BIN/hwut.sanitize" $c < /dev/null 2>&1; echo "exit $?"
+        done
+        echo "== hwut.sanitize root (in a/)"
+        ( cd a && "$BIN/hwut.sanitize" root < /dev/null 2>&1; echo "exit $?" )
+        OUT=$(mktemp -d)
+        echo "== hwut.sanitize sub-root . (no tree above)"
+        ( cd "$OUT" && "$BIN/hwut.sanitize" sub-root . < /dev/null 2>&1; echo "exit $?" )
+        rm -rf "$OUT" ;;
+    tick)
+        printf 'tick: 0.5 => "<tick {time_sec}>"\non: "<tick" <t = number> => { print("tick", t, "after line", pype.line_n()) }\non: <else> => flush;\non: <eof> => { print("<hwut-end>") }\n' > t.pype
+        ( echo a; sleep 0.75; echo b; sleep 0.5 ) | "$BIN/hwut.pype" t.pype; echo "exit $?"
+        printf 'tick: 0 => "x"\non: <else> => ignore;\non: <eof> => ignore;\n' > t2.pype
+        "$BIN/hwut.pype" --dry-run t2.pype 2>&1 | shown
+        printf 'tick: 1 => "{x}"\non: <else> => ignore;\non: <eof> => ignore;\n' > t2.pype
+        "$BIN/hwut.pype" --dry-run t2.pype 2>&1 | shown ;;
+    pype-system|system-draw)
+        printf 'on: <bof> => { print("a starts") }\non: "x" <n = int> => { print("A", n) }\nand: flush;\non: <else> => ignore;\non: <eof> => { print("a ends"); print("<hwut-end>") }\n' > a.pype
+        printf 'on: "x" <n = int> => { print("Q", n) }\non: <else> => ignore;\non: <eof> => { print("q ends") }\n' > q.pype
+        printf 'on: <else> => { print("b got:", pype.line()) }\non: <eof> => { print("b ends") }\n' > b.pype
+        printf 'on: <else> => { print("c got:", pype.line()) }\non: <eof> => { print("c ends") }\n' > c.pype
+        printf '# the ruled example\n--> a.pype\n--> q.pype\na.pype --> b.pype\n: --> c.pype\nq.pype --> b.pype\n' > s.pypes
+        if [ "$1" = "system-draw" ]; then
+            "$BIN/hwut.pype" --draw s.pypes; echo "exit $?"
+            "$BIN/hwut.pype" --draw --svg s.pypes > s.svg; echo "exit $?"
+            echo "boxes: $(grep -c '<rect' s.svg), arrows: $(grep -c '<line' s.svg)"
+            grep -o '>[^<]*</text>' s.svg | tr '\n' ' '; echo
+            "$BIN/hwut.pype" --svg s.pypes 2>&1; echo "exit $?"
+            "$BIN/hwut.pype" --draw a.pype 2>&1; echo "exit $?"
+        else
+            printf 'x 1\ny\nx 2\n' | "$BIN/hwut.pype" s.pypes; echo "exit $?"
+            "$BIN/hwut.pype" --dry-run s.pypes
+            for bad in ': --> a.pype' '--> a.pype\nb.pype --> a.pype' \
+                       '--> a.pype\na.pype --> b.pype\nb.pype --> a.pype' \
+                       '--> a.pype\n--> a.pype' '--> nope.pype' 'a.pype -> b.pype'; do
+                printf '%b\n' "$bad" > bad.pypes
+                "$BIN/hwut.pype" --dry-run bad.pypes 2>&1 | shown; echo "exit ${PIPESTATUS[0]}"
+            done
+        fi ;;
+    quantity-compare)
+        page test-q.sh 'title = "q"  tolerance { constraints = ["t < 50 ms"] }' \
+             'echo "took ((t: ${T:-2.5 ms}))"'
+        record
+        "$BIN/hwut.accept" --whole test-q.sh 2>&1 | grep -E "REFUSED|blessed"
+        for t in "40000us" "60 ms" "3 kg"; do
+            echo "== T=$t"
+            T="$t" "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|broken by" | sed 's/^ *//'
+        done
+        echo "== a rule over an unknown unit"
+        sed -i 's/50 ms/50 apples/' test-q.sh
+        "$BIN/hwut.run" --plain 2>&1 | grep -E "apples" | shown ;;
+    *)
+        echo "unknown choice '$1'"; exit 1 ;;
+esac
+echo "<hwut-end>"

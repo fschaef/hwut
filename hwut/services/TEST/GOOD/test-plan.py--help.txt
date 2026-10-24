@@ -11,8 +11,8 @@ $ hwut.plan --help
                   [--wishlist <file>]... [-l|--label <expr>]
                   [--language=<name>]... [--faster-than=<sec>]
                   [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                  [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                  [--directory=<path>]
+                  [-k|--keys <expr>] [--no-boundary]
+                  [<file-glob> [choice-glob]...] [--directory=<path>]
 
     DESCRIPTION
         hwut.plan           the plan of everything the directory offers:
@@ -75,6 +75,12 @@ $ hwut.plan --help
         -e, --feature-ext <id>
                             the runs linked to the feature of that external
                             id ('*' any characters); with '-F' a union
+        --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1): a
+                            project of its own, which a walk from above
+                            otherwise stops at and names in a NOTE. Its
+                            configuration is reset from that file alone --
+                            nothing above it reaches below it. Selects
+                            nothing by itself
         -k, --keys <expr>   the runs linked to features whose effective keys
                             satisfy the expression ('AND', 'OR', 'NOT',
                             brackets; ',' is 'OR'); a key flows down from the

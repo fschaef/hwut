@@ -1,0 +1,7 @@
+== accept
+REFUSED region: 'test-pc.sh .stdout' -- the candidate's regions cannot be read: line 1: expression 'speed > 0': unknown name 'speed'
+exit 1
+== a GOOD placed by hand: the run says why
+START test-pc.sh                                                           ||1
+        test-pc.sh   broken region framing  (line 1: expression 'speed > 0': unknown name 'speed'
+<hwut-end>

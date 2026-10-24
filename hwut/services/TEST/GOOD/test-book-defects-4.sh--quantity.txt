@@ -1,0 +1,9 @@
+push 30.0 N
+push 2500.0 N
+no match: push 3 kg
+t 2500.0 ms
+t 0.007 ms
+exit 0
+== a unit nobody knows
+pype: c.pype:1: 'quantity(cubit)': 'cubit' is neither a unit type ('hwut.pype --unit-types') nor a unit ('hwut.pype --units')
+<hwut-end>

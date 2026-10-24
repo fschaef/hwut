@@ -1,0 +1,5 @@
+exit 1
+END   test-cloud.sh ...................................... compare [FAIL]  ||0
+        test-cloud.sh   the comparison failed  (ModuleNotFoundError: No module named 'pyrsistent')
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+<hwut-end>

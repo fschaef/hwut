@@ -70,15 +70,14 @@ class ChunkPipe:
                     await fetch_gate.wait()
             await queue.put(sentinel)
 
-        except RegionSyntaxError as error:
-            # Carry the error to the consumer -- the zip stage re-raises it.
+        except Exception as error:                    # noqa: BLE001
+            #  EVERY ERROR IS CARRIED to the consumer -- the zip stage
+            #  re-raises it in the comparison's context. MEASURED (the
+            #  book's D-58): any exception but a RegionSyntaxError was
+            #  printed, then the END-OF-STREAM sentinel was queued -- both
+            #  sides looked ended, the comparison agreed, and a case whose
+            #  region reader could not import 'pyrsistent' passed.
             await queue.put(InputChunkError(error))
-
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            await queue.put(sentinel)
-            raise
 
 
 class _RegionFraming:

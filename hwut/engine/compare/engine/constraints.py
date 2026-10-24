@@ -4,7 +4,7 @@ PURPOSE: STATEFUL CONSTRAINTS -- a constraint space fed by binding elements.
 
 An element matching
 
-    (( <variable-name> : <number>|<quoted-string> ))
+    (( <variable-name> : <number> [<unit>]|<quoted-string> ))
 
 in the SEQUENTIAL outer text is a CONSTRAINT BINDING: the variable enters
 the run's CONSTRAINT SPACE with the given value. The moment it enters, ALL
@@ -59,6 +59,8 @@ ________________________________________________________________________________
 """
 import ast
 import contextvars
+import keyword
+import re
 
 from .constraint_namespace import (CONSTANT_DB, FUNCTION_DB,
                                    STR_METHOD_SET, namespace_of)
@@ -100,6 +102,61 @@ _SAFE_NODE_TYPES = (
 )
 
 
+#  A NUMERAL WITH A UNIT IN A CONSTRAINT (RQ-7): 't < 50 ms', 't < 2.5kN'.
+#  Python reads a numeral followed by a word as an error, so the reading
+#  takes nothing Python would read otherwise -- except a keyword after
+#  the numeral ('5 if', '5 in') and the glued forms Python owns ('0x1f',
+#  '0o7', '0b1', '5j'). Strings are passed over whole.
+_STRING_SRC  = r"\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'"
+_NUMERAL_SRC = r"(?<![\w.])(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+
+
+def _unit_literal_re():
+    """RETURN: compiled regex, a string literal (group 'string') or a
+               numeral (group 'numeral'), its gap (group 'gap') and its
+               unit (group 'unit')."""
+    from ....auxiliary.units import UNIT_WORD_SRC
+    return re.compile("(?P<string>%s)|(?P<numeral>%s)(?P<gap>[ \t]*)"
+                      "(?P<unit>%s)" % (_STRING_SRC, _NUMERAL_SRC,
+                                        UNIT_WORD_SRC))
+
+
+def with_quantity_literals(text):
+    """
+    RETURN: str, 'text' with every numeral-and-unit written as the call
+            'quantity("<numeral> <unit>")' -- 't < 50 ms' becomes
+            't < quantity("50 ms")' -- if success; 'text' itself where
+            it holds none;
+            raises ConstraintSpecError naming the unit, else: a unit pint
+            does not know, or pint absent.
+    """
+    def replaced(match):
+        if match.group("string") is not None: return match.group(0)
+        numeral, gap, unit = (match.group("numeral"), match.group("gap"),
+                              match.group("unit"))
+        head = re.match(r"[A-Za-z_]\w*", unit)
+        if head is not None and keyword.iskeyword(head.group(0)):
+            return match.group(0)
+        if not gap and (unit[0] in "jJ" and len(unit) == 1
+                        or (set(numeral) == {"0"} and unit[0] in "xXoObB")):
+            return match.group(0)
+        literal = "%s %s" % (numeral, unit)
+        try:
+            from ....auxiliary.units import quantity_of
+            quantity_of(literal)
+        except ModuleNotFoundError as error:
+            raise ConstraintSpecError(
+                "%r: a quantity needs the Python module 'pint' (%s) -- "
+                "'hwut.help' says how to install it" % (text, error)) \
+                from None
+        except Exception:                             # noqa: BLE001
+            raise ConstraintSpecError(
+                "%r: '%s' is no unit ('hwut.pype --units' lists them)"
+                % (text, unit)) from None
+        return 'quantity("%s")' % literal
+    return _unit_literal_re().sub(replaced, text)
+
+
 class ConstraintExpression:
     """A validated, compiled constraint expression over the constraint
     variables. Whitelisted at PARSE time (see module purpose); evaluation
@@ -114,7 +171,12 @@ class ConstraintExpression:
         self.text     = text
         self.variable = variable
         try:
-            tree = ast.parse(text, mode="eval")
+            source = with_quantity_literals(text)
+        except ConstraintSpecError as error:
+            raise ConstraintSpecError("constraint for '%s': %s"
+                                      % (variable, error)) from None
+        try:
+            tree = ast.parse(source, mode="eval")
         except SyntaxError as e:
             raise ConstraintSpecError(
                 "constraint for '%s': %r is not parseable (%s)"
@@ -284,6 +346,26 @@ class ConstraintSpace:
         return None
 
 
+def quoted_expression(expression):
+    """
+    RETURN: str, 'expression' between double quotes, as every constraint
+            is said -- between single quotes where it holds a double quote
+            itself, so 'm == "run"' is said as written (the book's D-59b:
+            it was echoed '"m == "run""').
+    """
+    if '"' in expression and "'" not in expression:
+        return "'%s'" % expression
+    return '"%s"' % expression
+
+
+def _value_said(value):
+    """RETURN: str, a bound value as a page says it: a string quoted, a
+               quantity in short form ('2.5 ms', RQ-7), a number as is."""
+    if isinstance(value, str): return '"%s"' % value
+    from ....auxiliary.units import shown
+    return shown(value)
+
+
 class ConstraintFinding:
     """WHAT A CONSTRAINT FOUND (C-20): on which side, of which kind, under
     which expression -- told to the caller, never raised.
@@ -313,12 +395,11 @@ class ConstraintFinding:
     def text(self):
         """RETURN: str, the finding as one sentence, naming the side."""
         if self.kind == "unbound":
-            return "%s: constraint \"%s\": '%s' never bound" \
-                   % (self.side, self.expression, self.variable)
-        value = '"%s"' % self.value if isinstance(self.value, str) \
-                else self.value
-        return "%s: constraint \"%s\": broken by ((%s: %s))%s" \
-               % (self.side, self.expression, self.variable, value,
+            return "%s: constraint %s: '%s' never bound" \
+                   % (self.side, quoted_expression(self.expression), self.variable)
+        value = _value_said(self.value)
+        return "%s: constraint %s: broken by ((%s: %s))%s" \
+               % (self.side, quoted_expression(self.expression), self.variable, value,
                   "" if self.line_n is None else ", line %s" % self.line_n)
 
     def remark(self):
@@ -335,12 +416,12 @@ class ConstraintFinding:
         pair_list = []
         for name in sorted(set(self.value_db) | {self.variable}):
             if name in self.value_db:
-                value = self.value_db[name]
-                text  = '"%s"' % value if isinstance(value, str) else value
+                text  = _value_said(self.value_db[name])
             else:
                 text  = "(never bound)"
             pair_list.append("%s=%s" % (name, text))
-        return 'error: "%s" with: %s' % (self.expression, " ".join(pair_list))
+        return 'error: %s with: %s' % (quoted_expression(self.expression),
+                                        " ".join(pair_list))
 
     def __repr__(self):
         """RETURN: str, the sentence."""

@@ -7,8 +7,8 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -19,8 +19,8 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -31,8 +31,8 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -43,7 +43,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 <hwut-end>

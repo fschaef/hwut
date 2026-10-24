@@ -1,0 +1,5 @@
+MISSING: the program 'coverage' (absent) -- to measure coverage over
+    Python ('hwut.cov.run').
+    pip:            pip install coverage
+exit 0
+<hwut-end>

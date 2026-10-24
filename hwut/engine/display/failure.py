@@ -47,6 +47,7 @@ class E_Failure(Enum):
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
     OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
     OUTPUT_REGION_SYNTAX_ERROR  = "output-region-syntax-error"
+    COMPARE_ERROR               = "compare-error"
     PYPE_CONTAINED              = "pype-contained"
     PYPE_FAILED                 = "pype-failed"
     PYPE_FILE_NOT_FOUND         = "pype-file-not-found"
@@ -219,6 +220,7 @@ _brief_failure_db = {
     _F.STDERR_UNDECIDED:            (_C.EXECUTION,  "stderr"),
     _F.TERMINATED_WITHOUT_END:      (_C.EXECUTION,  "cut-short"),
     _F.OUTPUT_REGION_SYNTAX_ERROR:  (_C.EXECUTION,  "region"),
+    _F.COMPARE_ERROR:               (_C.EXECUTION,  "compare"),
     _F.TEST_APP_NO_OUTPUT:          (_C.EXECUTION,  "no-output"),
     _F.TEST_APP_STALLED:            (_C.EXECUTION,  "no-output"),
     _F.RECORDING_MISSING:           (_C.EXECUTION,  "no-output"),
@@ -304,6 +306,14 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "a bad parameter, an unclosed region. 'hwut.diff' names "
              "the line.",
              "Mend the framing in the GOOD file, or accept anew."),
+    _failure(_F.COMPARE_ERROR, "the comparison failed",
+             "Reading the output against GOOD raised an exception -- a "
+             "missing module, a defect of hwut. No comparison took place, "
+             "so the case cannot pass. The line behind the phrase names "
+             "the exception.",
+             "'hwut.help' names a missing module and how to install it; "
+             "anything else is a defect of hwut -- report it with the "
+             "line."),
     _failure(_F.OUTPUT_REGION_SYNTAX_ERROR,
              "broken region framing in output",
              "A '##!' region the test printed cannot be read: an unknown "

@@ -58,11 +58,11 @@ Done 1/1
 ./test-a.sh
 STATUS: 0
 == hwut.sanitize root . -- a boundary stands above
-nothing to do: root . -- a boundary stands: '../../hwut-root.conf'
-STATUS: 0
+REFUSED: root . -- a boundary stands above: '../../hwut-root.conf' => a project of its own here: 'hwut.sanitize sub-root .'
+STATUS: 1
 == hwut.sanitize root -- asks nothing where one stands
-nothing to do: a boundary stands: '../../hwut-root.conf'
-STATUS: 0
+REFUSED: root -- a boundary stands above: '../../hwut-root.conf' => a project of its own here: 'hwut.sanitize sub-root .'
+STATUS: 2
 == hwut.sanitize root -- no repository above: [1] the current directory
 no 'hwut-root.conf' stands in or above '.'. Where shall it go?
   [1]  .  the current directory

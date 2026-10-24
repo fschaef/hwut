@@ -1,0 +1,15 @@
+<stdin>
+ +--> a.pype
+ |     +--> b.pype --> <stdout>
+ |     +--> c.pype --> <stdout>
+ +--> q.pype
+       +--> b.pype  (^ above)
+exit 0
+exit 0
+boxes: 6, arrows: 7
+>&lt;stdin&gt;</text> >a.pype</text> >q.pype</text> >b.pype</text> >c.pype</text> >&lt;stdout&gt;</text> 
+pype: '--svg' says how to '--draw'; it draws nothing alone
+exit 1
+pype: '--draw' draws a system ('.pypes'), not the script 'a.pype'
+exit 1
+<hwut-end>

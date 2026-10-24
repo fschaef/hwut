@@ -4,34 +4,34 @@ STDOUT {
     ===== CONFIGURATION ==========================================
         test-noisy.sh - {
             caps {
-                timeout_sec = 300.0
-                cpu_sec = 300
-                memory_mb = 512
-                file_size_mb = 10
-                child_process_max_n = 32
-                disk_mb = 100
-                network = true
+                timeout_sec = 300.0                   # default
+                cpu_sec = 300                         # default
+                memory_mb = 512                       # default
+                file_size_mb = 10                     # default
+                child_process_max_n = 32              # default
+                disk_mb = 100                         # default
+                network = true                        # default
             }
             tolerance {
-                numeric_ratio = 0.0
-                whitespace = true
-                eq_pattern = []
-                nothing = []
-                analogy = ["((", "))"]
-                constraints = []
-                comment = ["##", "##"]
-                regions = true
-                stderr_ignored = false
+                numeric_ratio = 0.0                   # default
+                whitespace = true                     # default
+                eq_pattern = []                       # default
+                nothing = []                          # default
+                analogy = ["((", "))"]                # default
+                constraints = []                      # default
+                comment = ["##", "##"]                # default
+                regions = true                        # default
+                stderr_ignored = false                # default
             }
             diff_display_parameters {
-                search_budget = 20000
-                margin = 0.1
-                lowest_n = 4
-                context_k = 1
+                search_budget = 20000                 # default
+                margin = 0.1                          # default
+                lowest_n = 4                          # default
+                context_k = 1                         # default
             }
-            same = false
-            interactive = false
-            output = ["<stdout>"]
+            same = false                              # default
+            interactive = false                       # default
+            output = ["<stdout>"]                     # default
         }
     
     ===== OUTPUT =================================================
@@ -53,34 +53,34 @@ STDOUT {
     ===== CONFIGURATION ==========================================
         test-noisy.sh - {
             caps {
-                timeout_sec = 300.0
-                cpu_sec = 300
-                memory_mb = 512
-                file_size_mb = 10
-                child_process_max_n = 32
-                disk_mb = 100
-                network = true
+                timeout_sec = 300.0                   # default
+                cpu_sec = 300                         # default
+                memory_mb = 512                       # default
+                file_size_mb = 10                     # default
+                child_process_max_n = 32              # default
+                disk_mb = 100                         # default
+                network = true                        # default
             }
             tolerance {
-                numeric_ratio = 0.0
-                whitespace = true
-                eq_pattern = []
-                nothing = []
-                analogy = ["((", "))"]
-                constraints = []
-                comment = ["##", "##"]
-                regions = true
-                stderr_ignored = false
+                numeric_ratio = 0.0                   # default
+                whitespace = true                     # default
+                eq_pattern = []                       # default
+                nothing = []                          # default
+                analogy = ["((", "))"]                # default
+                constraints = []                      # default
+                comment = ["##", "##"]                # default
+                regions = true                        # default
+                stderr_ignored = false                # default
             }
             diff_display_parameters {
-                search_budget = 20000
-                margin = 0.1
-                lowest_n = 4
-                context_k = 1
+                search_budget = 20000                 # default
+                margin = 0.1                          # default
+                lowest_n = 4                          # default
+                context_k = 1                         # default
             }
-            same = false
-            interactive = false
-            output = ["<stdout>"]
+            same = false                              # default
+            interactive = false                       # default
+            output = ["<stdout>"]                     # default
         }
     
     ===== OUTPUT =================================================

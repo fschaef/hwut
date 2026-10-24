@@ -1,0 +1,33 @@
+b got: a starts
+c got: a starts
+b got: A 1
+c got: A 1
+b got: x 1
+c got: x 1
+b got: Q 1
+b got: A 2
+c got: A 2
+b got: x 2
+c got: x 2
+b got: Q 2
+b got: a ends
+c got: a ends
+c ends
+b got: q ends
+b ends
+<hwut-end>
+exit 0
+dry run ok: 4 script(s), 5 edge(s)
+pype: bad.pypes:1: ':' stands for the previous line's source, and there is none
+exit 1
+pype: bad.pypes:2: nothing feeds 'b.pype' -- '--> b.pype' reads stdin
+exit 1
+pype: bad.pypes: the system holds a cycle through 'a.pype', 'b.pype'
+exit 1
+pype: bad.pypes:2: the edge '<stdin> --> a.pype' stands twice
+exit 1
+pype: bad.pypes:1: the script 'nope.pype' cannot be read: [Errno 2] No such file or directory: 'nope.pype'
+exit 1
+pype: bad.pypes:1: an edge reads '[<source>|:] --> <script>', not 'a.pype -> b.pype'
+exit 1
+<hwut-end>

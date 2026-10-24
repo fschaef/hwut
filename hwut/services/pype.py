@@ -7,6 +7,12 @@ PURPOSE: THE 'hwut.pype' COMMAND LINE -- the pype line-matching filter,
     hwut.pype [--trace|--trace-plain] [--pype-dir DIR ...] SCRIPT [INPUT ...]
     hwut.pype --example SCRIPT
     hwut.pype --dry-run SCRIPT
+    hwut.pype --unit-types
+    hwut.pype --units [<type>]
+
+'--unit-types' and '--units' list what '<name = quantity(X)>' admits
+(the book's RQ-7): the unit types (dimensions) with their reference
+unit, and the units -- of one type, or of one unit's type, where named.
 
 The interpreter owns the language: its parser, its modes, its trace, its
 usage line. This face owns the DOOR -- what the shell reads as the whole
@@ -59,14 +65,19 @@ def main(argv, write=print):
         #  THE INTERPRETER'S OWN TEXT: its three 'usage' lines are the
         #  USAGE, what follows them the DESCRIPTION.
         line_list = USAGE.split("\n")
+        usage_n   = sum(1 for each in line_list if "hwut.pype" in each)
         text = "run a pype SCRIPT over its input\n\n" \
                + "\n".join(each.strip() if each.lstrip().startswith("--")
                                          or each.lstrip().startswith("SCRIPT")
-                           else "    " + each.strip() for each in line_list[3:])
+                           else "    " + each.strip()
+                           for each in line_list[usage_n:])
         for line in man_page(PROGRAM_NAME, text,
-                             usage="\n".join(line_list[:3])).split("\n"):
+                             usage="\n".join(line_list[:usage_n])).split("\n"):
             write(line)
         return E_ExitCode.OK
+
+    if argv and argv[0] in ("--unit-types", "--units"):
+        return _units_listed(argv, write)
 
     if not any(os.path.isfile(arg) for arg in argv):
         print(USAGE, file=sys.stderr)
@@ -79,6 +90,52 @@ def main(argv, write=print):
     status = interpreter_main([PROGRAM_NAME] + list(argv))
     if status == 0: return E_ExitCode.OK
     else:           return E_ExitCode.FAULT
+
+
+def _units_listed(argv, write):
+    """
+    RETURN: E_ExitCode, OK where the list was written; REFUSED where the
+            command line holds more than '--units [<type>]' or a type no
+            unit belongs to; FAULT where pint is absent.
+
+    '--unit-types': one line per type, its reference unit beside it.
+    '--units [<type>]': one line per unit, its type beside it; a unit
+    may stand for the type ('--units ms' lists every unit of time).
+    """
+    try:
+        from ..auxiliary import units
+    except ModuleNotFoundError as error:                # pragma: no cover
+        write("FAULT: %s -- 'hwut.help' says how to install it" % error)
+        return E_ExitCode.FAULT
+    if argv[0] == "--unit-types":
+        if len(argv) != 1:
+            write("REFUSED: '--unit-types' takes no word")
+            return E_ExitCode.REFUSED
+        try:
+            row_list = units.unit_type_tuple()
+        except ModuleNotFoundError as error:
+            write("FAULT: %s -- 'hwut.help' says how to install it" % error)
+            return E_ExitCode.FAULT
+        width = max(len(name) for name, _ in row_list)
+        for name, reference in row_list:
+            write("%-*s  %s" % (width, name, reference))
+        return E_ExitCode.OK
+    if len(argv) > 2:
+        write("REFUSED: '--units' takes at most one word, a unit type "
+              "or a unit")
+        return E_ExitCode.REFUSED
+    try:
+        row_list = units.unit_tuple(argv[1] if len(argv) == 2 else None)
+    except ModuleNotFoundError as error:
+        write("FAULT: %s -- 'hwut.help' says how to install it" % error)
+        return E_ExitCode.FAULT
+    except ValueError as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    width = max(len(unit) for unit, _ in row_list)
+    for unit, type_name in row_list:
+        write("%-*s  %s" % (width, unit, type_name))
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

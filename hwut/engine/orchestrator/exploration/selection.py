@@ -150,7 +150,7 @@ def of_tree(root, wish, label_view=None, base_f=None):
     Raises SelectionError and RootConfMissing out of the walk,
     unchanged.
     """
-    exploration = explore_tree(root)
+    exploration = explore_tree(root, boundary_f=not wish.no_boundary_f)
     case_list     = []
     result_db     = {}
     bookkeeper_db = {}
@@ -179,7 +179,10 @@ def of_tree(root, wish, label_view=None, base_f=None):
     return CSelection(
         case_list     = case_list,
         fault_tuple   = tuple(exploration.fault_tuple),
-        warning_tuple = swallowed_warning_tuple(met_set, visible_set),
+        #  THE INNER ROOTS THE WALK STOPPED AT (RQ-1) decide nothing:
+        #  said where the selection's other findings are said.
+        warning_tuple = tuple(exploration.note_tuple)
+                        + swallowed_warning_tuple(met_set, visible_set),
         result_db     = result_db,
         bookkeeper_db = bookkeeper_db,
         query_db      = query_db,
@@ -190,20 +193,23 @@ class CGlobReach:
     """WHAT THE GLOBS OF A STREAMED SELECTION MET, accumulated over the
     walk: 'of_tree' holds the two sets as locals; a stream hands them
     to whoever asked."""
-    __slots__ = ("met_set", "visible_set")
+    __slots__ = ("met_set", "visible_set", "note_list")
 
     def __init__(self):
         self.met_set, self.visible_set = set(), set()
+        self.note_list = []              # the inner roots not walked (RQ-1)
 
     def warning_tuple(self):
-        """RETURN: tuple[str], one WARNING per glob whose every match the
-                   standard label silences; () where none is, or where
-                   the walk has not ended."""
-        return swallowed_warning_tuple(self.met_set, self.visible_set)
+        """RETURN: tuple[str], one NOTE per inner root the walk stopped at
+                   (RQ-1), then one WARNING per glob whose every match
+                   the standard label silences; () where none is, or
+                   where the walk has not ended."""
+        return tuple(self.note_list) \
+               + swallowed_warning_tuple(self.met_set, self.visible_set)
 
 
 def of_tree_stream(root, wish, label_view=None, base_f=None,
-                   fault_list=None, reach=None):
+                   fault_list=None, reach=None, note_list=None):
     """
     YIELD: [0] str            one directory, RELATIVE to 'root', walk
                               order.
@@ -228,8 +234,11 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
     exhausted, for the reason stated above.
     """
     want_f = wish.asks_base_f() if base_f is None else base_f
-    for directory, result in explore_tree_stream(root,
-                                                 fault_list=fault_list):
+    if note_list is None and reach is not None: note_list = reach.note_list
+    for directory, result in explore_tree_stream(
+                                 root, fault_list=fault_list,
+                                 note_list=note_list,
+                                 boundary_f=not wish.no_boundary_f):
         bookkeeper = Bookkeeper(os.path.join(root, directory),
                                 naming_of(result.app_set)) \
                      if want_f else None

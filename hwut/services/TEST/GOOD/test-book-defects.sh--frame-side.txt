@@ -13,7 +13,7 @@ HINTS
 ------------------------------------------------------------------------------
 EXECUTION -- application invocation error
     a/TEST
-        test-t.py  table   broken region framing in output
+        test-t.py  table   broken region framing in output  (line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim)
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
@@ -38,7 +38,7 @@ HINTS
 ------------------------------------------------------------------------------
 NOMINAL -- error in GOOD file
     a/TEST
-        test-t.py  table   broken region framing
+        test-t.py  table   broken region framing  (line 1: unknown region handler 'tabel'; known handlers: constraint-violation, ignore, point-cloud, potpourri, table, unaccepted, verbatim)
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================

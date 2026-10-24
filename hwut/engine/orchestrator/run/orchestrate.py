@@ -548,7 +548,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
     """
-    tree = explore_tree(root)
+    tree = explore_tree(root, boundary_f=not wish.no_boundary_f)
     factory = None
     if wish.asks_base_f():
         def factory(directory):

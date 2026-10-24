@@ -104,16 +104,39 @@ def _version_tuple(text):
     return tuple(int(n) for n in re.findall(r"\d+", text.split("+")[0])[:4])
 
 
+#  THE ROADS 'hwut.help' NAMES (RQ-5): programs a user's road wants that
+#  no package brings -- not a failure of the installation, a road not yet
+#  open. They stay out of 'user_rows', which is the wheel's dependencies
+#  and the package's 'Depends'.
+HELP_ROAD_TUPLE = (("program", "coverage"),)
+
+
+def help_rows(path=LIST_PATH):
+    """
+    RETURN: list[Row], what 'hwut.help' checks: the user requirements
+            ('user_rows'), then the roads of HELP_ROAD_TUPLE -- the
+            coverage tool 'hwut.cov.run' calls over Python.
+    """
+    return user_rows(path) + [r for r in rows(path)
+                              if (r.kind, r.name) in HELP_ROAD_TUPLE]
+
+
 def missing(path=LIST_PATH):
     """
-    RETURN: list[(Row, str)], each user requirement this machine lacks,
-            with what is wrong: 'absent', or 'too old: <version>'. A module
-            is looked for without importing it.
+    RETURN: list[(Row, str)], each requirement 'hwut.help' checks that
+            this machine lacks, with what is wrong: 'absent', or 'too
+            old: <version>'. A module is looked for without importing it,
+            a program on PATH.
             [], where every one stands.
     """
     import importlib.util
+    import shutil
     result = []
-    for r in user_rows(path):
+    for r in help_rows(path):
+        if r.kind == "program":
+            if r.name != "python3" and shutil.which(r.name) is None:
+                result.append((r, "absent"))
+            continue
         if r.kind == "python":
             if importlib.util.find_spec(r.name) is None:
                 result.append((r, "absent"))
@@ -175,10 +198,15 @@ def missing_text(missing_list, width=None):
     out = []
     for row, what in missing_list:
         noun = {"python":  "the Python module",
-                "library": "the shared library"}.get(row.kind, row.kind)
+                "library": "the shared library",
+                "program": "the program"}.get(row.kind, row.kind)
         out.extend(_wrapped("MISSING: %s '%s' (%s) -- %s."
                             % (noun, row.name, what, row.note.rstrip(".")),
                             width, "    "))
+        if row.debian.startswith("pip:"):
+            #  ONLY pip BRINGS IT under the name hwut calls.
+            out.append("    pip:            pip install %s" % row.debian[4:])
+            continue
         out.append("    Debian/Ubuntu:  sudo apt install %s" % row.debian)
         if row.kind == "python":
             out.append("    pip:            pip install '%s>=%s'"

@@ -41,6 +41,30 @@ def finding_list_of(setup, subject_text, nominal_text):
     return finding_list
 
 
+def region_fault_text(setup, text):
+    """
+    RETURN: str, the sentence of the region reader where 'text' held
+            against itself cannot be read -- an unknown handler, a bad
+            parameter, a region expression over a name it does not know
+            ('speed' in 'constraint={speed > 0}');
+            None, else.
+
+    A CANDIDATE WHOSE REGIONS DO NOT READ IS NEVER BLESSED (the book's
+    D-59a): as a GOOD it would fail every run as 'broken region framing',
+    and the reason belongs where the blessing is asked for.
+    """
+    from ....engine.compare.api import Configuration, RegionSyntaxError, \
+                                       is_equivalent
+    setup = setup if setup is not None else Configuration()
+    try:
+        asyncio.run(is_equivalent(setup, io.StringIO(text), io.StringIO(text)))
+    except RegionSyntaxError as error:
+        return str(error)
+    except Exception:                                 # noqa: BLE001
+        return None                # not this check's business: the run says it
+    return None
+
+
 def finding_text_list(setup, subject_text, nominal_text):
     """
     RETURN: list[str], one sentence per finding of 'finding_list_of' --

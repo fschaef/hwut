@@ -153,6 +153,9 @@ class CTreeExploration:
     root:         str
     result_tuple: tuple      # of (directory, ExplorationResult)
     fault_tuple:  tuple
+    #  THE INNER ROOTS THE WALK STOPPED AT (RQ-1): one NOTE each, a
+    #  finding that decides nothing.
+    note_tuple:   tuple = ()
 
     def __iter__(self):
         """YIELD: [0] str                one directory, walk order.
@@ -160,7 +163,26 @@ class CTreeExploration:
         yield from self.result_tuple
 
 
-def explore_tree_stream(root, interview_runner=None, fault_list=None):
+def inner_root_note(relative):
+    """
+    RETURN: str, the NOTE a walk says where it stops at an inner
+            'hwut-root.conf' (RQ-1): which directory, and how to run it.
+    """
+    return ("NOTE  %s/: own root, not walked => run inside it, or "
+            "'--no-boundary'" % relative)
+
+
+def inner_root_f(path):
+    """
+    RETURN: bool, True where the directory 'path' holds a
+            'hwut-root.conf' of its own -- a project of its own, which a
+            walk from above does not enter (RQ-1).
+    """
+    return os.path.isfile(os.path.join(path, ROOT_CONF_NAME))
+
+
+def explore_tree_stream(root, interview_runner=None, fault_list=None,
+                        note_list=None, boundary_f=True):
     """
     YIELD: [0] str                one test directory, RELATIVE to
                                   'root', in walk order.
@@ -181,8 +203,16 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None):
 
     WALK ORDER IS PRESERVED. The recursion is the same, sorted the
     same; only the accumulator became a yield.
+
+    AN INNER 'hwut-root.conf' IS A BOUNDARY (RQ-1): a project of its own
+    starts there, and the walk does not enter it -- 'note_list', the
+    caller's accumulator, receives one NOTE per inner root. With
+    'boundary_f' False ('--no-boundary') the walk enters, and at the
+    inner root the configuration is RESET from that file alone: nothing
+    above it reaches below it, root-only keys included.
     """
     if fault_list is None: fault_list = []
+    if note_list  is None: note_list  = []
     inherited, ascent_fault_list = ascended_spec(root)
     fault_list.extend(ascent_fault_list)
     #  ASKED INSIDE A DIRECTORY NO WALK ENTERS -- a coverage output, a
@@ -195,7 +225,7 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None):
                             inherited=inherited))
     else:
         yield from _walk_stream(root, ".", inherited, interview_runner,
-                                fault_list)
+                                fault_list, note_list, boundary_f)
 
 
 def test_directory_f(directory, inherited):
@@ -216,7 +246,7 @@ def test_directory_f(directory, inherited):
     return os.path.basename(os.path.abspath(directory)) == marker
 
 
-def explore_tree(root, interview_runner=None):
+def explore_tree(root, interview_runner=None, boundary_f=True):
     """
     RETURN: CTreeExploration -- every test directory below 'root',
             explored under the configuration tree, in walk order.
@@ -230,14 +260,18 @@ def explore_tree(root, interview_runner=None):
     directory as it is found asks the generator instead.
     """
     fault_list  = []
+    note_list   = []
     result_list = list(explore_tree_stream(root, interview_runner,
-                                           fault_list))
+                                           fault_list, note_list,
+                                           boundary_f))
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
-                            fault_tuple  = tuple(fault_list))
+                            fault_tuple  = tuple(fault_list),
+                            note_tuple   = tuple(note_list))
 
 
-def _walk_stream(root, relative, effective, interview_runner, fault_list):
+def _walk_stream(root, relative, effective, interview_runner, fault_list,
+                 note_list=None, boundary_f=True, folded_f=False):
     """
     YIELD: [0] str                one test directory, relative to root.
            [1] ExplorationResult  what it offers.
@@ -248,8 +282,12 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list):
     effective test directory name.
     """
     directory = os.path.normpath(os.path.join(root, relative))
-    effective = _folded(directory, relative, effective, fault_list)
+    #  'folded_f': the level's own confs are in 'effective' already --
+    #  an inner root under '--no-boundary', whose reset read them.
+    if not folded_f:
+        effective = _folded(directory, relative, effective, fault_list)
     marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
+    if note_list is None: note_list = []
 
     for name in sorted(os.listdir(directory)):
         if name.startswith("."):                          continue
@@ -257,13 +295,29 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list):
         if not os.path.isdir(path):                       continue
         if no_entry_f(path):                              continue
         child_relative = _joined(relative, name)
-        if name == marker:
+        child_effective, child_folded_f = effective, False
+        if inner_root_f(path):
+            #  A PROJECT OF ITS OWN (RQ-1): not entered, and said; or,
+            #  under '--no-boundary', entered with the configuration
+            #  RESET from the inner root alone ("we do not inherit into
+            #  hwut-root.conf").
+            if boundary_f:
+                note_list.append(inner_root_note(child_relative))
+                continue
+            child_effective, reset_fault_list = ascended_spec(path)
+            fault_list.extend(reset_fault_list)
+            child_folded_f = True
+        if name == (child_effective.test_directory
+                    or FALLBACK_TEST_DIRECTORY) \
+           and (child_folded_f or name == marker):
             yield (child_relative,
                    explore(path, interview_runner=interview_runner,
-                           inherited=effective))
+                           inherited=child_effective))
         else:
-            yield from _walk_stream(root, child_relative, effective,
-                                    interview_runner, fault_list)
+            yield from _walk_stream(root, child_relative, child_effective,
+                                    interview_runner, fault_list,
+                                    note_list, boundary_f,
+                                    folded_f=child_folded_f)
 
 
 def inherited_spec(parent, child):
@@ -453,33 +507,6 @@ def ascended_spec(start):
                                                       spec.position))
         effective = inherited_spec(effective, spec)
     return effective, fault_list
-
-
-def _walk(root, relative, effective, interview_runner,
-          result_list, fault_list):
-    """
-    RETURN: None. One directory of the walk: fold its 'hwut.conf' onto
-            'effective', recurse into its sub-directories in sorted
-            order, and explore those whose name is the effective test
-            directory name.
-    """
-    directory = os.path.normpath(os.path.join(root, relative))
-    effective = _folded(directory, relative, effective, fault_list)
-    marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
-
-    for name in sorted(os.listdir(directory)):
-        if name.startswith("."):                          continue
-        path = os.path.join(directory, name)
-        if not os.path.isdir(path):                       continue
-        if no_entry_f(path):                              continue
-        child_relative = _joined(relative, name)
-        if name == marker:
-            result = explore(path, interview_runner=interview_runner,
-                             inherited=effective)
-            result_list.append((child_relative, result))
-        else:
-            _walk(root, child_relative, effective, interview_runner,
-                  result_list, fault_list)
 
 
 def _folded(directory, relative, effective, fault_list):

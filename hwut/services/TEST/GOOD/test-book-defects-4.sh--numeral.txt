@@ -1,0 +1,7 @@
+int 5
+number 5.5
+int 5
+int -3
+number 1000.0
+exit 0
+<hwut-end>

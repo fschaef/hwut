@@ -184,7 +184,8 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--wishlist <file>]...", "[-l|--label <expr>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]",
                      "[-F|--feature <id-glob>]...",
-                     "[-e|--feature-ext <id>]...", "[-k|--keys <expr>]")
+                     "[-e|--feature-ext <id>]...", "[-k|--keys <expr>]",
+                     "[--no-boundary]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -241,6 +242,12 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
     -e, --feature-ext <id>
                         the runs linked to the feature of that external
                         id ('*' any characters); with '-F' a union
+    --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1): a
+                        project of its own, which a walk from above
+                        otherwise stops at and names in a NOTE. Its
+                        configuration is reset from that file alone --
+                        nothing above it reaches below it. Selects
+                        nothing by itself
     -k, --keys <expr>   the runs linked to features whose effective keys
                         satisfy the expression ('AND', 'OR', 'NOT',
                         brackets; ',' is 'OR'); a key flows down from the
@@ -293,6 +300,9 @@ class Wish:
     keys_spec:         str | None = None
     #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
     feature_ext_tuple: tuple = ()
+    #  THE WALK ENTERS INNER ROOTS (RQ-1, '--no-boundary'). A word about
+    #  the WALK, not the cases: it states nothing of what is wanted.
+    no_boundary_f:     bool  = False
     #  THE RECORDINGS A WISHLIST NAMES BY DIGEST (E-168): pairs
     #  '(<literal target>, <tag>)', the target as the list's line
     #  expanded. Read by 'hwut.accept' alone; every other face refuses.
@@ -366,6 +376,7 @@ class Wish:
         part_list = []
         if self.fail_f:                 part_list.append("--fail")
         if self.unaccepted_f:           part_list.append("--unaccepted")
+        if self.no_boundary_f:          part_list.append("--no-boundary")
         if self.pass_f:                 part_list.append("--pass")
         if self.since_spec is not None:
             part_list.append("--since=%s" % self.since_spec)
@@ -413,6 +424,7 @@ def parse_wish(argv, digest_f=False):
     """
     fail_f     = False
     unaccepted_f = False
+    no_boundary_f = False
     pass_f     = False
     since_spec = None
     until_spec = None
@@ -437,6 +449,7 @@ def parse_wish(argv, digest_f=False):
         index   += 1
         if   argument == "--fail":  fail_f = True
         elif argument == "--unaccepted": unaccepted_f = True
+        elif argument == "--no-boundary": no_boundary_f = True
         elif argument == "--pass":  pass_f = True
         elif argument.startswith("--since="):
             since_spec = _validated(argument[len("--since="):], argument)
@@ -607,7 +620,8 @@ def parse_wish(argv, digest_f=False):
                  tuple(dir_list), label_spec, tuple(language_list),
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
                  tuple(feature_list), keys_spec, tuple(feature_ext_list),
-                 digest_tuple=tuple(digest_list)),
+                 digest_tuple=tuple(digest_list),
+                 no_boundary_f=no_boundary_f),
             rest_list)
 
 

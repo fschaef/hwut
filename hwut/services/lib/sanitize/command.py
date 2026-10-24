@@ -92,6 +92,7 @@ ARITY_DB = {
     "repoint":  (2, 2, "<external id> <internal id>"),
     "fold":     (2, 2, "<id> <first id>"),
     "root":   (1, 1, "<dir>"),
+    "sub-root": (1, 1, "<dir>"),
 }
 assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
 
@@ -196,7 +197,8 @@ class CContext:
                 done only where the judgement still finds it insane.
         """
         try:
-            return getattr(self, "_do_" + command.verb)(command.word_tuple)
+            return getattr(self, "_do_" + command.verb.replace("-", "_"))(
+                command.word_tuple)
         except Exception as error:                         # noqa: BLE001
             return CDone(E_Done.FAULT, "%s: %s" % (type(error).__name__,
                                                    error))
@@ -215,10 +217,48 @@ class CContext:
         except RootConfMissing:
             standing = None
         if standing is not None:
-            return CDone(E_Done.NOTHING,
-                         "a boundary stands: '%s'"
+            where = os.path.join(sanitize.shown(self.base, standing),
+                                 _boundary.ROOT_CONF_NAME)
+            if os.path.normpath(standing) == directory:
+                return CDone(E_Done.NOTHING, "a boundary stands: '%s'" % where)
+            #  BELOW A ROOT (RQ-1, ruled 2026-10-24): an inner root cuts a
+            #  project out of the tree -- done only when asked by its name.
+            return CDone(E_Done.REFUSED,
+                         "a boundary stands above: '%s' => a project of "
+                         "its own here: 'hwut.sanitize sub-root %s'"
+                         % (where, word_tuple[0]))
+        return self._root_written(directory)
+
+    def _do_sub_root(self, word_tuple):
+        """RETURN: CDone -- 'hwut-root.conf' written into the directory
+                   named, a project of its own inside a tree (RQ-1): a
+                   walk from above stops there; NOTHING where the
+                   directory is a root already, REFUSED where no tree
+                   stands above it ('root' is the verb then), it is no
+                   directory, or it cannot be written in."""
+        from ... import _boundary
+        directory = self.path_of(word_tuple[0])
+        if not os.path.isdir(directory):
+            return CDone(E_Done.REFUSED, "no such directory")
+        try:
+            standing = root_conf_directory(directory)
+        except RootConfMissing:
+            standing = None
+        if standing is None:
+            return CDone(E_Done.REFUSED,
+                         "no tree stands above => 'hwut.sanitize root %s'"
+                         % word_tuple[0])
+        if os.path.normpath(standing) == directory:
+            return CDone(E_Done.NOTHING, "a boundary stands: '%s'"
                          % os.path.join(sanitize.shown(self.base, standing),
                                         _boundary.ROOT_CONF_NAME))
+        return self._root_written(directory)
+
+    def _root_written(self, directory):
+        """RETURN: CDone, DONE where the template 'hwut-root.conf' was
+                   written into 'directory'; REFUSED where it cannot be
+                   written in, FAULT where writing failed."""
+        from ... import _boundary
         if not _boundary.writeable_f(directory):
             return CDone(E_Done.REFUSED, "no write access")
         try:

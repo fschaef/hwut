@@ -6812,3 +6812,173 @@ COST      A tree with a stale book row lists one line more on every
           'hwut.report.list'. Regression: 'test-book-defects-3.sh
           book-vanished' -- run, report and list agree before and after
           'hwut.remove'.
+
+
+E-172  A COMPARISON THAT RAISES FAILS; WHAT ACCEPT CANNOT READ IT
+       REFUSES  (D-58, D-59, D-61)                                    (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED by the book writers, 2026-10-24, and again here:
+          (D-58) an exception inside the comparison ('pyrsistent' not
+          importable) printed two tracebacks, and the case ended
+          '[OK]', exit 0. (D-59a) 'hwut.accept' blessed a candidate
+          whose regions cannot be read ('constraint={speed > 0}' over no
+          column 'speed'); the next run said 'broken region framing'
+          and no more. (D-59b) a rule holding '"' was said
+          '"m == "run""'. (D-61) the pype README/MANUAL named 'mode()',
+          'line' and 16 choices -- none of it true any longer.
+
+DECISION  The law of D-39, "every error is a failure of the test":
+          the region reader ('chunk_pipe') hands any exception to the
+          consumer as an 'InputChunkError'; the equivalence check turns
+          it into the token 'compare-error' -- 'compare [FAIL]', the
+          exception named in HINTS. 'hwut.accept' reads the candidate's
+          regions against themselves BEFORE the constraint check and
+          refuses with the reader's own words; the run's HINT carries
+          them too. A rule holding '"' is said between single quotes.
+          The pype texts say what the interpreter does: 'pype.goto()',
+          '<bol>'/'<eol>', 17 choices, 'pype' the one name.
+
+COST      One more token in the failure table. Regression:
+          'test-book-defects-4.sh' compare-crash, region-refused,
+          quoted-rule.
+
+
+E-173  'hwut.help' NAMES MISSING PROGRAMS; A NUMBER IS THE LONGEST
+       NUMERAL  (RQ-5, RQ-6)                                          (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   (RQ-5) 'hwut.cov.run' needs the program 'coverage'; 'hwut.help'
+          checked Python modules only and said INSTALLED without it.
+          (RQ-6) '<n = int>' bound 5 out of 'count 5.5': a numeral was
+          entered midway and cut short.
+
+DECISION  A requirement row may name a PROGRAM; 'hwut.help' checks it
+          on PATH and names the road ('pip install coverage', or the
+          distribution's package). The image installs it. Numerals are
+          read as a lexer reads them: never entered after a digit or a
+          '.', and an 'int' is the WHOLE numeral -- '5.5' is no int and
+          goes to the next handler. pint enters the requirement list for
+          E-175.
+
+COST      Scripts that relied on the cut ('int' out of '5.5') now meet
+          their next handler; the pype test pages that showed the cut
+          were re-blessed. Regression: help-coverage, numeral.
+
+
+E-174  AN INNER 'hwut-root.conf' IS A BOUNDARY; 'sanitize sub-root'
+       MAKES ONE  (RQ-1, ruled 2026-10-24)                            (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: a project with its own 'hwut-root.conf' below a tree
+          was walked from above under the OUTER configuration and from
+          inside under its own -- one case, two verdicts. 'hwut.sanitize
+          root' below a root said "nothing to do: a boundary stands",
+          and no verb made a project of its own on purpose.
+
+DECISION  The walk does not enter an inner root; it says so, one NOTE
+          per inner root: "own root, not walked => run inside it, or
+          '--no-boundary'". '--no-boundary' (a wish word about the walk,
+          selecting nothing) enters, and RESETS the configuration from
+          the inner file alone -- nothing above reaches below. Labels,
+          timings and feature detection stop at the same place.
+          RULED: 'hwut.sanitize root <dir>' below a root REFUSES,
+          naming the verb that does it on purpose: 'hwut.sanitize
+          sub-root <dir>'. 'sub-root' writes the template where a root
+          stands above, and refuses where none does ('root' then). No
+          judgement proposes it: a project of its own is a wish, never a
+          finding.
+
+COST      A tree that held an inner root by accident loses those cases
+          from the walk above -- said in a NOTE, not silent. Regression:
+          nested-root, sub-root.
+
+
+E-175  QUANTITIES WITH UNITS, IN PYPE AND IN THE COMPARISON
+       (RQ-7, ruled 2026-10-24)                                       (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   The book wanted '2.5 ms' read as time and checked as time: a
+          pype script bound '2.5' and dropped the unit; a constraint
+          could not write '50 ms' at all.
+
+DECISION  pint (BSD-3) reads units; hwut adds names of dimensions
+          ('auxiliary/units.py': time, force, ...). In pype,
+          '<t = quantity(X)>' matches a numeral with a unit of X's
+          dimension and binds the number in X -- for a type, in its
+          reference unit. 'hwut.pype --unit-types', '--units [<type>]'
+          list them. RULED for the comparison: the binding holds the
+          quantity -- '((t: 2.5 ms))' binds a pint quantity; a literal
+          with its unit in a constraint, 't < 50 ms', is read as
+          'quantity("50 ms")' (a namespace function) and compares
+          through pint. Another dimension or a bare number fails the
+          constraint; a unit pint does not know in a binding binds its
+          text (and fails a constraint over it); in a constraint it is
+          refused where the page is read.
+          FOUND ON THE WAY: the relation of variables to constraints
+          ('configuration._free_name_set') dropped an expression it
+          could not parse, silently -- 't < 50 ms' constrained nothing
+          and every value passed. It now reads the expression as the
+          compiler does.
+
+COST      pint becomes a requirement (census row, image). A binding
+          '((x: 5 apples))' is a binding now, no longer an analogy,
+          where constraints stand. 'quantity' is a name no variable may
+          carry. Regression: quantity, units-list, quantity-compare.
+
+
+E-176  TIME AS INPUT: 'tick:'  (RQ-3, ruled 2026-10-24)              (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   A script watching a device needs time to pass even when no
+          line comes ("nothing for 2 s" is a finding); pype dispatched
+          lines only.
+
+DECISION  RULED: 'tick: <seconds> => "<format>"', '{time_sec}' the one
+          placeholder. Every interval since the start of reading (the
+          clock of 'pype.time()') the line format.format(time_sec=k*s)
+          is dispatched in the ACTIVE mode like an input line. A line
+          arriving at the same instant goes first; a tick due while a
+          handler ran is dispatched late, never skipped; ticks stop at
+          the end of input; a tick is no input line ('pype.line_n()'
+          stays). With ticks the input is read in a helper thread; the
+          interpreter thread waits for whichever comes first. Without
+          ticks nothing changes. Determinism is the author's business:
+          the manual says so.
+
+COST      A test that compares tick lines depends on the machine's
+          jitter; its margins are its own. Regression: tick (0.25 s
+          margins).
+
+
+E-177  SYSTEMS OF PYPE SCRIPTS: '.pypes'  (RQ-2, ruled 2026-10-24)   (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   The book chains scripts with shell pipes: no fan-in, the
+          order between two pipes undefined, a '<hwut-end>' per stage.
+
+DECISION  RULED: a file '*.pypes' wires scripts -- '--> a.pype' (reads
+          stdin), 'a.pype --> b.pype', ': --> c.pype' (':' the previous
+          line's source); 'hwut.pype x.pypes' runs it, '--draw' draws
+          ASCII, '--draw --svg' SVG. PLAYED BACK, NOT STRUCK: what a
+          script prints goes to its successors only, a sink writes to
+          stdout; a stdin line goes to the sources in file order, an
+          emitted line passes depth-first in edge order before the
+          script's next statement; '<eof>' once every predecessor ended;
+          every '<hwut-end>' swallowed, one printed at the end; a cycle,
+          an unreadable script, ':' with nothing before, an edge twice, a
+          script nothing feeds -- refused when the file is read. Each
+          script its own interpreter, in one process
+          ('test_writing_support/hwut_pype/pype_system.py'); sinks start
+          first so '<bof>' output finds its readers.
+
+COST      'hwut.pype' gains two usage lines (pages showing the usage
+          re-blessed). Regression: pype-system, system-draw.
+
+
+E-178  'hwut.play' GAVE THE PRINTER EVERY CHOICE'S ORIGINS        (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED while recording E-174's pages: 'hwut.play' passed
+          the whole choice -> origins map where the printer wants one
+          choice's origins. Provenance comments were missing from every
+          play page; a choice named like a configuration key crashed
+          play with AttributeError.
+
+DECISION  FIX: the printer receives 'origin_db[case.choice]'.
+
+COST      Play pages showing CONFIGURATION gain their provenance
+          comments ('# hwut-root.conf:225'); such pages were re-blessed.

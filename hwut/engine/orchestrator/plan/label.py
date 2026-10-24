@@ -158,6 +158,14 @@ class CLabelView:
         relative = os.path.relpath(absolute_path, self.boundary)
         relative = relative.replace(os.sep, "/")
         if relative.startswith("../"): return frozenset()
+        #  NOTHING CROSSES A BOUNDARY (RQ-1): a run inside an inner
+        #  'hwut-root.conf' -- reached only under '--no-boundary' -- is
+        #  not labelled by this file.
+        here = os.path.dirname(os.path.abspath(absolute_path))
+        while len(here) > len(self.boundary):
+            if os.path.isfile(os.path.join(here, "hwut-root.conf")):
+                return frozenset()
+            here = os.path.dirname(here)
         found = self.entry_db.get((relative, None), frozenset())
         if choice is not None:
             found = found | self.entry_db.get((relative, choice),

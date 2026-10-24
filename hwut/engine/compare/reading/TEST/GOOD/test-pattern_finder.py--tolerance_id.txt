@@ -1,7 +1,7 @@
 
 size: 6;
 None -> STRING
-\(\(\s*[A-Za-z_]\w*\s*:\s*(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?:[ \t]*(?:[A-Za-zµΩ°%][A-Za-z0-9µΩ°%_]*(?:\*\*-?\d+|\^-?\d+)?(?:[/*][A-Za-zµΩ°%][A-Za-z0-9µΩ°%_]*(?:\*\*-?\d+|\^-?\d+)?)*))?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
 otto -> EQUIVALENCE_PATTERN
 fritz -> EQUIVALENCE_PATTERN

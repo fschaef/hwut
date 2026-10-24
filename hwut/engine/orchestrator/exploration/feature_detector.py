@@ -143,7 +143,10 @@ def fact_db_of_tree(root, below="."):
                                                                 below)):
         name_list[:] = sorted(each for each in name_list
                               if not each.startswith(".")
-                              and each not in PRUNE_NAME_TUPLE)
+                              and each not in PRUNE_NAME_TUPLE
+                              #  A PROJECT OF ITS OWN (RQ-1).
+                              and not os.path.isfile(os.path.join(
+                                  directory, each, "hwut-root.conf")))
         relative = os.path.relpath(directory, root).replace(os.sep, "/")
         test_f   = os.path.basename(directory) == TEST_NAME
         if FEATURE_FILE_NAME in file_list:

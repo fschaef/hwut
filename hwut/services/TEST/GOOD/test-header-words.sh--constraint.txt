@@ -26,5 +26,5 @@ RECORDED: test-breaks.sh.txt (digest: <tag>)
 STATUS: 0
 == hwut.accept --whole test-breaks.sh
 REFUSED constraint: 'test-breaks.sh .stdout' -- the candidate breaks its constraints:
-    constraint "glob(name, "build-*.log")": broken by ((name: "debug-7.log")), line 1
+    constraint 'glob(name, "build-*.log")': broken by ((name: "debug-7.log")), line 1
 <hwut-end>

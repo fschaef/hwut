@@ -109,6 +109,12 @@ class E_TestRunResult(Enum):
     #  printed does not. The side at fault decides who mends: the test's
     #  author here, the GOOD file's keeper above.
     OUTPUT_REGION_SYNTAX_ERROR  = "output-region-syntax-error"
+    #  THE COMPARISON ITSELF FAILED (the book's D-58): an exception the
+    #  reading of the two texts raised -- a missing module, a defect of
+    #  hwut. A comparison that did not happen is never an agreement: the
+    #  case FAILS, the exception named (services E-169: every error is
+    #  the test's failure).
+    COMPARE_ERROR               = "compare-error"
     #  THE CONSTRAINTS found something (compare C-20, services E-123): a
     #  binding broke its law, or a variable a constraint names was never
     #  bound -- on the OUTPUT's side or on the GOOD's. The sentence naming

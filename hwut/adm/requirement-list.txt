@@ -51,7 +51,7 @@ program  dpkg-deb        census  dpkg                   'adm/packaging/TEST/test
 program  zsh             census  zsh                    'services/TEST/test-complete.py zsh'
 program  pwsh            census  -                      'test-complete.py powershell'; PowerShell 7,
                                                         Microsoft's package or release tarball
-program  coverage        census  pip:coverage           'hwut.cov.run' over python
+program  coverage        census  pip:coverage           to measure coverage over Python ('hwut.cov.run')
 
 python   bidict>=0.22.1          census  python3-bidict>=0.22.1          hwut imports it
 python   rapidfuzz>=3.6.2        census  python3-rapidfuzz>=3.6.2        hwut imports it
@@ -60,6 +60,8 @@ python   typeguard>=4.1.5        census  python3-typeguard>=4.1.5        hwut im
 python   pyrsistent>=0.20.0      census  python3-pyrsistent>=0.20.0      hwut imports it
 python   prompt_toolkit>=3.0.43  census  python3-prompt-toolkit>=3.0.43  the keyed merge screen
 python   psutil>=5.9.8           census  python3-psutil>=5.9.8           hwut imports it
+python   pint>=0.26.2            census  python3-pint                    quantities with units ('quantity(...)' in pype)
+#        RQ-7, measured with 0.26.2 only; Debian's numbering not measured
 
 library  vterm           census  libvterm0              testing terminal programs ('hwut_vterm')
 #        read by 'test_writing_support/python/hwut_vterm.py'; red without it:

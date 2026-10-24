@@ -567,8 +567,14 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     if case is not None:
         write(banner("CONFIGURATION", banner_color_f))
         _write_indented(
+            #  THE ORIGINS OF THIS CHOICE: 'origin_db' maps a choice to
+            #  its origins (configuration_tree). MEASURED 2026-10-24: the
+            #  whole map was handed down -- every parameter missed its
+            #  place comment, and a choice named like a key ('same')
+            #  crashed the face with an AttributeError.
             printer.case_text(case,
-                              origin_db=getattr(app, "origin_db", None),
+                              origin_db=(getattr(app, "origin_db", None)
+                                         or {}).get(case.choice, {}),
                               provenance_f=True),
             write)
         write("")

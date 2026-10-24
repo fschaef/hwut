@@ -85,13 +85,29 @@ def marked_no_entry(path):
     return path
 
 
-def entered(directory, name_list):
+#  WHERE A PROJECT OF ITS OWN BEGINS (RQ-1): a directory holding this file.
+ROOT_CONF_NAME = "hwut-root.conf"
+
+
+def inner_root_f(path):
+    """
+    RETURN: bool, True where the directory 'path' holds a 'hwut-root.conf'
+            of its own -- a project a walk from above does not enter (RQ-1).
+    """
+    return os.path.isfile(os.path.join(path, ROOT_CONF_NAME))
+
+
+def entered(directory, name_list, boundary_f=True):
     """RETURN: list of str, the names of 'name_list' -- sub-directories
     of 'directory' -- that a walk goes on into, sorted: those 'no_entry_f'
-    does not close and whose name does not begin with '.'."""
+    does not close, whose name does not begin with '.', and -- where
+    'boundary_f' holds, as it does unless '--no-boundary' said otherwise
+    -- that start no project of their own (RQ-1)."""
     return sorted(name for name in name_list
                   if not name.startswith(".")
-                  and not no_entry_f(os.path.join(directory, name)))
+                  and not no_entry_f(os.path.join(directory, name))
+                  and not (boundary_f
+                           and inner_root_f(os.path.join(directory, name))))
 
 
 def below_no_entry_f(start, top_f):

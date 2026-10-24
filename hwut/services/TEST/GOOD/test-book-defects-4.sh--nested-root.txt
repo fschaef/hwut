@@ -1,0 +1,15 @@
+== from above
+NOTE  world/: own root, not walked => run inside it, or '--no-boundary'
+END   test-top.sh .................................................. [OK]  ||0
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+== from inside
+END   test-slow.sh ........................................ killed [FAIL]  ||0
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+== from above, --no-boundary
+END   test-top.sh .................................................. [OK]  ||0
+END   test-slow.sh ........................................ killed [FAIL]  ||0
+RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
+== hwut.report.list from above
+NOTE  world/: own root, not walked => run inside it, or '--no-boundary'
+./TEST/test-top.sh
+<hwut-end>

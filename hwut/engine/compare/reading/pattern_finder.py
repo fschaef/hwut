@@ -108,9 +108,12 @@ class PatternFinder:
         if config.constraint_f:
             b = re.escape(config.analogy_begin_marker)
             e = re.escape(config.analogy_end_marker)
+            #  A UNIT MAY FOLLOW THE NUMBER (RQ-7): '((t: 2.5 ms))'.
+            from ....auxiliary.units import UNIT_WORD_SRC
             binding_re_str = (
                 b + r"\s*[A-Za-z_]\w*\s*:\s*"
                     r"(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+                    r"(?:[ \t]*" + UNIT_WORD_SRC + r")?"
                     r"|\"[^\"]*\")\s*" + e)
             self._constraint_binding_re = re.compile(binding_re_str)
             _register(E_ToleranceId.CONSTRAINT_BINDING, binding_re_str)

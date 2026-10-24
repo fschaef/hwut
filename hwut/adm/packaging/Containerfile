@@ -19,9 +19,13 @@ FROM docker.io/library/debian:13-slim
 
 ARG VERSION
 COPY hwut.deb /tmp/hwut.deb
+#  COVERAGE OVER PYTHON IS PART OF THE IMAGE (the book's RQ-5): Debian's
+#  coverage.py installs its command as 'python3-coverage'; 'hwut.cov.run'
+#  calls 'coverage', so the image links the one to the other.
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        /tmp/hwut.deb \
+        /tmp/hwut.deb python3-coverage \
+ && ln -s /usr/bin/python3-coverage /usr/local/bin/coverage \
  && rm -rf /var/lib/apt/lists/* /tmp/hwut.deb
 
 LABEL org.opencontainers.image.title="hwut" \

@@ -19,6 +19,6 @@ STDOUT {
                            [-l|--label <expr>] [--language=<name>]...
                            [--faster-than=<sec>] [-F|--feature <id-glob>]...
                            [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                           [--directory=<path>]
+                           [--no-boundary] [--directory=<path>]
 }
 <hwut-end>

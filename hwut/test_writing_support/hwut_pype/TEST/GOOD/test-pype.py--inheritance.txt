@@ -39,7 +39,7 @@ NOTE: mode 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:6) comes first a
 
 --- the first match fires: own against own, '<int>' before '<number>' ---
     int 5
-    int 5
+    number 5.5
 
 --- disjoint vocabularies inherit cleanly; no shadowing needed ---
 SCRIPT: {

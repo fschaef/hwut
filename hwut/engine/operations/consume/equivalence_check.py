@@ -198,6 +198,19 @@ class EquivalenceCheck:
                 #  one thing it is for.
                 ok     = False
                 report = region_fault_of(error)
+                #  THE READER'S SENTENCE IS THE REASON (the book's D-59a):
+                #  'unknown name 'speed'' belongs in HINTS, not only in
+                #  'hwut.diff'.
+                detail_list.append(str(error))
+                notify(self.observer, "diagnosis", name, str(error))
+            except Exception as error:                # noqa: BLE001
+                #  THE COMPARISON ITSELF FAILED (D-58): a verdict with its
+                #  reason, never an agreement and never an escape into
+                #  the scheduler.
+                ok     = False
+                report = E_TestRunResult.COMPARE_ERROR
+                detail_list.append("%s: %s"
+                                   % (type(error).__name__, error))
                 notify(self.observer, "diagnosis", name, str(error))
             finally:
                 for reader in (subject_reader, nominal_reader):

@@ -61,7 +61,7 @@ from ..engine.orchestrator.run.adapter import script_config_of
 
 
 USAGE = "usage: hwut.execute [-i] [--default=<script>] [-q] [+x] " \
-        "[--directory=<path>] <target> [<argument> ...]\n" \
+        "[--no-boundary] [--directory=<path>] <target> [<argument> ...]\n" \
         "       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] " \
         "-c \"<commands>\""
 
@@ -182,7 +182,7 @@ def _read_command_line(argv, write):
     result = {"target": None, "pass_through": [], "ignore_f": False,
               "default": None, "quiet_f": False, "plus_x_f": False,
               "directory": ".", "dir_tuple": (), "dir_rule_tuple": (),
-              "command": None}
+              "command": None, "boundary_f": True}
     i = 0
     while i < len(argv):
         argument = argv[i]
@@ -192,6 +192,8 @@ def _read_command_line(argv, write):
             return "help"
         elif argument in ("-i", "--ignore"):  result["ignore_f"] = True
         elif argument in ("-q", "--quiet"):   result["quiet_f"]  = True
+        #  THE WISH'S OWN WORD (RQ-1): walk into inner roots.
+        elif argument == "--no-boundary":     result["boundary_f"] = False
         elif argument == "+x":                result["plus_x_f"] = True
         elif argument.startswith("--default="):
             result["default"] = argument[len("--default="):]
@@ -303,7 +305,7 @@ def _phase_one(arguments):
     found_any_f  = False
 
     wanted_f = _wanted_f_of(arguments["dir_rule_tuple"])
-    for relative in _walk(root):
+    for relative in _walk(root, arguments.get("boundary_f", True)):
         if not wanted_f(relative): continue
         directory = os.path.normpath(os.path.join(root, relative))
         text      = finder.conf_text(directory)
@@ -430,7 +432,7 @@ def _wanted_f_of(rule_tuple):
     return lambda relative: not dir_ruled_out_f(relative, rule_tuple)
 
 
-def _walk(root):
+def _walk(root, boundary_f=True):
     """
     YIELD: [0] str  one directory below 'root', root-relative,
                     '/'-separated, '.' for the root itself -- sorted
@@ -440,7 +442,7 @@ def _walk(root):
     for here, directory_list, _file_list in os.walk(root):
         #  WHERE hwut DOES NOT ITERATE (exploration R-85): a marked
         #  directory, a test directory's 'TMP' and 'OUT'.
-        directory_list[:] = entered(here, directory_list)
+        directory_list[:] = entered(here, directory_list, boundary_f)
         for name in directory_list:
             relative = os.path.relpath(os.path.join(here, name), root)
             yield relative.replace(os.sep, "/")

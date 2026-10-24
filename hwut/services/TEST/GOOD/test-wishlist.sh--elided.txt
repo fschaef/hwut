@@ -22,8 +22,8 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 --- ':/:' without a choice, refused by name
 STATUS: 2
@@ -35,8 +35,8 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 --- a lone ':' is no elision mark
 STATUS: 2
@@ -48,7 +48,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [<file-glob> [choice-glob]...]
-                            [--directory=<path>]
+                            [-k|--keys <expr>] [--no-boundary]
+                            [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 <hwut-end>

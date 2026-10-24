@@ -7,6 +7,7 @@
     pyrsistent>=0.20.0
     prompt_toolkit>=3.0.43
     psutil>=5.9.8
+    pint>=0.26.2
     the same:  True
     requires-python:  >=3.10
 
@@ -19,6 +20,7 @@
     python3-pyrsistent (>= 0.20.0)
     python3-prompt-toolkit (>= 3.0.43)
     python3-psutil (>= 5.9.8)
+    python3-pint
     libvterm0
     every census module there:  True
 <hwut-end>

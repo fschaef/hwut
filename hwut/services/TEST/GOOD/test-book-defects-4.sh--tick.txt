@@ -1,0 +1,9 @@
+a
+tick 0.5 after line 1
+b
+tick 1.0 after line 2
+<hwut-end>
+exit 0
+pype: t2.pype:1: 'tick:' takes seconds above zero, not '0'
+pype: t2.pype:1: the tick's format cannot be filled -- '{time_sec}' is its one placeholder: KeyError: 'x'
+<hwut-end>

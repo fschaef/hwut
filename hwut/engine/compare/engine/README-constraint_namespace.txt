@@ -19,7 +19,7 @@ methods. It stands in 'engine/constraint_namespace.py'.
 The VARIABLE part is the run's CONSTRAINT SPACE. A binding element in the
 sequential outer text
 
-    (( <variable-name> : <number>|<quoted-string> ))
+    (( <variable-name> : <number> [<unit>]|<quoted-string> ))
 
 enters a name into the space, and the moment it does, every constraint over
 that name is checked ('engine/constraints.py').
@@ -54,6 +54,14 @@ FUNCTIONS
                 round ord chr all any sorted
 
     text        glob(value, pattern)
+
+    units       quantity(text)      the quantity 'text' spells ('50 ms');
+                a literal with its unit, 't < 50 ms', is read as
+                't < quantity("50 ms")' (RQ-7). A binding
+                '((t: 2.5 ms))' binds a quantity; the two compare through
+                pint, units converted. Another dimension, or a bare
+                number, FAILS the constraint. A unit pint does not know
+                is refused where the constraint is read.
 
 'glob' matches the way a shell does -- '*' any run, '?' one character,
 '[abc]' a set -- and is CASE SENSITIVE. It touches no file system. A value

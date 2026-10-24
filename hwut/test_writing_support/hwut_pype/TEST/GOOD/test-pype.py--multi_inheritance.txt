@@ -76,7 +76,7 @@ NOTE: mode 'SUB': '"x"' (<test>:5) never fires -- '"x"' (<test>:1) comes first a
 
 --- intersecting languages: B1's int, first, also matches inside '5.5' -- no NOTE ---
     B1 int 5
-    B1 int 5
+    B2 number 5.5
 
 --- globs: '*.txt' first takes 'a.txt', '*' the rest ---
     txt a.txt

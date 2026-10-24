@@ -14,6 +14,7 @@ Script grammar (line-oriented):
     HANDLER  :=  [ MODE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
     INHERIT  :=  [ MODE ] "is:" BASE { "," BASE }
     IMPORT   :=  "import:" FILE-PATH
+    TICK     :=  "tick:" SECONDS "=>" '"' FORMAT '"'
 
     CAUSE    :=  PATTERN                  match handler
               |  "if" "(" python-condition ")"
@@ -32,6 +33,17 @@ further EFFECT to the preceding handler; effects run in order.
 "import:" merges another pype file (resolved against the importer's
 directory, then the '--pype-dir' directories; idempotent; cycles are
 errors).
+
+"tick:" (the book's RQ-3) makes TIME an input: every SECONDS since the
+start of reading -- the clock of 'pype.time()' -- the line
+FORMAT.format(time_sec=<k * SECONDS>) is dispatched in the ACTIVE mode
+like an input line ('tick: 1 => "<tick {time_sec}>"' gives '<tick 1>',
+'<tick 2>', ...). A line that arrives at the same instant is dispatched
+before the tick; a tick missed while a handler ran is dispatched late,
+never skipped. Ticks stop at the end of input. A tick does not count as
+an input line ('pype.line_n()' stays); 'pype.line()' is its text. WHEN
+a tick falls between two lines depends on the clock: a test that wants
+a deterministic output makes the timing its own business.
 
 Pattern tokens (whitespace-separated; matched left-to-right in the line,
 gaps of arbitrary whitespace permitted between tokens; the pattern matches
@@ -101,6 +113,9 @@ RE_IF_CAUSE     = re.compile(r"^if\s*\((.*)\)\s*$")
 RE_CAUSE_KEYWORD = re.compile(
     r"^<\s*(entry|exit|bof|eof|else)\s*>$")
 RE_IMPORT_HEAD  = re.compile(r"^import\s*:\s*(.*)$")
+RE_TICK_HEAD    = re.compile(r"^tick\s*:")
+RE_TICK         = re.compile(r'^tick\s*:\s*(\S+)\s*=>\s*'
+                             r'"((?:[^"\\]|\\.)*)"\s*;?\s*$')
 RE_IMPORT_PATH  = re.compile(r'^"((?:[^"\\\\]|\\\\.)*)"$')
 RE_IS_DEFAULT   = re.compile(r"^is\s*:\s*"
                              r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*$")
@@ -134,16 +149,23 @@ RE_TOKEN_BIND   = re.compile(
     r"<\s*(?:([A-Za-z_]\w*)"
     r"(?:\s*\[\s*([A-Za-z_]\w*)((?:\s*[-+]\s*\d+)*)\s*\])?"
     r"\s*=\s*)?"
-    r"(number|int|\"((?:[^\"\\]|\\.)*)\")"
+    r"(number|int|\"((?:[^\"\\]|\\.)*)\"|quantity\(\s*([^()\s]+)\s*\))"
     r"\s*>")
 RE_TOKEN_ANCHOR = re.compile(r"<\s*(bol|eol)\s*>")
 RE_REPEAT_OPEN  = re.compile(r"\+\(\s*([A-Za-z_]\w*)\s*:")
 RE_RANGE        = re.compile(r"^(\d+)?\s*(\.\.)?\s*(\d+)?$")
 
-REGEX_NUMBER = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?"
-REGEX_INT    = r"[-+]?\d+"
+#  THE LONGEST NUMERAL AT ITS POSITION, AS A LEXER READS IT (the book's
+#  RQ-6): a numeral is never entered midway (not after a digit or a '.'),
+#  and an 'int' is the WHOLE numeral -- not followed by a digit, a '.' or
+#  an exponent. So '5.5' is no 'int': 'count 5.5' does not match
+#  '"count" <n = int>' and goes to the next handler. What follows the
+#  numeral otherwise is free ('5abc', '2.5ms', '5,').
+REGEX_NUMBER = r"(?<![\d.])[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?"
+REGEX_INT    = r"(?<![\d.])[-+]?\d+(?![\d.]|[eE][-+]?\d)"
 
-def parse(source_txt, file_name, search_dir_list=None, source_db=None):
+def parse(source_txt, file_name, search_dir_list=None, source_db=None,
+          tick_list=None):
     """RETURN: (dict, str), the mode map (name -> Mode) and the name of the
                             start mode if success.
                Raises PypeError, else.
@@ -160,7 +182,9 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
     'search_dir_list' in order; an absolute path stands alone. A file already imported is
     entered once; an import cycle is an error. If the caller passes a
     dictionary as 'source_db', it is filled with file name -> source
-    line list for every parsed file (feeding the tracer).
+    line list for every parsed file (feeding the tracer). If the caller
+    passes a list as 'tick_list', it receives one CTick per 'tick:'
+    line, in the order read (imports where they stand).
     """
     import os as _os
     mode_db         = {}
@@ -168,6 +192,7 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
     seen_files      = set()
     search_dir_list = search_dir_list if search_dir_list is not None else []
     if source_db is None: source_db = {}
+    if tick_list is None: tick_list = []
 
     def resolve_import(path_txt, importer_file, where):
         """RETURN: str, the resolved path of an imported file if success.
@@ -239,6 +264,12 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
                     with open(imported, "r") as fh:
                         _parse_one(fh.read(), imported,
                                    import_stack + [key])
+                current_handler = None
+                i += 1
+                continue
+
+            if RE_TICK_HEAD.match(text):
+                tick_list.append(_tick_of(text, where))
                 current_handler = None
                 i += 1
                 continue
@@ -367,6 +398,140 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None):
     _check_eof_present(mode_db, file_name)
     return mode_db, start_mode_name
 
+
+
+class CTick:
+    """RETURN: --. One 'tick:' line (RQ-3): every 'interval' seconds the
+                   line 'format_txt.format(time_sec=...)' is dispatched.
+    """
+    def __init__(self, interval, format_txt, where):
+        self.interval   = interval     # float, > 0
+        self.format_txt = format_txt   # str, '{time_sec}' its placeholder
+        self.where      = where        # 'file:line'
+
+    def text(self, k):
+        """RETURN: str, the line of the k-th tick (k = 1, 2, ...): FORMAT
+                        with 'time_sec' = k * interval -- an int where
+                        that is whole ('<tick 2>', not '<tick 2.0>'), a
+                        float rounded to nanoseconds else.
+        """
+        return self.format_txt.format(time_sec=tick_time_sec(k,
+                                                             self.interval))
+
+
+def tick_time_sec(k, interval):
+    """RETURN: int, k * interval where that is a whole number;
+               float, k * interval rounded to 9 decimals, else.
+    """
+    value = round(k * interval, 9)
+    return int(value) if float(value).is_integer() else value
+
+
+def _tick_of(text, where):
+    """RETURN: CTick, the 'tick:' line 'text' if success.
+               Raises PypeError naming 'where', else -- no number of
+               seconds above zero, no quoted format, or a format that
+               asks for more than '{time_sec}'.
+    """
+    match = RE_TICK.match(text)
+    if match is None:
+        raise PypeError('%s: a tick reads: tick: <seconds> => "<format>"'
+                        % where)
+    try:
+        interval = float(match.group(1))
+    except ValueError:
+        interval = 0.0
+    if not interval > 0 or interval != interval or interval == float("inf"):
+        raise PypeError("%s: 'tick:' takes seconds above zero, not '%s'"
+                        % (where, match.group(1)))
+    format_txt = match.group(2).replace(r'\"', '"').replace("\\\\", "\\")
+    tick = CTick(interval, format_txt, where)
+    try:
+        tick.text(1); tick.text(2)
+    except (KeyError, IndexError, ValueError) as error:
+        raise PypeError("%s: the tick's format cannot be filled -- "
+                        "'{time_sec}' is its one placeholder: %s: %s"
+                        % (where, type(error).__name__, error)) from None
+    return tick
+
+
+def drive(line_iterable, take, tick_entry_list, start_time):
+    """RETURN: None, once 'line_iterable' is exhausted: every line handed
+                     to 'take(line)', and -- while lines may still come --
+                     every tick to its callback, in time order.
+
+    'tick_entry_list' holds (CTick, callback) pairs; 'callback(text)'
+    dispatches the k-th tick's text. Ticks are due at
+    'start_time + k * interval' on the monotonic clock. Without ticks
+    the lines are read in this thread, as ever. With ticks they are read
+    in a helper thread, and this thread waits for whichever comes first:
+    a line, or the next tick due. A tick that is due is dispatched only
+    after every line already arrived (THE SAME INSTANT: lines first); a
+    tick due while a handler ran is dispatched late, never skipped; two
+    ticks due at once go in the order their 'tick:' lines stand. Ticks
+    stop at the end of input. An error raised by the reading surfaces
+    here, in this thread.
+    """
+    if not tick_entry_list:
+        for line in line_iterable:
+            take(line)
+        return
+
+    import heapq
+    import threading
+    try:
+        import queue as _queue
+    except ImportError:                                  # pragma: no cover
+        import Queue as _queue                           # Python 2
+    end_mark  = object()
+    line_q    = _queue.Queue()
+
+    def reader():
+        try:
+            for line in line_iterable:
+                line_q.put(line)
+            line_q.put(end_mark)
+        except BaseException as error:                   # noqa: BLE001
+            line_q.put(("<error>", error))
+
+    thread = threading.Thread(target=reader)
+    thread.daemon = True
+    thread.start()
+
+    def handed(item):
+        """RETURN: bool, False where 'item' ends the input; True where
+                         it was a line, handed to 'take'."""
+        if item is end_mark: return False
+        if isinstance(item, tuple) and len(item) == 2 \
+           and item[0] == "<error>":
+            raise item[1]
+        take(item)
+        return True
+
+    heap = [(tick.interval, order, 1, tick, callback)
+            for order, (tick, callback) in enumerate(tick_entry_list)]
+    heapq.heapify(heap)
+    while True:
+        due_sec, order, k, tick, callback = heap[0]
+        wait = start_time + due_sec - _monotonic()
+        if wait > 0:
+            try:
+                item = line_q.get(timeout=wait)
+            except _queue.Empty:
+                item = None
+            if item is not None:
+                if not handed(item): return
+                continue
+        #  THE TICK IS DUE: lines already arrived go first.
+        while True:
+            try:
+                item = line_q.get_nowait()
+            except _queue.Empty:
+                break
+            if not handed(item): return
+        heapq.heapreplace(heap, (round((k + 1) * tick.interval, 9), order,
+                                 k + 1, tick, callback))
+        callback(tick.text(k))
 
 
 def parse_glob(glob_txt):
@@ -498,6 +663,7 @@ def _parse_token_list(txt, position, where, repeat_counter=None):
             name, index, offset_txt, kind, glob_txt = (
                 match.group(1), match.group(2), match.group(3),
                 match.group(4), match.group(5))
+            quantity_spec = match.group(6)
             if index is None:
                 offset = None
             else:
@@ -516,6 +682,12 @@ def _parse_token_list(txt, position, where, repeat_counter=None):
                 token_list.append(("number", name, offset))
             elif kind == "int":
                 token_list.append(("int", name, offset))
+            elif quantity_spec is not None:
+                #  A QUANTITY WITH ITS UNIT (RQ-7): the unit type or unit
+                #  is read HERE, so a misspelt one is refused with the
+                #  script, not met on a line.
+                _quantity_reference(quantity_spec, where)
+                token_list.append(("quantity", quantity_spec, name, offset))
             else:
                 token_list.append(("glob", glob_txt, name, offset))
             position = match.end()
@@ -536,7 +708,48 @@ def _token_plain_src(token):
     elif token[0] == "number": return REGEX_NUMBER
     elif token[0] == "int":    return REGEX_INT
     elif token[0] == "glob":   return glob_to_regex(token[1])
+    elif token[0] == "quantity":
+        from hwut.auxiliary.units import UNIT_WORD_SRC
+        return r"%s\s?%s" % (REGEX_NUMBER, UNIT_WORD_SRC)
     return None
+
+
+def _quantity_reference(spec, where):
+    """
+    RETURN: str, the unit a binding of 'quantity(<spec>)' is expressed in,
+            if success;
+            raises PypeError naming 'spec', else -- neither a unit type nor
+            a unit, or pint absent.
+    """
+    try:
+        from hwut.auxiliary import units
+        return units.reference_of(spec)
+    except ModuleNotFoundError as error:
+        raise PypeError("%s: 'quantity(%s)' needs the Python module 'pint' "
+                        "(%s) -- 'hwut.help' says how to install it"
+                        % (where, spec, error)) from None
+    except ValueError as error:
+        raise PypeError("%s: %s" % (where, error)) from None
+
+
+def _quantity_convert(spec):
+    """
+    RETURN: callable, text -> float, the quantity in the reference unit
+            of 'spec'; it raises _NotHere where the text is no quantity
+            of that dimension (RQ-7).
+    """
+    from hwut.auxiliary import units
+    def convert(text):
+        try:
+            return units.bound_value(text, spec)
+        except units.NotThisQuantity:
+            raise _NotHere(text) from None
+    return convert
+
+
+class _NotHere(Exception):
+    """A text a token's regex took but its reading refuses: the pattern
+    does not match at this place (a unit of another dimension)."""
 
 
 def _collect_const_list(token_list):
@@ -615,6 +828,9 @@ class Matcher:
                     group_list.append((n, token[1], float))
                 elif token[0] == "int":
                     group_list.append((n, token[1], int))
+                elif token[0] == "quantity":
+                    group_list.append((n, token[2],
+                                       _quantity_convert(token[1])))
                 else:                                    # glob
                     group_list.append((n, token[2], str))
         self.fast_regex  = re.compile("".join(part_list))
@@ -638,6 +854,10 @@ class Matcher:
                 element_list.append(
                     ("re", re.compile(glob_to_regex(token[1])), token[2],
                      token[3], str))
+            elif token[0] == "quantity":
+                element_list.append(
+                    ("re", re.compile(_token_plain_src(token)), token[2],
+                     token[3], _quantity_convert(token[1])))
             elif token[0] in ("bol", "eol"):
                 element_list.append((token[0],))
             else:                                        # repeat
@@ -658,10 +878,15 @@ class Matcher:
             match = self.fast_regex.search(line)
             if match is None: return None
             binding_db = {}
-            for group_n, name, convert in self.fast_groups:
-                if name is not None:
-                    binding_db[name] = convert(match.group(group_n))
-            return binding_db
+            try:
+                for group_n, name, convert in self.fast_groups:
+                    if name is not None:
+                        binding_db[name] = convert(match.group(group_n))
+                return binding_db
+            except _NotHere:
+                #  THE LEFTMOST CANDIDATE IS NO QUANTITY OF THE DIMENSION
+                #  ASKED (RQ-7): the patient walk tries every place.
+                pass
         for start in range(len(line) + 1):
             result = self._match_at(line, start, self.element_list)
             if result is None: continue
@@ -695,8 +920,12 @@ class Matcher:
                 _, rx, name, offset, convert = element
                 match = rx.match(line, pos)
                 if match is None: return None
+                try:
+                    value = convert(match.group(0))
+                except _NotHere:
+                    return None
                 if name is not None:
-                    triple_list.append((name, None, convert(match.group(0))))
+                    triple_list.append((name, None, value))
                 pos = match.end()
             else:                                        # repeat
                 _, counter, sub_list = element
@@ -977,6 +1206,7 @@ def _token_shape(token):
     kind = token[0]
     if kind == "const":  return ("const", token[1])
     if kind == "glob":   return ("glob", token[1])
+    if kind == "quantity": return ("quantity", token[1])
     if kind == "repeat": return ("repeat",
                                  tuple(_token_shape(t) for t in token[2]))
     return (kind,)
@@ -1064,7 +1294,8 @@ class Interpreter:
     'push(name)', 'pop()' and the 'pype' information object (PypeInfo).
     """
     def __init__(self, mode_db, start_mode_name, file_name="<stream>",
-                 trace_style=None, source_db=None, trace_filter=None):
+                 trace_style=None, source_db=None, trace_filter=None,
+                 tick_list=None):
         self.mode_db         = mode_db
         self.active          = None
         self.start_mode_name = start_mode_name
@@ -1081,6 +1312,7 @@ class Interpreter:
         self.input_name      = "<stdin>"
         self.input_line_n    = 0
         self.current_bindings = {}
+        self.tick_list       = list(tick_list or ())   # of CTick (RQ-3)
         self.namespace       = {"pype": PypeInfo(self)}
 
     def trace(self, where, gcc_txt, plain_txt):
@@ -1316,7 +1548,19 @@ class Interpreter:
                          deactivates.
 
         Runtime information is available through the 'pype' object:
-        'pype.line()', 'pype.line_n()', 'pype.time()', and so on.
+        'pype.line()', 'pype.line_n()', 'pype.time()', and so on. The
+        script's 'tick:' lines (RQ-3) dispatch their lines in between,
+        on the clock of 'pype.time()' (see 'drive').
+        """
+        self.start()
+        drive(line_iterable, self.take,
+              [(tick, self.tick) for tick in self.tick_list],
+              self.start_time)
+        self.finish()
+
+    def start(self):
+        """RETURN: None. Starts the clock, activates the start mode (its
+                         '<entry>' fires) and fires '<bof>'.
         """
         self.start_time = _monotonic()
         self.transition(self.start_mode_name)
@@ -1327,11 +1571,26 @@ class Interpreter:
                        % (self.active.name, handler.where))
             self.fire(handler)
         self.apply_pending_request()
-        for line in line_iterable:
-            self.current_line_n += 1
-            if self.input_name == "<stdin>":
-                self.input_line_n = self.current_line_n
-            self.feed(line.rstrip("\n"))
+
+    def take(self, line):
+        """RETURN: None. Dispatches one input line: counted, then fed."""
+        self.current_line_n += 1
+        if self.input_name == "<stdin>":
+            self.input_line_n = self.current_line_n
+        self.feed(line.rstrip("\n"))
+
+    def tick(self, text):
+        """RETURN: None. Dispatches the line of a tick (RQ-3) in the
+                         active mode like an input line -- not counted
+                         as one: 'pype.line_n()' stays.
+        """
+        self.trace(None, "tick: %r" % text, "[tick] %r" % text)
+        self.feed(text)
+
+    def finish(self):
+        """RETURN: None. Fires '<eof>' of the active mode, then
+                         deactivates it (its '<exit>' fires).
+        """
         for handler in self.active.handlers("eof"):
             self.trace(handler.where, "fire: %s/on: <eof>" % self.active.name,
                        "    fire %s/on: <eof>   (%s)"
@@ -1360,6 +1619,11 @@ def _sample_of_token_list(token_list, counter_db):
         elif token[0] == "number":
             counter_db["number"] += 1
             part_list.append("%.1f" % (counter_db["number"] + 0.5))
+        elif token[0] == "quantity":
+            counter_db["number"] += 1
+            part_list.append("%.1f %s" % (counter_db["number"] + 0.5,
+                                          _quantity_reference(token[1],
+                                                              "<example>")))
         elif token[0] == "glob":
             part = []
             for element in parse_glob(token[1]):
@@ -1439,10 +1703,18 @@ def generate_example_input(mode_db, start_mode_name):
 
 
 USAGE = ("usage: hwut.pype [--trace] SCRIPT < input\n"
+         "       hwut.pype SYSTEM.pypes < input   "
+         "(a system of scripts, wired)\n"
+         "       hwut.pype --draw [--svg] SYSTEM.pypes   "
+         "(draw the system: ASCII; SVG)\n"
          "       hwut.pype --example SCRIPT   "
          "(print generated example input)\n"
          "       hwut.pype --dry-run SCRIPT   "
          "(check the script, read no input)\n"
+         "       hwut.pype --unit-types       "
+         "(the unit types of 'quantity(...)')\n"
+         "       hwut.pype --units [<type>]   "
+         "(the units, of one type where named)\n"
          "       --trace: show, on stderr, input lines against the\n"
          "                handlers they trigger, and the executed\n"
          "                lines inside python blocks; gcc-style\n"
@@ -1473,7 +1745,8 @@ def main(argv=None, stream=None):
     argv      = argv if argv is not None else sys.argv
     stream    = stream if stream is not None else sys.stdin
     flag_db   = {"--example": False, "--dry-run": False,
-                 "--trace": False, "--trace-plain": False}
+                 "--trace": False, "--trace-plain": False,
+                 "--draw": False, "--svg": False}
     search_dir_list = []
     rest = []
     k = 1
@@ -1510,13 +1783,32 @@ def main(argv=None, stream=None):
         print(USAGE, file=sys.stderr)
         return 1
     file_name = argv[1]
+    if flag_db["--svg"] and not flag_db["--draw"]:
+        print("pype: '--svg' says how to '--draw'; it draws nothing alone",
+              file=sys.stderr)
+        return 1
+    try:
+        from . import pype_system
+    except (ImportError, ValueError):                  # run as a plain script
+        import pype_system
+    pype_system.bind(sys.modules[__name__])
+    if pype_system.system_f(file_name):
+        return _system_main(pype_system, file_name, flag_db,
+                            search_dir_list, trace_style, input_path_list,
+                            stream)
+    if flag_db["--draw"]:
+        print("pype: '--draw' draws a system ('%s'), not the script '%s'"
+              % (pype_system.SYSTEM_EXTENSION, file_name), file=sys.stderr)
+        return 1
     try:
         with open(file_name, "r") as fh:
             source_txt = fh.read()
         source_db = {}
+        tick_list = []
         mode_db, start_mode_name = parse(source_txt, file_name,
                                          search_dir_list=search_dir_list,
-                                         source_db=source_db)
+                                         source_db=source_db,
+                                         tick_list=tick_list)
         if dry_run_f or trace_style is not None:
             #  THE CHECK'S NOTES (D-47) go where the script is CHECKED --
             #  never into a run's stderr, which a test may compare.
@@ -1534,7 +1826,8 @@ def main(argv=None, stream=None):
             interpreter = Interpreter(mode_db, start_mode_name, file_name,
                                       trace_style=trace_style,
                                       source_db=source_db,
-                                      trace_filter=trace_filter)
+                                      trace_filter=trace_filter,
+                                      tick_list=tick_list)
             if input_path_list:
                 def file_lines(itp, path_list):
                     """RETURN: iterator over the lines of the files of
@@ -1556,6 +1849,49 @@ def main(argv=None, stream=None):
         print("pype: %s" % error, file=sys.stderr)
         return 1
     except OSError as error:
+        print("pype: %s" % error, file=sys.stderr)
+        return 1
+    return 0
+
+
+def _system_main(pype_system, file_name, flag_db, search_dir_list,
+                 trace_style, input_path_list, stream):
+    """RETURN: int, 0 where the system ('.pypes', RQ-2) was drawn, checked
+                    or run to completion; 1 where it cannot be read, a
+                    script of it does not parse, or it is asked for what
+                    only a script does ('--example').
+    """
+    try:
+        system = pype_system.read(file_name)
+        if flag_db["--draw"]:
+            print(pype_system.drawn_svg(system) if flag_db["--svg"]
+                  else pype_system.drawn_ascii(system))
+            return 0
+        if flag_db["--example"]:
+            print("pype: '--example' takes a script, not a system",
+                  file=sys.stderr)
+            return 1
+        if flag_db["--dry-run"]:
+            pype_system.built(system, search_dir_list)
+            print("dry run ok: %d script(s), %d edge(s)"
+                  % (len(system.node_list), len(system.edge_list)))
+            return 0
+        if input_path_list:
+            def file_lines(path_list):
+                """RETURN: iterator over the lines of the files of
+                            'path_list', in order, as one stream."""
+                for path in path_list:
+                    with open(path, "r") as fh:
+                        for line in fh:
+                            yield line
+            line_iterable = file_lines(input_path_list)
+        else:
+            line_iterable = stream
+        pype_system.run(system, line_iterable, search_dir_list, trace_style)
+    except PypeError as error:
+        print("pype: %s" % error, file=sys.stderr)
+        return 1
+    except (IOError, OSError) as error:
         print("pype: %s" % error, file=sys.stderr)
         return 1
     return 0

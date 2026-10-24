@@ -232,18 +232,38 @@ class LineElementConstraintBinding(LineElement):
     """
     __slots__ = ('name', 'value')
 
-    _PARSE_RE = re.compile(
-        r'([A-Za-z_]\w*)\s*:\s*'
-        r'([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")')
+    _PARSE_RE = None              # built on first use: the unit's words
+
+    @classmethod
+    def _parse_re(cls):
+        """RETURN: compiled regex: group 1 the name, group 2 the number
+                   or the quoted string, group 3 the unit (RQ-7) or None."""
+        if cls._PARSE_RE is None:
+            from ....auxiliary.units import UNIT_WORD_SRC
+            cls._PARSE_RE = re.compile(
+                r'([A-Za-z_]\w*)\s*:\s*'
+                r'([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")'
+                r'(?:[ \t]*(' + UNIT_WORD_SRC + r'))?')
+        return cls._PARSE_RE
 
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.CONSTRAINT_BINDING, content)
-        m = self._PARSE_RE.search(content)
+        m = self._parse_re().search(content)
         assert m is not None  # the master regex guaranteed the shape
         self.name = m.group(1)
-        raw       = m.group(2)
+        raw, unit = m.group(2), m.group(3)
         if raw.startswith('"'):
             self.value = raw[1:-1]
+        elif unit is not None:
+            #  A QUANTITY (RQ-7): compared through pint, units converted.
+            #  A word pint does not know binds the text as written, and a
+            #  constraint over it fails on the comparison -- said, not
+            #  swallowed.
+            try:
+                from ....auxiliary.units import quantity_of
+                self.value = quantity_of("%s %s" % (raw, unit))
+            except Exception:                         # noqa: BLE001
+                self.value = "%s %s" % (raw, unit)
         else:
             try:               self.value = int(raw)
             except ValueError: self.value = float(raw)

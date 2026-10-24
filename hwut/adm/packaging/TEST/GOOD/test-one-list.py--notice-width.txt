@@ -22,6 +22,10 @@ MISSING: the Python module 'prompt_toolkit' (absent) -- the keyed merge
 MISSING: the Python module 'psutil' (absent) -- hwut imports it.
     Debian/Ubuntu:  sudo apt install python3-psutil
     pip:            pip install 'psutil>=5.9.8'
+MISSING: the Python module 'pint' (absent) -- quantities with units
+    ('quantity(...)' in pype).
+    Debian/Ubuntu:  sudo apt install python3-pint
+    pip:            pip install 'pint>=0.26.2'
 MISSING: the shared library 'vterm' (absent) -- testing terminal
     programs ('hwut_vterm').
     Debian/Ubuntu:  sudo apt install libvterm0

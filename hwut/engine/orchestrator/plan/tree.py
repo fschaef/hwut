@@ -173,7 +173,9 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         root          = tree_exploration.root,
         entry_tuple   = tuple(entry_list),
         fault_tuple   = tuple(tree_exploration.fault_tuple),
-        warning_tuple = swallowed_warning_tuple(met_set, visible_set))
+        #  THE INNER ROOTS THE WALK STOPPED AT (RQ-1): one NOTE each.
+        warning_tuple = tuple(getattr(tree_exploration, "note_tuple", ()))
+                        + swallowed_warning_tuple(met_set, visible_set))
 
 
 def print_tree_plan(tree_plan, write=None):

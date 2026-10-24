@@ -11,12 +11,14 @@ ______________________________________________________________________________
 FILES:
 
     hwut_pype.py    parser and interpreter.
+    pype_system.py  systems of scripts ('.pypes'): reading, running,
+                    drawing (RQ-2).
     manual.txt      user manual with grammar, semantics, idioms.
     examples/       five runnable scripts, each with a matching input
                     file: 'hwut.pype examples/NN-name.pype
                     < examples/NN-name.txt'. Reference outputs are
                     recorded in TEST/GOOD/test-pype.py--examples.txt.
-    TEST/           HWUT test suite (16 choices, GOOD baselined).
+    TEST/           HWUT test suite (17 choices, GOOD baselined).
 
     The executable she-bang entry point is 'bin/hwut.pype' under the
     package root, with every other launcher of the tool.
@@ -51,13 +53,22 @@ INVOCATION:
                                         walked along static 'goto'/
                                         'push' effects; pure-ignore
                                         handlers
-                                        produce no line; 'mode()' calls
-                                        are not followed.
+                                        produce no line; 'pype.goto()'
+                                        calls are not followed.
+    hwut.pype SYSTEM.pypes < input      run a SYSTEM of scripts wired
+                                        by '-->' lines (MANUAL 14).
+    hwut.pype --draw [--svg] SYSTEM.pypes
+                                        draw the system: ASCII; SVG.
+    hwut.pype --unit-types              the unit types and the units
+    hwut.pype --units [<type>]          '<x = quantity(X)>' admits
+                                        (MANUAL 12).
 
 SCRIPT GRAMMAR (line-oriented; '#' starts a comment line):
 
     HANDLER  :=  [ MODE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
     INHERIT  :=  [ MODE ] "is:" BASE { "," BASE }
+    TICK     :=  "tick:" SECONDS "=>" '"' FORMAT '"'   time as input
+                                        ('{time_sec}', MANUAL 13)
     IMPORT   :=  "import:" FILE-PATH
 
     CAUSE    :=  PATTERN | "if" "(" python-condition ")" | "<else>"
@@ -96,12 +107,12 @@ DISPATCH:
 
     The handlers of the active mode are tried in definition order; the
     first whose pattern matches fires. The pattern matches anywhere in
-    the line; there is no anchoring to line start. If every match
+    the line unless '<bol>' / '<eol>' anchor it. If every match
     handler fails, the first 'else' handler of the effective list
     fires. One handler fires per line; its blocks run in definition
     order. Every ACTIVATABLE mode (start mode, switch and push targets)
     must carry an 'else' in its effective list -- parse error otherwise;
-    activation through 'mode()'/'push()' is checked at run time; pure
+    activation through 'pype.goto()'/'pype.push()' is checked at run time; pure
     mixins are exempt. Runtime information lives in the 'pype' object:
     pype.time(), pype.file_name(), pype.line(), pype.line_n(),
     pype.mode_name(), pype.stack_depth(), pype.bindings(); actions:
@@ -126,7 +137,7 @@ MODES:
     '<exit>' fires. A switch to the already-active mode is a no-operation.
     The default mode has no name; once left, it cannot be entered again.
 
-    '=> OTHERMODE' and the namespace function 'mode("OTHERMODE")' both
+    '=> goto OTHERMODE;' and 'pype.goto("OTHERMODE")' in a block both
     request a switch; the request is applied after the current handler's
     blocks have completed. The last request wins. A request raised by
     the '<entry>' or '<exit>' handlers of that switch is applied in the
@@ -163,10 +174,11 @@ KEYWORDS:
 
 NAMESPACE:
 
-    All Python blocks share one single namespace. It provides 'mode(name)'
-    and, during a match, 'line' (the current input line, newline stripped)
-    and the pattern's named bindings. Bindings and assignments persist
-    across handlers and modes.
+    All Python blocks share one single namespace. It holds the 'pype'
+    object ('pype.line()' is the current input line, newline stripped;
+    'pype.goto(name)' requests a switch) and, during a match, the
+    pattern's named bindings. Bindings and assignments persist across
+    handlers and modes.
 
 ERRORS:
 

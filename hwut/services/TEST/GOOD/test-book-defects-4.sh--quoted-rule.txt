@@ -1,0 +1,3 @@
+REFUSED constraint: 'test-q.sh .stdout' -- the candidate breaks its constraints:
+    constraint 'm == "run"': broken by ((m: "walk")), line 1
+<hwut-end>

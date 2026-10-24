@@ -164,9 +164,13 @@ def _free_name_set(expression):
     RETURN: set[str], every name the expression mentions.
             set(),    the expression does not parse.
     """
+    #  A NUMERAL WITH ITS UNIT ('t < 50 ms', RQ-7) is read as the
+    #  compiler reads it: as 'quantity("50 ms")'.
+    from .engine.constraints import (ConstraintSpecError,
+                                     with_quantity_literals)
     try:
-        tree = ast.parse(expression, mode="eval")
-    except SyntaxError:
+        tree = ast.parse(with_quantity_literals(expression), mode="eval")
+    except (SyntaxError, ConstraintSpecError):
         return set()
     return {node.id for node in ast.walk(tree)
             if isinstance(node, ast.Name)}

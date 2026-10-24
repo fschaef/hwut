@@ -1499,6 +1499,14 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         #  '--force' reaches past this (E-124). Held against itself: what
         #  it would say, were it the GOOD.
         from .lib.accept.constraint import own_finding_text_list
+        from .lib.accept.constraint import region_fault_text
+        fault = region_fault_text(key_setup_of(key, config_db), text)
+        if fault is not None:
+            write("REFUSED region: '%s' -- the candidate's regions cannot "
+                  "be read: %s" % (key.name, fault))
+            skipped_list.append(key)
+            refused_f = True
+            continue
         own_list = own_finding_text_list(key_setup_of(key, config_db), text)
         if own_list:
             write("REFUSED constraint: '%s' -- the candidate breaks its "

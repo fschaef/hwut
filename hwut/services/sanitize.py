@@ -61,6 +61,12 @@ relative to '--directory' (the current directory where none is given):
                                  mercurial, svn, jujutsu, bazaar, darcs,
                                  pijul, fossil), the current directory,
                                  and 'q' to quit
+                                 BELOW A ROOT IT REFUSES, naming 'sub-root'
+    sub-root <dir>               a project of its own inside a tree
+                                 (RQ-1): 'hwut-root.conf' is written into
+                                 <dir> though a root stands above; a walk
+                                 from above stops there with a NOTE. No
+                                 judgement proposes it
 
 EVERY COMMAND JUDGES AGAIN BEFORE IT ACTS. The entity says WHAT; the
 tree at this moment says WHETHER. A command whose entity sanitize would
@@ -223,8 +229,11 @@ ISSUE_KIND_TUPLE = (
 )
 ISSUE_KIND_DB = {kind.name: kind for kind in ISSUE_KIND_TUPLE}
 
-#  The verbs, each once, in the order their first kind stands.
-VERB_TUPLE = tuple(dict.fromkeys(kind.verb for kind in ISSUE_KIND_TUPLE))
+#  The verbs, each once, in the order their first kind stands -- then
+#  'sub-root', which no judgement proposes: a project of its own inside
+#  a tree is a wish, never a finding (RQ-1, ruled 2026-10-24).
+VERB_TUPLE = tuple(dict.fromkeys(kind.verb for kind in ISSUE_KIND_TUPLE)) \
+             + ("sub-root",)
 
 
 @dataclass(frozen=True)
@@ -880,9 +889,16 @@ def main(argv=None, write=None, ask=None):
         except RootConfMissing:
             standing = None
         if standing is not None:
-            write("nothing to do: a boundary stands: '%s'"
+            if os.path.abspath(standing) == os.path.abspath(base):
+                write("nothing to do: a boundary stands: '%s'"
+                      % os.path.join(shown(base, standing), ROOT_CONF_NAME))
+                return E_ExitCode.OK
+            #  BELOW A ROOT, 'root' WOULD CUT A PROJECT OUT OF A TREE
+            #  (RQ-1): refused, and the verb that does it on purpose said.
+            write("REFUSED: root -- a boundary stands above: '%s' => "
+                  "a project of its own here: 'hwut.sanitize sub-root .'"
                   % os.path.join(shown(base, standing), ROOT_CONF_NAME))
-            return E_ExitCode.OK
+            return E_ExitCode.REFUSED
         if ask is None:
             if not sys.stdin.isatty():
                 write("REFUSED: 'root' with no directory asks where, and "

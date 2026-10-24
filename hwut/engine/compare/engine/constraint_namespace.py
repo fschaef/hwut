@@ -56,6 +56,19 @@ def glob(value, pattern):
     return fnmatchcase(str(value), str(pattern))
 
 
+def quantity(text):
+    """
+    RETURN: pint.Quantity, the quantity 'text' spells ('50 ms'), if
+            success; raises else -- a word pint does not know, or pint
+            absent. A literal '50 ms' in a constraint is read as
+            'quantity("50 ms")' (the book's RQ-7); bound quantities and
+            these compare through pint, converting units, and a
+            comparison across dimensions FAILS the constraint.
+    """
+    from ....auxiliary.units import quantity_of
+    return quantity_of(text)
+
+
 #  The maths taken from the standard library BY NAME: a name 'math' gains
 #  does not silently enter the namespace.
 _MATH_NAME_LIST = (
@@ -74,7 +87,7 @@ FUNCTION_DB = {
     "int": int, "float": float, "str": str, "bool": bool,
     "round": round, "ord": ord, "chr": chr,
     "all": all, "any": any, "sorted": sorted,
-    "glob": glob,
+    "glob": glob, "quantity": quantity,
 }
 
 #  WHAT A CONSTRAINT MAY NAME without calling it.

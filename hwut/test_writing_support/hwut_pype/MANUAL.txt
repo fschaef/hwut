@@ -206,7 +206,7 @@ sample line per pattern handler, with deterministic sample values
 (integers 1, 2, 3, ...; numbers 1.5, 2.5, ...; '*' in a glob becomes
 'sample', '?' becomes 'x'). The generator walks the modes along the
 statically visible switch actions ('goto', 'push');
-'if(...)' causes and 'mode()' calls inside blocks are not followed.
+'if(...)' causes and 'pype.goto()' calls inside blocks are not followed.
 
 Exit status: 0 after the whole stream is processed; 1 on a script
 error. Errors go to stderr with 'file:line'. A Python exception inside
@@ -275,6 +275,8 @@ A pattern is a whitespace-separated sequence of tokens:
     <name = int>                integer, bound as int
     <name = "GLOB">             glob over one token, bound as str
     <number> <int> <"GLOB">     unnamed variants: match, no binding
+    <name = quantity(X)>        number with its unit, bound as float in
+                                the unit X (section 12)
     <bol> <eol>                 demand line start / line end here
     +( i : ... )                repeat group (below)
 
@@ -615,4 +617,98 @@ ______________________________________________________________________________
     pype.goto('...'): no such mode
     pype.goto('<default>'): the default mode cannot be entered
     pop with empty mode stack
+    <file>:<n>: a tick reads: tick: <seconds> => "<format>"
+    <file>:<n>: 'tick:' takes seconds above zero, not '...'
+    <file>:<n>: the tick's format cannot be filled -- ...
+    <file>:<n>: 'quantity(X)': 'X' is neither a unit type ... nor a unit
+    <system>:<n>: an edge reads '[<source>|:] --> <script>', not '...'
+    <system>:<n>: ':' stands for the previous line's source, and there
+            is none
+    <system>:<n>: the edge '... --> ...' stands twice
+    <system>:<n>: nothing feeds '...' -- '--> ...' reads stdin
+    <system>:<n>: the script '...' cannot be read: ...
+    <system>: the system holds a cycle through '...', ...
+    <system>: the system holds no edge
+
+
+12  QUANTITIES  (the book's RQ-7)
+______________________________________________________________________________
+
+    on: "took" <t = quantity(ms)> => { print(t) }      'took 2.5 s' -> 2500.0
+    on: "push" <f = quantity(force)> => { ... }       'push 2.5 kN' -> 2500.0
+
+X is a UNIT TYPE ('time', 'force', ... -- 'hwut.pype --unit-types') or a
+UNIT ('ms', 'N', ... -- 'hwut.pype --units [<type>]'). Every unit of X's
+dimension matches, with or without a blank ('2.5ms', '2.5 ms'); the
+value bound is the number expressed in X -- for a type, in the type's
+reference unit ('quantity(time)' binds seconds). A number whose unit is
+of another dimension does not match HERE ('3 kg' under 'quantity(N)').
+pint (a requirement of hwut) does the reading.
+
+THE COMPARISON SPEAKS UNITS TOO. A binding '((t: 2.5 ms))' binds a
+quantity, and a constraint may write a literal with its unit:
+
+    tolerance { constraints = ["t < 50 ms"] }
+
+compares through pint ('40000us' holds, '60 ms' breaks it); a quantity
+of another dimension, or a bare number, breaks it as well. A unit pint
+does not know in a constraint is refused when the page is read.
+
+
+13  TIME AS INPUT: 'tick:'  (the book's RQ-3)
+______________________________________________________________________________
+
+    tick: 1 => "<tick {time_sec}>"
+
+Every SECONDS since the start of reading (the clock of 'pype.time()'),
+the line FORMAT.format(time_sec=k*SECONDS) is dispatched in the ACTIVE
+mode like an input line: '<tick 1>', '<tick 2>', ... 'time_sec' is an
+int where it is whole, a float else; '{time_sec:.3f}' formats it.
+'{time_sec}' is the one placeholder -- a literal brace is written twice.
+
+    -- a line that arrives at the same instant goes first;
+    -- a tick due while a handler ran is dispatched late, never skipped;
+    -- ticks stop at the end of input;
+    -- a tick is no input line: 'pype.line_n()' stays, 'pype.line()'
+       is the tick's text.
+
+WHERE a tick falls between two input lines depends on the clock. A test
+that compares its output makes that timing its own business: margins
+well above the machine's jitter, or ticks that only count.
+
+
+14  SYSTEMS: '.pypes'  (the book's RQ-2)
+______________________________________________________________________________
+
+    --> a.pype            a reads stdin
+    --> q.pype            q reads stdin too
+    a.pype --> b.pype     a pipes to b
+    : --> c.pype          ':' = the previous line's source (a)
+    q.pype --> b.pype     fan-in: b reads a and q
+
+    hwut.pype system.pypes < input            run it
+    hwut.pype --draw system.pypes             draw it, ASCII
+    hwut.pype --draw --svg system.pypes       draw it, SVG
+
+A file with the extension '.pypes' is a SYSTEM: one edge per line, '#'
+comments, script paths relative to the file. Each script runs in its own
+interpreter -- its own namespace, its own modes.
+
+    FLOW      what a script prints goes to its successors only; a SINK
+              (no successor) writes to stdout.
+    ORDER     a stdin line goes to the sources in the order their '-->'
+              lines stand; a line a script emits passes, DEPTH-FIRST, to
+              its successors in edge order, before the script's next
+              statement runs.
+    START     sinks first, so what '<bof>' prints finds its readers.
+    END       a script receives '<eof>' once every predecessor (stdin
+              counts as one) has ended.
+    <hwut-end> every one a script prints is swallowed; the system
+              prints exactly one, at the very end.
+    TICKS     each script ticks on its own clock; all stop with stdin.
+
+Refused when the file is read: an unreadable edge, ':' with no previous
+line, an edge written twice, a script nothing feeds, a script that does
+not parse or cannot be read, a cycle, an empty file. '--dry-run' checks a
+system the same way; '--example' takes a script only.
 ______________________________________________________________________________
