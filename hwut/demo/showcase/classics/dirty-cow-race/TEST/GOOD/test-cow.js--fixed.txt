@@ -1,0 +1,17 @@
+unit:      ../cow.js, driven by this Node test over every interleaving
+actors:    writer 3 steps (fault, settle, write)   discarder 1 step (zap)
+space:     every order of 3 + 1 steps = 4 interleavings
+legend:    a row's word: 'W' the writer steps, 'Z' the discarder steps
+           write target: 'copy' private copy (safe)   'orig !!' the shared object
+
+  word   target    verdict
+  WWWZ   copy      safe
+  WWZW   copy      safe
+  WZWW   copy      safe
+  ZWWW   copy      safe
+
+
+interleavings run: 4   losing: 0
+writes to the shared object ((ro_writes: 0))   law == 0   kept
+actors left unfinished ((unfinished: 0))   law == 0   kept
+<hwut-end>
