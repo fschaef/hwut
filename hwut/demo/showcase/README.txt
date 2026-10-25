@@ -2,7 +2,7 @@
 showcase -- WHAT A TEXT-JUDGING TEST TOOL CAN TEST
 ==============================================================================
 
-80 examples from working life and famous failures, 207 test cases, one hwut tree. Each example
+81 examples from working life and famous failures, 210 test cases, one hwut tree. Each example
 states ONE requirement and prints what it finds as a picture -- a tree, a
 matrix, a waveform, a timeline, a plot -- so that the GOOD file reads as a
 specification sheet: a person or an AI judges it without reading the code.
@@ -52,7 +52,8 @@ THE SIX AREAS
                    Ariane 5, Pentium FDIV, Zune, Y2038, goto fail,
                    Therac-25, Peterson/Dekker, dining philosophers,
                    Cloudflare regex, Mars Climate Orbiter,
-                   Gimli Glider.                        14 examples
+                   Gimli Glider, Apollo 11's stolen
+                   memory cycles (Verilog).             15 examples
     science/       BIOINFORMATICS AND NUMERICS: gene names in spreadsheets,
                    BED vs VCF coordinates, Needleman-Wunsch, reverse
                    complement and translation, FASTQ Phred, SIR model,
@@ -66,5 +67,7 @@ the requirement, what each choice shows, which hwut concept carries it, and
 why every tolerance is there.
 
 MACHINE -- Python 3.10+, bash, gcc, make, awk, perl, node; hwut on PATH.
-No network. C units are compiled by their test application per run.
+classics/apollo11-counters also needs Verilator (apt install verilator).
+No network. C and Verilog units are compiled by their test application per
+run.
 ==============================================================================

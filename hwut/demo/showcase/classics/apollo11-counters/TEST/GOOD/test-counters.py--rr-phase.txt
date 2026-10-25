@@ -1,0 +1,25 @@
+unit:      ../counters.v, verilated, driven by ../drive.cpp
+scenario:  rr-phase   TIME1 100 Hz   CDUT 6400 Hz   CDUS 6400 Hz
+flight:    1 s = 85333 memory cycles of 11.72 us
+timeline:  memory cycles 0..71 (first cycle after which two counters wait at once)
+legend:    '|' a pulse arrives   cycle: '.' program  '1' TIME1  'T' CDUT  'S' CDUS
+           reference: the cycles as the requirement model R1/R2 spends them
+
+##! verbatim
+  cycle         0         10        20        30        40        50        60        70
+  pulse TIME1   |                                                                       
+  pulse CDUT    |            |            |             |            |            |     
+  pulse CDUS          |             |            |            |             |           
+  memory cycle  .1T....S......T......S.....T......S......T.....S......T......S.....T....
+  reference     .1T....S......T......S.....T......S......T.....S......T......S.....T....
+####
+
+  counter   rate       pulses   counted   lost   cycles stolen
+  TIME1      100 Hz      100       100      0      100
+  CDUT      6400 Hz     6400      6400      0     6400
+  CDUS      6400 Hz     6400      6400      0     6400
+
+R1 pulses lost ((lost: 0))   law == 0   kept
+R2 cycles that differ from the reference model ((diverging: 0))   law == 0   kept
+R3 counting took ((stolen: 151.2 ms)) of 1 s (15.1 %)   law <= 100 ms   BROKEN
+<hwut-end>
