@@ -1,0 +1,16 @@
+== one.py -
+the one
+<end>
+exit 0
+== one.py x
+error: 'x': this application has no choices -- call it without one.
+exit 1
+== two.py c
+error: choice 'c' not available.
+error: available: a, b.
+error: did you mean 'a'?
+exit 1
+== two.py
+error: a choice is required: a, b -- name one, or let 'hwut.play' ask.
+exit 1
+<hwut-end>

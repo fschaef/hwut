@@ -108,7 +108,12 @@ _SAFE_NODE_TYPES = (
 #  the numeral ('5 if', '5 in') and the glued forms Python owns ('0x1f',
 #  '0o7', '0b1', '5j'). Strings are passed over whole.
 _STRING_SRC  = r"\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'"
-_NUMERAL_SRC = r"(?<![\w.])(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+#  THE NUMERAL IS THE LONGEST NUMERAL (RQ-6, R1 of 2026-10-24): it never
+#  stops where an exponent continues it. Without the look-ahead '1e-9'
+#  with no unit after it was re-read as '1' and the unit 'e' -- pint's
+#  elementary charge -- and 'x <= 1e-9' compared x with a charge.
+_NUMERAL_SRC = (r"(?<![\w.])(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+                r"(?![eE][-+]?\d)")
 
 
 def _unit_literal_re():
@@ -162,7 +167,7 @@ class ConstraintExpression:
     variables. Whitelisted at PARSE time (see module purpose); evaluation
     happens against the current constraint space values.
     """
-    __slots__ = ("text", "variable", "depend_set", "_code")
+    __slots__ = ("text", "variable", "depend_set", "_code", "_quantity_f")
 
     def __init__(self, variable, text):
         """RETURNS: (constructor) -- raises ConstraintSpecError if 'text' is
@@ -181,8 +186,14 @@ class ConstraintExpression:
             raise ConstraintSpecError(
                 "constraint for '%s': %r is not parseable (%s)"
                 % (variable, text, e.msg)) from None
-        self.depend_set = self._validate(tree)
-        self._code      = compile(tree, "<constraint>", "eval")
+        self.depend_set  = self._validate(tree)
+        self._code       = compile(tree, "<constraint>", "eval")
+        #  A LAW THAT WRITES A QUANTITY ('x == 0 s', or 'quantity(...)'
+        #  by hand) -- see '_bare_numbers_dimensionless'.
+        self._quantity_f = any(isinstance(node, ast.Call)
+                               and isinstance(node.func, ast.Name)
+                               and node.func.id == "quantity"
+                               for node in ast.walk(tree))
 
     def _validate(self, tree):
         """RETURNS: frozenset of variable names the expression refers to
@@ -259,12 +270,38 @@ class ConstraintExpression:
         Called only once every variable of 'depend_set' is in 'value_db'
         (C-19: 'ConstraintSpace.enter' decides).
         """
-        scope = namespace_of({name: value_db[name]
-                              for name in self.depend_set
-                              if name in value_db})
+        value_db = {name: value_db[name]
+                    for name in self.depend_set if name in value_db}
+        value_db = _bare_numbers_dimensionless(value_db, self._quantity_f)
+        scope = namespace_of(value_db)
         return eval(self._code, {"__builtins__": {}}, scope)  # noqa: S307
         # 'eval' runs a WHITELIST-VALIDATED, freshly compiled expression
         # with empty builtins -- see module purpose.
+
+
+def _bare_numbers_dimensionless(value_db, quantity_f):
+    """
+    RETURN: dict, 'value_db' with every bare number (int or float, not
+            bool) made a DIMENSIONLESS quantity, where the law involves
+            quantities -- 'quantity_f' (it writes one) or a value of
+            'value_db' that carries a unit;
+            'value_db' itself, else.
+
+    PINT'S ZERO EXCEPTION (ND13, services E-182): pint compares a plain
+    0 with ANY unit ('0 == 0 s' is True), while every other bare number
+    raises. E-175 ruled that a bare number fails a law with a unit; a
+    dimensionless 0 is refused like 7, so the law holds for every
+    number alike. Laws over plain numbers meet plain numbers, unchanged.
+    """
+    if not quantity_f and not any(hasattr(value, "units")
+                                  for value in value_db.values()):
+        return value_db
+    from ....auxiliary.units import registry
+    ureg = registry()
+    return {name: (ureg.Quantity(value, "")
+                   if isinstance(value, (int, float))
+                   and not isinstance(value, bool) else value)
+            for name, value in value_db.items()}
 
 
 # ------------------------------------------------------------------------------

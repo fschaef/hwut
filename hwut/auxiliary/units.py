@@ -135,7 +135,14 @@ def bound_value(text, spec):
        or quantity.dimensionality != dimensionality_of(spec) \
        or quantity.unitless:
         raise NotThisQuantity(text)
-    return float(quantity.to(reference_of(spec)).magnitude)
+    try:
+        return float(quantity.to(reference_of(spec)).magnitude)
+    except Exception:                                 # noqa: BLE001
+        #  ONE DIMENSION, NO CONVERSION (ND9): an absolute temperature
+        #  and a difference ('degC' and 'delta_degC') share
+        #  '[temperature]', and pint refuses to convert between them --
+        #  the text is no quantity of THIS kind: no match here.
+        raise NotThisQuantity(text) from None
 
 
 def quantity_of(text):
@@ -177,12 +184,51 @@ def unit_type_tuple():
     return tuple(sorted(UNIT_TYPE_DB.items()))
 
 
+def written(unit, type_name):
+    """
+    RETURN: str, the spelling of 'unit' a LINE can write and the reader
+            reads back as that very unit under 'quantity(<type_name>)' --
+            pint's symbol where it is one ('ms', 'degC'), else the first
+            alias or the name that is ('um' for 'μm', 'angstrom' for
+            'Å', 'delta_degC' for 'Δ°C') -- if success;
+            None, else: no spelling of it is read back (a constant such
+            as 'pi', or a symbol another unit owns: 'mcd' reads as a
+            microday).
+
+    THE LISTING IS MEASURED THROUGH THE READER (D-65, services E-183):
+    a spelling is offered only where 'UNIT_WORD_SRC' takes it whole and
+    'bound_value' binds it, under its type, to this unit.
+    """
+    import re
+    ureg   = registry()
+    symbol = format(unit, "~")
+    name   = str(unit)
+    #  THE SYMBOL FIRST, then its ASCII forms ('μm' -> 'um', 'Δ°C' ->
+    #  'delta_degC'), then pint's aliases and the name.
+    candidate_list = [symbol, symbol.replace("μ", "u").replace("µ", "u"),
+                      symbol.replace("Δ°", "delta_deg")]
+    definition = getattr(ureg, "_units", {}).get(name)
+    candidate_list += list(getattr(definition, "aliases", ()) or ())
+    candidate_list.append(name)
+    for candidate in candidate_list:
+        if not candidate \
+           or re.fullmatch(UNIT_WORD_SRC, candidate) is None:   continue
+        try:
+            if ureg.Unit(candidate) != unit:                    continue
+            bound_value("1 %s" % candidate, type_name)
+        except Exception:                             # noqa: BLE001
+            continue
+        return candidate
+    return None
+
+
 def unit_tuple(spec=None):
     """
     RETURN: tuple[(str, str)], '(unit, unit type)' for every unit of the
-            registry, of 'spec's dimension only where 'spec' is given --
-            each type's reference unit also with the prefixes of
-            SHOWN_PREFIX_TUPLE -- sorted by type, then unit;
+            registry a line can write ('written'), of 'spec's dimension
+            only where 'spec' is given -- each type's reference unit also
+            with the prefixes of SHOWN_PREFIX_TUPLE -- sorted by type,
+            then unit; empty where no unit of that dimension is written;
             raises UnitSpecError where 'spec' names nothing known.
     """
     ureg = registry()
@@ -199,7 +245,9 @@ def unit_tuple(spec=None):
         dimension = unit.dimensionality
         if dimension not in type_of: continue
         if wanted is not None and dimension != wanted: continue
-        found.add((type_of[dimension], format(unit, "~") or name))
+        spelling = written(unit, type_of[dimension])
+        if spelling is None: continue
+        found.add((type_of[dimension], spelling))
     for type_name, reference in UNIT_TYPE_DB.items():
         dimension = ureg.Unit(reference).dimensionality
         if wanted is not None and dimension != wanted: continue
@@ -208,6 +256,7 @@ def unit_tuple(spec=None):
             #  SPELLED AS A LOG SPELLS IT: 'us', not pint's 'μs'.
             try:
                 ureg.Unit(prefix + reference)
+                bound_value("1 %s%s" % (prefix, reference), type_name)
             except Exception:                         # noqa: BLE001
                 continue
             found.add((type_of[dimension], prefix + reference))

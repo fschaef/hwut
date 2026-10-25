@@ -45,23 +45,17 @@ def classify(key, force_f):
     """
     RETURN: str, which kind of acceptance the key calls for:
 
-            'first'   no nominal stands, and the whole-take was not
-                      asked ('--whole' / '--as-is' / '--force'): the
-                      FIRST acceptance -- the candidate is recorded as
-                      one nobody has judged yet (E-60), and the
-                      session, where there is one, opens on that
-            'bless'   no nominal stands and the whole-take was asked:
-                      the candidate becomes the nominal WHOLE, as it
-                      stands (E-109)
+            'bless'   no nominal stands: the recording becomes the
+                      nominal WHOLE, as it stands -- the recording
+                      'hwut.play' showed (N10, services E-188; E-60's
+                      undecided mirror is retired)
             'merge'   a nominal stands and '--force' was not said: this
-                      is a CHANGE, and 'hwut.merge's
-                      business
+                      is a CHANGE, and 'hwut.merge's business
             'force'   a nominal stands and '--force' was said
     """
-    if   not key.nominal_stands_f: return "bless" if force_f else "first"
+    if   not key.nominal_stands_f: return "bless"
     elif force_f:                  return "force"
     else:                          return "merge"
-
 
 def read_text(path):
     """

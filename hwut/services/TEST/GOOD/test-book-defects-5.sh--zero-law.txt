@@ -1,0 +1,6 @@
+x == 0 s       over 0        : refused
+x == 0 s       over 0 s      : blessed
+x > 5 ms       over 0        : refused
+x >= 0         over 0        : blessed
+x < 5          over 3        : blessed
+<hwut-end>

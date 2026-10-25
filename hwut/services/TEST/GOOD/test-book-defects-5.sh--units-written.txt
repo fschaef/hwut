@@ -1,0 +1,16 @@
+== --units length: the spellings a line writes
+angstrom              length
+um                    length
+== --units temperature
+delta_degC          temperature
+°C                  temperature
+== every listed spelling, bound back through the reader
+unwritable: none
+== quantity(degC) over a difference
+abs 20.0
+other: 5 delta_degC
+exit 0
+== --units cM
+REFUSED: 'cM' is a unit of no unit type hwut names ('hwut.pype --unit-types' lists them)
+exit 2
+<hwut-end>

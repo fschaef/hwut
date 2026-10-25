@@ -7,4 +7,5 @@ STDOUT {
     prints the token itself, as its last line.
 }
 GOOD holds:
+    test-cut.sh.txt
 <hwut-end>

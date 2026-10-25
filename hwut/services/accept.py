@@ -21,11 +21,11 @@ PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
                                 the first word names files, every
                                 further word a choice; both carry
                                 fnmatch's '*', '?' and '[ ]'
-    --whole, --as-is, --force   record the candidate WHOLE, as it
-                                stands: a first acceptance without the
-                                undecided shape (E-60), a standing
-                                nominal overwritten without the merge.
-                                One act, three spellings (E-109)
+    --whole, --as-is, --force   overwrite a standing nominal with the
+                                recording, without the merge. A first
+                                acceptance blesses the recording whole
+                                without them (E-188). One act, three
+                                spellings (E-109)
     --directory=<path>          ONE directory; the whole tree else
     --help                      this text
 
@@ -69,7 +69,6 @@ from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
                                                                WishError,
                                                                parse_wish,
                                                                with_targets)
-from ..engine.compare.api import Configuration
 from ..engine.orchestrator.run.adapter import \
                                                        test_configuration_of
 from   ._exit                                          import E_ExitCode
@@ -127,11 +126,9 @@ PROMOTION
                         must select exactly ONE case; a wishlist gives
                         each of its literal lines a tag of its own
     --whole, --as-is, --force
-                        record the candidate WHOLE, as it stands. On a
-                        first acceptance that is the blessing rather
-                        than E-60's undecided shape; on a standing
-                        nominal it is the overwrite, skipping the
-                        merge. ONE ACT: what it replaces is an earlier
+                        overwrite a standing nominal with the recording,
+                        skipping the merge; a first acceptance blesses
+                        the recording whole without them (E-188). ONE ACT: what it replaces is an earlier
                         accept, never the author's evidence -- a GOOD
                         file cannot exist without this face (E-109).
     A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run' does -- the
@@ -396,6 +393,26 @@ def _trace(text):
         sys.stderr.flush()
 
 
+def ignored_line_set(line_list):
+    """
+    RETURN: set[int], the numbers (from 1) of the lines of 'line_list'
+            that stand INSIDE a '##! ignore' region -- between its
+            opening line and its closing '####', both excluded;
+            empty where the text holds no such region.
+    """
+    found  = set()
+    inside = False
+    for number, line in enumerate(line_list, 1):
+        stripped = line.strip()
+        if inside:
+            if stripped == "####": inside = False
+            else:                  found.add(number)
+        elif stripped.startswith("##!") \
+             and stripped[3:].split()[:1] == ["ignore"]:
+            inside = True
+    return found
+
+
 def difference_pair_list(compare_config, out_path, good_path, line_n):
     """
     RETURN: [0] list of (position, out text, good text) -- ONE PER
@@ -499,6 +516,18 @@ def difference_pair_list(compare_config, out_path, good_path, line_n):
             if len(found) > line_n: return found, True
         return found, True
 
+    #  A LINE IS JUDGED ALONE, OUTSIDE ITS REGION (ND5): a line inside
+    #  '##! ignore' would differ, though the run ignores it. What both
+    #  sides hold inside such a region is no difference to propose.
+    out_ignored  = ignored_line_set(out_line_list)
+    good_ignored = ignored_line_set(good_line_list)
+    def kept(entry_list):
+        """RETURN: list, 'entry_list' without the entries that lie inside
+                   '##! ignore' on every side that has a line."""
+        return [entry for entry in entry_list
+                if not ((entry[0] is None or entry[0] in out_ignored)
+                        and (entry[2] is None or entry[2] in good_ignored))]
+
     try:
         #  ALIGNED FIRST (D-42b): one inserted line is one entry, not a
         #  shift of every line after it. Where the bytes differ beyond
@@ -506,9 +535,11 @@ def difference_pair_list(compare_config, out_path, good_path, line_n):
         #  -- the positional walk judges each position, as before.
         found, done_f = asyncio.run(aligned())
         if done_f:
+            found = kept(found)
             if len(found) > line_n: return [], "> %d lines" % line_n
             return found, None
         found, aborted_f = asyncio.run(walk())
+        found = kept(found)
     except RegionSyntaxError as error:
         return [], "the region framing does not read: %s" % error
     except OSError as error:
@@ -1037,7 +1068,6 @@ def stderr_decision(spoke_db, ignored_f_of):
 #  must not be able to apply to one kind and not the other.
 from ._accept_common import (token_terminated_f, classify,  # noqa: E402
                                          STDERR_IGNORED_LINE)
-from . import accept_first                   # noqa: E402
 
 
 def main(argv=None, write=None, read_line=None, propose_n=None,
@@ -1516,23 +1546,6 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             refused_f = True
             continue
         written = text
-        if verdict == "first":
-            #  ACCEPT IS PARTIAL BY DEFAULT (E-60). What gets WRITTEN is
-            #  the candidate's SHAPE with nothing decided -- the mirror
-            #  of '##! unaccepted' regions 'accept_first' builds -- not
-            #  the candidate. What gets SHOWN at the prompt is still the
-            #  candidate (E-57): the reader judges what the test
-            #  printed, not the framing it will be filed under.
-            setup   = compare_setup_of(config_db.get(key.test), key.choice)
-            written = accept_first.opening_nominal(
-                          setup if setup is not None else Configuration(),
-                          text, force_f=False)
-            if written is None:
-                write("REFUSED: the candidate of '%s' does not end in "
-                      "'<hwut-end>' -- it never COMPLETED" % key.name)
-                skipped_list.append(key)
-                refused_f = True
-                continue
         store.accept(key.test, key.choice, key.subject, written)
         #  THE REGISTER: an id is born at first accept -- issued by
         #  'note_accept' in the acceptance's own act (B-9).
@@ -1551,7 +1564,7 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         aspirant_f = carries_unaccepted_text_f(written)
         store.bookkeeper.note_accept(key.test, key.choice,
                                      aspirant_f=aspirant_f)
-        (undecided_list if verdict == "first" else blessed_list).append(key)
+        blessed_list.append(key)
 
     uncommitted_list, short_list = [], []
 

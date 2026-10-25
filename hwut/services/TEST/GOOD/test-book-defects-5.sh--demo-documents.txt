@@ -1,0 +1,4 @@
+exit 0
+18 document path(s), 0 relative, 0 point nowhere
+RESULTS: 6 ok, 0 fail, <t> [sec], <t> [sec] total
+<hwut-end>

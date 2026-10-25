@@ -1,0 +1,8 @@
+exit 0
+
+# TEST RUN: ./test-i.sh x
+# -- [5] OUT:  "b 2"
+# => [5] GOOD: "b 1"
+./test-i.sh x
+
+<hwut-end>

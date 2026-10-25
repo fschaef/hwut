@@ -34,13 +34,8 @@ request: a choice by index   (1)
 request: no argument, '1' on stdin   (no argument)
     app_argv.py    exit 1   answered: no
         | choices: de, en, ch
-    app_runner.py  exit 0   answered: yes
-        | Select choice:
-        | (0) ch
-        | (1) de
-        | (2) en
-        | de               0,00
-        | ... 3 more line(s)
+    app_runner.py  exit 1   answered: no
+        | error: a choice is required: ch, de, en -- name one, or let 'hwut.play' ask.
 
 request: --hwut-info   (--hwut-info)   (framework)
     app_argv.py    exit 1   answered: no

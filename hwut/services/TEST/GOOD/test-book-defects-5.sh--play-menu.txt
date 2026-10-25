@@ -1,0 +1,34 @@
+== answer '1'
+Select choice of test-two.sh:
+(0) a
+(1) b
+> 1
+     1 | I am b
+RECORDED: test-two.sh--b.txt (digest: <tag>)
+exit 0
+== answer 'a'
+Select choice of test-two.sh:
+(0) a
+(1) b
+> a
+     1 | I am a
+RECORDED: test-two.sh--a.txt (digest: <tag>)
+exit 0
+== answer 'x'
+Select choice of test-two.sh:
+(0) a
+(1) b
+> x
+REFUSED: 'x' selects no choice of 'test-two.sh' -- nothing played
+exit 2
+== answer 'EOF'
+Select choice of test-two.sh:
+(0) a
+(1) b
+> 
+REFUSED: '' selects no choice of 'test-two.sh' -- nothing played
+exit 2
+== no terminal
+REFUSED: 'test-two.sh' has 2 choices: a, b -- name one, or '--all'
+exit 2
+<hwut-end>

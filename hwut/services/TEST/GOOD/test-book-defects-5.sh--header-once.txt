@@ -1,0 +1,15 @@
+== the header no longer parses
+SKIP  test-h.sh ............................................. spec [FAIL]  ||0
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/1
+        test-h.sh   @hwut header does not parse
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+== hwut.report --fail
+        test-h.sh .............................................. spec [FAIL]
+         1 1    [FAIL]   TEST
+RESULTS: 0 ok, 1 fail
+== hwut.report.list --fail
+./test-h.sh
+== mended
+END   :          x ................................................. [OK]  ||0
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+<hwut-end>

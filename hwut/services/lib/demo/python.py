@@ -65,12 +65,37 @@ def written(target):
             with open(path, "rb") as fh: head = fh.read(2)
             if head == b"#!":
                 os.chmod(path, os.stat(path).st_mode | 0o111)
+    _documents_repointed(os.path.join(test, "hwut-features.conf"))
     #  THE ROOT IS THE TEMPLATE (services E-25, D-43): the demonstration
     #  stands on the same 'hwut-root.conf' 'hwut.sanitize root' writes,
     #  language table and all -- never on an empty 'hwut { }'.
     from ..._boundary import written as root_written
     root_written(target)
     return test
+
+
+def _documents_repointed(path):
+    """
+    RETURN: int, the number of document paths rewritten in the feature
+            file 'path' -- every relative one ('../../README.md') made
+            absolute as it resolved from the SOURCE directory; 0 where
+            the file does not stand.
+
+    A COPY KEEPS ITS REFERENCES (ND1): the paths were relative to
+    'demo/python/TEST'; copied elsewhere, 18 of them pointed nowhere.
+    """
+    import re
+    if not os.path.isfile(path): return 0
+    with open(path, encoding="utf-8") as fh: text = fh.read()
+    count = [0]
+    def absolute(match):
+        """RETURN: str, the quoted path, absolute from SOURCE."""
+        count[0] += 1
+        return '"%s"' % os.path.normpath(os.path.join(SOURCE,
+                                                      match.group(1)))
+    text = re.sub(r'"((?:\.\./)+[^"]*)"', absolute, text)
+    with open(path, "w", encoding="utf-8") as fh: fh.write(text)
+    return count[0]
 
 
 def main(argv=None, write=None):

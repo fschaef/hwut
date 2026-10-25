@@ -1,0 +1,12 @@
+== hwut.play test-cut.sh x
+exit 1
+  call[0]    containment ok-completed   exit 0   wall <t>s
+  REPORT     ok
+NOT RECORDED: the stream did not end with '<hwut-end>' -- empty, or cut short; a partial subject is never stored as if whole
+== hwut.play test-slow.sh x
+exit 1
+  call[0]    containment fail-wall-clock-exceeded   exit None   wall <t>s
+  REPORT     test-app-wall-clock-exceeded
+NOT RECORDED: the stream did not end with '<hwut-end>' -- empty, or cut short; a partial subject is never stored as if whole
+OUT: nothing recorded
+<hwut-end>

@@ -86,3 +86,17 @@ COST      Unenforced against a choice that spawns by other means and
 GRAVEYARD Own-writes-only with no stated responsibility: leaves the bug
           class unowned. Per-choice setsid + group containment in
           HwutRunner: duplicates the procsitter inside the harness.
+
+------------------------------------------------------------------------------
+PROBLEM   (ND4, S8 of the defect list on a52f2a3, 2026-10-24) A
+          choice-less application given '-' -- the name its own listing
+          gives the one test -- answered "choice '-' not available.
+          available: -.". The manual mode (no argument) read a selection
+          from stdin and exited 0 or 255 on one that selected nothing.
+DECISION  '-' runs the choice-less test; any other word given to it is
+          answered "this application has no choices". RULED 2026-10-24
+          (services E-189): the menu is 'hwut.play's -- the manual mode
+          is gone; an application with choices called bare refuses,
+          naming them and 'hwut.play', exit 1.
+COST      A person running an application by hand names the choice.
+          Regression: 'services/TEST/test-book-defects-5.sh runner-words'.

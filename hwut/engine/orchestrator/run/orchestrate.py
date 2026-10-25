@@ -527,12 +527,20 @@ def unstood_tuple(directory, app_set, fault_tuple):
     is in the book as a verdict of its own -- the run never dispatches
     them -- so both ask this function, and the tree, directly.
     """
+    #  ONE FAULT, ONE FAILURE (D-63, services E-181): a test whose
+    #  header does not parse is no member of the app set, and the book,
+    #  asked against the app set, would read it as deleted -- 'in book,
+    #  no such test' beside 'spec [FAIL]' for one file that stands. Its
+    #  declaration cannot be read, so the book cannot be judged against
+    #  it: the header fault alone is said, and the book row stays.
+    broken_tuple = broken_app_tuple(app_set, fault_tuple)
+    broken_set   = set(broken_tuple)
     #  ONE ORDER ON EVERY PAGE (2026-10-19, "order must be the same"):
     #  by test, then choice -- the order the report and HINTS stand in.
     return tuple(sorted(
-        tuple((name, "spec-broken")
-              for name in broken_app_tuple(app_set, fault_tuple))
-        + vanished_tuple(directory, app_set),
+        tuple((name, "spec-broken") for name in broken_tuple)
+        + tuple(pair for pair in vanished_tuple(directory, app_set)
+                if pair[0].partition(" ")[0] not in broken_set),
         key=lambda pair: tuple(pair[0].partition(" ")[::2])))
 
 

@@ -18,13 +18,15 @@ class HwutRunner:
 
         app --hwut-info      print the info block; exit.
         app <choice>         normal mode: run one choice; test output on
-                             the process's stdout and stderr.
+                             the process's stdout and stderr. '-' runs
+                             a choice-less application.
         app --interactive    interactive mode: choices are started via
                              stdin; per choice, test output goes to two
                              named sink files; 'done' is reported on the
                              process's original stdout.
-        app                  manual mode: list choices, read one selection
-                             from stdin, run it, exit.
+        app                  the choice-less test; where the application
+                             has choices, refused, naming them -- the
+                             menu is 'hwut.play's (services E-189).
     """
     @typechecked
     def __init__(self,
@@ -101,10 +103,11 @@ class HwutRunner:
             case "--interactive":
                 do = self.MODE_interactive
             case None:
-                # If no choice is specified, but required, ask the user.
-                if None not in self.choice_map:        do = self.MODE_manual_interaction_with_user
+                # A choice is required but none given: refused, named.
+                if None not in self.choice_map:        do = self.MODE_choice_missing
                 else:                                  do = self.MODE_run_test
             case "--run":
+                self.choice = self.__choice_of_word(self.choice)
                 if self.choice not in self.choice_map: do = self.MODE_choice_does_not_exist
                 else:                                  do = self.MODE_run_test
             case _:
@@ -112,12 +115,38 @@ class HwutRunner:
 
         do()
 
+    def __choice_of_word(self, word):
+        """RETURN: str|None, the choice the command-line 'word' names, if
+                   success -- the choice itself; for a choice-less
+                   application its listed name '-' (ND4);
+                   'word' unchanged, else.
+        """
+        if word in self.choice_map:                    return word
+        if word == "-" and None in self.choice_map:    return None
+        return word
+
+    def MODE_choice_missing(self):
+        """RETURN: never; exits with status 1.
+
+        The application has choices and the command line names none. The
+        menu that once asked here is 'hwut.play's (services E-189).
+        """
+        print(f'error: a choice is required: {", ".join(self.__printable_choice_list())}'
+              f" -- name one, or let 'hwut.play' ask.")
+        sys.exit(1)
+
     def MODE_choice_does_not_exist(self):
         """RETURN: never; exits with status 1.
 
         Reports the unavailable choice, the available ones, and the closest
         match by Levenshtein distance.
         """
+        if None in self.choice_map:
+            #  A CHOICE-LESS APPLICATION has no word to offer (ND4): it
+            #  was told 'available: -.' before.
+            print(f"error: '{self.choice}': this application has no "
+                  f"choices -- call it without one.")
+            sys.exit(1)
         print(f"error: choice '{self.choice}' not available.")
         print(f'error: available: {", ".join(self.__printable_choice_list())}.')
         suggestion = _levenshtein_best_match(self.choice, self.sorted_choice_list)
@@ -146,27 +175,6 @@ class HwutRunner:
         """
         for line in self.__info_block_lines(): print(line)
         sys.exit()
-
-    def MODE_manual_interaction_with_user(self):
-        """RETURN: None.
-
-        Lists the choices with indices, reads one line from stdin, runs the
-        selected choice. One shot; for another shot, call the app again.
-        """
-        print("Select choice:")
-        for i, choice in enumerate(self.__printable_choice_list()):
-            print(f"({i}) {choice}")
-
-        cmd = self.__readline()
-        if cmd is None or not cmd.isnumeric():
-            print("error: bad choice or instruction")
-            return
-        try:
-            choice = self.sorted_choice_list[int(cmd)]
-        except IndexError:
-            print(f"error: choice number {cmd} does not exist")
-            sys.exit(-1)
-        self.__run_choice(choice)
 
     def MODE_interactive(self):
         """RETURN: None; returns when the session ends ('quit' or EOF).

@@ -6,7 +6,7 @@
 #     choices {
 #         ask         { features = ["accept-asks-with-reading"] }
 #         bless       { features = ["accept-whole", "accept-refresh"] }
-#         first       { features = ["accept-partial-first", "run-unaccepted-fails"] }
+#         first       { features = ["accept-whole"] }
 #         labels      { features = ["wish-label-silence"] }
 #         merge       { features = ["accept-standing-left-alone", "accept-whole"] }
 #         onedoor     { features = ["accept-standing-left-alone", "accept-merge-at-terminal"] }
@@ -203,12 +203,18 @@ token)
     #  in '<hwut-end>' never COMPLETED. REFUSED atomically -- nothing
     #  is promotable while one incomplete stream stands in the
     #  selection, and no flag bypasses.
+    #  A CUT STREAM REACHES ACCEPT BY 'hwut.run' ONLY: 'hwut.play'
+    #  records none (services E-184). So the case is blessed whole
+    #  first, then cut, then run -- the run's recording is the
+    #  incomplete candidate.
     fixture
-    printf '#!/bin/bash\n# @hwut { title = "Cut" }\necho "half a line"\n' \
+    printf '#!/bin/bash\n# @hwut { title = "Cut" }\necho "half a line"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-cut.sh
     chmod +x tree/suite/TEST/test-cut.sh
-    $RUN --directory=tree --silent 2> /dev/null
     record
+    $ACCEPT --directory=tree/suite/TEST --whole test-cut.sh > /dev/null 2>&1
+    sed -i '/<hwut-end>/d' tree/suite/TEST/test-cut.sh
+    $RUN --directory=tree --silent > /dev/null 2>&1
     face --directory=tree/suite/TEST --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
@@ -223,7 +229,7 @@ ask)
         > out.txt 2> /dev/null
     echo "STATUS: $?"
     mask < out.txt | sed 's/^/    /'
-    echo "GOOD holds (all three, in E-60's undecided shape):"
+    echo "GOOD holds (all three, blessed, E-188):"
     good | sed 's/^/    /'
     echo "--- '--dont-ask' is gone"
     $ACCEPT --directory=tree/suite/TEST --dont-ask 2>&1 | sed 's/^/    /'
@@ -281,20 +287,17 @@ refresh)
     ;;
 
 first)
-    #  ACCEPT IS PARTIAL BY DEFAULT (E-60). A first acceptance WITHOUT
-    #  '--force' records the candidate's SHAPE with nothing decided:
-    #  one '##! unaccepted' region per chunk, one filler per line, the
-    #  closing token outside. The next run reads 'unaccepted [FAIL]'
-    #  (O-25), not '[OK]' -- nobody has judged it yet. '--force' is the old
-    #  blessing, the candidate whole ('bless' above).
+    #  A FIRST ACCEPTANCE BLESSES THE RECORDING (E-188, which retired
+    #  E-60's undecided mirror): what 'hwut.play' recorded becomes the
+    #  nominal whole, and the next run is green.
     fixture
     printf 'y\n' | $ACCEPT --directory=tree/suite/TEST test-ok.sh \
         > out.txt 2> /dev/null
     echo "STATUS: $?"
     grep -E 'blessed|ACCEPTED' out.txt | sed 's/^/    /'
-    echo "--- what stands in GOOD: the shape, undecided"
+    echo "--- what stands in GOOD: the recording"
     sed 's/^/    | /' tree/suite/TEST/GOOD/test-ok.sh.txt
-    echo "--- the next run: a failure by its name, a decision still owed"
+    echo "--- the next run"
     $RUN --directory=tree --plain test-ok.sh > out.txt 2> err.txt
     echo "STATUS: $?"
     grep -E '\[FAIL\]|\[OK\]|RESULTS' out.txt \

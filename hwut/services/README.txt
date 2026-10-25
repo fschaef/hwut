@@ -69,35 +69,18 @@ The faces:
                  a candidate -- because the atomic refusal spans the
                  whole SELECTION and neither half may own it.
 
-                 ACCEPT IS PARTIAL BY DEFAULT (E-60). Without
-                 '--force', a first acceptance records the candidate's
-                 SHAPE with nothing decided: one '##! unaccepted'
-                 region per subject chunk, one filler line per line of
-                 it, the closing token outside every region. The report
-                 says 'undecided', never 'blessed'. The next run reads
-                 'unaccepted [FAIL]' (O-25) -- a decision still owed.
-                 '--force' is the old blessing: the candidate whole.
-
-                 '--whole', '--as-is' and '--force' ARE ONE ACT
-                 (E-109): the candidate becomes the nominal as it
-                 stands -- on a first acceptance instead of the
-                 undecided shape, on a standing nominal instead of
-                 the merge. What an overwrite replaces is an earlier
-                 acceptance: a GOOD file cannot exist without this
-                 face. The two readings of a
-                 first acceptance -- both after 'hwut.play' recorded
-                 the case:
+                 A FIRST ACCEPTANCE BLESSES THE RECORDING (E-188):
+                 the one 'hwut.play' showed -- with '--digest' the very
+                 one. The looking is play's:
 
                      hwut.play <app>            run, look, again,
-                     hwut.accept <app>          until it is right,
-                                                then decide the lines
+                     hwut.accept <app>          until it is right
 
-                     hwut.play <app>            it is right already
-                     hwut.accept <app> --as-is
-
-                 The first is the author's path; the second is a
-                 fixture's, a script's, and an author's who has read
-                 the output and wants it recorded whole.
+                 '--whole', '--as-is' and '--force' ARE ONE ACT
+                 (E-109): the recording overwrites a STANDING nominal,
+                 instead of the merge. What an overwrite replaces is an
+                 earlier acceptance: a GOOD file cannot exist without
+                 this face.
 
                  WHAT ACCEPTANCE MEANS, exactly: a row in 'book.csv'
                  AND a file in 'GOOD/' --

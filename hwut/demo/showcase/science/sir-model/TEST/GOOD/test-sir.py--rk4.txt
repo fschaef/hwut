@@ -88,10 +88,10 @@ I CURVE  day, infected per 1000 -- compared with the recorded curve, distance <=
 120.0    0.000
 ####
 
-peak of I: unit day ((t_peak: 24.37)), ((i_peak: 233.8)) persons; oracle day ((t_ref: 24.36)), ((i_ref: 233.9)) persons
+peak of I: unit ((t_peak: 24.37 d)), ((i_peak: 233.8)) persons; oracle ((t_ref: 24.36 d)), ((i_ref: 233.9)) persons
 LAWS
   drift           ((drift: 1.000e-12))   required <= 1e-9   kept
   s_min           ((s_min: 1.072e+02))   required >= 0      kept
-  peak_shift      ((peak_shift: 4.017e-03))   required <= 0.25   kept
+  peak_shift      ((peak_shift: 4.017e-03 d))   required <= 0.25 d  kept
   final_size_err  ((final_size_err: 9.361e-09))   required <= 1e-4   kept
 <hwut-end>

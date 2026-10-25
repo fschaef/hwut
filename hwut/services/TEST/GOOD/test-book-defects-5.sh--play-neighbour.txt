@@ -1,0 +1,15 @@
+== hwut.play test-ok.sh x
+exit 0
+FAULT: test-bad.sh:2:26: SYNTAX: unterminated list: ']' missing before '}'
+NOT PLAYED: test-bad.sh -- it cannot be read
+RECORDED: test-ok.sh--x.txt (digest: <tag>)
+== hwut.play --all
+exit 1
+FAULT: test-bad.sh:2:26: SYNTAX: unterminated list: ']' missing before '}'
+NOT PLAYED: test-bad.sh -- it cannot be read
+RECORDED: test-ok.sh--x.txt (digest: <tag>)
+== hwut.play test-bad.sh x
+exit 1
+FAULT: test-bad.sh:2:26: SYNTAX: unterminated list: ']' missing before '}'
+nothing played: a directory that cannot be fully read cannot say what it offers
+<hwut-end>

@@ -65,7 +65,7 @@ depends on whom at a stated DEPTH -- 1 the outer directories, 2 the
 inner ones, 0 the modules themselves.
 
     adm/import_graph.py . --depth=1 --exclude="*/TEST/*" \
-        --exclude="*/test-*" --exclude="*/config.py"
+        --exclude="*/test-*" --exclude="*/config.py" --exclude="demo/*"
 
 AN IMPORT IS A FACT IN THE TEXT, and nothing here guesses. That is why
 this tool is static while a CALL graph could not be: duck typing and
@@ -75,6 +75,8 @@ Real calls are observed, never derived.
 
 THE SUITES ARE EXCLUDED. A test application imports whatever it tests,
 upward and downward alike, and is no part of the shape it examines.
+'demo/' IS EXCLUDED TOO (services E-180): the showcase and the Python
+demo are projects hwut tests, not components of hwut.
 
 FORMATS: 'tree' (nested blocks and arrows, for reading), 'edges' (one
 per line, for grep and for diff -- the form a GOOD file wants), 'dot'
@@ -86,7 +88,7 @@ permits is a violation naming both ends, and the tool answers 1.
 
     adm/import_graph.py . --depth=2 --check=adm/LAYERING.txt \
         --exclude="*/TEST/*" --exclude="*/test-*" \
-        --exclude="*/config.py"
+        --exclude="*/config.py" --exclude="demo/*"
 
 The suite is 'adm/TEST/test-import_graph.sh'. Its 'layering' choice
 shows the check PASSING and BITING, because a check that never fails
@@ -172,7 +174,8 @@ CONTRACT MATERIAL -- '--shared'
 ______________________________________________________________________________
 
     adm/import_graph.py . --depth=3 --shared=3 \
-        --exclude="*/TEST/*" --exclude="*/test-*" --exclude="*/config.py"
+        --exclude="*/TEST/*" --exclude="*/test-*" --exclude="*/config.py" \
+        --exclude="demo/*"
 
 names every NAME that three or more components import, and where it
 lives today.
@@ -189,7 +192,8 @@ methods is not contract however many components import it -- it is
 shared because a REAL dependency exists, and the layering must express
 that rather than hide it.
 
-    adm/import_graph.py . --depth=2 --format=svg > architecture.svg
+    adm/import_graph.py . --depth=2 --format=svg --exclude="demo/*" \
+        > architecture.svg
 
 draws the picture HERE -- no graphviz, no browser, no dependency.
 Components in rows, importers above what they import, and A MUTUAL

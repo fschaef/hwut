@@ -62,7 +62,9 @@ record it wins, and the recording says which of them it was and when.
 
 '--all' PLAYS EVERY CASE THE WORDS SELECT here -- every case, where no
 word is given -- one after the other, each recorded. Without it, words
-that name several cases are refused rather than guessed at.
+that name several cases are refused rather than guessed at -- but an
+application with several choices, named without one, is ASKED for on
+the terminal: a short menu, answered by index or name (E-189).
 
 RECORD, LOOK, BLESS. 'hwut.play' and 'hwut.run' are the only faces
 that run a test. 'hwut.diff', 'hwut.merge' and 'hwut.accept' read the
@@ -85,7 +87,8 @@ EXIT STATUS (E-1, services/_exit.py):
                 the tree cannot be read -- what was learnt is shown
     2  REFUSED  the command line cannot be read: no such application,
                 no such choice, or a choice not named where the
-                application offers several
+                application offers several and no terminal can be
+                asked; a menu answer that selects nothing
     3  EMPTY    the choice produced no output to read
 ______________________________________________________________________________
 """
@@ -211,10 +214,8 @@ def main(argv=None, write=None):
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
     result = found.result_db["."]
-    if found.fault_tuple:
-        for fault in found.fault_tuple: write("FAULT: %s" % fault)
-        write("nothing played: a directory that cannot be fully read "
-              "cannot say what it offers")
+    if not _faults_spare(found.fault_tuple, result.app_set, (source_file,),
+                         write):
         return E_ExitCode.FAULT
 
     case = _settled_case(result.app_set, source_file, choice_name,
@@ -251,12 +252,46 @@ def main(argv=None, write=None):
         return E_ExitCode.REFUSED
 
 
+def _faults_spare(fault_tuple, app_set, wanted_tuple, write):
+    """
+    RETURN: bool, True if the play may go on -- no fault, or every fault
+            names ANOTHER test file than those of 'wanted_tuple' (each
+            such fault is written as 'FAULT: ...', with the word that
+            the file is not played);
+            False, else -- a fault of the directory itself ('hwut.conf'),
+            one that names no file, or one naming a test asked for:
+            written, with 'nothing played'.
+
+    ONE FAULT SPOILS WHAT IT NAMES, NOT ITS NEIGHBOURS (Q2, services
+    E-184): a test whose header does not parse cannot be played, and
+    says so; the test beside it can, as 'hwut.run' runs it.
+    """
+    if not fault_tuple: return True
+    readable = {app.source_file for app in app_set} if app_set else set()
+    spoiling = []
+    for fault in fault_tuple:
+        file = getattr(fault, "file", None)
+        if not file or file.endswith(".conf") or file in readable \
+           or any(os.path.basename(file) == os.path.basename(wanted)
+                  for wanted in wanted_tuple):
+            spoiling.append(fault)
+    for fault in fault_tuple: write("FAULT: %s" % fault)
+    if spoiling:
+        write("nothing played: a directory that cannot be fully read "
+              "cannot say what it offers")
+        return False
+    for file in sorted({fault.file for fault in fault_tuple}):
+        write("NOT PLAYED: %s -- it cannot be read" % file)
+    return True
+
+
 def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
               write):
     """
     RETURN: E_ExitCode, the worst of the cases played: OK where every
             case the words select was played and recorded; FAULT where
-            one could not be; REFUSED where the selection cannot be
+            one could not be, or a test of the directory could not be
+            read (it is named, the rest is played); REFUSED where the selection cannot be
             made; EMPTY where it selects nothing.
 
     '--all' PLAYS EVERY CASE THE WORDS SELECT, in this directory, one
@@ -273,11 +308,11 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
     result = found.result_db["."]
-    if found.fault_tuple:
-        for fault in found.fault_tuple: write("FAULT: %s" % fault)
-        write("nothing played: a directory that cannot be fully read "
-              "cannot say what it offers")
+    if not _faults_spare(found.fault_tuple, result.app_set, (), write):
         return E_ExitCode.FAULT
+    #  WHAT COULD NOT BE READ IS NOT PLAYED, AND THE ENDING SAYS SO (Q2):
+    #  the readable cases are played all the same.
+    unreadable_f = bool(found.fault_tuple)
     wish  = with_targets(Wish(), word_list) if word_list else Wish()
     query = CTestTaskListQuery(wish, directory=".",
                                root=os.path.abspath(directory))
@@ -316,6 +351,7 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
             write("REFUSED: %s" % error)
             return E_ExitCode.REFUSED
         if code is not E_ExitCode.OK: worst = E_ExitCode.FAULT
+    if unreadable_f: worst = E_ExitCode.FAULT
     return worst
 
 
@@ -369,7 +405,12 @@ def _settled_case(app_set, source_file, choice_name, directory,
         if choice_name is None and case_tuple:
             #  A CHOICE IS NOT MANDATORY: a test with one meaningful run
             #  declares none and plays without one. This one declares
-            #  several, and one of them is to be named.
+            #  several, and one of them is to be named -- ASKED where a
+            #  person is at the terminal (services E-189), refused where
+            #  nobody is: a pipe has no one to answer.
+            if sys.stdin.isatty():
+                return _chosen_on_console(source_file, choice_list,
+                                          case_tuple, write)
             write("REFUSED: '%s' has %d choices: %s -- name one, or "
                   "'--all'"
                   % (source_file, len(choice_list),
@@ -398,6 +439,34 @@ def _settled_case(app_set, source_file, choice_name, directory,
     return _REFUSED
 
 
+def _chosen_on_console(source_file, choice_list, case_tuple, write):
+    """
+    RETURN: CTestCase, the run of the choice the person selected from a
+            short menu on the console -- by its index or its name -- if
+            success;
+            '_REFUSED', else: an empty answer, the end of input, or a
+            word that selects no choice -- said, nothing played.
+
+    THE MENU 'hwut_runner' ONCE KEPT (services E-189): the choices as the
+    application reports them, numbered from 0, one line read.
+    """
+    write("Select choice of %s:" % source_file)
+    for index, name in enumerate(choice_list):
+        write("(%d) %s" % (index, name))
+    try:
+        answer = input("> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        write("")                   # the prompt's line is closed
+        answer = ""
+    if answer.isdecimal() and int(answer) < len(choice_list):
+        answer = choice_list[int(answer)]
+    for case in case_tuple:
+        if case.choice == answer: return case
+    write("REFUSED: '%s' selects no choice of '%s' -- nothing played"
+          % (answer, source_file))
+    return _REFUSED
+
+
 def _choice_list(app):
     """
     RETURN: list[str], the choices an application reports, in the order
@@ -417,6 +486,24 @@ def _case_name(case):
     """
     if case.choice is None: return case.source_file
     return "%s %s" % (case.source_file, case.choice)
+
+
+def _stream_whole_f(subjects):
+    """
+    RETURN: bool, True if the application's standard output ends with
+            the closing token '<hwut-end>' (R-70), or no standard output
+            is among the subjects to testify;
+            False, else -- an empty stream, or one cut short (ND6).
+
+    THE APPLICATION TESTIFIES, NOT ITS PYPE: the RAW stream is read where
+    one was kept -- a pype may well filter the token out of the subject.
+    """
+    from ..._accept_common import token_terminated_f
+    raw_db = subjects.raw_db or {}
+    if STDOUT in raw_db:
+        return token_terminated_f(raw_db[STDOUT])
+    if STDOUT not in subjects.reader_db: return True
+    return token_terminated_f(subjects.reader_db[STDOUT].open().read())
 
 
 async def _play(configuration, choice_name, bookkeeper, plain_f,
@@ -493,7 +580,9 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     with MkdirMutex(str(configuration.test_directory)):
         subjects = await provision.provide()
         recorded_db = None
-        if subjects is not None:
+        cut_short_f = subjects is not None \
+                      and not _stream_whole_f(subjects)
+        if subjects is not None and not cut_short_f:
             recorded_db = subject_provision.record(store, configuration,
                                                    choice_name, provision,
                                                    wanted=True,
@@ -512,6 +601,13 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
             write("RECORDED: %s (digest: %s)"
                   % (", ".join(path.name for path in path_list),
                      digest_tag(path_list)))
+        elif cut_short_f:
+            #  THE STREAM'S OWN TESTIMONY IS MISSING (ND6, R-70): the
+            #  help promised it -- a stream cut short is shown, and NOT
+            #  recorded.
+            write("NOT RECORDED: the stream did not end with "
+                  "'<hwut-end>' -- empty, or cut short; a partial "
+                  "subject is never stored as if whole")
         else:
             write("NOT RECORDED: the run did not complete, and a partial "
                   "subject is never stored as if whole")
@@ -532,13 +628,19 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         #  AN EMPTY ANSWER IS NEVER REPORTED EMPTY (operations todo-21,
         #  law 1): with it, the call, what PATH resolved, the exit code,
         #  the containment and the other channel.
-        write("EMPTY: the choice produced no output to read")
+        launch_failed_f = _launch_failed_f(provision)
+        if launch_failed_f:
+            #  THE HELP'S WORD (ND2): an application that would not
+            #  launch is a FAULT, exit 1 -- not an empty answer.
+            write("FAULT: the application would not launch")
+        else:
+            write("EMPTY: the choice produced no output to read")
         _write_diagnosis(configuration, choice_name, provision,
                          {STDOUT: raw_db.get(STDOUT, "") or text,
                           STDERR: subject_db.get(STDERR, "")
                                   or raw_db.get(STDERR, "")}, write)
         recorded_note()
-        return E_ExitCode.EMPTY
+        return E_ExitCode.FAULT if launch_failed_f else E_ExitCode.EMPTY
 
     if live_f: write("")
     if raw_f:
@@ -604,11 +706,17 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         #  to show an author what their program produced may show it,
         #  and the banner keeps the two apart.
         _write_indented(error_text or "(nothing)", write)
+    if cut_short_f:
+        #  WHY IT WAS CUT SHORT (ND3): a cap that killed it, its exit, its
+        #  stderr -- the provision's own record, as for an empty answer.
+        _write_diagnosis(configuration, choice_name, provision, {}, write)
     write("")
     recorded_note()
     #  THE READING IS THE PRODUCT: a text this face could not read is
-    #  a FAULT, not an OK with a refusal printed in the middle of it.
-    return E_ExitCode.OK if shown_f else E_ExitCode.FAULT
+    #  a FAULT, not an OK with a refusal printed in the middle of it --
+    #  and so is a stream that could not be recorded (ND6).
+    return E_ExitCode.OK if shown_f and not cut_short_f \
+           else E_ExitCode.FAULT
 
 
 def _write_diagnosis(configuration, choice_name, provision, channel_db,
@@ -634,6 +742,18 @@ def _write_diagnosis(configuration, choice_name, provision, channel_db,
     for line in explain(configuration, choice_name, record,
                         channel_db or None).rstrip("\n").splitlines():
         write(line)
+
+
+def _launch_failed_f(provision):
+    """
+    RETURN: bool, True if the provision's record says the application
+            did not launch (report 'test-app-launch-failed');
+            False, else -- or where no record stands.
+    """
+    delivered = getattr(provision, "last_provided", None)
+    record    = getattr(delivered, "provision", None)
+    report    = getattr(record, "report", None)
+    return getattr(report, "value", report) == "test-app-launch-failed"
 
 
 def _compare_options(configuration, choice_name):

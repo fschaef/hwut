@@ -1,0 +1,5 @@
+x <= 1e-9      over 2e-16    : blessed
+x <= 1e-9      over 2e-6     : refused
+x <= 1E-9      over 2e-16    : blessed
+x < 1e-9 s     over 2e-16 s  : blessed
+<hwut-end>

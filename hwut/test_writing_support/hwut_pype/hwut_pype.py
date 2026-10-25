@@ -1848,6 +1848,10 @@ def main(argv=None, stream=None):
     except PypeError as error:
         print("pype: %s" % error, file=sys.stderr)
         return 1
+    except BrokenPipeError:
+        #  THE READER HUNG UP ('hwut.pype ... | head', D-64): an ordinary
+        #  ending, the face's guard says it (E-55) -- not a fault here.
+        raise
     except OSError as error:
         print("pype: %s" % error, file=sys.stderr)
         return 1
@@ -1891,11 +1895,34 @@ def _system_main(pype_system, file_name, flag_db, search_dir_list,
     except PypeError as error:
         print("pype: %s" % error, file=sys.stderr)
         return 1
+    except BrokenPipeError:
+        raise                       # the reader hung up (D-64), as above
     except (IOError, OSError) as error:
         print("pype: %s" % error, file=sys.stderr)
         return 1
     return 0
 
 
+def _main_quiet_on_closed_pipe():
+    """
+    RETURN: int, 'main()'s exit code if success;
+            141 (128 + SIGPIPE), else -- the reader hung up ('... | head',
+            D-64), an ordinary ending, said by nothing.
+
+    The script's own door, where 'hwut.pype's guard (services E-55) does
+    not stand: this module is SEALED and imports nothing of the
+    services. stdout is pointed at the void so the interpreter's flush
+    at exit cannot raise a second time.
+    """
+    try:
+        return main()
+    except BrokenPipeError:
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except OSError:
+            pass
+        return 141
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(_main_quiet_on_closed_pipe())

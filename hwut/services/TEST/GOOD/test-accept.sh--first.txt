@@ -1,13 +1,12 @@
 STATUS: 0
     ACCEPTED  1 of 1
---- what stands in GOOD: the shape, undecided
-    | ##! unaccepted
-    | --?--
-    | ####
+        blessed        test-ok.sh .stdout
+--- what stands in GOOD: the recording
+    | steady line
     | <hwut-end>
---- the next run: a failure by its name, a decision still owed
-STATUS: 1
-    SKIP  test-ok.sh unaccepted [FAIL]  ||0
-       suite/TEST . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/1
-    RESULTS: 0 ok, 1 fail, 2 skip, 0.02 [sec] total
+--- the next run
+STATUS: 0
+    END   test-ok.sh [OK]  ||0
+       suite/TEST . . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
+    RESULTS: 1 ok, 0 fail, 2 skip, 0.04 [sec] total
 <hwut-end>

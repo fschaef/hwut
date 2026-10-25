@@ -1,0 +1,10 @@
+RECORDED: test-f.sh--c.txt (digest: <tag>)
+ACCEPTED  1 of 1
+    blessed        test-f.sh c .stdout
+exit 0
+== GOOD
+hello
+<end>
+END   :          c ................................................. [OK]  ||0
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+<hwut-end>

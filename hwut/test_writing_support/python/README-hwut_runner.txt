@@ -4,7 +4,15 @@ hwut_runner -- FRONT END OF A HWUT TEST APPLICATION
 
 A test application constructs one HwutRunner and calls '.run()'.
 
-    from hwut_runner import HwutRunner
+    from hwut.test_writing_support.python.hwut_runner import HwutRunner
+
+THE IMPORT PATH (S7): under 'hwut.run' and 'hwut.play' the module is
+found because every 'hwut.*' launcher exports PYTHONPATH with the
+directory that holds 'hwut/', and the test application inherits it; an
+installed hwut has it on the path anyway. Run by hand from a source
+tree, the application needs the same: 'PYTHONPATH=<dir holding hwut>'.
+The module requires 'typeguard' (adm/requirement-list.txt), as hwut
+itself does.
 
     HwutRunner(sys.argv, "My Title;",
                { "first": test_first, "second": test_second },
@@ -29,8 +37,9 @@ ______________________________________________________________________________
                         the process's stdout and stderr. Exit status is the
                         process's exit status.
     app --interactive   INTERACTIVE MODE. Section 2.
-    app                 manual mode: list choices with indices, read one
-                        index from stdin, run it, exit.
+    app                 the choice-less test. Where the application has
+                        choices it refuses, naming them, exit 1: the menu
+                        that asked here is 'hwut.play's (services E-189).
     app -h | --hi | --sos | --wtf     same as '--hwut-info'.
 
 Info block:
@@ -136,5 +145,10 @@ the state at session entry.
 6  FURTHER CONTENT OF THE MODULE
 ______________________________________________________________________________
 
-make_script_application()   generate a temporary executable script
-ScriptApplication           context manager around it; deletes on exit
+In 'script_runner.py' beside it (TW-2: this section named functions that
+do not exist):
+
+script_runner.do()          generate an executable script, temporary
+                            or at a given path; returns its path
+script_runner.CRunScript    context manager around 'do()'; deletes the
+                            script when the block ends

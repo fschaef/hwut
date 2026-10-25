@@ -1,0 +1,5 @@
+exit 1
+FAULT: the application would not launch
+  REPORT     test-app-launch-failed
+NOT RECORDED: the run did not complete, and a partial subject is never stored as if whole
+<hwut-end>

@@ -1,0 +1,4 @@
+a.pype in.txt: exit 141, stderr 0 byte(s)
+s.pypes in.txt: exit 141, stderr 0 byte(s)
+--draw --svg big.pypes: exit 141, stderr 0 byte(s)
+<hwut-end>

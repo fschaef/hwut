@@ -3,6 +3,6 @@ INSPECT: region GOOD carries unaccepted: False
          plain  GOOD carries unaccepted: True
          plain  booked : aspirant
   OK  : a GOOD with a '##! potpourri' region is booked accepted
-  OK  : a first acceptance ('##! unaccepted') is booked aspirant
+  OK  : a GOOD carrying '##! unaccepted' is booked aspirant
 SUCCESS: accept books by the bookkeeper's own test.
 <hwut-end>

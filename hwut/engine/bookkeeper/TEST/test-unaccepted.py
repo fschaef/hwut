@@ -100,7 +100,7 @@ def test_booked():
     os.makedirs(test)
     with open(os.path.join(test, "hwut.conf"), "w") as fh: fh.write("hwut {\n}\n")
     for stem, body in (("region", "##! potpourri\\na\\n####\\n<hwut-end>"),
-                       ("plain",  "x\\n<hwut-end>")):
+                       ("plain",  "##! unaccepted\\nx\\n####\\n<hwut-end>")):
         path = os.path.join(test, "test-%s.py" % stem)
         with open(path, "w") as fh: fh.write(SCRIPT % (stem, body))
         os.chmod(path, 0o755)
@@ -127,7 +127,7 @@ def test_booked():
         (region.get("verdict") is E_TestVerdict.PASS,
          "a GOOD with a '##! potpourri' region is booked accepted"),
         (plain.get("verdict") is E_TestVerdict.ASPIRANT,
-         "a first acceptance ('##! unaccepted') is booked aspirant"),
+         "a GOOD carrying '##! unaccepted' is booked aspirant"),
     ])
     shutil.rmtree(root, ignore_errors=True)
     _verdict(ok, "accept books by the bookkeeper's own test.")

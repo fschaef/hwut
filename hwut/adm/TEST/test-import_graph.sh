@@ -235,10 +235,13 @@ refused)
 hwut)
     #  THE REAL TREE: the outer picture, and its own declaration.
     #  THE SUITES ARE EXCLUDED -- a test application imports whatever
-    #  it tests, and is no part of the shape it examines.
+    #  it tests, and is no part of the shape it examines. SO IS 'demo/'
+    #  (services E-180): the showcase and the Python demo are projects
+    #  hwut tests, not components of hwut.
     cd "$ROOT"
     python3 "$TOOL" . --depth=1 --exclude="*/TEST/*" \
-        --exclude="*/test-*" --exclude="*/config.py" > "$WORK/o.txt" 2>&1
+        --exclude="*/test-*" --exclude="*/config.py" \
+        --exclude="demo/*" > "$WORK/o.txt" 2>&1
     echo "STATUS: $?"
     #  ONE LINE OF EDGES PER COMPONENT: their number is the tree's, so
     #  they stand on one line where one pattern takes them all.
@@ -249,7 +252,7 @@ hwut)
     echo "}"
     python3 "$TOOL" . --depth=2 --check=adm/LAYERING.txt \
         --exclude="*/TEST/*" --exclude="*/test-*" \
-        --exclude="*/config.py" > "$WORK/c.txt" 2>&1
+        --exclude="*/config.py" --exclude="demo/*" > "$WORK/c.txt" 2>&1
     echo "STATUS: $?"
     #  THE JUDGEMENT LINE ALONE: what follows it lists what the tree
     #  holds (violations, seals, doors) -- the 'layering' choice shows

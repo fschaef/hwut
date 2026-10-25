@@ -30,10 +30,11 @@ speaks the interactive protocol (DOWN 'run <choice> <out> <err>', 'info',
 'quit'; UP 'done <choice> <status>', 'info: ...', 'bye').
 
 front-end   one row per request, both applications: a choice, a typo, a
-            choice by index, no argument (manual mode, '1' on stdin),
-            '--hwut-info', '--interactive'. What HwutRunner buys: the info
-            block from the map, 'did you mean', indices, the session --
-            none of it written by the author.
+            choice by index, no argument (refused by HwutRunner, naming
+            the choices: the menu is 'hwut.play's), '--hwut-info',
+            '--interactive'. What HwutRunner buys: the info block from
+            the map, 'did you mean', the session -- none of it written
+            by the author.
 sequential  one session, choices de, en, ch run one after the other IN
             ONE PROCESS. numfmt configures its separators once per
             process: en and ch print German separators. The matrix marks

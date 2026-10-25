@@ -246,7 +246,7 @@ failed test, 2 the command line cannot be read, 3 it asks for nothing.
 
 | Command | What it does |
 |---|---|
-| `hwut.accept` | promotes the recording to the nominal; runs nothing, asks nothing. Partial by default: a first acceptance records the shape with nothing decided; `--whole` blesses the recording as it stands; `--digest=<tag>` blesses only the recording `hwut.play` named. Where a nominal stands it refers to `hwut.merge` |
+| `hwut.accept` | promotes the recording to the nominal; runs nothing, asks nothing. A first acceptance blesses the recording `hwut.play` showed; `--digest=<tag>` blesses only the recording `hwut.play` named. Where a nominal stands it refers to `hwut.merge`; `--whole` overwrites it |
 | `hwut.merge` | the merge with keys, the one face that merges; runs nothing: take lines, regions or the whole subject into GOOD, edit, undo, adjust tolerances |
 | `hwut.accept.propose` | writes the differences as a file to read; blesses nothing |
 | `hwut.accept.apply` | blesses what such a file names, and nothing else |

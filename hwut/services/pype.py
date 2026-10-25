@@ -132,6 +132,12 @@ def _units_listed(argv, write):
     except ValueError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    if not row_list:
+        #  A UNIT OF NO TYPE (ND11): 'cM' is pint's centimolar, a
+        #  dimension no unit type of hwut names -- nothing to list.
+        write("REFUSED: '%s' is a unit of no unit type hwut names "
+              "('hwut.pype --unit-types' lists them)" % argv[1])
+        return E_ExitCode.REFUSED
     width = max(len(unit) for unit, _ in row_list)
     for unit, type_name in row_list:
         write("%-*s  %s" % (width, unit, type_name))

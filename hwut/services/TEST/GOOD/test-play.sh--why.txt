@@ -11,11 +11,11 @@ STDOUT {
       stderr         20 bytes   first: 'all of it on stderr'
       stdout          0 bytes
       HINT: stdout is EMPTY while stderr is not -- output on the wrong channel? (a runner may route print() to stderr; compare reads stdout)
-    RECORDED: test-wrong.sh.txt (digest: <tag>)
+    NOT RECORDED: the stream did not end with '<hwut-end>' -- empty, or cut short; a partial subject is never stored as if whole
 }
-STATUS: 3
+STATUS: 1
 STDOUT {
-    EMPTY: the choice produced no output to read
+    FAULT: the application would not launch
     
     EXPLAIN  test-gone.sh, choice None
       REQUEST    ['no-such-tool-xyz', 'test-gone.sh']

@@ -6,11 +6,11 @@ STATUS: 0
     ==============================================================================
     ACCEPTED  3 of 3
     ------------------------------------------------------------------------------
-        undecided      test-ok.sh .stdout
-        undecided      test-two.sh a .stdout
-        undecided      test-two.sh b .stdout
+        blessed        test-ok.sh .stdout
+        blessed        test-two.sh a .stdout
+        blessed        test-two.sh b .stdout
     ==============================================================================
-GOOD holds (all three, in E-60's undecided shape):
+GOOD holds (all three, blessed, E-188):
     test-ok.sh.txt
     test-two.sh--a.txt
     test-two.sh--b.txt

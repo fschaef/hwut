@@ -7029,3 +7029,189 @@ COST      Decision points have an optional fourth element; every reader
           only in the per-case record -- the names are lost after it.
           Regression: 'test-book-defects-4.sh coverage-arms';
           'engine/coverage/readers/TEST/test-readers.py branches'.
+
+
+E-180  IMPORT GRAPHS LEAVE OUT 'demo/'  (ruled 2026-10-24)        (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on a52f2a3: 'adm/TEST/test-import_graph.sh hwut' red.
+          The showcase (574ab5d) put 39 Python modules under
+          'hwut/demo/showcase/'; the outer picture of hwut drew them as a
+          component, 'demo --> test_writing_support'.
+DECISION  RULED (a): "exclude the showcase and the demo from import
+          graphs". Every graph drawn over the tree -- the page's two
+          invocations, the four recipes of 'adm/DEVELOPMENT.txt' --
+          passes '--exclude="demo/*"' beside the suites' exclusion: the
+          showcase and the Python demo are projects hwut tests, not
+          components of hwut.
+COST      The showcase's real edge to 'test_writing_support' is drawn
+          nowhere. The page's GOOD stands unchanged.
+GRAVEYARD (b) recording 'demo { }' as part of hwut's picture: its edges
+          would count in LAYERING, and every showcase project would move
+          the page.
+
+
+E-181  ONE FAULT, ONE FAILURE: A REFUSED HEADER IS NO VANISHED TEST
+       (D-63)                                                         (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: a test the book records whose header then does not
+          parse failed twice -- 'spec [FAIL]' and 'no-app [FAIL]', "in
+          book, no such test" -- on 'hwut.run', 'hwut.report' (2 fail)
+          and 'hwut.report.list' (listed twice); the run said '1 fail'
+          beside two lines and its HINTS omitted the header. ROOT: the
+          book was asked against the APP SET (E-171), and a test whose
+          header does not parse is absent from it -- read as deleted.
+DECISION  FIX in 'orchestrate.unstood_tuple', where all four readers ask:
+          a test exploration could not read is judged by its header
+          fault alone; its book row stays, since the file stands. Mended,
+          it is green against its old GOOD.
+COST      None measured. Regression: 'test-book-defects-5.sh header-once'.
+
+
+E-182  A NUMERAL IN A LAW IS THE LONGEST NUMERAL; A BARE ZERO IS A BARE
+       NUMBER  (R1, ND13)                                             (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED (R1): 'x <= 1e-9' compared x with pint's elementary
+          charge. The literal reader of E-175 took a numeral and a unit;
+          with no unit after '1e-9' the regex backtracked into the
+          numeral and read '1' with the unit 'e'. '1E-9' was refused
+          ("'E' is no unit") and blocked the directory. Every run then
+          wrote the false finding into the GOOD (E-123): the showcase
+          read 204 ok, 3 fail. MEASURED (ND13): pint compares a plain 0
+          with any unit ('0 == 0 s' is True) while every other bare
+          number raises -- a bare 0 was blessed under 'x == 0 s'. The
+          list's second example ('x > 5 ms' over 0) was refused already:
+          zero is comparable, not greater.
+DECISION  FIX: a numeral never stops where an exponent continues it
+          (RQ-6's law, now in the constraint reader too). Where a law
+          writes a quantity, or a value it meets carries a unit, a bare
+          number enters it as a DIMENSIONLESS quantity -- refused against
+          a unit like 7 is, zero included. Laws over plain numbers meet
+          plain numbers.
+COST      A GOOD a run already marked with a false
+          '##! constraint-violation' keeps it (E-123: "until someone
+          decides"); the showcase's three were restored by git. The
+          showcase reads 207 of 207; 'science/sir-model rk4' was
+          re-recorded for its own change (days printed as quantities,
+          diff seen). Regression: 'test-book-defects-5.sh' exponent-law,
+          zero-law.
+
+
+E-183  THE UNIT LISTING IS MEASURED THROUGH THE READER  (D-65, ND9,
+       ND11)                                                          (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.pype --units' printed pint's symbols -- 38 of
+          470 spellings no line can write: 'μm', 'Å', 'Δ°C' (outside the
+          reader's word), dimensionless constants under 'angle' ('%',
+          'pi', 'avogadro_number'), and 'mcd', listed as millicandela,
+          which pint reads as a microday. 'quantity(degC)' over a
+          'delta_degC' line raised DimensionalityError (ND9); '--units cM'
+          a traceback over an empty listing (ND11).
+DECISION  FIX: a unit is listed in the first spelling the reader takes
+          whole and binds back, under its type, to that very unit -- the
+          symbol, its ASCII forms ('um', 'delta_degC'), pint's aliases,
+          its name ('angstrom'); a unit no spelling reaches is not
+          listed. A text of the right dimension that will not convert
+          (absolute against difference) is no match. A unit of no type
+          hwut names is refused by name, exit 2.
+COST      450 spellings listed, every one writable. The reader itself is
+          unchanged: a log that writes 'μm' still binds nothing.
+          Regression: 'test-book-defects-5.sh units-written'.
+
+
+E-184  'hwut.play': A FAULT SPOILS WHAT IT NAMES; A STREAM CUT SHORT IS
+       NOT RECORDED  (Q2, ND6, ND3, ND2)                              (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: one test whose header does not parse stopped
+          'hwut.play' for its whole directory, the healthy test named
+          included (Q2). A stream without '<hwut-end>', or an empty one,
+          was RECORDED although the help says a stream cut short is not
+          (ND6); one killed by its cap said "NOT RECORDED" without the
+          cap, exit 0 (ND3). An application that would not launch said
+          EMPTY, exit 3; the help says FAULT, 1 (ND2).
+DECISION  FIX, to the help's word and the run's law: a fault naming
+          another test's file is said ('NOT PLAYED: <file> -- it cannot
+          be read') and the play goes on; '--all' plays the readable
+          ones and exits 1; a fault of 'hwut.conf', or of the test asked
+          for, still refuses. A stream that does not end with the
+          closing token is shown, not recorded, exit 1, with the
+          provision's diagnosis (the cap, the exit). A launch failure is
+          'FAULT: the application would not launch', exit 1.
+COST      Regression: 'test-book-defects-5.sh' play-neighbour,
+          play-cut-short, play-no-launch.
+
+
+E-185  'hwut.pype' ENDS QUIETLY ON A CLOSED PIPE  (D-64)            (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.pype ... | head -1' printed 'pype: [Errno 32]
+          Broken pipe', exit 1, for scripts, systems and '--draw --svg'.
+          ROOT: the interpreter's 'except OSError' caught BrokenPipeError
+          (a subclass) before the face's guard (E-55) saw it.
+DECISION  FIX: the interpreter lets BrokenPipeError through; the face's
+          guard ends with 141, silent, as 'hwut.diff' does (D-31). The
+          interpreter's own script door, sealed from the services, does
+          the same itself.
+COST      Regression: 'test-book-defects-5.sh pipe-quiet'.
+
+
+E-186  A PROPOSAL HOLDS NO LINE OF '##! ignore'  (ND5)             (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.accept.propose' proposed a line inside a
+          '##! ignore' region beside the real difference. ROOT: each line
+          is judged ALONE ('difference_pair_list'), outside the region
+          that makes the run ignore it.
+DECISION  FIX: an entry whose lines lie inside '##! ignore' on every side
+          that has one is dropped before the proposal is written.
+COST      Other region kinds are still judged line by line. Regression:
+          'test-book-defects-5.sh propose-ignore'.
+
+
+E-187  'hwut.demo.python' REPOINTS ITS DOCUMENTS  (ND1)            (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: the feature file of the copy kept its document
+          paths relative to 'demo/python/TEST'; written anywhere else, 18
+          of them pointed nowhere.
+DECISION  FIX: on writing, every relative document path is made absolute
+          as it resolved from the source directory.
+COST      The copy names the installation it came from; moved with it.
+          Regression: 'test-book-defects-5.sh demo-documents'.
+
+
+E-188  A FIRST 'hwut.accept' BLESSES THE RECORDING  (N10, ruled
+       2026-10-24 (a))                                                (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: 'hwut.play t.sh c' recorded "hello"; a bare
+          'hwut.accept t.sh c' said 'ACCEPTED 1 of 1 / undecided', exit 0,
+          and wrote E-60's mirror -- '##! unaccepted', '--?--' -- with
+          "hello" nowhere; the next run was red. ANSWERS 7.1 and 8.2 had
+          told the writers "play, look, accept" and "accept blesses what
+          the words select" (E-165, E-167): two rulings disagreed.
+DECISION  RULED (a): where no nominal stands, 'hwut.accept' blesses the
+          recording whole -- the one 'hwut.play' showed, and with
+          '--digest' the very one. '--whole', '--as-is', '--force' keep
+          one meaning: overwrite a standing nominal, skipping the merge.
+COST      The pages that showed 'undecided' were re-recorded. GRAVEYARD:
+          E-60's first-acceptance mirror (its builder still serves the
+          merge screen); (b) keeping it with an honest report and exit 1;
+          (c) refusing a bare first accept. Regression:
+          'test-book-defects-5.sh accept-first'.
+
+
+E-189  'hwut.play' ASKS FOR THE CHOICE ON THE TERMINAL; 'hwut_runner'
+       KEEPS NO MENU  (ruled 2026-10-24)                              (2026-10-24)
+------------------------------------------------------------------------------
+PROBLEM   An application with several choices, played with none named,
+          was refused ("name one, or '--all'"); the test-writing support
+          'hwut_runner' kept a console menu of its own, for one process.
+DECISION  RULED: "hwut.play should interact on the choice, if the choice
+          is omitted but the test app requires it, in the same way that
+          hwut_runner.py does, in form of a short console menu".
+          Played back and accepted: on a terminal, play lists the choices
+          numbered from 0 and reads one line -- index or name; an empty
+          answer, the end of input or a word that selects nothing plays
+          nothing, exit 2; one choice or none, no menu. Without a terminal
+          the refusal stands (a piped stdin is for later). 'hwut_runner'
+          loses its manual mode: an application with choices called bare
+          refuses, naming them and 'hwut.play', exit 1.
+COST      The showcase's 'runner-session front-end' was re-recorded (its
+          no-argument row). Regression: 'test-book-defects-5.sh'
+          play-menu, runner-words.
