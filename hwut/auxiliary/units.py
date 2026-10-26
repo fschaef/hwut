@@ -38,6 +38,7 @@ UNIT_TYPE_DB = {
     "energy":        "J",
     "force":         "N",
     "frequency":     "Hz",
+    "genetic_distance": "cM",
     "inductance":    "H",
     "length":        "m",
     "luminosity":    "cd",
@@ -45,8 +46,11 @@ UNIT_TYPE_DB = {
     "power":         "W",
     "pressure":      "Pa",
     "resistance":    "ohm",
+    "sequence_length": "bp",
     "speed":         "m/s",
     "temperature":   "K",
+    #  ONE DIMENSION, TWO KINDS (ND12, E-191): a reading and a difference.
+    "temperature_difference": "delta_degC",
     "time":          "s",
     "voltage":       "V",
     "volume":        "m**3",
@@ -55,6 +59,12 @@ UNIT_TYPE_DB = {
 #  THE PREFIXES SHOWN beside a type's reference unit by '--units': pint
 #  reads every SI prefix on every unit; these are the ones a log carries.
 SHOWN_PREFIX_TUPLE = ("n", "u", "m", "k", "M", "G")
+
+#  A TYPE WHOSE LOGS CARRY OTHER PREFIXES (ND14, E-194): a sequence is
+#  written in kbp, Mbp, Gbp -- never 'mbp'; 'cM' is prefixed already.
+SHOWN_PREFIX_DB = {"data": ("k", "M", "G", "T"),       # no 'mbyte' (E-195)
+                   "sequence_length": ("k", "M", "G"),
+                   "genetic_distance": ()}
 
 #  A UNIT AS A LINE SPELLS IT: a word, optionally divided or multiplied
 #  by further words, powers allowed -- 'ms', 'kN', 'm/s', 'm/s**2',
@@ -83,7 +93,107 @@ def registry():
             names how to install it.
     """
     import pint
-    return pint.UnitRegistry(autoconvert_offset_to_baseunit=True)
+    #  PINT'S OWN ALGEBRA (ND12, services E-191): an absolute temperature
+    #  in arithmetic is an error with a name -- 't * 2' over 20 degC --
+    #  never silently kelvin. 't2 - t1' of two degC is a delta_degC, and
+    #  'degC + delta_degC' a degC, as physics has it.
+    return pint.UnitRegistry(_definition_file(),
+                             autoconvert_offset_to_baseunit=False)
+
+
+def _definition_file():
+    """
+    RETURN: str, the path of pint's own unit definitions -- derived from
+            the INSTALLED pint at the first call, so they never fall out
+            of step with it -- changed where pint reads otherwise than a
+            log means:
+            - information is a dimension of its own, 'bit = [information]'
+              (ND10, services E-192). pint counts bits and bytes as
+              dimensionless, so '3 MB' bound as an angle and '10 GHz' held
+              'r >= 100 MB/s'.
+            - GENOMICS (ND14, E-194): 'bp' is a base pair, a sequence
+              length ('kbp', 'Mbp', 'Gbp' by prefix), not pint's big point
+              ('1200 bp' bound 0.423 m); 'cM' a centimorgan, a genetic
+              distance, not centimolar. 'big_point' and 'centimolar' keep
+              their long names.
+            - BITS (E-195): 'kb', 'Mb', 'Gb' are kilo-, mega-, gigabits, as
+              a link speed writes them -- not kilobarn, megabarn, gilbert.
+            raises RuntimeError naming the line, where the installed pint
+            spells a changed line otherwise.
+    """
+    import atexit
+    import os
+    import re
+    import shutil
+    import tempfile
+    import pint
+    source = os.path.dirname(pint.__file__)
+    target = tempfile.mkdtemp(prefix="hwut_units_")
+    atexit.register(shutil.rmtree, target, True)
+    for name in os.listdir(source):          # 'default_en.txt' imports others
+        if name.endswith(".txt"):
+            shutil.copy(os.path.join(source, name), target)
+    path = os.path.join(target, "default_en.txt")
+    with open(path, encoding="utf-8") as fh: text = fh.read()
+    for pattern, replacement, said in _DEFINITION_CHANGE_TUPLE:
+        text, n = re.subn(pattern, replacement, text)
+        if n != 1:
+            #  A PINT THAT SPELLS IT OTHERWISE is said, not guessed around.
+            raise RuntimeError("pint %s does not define %s as hwut expects; "
+                               "hwut cannot read its units"
+                               % (pint.__version__, said))
+    text += _DEFINITION_ADDED
+    with open(path, "w", encoding="utf-8") as fh: fh.write(text)
+    return path
+
+
+#  WHERE HWUT'S REGISTRY DIFFERS FROM PINT'S: (pattern, replacement, what
+#  the line is), each matching exactly once in 'default_en.txt'.
+_DEFINITION_CHANGE_TUPLE = (
+    (r"(?m)^(\s*)bit\s*=\s*\[\]", r"\1bit = [information]",
+     "'bit = []'"),
+    #  'bp' leaves the point's aliases; the point keeps 'big_point'.
+    (r"(?m)^(\s*point\s*=.*?)\s*=\s*bp\s*$", r"\1",
+     "the point with its alias 'bp'"),
+    #  'Gb' leaves the gilbert, which keeps its name (E-195).
+    (r"(?m)^(\s*gilbert\s*=.*?)\s*=\s*Gb\s*$", r"\1",
+     "the gilbert with its symbol 'Gb'"),
+)
+
+#  WHAT HWUT ADDS (ND14, E-194; E-195). 'cM' defined whole is read before pint
+#  splits it into 'c' + 'M' (molar).
+_DEFINITION_ADDED = """
+
+# hwut (ND14, services E-194): genomics
+base_pair = [sequence_length] = bp
+morgan = [genetic_distance]
+centimorgan = 0.01 * morgan = cM
+
+# hwut (services E-195): a link speed's bits -- '100 Mb/s', not megabarn
+kilobit = 1e3 * bit = kb
+megabit = 1e6 * bit = Mb
+gigabit = 1e9 * bit = Gb
+"""
+
+
+def difference_unit_f(unit):
+    """
+    RETURN: bool, True if 'unit' is a temperature DIFFERENCE --
+            'delta_degC', 'delta_degF', ... -- as pint names them;
+            False, else.
+    """
+    return str(unit).startswith("delta_")
+
+
+def absolute_temperature_f(unit):
+    """
+    RETURN: bool, True if 'unit' is a temperature an ABSOLUTE reading
+            is written in -- degC, degF, K, ... -- not a difference;
+            False, else.
+    """
+    ureg = registry()
+    return not difference_unit_f(unit) \
+           and ureg.Unit(unit).dimensionality == ureg.Unit("K").dimensionality
 
 
 @functools.lru_cache(maxsize=None)
@@ -134,6 +244,12 @@ def bound_value(text, spec):
     if not hasattr(quantity, "dimensionality") \
        or quantity.dimensionality != dimensionality_of(spec) \
        or quantity.unitless:
+        raise NotThisQuantity(text)
+    #  ABSOLUTE AND DIFFERENCE ARE NOT ONE KIND (ND12): 'quantity(temperature)',
+    #  'quantity(degC)', 'quantity(K)' read readings; a difference is
+    #  'quantity(delta_degC)'. One dimension, two meanings.
+    if absolute_temperature_f(reference_of(spec)) \
+       and difference_unit_f(quantity.units):
         raise NotThisQuantity(text)
     try:
         return float(quantity.to(reference_of(spec)).magnitude)
@@ -227,15 +343,25 @@ def unit_tuple(spec=None):
     RETURN: tuple[(str, str)], '(unit, unit type)' for every unit of the
             registry a line can write ('written'), of 'spec's dimension
             only where 'spec' is given -- each type's reference unit also
-            with the prefixes of SHOWN_PREFIX_TUPLE -- sorted by type,
+            with the prefixes of SHOWN_PREFIX_TUPLE, or of SHOWN_PREFIX_DB
+            where the type names its own -- sorted by type,
             then unit; empty where no unit of that dimension is written;
             raises UnitSpecError where 'spec' names nothing known.
     """
     ureg = registry()
     wanted = None if spec is None else dimensionality_of(spec)
+    #  THE KIND, where a temperature is asked for: a reading or a difference.
+    wanted_difference = None if spec is None \
+                        else difference_unit_f(reference_of(spec))
     type_of = {}
     for name, reference in UNIT_TYPE_DB.items():
         type_of.setdefault(ureg.Unit(reference).dimensionality, name)
+
+    def type_name_of(unit, dimension):
+        """RETURN: str, the unit type 'unit' belongs to -- its dimension's,
+                   a temperature difference apart from a reading."""
+        if difference_unit_f(unit): return "temperature_difference"
+        return type_of[dimension]
     found = set()
     for name in list(ureg._units):                    # noqa: SLF001 -- pint has no public list
         try:
@@ -245,14 +371,18 @@ def unit_tuple(spec=None):
         dimension = unit.dimensionality
         if dimension not in type_of: continue
         if wanted is not None and dimension != wanted: continue
-        spelling = written(unit, type_of[dimension])
+        if wanted is not None and type_of[dimension] == "temperature" \
+           and difference_unit_f(unit) != wanted_difference:   continue
+        spelling = written(unit, type_name_of(unit, dimension))
         if spelling is None: continue
-        found.add((type_of[dimension], spelling))
+        found.add((type_name_of(unit, dimension), spelling))
     for type_name, reference in UNIT_TYPE_DB.items():
         dimension = ureg.Unit(reference).dimensionality
         if wanted is not None and dimension != wanted: continue
         if "*" in reference or "/" in reference: continue
-        for prefix in SHOWN_PREFIX_TUPLE:
+        if difference_unit_f(reference): continue      # no 'kdelta_degC'
+        if wanted is not None and wanted_difference: continue
+        for prefix in SHOWN_PREFIX_DB.get(type_name, SHOWN_PREFIX_TUPLE):
             #  SPELLED AS A LOG SPELLS IT: 'us', not pint's 'μs'.
             try:
                 ureg.Unit(prefix + reference)

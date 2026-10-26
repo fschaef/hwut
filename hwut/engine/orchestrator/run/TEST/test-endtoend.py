@@ -63,7 +63,8 @@ stream   the whole fixture under one wish: the full event stream as
          JSON lines, then the fold. Deterministic: stated clock,
          worker bound 1, root-relative paths.
 
-frame    'on_entry' fails: nothing dispatched, 'on_exit' still runs.
+frame    'on_entry' fails: said as a FRAME event ('exited 1'), the
+         cases run all the same, 'on_exit' runs (services E-158, D-19).
 
 nostore  the store knob (n-1): record=False -- the same run, and the
          store holds NO candidate afterwards; record=None (default)
@@ -111,7 +112,7 @@ def fixture(entry_command="true"):
         if executable: os.chmod(path, 0o755)
 
     put(test, "hwut.conf",
-        '@hwut {\n'
+        'hwut {\n'
         '    ignore   = ["Makefile", "strip_noise.py"]\n'
         '    on_entry = "%s"\n'
         '    on_exit  = "true"\n'
@@ -256,7 +257,7 @@ def test_stream():
 
 
 def test_frame():
-    """RETURN: None. A broken 'on_entry': nothing dispatched."""
+    """RETURN: None. A broken 'on_entry': said, and the cases run (E-158)."""
     root = fixture(entry_command="false")
     try:
         event_list = run(root)

@@ -774,3 +774,34 @@ DECISION  RULED (Frank-Rene, 2026-09-27): "we use '##! unaccepted' for
 
 COST      One enum member, one handler, one subclass of the unaccepted
           chunk. The aspirant's 'unaccepted' is unchanged everywhere.
+
+
+C-22  THE ASSOCIATION IS FREE: THE VERDICT STOPS, THE DIFF GOES ON
+      (M3, U-4; ruled 2026-10-25)                                     (2026-10-25)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on a page with two laws, 'n < 5' and 'm < 5', both
+          broken, and line 1 differing besides: 'hwut.diff' drew
+          '~((n: 9))~' as tolerated and marked nothing BROKEN; with line 1
+          equal it marked 'n' alone; 'hwut.accept' refused naming "n < 5"
+          alone. ROOT: THE LAW (C-20) made the Lawyer kill its space where
+          the Judge aborts -- at the first difference and the first broken
+          law -- so the association could show no more than the verdict
+          had found. The author learnt of one law per round.
+DECISION  RULED: "equivalence check: early abort, first violation =>
+          abort. diff-display/association: continue, mark every broken
+          law" -- "if equivalence has no judgement, because it bailed out,
+          then association is free". The Judge is unchanged: the verdict,
+          its token, its HINTS and the E-123 remark stop where it stops.
+          The association's context ('free_f') remembers a difference and
+          stays alive; every law of every binding is judged, on differing
+          pairs too. 'hwut.diff' and 'hwut.merge' mark each; 'hwut.accept'
+          holds a candidate against itself through the association and
+          names each. A variable never bound is asked where nothing
+          differed, by both faces, as before.
+          THE LAW, narrowed: both faces agree on EQUIVALENCE -- once the
+          Judge has said False, more red pairs in the association still
+          say False ('is_equivalent_by_association', the cross-check).
+COST      The association reads to the end of a failing stream. The page
+          that showed the shielding ('test-constraints.py lawyer') shows
+          line 3 red now. Regression: 'services/TEST/test-book-defects-5.sh
+          laws-all'.

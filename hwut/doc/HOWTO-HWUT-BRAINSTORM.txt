@@ -784,3 +784,18 @@ BIN DISCIPLINE
       blessed the old candidate of three faces. The census found it. After
       a change that moves a page: 'hwut.run' it, read the diff, accept,
       and grep the GOOD for what the change added
+    - A FIXTURE'S CONFIGURATION MUST READ, or the page tests something
+      else than its title. Found 2026-10-25 by services E-190, which made
+      such pages red: 'run/TEST/test-endtoend.py' and
+      'services/TEST/test-stability.sh' wrote '@hwut {' (the HEADER's
+      spelling) into a 'hwut.conf'; the file was unread, said once as
+      an ERROR line, and both pages stayed green. 'frame' claimed
+      "'on_entry' fails" -- its GOOD held no frame event; 'test-m.sh'
+      was recorded failing 'not-equivalent', where the page says
+      'misdep'; stability 'length' recorded its warning over a case that
+      failed every run, its 'nothing' pattern never in force. Repaired,
+      the stability fixture showed two errors more, each named by the
+      vocabulary: a per-test parameter is no key of 'hwut { }' ('apps'
+      or 'app_defaults'), and a test carrying its own header is not
+      named under 'apps' too ("one file, one carrier"). Ask of a fixture:
+      'hwut.config.show' reads it back with no fault?

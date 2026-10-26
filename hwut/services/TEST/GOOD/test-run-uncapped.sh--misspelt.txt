@@ -1,28 +1,28 @@
 DIR  TEST                                                                     
 ERROR hwut-root.conf:4:9: VOCABULARY: unknown cap 'netwerk'; known: child_process_max_n, cpu_sec, disk_mb, file_handle_max_n, file_size_mb, memory_mb, network, timeout_sec, write_directory_list
 ERROR hwut-root.conf:5:19: TYPE: 'network' must be a boolean
-SKIP  test-net.sh  a .................................... uncapped [FAIL]  ||0
-      :            b .................................... uncapped [FAIL]  ||0
-START test-free.sh                                                         ||1
-END   test-free.sh ................................................. [OK]  ||0
+SKIP  test-free.sh .......................................... spec [FAIL]  ||0
+      test-net.sh  a ........................................ spec [FAIL]  ||0
+      :            b ........................................ spec [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                             1 ok, 2 fail, <t>
+DIRECTORIES                                             0 ok, 3 fail, <t>
 ------------------------------------------------------------------------------
-   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      1/3
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/3
 
 ==============================================================================
 HINTS
 ------------------------------------------------------------------------------
-ENVIRONMENT -- error around the test
+BUILD -- build or launch error
     TEST
-        test-net.sh  a   cap not enforceable here; not run  (cap 'network' not enforceable on '<platform>' => hwut-root.conf: procsitter { <platform> { network = false } })
+        test-free.sh     its configuration does not read
+        test-net.sh  a   :
         :            b   :
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 1 ok, 2 fail, <t> [sec], <t> [sec] total
-|           ok            |                       fail                       |
+RESULTS: 0 ok, 3 fail, <t> [sec], <t> [sec] total
+|                                    fail                                    |
 STATUS: 1
 <hwut-end>

@@ -273,7 +273,9 @@ async def associate(config: Configuration, subject_line_provider,
     token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry())
     # Stateful constraints: fresh space per run; static checks are LOUD here
     # (before any line is read) -- see 'engine/constraints.py'.
-    token_constraints = constraints.context_new(config, finding_list)
+    #  THE ASSOCIATION IS FREE (C-22): its space stops at nothing.
+    token_constraints = constraints.context_new(config, finding_list,
+                                                free_f=True)
 
     try:
         analogy_db = AnalogyDb()
@@ -295,8 +297,8 @@ async def associate(config: Configuration, subject_line_provider,
             analogy_db = result.analogy_db()
 
             # Stateful constraints: a non-equivalent chunk (of ANY type) is
-            # the Judge's abort point -- the Lawyer kills the space so no
-            # later binding is processed either (THE LAW).
+            # the Judge's abort point -- the association remembers it
+            # and goes on (C-22).
             context = constraints.context_get()
             if (context is not None and context.alive
                     and not result.is_equivalent()):
@@ -307,7 +309,7 @@ async def associate(config: Configuration, subject_line_provider,
         #  EVERY NAMED VARIABLE BOUND (C-20): asked where the association
         #  ended alive -- where the Judge asks it too.
         context = constraints.context_get()
-        if context is not None and context.alive:
+        if context is not None and context.whole_f():
             context.unbound_found()
 
     finally:

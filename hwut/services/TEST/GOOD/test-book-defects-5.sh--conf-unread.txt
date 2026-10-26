@@ -1,0 +1,65 @@
+######## a/hwut.conf: unknown key
+== hwut.run
+exit 1
+ERROR a/hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+SKIP  test-c.sh  x .......................................... spec [FAIL]
+      :          y .......................................... spec [FAIL]
+END   :          x ................................................. [OK]
+        test-c.sh  x   its configuration does not read
+RESULTS: 2 ok, 2 fail, <t> [sec], <t> [sec] total
+== hwut.report.list --fail
+./a/TEST/test-c.sh x
+./a/TEST/test-c.sh y
+== hwut.play a/TEST
+FAULT: $WORK/a/hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+nothing played: a directory that cannot be fully read cannot say what it offers
+exit 1
+== hwut.accept --directory=a/TEST
+FAULT: $WORK/a/hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+REFUSED: 'a/TEST' -- its configuration does not read (the FAULT above); nothing is accepted under it
+exit 1
+######## a/TEST/hwut.conf: unknown key
+== hwut.run
+exit 1
+ERROR hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+SKIP  test-c.sh  x .......................................... spec [FAIL]
+      :          y .......................................... spec [FAIL]
+END   test-c.sh  x ................................................. [OK]
+        test-c.sh  x   its configuration does not read
+RESULTS: 2 ok, 2 fail, <t> [sec], <t> [sec] total
+== hwut.report.list --fail
+./a/TEST/test-c.sh x
+./a/TEST/test-c.sh y
+== hwut.play a/TEST
+FAULT: hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+nothing played: a directory that cannot be fully read cannot say what it offers
+exit 1
+== hwut.accept --directory=a/TEST
+FAULT: hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+REFUSED: 'a/TEST' -- its configuration does not read (the FAULT above); nothing is accepted under it
+exit 1
+######## hwut-root.conf: 'caps' at the root
+== hwut.run
+exit 1
+ERROR hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+SKIP  test-c.sh  x .......................................... spec [FAIL]
+      :          y .......................................... spec [FAIL]
+SKIP  test-c.sh  x .......................................... spec [FAIL]
+      :          y .......................................... spec [FAIL]
+        test-c.sh  x   its configuration does not read
+        test-c.sh  x   its configuration does not read
+RESULTS: 0 ok, 4 fail, <t> [sec], <t> [sec] total
+== hwut.report.list --fail
+./a/TEST/test-c.sh x
+./a/TEST/test-c.sh y
+./z/TEST/test-c.sh x
+./z/TEST/test-c.sh y
+== hwut.play a/TEST
+FAULT: hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+nothing played: a directory that cannot be fully read cannot say what it offers
+exit 1
+== hwut.accept --directory=a/TEST
+FAULT: hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+REFUSED: 'a/TEST' -- its configuration does not read (the FAULT above); nothing is accepted under it
+exit 1
+<hwut-end>

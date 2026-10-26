@@ -53,6 +53,38 @@ class ExplorationResult:
     app_set:       CTestAppSet
     fault_list:    tuple
     refused_tuple: tuple = ()
+    #  THE CONFIGURATION THAT CANNOT BE READ (ND7, services E-190): every
+    #  fault of a 'hwut-root.conf' or 'hwut.conf' at this directory or
+    #  above it. Where one stands, no case here runs: each fails by name.
+    conf_fault_tuple: tuple = ()
+
+
+def conf_fault_f(fault):
+    """
+    RETURN: bool, True if 'fault' says a configuration file --
+            'hwut.conf' or 'hwut-root.conf' -- does not READ as written:
+            a syntax, a key refused or unknown, a value of the wrong
+            shape;
+            False, else: a test's header, a candidate, no file at all,
+            or a DIRECTORY conflict -- keys that read, whose values
+            disagree with what the directory offers ('dependency' naming
+            a test that is not there), answered case by case (P-6).
+    """
+    name = os.path.basename(getattr(fault, "file", None) or "")
+    if name not in (finder.CONF_NAME, finder.ROOT_CONF_NAME): return False
+    return getattr(fault, "kind", None) is not E_FaultKind.DIRECTORY
+
+
+def governed(result, above_tuple):
+    """
+    RETURN: ExplorationResult, 'result' carrying in 'conf_fault_tuple'
+            the faults of the configuration that governs it -- those
+            of the files above it ('above_tuple', as the walk met them)
+            and of its own 'hwut.conf'.
+    """
+    from dataclasses import replace
+    own_tuple = tuple(f for f in result.fault_list if conf_fault_f(f))
+    return replace(result, conf_fault_tuple=tuple(above_tuple) + own_tuple)
 
 
 def explore(directory, interview_runner=None, inherited=None):

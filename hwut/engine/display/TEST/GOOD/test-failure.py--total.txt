@@ -1,4 +1,4 @@
-INSPECT: failures            = 54
+INSPECT: failures            = 55
          report tokens absent = none
   OK  : every report token is a failure of the table
   OK  : every failure has its brief line

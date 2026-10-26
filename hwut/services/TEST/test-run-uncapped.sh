@@ -31,7 +31,8 @@
 # acknowledged  'procsitter { <platform> { network = false } }': all run.
 # elsewhere     the acknowledgement names another platform: uncapped still.
 # misspelt      an unknown cap, and a word where a boolean belongs:
-#               faults by name, and nothing is acknowledged.
+#               faults by name, and nothing is acknowledged; the root
+#               file does not read, so every case fails by name (E-190).
 # doors         the face that runs WITHOUT a plan, 'hwut.play', refuses
 #               the same case by the same reason, and 'hwut.report.details'
 #               says it; 'hwut.accept' and 'hwut.merge' run nothing

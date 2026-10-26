@@ -161,7 +161,8 @@ def with_findings(item_list, finding_list):
     from ....engine.compare.feeder.ui import LinePairInst
     at_db, unbound_list = {}, []
     for finding in finding_list:
-        if finding.kind == "violated" and finding.line_n is not None:
+        if finding.kind in ("violated", "misnamed") \
+           and finding.line_n is not None:
             side = "s" if finding.side == "OUTPUT" else "n"
             at_db.setdefault((side, finding.line_n), []).append(finding)
         else:

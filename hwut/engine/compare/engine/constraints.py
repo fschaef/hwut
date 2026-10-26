@@ -46,11 +46,14 @@ whitelist (arithmetic, comparisons, boolean logic, math functions, Python
 string methods) and executed by Python with empty builtins -- the same
 safety envelope as 'region/point_cloud/expression.py' (D-22).
 
-THE LAW: both faces process bindings in the SAME line order and STOP at the
-first non-equivalent pair (the Judge aborts; the Lawyer kills the space via
-'ConstraintContext.kill()'). Hence a finding -- a violation on either side,
-a named variable never bound -- is found by both faces or by neither:
-reachability is mirrored.
+THE LAW: both faces process bindings in the SAME line order. The Judge
+STOPS at the first non-equivalent pair and at the first broken law -- the
+verdict is decided there. THE ASSOCIATION IS FREE (C-22): once the Judge
+has bailed out it has no judgement to agree with, so the Lawyer's context
+('free_f') keeps the space alive past every difference and judges every
+law at every binding -- what 'hwut.diff', 'hwut.merge' and 'hwut.accept'
+show. Where nothing differs and nothing breaks, both find the same: none,
+and a named variable never bound is asked by both at the same point.
 
 Context threading uses a ContextVar (like 'frozen_analogy_db'): local to
 the thread / asyncio task, set by 'main.py' only when 'constraint_db' is
@@ -90,6 +93,11 @@ class ConstraintSpecError(Exception):
 #  string methods allowed that it does not hold. One list, three names.
 SAFE_FUNCTION_DB    = FUNCTION_DB
 SAFE_CONSTANT_DB    = CONSTANT_DB
+
+#  HOW A CONSTANT IS SAID where a binding carries its name (E-193).
+_CONSTANT_SAID_DB = {"pi": "the circle's ratio", "e": "Euler's number",
+                     "tau": "two pi", "inf": "infinity",
+                     "nan": "not a number"}
 SAFE_STR_METHOD_SET = STR_METHOD_SET
 
 _SAFE_NODE_TYPES = (
@@ -126,7 +134,7 @@ def _unit_literal_re():
                                         UNIT_WORD_SRC))
 
 
-def with_quantity_literals(text):
+def with_quantity_literals(text, glued_list=None):
     """
     RETURN: str, 'text' with every numeral-and-unit written as the call
             'quantity("<numeral> <unit>")' -- 't < 50 ms' becomes
@@ -145,20 +153,35 @@ def with_quantity_literals(text):
         if not gap and (unit[0] in "jJ" and len(unit) == 1
                         or (set(numeral) == {"0"} and unit[0] in "xXoObB")):
             return match.group(0)
-        literal = "%s %s" % (numeral, unit)
-        try:
-            from ....auxiliary.units import quantity_of
-            quantity_of(literal)
-        except ModuleNotFoundError as error:
-            raise ConstraintSpecError(
-                "%r: a quantity needs the Python module 'pint' (%s) -- "
-                "'hwut.help' says how to install it" % (text, error)) \
-                from None
-        except Exception:                             # noqa: BLE001
-            raise ConstraintSpecError(
-                "%r: '%s' is no unit ('hwut.pype --units' lists them)"
-                % (text, unit)) from None
-        return 'quantity("%s")' % literal
+        #  A GLUED PRODUCT ('10 m*force', services E-193): the longest
+        #  unit pint knows, the rest of the word stays the law's.
+        rest = ""
+        while True:
+            literal = "%s %s" % (numeral, unit)
+            try:
+                from ....auxiliary.units import quantity_of
+                quantity_of(literal)
+                break
+            except ModuleNotFoundError as error:
+                raise ConstraintSpecError(
+                    "%r: a quantity needs the Python module 'pint' (%s) -- "
+                    "'hwut.help' says how to install it" % (text, error)) \
+                    from None
+            except Exception:                         # noqa: BLE001
+                cut = max(unit.rfind("*"), unit.rfind("/"))
+                if cut <= 0:
+                    raise ConstraintSpecError(
+                        "%r: '%s' is no unit ('hwut.pype --units' lists "
+                        "them)" % (text, unit + rest)) from None
+                unit, rest = unit[:cut], unit[cut:] + rest
+        #  WHAT THE UNIT WORD SWALLOWED past its first unit ('kg*a'):
+        #  names a binding may also carry (services E-193).
+        if glued_list is not None:
+            glued_list.extend(
+                (literal, part) for part in
+                (re.sub(r"(\*\*|\^)-?\d+$", "", piece)
+                 for piece in re.split(r"[*/]", unit)[1:]) if part)
+        return 'quantity("%s")%s' % (literal, rest)
     return _unit_literal_re().sub(replaced, text)
 
 
@@ -167,7 +190,8 @@ class ConstraintExpression:
     variables. Whitelisted at PARSE time (see module purpose); evaluation
     happens against the current constraint space values.
     """
-    __slots__ = ("text", "variable", "depend_set", "_code", "_quantity_f")
+    __slots__ = ("text", "variable", "depend_set", "_code", "_quantity_f",
+                 "_code_q", "glued_tuple")
 
     def __init__(self, variable, text):
         """RETURNS: (constructor) -- raises ConstraintSpecError if 'text' is
@@ -175,8 +199,9 @@ class ConstraintExpression:
         """
         self.text     = text
         self.variable = variable
+        glued_list = []
         try:
-            source = with_quantity_literals(text)
+            source = with_quantity_literals(text, glued_list)
         except ConstraintSpecError as error:
             raise ConstraintSpecError("constraint for '%s': %s"
                                       % (variable, error)) from None
@@ -187,7 +212,17 @@ class ConstraintExpression:
                 "constraint for '%s': %r is not parseable (%s)"
                 % (variable, text, e.msg)) from None
         self.depend_set  = self._validate(tree)
+        #  (literal, unit part) of every glued unit word -- 'kg*a' in
+        #  '2 kg*a': where a binding is called 'a', the law is ambiguous.
+        self.glued_tuple = tuple(glued_list)
         self._code       = compile(tree, "<constraint>", "eval")
+        #  THE SAME LAW, ITS NUMBERS DIMENSIONLESS (ND12, E-191): evaluated
+        #  where quantities take part, so a unit-less number meeting a
+        #  quantity fails ('t > 0' over -5 degC) as a unit-less value does
+        #  (ND13) -- and '2 * y' stays a factor.
+        self._code_q     = compile(_with_dimensionless_numbers(
+                                       ast.parse(source, mode="eval")),
+                                   "<constraint>", "eval")
         #  A LAW THAT WRITES A QUANTITY ('x == 0 s', or 'quantity(...)'
         #  by hand) -- see '_bare_numbers_dimensionless'.
         self._quantity_f = any(isinstance(node, ast.Call)
@@ -209,6 +244,15 @@ class ConstraintExpression:
         called_set = {id(node.func) for node in ast.walk(tree)
                       if isinstance(node, ast.Call)}
         for node in ast.walk(tree):
+            #  AN EXPONENT IS A SMALL NUMBER (services E-193): units need
+            #  'm**2', 's**-1'; '10 ** 10 ** 10' held the run for good.
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Pow) \
+               and not _small_exponent_f(node.right):
+                raise ConstraintSpecError(
+                    "constraint for '%s': %r: an exponent must be a number "
+                    "of magnitude at most %d ('x ** 2', 's ** -1'), not '%s'"
+                    % (self.variable, self.text, EXPONENT_MAX,
+                       ast.unparse(node.right)))
             if not isinstance(node, _SAFE_NODE_TYPES):
                 raise ConstraintSpecError(
                     "constraint for '%s': %r: '%s' is not allowed"
@@ -272,11 +316,128 @@ class ConstraintExpression:
         """
         value_db = {name: value_db[name]
                     for name in self.depend_set if name in value_db}
+        quantity_f = self._quantity_f \
+                     or any(hasattr(v, "units") for v in value_db.values())
         value_db = _bare_numbers_dimensionless(value_db, self._quantity_f)
         scope = namespace_of(value_db)
-        return eval(self._code, {"__builtins__": {}}, scope)  # noqa: S307
+        if not quantity_f:
+            return eval(self._code, {"__builtins__": {}}, scope)  # noqa: S307
+        from ....auxiliary.units import registry
+        ureg = registry()
+
+        def dimensionless(number):
+            """RETURN: pint.Quantity, 'number' without unit -- an operand
+                       of a law where quantities take part (E-191)."""
+            return ureg.Quantity(number, "")
+        scope[_DIMENSIONLESS_NAME] = dimensionless
+        return eval(self._code_q, {"__builtins__": {}}, scope)  # noqa: S307
         # 'eval' runs a WHITELIST-VALIDATED, freshly compiled expression
         # with empty builtins -- see module purpose.
+
+
+#  THE LARGEST EXPONENT A LAW MAY WRITE (services E-193).
+EXPONENT_MAX = 64
+
+
+def _small_exponent_f(node):
+    """
+    RETURN: bool, True if 'node' -- the right side of a '**' -- is a
+            number, signed or not, of magnitude at most EXPONENT_MAX;
+            False, else: a variable, an expression, a larger number.
+    """
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op,
+                                                    (ast.USub, ast.UAdd)):
+        node = node.operand
+    return isinstance(node, ast.Constant) \
+           and isinstance(node.value, (int, float)) \
+           and not isinstance(node.value, bool) \
+           and abs(node.value) <= EXPONENT_MAX
+
+
+#  THE NAME the dimensionless wrapper carries in a law's scope -- one no
+#  constraint can write ('_' opens no name of the grammar's variables).
+_DIMENSIONLESS_NAME = "_hwut_dimensionless"
+
+
+def _with_dimensionless_numbers(tree):
+    """
+    RETURN: ast.Expression, 'tree' with every number that is an OPERAND --
+            of arithmetic or of a comparison -- wrapped as
+            '_hwut_dimensionless(<number>)'; an exponent, a function's
+            argument and a boolean stay as written ('x ** 2',
+            'round(x, 2)').
+    """
+    class Wrap(ast.NodeTransformer):
+        """Wraps the operand numbers; leaves exponents and call arguments."""
+        def _wrapped(self, node):
+            if isinstance(node, ast.Constant) \
+               and isinstance(node.value, (int, float)) \
+               and not isinstance(node.value, bool):
+                return ast.copy_location(ast.Call(
+                    func=ast.Name(id=_DIMENSIONLESS_NAME, ctx=ast.Load()),
+                    args=[node], keywords=[]), node)
+            return self.visit(node)
+
+        def visit_BinOp(self, node):
+            node.left = self._wrapped(node.left)
+            node.right = self.visit(node.right) if isinstance(node.op, ast.Pow) \
+                         else self._wrapped(node.right)
+            return node
+
+        def visit_Compare(self, node):
+            node.left = self._wrapped(node.left)
+            node.comparators = [self._wrapped(c) for c in node.comparators]
+            return node
+
+        def visit_UnaryOp(self, node):
+            node.operand = self._wrapped(node.operand)
+            return node
+
+        def visit_Call(self, node):
+            #  A FUNCTION'S ARGUMENTS ARE ITS OWN: 'round(x, 2)' takes digits.
+            #  Only their inner arithmetic is visited.
+            node.args = [self.visit(arg) for arg in node.args]
+            return node
+
+    return ast.fix_missing_locations(Wrap().visit(tree))
+
+
+def failure_reason(error):
+    """
+    RETURN: str, why a law over quantities could not be judged, said in a
+            reader's words -- a number without unit against a quantity, an
+            offset temperature in arithmetic, two units that do not
+            compare -- if 'error' is pint's;
+            None, else (a division by zero, a type clash: said as before).
+    """
+    name = type(error).__name__
+    text = str(error)
+    if name == "OffsetUnitCalculusError":
+        return ("an absolute temperature in arithmetic -- write the "
+                "difference in delta_degC or K")
+    if name == "DimensionalityError":
+        if "'dimensionless'" in text:
+            return "a number without unit against a quantity -- write its unit"
+        #  IN THE SPELLING A PAGE WRITES ('kg', 'ms'), not pint's long form.
+        #  AND THEIR DIMENSIONS (services E-193): 'm * N / kg' says less
+        #  than '[length] ** 2 / [time] ** 2' does.
+        unit_list = [getattr(error, attribute, None)
+                     for attribute in ("units1", "units2")]
+        dimension_list = [getattr(error, attribute, None)
+                          for attribute in ("dim1", "dim2")]
+        if all(u is not None for u in unit_list):
+            from ....auxiliary.units import registry
+            ureg = registry()
+            try:
+                said = ["%s" % format(ureg.Unit(u), "~") for u in unit_list]
+            except Exception:                          # noqa: BLE001
+                return "the units do not compare"      # a unit pint cannot say
+            if all(d for d in dimension_list):
+                said = ["%s (%s)" % (u, d) for u, d in zip(said,
+                                                          dimension_list)]
+            return "the units do not compare: %s against %s" % tuple(said)
+        return "the units do not compare"
+    return None
 
 
 def _bare_numbers_dimensionless(value_db, quantity_f):
@@ -354,11 +515,13 @@ class ConstraintSpace:
     the ruling's core: the moment a variable enters, all constraints defined
     for it are checked against the CURRENT space.
     """
-    __slots__ = ("constraint_db", "value_db")
+    __slots__ = ("constraint_db", "value_db", "reason_db", "glued_failed_db")
 
     def __init__(self, constraint_db):
         self.constraint_db = constraint_db
         self.value_db      = {}
+        self.reason_db     = {}     # expression text -> why it failed, or None
+        self.glued_failed_db = {}   # failed expression text -> glued_tuple
 
     def enter(self, name, value):
         """RETURNS: None,                  if every constraint of 'name' that
@@ -370,16 +533,63 @@ class ConstraintSpace:
         (C-19); before that it is passed over, never failed.
         The value is stored either way; later entries may refer to it.
         """
+        failing_tuple = self.failing_tuple(name, value)
+        return failing_tuple[0] if failing_tuple else None
+
+    def failing_tuple(self, name, value):
+        """
+        RETURN: tuple[ConstraintExpression], EVERY constraint of 'name'
+                that fires and fails -- false, or any evaluation failure
+                -- in definition order; empty where every one that fires
+                holds. The value is stored either way.
+        """
         self.value_db[name] = value
+        found = []
         for expression in self.constraint_db.get(name):
             if not expression.depend_set <= self.value_db.keys():
                 continue            # not all bound yet: does not fire
+            #  A UNIT WORD THAT SWALLOWED A BINDING'S NAME (E-193): '2 kg*a'
+            #  reads kilogram-annum where a binding 'a' stands -- said, never
+            #  judged either way.
+            clash_list = [(literal, part)
+                          for literal, part in expression.glued_tuple
+                          if part in self.value_db]
+            if clash_list:
+                literal, part = clash_list[0]
+                self.reason_db[expression.text] = (
+                    "'%s' reads '%s' as a unit, and a binding is called "
+                    "'%s' -- write '* %s' apart" % (literal, part, part, part))
+                found.append(expression)
+                continue
             try:
                 ok = expression(self.value_db)
-            except Exception:
-                return expression   # div-zero / type clash / any failure
+            except Exception as error:
+                ok = False          # div-zero / type clash / any failure
+                #  WHY, WHERE A READER CAN ACT ON IT (ND12, E-191).
+                self.reason_db[expression.text] = failure_reason(error)
             if not ok:
-                return expression
+                #  A GLUED UNIT WORD WHOSE BINDING MAY STILL COME (E-193):
+                #  remembered, said only where that binding does come
+                #  ('glued_reason').
+                if expression.glued_tuple:
+                    self.glued_failed_db[expression.text] = \
+                        expression.glued_tuple
+                found.append(expression)
+        return tuple(found)
+
+    def glued_reason(self, expression_text, name):
+        """
+        RETURN: str, why the failed law 'expression_text' may have meant
+                otherwise -- its glued unit word swallowed 'name', which a
+                binding now carries ('2 kg*a', then '((a: 3 m/s**2))') --
+                if that is so;
+                None, else.
+        """
+        for literal, part in self.glued_failed_db.get(expression_text, ()):
+            if part == name:
+                return ("'%s' reads '%s' as a unit, and a binding is called "
+                        "'%s' -- write '* %s' apart"
+                        % (literal, part, part, part))
         return None
 
 
@@ -418,26 +628,36 @@ class ConstraintFinding:
         line_n      the line of the binding ("violated"); None else
         value_db    every variable the expression names -> its value when
                     the finding was made; one never bound is absent
+        reason      why the law could not be judged, where pint said so
+                    (ND12): a number without unit, an offset temperature
+                    in arithmetic; None else
     """
     __slots__ = ("side", "kind", "expression", "variable", "value",
-                 "line_n", "value_db")
+                 "line_n", "value_db", "reason")
 
     def __init__(self, side, kind, expression, variable, value=None,
-                 line_n=None, value_db=None):
+                 line_n=None, value_db=None, reason=None):
         self.side = side;             self.kind = kind
         self.expression = expression; self.variable = variable
         self.value = value;           self.line_n = line_n
         self.value_db = dict(value_db or {})
+        self.reason = reason
 
     def text(self):
         """RETURN: str, the finding as one sentence, naming the side."""
         if self.kind == "unbound":
             return "%s: constraint %s: '%s' never bound" \
                    % (self.side, quoted_expression(self.expression), self.variable)
+        if self.kind == "misnamed":
+            return "%s: binding ((%s: %s))%s -- %s" \
+                   % (self.side, self.variable, _value_said(self.value),
+                      "" if self.line_n is None else ", line %s" % self.line_n,
+                      self.reason)
         value = _value_said(self.value)
-        return "%s: constraint %s: broken by ((%s: %s))%s" \
+        return "%s: constraint %s: broken by ((%s: %s))%s%s" \
                % (self.side, quoted_expression(self.expression), self.variable, value,
-                  "" if self.line_n is None else ", line %s" % self.line_n)
+                  "" if self.line_n is None else ", line %s" % self.line_n,
+                  "" if self.reason is None else " -- %s" % self.reason)
 
     def remark(self):
         """
@@ -449,7 +669,11 @@ class ConstraintFinding:
                 every variable the expression names, in name order, with
                 the value it held; one never bound as '(never bound)'.
                 No side and no line: the file and the place say both.
+                A binding named like a constant: 'error: binding "<name>"
+                -- <reason>'.
         """
+        if self.kind == "misnamed":
+            return 'error: binding "%s" -- %s' % (self.variable, self.reason)
         pair_list = []
         for name in sorted(set(self.value_db) | {self.variable}):
             if name in self.value_db:
@@ -472,12 +696,17 @@ class ConstraintContext:
     processed on either face -- reachability of every finding stays
     identical between Judge and Lawyer (THE LAW).
     """
-    __slots__ = ("subject_space", "nominal_space", "alive", "finding_list")
+    __slots__ = ("subject_space", "nominal_space", "alive", "finding_list",
+                 "free_f", "differed_f")
 
-    def __init__(self, constraint_db, finding_list=None):
+    def __init__(self, constraint_db, finding_list=None, free_f=False):
         self.subject_space = ConstraintSpace(constraint_db)
         self.nominal_space = ConstraintSpace(constraint_db)
         self.alive         = True
+        #  THE ASSOCIATION IS FREE (C-22): 'kill' marks a difference and
+        #  stops nothing; every law is judged at every binding.
+        self.free_f        = free_f
+        self.differed_f    = False
         #  THE CALLER'S LIST, where one was handed in: findings leave
         #  compare here (C-20).
         self.finding_list  = finding_list if finding_list is not None \
@@ -507,10 +736,22 @@ class ConstraintContext:
         return found_f
 
     def kill(self):
-        """RETURNS: None -- freezes both spaces: no further '.enter()' calls
-        are made by the faces (they check '.alive' first).
+        """RETURNS: None -- a difference or a broken law was met. The Judge's
+        context freezes both spaces: no further '.enter()' calls are made
+        by the faces (they check '.alive' first). A FREE context (the
+        association, C-22) only remembers it -- 'differed_f' -- and stays
+        alive.
         """
-        self.alive = False
+        self.differed_f = True
+        if not self.free_f:
+            self.alive = False
+
+    def whole_f(self):
+        """RETURNS: bool, True if the space is alive and nothing differed --
+        where the Judge asks whether every named variable was bound, and
+        the association asks it too.
+        """
+        return self.alive and not self.differed_f
 
 
 # Context variable, local to thread / asyncio task -- like the frozen
@@ -519,11 +760,12 @@ context_constraint_context = contextvars.ContextVar(
     "context_constraint_context", default=None)
 
 
-def context_new(config, finding_list=None):
+def context_new(config, finding_list=None, free_f=False):
     """RETURNS: token to reset 'context_constraint_context' with -- sets a
                 fresh ConstraintContext if 'config.constraint_db' is
                 non-empty, else sets None. Its findings go to
-                'finding_list' where one is given (C-20).
+                'finding_list' where one is given (C-20); 'free_f' makes
+                it the association's, which stops at nothing (C-22).
     Raises ConstraintSpecError on a malformed constraint dictionary
     (static checks happen HERE, before any line is read).
     """
@@ -531,7 +773,7 @@ def context_new(config, finding_list=None):
     if not spec_db:
         return context_constraint_context.set(None)
     return context_constraint_context.set(
-        ConstraintContext(ConstraintDb(spec_db), finding_list))
+        ConstraintContext(ConstraintDb(spec_db), finding_list, free_f))
 
 
 def context_get():
@@ -576,18 +818,42 @@ def enter_line(context, subject_line, nominal_line):
         nominal_line = None
     if subject_line is not None and subject_line.is_insignificant():
         subject_line = None
+    held_f = True
     for side, space, line in (("GOOD",   context.nominal_space, nominal_line),
                               ("OUTPUT", context.subject_space, subject_line)):
         for name, value in iter_bindings(line):
-            failed = space.enter(name, value)
-            if failed is None: continue
-            context.finding_list.append(ConstraintFinding(
-                side, "violated", failed.text, name, value, line.line_n,
-                value_db={n: space.value_db[n] for n in failed.depend_set
-                          if n in space.value_db}))
-            context.kill()
-            return False
-    return True
+            #  A BINDING NAMED LIKE A CONSTANT OF THE NAMESPACE (services
+            #  E-193): a law reads 'e' as Euler's number, never as this
+            #  binding -- refused where the binding is read, by name.
+            if name in CONSTANT_DB:
+                context.finding_list.append(ConstraintFinding(
+                    side, "misnamed", "", name, value, line.line_n,
+                    reason="'%s' is a constant of the constraint namespace "
+                           "(%s) -- rename the binding"
+                           % (name, _CONSTANT_SAID_DB.get(name, name))))
+                context.kill()
+                held_f = False
+                if not context.free_f: return False
+                continue
+            #  A LAW THAT FAILED BEFORE THIS BINDING CAME, its glued unit
+            #  word having swallowed this name (E-193): its finding says so.
+            for finding in context.finding_list:
+                if finding.side == side and finding.kind == "violated" \
+                   and finding.reason is None:
+                    finding.reason = space.glued_reason(finding.expression,
+                                                        name)
+            for failed in space.failing_tuple(name, value):
+                context.finding_list.append(ConstraintFinding(
+                    side, "violated", failed.text, name, value, line.line_n,
+                    value_db={n: space.value_db[n] for n in failed.depend_set
+                              if n in space.value_db},
+                    reason=space.reason_db.pop(failed.text, None)))
+                context.kill()
+                held_f = False
+                #  THE JUDGE STOPS AT THE FIRST (THE LAW); the association
+                #  goes on to every law of every binding (C-22).
+                if not context.free_f: return False
+    return held_f
 
 
 def check_no_bindings_nominal(line_list, scope_name):

@@ -1167,12 +1167,12 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     #  in a test directory owes the same effective configuration as a
     #  walk that reached it from the project root.
     try:
-        inherited, ascent_fault_list = ascended_spec(directory)
+        inherited, _ = ascended_spec(directory)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
-    for fault in ascent_fault_list:
-        write(str(fault))
+    #  THE CLIMB'S FAULTS ARE SAID ONCE, with the selection's ('FAULT:'
+    #  below): the door reads them itself (ND7).
 
     entry_list = []
     if script_name is not None:
@@ -1229,6 +1229,17 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    #  NOTHING IS BLESSED UNDER A CONFIGURATION THAT CANNOT BE READ (ND7,
+    #  services E-190): its directories select nothing, and say so --
+    #  the FAULT above names the file and the key.
+    conf_refused_list = sorted(where for where, result
+                               in (found.result_db or {}).items()
+                               if result.conf_fault_tuple)
+    for where in conf_refused_list:
+        write("REFUSED: '%s' -- its configuration does not read (the "
+              "FAULT above); nothing is accepted under it"
+              % os.path.normpath(os.path.relpath(
+                    os.path.join(directory, where), os.getcwd())))
 
     #  THE CASES, GROUPED BY THE DIRECTORY THEY WERE FOUND IN -- walk
     #  order, which is the order a reader met them in the run's report.
@@ -1307,6 +1318,8 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
                     CInk(colour_decision(os.environ, sys.stdout.isatty()),
                          color_of=preferences.load().color))
         return worst
+    if conf_refused_list and worst in (E_ExitCode.OK, E_ExitCode.EMPTY):
+        return E_ExitCode.FAULT
     if empty_f and worst is E_ExitCode.OK:
         (put if propose_n is not None else write)(
             "#  nothing to propose: every selected case agrees with "

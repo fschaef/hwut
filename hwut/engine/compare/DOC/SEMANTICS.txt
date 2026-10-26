@@ -476,12 +476,17 @@ dictionary, variable name -> expression (or list of expressions):
      tables (a binding there is plain text). A subject-side binding in a
      potpourri is a plain mismatch (kind MISFIT against any nominal line).
 
-10.5 REACHABILITY IS MIRRORED (THE LAW). Both faces process bindings in
-     the same line order and STOP at the first non-equivalent pair: the
-     Judge aborts; the Lawyer kills the space. Hence a loud nominal
-     violation behind a mismatch is raised by BOTH faces or by NEITHER.
-     Bindings on insignificant lines (blank/ignored) never enter: the
-     Judge's pipe drops those lines before it sees them.
+10.5 THE VERDICT STOPS, THE ASSOCIATION IS FREE (THE LAW, narrowed by
+     C-22). Both faces process bindings in the same line order. The
+     Judge STOPS at the first non-equivalent pair and at the first broken
+     law: the verdict is decided there. The Lawyer goes on: it remembers
+     the difference and judges every law at every binding, so the diff,
+     the merge and accept's refusal show every broken law. Both faces
+     agree on EQUIVALENCE -- after the Judge's False, more red pairs
+     still say False. A named variable never bound is asked by both
+     where nothing differed. Bindings on insignificant lines
+     (blank/ignored) never enter: the Judge's pipe drops those lines
+     before it sees them.
 
 10.6 EXPRESSIONS are inspected as AST elements against a strict whitelist
      (arithmetic, comparisons, boolean logic, the math function set,

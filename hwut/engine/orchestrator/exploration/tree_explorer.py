@@ -67,7 +67,7 @@ from dataclasses import dataclass, replace
 
 from .          import finder
 from .          import reader
-from .explorer  import explore
+from .explorer  import explore, governed, conf_fault_f
 from .fault     import Fault, E_FaultKind
 from .configuration_tree import DirectorySpec
 from ....auxiliary.no_entry import (TRANSIENT_DIRECTORY_NAME,
@@ -220,12 +220,17 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     if below_no_entry_f(root, lambda here: os.path.isfile(
                                   os.path.join(here, ROOT_CONF_NAME))):
         return
+    #  WHAT GOVERNS FROM ABOVE (ND7): the faults of the files the climb
+    #  read -- the root's 'hwut-root.conf' and every 'hwut.conf' on the
+    #  way down to here.
+    above_tuple = tuple(f for f in ascent_fault_list if conf_fault_f(f))
     if test_directory_f(root, inherited):
-        yield (".", explore(root, interview_runner=interview_runner,
-                            inherited=inherited))
+        yield (".", governed(explore(root, interview_runner=interview_runner,
+                                     inherited=inherited), above_tuple))
     else:
         yield from _walk_stream(root, ".", inherited, interview_runner,
-                                fault_list, note_list, boundary_f)
+                                fault_list, note_list, boundary_f,
+                                above_tuple=above_tuple)
 
 
 def test_directory_f(directory, inherited):
@@ -271,7 +276,8 @@ def explore_tree(root, interview_runner=None, boundary_f=True):
 
 
 def _walk_stream(root, relative, effective, interview_runner, fault_list,
-                 note_list=None, boundary_f=True, folded_f=False):
+                 note_list=None, boundary_f=True, folded_f=False,
+                 above_tuple=()):
     """
     YIELD: [0] str                one test directory, relative to root.
            [1] ExplorationResult  what it offers.
@@ -279,13 +285,19 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
     '_walk' with the accumulator replaced by a yield: fold this
     directory's 'hwut.conf' onto 'effective', then descend into the
     sub-directories in sorted order, exploring those whose name is the
-    effective test directory name.
+    effective test directory name. 'above_tuple' holds the faults of the
+    configuration files above this level; this level's own join them
+    for everything below (ND7).
     """
     directory = os.path.normpath(os.path.join(root, relative))
     #  'folded_f': the level's own confs are in 'effective' already --
     #  an inner root under '--no-boundary', whose reset read them.
     if not folded_f:
+        before_n  = len(fault_list)
         effective = _folded(directory, relative, effective, fault_list)
+        above_tuple = tuple(above_tuple) \
+                      + tuple(f for f in fault_list[before_n:]
+                              if conf_fault_f(f))
     marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
     if note_list is None: note_list = []
 
@@ -307,17 +319,25 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
             child_effective, reset_fault_list = ascended_spec(path)
             fault_list.extend(reset_fault_list)
             child_folded_f = True
+            #  NOTHING ABOVE REACHES BELOW an inner root -- its faults
+            #  neither (RQ-1).
+            child_above = tuple(f for f in reset_fault_list
+                                if conf_fault_f(f))
+        else:
+            child_above = above_tuple
         if name == (child_effective.test_directory
                     or FALLBACK_TEST_DIRECTORY) \
            and (child_folded_f or name == marker):
             yield (child_relative,
-                   explore(path, interview_runner=interview_runner,
-                           inherited=child_effective))
+                   governed(explore(path, interview_runner=interview_runner,
+                                    inherited=child_effective),
+                            child_above))
         else:
             yield from _walk_stream(root, child_relative, child_effective,
                                     interview_runner, fault_list,
                                     note_list, boundary_f,
-                                    folded_f=child_folded_f)
+                                    folded_f=child_folded_f,
+                                    above_tuple=child_above)
 
 
 def inherited_spec(parent, child):

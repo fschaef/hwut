@@ -132,7 +132,8 @@ def line_tuple_of(root, wish, warning_list=None):
         line_list = []
         for name, _ in unstood_tuple(os.path.join(root, where),
                                      result.app_set,
-                                     tuple(result.fault_list)):
+                                     tuple(result.fault_list),
+                                     result.conf_fault_tuple):
             test, _, choice = name.partition(" ")
             line_list.append(target_line(where, test, choice or None))
         return line_list

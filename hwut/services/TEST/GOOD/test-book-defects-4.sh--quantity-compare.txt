@@ -6,7 +6,7 @@ END   test-q.sh ....................................... constraint [FAIL]  ||0
 test-q.sh   constraint violated by the output  (OUTPUT: constraint "t < 50 ms": broken by ((t: 60 ms)), line 1)
 == T=3 kg
 END   test-q.sh ....................................... constraint [FAIL]  ||0
-test-q.sh   constraint violated by the output  (OUTPUT: constraint "t < 50 ms": broken by ((t: 3 kg)), line 1)
+test-q.sh   constraint violated by the output  (OUTPUT: constraint "t < 50 ms": broken by ((t: 3 kg)), line 1 -- the units do not compare: kg ([mass]) against ms ([time]))
 == a rule over an unknown unit
 ERROR test-q.sh:2:50: REFUSED: constraint 't < 50 apples': 'apples' is no unit ('hwut.pype --units' lists them)
 <hwut-end>

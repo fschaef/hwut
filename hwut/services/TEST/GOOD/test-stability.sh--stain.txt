@@ -40,5 +40,5 @@ STDOUT {
     TALLY: 0 unstable, 0 warned, 1 steady
 }
 --- 6. and it runs again
-STATUS: 1
+STATUS: 0
 <hwut-end>

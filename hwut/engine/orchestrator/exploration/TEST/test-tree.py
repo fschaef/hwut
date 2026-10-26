@@ -235,7 +235,8 @@ def test_stream():
 
     A tree of four test directories at three depths, one with a
     faulted tree-level 'hwut.conf', so order and faults both have
-    something to disagree about. After the FIRST yield no fault is
+    something to disagree about -- its case is selected by neither
+    (services E-190). After the FIRST yield no fault is
     known yet -- the faulted level lies later in the walk -- which is
     what shows the stream hands a directory over before walking on.
     """

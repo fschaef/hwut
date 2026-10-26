@@ -81,6 +81,7 @@ class CTreePlanEntry:
     meta_hidden_n: int = 0       # cases 'meta' hid from a label-less wish
     wish_skipped_n: int = 0      # cases the wish did not want
     refused_tuple: tuple = ()   # (name, reason): not run, and said so
+    conf_fault_tuple: tuple = () # the unreadable configuration governing it
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,10 +149,19 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
         #  REFUSED block -- or, for want of a GOOD file, fails by name
         #  (display D-32). Exploration's own refusals (backup-shaped
         #  names, finder.py) stand in the block.
-        plan, report_list, refused_list = determine(
-            result.app_set, task_list,
-            admit=admit_of(os.path.join(tree_exploration.root, directory),
-                           result.app_set))
+        if result.conf_fault_tuple:
+            #  A CONFIGURATION THAT CANNOT BE READ GOVERNS HERE (ND7,
+            #  services E-190): nothing runs; every case fails by name
+            #  ('orchestrate.unstood_tuple').
+            plan, _, _ = determine(result.app_set, task_list,
+                                   admit=lambda *_: "conf")
+            report_list, refused_list = [], []
+        else:
+            plan, report_list, refused_list = determine(
+                result.app_set, task_list,
+                admit=admit_of(os.path.join(tree_exploration.root,
+                                            directory),
+                               result.app_set))
         refused_list = list(result.refused_tuple) + refused_list
         if label_view is not None and wish.glob_tuple:
             met, visible = task_list.glob_reach(result.app_set)
@@ -168,7 +178,8 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
             on_exit      = spec.on_exit,
             report_tuple = tuple(report_list),
             fault_tuple  = tuple(result.fault_list),
-            refused_tuple = tuple(refused_list)))
+            refused_tuple = tuple(refused_list),
+            conf_fault_tuple = tuple(result.conf_fault_tuple)))
     return CTreePlan(
         root          = tree_exploration.root,
         entry_tuple   = tuple(entry_list),

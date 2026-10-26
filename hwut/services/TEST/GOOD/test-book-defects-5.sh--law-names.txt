@@ -1,0 +1,11 @@
+x < 3                  over ((e: 30 J)) and ((x: 1))           : refused: 'e' is a constant of the constraint namespace (Euler's number) -- rename the binding
+e < 3                  over ((e: 30 J))                        : play: FAULT: test-u.sh:2:37: REFUSED: constraint 'e < 3' names no variable -- it constrains nothing
+x < 10 ** 10 ** 10     over ((x: 1))                           : play: FAULT: test-u.sh:2:37: REFUSED: constraint 'x < 10 ** 10 ** 10': an exponent must be a number of magnitude at most 64 ('x ** 2', 's ** -1'), not '10 ** 10'
+x ** 2 < 10 m**2       over ((x: 3 m))                         : blessed
+s < 3 m*s              over ((s: 2 kg))                        : refused: '3 m*s' reads 's' as a unit, and a binding is called 's' -- write '* s' apart
+v * t == 10 m*force    over ((v: 2 m/s)) ((t: 5 s)) ((force: 1)) : blessed
+f == 2 kg*a            over ((f: 6 N)) with ((a: 3 m/s**2))    : refused: '2 kg*a' reads 'a' as a unit, and a binding is called 'a' -- write '* a' apart
+f == 2 kg*a            over ((a: 3 m/s**2)) with ((f: 6 N))    : refused: '2 kg*a' reads 'a' as a unit, and a binding is called 'a' -- write '* a' apart
+f == 2 kg * a          over ((f: 6 N)) with ((a: 3 m/s**2))    : blessed
+x < 10 m               over ((x: 3 kg))                        : refused: the units do not compare: kg ([mass]) against m ([length])
+<hwut-end>

@@ -1,0 +1,22 @@
+n < 2 kbp    over insert ((n: 1200 bp))        : blessed
+n < 1 kbp    over insert ((n: 1200 bp))        : refused: broken
+n < 1 m      over insert ((n: 1200 bp))        : refused: the units do not compare: bp ([sequence_length]) against m ([length])
+g > 3 Gbp    over genome ((g: 3100 Mbp))       : blessed
+d <= 50 cM   over map ((d: 12.5 cM))           : blessed
+d < 1 cm     over map ((d: 12.5 cM))           : refused: the units do not compare: cM ([genetic_distance]) against cm ([length])
+x < 1 m      over ((x: 1200 big_point))        : blessed
+== pype: what a line binds
+sequence 1200.0
+sequence 2000.0
+distance 5.0
+length 0.05
+length 0.004233333333333333
+== --units sequence_length
+Gbp  sequence_length
+Mbp  sequence_length
+bp   sequence_length
+kbp  sequence_length
+== --units genetic_distance
+cM      genetic_distance
+morgan  genetic_distance
+<hwut-end>

@@ -141,7 +141,8 @@ class CDirectoryWork:
             emit("fault", directory=directory, text=str(fault))
         unstood = unstood_tuple(
                       os.path.normpath(os.path.join(self.root, directory)),
-                      entry.app_set, entry.fault_tuple)
+                      entry.app_set, entry.fault_tuple,
+                      entry.conf_fault_tuple)
         for report in entry.report_tuple:
             #  NOT EMPTY WHERE THE BOOK ANSWERS: a test or choice the book
             #  records and the tree no longer declares is a case of the
@@ -338,7 +339,8 @@ class CTreeScheduler:
                         + len(unstood_tuple(
                               os.path.normpath(os.path.join(tree_plan.root,
                                                             entry.directory)),
-                              entry.app_set, entry.fault_tuple))
+                              entry.app_set, entry.fault_tuple,
+                              entry.conf_fault_tuple))
                         for entry in tree_plan))
         for fault in tree_plan.fault_tuple:
             emit("fault", directory=".", text=str(fault))
@@ -514,13 +516,15 @@ def unaccepted_tuple_of(refused_tuple):
                  if reason == UNACCEPTED_REASON)
 
 
-def unstood_tuple(directory, app_set, fault_tuple):
+def unstood_tuple(directory, app_set, fault_tuple, conf_fault_tuple=()):
     """
     RETURN: tuple[(str, str)], one (case name, verdict) for every case a
-            directory FAILS BEFORE ANYTHING RUNS -- the files exploration
-            could not read ('spec-broken'), then the book's tests and
-            choices the directory no longer declares ('test-vanished',
-            'test-choice-vanished').
+            directory FAILS BEFORE ANYTHING RUNS -- where a configuration
+            that governs it cannot be read ('conf_fault_tuple', ND7),
+            every case it declares ('conf-broken'); the files exploration
+            could not read ('spec-broken'); then, where the configuration
+            reads, the book's tests and choices the directory no longer
+            declares ('test-vanished', 'test-choice-vanished').
 
     ONE LAW, TWO READERS (services E-128): 'hwut.run' counts these as
     failing cases, and 'hwut.report' reports what the run counts. Neither
@@ -535,12 +539,22 @@ def unstood_tuple(directory, app_set, fault_tuple):
     #  it: the header fault alone is said, and the book row stays.
     broken_tuple = broken_app_tuple(app_set, fault_tuple)
     broken_set   = set(broken_tuple)
+    if conf_fault_tuple:
+        #  A CONFIGURATION THAT CANNOT BE READ (ND7, services E-190): what
+        #  it governs cannot be run as written -- every declared case
+        #  fails by name. The book is not judged against a declaration
+        #  read under a configuration that does not read.
+        later = tuple((name if choice is None else "%s %s" % (name, choice),
+                       "conf-broken")
+                      for name, app in sorted(app_set.app_db.items())
+                      for choice in app.choice_db)
+    else:
+        later = tuple(pair for pair in vanished_tuple(directory, app_set)
+                      if pair[0].partition(" ")[0] not in broken_set)
     #  ONE ORDER ON EVERY PAGE (2026-10-19, "order must be the same"):
     #  by test, then choice -- the order the report and HINTS stand in.
     return tuple(sorted(
-        tuple((name, "spec-broken") for name in broken_tuple)
-        + tuple(pair for pair in vanished_tuple(directory, app_set)
-                if pair[0].partition(" ")[0] not in broken_set),
+        tuple((name, "spec-broken") for name in broken_tuple) + later,
         key=lambda pair: tuple(pair[0].partition(" ")[::2])))
 
 

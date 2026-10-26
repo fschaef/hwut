@@ -57,6 +57,9 @@ class E_Failure(Enum):
     REGION_SYNTAX_ERROR         = "region-syntax-error"
     SOURCE_NOT_FOUND            = "source-not-found"
     SPEC_BROKEN                 = "spec-broken"
+    #  A CONFIGURATION GOVERNING THE CASE CANNOT BE READ (ND7, services
+    #  E-190): 'hwut-root.conf' or a 'hwut.conf' at or above it.
+    CONF_BROKEN                 = "conf-broken"
     STDERR_UNDECIDED            = "stderr-undecided"
     TARGET_NOT_BUILT            = "target-not-built"
     TERMINATED_WITHOUT_END      = "terminated-without-hwut-end"
@@ -201,6 +204,7 @@ _brief_failure_db = {
     _F.SOURCE_NOT_FOUND:            (_C.BUILD,      "no-launch"),
     _F.INTERPRETER_NOT_FOUND:       (_C.BUILD,      "no-launch"),
     _F.SPEC_BROKEN:                 (_C.BUILD,      "spec"),
+    _F.CONF_BROKEN:                 (_C.BUILD,      "spec"),
     _F.BUILD_FAILED:                (_C.BUILD,      "no-build"),
     _F.TARGET_NOT_BUILT:            (_C.BUILD,      "no-build"),
     _F.BUILD_TOOL_NOT_FOUND:        (_C.BUILD,      "no-build"),
@@ -372,6 +376,11 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "The application process could not be started.",
              "Check that the file is executable and its first line names "
              "an interpreter that exists."),
+    _failure(_F.CONF_BROKEN, "its configuration does not read",
+             "A 'hwut-root.conf' or 'hwut.conf' at or above the test's "
+             "directory does not read, so no case it governs runs as "
+             "written. The ERROR line above names the file and the key.",
+             "Mend the file ('hwut.config.show' reads it back)."),
     _failure(_F.SPEC_BROKEN, "@hwut header does not parse",
              "The '@hwut { ... }' block in the test's own header does not "
              "parse, so the test is not a test. The HINTS line names the "

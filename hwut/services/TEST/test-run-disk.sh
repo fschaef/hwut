@@ -22,7 +22,8 @@
 #         much), so the margin outlasts what else writes meanwhile.
 #         MEASURED 2026-10-19 before the guard: 'a had ended: no'.
 # local   the floor in a test directory's own 'hwut.conf': a fault, it
-#         is the root's alone.
+#         is the root's alone -- and the file does not read, so every case
+#         it governs fails by name (services E-190).
 #
 # THE FREE SPACE IS THE MACHINE'S FACT: shown as '<n>'.
 # ---------------------------------------------------------------------------

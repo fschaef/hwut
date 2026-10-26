@@ -32,7 +32,8 @@ the fixed part is copied, the space belongs to the run.
 2  WHAT A CONSTRAINT MAY CONTAIN
 ______________________________________________________________________________
 
-    arithmetic          + - * / // % **
+    arithmetic          + - * / // % **   (an exponent is a number of
+                        magnitude at most 64: 'x ** 2', 's ** -1')
     comparison          < <= > >= == !=
     boolean             and or not
     calls               the functions below, by bare name
@@ -60,8 +61,14 @@ FUNCTIONS
                 't < quantity("50 ms")' (RQ-7). A binding
                 '((t: 2.5 ms))' binds a quantity; the two compare through
                 pint, units converted. Another dimension, or a bare
-                number, FAILS the constraint. A unit pint does not know
+                number, FAILS the constraint, the finding naming both
+                units and their dimensions. A unit pint does not know
                 is refused where the constraint is read.
+                A GLUED product, '10 m*force', takes the longest unit
+                pint knows ('m'); the rest stays the law's. Where the
+                swallowed word is also a binding -- '2 kg*a' reads
+                kilogram-annum, a binding 'a' stands -- the finding says
+                so: write '2 kg * a' (services E-193).
 
 'glob' matches the way a shell does -- '*' any run, '?' one character,
 '[abc]' a set -- and is CASE SENSITIVE. It touches no file system. A value
@@ -89,6 +96,13 @@ ______________________________________________________________________________
 
 Every name of section 2 is a name a variable may not carry: a constraint
 over a variable called 'min', 'sin' or 'glob' cannot be written.
+
+A BINDING is held to it too, for the constants: '((e: 30 J))' would never
+reach a law -- 'e' there is Euler's number. Where laws stand, such a
+binding is a finding of its own, by name, on the line that binds it
+("'e' is a constant of the constraint namespace (Euler's number) --
+rename the binding"); where no law stands, nothing reads the name and the
+page is as before (services E-193).
 
 This is not only a rule about writing. The same set is read by the VARIABLE
 FINDER, which relates a variable to the constraints that mention it:

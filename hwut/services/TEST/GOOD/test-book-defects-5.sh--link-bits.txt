@@ -1,0 +1,12 @@
+r >= 10 MB/s   over throughput ((r: 100 Mb/s))   : blessed
+r >= 20 MB/s   over throughput ((r: 100 Mb/s))   : refused: broken
+r == 1000 Mb/s over link ((r: 1 Gb/s))           : blessed
+n < 1 kB       over frame ((n: 6 kb))            : blessed
+n < 1 kB       over frame ((n: 9 kb))            : refused: broken
+== pype: what a line binds
+rate 12.5
+rate 125.0
+rate 0.008
+data 375.0
+data 250000.0
+<hwut-end>

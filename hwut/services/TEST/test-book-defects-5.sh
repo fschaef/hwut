@@ -7,14 +7,16 @@
 #     choices  = ["header-once", "pipe-quiet", "units-written", "exponent-law",
 #                 "zero-law", "play-neighbour", "play-cut-short",
 #                 "play-no-launch", "propose-ignore", "runner-words",
-#                 "demo-documents", "play-menu", "accept-first"]
+#                 "demo-documents", "play-menu", "accept-first",
+#                 "laws-all", "conf-unread", "unit-algebra", "law-names",
+#                 "genomics", "link-bits"]
 # }
 #
 # ---------------------------------------------------------------------------
 #
 # The book writers' D-63 to D-65 (2026-10-24, note b) and the open-defect
 # list measured on a52f2a3, one choice per fixed item (services E-180 to
-# E-189):
+# E-191; compare C-22):
 #
 # header-once     D-63: a test the book records whose header is then
 #                 refused fails ONCE, 'spec [FAIL]'; run, 'hwut.report'
@@ -28,7 +30,8 @@
 # units-written   D-65, ND9, ND11: '--units' lists only spellings a line
 #                 can write and the reader binds back ('um', 'angstrom',
 #                 'delta_degC', '°C'); 'quantity(degC)' does not match a
-#                 'delta_degC' line; '--units cM' is refused by name.
+#                 'delta_degC' line; '--units M' (molar) is refused by
+#                 name ('cM' was, until it became a centimorgan, E-194).
 #                 MEASURED before: 38 of 470 listed spellings unwritable
 #                 ('μm', 'Å', 'Δ°C', '%', 'mcd' = microday); a
 #                 DimensionalityError; a traceback over an empty max().
@@ -75,6 +78,52 @@
 #                 'hwut.accept' blesses the recording whole; the run is
 #                 green. MEASURED before: 'ACCEPTED 1 of 1 / undecided',
 #                 the GOOD a '--?--' mirror, the run red.
+# laws-all        M3, U-4, compare C-22 (ruled 2026-10-25): two laws broken
+#                 and a line differing besides. The run's verdict stops
+#                 where the equivalence check bails out ('[FAIL]', nothing
+#                 more); 'hwut.diff' marks BROKEN under both laws;
+#                 'hwut.accept' names both. MEASURED before: the diff drew
+#                 '~((n: 9))~' as tolerated, no BROKEN; accept named "n < 5"
+#                 alone.
+# conf-unread     ND7, E-190 (ruled 2026-10-25, (a)): a configuration file
+#                 that does not read fails every case it governs -- the
+#                 directory at and below it -- 'spec [FAIL]', not run; a
+#                 sibling directory runs. Root file, a parent's 'hwut.conf'
+#                 and a TEST directory's own. 'hwut.play' and 'hwut.accept'
+#                 refuse, exit 1. MEASURED before: 'caps' at the root of
+#                 'hwut-root.conf' -- play recorded under the default cap
+#                 and said nothing, accept blessed, the run said '1 ok'.
+# unit-algebra    ND12, E-191 (ruled 2026-10-25, (a)): a unit-less number in
+#                 a law fails where it meets a quantity ('t > 0' over
+#                 -5 degC: "write its unit"); an absolute temperature in
+#                 arithmetic fails by name; pint's algebra otherwise --
+#                 a difference of readings is a delta_degC, speed x time a
+#                 length, force = mass x acceleration. pype keeps readings
+#                 and differences apart; information is a dimension of its
+#                 own (ND10, E-192): '10 GHz' is no data rate, '90 degree'
+#                 no size. MEASURED before: the frost check
+#                 't > 0' over -5 degC blessed (268.15 K > 0); 't * 2' over
+#                 20 degC computed in kelvin; '5 delta_degC' bound as 5 K.
+# law-names       E-193 (ruled 2026-10-26, (a)): what a law's words mean.
+#                 A binding named like a constant of the namespace ('e',
+#                 'pi') is refused by name -- a law read it as Euler's
+#                 number. An exponent is a number of magnitude at most 64
+#                 ('10 ** 10 ** 10' held the run for good). A glued product
+#                 '10 m*force' takes the longest unit pint knows; where the
+#                 swallowed word is a binding ('2 kg*a', 'a' = annum) the
+#                 refusal says so. Two units that do not compare are said
+#                 with their dimensions. MEASURED before: ((e: 30 J)) under
+#                 'e < 3' compared 2.718; '10 m*force' was no unit.
+# genomics        ND14, E-194 (ruled 2026-10-26, (a)): 'bp' is a base pair,
+#                 a sequence length ('kbp', 'Mbp', 'Gbp'); 'cM' a
+#                 centimorgan, a genetic distance. MEASURED before:
+#                 '1200 bp' bound pint's big point, 0.423 m, under
+#                 'quantity(length)' -- and held 'n < 1 m'; '5 cM' bound
+#                 centimolar.
+# link-bits       E-195 (ruled 2026-10-26, (i)): 'kb', 'Mb', 'Gb' are kilo-,
+#                 mega-, gigabits, as a link speed writes them. MEASURED
+#                 before: '100 Mb/s' bound megabarn per second, '1 Gb/s'
+#                 gilbert per second -- no data rate.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -86,7 +135,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits;"
         exit 0 ;;
 esac
 
@@ -99,7 +148,10 @@ printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "
 cd TEST
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g; s/, [0-9:]+$/, <t>/;
-            s/\(digest: [A-Za-z0-9_-]+\)/(digest: <tag>)/; s/wall [0-9.]+s/wall <t>s/"
+            s/\(digest: [A-Za-z0-9_-]+\)/(digest: <tag>)/; s/wall [0-9.]+s/wall <t>s/;
+            s/ +\|\|[0-9]+$//"
+    #  ' ||N' ends a run line: how many runs stood at that instant -- the
+    #  recording machine's cores, not the subject (determinism law).
 }
 record() {              # every case here recorded by play (E-165)
     "$BIN/hwut.play" --all --plain > /dev/null 2>&1
@@ -150,6 +202,9 @@ case "$1" in
         "$BIN/hwut.pype" --units length | grep -E "^(um|angstrom|μm|Å) " | sort
         echo "== --units temperature"
         "$BIN/hwut.pype" --units temperature | grep -E "^(°C|delta_degC|degC|Δ°C) " | sort
+        #  A DIFFERENCE IS ITS OWN TYPE (E-191).
+        echo "== --units temperature_difference"
+        "$BIN/hwut.pype" --units temperature_difference | grep -E "^(delta_degC|Δ°C) " | sort
         echo "== every listed spelling, bound back through the reader"
         python3 - <<'EOF'
 import re
@@ -168,8 +223,8 @@ EOF
         printf 'on: <t = quantity(degC)> => { print("abs", t) }\non: <else> => { print("other:", pype.line()) }\non: <eof> => ignore;\n' > d.pype
         printf '20 degC\n5 delta_degC\n' | "$BIN/hwut.pype" d.pype 2>&1
         echo "exit ${PIPESTATUS[1]}"
-        echo "== --units cM"
-        "$BIN/hwut.pype" --units cM; echo "exit $?" ;;
+        echo "== --units M"
+        "$BIN/hwut.pype" --units M; echo "exit $?" ;;
     exponent-law)
         law "x <= 1e-9" "2e-16"
         law "x <= 1e-9" "2e-6"
@@ -283,6 +338,147 @@ print("%d document path(s), %d relative, %d point nowhere"
          sum(not os.path.exists(p) for p in path_list)))
 EOF2
         ( cd "$WORK/demo/TEST" && "$BIN/hwut" --plain 2>&1 | grep "^RESULTS" | shown ) ;;
+    laws-all)
+        page test-two.sh 'choices = ["x"] tolerance { constraints = ["n < 5", "m < 5"] }' \
+             'echo "head ${H:-a}"' 'echo "n = ((n: ${N:-3}))"' 'echo "m = ((m: ${M:-3}))"'
+        record
+        "$BIN/hwut.accept" test-two.sh x > /dev/null 2>&1
+        echo "== hwut.run: line 1 differs, n and m break their laws"
+        N=9 M=9 H=b "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|constraint \"" | shown
+        echo "== hwut.diff"
+        "$BIN/hwut.diff" test-two.sh x 2>&1 | grep -E "^S |BROKEN"
+        echo "== hwut.accept of that recording, no nominal standing"
+        rm -rf GOOD/test-two.sh--x.txt
+        "$BIN/hwut.accept" test-two.sh x 2>&1 | grep -E "^REFUSED|constraint \""
+        echo "exit ${PIPESTATUS[0]}" ;;
+    conf-unread)
+        mkdir -p "$WORK/a/TEST" "$WORK/z/TEST"
+        cd "$WORK/a/TEST"; page test-c.sh 'choices = ["x", "y"]' 'echo "c $1"'
+        record; "$BIN/hwut.accept" > /dev/null 2>&1
+        cd "$WORK/z/TEST"; page test-c.sh 'choices = ["x", "y"]' 'echo "c $1"'
+        record; "$BIN/hwut.accept" > /dev/null 2>&1
+        cd "$WORK"
+        probe() {
+            echo "== hwut.run"
+            "$BIN/hwut.run" --plain > o.txt 2>&1; echo "exit $?"
+            grep -E "^ERROR|FAIL\]|^END|configuration does not read|^RESULTS" o.txt \
+                | grep -v "^ *[|+']" | shown
+            echo "== hwut.report.list --fail"; "$BIN/hwut.report.list" --fail
+            echo "== hwut.play a/TEST"
+            ( cd a/TEST && "$BIN/hwut.play" test-c.sh x --plain 2>&1 \
+                  | grep -E "^FAULT|^nothing|^RECORDED" | shown
+              echo "exit ${PIPESTATUS[0]}" )
+            echo "== hwut.accept --directory=a/TEST"
+            "$BIN/hwut.accept" --directory=a/TEST 2>&1 | grep -E "^FAULT|^REFUSED" | shown
+            echo "exit ${PIPESTATUS[0]}"
+        }
+        unknown='hwut {\n    no_such_key = 1\n}\n'
+        echo "######## a/hwut.conf: unknown key"
+        printf "$unknown" > a/hwut.conf; probe; rm a/hwut.conf
+        echo "######## a/TEST/hwut.conf: unknown key"
+        printf "$unknown" > a/TEST/hwut.conf; probe; rm a/TEST/hwut.conf
+        echo "######## hwut-root.conf: 'caps' at the root"
+        sed -i 's/^}$/    caps { timeout_sec = 1 }\n}/' hwut-root.conf; probe ;;
+    unit-algebra)
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-u.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-u.sh --plain > /dev/null 2>&1
+            printf '%-24s over %-34s : ' "$1" "$2"
+            #  THE REFUSAL'S CONSTRAINT LINE: its reason after ' -- ', or 'broken'.
+            "$BIN/hwut.accept" test-u.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 '^    constraint ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "t > 0"                  "frost ((t: -5 degC))"
+        judged "t > 0 degC"             "frost ((t: -5 degC))"
+        judged "t * 2 < 100 degC"       "warm ((t: 20 degC))"
+        judged "t2 - t1 < 5 delta_degC" "rise ((t1: 20 degC)) to ((t2: 23 degC))"
+        judged "t2 - t1 < 2 delta_degC" "rise ((t1: 20 degC)) to ((t2: 23 degC))"
+        judged "v * t < 10 m"           "run ((v: 2 m/s)) for ((t: 4 s))"
+        judged "f == m * a"             "((f: 6 N)) = ((m: 2 kg)) x ((a: 3 m/s**2))"
+        judged "x < 2 * y"              "((x: 9 ms)) against ((y: 5 ms))"
+        judged "x / y > 2"              "((x: 10 ms)) over ((y: 2 s))"
+        judged "x < 5"                  "plain ((x: 3))"
+        #  INFORMATION IS A DIMENSION OF ITS OWN (ND10, E-192).
+        judged "r >= 100 MB/s"          "rate ((r: 1 Gbit/s))"
+        judged "r >= 100 MB/s"          "rate ((r: 10 GHz))"
+        judged "n < 1 MB"               "size ((n: 7))"
+        echo "== pype: readings and differences apart"
+        printf '%s\n' 'on: <t = quantity(temperature)> => { print("reading", t) }' \
+               'on: <d = quantity(temperature_difference)> => { print("difference", d) }' \
+               'on: <b = quantity(data)> => { print("bytes", b) }' \
+               'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > q.pype
+        printf '20 degC\n5 delta_degC\n300 K\n3 MB\n90 degree\n' | "$BIN/hwut.pype" q.pype ;;
+    law-names)
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-u.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-u.sh --plain > p.txt 2>&1
+            printf '%-22s over %-34s : ' "$1" "$2"
+            if grep -q '^FAULT' p.txt; then
+                grep -m1 '^FAULT' p.txt | sed -E "s/.*: '[^']*': //; s/^/play: /"
+                return
+            fi
+            "$BIN/hwut.accept" test-u.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 -E '^    (constraint|binding) ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "x < 3"                  "((e: 30 J)) and ((x: 1))"
+        judged "e < 3"                  "((e: 30 J))"
+        judged "x < 10 ** 10 ** 10"     "((x: 1))"
+        judged "x ** 2 < 10 m**2"       "((x: 3 m))"
+        judged "s < 3 m*s"              "((s: 2 kg))"
+        judged "v * t == 10 m*force"    "((v: 2 m/s)) ((t: 5 s)) ((force: 1))"
+        judged "f == 2 kg*a"            "((f: 6 N)) with ((a: 3 m/s**2))"
+        judged "f == 2 kg*a"            "((a: 3 m/s**2)) with ((f: 6 N))"
+        judged "f == 2 kg * a"          "((f: 6 N)) with ((a: 3 m/s**2))"
+        judged "x < 10 m"               "((x: 3 kg))" ;;
+    genomics)
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-g.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-g.sh --plain > /dev/null 2>&1
+            printf '%-12s over %-28s : ' "$1" "$2"
+            "$BIN/hwut.accept" test-g.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 '^    constraint ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "n < 2 kbp"   "insert ((n: 1200 bp))"
+        judged "n < 1 kbp"   "insert ((n: 1200 bp))"
+        judged "n < 1 m"     "insert ((n: 1200 bp))"
+        judged "g > 3 Gbp"   "genome ((g: 3100 Mbp))"
+        judged "d <= 50 cM"  "map ((d: 12.5 cM))"
+        judged "d < 1 cm"    "map ((d: 12.5 cM))"
+        judged "x < 1 m"     "((x: 1200 big_point))"
+        echo "== pype: what a line binds"
+        printf '%s\n' 'on: <n = quantity(sequence_length)> => { print("sequence", n) }' \
+               'on: <d = quantity(genetic_distance)> => { print("distance", d) }' \
+               'on: <x = quantity(length)> => { print("length", x) }' \
+               'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > g.pype
+        printf '1200 bp\n2 kbp\n5 cM\n5 cm\n12 pp\n' | "$BIN/hwut.pype" g.pype
+        echo "== --units sequence_length";  "$BIN/hwut.pype" --units sequence_length
+        echo "== --units genetic_distance"; "$BIN/hwut.pype" --units genetic_distance ;;
+    link-bits)
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-b.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-b.sh --plain > /dev/null 2>&1
+            printf '%-14s over %-28s : ' "$1" "$2"
+            "$BIN/hwut.accept" test-b.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 '^    constraint ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "r >= 10 MB/s"  "throughput ((r: 100 Mb/s))"
+        judged "r >= 20 MB/s"  "throughput ((r: 100 Mb/s))"
+        judged "r == 1000 Mb/s" "link ((r: 1 Gb/s))"
+        judged "n < 1 kB"      "frame ((n: 6 kb))"
+        judged "n < 1 kB"      "frame ((n: 9 kb))"
+        echo "== pype: what a line binds"
+        printf '%s\n' 'on: <r = quantity(MB/s)> => { print("rate", r) }' \
+               'on: <n = quantity(data)> => { print("data", n) }' \
+               'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > b.pype
+        printf '100 Mb/s\n1 Gb/s\n64 kb/s\n3 kb\n2 Mbit\n' | "$BIN/hwut.pype" b.pype ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

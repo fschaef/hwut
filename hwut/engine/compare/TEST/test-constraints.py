@@ -165,7 +165,9 @@ if "lawyer" in sys.argv:
                       % (line_pair.is_equivalent(),
                          line_pair.subject_line_n, line_pair.nominal_line_n))
 
-    print("-- subject violation on line 2 (red), line 3 shielded (space dead):")
+    #  THE ASSOCIATION IS FREE (C-22): line 3 breaks the law too, and is
+    #  red -- before, the space died at line 2 and shielded it.
+    print("-- subject violations on lines 2 and 3 (both red; the association is free):")
     asyncio.run(cells("ok\nx ((t: 666))\ny ((t: 777))\n",
                       "ok\nx ((t: 5))\ny ((t: 6))\n"))
     print("-- all constraints hold (all rows green):")

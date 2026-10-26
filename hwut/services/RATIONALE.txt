@@ -7215,3 +7215,189 @@ DECISION  RULED: "hwut.play should interact on the choice, if the choice
 COST      The showcase's 'runner-session front-end' was re-recorded (its
           no-argument row). Regression: 'test-book-defects-5.sh'
           play-menu, runner-words.
+
+
+E-190  A CONFIGURATION THAT CANNOT BE READ FAILS WHAT IT GOVERNS
+       (ND7, ruled 2026-10-25 (a))                                    (2026-10-25)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: 'caps { timeout_sec = 1 }' at the root of
+          'hwut-root.conf' (refused: the root carries directory keys only)
+          and a test sleeping 3 s. 'hwut.play' said nothing of the fault,
+          showed 'timeout_sec = 300.0  # default' and recorded, exit 0;
+          'hwut.accept' said FAULT and blessed, exit 0; 'hwut.run' said
+          ERROR and then '1 ok, 0 fail'. The author believed his tests
+          capped at 1 s; none was. ROOT: a refused key is a fault of the
+          FILE, and each face decided alone what it meant -- the run
+          counted its cases as if the file read; the single-directory
+          door dropped the climb's faults, so play never heard of the
+          root file's.
+DECISION  RULED (a), the law of ANSWERS 8.1 and the answer of D-63: a
+          'hwut-root.conf' or 'hwut.conf' that does not read FAILS every
+          case it governs -- the directory it stands in and all below.
+          Exploration carries the governing faults on each directory
+          ('ExplorationResult.conf_fault_tuple'), threaded down the walk
+          and read by the climb; an inner root resets them (RQ-1). No case
+          there is selected or run; 'orchestrate.unstood_tuple' names each
+          'conf-broken' -- 'spec [FAIL]', HINTS "its configuration does not
+          read", the file and key in the one ERROR line; run, report and
+          list agree. 'hwut.play' refuses ('nothing played', exit 1);
+          'hwut.accept' refuses each such directory by name, exit 1. The
+          single-directory door reads the climb's faults also where a face
+          hands it the spec; accept no longer prints them a second time.
+COST      A typo in 'hwut-root.conf' turns the whole tree red, by count.
+          The book is not judged against a declaration read under such a
+          file (no 'no-app' beside 'conf-broken'). Regression:
+          'test-book-defects-5.sh conf-unread'. FOUND ON THE WAY: a run
+          line's trailing '||N' counts the runs open at that instant --
+          the recording machine's cores; the page's filter drops it.
+
+
+E-191  UNITS: PINT'S OWN ALGEBRA; A NUMBER WITHOUT UNIT FAILS WHERE IT
+       MEETS ONE  (ND12, U-2; ruled 2026-10-25 (a))                   (2026-10-25)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: the frost check 't > 0' over ((t: -5 degC)) was
+          blessed -- pint converted to kelvin (268.15 > 0) and let a bare 0
+          compare with any unit. 't * 2 < 100 degC' was computed in kelvin
+          (the registry's 'autoconvert_offset_to_baseunit'); 't + t' broke
+          the law with no reason given; 'quantity(temperature)' bound
+          '5 delta_degC' as 5 K -- a difference read as a reading.
+DECISION  RULED (a), with: "a unit-less constraint fails when caught at a
+          unit-adhering value" -- no law must name a unit; one that does
+          not fails where its number meets a quantity. "Make sure that the
+          algebra for the constraints works with the units."
+          - The registry converts nothing silently: pint's own algebra,
+            the physical one -- a difference of two degC readings is a
+            delta_degC, degC + delta_degC a degC, speed x time a length,
+            energy / time a power; an absolute temperature in
+            multiplication is an error.
+          - Where quantities take part, a law's numbers are dimensionless
+            operands ('t > 0' fails; '2 * y' stays a factor); exponents
+            and function arguments stay as written ('x ** 2', 'round(x,
+            2)'). Laws over plain numbers meet plain numbers, unchanged.
+          - A finding pint's error explains carries the reason: "a number
+            without unit against a quantity -- write its unit", "an
+            absolute temperature in arithmetic -- write the difference in
+            delta_degC or K", "the units do not compare (...)".
+          - Readings and differences are two unit types:
+            'quantity(temperature)' (K) reads readings only,
+            'quantity(temperature_difference)' (delta_degC) differences;
+            '--units' lists each under its own.
+          STAYS: 'K' compares with 'delta_degC' -- pint holds kelvin as
+          both a reading and a difference.
+COST      A page that wrote 't > 0' over degC must write the unit. The
+          harness of 24 laws (comparisons, differences, products,
+          quotients, powers, abs/min/max) reads as a reader expects.
+          Regression: 'test-book-defects-5.sh unit-algebra'. FOUND ON THE
+          WAY: a binding named like a namespace constant ('((e: 30 J))')
+          is taken by the law as Euler's number, and the refusal blames
+          the units -- closed by E-193.
+
+
+E-192  INFORMATION IS A DIMENSION OF ITS OWN  (ND10, ruled 2026-10-26 (a))
+                                                                      (2026-10-26)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: pint counts bits and bytes as dimensionless, as it
+          counts radians. '3 MB' bound under 'quantity(angle)' as
+          24000000 rad; '90 degree' under 'quantity(data)'; '10 GHz' held
+          'r >= 100 MB/s' (10 GHz = 1250 MB/s); a bare '7' compared with
+          '1 MB' without a word; 28 of the 39 rows of '--units data' were
+          labelled 'angle'.
+DECISION  RULED (a): hwut's registry is pint's own definitions, re-derived
+          from the INSTALLED pint at the first use, with one line changed:
+          'bit = [information]'. A pint that spells the line otherwise is
+          refused by name, never guessed around. Bytes, KiB, Mibit, baud
+          and data rates convert among themselves as before; a frequency,
+          an angle or a bare number against data fails, the finding saying
+          why ("the units do not compare: GHz (1 / [time]) against
+          MB / s ([information] / [time])", E-193).
+COST      A copy of pint's definition files per process, in a temporary
+          directory removed at exit. '--units data' lists 10 rows, all
+          data. Regression: 'test-book-defects-5.sh unit-algebra'.
+
+
+E-193  WHAT A LAW'S WORDS MEAN: CONSTANTS, EXPONENTS, GLUED UNITS
+                                              (ruled 2026-10-26 (a))
+                                                                      (2026-10-26)
+------------------------------------------------------------------------------
+PROBLEM   Asked "are complex constraint expressions safe?" over
+          'v * (t + delta_t) == 10 m * (force / ((m0 - delta_m + 0.5 kg)
+          * t) * t + 1km'. MEASURED: no escape -- attributes, dunders,
+          comprehensions, lambdas, imports refused where read; evaluated
+          with empty builtins. But four ways a law means other than it
+          says: (1) '((e: 30 J))' under 'e < 3' compared Euler's number;
+          (2) '10 ** 10 ** 10' held the run for good (an exponent is
+          unbounded arithmetic); (3) '10 m*force' was "no unit" -- the
+          word was read whole; (4) "the units do not compare: kg against
+          m" named units, not what kind they are.
+          CORRECTION to what I said before measuring: units and variables
+          are not apart in the grammar. '2 kg*a' read 'kg*a' as one unit
+          -- kilogram-annum -- because 'a' is a pint unit.
+DECISION  RULED (a):
+          - A binding called 'pi', 'e', 'tau', 'inf', 'nan' is a finding
+            of its own where laws stand: "'e' is a constant of the
+            constraint namespace (Euler's number) -- rename the binding".
+            The judge stops on it; the association marks it with the
+            broken laws (C-22). No law: nothing reads it, as before.
+          - The right side of '**' is a number of magnitude at most 64,
+            signed or not: 'm**2', 's**-1'. Anything else is refused
+            where the law is read (a broken specification, play FAULT).
+          - A glued unit word takes the longest unit pint knows, cut at
+            the last '*' or '/'; the rest is the law's ('10 m*force' =
+            '10 m * force').
+          - Where a glued word swallowed a name that is a binding, the law
+            fails with the reason: "'2 kg*a' reads 'a' as a unit, and a
+            binding is called 'a' -- write '* a' apart". Where the law
+            failed before that binding came, the binding's arrival gives
+            the failed law's finding the same reason. AMENDED with E-195:
+            a first cut guessed a hint on every failed law with a glued
+            word -- 'r >= 20 MB/s' was told 's' might be a binding.
+          - A dimension mismatch names both: "kg ([mass]) against m
+            ([length])".
+STAYS     Names of section 2 of README-constraint_namespace stay barred
+          as variable names in laws; a unit and a variable may share a
+          spelling where no glued word stands ('2 kg * a').
+COST      A page binding 'e' under laws must rename it. Regression:
+          'test-book-defects-5.sh law-names'; the 24-law algebra harness
+          reads as before.
+
+
+E-194  GENOMICS IN THE PRESET BASE: 'bp' AND 'cM'  (ND14, ruled 2026-10-26 (a))
+                                                                      (2026-10-26)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED (pint 0.26.2): '1200 bp' bound pint's big point, a
+          typographic length, 0.423 m -- under 'quantity(length)' no
+          dimension caught it, and 'n < 1 m' held. 'kbp', 'Mbp' bound
+          kilo- and megapoints; '5 cM' centimolar. Found by the agent
+          swarm (RQ-7), re-measured by the book.
+DECISION  RULED (a): hwut's registry (E-192) adds a sequence length and a
+          genetic distance:
+              base_pair   = [sequence_length] = bp   ('kbp', 'Mbp', 'Gbp')
+              morgan      = [genetic_distance]
+              centimorgan = 0.01 morgan = cM
+          'bp' leaves the aliases of pint's point; 'big_point', 'pp' and
+          'printers_point' still name it, 'centimolar' the concentration.
+          Unit types 'sequence_length' (bp) and 'genetic_distance' (cM);
+          '--units' shows a type's own prefixes (kbp, Mbp, Gbp -- never
+          'mbp'; none on 'cM').
+          A pint that spells the point otherwise is refused by name, as
+          for 'bit'.
+STAYS     'kb', 'Mb', 'Gb' -- kilobases in genomics, kilobits in a link
+          speed ('100 Mb/s'): decided in E-195, bits.
+COST      A log that meant typographic points by 'bp' must write
+          'big_point'. Regression: 'test-book-defects-5.sh genomics'.
+
+
+E-195  'kb', 'Mb', 'Gb' ARE BITS  (ruled 2026-10-26 (i))
+                                                                      (2026-10-26)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: '100 Mb/s' bound megabarn per second ([length]**2 /
+          [time]), '1 Gb/s' gilbert per second, '64 kb/s' kilobarn per
+          second: no link speed was a data rate. Genomics writes the same
+          symbols for kilobases.
+DECISION  RULED (i): kilo-, mega-, gigabits, as a link speed writes them --
+          'kilobit = 1e3 bit = kb', 'megabit', 'gigabit'. 100 Mb/s equals
+          12.5 MB/s. Genomics writes 'kbp', 'Mbp', 'Gbp' (E-194). The
+          gilbert gives up 'Gb' and keeps its name; 'kilobarn',
+          'megabarn' theirs. '--units data' shows k, M, G, T (no 'mbyte').
+STAYS     'Tb' (terabarn) and a bare 'b' (barn): not asked.
+COST      Regression: 'test-book-defects-5.sh link-bits'.

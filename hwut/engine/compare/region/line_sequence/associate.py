@@ -66,10 +66,15 @@ def do(subject, nominal, analogy_db):
         if context is not None and context.alive:
             if not pair.is_equivalent():
                 context.kill()
+                #  THE ASSOCIATION IS FREE (C-22): a differing pair's
+                #  bindings are judged too -- the pair is red already.
+                if context.free_f:
+                    constraints.enter_line(context, subject_seq,
+                                           nominal_seq)
             elif not constraints.enter_line(context, subject_seq,
                                             nominal_seq):
                 # Subject-side constraint violation: THE red cell. The
-                # space is already killed by 'enter_line'.
+                # Judge's space is already killed by 'enter_line'.
                 pair = LinePair(subject_seq, nominal_seq, edit_list,
                                 cost = cost,
                                 seq_edit_id = E_EditId.SUBSTITUTE)

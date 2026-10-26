@@ -3,6 +3,7 @@ build-contained                build        no-build
 build-failed                   build        no-build
 build-tool-not-found           build        no-build
 compare-error                  execution    compare
+conf-broken                    build        spec
 constraint                     nominal      constraint
 disk-short                     environment  no-disk
 display-target-unreachable     environment  no-display

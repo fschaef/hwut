@@ -1,0 +1,14 @@
+== hwut.run: line 1 differs, n and m break their laws
+END   :            x ............................................. [FAIL]
+== hwut.diff
+S    1      | head [b]
+S    2      | n = [((n: 9))]
+            | ^ BROKEN: OUTPUT: constraint "n < 5": broken by ((n: 9)), line 2
+S    3      | m = [((m: 9))]
+            | ^ BROKEN: OUTPUT: constraint "m < 5": broken by ((m: 9)), line 3
+== hwut.accept of that recording, no nominal standing
+REFUSED constraint: 'test-two.sh x .stdout' -- the candidate breaks its constraints:
+    constraint "n < 5": broken by ((n: 9)), line 2
+    constraint "m < 5": broken by ((m: 9)), line 3
+exit 1
+<hwut-end>

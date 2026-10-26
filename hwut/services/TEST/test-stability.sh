@@ -98,7 +98,7 @@ masked() {              # <args...> -- as 'face', every number the
 
 conf() {                # <extra-lines...>
     mkdir -p tree/suite/TEST/GOOD
-    { echo '@hwut {'
+    { echo 'hwut {'
       echo '    on_entry = "true"'
       echo '    on_exit  = "true"'
       printf '%s\n' "$@"
@@ -171,7 +171,7 @@ bytes)
 length)
     #  Lines a 'nothing' pattern swallows, a differing NUMBER of them
     #  each run: the verdict holds, the cadence cannot be aligned.
-    conf '    test-app.sh { tolerance { nothing = ["noise.*"] } }'
+    conf '    app_defaults { tolerance { nothing = ["noise.*"] } }'
     app "Length" \
         'n=0' \
         '[ -f count.txt ] && n=$(cat count.txt)' \

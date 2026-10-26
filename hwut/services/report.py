@@ -500,7 +500,8 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
         #  failing case and never books it, so the report asks the
         #  run's own function -- whatever the wish, as the run does.
         for name, verdict in unstood_tuple(whole, result.app_set,
-                                           tuple(result.fault_list)):
+                                           tuple(result.fault_list),
+                                           result.conf_fault_tuple):
             test, _, choice = name.partition(" ")
             #  A CHOICE THAT VANISHED stands with its test's other rows,
             #  under the test's title; anything else closes the block.

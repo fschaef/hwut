@@ -115,8 +115,18 @@ def of_directory(directory, wish, label_view=None, inherited=None,
     #  that has not ascended itself gets the climb here, so
     #  'language-setup' governs 'hwut.play' as it governs 'hwut.run'.
     if inherited is None:
-        inherited, _ascent_fault_list = ascended_spec(directory)
-    result     = explore(directory, inherited=inherited)
+        inherited, ascent_fault_list = ascended_spec(directory)
+    else:
+        #  HANDED DOWN, THE SPEC IS THE CALLER'S; THE FAULTS ARE STILL
+        #  THE CLIMB'S, and govern here (ND7).
+        _, ascent_fault_list = ascended_spec(directory)
+    #  THE CLIMB'S FAULTS ARE THIS DIRECTORY'S TOO (ND7): a root file that
+    #  cannot be read governs here as it governs a walk -- they were
+    #  dropped, and 'hwut.play' never heard of them.
+    from .explorer import governed, conf_fault_f
+    result     = governed(explore(directory, inherited=inherited),
+                          tuple(f for f in ascent_fault_list
+                                if conf_fault_f(f)))
     #  'base_f' OVERRIDES THE WISH'S OWN ANSWER, for the face that
     #  needs the book whatever the wish asked: 'hwut.accept' reads
     #  candidates, and a bare wish asks no base.
@@ -127,9 +137,10 @@ def of_directory(directory, wish, label_view=None, inherited=None,
                                     root=os.path.abspath(directory),
                                     label_view=label_view)
     case_list  = [CSelectedCase(".", case)
-                  for case in query.get_test_cases(result.app_set)]
+                  for case in _selected(query, result)]
     return CSelection(case_list     = case_list,
-                      fault_tuple   = tuple(result.fault_list),
+                      fault_tuple   = tuple(ascent_fault_list)
+                                      + tuple(result.fault_list),
                       warning_tuple = _warning_tuple(query, wish,
                                                      result.app_set),
                       result_db     = {".": result},
@@ -174,7 +185,7 @@ def of_tree(root, wish, label_view=None, base_f=None):
             #  THE SILENCE CAN ONLY SWALLOW where a view reaches: with
             #  none, everything met is visible.
             visible_set.update(met if label_view is None else visible)
-        for case in query.get_test_cases(result.app_set):
+        for case in _selected(query, result):
             case_list.append(CSelectedCase(directory, case))
     return CSelection(
         case_list     = case_list,
@@ -253,8 +264,20 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
                 reach.visible_set.update(met if label_view is None
                                          else visible)
         case_list = [CSelectedCase(directory, case)
-                     for case in query.get_test_cases(result.app_set)]
+                     for case in _selected(query, result)]
         yield directory, result, bookkeeper, case_list
+
+
+def _selected(query, result):
+    """
+    RETURN: list, the cases 'query' selects of 'result' -- none where a
+            configuration that governs the directory cannot be read
+            ('result.conf_fault_tuple', ND7): every case there fails by
+            name ('orchestrate.unstood_tuple'), and none is selected to
+            run or to be listed beside it.
+    """
+    if result.conf_fault_tuple: return []
+    return list(query.get_test_cases(result.app_set))
 
 
 def directory_tuple(root, wish):

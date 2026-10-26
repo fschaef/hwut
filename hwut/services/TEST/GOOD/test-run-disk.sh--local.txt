@@ -1,17 +1,25 @@
 DIR  TEST                                                                     
 ERROR hwut.conf:1:7: VOCABULARY: 'free_disk_min_mb' outside 'hwut-root.conf': the floor is a property of the DISK, not of a directory: every case on it shares one (D-24)
-START test-a.sh                                                            ||1
-END   test-a.sh .................................................... [OK]  ||0
-START test-b.sh                                                            ||1
-END   test-b.sh .................................................... [OK]  ||0
+SKIP  test-a.sh ............................................. spec [FAIL]  ||0
+      test-b.sh ............................................. spec [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                             2 ok, 0 fail, <t>
+DIRECTORIES                                             0 ok, 2 fail, <t>
 ------------------------------------------------------------------------------
-   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      2/2
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]      0/2
+
+==============================================================================
+HINTS
+------------------------------------------------------------------------------
+BUILD -- build or launch error
+    TEST
+        test-a.sh   its configuration does not read
+        test-b.sh   :
+
+HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
-|                                     ok                                     |
+RESULTS: 0 ok, 2 fail, <t> [sec], <t> [sec] total
+|                                    fail                                    |
 STATUS: 1
 <hwut-end>

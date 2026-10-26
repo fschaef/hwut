@@ -27,13 +27,21 @@ def finding_list_of(setup, subject_text, nominal_text):
             Empty where nothing was found, or no constraint stands.
     """
     from ....engine.compare.api import (Configuration, ConstraintSpecError,
-                                        RegionSyntaxError, is_equivalent)
+                                        RegionSyntaxError, associate)
     setup        = setup if setup is not None else Configuration()
     if not setup.constraint_db: return []
     finding_list = []
+
+    async def drained():
+        """RETURN: None. The association runs to its end: it is FREE
+                   (compare C-22) and finds every broken law, where the
+                   verdict stops at the first (U-4)."""
+        async for _ in associate(setup, io.StringIO(subject_text),
+                                 io.StringIO(nominal_text), finding_list):
+            pass
+
     try:
-        asyncio.run(is_equivalent(setup, io.StringIO(subject_text),
-                                  io.StringIO(nominal_text), finding_list))
+        asyncio.run(drained())
     except ConstraintSpecError as error:
         return ["constraint: %s" % error]
     except RegionSyntaxError:

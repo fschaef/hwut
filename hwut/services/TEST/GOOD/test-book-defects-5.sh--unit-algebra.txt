@@ -1,0 +1,20 @@
+t > 0                    over frost ((t: -5 degC))               : refused: a number without unit against a quantity -- write its unit
+t > 0 degC               over frost ((t: -5 degC))               : refused: broken
+t * 2 < 100 degC         over warm ((t: 20 degC))                : refused: an absolute temperature in arithmetic -- write the difference in delta_degC or K
+t2 - t1 < 5 delta_degC   over rise ((t1: 20 degC)) to ((t2: 23 degC)) : blessed
+t2 - t1 < 2 delta_degC   over rise ((t1: 20 degC)) to ((t2: 23 degC)) : refused: broken
+v * t < 10 m             over run ((v: 2 m/s)) for ((t: 4 s))    : blessed
+f == m * a               over ((f: 6 N)) = ((m: 2 kg)) x ((a: 3 m/s**2)) : blessed
+x < 2 * y                over ((x: 9 ms)) against ((y: 5 ms))    : blessed
+x / y > 2                over ((x: 10 ms)) over ((y: 2 s))       : refused: broken
+x < 5                    over plain ((x: 3))                     : blessed
+r >= 100 MB/s            over rate ((r: 1 Gbit/s))               : blessed
+r >= 100 MB/s            over rate ((r: 10 GHz))                 : refused: the units do not compare: GHz (1 / [time]) against MB / s ([information] / [time])
+n < 1 MB                 over size ((n: 7))                      : refused: a number without unit against a quantity -- write its unit
+== pype: readings and differences apart
+reading 293.15
+difference 5.0
+reading 300.0
+bytes 3000000.0
+other: 90 degree
+<hwut-end>
