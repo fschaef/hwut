@@ -1,6 +1,7 @@
-# vut-register 5 generation:25 apps:3 marks:0=6,1=6,2=10
+# vut-register 5 generation:26 apps:3 marks:0=7,1=6,2=10
 test;choice;verdict;report;stain;test_id;choice_id
 test-multi-execute.py;files;true;ok;;0;0
+;held;true;ok;;0;6
 ;plugged;true;ok;;0;1
 ;refused;true;ok;;0;2
 ;session;true;ok;;0;3

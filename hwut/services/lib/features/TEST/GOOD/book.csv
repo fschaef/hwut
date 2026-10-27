@@ -10,7 +10,7 @@ test-faces.py;init;true;ok;;1;0
 ;register;true;ok;;1;1
 ;tree;true;ok;;1;2
 test-proposals.py;apply;true;ok;;2;0
-;hint;false;not-equivalent-with-nominal;;2;1
+;hint;true;ok;;2;1
 ;propose;true;ok;;2;2
 ;verbs;true;ok;;2;3
 test-report.py;below;true;ok;;3;0

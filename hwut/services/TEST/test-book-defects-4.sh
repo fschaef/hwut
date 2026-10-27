@@ -134,7 +134,14 @@ case "$1" in
         "$BIN/hwut.accept" --whole test-q.sh 2>&1 | grep -E "REFUSED|constraint" ;;
     help-coverage)
         mkdir -p "$WORK/nocov"
-        for p in python3 sh dirname readlink; do ln -s "$(command -v $p)" "$WORK/nocov/$p"; done
+        #  AN EXEC WRAPPER, NOT A SYMLINK: a venv's python started through a
+        #  link in another directory runs as the bare base interpreter --
+        #  without the venv's modules, so 'hwut.help' said 'absent' and
+        #  exited 1 on a machine whose python3 is a venv (E-197).
+        for p in python3 sh dirname readlink; do
+            printf '#!/bin/sh\nexec %s "$@"\n' "$(command -v $p)" > "$WORK/nocov/$p"
+            chmod +x "$WORK/nocov/$p"
+        done
         OUT=$(mktemp -d)        # no 'hwut-root.conf' in or above it
         ( cd "$OUT" && PATH="$WORK/nocov" COLUMNS=72 "$BIN/hwut.help" 2>&1 \
              | grep -E -A2 "MISSING: the program 'coverage'"; echo "exit ${PIPESTATUS[0]}" )

@@ -7436,3 +7436,21 @@ FOUND     The session's record showed 512 s of CPU in 300 s for a process
           Not chased here.
 COST      Regression: 'engine/operations/run/TEST/test-multi-execute.py
           held'.
+
+
+E-197  A TEST THAT NARROWS PATH WRAPS ITS PROGRAMS, NEVER LINKS THEM
+                                                                      (2026-10-27)
+------------------------------------------------------------------------------
+PROBLEM   'test-book-defects-4.sh help-coverage' failed on the author's
+          machine: 'exit 1' against the GOOD's 'exit 0', the text alike.
+          The page builds a PATH without 'coverage' by SYMLINKING python3,
+          sh, dirname, readlink into a directory of its own. MEASURED: a
+          venv's python started through a link in another directory runs
+          as the base interpreter (sys.prefix '/usr/local', not the venv)
+          -- without the venv's modules; 'hwut.help' said a module absent
+          and exited 1 (its rule, E-1). The page's grep showed only the
+          'coverage' lines, so the named module was hidden.
+DECISION  The page writes a two-line 'exec <absolute path> "$@"' wrapper
+          per program: the interpreter starts by its own path and keeps
+          its environment. Any page that narrows PATH does the same.
+COST      None on a machine whose python3 is no venv; the GOOD stands.
